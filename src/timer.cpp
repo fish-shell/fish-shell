@@ -156,7 +156,7 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
     };
 
     auto wall_unit = get_unit(net_wall_micros);
-    auto cpu_unit = get_unit((net_sys_micros + net_usr_micros) / 2);
+    auto cpu_unit = get_unit(std::max(net_sys_micros, net_usr_micros));
     auto wall_time = convert(net_wall_micros, wall_unit);
     auto usr_time = convert(net_usr_micros, cpu_unit);
     auto sys_time = convert(net_sys_micros, cpu_unit);
@@ -172,8 +172,8 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
                       wall_time, unit_name(wall_unit), usr_time, unit_name(cpu_unit), sys_time,
                       unit_name(cpu_unit));
     } else {
-        auto fish_unit = get_unit((fish_sys_micros + fish_usr_micros) / 2);
-        auto child_unit = get_unit((child_sys_micros + child_usr_micros) / 2);
+        auto fish_unit = get_unit(std::max(fish_sys_micros, fish_usr_micros));
+        auto child_unit = get_unit(std::max(child_sys_micros, child_usr_micros));
         auto fish_usr_time = convert(fish_usr_micros, fish_unit);
         auto fish_sys_time = convert(fish_sys_micros, fish_unit);
         auto child_usr_time = convert(child_usr_micros, child_unit);

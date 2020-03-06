@@ -1,6 +1,4 @@
 # Tab completion for cargo (https://github.com/rust-lang/cargo).
-complete -e -c cargo
-
 complete -c cargo -s h -l help
 complete -c cargo -s V -l version -d 'Print version info and exit'
 complete -c cargo -l list -d 'List installed commands'

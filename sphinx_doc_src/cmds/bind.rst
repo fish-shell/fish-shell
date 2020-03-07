@@ -120,6 +120,8 @@ The following special input functions are available:
 
 - ``execute`` run the current commandline
 
+- ``force-repaint`` reexecute the prompt functions without coalescing
+
 - ``forward-bigword``, move one whitespace-delimited word to the right
 
 - ``forward-char``, move one character to the right
@@ -160,7 +162,9 @@ The following special input functions are available:
 
 - ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode. If no fish_mode_prompt exists, it acts like a normal repaint.
 
-- ``force-repaint`` reexecute the prompt functions without coalescing.
+- ``self-insert``, inserts the matching sequence into the command line
+
+- ``self-insert-notfirst``, inserts the matching sequence into the command line, unless the cursor is at the beginning
 
 - ``suppress-autosuggestion``, remove the current autosuggestion
 

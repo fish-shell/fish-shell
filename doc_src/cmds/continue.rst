@@ -20,8 +20,6 @@ Example
 
 The following code removes all tmp files that do not contain the word smurf.
 
-
-
 ::
 
     for i in *.tmp
@@ -34,3 +32,7 @@ The following code removes all tmp files that do not contain the word smurf.
         echo $i
     end
 
+See Also
+--------
+
+- the :ref:`break <cmd-break>` command, to stop the current inner loop

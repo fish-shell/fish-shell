@@ -1,7 +1,7 @@
 # Pulseaudio's pacmd
 # This covers the most useful commands
 set -l commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
-complete -f -e -c pacmd
+complete -f -c pacmd
 complete -f -c pacmd -w pactl
 
 # These descriptions are a bit wordy and unnecessary

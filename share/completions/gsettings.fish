@@ -74,7 +74,7 @@ end
 
 set -l valid_commands get monitor writable range describe set reset reset-recursively list-schemas list-relocatable-schemas list-keys list-children list-recursively help
 
-complete -f -e -c gsettings
+complete -f -c gsettings
 
 complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l version -d 'Print the version information'
 complete -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l schemadir -d 'Specify a custom schemas directory' -xa "(__fish_complete_directories (commandline -ct))"

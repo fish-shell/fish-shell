@@ -47,7 +47,7 @@ function __fish_pa_complete_unloaded_modules
     end
 end
 
-complete -f -e -c pactl
+complete -f -c pactl
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a "$ctlcommands"
 
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a stat -d 'Show statistics about memory usage'

@@ -1,4 +1,4 @@
-complete -c rustup -e
+complete -c rustup
 
 set -l subcmds \
     show \

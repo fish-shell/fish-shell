@@ -1,4 +1,4 @@
-complete -f -e -c machinectl
+complete -f -c machinectl
 
 set -l commands list status show start login enable disable poweroff reboot \
     terminate kill bind copy-{to,from} list-images image-status show-image clone rename read-only remove set-limit pull-{tar,raw,dkr} \

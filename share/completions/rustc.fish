@@ -1,7 +1,3 @@
-# Tab completion for rustc (https://github.com/rust-lang/rust).
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
-complete -e -c rustc
-
 complete -c rustc -s h -l help
 
 complete -c rustc -x -l cfg

@@ -1,7 +1,4 @@
-# Completions for pacaur
-
 set -l progname pacaur
-complete -e -c $progname
 complete -c $progname -f
 
 set -l listinstalled "(pacman -Q | string replace ' ' \t)"

@@ -119,7 +119,7 @@ end
 ### Commands
 set -l commands list status monitor capture tree introspect call get-property set-property help
 
-complete -f -e -c busctl
+complete -f -c busctl
 complete -f -c busctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
 ### Arguments to commands

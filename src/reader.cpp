@@ -2568,7 +2568,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
         if (!event_is_normal_char(evt) || !can_read(STDIN_FILENO)) {
             event_needing_handling = std::move(evt);
             break;
-        } else if (evt.input_style == char_event_t::style_notfirst && accumulated_chars.empty() &&
+        } else if (evt.input_style == char_input_style_t::notfirst && accumulated_chars.empty() &&
                    active_edit_line()->position() == 0) {
             // The cursor is at the beginning and nothing is accumulated, so skip this character.
             continue;
@@ -3481,7 +3481,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         } else {
             // Ordinary char.
             wchar_t c = event_needing_handling->get_char();
-            if (event_needing_handling->input_style == char_event_t::style_notfirst &&
+            if (event_needing_handling->input_style == char_input_style_t::notfirst &&
                 active_edit_line()->position() == 0) {
                 // This character is skipped.
             } else if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&

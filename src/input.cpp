@@ -511,8 +511,8 @@ char_event_t inputter_t::readch(bool allow_commands) {
 
                     // Hackish: mark the input style.
                     res.input_style = evt.get_readline() == readline_cmd_t::self_insert_notfirst
-                                          ? char_event_t::style_notfirst
-                                          : char_event_t::style_normal;
+                                          ? char_input_style_t::notfirst
+                                          : char_input_style_t::normal;
                     return res;
                 }
                 case readline_cmd_t::func_and: {

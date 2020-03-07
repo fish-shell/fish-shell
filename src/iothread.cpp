@@ -16,6 +16,7 @@
 #include <condition_variable>
 #include <functional>
 #include <queue>
+#include <thread>
 
 #include "common.h"
 #include "flog.h"
@@ -132,7 +133,7 @@ struct thread_pool_t {
 /// These are used for completions, etc.
 static thread_pool_t s_io_thread_pool(1, IO_MAX_THREADS);
 
-static owning_lock<std::queue<work_request_t>> s_result_queue;
+static owning_lock<std::queue<void_function_t>> s_result_queue;
 
 // "Do on main thread" support.
 static std::mutex s_main_thread_performer_lock;               // protects the main thread requests
@@ -195,8 +196,11 @@ maybe_t<work_request_t> thread_pool_t::dequeue_work_or_commit_to_exit() {
     return result;
 }
 
-static void enqueue_thread_result(work_request_t req) {
+static void enqueue_thread_result(void_function_t req) {
     s_result_queue.acquire()->push(std::move(req));
+    const char wakeup_byte = IO_SERVICE_RESULT_QUEUE;
+    int notify_fd = get_notify_pipes().write;
+    assert_with_errno(write_loop(notify_fd, &wakeup_byte, sizeof wakeup_byte) != -1);
 }
 
 static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
@@ -212,10 +216,7 @@ void *thread_pool_t::run() {
         // Note we're using std::function's weirdo operator== here
         if (req->completion != nullptr) {
             // Enqueue the result, and tell the main thread about it.
-            enqueue_thread_result(req.acquire());
-            const char wakeup_byte = IO_SERVICE_RESULT_QUEUE;
-            int notify_fd = get_notify_pipes().write;
-            assert_with_errno(write_loop(notify_fd, &wakeup_byte, sizeof wakeup_byte) != -1);
+            enqueue_thread_result(std::move(req->completion));
         }
     }
     FLOGF(iothread, L"pthread %p exiting", this_thread());
@@ -392,16 +393,16 @@ static void iothread_service_main_thread_requests() {
 // Service the queue of results
 static void iothread_service_result_queue() {
     // Move the queue to a local variable.
-    std::queue<work_request_t> result_queue;
+    std::queue<void_function_t> result_queue;
     s_result_queue.acquire()->swap(result_queue);
 
     // Perform each completion in order
     while (!result_queue.empty()) {
-        work_request_t req(std::move(result_queue.front()));
+        void_function_t req(std::move(result_queue.front()));
         result_queue.pop();
         // ensure we don't invoke empty functions, that raises an exception
-        if (req.completion != nullptr) {
-            req.completion();
+        if (req != nullptr) {
+            req();
         }
     }
 }
@@ -493,3 +494,96 @@ uint64_t thread_id() {
     static thread_local uint64_t tl_tid = next_thread_id();
     return tl_tid;
 }
+
+// Debounce implementation note: we would like to enqueue at most one request, except if a thread
+// hangs (e.g. on fs access) then we do not want to block indefinitely; such threads are called
+// "abandoned". This is implemented via a monotone uint64 counter, called a token.
+// Every time we spawn a thread, increment the token. When the thread is completed, it compares its
+// token to the active token; if they differ then this thread was abandoned.
+struct debounce_t::impl_t {
+    // Synchronized data from debounce_t.
+    struct data_t {
+        // The (at most 1) next enqueued request, or none if none.
+        maybe_t<work_request_t> next_req{};
+
+        // The token of the current non-abandoned thread, or 0 if no thread is running.
+        uint64_t active_token{0};
+
+        // The next token to use when spawning a thread.
+        uint64_t next_token{1};
+
+        // The start time of the most recently run thread spawn, or request (if any).
+        std::chrono::time_point<std::chrono::steady_clock> start_time{};
+    };
+    owning_lock<data_t> data{};
+
+    /// Run an iteration in the background, with the given thread token.
+    /// \return true if we handled a request, false if there were none.
+    bool run_next(uint64_t token);
+};
+
+bool debounce_t::impl_t::run_next(uint64_t token) {
+    assert(token > 0 && "Invalid token");
+    // Note we are on a background thread.
+    maybe_t<work_request_t> req;
+    {
+        auto d = data.acquire();
+        if (d->next_req) {
+            // The value was dequeued, we are going to execute it.
+            req = d->next_req.acquire();
+            d->start_time = std::chrono::steady_clock::now();
+        } else {
+            // There is no request. If we are active, mark ourselves as no longer running.
+            if (token == d->active_token) {
+                d->active_token = 0;
+            }
+            return false;
+        }
+    }
+
+    assert(req && req->handler && "Request should have value");
+    req->handler();
+    if (req->completion) {
+        enqueue_thread_result(std::move(req->completion));
+    }
+    return true;
+}
+
+uint64_t debounce_t::perform_impl(std::function<void()> handler, std::function<void()> completion) {
+    uint64_t active_token{0};
+    bool spawn{false};
+    // Local lock.
+    {
+        auto d = impl_->data.acquire();
+        d->next_req = work_request_t{std::move(handler), std::move(completion)};
+        // If we have a timeout, and our running thread has exceeded it, abandon that thread.
+        if (d->active_token && timeout_msec_ > 0 &&
+            std::chrono::steady_clock::now() - d->start_time >
+                std::chrono::milliseconds(timeout_msec_)) {
+            // Abandon this thread by marking nothing as active.
+            d->active_token = 0;
+        }
+        if (!d->active_token) {
+            // We need to spawn a new thread.
+            // Mark the current time so that a new request won't immediately abandon us.
+            spawn = true;
+            d->active_token = d->next_token++;
+            d->start_time = std::chrono::steady_clock::now();
+        }
+        active_token = d->active_token;
+        assert(active_token && "Something should be active");
+    }
+    if (spawn) {
+        // Equip our background thread with a reference to impl, to keep it alive.
+        auto impl = impl_;
+        iothread_perform([=] {
+            while (impl->run_next(active_token))
+                ;  // pass
+        });
+    }
+    return active_token;
+}
+
+debounce_t::debounce_t(long timeout_msec)
+    : timeout_msec_(timeout_msec), impl_(std::make_shared<impl_t>()) {}
+debounce_t::~debounce_t() = default;

@@ -144,6 +144,20 @@ operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
     return operation_context_t{nullptr, *env, std::move(cancel_checker)};
 }
 
+/// Get the debouncer for autosuggestions and background highlighting.
+/// These are deliberately leaked to avoid shutdown dtor registration.
+static debounce_t &debounce_autosuggestions() {
+    const long kAutosuggetTimeoutMs = 500;
+    static debounce_t *res = new debounce_t(kAutosuggetTimeoutMs);
+    return *res;
+}
+
+static debounce_t &debounce_highlighting() {
+    const long kHighlightTimeoutMs = 500;
+    static debounce_t *res = new debounce_t(kHighlightTimeoutMs);
+    return *res;
+}
+
 bool edit_t::operator==(const edit_t &other) const {
     return cursor_position_before_edit == other.cursor_position_before_edit &&
            offset == other.offset && length == other.length && old == other.old &&
@@ -1482,9 +1496,10 @@ void reader_data_t::update_autosuggestion() {
         auto performer =
             get_autosuggestion_performer(parser(), el->text(), el->position(), history);
         auto shared_this = this->shared_from_this();
-        iothread_perform(performer, [shared_this](autosuggestion_result_t result) {
-            shared_this->autosuggest_completed(std::move(result));
-        });
+        debounce_autosuggestions().perform(
+            performer, [shared_this](autosuggestion_result_t result) {
+                shared_this->autosuggest_completed(std::move(result));
+            });
     }
 }
 
@@ -2226,9 +2241,10 @@ void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bo
     } else {
         // Highlighting including I/O proceeds in the background.
         auto shared_this = this->shared_from_this();
-        iothread_perform(highlight_performer, [shared_this](highlight_result_t result) {
-            shared_this->highlight_complete(std::move(result));
-        });
+        debounce_highlighting().perform(highlight_performer,
+                                        [shared_this](highlight_result_t result) {
+                                            shared_this->highlight_complete(std::move(result));
+                                        });
     }
     highlight_search();
 

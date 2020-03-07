@@ -36,6 +36,12 @@ function fish_hg_prompt --description 'Write out the hg prompt'
         set branch "$branch|$bookmark"
     end
 
+    if not set -q fish_prompt_hg_show_informative_status
+        set_color normal
+        echo -n " ($branch)"
+        return
+    end
+
     echo -n '|'
 
     # Disabling color and pager is always a good idea.

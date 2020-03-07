@@ -19,7 +19,11 @@ The fish_hg_prompt function displays information about the current Mercurial rep
 
 `Mercurial <https://www.mercurial-scm.org/>`_ (``hg``) must be installed.
 
-There are numerous customization options, which can be controlled with fish variables.
+By default, only the current branch is shown because ``hg status`` can take be slow on large repository. You can enable a more informative prompt by setting the variable ``$fish_prompt_hg_show_informative_status``, for example::
+
+	set --universal fish_prompt_hg_show_informative_status
+
+If you enabled the informative status, there are numerous customization options, which can be controlled with fish variables.
 
 - ``$fish_color_hg_clean``, ``$fish_color_hg_modified`` and ``$fish_color_hg_dirty`` are colors used when the repository has the respective status.
 
@@ -52,6 +56,7 @@ A simple prompt that displays hg info::
 
     function fish_prompt
         ...
+        set -g fish_prompt_hg_show_informative_status
         printf '%s %s$' $PWD (fish_hg_prompt)
     end
 

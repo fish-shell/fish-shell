@@ -253,10 +253,10 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
                     append_whitespace(node_indent);
                 }
                 wcstring unescaped{source, node.source_start, node.source_length};
-                // Unescape the string - this leaves special markers around if there are any expansions or anything.
-                // TODO: This also already computes backslash-escapes like \u or \x.
-                // We probably don't want that - if someone picked `\x20` to spell space, they have a reason.
-                unescape_string_in_place(&unescaped, UNESCAPE_SPECIAL);
+                // Unescape the string - this leaves special markers around if there are any
+                // expansions or anything. We specifically tell it to not compute backslash-escapes
+                // like \U or \x, because we want to leave them intact.
+                unescape_string_in_place(&unescaped, UNESCAPE_SPECIAL | UNESCAPE_NO_BACKSLASHES);
 
                 // Remove INTERNAL_SEPARATOR because that's a quote.
                 auto quote = [](wchar_t ch) { return ch == INTERNAL_SEPARATOR; };

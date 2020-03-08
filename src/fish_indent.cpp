@@ -263,10 +263,14 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
                 unescaped.erase(std::remove_if(unescaped.begin(), unescaped.end(), quote),
                                 unescaped.end());
 
-                // If no non-alphanumeric char is left, use the unescaped version.
+                // If no non-"good" char is left, use the unescaped version.
                 // This can be extended to other characters, but giving the precise list is tough,
-                // can change over time (see "^", "%" and "?", in some cases "{}") and it just makes people feel more at ease.
-                if (std::find_if_not(unescaped.begin(), unescaped.end(), fish_iswalnum) == unescaped.end() && !unescaped.empty()) {
+                // can change over time (see "^", "%" and "?", in some cases "{}") and it just makes
+                // people feel more at ease.
+                auto goodchars = [](wchar_t ch) { return fish_iswalnum(ch) || ch == L'_' || ch == L'-' || ch == L'/'; };
+                if (std::find_if_not(unescaped.begin(), unescaped.end(), goodchars) ==
+                        unescaped.end() &&
+                    !unescaped.empty()) {
                     output.append(unescaped);
                 } else {
                     output.append(source, node.source_start, node.source_length);

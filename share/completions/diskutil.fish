@@ -28,21 +28,21 @@ end
 
 # list
 complete -f -c diskutil -n '__fish_use_subcommand' -a list -d 'List disks'
-complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand list' -o 'plist' -d 'Return a property list'
+complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand list' -o plist -d 'Return a property list'
 complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand list' -a '(__fish_diskutil_devices)'
 
 # info
 complete -f -c diskutil -n '__fish_use_subcommand' -a info -d 'Get detailed information about a specific whole disk or partition'
-complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand info' -o 'plist' -d 'Return a property list'
+complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand info' -o plist -d 'Return a property list'
 complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand info' -a '(__fish_diskutil_devices)'
-complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand info' -o 'all' -d 'Process all disks'
+complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand info' -o all -d 'Process all disks'
 
 # activity
 complete -f -c diskutil -n '__fish_use_subcommand' -a activity -d 'Continuously display system-wide disk manipulation activity'
 
 # listFilesystems
 complete -f -c diskutil -n '__fish_use_subcommand' -a listFilesystems -d 'Show the file system personalities available'
-complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand listFilesystems' -o 'plist' -d 'Return a property list'
+complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand listFilesystems' -o plist -d 'Return a property list'
 
 # umount
 complete -f -c diskutil -n '__fish_use_subcommand' -a umount -d 'Unmount a single volume'
@@ -58,7 +58,7 @@ complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand eject' -a '(__f
 
 # mount
 complete -f -c diskutil -n '__fish_use_subcommand' -a mount -d 'Mount a single volume'
-complete -r -c diskutil -n '__fish_diskutil_using_not_subcommand mount' -o 'mountPoint' -d 'Specify mount point'
+complete -r -c diskutil -n '__fish_diskutil_using_not_subcommand mount' -o mountPoint -d 'Specify mount point'
 complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand mount' -a '(__fish_diskutil_devices)'
 
 # mountDisk

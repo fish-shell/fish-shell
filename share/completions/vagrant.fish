@@ -81,7 +81,7 @@ end
 
 function __fish_vagrant_box_need_command
     set -l cmd (__fish_vagrant_need_command)
-    test "$cmd[1]" = "box" 2>/dev/null
+    test "$cmd[1]" = box 2>/dev/null
     or return 1
     set -e cmd[1]
 
@@ -106,7 +106,7 @@ end
 
 function __fish_vagrant_cloud_need_command
     set -l cmd (__fish_vagrant_need_command)
-    test "$cmd[1]" = "cloud" 2>/dev/null
+    test "$cmd[1]" = cloud 2>/dev/null
     or return 1
     set -e cmd[1]
 

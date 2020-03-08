@@ -8,7 +8,7 @@ function __fish_equery_print_format
         '$version' "Version (without the revision) (e.g. '0.3.0_rc10')" \
         '$revision' "Revision (e.g. 'r1')" \
         '$fullversion' "Version including revision (e.g. '0.3.0_rc10-r1')" \
-        '$slot' "Slot" \
+        '$slot' Slot \
         '$repo' "Repository (e.g. 'gentoo')" \
         '$mask' "Mask-status field (~M-??)" \
         '$mask2' "Verbose description of the masking status" \
@@ -23,20 +23,20 @@ complete -c equery -s N -l no-pipe -d "Turns off pipe detection"
 complete -c equery -s V -l version -d "Display version information"
 
 ## Subcommands
-complete -c equery -n '__fish_use_subcommand' -xa 'belongs' -d "List all pkgs owning file(s)"
-complete -c equery -n '__fish_use_subcommand' -xa 'changes' -d "List changelog entries for ATOM"
-complete -c equery -n '__fish_use_subcommand' -xa 'check' -d "Check pkg's MD5sums and timestamps"
-complete -c equery -n '__fish_use_subcommand' -xa 'depends' -d "List all pkgs depending on specified pkg"
-complete -c equery -n '__fish_use_subcommand' -xa 'depgraph' -d "Display pkg's dependency tree"
-complete -c equery -n '__fish_use_subcommand' -xa 'files' -d "List files owned by pkg"
-complete -c equery -n '__fish_use_subcommand' -xa 'has' -d "List pkgs for matching ENVIRONMENT data"
-complete -c equery -n '__fish_use_subcommand' -xa 'hasuse' -d "List pkgs with specified useflag"
-complete -c equery -n '__fish_use_subcommand' -xa 'keywords' -d "Display pkg's keywords"
-complete -c equery -n '__fish_use_subcommand' -xa 'list' -d "List all pkgs matching pattern"
-complete -c equery -n '__fish_use_subcommand' -xa 'meta' -d "Display pkg's metadata"
-complete -c equery -n '__fish_use_subcommand' -xa 'size' -d "Print size of files contained in pkg"
-complete -c equery -n '__fish_use_subcommand' -xa 'uses' -d "Display pkg's USE flags"
-complete -c equery -n '__fish_use_subcommand' -xa 'which' -d "Print full path to ebuild for pkg"
+complete -c equery -n '__fish_use_subcommand' -xa belongs -d "List all pkgs owning file(s)"
+complete -c equery -n '__fish_use_subcommand' -xa changes -d "List changelog entries for ATOM"
+complete -c equery -n '__fish_use_subcommand' -xa check -d "Check pkg's MD5sums and timestamps"
+complete -c equery -n '__fish_use_subcommand' -xa depends -d "List all pkgs depending on specified pkg"
+complete -c equery -n '__fish_use_subcommand' -xa depgraph -d "Display pkg's dependency tree"
+complete -c equery -n '__fish_use_subcommand' -xa files -d "List files owned by pkg"
+complete -c equery -n '__fish_use_subcommand' -xa has -d "List pkgs for matching ENVIRONMENT data"
+complete -c equery -n '__fish_use_subcommand' -xa hasuse -d "List pkgs with specified useflag"
+complete -c equery -n '__fish_use_subcommand' -xa keywords -d "Display pkg's keywords"
+complete -c equery -n '__fish_use_subcommand' -xa list -d "List all pkgs matching pattern"
+complete -c equery -n '__fish_use_subcommand' -xa meta -d "Display pkg's metadata"
+complete -c equery -n '__fish_use_subcommand' -xa size -d "Print size of files contained in pkg"
+complete -c equery -n '__fish_use_subcommand' -xa uses -d "Display pkg's USE flags"
+complete -c equery -n '__fish_use_subcommand' -xa which -d "Print full path to ebuild for pkg"
 
 ## Arguments
 complete -c equery -n '__fish_seen_subcommand_from c changes d depends g depgraph y keywords m meta u uses w which' \

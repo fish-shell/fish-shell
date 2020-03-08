@@ -18,7 +18,7 @@ function __fish_print_magento_modules -d "Lists all Magento modules"
     set -l modules (magento module:status)
 
     for i in $test
-        if test -n "$i" -a "$i" != "None"
+        if test -n "$i" -a "$i" != None
             echo $i
         end
     end

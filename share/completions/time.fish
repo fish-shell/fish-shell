@@ -1,9 +1,9 @@
 if not command -q time
-    complete -c time -a "(__fish_complete_subcommand)" -d "Command"
+    complete -c time -a "(__fish_complete_subcommand)" -d Command
     exit
 end
 
-complete -c time -a "(__fish_complete_subcommand -- -o --output -f --format)" -d "Command"
+complete -c time -a "(__fish_complete_subcommand -- -o --output -f --format)" -d Command
 
 complete -c time -s f -l format -n "__fish_no_arguments" -d "Specify output format" -x
 complete -c time -s p -l portable -n "__fish_no_arguments" -d "Use the portable output format"

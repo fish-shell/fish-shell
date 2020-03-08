@@ -40,7 +40,7 @@ complete -c scons -l profile -d 'Run SCons under the Python profiler and save th
 complete -c scons -s q -l question -d 'Do not run any commands, or print anything'
 complete -c scons -s Q -d 'Quiets SCons status messages about reading SConscript files, building targets and entering directories'
 complete -c scons -l random -d 'Build dependencies in a random order'
-complete -c scons -s s -l silent -l quiet -d 'Silent'
+complete -c scons -s s -l silent -l quiet -d Silent
 complete -c scons -l taskmastertrace -d 'Prints trace information to the specified file about how the internal Taskmaster object evaluates and controls the order in which Nodes are built'
 complete -c scons -s u -l up -l search-up -d 'Walks up the directory structure until an SConstruct , Scon struct or sconstruct file is found, and uses that as the top of the directory tree'
 complete -c scons -s U -d 'Works exactly the same way as the -u option except for the way default targets are handled'

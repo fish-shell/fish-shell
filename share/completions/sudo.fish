@@ -48,7 +48,7 @@ complete -c sudo -n "__fish_sudo_no_subcommand" -s K -d "Remove the credential t
 complete -c sudo -n "__fish_sudo_no_subcommand" -s P -d "Preserve group vector"
 complete -c sudo -n "__fish_sudo_no_subcommand" -s S -d "Read password from stdin"
 complete -c sudo -n "__fish_sudo_no_subcommand" -s b -d "Run command in the background"
-complete -c sudo -n "__fish_sudo_no_subcommand" -s e -rF -d "Edit"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s e -rF -d Edit
 complete -c sudo -n "__fish_sudo_no_subcommand" -s g -a "(__fish_complete_groups)" -x -d "Run command as group"
 complete -c sudo -n "__fish_sudo_no_subcommand" -s i -d "Run a login shell"
 complete -c sudo -n "__fish_sudo_no_subcommand" -s k -d "Reset or ignore the credential timestamp"

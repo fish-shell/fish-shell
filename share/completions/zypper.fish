@@ -79,15 +79,15 @@ function __fish_zypper_print_packages
 
     if test -z "$type"
         cat $idx | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
-    else if test "$type" = "package"
+    else if test "$type" = package
         cat $idx | string match -rv '^('(string join \| $__fish_zypper_package_types)'):' | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
     else
         cat $idx | string replace -rf "^$type"':([^\t]+)\t.*\t.*$' '$1\t'"$type"
     end
 end
 
-complete -n '__fish_zypper_use_pkg' -c zypper -a '(__fish_zypper_print_packages)' -d 'Package'
-complete -f -n '__fish_zypper_use_repo' -c zypper -a '(__fish_zypper_print_repos)' -d 'Repo'
+complete -n '__fish_zypper_use_pkg' -c zypper -a '(__fish_zypper_print_packages)' -d Package
+complete -f -n '__fish_zypper_use_repo' -c zypper -a '(__fish_zypper_print_repos)' -d Repo
 complete -f -n '__fish_zypper_not_use_file' -c zypper
 
 # Commands:
@@ -121,7 +121,7 @@ complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'install-new-recommend
 #  Update Management:
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'update up' -d 'Update installed packages with newer versions'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'list-updates lu' -d 'List available updates'
-complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'patch' -d 'Install needed patches'
+complete -f -n '__fish_zypper_no_subcommand' -c zypper -a patch -d 'Install needed patches'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'list-patches lp' -d 'List needed patches'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'dist-upgrade dup' -d 'Perform a distribution upgrade'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'patch-check pchk' -d 'Check for patches'
@@ -152,19 +152,19 @@ complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'removelocale rloc' -d
 #  Other Commands:
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'versioncmp vcmp' -d 'Compare two version strings'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'targetos tos' -d 'Print the target operating system ID string'
-complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'licenses' -d 'Print report about licenses and EULAs of installed packages'
-complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'download' -d 'Download rpms specified on the commandline to a local directory'
+complete -f -n '__fish_zypper_no_subcommand' -c zypper -a licenses -d 'Print report about licenses and EULAs of installed packages'
+complete -f -n '__fish_zypper_no_subcommand' -c zypper -a download -d 'Download rpms specified on the commandline to a local directory'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'source-download' -d 'Download source rpms for all installed packages to a local directory'
 complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'needs-rebooting' -d 'Check if the needs-reboot flag was set'
-complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'ps' -d 'List running processes which might still use files and libraries deleted by recent upgrades'
+complete -f -n '__fish_zypper_no_subcommand' -c zypper -a ps -d 'List running processes which might still use files and libraries deleted by recent upgrades'
 
 #  Subcommands:
 
-complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'subcommand' -d 'Lists available subcommands'
+complete -f -n '__fish_zypper_no_subcommand' -c zypper -a subcommand -d 'Lists available subcommands'
 
 # Global Options:
 
-complete -c zypper -n '__fish_zypper_no_subcommand' -l help -s h -d 'Help'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l help -s h -d Help
 complete -c zypper -n '__fish_zypper_no_subcommand' -l version -s V -d 'Output the version number'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l promptids -d 'Output a list of zypper user prompts'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l config -r -s c -d 'Use specified config file instead of the default'

@@ -37,7 +37,7 @@ complete -f -c lunchy -n '__fish_lunchy_needs_command' -a status -d 'Show the PI
 complete -f -c lunchy -n '__fish_lunchy_needs_command' -a edit -d 'Opens the launchctl daemon file in the default editor'
 
 # Commands with service completion
-complete -f -c lunchy -n '__fish_lunchy_using_command ls list start stop restart status edit' -a '(lunchy ls)' -d 'Service'
+complete -f -c lunchy -n '__fish_lunchy_using_command ls list start stop restart status edit' -a '(lunchy ls)' -d Service
 
 # Command: start
 complete -f -c lunchy -n '__fish_lunchy_using_command start' -s w -l write -d 'Persist command'

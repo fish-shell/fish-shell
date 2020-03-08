@@ -21,7 +21,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Because it's a rather discoverable name, users will execute it
     # and without this would then have subtly broken bindings.
     if test "$fish_key_bindings" != "fish_vi_key_bindings"
-        and test "$rebind" = "true"
+        and test "$rebind" = true
         # Allow the user to set the variable universally.
         set -q fish_key_bindings
         or set -g fish_key_bindings

@@ -883,7 +883,7 @@ complete -c virsh -n "__fish_seen_subcommand_from allocpages" -l add -d "Instead
 complete -c virsh -n "__fish_seen_subcommand_from allocpages" -l all -d "Set on all NUMA cells"
 
 # virsh capabilities
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a capabilities -d "Capabilities"
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a capabilities -d Capabilities
 
 # virsh cpu-models
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a cpu-models -d "CPU models"

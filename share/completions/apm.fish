@@ -7,7 +7,7 @@ function __fish_apm_needs_command
         for c in $cmd[2..-1]
             switch $c
                 # Exclude options that are allowed to appear before command
-                case '--color' '--no-color' 'help'
+                case '--color' '--no-color' help
                     continue
                 case '*'
                     return 1

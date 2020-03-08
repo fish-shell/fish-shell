@@ -10,7 +10,7 @@ function __fish_arc_needs_command
         for c in $cmd[2..-1]
             switch $c
                 # General options that can still take a command
-                case "--trace" "--no-ansi" "--ansi" "--load-phutil-library" "config" "skip-arcconfig" "arcrc-file" --conduit-{uri,token,version,timeout}
+                case "--trace" "--no-ansi" "--ansi" "--load-phutil-library" config "skip-arcconfig" "arcrc-file" --conduit-{uri,token,version,timeout}
                     continue
                 case "*"
                     echo $c

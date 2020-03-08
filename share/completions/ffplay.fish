@@ -5,7 +5,7 @@ function __fish_ffplay_help_type
     for help_type in decoder encoder demuxer muxer filter
         set -l regex
 
-        if test $help_type = "filter"
+        if test $help_type = filter
             set regex '\S+\s+(\S+)\s+\S+\s+(\S+)'
         else
             set regex '\S+\s+(\S+)\s+(\S+)'

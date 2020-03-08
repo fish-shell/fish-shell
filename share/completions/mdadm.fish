@@ -73,14 +73,14 @@ function __fish_mdadm_layout_options # To be clarified
     echo -e "write-all"
     echo -e "read-fixable"
     echo -e "rf\tAlias of read-fixable"
-    echo -e "clear"
-    echo -e "flush"
-    echo -e "none"
-    echo -e "n"
-    echo -e "o"
-    echo -e "f"
-    echo -e "normalise"
-    echo -e "preserve"
+    echo -e clear
+    echo -e flush
+    echo -e none
+    echo -e n
+    echo -e o
+    echo -e f
+    echo -e normalise
+    echo -e preserve
 end
 
 function __fish_mdadm_level_options

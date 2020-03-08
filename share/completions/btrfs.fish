@@ -99,9 +99,9 @@ complete -f -c btrfs -n $restore -s s -l snapshots -d 'Get snapshots'
 complete -f -c btrfs -n $restore -s x -l xattr -d 'Restore extended attributes'
 complete -f -c btrfs -n $restore -s m -l metadata -d 'Restore owner, mode and times'
 complete -f -c btrfs -n $restore -s S -l symlink -d 'Restore symbolic links'
-complete -f -c btrfs -n $restore -s v -l verbose -d 'Verbose'
+complete -f -c btrfs -n $restore -s v -l verbose -d Verbose
 complete -f -c btrfs -n $restore -s i -l ignore-errors -d 'Ignore errors'
-complete -f -c btrfs -n $restore -s o -l overwrite -d 'Overwrite'
+complete -f -c btrfs -n $restore -s o -l overwrite -d Overwrite
 complete -f -c btrfs -n $restore -s t -d 'Tree location'
 complete -f -c btrfs -n $restore -s f -d 'Filesystem location'
 complete -f -c btrfs -n $restore -s u -l super -d 'Super mirror'

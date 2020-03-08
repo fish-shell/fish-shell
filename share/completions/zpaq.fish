@@ -9,11 +9,11 @@ set -l command3 x extract
 
 #commands
 complete -c zpaq -f -n "not $seen $commands" -a "$commands"
-complete -c zpaq -f -n "not $seen $commands" -a a -d "add"
+complete -c zpaq -f -n "not $seen $commands" -a a -d add
 complete -c zpaq -f -n "not $seen $commands" -a add -d "Append files to archive if dates have changed"
-complete -c zpaq -f -n "not $seen $commands" -a x -d "extract"
+complete -c zpaq -f -n "not $seen $commands" -a x -d extract
 complete -c zpaq -f -n "not $seen $commands" -a extract -d "Extract most recent versions of files"
-complete -c zpaq -f -n "not $seen $commands" -a l -d "list"
+complete -c zpaq -f -n "not $seen $commands" -a l -d list
 complete -c zpaq -f -n "not $seen $commands" -a list -d "List or compare external files to archive"
 
 #options

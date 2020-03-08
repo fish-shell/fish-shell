@@ -105,7 +105,7 @@ complete -c $progname -n "$has_db_opt; and $database" -xa "$listinstalled"
 # File options - since pacman 5
 complete -c $progname -n "$files" -s x -l regex -d 'Interpret each query as a regular expression' -f
 complete -c $progname -n "$files" -l machinereadable -d 'Print each match in a machine readable output format' -f
-complete -c $progname -n "$files" -d 'Package' -xa "$listall"
+complete -c $progname -n "$files" -d Package -xa "$listall"
 
 # Query options
 complete -c $progname -n "$query" -s c -l changelog -d 'View the change log of PACKAGE' -f

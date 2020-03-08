@@ -121,8 +121,8 @@ complete -c gcc -o Wselector -d 'Warn if multiple methods of different types for
 complete -c gcc -o Wstrict-selector-match -d 'Warn if multiple methods with differing argument and/or return types are found for a given selector when attempting to send a message using this selector to a receiver of type "id" or "Class"'
 complete -c gcc -o Wundeclared-selector -d 'Warn if a "@selector('
 complete -c gcc -o print-objc-runtime-info -d 'Generate C header describing the largest structure that is passed by value, if any'
-complete -c gcc -o fmessage-length -d 'Try to format error messages so that they fit on lines of the specified number of characters' -x -a "80"
-complete -c gcc -o fdiagnostics-show-location -d 'Only meaningful in line-wrapping mode' -a "once"
+complete -c gcc -o fmessage-length -d 'Try to format error messages so that they fit on lines of the specified number of characters' -x -a 80
+complete -c gcc -o fdiagnostics-show-location -d 'Only meaningful in line-wrapping mode' -a once
 complete -c gcc -o line -d 'Only meaningful in line-wrapping mode'
 complete -c gcc -o fdiagnostics-show-options -d 'This option instructs the diagnostic machinery to add text to each diagnostic emitted, which indicates which command line option directly controls that diagnostic, when such an option is known to the diagnostic machinery'
 complete -c gcc -o Wno- -d 'to turn off warnings; for example, -Wno-implicit'
@@ -165,7 +165,7 @@ complete -c gcc -o Wunused -d 'All the above -Wunused options combined'
 complete -c gcc -o Wuninitialized -d 'Warn if an automatic variable is used without first being initialized or if a variable may be clobbered by a "setjmp" call'
 complete -c gcc -o Wunknown-pragmas -d 'Warn when a #pragma directive is encountered which is not understood by GCC'
 complete -c gcc -o Wno-pragmas -d 'Do not warn about misuses of pragmas, such as incorrect parameters, invalid syntax, or conflicts between pragmas'
-complete -c gcc -o Wstrict-aliasing -d 'This option is only active when -fstrict-aliasing is active' -a "2"
+complete -c gcc -o Wstrict-aliasing -d 'This option is only active when -fstrict-aliasing is active' -a 2
 complete -c gcc -o Wall -d 'All of the above -W options combined'
 complete -c gcc -o Wextra -d '(This option used to be called -W'
 complete -c gcc -o Wno-div-by-zero -d 'Do not warn about compile-time integer division by zero'

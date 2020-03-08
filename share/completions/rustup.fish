@@ -1,27 +1,27 @@
 complete -c rustup -e
 
 set -l subcmds \
-    "show" \
-    "update" \
-    "default" \
-    "toolchain" \
-    "target" \
-    "component" \
-    "override" \
-    "run" \
-    "which" \
-    "doc" \
-    "man" \
-    "self" \
-    "set" \
+    show \
+    update \
+    default \
+    toolchain \
+    target \
+    component \
+    override \
+    run \
+    which \
+    doc \
+    man \
+    self \
+    set \
     # "completions" \
-    "help"
+    help
 
 set -l rustup_show \
     "active-toolchain" \
-    "home" \
-    "profile" \
-    "help"
+    home \
+    profile \
+    help
 
 # rustup does not really expose a mechanism of retrieving a list of all valid components without the archs appended
 function __rustup_components
@@ -194,7 +194,7 @@ function __rustup_strip_common_suffix_strict
 end
 
 function __rustup_all_toolchains
-    set -l __rustup_channels "beta" "stable" "nightly"
+    set -l __rustup_channels beta stable nightly
     printf "%s\n" $__rustup_channels
     printf "%s\n" $__rustup_channels-(__rustup_triples)
 end
@@ -224,7 +224,7 @@ set -l __rustup_toolchains (rustup toolchain list | string replace -r "\s+.*" ''
 # but a shorter version can be used if it is unambiguous.
 set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_toolchains)
 
-set -l rustup_profiles "minimal" "default" "complete"
+set -l rustup_profiles minimal default complete
 
 complete -c rustup -n "__fish_should_complete_switches" -s v -l verbose
 complete -c rustup -n "__fish_should_complete_switches" -s h -l help

@@ -70,7 +70,7 @@ function type --description 'Print the type of a command'
                         switch $func_path
                             case "-"
                             case "n/a"
-                            case "stdin"
+                            case stdin
                                 break
                             case "*"
                                 echo $func_path

@@ -24,7 +24,7 @@ begin
     complete -c perl -s Co -n $unicode -d 'Filehandles written to are UTF-8'
     complete -c perl -s CO -n $unicode -d 'STDOUT is UTF-8'
     complete -c perl -s CS -n $unicode -d 'STDOUT, STDIN, and STDERR are UTF-8'
-    complete -c perl -s d -n $noopt -d 'Debugger'
+    complete -c perl -s d -n $noopt -d Debugger
     complete -c perl -s dt -n 'commandline | string match -qr "d\$"' -d 'Debugger, with threads'
     complete -c perl -s D -n $noopt -x -d 'Debug option'
     complete -c perl -s e -n $noopt -x -d 'Execute command'

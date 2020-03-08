@@ -87,7 +87,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
     end
 
     switch $mode
-        case 'add'
+        case add
             # Convert from old "key=value" syntax
             # TODO: This should be removed later
             if not set -q mode_arg[2]
@@ -124,7 +124,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
             set fish_user_abbreviations $fish_user_abbreviations "$key $value"
             return 0
 
-        case 'rename'
+        case rename
             set -l old_name $param1
             set -l new_name $param2
 
@@ -150,7 +150,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
             set fish_user_abbreviations[$idx] "$new_name $value"
             return 0
 
-        case 'erase'
+        case erase
             if set -l idx (__fish_abbr_get_by_key $mode_arg)
                 set -e fish_user_abbreviations[$idx]
                 return 0
@@ -159,7 +159,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
                 return 2
             end
 
-        case 'show'
+        case show
             for i in $fish_user_abbreviations
                 set -l opt_double_dash
                 set -l kv (string split " " -m 1 -- $i)
@@ -174,7 +174,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
             end
             return 0
 
-        case 'list'
+        case list
             for i in $fish_user_abbreviations
                 set -l key (string split " " -m 1 -- $i)[1]
                 printf "%s\n" $key

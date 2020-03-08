@@ -494,7 +494,7 @@ complete $sfdx_looking -xa force:org:clone -d 'clone a sandbox org'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -s a -l setalias -d 'alias for the created org'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -s f -l definitionfile -d 'path to an org definition file'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -s s -l setdefaultusername -d 'set the created org as the default username'
-complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -s t -l type -d '(required) type of org to create' -xa 'sandbox'
+complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -s t -l type -d '(required) type of org to create' -xa sandbox
 complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -s w -l wait -d '[default: 6 minutes] the streaming client socket timeout (in minutes)'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:clone' -l apiversion -d 'override the api version used for api requests made by this command'

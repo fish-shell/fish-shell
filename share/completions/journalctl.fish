@@ -23,8 +23,8 @@ function __fish_journalctl_field_values
 end
 
 complete -c journalctl -n "not __fish_journalctl_is_field" -a '(__fish_journalctl_fields)' -d "Journal field" -f
-complete -c journalctl -n "not __fish_journalctl_is_field" -a '(command journalctl -F _EXE 2>/dev/null)' -d "Executable"
-complete -c journalctl -n "not __fish_journalctl_is_field" -a '+' -d "OR"
+complete -c journalctl -n "not __fish_journalctl_is_field" -a '(command journalctl -F _EXE 2>/dev/null)' -d Executable
+complete -c journalctl -n "not __fish_journalctl_is_field" -a '+' -d OR
 complete -c journalctl -n "__fish_journalctl_is_field" -a '(__fish_journalctl_field_values)' -f -r
 
 complete -c journalctl -f -s h -l help -d 'Prints a short help text and exits'

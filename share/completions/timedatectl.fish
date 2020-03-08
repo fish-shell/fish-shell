@@ -1,7 +1,7 @@
 set -l commands status set-time{,zone} list-timezones set-local-rtc set-ntp
 
 complete -c timedatectl -f
-complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a "status"
+complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a status
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a "set-time"
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a "set-timezone"
 complete -c timedatectl -n "__fish_seen_subcommand_from set-timezone" -a "(timedatectl list-timezones)"

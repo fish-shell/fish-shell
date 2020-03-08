@@ -80,12 +80,12 @@ complete -c tmux -n "__fish_seen_subcommand_from $new" -s D -d "if -A is specifi
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s P -d "print information about the new session after creation"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s E -d "don't apply update-environment option"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs c -d 'start-directory'
-complete -c tmux -n "__fish_seen_subcommand_from $new" -xs F -d 'format'
+complete -c tmux -n "__fish_seen_subcommand_from $new" -xs F -d format
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs n -d 'window-name'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs s -d 'session-name'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs t -d 'group-name'
-complete -c tmux -n "__fish_seen_subcommand_from $new" -xs x -d 'width'
-complete -c tmux -n "__fish_seen_subcommand_from $new" -xs y -d 'height'
+complete -c tmux -n "__fish_seen_subcommand_from $new" -xs x -d width
+complete -c tmux -n "__fish_seen_subcommand_from $new" -xs y -d height
 
 complete -c tmux -n '__fish_use_subcommand' -a $refresh -d 'refresh client'
 complete -c tmux -n "__fish_seen_subcommand_from $refresh" -s S -d 'update client status bar'

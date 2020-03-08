@@ -311,11 +311,11 @@ _svn_cmpl_ $propset -a "$props"
 
 _svn_cmpl_ svn:eol-style -a "native LF CR CRLF"
 _svn_cmpl_ svn:mime-type -a "(__fish_print_xdg_mimetypes)"
-_svn_cmpl_ svn:keywords -a "URL" -d 'The URL for the head version of the object'
-_svn_cmpl_ svn:keywords -a "Author" -d 'The last person to modify the file'
-_svn_cmpl_ svn:keywords -a "Date" -d 'Last changed date'
-_svn_cmpl_ svn:keywords -a "Rev" -d 'The last revision the object changed'
-_svn_cmpl_ svn:keywords -a "Id" -d 'A compressed summary of all keywords'
+_svn_cmpl_ svn:keywords -a URL -d 'The URL for the head version of the object'
+_svn_cmpl_ svn:keywords -a Author -d 'The last person to modify the file'
+_svn_cmpl_ svn:keywords -a Date -d 'Last changed date'
+_svn_cmpl_ svn:keywords -a Rev -d 'The last revision the object changed'
+_svn_cmpl_ svn:keywords -a Id -d 'A compressed summary of all keywords'
 
 #
 # Completions for the 'relocate' subcommand

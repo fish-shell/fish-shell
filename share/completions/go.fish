@@ -23,12 +23,12 @@ complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o mod -
 # Completions for go cmds that takes file arguments
 complete -c go -n "__fish_seen_subcommand_from build compile fix fmt install run test vet" -x -a "(
             __fish_complete_suffix .go
-    )" --description 'File'
+    )" --description File
 
 # Completions for go cmds that takes pkg arguments
 complete -c go -n "__fish_seen_subcommand_from build doc fix fmt install test vet" -x -a "(
             go list -e -f '{{.ImportPath}}	{{or .Doc \"Go package\"}}' (commandline -ct)... ^/dev/null
-    )" --description 'Package'
+    )" --description Package
 
 
 # build

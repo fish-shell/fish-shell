@@ -10,7 +10,7 @@ function __fish_ruby-build_definitions
     ruby-build --definitions
 end
 
-complete -f -c ruby-build -n '__fish_ruby-build_needs_command' -a '(__fish_ruby-build_definitions)' -d 'Definition'
+complete -f -c ruby-build -n '__fish_ruby-build_needs_command' -a '(__fish_ruby-build_definitions)' -d Definition
 
 complete -f -c ruby-build -n '__fish_ruby-build_needs_command' -l keep -s k -d 'Do not remove source tree after installation'
 complete -f -c ruby-build -n '__fish_ruby-build_needs_command' -l verbose -s v -d 'Verbose mode: print compilation status to stdout'

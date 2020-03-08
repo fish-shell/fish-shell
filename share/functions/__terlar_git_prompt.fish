@@ -65,7 +65,7 @@ function __terlar_git_prompt --description 'Write out the git prompt'
                 set -a gs deleted
             case "$dq"
                 set -a gs untracked
-            case 'U*' '*U' 'DD' 'AA'
+            case 'U*' '*U' DD AA
                 set -a gs unmerged
         end
     end

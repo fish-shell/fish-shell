@@ -13,9 +13,9 @@ function fish_print_git_action --argument-names git_dir
     for action_dir in "$git_dir/rebase-apply" "$git_dir/rebase"
         if test -d "$action_dir"
             if test -f "$action_dir/rebasing"
-                echo -n 'rebase'
+                echo -n rebase
             else if test -f "$action_dir/applying"
-                echo -n 'apply'
+                echo -n apply
             else
                 echo -n 'rebase/apply'
             end
@@ -38,7 +38,7 @@ function fish_print_git_action --argument-names git_dir
     end
 
     if test -f "$git_dir/MERGE_HEAD"
-        echo -n 'merge'
+        echo -n merge
         return 0
     end
 
@@ -55,13 +55,13 @@ function fish_print_git_action --argument-names git_dir
         if test -d "$git_dir/sequencer"
             echo -n 'revert-sequence'
         else
-            echo -n 'revert'
+            echo -n revert
         end
         return 0
     end
 
     if test -f "$git_dir/BISECT_LOG"
-        echo -n 'bisect'
+        echo -n bisect
         return 0
     end
 

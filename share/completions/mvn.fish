@@ -742,8 +742,8 @@ complete -c mvn -a "android:emulator-stop-all" -d "EmulatorStopeAllMojo will sto
 complete -c mvn -a "android:generate-sources" -d "Generates R.java based on resources specified by the resources configuration parameter"
 complete -c mvn -a "android:help" -d "Display help information on android-maven-plugin"
 complete -c mvn -a "android:instrument" -d "Runs the instrumentation apk on device."
-complete -c mvn -a "android:internal-integration-test" -d "Internal"
-complete -c mvn -a "android:internal-pre-integration-test" -d "Internal"
+complete -c mvn -a "android:internal-integration-test" -d Internal
+complete -c mvn -a "android:internal-pre-integration-test" -d Internal
 complete -c mvn -a "android:lint" -d "LintMojo can run the lint command against the project"
 complete -c mvn -a "android:manifest-merger" -d "Manifest Merger V2 AndroidManifest.xml file"
 complete -c mvn -a "android:manifest-update" -d "Updates various version attributes present in the AndroidManifest.xml file."

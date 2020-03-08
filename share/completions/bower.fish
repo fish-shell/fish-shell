@@ -41,7 +41,7 @@ function __bower_args
 end
 
 function __bower_matching_pkgs
-    bower search (commandline -ct) | string match -r "\S+[^\s]" | string match -v "Search"
+    bower search (commandline -ct) | string match -r "\S+[^\s]" | string match -v Search
 end
 
 # Output of `bower list` is a) slow, b) convoluted. Use `python` or `jq` instead.

@@ -140,7 +140,7 @@ function history --description "display or manipulate interactive command histor
                     return
                 end
 
-                if test "$choice" = "all"
+                if test "$choice" = all
                     printf "Deleting all matching entries!\n"
                     for item in $found_items
                         builtin history delete --exact --case-sensitive -- $item
@@ -181,7 +181,7 @@ function history --description "display or manipulate interactive command histor
 
             printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
-            if test "$choice" = "yes"
+            if test "$choice" = yes
                 builtin history clear -- $argv
                 and printf (_ "Command history cleared!")
             else

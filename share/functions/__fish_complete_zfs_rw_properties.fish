@@ -2,16 +2,16 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
     set -l OS ""
     switch (uname)
         case Linux
-            set OS "Linux"
+            set OS Linux
         case Darwin
-            set OS "macOS"
+            set OS macOS
         case FreeBSD
-            set OS "FreeBSD"
+            set OS FreeBSD
         case SunOS
-            set OS "SunOS"
+            set OS SunOS
             # Others?
         case "*"
-            set OS "unknown"
+            set OS unknown
     end
     echo -e "aclinherit\tInheritance of ACL entries (discard, noallow, restricted, passthrough, passthrough-x)"
     echo -e "atime\tUpdate access time on read (on, off)"
@@ -68,7 +68,7 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
         set -l tabAndBefore (echo -e "groupquota@$group\t")
         printf "%sMax usage by group %s\n" $tabAndBefore $group
     end
-    if test $OS = "SunOS"
+    if test $OS = SunOS
         echo -e "aclmode\tHow is ACL modified by chmod (discard, groupmask, passthrough, restricted)"
         echo -e "mlslabel\tCan the dataset be mounted in a zone with Trusted Extensions enabled (LABEL, none)"
         echo -e "nbmand\tMount with Non Blocking mandatory locks (on, off)"
@@ -78,7 +78,7 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
         echo -e "vscan\tScan regular files for viruses on opening and closing (on, off)"
         echo -e "xattr\tExtended attributes (on, off, sa)"
         echo -e "zoned\tManaged from a non-global zone (on, off)"
-    else if test $OS = "Linux"
+    else if test $OS = Linux
         echo -e "acltype\tUse no ACL or POSIX ACL (noacl, posixacl)"
         echo -e "nbmand\tMount with Non Blocking mandatory locks (on, off)"
         echo -e "relatime\tSometimes update access time on read (on, off)"
@@ -88,7 +88,7 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
         echo -e "version\tOn-disk version of filesystem (1, 2, current)"
         echo -e "vscan\tScan regular files for viruses on opening and closing (on, off)"
         echo -e "xattr\tExtended attributes (on, off, sa)"
-    else if test $OS = "FreeBSD"
+    else if test $OS = FreeBSD
         echo -e "aclmode\tHow is ACL modified by chmod (discard, groupmask, passthrough, restricted)"
         echo -e "volmode\tHow to expose volumes to OS (default, geom, dev, none)"
     end

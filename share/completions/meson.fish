@@ -37,7 +37,7 @@ for arg in $dir_arguments
     complete -c meson -l "$parts[2]" -d "$parts[3]" -xa '(__fish_complete_directories)'
 end
 
-complete -c meson -s "D" -d "Set value of an option (-D foo=bar)"
+complete -c meson -s D -d "Set value of an option (-D foo=bar)"
 
 complete -c meson -l buildtype -xa 'plain debug debugoptimized release minsize' -d "Set build type [debug]"
 complete -c meson -l layout -xa 'mirror flat' -d "Build directory layout [mirror]"

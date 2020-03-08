@@ -12,31 +12,31 @@ complete -f -c ttx -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf
 complete -c ttx -f -n '__fish_is_first_token' -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx)'
 
 # General options
-complete -c ttx -f -s 'h' -d'Show help message'
-complete -c ttx -f -l 'version' -d'Show version info'
-complete -c ttx -x -s 'd' -d'Set output folder' -a '(__fish_complete_directories)'
-complete -c ttx -r -s 'o' -d'Set output filename' -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx)'
-complete -c ttx -f -s 'f' -d'Force output overwrite'
-complete -c ttx -f -s 'v' -d'Verbose output'
-complete -c ttx -f -s 'q' -d'Quiet mode'
-complete -c ttx -f -s 'a' -d'Allow virtual glyph IDs'
+complete -c ttx -f -s h -d'Show help message'
+complete -c ttx -f -l version -d'Show version info'
+complete -c ttx -x -s d -d'Set output folder' -a '(__fish_complete_directories)'
+complete -c ttx -r -s o -d'Set output filename' -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx)'
+complete -c ttx -f -s f -d'Force output overwrite'
+complete -c ttx -f -s v -d'Verbose output'
+complete -c ttx -f -s q -d'Quiet mode'
+complete -c ttx -f -s a -d'Allow virtual glyph IDs'
 
 # Dump options
-complete -c ttx -f -s 'l' -d'List table info'
-complete -c ttx -x -s 't' -d'Dump named table' -a "$table_names"
-complete -c ttx -x -s 'x' -d'Exclude named table' -a "$table_names"
-complete -c ttx -f -s 's' -d'Split tables'
-complete -c ttx -f -s 'g' -d'Split glyf tables'
-complete -c ttx -f -s 'i' -d'Do NOT disassemble TT instructions'
-complete -c ttx -x -s 'z' -d'Use FORMAT for EBDT or CBDT' -a "$formats"
-complete -c ttx -f -s 'e' -d'Don\'t ignore decompilation errors'
-complete -c ttx -x -s 'y' -d'Select font index for TrueType Collection'
-complete -c ttx -x -l 'unicodedata' -d'Custom database for character names [UnicodeData.txt]' -a '(__fish_complete_suffix .txt)'
-complete -c ttx -x -l 'newline' -d'Set EOL format' -a "$line_endings"
+complete -c ttx -f -s l -d'List table info'
+complete -c ttx -x -s t -d'Dump named table' -a "$table_names"
+complete -c ttx -x -s x -d'Exclude named table' -a "$table_names"
+complete -c ttx -f -s s -d'Split tables'
+complete -c ttx -f -s g -d'Split glyf tables'
+complete -c ttx -f -s i -d'Do NOT disassemble TT instructions'
+complete -c ttx -x -s z -d'Use FORMAT for EBDT or CBDT' -a "$formats"
+complete -c ttx -f -s e -d'Don\'t ignore decompilation errors'
+complete -c ttx -x -s y -d'Select font index for TrueType Collection'
+complete -c ttx -x -l unicodedata -d'Custom database for character names [UnicodeData.txt]' -a '(__fish_complete_suffix .txt)'
+complete -c ttx -x -l newline -d'Set EOL format' -a "$line_endings"
 
 # Compile options
-complete -c ttx -x -s 'm' -d'Merge named TTF/OTF with SINGLE .ttx input' -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf)'
-complete -c ttx -f -s 'b' -d'Don\'t recalculate glyph bounding boxes'
+complete -c ttx -x -s m -d'Merge named TTF/OTF with SINGLE .ttx input' -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf)'
+complete -c ttx -f -s b -d'Don\'t recalculate glyph bounding boxes'
 complete -c ttx -f -l 'recalc-timestamp' -d'Set font modified timestamp to current time'
-complete -c ttx -x -l 'flavor' -d'Set WOFF flavor' -a "$woff_fmts"
+complete -c ttx -x -l flavor -d'Set WOFF flavor' -a "$woff_fmts"
 complete -c ttx -f -l 'with-zopfli' -d'Compress with zopfli instead of zlib'

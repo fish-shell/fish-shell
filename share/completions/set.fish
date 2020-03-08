@@ -108,5 +108,5 @@ complete -c set -n '__fish_set_is_color' -s b -l background -x -a '(set_color --
 complete -c set -n '__fish_set_is_color' -s o -l bold -d 'Make font bold'
 
 # Locale completions
-complete -c set -n '__fish_set_is_locale; and not __fish_seen_argument -s e -l erase' -x -a '(command -sq locale; and locale -a)' -d "Locale"
+complete -c set -n '__fish_set_is_locale; and not __fish_seen_argument -s e -l erase' -x -a '(command -sq locale; and locale -a)' -d Locale
 complete -c set -s L -l long -d 'Do not truncate long lines'

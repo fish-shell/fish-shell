@@ -28,7 +28,7 @@ end
 
 # general flags
 ## ones that work without any subcommand
-complete -f -c opam -l 'help' -d "Display the manual for an OPAM command."
+complete -f -c opam -l help -d "Display the manual for an OPAM command."
 complete -f -c opam -l version -d 'Show version information.'
 ## ones that require at least a subcommand (but are shared by all)
 ### colour
@@ -81,24 +81,24 @@ complete -f -c opam -n '__fish_opam_using_command config' -a bytelink -d 'return
 complete -f -c opam -n '__fish_opam_using_command config' -a report -d 'Prints a summary of your setup, useful for bug-reports.'
 
 # TODO all subcommands other than config (and admin?)
-complete -f -c opam -n '__fish_opam_needs_command' -a "help" -d "Display help about OPAM and OPAM commands."
-complete -f -c opam -n '__fish_opam_needs_command' -a "init" -d "Initialize OPAM state."
-complete -f -c opam -n '__fish_opam_needs_command' -a "install" -d "Install a list of packages."
-complete -f -c opam -n '__fish_opam_needs_command' -a "list" -d "Display the list of available packages."
-complete -f -c opam -n '__fish_opam_needs_command' -a "pin" -d "Pin a given package to a specific version."
-complete -f -c opam -n '__fish_opam_needs_command' -a "reinstall" -d "Reinstall a list of packages."
+complete -f -c opam -n '__fish_opam_needs_command' -a help -d "Display help about OPAM and OPAM commands."
+complete -f -c opam -n '__fish_opam_needs_command' -a init -d "Initialize OPAM state."
+complete -f -c opam -n '__fish_opam_needs_command' -a install -d "Install a list of packages."
+complete -f -c opam -n '__fish_opam_needs_command' -a list -d "Display the list of available packages."
+complete -f -c opam -n '__fish_opam_needs_command' -a pin -d "Pin a given package to a specific version."
+complete -f -c opam -n '__fish_opam_needs_command' -a reinstall -d "Reinstall a list of packages."
 complete -f -c opam -n '__fish_opam_needs_command' -a "remove uninstall" -d "Remove a list of packages."
 complete -f -c opam -n '__fish_opam_needs_command' -a "repository remote" -d "Manage OPAM repositories."
-complete -f -c opam -n '__fish_opam_needs_command' -a "search" -d "Search into the package list."
+complete -f -c opam -n '__fish_opam_needs_command' -a search -d "Search into the package list."
 complete -f -c opam -n '__fish_opam_needs_command' -a "show info" -d "Display information about specific packages."
 complete -f -c opam -n '__fish_opam_needs_command' -a switch -d "Manage multiple installation of compilers."
-complete -f -c opam -n '__fish_opam_needs_command' -a "update" -d "Update the list of available packages."
-complete -f -c opam -n '__fish_opam_needs_command' -a "upgrade" -d "Upgrade the installed package to latest version."
+complete -f -c opam -n '__fish_opam_needs_command' -a update -d "Update the list of available packages."
+complete -f -c opam -n '__fish_opam_needs_command' -a upgrade -d "Upgrade the installed package to latest version."
 ## admin
-complete -f -c opam -n '__fish_opam_needs_command' -a "admin" -d "Administration tool for local repositories."
-complete -c opam -n '__fish_opam_using_command admin' -l 'help' -d 'Show this help in format FMT (pager, plain or groff).'
-complete -c opam -n '__fish_opam_using_command admin' -l 'version' -d 'Show version information.'
-complete -f -c opam -n '__fish_opam_using_command admin' -a "check" -d "Check a local repo for errors."
-complete -f -c opam -n '__fish_opam_using_command admin' -a "depexts" -d "Add external dependencies."
-complete -f -c opam -n '__fish_opam_using_command admin' -a "make" -d "Initialize a repo for serving files."
-complete -f -c opam -n '__fish_opam_using_command admin' -a "stats" -d "Compute statistics."
+complete -f -c opam -n '__fish_opam_needs_command' -a admin -d "Administration tool for local repositories."
+complete -c opam -n '__fish_opam_using_command admin' -l help -d 'Show this help in format FMT (pager, plain or groff).'
+complete -c opam -n '__fish_opam_using_command admin' -l version -d 'Show version information.'
+complete -f -c opam -n '__fish_opam_using_command admin' -a check -d "Check a local repo for errors."
+complete -f -c opam -n '__fish_opam_using_command admin' -a depexts -d "Add external dependencies."
+complete -f -c opam -n '__fish_opam_using_command admin' -a make -d "Initialize a repo for serving files."
+complete -f -c opam -n '__fish_opam_using_command admin' -a stats -d "Compute statistics."

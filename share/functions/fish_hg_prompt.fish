@@ -74,7 +74,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
                     set -a hg_statuses deleted
                 case "$dq "
                     set -a hg_statuses untracked
-                case 'U*' '*U' 'DD' 'AA'
+                case 'U*' '*U' DD AA
                     set -a hg_statuses unmerged
             end
         end

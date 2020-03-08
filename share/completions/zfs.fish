@@ -315,7 +315,7 @@ complete -c zfs -x -n '__fish_zfs_using_command rename' -d 'Dataset to rename' -
 complete -c zfs -f -n '__fish_zfs_using_command list' -s H -d 'Print output in a machine-parsable format'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s r -d 'Operate recursively on datasets'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_contains_opt -s r' -s d -d 'Maximum recursion depth'
-complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name""; echo -e "space\tSpace properties"")'
+complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name"; echo -e "space\tSpace properties"))'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name")'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name")'
@@ -334,7 +334,7 @@ complete -c zfs -x -n '__fish_zfs_using_command get' -s o -d 'Fields to display'
 complete -c zfs -x -n '__fish_zfs_using_command get' -s s -d 'Property source to display' -a '(__fish_append , (__fish_zfs_list_source_types))'
 complete -c zfs -f -n '__fish_zfs_using_command get' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zfs -x -n '__fish_zfs_using_command get' -s t -d 'Dataset type' -a '(__fish_append , (__fish_zfs_list_dataset_types))'
-complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all")'
+complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all"))'
 complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Dataset which properties is to be got' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 
 # inherit completions

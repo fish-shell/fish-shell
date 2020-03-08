@@ -7,7 +7,7 @@ function __fish_iptables_current_table
             case "--table=*"
                 echo (string split -m1 = -- $token)[2]
                 return 0
-            case "--table"
+            case --table
                 set next_is_table 0
             case "-*t*"
                 set next_is_table 0
@@ -106,8 +106,8 @@ complete -c iptables -n '__fish_contains_opt -s A -s C -s D append check delete;
 '(__fish_iptables_targets)'
 
 complete -c iptables -n '__fish_contains_opt -s A -s C -s D append check delete; and __fish_iptables_has_chain' -s m -l match -d 'Specify a match to use' -f
-complete -c iptables -n '__fish_iptables_has_chain' -a 'ACCEPT DROP RETURN' -f
-complete -c iptables -n '__fish_iptables_has_chain' -a '( __fish_iptables_user_chains)' -f
+complete -c iptables -n __fish_iptables_has_chain -a 'ACCEPT DROP RETURN' -f
+complete -c iptables -n __fish_iptables_has_chain -a '( __fish_iptables_user_chains)' -f
 complete -c iptables -s I -l insert -d 'Insert rules in the beginning of a chain' -a '(__fish_iptables_chains)' -f
 complete -c iptables -s R -l replace -d 'Replace a rule in a chain' -a '(__fish_iptables_chains)' -f
 complete -c iptables -s L -l list -d 'List all rules in a chain' -a '(__fish_iptables_chains)' -f

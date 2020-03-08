@@ -72,7 +72,7 @@ function __helm_kube_contexts
 end
 
 function __helm_kube_namespaces
-    kubectl get namespaces -o name | string replace 'namespace/' ''
+    kubectl get namespaces -o name | string replace namespace/ ''
 end
 
 function __helm_releases

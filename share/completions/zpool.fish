@@ -44,11 +44,11 @@ end
 
 function __fish_zpool_list_available_vdevs
     if test $OS = Linux
-        find /dev -type b | string replace '/dev/' ''
+        find /dev -type b | string replace /dev/ ''
     else if test $OS = FreeBSD
         sysctl -an kern.disks | string split ' '
     else if test $OS = SunOS
-        find /dev/dsk -type b | string replace '/dev/' ''
+        find /dev/dsk -type b | string replace /dev/ ''
     end
 end
 
@@ -167,34 +167,34 @@ function __fish_zpool_list_rw_properties
     zpool list -o all | string replace -ra ' +' '\n' | string lower | string replace -rf '^feature@(.*)' '$1'
 end
 
-complete -c zpool -f -n '__fish_zpool_needs_command' -s '?' -d 'Display a help message'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a add -d 'Add new virtual devices to pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a attach -d 'Attach virtual device to a pool device'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a clear -d 'Clear devices errors in pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a create -d 'Create a new storage pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a destroy -d 'Destroy a storage pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a detach -d 'Detach virtual device from a mirroring pool'
+complete -c zpool -f -n __fish_zpool_needs_command -s '?' -d 'Display a help message'
+complete -c zpool -f -n __fish_zpool_needs_command -a add -d 'Add new virtual devices to pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a attach -d 'Attach virtual device to a pool device'
+complete -c zpool -f -n __fish_zpool_needs_command -a clear -d 'Clear devices errors in pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a create -d 'Create a new storage pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a destroy -d 'Destroy a storage pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a detach -d 'Detach virtual device from a mirroring pool'
 if test $OS = Linux
-    complete -c zpool -f -n '__fish_zpool_needs_command' -a events -d 'Display pool event log'
+    complete -c zpool -f -n __fish_zpool_needs_command -a events -d 'Display pool event log'
 end
-complete -c zpool -f -n '__fish_zpool_needs_command' -a export -d 'Export a pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a get -d 'Get one or several pool properties'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a history -d 'Display pool command history'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a import -d 'List importable pools, or import some'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a iostat -d 'Display pool I/O stats'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a labelclear -d 'Remove ZFS label information from the specified device'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a list -d 'List pools with health status and space usage'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a offline -d 'Take the specified devices offline'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a online -d 'Bring the specified devices back online'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a reguid -d 'Reset pool GUID'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a remove -d 'Remove virtual devices from pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a reopen -d 'Reopen pool devices'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a replace -d 'Replace a pool virtual device'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a scrub -d 'Start or stop scrubbing'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a set -d 'Set a pool property'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a split -d 'Create a pool by splitting an existing mirror one'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a status -d 'Display detailed pool health status'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a upgrade -d 'List upgradeable pools, or upgrade one'
+complete -c zpool -f -n __fish_zpool_needs_command -a export -d 'Export a pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a get -d 'Get one or several pool properties'
+complete -c zpool -f -n __fish_zpool_needs_command -a history -d 'Display pool command history'
+complete -c zpool -f -n __fish_zpool_needs_command -a import -d 'List importable pools, or import some'
+complete -c zpool -f -n __fish_zpool_needs_command -a iostat -d 'Display pool I/O stats'
+complete -c zpool -f -n __fish_zpool_needs_command -a labelclear -d 'Remove ZFS label information from the specified device'
+complete -c zpool -f -n __fish_zpool_needs_command -a list -d 'List pools with health status and space usage'
+complete -c zpool -f -n __fish_zpool_needs_command -a offline -d 'Take the specified devices offline'
+complete -c zpool -f -n __fish_zpool_needs_command -a online -d 'Bring the specified devices back online'
+complete -c zpool -f -n __fish_zpool_needs_command -a reguid -d 'Reset pool GUID'
+complete -c zpool -f -n __fish_zpool_needs_command -a remove -d 'Remove virtual devices from pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a reopen -d 'Reopen pool devices'
+complete -c zpool -f -n __fish_zpool_needs_command -a replace -d 'Replace a pool virtual device'
+complete -c zpool -f -n __fish_zpool_needs_command -a scrub -d 'Start or stop scrubbing'
+complete -c zpool -f -n __fish_zpool_needs_command -a set -d 'Set a pool property'
+complete -c zpool -f -n __fish_zpool_needs_command -a split -d 'Create a pool by splitting an existing mirror one'
+complete -c zpool -f -n __fish_zpool_needs_command -a status -d 'Display detailed pool health status'
+complete -c zpool -f -n __fish_zpool_needs_command -a upgrade -d 'List upgradeable pools, or upgrade one'
 
 # add completions
 complete -c zpool -f -n '__fish_zpool_using_command add' -s f -d 'Force use of virtual device'

@@ -1,5 +1,5 @@
 function prompt_pwd --description "Print the current working directory, shortened to fit the prompt"
-    set -l options 'h/help'
+    set -l options h/help
     argparse -n prompt_pwd --max-args=0 $options -- $argv
     or return
 

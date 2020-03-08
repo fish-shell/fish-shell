@@ -47,7 +47,7 @@ function __fish_heroku_using_command
     return 1
 end
 
-set -l heroku_looking -c heroku -n '__fish_heroku_needs_command'
+set -l heroku_looking -c heroku -n __fish_heroku_needs_command
 
 # Main commands
 complete $heroku_looking -xa addons -d 'list installed addons'

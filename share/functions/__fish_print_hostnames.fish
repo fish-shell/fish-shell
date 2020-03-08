@@ -40,10 +40,10 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         set -l ssh_func_tokens (functions ssh | string match '*command ssh *' | string split ' ')
         set -l ssh_command $ssh_func_tokens (commandline -cpo)
         # Extract ssh config path from last -F short option.
-        if contains -- '-F' $ssh_command
+        if contains -- -F $ssh_command
             set -l ssh_config_path_is_next 1
             for token in $ssh_command
-                if contains -- '-F' $token
+                if contains -- -F $token
                     set ssh_config_path_is_next 0
                 else if test $ssh_config_path_is_next -eq 0
                     set ssh_config (eval "echo $token")
@@ -59,7 +59,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         # system or user level config. -F will not override this behaviour
         set -l relative_path $HOME/.ssh
         if string match '/etc/ssh/*' -- $ssh_config
-            set relative_path '/etc/ssh'
+            set relative_path /etc/ssh
         end
 
         function _recursive --no-scope-shadowing

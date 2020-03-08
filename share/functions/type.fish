@@ -3,7 +3,7 @@ function type --description 'Print the type of a command'
     set -q argv[1]
     or return 1
 
-    set -l options 'h/help' 'a/all' 's/short' 'f/no-functions' 't/type' 'p/path' 'P/force-path' 'q/quiet'
+    set -l options h/help a/all s/short f/no-functions t/type p/path P/force-path q/quiet
     argparse -n type -x t,p,P $options -- $argv
     or return
 
@@ -68,8 +68,8 @@ function type --description 'Print the type of a command'
                     case path
                         set -l func_path (functions --details $i)
                         switch $func_path
-                            case "-"
-                            case "n/a"
+                            case -
+                            case n/a
                             case stdin
                                 break
                             case "*"

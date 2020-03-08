@@ -78,7 +78,7 @@ function __minikube_config_fields
 end
 
 # Sub-commands
-complete -c minikube -f -n "__minikube_no_command" -a "(__minikube_list_subcommands)"
+complete -c minikube -f -n __minikube_no_command -a "(__minikube_list_subcommands)"
 
 # Shared options
 complete -c minikube -l alsologtostderr -d "Log to standard error as well as files"
@@ -125,7 +125,7 @@ complete -c minikube -n "__minikube_using_command config; and __fish_seen_subcom
 complete -c minikube -n "__minikube_using_command dashboard" -l url -d "Display the kubernetes dashboard URL instead of opening it"
 
 # Sub-command: docker-env
-complete -c minikube -n "__minikube_using_command docker-env" -l "no-proxy" -d "Add machine IP to NO_PROXY environment variable"
+complete -c minikube -n "__minikube_using_command docker-env" -l no-proxy -d "Add machine IP to NO_PROXY environment variable"
 complete -c minikube -f -n "__minikube_using_command docker-env" -l shell -d "Force environment to be configured for a specified shell"
 complete -c minikube -n "__minikube_using_command docker-env" -l unset -s u -d "Unset variables"
 
@@ -140,26 +140,26 @@ complete -c minikube -n "__minikube_using_command service" -l namespace -s n -d 
 complete -c minikube -n "__minikube_using_command service" -l url -d "Display the kubernetes service URL instead of opening it"
 
 # Sub-command: start
-complete -c minikube -n "__minikube_using_command start" -l "container-runtime" -d "The container runtime to be used"
+complete -c minikube -n "__minikube_using_command start" -l container-runtime -d "The container runtime to be used"
 complete -c minikube -n "__minikube_using_command start" -l cpus -d "Number of CPUs allocated to the minikube VM (default 2)"
-complete -c minikube -n "__minikube_using_command start" -l "disk-size" -d "Disk size allocated to the minikube VM (format: <number>[<unit>], where unit = b, k, m or g) (default 20g)"
-complete -c minikube -n "__minikube_using_command start" -l "docker-env" -d "Environment variables to pass to the Docker daemon (format: key=value)"
-complete -c minikube -n "__minikube_using_command start" -l "extra-config" -d "A set of key=value pairs that describe configuration that may be passed to different components"
-complete -c minikube -n "__minikube_using_command start" -l "feature-gates" -d "A set of key=value pairs that describe feature gates for alpha/experimental features"
-complete -c minikube -n "__minikube_using_command start" -l "insecure-registry" -d "Insecure Docker registries to pass to the Docker daemon"
-complete -c minikube -n "__minikube_using_command start" -l "iso-url" -d "Location of the minikube iso"
-complete -c minikube -n "__minikube_using_command start" -l "keep-context" -d "Keep the existing kubectl context and create a minikube context instead"
-complete -c minikube -n "__minikube_using_command start" -l "kubernetes-version" -d "The kubernetes version that the minikube VM will use"
+complete -c minikube -n "__minikube_using_command start" -l disk-size -d "Disk size allocated to the minikube VM (format: <number>[<unit>], where unit = b, k, m or g) (default 20g)"
+complete -c minikube -n "__minikube_using_command start" -l docker-env -d "Environment variables to pass to the Docker daemon (format: key=value)"
+complete -c minikube -n "__minikube_using_command start" -l extra-config -d "A set of key=value pairs that describe configuration that may be passed to different components"
+complete -c minikube -n "__minikube_using_command start" -l feature-gates -d "A set of key=value pairs that describe feature gates for alpha/experimental features"
+complete -c minikube -n "__minikube_using_command start" -l insecure-registry -d "Insecure Docker registries to pass to the Docker daemon"
+complete -c minikube -n "__minikube_using_command start" -l iso-url -d "Location of the minikube iso"
+complete -c minikube -n "__minikube_using_command start" -l keep-context -d "Keep the existing kubectl context and create a minikube context instead"
+complete -c minikube -n "__minikube_using_command start" -l kubernetes-version -d "The kubernetes version that the minikube VM will use"
 complete -c minikube -n "__minikube_using_command start" -l memory -d "Amount of RAM allocated to the minikube VM (default 2048)"
-complete -c minikube -n "__minikube_using_command start" -l "network-plugin" -d "The name of the network plugin"
-complete -c minikube -n "__minikube_using_command start" -l "registry-mirror" -d "Registry mirrors to pass to the Docker daemon"
-complete -c minikube -f -n "__minikube_using_command start" -l "vm-driver" -d "VM driver to use (default virtualbox)"
+complete -c minikube -n "__minikube_using_command start" -l network-plugin -d "The name of the network plugin"
+complete -c minikube -n "__minikube_using_command start" -l registry-mirror -d "Registry mirrors to pass to the Docker daemon"
+complete -c minikube -f -n "__minikube_using_command start" -l vm-driver -d "VM driver to use (default virtualbox)"
 
 complete -c minikube -f -n "__minikube_using_command start; and __minikube_using_option --vm-driver" -a "virtualbox kvm hyperv" -d "VM driver"
 
-complete -c minikube -n "__minikube_using_command start; and __minikube_using_option_value --vm-driver virtualbox" -l "host-only-cidr" -d "The CIDR to be used for the VM"
-complete -c minikube -n "__minikube_using_command start; and __minikube_using_option_value --vm-driver kvm" -l "kvm-network" -d "The KVM network name"
-complete -c minikube -n "__minikube_using_command start; and __minikube_using_option_value --vm-driver hyperv" -l "hyperv-virtual-switch" -d "The hyperv virtual switch name"
+complete -c minikube -n "__minikube_using_command start; and __minikube_using_option_value --vm-driver virtualbox" -l host-only-cidr -d "The CIDR to be used for the VM"
+complete -c minikube -n "__minikube_using_command start; and __minikube_using_option_value --vm-driver kvm" -l kvm-network -d "The KVM network name"
+complete -c minikube -n "__minikube_using_command start; and __minikube_using_option_value --vm-driver hyperv" -l hyperv-virtual-switch -d "The hyperv virtual switch name"
 
 # Sub-command: status
 complete -c minikube -n "__minikube_using_command status" -l format -d "Go template format string for the status output"

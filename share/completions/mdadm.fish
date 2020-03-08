@@ -44,34 +44,34 @@ function __fish_mdadm_level_options
 end
 
 function __fish_mdadm_layout_options # To be clarified
-    echo -e "left-asymmetric"
-    echo -e "left-symmetric"
-    echo -e "right-asymmetric"
-    echo -e "right-symmetric"
+    echo -e left-asymmetric
+    echo -e left-symmetric
+    echo -e right-asymmetric
+    echo -e right-symmetric
     echo -e "la\tAlias of left-asymmetric"
     echo -e "ra\tAlias of right-asymmetric"
     echo -e "ls\tAlias of left-symmetric"
     echo -e "rs\tAlias of right-symmetric"
-    echo -e "parity-first"
-    echo -e "parity-last"
-    echo -e "ddf-zero-restart"
-    echo -e "ddf-N-restart"
-    echo -e "ddf-N-continue"
-    echo -e "left-symmetric-6"
-    echo -e "right-symmetric-6"
-    echo -e "left-asymmetric-6"
-    echo -e "right-asymmetric-6"
-    echo -e "parity-first-6"
-    echo -e "write-transient"
+    echo -e parity-first
+    echo -e parity-last
+    echo -e ddf-zero-restart
+    echo -e ddf-N-restart
+    echo -e ddf-N-continue
+    echo -e left-symmetric-6
+    echo -e right-symmetric-6
+    echo -e left-asymmetric-6
+    echo -e right-asymmetric-6
+    echo -e parity-first-6
+    echo -e write-transient
     echo -e "wt\tAlias of write-transient"
-    echo -e "read-transient"
+    echo -e read-transient
     echo -e "rt\tAlias of read-transient"
-    echo -e "write-persistent"
+    echo -e write-persistent
     echo -e "wp\tAlias of write-persistent"
-    echo -e "read-persistent"
+    echo -e read-persistent
     echo -e "rp\tAlias of read-persistent"
-    echo -e "write-all"
-    echo -e "read-fixable"
+    echo -e write-all
+    echo -e read-fixable
     echo -e "rf\tAlias of read-fixable"
     echo -e clear
     echo -e flush
@@ -132,7 +132,7 @@ complete -c mdadm -s q -l quiet -d "Be quiet"
 complete -c mdadm -s f -l force -d "Force operation"
 complete -c mdadm -s c -l config -r -d "Specify config file or directory"
 complete -c mdadm -s s -l scan -d "Scan for missing information"
-complete -c mdadm -s e -l metadata -a "__fish_mdadm_metadata_options" -x -d "Set metadata style to use"
+complete -c mdadm -s e -l metadata -a __fish_mdadm_metadata_options -x -d "Set metadata style to use"
 complete -c mdadm -l homehost -x -d "Provide home host identity"
 complete -c mdadm -l prefer -x -d "Give name format preference"
 complete -c mdadm -l home-cluster -x -d "Give cluster name"
@@ -142,8 +142,8 @@ complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -s z
 complete -c mdadm -n '__fish_contains_opt -s G grow' -s Z -l array-size -x -d "Specify the size made available on the array"
 complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -s c -l chunk -x -d "Specify the chunk size"
 complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -l rounding -x -d "Specify rounding factor"
-complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -s l -l level -a "__fish_mdadm_level_options" -x -d "Specify RAID level"
-complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -s p -l layout -l parity -a "__fish_mdadm_layout_options" -x -d "Specify data layout"
+complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -s l -l level -a __fish_mdadm_level_options -x -d "Specify RAID level"
+complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -s p -l layout -l parity -a __fish_mdadm_layout_options -x -d "Specify data layout"
 complete -c mdadm -n '__fish_contains_opt -s A assemble -s B build -s C create -s G grow' -s b -l bitmap -r -d "Specify file for write-intent bitmap"
 complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -l bitmap-chunk -x -d "Specify chunksize of bitmap"
 complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow -s a add' -s W -l write-mostly -d "Prefer reading from other devices than these"
@@ -156,7 +156,7 @@ complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -l d
 complete -c mdadm -n '__fish_contains_opt -s G grow' -l continue -d "Resume frozen --grow command"
 complete -c mdadm -n '__fish_contains_opt -s A assemble -s B build -s C create' -s N -l name -x -d "Set array name"
 complete -c mdadm -n '__fish_contains_opt -s A assemble -s B build -s C create -s I incremental; or __fish_not_contain_opt -s F follow monitor -s G grow' -s R -l run -d "Run array despite warnings"
-complete -c mdadm -n '__fish_contains_opt -s A assemble -s B build -s C create' -s a -l auto -l level -a "__fish_mdadm_level_options" -x -d "Give instruction for device file" # May be improved with device numbers management
+complete -c mdadm -n '__fish_contains_opt -s A assemble -s B build -s C create' -s a -l auto -l level -a __fish_mdadm_level_options -x -d "Give instruction for device file" # May be improved with device numbers management
 complete -c mdadm -n '__fish_contains_opt -s A assemble -s G grow' -s a -l add -d "Add devices to array"
 complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -l nodes -d "Specify max nodes in the cluster"
 complete -c mdadm -n '__fish_contains_opt -s B build -s C create -s G grow' -l write-journal -d "Specify journal device for RAID-4/5/6 array"
@@ -164,7 +164,7 @@ complete -c mdadm -n '__fish_contains_opt -s A assemble' -s u -l uuid -x -d "UUI
 complete -c mdadm -n '__fish_contains_opt -s A assemble' -s m -l super-minor -x -d "Minor number of array device"
 complete -c mdadm -n '__fish_contains_opt -s A assemble; and __fish_contains_opt -s s scan' -l no-degraded -d "Refuse to start without all drives"
 complete -c mdadm -n '__fish_contains_opt -s A assemble' -l invalid-backup -d "Do not ask for backup file, unavailable"
-complete -c mdadm -n '__fish_contains_opt -s A assemble' -s U -l update -a "__fish_mdadm_update_options" -x -d "Update superblock properties"
+complete -c mdadm -n '__fish_contains_opt -s A assemble' -s U -l update -a __fish_mdadm_update_options -x -d "Update superblock properties"
 complete -c mdadm -n '__fish_contains_opt -s A assemble' -l freeze-reshape -d "Freeze --grow command"
 complete -c mdadm -n '__fish_contains_opt -s F follow monitor; or __fish_not_contain_opt -s A assemble -s B build -s C create -s G grow -s I incremental auto-detect' -s t -l test -d "Test mode" # To be clarified
 complete -c mdadm -n '__fish_contains_opt -s G grow; or __fish_not_contain_opt -s A assemble -s B build -s C create -s F follow monitor -s I incremental auto-detect' -s a -l add -d "Hot-add listed devices"
@@ -191,7 +191,7 @@ complete -c mdadm -n '__fish_not_contain_opt -s A assemble -s B build -s C creat
 complete -c mdadm -n '__fish_not_contain_opt -s A assemble -s B build -s C create -s F follow monitor -s G grow -s I incremental auto-detect' -l update-subarray -r -d "Update subarray" # To be clarified
 complete -c mdadm -n '__fish_not_contain_opt -s A assemble -s B build -s C create -s F follow monitor -s G grow -s I incremental auto-detect' -s W -l wait -d "Wait for pending operations"
 complete -c mdadm -l wait-clean -d "Mark array as clean ASAP"
-complete -c mdadm -n '__fish_not_contain_opt -s A assemble -s B build -s C create -s F follow monitor -s G grow -s I incremental auto-detect' -l action -a "__fish_mdadm_action_options" -x -d "Set sync action for md devices"
+complete -c mdadm -n '__fish_not_contain_opt -s A assemble -s B build -s C create -s F follow monitor -s G grow -s I incremental auto-detect' -l action -a __fish_mdadm_action_options -x -d "Set sync action for md devices"
 complete -c mdadm -n '__fish_contains_opt -s I incremental' -s r -l rebuild-map -d "Rebuild /run/mdadm/map"
 complete -c mdadm -n '__fish_contains_opt -s I incremental; and __fish_contains_opt -s f fail set-faulty' -l path -r -d "Automatically add eventually appearing device to array"
 complete -c mdadm -n '__fish_contains_opt -s F follow monitor' -s m -l mail -x -d "Mail address to send alerts to"

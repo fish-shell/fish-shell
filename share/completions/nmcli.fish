@@ -58,7 +58,7 @@ complete -c nmcli -n "contains_seq connection up -- (commandline -op) && not con
 complete -c nmcli -n "contains_seq connection up -- (commandline -op) && test (commandline -op)[-1] = ifname" -xa "$ifname" -k
 complete -c nmcli -n "contains_seq connection up -- (commandline -op) && test (commandline -op)[-1] = ap" -xa "$bssid"
 complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa nsp -d 'Specify NSP to connect to (only for WiMAX)'
-complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa 'passwd-file' -d 'password file to activate the connection'
+complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa passwd-file -d 'password file to activate the connection'
 complete -c nmcli -n "contains_seq connection down -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection add -- (commandline -op)" -xa 'type ifname con-name autoconnect save master slave-type help'
 complete -c nmcli -n "contains_seq connection add -- (commandline -op) && test (commandline -op)[-1] = ifname" -xa "$ifname"
@@ -67,7 +67,7 @@ complete -c nmcli -n "contains_seq connection modify -- (commandline -op)" -xa "
 complete -c nmcli -n "contains_seq connection clone -- (commandline -op)" -l temporary
 complete -c nmcli -n "contains_seq connection clone -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection edit -- (commandline -op)" -xa "type help $cname" -k
-complete -c nmcli -n "contains_seq connection edit type -- (commandline -op)" -xa 'con-name'
+complete -c nmcli -n "contains_seq connection edit type -- (commandline -op)" -xa con-name
 complete -c nmcli -n "contains_seq connection delete -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection monitor -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection import -- (commandline -op)" -l temporary

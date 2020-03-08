@@ -399,7 +399,7 @@ complete -c hg -l color -x -a "true false always auto never debug" -d "when to c
 complete -c hg -l pager -x -a "true false always auto never" -d "when to paginate"
 
 # subcommands
-complete -c hg -n "__fish_hg_needs_command" -x -a "(__fish_hg_commands)"
+complete -c hg -n __fish_hg_needs_command -x -a "(__fish_hg_commands)"
 
 # hg add
 complete -c hg -n "__fish_hg_using_command add" -f -a "(__fish_hg_status -u)"

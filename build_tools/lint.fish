@@ -31,7 +31,7 @@ end
 # be harmless everywhere else.
 set cppcheck_args $cppcheck_args -I /usr/include -I .
 
-if test "$machine_type" = "x86_64"
+if test "$machine_type" = x86_64
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
 end
 

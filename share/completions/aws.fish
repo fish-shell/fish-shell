@@ -87,8 +87,8 @@ complete -c aws -n "__s3_is_maybe_bucket && __s3_cmd_in ls rb rm" -xa "(__s3_ls_
 complete -c aws -n "__s3_is_maybe_bucket && __s3_cmd_in mv cp presign mb sync" -a "(__s3_ls_buckets)"
 
 # Complete the paths themselves
-complete -c aws -n "__s3_is_remote_path" -xa "(__s3_ls_dir)"
-complete -c aws -n "__s3_is_bucket" -xa "(__s3_ls_buckets)"
+complete -c aws -n __s3_is_remote_path -xa "(__s3_ls_dir)"
+complete -c aws -n __s3_is_bucket -xa "(__s3_ls_buckets)"
 
 # This list is extracted from the output of `aws help`, which can't be ingested directly,
 # as it emits considerable ANSI output and other terminal control characters.
@@ -270,4 +270,4 @@ set -l aws_services \
     workspaces \
     xray
 
-complete -c aws -n '__fish_is_first_token' -xa "$aws_services"
+complete -c aws -n __fish_is_first_token -xa "$aws_services"

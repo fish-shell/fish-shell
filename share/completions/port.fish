@@ -54,7 +54,7 @@ complete -f -n "__fish_use_subcommand $subcommands" -c port -a provides --descri
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a rdependents --description 'Recursively list ports depending on given port'
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a rdeps --description 'Display a recursive dependency listing of port(s)'
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a reload --description "reload a port's daemon"
-complete -f -n "__fish_use_subcommand $subcommands" -c port -a 'rev-upgrade' --description 'Rebuild ports containing broken binaries'
+complete -f -n "__fish_use_subcommand $subcommands" -c port -a rev-upgrade --description 'Rebuild ports containing broken binaries'
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a search --description 'Search for a port using keywords'
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a select --description 'Selects a version to be the default'
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a selfupdate --description 'Upgrade MacPorts and update list of ports'

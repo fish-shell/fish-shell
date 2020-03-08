@@ -1,6 +1,6 @@
 
 # First parameter is the profile name, or 'usage'
-complete --command duply --no-files --condition '__fish_is_first_token' --arguments '(/bin/ls /etc/duply 2>/dev/null) (/bin/ls ~/.duply 2>/dev/null)' -d Profile
+complete --command duply --no-files --condition __fish_is_first_token --arguments '(/bin/ls /etc/duply 2>/dev/null) (/bin/ls ~/.duply 2>/dev/null)' -d Profile
 complete --command duply --no-files --arguments usage -d 'Get usage help text'
 
 # Second parameter is a duply command
@@ -15,7 +15,7 @@ complete --command duply --no-files --condition 'not __fish_is_first_token' --ar
 complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments status -d 'Prints backup sets and chains currently in repository'
 complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments verify -d 'List files changed since latest backup'
 complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments purge -d 'Shows outdated backup archives [--force, delete these files]'
-complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments 'purge-full' -d 'Shows outdated backups [--force, delete these files]'
+complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments purge-full -d 'Shows outdated backups [--force, delete these files]'
 complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments cleanup -d 'Shows broken backup archives [--force, delete these files]'
 complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments restore -d 'Restore the backup to <target_path> [as it was at <age>]'
 complete --command duply --no-files --condition 'not __fish_is_first_token' --arguments fetch -d 'Restore single file/folder from backup [as it was at <age>]'

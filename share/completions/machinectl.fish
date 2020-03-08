@@ -44,7 +44,7 @@ complete -f -c machinectl -l no-ask-password -d "Don't ask for password for priv
 
 # Machine commands
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a list -d "List running machines"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "list-images" -d "List startable machine images"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a list-images -d "List startable machine images"
 complete -f -c machinectl -n "__fish_seen_subcommand_from list-images" -s a -l all -d "Also show machines starting with a '.'"
 
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a status -d "Show information about machine"
@@ -74,32 +74,32 @@ complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a bind
 complete -f -c machinectl -n "__fish_seen_subcommand_from bind" -l mkdir -d "Create destination directory"
 complete -f -c machinectl -n "__fish_seen_subcommand_from bind" -l read-only -d "Apply read-only mount"
 
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "copy-to" -d "Copy file or directory to a machine"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "copy-from" -d "Copy file or directory from a machine"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a copy-to -d "Copy file or directory to a machine"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a copy-from -d "Copy file or directory from a machine"
 
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a shell -d "Open a shell on a machine"
 
 # Image commands
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "list-images" -d "Show a list of locally installed machines"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "image-status" -d "Show information about machine images (human-readable)"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "show-image" -d "Show properties of machine images (machine-readable)"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a list-images -d "Show a list of locally installed machines"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a image-status -d "Show information about machine images (human-readable)"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a show-image -d "Show properties of machine images (machine-readable)"
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a clone -d "Clone a machine image"
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a rename -d "Rename a machine image"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "read-only" -d "Mark or unmark machine image as read-only"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a read-only -d "Mark or unmark machine image as read-only"
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a remove -d "Remove machine images"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "set-limit" -d "Set size limit for machine image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a set-limit -d "Set size limit for machine image"
 
 # Image transfer commands
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "pull-tar" -d "Download a .tar container image"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "pull-raw" -d "Download a .raw container image"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "pull-dkr" -d "Download a .dkr container image"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "import-tar" -d "Import a .tar container image"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "import-raw" -d "Import a .raw container image"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "export-tar" -d "Export a .tar container image"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "export-raw" -d "Export a .raw container image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a pull-tar -d "Download a .tar container image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a pull-raw -d "Download a .raw container image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a pull-dkr -d "Download a .dkr container image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a import-tar -d "Import a .tar container image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a import-raw -d "Import a .raw container image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a export-tar -d "Export a .tar container image"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a export-raw -d "Export a .raw container image"
 complete -f -c machinectl -n "__fish_seen_subcommand_from export-tar export-raw" -l format -d "Specify compression format" -a 'uncompressed xz gzip bzip2'
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "list-transfers" -d "Show running downloads, imports and exports"
-complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "cancel-transfers" -d "Abort running downloads, imports or exports"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a list-transfers -d "Show running downloads, imports and exports"
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a cancel-transfers -d "Abort running downloads, imports or exports"
 complete -x -c machinectl -n "__fish_seen_subcommand_from pull-{tar,raw}" -l verify -a 'no checksum signature' -d "Verify image with specified method"
 complete -x -c machinectl -n "__fish_seen_subcommand_from pull-dkr" -l verify -a no -d "Verify image (not available for dkr)"
 complete -x -c machinectl -n "__fish_seen_subcommand_from pull-dkr" -l dkr-index-url -d "Specify index server"

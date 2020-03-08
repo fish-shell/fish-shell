@@ -112,7 +112,7 @@ function __fish_umask_parse
                 case '+'
                     set res[$j] (__fish_umask_add $res[$j] $val)
 
-                case '-'
+                case -
                     set res[$j] (__fish_umask_remove $res[$j] $val)
             end
         end
@@ -149,7 +149,7 @@ function __fish_umask_print_symbolic
 end
 
 function umask --description "Set default file permission mask"
-    set -l options 'h/help' 'p/as-command' 'S/symbolic'
+    set -l options h/help p/as-command S/symbolic
     argparse -n umask $options -- $argv
     or return
 

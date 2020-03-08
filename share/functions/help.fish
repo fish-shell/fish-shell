@@ -1,5 +1,5 @@
 function help --description 'Show help for the fish shell'
-    set -l options 'h/help'
+    set -l options h/help
     argparse -n help --max-args=1 $options -- $argv
     or return
 
@@ -189,7 +189,7 @@ function help --description 'Show help for the fish shell'
         # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
-            case htmlview 'x-www-browser'
+            case htmlview x-www-browser
                 printf (_ 'help: Help is being displayed in your default browser.\n')
             case '*'
                 printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]

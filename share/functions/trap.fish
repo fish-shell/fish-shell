@@ -16,7 +16,7 @@ function __trap_switch
 end
 
 function trap -d 'Perform an action when the shell receives a signal'
-    set -l options 'h/help' 'l/list-signals' 'p/print'
+    set -l options h/help l/list-signals p/print
     argparse -n trap $options -- $argv
     or return
 

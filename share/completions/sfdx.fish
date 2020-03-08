@@ -15,7 +15,7 @@ function __fish_sfdx_find_packagexml
     printf '%s\n' (find . -type f -regex ".*/package.xml" | string sub -s 3)
 end
 
-set -l sfdx_looking -c sfdx -n '__fish_use_subcommand'
+set -l sfdx_looking -c sfdx -n __fish_use_subcommand
 
 set -l sfdx_loglevels 'trace debug info warn error fatal TRACE DEBUG INFO WARN ERROR FATAL'
 

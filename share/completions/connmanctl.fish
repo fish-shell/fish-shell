@@ -45,5 +45,5 @@ complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a vpnconne
 complete -f -c connmanctl -n "test (count (commandline -opc)) -eq 2; and contains -- (commandline -opc)[2] vpnconnections" -a "(__fish_print_connman_vpnconnections)"
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a session -d "Enable or disable a session"
 complete -f -c connmanctl -n "test (count (commandline -opc)) -eq 2; and contains -- (commandline -opc)[2] session" -a "on off connect disconnect config"
-complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a "peer_service" -d "(Un)Register a Peer Service"
+complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a peer_service -d "(Un)Register a Peer Service"
 complete -f -c connmanctl -n "test (count (commandline -opc)) -lt 2" -a help -d "Show help"

@@ -1,5 +1,5 @@
 function alias --description 'Creates a function wrapping a command'
-    set -l options 'h/help' 's/save'
+    set -l options h/help s/save
     argparse -n alias --max-args=2 $options -- $argv
     or return
 

@@ -52,7 +52,7 @@ function test_in_file
         rm -f $base.tmp.{err,out}
         return 0
     else
-        say red "fail"
+        say red fail
         if test $out_status -ne 0
             say yellow "Output differs for file $file. Diff follows:"
             colordiff -u $base.out $base.tmp.out

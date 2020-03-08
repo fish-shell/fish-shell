@@ -7,23 +7,23 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
     while set -q argv[1]
         set -l new_mode
         switch $argv[1]
-            case '-h' '--help'
+            case -h --help
                 __fish_print_help abbr
                 return 0
-            case '-a' '--add'
+            case -a --add
                 set new_mode add
                 set needs_arg multi
-            case '-r' '--rename'
+            case -r --rename
                 set new_mode rename
                 set needs_arg double
-            case '-e' '--erase'
+            case -e --erase
                 set new_mode erase
                 set needs_arg single
-            case '-l' '--list'
+            case -l --list
                 set new_mode list
-            case '-s' '--show'
+            case -s --show
                 set new_mode show
-            case '--'
+            case --
                 set -e argv[1]
                 break
             case '-*'
@@ -169,7 +169,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
                 # Check to see if either key or value has a leading dash
                 # If so, we need to write --
                 string match -q -- '-*' $key $value
-                and set opt_double_dash '--'
+                and set opt_double_dash --
                 echo abbr $opt_double_dash (string escape -- $key $value)
             end
             return 0

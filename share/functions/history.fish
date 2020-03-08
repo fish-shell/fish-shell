@@ -17,11 +17,11 @@ end
 function history --description "display or manipulate interactive command history"
     set -l cmd history
     set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,X'
-    set -a options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
-    set -a options 'C/case-sensitive' 'R/reverse' 'z/null' 't/show-time=?' 'n#max'
+    set -a options h/help c/contains e/exact p/prefix
+    set -a options C/case-sensitive R/reverse z/null 't/show-time=?' 'n#max'
     # The following options are deprecated and will be removed in the next major release.
     # Note that they do not have usable short flags.
-    set -a options 'S-search' 'D-delete' 'M-merge' 'V-save' 'X-clear'
+    set -a options S-search D-delete M-merge V-save X-clear
     argparse -n $cmd $options -- $argv
     or return
 
@@ -81,7 +81,7 @@ function history --description "display or manipulate interactive command histor
     switch $hist_cmd
         case search # search the interactive command history
             test -z "$search_mode"
-            and set search_mode "--contains"
+            and set search_mode --contains
 
             if isatty stdout
                 set -l pager less
@@ -110,10 +110,10 @@ function history --description "display or manipulate interactive command histor
             end
 
             if test -z "$search_mode"
-                set search_mode "--contains"
+                set search_mode --contains
             end
 
-            if test $search_mode = "--exact"
+            if test $search_mode = --exact
                 builtin history delete $search_mode $_flag_case_sensitive $searchterm
                 return
             end

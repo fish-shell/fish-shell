@@ -4,28 +4,28 @@
 
 #####
 # Global options
-complete -c gem -n '__fish_use_subcommand' -s h -l help -d "Print usage informations and quit"
-complete -c gem -n '__fish_use_subcommand' -s v -l version -d "Print the version and quit"
+complete -c gem -n __fish_use_subcommand -s h -l help -d "Print usage informations and quit"
+complete -c gem -n __fish_use_subcommand -s v -l version -d "Print the version and quit"
 
 #####
 # Subcommands
-complete -c gem -n '__fish_use_subcommand' -xa "build\tBuild a gem from a gemspec"
-complete -c gem -n '__fish_use_subcommand' -xa "cert\tAdjust RubyGems certificate settings"
-complete -c gem -n '__fish_use_subcommand' -xa "check\tCheck installed gems"
-complete -c gem -n '__fish_use_subcommand' -xa "cleanup\tCleanup old versions of installed gems in the local repository"
-complete -c gem -n '__fish_use_subcommand' -xa "contents\tDisplay the contents of the installed gems"
-complete -c gem -n '__fish_use_subcommand' -xa "dependency\tShow the dependencies of an installed gem"
-complete -c gem -n '__fish_use_subcommand' -xa "environment\tDisplay RubyGems environmental information"
-complete -c gem -n '__fish_use_subcommand' -xa "help\tProvide help on the 'gem' command"
-complete -c gem -n '__fish_use_subcommand' -xa "install\tInstall a gem into the local repository"
-complete -c gem -n '__fish_use_subcommand' -xa "list\tDisplay all gems whose name starts with STRING"
-complete -c gem -n '__fish_use_subcommand' -xa "query\tQuery gem information in local or remote repositories"
-complete -c gem -n '__fish_use_subcommand' -xa "rdoc\tGenerates RDoc for pre-installed gems"
-complete -c gem -n '__fish_use_subcommand' -xa "search\tDisplay all gems whose name contains STRING"
-complete -c gem -n '__fish_use_subcommand' -xa "specification\tDisplay gem specification (in yaml)"
-complete -c gem -n '__fish_use_subcommand' -xa "uninstall\tUninstall a gem from the local repository"
-complete -c gem -n '__fish_use_subcommand' -xa "unpack\tUnpack an installed gem to the current directory"
-complete -c gem -n '__fish_use_subcommand' -xa "update\tUpdate the named gem (or all installed gems) in the local repository"
+complete -c gem -n __fish_use_subcommand -xa "build\tBuild a gem from a gemspec"
+complete -c gem -n __fish_use_subcommand -xa "cert\tAdjust RubyGems certificate settings"
+complete -c gem -n __fish_use_subcommand -xa "check\tCheck installed gems"
+complete -c gem -n __fish_use_subcommand -xa "cleanup\tCleanup old versions of installed gems in the local repository"
+complete -c gem -n __fish_use_subcommand -xa "contents\tDisplay the contents of the installed gems"
+complete -c gem -n __fish_use_subcommand -xa "dependency\tShow the dependencies of an installed gem"
+complete -c gem -n __fish_use_subcommand -xa "environment\tDisplay RubyGems environmental information"
+complete -c gem -n __fish_use_subcommand -xa "help\tProvide help on the 'gem' command"
+complete -c gem -n __fish_use_subcommand -xa "install\tInstall a gem into the local repository"
+complete -c gem -n __fish_use_subcommand -xa "list\tDisplay all gems whose name starts with STRING"
+complete -c gem -n __fish_use_subcommand -xa "query\tQuery gem information in local or remote repositories"
+complete -c gem -n __fish_use_subcommand -xa "rdoc\tGenerates RDoc for pre-installed gems"
+complete -c gem -n __fish_use_subcommand -xa "search\tDisplay all gems whose name contains STRING"
+complete -c gem -n __fish_use_subcommand -xa "specification\tDisplay gem specification (in yaml)"
+complete -c gem -n __fish_use_subcommand -xa "uninstall\tUninstall a gem from the local repository"
+complete -c gem -n __fish_use_subcommand -xa "unpack\tUnpack an installed gem to the current directory"
+complete -c gem -n __fish_use_subcommand -xa "update\tUpdate the named gem (or all installed gems) in the local repository"
 
 #####
 # Subcommand switches

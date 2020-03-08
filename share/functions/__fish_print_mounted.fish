@@ -7,6 +7,6 @@ function __fish_print_mounted --description 'Print mounted devices'
         # and tabs because of descriptions
         string replace -r '\S+ (\S+) .*' '$1' </etc/mtab | string replace -a "\040" " " | string replace -a "\011" \t | string replace -a "\012" \n | string replace -a "\\\\" "\\"
     else
-        mount | string replace -r '^(\S+) \S+ (\S+) .*' '$1\n$2' | string replace -r '[\d.]*:/' '/' | string match '/*'
+        mount | string replace -r '^(\S+) \S+ (\S+) .*' '$1\n$2' | string replace -r '[\d.]*:/' / | string match '/*'
     end
 end

@@ -9,7 +9,7 @@ function __fish_complete_gsettings_args
     set -e cmd[1]
 
     if set -q cmd[2]
-        and string match -q -- '--schemadir' $cmd[1]
+        and string match -q -- --schemadir $cmd[1]
         # TODO: This needs to support proper expansion of paths (~, variables, etc.)
         set schemadir --schemadir $cmd[2]
         set -e cmd[1..2]
@@ -85,12 +85,12 @@ complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a
 complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a describe -d 'Print the description of a key'
 complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a set -d 'Set the value of a key'
 complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a reset -d 'Reset a key to its default value'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'reset-recursively' -d 'Reset all keys under the given schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-schemas' -d 'List all installed, non-relocatable schemas'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-relocatable-schemas' -d 'List all installed, relocatable schemas'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-keys' -d 'List all keys in a schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-children' -d 'List all children of a schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-recursively' -d 'List keys and values, recursively'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a reset-recursively -d 'Reset all keys under the given schema'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-schemas -d 'List all installed, non-relocatable schemas'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-relocatable-schemas -d 'List all installed, relocatable schemas'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-keys -d 'List all keys in a schema'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-children -d 'List all children of a schema'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-recursively -d 'List keys and values, recursively'
 complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a help -d 'Print help'
 
 complete -f -c gsettings -n "__fish_seen_subcommand_from $valid_commands" -xa "(__fish_complete_gsettings_args)"

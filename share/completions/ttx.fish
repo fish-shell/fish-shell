@@ -9,7 +9,7 @@ set -l line_endings LF CR CRLF
 set -l woff_fmts woff woff2
 
 complete -f -c ttx -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx; __fish_complete_suffix .ttc)'
-complete -c ttx -f -n '__fish_is_first_token' -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx)'
+complete -c ttx -f -n __fish_is_first_token -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx)'
 
 # General options
 complete -c ttx -f -s h -d'Show help message'
@@ -37,6 +37,6 @@ complete -c ttx -x -l newline -d'Set EOL format' -a "$line_endings"
 # Compile options
 complete -c ttx -x -s m -d'Merge named TTF/OTF with SINGLE .ttx input' -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf)'
 complete -c ttx -f -s b -d'Don\'t recalculate glyph bounding boxes'
-complete -c ttx -f -l 'recalc-timestamp' -d'Set font modified timestamp to current time'
+complete -c ttx -f -l recalc-timestamp -d'Set font modified timestamp to current time'
 complete -c ttx -x -l flavor -d'Set WOFF flavor' -a "$woff_fmts"
-complete -c ttx -f -l 'with-zopfli' -d'Compress with zopfli instead of zlib'
+complete -c ttx -f -l with-zopfli -d'Compress with zopfli instead of zlib'

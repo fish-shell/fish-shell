@@ -151,7 +151,7 @@ function __fish_ip_commandwords
                 else
                     echo $word
                 end
-            case '-n' '-netns' '--netns'
+            case -n -netns --netns
                 if test $have_command = 0
                     set skip 1
                 else

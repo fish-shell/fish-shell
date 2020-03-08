@@ -10,7 +10,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # This needs to be checked here because if we are called again
     # via the variable handler the argument will be gone.
     set -l rebind true
-    if test "$argv[1]" = "--no-erase"
+    if test "$argv[1]" = --no-erase
         set rebind false
         set -e argv[1]
     else
@@ -20,7 +20,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Allow just calling this function to correctly set the bindings.
     # Because it's a rather discoverable name, users will execute it
     # and without this would then have subtly broken bindings.
-    if test "$fish_key_bindings" != "fish_vi_key_bindings"
+    if test "$fish_key_bindings" != fish_vi_key_bindings
         and test "$rebind" = true
         # Allow the user to set the variable universally.
         set -q fish_key_bindings

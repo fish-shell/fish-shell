@@ -7,13 +7,13 @@
 # Eopkg subcommand
 function __fish_eopkg_subcommand -a subcommand
     set -e argv[1]
-    complete -f -c eopkg -n '__fish_use_subcommand' -a $subcommand $argv
+    complete -f -c eopkg -n __fish_use_subcommand -a $subcommand $argv
 end
 
 function __fish_eopkg_subcommand_with_shortcut -a subcommand shortcut
     set -e argv[1..2]
-    complete -f -c eopkg -n '__fish_use_subcommand' -a $subcommand $argv
-    complete -f -c eopkg -n '__fish_use_subcommand' -a $shortcut $argv
+    complete -f -c eopkg -n __fish_use_subcommand -a $subcommand $argv
+    complete -f -c eopkg -n __fish_use_subcommand -a $shortcut $argv
 end
 
 # Eopkg subcommand's option

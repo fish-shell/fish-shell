@@ -5,7 +5,7 @@ complete -c cygport -s 8 -l 64 -d "Build for 64-bit Cygwin"
 complete -c cygport -l debug -d "Enable debugging messages"
 
 # Cygport file
-complete -c cygport -n '__fish_is_first_token' -f -a '*.cygport' -d "Cygport file"
+complete -c cygport -n __fish_is_first_token -f -a '*.cygport' -d "Cygport file"
 
 # Commands
 complete -c cygport -n 'not __fish_is_first_token' -f -a 'downloadall fetchall wgetall getall' -d "Download all sources"

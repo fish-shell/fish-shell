@@ -310,7 +310,7 @@ end
 #########################################################
 
 function __fish_p4_register_command -d "Adds a completion for a specific command"
-    complete -c p4 -n "__fish_p4_not_in_command" -a $argv[1] $argv[2..-1]
+    complete -c p4 -n __fish_p4_not_in_command -a $argv[1] $argv[2..-1]
 end
 
 #########################################################
@@ -666,7 +666,7 @@ for a in integ integrate
     __fish_p4_register_command_option $a -s v -d "Open files for branching without copying toFiles into the client workspace"
     __fish_p4_register_command_option $a -s c -x -a '(__fish_print_p4_pending_changelists)' -d "Open the toFiles for branch, integrate, or delete in the specified pending changelist"
     __fish_p4_register_command_option $a -s q -d "Quiet mode"
-    __fish_p4_register_command_option $a -a '-Di' -d "f the source file has been deleted and re-added, revisions that precede the deletion will be considered to be part of the same source file"
+    __fish_p4_register_command_option $a -a -Di -d "f the source file has been deleted and re-added, revisions that precede the deletion will be considered to be part of the same source file"
     __fish_p4_register_command_option $a -s f -d "Force the integration on all revisions of fromFile and toFile, even if some revisions have been integrated in the past"
     __fish_p4_register_command_option $a -s h -d "Use the have revision"
     __fish_p4_register_command_option $a -s O -x -a '(__fish_print_p4_integrate_output_options)' -d "Specify output options"

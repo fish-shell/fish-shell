@@ -220,9 +220,9 @@ if status --is-login
             set -xg $argv[1] $result
         end
 
-        __fish_macos_set_env PATH '/etc/paths' '/etc/paths.d'
+        __fish_macos_set_env PATH /etc/paths '/etc/paths.d'
         if [ -n "$MANPATH" ]
-            __fish_macos_set_env MANPATH '/etc/manpaths' '/etc/manpaths.d'
+            __fish_macos_set_env MANPATH /etc/manpaths '/etc/manpaths.d'
         end
         functions -e __fish_macos_set_env
     end

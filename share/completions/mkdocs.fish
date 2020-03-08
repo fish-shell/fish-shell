@@ -15,7 +15,7 @@ complete -n 'contains build (commandline -poc)' -c mkdocs -s e -l theme-dir -r -
 complete -n 'contains build (commandline -poc)' -c mkdocs -s d -l site-dir -r -d 'The directory to output the result of the documentation build'
 
 ## gh-deploy
-complete -n 'not __fish_seen_subcommand_from build gh-deploy new serve' -f -c mkdocs -a 'gh-deploy' -d 'Deploy your documentation to GitHub Pages'
+complete -n 'not __fish_seen_subcommand_from build gh-deploy new serve' -f -c mkdocs -a gh-deploy -d 'Deploy your documentation to GitHub Pages'
 complete -n 'contains gh-deploy (commandline -poc)' -f -c mkdocs -s c -l clean -d 'Remove old site_dir before building (the default)'
 complete -n 'contains gh-deploy (commandline -poc)' -c mkdocs -s f -l config-file -r -d 'Provide a specific MkDocs config'
 complete -n 'contains gh-deploy (commandline -poc)' -f -c mkdocs -s m -l message -r -d 'A commit message to use when committing to the Github Pages remote branch'

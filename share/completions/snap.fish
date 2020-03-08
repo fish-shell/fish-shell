@@ -41,7 +41,7 @@ end
 function __fish_snap_subcommand
     set subcommand $argv[1]
     set -e argv[1]
-    complete -f -c snap -n '__fish_snap_no_subcommand' -a $subcommand $argv
+    complete -f -c snap -n __fish_snap_no_subcommand -a $subcommand $argv
 end
 
 function __fish_snap_option
@@ -114,7 +114,7 @@ end
 #complete -c snap -n '__fish_snap_use_package' -a '(__fish_print_packages)' -d 'Package'
 
 # Enable file completions where appropriate
-complete -c snap -n '__fish_snap_use_file' -a '(__fish_complete_path)'
+complete -c snap -n __fish_snap_use_file -a '(__fish_complete_path)'
 
 # Support flags
 complete -x -f -c snap -s h -l help -d 'Show this help message'

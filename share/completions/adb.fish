@@ -38,9 +38,9 @@ function __fish_adb_run_command -d 'Runs adb with any -s parameters already give
     # If no -s option, see if there's a -d or -e instead
     if test -z "$sopt"
         if contains -- -d $cmd
-            set sopt '-d'
+            set sopt -d
         else if contains -- -e $cmd
-            set sopt '-e'
+            set sopt -e
         end
     end
 
@@ -63,7 +63,7 @@ function __fish_adb_list_files
 
     # Have tab complete show initial / if nothing on current token
     if test -z "$token"
-        set token "/"
+        set token /
     end
 
     # Return list of directories suffixed with '/'
@@ -74,44 +74,44 @@ end
 
 
 # Generic options, must come before command
-complete -n '__fish_adb_no_subcommand' -c adb -s s -x -a "(__fish_adb_get_devices)" -d 'Device to communicate with'
-complete -n '__fish_adb_no_subcommand' -c adb -s d -d 'Communicate with first USB device'
-complete -n '__fish_adb_no_subcommand' -c adb -s e -d 'Communicate with emulator'
+complete -n __fish_adb_no_subcommand -c adb -s s -x -a "(__fish_adb_get_devices)" -d 'Device to communicate with'
+complete -n __fish_adb_no_subcommand -c adb -s d -d 'Communicate with first USB device'
+complete -n __fish_adb_no_subcommand -c adb -s e -d 'Communicate with emulator'
 
 # Commands
-complete -f -n '__fish_adb_no_subcommand' -c adb -a connect -d 'Connect to device'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a disconnect -d 'Disconnect from device'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a devices -d 'List all connected devices'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a push -d 'Copy file to device'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a pull -d 'Copy file from device'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a sync -d 'Copy host->device only if changed'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a shell -d 'Run remote shell [command]'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a emu -d 'Run emulator console command'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a logcat -d 'View device log'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a install -d 'Install package'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a uninstall -d 'Uninstall package'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a jdwp -d 'List PIDs of processes hosting a JDWP transport'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a forward -d 'Port forwarding'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a bugreport -d 'Return bugreport information'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a backup -d 'Perform device backup'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a restore -d 'Restore device from backup'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a version -d 'Show adb version'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a help -d 'Show adb help'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'wait-for-device' -d 'Block until device is online'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'start-server' -d 'Ensure that there is a server running'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'kill-server' -d 'Kill the server if it is running'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a remount -d 'Remounts the /system partition on the device read-write'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a reboot -d 'Reboots the device, optionally into the bootloader or recovery program'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'get-state' -d 'Prints state of the device'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'get-serialno' -d 'Prints serial number of the device'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'get-devpath' -d 'Prints device path'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a 'status-window' -d 'Continuously print the device status'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a root -d 'Restart the adbd daemon with root permissions'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a usb -d 'Restart the adbd daemon listening on USB'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a tcpip -d 'Restart the adbd daemon listening on TCP'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a ppp -d 'Run PPP over USB'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a sideload -d 'Sideloads the given package'
-complete -f -n '__fish_adb_no_subcommand' -c adb -a reconnect -d 'Kick current connection from host side and make it reconnect.'
+complete -f -n __fish_adb_no_subcommand -c adb -a connect -d 'Connect to device'
+complete -f -n __fish_adb_no_subcommand -c adb -a disconnect -d 'Disconnect from device'
+complete -f -n __fish_adb_no_subcommand -c adb -a devices -d 'List all connected devices'
+complete -f -n __fish_adb_no_subcommand -c adb -a push -d 'Copy file to device'
+complete -f -n __fish_adb_no_subcommand -c adb -a pull -d 'Copy file from device'
+complete -f -n __fish_adb_no_subcommand -c adb -a sync -d 'Copy host->device only if changed'
+complete -f -n __fish_adb_no_subcommand -c adb -a shell -d 'Run remote shell [command]'
+complete -f -n __fish_adb_no_subcommand -c adb -a emu -d 'Run emulator console command'
+complete -f -n __fish_adb_no_subcommand -c adb -a logcat -d 'View device log'
+complete -f -n __fish_adb_no_subcommand -c adb -a install -d 'Install package'
+complete -f -n __fish_adb_no_subcommand -c adb -a uninstall -d 'Uninstall package'
+complete -f -n __fish_adb_no_subcommand -c adb -a jdwp -d 'List PIDs of processes hosting a JDWP transport'
+complete -f -n __fish_adb_no_subcommand -c adb -a forward -d 'Port forwarding'
+complete -f -n __fish_adb_no_subcommand -c adb -a bugreport -d 'Return bugreport information'
+complete -f -n __fish_adb_no_subcommand -c adb -a backup -d 'Perform device backup'
+complete -f -n __fish_adb_no_subcommand -c adb -a restore -d 'Restore device from backup'
+complete -f -n __fish_adb_no_subcommand -c adb -a version -d 'Show adb version'
+complete -f -n __fish_adb_no_subcommand -c adb -a help -d 'Show adb help'
+complete -f -n __fish_adb_no_subcommand -c adb -a wait-for-device -d 'Block until device is online'
+complete -f -n __fish_adb_no_subcommand -c adb -a start-server -d 'Ensure that there is a server running'
+complete -f -n __fish_adb_no_subcommand -c adb -a kill-server -d 'Kill the server if it is running'
+complete -f -n __fish_adb_no_subcommand -c adb -a remount -d 'Remounts the /system partition on the device read-write'
+complete -f -n __fish_adb_no_subcommand -c adb -a reboot -d 'Reboots the device, optionally into the bootloader or recovery program'
+complete -f -n __fish_adb_no_subcommand -c adb -a get-state -d 'Prints state of the device'
+complete -f -n __fish_adb_no_subcommand -c adb -a get-serialno -d 'Prints serial number of the device'
+complete -f -n __fish_adb_no_subcommand -c adb -a get-devpath -d 'Prints device path'
+complete -f -n __fish_adb_no_subcommand -c adb -a status-window -d 'Continuously print the device status'
+complete -f -n __fish_adb_no_subcommand -c adb -a root -d 'Restart the adbd daemon with root permissions'
+complete -f -n __fish_adb_no_subcommand -c adb -a usb -d 'Restart the adbd daemon listening on USB'
+complete -f -n __fish_adb_no_subcommand -c adb -a tcpip -d 'Restart the adbd daemon listening on TCP'
+complete -f -n __fish_adb_no_subcommand -c adb -a ppp -d 'Run PPP over USB'
+complete -f -n __fish_adb_no_subcommand -c adb -a sideload -d 'Sideloads the given package'
+complete -f -n __fish_adb_no_subcommand -c adb -a reconnect -d 'Kick current connection from host side and make it reconnect.'
 
 # install options
 complete -n '__fish_seen_subcommand_from install' -c adb -s l -d 'Forward-lock the app'
@@ -149,9 +149,9 @@ complete -n '__fish_seen_subcommand_from reboot' -c adb -x -a 'bootloader recove
 
 # forward
 complete -n '__fish_seen_subcommand_from forward' -c adb -l list -d 'List all forward socket connections'
-complete -n '__fish_seen_subcommand_from forward' -c adb -l 'no-rebind' -d 'Fails the forward if local is already forwarded'
+complete -n '__fish_seen_subcommand_from forward' -c adb -l no-rebind -d 'Fails the forward if local is already forwarded'
 complete -n '__fish_seen_subcommand_from forward' -c adb -l remove -d 'Remove a specific forward socket connection'
-complete -n '__fish_seen_subcommand_from forward' -c adb -l 'remove-all' -d 'Remove all forward socket connections'
+complete -n '__fish_seen_subcommand_from forward' -c adb -l remove-all -d 'Remove all forward socket connections'
 
 # sideload
 complete -n '__fish_seen_subcommand_from sideload' -c adb -xa '(__fish_complete_suffix .zip)'

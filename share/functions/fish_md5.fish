@@ -2,7 +2,7 @@ function fish_md5
     if type -q md5sum
         # GNU systems
         if set -q argv[2]
-            if test $argv[1] = "-s"
+            if test $argv[1] = -s
                 echo (echo $argv[2] | md5sum | string split ' ')[1]
             else
                 printf (_ "%s: Too many arguments %s\n") fish_md5 $argv
@@ -14,7 +14,7 @@ function fish_md5
     else if type -q md5
         # BSD systems
         if set -q argv[2]
-            if test $argv[1] = "-s"
+            if test $argv[1] = -s
                 md5 -s $argv[1]
             else
                 printf (_ "%s: Too many arguments %s\n") fish_md5 $argv

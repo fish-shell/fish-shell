@@ -438,17 +438,17 @@ if contains -- $OS SunOS FreeBSD
     complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g -s e' -a 'everyone' -d 'Delegate permission to everyone'
 end
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g everyone' -s e -d 'Delegate permission to everyone'
-complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Delegate permissions only to the creator of later descendent datasets' -a '(__fish_zfs_append , (__fish_zfs_list_permissions))'
+complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Delegate permissions only to the creator of later descendent datasets' -a '(__fish_append , (__fish_zfs_list_permissions))'
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s c' -s s -d 'Create a permission set or add permissions to an existing one'
 complete -c zfs -x -n '__fish_zfs_using_command allow' -d 'Dataset on which delegation is to be applied' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)'
 
 # unallow completions
 complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s d' -s l -d 'Remove permissions only on the specified dataset'
 complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l' -s d -d 'Remove permissions only on the descendents dataset'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s u -d 'User to remove permissions from' -a '(__fish_zfs_append , (__fish_complete_users))'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s g -d 'Group to remove permissions from' -a '(__fish_zfs_append , (__fish_complete_groups))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s u -d 'User to remove permissions from' -a '(__fish_append , (__fish_complete_users))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s g -d 'Group to remove permissions from' -a '(__fish_append , (__fish_complete_groups))'
 complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s u -s g everyone' -s e -d 'Remove permission from everyone'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Remove permissions only on later created descendent datasets' -a '(__fish_zfs_append , (__fish_zfs_list_permissions))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Remove permissions only on later created descendent datasets' -a '(__fish_append , (__fish_zfs_list_permissions))'
 complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s c' -s s -d 'Remove a permission set or remove permissions from an existing one'
 if test $OS = 'SunOS'
     complete -c zfs -f -n '__fish_zfs_using_command unallow' -s r -d 'Remove permissions recursively'

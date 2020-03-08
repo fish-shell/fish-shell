@@ -505,7 +505,7 @@ int main(int argc, char **argv) {
                 for (char **ptr = argv + my_optind; *ptr; ptr++) {
                     list.push_back(str2wcstring(*ptr));
                 }
-                parser.vars().set(L"argv", ENV_DEFAULT, list);
+                parser.vars().set(L"argv", ENV_DEFAULT, std::move(list));
 
                 auto &ld = parser.libdata();
                 wcstring rel_filename = str2wcstring(file);

@@ -182,12 +182,13 @@ static wcstring input_get_bind_mode(const environment_t &vars) {
 }
 
 /// Set the current bind mode.
-static void input_set_bind_mode(env_stack_t &vars, const wcstring &bm) {
+static void input_set_bind_mode(parser_t &parser, const wcstring &bm) {
     // Only set this if it differs to not execute variable handlers all the time.
     // modes may not be empty - empty is a sentinel value meaning to not change the mode
     assert(!bm.empty());
-    if (input_get_bind_mode(vars) != bm) {
-        vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
+    if (input_get_bind_mode(parser.vars()) != bm) {
+        // Must send events here - see #6653.
+        parser.set_var_and_fire(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
     }
 }
 
@@ -361,7 +362,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
 
     // !has_functions && !has_commands: only set bind mode
     if (!has_commands && !has_functions) {
-        if (!m.sets_mode.empty()) input_set_bind_mode(parser_->vars(), m.sets_mode);
+        if (!m.sets_mode.empty()) input_set_bind_mode(*parser_, m.sets_mode);
         return;
     }
 
@@ -400,7 +401,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
-    if (!m.sets_mode.empty()) input_set_bind_mode(parser_->vars(), m.sets_mode);
+    if (!m.sets_mode.empty()) input_set_bind_mode(*parser_, m.sets_mode);
 }
 
 /// Try reading the specified function mapping.

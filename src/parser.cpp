@@ -107,6 +107,25 @@ void parser_t::cancel_requested(int sig) {
     principal->cancellation_signal = sig;
 }
 
+int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
+    std::vector<event_t> events;
+    int res = vars().set(key, mode, std::move(vals), &events);
+    for (const auto &evt : events) {
+        event_fire(*this, evt);
+    }
+    return res;
+}
+
+int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val) {
+    wcstring_list_t vals;
+    vals.push_back(std::move(val));
+    return set_var_and_fire(key, mode, std::move(vals));
+}
+
+int parser_t::set_empty_var_and_fire(const wcstring &key, env_mode_flags_t mode) {
+    return set_var_and_fire(key, mode, wcstring_list_t{});
+}
+
 // Given a new-allocated block, push it onto our block list, acquiring ownership.
 block_t *parser_t::push_block(block_t &&block) {
     block_t new_current{block};

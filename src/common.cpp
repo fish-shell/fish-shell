@@ -1429,6 +1429,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
 
     const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
     const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
+    const bool ignore_backslashes = static_cast<bool>(flags & UNESCAPE_NO_BACKSLASHES);
 
     // The positions of open braces.
     std::vector<size_t> braces;
@@ -1451,21 +1452,23 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
         if (mode == mode_unquoted) {
             switch (c) {
                 case L'\\': {
-                    // Backslashes (escapes) are complicated and may result in errors, or appending
-                    // INTERNAL_SEPARATORs, so we have to handle them specially.
-                    auto escape_chars = read_unquoted_escape(input + input_position, &result,
-                                                             allow_incomplete, unescape_special);
-                    if (!escape_chars) {
-                        // A none() return indicates an error.
-                        errored = true;
-                    } else {
-                        // Skip over the characters we read, minus one because the outer loop will
-                        // increment it.
-                        assert(*escape_chars > 0);
-                        input_position += *escape_chars - 1;
+                    if (!ignore_backslashes) {
+                        // Backslashes (escapes) are complicated and may result in errors, or appending
+                        // INTERNAL_SEPARATORs, so we have to handle them specially.
+                        auto escape_chars = read_unquoted_escape(input + input_position, &result,
+                                                                 allow_incomplete, unescape_special);
+                        if (!escape_chars) {
+                            // A none() return indicates an error.
+                            errored = true;
+                        } else {
+                            // Skip over the characters we read, minus one because the outer loop will
+                            // increment it.
+                            assert(*escape_chars > 0);
+                            input_position += *escape_chars - 1;
+                        }
+                        // We've already appended, don't append anything else.
+                        to_append_or_none = none();
                     }
-                    // We've already appended, don't append anything else.
-                    to_append_or_none = none();
                     break;
                 }
                 case L'~': {

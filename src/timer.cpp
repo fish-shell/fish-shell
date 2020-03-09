@@ -101,9 +101,9 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
     auto get_unit = [](int64_t micros) {
         if (micros > 900 * 1E6) {
             return tunit::minutes;
-        } else if (micros > 1 * 1E6) {
+        } else if (micros >= 999995) {
             return tunit::seconds;
-        } else if (micros > 1E3) {
+        } else if (micros >= 1000) {
             return tunit::milliseconds;
         } else {
             return tunit::microseconds;
@@ -179,18 +179,20 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
         auto child_usr_time = convert(child_usr_micros, child_unit);
         auto child_sys_time = convert(child_sys_micros, child_unit);
 
+        auto column2_unit_len =
+            std::max(strlen(unit_short_name(wall_unit)), strlen(unit_short_name(cpu_unit)));
         append_format(output,
                       L"\n________________________________________________________"
-                      L"\nExecuted in  %6.2F %s   %*s           %*s "
-                      L"\n   usr time  %6.2F %s  %6.2F %s  %6.2F %s "
-                      L"\n   sys time  %6.2F %s  %6.2F %s  %6.2F %s "
+                      L"\nExecuted in  %6.2F %-*s    %-*s  %s"
+                      L"\n   usr time  %6.2F %-*s  %6.2F %s  %6.2F %s"
+                      L"\n   sys time  %6.2F %-*s  %6.2F %s  %6.2F %s"
                       L"\n",
-                      wall_time, unit_short_name(wall_unit), strlen(unit_short_name(wall_unit)) - 1,
-                      "fish", strlen(unit_short_name(fish_unit)) - 1, "external", usr_time,
-                      unit_short_name(cpu_unit), fish_usr_time, unit_short_name(fish_unit),
-                      child_usr_time, unit_short_name(child_unit), sys_time,
-                      unit_short_name(cpu_unit), fish_sys_time, unit_short_name(fish_unit),
-                      child_sys_time, unit_short_name(child_unit));
+                      wall_time, column2_unit_len, unit_short_name(wall_unit),
+                      strlen(unit_short_name(fish_unit)) + 7, "fish", "external",            //
+                      usr_time, column2_unit_len, unit_short_name(cpu_unit), fish_usr_time,  //
+                      unit_short_name(fish_unit), child_usr_time, unit_short_name(child_unit),
+                      sys_time, column2_unit_len, unit_short_name(cpu_unit), fish_sys_time,
+                      unit_short_name(fish_unit), child_sys_time, unit_short_name(child_unit));
     }
 
     return output;

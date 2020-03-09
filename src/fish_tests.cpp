@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <cwchar>
@@ -72,6 +73,7 @@
 #include "redirection.h"
 #include "screen.h"
 #include "signal.h"
+#include "timer.h"
 #include "tnode.h"
 #include "tokenizer.h"
 #include "topic_monitor.h"
@@ -5641,6 +5643,36 @@ static void test_topic_monitor_torture() {
     for (auto &t : threads) t.join();
 }
 
+static void test_timer_format() {
+    say(L"Testing timer format");
+    auto t1 = timer_snapshot_t::take();
+    t1.cpu_fish.ru_utime.tv_usec = 0;
+    t1.cpu_fish.ru_stime.tv_usec = 0;
+    t1.cpu_children.ru_utime.tv_usec = 0;
+    t1.cpu_children.ru_stime.tv_usec = 0;
+    auto t2 = t1;
+    t2.cpu_fish.ru_utime.tv_usec = 999995;
+    t2.cpu_fish.ru_stime.tv_usec = 999994;
+    t2.cpu_children.ru_utime.tv_usec = 1000;
+    t2.cpu_children.ru_stime.tv_usec = 500;
+    t2.wall += std::chrono::microseconds(500);
+    auto expected =
+        LR"(
+________________________________________________________
+Executed in  500.00 micros    fish         external
+   usr time    1.00 secs      1.00 secs    1.00 millis
+   sys time    1.00 secs      1.00 secs    0.50 millis
+)"; //         (a)            (b)            (c)
+    // (a) remaining columns should align even if there are different units
+    // (b) carry to the next unit when it would overflow %6.2F
+    // (c) carry to the next unit when the larger one exceeds 1000
+    std::wstring actual = timer_snapshot_t::print_delta(t1, t2, true);
+    if (actual != expected) {
+        err(L"Failed to format timer snapshot\n\Expected: %ls\nActual:%ls\n", expected,
+            actual.c_str());
+    }
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -5770,6 +5802,7 @@ int main(int argc, char **argv) {
     if (should_test_function("normalize")) test_normalize_path();
     if (should_test_function("topics")) test_topic_monitor();
     if (should_test_function("topics")) test_topic_monitor_torture();
+    if (should_test_function("timer_format")) test_timer_format();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

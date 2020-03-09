@@ -20,7 +20,7 @@ Description
 
 ``string split`` splits each STRING on the separator SEP, which can be an empty string. If ``-m`` or ``--max`` is specified, at most MAX splits are done on each STRING. If ``-r`` or ``--right`` is given, splitting is performed right-to-left. This is useful in combination with ``-m`` or ``--max``. With ``-n`` or ``--no-empty``, empty results are excluded from consideration (e.g. ``hello\n\nworld`` would expand to two strings and not three). Exit status: 0 if at least one split was performed, or 1 otherwise.
 
-See also ``read --delimiter``.
+See also the ``--delimiter`` option of the :ref:`read <cmd-read>` command.
 
 ``string split0`` splits each STRING on the zero byte (NUL). Options are the same as ``string split`` except that no separator is given.
 

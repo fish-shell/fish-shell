@@ -75,7 +75,7 @@ function test_littlecheck_file
     set -l file $argv[1]
     echo -n "Testing file $file ... "
     set starttime (timestamp)
-    $python ../littlecheck.py \
+    $python -S ../littlecheck.py \
         -s fish=../test/root/bin/fish \
         -s fish_test_helper=../test/root/bin/fish_test_helper \
         $file

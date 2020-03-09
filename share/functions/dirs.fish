@@ -1,5 +1,5 @@
 function dirs --description 'Print directory stack'
-    set -l options 'h/help' 'c'
+    set -l options h/help c
     argparse -n dirs --max-args=0 $options -- $argv
     or return
 

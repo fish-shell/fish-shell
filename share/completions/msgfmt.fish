@@ -27,7 +27,7 @@ complete -c msgfmt -l check-domain -d "Check for conflicts between domain direct
 complete -c msgfmt -s C -l check-compatibility -d "Check that GNU msgfmt behaves like X/Open msgfmt"
 complete -c msgfmt -l check-accelerators -d "Check presence of keyboard accelerators for menu items"
 complete -c msgfmt -s f -l use-fuzzy -d "Use fuzzy entries in output"
-complete -c msgfmt -s a -l alignment -d "Alignment" -r
+complete -c msgfmt -s a -l alignment -d Alignment -r
 complete -c msgfmt -l no-hash -d "Binary file will not include the hash table"
 complete -c msgfmt -s h -l help -d "Display help and exit"
 complete -c msgfmt -s V -l version -d "Display version and exit"

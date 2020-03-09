@@ -13,25 +13,25 @@ set -g __fish_svn_prompt_char_separator "|"
 #
 # these variables are user-configurable and can be set to customize the display output
 
-set -g __fish_svn_prompt_char_added_display 'A'
+set -g __fish_svn_prompt_char_added_display A
 set -g __fish_svn_prompt_char_added_color green
 
-set -g __fish_svn_prompt_char_conflicted_display 'C'
+set -g __fish_svn_prompt_char_conflicted_display C
 set -g __fish_svn_prompt_char_conflicted_color --underline magenta
 
-set -g __fish_svn_prompt_char_deleted_display 'D'
+set -g __fish_svn_prompt_char_deleted_display D
 set -g __fish_svn_prompt_char_deleted_color red
 
-set -g __fish_svn_prompt_char_ignored_display 'I'
+set -g __fish_svn_prompt_char_ignored_display I
 set -g __fish_svn_prompt_char_ignored_color --bold yellow
 
-set -g __fish_svn_prompt_char_modified_display 'M'
+set -g __fish_svn_prompt_char_modified_display M
 set -g __fish_svn_prompt_char_modified_color blue
 
-set -g __fish_svn_prompt_char_replaced_display 'R'
+set -g __fish_svn_prompt_char_replaced_display R
 set -g __fish_svn_prompt_char_replaced_color cyan
 
-set -g __fish_svn_prompt_char_unversioned_external_display 'X'
+set -g __fish_svn_prompt_char_unversioned_external_display X
 set -g __fish_svn_prompt_char_unversioned_external_color --underline cyan
 
 set -g __fish_svn_prompt_char_unversioned_display '?'
@@ -43,25 +43,25 @@ set -g __fish_svn_prompt_char_missing_color yellow
 set -g __fish_svn_prompt_char_versioned_obstructed_display '~'
 set -g __fish_svn_prompt_char_versioned_obstructed_color magenta
 
-set -g __fish_svn_prompt_char_locked_display 'L'
+set -g __fish_svn_prompt_char_locked_display L
 set -g __fish_svn_prompt_char_locked_color --bold red
 
 set -g __fish_svn_prompt_char_scheduled_display '+'
 set -g __fish_svn_prompt_char_scheduled_color --bold green
 
-set -g __fish_svn_prompt_char_switched_display 'S'
+set -g __fish_svn_prompt_char_switched_display S
 set -g __fish_svn_prompt_char_switched_color --bold blue
 
-set -g __fish_svn_prompt_char_token_present_display 'K'
+set -g __fish_svn_prompt_char_token_present_display K
 set -g __fish_svn_prompt_char_token_present_color --bold cyan
 
-set -g __fish_svn_prompt_char_token_other_display 'O'
+set -g __fish_svn_prompt_char_token_other_display O
 set -g __fish_svn_prompt_char_token_other_color --underline purple
 
-set -g __fish_svn_prompt_char_token_stolen_display 'T'
+set -g __fish_svn_prompt_char_token_stolen_display T
 set -g __fish_svn_prompt_char_token_stolen_color --bold purple
 
-set -g __fish_svn_prompt_char_token_broken_display 'B'
+set -g __fish_svn_prompt_char_token_broken_display B
 set -g __fish_svn_prompt_char_token_broken_color --bold magenta
 
 

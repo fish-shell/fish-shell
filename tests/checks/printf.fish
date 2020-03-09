@@ -84,7 +84,7 @@ for locale in {$acceptable_locales}.{UTF-8,UTF8}
 end
 
 # OpenBSD's wcstod does not honor LC_NUMERIC, meaning this feature is broken there.
-if set -q numeric_locale[1]; and test (uname) != "OpenBSD"
+if set -q numeric_locale[1]; and test (uname) != OpenBSD
     set -x LC_NUMERIC $numeric_locale
     printf '%e\n' "3,45" # should succeed, output should be 3,450000e+00
     printf '%e\n' "4.56" # should succeed, output should be 4,560000e+00

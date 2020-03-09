@@ -5,7 +5,7 @@ function __fish_ffmpeg_help_type
     for help_type in decoder encoder demuxer muxer filter
         set -l regex
 
-        if test $help_type = "filter"
+        if test $help_type = filter
             set regex '\S+\s+(\S+)\s+\S+\s+(\S+)'
         else
             set regex '\S+\s+(\S+)\s+(\S+)'
@@ -92,8 +92,8 @@ complete -c ffmpeg -o frames -d "Set the number of frames to output"
 complete -c ffmpeg -o filter -d "Set stream filtergraph"
 complete -c ffmpeg -o filter_script -d "Read stream filtergraph description from a file"
 complete -c ffmpeg -o reinit_filter -d "Reinit filtergraph on input parameter changes"
-complete -c ffmpeg -o discard -d "Discard"
-complete -c ffmpeg -o disposition -d "Disposition"
+complete -c ffmpeg -o discard -d Discard
+complete -c ffmpeg -o disposition -d Disposition
 
 # Video options
 complete -c ffmpeg -o vframes -d "Set the number of video frames to output"

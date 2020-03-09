@@ -61,19 +61,19 @@ end
 
 # Defining a short flag more than once
 begin
-    argparse 's/short' 'x/xray' 's/long' -- -s -x --long
+    argparse s/short x/xray s/long -- -s -x --long
     # CHECKERR: argparse: Short flag 's' already defined
 end
 
 # Defining a long flag more than once
 begin
-    argparse 's/short' 'x/xray' 'l/short' -- -s -x --long
+    argparse s/short x/xray l/short -- -s -x --long
     # CHECKERR: argparse: Long flag 'short' already defined
 end
 
 # Defining an implicit int flag more than once
 begin
-    argparse '#-val' 'x/xray' 'v#val' -- -s -x --long
+    argparse '#-val' x/xray 'v#val' -- -s -x --long
     # CHECKERR: argparse: Implicit int flag '#' already defined
 end
 
@@ -109,7 +109,7 @@ end
 
 # Required, optional, and multiple flags
 begin
-    argparse 'h/help' 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 --d -g g3
+    argparse h/help 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 --d -g g3
     set -l
     # CHECK: _flag_a ABC
     # CHECK: _flag_abc ABC
@@ -124,7 +124,7 @@ end
 
 # --stop-nonopt works
 begin
-    argparse --stop-nonopt 'h/help' 'a/abc=' -- -a A1 -h --abc A2 non-opt 'second non-opt' --help
+    argparse --stop-nonopt h/help 'a/abc=' -- -a A1 -h --abc A2 non-opt 'second non-opt' --help
     set -l
     # CHECK: _flag_a A2
     # CHECK: _flag_abc A2
@@ -141,7 +141,7 @@ begin
     # CHECK: argv 'abc'  'def'
 end
 begin
-    argparse 'v/verbose' '#-val' 't/token=' -- -123 a1 --token woohoo --234 -v a2 --verbose
+    argparse v/verbose '#-val' 't/token=' -- -123 a1 --token woohoo --234 -v a2 --verbose
     set -l
     # CHECK: _flag_t woohoo
     # CHECK: _flag_token woohoo
@@ -171,7 +171,7 @@ end
 
 # Bool short flag only
 begin
-    argparse 'C' 'v' -- -C -v arg1 -v arg2
+    argparse C v -- -C -v arg1 -v arg2
     set -l
     # CHECK: _flag_C -C
     # CHECK: _flag_v '-v'  '-v'
@@ -180,7 +180,7 @@ end
 
 # Value taking short flag only
 begin
-    argparse 'x=' 'v/verbose' -- --verbose arg1 -v -x arg2
+    argparse 'x=' v/verbose -- --verbose arg1 -v -x arg2
     set -l
     # CHECK: _flag_v '--verbose'  '-v'
     # CHECK: _flag_verbose '--verbose'  '-v'
@@ -190,7 +190,7 @@ end
 
 # Implicit int short flag only
 begin
-    argparse 'x#' 'v/verbose' -- -v -v argle -v -x 321 bargle
+    argparse 'x#' v/verbose -- -v -v argle -v -x 321 bargle
     set -l
     # CHECK: _flag_v '-v'  '-v'  '-v'
     # CHECK: _flag_verbose '-v'  '-v'  '-v'
@@ -200,7 +200,7 @@ end
 
 # Implicit int short flag only with custom validation passes
 begin
-    argparse 'x#!_validate_int --max 500' 'v/verbose' -- -v -v -x 499 -v
+    argparse 'x#!_validate_int --max 500' v/verbose -- -v -v -x 499 -v
     set -l
     # CHECK: _flag_v '-v'  '-v'  '-v'
     # CHECK: _flag_verbose '-v'  '-v'  '-v'
@@ -210,7 +210,7 @@ end
 
 # Implicit int short flag only with custom validation fails
 begin
-    argparse 'x#!_validate_int --min 500' 'v/verbose' -- -v -v -x 499 -v
+    argparse 'x#!_validate_int --min 500' v/verbose -- -v -v -x 499 -v
     set -l
     # CHECKERR: argparse: Value '499' for flag 'x' less than min allowed of '500'
 end

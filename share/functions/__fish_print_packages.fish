@@ -1,6 +1,6 @@
 # Use --installed to limit to installed packages only
 function __fish_print_packages
-    argparse --name=__fish_print_packages 'i/installed' -- $argv
+    argparse --name=__fish_print_packages i/installed -- $argv
     or return
 
     set -l only_installed 1
@@ -46,7 +46,7 @@ function __fish_print_packages
     # Listing /var/db/pkg is a clean alternative.
     if type -q -f pkg_add
         set -l files /var/db/pkg/*
-        string replace '/var/db/pkg/' '' -- $files
+        string replace /var/db/pkg/ '' -- $files
         return
     end
 

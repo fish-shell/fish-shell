@@ -19,28 +19,28 @@ function __dnf_list_transactions
 end
 
 # Alias
-complete -c dnf -n "__fish_use_subcommand" -xa alias -d "Manage aliases"
+complete -c dnf -n __fish_use_subcommand -xa alias -d "Manage aliases"
 complete -c dnf -n "__fish_seen_subcommand_from alias" -xa add -d "Add a new alias"
 complete -c dnf -n "__fish_seen_subcommand_from alias" -xa list -d "Lists all defined aliases"
 complete -c dnf -n "__fish_seen_subcommand_from alias" -xa delete -d "Delete an alias"
 
 # Autoremove
-complete -c dnf -n "__fish_use_subcommand" -xa autoremove -d "Removes unneeded packages"
+complete -c dnf -n __fish_use_subcommand -xa autoremove -d "Removes unneeded packages"
 complete -c dnf -n "__fish_seen_subcommand_from autoremove" -xa "(__dnf_list_installed_packages)"
 
 # Check
-complete -c dnf -n "__fish_use_subcommand" -xa check -d "Check for problems in packagedb"
+complete -c dnf -n __fish_use_subcommand -xa check -d "Check for problems in packagedb"
 complete -c dnf -n "__fish_seen_subcommand_from check" -l dependencies -d "Checks dependencies"
 complete -c dnf -n "__fish_seen_subcommand_from check" -l duplicates -d "Checks duplicates"
 complete -c dnf -n "__fish_seen_subcommand_from check" -l obsoleted -d "Checks obsoleted"
 complete -c dnf -n "__fish_seen_subcommand_from check" -l provides -d "Checks provides"
 
 # Check-Update
-complete -c dnf -n "__fish_use_subcommand" -xa check-update -d "Checks for updates"
+complete -c dnf -n __fish_use_subcommand -xa check-update -d "Checks for updates"
 complete -c dnf -n "__fish_seen_subcommand_from check-update" -l changelogs
 
 # Clean
-complete -c dnf -n "__fish_use_subcommand" -xa clean -d "Clean up cache directory"
+complete -c dnf -n __fish_use_subcommand -xa clean -d "Clean up cache directory"
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa dbcache -d "Removes the database cache"
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa expire-cache -d "Marks the repository metadata expired"
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa metadata -d "Removes repository metadata"
@@ -48,14 +48,14 @@ complete -c dnf -n "__fish_seen_subcommand_from clean" -xa packages -d "Removes 
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa all -d "Removes all cache"
 
 # Distro-sync
-complete -c dnf -n "__fish_use_subcommand" -xa distro-sync -d "Synchronizes packages to match the latest"
+complete -c dnf -n __fish_use_subcommand -xa distro-sync -d "Synchronizes packages to match the latest"
 
 # Downgrade
-complete -c dnf -n "__fish_use_subcommand" -xa downgrade -d "Downgrades the specified package"
+complete -c dnf -n __fish_use_subcommand -xa downgrade -d "Downgrades the specified package"
 complete -c dnf -n "__fish_seen_subcommand_from downgrade" -xa "(__dnf_list_installed_packages)"
 
 # Group
-complete -c dnf -n "__fish_use_subcommand" -xa group -d "Manage groups"
+complete -c dnf -n __fish_use_subcommand -xa group -d "Manage groups"
 
 complete -c dnf -n "__fish_seen_subcommand_from group; and not __fish_seen_subcommand_from mark" -xa summary -d "Display overview of installed and available groups"
 complete -c dnf -n "__fish_seen_subcommand_from group; and not __fish_seen_subcommand_from mark" -xa info -d "Display package list of a group"
@@ -78,10 +78,10 @@ complete -c dnf -n "__fish_seen_subcommand_from group; and __fish_seen_subcomman
 complete -c dnf -n "__fish_seen_subcommand_from group; and __fish_seen_subcommand_from mark" -xa remove -d "Mark group removed without removing packages"
 
 # Help
-complete -c dnf -n "__fish_use_subcommand" -xa help -d "Display help and exit"
+complete -c dnf -n __fish_use_subcommand -xa help -d "Display help and exit"
 
 # History
-complete -c dnf -n "__fish_use_subcommand" -xa history -d "View and manage past transactions"
+complete -c dnf -n __fish_use_subcommand -xa history -d "View and manage past transactions"
 complete -c dnf -n "__fish_seen_subcommand_from history" -xa list -d "Lists all transactions"
 complete -c dnf -n "__fish_seen_subcommand_from history" -xa info -d "Describe the given transactions"
 complete -c dnf -n "__fish_seen_subcommand_from history" -xa redo -d "Redoes the specified transaction"
@@ -94,15 +94,15 @@ for i in info redo rollback undo
 end
 
 # Info
-complete -c dnf -n "__fish_use_subcommand" -xa info -d "Describes the given package"
+complete -c dnf -n __fish_use_subcommand -xa info -d "Describes the given package"
 complete -c dnf -n "__fish_seen_subcommand_from info; and not __fish_seen_subcommand_from history" -xa "(__dnf_list_available_packages)"
 
 # Install
-complete -c dnf -n "__fish_use_subcommand" -xa install -d "Install package"
+complete -c dnf -n __fish_use_subcommand -xa install -d "Install package"
 complete -c dnf -n "__fish_seen_subcommand_from install" -xa "(__dnf_list_available_packages)"
 
 # List
-complete -c dnf -n "__fish_use_subcommand" -xa list -d "Lists all packages"
+complete -c dnf -n __fish_use_subcommand -xa list -d "Lists all packages"
 complete -c dnf -n "__fish_seen_subcommand_from list" -l all -d "Lists all packages"
 complete -c dnf -n "__fish_seen_subcommand_from list" -l installed -d "Lists installed packages"
 complete -c dnf -n "__fish_seen_subcommand_from list" -l available -d "Lists available packages"
@@ -113,17 +113,17 @@ complete -c dnf -n "__fish_seen_subcommand_from list" -l upgrades -d "List avail
 complete -c dnf -n "__fish_seen_subcommand_from list" -l autoremove -d "List packages which will be removed by autoremove"
 
 # Makecache
-complete -c dnf -n "__fish_use_subcommand" -xa makecache -d "Downloads and caches metadata for all known repos"
+complete -c dnf -n __fish_use_subcommand -xa makecache -d "Downloads and caches metadata for all known repos"
 complete -c dnf -n "__fish_seen_subcommand_from makecache" -l timer -d "Instructs DNF to be more resource-aware"
 
 # Mark
-complete -c dnf -n "__fish_use_subcommand" -xa mark -d "Mark packages"
+complete -c dnf -n __fish_use_subcommand -xa mark -d "Mark packages"
 complete -c dnf -n "__fish_seen_subcommand_from mark" -xa install -d "Mark package installed"
 complete -c dnf -n "__fish_seen_subcommand_from mark" -xa remove -d "Unmarks installed package"
 complete -c dnf -n "__fish_seen_subcommand_from mark" -xa group -d "Mark installed by group"
 
 # Module
-complete -c dnf -n "__fish_use_subcommand" -xa module -d "Manage modules"
+complete -c dnf -n __fish_use_subcommand -xa module -d "Manage modules"
 complete -c dnf -n "__fish_seen_subcommand_from module" -xa install -d "Install module"
 complete -c dnf -n "__fish_seen_subcommand_from module" -xa update -d "Update modules"
 complete -c dnf -n "__fish_seen_subcommand_from module" -xa remove -d "Remove module"
@@ -139,21 +139,21 @@ complete -c dnf -n "__fish_seen_subcommand_from module" -xa info -d "Print modul
 complete -c dnf -n "__fish_seen_subcommand_from module; and __fish_seen_subcommand_from info" -l profile -d "Print module profiles information"
 
 # Provides
-complete -c dnf -n "__fish_use_subcommand" -xa provides -d "Finds packages providing the given command"
+complete -c dnf -n __fish_use_subcommand -xa provides -d "Finds packages providing the given command"
 
 # Reinstall
-complete -c dnf -n "__fish_use_subcommand" -xa reinstall -d "Reinstalls a package"
+complete -c dnf -n __fish_use_subcommand -xa reinstall -d "Reinstalls a package"
 complete -c dnf -n "__fish_seen_subcommand_from reinstall" -xa "(__dnf_list_installed_packages)"
 
 # Remove
-complete -c dnf -n "__fish_use_subcommand" -xa remove -d "Remove packages"
+complete -c dnf -n __fish_use_subcommand -xa remove -d "Remove packages"
 complete -c dnf -n "__fish_seen_subcommand_from remove" -xa "(__dnf_list_installed_packages)" -d "Removes the specified packages"
 complete -c dnf -n "__fish_seen_subcommand_from remove" -l duplicates -d "Removes older version of duplicated packages"
 complete -c dnf -n "__fish_seen_subcommand_from remove" -l oldinstallonly -d "Removes old installonly packages"
 
 # Repolist and Repoinfo
-complete -c dnf -n "__fish_use_subcommand" -xa repoinfo -d "Verbose repolist"
-complete -c dnf -n "__fish_use_subcommand" -xa repolist -d "Lists all enabled repositories"
+complete -c dnf -n __fish_use_subcommand -xa repoinfo -d "Verbose repolist"
+complete -c dnf -n __fish_use_subcommand -xa repolist -d "Lists all enabled repositories"
 
 for i in repolist repoinfo
     complete -c dnf -n "__fish_seen_subcommand_from $i" -l enabled -d "Lists all enabled repositories"
@@ -162,7 +162,7 @@ for i in repolist repoinfo
 end
 
 # Repoquery
-complete -c dnf -n "__fish_use_subcommand" -xa repoquery -d "Queries DNF repositories"
+complete -c dnf -n __fish_use_subcommand -xa repoquery -d "Queries DNF repositories"
 complete -c dnf -n "__fish_seen_subcommand_from repoquery" -l querytags -d "Provides the list of tags"
 
 # repoquery select options
@@ -221,20 +221,20 @@ complete -c dnf -n "__fish_seen_subcommand_from repoquery" -l recursive -d "Quer
 complete -c dnf -n "__fish_seen_subcommand_from repoquery" -l resolve -d "Resolve capabilities to originating packages"
 
 # Repository-Packages
-complete -c dnf -n "__fish_use_subcommand" -xa repository-packages -d "Run commands on all packages in the repository"
+complete -c dnf -n __fish_use_subcommand -xa repository-packages -d "Run commands on all packages in the repository"
 
 # Search
-complete -c dnf -n "__fish_use_subcommand" -xa search -d "Search package metadata for keywords"
+complete -c dnf -n __fish_use_subcommand -xa search -d "Search package metadata for keywords"
 complete -c dnf -n "__fish_seen_subcommand_from search" -l all -d "Lists packages that match at least one of the keys"
 
 # Shell
-complete -c dnf -n "__fish_use_subcommand" -xa shell -d "Opens an interactive shell"
+complete -c dnf -n __fish_use_subcommand -xa shell -d "Opens an interactive shell"
 
 # Swap
-complete -c dnf -n "__fish_use_subcommand" -xa swap -d "Remove spec and install spec in one transaction"
+complete -c dnf -n __fish_use_subcommand -xa swap -d "Remove spec and install spec in one transaction"
 
 # Updateinfo
-complete -c dnf -n "__fish_use_subcommand" -xa updateinfo -d "Display information about update advisories"
+complete -c dnf -n __fish_use_subcommand -xa updateinfo -d "Display information about update advisories"
 complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l summary -d "Displays the summary"
 complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l list -d "List of advisories"
 complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l info -d "Detailed information"
@@ -246,63 +246,63 @@ complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l installed
 complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l updates
 
 # Upgrade
-complete -c dnf -n "__fish_use_subcommand" -xa upgrade -d "Updates packages"
+complete -c dnf -n __fish_use_subcommand -xa upgrade -d "Updates packages"
 complete -c dnf -n "__fish_seen_subcommand_from upgrade" -xa "(__dnf_list_installed_packages)"
 
 # Upgrade-Minimal
-complete -c dnf -n "__fish_use_subcommand" -xa upgrade-minimal -d "Updates packages"
+complete -c dnf -n __fish_use_subcommand -xa upgrade-minimal -d "Updates packages"
 complete -c dnf -n "__fish_seen_subcommand_from upgrade-minimal" -xa "(__dnf_list_installed_packages)"
 
 # Options:
 # Using __fish_no_arguments here so that users are not completely overloaded with
 #   available options when using subcommands (e.g. repoquery) (40 vs 100ish)
-complete -c dnf -n "__fish_no_arguments" -s 4 -d "Use IPv4 only"
-complete -c dnf -n "__fish_no_arguments" -s 6 -d "Use IPv6 only"
-complete -c dnf -n "__fish_no_arguments" -l advisory -l advisories -d "Include packages corresponding to the advisory ID"
-complete -c dnf -n "__fish_no_arguments" -l allowerasing -d "Allow erasing of installed packages to resolve dependencies"
-complete -c dnf -n "__fish_no_arguments" -l assumeno -d "Answer no for all questions"
-complete -c dnf -n "__fish_no_arguments" -s b -l best -d "Try the best available package versions in transactions"
-complete -c dnf -n "__fish_no_arguments" -l bugfix -d "Include packages that fix a bugfix issue"
-complete -c dnf -n "__fish_no_arguments" -l bz -l bzs -d "Include packages that fix a Bugzilla ID"
-complete -c dnf -n "__fish_no_arguments" -s C -l cacheonly -d "Run entirely from system cache"
-complete -c dnf -n "__fish_no_arguments" -l color -xa "always never auto" -d "Control whether color is used"
-complete -c dnf -n "__fish_no_arguments" -s c -l config -d "Configuration file location"
-complete -c dnf -n "__fish_no_arguments" -l cve -l cves -d "Include packages that fix a CVE"
-complete -c dnf -n "__fish_no_arguments" -s d -l debuglevel -d "Debugging output level"
-complete -c dnf -n "__fish_no_arguments" -l debugsolver -d "Dump dependency solver debugging info"
-complete -c dnf -n "__fish_no_arguments" -l disableexcludes -l disableexcludepkgs -d "Disable excludes"
-complete -c dnf -n "__fish_no_arguments" -l disable -l set-disabled -d "Disable specified repositories"
-complete -c dnf -n "__fish_no_arguments" -l disableplugin -d "Disable the listed plugins specified"
-complete -c dnf -n "__fish_no_arguments" -l disablerepo -d "Disable specified repositories"
-complete -c dnf -n "__fish_no_arguments" -l downloaddir -l destdir -d "Change downloaded packages to provided directory"
-complete -c dnf -n "__fish_no_arguments" -l downloadonly -d "Download packages without performing any transaction"
-complete -c dnf -n "__fish_no_arguments" -l enable -l set-enabled -d "Enable specified repositories"
-complete -c dnf -n "__fish_no_arguments" -l enableplugin -d "Enable the listed plugins"
-complete -c dnf -n "__fish_no_arguments" -l enablerepo -d "Enable additional repositories"
-complete -c dnf -n "__fish_no_arguments" -l enhancement -d "Include enhancement relevant packages"
-complete -c dnf -n "__fish_no_arguments" -s x -l exclude -d "Exclude packages specified"
-complete -c dnf -n "__fish_no_arguments" -l forcearch -d "Force the use of the specified architecture"
-complete -c dnf -n "__fish_no_arguments" -s h -l help -l help-i -d "Show the help"
-complete -c dnf -n "__fish_no_arguments" -l installroot -d "Specifies an alternative installroot"
-complete -c dnf -n "__fish_no_arguments" -l newpackage -d "Include newpackage relevant packages"
-complete -c dnf -n "__fish_no_arguments" -l noautoremove -d "Disable autoremove"
-complete -c dnf -n "__fish_no_arguments" -l nobest -d "Set best option to False"
-complete -c dnf -n "__fish_no_arguments" -l nodocs -d "Do not install documentation"
-complete -c dnf -n "__fish_no_arguments" -l nogpgcheck -d "Skip checking GPG signatures on packages"
-complete -c dnf -n "__fish_no_arguments" -l noplugins -d "Disable all plugins"
-complete -c dnf -n "__fish_no_arguments" -l obsoletes -d "Enables obsoletes processing logic"
-complete -c dnf -n "__fish_no_arguments" -s q -l quiet -d "Quiet mode"
-complete -c dnf -n "__fish_no_arguments" -s R -l randomwait -d "Maximum command wait time"
-complete -c dnf -n "__fish_no_arguments" -l refresh -d "Set metadata as expired before running the command"
-complete -c dnf -n "__fish_no_arguments" -l releasever -d "Configure the distribution release"
-complete -c dnf -n "__fish_no_arguments" -l repofrompath -d "Specify repository to add to the repositories for this query"
-complete -c dnf -n "__fish_no_arguments" -l repo -l repoid -d "Enable just specific repositories by an id or a glob"
-complete -c dnf -n "__fish_no_arguments" -l rpmverbosity -d "RPM debug scriptlet output level"
-complete -c dnf -n "__fish_no_arguments" -l sec-severity -l secseverity -d "Includes packages that provide a fix for an issue of the specified severity"
-complete -c dnf -n "__fish_no_arguments" -l security -d "Includes packages that provide a fix for a security issue"
-complete -c dnf -n "__fish_no_arguments" -l setopt -d "Override a configuration option"
-complete -c dnf -n "__fish_no_arguments" -l skip-broken -d "Skips broken packages"
-complete -c dnf -n "__fish_no_arguments" -l showduplicates -d "Shows duplicate packages"
-complete -c dnf -n "__fish_no_arguments" -s v -l verbose -d "Verbose mode"
-complete -c dnf -n "__fish_no_arguments" -l version -d "Shows DNF version and exit"
-complete -c dnf -n "__fish_no_arguments" -s y -l assumeyes -d "Answer yes for all questions"
+complete -c dnf -n __fish_no_arguments -s 4 -d "Use IPv4 only"
+complete -c dnf -n __fish_no_arguments -s 6 -d "Use IPv6 only"
+complete -c dnf -n __fish_no_arguments -l advisory -l advisories -d "Include packages corresponding to the advisory ID"
+complete -c dnf -n __fish_no_arguments -l allowerasing -d "Allow erasing of installed packages to resolve dependencies"
+complete -c dnf -n __fish_no_arguments -l assumeno -d "Answer no for all questions"
+complete -c dnf -n __fish_no_arguments -s b -l best -d "Try the best available package versions in transactions"
+complete -c dnf -n __fish_no_arguments -l bugfix -d "Include packages that fix a bugfix issue"
+complete -c dnf -n __fish_no_arguments -l bz -l bzs -d "Include packages that fix a Bugzilla ID"
+complete -c dnf -n __fish_no_arguments -s C -l cacheonly -d "Run entirely from system cache"
+complete -c dnf -n __fish_no_arguments -l color -xa "always never auto" -d "Control whether color is used"
+complete -c dnf -n __fish_no_arguments -s c -l config -d "Configuration file location"
+complete -c dnf -n __fish_no_arguments -l cve -l cves -d "Include packages that fix a CVE"
+complete -c dnf -n __fish_no_arguments -s d -l debuglevel -d "Debugging output level"
+complete -c dnf -n __fish_no_arguments -l debugsolver -d "Dump dependency solver debugging info"
+complete -c dnf -n __fish_no_arguments -l disableexcludes -l disableexcludepkgs -d "Disable excludes"
+complete -c dnf -n __fish_no_arguments -l disable -l set-disabled -d "Disable specified repositories"
+complete -c dnf -n __fish_no_arguments -l disableplugin -d "Disable the listed plugins specified"
+complete -c dnf -n __fish_no_arguments -l disablerepo -d "Disable specified repositories"
+complete -c dnf -n __fish_no_arguments -l downloaddir -l destdir -d "Change downloaded packages to provided directory"
+complete -c dnf -n __fish_no_arguments -l downloadonly -d "Download packages without performing any transaction"
+complete -c dnf -n __fish_no_arguments -l enable -l set-enabled -d "Enable specified repositories"
+complete -c dnf -n __fish_no_arguments -l enableplugin -d "Enable the listed plugins"
+complete -c dnf -n __fish_no_arguments -l enablerepo -d "Enable additional repositories"
+complete -c dnf -n __fish_no_arguments -l enhancement -d "Include enhancement relevant packages"
+complete -c dnf -n __fish_no_arguments -s x -l exclude -d "Exclude packages specified"
+complete -c dnf -n __fish_no_arguments -l forcearch -d "Force the use of the specified architecture"
+complete -c dnf -n __fish_no_arguments -s h -l help -l help-i -d "Show the help"
+complete -c dnf -n __fish_no_arguments -l installroot -d "Specifies an alternative installroot"
+complete -c dnf -n __fish_no_arguments -l newpackage -d "Include newpackage relevant packages"
+complete -c dnf -n __fish_no_arguments -l noautoremove -d "Disable autoremove"
+complete -c dnf -n __fish_no_arguments -l nobest -d "Set best option to False"
+complete -c dnf -n __fish_no_arguments -l nodocs -d "Do not install documentation"
+complete -c dnf -n __fish_no_arguments -l nogpgcheck -d "Skip checking GPG signatures on packages"
+complete -c dnf -n __fish_no_arguments -l noplugins -d "Disable all plugins"
+complete -c dnf -n __fish_no_arguments -l obsoletes -d "Enables obsoletes processing logic"
+complete -c dnf -n __fish_no_arguments -s q -l quiet -d "Quiet mode"
+complete -c dnf -n __fish_no_arguments -s R -l randomwait -d "Maximum command wait time"
+complete -c dnf -n __fish_no_arguments -l refresh -d "Set metadata as expired before running the command"
+complete -c dnf -n __fish_no_arguments -l releasever -d "Configure the distribution release"
+complete -c dnf -n __fish_no_arguments -l repofrompath -d "Specify repository to add to the repositories for this query"
+complete -c dnf -n __fish_no_arguments -l repo -l repoid -d "Enable just specific repositories by an id or a glob"
+complete -c dnf -n __fish_no_arguments -l rpmverbosity -d "RPM debug scriptlet output level"
+complete -c dnf -n __fish_no_arguments -l sec-severity -l secseverity -d "Includes packages that provide a fix for an issue of the specified severity"
+complete -c dnf -n __fish_no_arguments -l security -d "Includes packages that provide a fix for a security issue"
+complete -c dnf -n __fish_no_arguments -l setopt -d "Override a configuration option"
+complete -c dnf -n __fish_no_arguments -l skip-broken -d "Skips broken packages"
+complete -c dnf -n __fish_no_arguments -l showduplicates -d "Shows duplicate packages"
+complete -c dnf -n __fish_no_arguments -s v -l verbose -d "Verbose mode"
+complete -c dnf -n __fish_no_arguments -l version -d "Shows DNF version and exit"
+complete -c dnf -n __fish_no_arguments -s y -l assumeyes -d "Answer yes for all questions"

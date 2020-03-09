@@ -1,5 +1,5 @@
 function help --description 'Show help for the fish shell'
-    set -l options 'h/help'
+    set -l options h/help
     argparse -n help --max-args=1 $options -- $argv
     or return
 
@@ -98,7 +98,7 @@ function help --description 'Show help for the fish shell'
     # In Cygwin, start the user-specified browser using cygstart,
     # only if a Windows browser is to be used.
     if type -q cygstart
-        if test $fish_browser != "cygstart"
+        if test $fish_browser != cygstart
             and not command -sq $fish_browser[1]
             # Escaped quotes are necessary to work with spaces in the path
             # when the command is finally eval'd.
@@ -145,7 +145,7 @@ function help --description 'Show help for the fish shell'
         # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
         # but only if a Windows browser is being used
         if type -q cygpath
-            and string match -qr "cygstart" $fish_browser[1]
+            and string match -qr cygstart $fish_browser[1]
             set page_url file://(cygpath -m $__fish_help_dir)/$fish_help_page
         else if type -q wslpath
             and string match -qr '.exe' $fish_browser[1]
@@ -174,7 +174,7 @@ function help --description 'Show help for the fish shell'
             # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
             # but only if a Windows browser is being used
             if type -q cygpath
-                and string match -qr "cygstart" $fish_browser[1]
+                and string match -qr cygstart $fish_browser[1]
                 set page_url file://(cygpath -m $tmpname)
             else if type -q wslpath
                 and string match -qr '.exe' $fish_browser[1]
@@ -189,7 +189,7 @@ function help --description 'Show help for the fish shell'
         # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
-            case 'htmlview' 'x-www-browser'
+            case htmlview x-www-browser
                 printf (_ 'help: Help is being displayed in your default browser.\n')
             case '*'
                 printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]

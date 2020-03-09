@@ -41,7 +41,7 @@ end
 function __fish_snap_subcommand
     set subcommand $argv[1]
     set -e argv[1]
-    complete -f -c snap -n '__fish_snap_no_subcommand' -a $subcommand $argv
+    complete -f -c snap -n __fish_snap_no_subcommand -a $subcommand $argv
 end
 
 function __fish_snap_option
@@ -103,7 +103,7 @@ function __fish_snap_assertion
     set -e argv[1]
     complete -f -c snap -n '__fish_snap_using_subcommand known; and __fish_snap_no_assertion' -a $assertion
     complete -f -c snap -n "__fish_snap_using_assertion $assertion" -a "(__fish_snap_filters $assertion)"\
- -d "Filter"
+ -d Filter
 end
 
 function __fish_snap_filters -d 'List assertion filters'
@@ -114,7 +114,7 @@ end
 #complete -c snap -n '__fish_snap_use_package' -a '(__fish_print_packages)' -d 'Package'
 
 # Enable file completions where appropriate
-complete -c snap -n '__fish_snap_use_file' -a '(__fish_complete_path)'
+complete -c snap -n __fish_snap_use_file -a '(__fish_complete_path)'
 
 # Support flags
 complete -x -f -c snap -s h -l help -d 'Show this help message'
@@ -128,7 +128,7 @@ __fish_snap_subcommand ack -r -d "Adds an assertion to the system"
 
 # Alias
 __fish_snap_subcommand alias -r -d "Sets up a manual alias"
-__fish_snap_option alias -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option alias -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Aliases
 __fish_snap_subcommand aliases -d "Lists aliases in the system"
@@ -174,7 +174,7 @@ __fish_snap_option find -l section -d "Restrict the search to a given section"
 __fish_snap_subcommand get -r -d "Prints configuration options"
 __fish_snap_option get -s t -d "Strict typing with nulls and quoted strings"
 __fish_snap_option get -s d -d "Always return documents, even with single key"
-__fish_snap_option get -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option get -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Help
 __fish_snap_subcommand help -d "The help command shows useful information"
@@ -183,7 +183,7 @@ __fish_snap_option help -l man -d "Generates the manpage"
 # Info
 __fish_snap_subcommand info -r -d "Show detailed information about a snap"
 __fish_snap_option info -l verbose -d "Include a verbose list of snap's notes"
-__fish_snap_option info -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option info -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Install
 __fish_snap_subcommand install -r -d "Installs a snap to the system"
@@ -200,7 +200,7 @@ __fish_snap_option install -l dangerous -d "Install the given snap file even if 
 
 # Interfaces
 __fish_snap_subcommand interfaces -d "Lists interfaces in the system"
-complete -f -c snap -n '__fish_snap_using_subcommand interfaces' -a '(__fish_snap_installed_snaps)' -d "Snap"
+complete -f -c snap -n '__fish_snap_using_subcommand interfaces' -a '(__fish_snap_installed_snaps)' -d Snap
 __fish_snap_option interfaces -s i -d "Constrain listing to specific interfaces"
 
 # Known
@@ -228,7 +228,7 @@ __fish_snap_subcommand logout -d "Log out of the store"
 
 # Prefer
 __fish_snap_subcommand prefer -r -d "Prefes aliases from a snap and disable conflicts"
-__fish_snap_option prefer -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option prefer -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Refresh
 __fish_snap_subcommand refresh -r -d "Refreshes a snap in the system"
@@ -242,12 +242,12 @@ __fish_snap_option refresh -l devmode -d "Put snap in development mode and disab
 __fish_snap_option refresh -l jailmode -d "Put snap in enforced confinement mode"
 __fish_snap_option refresh -l classic -d "Put snap in classic mode and disable security confinement"
 __fish_snap_option refresh -l ignore-validation -d "Ignore validation by other snaps blocking the refresh"
-__fish_snap_option refresh -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option refresh -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Remove
 __fish_snap_subcommand remove -r -d "Removes a snap from the system"
 __fish_snap_option remove -l revision -d "Removes only the given revision"
-__fish_snap_option remove -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option remove -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Revert
 __fish_snap_subcommand revert -r -d "Revert the given snap to the previous state"
@@ -255,21 +255,21 @@ __fish_snap_option refresh -l revision -d "Revert to the given revision"
 __fish_snap_option refresh -l devmode -d "Put snap in development mode and disable security confinement"
 __fish_snap_option refresh -l jailmode -d "Put snap in enforced confinement mode"
 __fish_snap_option refresh -l classic -d "Put snap in classic mode and disable security confinement"
-__fish_snap_option revert -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option revert -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Run
 __fish_snap_subcommand run -r -d "Run the given snap command"
 __fish_snap_option run -l shell -d "Run a shell instead of the command (useful for debugging)"
-__fish_snap_option run -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option run -a '(__fish_snap_installed_snaps)' -d Snap
 
 # There seems to be no programmatic way of getting configuration options
 # Set
 __fish_snap_subcommand set -r -d "Changes configuration options"
-__fish_snap_option set -a '(__fish_snap_installed_snaps)' -d "Snap"
+__fish_snap_option set -a '(__fish_snap_installed_snaps)' -d Snap
 
 # Tasks
 __fish_snap_subcommand tasks -d "List a change's tasks"
-__fish_snap_option tasks -a '(__fish_snap_change_id)' -d "ID"
+__fish_snap_option tasks -a '(__fish_snap_change_id)' -d ID
 
 # Try
 __fish_snap_subcommand try -r -d "Tests a snap in the system"
@@ -286,4 +286,4 @@ __fish_snap_subcommand version -d "Shows version details"
 
 # Watch
 __fish_snap_subcommand watch -d "Watch a change in progress"
-__fish_snap_option watch -a '(__fish_snap_change_id)' -d "ID"
+__fish_snap_option watch -a '(__fish_snap_change_id)' -d ID

@@ -7,7 +7,7 @@ echo About to sigint
 #CHECK: About to sigint
 
 while true
-  sh -c 'echo Here we go; sleep .25; kill -s INT $$'
+    sh -c 'echo Here we go; sleep .25; kill -s INT $$'
 end
 #CHECK: Here we go
 

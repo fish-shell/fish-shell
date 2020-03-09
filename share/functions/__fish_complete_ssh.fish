@@ -7,7 +7,7 @@ function __fish_complete_ssh -d "common completions for ssh commands" --argument
     complete -xc $command -s c -d "Encryption algorithm" -a "blowfish 3des des"
     complete -r -c $command -s F -d "Configuration file"
     complete -r -c $command -s i -d "Identity file"
-    complete -x -c $command -s o -d "Options" -a "
+    complete -x -c $command -s o -d Options -a "
 		AddressFamily
 		BatchMode
 		BindAddress

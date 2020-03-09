@@ -57,4 +57,4 @@ function __contains_gradle_build
     test -f build.gradle
 end
 
-complete -x -c gradle -n '__contains_gradle_build' -a "(__cache_or_get_gradle_completion)"
+complete -x -c gradle -n __contains_gradle_build -a "(__cache_or_get_gradle_completion)"

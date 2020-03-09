@@ -9,7 +9,7 @@ set fish_files
 set python_files
 set all no
 
-if test "$argv[1]" = "--all"
+if test "$argv[1]" = --all
     set all yes
     set -e argv[1]
 end

@@ -1,5 +1,6 @@
 #RUN: %fish %s
-jobs -q; echo $status
+jobs -q
+echo $status
 #CHECK: 1
 sleep 5 &
 sleep 5 &
@@ -7,7 +8,8 @@ jobs -c
 #CHECK: Command
 #CHECK: sleep
 #CHECK: sleep
-jobs -q; echo $status
+jobs -q
+echo $status
 #CHECK: 0
 bg -23 1 2>/dev/null
 or echo bg: invalid option -23 >&2
@@ -46,13 +48,15 @@ sleep 2
 
 # Verify `jobs -l` works and returns the right status codes
 # https://github.com/fish-shell/fish-shell/issues/6104
-jobs --last --command; echo $status
+jobs --last --command
+echo $status
 #CHECK: Command
 #CHECK: sleep
 #CHECK: sleep is done
 #CHECK: 1
 sleep 0.2 &
-jobs -lc; echo $status
+jobs -lc
+echo $status
 #CHECK: Command
 #CHECK: sleep
 #CHECK: 0

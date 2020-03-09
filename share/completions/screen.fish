@@ -10,9 +10,9 @@ function __fish_complete_screen_general_list_mac -d "Get the socket list on mac"
     set -l sockets (ls)
     if test (count $sockets) -ne 0
         switch $argv
-            case "Detached"
+            case Detached
                 stat -f "%Lp %SB %N" -t "%D %T" $sockets | string match -r '^6\d{2} .*$' | string replace -r '^6\d{2} (\S+ \S+) (\S+)' '$2\t$1 Detached'
-            case "Attached"
+            case Attached
                 stat -f "%Lp %SB %N" -t "%D %T" $sockets | string match -r '^7\d{2} .*$' | string replace -r '^7\d{2} (\S+ \S+) (\S+)' '$2\t$1 Attached'
         end
     end

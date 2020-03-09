@@ -1,6 +1,6 @@
 # General options:
 complete -c pg_restore -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Connect to database name"
-complete -c pg_restore -s f -l file -a '-' -r -d "Output file name (- for stdout)"
+complete -c pg_restore -s f -l file -a - -r -d "Output file name (- for stdout)"
 complete -c pg_restore -s F -l format -x -a "c\t'Custom format (pg_dump)' d\t'Directory archive' t\t'Tar archive'" -d "Backup file format (should be automatic)"
 complete -c pg_restore -s l -l list -d "Print summarized TOC of the archive"
 complete -c pg_restore -s v -l verbose -d "Verbose mode"

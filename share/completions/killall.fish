@@ -1,7 +1,7 @@
 # On Solaris, `killall` kills all processes. So we don't want to bother providing completion
 # support on that OS.
 set -l OS (uname)
-if test "$OS" = 'SunOS'
+if test "$OS" = SunOS
     exit 0
 end
 
@@ -15,7 +15,7 @@ for i in $__kill_signals
     complete -c killall -o $number -d $name
     complete -c killall -o $name
     # The `-s` flag doesn't work in OS X
-    test "$OS" != 'Darwin'
+    test "$OS" != Darwin
     and complete -c killall -s s -x -a "$number $name"
 end
 

@@ -7,16 +7,16 @@
 set OS ""
 switch (uname)
     case Linux
-        set OS "Linux"
+        set OS Linux
     case Darwin
-        set OS "macOS"
+        set OS macOS
     case FreeBSD
-        set OS "FreeBSD"
+        set OS FreeBSD
     case SunOS
-        set OS "SunOS"
+        set OS SunOS
         # Others?
     case "*"
-        set OS "unknown"
+        set OS unknown
 end
 
 # Does the current invocation need a command?
@@ -43,12 +43,12 @@ function __fish_zpool_list_used_vdevs -a pool
 end
 
 function __fish_zpool_list_available_vdevs
-    if test $OS = 'Linux'
-        find /dev -type b | string replace '/dev/' ''
-    else if test $OS = 'FreeBSD'
+    if test $OS = Linux
+        find /dev -type b | string replace /dev/ ''
+    else if test $OS = FreeBSD
         sysctl -an kern.disks | string split ' '
-    else if test $OS = 'SunOS'
-        find /dev/dsk -type b | string replace '/dev/' ''
+    else if test $OS = SunOS
+        find /dev/dsk -type b | string replace /dev/ ''
     end
 end
 
@@ -119,7 +119,7 @@ function __fish_zpool_list_ro_properties
         echo -e "available\tAvailable space"
         echo -e "avail\tAvailable space"
     end
-    if test $OS = 'SunOS'
+    if test $OS = SunOS
         echo -e "bootsize\tSystem boot partition size"
     end
     echo -e "capacity\tUsage percentage of pool"
@@ -167,39 +167,39 @@ function __fish_zpool_list_rw_properties
     zpool list -o all | string replace -ra ' +' '\n' | string lower | string replace -rf '^feature@(.*)' '$1'
 end
 
-complete -c zpool -f -n '__fish_zpool_needs_command' -s '?' -d 'Display a help message'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'add' -d 'Add new virtual devices to pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'attach' -d 'Attach virtual device to a pool device'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'clear' -d 'Clear devices errors in pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'create' -d 'Create a new storage pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'destroy' -d 'Destroy a storage pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'detach' -d 'Detach virtual device from a mirroring pool'
-if test $OS = 'Linux'
-    complete -c zpool -f -n '__fish_zpool_needs_command' -a 'events' -d 'Display pool event log'
+complete -c zpool -f -n __fish_zpool_needs_command -s '?' -d 'Display a help message'
+complete -c zpool -f -n __fish_zpool_needs_command -a add -d 'Add new virtual devices to pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a attach -d 'Attach virtual device to a pool device'
+complete -c zpool -f -n __fish_zpool_needs_command -a clear -d 'Clear devices errors in pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a create -d 'Create a new storage pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a destroy -d 'Destroy a storage pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a detach -d 'Detach virtual device from a mirroring pool'
+if test $OS = Linux
+    complete -c zpool -f -n __fish_zpool_needs_command -a events -d 'Display pool event log'
 end
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'export' -d 'Export a pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'get' -d 'Get one or several pool properties'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'history' -d 'Display pool command history'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'import' -d 'List importable pools, or import some'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'iostat' -d 'Display pool I/O stats'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'labelclear' -d 'Remove ZFS label information from the specified device'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'list' -d 'List pools with health status and space usage'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'offline' -d 'Take the specified devices offline'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'online' -d 'Bring the specified devices back online'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'reguid' -d 'Reset pool GUID'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'remove' -d 'Remove virtual devices from pool'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'reopen' -d 'Reopen pool devices'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'replace' -d 'Replace a pool virtual device'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'scrub' -d 'Start or stop scrubbing'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'set' -d 'Set a pool property'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'split' -d 'Create a pool by splitting an existing mirror one'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'status' -d 'Display detailed pool health status'
-complete -c zpool -f -n '__fish_zpool_needs_command' -a 'upgrade' -d 'List upgradeable pools, or upgrade one'
+complete -c zpool -f -n __fish_zpool_needs_command -a export -d 'Export a pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a get -d 'Get one or several pool properties'
+complete -c zpool -f -n __fish_zpool_needs_command -a history -d 'Display pool command history'
+complete -c zpool -f -n __fish_zpool_needs_command -a import -d 'List importable pools, or import some'
+complete -c zpool -f -n __fish_zpool_needs_command -a iostat -d 'Display pool I/O stats'
+complete -c zpool -f -n __fish_zpool_needs_command -a labelclear -d 'Remove ZFS label information from the specified device'
+complete -c zpool -f -n __fish_zpool_needs_command -a list -d 'List pools with health status and space usage'
+complete -c zpool -f -n __fish_zpool_needs_command -a offline -d 'Take the specified devices offline'
+complete -c zpool -f -n __fish_zpool_needs_command -a online -d 'Bring the specified devices back online'
+complete -c zpool -f -n __fish_zpool_needs_command -a reguid -d 'Reset pool GUID'
+complete -c zpool -f -n __fish_zpool_needs_command -a remove -d 'Remove virtual devices from pool'
+complete -c zpool -f -n __fish_zpool_needs_command -a reopen -d 'Reopen pool devices'
+complete -c zpool -f -n __fish_zpool_needs_command -a replace -d 'Replace a pool virtual device'
+complete -c zpool -f -n __fish_zpool_needs_command -a scrub -d 'Start or stop scrubbing'
+complete -c zpool -f -n __fish_zpool_needs_command -a set -d 'Set a pool property'
+complete -c zpool -f -n __fish_zpool_needs_command -a split -d 'Create a pool by splitting an existing mirror one'
+complete -c zpool -f -n __fish_zpool_needs_command -a status -d 'Display detailed pool health status'
+complete -c zpool -f -n __fish_zpool_needs_command -a upgrade -d 'List upgradeable pools, or upgrade one'
 
 # add completions
 complete -c zpool -f -n '__fish_zpool_using_command add' -s f -d 'Force use of virtual device'
 complete -c zpool -f -n '__fish_zpool_using_command add' -s n -d 'Dry run: only display resulting configuration'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command add' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command add' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command add' -s P -d 'Display device full path'
@@ -210,14 +210,14 @@ complete -c zpool -x -n '__fish_zpool_using_command add' -d 'Virtual device to a
 
 # attach completions
 complete -c zpool -f -n '__fish_zpool_using_command attach' -s f -d 'Force use of virtual device'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -x -n '__fish_zpool_using_command attach' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
 complete -c zpool -x -n '__fish_zpool_using_command attach' -d 'Pool to attach virtual device to' -a '(__fish_complete_zfs_pools)'
 complete -c zpool -x -n '__fish_zpool_using_command attach' -d 'Virtual device to operate on' -a '(__fish_zpool_list_available_vdevs)'
 
 # clear completions
-if test $OS = 'FreeBSD'
+if test $OS = FreeBSD
     complete -c zpool -f -n '__fish_zpool_using_command clear' -s F -d 'Initiate recovery mode'
     complete -c zpool -f -n '__fish_zpool_using_command clear; and __fish_contains_opt -s F' -s n -d 'Dry run: only determine if the recovery is possible, without attempting it'
 end
@@ -225,7 +225,7 @@ complete -c zpool -x -n '__fish_zpool_using_command clear' -d 'Pool to clear err
 complete -c zpool -f -n '__fish_zpool_using_command clear' -d 'Virtual device to operate on' -a '(__fish_zpool_list_used_vdevs)'
 
 # create completions
-if test $OS = 'SunOS'
+if test $OS = SunOS
     complete -c zpool -f -n '__fish_zpool_using_command create' -s B -d 'Create whole disk pool with EFI System partition to support booting system with UEFI firmware'
 else
     complete -c zpool -f -n '__fish_zpool_using_command create' -s f -d 'Force use of virtual device'
@@ -236,7 +236,7 @@ complete -c zpool -x -n '__fish_zpool_using_command create' -s o -d 'Pool proper
 complete -c zpool -x -n '__fish_zpool_using_command create' -s O -d 'Root filesystem property' -a '(__fish_complete_zfs_ro_properties; __fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 complete -c zpool -r -n '__fish_zpool_using_command create' -s R -d 'Equivalent to "-o cachefile=none,altroot=ROOT"'
 complete -c zpool -x -n '__fish_zpool_using_command create' -s m -d 'Root filesystem mountpoint' -a 'legacy none'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -x -n '__fish_zpool_using_command create' -s t -d 'Set a different in-core pool name'
 end
 complete -c zpool -x -n '__fish_zpool_using_command create' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
@@ -250,7 +250,7 @@ complete -c zpool -x -n '__fish_zpool_using_command clear' -d 'Pool to detach de
 complete -c zpool -x -n '__fish_zpool_using_command clear' -d 'Physical device to detach' -a '(__fish_zpool_list_used_vdevs)'
 
 # events completions
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command events' -s v -d 'Print verbose event information'
     complete -c zpool -f -n '__fish_zpool_using_command events' -s H -d 'Print output in a machine-parsable format'
     complete -c zpool -f -n '__fish_zpool_using_command events' -s f -d 'Output appended data as the log grows'
@@ -259,7 +259,7 @@ if test $OS = 'Linux'
 end
 
 # export completions
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command export' -s a -d 'Export all pools'
 end
 complete -c zpool -f -n '__fish_zpool_using_command export' -s f -d 'Force unmounting of all contained datasets'
@@ -292,7 +292,7 @@ complete -c zpool -f -n '__fish_zpool_using_command import' -s m -d 'Ignore miss
 complete -c zpool -r -n '__fish_zpool_using_command import' -s R -d 'Equivalent to "-o cachefile=none,altroot=ROOT"'
 complete -c zpool -f -n '__fish_zpool_using_command import' -s N -d 'Do not mount contained filesystems'
 complete -c zpool -f -n '__fish_zpool_using_command import; and __fish_contains_opt -s F' -s n -d 'Dry run: only determine if the recovery is possible, without attempting it'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command import; and __fish_contains_opt -s F' -s X -d 'Roll back to a previous TXG (hazardous)'
     complete -c zpool -r -n '__fish_zpool_using_command import' -s T -d 'TXG to roll back to (implies -FX)'
     complete -c zpool -f -n '__fish_zpool_using_command import' -s t -d 'Specify, as the last argument, a temporary pool name'
@@ -301,7 +301,7 @@ complete -c zpool -f -n '__fish_zpool_using_command import; and __fish_not_conta
 
 # iostat completions
 complete -c zpool -x -n '__fish_zpool_using_command iostat' -s T -d 'Display a timestamp using specified format'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command iostat' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command iostat' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command iostat' -s P -d 'Display device full path'
@@ -316,7 +316,7 @@ complete -c zpool -x -n '__fish_zpool_using_command labelclear' -d 'Device to cl
 
 # list completions
 complete -c zpool -f -n '__fish_zpool_using_command list' -s H -d 'Print output in a machine-parsable format'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command list' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command list' -s L -d 'Resolve device path symbolic links'
 end
@@ -348,7 +348,7 @@ complete -c zpool -x -n '__fish_zpool_using_command reopen' -d 'Pool which devic
 
 # replace completions
 complete -c zpool -f -n '__fish_zpool_using_command replace' -s f -d 'Force use of virtual device'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -x -n '__fish_zpool_using_command replace' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
 complete -c zpool -x -n '__fish_zpool_using_command replace' -d 'Pool to replace device' -a '(__fish_complete_zfs_pools)'
@@ -357,7 +357,7 @@ complete -c zpool -f -n '__fish_zpool_using_command replace' -d 'Device to use f
 
 # scrub completions
 complete -c zpool -f -n '__fish_zpool_using_command scrub' -s s -d 'Stop scrubbing'
-if test $OS = 'SunOS'
+if test $OS = SunOS
     complete -c zpool -f -n '__fish_zpool_using_command scrub' -s p -d 'Pause scrubbing'
 end
 complete -c zpool -x -n '__fish_zpool_using_command scrub' -d 'Pool to start/stop scrubbing' -a '(__fish_complete_zfs_pools)'
@@ -367,7 +367,7 @@ complete -c zpool -x -n '__fish_zpool_using_command set' -d 'Property to set' -a
 complete -c zpool -x -n '__fish_zpool_using_command set' -d 'Pool which property is to be set' -a '(__fish_complete_zfs_pools)'
 
 # split completions
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command split' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command split' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command split' -s P -d 'Display device full path'
@@ -375,18 +375,18 @@ end
 complete -c zpool -f -n '__fish_zpool_using_command split' -s n -d 'Dry run: only display resulting configuration'
 complete -c zpool -r -n '__fish_zpool_using_command split' -s R -d 'Set altroot for newpool and automatically import it'
 complete -c zpool -x -n '__fish_zpool_using_command split' -s o -d 'Pool property' -a '(__fish_zpool_list_writeonce_properties; __fish_zpool_list_rw_properties)'
-if test $OS = 'FreeBSD'
+if test $OS = FreeBSD
     complete -c zpool -x -n '__fish_zpool_using_command split; and __fish_contains_opt -s R' -s o -d 'Mount properties for contained datasets' -a '(__fish_append , (__fish_complete_zfs_mountpoint_properties))'
 end
 complete -c zpool -x -n '__fish_zpool_using_command split' -d 'Pool to split' -a '(__fish_complete_zfs_pools)'
 
 # status completions
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command status' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command status' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command status' -s P -d 'Display device full path'
     complete -c zpool -f -n '__fish_zpool_using_command status' -s D -d 'Display deduplication histogram'
-else if test $OS = 'SunOS'
+else if test $OS = SunOS
     complete -c zpool -f -n '__fish_zpool_using_command status' -s D -d 'Display deduplication histogram'
 end
 complete -c zpool -f -n '__fish_zpool_using_command status' -s v -d 'Verbose mode'

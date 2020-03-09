@@ -21,8 +21,8 @@ set -l files '__fish_contains_opt -s F files'
 complete -c $progname -e
 complete -c $progname -f
 # HACK: We only need these two to coerce fish to stop file completion and complete options
-complete -c $progname -n "$noopt" -a "-D" -d "Modify the package database"
-complete -c $progname -n "$noopt" -a "-Q" -d "Query the package database"
+complete -c $progname -n "$noopt" -a -D -d "Modify the package database"
+complete -c $progname -n "$noopt" -a -Q -d "Query the package database"
 
 # Primary operations
 complete -c $progname -s D -f -l database -n "$noopt" -d 'Modify the package database'
@@ -105,7 +105,7 @@ complete -c $progname -n "$has_db_opt; and $database" -xa "$listinstalled"
 # File options - since pacman 5
 complete -c $progname -n "$files" -s x -l regex -d 'Interpret each query as a regular expression' -f
 complete -c $progname -n "$files" -l machinereadable -d 'Print each match in a machine readable output format' -f
-complete -c $progname -n "$files" -d 'Package' -xa "$listall"
+complete -c $progname -n "$files" -d Package -xa "$listall"
 
 # Query options
 complete -c $progname -n "$query" -s c -l changelog -d 'View the change log of PACKAGE' -f

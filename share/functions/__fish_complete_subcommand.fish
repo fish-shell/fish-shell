@@ -14,9 +14,9 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
         switch $arg
             case '--fcs-skip=*'
                 set skip_next (string split = -- $arg)[2]
-            case '--allow-functions-and-builtins'
+            case --allow-functions-and-builtins
                 set allow_functions_and_builtins true
-            case '--commandline'
+            case --commandline
                 set subcommand $argv
                 set -e argv
                 break

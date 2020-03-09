@@ -2,20 +2,20 @@ function __fish_complete_zfs_write_once_properties -d "Completes with ZFS proper
     set -l OS ""
     switch (uname)
         case Linux
-            set OS "Linux"
+            set OS Linux
         case Darwin
-            set OS "macOS"
+            set OS macOS
         case FreeBSD
-            set OS "FreeBSD"
+            set OS FreeBSD
         case SunOS
-            set OS "SunOS"
+            set OS SunOS
             # Others?
         case "*"
-            set OS "unknown"
+            set OS unknown
     end
     echo -e "normalization\tUnicode normalization (none, formC, formD, formKC, formKD)"
     echo -e "utf8only\tReject non-UTF-8-compliant filenames (on, off)"
-    if test $OS = "Linux"
+    if test $OS = Linux
         echo -e "overlay\tAllow overlay mount (on, off)"
         if command -sq sestatus # SELinux is enabled
             echo -e "context\tSELinux context for the child filesystem"

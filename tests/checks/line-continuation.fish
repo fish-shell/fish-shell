@@ -14,18 +14,15 @@ d echo true
 \i\
 \U00000066\
  true
-	echo if true
-\
-\145n\
+    echo if true
+ \
+    \145n\
 d\
-;
+
 #CHECK: if true
 
 'if'\
  true
-	echo if true
-"\
-en\
-d\
-";
+    echo if true
+end
 #CHECK: if true

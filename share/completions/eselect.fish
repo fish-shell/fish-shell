@@ -18,7 +18,7 @@ function __fish_complete_eselect_action_options
     set -l cmdl (commandline -poc)
 
     # Alter further php completion
-    if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
+    if [ (__fish_print_cmd_args_without_options)[2] = php ]
         eselect php list-modules 2>/dev/null | string split " "
         return
     end
@@ -37,7 +37,7 @@ end
 function __fish_complete_eselect_php_actions
     set -l sedregexp 's/^\s*\[([0-9]+)\]\s+([A-Za-z0-9\.]+).*/\1\t\2/'
 
-    if test (__fish_print_cmd_args_without_options)[3] = 'set'
+    if test (__fish_print_cmd_args_without_options)[3] = set
         eselect php list (__fish_print_cmd_args_without_options)[-1] 2>/dev/null | sed -r $sedregexp
     end
 end
@@ -47,7 +47,7 @@ function __fish_complete_eselect_targets
     set -l cmdl (commandline -poc)
 
     # Disable further php completion
-    if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
+    if [ (__fish_print_cmd_args_without_options)[2] = php ]
         return
     end
 

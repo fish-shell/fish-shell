@@ -13,5 +13,5 @@ test 5 -eq nan
 # CHECKERR: test 5 -eq nan
 # CHECKERR: ^
 
-test -z "nan" || echo nan is fine
+test -z nan || echo nan is fine
 # CHECK: nan is fine

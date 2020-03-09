@@ -1,8 +1,8 @@
 #RUN: %fish %s
 function commandline
-    if test $argv[1] = '-ct'
+    if test $argv[1] = -ct
         echo --long4\n-4
-    else if test $argv[1] = '-cpo'
+    else if test $argv[1] = -cpo
         echo cmd\n-z\n-bc\n--long1\narg1\n-d\narg2\n--long2
     end
 end

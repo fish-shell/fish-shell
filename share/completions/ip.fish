@@ -151,7 +151,7 @@ function __fish_ip_commandwords
                 else
                     echo $word
                 end
-            case '-n' '-netns' '--netns'
+            case -n -netns --netns
                 if test $have_command = 0
                     set skip 1
                 else
@@ -177,7 +177,7 @@ end
 
 function __fish_ip_device
     ip -o link show | while read a b c
-        printf '%s\t%s\n' (string replace ':' '' -- $b) "Device"
+        printf '%s\t%s\n' (string replace ':' '' -- $b) Device
     end
 end
 

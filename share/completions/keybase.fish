@@ -49,10 +49,10 @@ complete -c keybase -f -n "$ends keybase" -l bg-identifier-disabled
 complete -c keybase -f -n "$ends keybase" -l chat-db
 complete -c keybase -f -n "$ends keybase" -l code-signing-kids
 complete -c keybase -f -n "$ends keybase" -l config-file
-complete -c keybase -f -n "$ends keybase" -s c -d "--config-file"
+complete -c keybase -f -n "$ends keybase" -s c -d --config-file
 complete -c keybase -f -n "$ends keybase" -l db
 complete -c keybase -f -n "$ends keybase" -l debug
-complete -c keybase -f -n "$ends keybase" -s d -d "--debug"
+complete -c keybase -f -n "$ends keybase" -s d -d --debug
 complete -c keybase -f -n "$ends keybase" -l debug-journeycard
 complete -c keybase -f -n "$ends keybase" -l disable-bg-conv-loader
 complete -c keybase -f -n "$ends keybase" -l disable-cert-pinning
@@ -72,9 +72,9 @@ complete -c keybase -f -n "$ends keybase" -l gpg-options
 complete -c keybase -f -n "$ends keybase" -l gpgdir
 complete -c keybase -f -n "$ends keybase" -l gui-config-file
 complete -c keybase -f -n "$ends keybase" -l help
-complete -c keybase -f -n "$ends keybase" -s h -d "--help"
+complete -c keybase -f -n "$ends keybase" -s h -d --help
 complete -c keybase -f -n "$ends keybase" -l home
-complete -c keybase -f -n "$ends keybase" -s H -d "--home"
+complete -c keybase -f -n "$ends keybase" -s H -d --home
 complete -c keybase -f -n "$ends keybase" -l leveldb-num-files
 complete -c keybase -f -n "$ends keybase" -l local-rpc-debug-unsafe
 complete -c keybase -f -n "$ends keybase" -l log-file
@@ -82,7 +82,7 @@ complete -c keybase -f -n "$ends keybase" -l log-format
 complete -c keybase -f -n "$ends keybase" -l log-prefix
 complete -c keybase -f -n "$ends keybase" -l merkle-kids
 complete -c keybase -f -n "$ends keybase" -l no-auto-fork
-complete -c keybase -f -n "$ends keybase" -s F -d "--no-auto-fork"
+complete -c keybase -f -n "$ends keybase" -s F -d --no-auto-fork
 complete -c keybase -f -n "$ends keybase" -l no-debug
 complete -c keybase -f -n "$ends keybase" -l paramproof-kit
 complete -c keybase -f -n "$ends keybase" -l pgpdir
@@ -102,7 +102,7 @@ complete -c keybase -f -n "$ends keybase" -l run-mode
 complete -c keybase -f -n "$ends keybase" -l scraper-timeout
 complete -c keybase -f -n "$ends keybase" -l secret-keyring
 complete -c keybase -f -n "$ends keybase" -l server
-complete -c keybase -f -n "$ends keybase" -s s -d "--server"
+complete -c keybase -f -n "$ends keybase" -s s -d --server
 complete -c keybase -f -n "$ends keybase" -l session-file
 complete -c keybase -f -n "$ends keybase" -l slow-gregor-conn
 complete -c keybase -f -n "$ends keybase" -l socket-file
@@ -117,7 +117,7 @@ complete -c keybase -f -n "$ends keybase" -l use-root-config-file
 complete -c keybase -f -n "$ends keybase" -l user-cache-size
 complete -c keybase -f -n "$ends keybase" -l vdebug
 complete -c keybase -f -n "$ends keybase" -l version
-complete -c keybase -f -n "$ends keybase" -s v -d "--version"
+complete -c keybase -f -n "$ends keybase" -s v -d --version
 
 #commands
 #L1

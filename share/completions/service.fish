@@ -1,5 +1,5 @@
 # First argument is the names of the service, i.e. a file in /etc/init.d
-complete -c service -n "__fish_is_first_token" -xa "(__fish_print_service_names)" -d "Service"
+complete -c service -n __fish_is_first_token -xa "(__fish_print_service_names)" -d Service
 
 # as found in __fish_print_service_names.fish
 if test -d /run/systemd/system # Systemd systems

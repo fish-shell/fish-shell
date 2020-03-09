@@ -66,7 +66,7 @@ complete -c feh -l zoom -x -a "max fill" -d "Zoom images by given percent when i
 
 # Montage Mode Options
 complete -c feh -l alpha -s a -x -d "Set thumbnails' transparency to given level (0-255)"
-complete -c feh -l bg -s b -r -a "trans" -d "Use given file as background for your montage"
+complete -c feh -l bg -s b -r -a trans -d "Use given file as background for your montage"
 complete -c feh -l ignore-aspect -s X -d "Don't retain thumbnails' aspect ratios"
 complete -c feh -l limit-height -s W -x -d "Limit montage's height"
 complete -c feh -l limit-width -s W -x -d "Limit montage's width"

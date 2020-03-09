@@ -399,7 +399,7 @@ complete -c hg -l color -x -a "true false always auto never debug" -d "when to c
 complete -c hg -l pager -x -a "true false always auto never" -d "when to paginate"
 
 # subcommands
-complete -c hg -n "__fish_hg_needs_command" -x -a "(__fish_hg_commands)"
+complete -c hg -n __fish_hg_needs_command -x -a "(__fish_hg_commands)"
 
 # hg add
 complete -c hg -n "__fish_hg_using_command add" -f -a "(__fish_hg_status -u)"
@@ -486,7 +486,7 @@ end
 # hg bookmarks
 for cmd in bo boo book bookm bookma bookmar bookmark bookmarks
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_bookmarks)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "force"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d force
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision for bookmark action"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l delete -d "delete a given bookmark"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l rename -x -a "(__fish_hg_bookmarks)" -d "rename a given bookmark"
@@ -604,7 +604,7 @@ end
 # hg diff
 for cmd in d di dif diff
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -amr)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d revision
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l change -x -a "(__fish_hg_labels)" -d "change made by revision"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l text -d "treat all files as text"
     complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
@@ -1388,7 +1388,7 @@ for cmd in up upd upda updat update che chec check checko checkou checkout co
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l check -d "require clean working directory"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l merge -d "merge uncommitted changes"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l date -x -d "tipmost revision matching date"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d revision
     complete -c hg -n "__fish_hg_using_command $cmd" -s t -l tool -x -a "(__fish_hg_merge_tools)" -d "specify merge tool"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end

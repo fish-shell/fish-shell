@@ -42,7 +42,7 @@ complete -c wget -l waitretry -d "Wait time between retries" -x
 complete -c wget -l random-wait -d "Wait random amount of time between retrievals"
 complete -c wget -s Y -l proxy -d "Toggle proxy support" -xa "on off"
 complete -c wget -s Q -l quota -d "Specify download quota for automatic retrievals" -x
-complete -c wget -l dns-cache -d "Turn off caching of DNS lookups" -xa "off"
+complete -c wget -l dns-cache -d "Turn off caching of DNS lookups" -xa off
 complete -c wget -l restrict-file-names -d "Change which characters found in remote URLs may show up in local file names" -a "
 	unix\t'Escape slash and non-printing characters'
 	windows\t'Escape most non-alphabetical characters'

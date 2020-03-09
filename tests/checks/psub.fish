@@ -15,7 +15,7 @@ or echo 'psub is not a fifo' >&2
 # hack: the background write that psub peforms may block
 # until someone opens the fifo for reading. So make sure we
 # actually read it.
-cat $filename > /dev/null
+cat $filename >/dev/null
 rm $filename
 
 cat (echo foo | psub)

@@ -44,7 +44,7 @@ end
 
 for foo in {hello
 world}
-   echo \'$foo\'
+    echo \'$foo\'
 end
 #CHECK: '{hello
 #CHECK: world}'

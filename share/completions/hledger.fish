@@ -55,32 +55,32 @@ complete -c hledger -x -l version -d 'Show version information'
 # Commands
 
 # Data entry
-complete -c hledger -f -n '__fish_use_subcommand' -a add -d 'Add transactions using guided prompts'
+complete -c hledger -f -n __fish_use_subcommand -a add -d 'Add transactions using guided prompts'
 complete -c hledger -f -n '__fish_seen_subcommand_from add' -l no-new-accounts -d 'Don’t allow creating new accounts'
 
-complete -c hledger -n '__fish_use_subcommand' -a import -d 'Add new transactions from other files'
+complete -c hledger -n __fish_use_subcommand -a import -d 'Add new transactions from other files'
 complete -c hledger -f -n '__fish_seen_subcommand_from import' -l dry-run -d 'Just show the transactions to be imported'
 
 # Data management
-complete -c hledger -f -n '__fish_use_subcommand' -a check-dates -d 'Ensure transactions are ordered by date'
+complete -c hledger -f -n __fish_use_subcommand -a check-dates -d 'Ensure transactions are ordered by date'
 complete -c hledger -f -n '__fish_seen_subcommand_from check-dates' -l strict -d 'Makes date comparing strict'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a check-dupes -d 'Ensure accounts have different leaf names'
+complete -c hledger -f -n __fish_use_subcommand -a check-dupes -d 'Ensure accounts have different leaf names'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a 'close equity' -d 'Generate balance-resetting transactions'
+complete -c hledger -f -n __fish_use_subcommand -a 'close equity' -d 'Generate balance-resetting transactions'
 complete -c hledger -f -n '__fish_seen_subcommand_from close' -l opening -d 'Show just opening transaction'
 complete -c hledger -f -n '__fish_seen_subcommand_from close' -l closing -d 'Show just closing transaction'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a rewrite -d 'Generate automated postings/diffs'
+complete -c hledger -f -n __fish_use_subcommand -a rewrite -d 'Generate automated postings/diffs'
 complete -c hledger -f -n '__fish_seen_subcommand_from rewrite' -l add-posting -d 'Add a posting to account'
 complete -c hledger -f -n '__fish_seen_subcommand_from rewrite' -l diff -d 'Generate diff suitable for patch(1)'
 
 # Financial reports
 set -l financial_reports_commands 'balancesheet bs balancesheetequity bse cashflow cf incomestatement is' # these four (but not roi!) use the same commands
-complete -c hledger -f -n '__fish_use_subcommand' -a 'balancesheet       bs' -d 'Show assets, liabilities, and net worth'
-complete -c hledger -f -n '__fish_use_subcommand' -a 'balancesheetequity bse' -d 'Show assets, liabilities, and equity'
-complete -c hledger -f -n '__fish_use_subcommand' -a 'cashflow           cf' -d 'Show changes in liquid assets'
-complete -c hledger -f -n '__fish_use_subcommand' -a 'incomestatement    is' -d 'Show revenues and expenses'
+complete -c hledger -f -n __fish_use_subcommand -a 'balancesheet       bs' -d 'Show assets, liabilities, and net worth'
+complete -c hledger -f -n __fish_use_subcommand -a 'balancesheetequity bse' -d 'Show assets, liabilities, and equity'
+complete -c hledger -f -n __fish_use_subcommand -a 'cashflow           cf' -d 'Show changes in liquid assets'
+complete -c hledger -f -n __fish_use_subcommand -a 'incomestatement    is' -d 'Show revenues and expenses'
 complete -c hledger -f -n "__fish_seen_subcommand_from $financial_reports_commands" -l change -d 'Show balance change in each period'
 complete -c hledger -f -n "__fish_seen_subcommand_from $financial_reports_commands" -l cumulative -d 'Show balance change accumulated across periods'
 complete -c hledger -f -n "__fish_seen_subcommand_from $financial_reports_commands" -s H -l historical -d 'Show historical ending balance in each period'
@@ -97,22 +97,22 @@ complete -c hledger -f -n "__fish_seen_subcommand_from $financial_reports_comman
 complete -c hledger -f -n "__fish_seen_subcommand_from $financial_reports_commands" -s O -l output-format -a 'txt csv html' -d 'Select an output format'
 complete -c hledger -r -n "__fish_seen_subcommand_from $financial_reports_commands" -s o -l output-file -d 'Write output to given file; extension selects format'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a roi -d 'Show return on investments'
+complete -c hledger -f -n __fish_use_subcommand -a roi -d 'Show return on investments'
 complete -c hledger -f -n '__fish_seen_subcommand_from roi' -l cashflow -d 'Show all amounts that were used to compute returns'
 complete -c hledger -x -n '__fish_seen_subcommand_from roi' -l investment -d 'Query to select investment transactions'
 complete -c hledger -x -n '__fish_seen_subcommand_from roi' -l profit-loss -l pnl -d 'Query to select profit-and-loss or appreciation/valuation transactions'
 
 # Low-level reports
-complete -c hledger -f -n '__fish_use_subcommand' -a accounts -d 'Show account names'
+complete -c hledger -f -n __fish_use_subcommand -a accounts -d 'Show account names'
 complete -c hledger -f -n '__fish_seen_subcommand_from accounts' -l declared -d 'Show account names declared with account directives'
 complete -c hledger -f -n '__fish_seen_subcommand_from accounts' -l used -d 'Show account names referenced by transactions'
 complete -c hledger -f -n '__fish_seen_subcommand_from accounts' -l tree -d 'Show short account names as a tree'
 complete -c hledger -f -n '__fish_seen_subcommand_from accounts' -l flat -d 'Show short account names as a list'
 complete -c hledger -x -n '__fish_seen_subcommand_from accounts' -l drop -d 'Omit N leading account name parts in flat mode'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a activity -d 'Show postings-per-interval bar charts'
+complete -c hledger -f -n __fish_use_subcommand -a activity -d 'Show postings-per-interval bar charts'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a balance -d 'Show balance changes/end balances/budgets in accounts'
+complete -c hledger -f -n __fish_use_subcommand -a balance -d 'Show balance changes/end balances/budgets in accounts'
 complete -c hledger -f -n '__fish_seen_subcommand_from balance' -l change -d 'Show balance change in each period'
 complete -c hledger -f -n '__fish_seen_subcommand_from balance' -l cumulative -d 'Show balance change accumulated across periods'
 complete -c hledger -f -n '__fish_seen_subcommand_from balance' -s H -l historical -d 'Show historical ending balance in each period'
@@ -132,23 +132,23 @@ complete -c hledger -f -n '__fish_seen_subcommand_from balance' -l transpose -d 
 complete -c hledger -x -n '__fish_seen_subcommand_from balance' -s O -l output-format -a 'txt csv html' -d 'Select an output format'
 complete -c hledger -r -n '__fish_seen_subcommand_from balance' -s o -l output-file -d 'Write output to given file; extension selects format'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a commodities -d 'Show commodity/currency symbols'
+complete -c hledger -f -n __fish_use_subcommand -a commodities -d 'Show commodity/currency symbols'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a files -d 'Show input file paths'
+complete -c hledger -f -n __fish_use_subcommand -a files -d 'Show input file paths'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a prices -d 'Show market-price records'
+complete -c hledger -f -n __fish_use_subcommand -a prices -d 'Show market-price records'
 complete -c hledger -f -n '__fish_seen_subcommand_from prices' -l costs -d 'Print transaction prices from postings'
 complete -c hledger -f -n '__fish_seen_subcommand_from prices' -l inverted-costs -d 'Print transaction inverted prices from postings also'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a 'print txns' -d 'Show transactions'
-complete -c hledger -f -n '__fish_use_subcommand' -a 'print-unique' -d 'Show only transactions with unique descriptions'
+complete -c hledger -f -n __fish_use_subcommand -a 'print txns' -d 'Show transactions'
+complete -c hledger -f -n __fish_use_subcommand -a print-unique -d 'Show only transactions with unique descriptions'
 complete -c hledger -x -n '__fish_seen_subcommand_from print txns print-unique' -s m -l match -d 'Show the most-recent transaction most similar to STR'
 complete -c hledger -f -n '__fish_seen_subcommand_from print txns print-unique' -s x -l explicit -d 'Show all amounts explicitly'
 complete -c hledger -f -n '__fish_seen_subcommand_from print txns print-unique' -l new -d 'Show only newer-dated transactions added in each file since last run'
 complete -c hledger -x -n '__fish_seen_subcommand_from print txns print-unique' -s O -l output-format -a 'txt csv html' -d 'Select an output format'
 complete -c hledger -r -n '__fish_seen_subcommand_from print txns print-unique' -s o -l output-file -d 'Write output to given file; extension selects format'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a register -d 'Show postings in one or more accounts & running total'
+complete -c hledger -f -n __fish_use_subcommand -a register -d 'Show postings in one or more accounts & running total'
 complete -c hledger -f -n '__fish_seen_subcommand_from register' -l cumulative -d 'Show running total from report start date'
 complete -c hledger -f -n '__fish_seen_subcommand_from register' -s H -l historical -d 'Show historical running total/balance'
 complete -c hledger -f -n '__fish_seen_subcommand_from register' -s A -l average -d 'Show running average of posting amounts instead of total (implies --empty)'
@@ -158,14 +158,14 @@ complete -c hledger -x -n '__fish_seen_subcommand_from register' -s w -l width -
 complete -c hledger -x -n '__fish_seen_subcommand_from register' -s O -l output-format -a 'txt csv html' -d 'Select an output format'
 complete -c hledger -r -n '__fish_seen_subcommand_from register' -s o -l output-file -d 'Write output to given file; extension selects format'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a register-match -d 'Show a recent posting that best matches a description'
+complete -c hledger -f -n __fish_use_subcommand -a register-match -d 'Show a recent posting that best matches a description'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a stats -d 'Show journal statistics'
+complete -c hledger -f -n __fish_use_subcommand -a stats -d 'Show journal statistics'
 complete -c hledger -r -n '__fish_seen_subcommand_from stats' -s o -l output-file -d 'Write output to given file; extension selects format'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a tags -d 'Show tag names'
+complete -c hledger -f -n __fish_use_subcommand -a tags -d 'Show tag names'
 
-complete -c hledger -f -n '__fish_use_subcommand' -a test -d 'Run self-tests'
+complete -c hledger -f -n __fish_use_subcommand -a test -d 'Run self-tests'
 
 # Help
-complete -c hledger -f -n '__fish_use_subcommand' -a help -d 'Show hledger manual list'
+complete -c hledger -f -n __fish_use_subcommand -a help -d 'Show hledger manual list'

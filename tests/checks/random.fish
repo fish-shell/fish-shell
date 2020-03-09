@@ -40,7 +40,7 @@ random choic a b c
 #CHECKERR: random: Too many arguments
 
 function check_boundaries
-    if not test $argv[1] -ge $argv[2] -a $argv[1] -le $argv[3] 
+    if not test $argv[1] -ge $argv[2] -a $argv[1] -le $argv[3]
         printf "Unexpected: %s <= %s <= %s not verified\n" $argv[2] $argv[1] $argv[3] >&2
         return 1
     end
@@ -93,7 +93,7 @@ for i in (seq 10)
     test_step 0 $i 10
     test_step -5 $i 5
     test_step -10 $i 0
-    
+
     test_choice a
     test_choice foo bar
     test_choice bass trout salmon zander perch carp

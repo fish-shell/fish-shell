@@ -17,8 +17,8 @@ echo -n A\u00FCA | display_bytes
 # Verify that exporting a change to the C locale produces the expected output.
 # The output should include the literal byte \xFC rather than the UTF-8 sequence for \u00FC.
 begin
-	set -lx LC_ALL C
-	echo -n B\u00FCB | display_bytes
+    set -lx LC_ALL C
+    echo -n B\u00FCB | display_bytes
 end
 #CHECK: 0000000 102 374 102
 #CHECK: 0000003
@@ -33,8 +33,8 @@ echo -n C\u00FCC | display_bytes
 # The output should include the UTF-8 sequence for \u00FC rather than that literal byte.
 # Just like the previous test.
 begin
-	set -l LC_ALL C
-	echo -n D\u00FCD | display_bytes
+    set -l LC_ALL C
+    echo -n D\u00FCD | display_bytes
 end
 #CHECK: 0000000 104 303 274 104
 #CHECK: 0000004

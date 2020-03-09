@@ -11,9 +11,9 @@ function __fish_busctl
     # We also need to pass the _last_ of these (`busctl --user --system` operates on the system bus)
     set -l mode
     if __fish_contains_opt user
-        set mode "--user"
+        set mode --user
     else
-        set mode "--system"
+        set mode --system
     end
     command busctl $mode $argv --no-legend --no-pager 2>/dev/null
 end

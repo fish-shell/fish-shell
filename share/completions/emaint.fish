@@ -11,16 +11,16 @@ complete -c emaint -s f -l fix -d "Attempt to fix problems"
 complete -c emaint -s P -l purge -d "Remove the list of failed merges"
 
 ## Subcommands
-complete -c emaint -n '__fish_use_subcommand' -xa 'all' -d 'Perform all supported commands'
-complete -c emaint -n '__fish_use_subcommand' -xa 'binhost' -d 'Scan and generate metadata indexes for binary pkgs'
-complete -c emaint -n '__fish_use_subcommand' -xa 'cleanconfmem' -d 'Check and clean the config tracker list for uninstalled pkgs'
-complete -c emaint -n '__fish_use_subcommand' -xa 'cleanresume' -d 'Discard emerge --resume merge lists'
-complete -c emaint -n '__fish_use_subcommand' -xa 'logs' -d 'Check and clean old logs in the PORT_LOGDIR'
-complete -c emaint -n '__fish_use_subcommand' -xa 'merges' -d 'Scan for failed merges and fix them'
-complete -c emaint -n '__fish_use_subcommand' -xa 'movebin' -d 'Perform pkg move updates for binary pkgs'
-complete -c emaint -n '__fish_use_subcommand' -xa 'moveinst' -d 'Perform pkg move updates for installed and binary pkgs'
-complete -c emaint -n '__fish_use_subcommand' -xa 'sync' -d 'Check repos.conf settings and sync repositories'
-complete -c emaint -n '__fish_use_subcommand' -xa 'world' -d 'Check and fix problems in the world file'
+complete -c emaint -n __fish_use_subcommand -xa all -d 'Perform all supported commands'
+complete -c emaint -n __fish_use_subcommand -xa binhost -d 'Scan and generate metadata indexes for binary pkgs'
+complete -c emaint -n __fish_use_subcommand -xa cleanconfmem -d 'Check and clean the config tracker list for uninstalled pkgs'
+complete -c emaint -n __fish_use_subcommand -xa cleanresume -d 'Discard emerge --resume merge lists'
+complete -c emaint -n __fish_use_subcommand -xa logs -d 'Check and clean old logs in the PORT_LOGDIR'
+complete -c emaint -n __fish_use_subcommand -xa merges -d 'Scan for failed merges and fix them'
+complete -c emaint -n __fish_use_subcommand -xa movebin -d 'Perform pkg move updates for binary pkgs'
+complete -c emaint -n __fish_use_subcommand -xa moveinst -d 'Perform pkg move updates for installed and binary pkgs'
+complete -c emaint -n __fish_use_subcommand -xa sync -d 'Check repos.conf settings and sync repositories'
+complete -c emaint -n __fish_use_subcommand -xa world -d 'Check and fix problems in the world file'
 
 ## Local opts
 # logs

@@ -23,6 +23,7 @@ Description: friendly interactive shell
 
 Package: fish-common
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends}
 Recommends: fish, python3 (>= 3.5)
 Suggests: xdg-utils

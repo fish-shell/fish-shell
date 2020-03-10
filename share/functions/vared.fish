@@ -7,7 +7,7 @@ function vared --description "Edit variable value"
     if test (count $argv) = 1
         switch $argv
 
-            case '-h' '--h' '--he' '--hel' '--help'
+            case -h --h --he --hel --help
                 __fish_print_help vared
                 return 0
 

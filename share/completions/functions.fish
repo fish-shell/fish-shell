@@ -8,7 +8,7 @@ function __fish_maybe_list_all_functions
 end
 
 complete -c functions -s e -l erase -d "Erase function" -x -a "(__fish_maybe_list_all_functions)"
-complete -c functions -xa "(functions -na)" -d "Function"
+complete -c functions -xa "(functions -na)" -d Function
 complete -c functions -s a -l all -d "Show hidden functions"
 complete -c functions -s h -l help -d "Display help and exit"
 complete -c functions -s d -l description -d "Set function description" -x

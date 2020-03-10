@@ -1,4 +1,4 @@
-complete -f -c yast2 -a '(yast2 -l)' -d 'Module'
+complete -f -c yast2 -a '(yast2 -l)' -d Module
 
 complete -f -c yast2 -s h -l help -d 'Show help'
 complete -f -c yast2 -s l -l list -d 'List all available modules'

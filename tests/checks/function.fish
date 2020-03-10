@@ -69,18 +69,24 @@ frob
 function name1 -a arg1 arg2
     echo hello
 end
-function -a arg1 arg2 name2 ; end
+function -a arg1 arg2 name2
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Illegal function name '-a'
-#CHECKERR: function -a arg1 arg2 name2 ; end
+#CHECKERR: function -a arg1 arg2 name2
 #CHECKERR: ^
-function name3 --argument-names arg1 arg2 ; echo hello; echo goodbye; end
-function --argument-names arg1 arg2 name4 ; end
+function name3 --argument-names arg1 arg2
+    echo hello
+    echo goodbye
+end
+function --argument-names arg1 arg2 name4
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Illegal function name '--argument-names'
-#CHECKERR: function --argument-names arg1 arg2 name4 ; end
+#CHECKERR: function --argument-names arg1 arg2 name4
 #CHECKERR: ^
-function name5 abc --argument-names def ; end
+function name5 abc --argument-names def
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Unexpected positional argument 'abc'
-#CHECKERR: function name5 abc --argument-names def ; end
+#CHECKERR: function name5 abc --argument-names def
 #CHECKERR: ^
 functions -q name1; and echo "Function name1 found"
 functions -q name2; or echo "Function name2 not found as expected"
@@ -110,12 +116,14 @@ test "$name1[3..-1]" = "$name1a[2..-1]"; and echo "1 = 1a"
 test "$name3[3..-1]" = "$name3a[2..-1]"; and echo "3 = 3a"
 #CHECK: 3 = 3a
 
-function test; echo banana; end
+function test
+    echo banana
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: The name 'test' is reserved,
 #CHECKERR: and can not be used as a function name
-#CHECKERR: function test; echo banana; end
+#CHECKERR: function test
 #CHECKERR: ^
 
-functions -q; or echo "False"
+functions -q; or echo False
 #CHECK: False
 exit 0

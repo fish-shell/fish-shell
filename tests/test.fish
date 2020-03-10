@@ -52,7 +52,7 @@ function test_in_file
         rm -f $base.tmp.{err,out}
         return 0
     else
-        say red "fail"
+        say red fail
         if test $out_status -ne 0
             say yellow "Output differs for file $file. Diff follows:"
             colordiff -u $base.out $base.tmp.out
@@ -75,7 +75,7 @@ function test_littlecheck_file
     set -l file $argv[1]
     echo -n "Testing file $file ... "
     set starttime (timestamp)
-    $python ../littlecheck.py \
+    $python -S ../littlecheck.py \
         -s fish=../test/root/bin/fish \
         -s fish_test_helper=../test/root/bin/fish_test_helper \
         $file

@@ -21,7 +21,7 @@ if not command -sq seq
         set -l to 1
 
         # Remove a "--" argument if it happens first.
-        if test "x$argv[1]" = "x--"
+        if test "x$argv[1]" = x--
             set -e argv[1]
         end
 

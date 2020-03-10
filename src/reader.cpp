@@ -144,6 +144,20 @@ operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
     return operation_context_t{nullptr, *env, std::move(cancel_checker)};
 }
 
+/// Get the debouncer for autosuggestions and background highlighting.
+/// These are deliberately leaked to avoid shutdown dtor registration.
+static debounce_t &debounce_autosuggestions() {
+    const long kAutosuggetTimeoutMs = 500;
+    static debounce_t *res = new debounce_t(kAutosuggetTimeoutMs);
+    return *res;
+}
+
+static debounce_t &debounce_highlighting() {
+    const long kHighlightTimeoutMs = 500;
+    static debounce_t *res = new debounce_t(kHighlightTimeoutMs);
+    return *res;
+}
+
 bool edit_t::operator==(const edit_t &other) const {
     return cursor_position_before_edit == other.cursor_position_before_edit &&
            offset == other.offset && length == other.length && old == other.old &&
@@ -1166,6 +1180,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword:
         case rl::self_insert:
+        case rl::self_insert_notfirst:
         case rl::transpose_chars:
         case rl::transpose_words:
         case rl::upcase_word:
@@ -1482,9 +1497,10 @@ void reader_data_t::update_autosuggestion() {
         auto performer =
             get_autosuggestion_performer(parser(), el->text(), el->position(), history);
         auto shared_this = this->shared_from_this();
-        iothread_perform(performer, [shared_this](autosuggestion_result_t result) {
-            shared_this->autosuggest_completed(std::move(result));
-        });
+        debounce_autosuggestions().perform(
+            performer, [shared_this](autosuggestion_result_t result) {
+                shared_this->autosuggest_completed(std::move(result));
+            });
     }
 }
 
@@ -2226,9 +2242,10 @@ void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bo
     } else {
         // Highlighting including I/O proceeds in the background.
         auto shared_this = this->shared_from_this();
-        iothread_perform(highlight_performer, [shared_this](highlight_result_t result) {
-            shared_this->highlight_complete(std::move(result));
-        });
+        debounce_highlighting().perform(highlight_performer,
+                                        [shared_this](highlight_result_t result) {
+                                            shared_this->highlight_complete(std::move(result));
+                                        });
     }
     highlight_search();
 
@@ -2542,47 +2559,36 @@ struct readline_loop_state_t {
 /// Read normal characters, inserting them into the command line.
 /// \return the next unhandled event.
 maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rls) {
-    maybe_t<char_event_t> event_needing_handling = inputter.readch();
-
-    if (!event_is_normal_char(*event_needing_handling) || !can_read(STDIN_FILENO))
-        return event_needing_handling;
-
-    // This is a normal character input.
-    // We are going to handle it directly, accumulating more.
-    char_event_t evt = event_needing_handling.acquire();
+    maybe_t<char_event_t> event_needing_handling{};
+    wcstring accumulated_chars;
     size_t limit = std::min(rls.nchars - command_line.size(), READAHEAD_MAX);
-
-    wchar_t arr[READAHEAD_MAX + 1] = {};
-    arr[0] = evt.get_char();
-
-    for (size_t i = 1; i < limit; ++i) {
-        if (!can_read(0)) {
+    while (accumulated_chars.size() < limit) {
+        bool allow_commands = (accumulated_chars.empty());
+        auto evt = inputter.readch(allow_commands);
+        if (!event_is_normal_char(evt) || !can_read(STDIN_FILENO)) {
+            event_needing_handling = std::move(evt);
             break;
-        }
-        // Only allow commands on the first key; otherwise, we might have data we
-        // need to insert on the commandline that the command might need to be able
-        // to see.
-        auto next_event = inputter.readch(false);
-        if (event_is_normal_char(next_event)) {
-            arr[i] = next_event.get_char();
+        } else if (evt.input_style == char_input_style_t::notfirst && accumulated_chars.empty() &&
+                   active_edit_line()->position() == 0) {
+            // The cursor is at the beginning and nothing is accumulated, so skip this character.
+            continue;
         } else {
-            // We need to process this in the outer loop.
-            assert(!event_needing_handling && "Should not have an unhandled event");
-            event_needing_handling = next_event;
-            break;
+            accumulated_chars.push_back(evt.get_char());
         }
     }
 
-    editable_line_t *el = active_edit_line();
-    insert_string(el, arr);
+    if (!accumulated_chars.empty()) {
+        editable_line_t *el = active_edit_line();
+        insert_string(el, accumulated_chars);
 
-    // End paging upon inserting into the normal command line.
-    if (el == &command_line) {
-        clear_pager();
+        // End paging upon inserting into the normal command line.
+        if (el == &command_line) {
+            clear_pager();
+        }
+
+        // Since we handled a normal character, we don't have a last command.
+        rls.last_cmd.reset();
     }
-
-    // Since we handled a normal character, we don't have a last command.
-    rls.last_cmd.reset();
     return event_needing_handling;
 }
 
@@ -3357,12 +3363,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
-            // Some commands should have been handled internally by input_readch().
-        case rl::self_insert: {
-            DIE("self-insert should have been handled by inputter_t::readch");
-        }
+            // Some commands should have been handled internally by inputter_t::readch().
+        case rl::self_insert:
+        case rl::self_insert_notfirst:
         case rl::func_and: {
-            DIE("self-insert should have been handled by inputter_t::readch");
+            DIE("should have been handled by inputter_t::readch");
         }
     }
 }
@@ -3476,8 +3481,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         } else {
             // Ordinary char.
             wchar_t c = event_needing_handling->get_char();
-            if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
-                c != 0x7F) {
+            if (event_needing_handling->input_style == char_input_style_t::notfirst &&
+                active_edit_line()->position() == 0) {
+                // This character is skipped.
+            } else if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
+                       c != 0x7F) {
                 // Regular character.
                 editable_line_t *el = active_edit_line();
                 insert_char(active_edit_line(), c);

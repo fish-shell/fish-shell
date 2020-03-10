@@ -92,10 +92,10 @@ string escape --style=var 'a b#c"\'d'
 string escape --style=var a\nghi_
 # CHECK: a_0A_ghi__
 
-string escape --style=var 'abc'
+string escape --style=var abc
 # CHECK: abc
 
-string escape --style=var '_a_b_c_'
+string escape --style=var _a_b_c_
 # CHECK: __a__b__c__
 
 string escape --style=var -- -
@@ -238,7 +238,7 @@ or echo Unexpected exit status at line (status --current-line-number)
 # CHECK: dXf
 # CHECK: jkX
 
-string replace --regex -f "Z" X 1bc axc 2 d3f jk4 xyz
+string replace --regex -f Z X 1bc axc 2 d3f jk4 xyz
 and echo Unexpected exit status at line (status --current-line-number)
 
 # From https://github.com/fish-shell/fish-shell/issues/5201
@@ -272,22 +272,22 @@ string match -rvn a bbb; or echo "exit 1"
 # CHECK: 1 3
 
 ### Test repeat subcommand
-string repeat -n 2 "foo"
+string repeat -n 2 foo
 # CHECK: foofoo
 
-string repeat --count 2 "foo"
+string repeat --count 2 foo
 # CHECK: foofoo
 
 echo foo | string repeat -n 2
 # CHECK: foofoo
 
-string repeat -n2 -q "foo"; and echo "exit 0"
+string repeat -n2 -q foo; and echo "exit 0"
 # CHECK: exit 0
 
-string repeat -n2 --quiet "foo"; and echo "exit 0"
+string repeat -n2 --quiet foo; and echo "exit 0"
 # CHECK: exit 0
 
-string repeat -n0 "foo"; or echo "exit 1"
+string repeat -n0 foo; or echo "exit 1"
 # CHECK: exit 1
 
 string repeat -n0; or echo "exit 1"
@@ -304,31 +304,31 @@ string repeat -n1 --no-newline "there is "
 echo "no newline"
 # CHECK: there is no newline
 
-string repeat -n10 -m4 "foo"
+string repeat -n10 -m4 foo
 # CHECK: foof
 
-string repeat -n10 --max 5 "foo"
+string repeat -n10 --max 5 foo
 # CHECK: foofo
 
-string repeat -n3 -m20 "foo"
+string repeat -n3 -m20 foo
 # CHECK: foofoofoo
 
-string repeat -m4 "foo"
+string repeat -m4 foo
 # CHECK: foof
 
-string repeat -n-1 "foo"; and echo "exit 0"
+string repeat -n-1 foo; and echo "exit 0"
 # CHECKERR: string repeat: Invalid count value '-1'
 
-string repeat -m-1 "foo"; and echo "exit 0"
+string repeat -m-1 foo; and echo "exit 0"
 # CHECKERR: string repeat: Invalid max value '-1'
 
-string repeat -n notanumber "foo"; and echo "exit 0"
+string repeat -n notanumber foo; and echo "exit 0"
 # CHECKERR: string repeat: Argument 'notanumber' is not a valid integer
 
-string repeat -m notanumber "foo"; and echo "exit 0"
+string repeat -m notanumber foo; and echo "exit 0"
 # CHECKERR: string repeat: Argument 'notanumber' is not a valid integer
 
-echo "stdin" | string repeat -n1 "and arg"; and echo "exit 0"
+echo stdin | string repeat -n1 "and arg"; and echo "exit 0"
 # CHECKERR: string repeat: Too many arguments
 
 string repeat -n; and echo "exit 0"
@@ -417,7 +417,7 @@ or echo exit 1
 # Test `string lower` and `string upper`.
 set x (string lower abc DEF gHi)
 or echo string lower exit 1
-test $x[1] = 'abc' -a $x[2] = 'def' -a $x[3] = 'ghi'
+test $x[1] = abc -a $x[2] = def -a $x[3] = ghi
 or echo strings not converted to lowercase
 
 set x (echo abc DEF gHi | string lower)
@@ -430,7 +430,7 @@ and echo lowercasing a lowercase string did not fail as expected
 
 set x (string upper abc DEF gHi)
 or echo string upper exit 1
-test $x[1] = 'ABC' -a $x[2] = 'DEF' -a $x[3] = 'GHI'
+test $x[1] = ABC -a $x[2] = DEF -a $x[3] = GHI
 or echo strings not converted to uppercase
 
 set x (echo abc DEF gHi | string upper)
@@ -444,7 +444,7 @@ and echo uppercasing a uppercase string did not fail as expected
 # 'Check NUL'
 # Note: We do `string escape` at the end to make a `\0` literal visible.
 printf 'a\0b' | string escape
-printf 'a\0c' | string match -e 'a' | string escape
+printf 'a\0c' | string match -e a | string escape
 printf 'a\0d' | string split '' | string escape
 printf 'a\0b' | string match -r '.*b$' | string escape
 printf 'a\0b' | string replace b g | string escape

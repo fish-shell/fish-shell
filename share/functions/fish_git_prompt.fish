@@ -394,7 +394,7 @@ function fish_git_prompt --description "Prompt function for Git"
         and set untracked true
     end
 
-    if test "true" = $inside_worktree
+    if test true = $inside_worktree
         # Use informative status if it has been enabled locally, or it has been
         # enabled globally (via the fish variable) and dirty or untracked are not false.
         #
@@ -561,7 +561,7 @@ function __fish_git_prompt_informative_status
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
     else
         for i in $___fish_git_prompt_status_order
-            if [ $$i != "0" ]
+            if [ $$i != 0 ]
                 set -l color_var ___fish_git_prompt_color_$i
                 set -l color_done_var ___fish_git_prompt_color_{$i}_done
                 set -l symbol_var ___fish_git_prompt_char_$i
@@ -665,8 +665,8 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
         end
     end
 
-    if test "true" = $inside_gitdir
-        if test "true" = $bare_repo
+    if test true = $inside_gitdir
+        if test true = $bare_repo
             set bare "BARE:"
         else
             # Let user know they're inside the git dir of a non-bare repo

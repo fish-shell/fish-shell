@@ -38,8 +38,8 @@ complete -c dhclient -l no-pid -d 'Disable writing pid files'
 complete -c dhclient -o sf -F -d 'Path to the network configuration script'
 complete -c dhclient -s B -d 'Always set the bootp broadcast flag in request packets'
 complete -c dhclient -s C -x -d 'DHCP client identifier'
-complete -c dhclient -s H -x -d 'Hostname'
-complete -c dhclient -s F -x -d 'FQDN'
+complete -c dhclient -s H -x -d Hostname
+complete -c dhclient -s F -x -d FQDN
 complete -c dhclient -s V -x -d 'Vendor class identifier'
 complete -c dhclient -l request-options -x -d 'Request option list'
-complete -c dhclient -l timeout -x -d 'Timeout'
+complete -c dhclient -l timeout -x -d Timeout

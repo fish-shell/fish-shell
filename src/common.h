@@ -121,7 +121,8 @@ enum escape_string_style_t {
 enum {
     UNESCAPE_DEFAULT = 0,         // default behavior
     UNESCAPE_SPECIAL = 1 << 0,    // escape special fish syntax characters like the semicolon
-    UNESCAPE_INCOMPLETE = 1 << 1  // allow incomplete escape sequences
+    UNESCAPE_INCOMPLETE = 1 << 1,  // allow incomplete escape sequences
+    UNESCAPE_NO_BACKSLASHES = 1 << 2,  // don't handle backslash escapes
 };
 typedef unsigned int unescape_flags_t;
 

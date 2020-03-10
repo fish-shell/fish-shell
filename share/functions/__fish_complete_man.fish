@@ -35,7 +35,7 @@ function __fish_complete_man
 
     set -l exclude_fish_commands
     # Only include fish commands when section is empty or 1
-    if test -z "$section" -o "$section" = "1"
+    if test -z "$section" -o "$section" = 1
         set -e exclude_fish_commands
     end
 

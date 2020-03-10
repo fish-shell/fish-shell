@@ -18,8 +18,8 @@ function cd --description "Change directory"
     # Avoid set completions.
     set -l previous $PWD
 
-    if test "$argv" = "-"
-        if test "$__fish_cd_direction" = "next"
+    if test "$argv" = -
+        if test "$__fish_cd_direction" = next
             nextd
         else
             prevd

@@ -47,7 +47,7 @@ complete -C't --fileoption ' | string match bind.expect
 # Make sure bare `complete` is reasonable,
 complete -p '/complete test/beta1' -d 'desc, desc' -sZ
 complete -c 'complete test beta2' -r -d 'desc \' desc2 [' -a 'foo bar'
-complete -c 'complete_test_beta2' -x -n 'false' -A -o test
+complete -c complete_test_beta2 -x -n false -A -o test
 complete
 
 # CHECK: complete --no-files -c complete_test_alpha1 -a '(commandline)'
@@ -96,13 +96,13 @@ complete -C'complete_test_recurse1 '
 # short options
 complete -c foo -f -a non-option-argument
 complete -c foo -f --short-option x
-complete -c foo -f --short-option y -a 'ARGY'
-complete -c foo -f --short-option z -a 'ARGZ' -r
+complete -c foo -f --short-option y -a ARGY
+complete -c foo -f --short-option z -a ARGZ -r
 complete -c foo -f --old-option single-long-ending-in-z
 complete -c foo -f --old-option x-single-long
 complete -c foo -f --old-option y-single-long
 complete -c foo -f --old-option z-single-long
-complete -c foo -f --long-option x-long -a 'ARGLONG'
+complete -c foo -f --long-option x-long -a ARGLONG
 # Make sure that arguments of concatenated short options are expanded (#332)
 complete -C'foo -xy'
 # CHECK: -xyARGY
@@ -130,7 +130,7 @@ complete -C'foo -z'
 
 
 # Builtins (with subcommands; #2705)
-complete -c complete_test_subcommand -n 'test (commandline -op)[1] = complete_test_subcommand' -xa 'ok'
+complete -c complete_test_subcommand -n 'test (commandline -op)[1] = complete_test_subcommand' -xa ok
 complete -C'not complete_test_subcommand '
 # CHECK: ok
 complete -C'echo; and complete_test_subcommand '
@@ -287,7 +287,9 @@ echo "Expect --backup=all  --backup=none  --backup=simple:" (complete -C'TestOpt
 #CHECK: Expect --backup=all  --backup=none  --backup=simple: --backup=all --backup=none --backup=simple
 
 # Test that directory completions work correctly
-if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
+if begin
+        rm -rf test6.tmp.dir; and mkdir test6.tmp.dir
+    end
     pushd test6.tmp.dir
     set -l dir (mktemp -d XXXXXXXX)
     if complete -C$dir | grep "^$dir/.*Directory" >/dev/null
@@ -319,36 +321,36 @@ end
 
 # Test command expansion with parened PATHs (#952)
 begin
-  set -l parened_path $PWD/'test6.tmp2.(paren).dir'
-  set -l parened_subpath $parened_path/subdir
-  if not begin
-        rm -rf $parened_path
-	    and mkdir $parened_path
-		and mkdir $parened_subpath
-	    and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
-	    and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
-      end
-    echo "error: could not create command expansion temp environment" >&2
-  end
-  
-  # Verify that we can expand commands when PATH has parens
-  set -l PATH $parened_path $PATH
-  set -l completed (complete -C__test6_ | cut -f 1 -d \t)
-  if test "$completed" = '__test6_(paren)_command'
-    echo "Command completion with parened PATHs test passed"
-  else
-    echo "Command completion with parened PATHs test failed. Expected __test6_(paren)_command, got $completed" >&2
-  end
-  #CHECK: Command completion with parened PATHs test passed
-  
-  # Verify that commands with intermediate slashes do NOT expand with respect to PATH
-  set -l completed (complete -Csubdir/__test6_subdir)
-  if test -z "$completed"
-    echo "Command completion with intermediate slashes passed"
-  else
-    echo "Command completion with intermediate slashes: should output nothing, instead got $completed" >&2
-  end
-  #CHECK: Command completion with intermediate slashes passed
-  
-  rm -rf $parened_path
+    set -l parened_path $PWD/'test6.tmp2.(paren).dir'
+    set -l parened_subpath $parened_path/subdir
+    if not begin
+            rm -rf $parened_path
+            and mkdir $parened_path
+            and mkdir $parened_subpath
+            and ln -s /bin/ls $parened_path/'__test6_(paren)_command'
+            and ln -s /bin/ls $parened_subpath/'__test6_subdir_(paren)_command'
+        end
+        echo "error: could not create command expansion temp environment" >&2
+    end
+
+    # Verify that we can expand commands when PATH has parens
+    set -l PATH $parened_path $PATH
+    set -l completed (complete -C__test6_ | cut -f 1 -d \t)
+    if test "$completed" = '__test6_(paren)_command'
+        echo "Command completion with parened PATHs test passed"
+    else
+        echo "Command completion with parened PATHs test failed. Expected __test6_(paren)_command, got $completed" >&2
+    end
+    #CHECK: Command completion with parened PATHs test passed
+
+    # Verify that commands with intermediate slashes do NOT expand with respect to PATH
+    set -l completed (complete -Csubdir/__test6_subdir)
+    if test -z "$completed"
+        echo "Command completion with intermediate slashes passed"
+    else
+        echo "Command completion with intermediate slashes: should output nothing, instead got $completed" >&2
+    end
+    #CHECK: Command completion with intermediate slashes passed
+
+    rm -rf $parened_path
 end

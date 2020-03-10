@@ -38,7 +38,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
         set -l cache_dir "$XDG_CACHE_HOME/fish/ant_completions"
         mkdir -p $cache_dir
 
-        set -l cache_file $cache_dir/(fish_md5 -s $buildfile)
+        set -l cache_file $cache_dir/(__fish_md5 -s $buildfile)
         if [ ! -s "$cache_file" ]
             # generate cache file if empty
             __parse_ant_targets_from_projecthelp $buildfile >$cache_file

@@ -346,6 +346,12 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     statuses_t get_last_statuses() const { return vars().get_last_statuses(); }
     void set_last_statuses(statuses_t s) { vars().set_last_statuses(std::move(s)); }
 
+    /// Cover of vars().set(), which also fires any returned event handlers.
+    /// \return a value like ENV_OK.
+    int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val);
+    int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+    int set_empty_var_and_fire(const wcstring &key, env_mode_flags_t mode);
+
     /// Pushes a new block. Returns a pointer to the block, stored in the parser. The pointer is
     /// valid until the call to pop_block()
     block_t *push_block(block_t &&b);

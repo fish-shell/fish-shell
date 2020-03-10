@@ -37,10 +37,10 @@ abbr | grep __abbr2
 abbr -e '~__abbr2'
 
 # Ensure we handle leading dashes in abbreviation names properly
-abbr -- '--__abbr3' 'xyz'
+abbr -- --__abbr3 xyz
 abbr | grep __abbr3
 # CHECK: abbr -a -U -- --__abbr3 xyz
-abbr -e -- '--__abbr3'
+abbr -e -- --__abbr3
 
 # Test that an abbr word containing spaces is rejected
 abbr "a b c" "d e f"

@@ -6,7 +6,7 @@ __fish_complete_ssh ssh
 #
 # ssh specific completions
 #
-complete -x -c ssh -d "Remote" -a "(__fish_complete_user_at_hosts)"
+complete -x -c ssh -d Remote -a "(__fish_complete_user_at_hosts)"
 
 # Disable as username completion is not very useful.
 # complete -x -c ssh -d User -a "
@@ -37,13 +37,13 @@ complete -c ssh -s f -d "Go to background"
 complete -c ssh -s g -d "Allow remote host to connect to local forwarded ports"
 complete -c ssh -s I -d "Smartcard device"
 complete -c ssh -s k -d "Disable forwarding of Kerberos tickets"
-complete -c ssh -s l -x -a "(__fish_complete_users)" -d "User"
+complete -c ssh -s l -x -a "(__fish_complete_users)" -d User
 complete -c ssh -s m -d "MAC algorithm"
 complete -c ssh -s n -d "Prevent reading from stdin"
 complete -c ssh -s N -d "Do not execute remote command"
-complete -c ssh -s p -x -d "Port"
+complete -c ssh -s p -x -d Port
 complete -c ssh -s q -d "Quiet mode"
-complete -c ssh -s s -d "Subsystem"
+complete -c ssh -s s -d Subsystem
 complete -c ssh -s t -d "Force pseudo-tty allocation"
 complete -c ssh -s T -d "Disable pseudo-tty allocation"
 complete -c ssh -s x -d "Disable X11 forwarding"
@@ -62,4 +62,4 @@ function __ssh_history_completions --argument limit
     history --prefix ssh | string replace -rf '.* ([A-Za-z0-9._:-]+@[A-Za-z0-9._:-]+).*' '$1' | head -n $limit
 end
 
-complete -k -c ssh -a '(__ssh_history_completions 100)' -f -d "Remote"
+complete -k -c ssh -a '(__ssh_history_completions 100)' -f -d Remote

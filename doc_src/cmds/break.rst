@@ -23,8 +23,6 @@ Example
 -------
 The following code searches all .c files for "smurf", and halts at the first occurrence.
 
-
-
 ::
 
     for i in *.c
@@ -34,3 +32,7 @@ The following code searches all .c files for "smurf", and halts at the first occ
         end
     end
 
+See Also
+--------
+
+- the :ref:`continue <cmd-continue>` command, to skip the remainder of the current iteration of the current inner loop

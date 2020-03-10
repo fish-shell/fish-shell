@@ -22,13 +22,13 @@ complete -c ansible-vault -l vault-id -r -d "the vault identity to use"
 complete -c ansible-vault -l vault-password-file -r -d "Vault password file"
 
 # subcommands
-complete -c ansible-vault -n '__fish_ansible_vault_no_subcommand' -a decrypt -d 'Decrypt encrypted file or stdin'
-complete -c ansible-vault -n '__fish_ansible_vault_no_subcommand' -a encrypt -d 'Encrypt a file or stdin'
-complete -c ansible-vault -n '__fish_ansible_vault_no_subcommand' -ra create -d 'Create encrypted file'
-complete -c ansible-vault -n '__fish_ansible_vault_no_subcommand' -ra edit -d 'Edit encrypted file'
-complete -c ansible-vault -n '__fish_ansible_vault_no_subcommand' -ra rekey -d 'Rekey encrypted file'
-complete -c ansible-vault -n '__fish_ansible_vault_no_subcommand' -ra view -d 'View contents of something encrypted'
-complete -f -c ansible-vault -n '__fish_ansible_vault_no_subcommand' -a encrypt_string -d 'Encrypt string'
+complete -c ansible-vault -n __fish_ansible_vault_no_subcommand -a decrypt -d 'Decrypt encrypted file or stdin'
+complete -c ansible-vault -n __fish_ansible_vault_no_subcommand -a encrypt -d 'Encrypt a file or stdin'
+complete -c ansible-vault -n __fish_ansible_vault_no_subcommand -ra create -d 'Create encrypted file'
+complete -c ansible-vault -n __fish_ansible_vault_no_subcommand -ra edit -d 'Edit encrypted file'
+complete -c ansible-vault -n __fish_ansible_vault_no_subcommand -ra rekey -d 'Rekey encrypted file'
+complete -c ansible-vault -n __fish_ansible_vault_no_subcommand -ra view -d 'View contents of something encrypted'
+complete -f -c ansible-vault -n __fish_ansible_vault_no_subcommand -a encrypt_string -d 'Encrypt string'
 
 # encrypt_string options
 complete -c ansible-vault -n '__fish_ansible_vault_using_command encrypt encrypt_string' -r -l stdin-name -f -d 'Specify the variable name for stdin'

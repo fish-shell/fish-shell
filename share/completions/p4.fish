@@ -134,7 +134,7 @@ end
 
 function __fish_print_p4_pending_changelists -d "Lists all *pending* changelists. If 'default' argument is provided, default changelist will also be listed"
     if set -q argv[1]
-        and test $argv[1] = "default"
+        and test $argv[1] = default
         echo default\tDefault changelist
     end
     __fish_print_p4_workspace_changelists -s pending
@@ -310,7 +310,7 @@ end
 #########################################################
 
 function __fish_p4_register_command -d "Adds a completion for a specific command"
-    complete -c p4 -n "__fish_p4_not_in_command" -a $argv[1] $argv[2..-1]
+    complete -c p4 -n __fish_p4_not_in_command -a $argv[1] $argv[2..-1]
 end
 
 #########################################################
@@ -465,12 +465,12 @@ __fish_p4_register_command_option clean -s l -d "Display output in local file sy
 __fish_p4_register_command_option clean -s n -d "Preview the results of the operation without performing any action"
 
 # client, workspace @TODO: -Fs (only in -f), -c (only in -S stream)
-for a in 'client' 'workspace'
+for a in client workspace
     __fish_p4_register_command_option $a -x -a '(__fish_print_p4_workspaces)'
     __fish_p4_register_command_option $a -s f -d "Allows the last modification date, which is normally read-only, to be set"
     __fish_p4_register_command_option $a -s d -f -a '(__fish_print_p4_workspaces)' -d "Delete the specified client workspace whether or not the workspace is owned by the user"
     # __fish_p4_register_command_option $a -a '-Fs' -d 'Deletes client with shelves (must follow -f)'
-    __fish_p4_register_command_option $a -s F -a 's' -d 'Deletes client with shelves (must follow -f)'
+    __fish_p4_register_command_option $a -s F -a s -d 'Deletes client with shelves (must follow -f)'
     __fish_p4_register_command_option $a -s o -d "Write the client workspace spec to standard output"
     __fish_p4_register_command_option $a -s i -d "Read the client workspace spec from standard input"
     __fish_p4_register_command_option $a -s c -x -a '(__fish_print_p4_workspace_changelists)' -d "When used with -S stream, displays the workspace spec that would have been created for a stream at the moment the change was submitted"
@@ -481,7 +481,7 @@ for a in 'client' 'workspace'
 end
 
 # clients, workspaces @TODO -U and others are mutually exclusive
-for a in 'clients' 'workspaces'
+for a in clients workspaces
     __fish_p4_register_command_option $a -s a -d "List all client workspaces, not just workspaces bound to this server"
     __fish_p4_register_command_option $a -s e -x -d "List only client workspaces matching filter (case-sensitive)"
     __fish_p4_register_command_option $a -s E -x -d "List only client workspaces matching filter (case-insensitive)"
@@ -556,7 +556,7 @@ __fish_p4_register_command_option edit -s t -x -a '(__fish_print_p4_file_types)'
 #-----------------------------------------------------
 
 # change, changelist
-for a in 'change' 'changelist'
+for a in change changelist
     __fish_p4_register_command_option $a -x -a '(__fish_print_p4_pending_changelists)'
     __fish_p4_register_command_option $a -s s -d "Allows jobs to be assigned arbitrary status values on submission of the changelist, rather than the default status of closed"
     __fish_p4_register_command_option $a -s f -d "Force operation (The -u and the -f options are mutually exclusive)"
@@ -570,7 +570,7 @@ for a in 'change' 'changelist'
 end
 
 # changes, changelists
-for a in 'changes' 'changelists'
+for a in changes changelists
     __fish_p4_register_command_option $a -s i -d "Include changelists that affected files that were integrated with the specified files"
     __fish_p4_register_command_option $a -s t -d "Display the time as well as the date of each change"
     __fish_p4_register_command_option $a -s l -d "List long output, with the full text of each changelist description"
@@ -589,7 +589,7 @@ __fish_p4_register_command_option describe -s f -d 'Force the display of descrip
 __fish_p4_register_command_option describe -s O -d 'Specify the original changelist number'
 __fish_p4_register_command_option describe -s s -d 'Short output without diffs'
 __fish_p4_register_command_option describe -s S -d 'Display shelved files with diffs'
-__fish_p4_register_command_option describe -s d -x -a '(__fish_print_p4_diff_options)' -d 'Diff'
+__fish_p4_register_command_option describe -s d -x -a '(__fish_print_p4_diff_options)' -d Diff
 
 # filelog @TODO
 
@@ -660,13 +660,13 @@ __fish_p4_register_command_option unshelve -s S -x -a '(__fish_print_p4_streams)
 # cstat @TODO
 
 # integ, integrate @TODO -s fromFile is based on -b branchname, try resolving
-for a in 'integ' 'integrate'
+for a in integ integrate
     __fish_p4_register_command_option $a -s b -x -a '(__fish_print_p4_branches)' -d "Integrate the files using the sourceFile/targetFile mappings included in the branch view of branchname. If the toFiles argument is included, include only those target files in the branch view that match the pattern specified by toFiles"
     __fish_p4_register_command_option $a -s n -d "Display the integrations this command would perform without actually performing them"
     __fish_p4_register_command_option $a -s v -d "Open files for branching without copying toFiles into the client workspace"
     __fish_p4_register_command_option $a -s c -x -a '(__fish_print_p4_pending_changelists)' -d "Open the toFiles for branch, integrate, or delete in the specified pending changelist"
     __fish_p4_register_command_option $a -s q -d "Quiet mode"
-    __fish_p4_register_command_option $a -a '-Di' -d "f the source file has been deleted and re-added, revisions that precede the deletion will be considered to be part of the same source file"
+    __fish_p4_register_command_option $a -a -Di -d "f the source file has been deleted and re-added, revisions that precede the deletion will be considered to be part of the same source file"
     __fish_p4_register_command_option $a -s f -d "Force the integration on all revisions of fromFile and toFile, even if some revisions have been integrated in the past"
     __fish_p4_register_command_option $a -s h -d "Use the have revision"
     __fish_p4_register_command_option $a -s O -x -a '(__fish_print_p4_integrate_output_options)' -d "Specify output options"

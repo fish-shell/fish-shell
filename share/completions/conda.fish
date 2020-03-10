@@ -102,8 +102,8 @@ __fish_conda config -l remove-key -x -a "(__fish_conda_config_keys)" -d "Remove 
 __fish_conda config -l stdin -d "Apply configuration given in yaml format from stdin"
 
 # 'help' command
-__fish_conda "help" -d "Displays a list of available conda commands and their help strings"
-__fish_conda "help" -x -a "$__fish_conda_commands"
+__fish_conda help -d "Displays a list of available conda commands and their help strings"
+__fish_conda help -x -a "$__fish_conda_commands"
 
 # 'info' command
 __fish_conda info -l offline -d "Offline mode, don't connect to the Internet."

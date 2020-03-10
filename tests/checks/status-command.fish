@@ -11,8 +11,12 @@ test "$status_fish_path" = "$env_fish_path"
 or echo "Fish path disagreement: $status_fish_path vs $env_fish_path"
 
 # Check is-block
-status is-block ; echo $status
-begin ; status is-block ; echo $status ; end
+status is-block
+echo $status
+begin
+    status is-block
+    echo $status
+end
 # CHECK: 1
 # CHECK: 0
 
@@ -27,7 +31,8 @@ end
 print_my_name
 # CHECK: print_my_name
 
-status is-command-substitution; echo $status
+status is-command-substitution
+echo $status
 echo (status is-command-substitution; echo $status)
 # CHECK: 1
 # CHECK: 0

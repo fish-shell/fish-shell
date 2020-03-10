@@ -23,42 +23,42 @@ complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o mod -
 # Completions for go cmds that takes file arguments
 complete -c go -n "__fish_seen_subcommand_from build compile fix fmt install run test vet" -x -a "(
             __fish_complete_suffix .go
-    )" --description 'File'
+    )" --description File
 
 # Completions for go cmds that takes pkg arguments
 complete -c go -n "__fish_seen_subcommand_from build doc fix fmt install test vet" -x -a "(
             go list -e -f '{{.ImportPath}}	{{or .Doc \"Go package\"}}' (commandline -ct)... ^/dev/null
-    )" --description 'Package'
+    )" --description Package
 
 
 # build
-complete -c go -n '__fish_use_subcommand' -a build -d 'compile packages and dependencies'
+complete -c go -n __fish_use_subcommand -a build -d 'compile packages and dependencies'
 
 # clean
-complete -c go -n '__fish_use_subcommand' -a clean -d 'remove object files'
+complete -c go -n __fish_use_subcommand -a clean -d 'remove object files'
 complete -c go -n '__fish_seen_subcommand_from clean' -s i -d "remove the corresponding installed archive or binary (what 'go install' would create)"
 complete -c go -n '__fish_seen_subcommand_from clean' -s n -d "print the remove commands it would execute, but not run them"
 complete -c go -n '__fish_seen_subcommand_from clean' -s r -d "clean to be applied recursively to all the dependencies of the packages named by the import paths"
 complete -c go -n '__fish_seen_subcommand_from clean' -s x -d "clean to print remove commands as it executes them"
 
 # doc
-complete -c go -n '__fish_use_subcommand' -a doc -d 'run godoc on package sources'
+complete -c go -n __fish_use_subcommand -a doc -d 'run godoc on package sources'
 complete -c go -n '__fish_seen_subcommand_from doc' -s n -d "prints commands that would be executed"
 complete -c go -n '__fish_seen_subcommand_from doc' -s x -d "prints commands as they are executed"
 
 # env
-complete -c go -n '__fish_use_subcommand' -a env -d 'print Go environment information'
+complete -c go -n __fish_use_subcommand -a env -d 'print Go environment information'
 
 # fix
-complete -c go -n '__fish_use_subcommand' -a fix -d 'run go tool fix on packages'
+complete -c go -n __fish_use_subcommand -a fix -d 'run go tool fix on packages'
 
 # fmt
-complete -c go -n '__fish_use_subcommand' -a fmt -d 'run gofmt on package sources'
+complete -c go -n __fish_use_subcommand -a fmt -d 'run gofmt on package sources'
 complete -c go -n '__fish_seen_subcommand_from fmt' -s n -d "prints commands that would be executed"
 complete -c go -n '__fish_seen_subcommand_from fmt' -s x -d "prints commands as they are executed"
 
 # get
-complete -c go -n '__fish_use_subcommand' -a get -d 'download and install packages and dependencies'
+complete -c go -n __fish_use_subcommand -a get -d 'download and install packages and dependencies'
 complete -c go -n '__fish_seen_subcommand_from get' -s d -d "stop after downloading the packages; don't install"
 complete -c go -n '__fish_seen_subcommand_from get' -o fix -d "run fix tool on packages before resolving dependencies or building"
 complete -c go -n '__fish_seen_subcommand_from get' -s u -d "update remote packages"
@@ -67,14 +67,14 @@ complete -c go -n '__fish_seen_subcommand_from get' -s t -d "also download the p
 complete -c go -n '__fish_seen_subcommand_from get' -o insecure -d "flag permits fetching & resolving domains using insecure schemes"
 
 # generate
-complete -c go -n '__fish_use_subcommand' -a generate -d 'Generate runs commands described by directives within existing files.'
+complete -c go -n __fish_use_subcommand -a generate -d 'Generate runs commands described by directives within existing files.'
 complete -c go -n '__fish_seen_subcommand_from get' -s n -d "prints commands that would be executed"
 complete -c go -n '__fish_seen_subcommand_from get' -s x -d "prints commands as they are executed"
 complete -c go -n '__fish_seen_subcommand_from get' -s v -d "prints the names of packages and files as they are processed"
 complete -c go -n '__fish_seen_subcommand_from get' -o run -d "prints the names of packages and files as they are processed"
 
 # help
-complete -c go -n '__fish_use_subcommand' -a help -d 'get help on topic'
+complete -c go -n __fish_use_subcommand -a help -d 'get help on topic'
 complete -c go -n '__fish_seen_subcommand_from help' -xa bug -d "start a bug report"
 complete -c go -n '__fish_seen_subcommand_from help' -xa build -d "compile packages and dependencies"
 complete -c go -n '__fish_seen_subcommand_from help' -xa clean -d "remove object files and cached files"
@@ -111,10 +111,10 @@ complete -c go -n '__fish_seen_subcommand_from help' -xa testflag -d "testing fl
 complete -c go -n '__fish_seen_subcommand_from help' -xa testfunc -d "testing functions"
 
 # install
-complete -c go -n '__fish_use_subcommand' -a install -d 'compile and install packages and dependencies'
+complete -c go -n __fish_use_subcommand -a install -d 'compile and install packages and dependencies'
 
 # list
-complete -c go -n '__fish_use_subcommand' -a list -d 'list packages'
+complete -c go -n __fish_use_subcommand -a list -d 'list packages'
 complete -c go -n '__fish_seen_subcommand_from list' -s e -d "tolerate erroneous packages"
 complete -c go -n '__fish_seen_subcommand_from list' -s f -r -d "pass in template for formatting"
 complete -c go -n '__fish_seen_subcommand_from list' -o json -d "print in JSON format"
@@ -122,29 +122,29 @@ complete -c go -n '__fish_seen_subcommand_from list' -o tags -r -d 'list of buil
 complete -c go -n '__fish_seen_subcommand_from list' -s m -d 'list modules instead of packages'
 
 # run
-complete -c go -n '__fish_use_subcommand' -a run -d 'compile and run Go program'
+complete -c go -n __fish_use_subcommand -a run -d 'compile and run Go program'
 
 # test
-complete -c go -n '__fish_use_subcommand' -a test -d 'test packages'
+complete -c go -n __fish_use_subcommand -a test -d 'test packages'
 complete -c go -n '__fish_seen_subcommand_from test' -s c -r -d "compile the test binary to pkg.test but do not run it"
 complete -c go -n '__fish_seen_subcommand_from test' -s i -d "install dependent packages, but don't run tests"
 
 # tool
-complete -c go -n '__fish_use_subcommand' -a tool -d 'run specified go tool'
+complete -c go -n __fish_use_subcommand -a tool -d 'run specified go tool'
 complete -c go -n '__fish_seen_subcommand_from tool' -a 'addr2line api asm cgo compile dist fix link nm objdump pack pprof prof vet yacc' -d "target tool"
 complete -c go -n '__fish_seen_subcommand_from tool' -s n -d "print the command that would be executed but not execute it"
 
 # version
-complete -c go -f -n '__fish_use_subcommand' -a version -d 'print Go version'
+complete -c go -f -n __fish_use_subcommand -a version -d 'print Go version'
 complete -c go -f -n '__fish_seen_subcommand_from version'
 
 # vet
-complete -c go -n '__fish_use_subcommand' -a vet -d 'vet packages'
+complete -c go -n __fish_use_subcommand -a vet -d 'vet packages'
 complete -c go -n '__fish_seen_subcommand_from vet' -s n -d "print the command that would be executed"
 complete -c go -n '__fish_seen_subcommand_from vet' -s x -d "prints commands as they are executed"
 
 # mod
-complete -c go -n '__fish_use_subcommand' -a mod -d 'module maintenance'
+complete -c go -n __fish_use_subcommand -a mod -d 'module maintenance'
 complete -c go -f -n '__fish_seen_subcommand_from mod' -a download -d "download modules to local cache"
 complete -c go -f -n '__fish_seen_subcommand_from mod' -a edit -d "edit go.mod from tools or scripts"
 complete -c go -f -n '__fish_seen_subcommand_from mod' -a graph -d "print module requirement graph"

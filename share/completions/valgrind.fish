@@ -9,7 +9,7 @@ if type -q valgrind; and valgrind --version 2>/dev/null | string match -qr -- '-
     set skin skin
 end
 
-complete -xc valgrind -l $skin -d "Skin" -a "
+complete -xc valgrind -l $skin -d Skin -a "
 	memcheck\tHeavyweight\ memory\ checker
 	cachegrind\tCache-miss\ profiler
 	addrcheck\tLightweight\ memory\ checker

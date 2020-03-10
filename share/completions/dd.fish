@@ -1,6 +1,6 @@
 complete -c dd -xa '(__fish_complete_dd)'
-complete -c dd -d 'display help and exit' -xa '--help'
-complete -c dd -d 'output version information and exit' -xa '--version'
+complete -c dd -d 'display help and exit' -xa --help
+complete -c dd -d 'output version information and exit' -xa --version
 
 function __fish_complete_dd -d 'Complete dd operands'
     # set operand_string as a local variable containing the current command-line token.

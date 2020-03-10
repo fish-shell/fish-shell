@@ -57,20 +57,26 @@ status features
 #CHECK: stderr-nocaret	off	3.0	^ no longer redirects stderr
 #CHECK: qmark-noglob	off	3.0	? no longer globs
 #CHECK: regex-easyesc	off	3.1	string replace -r needs fewer \'s
-status test-feature stderr-nocaret ; echo $status
+status test-feature stderr-nocaret
+echo $status
 #CHECK: 1
-status test-feature not-a-feature ; echo $status
+status test-feature not-a-feature
+echo $status
 #CHECK: 2
 
 # Ensure $status isn't reset before a function is executed
 function echo_last
-	echo $status
+    echo $status
 end
 
-false; echo_last; echo $status #1
+false
+echo_last
+echo $status #1
 #CHECK: 1
 #CHECK: 0
 
 # Verify that if swallows failure - see #1061
-if false ; end ; echo $status
+if false
+end
+echo $status
 #CHECK: 0

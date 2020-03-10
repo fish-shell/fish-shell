@@ -403,9 +403,9 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     }
     int retval;
     if (var) {
-        retval = parser->vars().set(for_var_name, ENV_LOCAL | ENV_USER, var->as_list());
+        retval = parser->set_var_and_fire(for_var_name, ENV_LOCAL | ENV_USER, var->as_list());
     } else {
-        retval = parser->vars().set_empty(for_var_name, ENV_LOCAL | ENV_USER);
+        retval = parser->set_empty_var_and_fire(for_var_name, ENV_LOCAL | ENV_USER);
     }
     assert(retval == ENV_OK);
 
@@ -424,7 +424,7 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
             break;
         }
 
-        int retval = parser->vars().set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
+        int retval = parser->set_var_and_fire(for_var_name, ENV_DEFAULT | ENV_USER, val);
         assert(retval == ENV_OK && "for loop variable should have been successfully set");
         (void)retval;
 
@@ -1014,7 +1014,7 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
             vals.emplace_back(std::move(completion.completion));
         }
         if (proc) proc->variable_assignments.push_back({variable_name, vals});
-        parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
+        parser->set_var_and_fire(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
     }
     return end_execution_reason_t::ok;
 }

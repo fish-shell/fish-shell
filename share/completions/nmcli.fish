@@ -27,38 +27,38 @@ complete -c nmcli -d 'Command-line tool to control NetworkManager'
 
 complete -c nmcli -n "not __fish_seen_subcommand_from $nmcli_commands" -xa "$nmcli_commands"
 
-complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa 'status' -d 'Show overall status of NetworkManager'
-complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa 'hostname' -d 'Get or change persistent system hostname'
-complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa 'permissions' -d 'Show caller permissions for authenticated operations'
-complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa 'logging' -d 'Get or change NetworkManager logging level and domains'
-complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa 'help'
+complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa status -d 'Show overall status of NetworkManager'
+complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa hostname -d 'Get or change persistent system hostname'
+complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa permissions -d 'Show caller permissions for authenticated operations'
+complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa logging -d 'Get or change NetworkManager logging level and domains'
+complete -c nmcli -n "__fish_seen_subcommand_from general; and not __fish_seen_subcommand_from $nmcli_general" -xa help
 complete -c nmcli -n "contains_seq general logging -- (commandline -op)" -xa 'level domains help'
 
-complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa 'on' -d 'Switch networking on'
-complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa 'off' -d 'Switch networking off'
-complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa 'connectivity' -d 'Get network connectivity state'
-complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa 'help'
-complete -c nmcli -n "contains_seq networking connectivity -- (commandline -op)" -xa 'check' -d 'Re-check the connectivity'
+complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa on -d 'Switch networking on'
+complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa off -d 'Switch networking off'
+complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa connectivity -d 'Get network connectivity state'
+complete -c nmcli -n "__fish_seen_subcommand_from networking; and not __fish_seen_subcommand_from $nmcli_networking" -xa help
+complete -c nmcli -n "contains_seq networking connectivity -- (commandline -op)" -xa check -d 'Re-check the connectivity'
 
-complete -c nmcli -n "__fish_seen_subcommand_from radio; and not __fish_seen_subcommand_from $nmcli_radio" -xa 'all' -d 'Get status of all radio switches; turn them on/off'
+complete -c nmcli -n "__fish_seen_subcommand_from radio; and not __fish_seen_subcommand_from $nmcli_radio" -xa all -d 'Get status of all radio switches; turn them on/off'
 complete -c nmcli -n "contains_seq radio all -- (commandline -op)" -xa 'on off help'
-complete -c nmcli -n "__fish_seen_subcommand_from radio; and not __fish_seen_subcommand_from $nmcli_radio" -xa 'wifi' -d 'Get status of Wi-Fi radio switch; turn it on/off'
+complete -c nmcli -n "__fish_seen_subcommand_from radio; and not __fish_seen_subcommand_from $nmcli_radio" -xa wifi -d 'Get status of Wi-Fi radio switch; turn it on/off'
 complete -c nmcli -n "contains_seq radio wifi -- (commandline -op)" -xa 'on off help'
-complete -c nmcli -n "__fish_seen_subcommand_from radio; and not __fish_seen_subcommand_from $nmcli_radio" -xa 'wwan' -d 'Get status of mobile broadband radio switch; turn it on/off'
+complete -c nmcli -n "__fish_seen_subcommand_from radio; and not __fish_seen_subcommand_from $nmcli_radio" -xa wwan -d 'Get status of mobile broadband radio switch; turn it on/off'
 complete -c nmcli -n "contains_seq radio wwan -- (commandline -op)" -xa 'on off help'
 
 complete -c nmcli -n "__fish_seen_subcommand_from connection; and not __fish_seen_subcommand_from $nmcli_connection" -xa "$nmcli_connection"
 # Connection subcommands are self-explanatory, I'm just highlighting a difference between edit and modify
-complete -c nmcli -n "__fish_seen_subcommand_from connection; and not __fish_seen_subcommand_from $nmcli_connection" -xa "modify" -d "Modify one or more properties"
-complete -c nmcli -n "__fish_seen_subcommand_from connection; and not __fish_seen_subcommand_from $nmcli_connection" -xa "edit" -d "Interactive edit"
+complete -c nmcli -n "__fish_seen_subcommand_from connection; and not __fish_seen_subcommand_from $nmcli_connection" -xa modify -d "Modify one or more properties"
+complete -c nmcli -n "__fish_seen_subcommand_from connection; and not __fish_seen_subcommand_from $nmcli_connection" -xa edit -d "Interactive edit"
 complete -c nmcli -n "contains_seq connection show -- (commandline -op)" -l active -d 'List only active profiles'
 complete -c nmcli -n "contains_seq connection show -- (commandline -op)" -l order -d 'Custom connection ordering'
 complete -c nmcli -n "contains_seq connection show -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection up -- (commandline -op) && not contains -- (commandline -op)[-1] ifname ap" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection up -- (commandline -op) && test (commandline -op)[-1] = ifname" -xa "$ifname" -k
 complete -c nmcli -n "contains_seq connection up -- (commandline -op) && test (commandline -op)[-1] = ap" -xa "$bssid"
-complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa 'nsp' -d 'Specify NSP to connect to (only for WiMAX)'
-complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa 'passwd-file' -d 'password file to activate the connection'
+complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa nsp -d 'Specify NSP to connect to (only for WiMAX)'
+complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa passwd-file -d 'password file to activate the connection'
 complete -c nmcli -n "contains_seq connection down -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection add -- (commandline -op)" -xa 'type ifname con-name autoconnect save master slave-type help'
 complete -c nmcli -n "contains_seq connection add -- (commandline -op) && test (commandline -op)[-1] = ifname" -xa "$ifname"
@@ -67,7 +67,7 @@ complete -c nmcli -n "contains_seq connection modify -- (commandline -op)" -xa "
 complete -c nmcli -n "contains_seq connection clone -- (commandline -op)" -l temporary
 complete -c nmcli -n "contains_seq connection clone -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection edit -- (commandline -op)" -xa "type help $cname" -k
-complete -c nmcli -n "contains_seq connection edit type -- (commandline -op)" -xa 'con-name'
+complete -c nmcli -n "contains_seq connection edit type -- (commandline -op)" -xa con-name
 complete -c nmcli -n "contains_seq connection delete -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection monitor -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection import -- (commandline -op)" -l temporary
@@ -89,8 +89,8 @@ complete -c nmcli -n "contains_seq device wifi hotspot ifname -- (commandline -o
 complete -c nmcli -n "contains_seq device wifi rescan -- (commandline -op)" -xa 'ifname ssid'
 complete -c nmcli -n "contains_seq device wifi rescan ifname -- (commandline -op)" -xa "$ifname"
 complete -c nmcli -n "contains_seq device wifi rescan ssid -- (commandline -op)" -xa "$ssid"
-complete -c nmcli -n "contains_seq device lldp -- (commandline -op)" -xa 'list'
+complete -c nmcli -n "contains_seq device lldp -- (commandline -op)" -xa list
 
-complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa "secret" -d "Register nmcli as NM secret agent"
-complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa "polkit" -d "Register nmcli as a polkit agent for user session"
-complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa "all" -d "Run nmcli as secret and polkit agent"
+complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa secret -d "Register nmcli as NM secret agent"
+complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa polkit -d "Register nmcli as a polkit agent for user session"
+complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa all -d "Run nmcli as secret and polkit agent"

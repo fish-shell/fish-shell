@@ -22,8 +22,8 @@ if command -sq grealpath
 end
 
 function realpath -d "return an absolute path without symlinks"
-    set -l options 'h/help' 'q/quiet' 'V-version' 's/strip' 'N-no-symlinks' 'z/zero'
-    set -a options 'e/canonicalize-existing' 'm/canonicalize-missing' 'L/logical' 'P/physical'
+    set -l options h/help q/quiet V-version s/strip N-no-symlinks z/zero
+    set -a options e/canonicalize-existing m/canonicalize-missing L/logical P/physical
     set -a options 'R-relative-to=' 'B-relative-base='
     argparse -n realpath $options -- $argv
     or return

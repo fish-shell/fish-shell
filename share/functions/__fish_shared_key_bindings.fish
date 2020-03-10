@@ -103,7 +103,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # This will make sure the output of the current command is paged using the default pager when
     # you press Meta-p.
     # If none is set, less will be used.
-    bind --preset $argv \ep '__fish_paginate'
+    bind --preset $argv \ep __fish_paginate
 
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also,
     # remove the commenting chars so the command can be further edited then executed.
@@ -144,10 +144,10 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Bind the starting sequence in every bind mode, even user-defined ones.
     # Exclude paste mode or there'll be an additional binding after switching between emacs and vi
     for mode in (bind --list-modes | string match -v paste)
-        bind --preset -M $mode -m paste \e\[200~ '__fish_start_bracketed_paste'
+        bind --preset -M $mode -m paste \e\[200~ __fish_start_bracketed_paste
     end
     # This sequence ends paste-mode and returns to the previous mode we have saved before.
-    bind --preset -M paste \e\[201~ '__fish_stop_bracketed_paste'
+    bind --preset -M paste \e\[201~ __fish_stop_bracketed_paste
     # In paste-mode, everything self-inserts except for the sequence to get out of it
     bind --preset -M paste "" self-insert
     # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
@@ -161,7 +161,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset -M paste \\ "__fish_commandline_insert_escaped \\\ \$__fish_paste_quoted"
     # Only insert spaces if we're either quoted or not at the beginning of the commandline
     # - this strips leading spaces if they would trigger histignore.
-    bind --preset -M paste \  'if set -q __fish_paste_quoted[1]; or string length -q -- (commandline -c); commandline -i " "; end'
+    bind --preset -M paste " " self-insert-notfirst
 end
 
 function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'

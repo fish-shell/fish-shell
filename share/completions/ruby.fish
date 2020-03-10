@@ -3,7 +3,7 @@ complete -c ruby -s 0 -d 'Specify record separator'
 complete -c ruby -s a -d 'Turn on autosplit mode'
 complete -c ruby -s c -d 'Check syntax'
 complete -c ruby -s K -d 'Kanji code-set'
-complete -c ruby -s d -l debug -d 'Debugger'
+complete -c ruby -s d -l debug -d Debugger
 complete -c ruby -s e -x -d 'Execute command'
 complete -c ruby -s h -l help -d 'Display help and exit'
 complete -c ruby -s F -d 'Set regexp used to split input'
@@ -20,6 +20,6 @@ complete -c ruby -s v -l verbose -d 'Verbose mode'
 complete -c ruby -s w -d 'Verbose mode without message'
 complete -c ruby -l version -d 'Display version and exit'
 complete -c ruby -s x -d 'Extract script'
-complete -c ruby -s X -x -a '(__fish_complete_directories (commandline -ct))' -d 'Directory'
+complete -c ruby -s X -x -a '(__fish_complete_directories (commandline -ct))' -d Directory
 complete -c ruby -s y -l yydebug -d 'Compiler debug mode'
 

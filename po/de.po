@@ -3506,8 +3506,8 @@ msgstr ""
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "Willkommen zu fish, der freundlichen interaktiven Shell"
 
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:1
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:2
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:1
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:2
 msgid "%s: Too many arguments %s\\n"
 msgstr ""
 

@@ -4,7 +4,7 @@
 
 
 # help commands
-complete -f -c bzr -n '__fish_use_subcommand' -a help -d 'Show help'
+complete -f -c bzr -n __fish_use_subcommand -a help -d 'Show help'
 complete -f -c bzr -n '__fish_seen_subcommand_from help' -a topics -d 'List all help topics'
 complete -f -c bzr -n '__fish_seen_subcommand_from help' -a commands -d 'List all commands'
 complete -f -c bzr -n '__fish_seen_subcommand_from help' -a formats -d 'Help about supported formats'
@@ -14,14 +14,14 @@ complete -f -c bzr -n '__fish_seen_subcommand_from help' -a bugs -d 'Show bug tr
 # TODO: Add help about specific commands generating the output
 
 # init command
-complete -f -c bzr -n '__fish_use_subcommand' -a init -d 'Makes this directory a versioned branch'
+complete -f -c bzr -n __fish_use_subcommand -a init -d 'Makes this directory a versioned branch'
 complete -f -c bzr -n '__fish_seen_subcommand_from init' -l create-prefix -d 'Create the path leading up to the branch if it does not already exists'
 complete -f -c bzr -n '__fish_seen_subcommand_from init' -l no-tree -d 'Create a branch without a working tree'
 complete -f -c bzr -n '__fish_seen_subcommand_from init' -l append-revisions-only -d 'Never change revnos or the existing log. Append revisions to it only'
 # TODO: Add init using path directory
 
 # branch command
-complete -f -c bzr -n '__fish_use_subcommand' -a branch -d 'Make a copy of another branch'
+complete -f -c bzr -n __fish_use_subcommand -a branch -d 'Make a copy of another branch'
 complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l use-existing-dir -d 'Proceed even if directory exits'
 complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l stacked -d 'Create a stacked branch referring to the source branch'
 complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l standalone -d 'Do not use a shared repository, even if available'
@@ -32,20 +32,20 @@ complete -f -c bzr -n '__fish_seen_subcommand_from branch' -l no-tree -d 'Create
 # TODO: Add source/destination branch or directory
 
 # add command
-complete -f -c bzr -n '__fish_use_subcommand' -a add -d 'Make files or directories versioned'
+complete -f -c bzr -n __fish_use_subcommand -a add -d 'Make files or directories versioned'
 complete -f -c bzr -n '__fish_seen_subcommand_from add' -l no-recurse -s N -d 'Don\'t recursively add the contents of directories'
 
 # ignore command
-complete -f -c bzr -n '__fish_use_subcommand' -a ignore -d 'Ignore a file or pattern'
+complete -f -c bzr -n __fish_use_subcommand -a ignore -d 'Ignore a file or pattern'
 complete -f -c bzr -n '__fish_seen_subcommand_from ignore' -l default-rules -d 'Display the default ignore rules that bzr uses'
 
 # mv command
-complete -f -c bzr -n '__fish_use_subcommand' -a mv -d 'Move or rename a versioned file'
+complete -f -c bzr -n __fish_use_subcommand -a mv -d 'Move or rename a versioned file'
 complete -f -c bzr -n '__fish_seen_subcommand_from mv' -l auto -d 'Automatically guess renames'
 complete -f -c bzr -n '__fish_seen_subcommand_from mv' -l after -d 'Move only the bzr identifier of the file, because the file has already been moved'
 
 # status command
-complete -f -c bzr -n '__fish_use_subcommand' -a status -d 'Summarize changes in working copy'
+complete -f -c bzr -n __fish_use_subcommand -a status -d 'Summarize changes in working copy'
 complete -f -c bzr -n '__fish_seen_subcommand_from status' -l short -s S -d 'Use short status indicators'
 complete -f -c bzr -n '__fish_seen_subcommand_from status' -l versioned -s V -d 'Only show versioned files'
 complete -f -c bzr -n '__fish_seen_subcommand_from status' -l no-pending -d 'Don\'t show pending merges'
@@ -53,11 +53,11 @@ complete -f -c bzr -n '__fish_seen_subcommand_from status' -l no-classify -d 'Do
 complete -f -c bzr -n '__fish_seen_subcommand_from status' -l show-ids -d 'Show internal object ids'
 
 # diff command
-complete -f -c bzr -n '__fish_use_subcommand' -a diff -d 'Show detailed diffs'
+complete -f -c bzr -n __fish_use_subcommand -a diff -d 'Show detailed diffs'
 # TODO: Add file diff options
 
 # merge command
-complete -f -c bzr -n '__fish_use_subcommand' -a merge -d 'Pull in changes from another branch'
+complete -f -c bzr -n __fish_use_subcommand -a merge -d 'Pull in changes from another branch'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l pull -d 'If the destination is already completely merged into the source, pull from the source rather than merging'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l remember -d 'Remember the specified location as a default'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l force -d 'Merge even if the destination tree has uncommitted changes'
@@ -71,7 +71,7 @@ complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l change -s c -d 'Sel
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l revision -s r -d 'Select changes introduced by the specified revision'
 
 # commit command
-complete -f -c bzr -n '__fish_use_subcommand' -a commit -d 'Save some or all changes'
+complete -f -c bzr -n __fish_use_subcommand -a commit -d 'Save some or all changes'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l show-diff -s p -d 'When no message is supplied, show the diff along with the status summary in the message editor'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l file -s F -d 'Take commit message from this file'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l exclude -s x -d 'Do not consider changes made to a given path'
@@ -85,7 +85,7 @@ complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l lossy -d 'When com
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l local -d 'Perform a local commit in a bound branch.  Local commits are not pushed to the master branch until a normal commit is performed'
 
 # send command
-complete -f -c bzr -n '__fish_use_subcommand' -a send -d 'Send changes via email'
+complete -f -c bzr -n __fish_use_subcommand -a send -d 'Send changes via email'
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l body -d 'Body for the email'
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l remember -d 'Remember submit and public branch'
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l mail-to -d 'Mail the request to this address'
@@ -95,10 +95,10 @@ complete -f -c bzr -n '__fish_seen_subcommand_from send' -l strict -d 'Refuse to
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l no-patch -d 'Do not include a preview patch in the merge directive'
 
 # log command
-complete -f -c bzr -n '__fish_use_subcommand' -a log -d 'Show history of changes'
+complete -f -c bzr -n __fish_use_subcommand -a log -d 'Show history of changes'
 
 # check command
-complete -f -c bzr -n '__fish_use_subcommand' -a check -d 'Validate storage'
+complete -f -c bzr -n __fish_use_subcommand -a check -d 'Validate storage'
 complete -f -c bzr -n '__fish_seen_subcommand_from check' -l tree -d 'Check the working tree related to the current directory'
 complete -f -c bzr -n '__fish_seen_subcommand_from check' -l repo -d 'Check the repository related to the current directory'
 complete -f -c bzr -n '__fish_seen_subcommand_from check' -l branch -d 'Check the branch related to the current directory'

@@ -38,13 +38,13 @@ begin
 end
 
 function print_vars --no-scope-shadowing
-	set -l space
-	set -l IFS \n # ensure our command substitution works right
-	for var in $argv
-		echo -n $space (count $$var) \'$$var\'
-		set space ''
-	end
-	echo
+    set -l space
+    set -l IFS \n # ensure our command substitution works right
+    for var in $argv
+        echo -n $space (count $$var) \'$$var\'
+        set space ''
+    end
+    echo
 end
 
 # Test splitting input
@@ -60,34 +60,34 @@ print_vars one
 echo '' | read -l one two
 print_vars one two
 #CHECK: 1 '' 1 ''
-echo 'test' | read -l one two three
+echo test | read -l one two three
 print_vars one two three
 #CHECK: 1 'test' 1 '' 1 ''
 echo 'foo   bar   baz' | read -l one two three
 print_vars one two three
 #CHECK: 1 'foo' 1 'bar' 1 '  baz'
-echo -n 'a' | read -l one
+echo -n a | read -l one
 echo "$status $one"
 #CHECK: 0 a
 
 # Test splitting input with IFS empty
 set -l IFS
-echo 'hello' | read -l one
+echo hello | read -l one
 print_vars one
 #CHECK: 1 'hello'
-echo 'hello' | read -l one two
+echo hello | read -l one two
 print_vars one two
 #CHECK: 1 'h' 1 'ello'
-echo 'hello' | read -l one two three
+echo hello | read -l one two three
 print_vars one two three
 #CHECK: 1 'h' 1 'e' 1 'llo'
 echo '' | read -l one
 print_vars one
 #CHECK: 0
-echo 't' | read -l one two
+echo t | read -l one two
 print_vars one two
 #CHECK: 1 't' 0
-echo 't' | read -l one two three
+echo t | read -l one two three
 print_vars one two three
 #CHECK: 1 't' 0 0
 echo ' t' | read -l one two
@@ -98,7 +98,7 @@ set -le IFS
 echo 'hello there' | read -la ary
 print_vars ary
 #CHECK: 2 'hello' 'there'
-echo 'hello' | read -la ary
+echo hello | read -la ary
 print_vars ary
 #CHECK: 1 'hello'
 echo 'this is a bunch of words' | read -la ary
@@ -112,10 +112,10 @@ print_vars ary
 #CHECK: 0
 
 set -l IFS
-echo 'hello' | read -la ary
+echo hello | read -la ary
 print_vars ary
 #CHECK: 5 'h' 'e' 'l' 'l' 'o'
-echo 'h' | read -la ary
+echo h | read -la ary
 print_vars ary
 #CHECK: 1 'h'
 echo '' | read -la ary
@@ -124,32 +124,35 @@ print_vars ary
 set -le IFS
 
 # read -n tests
-echo 'testing' | read -n 3 foo
+echo testing | read -n 3 foo
 echo $foo
 #CHECK: tes
-echo 'test' | read -n 10 foo
+echo test | read -n 10 foo
 echo $foo
 #CHECK: test
-echo 'test' | read -n 0 foo
+echo test | read -n 0 foo
 echo $foo
 #CHECK: test
-echo 'testing' | begin; read -n 3 foo; read -n 3 bar; end
+echo testing | begin
+    read -n 3 foo
+    read -n 3 bar
+end
 echo $foo
 #CHECK: tes
 echo $bar
 #CHECK: tin
-echo 'test' | read -n 1 foo
+echo test | read -n 1 foo
 echo $foo
 #CHECK: t
 
 # read -z tests
-echo -n 'testing' | read -lz foo
+echo -n testing | read -lz foo
 echo $foo
 #CHECK: testing
 echo -n 'test ing' | read -lz foo
 echo $foo
 #CHECK: test ing
-echo 'newline' | read -lz foo
+echo newline | read -lz foo
 echo $foo
 #CHECK: newline
 #CHECK: 
@@ -171,8 +174,8 @@ end
 # Chunked read tests
 set -l path /tmp/fish_chunked_read_test.txt
 set -l longstr (seq 1024 | string join ',')
-echo -n $longstr > $path
-read -l longstr2 < $path
+echo -n $longstr >$path
+read -l longstr2 <$path
 test "$longstr" = "$longstr2"
 and echo "Chunked reads test pass"
 or echo "Chunked reads test failure: long strings don't match!"
@@ -319,7 +322,9 @@ echo $c
 begin
     set -l IFS "..."
     echo a...b...c | read -l a b c
-    echo $a; echo $b; echo $c
+    echo $a
+    echo $b
+    echo $c
 end
 #CHECK: a
 #CHECK: b

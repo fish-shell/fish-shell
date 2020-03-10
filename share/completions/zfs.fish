@@ -13,23 +13,23 @@
 set -lx OS ""
 switch (uname)
     case Linux
-        set OS "Linux"
+        set OS Linux
     case Darwin
-        set OS "macOS"
+        set OS macOS
     case FreeBSD
-        set OS "FreeBSD"
+        set OS FreeBSD
     case SunOS
-        set OS "SunOS"
+        set OS SunOS
         # Others?
     case "*"
-        set OS "unknown"
+        set OS unknown
 end
 
 # Does the current invocation need a command?
 function __fish_zfs_needs_command
     set -l bookmark ""
     if __fish_is_zfs_feature_enabled "feature@bookmarks"
-        set bookmark "bookmark"
+        set bookmark bookmark
     end
 
     not __fish_seen_subcommand_from \? create destroy snap{,shot} rollback clone promote rename list set get inherit upgrade {user,group}space {u,un,}mount {un,}share $bookmark send receive recv {un,}allow hold{s,} release diff program
@@ -95,19 +95,19 @@ function __fish_zfs_list_permissions -V OS
     echo -e "clone\tAlso needs the 'create' and 'mount' permissions in the origin filesystem"
     echo -e "create\tAlso needs the 'mount' permission"
     echo -e "destroy\tAlso needs the 'mount' permission"
-    echo -e "mount"
+    echo -e mount
     echo -e "promote\tAlso needs the 'promote' and 'mount' permissions in the origin filesystem"
     echo -e "receive\tAlso needs the 'create' and 'mount' permissions"
     echo -e "rename\tAlso needs the 'create' and 'mount' permissions in the new parent"
     echo -e "rollback\tAlso needs the 'mount' permission"
-    echo -e "send"
+    echo -e send
     echo -e "share\tFor SMB and NFS shares"
     echo -e "snapshot\tAlso needs the 'mount' permission"
-    echo -e "groupquota"
-    echo -e "groupused"
+    echo -e groupquota
+    echo -e groupused
     echo -e "userprop\tAllows changing any user property"
-    echo -e "userquota"
-    echo -e "userused"
+    echo -e userquota
+    echo -e userused
     # The remaining code of the function is almost a duplicate of __fish_complete_zfs_rw_properties and __fish_complete_zfs_ro_properties, but almost only, hence the duplication
     # RO properties
     echo -e "volblocksize\tVolume block size"
@@ -163,7 +163,7 @@ function __fish_zfs_list_permissions -V OS
     echo -e "snapdir\tHide .zfs directory (hidden, visible)"
     echo -e "sync\tHandle of synchronous requests (standard, always, disabled)"
     echo -e "volsize\tVolume logical size (SIZE)"
-    if test $OS = "SunOS"
+    if test $OS = SunOS
         echo -e "zoned\tManaged from a non-global zone (on, off)"
         echo -e "mlslabel\tCan the dataset be mounted in a zone with Trusted Extensions enabled (LABEL, none)"
         echo -e "nbmand\tMount with Non Blocking mandatory locks (on, off)"
@@ -172,7 +172,7 @@ function __fish_zfs_list_permissions -V OS
         echo -e "version\tOn-disk version of filesystem (1, 2, current)"
         echo -e "vscan\tScan regular files for viruses on opening and closing (on, off)"
         echo -e "xattr\tExtended attributes (on, off, sa)"
-    else if test $OS = "Linux"
+    else if test $OS = Linux
         echo -e "acltype\tUse no ACL or POSIX ACL (noacl, posixacl)"
         echo -e "nbmand\tMount with Non Blocking mandatory locks (on, off)"
         echo -e "relatime\tSometimes update access time on read (on, off)"
@@ -182,14 +182,14 @@ function __fish_zfs_list_permissions -V OS
         echo -e "version\tOn-disk version of filesystem (1, 2, current)"
         echo -e "vscan\tScan regular files for viruses on opening and closing (on, off)"
         echo -e "xattr\tExtended attributes (on, off, sa)"
-    else if test $OS = "FreeBSD"
+    else if test $OS = FreeBSD
         echo -e "aclmode\tHow is ACL modified by chmod (discard, groupmask, passthrough, restricted)"
         echo -e "volmode\tHow to expose volumes to OS (default, geom, dev, none)"
     end
     # Write-once properties
     echo -e "normalization\tUnicode normalization (none, formC, formD, formKC, formKD)"
     echo -e "utf8only\tReject non-UTF-8-compliant filenames (on, off)"
-    if test $OS = "Linux"
+    if test $OS = Linux
         echo -e "casesensitivity\tCase sensitivity (sensitive, insensitive)"
     else # FreeBSD, SunOS and virtually all others
         echo -e "casesensitivity\tCase sensitivity (sensitive, insensitive, mixed)"
@@ -214,45 +214,45 @@ function __fish_print_zfs_volumes -d "Lists ZFS volumes"
     zfs list -t volume -o name -H
 end
 
-complete -c zfs -f -n '__fish_zfs_needs_command' -s '?' -a '?' -d 'Display a help message'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'create' -d 'Create a volume or filesystem'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'destroy' -d 'Destroy a dataset'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'snapshot snap' -d 'Create a snapshot'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'rollback' -d 'Roll back a filesystem to a previous snapshot'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'clone' -d 'Create a clone of a snapshot'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'promote' -d 'Promotes a clone file system to no longer be dependent on its "origin" snapshot'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'rename' -d 'Rename a dataset'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'list' -d 'List dataset properties'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'set' -d 'Set a dataset property'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'get' -d 'Get one or several dataset properties'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'inherit' -d 'Set a dataset property to be inherited'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'upgrade' -d 'List upgradeable datasets, or upgrade one'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'userspace' -d 'Get dataset space consumed by each user'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'groupspace' -d 'Get dataset space consumed by each user group'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'mount' -d 'Mount a filesystem'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'unmount umount' -d 'Unmount a filesystem'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'share' -d 'Share a given filesystem, or all of them'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'unshare' -d 'Stop sharing a given filesystem, or all of them'
+complete -c zfs -f -n __fish_zfs_needs_command -s '?' -a '?' -d 'Display a help message'
+complete -c zfs -f -n __fish_zfs_needs_command -a create -d 'Create a volume or filesystem'
+complete -c zfs -f -n __fish_zfs_needs_command -a destroy -d 'Destroy a dataset'
+complete -c zfs -f -n __fish_zfs_needs_command -a 'snapshot snap' -d 'Create a snapshot'
+complete -c zfs -f -n __fish_zfs_needs_command -a rollback -d 'Roll back a filesystem to a previous snapshot'
+complete -c zfs -f -n __fish_zfs_needs_command -a clone -d 'Create a clone of a snapshot'
+complete -c zfs -f -n __fish_zfs_needs_command -a promote -d 'Promotes a clone file system to no longer be dependent on its "origin" snapshot'
+complete -c zfs -f -n __fish_zfs_needs_command -a rename -d 'Rename a dataset'
+complete -c zfs -f -n __fish_zfs_needs_command -a list -d 'List dataset properties'
+complete -c zfs -f -n __fish_zfs_needs_command -a set -d 'Set a dataset property'
+complete -c zfs -f -n __fish_zfs_needs_command -a get -d 'Get one or several dataset properties'
+complete -c zfs -f -n __fish_zfs_needs_command -a inherit -d 'Set a dataset property to be inherited'
+complete -c zfs -f -n __fish_zfs_needs_command -a upgrade -d 'List upgradeable datasets, or upgrade one'
+complete -c zfs -f -n __fish_zfs_needs_command -a userspace -d 'Get dataset space consumed by each user'
+complete -c zfs -f -n __fish_zfs_needs_command -a groupspace -d 'Get dataset space consumed by each user group'
+complete -c zfs -f -n __fish_zfs_needs_command -a mount -d 'Mount a filesystem'
+complete -c zfs -f -n __fish_zfs_needs_command -a 'unmount umount' -d 'Unmount a filesystem'
+complete -c zfs -f -n __fish_zfs_needs_command -a share -d 'Share a given filesystem, or all of them'
+complete -c zfs -f -n __fish_zfs_needs_command -a unshare -d 'Stop sharing a given filesystem, or all of them'
 if __fish_is_zfs_feature_enabled 'feature@bookmarks'
-    complete -c zfs -f -n '__fish_zfs_needs_command' -a 'bookmark' -d 'Create a bookmark for a snapshot'
+    complete -c zfs -f -n __fish_zfs_needs_command -a bookmark -d 'Create a bookmark for a snapshot'
 end
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'send' -d 'Output a stream representation of a dataset'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'receive recv' -d 'Write on disk a dataset from the stream representation given on standard input'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'allow' -d 'Delegate, or display delegations of, rights on a dataset to (groups of) users'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'unallow' -d 'Revoke delegations of rights on a dataset from (groups of) users'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'hold' -d 'Put a named hold on a snapshot'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'holds' -d 'List holds on a snapshot'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'release' -d 'Remove a named hold from a snapshot'
-complete -c zfs -f -n '__fish_zfs_needs_command' -a 'diff' -d 'List changed files between a snapshot, and a filesystem or a previous snapshot'
-if test $OS = 'SunOS' # This is currently only supported under Illumos, but that will probably change
-    complete -c zfs -f -n '__fish_zfs_needs_command' -a 'program' -d 'Execute a ZFS Channel Program'
+complete -c zfs -f -n __fish_zfs_needs_command -a send -d 'Output a stream representation of a dataset'
+complete -c zfs -f -n __fish_zfs_needs_command -a 'receive recv' -d 'Write on disk a dataset from the stream representation given on standard input'
+complete -c zfs -f -n __fish_zfs_needs_command -a allow -d 'Delegate, or display delegations of, rights on a dataset to (groups of) users'
+complete -c zfs -f -n __fish_zfs_needs_command -a unallow -d 'Revoke delegations of rights on a dataset from (groups of) users'
+complete -c zfs -f -n __fish_zfs_needs_command -a hold -d 'Put a named hold on a snapshot'
+complete -c zfs -f -n __fish_zfs_needs_command -a holds -d 'List holds on a snapshot'
+complete -c zfs -f -n __fish_zfs_needs_command -a release -d 'Remove a named hold from a snapshot'
+complete -c zfs -f -n __fish_zfs_needs_command -a diff -d 'List changed files between a snapshot, and a filesystem or a previous snapshot'
+if test $OS = SunOS # This is currently only supported under Illumos, but that will probably change
+    complete -c zfs -f -n __fish_zfs_needs_command -a program -d 'Execute a ZFS Channel Program'
 end
 
 # Completions hereafter try to follow the man pages commands order, for maintainability, at the cost of multiple if statements
 
 # create completions
 complete -c zfs -f -n '__fish_zfs_using_command create' -s p -d 'Create all needed non-existing parent datasets'
-if test $OS = 'Linux' # Only Linux supports the comma-separated format; others need multiple -o calls
+if test $OS = Linux # Only Linux supports the comma-separated format; others need multiple -o calls
     complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
 else
     complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
@@ -261,7 +261,7 @@ end
 # If -V is typed after -s or -b, zfs should accept it, but fish won't propose -s or -b, but, as these options are for volumes only, it seems reasonable to expect the user to ask for a volume, with -V, before giving its characteristics with -s or -b
 complete -c zfs -x -n '__fish_zfs_using_command create' -s V -d 'Volume size'
 complete -c zfs -f -n '__fish_zfs_using_command create; and __fish_contains_opt -s V' -s s -d 'Create a sparse volume'
-complete -c zfs -x -n '__fish_zfs_using_command create; and __fish_contains_opt -s V' -s b -d 'Blocksize'
+complete -c zfs -x -n '__fish_zfs_using_command create; and __fish_contains_opt -s V' -s b -d Blocksize
 
 # destroy completions; as the dataset is the last item, we can't know yet if it's a snapshot, a bookmark or something else, so we can't separate snapshot-specific options from others
 complete -c zfs -f -n '__fish_zfs_using_command destroy' -s r -d 'Recursively destroy children'
@@ -275,7 +275,7 @@ complete -c zfs -x -n '__fish_zfs_using_command destroy' -d 'Dataset to destroy'
 
 # snapshot completions
 complete -c zfs -f -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s r -d 'Recursively snapshot children'
-if test $OS = 'Linux' # Only Linux supports the comma-separated format; others need multiple -o calls
+if test $OS = Linux # Only Linux supports the comma-separated format; others need multiple -o calls
     complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
 else
     complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
@@ -290,7 +290,7 @@ complete -c zfs -x -n '__fish_zfs_using_command rollback' -d 'Snapshot to roll b
 
 # clone completions
 complete -c zfs -f -n '__fish_zfs_using_command clone' -s p -d 'Create all needed non-existing parent datasets'
-if test $OS = 'Linux' # Only Linux supports the comma-separated format; others need multiple -o calls
+if test $OS = Linux # Only Linux supports the comma-separated format; others need multiple -o calls
     complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
 else
     complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
@@ -303,9 +303,9 @@ complete -c zfs -x -n '__fish_zfs_using_command promote' -d 'Clone to promote' -
 # rename completions; as the dataset is the last item, we can't know yet if it's a snapshot or not, we can't separate snapshot-specific option from others
 complete -c zfs -f -n '__fish_zfs_using_command rename' -s p -d 'Create all needed non-existing parent datasets'
 complete -c zfs -f -n '__fish_zfs_using_command rename' -s r -d 'Recursively rename children snapshots'
-if test $OS = 'Linux'
+if test $OS = Linux
     complete -c zfs -f -n '__fish_zfs_using_command rename' -s f -d 'Force unmounting if needed'
-else if test $OS = 'FreeBSD'
+else if test $OS = FreeBSD
     complete -c zfs -f -n '__fish_zfs_using_command rename' -s u -d 'Do not remount filesystems during rename'
     complete -c zfs -f -n '__fish_zfs_using_command rename; and __fish_not_contain_opt -s u' -s f -d 'Force unmounting if needed'
 end
@@ -315,7 +315,7 @@ complete -c zfs -x -n '__fish_zfs_using_command rename' -d 'Dataset to rename' -
 complete -c zfs -f -n '__fish_zfs_using_command list' -s H -d 'Print output in a machine-parsable format'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s r -d 'Operate recursively on datasets'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_contains_opt -s r' -s d -d 'Maximum recursion depth'
-complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name""; echo -e "space\tSpace properties"")'
+complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name"; echo -e "space\tSpace properties"))'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name")'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name")'
@@ -334,7 +334,7 @@ complete -c zfs -x -n '__fish_zfs_using_command get' -s o -d 'Fields to display'
 complete -c zfs -x -n '__fish_zfs_using_command get' -s s -d 'Property source to display' -a '(__fish_append , (__fish_zfs_list_source_types))'
 complete -c zfs -f -n '__fish_zfs_using_command get' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zfs -x -n '__fish_zfs_using_command get' -s t -d 'Dataset type' -a '(__fish_append , (__fish_zfs_list_dataset_types))'
-complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all")'
+complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all"))'
 complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Dataset which properties is to be got' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 
 # inherit completions
@@ -355,8 +355,8 @@ complete -c zfs -f -n '__fish_zfs_using_command groupspace' -s n -d 'Print GID i
 complete -c zfs -f -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s H -d 'Print output in a machine-parsable format'
 complete -c zfs -f -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s o -d 'Field to display' -a '(__fish_append , (__fish_zfs_list_space_fields))'
-complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a '__fish_zfs_list_space_fields'
-complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a '__fish_zfs_list_space_fields'
+complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a __fish_zfs_list_space_fields
+complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a __fish_zfs_list_space_fields
 complete -c zfs -x -n '__fish_zfs_using_command userspace' -s t -d 'Identity types to display' -a '(__fish_append , (__fish_zfs_list_userspace_types))'
 complete -c zfs -x -n '__fish_zfs_using_command groupspace' -s t -d 'Identity types to display' -a '(__fish_append , (__fish_zfs_list_groupspace_types))'
 complete -c zfs -f -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s i -d 'Translate S(amba)ID to POSIX ID'
@@ -392,7 +392,7 @@ end
 # send completions
 complete -c zfs -x -n '__fish_zfs_using_command send' -s i -d 'Generate incremental stream from snapshot' -a '(__fish_print_zfs_snapshots; __fish_print_zfs_bookmarks)'
 complete -c zfs -x -n '__fish_zfs_using_command send' -s I -d 'Generate incremental stream from snapshot, even with intermediary snapshots' -a '(__fish_print_zfs_snapshots)'
-if test $OS = 'SunOS'
+if test $OS = SunOS
     complete -c zfs -f -n '__fish_zfs_using_command send' -s R -l replicate -d 'Include children in replication stream'
     complete -c zfs -f -n '__fish_zfs_using_command send' -s D -l dedup -d 'Generate a deduplicated stream'
     complete -c zfs -f -n '__fish_zfs_using_command send; and __fish_is_zfs_feature_enabled "feature@large_blocks"' -s L -l large-block -d 'Allow the presence of larger blocks than 128 kiB'
@@ -421,8 +421,8 @@ complete -c zfs -f -n '__fish_zfs_using_command receive; or __fish_zfs_using_com
 complete -c zfs -f -n '__fish_zfs_using_command receive; or __fish_zfs_using_command recv' -s u -d 'Unmount the target filesystem'
 complete -c zfs -f -n '__fish_zfs_using_command receive; or __fish_zfs_using_command recv; and __fish_not_contain_opt -s e' -s d -d 'Discard the first element of the path of the sent snapshot'
 complete -c zfs -f -n '__fish_zfs_using_command receive; or __fish_zfs_using_command recv; and __fish_not_contain_opt -s d' -s e -d 'Discard all but the last element of the path of the sent snapshot'
-if test $OS = "SunOS"
-    complete -c zfs -x -n '__fish_zfs_using_command receive; or __fish_zfs_using_command recv' -s o -d 'Force the stream to be received as a clone of the given snapshot' -a 'origin'
+if test $OS = SunOS
+    complete -c zfs -x -n '__fish_zfs_using_command receive; or __fish_zfs_using_command recv' -s o -d 'Force the stream to be received as a clone of the given snapshot' -a origin
 end
 if __fish_is_zfs_feature_enabled "feature@extensible_dataset"
     complete -c zfs -f -n '__fish_zfs_using_command receive; or __fish_zfs_using_command recv' -s s -d 'On transfer interruption, store a receive_resume_token for resumption'
@@ -435,26 +435,26 @@ complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_op
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s u -d 'User to delegate permissions to' -a '(__fish_append , (__fish_complete_users))'
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s g -d 'Group to delegate permissions to' -a '(__fish_append , (__fish_complete_groups))'
 if contains -- $OS SunOS FreeBSD
-    complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g -s e' -a 'everyone' -d 'Delegate permission to everyone'
+    complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g -s e' -a everyone -d 'Delegate permission to everyone'
 end
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g everyone' -s e -d 'Delegate permission to everyone'
-complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Delegate permissions only to the creator of later descendent datasets' -a '(__fish_zfs_append , (__fish_zfs_list_permissions))'
+complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Delegate permissions only to the creator of later descendent datasets' -a '(__fish_append , (__fish_zfs_list_permissions))'
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s c' -s s -d 'Create a permission set or add permissions to an existing one'
 complete -c zfs -x -n '__fish_zfs_using_command allow' -d 'Dataset on which delegation is to be applied' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)'
 
 # unallow completions
 complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s d' -s l -d 'Remove permissions only on the specified dataset'
 complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l' -s d -d 'Remove permissions only on the descendents dataset'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s u -d 'User to remove permissions from' -a '(__fish_zfs_append , (__fish_complete_users))'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s g -d 'Group to remove permissions from' -a '(__fish_zfs_append , (__fish_complete_groups))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s u -d 'User to remove permissions from' -a '(__fish_append , (__fish_complete_users))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s g -d 'Group to remove permissions from' -a '(__fish_append , (__fish_complete_groups))'
 complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s u -s g everyone' -s e -d 'Remove permission from everyone'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Remove permissions only on later created descendent datasets' -a '(__fish_zfs_append , (__fish_zfs_list_permissions))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Remove permissions only on later created descendent datasets' -a '(__fish_append , (__fish_zfs_list_permissions))'
 complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s c' -s s -d 'Remove a permission set or remove permissions from an existing one'
-if test $OS = 'SunOS'
+if test $OS = SunOS
     complete -c zfs -f -n '__fish_zfs_using_command unallow' -s r -d 'Remove permissions recursively'
-    complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s u -s g -s e' -a 'everyone' -d 'Remove permission from everyone'
-else if test $OS = 'FreeBSD'
-    complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s u -s g -s e' -a 'everyone' -d 'Remove permission from everyone'
+    complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s u -s g -s e' -a everyone -d 'Remove permission from everyone'
+else if test $OS = FreeBSD
+    complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s u -s g -s e' -a everyone -d 'Remove permission from everyone'
 end
 complete -c zfs -x -n '__fish_zfs_using_command unallow' -d 'Dataset on which delegation is to be removed' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)'
 
@@ -477,7 +477,7 @@ complete -c zfs -f -n '__fish_zfs_using_command diff' -s t -d 'Display inode cha
 complete -c zfs -x -n '__fish_zfs_using_command diff' -d 'Source snapshot for the diff' -a '(__fish_print_zfs_snapshots)'
 
 # program completions
-if test $OS = 'SunOS' # This is currently only supported under Illumos, but that will probably change
+if test $OS = SunOS # This is currently only supported under Illumos, but that will probably change
     complete -c zfs -x -n '__fish_zfs_using_command program' -s t -d 'Execution timeout'
     complete -c zfs -x -n '__fish_zfs_using_command program' -s t -d 'Execution memory limit'
     complete -c zfs -x -n '__fish_zfs_using_command program' -d 'Pool which program will be executed on' -a '(__fish_complete_zfs_pools)'

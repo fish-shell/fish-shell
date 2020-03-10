@@ -47,8 +47,8 @@ end
 # This completion reenables file completion on
 # assignments, so e.g. 'make foo FILES=<tab>' will receive standard
 # filename completion.
-complete -c make -n 'commandline -ct | string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -c))" -d "Target"
-complete -f -c make -n 'commandline -ct | not string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -c))" -d "Target"
+complete -c make -n 'commandline -ct | string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -c))" -d Target
+complete -f -c make -n 'commandline -ct | not string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -c))" -d Target
 complete -c make -s f -d "Use file as makefile" -r
 complete -x -c make -s C -l directory -x -a "(__fish_complete_directories (commandline -ct))" -d "Change directory"
 complete -c make -s d -d "Debug mode"

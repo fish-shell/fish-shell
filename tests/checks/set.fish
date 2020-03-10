@@ -618,10 +618,15 @@ env | grep TESTVAR | cat -v
 
 # if/for/while scope
 function test_ifforwhile_scope
-    if set -l ifvar1 (true && echo val1) ; end
-    if set -l ifvar2 (echo val2 && false) ; end
-    if false ; else if set -l ifvar3 (echo val3 && false) ; end
-    while set -l whilevar1 (echo val3 ; false) ; end
+    if set -l ifvar1 (true && echo val1)
+    end
+    if set -l ifvar2 (echo val2 && false)
+    end
+    if false
+    else if set -l ifvar3 (echo val3 && false)
+    end
+    while set -l whilevar1 (echo val3 ; false)
+    end
     set --show ifvar1 ifvar2 ifvar3 whilevar1
 end
 test_ifforwhile_scope

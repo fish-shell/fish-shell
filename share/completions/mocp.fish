@@ -18,8 +18,8 @@ complete -c mocp -s T -l theme -r -d "Use selected theme file (read from ~/.moc/
 complete -c mocp -s C -l config -r -d "Use the specified config file instead of the default"
 complete -c mocp -s O -l set-option -r -d "NAME=VALUE Override configuration option NAME with VALUE"
 complete -c mocp -s M -l moc-dir -r -d "Use the specified MOC directory instead of the default"
-complete -c mocp -s P -l pause -d "Pause"
-complete -c mocp -s U -l unpause -d "Unpause"
+complete -c mocp -s P -l pause -d Pause
+complete -c mocp -s U -l unpause -d Unpause
 complete -c mocp -s G -l toggle-pause -d "Toggle between play/pause"
 complete -c mocp -s v -l volume -d "(+/-)LEVEL Adjust PCM volume" -xa '+ -'
 complete -c mocp -s y -l sync -d "Synchronize the playlist with other clients"

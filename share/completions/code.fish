@@ -6,7 +6,7 @@ end
 
 complete -c code -s d -l diff -d 'Compare two files with each other'
 complete -c code -s a -l add -d 'Add folder(s) to the last active window'
-complete -c code -s g -l goto -x -d 'line and character position'
+complete -c code -s g -l goto -r -d 'line and character position'
 complete -c code -s n -l new-window -d 'Force to open a new window'
 complete -c code -s r -l reuse-window -d 'Force to open a file or folder in an already opened window'
 complete -c code -s w -l wait -d 'Wait for the files to be closed before returning'

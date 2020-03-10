@@ -37,24 +37,30 @@ echo \'{ hello , world }\'
 #CHECK: 'hello' 'world'
 
 # expansion with escapes
-for phrase in {good\,,   beautiful ,morning}; echo -n "$phrase "; end | string trim;
-for phrase in {goodbye\,,\ cruel\ ,world\n}; echo -n $phrase; end;
+for phrase in {good\,,   beautiful ,morning}
+    echo -n "$phrase "
+end | string trim
+for phrase in {goodbye\,,\ cruel\ ,world\n}
+    echo -n $phrase
+end
 #CHECK: good, beautiful morning
 #CHECK: goodbye, cruel world
 
 # dual expansion cartesian product
-echo { alpha, beta }\ {lambda, gamma }, |  string replace -r ',$' ''
+echo { alpha, beta }\ {lambda, gamma }, | string replace -r ',$' ''
 #CHECK: alpha lambda, beta lambda, alpha gamma, beta gamma
 
 # expansion with subshells
 for name in { (echo Meg), (echo Jo) }
-	echo $name
+    echo $name
 end
 #CHECK: Meg
 #CHECK: Jo
 
 # subshells with expansion
-for name in (for name in {Beth, Amy}; printf "$name\n"; end); printf "$name\n"; end
+for name in (for name in {Beth, Amy}; printf "$name\n"; end)
+    printf "$name\n"
+end
 #CHECK: Beth
 #CHECK: Amy
 

@@ -77,6 +77,24 @@ Getting Help
     set - handle shell variables
       Synopsis...
 
+.. note::
+
+    If the ``help`` command failed like::
+
+        > help set
+        gio: file:///usr/share/doc/fish/cmds/set.html: No application is registered as handling this file
+
+    then you need to register a web browser to handle these files::
+
+        > # Detect a MIME type
+        > xdg-mime query filetype /usr/share/doc/fish/cmds/set.html
+        application/x-extension-html
+        > # Detect your default browser (*.desktop files are mostly in /usr/share/applications/)
+        > xdg-settings get default-web-browser
+        firefox.desktop
+        > # Register the browser for the MIME type
+        > xdg-mime default firefox.desktop application/x-extension-html
+
 
 
 Syntax Highlighting

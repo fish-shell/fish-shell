@@ -33,8 +33,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     # compute cursor line/column
     set -l lines (commandline)\n
     set -l line 1
-    while test $offset -ge (string length $lines[1])
-        set offset (math $offset - (string length $lines[1]))
+    while test $offset -ge (string length -- $lines[1])
+        set offset (math $offset - (string length -- $lines[1]))
         set line (math $line + 1)
         set -e lines[1]
     end

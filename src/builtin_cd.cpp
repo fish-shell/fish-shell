@@ -20,8 +20,6 @@
 
 /// The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 /// specified. The directory can be relative to any directory in the CDPATH variable.
-/// The cd builtin. Changes the current directory to the one specified or to $HOME if none is
-/// specified. The directory can be relative to any directory in the CDPATH variable.
 int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);

@@ -591,10 +591,12 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags, com
     return expand_result_t::ok;
 }
 
-/// Expand a command substitution \p input, executing on \p parser, and inserting the results into
+/// Expand a command substitution \p input, executing on \p ctx, and inserting the results into
 /// \p out_list, or any errors into \p errors. \return an expand result.
-static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
+static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t &ctx,
                                        completion_list_t *out_list, parse_error_list_t *errors) {
+    assert(ctx.parser && "Cannot expand without a parser");
+
     wchar_t *paren_begin = nullptr, *paren_end = nullptr;
     wchar_t *tail_begin = nullptr;
     size_t i, j;
@@ -620,7 +622,7 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
 
     wcstring_list_t sub_res;
     const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
-    int subshell_status = exec_subshell_for_expand(subcmd, parser, sub_res);
+    int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.parent_pgid, sub_res);
     if (subshell_status != 0) {
         // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
         const wchar_t *err;
@@ -674,7 +676,7 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
     // Recursively call ourselves to expand any remaining command substitutions. The result of this
     // recursive call using the tail of the string is inserted into the tail_expand array list
     completion_list_t tail_expand;
-    expand_cmdsubst(tail_begin, parser, &tail_expand, errors);  // TODO: offset error locations
+    expand_cmdsubst(tail_begin, ctx, &tail_expand, errors);  // TODO: offset error locations
 
     // Combine the result of the current command substitution with the result of the recursive tail
     // expansion.
@@ -919,7 +921,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_list_t *ou
         }
     } else {
         assert(ctx.parser && "Must have a parser to expand command substitutions");
-        return expand_cmdsubst(std::move(input), *ctx.parser, out, errors);
+        return expand_cmdsubst(std::move(input), ctx, out, errors);
     }
 }
 

@@ -29,6 +29,11 @@ class operation_context_t {
     // context itself.
     const environment_t &vars;
 
+    /// The pgid of the parental job.
+    /// This is used only when expanding command substitutions. If this is set, any jobs created by
+    /// the command substitions should use this pgid.
+    maybe_t<pid_t> parent_pgid{};
+
     // A function which may be used to poll for cancellation.
     cancel_checker_t cancel_checker;
 

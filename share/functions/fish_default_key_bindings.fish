@@ -69,6 +69,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind --preset $argv \ch backward-delete-char
     bind --preset $argv \cp up-or-search
     bind --preset $argv \cn down-or-search
+    bind --preset $argv \cr incremental-search
     bind --preset $argv \cf forward-char
     bind --preset $argv \cb backward-char
     bind --preset $argv \ct transpose-chars

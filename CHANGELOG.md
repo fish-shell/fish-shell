@@ -1,25 +1,37 @@
-# fish 3.1.1 (released X)
+# fish 3.1.1
 
-This is a bug fix release containing important fixes since 3.1.0. It
+This release of fish fixes a number of major issues discovered in fish 3.1.0.
 
-- fixes a regression where `psub` would clean its temporary file before it was usable, breaking `. (something | psub)` (#6613)
-- drops the rg and bat completions, which commonly conflicted with files installed into the fish rather than the vendor location by rg and bat packages (#5822)
-- undoes a change to glob ordering that also affected the order conf.d files were `source`d in (#6593)
-- readds the inadvertently removed `^&1` and `2>>&1` redirections. Note that `^` to redirect stderr is still deprecated and will be removed in future (#6591, #6614)
-- lists `time` as a builtin (#6598)
-- fixes an issue where exported universal variables sometimes wouldn't update properly (#6612)
-- fixes `status current-command` when the command includes variable overrides (#6635)
-- fixes a crash when $PWD wasn't readable at start (#6597)
-- fixes a crash when `test` is passed "inf" or "nan" with a numerical test (#6655)
-- improves compatibility with newer glibc (#6604) and 32-bit systems (#6609)
-- fixes compilation on old macOS (#6602)
-- fixes 256 colors when $TERM starts with xterm, does not include "256color" and $TERM_PROGRAM is not set, as a workaround for old Terminal.app that was misapplied (#6701).
-- fixes error spew in the hg prompt when the working directory doesn't exist anymore (#6699)
-- fixes hosts with multiple aliases in the ssh config (#6698).
-- fixes subcommand tab completion for commands like "watch" where executables that are not in $PATH were not suggested (#6798).
-- improves compatibility with macOS code signing
-- improves the `flatpak` (#6581) and `kill` (#6636) completions
-- plus some typo and link fixes and minor adjustments to the documentation (#6627, #6642, #6646, #6647, #6657)
+- Commands which involve `. ( ... | psub)` now work correctly, as a bug in the `function --on-job-exit` option has been fixed (#6613).
+- Conflicts between upstream packages for ripgrep and bat, and the fish packages, have been resolved (#5822).
+- Starting fish in a directory without read access, such as via `su`, no longer crashes (#6597).
+- Glob ordering changes which were introduced in 3.1.0 have been reverted, returning the order of globs to the previous state (#6593).
+- Redirections using the deprecated caret syntax to a file descriptor (eg `^&2`) work correctly (#6591).
+- Redirections that append to a file descriptor (eg `2>>&1`) work correctly (#6614).
+- Building fish on macOS (#6602) or with new versions of GCC (#6604, #6609) is now successful.
+- `time` is now correctly listed in the output of `builtins`, and `time --help` works correctly (#6598).
+- Exported universal variables now update properly (#6612).
+- `status current-command` gives the expected output when used with an environment override - that is, `F=B status current-command` returns `status` instead of `F=B` (#6635).
+- `test` no longer crashes when used with "`nan`" or "`inf`" arguments, erroring out instead (#6655).
+- Copying from the end of the command line no longer crashes fish (#6680).
+- `read` no longer removes multiple separators when splitting a variable into a list, restoring the previous behaviour from fish 3.0 and before (#6650).
+- Functions using `--on-job-exit` and `--on-process-exit` work reliably again (#6679).
+- Functions using `--on-signal INT` work reliably in interactive sessions, as they did in fish 2.7 and before (#6649). These handlers have never worked in non-interactive sessions, and making them work is an ongoing process.
+- Functions using `--on-variable` work reliably with variables which are set implicitly (rather than with `set`), such as "`fish_bind_mode`" and "`PWD`" (#6653).
+- 256 colors are properly enabled under certain conditions that were incorrectly detected in fish 3.1.0 (`$TERM` begins with xterm, does not include "`256color`", and `$TERM_PROGRAM` is not set) (#6701).
+- The Mercurial (`hg`) prompt no longer produces an error when the current working directory is removed (#6699), and the speed has been improved.
+- The VCS prompt, `fish_vcs_prompt`, no longer displays Subversion (`svn`) status by default, due to the potential slowness of this operation (#6681).
+- Pasting of commands has been sped up (#6713).
+- Using extended Unicode characters, such as emoji, in a non-Unicode capable locale (such as the `C` or `POSIX` locale) no longer renders all output blank (#6736).
+- `help` prefers to use `xdg-open`, avoiding the use of `open` on Debian systems where this command is actually `openvt` (#6739).
+- Command lines starting with a space, which are not saved in history, now do not get autosuggestions. This fixes an issue with Midnight Commander integration (#6763), but may be changed in a future version.
+
+This release also includes:
+- a number of changes to improve macOS compatibility with code signing and notarization;
+- a number of improvements to completions; and
+- a number of content and formatting improvements to the documentation.
+
+---
 
 # fish 3.1.0 (released February 12, 2020)
 

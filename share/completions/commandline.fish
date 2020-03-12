@@ -6,6 +6,7 @@ complete -c commandline -s r -l replace -d "Replace selected part"
 
 complete -c commandline -s j -l current-job -d "Select job under cursor"
 complete -c commandline -s p -l current-process -d "Select process under cursor"
+complete -c commandline -s s -l current-selection -d "Select current selection"
 complete -c commandline -s t -l current-token -d "Select token under cursor"
 complete -c commandline -s b -l current-buffer -d "Select entire command line (default)"
 

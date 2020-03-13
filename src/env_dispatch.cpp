@@ -217,12 +217,12 @@ void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &cal
     }
 }
 
-static void handle_fish_term_change(env_stack_t &vars) {
+static void handle_fish_term_change(const env_stack_t &vars) {
     update_fish_color_support(vars);
     reader_react_to_color_change();
 }
 
-static void handle_change_ambiguous_width(env_stack_t &vars) {
+static void handle_change_ambiguous_width(const env_stack_t &vars) {
     int new_width = 1;
     if (auto width_str = vars.get(L"fish_ambiguous_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());
@@ -230,26 +230,26 @@ static void handle_change_ambiguous_width(env_stack_t &vars) {
     g_fish_ambiguous_width = std::max(0, new_width);
 }
 
-static void handle_term_size_change(env_stack_t &vars) {
+static void handle_term_size_change(const env_stack_t &vars) {
     UNUSED(vars);
     invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
 }
 
-static void handle_fish_history_change(env_stack_t &vars) {
+static void handle_fish_history_change(const env_stack_t &vars) {
     reader_change_history(history_session_id(vars));
 }
 
-static void handle_function_path_change(env_stack_t &vars) {
+static void handle_function_path_change(const env_stack_t &vars) {
     UNUSED(vars);
     function_invalidate_path();
 }
 
-static void handle_complete_path_change(env_stack_t &vars) {
+static void handle_complete_path_change(const env_stack_t &vars) {
     UNUSED(vars);
     complete_invalidate_path();
 }
 
-static void handle_tz_change(const wcstring &var_name, env_stack_t &vars) {
+static void handle_tz_change(const wcstring &var_name, const env_stack_t &vars) {
     handle_timezone(var_name.c_str(), vars);
 }
 

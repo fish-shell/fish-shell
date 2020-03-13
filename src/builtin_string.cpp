@@ -183,7 +183,7 @@ typedef struct {  //!OCLINT(too many fields)
 } options_t;
 
 /// This handles the `--style=xxx` flag.
-static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     const wchar_t *cmd = argv[0];
 
@@ -207,7 +207,7 @@ static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->no_newline_valid) {
         opts->no_newline = true;
@@ -220,7 +220,7 @@ static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->all_valid) {
         opts->all = true;
@@ -230,7 +230,7 @@ static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->chars_valid) {
         opts->chars_to_trim = w.woptarg;
@@ -240,7 +240,7 @@ static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->entire_valid) {
         opts->entire = true;
@@ -250,7 +250,7 @@ static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->filter_valid) {
         opts->filter = true;
@@ -260,7 +260,7 @@ static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->ignore_case_valid) {
         opts->ignore_case = true;
@@ -273,7 +273,7 @@ static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->length_valid) {
         opts->length = fish_wcstol(w.woptarg);
@@ -293,7 +293,7 @@ static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->max_valid) {
         opts->max = fish_wcstol(w.woptarg);
@@ -310,7 +310,7 @@ static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->count_valid) {
         opts->count = fish_wcstol(w.woptarg);
@@ -336,7 +336,7 @@ static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_q(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_q(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->quiet_valid) {
         opts->quiet = true;
@@ -346,7 +346,7 @@ static int handle_flag_q(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->regex_valid) {
         opts->regex = true;
@@ -359,7 +359,7 @@ static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->start_valid) {
         opts->start = fish_wcstol(w.woptarg);
@@ -376,7 +376,7 @@ static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
+static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams, const wgetopter_t &w,
                          options_t *opts) {
     if (opts->invert_valid) {
         opts->invert_match = true;

@@ -89,7 +89,7 @@ const wchar_t *builtin_get_desc(const wcstring &name);
 
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
-void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *name,
+void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
                         wcstring *error_message = nullptr);
 int builtin_count_args(const wchar_t *const *argv);
 

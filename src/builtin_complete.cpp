@@ -56,8 +56,8 @@ static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wc
 
 /// Silly function.
 static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_list_t &paths,
-                                 const wchar_t *short_opt, wcstring_list_t &gnu_opt,
-                                 wcstring_list_t &old_opt, completion_mode_t result_mode,
+                                 const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
+                                 const wcstring_list_t &old_opt, completion_mode_t result_mode,
                                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
                                  int flags) {
     for (const wcstring &cmd : cmds) {

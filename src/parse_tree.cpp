@@ -406,7 +406,7 @@ class parse_ll_t {
     void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *fmt, ...);
     void parse_error_at_location(size_t source_start, size_t source_length, size_t error_location,
                                  parse_error_code_t code, const wchar_t *fmt, ...);
-    void parse_error_failed_production(struct parse_stack_element_t &elem, parse_token_t token);
+    void parse_error_failed_production(const struct parse_stack_element_t &elem, parse_token_t token);
     void parse_error_unbalancing_token(parse_token_t token);
 
     // Reports an error for an unclosed block, e.g. 'begin;'. Returns true on success, false on
@@ -701,7 +701,7 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token) {
 }
 
 /// This is a 'generic' parse error when we can't match the top of the stack element.
-void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &stack_elem,
+void parse_ll_t::parse_error_failed_production(const struct parse_stack_element_t &stack_elem,
                                                parse_token_t token) {
     fatal_errored = true;
     if (this->should_generate_error_messages) {
@@ -806,7 +806,7 @@ bool parse_ll_t::report_error_for_unclosed_block() {
 bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
     PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
-    parse_stack_element_t &stack_top = symbol_stack.back();
+    const auto &stack_top = symbol_stack.back();
 
     if (!type_is_terminal_type(stack_top.type)) {
         return false;  // was not handled

@@ -582,9 +582,9 @@ bool input_mapping_set_t::erase(const wcstring &sequence, const wcstring &mode, 
 }
 
 bool input_mapping_set_t::get(const wcstring &sequence, const wcstring &mode,
-                              wcstring_list_t *out_cmds, bool user, wcstring *out_sets_mode) {
+                              wcstring_list_t *out_cmds, bool user, wcstring *out_sets_mode) const {
     bool result = false;
-    mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
+    const auto &ml = user ? mapping_list_ : preset_mapping_list_;
     for (const input_mapping_t &m : ml) {
         if (sequence == m.seq && mode == m.mode) {
             *out_cmds = m.commands;

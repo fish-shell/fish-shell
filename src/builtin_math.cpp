@@ -128,7 +128,7 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
-static const wchar_t *math_describe_error(te_error_t &error) {
+static const wchar_t *math_describe_error(const te_error_t &error) {
     if (error.position == 0) return L"NO ERROR?!?";
 
     switch (error.type) {
@@ -186,8 +186,8 @@ static wcstring format_double(double v, const math_cmd_opts_t &opts) {
 }
 
 /// Evaluate math expressions.
-static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_t &streams,
-                               math_cmd_opts_t &opts, wcstring &expression) {
+static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_streams_t &streams,
+                               const math_cmd_opts_t &opts, wcstring &expression) {
     UNUSED(parser);
 
     int retval = STATUS_CMD_OK;

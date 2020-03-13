@@ -178,7 +178,7 @@ class input_event_queue_t {
     std::deque<char_event_t> queue_;
 
     /// \return if we have any lookahead.
-    bool has_lookahead() { return !queue_.empty(); }
+    bool has_lookahead() const { return !queue_.empty(); }
 
     /// \return the next event in the queue.
     char_event_t pop();

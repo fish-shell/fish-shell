@@ -643,7 +643,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     return STATUS_CMD_OK;
 }
 
-static int check_min_max_args_constraints(const argparse_cmd_opts_t &opts, parser_t &parser,
+static int check_min_max_args_constraints(const argparse_cmd_opts_t &opts, const parser_t &parser,
                                           io_streams_t &streams) {
     UNUSED(parser);
     const wchar_t *cmd = opts.name.c_str();

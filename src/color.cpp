@@ -170,7 +170,7 @@ static const named_color_t named_colors[] = {
 };
 
 wcstring_list_t rgb_color_t::named_color_names() {
-    size_t count = sizeof named_colors / sizeof *named_colors;
+    const size_t count = sizeof named_colors / sizeof *named_colors;
     wcstring_list_t result;
     result.reserve(1 + count);
     for (size_t i = 0; i < count; i++) {

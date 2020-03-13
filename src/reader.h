@@ -87,7 +87,7 @@ class editable_line_t {
 
     bool empty() const { return text().empty(); }
 
-    wchar_t at(size_t idx) { return text().at(idx); }
+    wchar_t at(size_t idx) const { return text().at(idx); }
 
     void clear() {
         undo_history.clear();

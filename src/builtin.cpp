@@ -152,7 +152,7 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
 ///    builtin or function name to get up help for
 ///
 /// Process and print help for the specified builtin or function.
-void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *name,
+void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
                         wcstring *error_message) {
     UNUSED(streams);
     // This won't ever work if no_exec is set.

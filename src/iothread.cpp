@@ -120,7 +120,7 @@ struct thread_pool_t {
     static void *run_trampoline(void *vpool);
 
     /// Attempt to spawn a new pthread.
-    bool spawn();
+    bool spawn() const;
 
     /// No copying or moving.
     thread_pool_t(const thread_pool_t &) = delete;
@@ -229,8 +229,8 @@ void *thread_pool_t::run_trampoline(void *pool) {
 }
 
 /// Spawn another thread. No lock is held when this is called.
-bool thread_pool_t::spawn() {
-    return make_detached_pthread(&run_trampoline, static_cast<void *>(this));
+bool thread_pool_t::spawn() const {
+    return make_detached_pthread(&run_trampoline, const_cast<thread_pool_t *>(this));
 }
 
 int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion, bool cant_wait) {

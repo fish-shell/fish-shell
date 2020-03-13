@@ -2324,10 +2324,10 @@ void reader_set_expand_abbreviations(bool flag) { current_data()->expand_abbrevi
 void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
 
 void reader_set_highlight_function(highlight_function_t func) {
-    current_data()->highlight_func = func;
+    current_data()->highlight_func = std::move(func);
 }
 
-void reader_set_test_function(test_function_t f) { current_data()->test_func = f; }
+void reader_set_test_function(test_function_t f) { current_data()->test_func = std::move(f); }
 
 void reader_set_exit_on_interrupt(bool i) { current_data()->exit_on_interrupt = i; }
 

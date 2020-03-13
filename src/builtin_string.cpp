@@ -617,7 +617,7 @@ class string_matcher_t {
 
    public:
     string_matcher_t(options_t opts_, io_streams_t &streams_)
-        : opts(opts_), streams(streams_), total_matched(0) {}
+        : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
 
     virtual ~string_matcher_t() = default;
     virtual bool report_matches(const wcstring &arg) = 0;
@@ -879,7 +879,7 @@ class string_replacer_t {
 
    public:
     string_replacer_t(const wchar_t *argv0_, options_t opts_, io_streams_t &streams_)
-        : argv0(argv0_), opts(opts_), total_replaced(0), streams(streams_) {}
+        : argv0(argv0_), opts(std::move(opts_)), total_replaced(0), streams(streams_) {}
 
     virtual ~string_replacer_t() = default;
     int replace_count() const { return total_replaced; }

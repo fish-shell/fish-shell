@@ -74,7 +74,7 @@ struct event_handler_t {
 
     explicit event_handler_t(event_type_t t) : desc(t) {}
     event_handler_t(event_description_t d, wcstring name)
-        : desc(d), function_name(std::move(name)) {}
+        : desc(std::move(d)), function_name(std::move(name)) {}
 };
 using event_handler_list_t = std::vector<std::shared_ptr<event_handler_t>>;
 

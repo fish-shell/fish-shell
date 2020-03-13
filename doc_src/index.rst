@@ -970,6 +970,15 @@ When a list is exported as an environment variable, it is either space or colon 
 
 ``fish`` automatically creates lists from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
 
+Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
+
+    count $smurf
+    # 2
+
+    contains blue $smurf
+    # key found, exits with status 0
+
+
 .. _variables-path:
 
 PATH variables

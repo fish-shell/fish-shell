@@ -39,7 +39,7 @@ static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 /// Callback function for handling interrupts on reading.
 static interrupt_func_t interrupt_handler;
 
-void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
+void input_common_init(interrupt_func_t func) { interrupt_handler = std::move(func); }
 
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
 /// only be called by input_common_readch().

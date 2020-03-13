@@ -27,7 +27,7 @@ class enum_set_t : private std::bitset<enum_count<T>()> {
     static size_t index_of(T t) { return static_cast<size_t>(t); }
 
     explicit enum_set_t(unsigned long raw) : super(raw) {}
-    explicit enum_set_t(super sup) : super(sup) {}
+    explicit enum_set_t(super sup) : super(std::move(sup)) {}
 
    public:
     enum_set_t() = default;

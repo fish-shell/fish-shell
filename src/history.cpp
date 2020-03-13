@@ -398,7 +398,8 @@ void history_impl_t::save_unless_disabled() {
     if (countdown_to_vacuum < 0) {
         unsigned int seed = static_cast<unsigned int>(time(nullptr));
         // Generate a number in the range [0, kVacuumFrequency).
-        countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
+        srand(seed);
+        countdown_to_vacuum = rand() / (RAND_MAX / kVacuumFrequency + 1);
     }
 
     // Determine if we're going to vacuum.

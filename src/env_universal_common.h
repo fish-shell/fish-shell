@@ -65,10 +65,10 @@ class env_universal_t {
     bool remove_internal(const wcstring &key);
 
     // Functions concerned with saving.
-    bool open_and_acquire_lock(const std::string &path, autoclose_fd_t *out_fd);
-    autoclose_fd_t open_temporary_file(const wcstring &directory, wcstring *out_path);
+    static bool open_and_acquire_lock(const std::string &path, autoclose_fd_t *out_fd);
+    static autoclose_fd_t open_temporary_file(const wcstring &directory, wcstring *out_path);
     bool write_to_fd(int fd, const wcstring &path);
-    bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
+    static bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
 
     // File id from which we last read.
     file_id_t last_read_file = kInvalidFileID;

@@ -201,7 +201,7 @@ class move_word_state_machine_t {
    private:
     bool consume_char_punctuation(wchar_t c);
     bool consume_char_path_components(wchar_t c);
-    bool is_path_component_character(wchar_t c);
+    static bool is_path_component_character(wchar_t c);
     bool consume_char_whitespace(wchar_t c);
 
     int state;

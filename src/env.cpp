@@ -898,10 +898,10 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     maybe_t<int> try_set_electric(const wcstring &key, const query_t &query, wcstring_list_t &val);
 
     /// Set a universal value.
-    void set_universal(const wcstring &key, wcstring_list_t val, const query_t &query);
+    static void set_universal(const wcstring &key, wcstring_list_t val, const query_t &query);
 
     /// Set a variable in a given node \p node.
-    void set_in_node(const env_node_ref_t &node, const wcstring &key, wcstring_list_t &&val,
+    static void set_in_node(const env_node_ref_t &node, const wcstring &key, wcstring_list_t &&val,
                      const var_flags_t &flags);
 
     // Implement the default behavior of 'set' by finding the node for an unspecified scope.

@@ -24,8 +24,8 @@ class builtin_bind_t {
     acquired_lock<input_mapping_set_t> input_mappings_;
 
     void list(const wchar_t *bind_mode, bool user, io_streams_t &streams);
-    void key_names(bool all, io_streams_t &streams);
-    void function_names(io_streams_t &streams);
+    static void key_names(bool all, io_streams_t &streams);
+    static void function_names(io_streams_t &streams);
     bool add(const wcstring &seq, const wchar_t *const *cmds, size_t cmds_len, const wchar_t *mode,
              const wchar_t *sets_mode, bool terminfo, bool user, io_streams_t &streams);
     bool erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool user,

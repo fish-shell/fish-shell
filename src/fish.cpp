@@ -109,9 +109,9 @@ static void print_rusage_self(FILE *fp) {
     long rss_kb = rs.ru_maxrss;
 #endif
     fprintf(fp, "  rusage self:\n");
-    fprintf(fp, "      user time: %llu ms\n", tv_to_msec(rs.ru_utime));
-    fprintf(fp, "       sys time: %llu ms\n", tv_to_msec(rs.ru_stime));
-    fprintf(fp, "     total time: %llu ms\n", tv_to_msec(rs.ru_utime) + tv_to_msec(rs.ru_stime));
+    fprintf(fp, "      user time: %lld ms\n", tv_to_msec(rs.ru_utime));
+    fprintf(fp, "       sys time: %lld ms\n", tv_to_msec(rs.ru_stime));
+    fprintf(fp, "     total time: %lld ms\n", tv_to_msec(rs.ru_utime) + tv_to_msec(rs.ru_stime));
     fprintf(fp, "        max rss: %ld kb\n", rss_kb);
     fprintf(fp, "        signals: %ld\n", rs.ru_nsignals);
 #endif

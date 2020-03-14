@@ -1,7 +1,7 @@
 set -l progname yaourt
 complete -c $progname -f
 
-set -l listinstalled "(pacman -Q | string replace ' ' \t)"
+set -l listinstalled "(__fish_print_packages --installed)"
 # This might be an issue if another package manager is also installed (e.g. for containers)
 set -l listall "(__fish_print_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"

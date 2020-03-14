@@ -1,33 +1,33 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
+cmake_minimum_required(VERSION 3.2)
 
-IF(POLICY CMP0066)
-  CMAKE_POLICY(SET CMP0066 OLD)
-ENDIF()
-IF(POLICY CMP0067)
-  CMAKE_POLICY(SET CMP0067 NEW)
-ENDIF()
+if(POLICY CMP0066)
+  cmake_policy(SET CMP0066 OLD)
+endif()
+if(POLICY CMP0067)
+  cmake_policy(SET CMP0067 NEW)
+endif()
 
-INCLUDE(cmake/Mac.cmake)
+include(cmake/Mac.cmake)
 
-PROJECT(fish)
+project(fish)
 
 # We are C++11.
-SET(CMAKE_CXX_STANDARD 11)
-SET(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+set(CMAKE_CXX_STANDARD 11)
+set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
 
 # Use the default flags (#6296) but remove -DNDEBUG so that asserts remain enabled.
-STRING(REPLACE "-DNDEBUG" ""
+string(REPLACE "-DNDEBUG" ""
   CMAKE_CXX_FLAGS_RELWITHDEBINFO
   "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
-STRING(REPLACE "-DNDEBUG" ""
+string(REPLACE "-DNDEBUG" ""
   CMAKE_CXX_FLAGS_RELEASE
   "${CMAKE_CXX_FLAGS_RELEASE}")
 
-IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    MESSAGE(STATUS "Setting build type to default '${DEFAULT_BUILD_TYPE}'")
-    SET(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
-ENDIF()
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to default '${DEFAULT_BUILD_TYPE}'")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
+endif()
 
 # Force colored warnings in Ninja's output, if the compiler has -fdiagnostics-color support.
 # Rationale in https://github.com/ninja-build/ninja/issues/814
@@ -53,11 +53,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra \
 ")
 
 # Disable exception handling.
-ADD_COMPILE_OPTIONS(-fno-exceptions)
+add_compile_options(-fno-exceptions)
 
 # Prefer the gold linker because it doesn't emit useless warnings about sys_nerr and _sys_errlist.
 if (UNIX AND NOT APPLE)
-  EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version
                   ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
   if ("${LD_VERSION}" MATCHES "GNU gold")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
@@ -65,37 +65,37 @@ if (UNIX AND NOT APPLE)
 endif()
 
 # Hide the CMake Rules directories in Xcode projects.
-SOURCE_GROUP("CMake Rules" REGULAR_EXPRESSION "^$")
+source_group("CMake Rules" REGULAR_EXPRESSION "^$")
 
 # Put source and header files at top level under targets.
-SOURCE_GROUP("Source Files" REGULAR_EXPRESSION "^$")
-SOURCE_GROUP("Header Files" REGULAR_EXPRESSION "^$")
-SOURCE_GROUP("Builtins" REGULAR_EXPRESSION "builtin_.*")
+source_group("Source Files" REGULAR_EXPRESSION "^$")
+source_group("Header Files" REGULAR_EXPRESSION "^$")
+source_group("Builtins" REGULAR_EXPRESSION "builtin_.*")
 
 # Support folders.
-SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Work around issue where archive-built libs go in the wrong place.
-SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-IF(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
-  SET(FISH_IN_TREE_BUILD TRUE)
-ELSE()
-  SET(FISH_IN_TREE_BUILD FALSE)
-ENDIF()
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+  set(FISH_IN_TREE_BUILD TRUE)
+else()
+  set(FISH_IN_TREE_BUILD FALSE)
+endif()
 
 # NetBSD does weird things with finding libraries,
 # making the tests fail by failing to find pcre.
 #
 # Keep the rpath used to build.
-IF(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
-  SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-ENDIF()
+if(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
 
 # All objects that the system needs to build fish, except fish.cpp
-SET(FISH_SRCS
+set(FISH_SRCS
     src/autoload.cpp src/builtin.cpp src/builtin_bg.cpp src/builtin_bind.cpp
     src/builtin_block.cpp src/builtin_builtin.cpp src/builtin_cd.cpp
     src/builtin_command.cpp src/builtin_commandline.cpp
@@ -124,18 +124,18 @@ SET(FISH_SRCS
 )
 
 # Header files are just globbed.
-FILE(GLOB FISH_HEADERS src/*.h)
+file(GLOB FISH_HEADERS src/*.h)
 
 # Set up config.h
-INCLUDE(cmake/ConfigureChecks.cmake)
-INCLUDE(cmake/gettext.cmake)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
+include(cmake/ConfigureChecks.cmake)
+include(cmake/gettext.cmake)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Set up standard directories.
-INCLUDE(GNUInstallDirs)
-ADD_DEFINITIONS(-D_UNICODE=1
+include(GNUInstallDirs)
+add_definitions(-D_UNICODE=1
                 -DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
                 -DPREFIX=L"${CMAKE_INSTALL_PREFIX}"
                 -DDATADIR=L"${CMAKE_INSTALL_FULL_DATADIR}"
@@ -145,85 +145,85 @@ ADD_DEFINITIONS(-D_UNICODE=1
 
 # Set up the machinery around FISH-BUILD-VERSION-FILE
 # This defines the FBVF variable.
-INCLUDE(Version)
+include(Version)
 
 # Let fish pick up when we're running out of the build directory without installing
-GET_FILENAME_COMPONENT(REAL_CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
-GET_FILENAME_COMPONENT(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
-ADD_DEFINITIONS(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
-ADD_DEFINITIONS(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
+get_filename_component(REAL_CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
+get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
+add_definitions(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
+add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
 # Teach fish_version.o to rebuild when FBVF changes.
 # The standard C++ include detection machinery misses this.
-SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
+set_source_files_properties(src/fish_version.cpp
                             PROPERTIES OBJECT_DEPENDS
                             ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
 
 # Enable thread-safe errno on Solaris (#5611)
-ADD_DEFINITIONS(-D_REENTRANT)
+add_definitions(-D_REENTRANT)
 
 # Set up PCRE2
-INCLUDE(cmake/PCRE2.cmake)
+include(cmake/PCRE2.cmake)
 
 # Define a function to link dependencies.
-FUNCTION(FISH_LINK_DEPS_AND_SIGN target)
-  TARGET_LINK_LIBRARIES(${target} fishlib)
-  CODESIGN_ON_MAC(${target})
-ENDFUNCTION(FISH_LINK_DEPS_AND_SIGN)
+function(FISH_LINK_DEPS_AND_SIGN target)
+  target_link_libraries(${target} fishlib)
+  codesign_on_mac(${target})
+endfunction(FISH_LINK_DEPS_AND_SIGN)
 
 # Define libfish.a.
-ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})
-TARGET_SOURCES(fishlib PRIVATE ${FISH_HEADERS})
-TARGET_LINK_LIBRARIES(fishlib
+add_library(fishlib STATIC ${FISH_SRCS})
+target_sources(fishlib PRIVATE ${FISH_HEADERS})
+target_link_libraries(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
   ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY})
 
 # Define fish.
-ADD_EXECUTABLE(fish src/fish.cpp)
-FISH_LINK_DEPS_AND_SIGN(fish)
+add_executable(fish src/fish.cpp)
+fish_link_deps_and_sign(fish)
 
 # Define fish_indent.
-ADD_EXECUTABLE(fish_indent
+add_executable(fish_indent
                src/fish_indent.cpp src/print_help.cpp)
-FISH_LINK_DEPS_AND_SIGN(fish_indent)
+fish_link_deps_and_sign(fish_indent)
 
 # Define fish_key_reader.
-ADD_EXECUTABLE(fish_key_reader
+add_executable(fish_key_reader
                src/fish_key_reader.cpp src/print_help.cpp)
-FISH_LINK_DEPS_AND_SIGN(fish_key_reader)
+fish_link_deps_and_sign(fish_key_reader)
 
 # Set up the docs.
-INCLUDE(cmake/Docs.cmake)
+include(cmake/Docs.cmake)
 
 # A helper for running tests.
-ADD_EXECUTABLE(fish_test_helper src/fish_test_helper.cpp)
+add_executable(fish_test_helper src/fish_test_helper.cpp)
 
 # Set up tests.
-INCLUDE(cmake/Tests.cmake)
+include(cmake/Tests.cmake)
 
 # Benchmarking support.
-INCLUDE(cmake/Benchmark.cmake)
+include(cmake/Benchmark.cmake)
 
 # Set up install.
-INCLUDE(cmake/Install.cmake)
+include(cmake/Install.cmake)
 
 # Mac app.
-INCLUDE(cmake/MacApp.cmake)
+include(cmake/MacApp.cmake)
 
 # Lint targets
 # This could be implemented as target properties, but the script has the useful feature of only
 # checking the currently-staged commands
 # The generator expressions below rebuild the command line for the fishlib targets
 # CMake does not support the "iquote" flag - https://gitlab.kitware.com/cmake/cmake/issues/15491
-SET(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:fishlib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:fishlib,INCLUDE_DIRECTORIES>, -I>")
-ADD_CUSTOM_TARGET(lint
+set(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:fishlib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:fishlib,INCLUDE_DIRECTORIES>, -I>")
+add_custom_target(lint
     COMMAND build_tools/lint.fish -- ${LINT_ARGS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
-ADD_CUSTOM_TARGET(lint-all
+add_custom_target(lint-all
     COMMAND build_tools/lint.fish --all -- ${LINT_ARGS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 
-INCLUDE(FeatureSummary)
-FEATURE_SUMMARY(WHAT ALL)
+include(FeatureSummary)
+feature_summary(WHAT ALL)

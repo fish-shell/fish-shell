@@ -3867,6 +3867,20 @@ bool reader_is_in_search_mode() {
     return data && data->history_search.active();
 }
 
+bool reader_get_search_term(size_t *begin, size_t *length) {
+    reader_data_t *data = current_data_or_null();
+    if (data == nullptr) return false;
+    const auto &history_search = data->history_search;
+    if (!history_search.active()) return false;
+    if (history_search.is_at_end()) return false;
+    // TODO token history_search needs to store match position as well.
+    if (data->history_search.by_token()) return false;
+    assert(history_search.by_line() || history_search.by_prefix());
+    *begin = history_search.match_position();
+    *length = history_search.search_string().size();
+    return true;
+}
+
 bool reader_has_pager_contents() {
     reader_data_t *data = current_data_or_null();
     return data && !data->current_page_rendering.screen_data.empty();

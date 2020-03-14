@@ -59,6 +59,8 @@ The following options output metadata about the commandline state:
 
 - ``-S`` or ``--search-mode`` evaluates to true if the commandline is performing a history search
 
+- ``-T`` or ``--search-term`` prints the starting and ending offset the current history search match
+
 - ``-P`` or ``--paging-mode`` evaluates to true if the commandline is showing pager contents, such as tab completions
 
 

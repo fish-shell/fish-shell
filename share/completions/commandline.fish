@@ -18,6 +18,7 @@ complete -c commandline -s I -l input -d "Specify command to operate on"
 complete -c commandline -s C -l cursor -d "Set/get cursor position, not buffer contents"
 complete -c commandline -s L -l line -d "Print the line that the cursor is on"
 complete -c commandline -s S -l search-mode -d "Return true if performing a history search"
+complete -c commandline -s T -l search-term -d "Print the starting and ending offset the current history search match"
 complete -c commandline -s P -l paging-mode -d "Return true if showing pager content"
 
 

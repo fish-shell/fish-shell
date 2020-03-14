@@ -1,8 +1,11 @@
 function up-or-search -d "Depending on cursor position and current mode, either search backward or move up one line"
     # If we are already in search mode, continue
-    if commandline --search-mode
-        commandline -f history-search-backward
-        return
+    if commandline --search-mode && set needle (commandline --search-term)
+        set cursor (commandline --cursor)
+        if test $cursor -ge $needle[1] && test $cursor -le $needle[2]
+            commandline -f history-search-backward
+            return
+        end
     end
 
     # If we are navigating the pager, then up always navigates

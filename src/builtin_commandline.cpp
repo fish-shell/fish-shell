@@ -144,6 +144,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int cursor_mode = 0;
     int line_mode = 0;
     int search_mode = 0;
+    int search_term = 0;
     int paging_mode = 0;
     const wchar_t *begin = nullptr, *end = nullptr;
 
@@ -171,7 +172,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         return STATUS_CMD_ERROR;
     }
 
-    static const wchar_t *const short_options = L":abijpctforhI:CLSsP";
+    static const wchar_t *const short_options = L":abijpctforhI:CLSsTP";
     static const struct woption long_options[] = {{L"append", no_argument, nullptr, 'a'},
                                                   {L"insert", no_argument, nullptr, 'i'},
                                                   {L"replace", no_argument, nullptr, 'r'},
@@ -188,6 +189,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                                                   {L"cursor", no_argument, nullptr, 'C'},
                                                   {L"line", no_argument, nullptr, 'L'},
                                                   {L"search-mode", no_argument, nullptr, 'S'},
+                                                  {L"search-term", no_argument, nullptr, 'T'},
                                                   {L"paging-mode", no_argument, nullptr, 'P'},
                                                   {nullptr, 0, nullptr, 0}};
 
@@ -252,6 +254,10 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 search_mode = 1;
                 break;
             }
+            case 'T': {
+                search_term = 1;
+                break;
+            }
             case 's': {
                 selection_mode = 1;
                 break;
@@ -283,7 +289,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
         // Check for invalid switch combinations.
         if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode ||
-            search_mode || paging_mode) {
+            search_mode || search_term || paging_mode) {
             streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
@@ -318,14 +324,15 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     // Check for invalid switch combinations.
-    if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc - w.woptind > 1)) {
+    if ((search_mode || search_term || line_mode || cursor_mode || paging_mode) &&
+        (argc - w.woptind > 1)) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if ((buffer_part || tokenize || cut_at_cursor) &&
-        (cursor_mode || line_mode || search_mode || paging_mode)) {
+        (cursor_mode || line_mode || search_mode || search_term || paging_mode)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -385,6 +392,13 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     if (search_mode) {
         return reader_is_in_search_mode() ? 0 : 1;
+    }
+
+    if (search_term) {
+        size_t begin, length;
+        bool ok = reader_get_search_term(&begin, &length);
+        if (ok) streams.out.append_format(L"%lu\n%lu\n", begin, begin + length);
+        return ok ? 0 : 1;
     }
 
     if (paging_mode) {

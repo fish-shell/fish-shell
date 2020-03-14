@@ -53,16 +53,16 @@ __fish_detect_screen_socket_dir
 complete -c screen -s a -d 'Include all capabilitys'
 complete -c screen -s A -d 'Adapt window size'
 complete -c screen -s c -r -d 'Specify init file'
-complete -c screen -s d -d 'Detach screen' -a '(__fish_complete_screen)' -x
-complete -c screen -s D -d 'Detach screen' -a '(__fish_complete_screen)' -x
-complete -c screen -s r -d 'Reattach session' -a '(__fish_complete_screen)' -x
-complete -c screen -s R -d 'Reattach/create session' -a '(__fish_complete_screen)' -x
+complete -c screen -o d -d 'Detach screen' -a '(__fish_complete_screen)' -x
+complete -c screen -o D -d 'Detach screen' -a '(__fish_complete_screen)' -x
+complete -c screen -o r -d 'Reattach session' -a '(__fish_complete_screen)' -x
+complete -c screen -o R -d 'Reattach/create session' -a '(__fish_complete_screen)' -x
 complete -c screen -o RR -d 'Reattach/create any session' -a '(__fish_complete_screen)' -x
 complete -c screen -s e -x -d 'Escape character'
 complete -c screen -s f -d 'Flow control on'
 complete -c screen -o fn -d 'Flow control off'
 complete -c screen -o fa -d 'Flow control automatic'
-complete -c screen -s h -x -d 'History length'
+complete -c screen -o h -x -d 'History length'
 complete -c screen -s i -d 'Interrupt display on C-c'
 complete -c screen -s l -d 'Login on'
 complete -c screen -o ln -d 'Login off'
@@ -73,12 +73,12 @@ complete -c screen -s m -d 'Ignore $STY'
 complete -c screen -s O -d 'Optimal output'
 complete -c screen -s p -d 'Preselect window'
 complete -c screen -s q -d 'Quiet mode'
-complete -c screen -s s -r -d 'Set shell'
-complete -c screen -s S -x -d 'Session name'
-complete -c screen -s t -x -d 'Session title'
+complete -c screen -o s -r -d 'Set shell'
+complete -c screen -o S -x -d 'Session name'
+complete -c screen -o t -x -d 'Session title'
+complete -c screen -o T -x -d 'Value to use for $TERM (default "screen")'
 complete -c screen -s U -d 'UTF-8 mode'
 complete -c screen -s v -d 'Display version and exit'
 complete -c screen -o wipe -d 'Wipe dead sessions'
-complete -c screen -s x -d 'Multi attach' -a '(__fish_complete_screen_attached)' -x
-complete -c screen -s X -r -d 'Send command'
-
+complete -c screen -o x -d 'Multi attach' -a '(__fish_complete_screen_attached)' -x
+complete -c screen -o X -r -d 'Send command'

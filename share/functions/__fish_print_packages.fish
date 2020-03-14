@@ -60,19 +60,23 @@ function __fish_print_packages
 
     # Caches for 5 minutes
     if type -q -f pacman
-        set cache_file $XDG_CACHE_HOME/.pac-cache.$USER
-        if test -f $cache_file
-            cat $cache_file
-            set age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set max_age 250
-            if test $age -lt $max_age
-                return
+        if not set -q only_installed
+            set cache_file $XDG_CACHE_HOME/.pac-cache.$USER
+            if test -f $cache_file
+                cat $cache_file
+                set age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set max_age 250
+                if test $age -lt $max_age
+                    return
+                end
             end
+            # prints: <package name>	Package
+            pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
+            return
+        else
+            pacman -Q | string replace ' ' \t
+            return
         end
-
-        # prints: <package name>	Package
-        pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
-        return
     end
 
     # Zypper needs caching as it is slow

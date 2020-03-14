@@ -14,17 +14,18 @@
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
 #include <wctype.h>
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cwchar>
 #include <functional>
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <random>
 #include <type_traits>
 #include <unordered_set>
 
@@ -396,10 +397,12 @@ void history_impl_t::save_unless_disabled() {
     // the counter.
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0) {
-        unsigned int seed = static_cast<unsigned int>(time(nullptr));
         // Generate a number in the range [0, kVacuumFrequency).
-        srand(seed);
-        countdown_to_vacuum = rand() / (RAND_MAX / kVacuumFrequency + 1);
+        std::uniform_int_distribution<unsigned> dist{0, kVacuumFrequency - 1};
+        unsigned seed =
+            static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count());
+        std::minstd_rand gen{seed};
+        countdown_to_vacuum = dist(gen);
     }
 
     // Determine if we're going to vacuum.

@@ -50,7 +50,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     else if contains $basename joe ee
         set -a editor +$line $f
     else if contains $basename code code-oss
-        set -a editor --goto $f:$line:$col
+        set -a editor --goto $f:$line:$col --wait
     else
         set -a editor $f
     end

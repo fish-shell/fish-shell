@@ -2999,8 +2999,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                      c == rl::history_prefix_search_backward)
                         ? history_search_direction_t::backward
                         : history_search_direction_t::forward;
-                history_search.move_in_direction(dir);
-                update_command_line_from_history_search();
+                if (history_search.move_in_direction(dir) ||
+                    (dir == history_search_direction_t::forward && history_search.is_at_end())) {
+                    update_command_line_from_history_search();
+                }
             }
             break;
         }

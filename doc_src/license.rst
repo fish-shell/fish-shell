@@ -1,7 +1,7 @@
 License
 ========
 
-``fish`` Copyright © 2005-2009 Axel Liljencrantz, 2009-2019 fish-shell contributors. ``fish`` is released under the GNU General Public License, version 2.
+``fish`` Copyright © 2005-2009 Axel Liljencrantz, 2009-2020 fish-shell contributors. ``fish`` is released under the GNU General Public License, version 2.
 
 ``fish`` includes other code licensed under the GNU General Public License, version 2, including GNU ``printf``.
 

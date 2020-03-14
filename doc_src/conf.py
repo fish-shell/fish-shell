@@ -53,7 +53,7 @@ highlight_language = "fish-docs-samples"
 # -- Project information -----------------------------------------------------
 
 project = "fish-shell"
-copyright = "2019, fish-shell developers"
+copyright = "2020, fish-shell developers"
 author = "fish-shell developers"
 
 # Parsing FISH-BUILD-VERSION-FILE is possible but hard to ensure that it is in the right place

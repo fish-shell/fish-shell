@@ -194,6 +194,12 @@ function __fish_ip_scope
         host "Address is only valid on this host"
 end
 
+function __fish_ip_netns_list
+    ip netns list | while read a b c
+        echo -- $a
+    end
+end
+
 function __fish_ip_types
     printf '%s\t%s\n' \
         macvtap "Virtual interface based on link layer address (MAC) and TAP." \
@@ -377,6 +383,25 @@ function __fish_complete_ip
                         end
                     case show
                     case help
+                end
+            end
+        case netns
+            if not set -q cmd[3]
+                printf '%s\t%s\n' add "Add network namespace" \
+                    delete "Delete network namespace" \
+                    set "Change network namespace attributes" \
+                    identify "Display network namespace for a process id" \
+                    pids "Display process ids of processes running in network namespace" \
+                    montior "Report as network namespace names are added and deleted" \
+                    exec "Execute command in network namespace" \
+                    help "Display help" \
+                    list "List network namespaces"
+            else
+                switch $cmd[2]
+                    case delete
+                        __fish_ip_netns_list
+                    case exec
+                        __fish_ip_netns_list
                 end
             end
     end

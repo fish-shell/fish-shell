@@ -101,7 +101,7 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
     auto get_unit = [](int64_t micros) {
         if (micros > 900 * 1E6) {
             return tunit::minutes;
-        } else if (micros >= 999995) {
+        } else if (micros >= 999995) {  // Move to seconds if we would overflow the %6.2 format.
             return tunit::seconds;
         } else if (micros >= 1000) {
             return tunit::milliseconds;

@@ -5662,10 +5662,10 @@ ________________________________________________________
 Executed in  500.00 micros    fish         external
    usr time    1.00 secs      1.00 secs    1.00 millis
    sys time    1.00 secs      1.00 secs    0.50 millis
-)"; //         (a)            (b)            (c)
-    // (a) remaining columns should align even if there are different units
-    // (b) carry to the next unit when it would overflow %6.2F
-    // (c) carry to the next unit when the larger one exceeds 1000
+)";  //        (a)            (b)            (c)
+     // (a) remaining columns should align even if there are different units
+     // (b) carry to the next unit when it would overflow %6.2F
+     // (c) carry to the next unit when the larger one exceeds 1000
     std::wstring actual = timer_snapshot_t::print_delta(t1, t2, true);
     if (actual != expected) {
         err(L"Failed to format timer snapshot\n\Expected: %ls\nActual:%ls\n", expected,

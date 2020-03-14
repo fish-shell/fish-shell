@@ -172,7 +172,8 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
     return STATUS_CMD_OK;
 }
 
-static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts,  //!OCLINT(npath complexity)
+static int validate_cmd_opts(const wchar_t *cmd,
+                             const set_cmd_opts_t &opts,  //!OCLINT(npath complexity)
                              int argc, parser_t &parser, io_streams_t &streams) {
     // Can't query and erase or list.
     if (opts.query && (opts.erase || opts.list)) {
@@ -235,8 +236,9 @@ static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts,  //
 
 // Check if we are setting a uvar and a global of the same name exists. See
 // https://github.com/fish-shell/fish-shell/issues/806
-static int check_global_scope_exists(const wchar_t *cmd, const set_cmd_opts_t &opts, const wchar_t *dest,
-                                     io_streams_t &streams, const parser_t &parser) {
+static int check_global_scope_exists(const wchar_t *cmd, const set_cmd_opts_t &opts,
+                                     const wchar_t *dest, io_streams_t &streams,
+                                     const parser_t &parser) {
     if (opts.universal) {
         auto global_dest = parser.vars().get(dest, ENV_GLOBAL);
         if (global_dest && parser.is_interactive()) {
@@ -602,8 +604,8 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
 }
 
 /// Show mode. Show information about the named variable(s).
-static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int argc, wchar_t **argv,
-                            parser_t &parser, io_streams_t &streams) {
+static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int argc,
+                            wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     UNUSED(opts);
     const auto &vars = parser.vars();
     if (argc == 0) {  // show all vars

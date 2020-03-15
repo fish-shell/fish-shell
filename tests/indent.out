@@ -107,8 +107,7 @@ while true
     builtin yes
 end
 
-alpha | \
-    beta
+alpha | beta
 
 gamma | \
     # comment3

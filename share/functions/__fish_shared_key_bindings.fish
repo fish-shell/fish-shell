@@ -22,6 +22,10 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \eOC forward-char
     bind --preset $argv \eOD backward-char
 
+    # Ctrl-left/right - these also work in vim.
+    bind --preset $argv \e\[1\;5C forward-word
+    bind --preset $argv \e\[1\;5D backward-word
+
     bind --preset $argv -k ppage beginning-of-history
     bind --preset $argv -k npage end-of-history
 

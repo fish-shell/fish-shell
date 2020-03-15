@@ -82,8 +82,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind --preset $argv \e\b backward-kill-word
     bind --preset $argv \eb backward-word
     bind --preset $argv \ef forward-word
-    bind --preset $argv \e\[1\;5C forward-word
-    bind --preset $argv \e\[1\;5D backward-word
     bind --preset $argv \e\< beginning-of-buffer
     bind --preset $argv \e\> end-of-buffer
 

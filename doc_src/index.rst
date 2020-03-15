@@ -1291,7 +1291,9 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Alt+←,Left` and :kbd:`Alt+→,Right` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt+→,Right` (or :kbd:`Alt+F`) accepts the first word in the suggestion.
 
-- :kbd:`Shift,←,Left` and :kbd:`Shift,→,Right` move the cursor one word left or right, without stopping on punctuation.
+- :kbd:`Ctrl+←` and :kbd:`Ctrl+→` move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
+
+- :kbd:`Shift+←` and :kbd:`Shift+→` move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
 
 - :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history-search>`_ section for more information on history searching.
 

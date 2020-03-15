@@ -1291,6 +1291,8 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Alt+←,Left` and :kbd:`Alt+→,Right` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt+→,Right` (or :kbd:`Alt+F`) accepts the first word in the suggestion.
 
+- :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, they accept one word of the autosuggestion.
+
 - :kbd:`Ctrl+←` and :kbd:`Ctrl+→` move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
 
 - :kbd:`Shift+←` and :kbd:`Shift+→` move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
@@ -1336,7 +1338,9 @@ Emacs mode commands
 
 - :kbd:`End` or :kbd:`Control+E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control+E` accepts the autosuggestion.
 
-- :kbd:`←` (Left) (or :kbd:`Control+B`) and :kbd:`→` (Right) (or :kbd:`Control+F`) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the :kbd:`→` (Right) key and the :kbd:`Control+F` combination accept the suggestion.
+- :kbd:`Control+B`, :kbd:`Control+F` move the cursor one character left or right just like the :kbd:`←` (Left) and :kbd:`→` (Right) shared bindings (which are available as well).
+
+- :kbd:`Control+N`, :kbd:`Control+P` move the cursor up/down or through history, like the up and down arrow shared bindings.
 
 - :kbd:`Delete` and :kbd:`Backspace` removes one character forwards or backwards respectively.
 

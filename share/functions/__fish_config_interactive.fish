@@ -109,7 +109,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
                     # Run python directly in the background and swallow all output
                     $py $update_args >/dev/null 2>&1 &
                     # Then disown the job so that it continues to run in case of an early exit (#6269)
-                    disown >/dev/null 2>&1 
+                    disown >/dev/null 2>&1
                     break
                 end
             end

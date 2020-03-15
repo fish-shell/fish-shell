@@ -69,8 +69,7 @@ function __fish_git_unique_remote_branches
     # `git checkout frobulate` is equivalent to `git checkout -b frobulate --track alice/frobulate`.
     __fish_git for-each-ref --format="%(refname:strip=3)" \
         --sort="refname:strip=3" \
-        "refs/remotes/*/$match*" "refs/remotes/*/*/**" 2>/dev/null | \
-        uniq -u
+        "refs/remotes/*/$match*" "refs/remotes/*/*/**" 2>/dev/null | uniq -u
 end
 
 function __fish_git_tags
@@ -1070,8 +1069,7 @@ complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cache
 ### Function to list available tools for git difftool and mergetool
 
 function __fish_git_diffmerge_tools -a cmd
-    git $cmd --tool-help | \
-        while read -l line
+    git $cmd --tool-help | while read -l line
         string match -q 'The following tools are valid, but not currently available:' -- $line
         and break
         string replace -f -r '^\t\t(\w+).*$' '$1' -- $line

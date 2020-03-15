@@ -15,8 +15,7 @@ d echo true
 \U00000066\
  true
     echo if true
- \
-    \145n\
+\145n\
 d\
 
 #CHECK: if true

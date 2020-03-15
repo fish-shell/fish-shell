@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import argparse
+import datetime
 import io
 import re
 import shlex
@@ -182,10 +183,7 @@ class TestFailure(object):
             ]
         if self.after:
             fields["additional_output"] = "    ".join(self.after[:afterlines])
-            fmtstrs += [
-                "  additional output:",
-                "    {BOLD}{additional_output}{RESET}",
-            ]
+            fmtstrs += ["  additional output:", "    {BOLD}{additional_output}{RESET}"]
         fmtstrs += ["  when running command:", "    {subbed_command}"]
         return "\n".join(fmtstrs).format(**fields)
 
@@ -470,7 +468,7 @@ def main():
     def_subs = {"%": "%"}
     def_subs.update(parse_subs(args.substitute))
 
-    success = True
+    failure_count = 0
     config = Config()
     config.colorize = sys.stdout.isatty()
     config.progress = args.progress
@@ -480,13 +478,21 @@ def main():
         fields["path"] = path
         if config.progress:
             print("Testing file {path} ... ".format(**fields), end="")
+            sys.stdout.flush()
         subs = def_subs.copy()
         subs["s"] = path
+        starttime = datetime.datetime.now()
         if not check_path(path, subs, config, TestFailure.print_message):
-            success = False
+            failure_count += 1
         elif config.progress:
-            print("{GREEN}ok{RESET}".format(**fields))
-    sys.exit(0 if success else 1)
+            endtime = datetime.datetime.now()
+            duration_ms = round((endtime - starttime).total_seconds() * 1000)
+            print(
+                "{GREEN}ok{RESET} ({duration} ms)".format(
+                    duration=duration_ms, **fields
+                )
+            )
+    sys.exit(failure_count)
 
 
 if __name__ == "__main__":

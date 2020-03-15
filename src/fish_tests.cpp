@@ -5645,6 +5645,9 @@ static void test_topic_monitor_torture() {
 
 static void test_timer_format() {
     say(L"Testing timer format");
+    // This test uses numeric output, so we need to set the locale.
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, nullptr));
+    setlocale(LC_NUMERIC, "C");
     auto t1 = timer_snapshot_t::take();
     t1.cpu_fish.ru_utime.tv_usec = 0;
     t1.cpu_fish.ru_stime.tv_usec = 0;
@@ -5671,6 +5674,8 @@ Executed in  500.00 micros    fish         external
         err(L"Failed to format timer snapshot\n\Expected: %ls\nActual:%ls\n", expected,
             actual.c_str());
     }
+    setlocale(LC_NUMERIC, saved_locale);
+    free(saved_locale);
 }
 
 /// Main test.

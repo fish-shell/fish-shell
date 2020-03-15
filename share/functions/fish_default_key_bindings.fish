@@ -56,9 +56,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind --preset $argv \e\[3~ delete-char
     bind --preset $argv \e\[4~ end-of-line
 
-    # OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
-    bind --preset $argv -k home beginning-of-line 2>/dev/null
-    bind --preset $argv -k end end-of-line 2>/dev/null
+    bind --preset $argv -k home beginning-of-line
+    bind --preset $argv -k end end-of-line
     bind --preset $argv \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
 
     bind --preset $argv \ca beginning-of-line

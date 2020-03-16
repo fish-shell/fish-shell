@@ -1,7 +1,7 @@
 # completion for zypper
 
 set -g __fish_zypper_all_commands shell sh repos lr addrepo ar removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc services ls addservice as modifyservice ms removeservice rs refresh-services refs install in remove rm verify ve source-install si install-new-recommends inr update up list-updates lu patch list-patches lp dist-upgrade dup patch-check pchk search se info if patch-info pattern-info product-info patches pch packages pa patterns pt products pd what-provides wp addlock al removelock rl locks ll cleanlocks cl locales lloc addlocale aloc removelocale rloc versioncmp vcmp targetos tos licenses download source-download needs-rebooting ps
-set -g __fish_zypper_pkg_commands install in remove rm info if addlock al removelock rl source-install si update up
+set -g __fish_zypper_pkg_commands install in remove rm info if addlock al removelock rl source-install si update up download
 set -g __fish_zypper_repo_commands repos lr removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc packages pa patches pch patterns pt products pd
 set -g __fish_zypper_file_commands install in addrepo ar
 set -g __fish_zypper_package_types package patch pattern product srcpackage application
@@ -682,9 +682,9 @@ function __fish_zypper_is_subcommand_download
 end
 
 complete -c zypper -n __fish_zypper_is_subcommand_download -l all-matches -d 'Download all versions matching the commandline arguments'
-complete -c zypper -n __fish_zypper_is_subcommand_download -l from -r -d 'Select packages from the specified repository'
+complete -c zypper -n __fish_zypper_is_subcommand_download -l from -rf -a "(__fish_zypper_print_repos -e)" -d 'Select packages from the specified repository'
 complete -c zypper -n __fish_zypper_is_subcommand_download -l dry-run -s D -d 'Don\'t change anything, just report what would be done'
-complete -c zypper -n __fish_zypper_is_subcommand_download -l repo -r -s r -d 'Work only with the specified repository'
+complete -c zypper -n __fish_zypper_is_subcommand_download -l repo -s r -rf -a "(__fish_zypper_print_repos -e)" -d 'Work only with the specified repository'
 
 function __fish_zypper_is_subcommand_ps
     __fish_zypper_cmd_in_array ps

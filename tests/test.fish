@@ -71,39 +71,26 @@ end
 
 set -g python (__fish_anypython)
 
-function test_littlecheck_file
-    set -l file $argv[1]
-    echo -n "Testing file $file ... "
-    set starttime (timestamp)
+# Test classic '.in' files.
+set -l failed 0
+for i in (string match '*.in' -- $files_to_test)
+        if not test_in_file $i
+            set failed (math $failed + 1)
+        end
+end
+
+# Test littlecheck files.
+set littlecheck_files (string match '*.fish' -- $files_to_test)
+if set -q littlecheck_files[1]
     $python -S ../littlecheck.py \
+        --progress \
         -s fish=../test/root/bin/fish \
         -s fish_test_helper=../test/root/bin/fish_test_helper \
-        $file
-    set -l exit_status $status
-    set -l res ok
-    set test_duration (delta $starttime)
-    if test $exit_status -eq 0
-        say green "ok ($test_duration $unit)"
-    end
-    return $exit_status
+        $littlecheck_files
+    set -l littlecheck_failures $status
+    set failed (math $failed + $littlecheck_failures)
 end
 
-set -l failed
-for i in $files_to_test
-    if string match --quiet '*.fish' $i
-        if not test_littlecheck_file $i
-            # littlecheck test
-            set failed $failed $i
-        end
-    else
-        # .in test
-        if not test_in_file $i
-            set failed $failed $i
-        end
-    end
-end
-
-set failed (count $failed)
 if test $failed -eq 0
     say green "All tests completed successfully"
     exit 0

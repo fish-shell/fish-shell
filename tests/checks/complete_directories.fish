@@ -13,6 +13,7 @@ __fish_complete_directories test/z
 __fish_complete_directories test/d
 #CHECK: test/data/	Directory
 #CHECK: test/buildroot/	Directory
+#CHECK: test/fish_expand_test/	Directory
 __fish_complete_directories test/data
 #CHECK: test/data/	Directory
 __fish_complete_directories test/data/

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+# RUN: %fish -C 'set -g fish %fish' %s
 #
 # Test function, loops, conditionals and some basic elements
 #
@@ -312,3 +312,137 @@ type -q fish_test_type_zzz ; echo $status
 # Should fail
 type -q -f fish_test_type_zzz ; echo $status
 #CHECK: 1
+
+# ensure that builtins that produce no output can still truncate files
+# (bug PCA almost reintroduced!)
+echo abc > ../test/temp/file_truncation_test.txt
+cat ../test/temp/file_truncation_test.txt
+echo -n > ../test/temp/file_truncation_test.txt
+cat ../test/temp/file_truncation_test.txt
+#CHECK: abc
+
+# Test events.
+
+
+# This pattern caused a crash; github issue #449
+
+set -g var before
+
+function test1 --on-event test
+    set -g var $var:test1
+    functions -e test2
+end
+
+function test2 --on-event test
+    # this should not run, as test2 gets removed before it has a chance of running
+    set -g var $var:test2a
+end
+emit test
+
+echo $var
+#CHECK: before:test1
+
+
+function test3 --on-event test3
+    echo received event test3 with args: $argv
+end
+
+emit test3 foo bar
+#CHECK: received event test3 with args: foo bar
+
+# test empty argument
+emit
+#CHECKERR: emit: expected event name
+
+# Test break and continue
+# This should output Ping once
+for i in a b c
+    if not contains $i c ; continue ; end
+    echo Ping
+end
+#CHECK: Ping
+
+# This should output Pong not at all
+for i in a b c
+    if not contains $i c ; break ; end
+    echo Pong
+end
+
+# This should output Foop three times, and Boop not at all
+set i a a a
+while contains $i a
+    set -e i[-1]
+    echo Foop
+    continue
+    echo Boop
+end
+#CHECK: Foop
+#CHECK: Foop
+#CHECK: Foop
+
+# This should output Doop once
+set i a a a
+while contains $i a
+    set -e i[-1]
+    echo Doop
+    break
+    echo Darp
+end
+#CHECK: Doop
+
+# Test implicit cd. This should do nothing.
+./
+
+# Test special for loop expansion
+# Here we the name of the variable is derived from another variable
+set var1 var2
+for $var1 in 1 2 3
+    echo -n $var2
+end
+echo
+#CHECK: 123
+
+# Test status -n
+eval 'status -n
+status -n
+status -n'
+#CHECK: 1
+#CHECK: 2
+#CHECK: 3
+
+# Test support for unbalanced blocks
+function try_unbalanced_block
+    $fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
+end
+try_unbalanced_block 'begin'
+#CHECKERR: - (line 1): Missing end to balance this begin
+try_unbalanced_block 'while true'
+#CHECKERR: - (line 1): Missing end to balance this while loop
+try_unbalanced_block 'for x in 1 2 3'
+#CHECKERR: - (line 1): Missing end to balance this for loop
+try_unbalanced_block 'switch abc'
+#CHECKERR: - (line 1): Missing end to balance this switch statement
+try_unbalanced_block 'function anything'
+#CHECKERR: - (line 1): Missing end to balance this function definition
+try_unbalanced_block 'if false'
+#CHECKERR: - (line 1): Missing end to balance this if statement
+
+# Ensure that quoted keywords work
+'while' false; end
+"while" false; end
+"wh"'ile' false; "e"nd
+
+# BOM checking (see #1518). But only in UTF8 locales.
+# (locale guarded because of musl)
+if command -sq locale; and string match -qi '*utf-8*' -- (locale)
+    echo \uFEFF"echo bom_test" | source
+else
+    echo "echo bom_test" | source
+end
+#CHECK: bom_test
+
+# Comments abutting text (#953)
+echo not#a#comment
+#CHECK: not#a#comment
+echo is # a # comment
+#CHECK: is

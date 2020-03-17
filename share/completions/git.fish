@@ -1564,6 +1564,13 @@ complete -f -c git -n '__fish_git_using_command rev-parse' -a '(__fish_git_branc
 complete -f -c git -n '__fish_git_using_command rev-parse' -a '(__fish_git_heads)' -d Head
 complete -k -c git -n '__fish_git_using_command rev-parse' -a '(__fish_git_tags)' -d Tag
 
+### restore
+complete -f -c git -n '__fish_git_needs_command' -a restore -d 'Restore working tree files'
+complete -f -c git -n '__fish_git_using_command restore' -s s -l source -d 'Specify the source tree used to restore working tree'
+complete -f -c git -n '__fish_git_using_command restore' -s p -l patch -d 'Interactive mode'
+complete -f -c git -n '__fish_git_using_command restore' -s W -l worktree -d 'Restore working tree (default)'
+complete -f -c git -n '__fish_git_using_command restore' -s S -l staged -d 'Restore the index'
+
 ### revert
 complete -f -c git -n __fish_git_needs_command -a revert -d 'Revert an existing commit'
 complete -f -c git -n '__fish_git_using_command revert' -ka '(__fish_git_commits)'
@@ -1589,6 +1596,15 @@ complete -f -c git -n '__fish_git_using_command status' -s z -d 'Terminate entri
 complete -f -c git -n '__fish_git_using_command status' -s u -l untracked-files -x -a 'no normal all' -d 'The untracked files handling mode'
 complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x -a 'none untracked dirty all' -d 'Ignore changes to submodules'
 # TODO options
+
+### switch
+complete -f -c git -n '__fish_git_needs_command' -a switch -d 'Switch to a branch'
+complete -k -f -c git -n '__fish_git_using_command switch; and not contains -- -- (commandline -op)' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command switch' -s c -l create -d 'Create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s C -l force-create -d 'Force create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -d 'Switch to a commit for inspection and discardable experiment'
+complete -f -c git -n '__fish_git_using_command switch' -l no-guess -d 'Do not guess branch name from remote branch'
+complete -f -c git -n '__fish_git_using_command switch' -l orphan -d 'Create a new orphan branch'
 
 ### tag
 complete -f -c git -n __fish_git_needs_command -a tag -d 'Create, list, delete or verify a tag object signed with GPG'

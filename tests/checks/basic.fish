@@ -1,8 +1,9 @@
+#RUN: %fish %s
 #
 # Test function, loops, conditionals and some basic elements
 #
 
-logmsg "Comments in odd places don't cause problems"
+# Comments in odd places don't cause problems
 for i in 1 2 # Comment on same line as command
 # Comment inside loop
     for j in a b
@@ -10,8 +11,12 @@ for i in 1 2 # Comment on same line as command
         echo $i$j
 	end;
 end
+#CHECK: 1a
+#CHECK: 1b
+#CHECK: 2a
+#CHECK: 2b
 
-logmsg Escaped newlines
+# Escaped newlines
 echo foo\ bar
 echo foo\
 bar
@@ -19,14 +24,22 @@ echo "foo\
 bar"
 echo 'foo\
 bar'
+#CHECK: foo bar
+#CHECK: foobar
+#CHECK: foobar
+#CHECK: foo\
+#CHECK: bar
 
 for i in \
     a b c
     echo $i
 end
+#CHECK: a
+#CHECK: b
+#CHECK: c
 
 
-logmsg Simple function tests
+# Simple function tests
 
 function foo
     echo >../test/temp/fish_foo.txt $argv
@@ -41,12 +54,14 @@ if test $foo = hello;
 else
   echo Test 2 fail
 end
+#CHECK: Test 2 pass
 
 function foo
     printf 'Test %s' $argv[1]; echo ' pass'
 end
 
 foo 3a
+#CHECK: Test 3a pass
 
 for i in Test for continue break and switch builtins problems;
 	switch $i
@@ -66,6 +81,7 @@ for i in Test for continue break and switch builtins problems;
 			echo fail
 	end
 end
+#CHECK: Test 3b pass
 
 set -l sta
 if eval true
@@ -78,8 +94,9 @@ else
 	set sta fail
 end
 echo Test 4 $sta
+#CHECK: Test 4 pass
 
-logmsg "Testing builtin status"
+# Testing builtin status
 
 function test_builtin_status
 	return 1
@@ -91,31 +108,47 @@ else
 	set sta fail
 end
 echo Test 5 $sta
+#CHECK: Test 5 pass
 
 ####################
-logmsg echo tests
+# echo tests
 echo 'abc\ndef'
+#CHECK: abc\ndef
 echo -e 'abc\ndef'
+#CHECK: abc
+#CHECK: def
 echo -e 'abc\zdef'
+#CHECK: abc\zdef
 echo -e 'abc\41def'
 echo -e 'abc\041def'
+#CHECK: abc!def
+#CHECK: abc!def
 echo -e 'abc\121def'
 echo -e 'abc\1212def'
+#CHECK: abcQdef
+#CHECK: abcQ2def
 echo -e 'abc\cdef' # won't output a newline!
+#CHECK: abc
 echo ''
 echo -
+#CHECK: -
 echo -h
+#CHECK: -h
 echo -ne '\376' | display_bytes
-echo -e Catch your breath
+#CHECK: 0000000 376
+#CHECK: 0000001
 echo -e 'abc\x21def'
 echo -e 'abc\x211def'
+#CHECK: abc!def
+#CHECK: abc!1def
 
-logmsg 'Comments allowed in between lines (#1987)'
+# Comments allowed in between lines (#1987)
 echo before comment \
   # comment
   after comment
+#CHECK: before comment after comment
 
-logmsg 'Backslashes are part of comments and do not join lines (#1255)'
+# Backslashes are part of comments and do not join lines (#1255)
 # This should execute false, not echo it
 echo -n # comment\
 false
@@ -126,11 +159,16 @@ function always_fails
     end
 end
 
-logmsg 'Verify $argv set correctly in sourced scripts (#139)'
+# Verify $argv set correctly in sourced scripts (#139)
 echo 'echo "source argv {$argv}"' | source
+#CHECK: source argv {}
 echo 'echo "source argv {$argv}"' | source -
+#CHECK: source argv {}
 echo 'echo "source argv {$argv}"' | source - abc
+#CHECK: source argv {abc}
 echo 'echo "source argv {$argv}"' | source - abc def
+#CHECK: source argv {abc def}
 
 always_fails
 echo $status
+#CHECK: 1

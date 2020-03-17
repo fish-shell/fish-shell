@@ -15,7 +15,7 @@ cd (dirname (status -f))
 if set -q argv[1]
     set files_to_test $argv.in
 else
-    set files_to_test *.in checks/*.fish
+    set files_to_test checks/*.fish
 end
 
 # These env vars should not be inherited from the user environment because they can affect the
@@ -29,55 +29,7 @@ or exit
 
 say -o cyan "Testing high level script functionality"
 
-function test_in_file
-    set -l file $argv[1]
-    set -l base (basename $file .in)
-
-    echo -n "Testing file $file ... "
-    set starttime (timestamp)
-
-    ../test/root/bin/fish <$file >$base.tmp.out 2>$base.tmp.err
-    set -l exit_status $status
-    set -l res ok
-    set test_duration (delta $starttime)
-
-    diff $base.tmp.out $base.out >/dev/null
-    set -l out_status $status
-    diff $base.tmp.err $base.err >/dev/null
-    set -l err_status $status
-
-    if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
-        say green "ok ($test_duration $unit)"
-        # clean up tmp files
-        rm -f $base.tmp.{err,out}
-        return 0
-    else
-        say red fail
-        if test $out_status -ne 0
-            say yellow "Output differs for file $file. Diff follows:"
-            colordiff -u $base.out $base.tmp.out
-        end
-        if test $err_status -ne 0
-            say yellow "Error output differs for file $file. Diff follows:"
-            colordiff -u $base.err $base.tmp.err
-        end
-        if test $exit_status -ne 0
-            say yellow "Exit status differs for file $file."
-            echo "Unexpected test exit status $exit_status."
-        end
-        return 1
-    end
-end
-
 set -g python (__fish_anypython)
-
-# Test classic '.in' files.
-set -l failed 0
-for i in (string match '*.in' -- $files_to_test)
-        if not test_in_file $i
-            set failed (math $failed + 1)
-        end
-end
 
 # Test littlecheck files.
 set littlecheck_files (string match '*.fish' -- $files_to_test)

@@ -24,3 +24,20 @@ If there is no function called ``NAME`` a new function will be created with the 
 - ``-i`` or ``--interactive`` Force opening the function body in the built-in editor even if ``$VISUAL`` or ``$EDITOR`` is defined.
 
 - ``-s`` or ``--save`` Automatically save the function after successfully editing it.
+
+Example
+-------
+
+Say you want to modify your prompt.
+
+Run::
+
+  >_ funced fish_prompt
+
+This will open up your editor, allowing you to modify the function. When you're done, save and quit. Fish will reload the function, so you should see the changes right away.
+
+When you're done, use::
+
+  >_ funcsave fish_prompt
+
+For more, see :ref:`funcsave <cmd-funcsave>`.

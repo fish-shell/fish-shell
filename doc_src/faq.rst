@@ -32,6 +32,15 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
 
 You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
 
+If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` like::
+
+  >_ funced fish_prompt
+  # this opens up your editor (set in $EDITOR), modify the function, save the file, repeat to your liking
+  # once you are happy with it:
+  >_ funcsave fish_prompt
+
+This also applies to :ref:`fish_right_prompt <cmd-fish_right_prompt>` and :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`.
+
 Why does my prompt show a `[I]`?
 --------------------------------
 

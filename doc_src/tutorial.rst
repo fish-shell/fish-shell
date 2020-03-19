@@ -131,7 +131,7 @@ Especially powerful is the recursive wildcard ** which searches directories recu
     /var/run/sntp.log
 
 
-If that directory traversal is taking a long time, you can :kbd:`Control+C` out of it.
+If that directory traversal is taking a long time, you can :kbd:`Control` + :kbd:`C` out of it.
 
 
 Pipes and Redirections
@@ -175,7 +175,7 @@ And history too. Type a command once, and you can re-summon it by just typing a 
 > :red:`r`:gray:`sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo`
 
 
-To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control+F`. To accept a single word of the autosuggestion, :kbd:`Alt+→` (right arrow). If the autosuggestion is not what you want, just ignore it.
+To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control` + :kbd:`F`. To accept a single word of the autosuggestion, :kbd:`Alt` + :kbd:`→` (right arrow). If the autosuggestion is not what you want, just ignore it.
 
 Tab Completions
 ---------------

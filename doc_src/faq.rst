@@ -52,7 +52,7 @@ If you want to change or disable this display, modify the `fish_mode_prompt` fun
 
 How do I run a command from history?
 ------------------------------------
-Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control+P` (up) and :kbd:`Control+N` (down).
+Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control` + :kbd:`P` (up) and :kbd:`Control` + :kbd:`N` (down).
 
 
 How do I run a subcommand? The backtick doesn't work!
@@ -234,11 +234,11 @@ Fish's history recall is very simple yet effective:
 
 - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
 
-- :kbd:`Alt+↑,Up` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. An alternate key binding is :kbd:`Alt+.`.
+- :kbd:`Alt` + :kbd:`↑,Up` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. An alternate key binding is :kbd:`Alt` + :kbd:`.`.
 
-- If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt+↑,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
+- If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt` + :kbd:`↑,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
 
-- If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
+- If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt` + :kbd:`D` and :kbd:`Alt` + :kbd:`Backspace` are your friends).
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
 

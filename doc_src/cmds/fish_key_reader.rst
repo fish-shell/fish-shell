@@ -36,7 +36,7 @@ The delay in milliseconds since the previous character was received is included 
 
 ``fish_key_reader`` intentionally disables handling of many signals. To terminate ``fish_key_reader`` in ``--continuous`` mode do:
 
-- press ``Ctrl-C`` twice, or
-- press ``Ctrl-D`` twice, or
+- press :kbd:`Control` + :kbd:`C` twice, or
+- press :kbd:`Control` + :kbd:`D` twice, or
 - type ``exit``, or
 - type ``quit``

@@ -1224,7 +1224,7 @@ Autosuggestions
 
 fish suggests commands as you type, based on `command history <#history-search>`_, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
-To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control` + :kbd:`F`. To accept the first suggested word, press :kbd:`Alt` + :kbd:`→,Right` or :kbd:`Alt` + :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
+To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control` + :kbd:`F`. To accept the first suggested word, press :kbd:`Alt` + :kbd:`→` or :kbd:`Alt` + :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
@@ -1289,9 +1289,9 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Tab` `completes <#tab-completion>`_ the current token. :kbd:`Shift` + :kbd:`Tab` completes the current token and starts the pager's search mode.
 
-- :kbd:`Alt` + :kbd:`←,Left` and :kbd:`Alt` + :kbd:`→,Right` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt` + :kbd:`→,Right` (or :kbd:`Alt` + :kbd:`F`) accepts the first word in the suggestion.
-
 - :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, they accept one word of the autosuggestion.
+
+- :kbd:`Alt` + :kbd:`←` and :kbd:`Alt` + :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt` + :kbd:`→` (or :kbd:`Alt` + :kbd:`F`) accepts the first word in the suggestion.
 
 - :kbd:`Control` + :kbd:`←` and :kbd:`Control` + :kbd:`→` move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
 

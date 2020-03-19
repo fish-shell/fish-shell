@@ -39,8 +39,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # shift-tab does a tab complete followed by a search.
     bind --preset $argv --key btab complete-and-search
 
-    bind --preset $argv \e\n "commandline -i \n"
-    bind --preset $argv \e\r "commandline -i \n"
+    bind --preset $argv \e\n "commandline -f expand-abbr; commandline -i \n"
+    bind --preset $argv \e\r "commandline -f expand-abbr; commandline -i \n"
 
     bind --preset $argv -k down down-or-search
     bind --preset $argv -k up up-or-search

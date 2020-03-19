@@ -1329,6 +1329,8 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Alt`\ +\ :kbd:`S` Prepends `sudo` to the current commandline.
 
+- :kbd:`Control`\ +\ :kbd:`Space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. (for vi-mode this only applies to insert-mode)
+
 .. _emacs-mode:
 
 Emacs mode commands

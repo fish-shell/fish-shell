@@ -1272,6 +1272,10 @@ void reader_data_t::completion_insert(const wchar_t *val, size_t token_end,
     set_buffer_maintaining_pager(new_command_line, cursor);
 }
 
+static bool may_add_to_history(const wcstring &commandline_prefix) {
+    return !commandline_prefix.empty() && commandline_prefix.at(0) != L' ';
+}
+
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
@@ -1295,17 +1299,19 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
             return nothing;
         }
 
-        history_search_t searcher(*history, search_string, history_search_type_t::prefix,
-                                  history_search_flags_t{});
-        while (!ctx.check_cancel() && searcher.go_backwards()) {
-            const history_item_t &item = searcher.current_item();
+        if (may_add_to_history(search_string)) {
+            history_search_t searcher(*history, search_string, history_search_type_t::prefix,
+                                      history_search_flags_t{});
+            while (!ctx.check_cancel() && searcher.go_backwards()) {
+                const history_item_t &item = searcher.current_item();
 
-            // Skip items with newlines because they make terrible autosuggestions.
-            if (item.str().find(L'\n') != wcstring::npos) continue;
+                // Skip items with newlines because they make terrible autosuggestions.
+                if (item.str().find(L'\n') != wcstring::npos) continue;
 
-            if (autosuggest_validate_from_history(item, working_directory, ctx)) {
-                // The command autosuggestion was handled specially, so we're done.
-                return {searcher.current_string(), search_string};
+                if (autosuggest_validate_from_history(item, working_directory, ctx)) {
+                    // The command autosuggestion was handled specially, so we're done.
+                    return {searcher.current_string(), search_string};
+                }
             }
         }
 
@@ -2754,7 +2760,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Finished command, execute it. Don't add items that start with a leading
                 // space.
                 const editable_line_t *el = &command_line;
-                if (history != nullptr && !el->empty() && el->text.at(0) != L' ') {
+                if (history != nullptr && may_add_to_history(el->text)) {
                     history->add_pending_with_file_detection(el->text, vars.get_pwd_slash());
                 }
                 rls.finished = true;

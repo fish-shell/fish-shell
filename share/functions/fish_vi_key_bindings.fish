@@ -153,6 +153,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset dT begin-selection backward-jump forward-char kill-selection end-selection
     bind -s --preset dh backward-char delete-char
     bind -s --preset dl delete-char
+    bind -s --preset di backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
+    bind -s --preset da backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
 
     bind -s --preset -m insert s delete-char repaint-mode
     bind -s --preset -m insert S kill-whole-line repaint-mode
@@ -179,6 +181,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert cT begin-selection backward-jump forward-char kill-selection end-selection repaint-mode
     bind -s --preset -m insert ch backward-char begin-selection kill-selection end-selection repaint-mode
     bind -s --preset -m insert cl begin-selection kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ci backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ca backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
 
     bind -s --preset '~' capitalize-word
     bind -s --preset gu downcase-word
@@ -204,6 +208,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset yB backward-kill-bigword yank
     bind -s --preset yge backward-kill-word yank
     bind -s --preset ygE backward-kill-bigword yank
+    bind -s --preset yf begin-selection forward-jump kill-selection yank end-selection
+    bind -s --preset yt begin-selection forward-jump-till kill-selection yank end-selection
+    bind -s --preset yF begin-selection backward-jump kill-selection yank end-selection
+    bind -s --preset yT begin-selection backward-jump-till kill-selection yank end-selection
+    bind -s --preset yh backward-char begin-selection kill-selection yank end-selection
+    bind -s --preset yl begin-selection kill-selection yank end-selection
+    bind -s --preset yi backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
+    bind -s --preset ya backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
 
     bind -s --preset f forward-jump
     bind -s --preset F backward-jump

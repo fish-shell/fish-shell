@@ -29,7 +29,7 @@ The following options are available:
 
 - ``-e`` or ``--erase`` causes the specified functions to be erased. This also means that it is prevented from autoloading.
 
-- ``-D`` or ``--details`` reports the path name where the specified function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading stdin, ``-`` if the function was created via ``source``, and ``n/a`` if the function isn't available. (Functions created via ``alias`` will return ``-``, because ``alias`` uses ``source`` internally.) If the ``--verbose`` option is also specified then five lines are written:
+- ``-D`` or ``--details`` reports the path name where the specified function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading stdin, ``-`` if the function was created via :ref:`source <cmd-source>`, and ``n/a`` if the function isn't available. (Functions created via :ref:`alias <cmd-alias>` will return ``-``, because ``alias`` uses ``source`` internally.) If the ``--verbose`` option is also specified then five lines are written:
 
     - the pathname as already described,
     - ``autoloaded``, ``not-autoloaded`` or ``n/a``,

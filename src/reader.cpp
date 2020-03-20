@@ -2007,7 +2007,7 @@ void reader_data_t::replace_current_token(wcstring &&new_token) {
     if (!begin || !end) return;
 
     size_t offset = begin - buff;
-    size_t length = end - buff;
+    size_t length = end - begin;
     el->replace_substring(offset, length, std::move(new_token));
 }
 

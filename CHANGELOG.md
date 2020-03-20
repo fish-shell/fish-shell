@@ -35,6 +35,7 @@
 ### For distributors and developers
 - fish source tarballs are now distributed using the XZ compression method (#5460).
 - Allow finishing builds on OS X <10.13.6 (previously builds would fail at the `codesign` step)
+- The pkg-config file now uses pkg-config variables
 
 ---
 

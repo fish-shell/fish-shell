@@ -20,7 +20,7 @@ Description
 
 ``bind`` adds a binding for the specified key sequence to the specified command.
 
-SEQUENCE is the character sequence to bind to. These should be written as :ref:`fish escape sequences <escapes>`. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, :kbd:`Alt` + :kbd:`W` can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example :kbd:`Control` + :kbd:`X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
+SEQUENCE is the character sequence to bind to. These should be written as :ref:`fish escape sequences <escapes>`. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, :kbd:`Alt`\ +\ :kbd:`W` can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example :kbd:`Control`\ +\ :kbd:`X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
 
 The default key binding can be set by specifying a ``SEQUENCE`` of the empty string (that is, ``''`` ). It will be used whenever no other binding matches. For most key bindings, it makes sense to use the ``self-insert`` function (i.e. ``bind '' self-insert``) as the default keybinding. This will insert any keystrokes not specifically bound to into the editor. Non- printable characters are ignored by the editor, so this will not result in control sequences being printable.
 
@@ -193,7 +193,7 @@ Examples
 
     bind \cd 'exit'
 
-Causes ``fish`` to exit when :kbd:`Control` + :kbd:`D` is pressed.
+Causes ``fish`` to exit when :kbd:`Control`\ +\ :kbd:`D` is pressed.
 
 
 
@@ -210,7 +210,7 @@ Performs a history search when the :kbd:`Page Up` key is pressed.
     set -g fish_key_bindings fish_vi_key_bindings
     bind -M insert \cc kill-whole-line force-repaint
 
-Turns on Vi key bindings and rebinds :kbd:`Control` + :kbd:`C` to clear the input line.
+Turns on Vi key bindings and rebinds :kbd:`Control`\ +\ :kbd:`C` to clear the input line.
 
 .. _cmd-bind-escape:
 

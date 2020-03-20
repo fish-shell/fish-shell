@@ -88,6 +88,16 @@ string split "" abc
 # CHECK: b
 # CHECK: c
 
+string split --fields=2 "" abc
+# CHECK: b
+
+string split --fields=2,3 "" abc
+# CHECK: b
+# CHECK: c
+
+string split --fields=2,9 "" abc
+# CHECK: b
+
 seq 3 | string join ...
 # CHECK: 1...2...3
 

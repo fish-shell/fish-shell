@@ -1224,7 +1224,7 @@ Autosuggestions
 
 fish suggests commands as you type, based on `command history <#history-search>`_, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
-To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control` + :kbd:`F`. To accept the first suggested word, press :kbd:`Alt` + :kbd:`→` or :kbd:`Alt` + :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
+To accept the autosuggestion (replacing the command line contents), press :kbd:`→` or :kbd:`Control` + :kbd:`F`. To accept the first suggested word, press :kbd:`Alt` + :kbd:`→` or :kbd:`Alt` + :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
@@ -1299,7 +1299,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control` + :kbd:`P` and :kbd:`Control` + :kbd:`N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history-search>`_ section for more information on history searching.
 
-- :kbd:`Alt` + :kbd:`↑,Up` and :kbd:`Alt` + :kbd:`↓,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history-search>`_ section for more information on history searching.
+- :kbd:`Alt` + :kbd:`↑` and :kbd:`Alt` + :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history-search>`_ section for more information on history searching.
 
 - :kbd:`Control` + :kbd:`C` cancels the entire line.
 
@@ -1475,7 +1475,7 @@ Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
-By pressing :kbd:`Alt` + :kbd:`↑,Up` and :kbd:`Alt` + :kbd:`↓,Down`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
+By pressing :kbd:`Alt` + :kbd:`↑` and :kbd:`Alt` + :kbd:`↓`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
 History searches can be aborted by pressing the escape key.
 
@@ -1492,7 +1492,7 @@ Examples:
 
 To search for previous entries containing the word 'make', type ``make`` in the console and press the up key.
 
-If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt` + :kbd:`↑,Up` to search for previously typed words containing 'm'.
+If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt` + :kbd:`↑` to search for previously typed words containing 'm'.
 
 
 .. _multiline:

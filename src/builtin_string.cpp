@@ -433,28 +433,18 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust share/completions/string.fish when `string` options change
-static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'},
-                                              {L"chars", required_argument, nullptr, 'c'},
-                                              {L"count", required_argument, nullptr, 'n'},
-                                              {L"entire", no_argument, nullptr, 'e'},
-                                              {L"filter", no_argument, nullptr, 'f'},
-                                              {L"ignore-case", no_argument, nullptr, 'i'},
-                                              {L"index", no_argument, nullptr, 'n'},
-                                              {L"invert", no_argument, nullptr, 'v'},
-                                              {L"left", no_argument, nullptr, 'l'},
-                                              {L"length", required_argument, nullptr, 'l'},
-                                              {L"max", required_argument, nullptr, 'm'},
-                                              {L"no-empty", no_argument, nullptr, 'n'},
-                                              {L"no-newline", no_argument, nullptr, 'N'},
-                                              {L"no-quoted", no_argument, nullptr, 'n'},
-                                              {L"quiet", no_argument, nullptr, 'q'},
-                                              {L"regex", no_argument, nullptr, 'r'},
-                                              {L"right", no_argument, nullptr, 'r'},
-                                              {L"start", required_argument, nullptr, 's'},
-                                              {L"style", required_argument, nullptr, 1},
-                                              {L"no-trim-newlines", no_argument, nullptr, 'N'},
-                                              {L"fields", required_argument, nullptr, 'f'},
-                                              {nullptr, 0, nullptr, 0}};
+static const struct woption long_options[] = {
+    {L"all", no_argument, nullptr, 'a'},          {L"chars", required_argument, nullptr, 'c'},
+    {L"count", required_argument, nullptr, 'n'},  {L"entire", no_argument, nullptr, 'e'},
+    {L"filter", no_argument, nullptr, 'f'},       {L"ignore-case", no_argument, nullptr, 'i'},
+    {L"index", no_argument, nullptr, 'n'},        {L"invert", no_argument, nullptr, 'v'},
+    {L"left", no_argument, nullptr, 'l'},         {L"length", required_argument, nullptr, 'l'},
+    {L"max", required_argument, nullptr, 'm'},    {L"no-empty", no_argument, nullptr, 'n'},
+    {L"no-newline", no_argument, nullptr, 'N'},   {L"no-quoted", no_argument, nullptr, 'n'},
+    {L"quiet", no_argument, nullptr, 'q'},        {L"regex", no_argument, nullptr, 'r'},
+    {L"right", no_argument, nullptr, 'r'},        {L"start", required_argument, nullptr, 's'},
+    {L"style", required_argument, nullptr, 1},    {L"no-trim-newlines", no_argument, nullptr, 'N'},
+    {L"fields", required_argument, nullptr, 'f'}, {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},

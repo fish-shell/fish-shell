@@ -1313,21 +1313,21 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Control` + :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control` + :kbd:`V` inserts the clipboard contents.
 
-- :kbd:`Alt` + :kbd:`d` moves the next word to the `killring <#killring>`__.
+- :kbd:`Alt` + :kbd:`D` moves the next word to the `killring <#killring>`__.
 
-- :kbd:`Alt` + :kbd:`h` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
+- :kbd:`Alt` + :kbd:`H` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
 
-- :kbd:`Alt` + :kbd:`l` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
+- :kbd:`Alt` + :kbd:`L` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
-- :kbd:`Alt` + :kbd:`p` adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
+- :kbd:`Alt` + :kbd:`P` adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
-- :kbd:`Alt` + :kbd:`w` prints a short description of the command under the cursor.
+- :kbd:`Alt` + :kbd:`W` prints a short description of the command under the cursor.
 
-- :kbd:`Alt` + :kbd:`e` edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
+- :kbd:`Alt` + :kbd:`E` edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
-- :kbd:`Alt` + :kbd:`v` Same as :kbd:`Alt` + :kbd:`e`.
+- :kbd:`Alt` + :kbd:`V` Same as :kbd:`Alt` + :kbd:`E`.
 
-- :kbd:`Alt` + :kbd:`s` Prepends `sudo` to the current commandline.
+- :kbd:`Alt` + :kbd:`S` Prepends `sudo` to the current commandline.
 
 .. _emacs-mode:
 
@@ -1346,13 +1346,13 @@ Emacs mode commands
 
 - :kbd:`Control` + :kbd:`K` moves contents from the cursor to the end of line to the `killring <#killring>`__.
 
-- :kbd:`Alt` + :kbd:`c` capitalizes the current word.
+- :kbd:`Alt` + :kbd:`C` capitalizes the current word.
 
-- :kbd:`Alt` + :kbd:`u` makes the current word uppercase.
+- :kbd:`Alt` + :kbd:`U` makes the current word uppercase.
 
-- :kbd:`Control` + :kbd:`t` transposes the last two characters
+- :kbd:`Control` + :kbd:`T` transposes the last two characters
 
-- :kbd:`Alt` + :kbd:`t` transposes the last two words
+- :kbd:`Alt` + :kbd:`T` transposes the last two words
 
 - :kbd:`Control` + :kbd:`_` (:kbd:`Control` + :kbd:`/` on some terminals) undoes the most recent edit of the line
 
@@ -1408,27 +1408,27 @@ Command mode
 
 Command mode is also known as normal mode.
 
-- :kbd:`h` moves the cursor left.
+- :kbd:`H` moves the cursor left.
 
-- :kbd:`l` moves the cursor right.
+- :kbd:`L` moves the cursor right.
 
-- :kbd:`i` enters `insert mode <#vi-mode-insert>`_ at the current cursor position.
+- :kbd:`I` enters `insert mode <#vi-mode-insert>`_ at the current cursor position.
 
-- :kbd:`v` enters `visual mode <#vi-mode-visual>`_ at the current cursor position.
+- :kbd:`V` enters `visual mode <#vi-mode-visual>`_ at the current cursor position.
 
-- :kbd:`a` enters `insert mode <#vi-mode-insert>`_ after the current cursor position.
+- :kbd:`A` enters `insert mode <#vi-mode-insert>`_ after the current cursor position.
 
-- :kbd:`Shift,A` enters `insert mode <#vi-mode-insert>`_ at the end of the line.
+- :kbd:`Shift` + :kbd:`A` enters `insert mode <#vi-mode-insert>`_ at the end of the line.
 
 - :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
-- :kbd:`d`:kbd:`d` deletes the current line and moves it to the `killring <#killring>`__.
+- :kbd:`D` + :kbd:`D` deletes the current line and moves it to the `killring <#killring>`__.
 
-- :kbd:`Shift,D` deletes text after the current cursor position and moves it to the `killring <#killring>`__.
+- :kbd:`Shift` + :kbd:`D` deletes text after the current cursor position and moves it to the `killring <#killring>`__.
 
-- :kbd:`p` pastes text from the `killring <#killring>`__.
+- :kbd:`P` pastes text from the `killring <#killring>`__.
 
-- :kbd:`u` search history backwards.
+- :kbd:`U` search history backwards.
 
 - :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the `history <#history-search>`_ section for more information on history searching.
 
@@ -1450,9 +1450,9 @@ Visual mode
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) extend the selection backward/forward by one character.
 
-- :kbd:`b` and :kbd:`w` extend the selection backward/forward by one word.
+- :kbd:`B` and :kbd:`W` extend the selection backward/forward by one word.
 
-- :kbd:`d` and :kbd:`x` move the selection to the `killring <#killring>`__ and enter `command mode <#vi-mode-command>`__.
+- :kbd:`D` and :kbd:`X` move the selection to the `killring <#killring>`__ and enter `command mode <#vi-mode-command>`__.
 
 - :kbd:`Escape` and :kbd:`Control` + :kbd:`C` enter `command mode <#vi-mode-command>`_.
 
@@ -1519,7 +1519,7 @@ Normally when ``fish`` starts a program, this program will be put in the foregro
 
 - By ending a command with the ``&`` (ampersand) symbol, the user tells ``fish`` to put the specified command into the background. A background process will be run simultaneous with ``fish``. ``fish`` will retain control of the terminal, so the program will not be able to read from the keyboard.
 
-- By pressing :kbd:`Control` + :kbd:`Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control` + :kbd:`X` :kbd:`z` to stop running.
+- By pressing :kbd:`Control` + :kbd:`Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control` + :kbd:`X` :kbd:`Z` to stop running.
 
 - By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, the user can send any currently running job into the foreground or background.
 

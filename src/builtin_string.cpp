@@ -1,5 +1,5 @@
 // Implementation of the string builtin.
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #define PCRE2_CODE_UNIT_WIDTH WCHAR_T_BITS
 #ifdef _WIN32

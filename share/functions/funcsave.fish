@@ -22,6 +22,20 @@ function funcsave --description "Save the current definition of all specified fu
     for funcname in $argv
         if functions -q -- $funcname
             functions -- $funcname >$__fish_config_dir/functions/$funcname.fish
+            # https://github.com/fish-shell/fish-shell/issues/6113
+            # Use the newly saved file as the source of the function, allowing
+            # a subsequent `funced` to modify the correct version of the file.
+            #
+            # Ideally this would be done in fish core and would simply update the
+            # function <-> file mapping, but as funcsave/funced are fish scripts,
+            # this is close enough. It's guaranteed to be free of side effects
+            # because `functions $funcname` returns only a function declaration
+            # without any initialization code, etc. you may find in a fish script.
+            functions -e $funcname
+            # `functions -e` is not enough on its own since it prevents future
+            # autoloading of a function by the same name, even from a different
+            # location. Possibly something to improve in the future?
+            source $__fish_config_dir/functions/$funcname.fish
         else
             printf (_ "%s: Unknown function '%s'\n") funcsave $funcname
             set retval 1

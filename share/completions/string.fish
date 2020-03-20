@@ -12,6 +12,7 @@ complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains --
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a split
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a split0
 complete -x -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr split0\?\$ -- (commandline -opc)[2]' -s m -l max -a "(seq 1 10)" -d "Specify maximum number of splits"
+complete -x -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr split0\?\$ -- (commandline -opc)[2]' -s f -l fields -a "(seq 1 10)" -d "Specify fields"
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr split0\?\$ -- (commandline -opc)[2]' -s r -l right -d "Split right-to-left"
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr split0\?\$ -- (commandline -opc)[2]' -s n -l no-empty -d "Empty results excluded"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a collect

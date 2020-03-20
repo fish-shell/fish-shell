@@ -154,6 +154,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool style_valid = false;
     bool no_empty_valid = false;
     bool no_trim_newlines_valid = false;
+    bool fields_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -174,6 +175,8 @@ typedef struct {  //!OCLINT(too many fields)
     long length = 0;
     long max = 0;
     long start = 0;
+
+    std::vector<int> fields;
 
     const wchar_t *chars_to_trim = L" \f\n\r\t";
     const wchar_t *arg1 = nullptr;
@@ -254,6 +257,19 @@ static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams
                          const wgetopter_t &w, options_t *opts) {
     if (opts->filter_valid) {
         opts->filter = true;
+        return STATUS_CMD_OK;
+    } else if (opts->fields_valid) {
+        for (const wcstring &s : split_string(w.woptarg, L',')) {
+            int field = fish_wcstoi(wcsdup(s.c_str()));
+            if (field <= 0 || field == INT_MIN || errno == ERANGE) {
+                string_error(streams, _(L"%ls: Invalid fields value '%ls'\n"), argv[0], w.woptarg);
+                return STATUS_INVALID_ARGS;
+            } else if (errno) {
+                string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+                return STATUS_INVALID_ARGS;
+            }
+            opts->fields.push_back(field);
+        }
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -410,6 +426,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->start_valid) short_opts.append(L"s:");
     if (opts->no_empty_valid) short_opts.append(L"n");
     if (opts->no_trim_newlines_valid) short_opts.append(L"N");
+    if (opts->fields_valid) short_opts.append(L"f:");
     return short_opts;
 }
 
@@ -436,6 +453,7 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"start", required_argument, nullptr, 's'},
                                               {L"style", required_argument, nullptr, 1},
                                               {L"no-trim-newlines", no_argument, nullptr, 'N'},
+                                              {L"fields", required_argument, nullptr, 'f'},
                                               {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
@@ -1069,6 +1087,7 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
     opts.max_valid = true;
     opts.max = LONG_MAX;
     opts.no_empty_valid = true;
+    opts.fields_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, is_split0 ? 0 : 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -1107,8 +1126,17 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
             if (splits.back().empty()) splits.pop_back();
         }
         auto &buff = streams.out.buffer();
-        for (const wcstring &split : splits) {
-            buff.append(split, separation_type_t::explicitly);
+        if (opts.fields.size() > 0) {
+            for (const auto &field : opts.fields) {
+                // field indexing starts from 1
+                if (field - 1 < (long)split_count) {
+                    buff.append(splits.at(field - 1), separation_type_t::explicitly);
+                }
+            }
+        } else {
+            for (const wcstring &split : splits) {
+                buff.append(split, separation_type_t::explicitly);
+            }
         }
     }
 

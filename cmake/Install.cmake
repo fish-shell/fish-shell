@@ -24,16 +24,20 @@ set(configure_input
 "This file was generated from a corresponding .in file.\
  DO NOT MANUALLY EDIT THIS FILE!")
 
+set(rel_completionsdir "fish/vendor_completions.d")
+set(rel_functionsdir "fish/vendor_functions.d")
+set(rel_confdir "fish/vendor_conf.d")
+
 set(extra_completionsdir
-    /usr/local/share/fish/vendor_completions.d
+    "/usr/local/share/${rel_completionsdir}"
     CACHE STRING "Path for extra completions")
 
 set(extra_functionsdir
-    /usr/local/share/fish/vendor_functions.d
+    "/usr/local/share/${rel_functionsdir}"
     CACHE STRING "Path for extra functions")
 
 set(extra_confdir
-    /usr/local/share/fish/vendor_conf.d
+    "/usr/local/share/${rel_confdir}"
     CACHE STRING "Path for extra configuration")
 
 # These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.
@@ -99,7 +103,7 @@ fish_create_dirs(${rel_datadir}/fish/vendor_completions.d ${rel_datadir}/fish/ve
     ${rel_datadir}/fish/vendor_conf.d)
 
 fish_try_create_dirs(${rel_datadir}/pkgconfig)
-configure_file(fish.pc.in fish.pc.noversion)
+configure_file(fish.pc.in fish.pc.noversion @ONLY)
 
 add_custom_command(OUTPUT fish.pc
     COMMAND sed '/Version/d' fish.pc.noversion > fish.pc

@@ -568,6 +568,10 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wc
 static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv,
                               bool is_join0) {
     options_t opts;
+    if (!is_join0) {
+        opts.left_valid = true;
+        opts.right_valid = true;
+    }
     opts.quiet_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, is_join0 ? 0 : 1, argc, argv, parser, streams);
@@ -578,12 +582,15 @@ static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc,
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         if (!opts.quiet) {
-            if (nargs > 0) {
+            if (nargs > 0 || (!is_join0 && opts.left)) {
                 streams.out.append(sep);
             }
             streams.out.append(*arg);
         }
         nargs++;
+    }
+    if (!is_join0 && opts.right) {
+        streams.out.append(sep);
     }
     if (nargs > 0 && !opts.quiet) {
         streams.out.push_back(is_join0 ? L'\0' : L'\n');

@@ -19,6 +19,8 @@ complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a collect
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr collect\$ -- (commandline -opc)[2]' -s N -l no-trim-newlines -d "Don't trim trailing newlines"
 
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a join
+complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] join" -s l -l left -d "Add prefix to each element"
+complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] join" -s r -l right -d "Add suffix to each element"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a join0
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a trim
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] trim" -s l -l left -d "Trim only leading chars"

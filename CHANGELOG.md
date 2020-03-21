@@ -7,6 +7,7 @@
 
 ### Scripting improvements
 - Range limits in index range expansions like `$x[$start..$end]` may be omitted: `$start` and `$end` default to 1 and -1 (the last item) respectively.
+- `fish_indent` now accepts an `-i`/`--indent` parameter to specify custom levels of indentation. As a result, the short flag for `--no-indent` has been renamed from `-i` to the more fitting `-I`.
 
 ### Interactive improvements
 

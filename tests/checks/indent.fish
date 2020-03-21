@@ -180,7 +180,7 @@ switch beta
        echo delta
 end
 end
-' | $fish_indent -i
+' | $fish_indent -I
 #CHECK: if true
 #CHECK: else if false
 #CHECK: {{^}}echo alpha

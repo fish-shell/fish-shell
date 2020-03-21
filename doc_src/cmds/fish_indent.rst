@@ -20,7 +20,9 @@ The following options are available:
 
 - ``-w`` or ``--write`` indents a specified file and immediately writes to that file.
 
-- ``-i`` or ``--no-indent`` do not indent commands; only reformat to one job per line.
+- ``-i`` or ``--indent`` number of spaces per indentation level (default: 4).
+
+- ``-I`` or ``--no-indent`` do not indent commands; only reformat to one job per line.
 
 - ``-v`` or ``--version`` displays the current fish version and then exits.
 

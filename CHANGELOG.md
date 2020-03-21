@@ -24,6 +24,7 @@
   - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
   - `dhclient`
   - `tcpdump`
+  - `fd`, `windscribe`
 
 ### Deprecations and removed features
 

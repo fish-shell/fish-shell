@@ -212,8 +212,8 @@ Some characters can not be written directly on the command line. For these chara
 - ``\}`` escapes the right curly bracket character
 - ``\[`` escapes the left bracket character
 - ``\]`` escapes the right bracket character
-- ``\\<`` escapes the less than character
-- ``\\>`` escapes the more than character
+- ``\<`` escapes the less than character
+- ``\>`` escapes the more than character
 - ``\^`` escapes the circumflex character
 - ``\&`` escapes the ampersand character
 - ``\|`` escapes the vertical bar character

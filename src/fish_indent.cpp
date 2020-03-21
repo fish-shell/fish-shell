@@ -47,8 +47,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-#define SPACES_PER_INDENT 4
-
 // An indent_t represents an abstract indent depth. 2 means we are in a doubly-nested block, etc.
 using indent_t = unsigned int;
 static bool dump_parse_tree = false;
@@ -91,6 +89,9 @@ struct prettifier_t {
     // Whether to indent, or just insert spaces.
     const bool do_indent;
 
+    // Number of spaces per indentation level.
+    const indent_t spaces_per_indent;
+
     // Whether we are at the beginning of a new line.
     bool has_new_line = true;
 
@@ -103,7 +104,8 @@ struct prettifier_t {
     // Additional indentation due to line continuation (escaped newline)
     uint32_t line_continuation_indent = 0;
 
-    prettifier_t(const wcstring &source, bool do_indent) : source(source), do_indent(do_indent) {}
+    prettifier_t(const wcstring &source, bool do_indent, indent_t spaces_per_indent)
+        : source(source), do_indent(do_indent), spaces_per_indent(spaces_per_indent) {}
 
     void prettify_node(const parse_node_tree_t &tree, node_offset_t node_idx, indent_t node_indent,
                        parse_token_type_t parent_type);
@@ -131,7 +133,7 @@ struct prettifier_t {
         if (!has_new_line) {
             output.push_back(L' ');
         } else if (do_indent) {
-            output.append((node_indent + line_continuation_indent) * SPACES_PER_INDENT, L' ');
+            output.append((node_indent + line_continuation_indent) * spaces_per_indent, L' ');
         }
     }
 };
@@ -389,7 +391,7 @@ static std::string make_pygments_csv(const wcstring &src) {
 }
 
 // Entry point for prettification.
-static wcstring prettify(const wcstring &src, bool do_indent) {
+static wcstring prettify(const wcstring &src, bool do_indent, indent_t spaces_per_indent) {
     parse_node_tree_t parse_tree;
     int parse_flags = (parse_flag_continue_after_error | parse_flag_include_comments |
                        parse_flag_leave_unterminated | parse_flag_show_blank_lines);
@@ -404,7 +406,7 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
 
     // We may have a forest of disconnected trees on a parse failure. We have to handle all nodes
     // that have no parent, and all parse errors.
-    prettifier_t prettifier{src, do_indent};
+    prettifier_t prettifier{src, do_indent, spaces_per_indent};
     for (node_offset_t i = 0; i < parse_tree.size(); i++) {
         const parse_node_t &node = parse_tree.at(i);
         if (node.parent == NODE_OFFSET_INVALID || node.type == parse_special_type_parse_error) {
@@ -546,12 +548,14 @@ int main(int argc, char *argv[]) {
     } output_type = output_type_plain_text;
     const char *output_location = "";
     bool do_indent = true;
+    indent_t spaces_per_indent = 4;
 
-    const char *short_opts = "+d:hvwiD:";
+    const char *short_opts = "+di:hvwID:";
     const struct option long_opts[] = {{"debug-level", required_argument, nullptr, 'd'},
                                        {"debug-stack-frames", required_argument, nullptr, 'D'},
                                        {"dump-parse-tree", no_argument, nullptr, 'P'},
-                                       {"no-indent", no_argument, nullptr, 'i'},
+                                       {"indent", required_argument, nullptr, 'i'},
+                                       {"no-indent", no_argument, nullptr, 'I'},
                                        {"help", no_argument, nullptr, 'h'},
                                        {"version", no_argument, nullptr, 'v'},
                                        {"write", no_argument, nullptr, 'w'},
@@ -582,6 +586,21 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'i': {
+                char *end;
+                long tmp;
+
+                errno = 0;
+                tmp = strtol(optarg, &end, 10);
+
+                if (tmp >= 0 && !*end && !errno) {
+                    spaces_per_indent = static_cast<indent_t>(tmp);
+                } else {
+                    std::fwprintf(stderr, _(L"Invalid value '%s' for indent flag"), optarg);
+                    exit(1);
+                }
+                break;
+            }
+            case 'I': {
                 do_indent = false;
                 break;
             }
@@ -668,7 +687,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        const wcstring output_wtext = prettify(src, do_indent);
+        const wcstring output_wtext = prettify(src, do_indent, spaces_per_indent);
 
         // Maybe colorize.
         std::vector<highlight_spec_t> colors;

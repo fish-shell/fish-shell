@@ -91,12 +91,21 @@ string split "" abc
 string split --fields=2 "" abc
 # CHECK: b
 
-string split --fields=2,3 "" abc
-# CHECK: b
+string split --fields=3,2 "" abc
 # CHECK: c
+# CHECK: b
 
 string split --fields=2,9 "" abc
 # CHECK: b
+
+string split --fields=1-3,5,9-7 "" 123456789
+# CHECK: 1
+# CHECK: 2
+# CHECK: 3
+# CHECK: 5
+# CHECK: 9
+# CHECK: 8
+# CHECK: 7
 
 seq 3 | string join ...
 # CHECK: 1...2...3

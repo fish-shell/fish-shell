@@ -19,7 +19,7 @@ Jobs in the list of jobs are sent a hang-up signal when fish terminates, which u
 
 If no process is specified, the most recently-used job is removed (like :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>`).  If one or more PIDs are specified, jobs with the specified process IDs are removed from the job list. Invalid jobs are ignored and a warning is printed.
 
-If a job is stopped, it is sent a signal to continue running, and a warning is printed. It is not possible to use the ``bg`` builtin to continue a job once it has been disowned.
+If a job is stopped, it is sent a signal to continue running, and a warning is printed. It is not possible to use the :ref:`bg <cmd-bg>` builtin to continue a job once it has been disowned.
 
 ``disown`` returns 0 if all specified jobs were disowned successfully, and 1 if any problems were encountered.
 

@@ -115,7 +115,7 @@ Example::
 
    echo hello world
 
-This calls the ``echo`` command. ``echo`` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same basic syntax.
+This calls the :ref:`echo <cmd-echo>` command. ``echo`` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same basic syntax.
 
 If you want to find out more about the echo command used above, read the manual page for the echo command by writing: ``man echo``
 
@@ -394,7 +394,7 @@ It is very important that function definition files only contain the definition 
 
 Autoloading also won't work for `event handlers <#event>`_, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the `event handlers <#event>`_ section for more information.
 
-Autoloading is not applicable to functions created by the ``alias`` command. For functions simple enough that you prefer to use the ``alias`` command to define them you'll need to put those commands in your ``~/.config/fish/config.fish`` script or some other script run when the shell starts.
+Autoloading is not applicable to functions created by the :ref:`alias <cmd-alias>` command. For functions simple enough that you prefer to use the ``alias`` command to define them you'll need to put those commands in your ``~/.config/fish/config.fish`` script or some other script run when the shell starts.
 
 If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
@@ -418,7 +418,7 @@ Conditional execution of code and flow control
 
 There are four fish builtins that let you execute commands only if a specific criterion is met. These builtins are :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>`, :ref:`and <cmd-and>` and :ref:`or <cmd-or>`.
 
-The ``switch`` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
+The :ref:`switch <cmd-switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
 
 The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See their documentation for more information.
 
@@ -490,11 +490,11 @@ The output of a series of commands can be used as the parameters to another comm
 
 If the output is piped to :ref:`string split or string split0 <cmd-string-split>` as the last step, those splits are used as they appear and no additional splitting on newlines takes place.
 
-The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution occurs in the context of a ``set`` command.
+The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution occurs in the context of a :ref:`set <cmd-set>` command.
 
 Only part of the output can be used, see `index range expansion <#expand-index-range>`_ for details.
 
-Fish has a default limit of 100 MiB on the amount of data a command substitution can output. If the limit is exceeded the entire command, not just the substitution, is failed and ``$status`` is set to 122. You can modify the limit by setting the ``fish_read_limit`` variable at any time including in the environment before fish starts running. If you set it to zero then no limit is imposed. This is a safety mechanism to keep the shell from consuming too much memory if a command outputs an unreasonable amount of data, typically your operating system also has a limit, and it's often much lower. Note that this limit also affects how much data the ``read`` command will process.
+Fish has a default limit of 100 MiB on the amount of data a command substitution can output. If the limit is exceeded the entire command, not just the substitution, is failed and ``$status`` is set to 122. You can modify the limit by setting the ``fish_read_limit`` variable at any time including in the environment before fish starts running. If you set it to zero then no limit is imposed. This is a safety mechanism to keep the shell from consuming too much memory if a command outputs an unreasonable amount of data, typically your operating system also has a limit, and it's often much lower. Note that this limit also affects how much data the :ref:`read <cmd-read>` command will process.
 
 Examples::
 
@@ -1011,7 +1011,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``PATH``, a list of directories in which to search for commands
 
-- ``CDPATH``, a list of directories in which to search for the new directory for the ``cd`` builtin.
+- ``CDPATH``, a list of directories in which to search for the new directory for the :ref:`cd <cmd-cd>` builtin.
 
 - ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
 
@@ -1217,7 +1217,7 @@ Help
 
 ``fish`` also has man pages for its commands. For example, ``man set`` will show the documentation for ``set`` as a man page.
 
-Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the ``fg`` builtin, either type ``fg -h`` or ``help fg``.
+Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the :ref:`fg <cmd-fg>` builtin, either type ``fg -h`` or ``help fg``.
 
 Autosuggestions
 ---------------
@@ -1504,7 +1504,7 @@ Multiline editing
 
 The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
 
-- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding ``end`` command.
+- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :ref:`end <cmd-end>` command.
 
 - Pressing :kbd:`Alt`\ +\ :kbd:`Enter` instead of pressing the :kbd:`Enter` key.
 
@@ -1525,7 +1525,7 @@ Normally when ``fish`` starts a program, this program will be put in the foregro
 
 - By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, the user can send any currently running job into the foreground or background.
 
-Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the ``bg`` command will not execute correctly.
+Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
 
 
 .. _initialization:

@@ -511,7 +511,7 @@ Note that ``case`` does not fall through, and can accept multiple arguments or (
 Functions
 ---------
 
-A ``fish`` function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the ``function`` builtin::
+A ``fish`` function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the :ref:`function <cmd-function>` builtin::
 
     > function say_hello
          echo Hello $argv

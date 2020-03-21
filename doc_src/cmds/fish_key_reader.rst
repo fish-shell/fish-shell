@@ -15,7 +15,7 @@ Description
 
 ``fish_key_reader`` is used to study input received from the terminal and can help with key binds. The program is interactive and works on standard input. Individual characters themselves and their hexadecimal values are displayed.
 
-The tool will write an example ``bind`` command matching the character sequence captured to stdout. If the character sequence matches a special key name (see ``bind --key-names``),  both ``bind CHARS ...`` and ``bind -k KEYNAME ...`` usage will be shown. Additional details about the characters received, such as the delay between chars, are written to stderr.
+The tool will write an example :ref:`bind <cmd-bind>` command matching the character sequence captured to stdout. If the character sequence matches a special key name (see ``bind --key-names``),  both ``bind CHARS ...`` and ``bind -k KEYNAME ...`` usage will be shown. Additional details about the characters received, such as the delay between chars, are written to stderr.
 
 The following options are available:
 

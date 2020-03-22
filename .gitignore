@@ -67,6 +67,7 @@ messages.pot
 /toc.txt
 /version
 fish-build-version-witness.txt
+__pycache__
 
 # File names that can appear below the project root that represent artifacts
 # from building and testing.

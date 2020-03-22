@@ -151,6 +151,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool regex_valid = false;
     bool right_valid = false;
     bool start_valid = false;
+    bool end_valid = false;
     bool style_valid = false;
     bool no_empty_valid = false;
     bool no_trim_newlines_valid = false;
@@ -175,6 +176,7 @@ typedef struct {  //!OCLINT(too many fields)
     long length = 0;
     long max = 0;
     long start = 0;
+    long end = 0;
 
     std::vector<int> fields;
 
@@ -245,7 +247,17 @@ static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams
 
 static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
-    if (opts->entire_valid) {
+    if (opts->end_valid) {
+        opts->end = fish_wcstol(w.woptarg);
+        if (opts->end == 0 || opts->end == LONG_MIN || errno == ERANGE) {
+            string_error(streams, _(L"%ls: Invalid end value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    } else if (opts->entire_valid) {
         opts->entire = true;
         return STATUS_CMD_OK;
     }
@@ -456,6 +468,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->regex_valid) short_opts.append(L"r");
     if (opts->right_valid) short_opts.append(L"r");
     if (opts->start_valid) short_opts.append(L"s:");
+    if (opts->end_valid) short_opts.append(L"e:");
     if (opts->no_empty_valid) short_opts.append(L"n");
     if (opts->no_trim_newlines_valid) short_opts.append(L"N");
     if (opts->fields_valid) short_opts.append(L"f:");
@@ -465,6 +478,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust share/completions/string.fish when `string` options change
+
 static const struct woption long_options[] = {
     {L"all", no_argument, nullptr, 'a'},          {L"chars", required_argument, nullptr, 'c'},
     {L"count", required_argument, nullptr, 'n'},  {L"entire", no_argument, nullptr, 'e'},
@@ -476,7 +490,8 @@ static const struct woption long_options[] = {
     {L"quiet", no_argument, nullptr, 'q'},        {L"regex", no_argument, nullptr, 'r'},
     {L"right", no_argument, nullptr, 'r'},        {L"start", required_argument, nullptr, 's'},
     {L"style", required_argument, nullptr, 1},    {L"no-trim-newlines", no_argument, nullptr, 'N'},
-    {L"fields", required_argument, nullptr, 'f'}, {nullptr, 0, nullptr, 0}};
+    {L"fields", required_argument, nullptr, 'f'}, {L"end", required_argument, nullptr, 'e'},
+    {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
@@ -1251,14 +1266,23 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
+
     options_t opts;
     opts.length_valid = true;
     opts.quiet_valid = true;
     opts.start_valid = true;
+    opts.end_valid = true;
     opts.length = -1;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
+
+    if (opts.length != -1 && opts.end != 0) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--end and --length are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
 
     int nsub = 0;
     arg_iterator_t aiter(argv, optind, streams);
@@ -1266,6 +1290,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         using size_type = wcstring::size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
+
         if (opts.start > 0) {
             pos = static_cast<size_type>(opts.start - 1);
         } else if (opts.start < 0) {
@@ -1273,12 +1298,23 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
             size_type n = static_cast<size_type>(-opts.start);
             pos = n > s->length() ? 0 : s->length() - n;
         }
+
         if (pos > s->length()) {
             pos = s->length();
         }
 
         if (opts.length >= 0) {
             count = static_cast<size_type>(opts.length);
+        } else if (opts.end != 0) {
+            size_type n;
+            if (opts.end > 0) {
+                n = static_cast<size_type>(opts.end);
+            } else {
+                assert(opts.end != LONG_MIN);  // checked above
+                n = static_cast<size_type>(-opts.end);
+                n = n > s->length() ? 0 : s->length() - n;
+            }
+            count = n < pos ? 0 : n - pos;
         }
 
         // Note that std::string permits count to extend past end of string.

@@ -27,4 +27,4 @@ Note that most builtin commands display their help in the terminal when given th
 Example
 -------
 
-``help fg`` shows the documentation for the ``fg`` builtin.
+``help fg`` shows the documentation for the :ref:`fg <cmd-fg>` builtin.

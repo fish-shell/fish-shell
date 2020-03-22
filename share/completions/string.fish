@@ -8,6 +8,7 @@ complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a upper
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a length
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a sub
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sub" -s s -l start -xa "(seq 1 10)"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sub" -s e -l end -xa "(seq 1 10)"
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sub" -s l -l length -xa "(seq 1 10)"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a split
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a split0

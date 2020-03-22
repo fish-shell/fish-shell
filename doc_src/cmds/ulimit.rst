@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-``ulimit`` builtin sets or outputs the resource usage limits of the shell and any processes spawned by it. If a new limit value is omitted, the current value of the limit of the resource is printed; otherwise, the specified limit is set to the new value.
+``ulimit`` sets or outputs the resource usage limits of the shell and any processes spawned by it. If a new limit value is omitted, the current value of the limit of the resource is printed; otherwise, the specified limit is set to the new value.
 
 Use one of the following switches to specify which resource limit to set or report:
 

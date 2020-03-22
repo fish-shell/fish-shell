@@ -115,7 +115,7 @@ Example::
 
    echo hello world
 
-This calls the ``echo`` command. ``echo`` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same basic syntax.
+This calls the :ref:`echo <cmd-echo>` command. ``echo`` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same basic syntax.
 
 If you want to find out more about the echo command used above, read the manual page for the echo command by writing: ``man echo``
 
@@ -323,7 +323,7 @@ will start the emacs text editor in the background.
 Job control
 -----------
 
-Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing :kbd:`Control` + :kbd:`Z` (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :ref:`fg <cmd-fg>` (foreground) command.
+Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :ref:`fg <cmd-fg>` (foreground) command.
 
 If you instead want to put a suspended job into the background, use the :ref:`bg <cmd-bg>` command.
 
@@ -394,7 +394,7 @@ It is very important that function definition files only contain the definition 
 
 Autoloading also won't work for `event handlers <#event>`_, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the `event handlers <#event>`_ section for more information.
 
-Autoloading is not applicable to functions created by the ``alias`` command. For functions simple enough that you prefer to use the ``alias`` command to define them you'll need to put those commands in your ``~/.config/fish/config.fish`` script or some other script run when the shell starts.
+Autoloading is not applicable to functions created by the :ref:`alias <cmd-alias>` command. For functions simple enough that you prefer to use the ``alias`` command to define them you'll need to put those commands in your ``~/.config/fish/config.fish`` script or some other script run when the shell starts.
 
 If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
@@ -418,7 +418,7 @@ Conditional execution of code and flow control
 
 There are four fish builtins that let you execute commands only if a specific criterion is met. These builtins are :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>`, :ref:`and <cmd-and>` and :ref:`or <cmd-or>`.
 
-The ``switch`` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
+The :ref:`switch <cmd-switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
 
 The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See their documentation for more information.
 
@@ -490,11 +490,11 @@ The output of a series of commands can be used as the parameters to another comm
 
 If the output is piped to :ref:`string split or string split0 <cmd-string-split>` as the last step, those splits are used as they appear and no additional splitting on newlines takes place.
 
-The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution occurs in the context of a ``set`` command.
+The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution occurs in the context of a :ref:`set <cmd-set>` command.
 
 Only part of the output can be used, see `index range expansion <#expand-index-range>`_ for details.
 
-Fish has a default limit of 100 MiB on the amount of data a command substitution can output. If the limit is exceeded the entire command, not just the substitution, is failed and ``$status`` is set to 122. You can modify the limit by setting the ``fish_read_limit`` variable at any time including in the environment before fish starts running. If you set it to zero then no limit is imposed. This is a safety mechanism to keep the shell from consuming too much memory if a command outputs an unreasonable amount of data, typically your operating system also has a limit, and it's often much lower. Note that this limit also affects how much data the ``read`` command will process.
+Fish has a default limit of 100 MiB on the amount of data a command substitution can output. If the limit is exceeded the entire command, not just the substitution, is failed and ``$status`` is set to 122. You can modify the limit by setting the ``fish_read_limit`` variable at any time including in the environment before fish starts running. If you set it to zero then no limit is imposed. This is a safety mechanism to keep the shell from consuming too much memory if a command outputs an unreasonable amount of data, typically your operating system also has a limit, and it's often much lower. Note that this limit also affects how much data the :ref:`read <cmd-read>` command will process.
 
 Examples::
 
@@ -1011,7 +1011,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``PATH``, a list of directories in which to search for commands
 
-- ``CDPATH``, a list of directories in which to search for the new directory for the ``cd`` builtin.
+- ``CDPATH``, a list of directories in which to search for the new directory for the :ref:`cd <cmd-cd>` builtin.
 
 - ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
 
@@ -1217,14 +1217,14 @@ Help
 
 ``fish`` also has man pages for its commands. For example, ``man set`` will show the documentation for ``set`` as a man page.
 
-Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the ``fg`` builtin, either type ``fg -h`` or ``help fg``.
+Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the :ref:`fg <cmd-fg>` builtin, either type ``fg -h`` or ``help fg``.
 
 Autosuggestions
 ---------------
 
 fish suggests commands as you type, based on `command history <#history-search>`_, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
-To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control` + :kbd:`F`. To accept the first suggested word, press :kbd:`Alt` + :kbd:`→` or :kbd:`Alt` + :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
+To accept the autosuggestion (replacing the command line contents), press :kbd:`→` or :kbd:`Control`\ +\ :kbd:`F`. To accept the first suggested word, press :kbd:`Alt`\ +\ :kbd:`→` or :kbd:`Alt`\ +\ :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
@@ -1287,76 +1287,78 @@ Shared bindings
 
 Some bindings are shared between emacs- and vi-mode because they aren't text editing bindings or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
-- :kbd:`Tab` `completes <#tab-completion>`_ the current token. :kbd:`Shift` + :kbd:`Tab` completes the current token and starts the pager's search mode.
+- :kbd:`Tab` `completes <#tab-completion>`_ the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode.
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, they accept one word of the autosuggestion.
 
-- :kbd:`Alt` + :kbd:`←` and :kbd:`Alt` + :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt` + :kbd:`→` (or :kbd:`Alt` + :kbd:`F`) accepts the first word in the suggestion.
+- :kbd:`Alt`\ +\ :kbd:`←` and :kbd:`Alt`\ +\ :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt`\ +\ :kbd:`→` (or :kbd:`Alt`\ +\ :kbd:`F`) accepts the first word in the suggestion.
 
-- :kbd:`Control` + :kbd:`←` and :kbd:`Control` + :kbd:`→` move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
+- :kbd:`Control`\ +\ :kbd:`←` and :kbd:`Control`\ +\ :kbd:`→` move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
 
-- :kbd:`Shift` + :kbd:`←` and :kbd:`Shift` + :kbd:`→` move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
+- :kbd:`Shift`\ +\ :kbd:`←` and :kbd:`Shift`\ +\ :kbd:`→` move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
 
-- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control` + :kbd:`P` and :kbd:`Control` + :kbd:`N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history-search>`_ section for more information on history searching.
+- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control`\ +\ :kbd:`P` and :kbd:`Control`\ +\ :kbd:`N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history-search>`_ section for more information on history searching.
 
-- :kbd:`Alt` + :kbd:`↑,Up` and :kbd:`Alt` + :kbd:`↓,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history-search>`_ section for more information on history searching.
+- :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history-search>`_ section for more information on history searching.
 
-- :kbd:`Control` + :kbd:`C` cancels the entire line.
+- :kbd:`Control`\ +\ :kbd:`C` cancels the entire line.
 
-- :kbd:`Control` + :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control` + :kbd:`D` will exit fish.
+- :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
 
-- :kbd:`Control` + :kbd:`U` moves contents from the beginning of line to the cursor to the `killring <#killring>`__.
+- :kbd:`Control`\ +\ :kbd:`U` moves contents from the beginning of line to the cursor to the `killring <#killring>`__.
 
-- :kbd:`Control` + :kbd:`L` clears and repaints the screen.
+- :kbd:`Control`\ +\ :kbd:`L` clears and repaints the screen.
 
-- :kbd:`Control` + :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the `killring <#killring>`__.
+- :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the `killring <#killring>`__.
 
-- :kbd:`Control` + :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control` + :kbd:`V` inserts the clipboard contents.
+- :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents.
 
-- :kbd:`Alt` + :kbd:`d` moves the next word to the `killring <#killring>`__.
+- :kbd:`Alt`\ +\ :kbd:`D` moves the next word to the `killring <#killring>`__.
 
-- :kbd:`Alt` + :kbd:`h` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
+- :kbd:`Alt`\ +\ :kbd:`H` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
 
-- :kbd:`Alt` + :kbd:`l` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
+- :kbd:`Alt`\ +\ :kbd:`L` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
-- :kbd:`Alt` + :kbd:`p` adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
+- :kbd:`Alt`\ +\ :kbd:`P` adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
-- :kbd:`Alt` + :kbd:`w` prints a short description of the command under the cursor.
+- :kbd:`Alt`\ +\ :kbd:`W` prints a short description of the command under the cursor.
 
-- :kbd:`Alt` + :kbd:`e` edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
+- :kbd:`Alt`\ +\ :kbd:`E` edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
-- :kbd:`Alt` + :kbd:`v` Same as :kbd:`Alt` + :kbd:`e`.
+- :kbd:`Alt`\ +\ :kbd:`V` Same as :kbd:`Alt`\ +\ :kbd:`E`.
 
-- :kbd:`Alt` + :kbd:`s` Prepends `sudo` to the current commandline.
+- :kbd:`Alt`\ +\ :kbd:`S` Prepends `sudo` to the current commandline.
+
+- :kbd:`Control`\ +\ :kbd:`Space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. (for vi-mode this only applies to insert-mode)
 
 .. _emacs-mode:
 
 Emacs mode commands
 -------------------
 
-- :kbd:`Home` or :kbd:`Control` + :kbd:`A` moves the cursor to the beginning of the line.
+- :kbd:`Home` or :kbd:`Control`\ +\ :kbd:`A` moves the cursor to the beginning of the line.
 
-- :kbd:`End` or :kbd:`Control` + :kbd:`E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control` + :kbd:`E` accepts the autosuggestion.
+- :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` accepts the autosuggestion.
 
-- :kbd:`Control` + :kbd:`B`, :kbd:`Control` + :kbd:`F` move the cursor one character left or right just like the :kbd:`←` (Left) and :kbd:`→` (Right) shared bindings (which are available as well).
+- :kbd:`Control`\ +\ :kbd:`B`, :kbd:`Control`\ +\ :kbd:`F` move the cursor one character left or right just like the :kbd:`←` (Left) and :kbd:`→` (Right) shared bindings (which are available as well).
 
-- :kbd:`Control` + :kbd:`N`, :kbd:`Control` + :kbd:`P` move the cursor up/down or through history, like the up and down arrow shared bindings.
+- :kbd:`Control`\ +\ :kbd:`N`, :kbd:`Control`\ +\ :kbd:`P` move the cursor up/down or through history, like the up and down arrow shared bindings.
 
 - :kbd:`Delete` and :kbd:`Backspace` removes one character forwards or backwards respectively.
 
-- :kbd:`Control` + :kbd:`K` moves contents from the cursor to the end of line to the `killring <#killring>`__.
+- :kbd:`Control`\ +\ :kbd:`K` moves contents from the cursor to the end of line to the `killring <#killring>`__.
 
-- :kbd:`Alt` + :kbd:`c` capitalizes the current word.
+- :kbd:`Alt`\ +\ :kbd:`C` capitalizes the current word.
 
-- :kbd:`Alt` + :kbd:`u` makes the current word uppercase.
+- :kbd:`Alt`\ +\ :kbd:`U` makes the current word uppercase.
 
-- :kbd:`Control` + :kbd:`t` transposes the last two characters
+- :kbd:`Control`\ +\ :kbd:`T` transposes the last two characters
 
-- :kbd:`Alt` + :kbd:`t` transposes the last two words
+- :kbd:`Alt`\ +\ :kbd:`T` transposes the last two words
 
-- :kbd:`Control` + :kbd:`_` (:kbd:`Control` + :kbd:`/` on some terminals) undoes the most recent edit of the line
+- :kbd:`Control`\ +\ :kbd:`_` (:kbd:`Control`\ +\ :kbd:`/` on some terminals) undoes the most recent edit of the line
 
-- :kbd:`Alt` + :kbd:`/` reverts the most recent undo
+- :kbd:`Alt`\ +\ :kbd:`/` reverts the most recent undo
 
 
 You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.
@@ -1408,27 +1410,27 @@ Command mode
 
 Command mode is also known as normal mode.
 
-- :kbd:`h` moves the cursor left.
+- :kbd:`H` moves the cursor left.
 
-- :kbd:`l` moves the cursor right.
+- :kbd:`L` moves the cursor right.
 
-- :kbd:`i` enters `insert mode <#vi-mode-insert>`_ at the current cursor position.
+- :kbd:`I` enters `insert mode <#vi-mode-insert>`_ at the current cursor position.
 
-- :kbd:`v` enters `visual mode <#vi-mode-visual>`_ at the current cursor position.
+- :kbd:`V` enters `visual mode <#vi-mode-visual>`_ at the current cursor position.
 
-- :kbd:`a` enters `insert mode <#vi-mode-insert>`_ after the current cursor position.
+- :kbd:`A` enters `insert mode <#vi-mode-insert>`_ after the current cursor position.
 
-- :kbd:`Shift,A` enters `insert mode <#vi-mode-insert>`_ at the end of the line.
+- :kbd:`Shift`\ +\ :kbd:`A` enters `insert mode <#vi-mode-insert>`_ at the end of the line.
 
 - :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
-- :kbd:`d`:kbd:`d` deletes the current line and moves it to the `killring <#killring>`__.
+- :kbd:`D`\ +\ :kbd:`D` deletes the current line and moves it to the `killring <#killring>`__.
 
-- :kbd:`Shift,D` deletes text after the current cursor position and moves it to the `killring <#killring>`__.
+- :kbd:`Shift`\ +\ :kbd:`D` deletes text after the current cursor position and moves it to the `killring <#killring>`__.
 
-- :kbd:`p` pastes text from the `killring <#killring>`__.
+- :kbd:`P` pastes text from the `killring <#killring>`__.
 
-- :kbd:`u` search history backwards.
+- :kbd:`U` search history backwards.
 
 - :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the `history <#history-search>`_ section for more information on history searching.
 
@@ -1450,20 +1452,20 @@ Visual mode
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) extend the selection backward/forward by one character.
 
-- :kbd:`b` and :kbd:`w` extend the selection backward/forward by one word.
+- :kbd:`B` and :kbd:`W` extend the selection backward/forward by one word.
 
-- :kbd:`d` and :kbd:`x` move the selection to the `killring <#killring>`__ and enter `command mode <#vi-mode-command>`__.
+- :kbd:`D` and :kbd:`X` move the selection to the `killring <#killring>`__ and enter `command mode <#vi-mode-command>`__.
 
-- :kbd:`Escape` and :kbd:`Control` + :kbd:`C` enter `command mode <#vi-mode-command>`_.
+- :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`C` enter `command mode <#vi-mode-command>`_.
 
 .. _killring:
 
 Copy and paste (Kill Ring)
 --------------------------
 
-``fish`` uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control` + :kbd:`K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control` + :kbd:`Y` (the `yank` input function). After pasting, use :kbd:`Alt` + :kbd:`Y` (`yank-pop`) to rotate to the previous kill.
+``fish`` uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control`\ +\ :kbd:`K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control`\ +\ :kbd:`Y` (the `yank` input function). After pasting, use :kbd:`Alt`\ +\ :kbd:`Y` (`yank-pop`) to rotate to the previous kill.
 
-Copy and paste from outside are also supported, both via the :kbd:`Control` + :kbd:`X` / :kbd:`Control` + :kbd:`V` bindings (the `fish_clipboard_copy` and `fish_clipboard_paste` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
+Copy and paste from outside are also supported, both via the :kbd:`Control`\ +\ :kbd:`X` / :kbd:`Control`\ +\ :kbd:`V` bindings (the `fish_clipboard_copy` and `fish_clipboard_paste` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
 In addition, when pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
 
 .. [#] These rely on external tools. Currently xsel, xclip, wl-copy/wl-paste and pbcopy/pbpaste are supported.
@@ -1475,7 +1477,7 @@ Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
-By pressing :kbd:`Alt` + :kbd:`↑,Up` and :kbd:`Alt` + :kbd:`↓,Down`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
+By pressing :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
 History searches can be aborted by pressing the escape key.
 
@@ -1492,7 +1494,7 @@ Examples:
 
 To search for previous entries containing the word 'make', type ``make`` in the console and press the up key.
 
-If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt` + :kbd:`↑,Up` to search for previously typed words containing 'm'.
+If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt`\ +\ :kbd:`↑` to search for previously typed words containing 'm'.
 
 
 .. _multiline:
@@ -1502,9 +1504,9 @@ Multiline editing
 
 The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
 
-- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding ``end`` command.
+- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :ref:`end <cmd-end>` command.
 
-- Pressing :kbd:`Alt` + :kbd:`Enter` instead of pressing the :kbd:`Enter` key.
+- Pressing :kbd:`Alt`\ +\ :kbd:`Enter` instead of pressing the :kbd:`Enter` key.
 
 - By inserting a backslash (``\``) character before pressing the :kbd:`Enter` key, escaping the newline.
 
@@ -1519,11 +1521,11 @@ Normally when ``fish`` starts a program, this program will be put in the foregro
 
 - By ending a command with the ``&`` (ampersand) symbol, the user tells ``fish`` to put the specified command into the background. A background process will be run simultaneous with ``fish``. ``fish`` will retain control of the terminal, so the program will not be able to read from the keyboard.
 
-- By pressing :kbd:`Control` + :kbd:`Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control` + :kbd:`X` :kbd:`z` to stop running.
+- By pressing :kbd:`Control`\ +\ :kbd:`Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control`\ +\ :kbd:`X` :kbd:`Z` to stop running.
 
 - By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, the user can send any currently running job into the foreground or background.
 
-Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the ``bg`` command will not execute correctly.
+Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
 
 
 .. _initialization:
@@ -1707,7 +1709,7 @@ For more information on how to define new event handlers, see the documentation 
 Debugging fish scripts
 -----------------------
 
-Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using ``printf`` and ``set``. As another example, you can run ``status print-stack-trace`` to see how this breakpoint was reached. To resume normal execution of the script, simply type ``exit`` or :kbd:`Control` + :kbd:`D`.
+Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using ``printf`` and ``set``. As another example, you can run ``status print-stack-trace`` to see how this breakpoint was reached. To resume normal execution of the script, simply type ``exit`` or :kbd:`Control`\ +\ :kbd:`D`.
 
 To start a debug session simply run the builtin command ``breakpoint`` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
 

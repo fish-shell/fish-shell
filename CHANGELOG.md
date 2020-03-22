@@ -7,6 +7,7 @@
 
 ### Scripting improvements
 - Range limits in index range expansions like `$x[$start..$end]` may be omitted: `$start` and `$end` default to 1 and -1 (the last item) respectively.
+- `string sub` has a new `--end` option to specify the end index of a substring (#6765).
 
 ### Interactive improvements
 

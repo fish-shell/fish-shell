@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    pwd
+    pwd [(-P | --physical)] [(-L | --logical)]
 
 
 Description
@@ -18,6 +18,6 @@ Description
 
 The following options are available:
 
-- ``-L``, Output the logical working directory, without resolving symlinks (default behavior).
+- ``-L`` or ``--logical`` Output the logical working directory, without resolving symlinks (default behavior).
 
-- ``-P``, Output the physical working directory, with symlinks resolved.
+- ``-P`` or ``--physical`` Output the physical working directory, with symlinks resolved.

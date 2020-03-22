@@ -52,7 +52,7 @@ If you want to change or disable this display, modify the `fish_mode_prompt` fun
 
 How do I run a command from history?
 ------------------------------------
-Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control` + :kbd:`P` (up) and :kbd:`Control` + :kbd:`N` (down).
+Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control`\ +\ :kbd:`P` (up) and :kbd:`Control`\ +\ :kbd:`N` (down).
 
 
 How do I run a subcommand? The backtick doesn't work!
@@ -234,11 +234,11 @@ Fish's history recall is very simple yet effective:
 
 - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
 
-- :kbd:`Alt` + :kbd:`↑,Up` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. An alternate key binding is :kbd:`Alt` + :kbd:`.`.
+- :kbd:`Alt`\ +\ :kbd:`↑` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. An alternate key binding is :kbd:`Alt`\ +\ :kbd:`.`.
 
-- If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt` + :kbd:`↑,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
+- If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt`\ +\ :kbd:`↑`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
 
-- If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt` + :kbd:`D` and :kbd:`Alt` + :kbd:`Backspace` are your friends).
+- If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt`\ +\ :kbd:`D` and :kbd:`Alt`\ +\ :kbd:`Backspace` are your friends).
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
 
@@ -247,6 +247,26 @@ How can I use ``-`` as a shortcut for ``cd -``?
 In fish versions prior to 2.5.0 it was possible to create a function named ``-`` that would do ``cd -``. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation::
 
     abbr -a -- - 'cd -'
+
+.. _faq-unicode:
+
+I'm getting weird graphical glitches (a staircase effect, ghost characters,...)?
+--------------------------------------------------------------------------------
+In a terminal, the application running inside it and the terminal itself need to agree on the width of characters in order to handle cursor movement.
+
+This is more important to fish than other shells because features like syntax highlighting and autosuggestions are implemented by moving the cursor.
+
+Sometimes, there is disagreement on the width. There are numerous causes and fixes for this:
+
+- It is possible the character is simply too new for your system to know - in this case you need to refrain from using it.
+- Fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
+- The character has an "ambiguous" width and fish thinks that means a width of X while your terminal thinks it's Y. In this case you either need to change your terminal's configuration or set $fish_ambiguous_width to the correct value.
+- The character is an emoji and the host system only supports Unicode 8, while you are running the terminal on a system that uses Unicode >= 9. In this case set $fish_emoji_width to 2.
+
+This also means that a few things are unsupportable:
+
+- Non-monospace fonts - there is *no way* for fish to figure out what width a specific character has as it has no influence on the terminal's font rendering.
+- Different widths for multiple ambiguous width characters - there is no way for fish to know which width you assign to each character.
 
 .. _faq-uninstalling:
 

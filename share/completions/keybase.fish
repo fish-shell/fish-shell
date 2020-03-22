@@ -41,77 +41,77 @@ set -l keybase_fs_sync disable enable h help show
 #...
 
 #global options
-complete -c keybase -f -n "$ends keybase" -l api-dump-unsafe                   -d ""
-complete -c keybase -f -n "$ends keybase" -l api-timeout                       -d ""
-complete -c keybase -f -n "$ends keybase" -l api-uri-path-prefix               -d ""
-complete -c keybase -f -n "$ends keybase" -l app-start-mode                    -d ""
-complete -c keybase -f -n "$ends keybase" -l auto-fork                         -d ""
-complete -c keybase -f -n "$ends keybase" -l bg-identifier-disabled            -d ""
-complete -c keybase -f -n "$ends keybase" -l chat-db                           -d ""
-complete -c keybase -f -n "$ends keybase" -l code-signing-kids                 -d ""
-complete -c keybase -f -n "$ends keybase" -l config-file                  -s c -d ""
-complete -c keybase -f -n "$ends keybase" -l db                                -d ""
-complete -c keybase -f -n "$ends keybase" -l debug                        -s d -d ""
-complete -c keybase -f -n "$ends keybase" -l debug-journeycard                 -d ""
-complete -c keybase -f -n "$ends keybase" -l disable-bg-conv-loader            -d ""
-complete -c keybase -f -n "$ends keybase" -l disable-cert-pinning              -d ""
-complete -c keybase -f -n "$ends keybase" -l disable-merkle-auditor            -d ""
-complete -c keybase -f -n "$ends keybase" -l disable-search-indexer            -d ""
-complete -c keybase -f -n "$ends keybase" -l disable-team-auditor              -d ""
-complete -c keybase -f -n "$ends keybase" -l disable-team-box-auditor          -d ""
-complete -c keybase -f -n "$ends keybase" -l display-raw-untrusted-output      -d ""
-complete -c keybase -f -n "$ends keybase" -l ek-log-file                       -d ""
-complete -c keybase -f -n "$ends keybase" -l enable-bot-lite-mode              -d ""
-complete -c keybase -f -n "$ends keybase" -l extra-net-logging                 -d ""
-complete -c keybase -f -n "$ends keybase" -l features                          -d ""
-complete -c keybase -f -n "$ends keybase" -l force-linux-keyring               -d ""
-complete -c keybase -f -n "$ends keybase" -l generate-bash-completion          -d ""
-complete -c keybase -f -n "$ends keybase" -l gpg                               -d ""
-complete -c keybase -f -n "$ends keybase" -l gpg-options                       -d ""
-complete -c keybase -f -n "$ends keybase" -l gpgdir                            -d ""
-complete -c keybase -f -n "$ends keybase" -l gui-config-file                   -d ""
-complete -c keybase -f -n "$ends keybase" -l help                         -s h -d ""
-complete -c keybase -f -n "$ends keybase" -l home                         -s H -d ""
-complete -c keybase -f -n "$ends keybase" -l leveldb-num-files                 -d ""
-complete -c keybase -f -n "$ends keybase" -l local-rpc-debug-unsafe            -d ""
-complete -c keybase -f -n "$ends keybase" -l log-file                          -d ""
-complete -c keybase -f -n "$ends keybase" -l log-format                        -d ""
-complete -c keybase -f -n "$ends keybase" -l log-prefix                        -d ""
-complete -c keybase -f -n "$ends keybase" -l merkle-kids                       -d ""
-complete -c keybase -f -n "$ends keybase" -l no-auto-fork                 -s F -d ""
-complete -c keybase -f -n "$ends keybase" -l no-debug                          -d ""
-complete -c keybase -f -n "$ends keybase" -l paramproof-kit                    -d ""
-complete -c keybase -f -n "$ends keybase" -l pgpdir                            -d ""
-complete -c keybase -f -n "$ends keybase" -l pid-file                          -d ""
-complete -c keybase -f -n "$ends keybase" -l pinentry                          -d ""
-complete -c keybase -f -n "$ends keybase" -l proof-cache-size                  -d ""
-complete -c keybase -f -n "$ends keybase" -l prove-bypass                      -d ""
-complete -c keybase -f -n "$ends keybase" -l proxy                             -d ""
-complete -c keybase -f -n "$ends keybase" -l proxy-type                        -d ""
-complete -c keybase -f -n "$ends keybase" -l push-disabled                     -d ""
-complete -c keybase -f -n "$ends keybase" -l push-save-interval                -d ""
-complete -c keybase -f -n "$ends keybase" -l push-server-uri                   -d ""
-complete -c keybase -f -n "$ends keybase" -l pvl-kit                           -d ""
-complete -c keybase -f -n "$ends keybase" -l read-deleted-sigchain             -d ""
-complete -c keybase -f -n "$ends keybase" -l remember-passphrase               -d ""
-complete -c keybase -f -n "$ends keybase" -l run-mode                          -d ""
-complete -c keybase -f -n "$ends keybase" -l scraper-timeout                   -d ""
-complete -c keybase -f -n "$ends keybase" -l secret-keyring                    -d ""
-complete -c keybase -f -n "$ends keybase" -l server                       -s s -d ""
-complete -c keybase -f -n "$ends keybase" -l session-file                      -d ""
-complete -c keybase -f -n "$ends keybase" -l slow-gregor-conn                  -d ""
-complete -c keybase -f -n "$ends keybase" -l socket-file                       -d ""
-complete -c keybase -f -n "$ends keybase" -l standalone                        -d ""
-complete -c keybase -f -n "$ends keybase" -l timers                            -d ""
-complete -c keybase -f -n "$ends keybase" -l tor-hidden-address                -d ""
-complete -c keybase -f -n "$ends keybase" -l tor-mode                          -d ""
-complete -c keybase -f -n "$ends keybase" -l tor-proxy                         -d ""
-complete -c keybase -f -n "$ends keybase" -l updater-config-file               -d ""
-complete -c keybase -f -n "$ends keybase" -l use-default-log-file              -d ""
-complete -c keybase -f -n "$ends keybase" -l use-root-config-file              -d ""
-complete -c keybase -f -n "$ends keybase" -l user-cache-size                   -d ""
-complete -c keybase -f -n "$ends keybase" -l vdebug                            -d ""
-complete -c keybase -f -n "$ends keybase" -l version                      -s v -d ""
+complete -c keybase -f -n "$ends keybase" -l api-dump-unsafe
+complete -c keybase -f -n "$ends keybase" -l api-timeout
+complete -c keybase -f -n "$ends keybase" -l api-uri-path-prefix
+complete -c keybase -f -n "$ends keybase" -l app-start-mode
+complete -c keybase -f -n "$ends keybase" -l auto-fork
+complete -c keybase -f -n "$ends keybase" -l bg-identifier-disabled
+complete -c keybase -f -n "$ends keybase" -l chat-db
+complete -c keybase -f -n "$ends keybase" -l code-signing-kids
+complete -c keybase -f -n "$ends keybase" -l config-file -s c
+complete -c keybase -f -n "$ends keybase" -l db
+complete -c keybase -f -n "$ends keybase" -l debug -s d
+complete -c keybase -f -n "$ends keybase" -l debug-journeycard
+complete -c keybase -f -n "$ends keybase" -l disable-bg-conv-loader
+complete -c keybase -f -n "$ends keybase" -l disable-cert-pinning
+complete -c keybase -f -n "$ends keybase" -l disable-merkle-auditor
+complete -c keybase -f -n "$ends keybase" -l disable-search-indexer
+complete -c keybase -f -n "$ends keybase" -l disable-team-auditor
+complete -c keybase -f -n "$ends keybase" -l disable-team-box-auditor
+complete -c keybase -f -n "$ends keybase" -l display-raw-untrusted-output
+complete -c keybase -f -n "$ends keybase" -l ek-log-file
+complete -c keybase -f -n "$ends keybase" -l enable-bot-lite-mode
+complete -c keybase -f -n "$ends keybase" -l extra-net-logging
+complete -c keybase -f -n "$ends keybase" -l features
+complete -c keybase -f -n "$ends keybase" -l force-linux-keyring
+complete -c keybase -f -n "$ends keybase" -l generate-bash-completion
+complete -c keybase -f -n "$ends keybase" -l gpg
+complete -c keybase -f -n "$ends keybase" -l gpg-options
+complete -c keybase -f -n "$ends keybase" -l gpgdir
+complete -c keybase -f -n "$ends keybase" -l gui-config-file
+complete -c keybase -f -n "$ends keybase" -l help -s h
+complete -c keybase -f -n "$ends keybase" -l home -s H
+complete -c keybase -f -n "$ends keybase" -l leveldb-num-files
+complete -c keybase -f -n "$ends keybase" -l local-rpc-debug-unsafe
+complete -c keybase -f -n "$ends keybase" -l log-file
+complete -c keybase -f -n "$ends keybase" -l log-format
+complete -c keybase -f -n "$ends keybase" -l log-prefix
+complete -c keybase -f -n "$ends keybase" -l merkle-kids
+complete -c keybase -f -n "$ends keybase" -l no-auto-fork -s F
+complete -c keybase -f -n "$ends keybase" -l no-debug
+complete -c keybase -f -n "$ends keybase" -l paramproof-kit
+complete -c keybase -f -n "$ends keybase" -l pgpdir
+complete -c keybase -f -n "$ends keybase" -l pid-file
+complete -c keybase -f -n "$ends keybase" -l pinentry
+complete -c keybase -f -n "$ends keybase" -l proof-cache-size
+complete -c keybase -f -n "$ends keybase" -l prove-bypass
+complete -c keybase -f -n "$ends keybase" -l proxy
+complete -c keybase -f -n "$ends keybase" -l proxy-type
+complete -c keybase -f -n "$ends keybase" -l push-disabled
+complete -c keybase -f -n "$ends keybase" -l push-save-interval
+complete -c keybase -f -n "$ends keybase" -l push-server-uri
+complete -c keybase -f -n "$ends keybase" -l pvl-kit
+complete -c keybase -f -n "$ends keybase" -l read-deleted-sigchain
+complete -c keybase -f -n "$ends keybase" -l remember-passphrase
+complete -c keybase -f -n "$ends keybase" -l run-mode
+complete -c keybase -f -n "$ends keybase" -l scraper-timeout
+complete -c keybase -f -n "$ends keybase" -l secret-keyring
+complete -c keybase -f -n "$ends keybase" -l server -s s
+complete -c keybase -f -n "$ends keybase" -l session-file
+complete -c keybase -f -n "$ends keybase" -l slow-gregor-conn
+complete -c keybase -f -n "$ends keybase" -l socket-file
+complete -c keybase -f -n "$ends keybase" -l standalone
+complete -c keybase -f -n "$ends keybase" -l timers
+complete -c keybase -f -n "$ends keybase" -l tor-hidden-address
+complete -c keybase -f -n "$ends keybase" -l tor-mode
+complete -c keybase -f -n "$ends keybase" -l tor-proxy
+complete -c keybase -f -n "$ends keybase" -l updater-config-file
+complete -c keybase -f -n "$ends keybase" -l use-default-log-file
+complete -c keybase -f -n "$ends keybase" -l use-root-config-file
+complete -c keybase -f -n "$ends keybase" -l user-cache-size
+complete -c keybase -f -n "$ends keybase" -l vdebug
+complete -c keybase -f -n "$ends keybase" -l version -s v
 
 #commands
 #L1

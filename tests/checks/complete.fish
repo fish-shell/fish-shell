@@ -41,8 +41,8 @@ complete -C't '
 # Ensure file completion happens even though it was disabled above.
 complete -c t -l fileoption -rF
 # Only match one file because I don't want to touch this any time we add a test file.
-complete -C't --fileoption ' | string match bind.expect
-# CHECK: bind.expect
+complete -C't --fileoption ' | string match test.fish
+# CHECK: test.fish
 
 # Make sure bare `complete` is reasonable,
 complete -p '/complete test/beta1' -d 'desc, desc' -sZ

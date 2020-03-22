@@ -1008,6 +1008,8 @@ def usage(script_name):
      -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.local/share/fish/generated_completions
      -m, --manpath\tProcess all man1 and man8 files available in the manpath (as determined by manpath)
      -p, --progress\tShow progress
+     -c, --cleanup-in\tRemove all .fish files out of a given directory.
+     -z\t\tParse using only Deroff parser.
     """
     )
 

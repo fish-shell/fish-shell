@@ -85,7 +85,8 @@ function help --description 'Show help for the fish shell'
             #
             # We use this instead of xdg-open because that's useless without a backend
             # like wsl-open which we'll check in a minute.
-            if not type -q cygstart
+            if test -f /proc/version
+                and string match -riq 'Microsoft|WSL' </proc/version
                 and set -l cmd (command -s cmd.exe /mnt/c/Windows/System32/cmd.exe)
                 # Use the first of these.
                 set fish_browser $cmd[1]

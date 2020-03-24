@@ -75,6 +75,30 @@ function fish_prompt
     # Date
     _nim_prompt_wrapper $retc '' (date +%X)
 
+    # Vi-mode
+    # The default mode prompt would be prefixed, which ruins our alignment.
+    function fish_mode_prompt; end
+    if test "$fish_key_bindings" = fish_vi_key_bindings
+        or test "$fish_key_bindings" = fish_hybrid_key_bindings
+        set -l mode
+        switch $fish_bind_mode
+            case default
+                set mode (set_color --bold red)N
+            case insert
+                set mode (set_color --bold green)I
+            case replace_one
+                set mode (set_color --bold green)R
+                echo '[R]'
+            case replace
+                set mode (set_color --bold cyan)R
+            case visual
+                set mode (set_color --bold magenta)V
+        end
+        set mode $mode(set_color normal)
+        _nim_prompt_wrapper $retc '' $mode
+    end
+
+
     # Virtual Environment
     set -q VIRTUAL_ENV_DISABLE_PROMPT
     or set -g VIRTUAL_ENV_DISABLE_PROMPT true

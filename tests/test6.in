@@ -81,11 +81,6 @@ if begin; rm -rf test6.tmp.dir; and mkdir test6.tmp.dir; end
     else
         echo "no implicit cd complete"
     end
-    if complete -C"command $dir" | grep "^$dir/.*Directory" >/dev/null
-        echo "implicit cd complete incorrect after 'command'"
-    else
-        echo "no implicit cd complete after 'command'"
-    end
     popd
     if begin
             set -l PATH $PWD/test6.tmp.dir $PATH 2>/dev/null

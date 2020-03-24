@@ -41,7 +41,6 @@ Expect no output 2:
 Expect --backup --backup=: --backup --backup=
 Expect --backup=all  --backup=none  --backup=simple: --backup=all --backup=none --backup=simple
 implicit cd complete works
-no implicit cd complete after 'command'
 PATH does not cause incorrect implicit cd
 Command completion with parened PATHs test passed
 Command completion with intermediate slashes passed

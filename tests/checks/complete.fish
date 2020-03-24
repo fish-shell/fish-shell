@@ -299,11 +299,11 @@ if begin
     end
     #CHECK: implicit cd complete works
     if complete -C"command $dir" | grep "^$dir/.*Directory" >/dev/null
-        echo "implicit cd complete incorrect after 'command'"
+        echo "implicit cd complete after 'command'"
     else
         echo "no implicit cd complete after 'command'"
     end
-    #CHECK: no implicit cd complete after 'command'
+    #CHECK: implicit cd complete after 'command'
     popd
     if begin
             set -l PATH $PWD/test6.tmp.dir $PATH 2>/dev/null

@@ -45,6 +45,13 @@ complete -f -c terraform -n '__fish_seen_subcommand_from env' -a select -d 'Sele
 complete -f -c terraform -n '__fish_seen_subcommand_from env' -a new -d 'Create a new environment'
 complete -f -c terraform -n '__fish_seen_subcommand_from env' -a delete -d 'Delete an existing environment'
 
+### workspace
+complete -f -c terraform -n __fish_use_subcommand -a workspace -d 'Workspace management'
+complete -f -c terraform -n '__fish_seen_subcommand_from workspace' -a list -d 'List workspaces'
+complete -f -c terraform -n '__fish_seen_subcommand_from workspace' -a select -d 'Select an workspace'
+complete -f -c terraform -n '__fish_seen_subcommand_from workspace' -a new -d 'Create a new workspace'
+complete -f -c terraform -n '__fish_seen_subcommand_from workspace' -a delete -d 'Delete an existing workspace'
+
 ### fmt
 complete -f -c terraform -n __fish_use_subcommand -a fmt -d 'Rewrite config files to canonical format'
 complete -f -c terraform -n '__fish_seen_subcommand_from fmt' -o list -d 'List files whose formatting differs'

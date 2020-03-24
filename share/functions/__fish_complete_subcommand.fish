@@ -49,7 +49,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
     end
 
     if test $allow_functions_and_builtins = false && test (count $subcommand) -eq 1
-        __fish_complete_external_command
+        __fish_complete_external_command "$subcommand"
     else
         printf "%s\n" (complete -C "$subcommand")
     end

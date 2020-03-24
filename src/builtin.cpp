@@ -327,6 +327,15 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     return STATUS_CMD_ERROR;
 }
 
+int builtin_gettext(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
+    UNUSED(streams);
+    for (int i = 1; i < builtin_count_args(argv); i++) {
+        streams.out.append(_(argv[i]));
+    }
+    return STATUS_CMD_OK;
+}
+
 // END OF BUILTIN COMMANDS
 // Below are functions for handling the builtin commands.
 // THESE MUST BE SORTED BY NAME! Completion lookup uses binary search.
@@ -338,6 +347,7 @@ static const builtin_data_t builtin_datas[] = {
     {L".", &builtin_source, N_(L"Evaluate contents of file")},
     {L":", &builtin_true, N_(L"Return a successful result")},
     {L"[", &builtin_test, N_(L"Test a condition")},
+    {L"_", &builtin_gettext, N_(L"Translate a string")},
     {L"and", &builtin_generic, N_(L"Execute command if previous command succeeded")},
     {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
@@ -393,7 +403,8 @@ static const builtin_data_t builtin_datas[] = {
     {L"true", &builtin_true, N_(L"Return a successful result")},
     {L"ulimit", &builtin_ulimit, N_(L"Set or get the shells resource usage limits")},
     {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},
-    {L"while", &builtin_generic, N_(L"Perform a command multiple times")}};
+    {L"while", &builtin_generic, N_(L"Perform a command multiple times")},
+};
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
 

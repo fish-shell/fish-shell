@@ -321,11 +321,18 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             arg_max = sysconf(_SC_ARG_MAX);
 
             if (arg_max > 0) {
-                format_size_safe(sz2, static_cast<unsigned long long>(arg_max));
-                debug_safe(0,
-                           "The total size of the argument and environment lists %s exceeds the "
-                           "operating system limit of %s.",
-                           sz1, sz2);
+                if (sz >= static_cast<unsigned long long>(arg_max)) {
+                    format_size_safe(sz2, static_cast<unsigned long long>(arg_max));
+                    debug_safe(0,
+                               "The total size of the argument and environment lists %s exceeds the "
+                               "operating system limit of %s.",
+                               sz1, sz2);
+                } else {
+                    // MAX_ARG_STRLEN, a linux thing that limits the size of one argument. It's defined in binfmt.h, but
+                    // we don't want to include that just to be able to print the real limit.
+                    debug_safe(0,
+                               "One of your arguments exceeds the operating system's argument length limit.");
+                }
             } else {
                 debug_safe(0,
                            "The total size of the argument and environment lists (%s) exceeds the "

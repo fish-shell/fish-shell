@@ -180,7 +180,7 @@ typedef struct {  //!OCLINT(too many fields)
 
     std::vector<int> fields;
 
-    const wchar_t *chars_to_trim = L" \f\n\r\t";
+    const wchar_t *chars_to_trim = L" \f\n\r\t\v";
     const wchar_t *arg1 = nullptr;
     const wchar_t *arg2 = nullptr;
 

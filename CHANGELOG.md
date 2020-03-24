@@ -16,6 +16,7 @@ This is a bug fix release containing important fixes since 3.1.0. It
 - fixes 256 colors when $TERM starts with xterm, does not include "256color" and $TERM_PROGRAM is not set, as a workaround for old Terminal.app that was misapplied (#6701).
 - fixes error spew in the hg prompt when the working directory doesn't exist anymore (#6699)
 - fixes hosts with multiple aliases in the ssh config (#6698).
+- fixes subcommand tab completion for commands like "watch" where executables that are not in $PATH were not suggested (#6798).
 - improves compatibility with macOS code signing
 - improves the `flatpak` (#6581) and `kill` (#6636) completions
 - plus some typo and link fixes and minor adjustments to the documentation (#6627, #6642, #6646, #6647, #6657)

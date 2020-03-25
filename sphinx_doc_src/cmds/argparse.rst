@@ -135,7 +135,7 @@ Some OPTION_SPEC examples:
 
 - ``n-name=+`` means that only ``--name`` is valid. It requires a value and can be used more than once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the values associated with each occurrence of the flag.
 
-- ``x`` means that only ``-x`` is valid. It is a boolean can can be used more than once. If it is seen then ``_flag_x`` will be set to the count of how many times the flag was seen.
+- ``x`` means that only ``-x`` is valid. It is a boolean that can be used more than once. If it is seen then ``_flag_x`` will be set to the count of how many times the flag was seen.
 
 - ``x=``, ``x=?``, and ``x=+`` are similar to the n/name examples above but there is no long flag alternative to the short flag ``-x``.
 

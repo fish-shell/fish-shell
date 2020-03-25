@@ -212,7 +212,6 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     const bool require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
     wcstring clean_potential_path_fragment;
     int has_magic = 0;
-    bool result = false;
 
     wcstring path_with_magic(potential_path_fragment);
     if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic, ctx.vars);
@@ -242,7 +241,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     }
 
     if (has_magic || clean_potential_path_fragment.empty()) {
-        return result;
+        return false;
     }
 
     // Don't test the same path multiple times, which can happen if the path is absolute and the
@@ -265,7 +264,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
         if (must_be_full_dir) {
             struct stat buf;
             if (0 == wstat(abs_path, &buf) && S_ISDIR(buf.st_mode)) {
-                result = true;
+                return true;
             }
         } else {
             // We do not end with a slash; it does not have to be a directory.
@@ -274,15 +273,13 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
             const wcstring filename_fragment = wbasename(abs_path);
             if (dir_name == L"/" && filename_fragment == L"/") {
                 // cd ///.... No autosuggestion.
-                result = true;
+                return true;;
             } else if ((dir = wopendir(dir_name))) {
                 cleanup_t cleanup_dir([&] { closedir(dir); });
 
                 // Check if we're case insensitive.
                 const bool do_case_insensitive =
                     fs_is_case_insensitive(dir_name, dirfd(dir), case_sensitivity_cache);
-
-                wcstring matched_file;
 
                 // We opened the dir_name; look for a string where the base name prefixes it Don't
                 // ask for the is_dir value unless we care, because it can cause extra filesystem
@@ -300,17 +297,14 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                     if (string_prefixes_string(filename_fragment, ent) ||
                         (do_case_insensitive &&
                          string_prefixes_string_case_insensitive(filename_fragment, ent))) {
-                        matched_file = ent;  // we matched
-                        break;
+                        return true;
                     }
                 }
-
-                result = !matched_file.empty();  // we succeeded if we found a match
             }
         }
     }
 
-    return result;
+    return false;
 }
 
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in

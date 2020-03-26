@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <iterator> // for std::begin/end
+#include <iterator>  // for std::begin/end
 
 static void become_foreground_then_print_stderr() {
     if (tcsetpgrp(STDOUT_FILENO, getpgrp()) < 0) {

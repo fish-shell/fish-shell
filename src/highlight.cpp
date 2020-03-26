@@ -273,7 +273,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
             const wcstring filename_fragment = wbasename(abs_path);
             if (dir_name == L"/" && filename_fragment == L"/") {
                 // cd ///.... No autosuggestion.
-                return true;;
+                return true;
             } else if ((dir = wopendir(dir_name))) {
                 cleanup_t cleanup_dir([&] { closedir(dir); });
 

@@ -670,7 +670,8 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         // Break the floating point value into base and delta. Ensure that base is <= the floating
         // point value.
         //
-        // Note that a non-finite number like infinity or NaN doesn't work for us, so we checked above.
+        // Note that a non-finite number like infinity or NaN doesn't work for us, so we checked
+        // above.
         double intpart = std::floor(floating);
         double delta = floating - intpart;
         *number = number_t{static_cast<long long>(intpart), delta};

@@ -997,9 +997,7 @@ def get_paths_from_man_locations():
 def usage(script_name):
     print(
         "Usage: {0} [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress]"
-        " [-c, --cleanup-in] [-z] files...".format(
-            script_name
-        )
+        " [-c, --cleanup-in] [-z] files...".format(script_name)
     )
     print(
         """Command options are:

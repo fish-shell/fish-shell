@@ -52,7 +52,8 @@ class category_list_t {
     category_t debug{L"debug", L"Debugging aid (on by default)", true};
 
     category_t warning{L"warning", L"Warnings (on by default)", true};
-    category_t warning_path{L"warning-path", L"Warnings about unusable paths for config/history (on by default)", true};
+    category_t warning_path{
+        L"warning-path", L"Warnings about unusable paths for config/history (on by default)", true};
 
     category_t config{L"config", L"Finding and reading configuration"};
 

@@ -24,6 +24,21 @@ jobs -c
 #CHECK: Command
 #CHECK: sleep
 #CHECK: sleep
+jobs 1
+echo $status
+#CHECK: 1
+#CHECKERR: jobs: No suitable job: 1
+jobs foo
+echo $status
+#CHECK: 2
+#CHECKERR: jobs: 'foo' is not a valid process id
+jobs -q 1
+echo $status
+#CHECK: 1
+jobs -q foo
+echo $status
+#CHECK: 2
+#CHECKERR: jobs: 'foo' is not a valid process id
 disown foo
 #CHECKERR: disown: 'foo' is not a valid job specifier
 disown (jobs -p)

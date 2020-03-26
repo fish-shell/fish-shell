@@ -209,7 +209,9 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     builtin_jobs_print(j, mode, false, streams);
                     found = true;
                 } else {
-                    streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
+                    if (mode != JOBS_PRINT_NOTHING) {
+                        streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
+                    }
                     return STATUS_CMD_ERROR;
                 }
             }

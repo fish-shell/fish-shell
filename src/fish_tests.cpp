@@ -5671,7 +5671,7 @@ Executed in  500.00 micros    fish         external
      // (c) carry to the next unit when the larger one exceeds 1000
     std::wstring actual = timer_snapshot_t::print_delta(t1, t2, true);
     if (actual != expected) {
-        err(L"Failed to format timer snapshot\n\Expected: %ls\nActual:%ls\n", expected,
+        err(L"Failed to format timer snapshot\nExpected: %ls\nActual:%ls\n", expected,
             actual.c_str());
     }
     setlocale(LC_NUMERIC, saved_locale);

@@ -2,6 +2,7 @@
 
 ## Notable improvements and fixes
 - `fish --no-execute` will no longer complain about unknown commands or non-matching wildcards, as these could be defined differently at runtime (especially for functions). #977
+- `jobs --quiet PID` will no longer print 'no suitable job' if the job for PID does not exist (e.g. because it has finished). #6809
 
 ### Syntax changes and new commands
 

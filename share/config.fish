@@ -106,15 +106,6 @@ else if not contains -- $__fish_data_dir/completions $fish_complete_path
     set -a fish_complete_path $__fish_data_dir/completions
 end
 
-# This cannot be in an autoload-file because `:.fish` is an invalid filename on windows.
-function : -d "no-op function"
-    # for compatibility with sh, bash, and others.
-    # Often used to insert a comment into a chain of commands without having
-    # it eat up the remainder of the line, handy in Makefiles.
-    # This command always succeeds
-    true
-end
-
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH

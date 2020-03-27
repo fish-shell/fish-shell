@@ -22,10 +22,12 @@
 
 #### Completions
 - Added completions for
+  - `gitk`
   - `wireshark`, `tshark`, and `dumpcap`
   - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
   - `dhclient`
   - `tcpdump`
+  - `tig`
 
 ### Deprecations and removed features
 

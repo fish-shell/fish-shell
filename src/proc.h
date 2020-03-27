@@ -82,6 +82,9 @@ class proc_status_t {
     /// \return if we are stopped (as in SIGSTOP).
     bool stopped() const { return WIFSTOPPED(status_); }
 
+    /// \return if we are continued (as in SIGCONT).
+    bool continued() const { return WIFCONTINUED(status_); }
+
     /// \return if we exited normally (not a signal).
     bool normal_exited() const { return WIFEXITED(status_); }
 

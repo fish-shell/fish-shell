@@ -342,6 +342,7 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 // Functions that are bound to builtin_generic are handled directly by the parser.
 // NOTE: These must be kept in sorted order!
 static const builtin_data_t builtin_datas[] = {
+    {L".", &builtin_source, N_(L"Evaluate contents of file")},
     {L":", &builtin_true, N_(L"Return a successful result")},
     {L"[", &builtin_test, N_(L"Test a condition")},
     {L"and", &builtin_generic, N_(L"Execute command if previous command succeeded")},

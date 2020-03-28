@@ -268,7 +268,7 @@ set tmpdir $PWD
 cd $saved
 mkdir $tmpdir/realhome
 ln -s $tmpdir/realhome $tmpdir/linkhome
-set expandedtilde (env HOME=$tmpdir/linkhome ../test/root/bin/fish -c 'echo ~')
+set expandedtilde (env HOME=$tmpdir/linkhome $fish -c 'echo ~')
 if test $expandedtilde != $tmpdir/linkhome
 	echo '~ expands to' $expandedtilde ' - expected ' $tmpdir/linkhome
 end

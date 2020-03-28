@@ -1,3 +1,5 @@
+# Yarn 1.22.4
+
 source $__fish_data_dir/functions/__fish_npm_helper.fish
 set -l yarn_add "yarn global add"
 

@@ -99,7 +99,7 @@ end
 
 set failed (count $failed)
 if test $failed -eq 0
-    say green "All tests completed successfully"
+    say green "All interactive tests completed successfully"
     exit 0
 else
     set plural (test $failed -eq 1; or echo s)

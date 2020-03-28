@@ -58,7 +58,7 @@ function test_file
     set -l err_status $status
 
     if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
-        say green "ok ($test_duration $unit)"
+        printf '%s\n' (set_color green)ok(set_color normal)" ($test_duration $unit)"
         # clean up tmp files
         rm -f $file.tmp.{err,out,log}
         return 0

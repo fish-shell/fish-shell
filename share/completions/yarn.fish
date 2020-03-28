@@ -121,7 +121,7 @@ complete -f -c yarn -n __fish_use_subcommand -a workspace
 complete -f -c yarn -n __fish_use_subcommand -a workspaces
 
 # These are the yarn commands all of them use the same options
-set -g yarn_cmds access add bin cache check clean config generate-lock-entry global info init install licenses link list login logout outdated owner pack publish remove run tag team unlink upgrade upgrade-interactive version versions why
+set -g yarn_cmds access add audit autoclean bin cache check config create exec generate-lock-entry global import info init install licenses link list login logout node outdated owner pack policies publish remove run tag team unlink unplug upgrade upgrade-interactive version versions why workspace workspaces
 
 # Common short, long options
 complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l help -s h -d 'output usage information'

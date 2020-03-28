@@ -20,21 +20,31 @@ complete -f -c yarn -n '__fish_seen_subcommand_from add' -l O -s O
 complete -f -c yarn -n '__fish_seen_subcommand_from add' -l exact -s E
 complete -f -c yarn -n '__fish_seen_subcommand_from add' -l tilde -s T
 
+complete -f -c yarn -n __fish_use_subcommand -a audit
+
+complete -f -c yarn -n __fish_use_subcommand -a autoclean
+
 complete -f -c yarn -n __fish_use_subcommand -a bin
 
 complete -f -c yarn -n __fish_use_subcommand -a cache
 complete -f -c yarn -n '__fish_seen_subcommand_from cache' -a 'ls dir clean'
 
 complete -f -c yarn -n __fish_use_subcommand -a check
-complete -f -c yarn -n __fish_use_subcommand -a clean
 
 complete -f -c yarn -n __fish_use_subcommand -a config
 complete -f -c yarn -n '__fish_seen_subcommand_from config' -a 'set get delete list'
+
+complete -f -c yarn -n __fish_use_subcommand -a create
+
+complete -f -c yarn -n __fish_use_subcommand -a exec
 
 complete -f -c yarn -n __fish_use_subcommand -a generate-lock-entry
 
 complete -f -c yarn -n __fish_use_subcommand -a global
 complete -f -c yarn -n '__fish_seen_subcommand_from global' -a 'add bin dir ls list remove upgrade upgrade-interactive'
+
+complete -f -c yarn -n __fish_use_subcommand -a import
+
 complete -f -c yarn -n __fish_use_subcommand -a info
 
 complete -f -c yarn -n __fish_use_subcommand -a init
@@ -51,12 +61,15 @@ complete -f -c yarn -n '__fish_seen_subcommand_from list' -l depth
 
 complete -f -c yarn -n __fish_use_subcommand -a login
 complete -f -c yarn -n __fish_use_subcommand -a logout
+complete -f -c yarn -n __fish_use_subcommand -a node
 complete -f -c yarn -n __fish_use_subcommand -a outdated
 
 complete -f -c yarn -n __fish_use_subcommand -a owner
 complete -f -c yarn -n '__fish_seen_subcommand_from owner' -a 'add rm ls'
 
 complete -f -c yarn -n __fish_use_subcommand -a pack
+
+complete -f -c yarn -n __fish_use_subcommand -a policies
 
 complete -f -c yarn -n __fish_use_subcommand -a publish
 complete -f -c yarn -n '__fish_seen_subcommand_from publish' -l access -a 'public restricted'
@@ -93,6 +106,7 @@ complete -f -c yarn -n __fish_use_subcommand -a team
 complete -f -c yarn -n '__fish_seen_subcommand_from team' -a 'create destroy add rm ls'
 
 complete -f -c yarn -n __fish_use_subcommand -a unlink
+complete -f -c yarn -n __fish_use_subcommand -a unplug
 complete -f -c yarn -n __fish_use_subcommand -a upgrade
 complete -f -c yarn -n __fish_use_subcommand -a upgrade-interactive
 
@@ -103,6 +117,8 @@ complete -f -c yarn -n '__fish_seen_subcommand_from version' -l no-git-tag-versi
 
 complete -f -c yarn -n __fish_use_subcommand -a versions
 complete -f -c yarn -n __fish_use_subcommand -a why
+complete -f -c yarn -n __fish_use_subcommand -a workspace
+complete -f -c yarn -n __fish_use_subcommand -a workspaces
 
 # These are the yarn commands all of them use the same options
 set -g yarn_cmds access add bin cache check clean config generate-lock-entry global info init install licenses link list login logout outdated owner pack publish remove run tag team unlink upgrade upgrade-interactive version versions why

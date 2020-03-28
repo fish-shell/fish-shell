@@ -4,58 +4,44 @@ function __fish_print_make_targets --argument-names directory file
     # text will be using the correct locale.
     set -lx LC_ALL C
 
-    if test -z "$directory"
-        set directory '.'
+    set -l makeflags -C $directory
+    if test -n "$file"
+        set -a makeflags -f $file
     end
 
-    if test -z "$file"
-        for standard_file in $directory/{GNUmakefile,Makefile,makefile}
-            if test -f $standard_file
-                set file $standard_file
-                break
-            end
-        end
-    end
-
-    set -l bsd_make
     if make --version 2>/dev/null | string match -q 'GNU*'
-        set bsd_make 0
-    else
-        set bsd_make 1
-    end
-
-    if test "$bsd_make" = 0
         # https://stackoverflow.com/a/26339924
-        make -C "$directory" -f "$file" -pRrq : 2>/dev/null | awk -v RS= -F: '/^# Files/,/^# Finished Make data base/ {if ($1 !~ "^[#.]") {print $1}}' 2>/dev/null
+        make $makeflags -pRrq : 2>/dev/null > log.mk
+        make $makeflags -pRrq : 2>/dev/null |
+            awk -F: '/^# Files/,/^# Finished Make data base/ {
+                if ($1 == "# Not a target") skip = 1;
+                if ($1 !~ "^[#.\t]") { if (!skip) print $1; skip=0 }
+            }' 2>/dev/null
     else
-        make -C "$directory" -f "$file" -d g1 -rn >/dev/null 2>| awk -F, '/^#\*\*\* Input graph:/,/^$/ {if ($1 !~ "^#... ") {gsub(/# /,"",$1); print $1}}' 2>/dev/null
+        # BSD make
+        make $makeflags -d g1 -rn >/dev/null 2>| awk -F, '/^#\*\*\* Input graph:/,/^$/ {if ($1 !~ "^#... ") {gsub(/# /,"",$1); print $1}}' 2>/dev/null
     end
 end
 
 function __fish_complete_make_targets
-    set directory (string replace -r '^make .*(-C ?|--directory(=| +))([^ ]*) .*$' '$3' -- $argv)
-    if not test $status -eq 0 -a -d $directory
-        set directory ''
-    end
-    set file (string replace -r '^make .*(-f ?|--file(=| +))([^ ]*) .*$' '$3' -- $argv)
-    if not test $status -eq 0 -a -f $file
-        set file ''
-    end
-    __fish_print_make_targets "$directory" "$file"
+    set -l directory (string replace -rf '^make .*(-C ?|--directory(=| +))([^ ]*) .*$' '$3' -- $argv)
+    or set directory .
+    set -l file (string replace -rf '^make .*(-f ?|--file(=| +))([^ ]*) .*$' '$3' -- $argv)
+    __fish_print_make_targets $directory $file
 end
 
 # This completion reenables file completion on
 # assignments, so e.g. 'make foo FILES=<tab>' will receive standard
 # filename completion.
-complete -c make -n 'commandline -ct | string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -c))" -d Target
-complete -f -c make -n 'commandline -ct | not string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -c))" -d Target
+complete -c make -n 'commandline -ct | string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -p))" -d Target
+complete -f -c make -n 'commandline -ct | not string match -q "*=*"' -a "(__fish_complete_make_targets (commandline -p))" -d Target
 complete -c make -s f -d "Use file as makefile" -r
 complete -x -c make -s C -l directory -x -a "(__fish_complete_directories (commandline -ct))" -d "Change directory"
 complete -c make -s d -d "Debug mode"
 complete -c make -s e -d "Environment before makefile"
 complete -c make -s i -d "Ignore errors"
 complete -x -c make -s I -d "Search directory for makefile" -a "(__fish_complete_directories (commandline -ct))"
-complete -x -c make -s j -d "Number of concurrent jobs"
+complete -f -c make -s j -d "Number of concurrent jobs (default: 1 per CPU)"
 complete -c make -s k -d "Continue after an error"
 complete -c make -s l -d "Start when load drops"
 complete -c make -s n -d "Do not execute commands"

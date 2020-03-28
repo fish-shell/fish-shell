@@ -34,7 +34,7 @@ complete -f -c yarn -n '__fish_seen_subcommand_from config' -a 'set get delete l
 complete -f -c yarn -n __fish_use_subcommand -a generate-lock-entry
 
 complete -f -c yarn -n __fish_use_subcommand -a global
-complete -f -c yarn -n '__fish_seen_subcommand_from global' -a 'add bin ls remove upgrade'
+complete -f -c yarn -n '__fish_seen_subcommand_from global' -a 'add bin dir ls list remove upgrade upgrade-interactive'
 complete -f -c yarn -n __fish_use_subcommand -a info
 
 complete -f -c yarn -n __fish_use_subcommand -a init

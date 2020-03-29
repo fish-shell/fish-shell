@@ -11,7 +11,6 @@ function __fish_print_make_targets --argument-names directory file
 
     if make --version 2>/dev/null | string match -q 'GNU*'
         # https://stackoverflow.com/a/26339924
-        make $makeflags -pRrq : 2>/dev/null > log.mk
         make $makeflags -pRrq : 2>/dev/null |
             awk -F: '/^# Files/,/^# Finished Make data base/ {
                 if ($1 == "# Not a target") skip = 1;

@@ -259,3 +259,26 @@ class SpawnedProc(object):
             "LIGHTCYAN": ansic(96),
             "WHITE": ansic(97),
         }
+
+
+def control(char):
+    char = char.lower()
+    a = ord(char)
+    if 97 <= a <= 122:
+        a = a - ord("a") + 1
+        return chr(a)
+    control_characters = {
+        "@": 0,
+        "`": 0,
+        "[": 27,
+        "{": 27,
+        "\\": 28,
+        "|": 28,
+        "]": 29,
+        "}": 29,
+        "^": 30,
+        "~": 30,
+        "_": 31,
+        "?": 127,
+    }
+    return chr(control_characters[char])

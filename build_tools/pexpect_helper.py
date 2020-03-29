@@ -341,3 +341,25 @@ class SpawnedProc(object):
             "LIGHTCYAN": ansic(96),
             "WHITE": ansic(97),
         }
+
+
+def control(char: str) -> str:
+    """ Returns the char sent when control is pressed along the given key. """
+    assert len(char) == 1
+    char = char.lower()
+    if ord("a") <= ord(char) <= ord("z"):
+        return chr(ord(char) - ord("a") + 1)
+    return chr({
+        "@": 0,
+        "`": 0,
+        "[": 27,
+        "{": 27,
+        "\\": 28,
+        "|": 28,
+        "]": 29,
+        "}": 29,
+        "^": 30,
+        "~": 30,
+        "_": 31,
+        "?": 127,
+    }[char])

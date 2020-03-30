@@ -1234,9 +1234,9 @@ Autosuggestions are a powerful way to quickly summon frequently entered commands
 Tab Completion
 --------------
 
-Tab completion is one of the most time saving features of any modern shell. By tapping the tab key, the user asks ``fish`` to guess the rest of the command or parameter that the user is currently typing. If  ``fish`` can only find one possible completion, ``fish`` will write it out. If there is more than one completion, ``fish`` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, the page up/page down keys, the tab key or the space bar.
+Tab completion is one of the most time saving features of any modern shell. By tapping :kbd:`Tab`, the user asks ``fish`` to guess the rest of the command or parameter that the user is currently typing. If ``fish`` can only find one possible completion, ``fish`` will write it out. If there is more than one completion, ``fish`` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Space`.
 
-If the list is visible, pressing control-S (or the ``pager-toggle-search`` binding) will allow filtering the list. Shift-tab (or the ``complete-and-search`` binding) will trigger completion with the search field immediately visible.
+If the list is visible, pressing :kbd:`Control`\ +\ :kbd:`S` (or the ``pager-toggle-search`` binding) will allow filtering the list. :kbd:`Shift`\ +\ :kbd:`Tab` (or the ``complete-and-search`` binding) will trigger completion with the search field immediately visible.
 These are the general purpose tab completions that ``fish`` provides:
 
 - Completion of commands (builtins, functions and regular programs).

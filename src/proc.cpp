@@ -398,7 +398,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    for (const auto &j : parser.jobs()) {
+    for (auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 // Update the signal hup/int gen.
@@ -423,6 +423,9 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
+                            if (proc->status.stopped()) {
+                                j->mut_flags().foreground = 0;
+                            }
                             if (proc->status.normal_exited() || proc->status.signal_exited()) {
                                 FLOGF(proc_reap_external,
                                       "Reaped external process '%ls' (pid %d, status %d)",

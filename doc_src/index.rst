@@ -1059,6 +1059,8 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``pipestatus``, a list of exit statuses of all processes that made up the last executed pipe.
 
+- ``fish_kill_signal``, the signal that terminated the previous command, or `0` if the command exited normally.
+
 - ``USER``, the current username. This variable can be changed by the user.
 
 - ``CMD_DURATION``, the runtime of the last command in milliseconds.

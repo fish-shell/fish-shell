@@ -187,7 +187,11 @@ statuses_t job_t::get_statuses() const {
     statuses_t st{};
     st.pipestatus.reserve(processes.size());
     for (const auto &p : processes) {
-        st.pipestatus.push_back(p->status.status_value());
+        auto status = p->status;
+        if (status.signal_exited()) {
+            st.kill_signal = status.signal_code();
+        }
+        st.pipestatus.push_back(status.status_value());
     }
     int laststatus = st.pipestatus.back();
     st.status = flags().negate ? !laststatus : laststatus;

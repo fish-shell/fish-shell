@@ -320,12 +320,12 @@ _svn_cmpl_ svn:keywords -a Id -d 'A compressed summary of all keywords'
 #
 # Completions for the 'relocate' subcommand
 #
-_svn_cmpl_ $relocate -xa '( svn info | string match "*URL:*" | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
+_svn_cmpl_ $relocate -xa '( svn info | string match "*URL:*" | string split -f2 " ") http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
 
 #
 # Completions for the 'switch', 'sw' subcommands
 #
-_svn_cmpl_ $switch -l relocate -d 'Relocate via URL-rewriting' -xa '( svn info | string match "*URL:*" | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
+_svn_cmpl_ $switch -l relocate -d 'Relocate via URL-rewriting' -xa '( svn info | string match "*URL:*" | string split -f2 " ") http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
 
 #
 # Completions for the 'status', 'st' subcommands

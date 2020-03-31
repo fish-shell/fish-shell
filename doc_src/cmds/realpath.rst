@@ -1,6 +1,6 @@
 .. _cmd-realpath:
 
-realpath - Convert a path to an absolute path without symlinks
+realpath - convert a path to an absolute path without symlinks
 ==============================================================
 
 Synopsis

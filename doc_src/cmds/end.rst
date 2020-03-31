@@ -1,7 +1,7 @@
 .. _cmd-end:
 
-end - end a block of commands.
-==============================
+end - end a block of commands
+=============================
 
 Synopsis
 --------

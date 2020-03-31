@@ -1,7 +1,7 @@
 .. _cmd-for:
 
-for - perform a set of commands multiple times.
-===============================================
+for - perform a set of commands multiple times
+==============================================
 
 Synopsis
 --------

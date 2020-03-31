@@ -1,6 +1,6 @@
 .. _cmd-history:
 
-history - Show and manipulate command history
+history - show and manipulate command history
 =============================================
 
 Synopsis

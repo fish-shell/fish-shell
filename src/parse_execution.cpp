@@ -189,7 +189,10 @@ maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution()
     if (shell_is_exiting()) {
         return end_execution_reason_t::cancelled;
     }
-    if (parser && parser->cancellation_signal) {
+    if (nullptr == parser) {
+        return none();
+    }
+    if (parser->cancellation_signal) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();

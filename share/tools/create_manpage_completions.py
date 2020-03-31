@@ -996,9 +996,8 @@ def get_paths_from_man_locations():
 
 def usage(script_name):
     print(
-        "Usage: {0} [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress] files...".format(
-            script_name
-        )
+        "Usage: {0} [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress]"
+        " [-c, --cleanup-in] [-z] files...".format(script_name)
     )
     print(
         """Command options are:
@@ -1008,6 +1007,8 @@ def usage(script_name):
      -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.local/share/fish/generated_completions
      -m, --manpath\tProcess all man1 and man8 files available in the manpath (as determined by manpath)
      -p, --progress\tShow progress
+     -c, --cleanup-in\tRemove all .fish files out of a given directory.
+     -z\t\tParse using only Deroff parser.
     """
     )
 

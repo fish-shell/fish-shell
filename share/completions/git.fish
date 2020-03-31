@@ -515,7 +515,7 @@ function __fish_git_ranges
 
     set -l to $both[2]
     # Remove description from the from-ref, not the to-ref.
-    for from_ref in (__fish_git_refs | string match "$from" | string replace -r \t'.*$' '')
+    for from_ref in (__fish_git_refs | string match -e "$from" | string replace -r \t'.*$' '')
         for to_ref in (__fish_git_refs | string match "*$to*") # if $to is empty, this correctly matches everything
             printf "%s..%s\n" $from_ref $to_ref
         end

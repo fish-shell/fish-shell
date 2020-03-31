@@ -248,6 +248,8 @@ static void handle_child_status(process_t *proc, proc_status_t status) {
     proc->status = status;
     if (status.stopped()) {
         proc->stopped = true;
+    } else if (status.continued()) {
+        proc->stopped = false;
     } else {
         proc->completed = true;
     }
@@ -396,7 +398,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    for (const auto &j : parser.jobs()) {
+    for (auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 // Update the signal hup/int gen.
@@ -417,13 +419,23 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                     } else if (proc->pid > 0) {
                         // Try reaping an external process.
                         int status = -1;
-                        auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED);
+                        auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED | WCONTINUED);
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
-                            FLOGF(proc_reap_external,
-                                  "Reaped external process '%ls' (pid %d, status %d)",
-                                  proc->argv0(), pid, proc->status.status_value());
+                            if (proc->status.stopped()) {
+                                j->mut_flags().foreground = 0;
+                            }
+                            if (proc->status.normal_exited() || proc->status.signal_exited()) {
+                                FLOGF(proc_reap_external,
+                                      "Reaped external process '%ls' (pid %d, status %d)",
+                                      proc->argv0(), pid, proc->status.status_value());
+                            } else {
+                                assert(proc->status.stopped() || proc->status.continued());
+                                FLOGF(proc_reap_external,
+                                      "External process '%ls' (pid %d, %s)",
+                                      proc->argv0(), pid, proc->status.stopped() ? "stopped" : "continued");
+                            }
                         }
                     } else {
                         assert(0 && "Don't know how to reap this process");

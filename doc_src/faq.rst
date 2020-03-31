@@ -248,6 +248,26 @@ In fish versions prior to 2.5.0 it was possible to create a function named ``-``
 
     abbr -a -- - 'cd -'
 
+.. _faq-unicode:
+
+I'm getting weird graphical glitches (a staircase effect, ghost characters,...)?
+--------------------------------------------------------------------------------
+In a terminal, the application running inside it and the terminal itself need to agree on the width of characters in order to handle cursor movement.
+
+This is more important to fish than other shells because features like syntax highlighting and autosuggestions are implemented by moving the cursor.
+
+Sometimes, there is disagreement on the width. There are numerous causes and fixes for this:
+
+- It is possible the character is simply too new for your system to know - in this case you need to refrain from using it.
+- Fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
+- The character has an "ambiguous" width and fish thinks that means a width of X while your terminal thinks it's Y. In this case you either need to change your terminal's configuration or set $fish_ambiguous_width to the correct value.
+- The character is an emoji and the host system only supports Unicode 8, while you are running the terminal on a system that uses Unicode >= 9. In this case set $fish_emoji_width to 2.
+
+This also means that a few things are unsupportable:
+
+- Non-monospace fonts - there is *no way* for fish to figure out what width a specific character has as it has no influence on the terminal's font rendering.
+- Different widths for multiple ambiguous width characters - there is no way for fish to know which width you assign to each character.
+
 .. _faq-uninstalling:
 
 Uninstalling fish

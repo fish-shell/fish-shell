@@ -207,20 +207,19 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
         if (dump_parse_tree) dump_node(node_indent, node, source);
 
         // Prepend any escaped newline, but only for certain cases.
-        // We allow it to split arguments (including at the end - this is like trailing commas in lists, makes for better diffs),
-        // to separate pipelines (but it has to be *before* the pipe, so the pipe symbol is the first thing on the new line after the indent)
-        // and to separate &&/|| job lists (`and` and `or` are handled separately below, as they *allow* semicolons)
+        // We allow it to split arguments (including at the end - this is like trailing commas in
+        // lists, makes for better diffs), to separate pipelines (but it has to be *before* the
+        // pipe, so the pipe symbol is the first thing on the new line after the indent) and to
+        // separate &&/|| job lists (`and` and `or` are handled separately below, as they *allow*
+        // semicolons)
         // TODO: Handle
         //     foo | \
         //         bar
-        // so it just removes the escape - pipes don't need it. This was changed in some fish version, figure out which it was and if
-        // it is worth supporting.
-        if (prev_node_type == symbol_arguments_or_redirections_list
-            || prev_node_type == symbol_argument_list
-            || node_type == parse_token_type_andand
-            || node_type == parse_token_type_pipe
-            || node_type == parse_token_type_end
-            ) {
+        // so it just removes the escape - pipes don't need it. This was changed in some fish
+        // version, figure out which it was and if it is worth supporting.
+        if (prev_node_type == symbol_arguments_or_redirections_list ||
+            prev_node_type == symbol_argument_list || node_type == parse_token_type_andand ||
+            node_type == parse_token_type_pipe || node_type == parse_token_type_end) {
             maybe_prepend_escaped_newline(node);
         }
 
@@ -282,7 +281,9 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
                 // This can be extended to other characters, but giving the precise list is tough,
                 // can change over time (see "^", "%" and "?", in some cases "{}") and it just makes
                 // people feel more at ease.
-                auto goodchars = [](wchar_t ch) { return fish_iswalnum(ch) || ch == L'_' || ch == L'-' || ch == L'/'; };
+                auto goodchars = [](wchar_t ch) {
+                    return fish_iswalnum(ch) || ch == L'_' || ch == L'-' || ch == L'/';
+                };
                 if (std::find_if_not(unescaped.begin(), unescaped.end(), goodchars) ==
                         unescaped.end() &&
                     !unescaped.empty()) {

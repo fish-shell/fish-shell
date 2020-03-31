@@ -3228,11 +3228,11 @@ static void test_autosuggest_suggest_special() {
                                        __LINE__);
 
     // Don't crash on ~ (issue #2696). Note this is cwd dependent.
-    if (system("mkdir -p '~hahaha/path1/path2/'")) err(L"mkdir failed");
-    perform_one_autosuggestion_cd_test(L"cd ~haha", L"ha/path1/path2/", vars, __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd ~hahaha/", L"path1/path2/", vars, __LINE__);
-    perform_one_completion_cd_test(L"cd ~haha", L"ha/", vars, __LINE__);
-    perform_one_completion_cd_test(L"cd ~hahaha/", L"path1/", vars, __LINE__);
+    if (system("mkdir -p '~absolutelynosuchuser/path1/path2/'")) err(L"mkdir failed");
+    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchus", L"er/path1/path2/", vars, __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/path2/", vars, __LINE__);
+    perform_one_completion_cd_test(L"cd ~absolutelynosuchus", L"er/", vars, __LINE__);
+    perform_one_completion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/", vars, __LINE__);
 
     parser_t::principal_parser().vars().remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
     popd();
@@ -5671,7 +5671,7 @@ Executed in  500.00 micros    fish         external
      // (c) carry to the next unit when the larger one exceeds 1000
     std::wstring actual = timer_snapshot_t::print_delta(t1, t2, true);
     if (actual != expected) {
-        err(L"Failed to format timer snapshot\n\Expected: %ls\nActual:%ls\n", expected,
+        err(L"Failed to format timer snapshot\nExpected: %ls\nActual:%ls\n", expected,
             actual.c_str());
     }
     setlocale(LC_NUMERIC, saved_locale);

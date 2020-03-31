@@ -1453,16 +1453,16 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
             switch (c) {
                 case L'\\': {
                     if (!ignore_backslashes) {
-                        // Backslashes (escapes) are complicated and may result in errors, or appending
-                        // INTERNAL_SEPARATORs, so we have to handle them specially.
-                        auto escape_chars = read_unquoted_escape(input + input_position, &result,
-                                                                 allow_incomplete, unescape_special);
+                        // Backslashes (escapes) are complicated and may result in errors, or
+                        // appending INTERNAL_SEPARATORs, so we have to handle them specially.
+                        auto escape_chars = read_unquoted_escape(
+                            input + input_position, &result, allow_incomplete, unescape_special);
                         if (!escape_chars) {
                             // A none() return indicates an error.
                             errored = true;
                         } else {
-                            // Skip over the characters we read, minus one because the outer loop will
-                            // increment it.
+                            // Skip over the characters we read, minus one because the outer loop
+                            // will increment it.
                             assert(*escape_chars > 0);
                             input_position += *escape_chars - 1;
                         }

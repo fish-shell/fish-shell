@@ -374,7 +374,7 @@ Unlike other shells, fish does not split command substitutions on any whitespace
 
     > printf '%s\n' (pkg-config --libs gio-2.0)
     -lgio-2.0 -lgobject-2.0 -lglib-2.0
-    > printf '%s\n' (pkg-config --libs gio-2.0 | string split " ")
+    > printf '%s\n' (pkg-config --libs gio-2.0 | string split -n " ")
     -lgio-2.0
     -lgobject-2.0
     -lglib-2.0

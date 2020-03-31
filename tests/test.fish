@@ -11,9 +11,9 @@ set -x FISH_UNIT_TESTS_RUNNING 1
 # Change to directory containing this script
 cd (dirname (status -f))
 
-# Test files specified on commandline, or all *.in files
+# Test files specified on commandline, or all checks.
 if set -q argv[1]
-    set files_to_test $argv.in
+    set files_to_test checks/$argv.fish
 else
     set files_to_test checks/*.fish
 end
@@ -44,7 +44,7 @@ if set -q littlecheck_files[1]
 end
 
 if test $failed -eq 0
-    say green "All tests completed successfully"
+    say green "All high level script tests completed successfully"
     exit 0
 else
     set plural (test $failed -eq 1; or echo s)

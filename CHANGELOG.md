@@ -2,11 +2,13 @@
 
 ## Notable improvements and fixes
 - `fish --no-execute` will no longer complain about unknown commands or non-matching wildcards, as these could be defined differently at runtime (especially for functions). #977
+- `jobs --quiet PID` will no longer print 'no suitable job' if the job for PID does not exist (e.g. because it has finished). #6809
 
 ### Syntax changes and new commands
 
 ### Scripting improvements
 - Range limits in index range expansions like `$x[$start..$end]` may be omitted: `$start` and `$end` default to 1 and -1 (the last item) respectively.
+- `string sub` has a new `--end` option to specify the end index of a substring (#6765).
 
 ### Interactive improvements
 
@@ -20,16 +22,19 @@
 
 #### Completions
 - Added completions for
+  - `gitk`
   - `wireshark`, `tshark`, and `dumpcap`
   - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
   - `dhclient`
   - `tcpdump`
+  - `tig`
   - `windscribe`
 
 ### Deprecations and removed features
 
 ### For distributors and developers
 - fish source tarballs are now distributed using the XZ compression method (#5460).
+- Allow finishing builds on OS X <10.13.6 (previously builds would fail at the `codesign` step)
 
 ---
 

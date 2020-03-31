@@ -246,9 +246,7 @@ __fish_reconstruct_path
 function __fish_expand_pid_args
     for arg in $argv
         if string match -qr '^%\d+$' -- $arg
-            # set newargv $newargv (jobs -p $arg)
-            jobs -p $arg
-            if not test $status -eq 0
+            if not jobs -p $arg
                 return 1
             end
         else

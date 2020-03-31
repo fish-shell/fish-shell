@@ -51,6 +51,30 @@ string sub -s 2 -l 2 abcde
 string sub --start=-2 abcde
 # CHECK: de
 
+string sub --end=3 abcde
+# CHECK: abc
+
+string sub --end=-4 abcde
+# CHECK: a
+
+string sub --start=2 --end=-2 abcde
+# CHECK: bc
+
+string sub -s -5 -e -2 abcdefgh
+# CHECK: def
+
+string sub -s -100 -e -2 abcde
+# CHECK: abc
+
+string sub -s -5 -e 2 abcde
+# CHECK: ab
+
+string sub -s -50 -e -100 abcde
+# CHECK:
+
+string sub -s 2 -e -5 abcde
+# CHECK:
+
 string split . example.com
 # CHECK: example
 # CHECK: com

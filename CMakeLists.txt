@@ -10,6 +10,7 @@ endif()
 include(cmake/Mac.cmake)
 
 project(fish)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # We are C++11.
 set(CMAKE_CXX_STANDARD 11)
@@ -217,11 +218,11 @@ include(cmake/MacApp.cmake)
 # CMake does not support the "iquote" flag - https://gitlab.kitware.com/cmake/cmake/issues/15491
 set(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:fishlib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:fishlib,INCLUDE_DIRECTORIES>, -I>")
 add_custom_target(lint
-    COMMAND build_tools/lint.fish -- ${LINT_ARGS}
+    COMMAND build_tools/lint.fish -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 add_custom_target(lint-all
-    COMMAND build_tools/lint.fish --all -- ${LINT_ARGS}
+    COMMAND build_tools/lint.fish --all -p ${CMAKE_BINARY_DIR} -- ${LINT_ARGS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 

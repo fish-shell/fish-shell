@@ -89,7 +89,7 @@ static const wcstring &C_(const wcstring &s) { return s; }
 /// If option is non-empty, it specifies a switch for the command. If \c comp is also not empty, it
 /// contains a list of non-switch arguments that may only follow directly after the specified
 /// switch.
-typedef struct complete_entry_opt {
+using complete_entry_opt_t = struct complete_entry_opt {
     // Text of the option (like 'foo').
     wcstring option;
     // Type of the option: args-oly, short, single_long, or double_long.
@@ -119,8 +119,7 @@ typedef struct complete_entry_opt {
         }
         DIE("unreachable");
     }
-
-} complete_entry_opt_t;
+};
 
 /// Last value used in the order field of completion_entry_t.
 static std::atomic<unsigned int> k_complete_order{0};

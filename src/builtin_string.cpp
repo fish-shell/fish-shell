@@ -133,7 +133,7 @@ class arg_iterator_t {
 
 // This is used by the string subcommands to communicate with the option parser which flags are
 // valid and get the result of parsing the command for flags.
-typedef struct {  //!OCLINT(too many fields)
+using options_t = struct options_t {  //!OCLINT(too many fields)
     bool all_valid = false;
     bool chars_valid = false;
     bool count_valid = false;
@@ -185,7 +185,7 @@ typedef struct {  //!OCLINT(too many fields)
     const wchar_t *arg2 = nullptr;
 
     escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
-} options_t;
+};
 
 /// This handles the `--style=xxx` flag.
 static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams,

@@ -74,13 +74,13 @@ typedef struct te_expr {
     te_expr *parameters[];
 } te_expr;
 
-typedef struct te_builtin {
+using te_builtin = struct {
     const char *name;
     const void *address;
     int type;
-} te_builtin;
+};
 
-typedef struct state {
+using state = struct {
     union {
         double value;
         const void *function;
@@ -89,7 +89,7 @@ typedef struct state {
     const char *next;
     int type;
     te_error_type_t error;
-} state;
+};
 
 /* Parses the input expression. */
 /* Returns NULL on error. */

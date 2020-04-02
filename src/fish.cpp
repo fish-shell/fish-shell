@@ -336,12 +336,12 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 auto cats = get_flog_categories();
                 // Compute width of longest name.
                 int name_width = 0;
-                for (const auto *cat : cats) {
+                for (auto cat : cats) {
                     name_width = std::max(name_width, static_cast<int>(wcslen(cat->name)));
                 }
                 // A little extra space.
                 name_width += 2;
-                for (const auto *cat : cats) {
+                for (auto cat : cats) {
                     // Negating the name width left-justifies.
                     printf("%*ls %ls\n", -name_width, cat->name, _(cat->description));
                 }

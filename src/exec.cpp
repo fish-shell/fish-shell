@@ -93,8 +93,8 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
     int err;
 
     // This function never returns, so we take certain liberties with constness.
-    char *const *envv = const_cast<char *const *>(cenvv);
-    char *const *argv = const_cast<char *const *>(cargv);
+    const auto envv = const_cast<char *const *>(cenvv);
+    const auto argv = const_cast<char *const *>(cargv);
 
     execve(actual_cmd, argv, envv);
     err = errno;
@@ -1062,8 +1062,7 @@ static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &bu
             const char *cursor = begin;
             while (cursor < end) {
                 // Look for the next separator.
-                const char *stop =
-                    static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
+                auto stop = static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
                 const bool hit_separator = (stop != nullptr);
                 if (!hit_separator) {
                     // If it's not found, just use the end.

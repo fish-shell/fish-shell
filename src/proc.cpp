@@ -96,7 +96,7 @@ void proc_init() { signal_set_handlers_once(false); }
 
 // Basic thread safe sorted vector of job IDs in use.
 // This is deliberately leaked to avoid dtor ordering issues - see #6539.
-static auto *const locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
+static const auto locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
 
 job_id_t acquire_job_id() {
     auto consumed_job_ids = locked_consumed_job_ids->acquire();

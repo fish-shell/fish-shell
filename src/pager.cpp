@@ -84,7 +84,7 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
             // skip non-printable characters
             continue;
         }
-        size_t width_c = size_t(iwidth_c);
+        auto width_c = size_t(iwidth_c);
 
         if (width_c > remaining) break;
 
@@ -139,7 +139,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
 
     auto modify_role = [=](highlight_role_t role) -> highlight_role_t {
         using uint_t = typename std::underlying_type<highlight_role_t>::type;
-        uint_t base = static_cast<uint_t>(role);
+        auto base = static_cast<uint_t>(role);
         if (selected) {
             base += static_cast<uint_t>(highlight_role_t::pager_selected_background) -
                     static_cast<uint_t>(highlight_role_t::pager_background);

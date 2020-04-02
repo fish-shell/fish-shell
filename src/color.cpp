@@ -87,15 +87,15 @@ static int parse_hex_digit(wchar_t x) {
 }
 
 static unsigned long squared_difference(long p1, long p2) {
-    unsigned long diff = static_cast<unsigned long>(labs(p1 - p2));
+    auto diff = static_cast<unsigned long>(labs(p1 - p2));
     return diff * diff;
 }
 
 static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *colors,
                                    size_t color_count) {
     long r = rgb[0], g = rgb[1], b = rgb[2];
-    unsigned long best_distance = static_cast<unsigned long>(-1);
-    unsigned char best_index = static_cast<unsigned char>(-1);
+    auto best_distance = static_cast<unsigned long>(-1);
+    auto best_index = static_cast<unsigned char>(-1);
     for (size_t idx = 0; idx < color_count; idx++) {
         uint32_t color = colors[idx];
         long test_r = (color >> 16) & 0xFF, test_g = (color >> 8) & 0xFF,

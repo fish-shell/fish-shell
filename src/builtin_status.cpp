@@ -350,7 +350,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 1, args.size());
                 return STATUS_INVALID_ARGS;
             }
-            const auto *metadata = features_t::metadata_for(args.front().c_str());
+            auto metadata = features_t::metadata_for(args.front().c_str());
             if (!metadata) {
                 retval = TEST_FEATURE_NOT_RECOGNIZED;
             } else {

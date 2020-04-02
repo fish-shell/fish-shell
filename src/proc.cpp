@@ -428,7 +428,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
                             if (proc->status.stopped()) {
-                                j->mut_flags().foreground = 0;
+                                j->mut_flags().foreground = false;
                             }
                             if (proc->status.normal_exited() || proc->status.signal_exited()) {
                                 FLOGF(proc_reap_external,

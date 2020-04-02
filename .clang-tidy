@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert,modernize-use-bool-literals'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

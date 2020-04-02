@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
@@ -9,6 +9,8 @@ CheckOptions:
     value:           'L;LL;LU;LLU'
   - key:             cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField
     value:           '0'
+  - key:             modernize-loop-convert.MinConfidence
+    value:           'risky'
   - key:             modernize-use-auto.RemoveStars
     value:           '1'
 ...

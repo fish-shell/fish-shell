@@ -148,13 +148,13 @@ operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
 /// These are deliberately leaked to avoid shutdown dtor registration.
 static debounce_t &debounce_autosuggestions() {
     const long kAutosuggetTimeoutMs = 500;
-    static debounce_t *res = new debounce_t(kAutosuggetTimeoutMs);
+    static auto res = new debounce_t(kAutosuggetTimeoutMs);
     return *res;
 }
 
 static debounce_t &debounce_highlighting() {
     const long kHighlightTimeoutMs = 500;
-    static debounce_t *res = new debounce_t(kHighlightTimeoutMs);
+    static auto res = new debounce_t(kHighlightTimeoutMs);
     return *res;
 }
 
@@ -549,7 +549,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     }
 
     editable_line_t *active_edit_line() {
-        const auto *cthis = this;
+        auto cthis = reinterpret_cast<const reader_data_t *>(this);
         return const_cast<editable_line_t *>(cthis->active_edit_line());
     }
 

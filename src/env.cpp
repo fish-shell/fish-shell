@@ -107,7 +107,7 @@ const electric_var_t *electric_var_t::for_name(const wcstring &name) {
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wcstring &key) {
-    if (const auto *ev = electric_var_t::for_name(key)) {
+    if (auto ev = electric_var_t::for_name(key)) {
         return ev->readonly();
     }
     // Hack.

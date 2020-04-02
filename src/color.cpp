@@ -173,9 +173,9 @@ wcstring_list_t rgb_color_t::named_color_names() {
     const size_t count = sizeof named_colors / sizeof *named_colors;
     wcstring_list_t result;
     result.reserve(1 + count);
-    for (size_t i = 0; i < count; i++) {
-        if (!named_colors[i].hidden) {
-            result.push_back(named_colors[i].name);
+    for (const auto &named_color : named_colors) {
+        if (!named_color.hidden) {
+            result.push_back(named_color.name);
         }
     }
     // "normal" isn't really a color and does not have a color palette index or

@@ -131,7 +131,6 @@ class completion_entry_t {
     /// List of all options.
     option_list_t options;
 
-   public:
     /// Command string.
     const wcstring cmd;
     /// True if command is a path.

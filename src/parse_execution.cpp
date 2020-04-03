@@ -485,7 +485,7 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
 
     // If we expanded to nothing, match the empty string.
     assert(switch_values_expanded.size() <= 1 && "Should have at most one expansion");
-    wcstring switch_value_expanded = L"";
+    wcstring switch_value_expanded;
     if (!switch_values_expanded.empty()) {
         switch_value_expanded = std::move(switch_values_expanded.front().completion);
     }

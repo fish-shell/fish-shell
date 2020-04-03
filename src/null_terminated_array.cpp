@@ -35,7 +35,7 @@ static CharT **make_null_terminated_array_helper(
         const std::basic_string<CharT> &str = argv.at(i);
         *pointers++ = strings;  // store the current string pointer into self
         strings = std::copy(str.begin(), str.end(), strings);  // copy the string into strings
-        *strings++ = (CharT)(0);  // each string needs a null terminator
+        *strings++ = static_cast<CharT>(0);  // each string needs a null terminator
     }
     *pointers++ = nullptr;  // array of pointers needs a null terminator
 

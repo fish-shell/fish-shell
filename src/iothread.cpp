@@ -203,7 +203,9 @@ static void enqueue_thread_result(void_function_t req) {
     assert_with_errno(write_loop(notify_fd, &wakeup_byte, sizeof wakeup_byte) != -1);
 }
 
-static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
+static void *this_thread() {
+    return reinterpret_cast<void *>(pthread_self());
+}
 
 void *thread_pool_t::run() {
     while (auto req = dequeue_work_or_commit_to_exit()) {

@@ -1174,7 +1174,7 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
         if (opts.fields.size() > 0) {
             for (const auto &field : opts.fields) {
                 // field indexing starts from 1
-                if (field - 1 >= (long)split_count) {
+                if (field - 1 >= static_cast<long>(split_count)) {
                     return STATUS_CMD_ERROR;
                 }
             }

@@ -54,7 +54,7 @@ class wgetopter_t {
     bool _handle_long_opt(int argc, wchar_t **argv, const struct woption *longopts, int *longind,
                           int long_only, int *retval);
     const struct woption *_find_matching_long_opt(const struct woption *longopts, wchar_t *nameend,
-                                                  int *exact, int *ambig, int *indfound);
+                                                  int *exact, int *ambig, int *indfound) const;
     void _update_long_opt(int argc, wchar_t **argv, const struct woption *pfound, wchar_t *nameend,
                           int *longind, int option_index, int *retval);
     bool initialized = false;

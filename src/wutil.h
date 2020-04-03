@@ -173,7 +173,7 @@ struct file_id_t {
 struct dir_t {
     DIR *dir;
     bool valid() const;
-    bool read(wcstring &name);
+    bool read(wcstring &name) const;
     dir_t(const wcstring &path);
     ~dir_t();
 };

@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert,modernize-use-bool-literals,modernize-use-using,hicpp-uppercase-literal-suffix'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert,modernize-use-bool-literals,modernize-use-using,hicpp-uppercase-literal-suffix,readability-make-member-function-const'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

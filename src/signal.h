@@ -45,7 +45,7 @@ class sigint_checker_t {
     bool check();
 
     /// Wait until a sigint is delivered.
-    void wait();
+    void wait() const;
 };
 
 #endif

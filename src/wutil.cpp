@@ -206,7 +206,7 @@ dir_t::~dir_t() {
 
 bool dir_t::valid() const { return this->dir != nullptr; }
 
-bool dir_t::read(wcstring &name) { return wreaddir(this->dir, name); }
+bool dir_t::read(wcstring &name) const { return wreaddir(this->dir, name); }
 
 int wstat(const wcstring &file_name, struct stat *buf) {
     const cstring tmp = wcs2string(file_name);

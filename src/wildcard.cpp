@@ -166,7 +166,7 @@ static wcstring resolve_description(const wcstring &full_completion, wcstring *c
     size_t complete_sep_loc = completion->find(PROG_COMPLETE_SEP);
     if (complete_sep_loc != wcstring::npos) {
         // This completion has an embedded description, do not use the generic description.
-        const wcstring description = completion->substr(complete_sep_loc + 1);
+        wcstring description = completion->substr(complete_sep_loc + 1);
         completion->resize(complete_sep_loc);
         return description;
     }
@@ -218,7 +218,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
 
     // Maybe we have no more wildcards at all. This includes the empty string.
     if (next_wc_char_pos == wcstring::npos) {
-        string_fuzzy_match_t match = string_fuzzy_match_string(wc, str);
+        auto match = string_fuzzy_match_string(wc, str);
 
         // If we're allowing fuzzy match, any match is OK. Otherwise we require a prefix match.
         bool match_acceptable;

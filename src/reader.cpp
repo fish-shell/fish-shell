@@ -240,7 +240,7 @@ bool editable_line_t::undo() {
     edit_t inverse = edit_t(edit.offset, edit.replacement.size(), L"");
     inverse.replacement = edit.old;
     size_t old_position = edit.cursor_position_before_edit;
-    apply_edit(&text_, std::move(inverse));
+    apply_edit(&text_, inverse);
     set_position(old_position);
     undo_history.may_coalesce = false;
     return true;
@@ -2330,10 +2330,10 @@ void reader_set_expand_abbreviations(bool flag) { current_data()->expand_abbrevi
 void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
 
 void reader_set_highlight_function(highlight_function_t func) {
-    current_data()->highlight_func = std::move(func);
+    current_data()->highlight_func = func;
 }
 
-void reader_set_test_function(test_function_t f) { current_data()->test_func = std::move(f); }
+void reader_set_test_function(test_function_t f) { current_data()->test_func = f; }
 
 void reader_set_exit_on_interrupt(bool i) { current_data()->exit_on_interrupt = i; }
 

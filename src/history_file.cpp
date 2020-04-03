@@ -161,7 +161,7 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
     return history_item_t{};
 }
 
-maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) {
+maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) const {
     auto offset = size_t(-1);
     switch (this->type()) {
         case history_type_fish_2_0:

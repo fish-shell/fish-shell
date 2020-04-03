@@ -1288,7 +1288,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 
     void make_pipe(const wchar_t *test_path);
 
-    void drain_excessive_data() {
+    void drain_excessive_data() const {
         // The pipe seems to have data on it, that won't go away. Read a big chunk out of it. We
         // don't read until it's exhausted, because if someone were to pipe say /dev/null, that
         // would cause us to hang!

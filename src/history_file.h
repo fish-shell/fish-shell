@@ -29,7 +29,7 @@ class history_file_contents_t {
     /// The cursor should initially be 0.
     /// If cutoff is nonzero, skip items whose timestamp is newer than cutoff.
     /// \return the offset of the next item, or none() on end.
-    maybe_t<size_t> offset_of_next_item(size_t *cursor, time_t cutoff);
+    maybe_t<size_t> offset_of_next_item(size_t *cursor, time_t cutoff) const;
 
     /// Get the file type.
     history_file_type_t type() const { return type_; }

@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert,modernize-use-bool-literals,modernize-use-using,hicpp-uppercase-literal-suffix,readability-make-member-function-const,readability-redundant-string-init,readability-inconsistent-declaration-parameter-name,google-readability-casting'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert,modernize-use-bool-literals,modernize-use-using,hicpp-uppercase-literal-suffix,readability-make-member-function-const,readability-redundant-string-init,readability-inconsistent-declaration-parameter-name,google-readability-casting,readability-redundant-access-specifiers'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

@@ -29,15 +29,15 @@ set(rel_functionsdir "fish/vendor_functions.d")
 set(rel_confdir "fish/vendor_conf.d")
 
 set(extra_completionsdir
-    "/usr/local/share/${rel_completionsdir}"
+    "${datadir}/${rel_completionsdir}"
     CACHE STRING "Path for extra completions")
 
 set(extra_functionsdir
-    "/usr/local/share/${rel_functionsdir}"
+    "${datadir}/${rel_functionsdir}"
     CACHE STRING "Path for extra functions")
 
 set(extra_confdir
-    "/usr/local/share/${rel_confdir}"
+    "${datadir}/${rel_confdir}"
     CACHE STRING "Path for extra configuration")
 
 # These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.

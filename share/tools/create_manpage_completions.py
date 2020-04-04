@@ -1008,10 +1008,7 @@ if __name__ == "__main__":
         action="append",
     )
     parser.add_argument(
-        "-d",
-        "--directory",
-        type=str,
-        help="The directory to save the completions in",
+        "-d", "--directory", type=str, help="The directory to save the completions in",
     )
     parser.add_argument(
         "-k",
@@ -1020,22 +1017,13 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
-        "-m",
-        "--manpath",
-        help="Whether to use manpath",
-        action="store_true",
+        "-m", "--manpath", help="Whether to use manpath", action="store_true",
     )
     parser.add_argument(
-        "-p",
-        "--progress",
-        help="Whether to show progress",
-        action="store_true",
+        "-p", "--progress", help="Whether to show progress", action="store_true",
     )
     parser.add_argument(
-        "-s",
-        "--stdout",
-        help="Write the completions to stdout",
-        action="store_true",
+        "-s", "--stdout", help="Write the completions to stdout", action="store_true",
     )
     parser.add_argument(
         "-v",
@@ -1045,12 +1033,9 @@ if __name__ == "__main__":
         help="The level of debug output to show",
     )
     parser.add_argument(
-        "-z",
-        "--deroff-only",
-        help="Whether to just deroff",
-        action="store_true",
+        "-z", "--deroff-only", help="Whether to just deroff", action="store_true",
     )
-    parser.add_argument('file_paths', type=str, nargs='*')
+    parser.add_argument("file_paths", type=str, nargs="*")
 
     args = parser.parse_args()
 

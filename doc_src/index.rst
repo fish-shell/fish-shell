@@ -814,11 +814,11 @@ There are three kinds of variables in fish: universal, global and local variable
 
 Variables can be explicitly set to be universal with the ``-U`` or ``--universal`` switch, global with the ``-g`` or ``--global`` switch, or local with the ``-l`` or ``--local`` switch.  The scoping rules when creating or updating a variable are:
 
-- If a variable is explicitly set to a scope (universal, global or local), that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
+- When a scope is explicitly given, it will be used. If a variable of the same name exists in a different scope, that variable will not be changed.
 
-- If a variable is not explicitly set to a scope, but has been previously defined, the variable scope is not changed.
+- When no scope is given, but a variable of that name exists, the variable of the smallest scope will be modified. The scope will not be changed.
 
-- If a variable is not explicitly set to a scope and has not been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+- As a special case, when no scope is given and no variable has been defined the variable will belong to the scope of the currently executing *function*. Note that this is different from the ``--local`` flag``, which would make the variable local to the current *block*.
 
 There may be many variables with the same name, but different scopes. When using a variable, the variable scope will be searched from the inside out, i.e. a local variable will be used rather than a global variable with the same name, a global variable will be used rather than a universal variable with the same name.
 
@@ -829,10 +829,13 @@ The following code will not output anything::
     begin
         # This is a nice local scope where all variables will die
         set -l pirate 'There be treasure in them thar hills'
+        set captain Space, the final frontier
     end
 
     echo $pirate
     # This will not output anything, since the pirate was local
+    echo $captain
+    # This will output the good Captain's speech since $captain had function-scope.
 
 .. _variables-override:
 

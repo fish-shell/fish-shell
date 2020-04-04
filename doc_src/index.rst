@@ -1477,10 +1477,25 @@ In addition, when pasting inside single quotes, pasted single quotes and backsla
 
 .. [#] These rely on external tools. Currently xsel, xclip, wl-copy/wl-paste and pbcopy/pbpaste are supported.
 
+.. _multiline:
+
+Multiline editing
+-----------------
+
+The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
+
+- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :ref:`end <cmd-end>` command.
+
+- Pressing :kbd:`Alt`\ +\ :kbd:`Enter` instead of pressing the :kbd:`Enter` key.
+
+- By inserting a backslash (``\``) character before pressing the :kbd:`Enter` key, escaping the newline.
+
+The fish commandline editor works exactly the same in single line mode and in multiline mode. To move between lines use the left and right arrow keys and other such keyboard shortcuts.
+
 .. _history-search:
 
-Searchable history
-------------------
+Searchable command history
+--------------------------
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
@@ -1503,21 +1518,35 @@ To search for previous entries containing the word 'make', type ``make`` in the 
 
 If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt`\ +\ :kbd:`↑` to search for previously typed words containing 'm'.
 
+Navigating directories
+======================
 
-.. _multiline:
+.. _directory-history:
 
-Multiline editing
+The current working directory can be displayed with the :ref:`pwd <cmd-pwd>` command.
+
+Directory history
 -----------------
 
-The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
+Fish automatically keeps a trail of the recent visited directories with :ref:`cd <cmd-cd>` by storing this history in the ``dirprev`` and ``dirnext`` variables.
 
-- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :ref:`end <cmd-end>` command.
+Several commands are provided to interact with this directory history:
 
-- Pressing :kbd:`Alt`\ +\ :kbd:`Enter` instead of pressing the :kbd:`Enter` key.
+- :ref:`dirh <cmd-dirh>` prints the history
+- :ref:`cdh <cmd-cdh>` displays a prompt to quickly navigate the history
+- :ref:`prevd <cmd-prevd>` moves backward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`←`
+- :ref:`nextd <cmd-nextd>` moves forward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`→`
 
-- By inserting a backslash (``\``) character before pressing the :kbd:`Enter` key, escaping the newline.
+.. _directory-stack:
 
-The fish commandline editor works exactly the same in single line mode and in multiline mode. To move between lines use the left and right arrow keys and other such keyboard shortcuts.
+Directory stack
+---------------
+
+Another set of commands, usually also available in other shells like bash, deal with the directory stack. Stack handling is not automatic and needs explicit calls of the following commands:
+
+- :ref:`dirs <cmd-dirs>` prints the stack
+- :ref:`pushd <cmd-pushd>` adds a directory on top of the stack and makes it the current working directory
+- :ref:`popd <cmd-popd>` removes the directory on top of the stack and changes the current working directory
 
 .. _job-control:
 

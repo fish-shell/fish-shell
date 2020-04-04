@@ -27,8 +27,6 @@ As a special case, ``cd .`` is equivalent to ``cd $PWD``, which is useful in cas
 Examples
 --------
 
-
-
 ::
 
     cd
@@ -37,8 +35,7 @@ Examples
     cd /usr/src/fish-shell
     # changes the working directory to /usr/src/fish-shell
 
-
 See Also
 --------
 
-See also the :ref:`cdh <cmd-cdh>` command for changing to a recently visited directory.
+Navigate directories using the :ref:`directory history <directory-history>` or the :ref:`directory stack <directory-stack>`

@@ -21,3 +21,8 @@ The following options are available:
 - ``-L`` or ``--logical`` Output the logical working directory, without resolving symlinks (default behavior).
 
 - ``-P`` or ``--physical`` Output the physical working directory, with symlinks resolved.
+
+See Also
+--------
+
+Navigate directories using the :ref:`directory history <directory-history>` or the :ref:`directory stack <directory-stack>`

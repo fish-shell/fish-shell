@@ -1294,7 +1294,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Tab` `completes <#tab-completion>`_ the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode.
 
-- :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, they accept one word of the autosuggestion.
+- :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`→` accepts the autosuggestion.
 
 - :kbd:`Alt`\ +\ :kbd:`←` and :kbd:`Alt`\ +\ :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt`\ +\ :kbd:`→` (or :kbd:`Alt`\ +\ :kbd:`F`) accepts the first word in the suggestion.
 
@@ -1334,7 +1334,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Alt`\ +\ :kbd:`S` Prepends `sudo` to the current commandline.
 
-- :kbd:`Control`\ +\ :kbd:`Space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. (for vi-mode this only applies to insert-mode)
+- :kbd:`Control`\ +\ :kbd:`Space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. For vi-mode this only applies to insert-mode.
 
 .. _emacs-mode:
 
@@ -1345,11 +1345,11 @@ Emacs mode commands
 
 - :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` accepts the autosuggestion.
 
-- :kbd:`Control`\ +\ :kbd:`B`, :kbd:`Control`\ +\ :kbd:`F` move the cursor one character left or right just like the :kbd:`←` (Left) and :kbd:`→` (Right) shared bindings (which are available as well).
+- :kbd:`Control`\ +\ :kbd:`B`, :kbd:`Control`\ +\ :kbd:`F` move the cursor one character left or right or accept the autosuggestion just like the :kbd:`←` (Left) and :kbd:`→` (Right) shared bindings (which are available as well).
 
 - :kbd:`Control`\ +\ :kbd:`N`, :kbd:`Control`\ +\ :kbd:`P` move the cursor up/down or through history, like the up and down arrow shared bindings.
 
-- :kbd:`Delete` and :kbd:`Backspace` removes one character forwards or backwards respectively.
+- :kbd:`Delete` or :kbd:`Backspace` removes one character forwards or backwards respectively.
 
 - :kbd:`Control`\ +\ :kbd:`K` moves contents from the cursor to the end of line to the `killring <#killring>`__.
 
@@ -1357,13 +1357,13 @@ Emacs mode commands
 
 - :kbd:`Alt`\ +\ :kbd:`U` makes the current word uppercase.
 
-- :kbd:`Control`\ +\ :kbd:`T` transposes the last two characters
+- :kbd:`Control`\ +\ :kbd:`T` transposes the last two characters.
 
-- :kbd:`Alt`\ +\ :kbd:`T` transposes the last two words
+- :kbd:`Alt`\ +\ :kbd:`T` transposes the last two words.
 
-- :kbd:`Control`\ +\ :kbd:`_` (:kbd:`Control`\ +\ :kbd:`/` on some terminals) undoes the most recent edit of the line
+- :kbd:`Control`\ +\ :kbd:`_` (:kbd:`Control`\ +\ :kbd:`/` on some terminals) undoes the most recent edit of the line.
 
-- :kbd:`Alt`\ +\ :kbd:`/` reverts the most recent undo
+- :kbd:`Alt`\ +\ :kbd:`/` reverts the most recent undo.
 
 
 You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.

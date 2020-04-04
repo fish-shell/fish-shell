@@ -317,20 +317,14 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
 int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv[1] != nullptr) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv) - 1);
-        return STATUS_INVALID_ARGS;
-    }
+    UNUSED(argv);
     return STATUS_CMD_OK;
 }
 
 int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv[1] != nullptr) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv) - 1);
-        return STATUS_INVALID_ARGS;
-    }
+    UNUSED(argv);
     return STATUS_CMD_ERROR;
 }
 

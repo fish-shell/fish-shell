@@ -346,7 +346,6 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                     printf("%*ls %ls\n", -name_width, cat->name, _(cat->description));
                 }
                 exit(0);
-                break;
             }
             case 'p': {
                 s_profiling_output_filename = optarg;
@@ -360,7 +359,6 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             case 'v': {
                 std::fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
                 exit(0);
-                break;
             }
             case 'D': {
                 char *end;
@@ -381,7 +379,6 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
                 exit(1);
-                break;
             }
         }
     }

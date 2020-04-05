@@ -191,7 +191,6 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -306,7 +305,6 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case HIST_UNDEF: {
             DIE("Unexpected HIST_UNDEF seen");
-            break;
         }
     }
 

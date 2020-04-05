@@ -571,12 +571,10 @@ int main(int argc, char *argv[]) {
             case 'h': {
                 print_help("fish_indent", 1);
                 exit(0);
-                break;
             }
             case 'v': {
                 std::fwprintf(stderr, _(L"%ls, version %s\n"), program_name, get_fish_version());
                 exit(0);
-                break;
             }
             case 'w': {
                 output_type = output_type_file;
@@ -632,7 +630,6 @@ int main(int argc, char *argv[]) {
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
                 exit(1);
-                break;
             }
         }
     }
@@ -706,7 +703,6 @@ int main(int argc, char *argv[]) {
             }
             case output_type_pygments_csv: {
                 DIE("pygments_csv should have been handled above");
-                break;
             }
         }
 

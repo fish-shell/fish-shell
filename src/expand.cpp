@@ -615,7 +615,6 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
         }
         default: {
             DIE("unhandled parse_ret value");
-            break;
         }
     }
 

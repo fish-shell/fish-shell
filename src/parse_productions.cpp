@@ -178,7 +178,6 @@ RESOLVE(statement) {
                     return production_for<decorated>();
                 }
             }
-            break;
         }
         case parse_token_type_pipe:
         case parse_token_type_redirection:

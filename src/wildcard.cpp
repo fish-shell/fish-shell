@@ -306,7 +306,6 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         }
         default: {
             DIE("unreachable code reached");
-            break;
         }
     }
 

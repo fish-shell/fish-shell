@@ -88,7 +88,7 @@ class input_mapping_set_t {
     input_mapping_set_t();
 
    public:
-    ~input_mapping_set_t();
+    ~input_mapping_set_t() = default;
 
     /// Erase all bindings.
     void clear(const wchar_t *mode = nullptr, bool user = true);

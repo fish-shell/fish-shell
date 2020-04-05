@@ -19,5 +19,3 @@ operation_context_t operation_context_t::empty() {
 operation_context_t operation_context_t::globals() {
     return operation_context_t{env_stack_t::globals()};
 }
-
-operation_context_t::~operation_context_t() = default;

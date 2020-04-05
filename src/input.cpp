@@ -165,7 +165,6 @@ wcstring describe_char(wint_t c) {
 
 using mapping_list_t = std::vector<input_mapping_t>;
 input_mapping_set_t::input_mapping_set_t() = default;
-input_mapping_set_t::~input_mapping_set_t() = default;
 
 acquired_lock<input_mapping_set_t> input_mappings() {
     static owning_lock<input_mapping_set_t> s_mappings{input_mapping_set_t()};

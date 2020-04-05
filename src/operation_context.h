@@ -50,7 +50,7 @@ class operation_context_t {
     explicit operation_context_t(const environment_t &vars)
         : operation_context_t(nullptr, vars, no_cancel) {}
 
-    ~operation_context_t();
+    ~operation_context_t() = default;
 };
 
 #endif

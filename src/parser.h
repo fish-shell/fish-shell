@@ -109,7 +109,7 @@ class block_t {
     static block_t breakpoint_block();
     static block_t variable_assignment_block();
 
-    ~block_t();
+    ~block_t() = default;
 };
 
 struct profile_item_t {

@@ -4,6 +4,7 @@
 - `fish --no-execute` will no longer complain about unknown commands or non-matching wildcards, as these could be defined differently at runtime (especially for functions). #977
 - `jobs --quiet PID` will no longer print 'no suitable job' if the job for PID does not exist (e.g. because it has finished). #6809
 - A variable `fish_kill_signal` will be set to the signal that terminated the last foreground job, or `0` if the job exited normally.
+- On BSD systems, with the `-s` option, `fish_md5` does not use the given string, but `-s`. From now on the string is used.
 
 ### Syntax changes and new commands
 

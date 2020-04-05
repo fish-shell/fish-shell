@@ -345,7 +345,6 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
             }
             default: {
                 DIE("unexpected utff8 len");
-                break;
             }
         }
 

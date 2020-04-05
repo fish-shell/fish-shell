@@ -732,7 +732,6 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
             }
             default: {
                 DIE("unknown cardinal direction");
-                break;
             }
         }
 

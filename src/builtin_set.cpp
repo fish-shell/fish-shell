@@ -163,7 +163,6 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -336,7 +335,6 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
         }
         default: {
             DIE("unexpected vars.set() ret val");
-            break;
         }
     }
 }
@@ -572,7 +570,6 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         }
         default: {
             DIE("invalid scope");
-            break;
         }
     }
 

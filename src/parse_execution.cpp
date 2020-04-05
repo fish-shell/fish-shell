@@ -869,7 +869,6 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
             }
             default: {
                 DIE("unexpected expand_string() return value");
-                break;
             }
         }
 
@@ -1009,7 +1008,6 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
 
             default: {
                 DIE("unexpected expand_string() return value");
-                break;
             }
         }
         wcstring_list_t vals;

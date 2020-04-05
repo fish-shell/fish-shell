@@ -517,7 +517,6 @@ unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigne
     switch (argc) {
         case 0: {
             DIE("argc should not be zero");  // should have been caught by the above test
-            break;
         }
         case 1: {
             return error(L"Missing argument at index %u", start + 1);

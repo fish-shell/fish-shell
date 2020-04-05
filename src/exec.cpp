@@ -867,7 +867,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
             // We should have handled exec up above.
             DIE("process_type_t::exec process found in pipeline, where it should never be. "
                 "Aborting.");
-            break;
         }
     }
     return true;

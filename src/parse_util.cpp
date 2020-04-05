@@ -1014,7 +1014,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
             }
             default: {
                 DIE("unexpected parse_util_locate_cmdsubst() return value");
-                break;
             }
         }
     }

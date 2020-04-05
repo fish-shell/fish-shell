@@ -570,7 +570,6 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
         }
         default: {
             DIE("unexpected opt");
-            break;
         }
     }
 }

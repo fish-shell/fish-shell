@@ -39,4 +39,8 @@ void exec_close(int fd);
 /// assigned. It's factored out because the logic has subtleties, and this centralizes it.
 pgroup_provenance_t get_pgroup_provenance(const std::shared_ptr<job_t> &j,
                                           const job_lineage_t &lineage);
+
+/// Add signals that should be masked for external processes in this job.
+bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask);
+
 #endif

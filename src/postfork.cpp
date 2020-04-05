@@ -9,7 +9,7 @@
 
 #include <cstring>
 #include <memory>
-#if FISH_USE_POSIX_SPAWN
+#ifdef FISH_USE_POSIX_SPAWN
 #include <spawn.h>
 #endif
 #include <cwchar>

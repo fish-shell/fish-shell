@@ -48,8 +48,8 @@
 #include "wcstringutil.h"
 #include "wutil.h"
 
-#if __APPLE__
-#define FISH_NOTIFYD_AVAILABLE 1
+#ifdef __APPLE__
+#define FISH_NOTIFYD_AVAILABLE
 #include <notify.h>
 #endif
 
@@ -1186,7 +1186,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
 
 /// A notifyd-based notifier. Very straightforward.
 class universal_notifier_notifyd_t : public universal_notifier_t {
-#if FISH_NOTIFYD_AVAILABLE
+#ifdef FISH_NOTIFYD_AVAILABLE
     int notify_fd;
     int token;
     std::string name;
@@ -1435,7 +1435,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 };
 
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
-#if FISH_NOTIFYD_AVAILABLE
+#ifdef FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;

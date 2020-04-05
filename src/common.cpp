@@ -42,7 +42,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/sysctl.h>
-#elif __APPLE__
+#elif defined(__APPLE__)
 #include <mach-o/dyld.h>
 #endif
 
@@ -2219,13 +2219,13 @@ bool valid_func_name(const wcstring &str) {
 std::string get_executable_path(const char *argv0) {
     char buff[PATH_MAX];
 
-#if __APPLE__
+#ifdef __APPLE__
     // On OS X use it's proprietary API to get the path to the executable.
     // This is basically grabbing exec_path after argc, argv, envp, ...: for us
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buffSize = sizeof buff;
     if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
-#elif __FreeBSD__
+#elif defined(__FreeBSD__)
     // FreeBSD does not have /proc by default, but it can be mounted as procfs via the
     // Linux compatibility layer. Per sysctl(3), passing in a process ID of -1 returns
     // the value for the current process.

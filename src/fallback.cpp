@@ -63,12 +63,13 @@ int fish_mkstemp_cloexec(char *name_template) {
     if (&mkostemp != nullptr) {
         return mkostemp(name_template, O_CLOEXEC);
     }
-#endif
+#else
     int result_fd = mkstemp(name_template);
     if (result_fd != -1) {
         fcntl(result_fd, F_SETFD, FD_CLOEXEC);
     }
     return result_fd;
+#endif
 }
 
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.

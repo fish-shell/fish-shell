@@ -158,3 +158,6 @@ See the [Guide for Developers](CONTRIBUTING.md).
 Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users> or join us on our [gitter.im channel](https://gitter.im/fish-shell/fish-shell). Or use the [fish tag on Stackoverflow](https://stackoverflow.com/questions/tagged/fish) for questions related to fish script and the [fish tag on Superuser](https://superuser.com/questions/tagged/fish) for all other questions (e.g., customizing colors, changing key bindings).
 
 Found a bug? Have an awesome idea? Please [open an issue](https://github.com/fish-shell/fish-shell/issues/new).
+
+## Projects that use fish
+* [xxh](https://github.com/xxh/xxh): Bring fish wherever you go through the ssh.

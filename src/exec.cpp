@@ -187,7 +187,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
 
     // child_setup_process makes sure signals are properly set up.
     dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
-    if (child_setup_process(INVALID_PID, false, redirs) == 0) {
+    if (child_setup_process(INVALID_PID, *j, false, redirs) == 0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -325,6 +325,16 @@ static void run_internal_process_or_short_circuit(parser_t &parser, const std::s
     }
 }
 
+bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask) {
+    // Block some signals in background jobs for which job control is turned off (#6828).
+    if (!job.is_foreground() && !job.wants_job_control()) {
+        sigaddset(sigmask, SIGINT);
+        sigaddset(sigmask, SIGQUIT);
+        return true;
+    }
+    return false;
+}
+
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
 /// context of the child. Returns true if fork succeeded, false if fork failed.
 static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t *p,
@@ -337,7 +347,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         maybe_t<pid_t> new_termowner{};
         p->pid = getpid();
         child_set_group(job.get(), p);
-        child_setup_process(job->should_claim_terminal() ? job->pgid : INVALID_PID, true, dup2s);
+        child_setup_process(job->should_claim_terminal() ? job->pgid : INVALID_PID, *job, true, dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }

@@ -113,7 +113,7 @@ int fish_mkstemp_cloexec(char *name_template) {
     return wcsncasecmp_fallback(a + 1, b + 1, count - 1);
 }
 
-#if __APPLE__
+#ifdef __APPLE__
 #if __DARWIN_C_LEVEL >= 200809L
 // Note parens avoid the macro expansion.
 wchar_t *wcsdup_use_weak(const wchar_t *a) {

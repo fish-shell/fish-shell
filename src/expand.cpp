@@ -16,7 +16,7 @@
 #ifdef SunOS
 #include <procfs.h>
 #endif
-#if __APPLE__
+#ifdef __APPLE__
 #include <sys/time.h>  // Required to build with old SDK versions
 // proc.h needs to be included *after* time.h, this comment stops clang-format from reordering.
 #include <sys/proc.h>

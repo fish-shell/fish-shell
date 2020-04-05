@@ -1178,7 +1178,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     }
 #else  // this class isn't valid on this system
    public:
-    universal_notifier_shmem_poller_t() {
+    [[noreturn]] universal_notifier_shmem_poller_t() {
         DIE("universal_notifier_shmem_poller_t cannot be used on this system");
     }
 #endif
@@ -1257,7 +1257,7 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
     }
 #else  // this class isn't valid on this system
    public:
-    universal_notifier_notifyd_t() {
+    [[noreturn]] universal_notifier_notifyd_t() {
         DIE("universal_notifier_notifyd_t cannot be used on this system");
     }
 #endif

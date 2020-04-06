@@ -41,6 +41,10 @@ if unzip -v 2>/dev/null | string match -eq Debian
 else
 
     # all tokens should be zip files
-    complete -c unzip -xa '(__fish_complete_suffix .zip)'
+    complete -c unzip -xa '(
+        __fish_complete_suffix .zip
+        __fish_complete_suffix .jar
+        __fish_complete_suffix .aar
+    )'
 
 end

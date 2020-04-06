@@ -274,7 +274,7 @@ static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams
         for (const wcstring &s : split_string(w.woptarg, L',')) {
             wcstring_list_t range = split_string(s, L'-');
             if (range.size() == 2) {
-                int begin = fish_wcstoi(wcsdup(range.at(0).c_str()));
+                int begin = fish_wcstoi(range.at(0).c_str());
                 if (begin <= 0 || begin == INT_MIN || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid range value for field '%ls'\n"), argv[0],
                                  w.woptarg);
@@ -283,7 +283,7 @@ static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams
                     string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                int end = fish_wcstoi(wcsdup(range.at(1).c_str()));
+                int end = fish_wcstoi(range.at(1).c_str());
                 if (end <= 0 || end == INT_MIN || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid range value for field '%ls'\n"), argv[0],
                                  w.woptarg);
@@ -302,7 +302,7 @@ static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams
                     }
                 }
             } else {
-                int field = fish_wcstoi(wcsdup(s.c_str()));
+                int field = fish_wcstoi(s.c_str());
                 if (field <= 0 || field == INT_MIN || errno == ERANGE) {
                     string_error(streams, _(L"%ls: Invalid fields value '%ls'\n"), argv[0],
                                  w.woptarg);

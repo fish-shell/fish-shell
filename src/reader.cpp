@@ -2536,7 +2536,7 @@ static bool event_is_normal_char(const char_event_t &evt) {
 }
 
 /// readline_loop_state_t encapsulates the state used in a readline loop.
-/// It is always stack allocated transient. This state should not be "publicly visible;" public
+/// It is always stack allocated transient. This state should not be "publicly visible"; public
 /// state should be in reader_data_t.
 struct readline_loop_state_t {
     /// The last command that was executed.
@@ -2545,8 +2545,8 @@ struct readline_loop_state_t {
     /// If the last command was a yank, the length of yanking that occurred.
     size_t yank_len{0};
 
-    /// If set, it means nothing has been inserted into the command line via completion machinery.
-    bool comp_empty{true};
+    /// If the last "complete" readline command has inserted text into the command line.
+    bool complete_did_insert{true};
 
     /// List of completions.
     completion_list_t comp;
@@ -2676,7 +2676,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // Use the command line only; it doesn't make sense to complete in any other line.
             editable_line_t *el = &command_line;
             if (is_navigating_pager_contents() ||
-                (!rls.comp_empty && rls.last_cmd == rl::complete)) {
+                (!rls.complete_did_insert && rls.last_cmd == rl::complete)) {
                 // The user typed complete more than once in a row. If we are not yet fully
                 // disclosed, then become so; otherwise cycle through our available completions.
                 if (current_page_rendering.remaining_to_disclose > 0) {
@@ -2735,11 +2735,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 cycle_cursor_pos = token_end - buff;
 
                 bool cont_after_prefix_insertion = (c == rl::complete_and_search);
-                rls.comp_empty = handle_completions(rls.comp, token_begin - buff, token_end - buff,
+                rls.complete_did_insert = handle_completions(rls.comp, token_begin - buff, token_end - buff,
                                                     cont_after_prefix_insertion);
 
                 // Show the search field if requested and if we printed a list of completions.
-                if (c == rl::complete_and_search && !rls.comp_empty && !pager.empty()) {
+                if (c == rl::complete_and_search && !rls.complete_did_insert && !pager.empty()) {
                     pager.set_search_field_shown(true);
                     select_completion_in_direction(selection_motion_t::next);
                     reader_repaint_needed();

@@ -1,60 +1,281 @@
-# gradle is a build system.
+# Gradle is a build system.
 # See: https://gradle.org
 
-complete -c gradle -l help -s h -d 'Show help'
-complete -c gradle -l no-rebuild -s a -d 'Don\'t rebuild dependencies'
-complete -c gradle -l build-file -s b -r -d 'Specify build file'
-complete -c gradle -l settings-file -s c -r -d 'Specify settings file'
-complete -c gradle -l configure-on-demand -d 'Only relevant project are configured'
-complete -c gradle -l console -x -d 'Specify console output type' -a 'plan auto rich'
-complete -c gradle -l continue -d 'Continue task execution after failure'
-complete -c gradle -l system-prop -s D -r -d 'Set system property of the JVM'
-complete -c gradle -l debug -s d -d 'Log in debug mode'
-complete -c gradle -l daemon -d 'Uses Gradle Daemon to run build'
-complete -c gradle -l foreground -d 'Uses Gradle Daemon in foreground'
-complete -c gradle -l gradle-user-home -s g -r -d 'Specify gradle user home directory'
-complete -c gradle -l initscript -s I -r -d 'Specify an initialization script'
-complete -c gradle -l info -s i -d 'Set log level to info'
-complete -c gradle -l include-build -r -d 'Include specified build in composite'
-complete -c gradle -l dry-run -s m -d 'Runs build with all task actions disabled'
-complete -c gradle -l max-workers -x -d 'Configure number of concurrent workers' -a '1\t 2\t 3\t 4\t 5\t 6\t 7\t 8\t 9\t 10\t'
-complete -c gradle -l no-daemon -d 'Don\'t use deamon'
-complete -c gradle -l offline -d 'Don\'t use network resources'
-complete -c gradle -l project-prop -s P -x -d 'Set project property for build script'
-complete -c gradle -l project-dir -s p -r -d 'Specify start directory'
-complete -c gradle -l parallel -d 'Build project in parallel'
-complete -c gradle -l profile -d 'Profile build execution time'
-complete -c gradle -l project-cache-dir -r -d 'Specify project cache directory'
-complete -c gradle -l quiet -s q -d 'Only log erros'
-complete -c gradle -l recompile-scripts -d 'Force build script recompiling'
-complete -c gradle -l refresh-dependencies -d 'Refresh state of dependencies'
-complete -c gradle -l rerun-tasks -d 'Ignore previously cached dependencies'
-complete -c gradle -l full-stacktrace -s S -d 'Print out full stacktrace for all exceptions'
-complete -c gradle -l status -d 'Shows status of running andrecently stopped daemon'
-complete -c gradle -l stop -d 'Stop daemon if running'
-complete -c gradle -l continuous -s t -d 'Enable continuous build'
-complete -c gradle -l no-search-upward -s u -d 'Don\'t search in parent folders for settings file'
-complete -c gradle -l version -s v -d 'Print version'
-complete -c gradle -l exclude-task -s x -x -d 'Specify task to be excluded from execution'
+function __contains_gradle_build
+    test \( -e ./build.gradle -a -f ./build.gradle \) -o \( -e ./build.gradle.kts -a -f ./build.gradle.kts \)
+end
 
-# https://github.com/hanny24/gradle-fish/blob/master/gradle.load
-function __cache_or_get_gradle_completion
+function __create_completion_cache_file
     # Set up cache directory
     if test -z $XDG_CACHE_HOME
         set XDG_CACHE_HOME $HOME/.cache/
     end
     mkdir -m 700 -p $XDG_CACHE_HOME/gradle-completions
 
-    set -l hashed_pwd (__fish_md5 -s $PWD)
-    set -l gradle_cache_file $XDG_CACHE_HOME/gradle-completions/$hashed_pwd
-    if not test -f $gradle_cache_file; or command test build.gradle -nt $gradle_cache_file
-        command gradle -q tasks 2>/dev/null | string match -r '^[[:alnum:]]+ - .*' | string replace ' - ' \t >$gradle_cache_file
+    string trim -- $XDG_CACHE_HOME/gradle-completions/(fish_md5 -s $argv[1] | string split ' = ')[2]
+end
+
+##############################
+# Configure Tasks Completion #
+##############################
+
+# Outside of a Project
+function __get_gradle_default_task_completion
+    if __contains_gradle_build
+        return
     end
-    cat $gradle_cache_file
+
+    string replace --all ' - ' \t -- "\
+        buildEnvironment - Displays all buildscript dependencies declared in root project.
+        components - Displays the components produced by root project.
+        dependencies - Displays all dependencies declared in root project.
+        dependencyInsight - Displays the insight into a specific dependency in root project.
+        dependentComponents - Displays the dependent components of components in root project.
+        help - Displays a help message.
+        init - Initializes a new Gradle build.
+        model - Displays the configuration model of root project.
+        projects - Displays the sub-projects of root project.
+        properties - Displays the properties of root project.
+        tasks - Displays the tasks runnable from root project.
+        wrapper - Generates Gradle wrapper files." \
+        | string trim
 end
 
-function __contains_gradle_build
-    test -f build.gradle
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --exclusive \
+    --arguments "(__get_gradle_default_task_completion)"
+
+# Inside of a Project
+function __get_gradle_task_completion
+    if not __contains_gradle_build
+        return
+    end
+
+    set -l gradle_cache_file (__create_completion_cache_file "{$PWD}-tasks")
+    if not command test -f $gradle_cache_file
+        command gradle -q tasks --all 2>/dev/null | string match --regex '^[a-z][A-z:]+.*' | string replace ' - ' \t >$gradle_cache_file
+    end
+
+    # return possible tasks
+    string trim -- <$gradle_cache_file
 end
 
-complete -x -c gradle -n __contains_gradle_build -a "(__cache_or_get_gradle_completion)"
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --condition "__contains_gradle_build" \
+    --exclusive \
+    --arguments "(__get_gradle_task_completion)"
+
+
+###############################
+# Configure Option Completion #
+###############################
+
+function __get_console_completion
+    string replace --all ' - ' \t -- "\
+        auto - Enable color and other rich output in the console output when the build process is attached to a console, or to generate plain text only when not attached to a console. This is the default when Gradle is attached to a terminal.
+        plain - This option disables all color and other rich output in the console output. This is the default when Gradle is not attached to a terminal.
+        rich - Enable color and other rich output in the console output, regardless of whether the build process is not attached to a console. When not attached to a console, the build output will use ANSI control characters to generate the rich output.
+        verbose - Enable color and other rich output like the rich, but output task names and outcomes at the lifecycle log level, as is done by default in Gradle 3.5 and earlier." \
+        | string trim
+end
+
+function __get_property_completion
+    string replace --all ' - ' \t -- "\
+        org.gradle.cache.reserved.mb - Reserve Gradle Daemon memory for operations.
+        org.gradle.caching - Set true to enable Gradle build cache.
+        org.gradle.console - Set type of console output to generate (plain auto rich verbose).
+        org.gradle.daemon.debug - Set true to debug Gradle Daemon.
+        org.gradle.daemon.idletimeout - Kill Gradle Daemon after # idle millis.
+        org.gradle.debug - Set true to debug Gradle Client.
+        org.gradle.jvmargs - Set JVM arguments.
+        org.gradle.java.home - Set JDK home dir.
+        org.gradle.logging.level - Set default Gradle log level (quiet warn lifecycle info debug).
+        org.gradle.parallel - Set true to enable parallel project builds (incubating).
+        org.gradle.priority - Set priority for Gradle worker processes (low normal).
+        org.gradle.warning.mode - Set types of warnings to log (all summary none).
+        org.gradle.workers.max - Set the number of workers Gradle is allowed to use." \
+        | string trim
+end
+
+function __get_priority_completion
+    string replace --all ' - ' \t -- "\
+        normal - Set the default process priority.
+        low - Set a low process priority." \
+        | string trim
+end
+
+function __get_warning_mode_completion
+    string replace --all ' - ' \t -- "\
+        all - Log all warnings.
+        summary - Suppress all warnings and log a summary at the end of the build.
+        fail - Log all warnings and fail the build if there are any warnings.
+        none - Suppress all warnings, including the summary at the end of the build." \
+        | string trim
+end
+
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'help' \
+    --short-option 'h' --short-option '?' \
+    --description 'Shows this help message.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'no-rebuild' \
+    --short-option 'a' \
+    --description 'Do not rebuild project dependencies.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'build-file' \
+    --short-option 'b' \
+    --require-parameter \
+    --description 'Specify the build file.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'build-cache' \
+    --description 'Enables the Gradle build cache. Gradle will try to reuse outputs from previous builds.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'settings-file' \
+    --short-option 'c' \
+    --require-parameter \
+    --description 'Specify the settings file.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'configure-on-demand' \
+    --description 'Configure necessary projects only. Gradle will attempt to reduce configuration time for large multi-project builds. [incubating]'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'console' \
+    --exclusive \
+    --description 'Specifies which type of console output to generate. Values are \'plain\', \'auto\' (default), \'rich\' or \'verbose\'.' \
+    --arguments "(__get_console_completion)"
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'continue' \
+    --description 'Continue task execution after a task failure.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'system-prop' \
+    --short-option 'D' \
+    --exclusive \
+    --description 'Set system property of the JVM (e.g. -Dmyprop=myvalue).' \
+    --arguments "(__get_property_completion)"
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'debug' \
+    --short-option 'd' \
+    --description 'Log in debug mode (includes normal stacktrace).'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'daemon' \
+    --description 'Uses the Gradle Daemon to run the build. Starts the Daemon if not running.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'foreground' \
+    --description 'Starts the Gradle Daemon in the foreground.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'gradle-user-home' \
+    --short-option 'g' \
+    --require-parameter \
+    --description 'Specifies the gradle user home directory.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'init-script' \
+    --short-option 'I' \
+    --require-parameter \
+    --description 'Specify an initialization script.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'info' \
+    --short-option 'i' \
+    --description 'Set log level to info.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'include-build' \
+    --require-parameter \
+    --description 'Include the specified build in the composite.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'dry-run' \
+    --short-option 'm' \
+    --description 'Run the builds with all task actions disabled.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'max-workers' \
+    --exclusive \
+    --description 'Configure the number of concurrent workers Gradle is allowed to use.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'no-build-cache' \
+    --description 'Disables the Gradle build cache.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'no-configure-on-demand' \
+    --description 'Disables the use of configuration on demand. [incubating]'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'no-daemon' \
+    --description 'Do not use the Gradle daemon to run the build. Useful occasionally if you have configured Gradle to always run with the daemon by default.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'no-parallel' \
+    --description 'Disables parallel execution to build projects.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'no-scan' \
+    --description 'Disables the creation of a build scan. For more information about build scans, please visit https://gradle.com/build-scans.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'offline' \
+    --description 'Execute the build without accessing network resources.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'project-prop' \
+    --short-option 'P' \
+    --exclusive \
+    --description 'Set project property for the build script (e.g. -Pmyprop=myvalue).'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'project-dir' \
+    --short-option 'p' \
+    --require-parameter \
+    --description 'Specifies the start directory for Gradle. Defaults to current directory.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'parallel' \
+    --description 'Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'priority' \
+    --exclusive \
+    --description 'Specifies the scheduling priority for the Gradle daemon and all processes launched by it. Values are \'normal\' (default) or \'low\' [incubating]' \
+    --arguments "(__get_priority_completion)"
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'profile' \
+    --description 'Profile build execution time and generates a report in the <build_dir>/reports/profile directory.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'project-cache-dir' \
+    --require-parameter \
+    --description 'Specify the project-specific cache directory. Defaults to .gradle in the root project directory.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'quiet' \
+    --short-option 'q' \
+    --description 'Log errors only.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'refresh-dependencies' \
+    --description 'Refresh the state of dependencies.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'rerun-tasks' \
+    --description 'Ignore previously cached task results.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'full-stacktrace' \
+    --short-option 'S' \
+    --description 'Print out the full (very verbose) stacktrace for all exceptions.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'stacktrace' \
+    --short-option 's' \
+    --description 'Print out the stacktrace for all exceptions.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'scan' \
+    --description 'Creates a build scan. Gradle will emit a warning if the build scan plugin has not been applied. (https://gradle.com/build-scans)'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'status' \
+    --description 'Shows status of running and recently stopped Gradle Daemon(s).'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'stop' \
+    --description 'Stops the Gradle Daemon if it is running.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'continuous' \
+    --short-option 't' \
+    --description 'Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'update-locks' \
+    --description 'Perform a partial update of the dependency lock, letting passed in module notations change version. [incubating]'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'version' \
+    --short-option 'v' \
+    --description 'Print version info.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'warn' \
+    --short-option 'w' \
+    --description 'Set log level to warn.'
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'warning-mode' \
+    --description 'Specifies which mode of warnings to generate. Values are \'all\', \'summary\'(default) or \'none\'' \
+    --arguments "(__get_warning_mode_completion)"
+complete --command 'gw' --command 'gradle' --command 'gradlew' \
+    --long-option 'write-locks' \
+    --description 'Persists dependency resolution for locked configurations, ignoring existing locking information if it exists [incubating]'

@@ -2735,8 +2735,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 cycle_cursor_pos = token_end - buff;
 
                 bool cont_after_prefix_insertion = (c == rl::complete_and_search);
-                rls.comp_empty = !handle_completions(rls.comp, token_begin - buff, token_end - buff,
-                                                     cont_after_prefix_insertion);
+                rls.comp_empty = handle_completions(rls.comp, token_begin - buff, token_end - buff,
+                                                    cont_after_prefix_insertion);
 
                 // Show the search field if requested and if we printed a list of completions.
                 if (c == rl::complete_and_search && !rls.comp_empty && !pager.empty()) {

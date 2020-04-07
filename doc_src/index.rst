@@ -1324,6 +1324,8 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Alt`\ +\ :kbd:`L` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
+- :kbd:`Alt`\ +\ :kbd:`O` opens the file at the cursor in a pager.
+
 - :kbd:`Alt`\ +\ :kbd:`P` adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
 - :kbd:`Alt`\ +\ :kbd:`W` prints a short description of the command under the cursor.

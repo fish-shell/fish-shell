@@ -76,11 +76,16 @@ static void print_blocked_signals() {
         perror("sigprocmask");
         exit(EXIT_FAILURE);
     }
-    // There is no obviously portable way to get the maximum number of signals; here we limit it to 128.
-    for (int sig=1; sig < 128; sig++) {
+    // There is no obviously portable way to get the maximum number of signals.
+    // Here we limit it to 64 because strsignal on Linux returns "Unknown signal" for anything above.
+    for (int sig=1; sig < 65; sig++) {
         if (sigismember(&sigs, sig)) {
             if (const char *s = strsignal(sig)) {
-                fprintf(stderr, "%s\n", s);
+                fprintf(stderr, "%s", s);
+                if (strchr(s, ':') == nullptr) {
+                    fprintf(stderr, ": %d", sig);
+                }
+                fprintf(stderr, "\n");
             }
         }
     }

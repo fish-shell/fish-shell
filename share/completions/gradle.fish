@@ -135,7 +135,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'console' \
     --exclusive \
-    --description 'Specifies which type of console output to generate. Values are \'plain\', \'auto\' (default), \'rich\' or \'verbose\'.' \
+    --description 'Specifies which type of console output to generate.' \
     --arguments "(__get_console_completion)"
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'continue' \
@@ -152,7 +152,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --description 'Log in debug mode (includes normal stacktrace).'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'daemon' \
-    --description 'Uses the Gradle Daemon to run the build. Starts the Daemon if not running.'
+    --description 'Uses the Gradle Daemon to run the build.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'foreground' \
     --description 'Starts the Gradle Daemon in the foreground.'
@@ -190,13 +190,13 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --description 'Disables the use of configuration on demand. [incubating]'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'no-daemon' \
-    --description 'Do not use the Gradle daemon to run the build. Useful occasionally if you have configured Gradle to always run with the daemon by default.'
+    --description 'Do not use the Gradle daemon to run the build.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'no-parallel' \
     --description 'Disables parallel execution to build projects.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'no-scan' \
-    --description 'Disables the creation of a build scan. For more information about build scans, please visit https://gradle.com/build-scans.'
+    --description 'Disables the creation of a build scan.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'offline' \
     --description 'Execute the build without accessing network resources.'
@@ -212,11 +212,11 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --description 'Specifies the start directory for Gradle. Defaults to current directory.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'parallel' \
-    --description 'Build projects in parallel. Gradle will attempt to determine the optimal number of executor threads to use.'
+    --description 'Build projects in parallel.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'priority' \
     --exclusive \
-    --description 'Specifies the scheduling priority for the Gradle daemon and all processes launched by it. Values are \'normal\' (default) or \'low\' [incubating]' \
+    --description 'Specifies the scheduling priority for the Gradle daemon and all processes launched by it.' \
     --arguments "(__get_priority_completion)"
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'profile' \
@@ -224,7 +224,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'project-cache-dir' \
     --require-parameter \
-    --description 'Specify the project-specific cache directory. Defaults to .gradle in the root project directory.'
+    --description 'Specify the project-specific cache directory.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'quiet' \
     --short-option 'q' \
@@ -245,7 +245,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --description 'Print out the stacktrace for all exceptions.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'scan' \
-    --description 'Creates a build scan. Gradle will emit a warning if the build scan plugin has not been applied. (https://gradle.com/build-scans)'
+    --description 'Creates a build scan.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'status' \
     --description 'Shows status of running and recently stopped Gradle Daemon(s).'
@@ -255,7 +255,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'continuous' \
     --short-option 't' \
-    --description 'Enables continuous build. Gradle does not exit and will re-execute tasks when task file inputs change.'
+    --description 'Enables continuous build.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'update-locks' \
     --description 'Perform a partial update of the dependency lock, letting passed in module notations change version. [incubating]'
@@ -269,7 +269,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --description 'Set log level to warn.'
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'warning-mode' \
-    --description 'Specifies which mode of warnings to generate. Values are \'all\', \'summary\'(default) or \'none\'' \
+    --description 'Specifies which mode of warnings to generate.' \
     --arguments "(__get_warning_mode_completion)"
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'write-locks' \

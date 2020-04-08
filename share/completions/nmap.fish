@@ -71,16 +71,16 @@ complete -c nmap -l max-os-tries -d 'Set the maximum number of OS detection trie
 # NMAP SCRIPTING ENGINE (NSE)
 complete -c nmap -o sC -d 'Scan: Scripts (default)'
 function __fish_complete_nmap_script
-	for l in (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
-		if string match -q -v --regex "^ " $l
-			set cmd $l
-		else
-			printf "%s\t%s\n" $cmd (string trim -l $l)
-		end
-	end
-	for cat in all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln
-		printf "%s\tCategory\n" $cat
-	end
+    for l in (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
+        if string match -q -v --regex "^ " $l
+            set cmd $l
+        else
+            printf "%s\t%s\n" $cmd (string trim -l $l)
+        end
+    end
+    for cat in all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln
+        printf "%s\tCategory\n" $cat
+    end
 end
 complete -c nmap -l script -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
 complete -c nmap -l script -r -d 'Runs a script scan'
@@ -122,11 +122,11 @@ complete -c nmap -l data -x -d 'Append custom binary data to sent packets'
 complete -c nmap -l data-string -x -d 'Append custom string to sent packets'
 complete -c nmap -l data-length -x -d 'Append random data to sent packets'
 function __fish_complete_nmap_ip-options
-	printf "S\tstrict source routing\n" # may be followed by ip addresses
-	printf "R\trecord route\n" # may be followed by ip addresses
-	printf "L\tloose source routing\n" # may be followed by ip addresses
-	printf "T\trecord internet timestamps\n"
-	printf "U\trecord timestamps and ip addresses\n"
+    printf "S\tstrict source routing\n" # may be followed by ip addresses
+    printf "R\trecord route\n" # may be followed by ip addresses
+    printf "L\tloose source routing\n" # may be followed by ip addresses
+    printf "T\trecord internet timestamps\n"
+    printf "U\trecord timestamps and ip addresses\n"
 end
 complete -c nmap -l ip-options -x -a "(__fish_complete_nmap_ip-options)" -d 'Send packets with specified ip options'
 complete -c nmap -l ttl -x -d 'Set IP time-to-live field'

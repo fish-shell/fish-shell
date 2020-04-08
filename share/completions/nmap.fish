@@ -72,11 +72,6 @@ complete -c nmap -l max-os-tries -d 'Set the maximum number of OS detection trie
 complete -c nmap -o sC -d 'Scan: Scripts (default)'
 complete -c nmap -l script -r -a "(find /usr/share/nmap/scripts/ -exec basename '{}' .nse \;)"
 complete -c nmap -l script -r -a "auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln" -d "category"
-#for c in (find /usr/share/nmap/scripts/)
-	#set -l description (grep -A1 description $c |tail -n 1)
-	#set -l option (basename $c .nse)
-	#complete -c nmap -l script -r -a "$option" -d "$description"
-#end
 complete -c nmap -l script-args -d 'provide arguments to NSE scripts'
 complete -c nmap -l script-args-file -r -a "(__fish_complete_path)" -d 'load arguments to NSE scripts from a file'
 complete -c nmap -l script-help -r -a "(find /usr/share/nmap/scripts/ -exec basename '{}' .nse \;)"

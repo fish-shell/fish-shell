@@ -33,6 +33,7 @@
   - `tcpdump`
   - `tig`
   - `zopfli`, and `zopflipng`
+  - `nmap`, `ncat`
 
 ### Deprecations and removed features
 

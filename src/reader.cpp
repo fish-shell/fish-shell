@@ -1889,7 +1889,7 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
                 const wchar_t *fmt =
                     _(L"I appear to be an orphaned process, so I am quitting politely. "
                       L"My pid is %d.");
-                FLOGF(warning, fmt, (int)getpid());
+                FLOGF(warning, fmt, static_cast<int>(getpid()));
                 exit_without_destructors(1);
             }
 
@@ -3138,7 +3138,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                     base_pos_old = parse_util_get_offset_from_line(el->text(), line_old);
 
-                    assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
+                    assert(base_pos_new != static_cast<size_t>(-1) &&
+                           base_pos_old != static_cast<size_t>(-1));
                     indent_old = indents.at(base_pos_old);
                     indent_new = indents.at(base_pos_new);
 

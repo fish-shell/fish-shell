@@ -299,7 +299,7 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
         return;
     }
 
-    assert(cursor_pos >= (size_t)(begin - buff));
+    assert(cursor_pos >= static_cast<size_t>(begin - buff));
     const size_t pos = cursor_pos - (begin - buff);
 
     if (a) *a = begin;

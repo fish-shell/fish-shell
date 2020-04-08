@@ -617,7 +617,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 // is set to the remaining string.
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                             &splits, argc - 1);
-                assert(splits.size() <= (size_t)vars_left());
+                assert(splits.size() <= static_cast<size_t>(vars_left()));
                 for (const auto &split : splits) {
                     parser.set_var_and_fire(*var_ptr++, opts.place, split);
                 }

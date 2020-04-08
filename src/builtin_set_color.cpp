@@ -185,7 +185,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     outputter_t outp;
 
     if (bold && enter_bold_mode) {
-        writembs_nofail(outp, tparm((char *)enter_bold_mode));
+        writembs_nofail(outp, tparm(const_cast<char *>(enter_bold_mode)));
     }
 
     if (underline && enter_underline_mode) {
@@ -207,12 +207,12 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (bgcolor != nullptr && bg.is_normal()) {
-        writembs_nofail(outp, tparm((char *)exit_attribute_mode));
+        writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
     }
 
     if (!fg.is_none()) {
         if (fg.is_normal() || fg.is_reset()) {
-            writembs_nofail(outp, tparm((char *)exit_attribute_mode));
+            writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
         } else {
             if (!outp.write_color(fg, true /* is_fg */)) {
                 // We need to do *something* or the lack of any output messes up

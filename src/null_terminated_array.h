@@ -34,7 +34,7 @@ class null_terminated_array_t {
     }
 
     void free(void) {
-        ::free((void *)array);
+        ::free(reinterpret_cast<void *>(array));
         array = nullptr;
     }
 

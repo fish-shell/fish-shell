@@ -70,12 +70,23 @@ complete -c nmap -l max-os-tries -d 'Set the maximum number of OS detection trie
 
 # NMAP SCRIPTING ENGINE (NSE)
 complete -c nmap -o sC -d 'Scan: Scripts (default)'
-complete -c nmap -l script -r -a "(find /usr/share/nmap/scripts/ -exec basename '{}' .nse \;)"
+function __fish_complete_nmap_script
+	for l in (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
+		if string match -q -v --regex "^ " $l
+			set cmd $l
+		else
+			printf "%s\t%s\n" $cmd (string trim -l $l)
+		end
+	end
+end
+complete -c nmap -l script -r -a "(__fish_complete_nmap_script)" -d 'script'
 complete -c nmap -l script -r -a "all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln" -d "category"
+complete -c nmap -l script -r -d 'Runs a script scan'
 complete -c nmap -l script-args -d 'provide arguments to NSE scripts'
 complete -c nmap -l script-args-file -r -a "(__fish_complete_path)" -d 'load arguments to NSE scripts from a file'
-complete -c nmap -l script-help -r -a "(find /usr/share/nmap/scripts/ -exec basename '{}' .nse \;)"
+complete -c nmap -l script-help -r -a "(__fish_complete_nmap_script)"
 complete -c nmap -l script-help -r -a "all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln" -d "category"
+complete -c nmap -l script-help -r -d "Shows help about scripts"
 complete -c nmap -l script-trace
 complete -c nmap -l script-updatedb
 

@@ -51,12 +51,12 @@ static void print_stdout_stderr() {
 
 static void print_pid_then_sleep() {
     // On some systems getpid is a long, on others it's an int, let's just cast it.
-    fprintf(stdout, "%ld\n", (long)getpid());
+    fprintf(stdout, "%ld\n", static_cast<long>(getpid()));
     fflush(nullptr);
     usleep(1000000 / 2);  //.5 secs
 }
 
-static void print_pgrp() { fprintf(stdout, "%ld\n", (long)getpgrp()); }
+static void print_pgrp() { fprintf(stdout, "%ld\n", static_cast<long>(getpgrp())); }
 
 static void print_fds() {
     bool needs_space = false;

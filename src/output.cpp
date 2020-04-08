@@ -55,7 +55,7 @@ unsigned char index_for_color(rgb_color_t c) {
 static bool write_color_escape(outputter_t &outp, const char *todo, unsigned char idx, bool is_fg) {
     if (term_supports_color_natively(idx)) {
         // Use tparm to emit color escape.
-        writembs(outp, tparm((char *)todo, idx));
+        writembs(outp, tparm(const_cast<char *>(todo), idx));
         return true;
     }
 
@@ -302,7 +302,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && enter_bold_mode[0] != '\0' && !bg_set) {
         // The unconst cast is for NetBSD's benefit. DO NOT REMOVE!
-        writembs_nofail(*this, tparm((char *)enter_bold_mode));
+        writembs_nofail(*this, tparm(const_cast<char *>(enter_bold_mode)));
         was_bold = is_bold;
     }
 

@@ -411,8 +411,8 @@ int main(int argc, char **argv) {
 
     const char *dummy_argv[2] = {"fish", nullptr};
     if (!argv[0]) {
-        argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
-        argc = 1;                    //!OCLINT(parameter reassignment)
+        argv = const_cast<char **>(dummy_argv);  //!OCLINT(parameter reassignment)
+        argc = 1;                                //!OCLINT(parameter reassignment)
     }
     fish_cmd_opts_t opts{};
     my_optind = fish_parse_opt(argc, argv, &opts);

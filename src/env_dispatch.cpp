@@ -478,7 +478,8 @@ static void init_curses(const environment_t &vars) {
     }
 
     can_set_term_title = does_term_support_setting_title(vars);
-    term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
+    term_has_xn =
+        tigetflag(const_cast<char *>("xenl")) == 1;  // does terminal have the eat_newline_glitch
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
     cached_layouts.clear();

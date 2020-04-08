@@ -27,7 +27,7 @@ struct fd_set_t {
 
     void add(int fd) {
         assert(fd >= 0 && "Invalid fd");
-        if ((size_t)fd >= fds.size()) {
+        if (static_cast<size_t>(fd) >= fds.size()) {
             fds.resize(fd + 1);
         }
         fds[fd] = true;
@@ -35,7 +35,7 @@ struct fd_set_t {
 
     bool contains(int fd) const {
         assert(fd >= 0 && "Invalid fd");
-        return (size_t)fd < fds.size() && fds[fd];
+        return static_cast<size_t>(fd) < fds.size() && fds[fd];
     }
 };
 

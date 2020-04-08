@@ -59,8 +59,8 @@ typedef std::vector<wcstring> wcstring_list_t;
 // Use Unicode "noncharacters" for internal characters as much as we can. This
 // gives us 32 "characters" for internal use that we can guarantee should not
 // appear in our input stream. See http://www.unicode.org/faq/private_use.html.
-#define RESERVED_CHAR_BASE (wchar_t)0xFDD0
-#define RESERVED_CHAR_END (wchar_t)0xFDF0
+#define RESERVED_CHAR_BASE static_cast<wchar_t>(0xFDD0)
+#define RESERVED_CHAR_END static_cast<wchar_t>(0xFDF0)
 // Split the available noncharacter values into two ranges to ensure there are
 // no conflicts among the places we use these special characters.
 #define EXPAND_RESERVED_BASE RESERVED_CHAR_BASE
@@ -86,7 +86,7 @@ typedef std::vector<wcstring> wcstring_list_t;
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-#define ENCODE_DIRECT_BASE (wchar_t)0xF600
+#define ENCODE_DIRECT_BASE static_cast<wchar_t>(0xF600)
 #define ENCODE_DIRECT_END (ENCODE_DIRECT_BASE + 256)
 
 // NAME_MAX is not defined on Solaris
@@ -399,7 +399,7 @@ void assert_is_background_thread(const char *who);
 /// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
 /// it, which it would be nice if it did, but here it is anyways.
 void assert_is_locked(void *mutex, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(x) assert_is_locked((void *)(&x), #x, __FUNCTION__)
+#define ASSERT_IS_LOCKED(x) assert_is_locked(reinterpret_cast<void *>(&x), #x, __FUNCTION__)
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);
@@ -842,7 +842,7 @@ template <>
 struct hash<const wcstring> {
     std::size_t operator()(const wcstring &w) const {
         std::hash<wcstring> hasher;
-        return hasher((wcstring)w);
+        return hasher(static_cast<wcstring>(w));
     }
 };
 }  // namespace std

@@ -13,7 +13,7 @@
 #include "reader.h"
 #include "screen.h"
 
-#define PAGER_SELECTION_NONE ((size_t)(-1))
+#define PAGER_SELECTION_NONE static_cast<size_t>(-1)
 
 /// Represents rendering from the pager.
 class page_rendering_t {

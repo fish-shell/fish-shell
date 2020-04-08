@@ -96,7 +96,8 @@ generation_list_t topic_monitor_t::updated_gens_in_data(acquired_lock<data_t> &d
     for (topic_t topic : topic_iter_t{}) {
         if (topics.get(topic)) {
             data->current_gens.at(topic) += 1;
-            FLOG(topic_monitor, "Updating topic", (int)topic, "to", data->current_gens.at(topic));
+            FLOG(topic_monitor, "Updating topic", static_cast<int>(topic), "to",
+                 data->current_gens.at(topic));
         }
     }
     // Report our change.

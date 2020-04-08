@@ -150,7 +150,7 @@ complete -c nmap -l no-stylesheet -d 'Omit XSL stylesheet declaration from XML'
 # MISCELLANEOUS OPTIONS
 complete -c nmap -s 6 -d 'Enable IPv6 scanning'
 complete -c nmap -s A -d 'Aggressive scan options'
-complete -c nmap -l datadir -r -a "(__fish_complete_directories)" -d 'Specify custom Nmap data file location'
+complete -c nmap -l datadir -x -a "(__fish_complete_directories)" -d 'Specify custom Nmap data file location'
 complete -c nmap -l servicedb -r -d 'Specify custom services file'
 complete -c nmap -l versiondb -r -d 'Specify custom service probes file'
 complete -c nmap -l send-eth -d 'Use raw ethernet sending'

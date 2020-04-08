@@ -32,6 +32,7 @@
   - `dhclient`
   - `tcpdump`
   - `tig`
+  - `zopfli`, and `zopflipng`
 
 ### Deprecations and removed features
 

@@ -121,7 +121,14 @@ complete -c nmap -l source-port -s g -x -d 'Spoof source port number'
 complete -c nmap -l data -x -d 'Append custom binary data to sent packets'
 complete -c nmap -l data-string -x -d 'Append custom string to sent packets'
 complete -c nmap -l data-length -x -d 'Append random data to sent packets'
-complete -c nmap -l ip-options -x -d 'Send packets with specified ip options'
+function __fish_complete_nmap_ip-options
+	printf "S\tstrict source routing\n" # may be followed by ip addresses
+	printf "R\trecord route\n" # may be followed by ip addresses
+	printf "L\tloose source routing\n" # may be followed by ip addresses
+	printf "T\trecord internet timestamps\n"
+	printf "U\trecord timestamps and ip addresses\n"
+end
+complete -c nmap -l ip-options -x -a "(__fish_complete_nmap_ip-options)" -d 'Send packets with specified ip options'
 complete -c nmap -l ttl -x -d 'Set IP time-to-live field'
 complete -c nmap -l randomize-hosts -d 'Randomize target host order'
 complete -c nmap -l spoof-mac -x -d 'Spoof MAC address'

@@ -99,7 +99,7 @@ complete -c nmap -s T -x -a "4 aggressive" -d 'aggressive timing template'
 complete -c nmap -s T -x -a "5 insane" -d 'insane timing template'
 
 # FIREWALL/IDS EVASION AND SPOOFING
-complete -c nmap -s f -d 'fragment packets' -n "test '[ ! (__fish_contains_opt -s f) ]'"
+complete -c nmap -s f -d 'fragment packets' -n "not __fish_contains_opt -s f"
 complete -c nmap -s f -d 'use 16 bytes per fragment' -n "__fish_contains_opt -s f"
 complete -c nmap -l mtu -d 'use specified mtu' -n "__fish_contains_opt -s f"
 complete -c nmap -s D -x -d 'Cloak a scan with decoys'

@@ -12,7 +12,7 @@ function __create_completion_cache_file
     end
     mkdir -m 700 -p $XDG_CACHE_HOME/gradle-completions
 
-    string trim -- $XDG_CACHE_HOME/gradle-completions/(fish_md5 -s $argv[1] | string split ' = ')[2]
+    string trim -- $XDG_CACHE_HOME/gradle-completions/(__fish_md5 -s $argv[1] | string split ' = ')[2]
 end
 
 ##############################

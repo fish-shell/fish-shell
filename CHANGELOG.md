@@ -32,7 +32,7 @@
   - `dhclient`
   - `tcpdump`
   - `tig`
-	- `nmap`
+	- `nmap`, `ncat`
 
 ### Deprecations and removed features
 

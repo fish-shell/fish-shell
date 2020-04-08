@@ -1,11 +1,11 @@
 # Completions for nmap (https://www.nmap.org)
 
-complete -c nmap -f -a "(__fish_complete_user_at_hosts)"
+complete -c nmap -f -a "(__fish_print_hostnames)"
 
 # TARGET SPECIFICATION
 complete -c nmap -o iL -r -a "(__fish_complete_path)" -d 'Input target from file'
 complete -c nmap -o iR -x -d 'Choose random targets'
-complete -c nmap -l exclude -r -a "(__fish_complete_user_at_hosts)" -d 'Exclude hosts/networks'
+complete -c nmap -l exclude -r -a "(__fish_print_hostnames)" -d 'Exclude hosts/networks'
 complete -c nmap -l excludefile -r -a "(__fish_complete_path)" -d 'Exclude list from file'
 
 # HOST DISCOVERY
@@ -26,7 +26,7 @@ complete -c nmap -l traceroute -d 'Trace path to host'
 complete -c nmap -s n -d 'No DNS resolution'
 complete -c nmap -s R -d 'DNS resolution for all targets'
 complete -c nmap -l system-dns -d 'Use system DNS resolver'
-complete -c nmap -l dns-servers -x -a "(__fish_complete_user_at_hosts)" -d 'Servers to use for reverse DNS queries'
+complete -c nmap -l dns-servers -x -a "(__fish_print_hostnames)" -d 'Servers to use for reverse DNS queries'
 
 # PORT SCANNING TECHNIQUES
 complete -c nmap -o sS -d 'Scan: TCP SYN'
@@ -41,9 +41,9 @@ complete -c nmap -o sW -d 'Scan: Window'
 complete -c nmap -o sM -d 'Scan: Mainmon'
 complete -c nmap -l scanflags -d 'Custom TCP scan flags'
 complete -c nmap -o sZ -d 'Scan: SCTP COOKIE ECHO'
-complete -c nmap -o sI -x -a"(__fish_complete_user_at_hosts)" -d 'Scan: Idle Scan'
+complete -c nmap -o sI -x -a"(__fish_print_hostnames)" -d 'Scan: Idle Scan'
 complete -c nmap -o sO -d 'Scan: IP protocol'
-complete -c nmap -s b -x -a"(__fish_complete_user_at_hosts)" -d 'FTP bounce scan'
+complete -c nmap -s b -x -a"(__fish_print_hostnames)" -d 'FTP bounce scan'
 
 # PORT SPECIFICATION AND SCAN ORDER
 complete -c nmap -s p -d 'Only scan specified ports'

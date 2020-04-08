@@ -3,10 +3,10 @@
 complete -c nmap -f -a "(__fish_print_hostnames)"
 
 # TARGET SPECIFICATION
-complete -c nmap -o iL -r -a "(__fish_complete_path)" -d 'Input target from file'
+complete -c nmap -o iL -F -d 'Input target from file'
 complete -c nmap -o iR -x -d 'Choose random targets'
 complete -c nmap -l exclude -r -a "(__fish_print_hostnames)" -d 'Exclude hosts/networks'
-complete -c nmap -l excludefile -r -a "(__fish_complete_path)" -d 'Exclude list from file'
+complete -c nmap -l excludefile -r -d 'Exclude list from file'
 
 # HOST DISCOVERY
 complete -c nmap -o sL -d 'Scan: List Scan'
@@ -83,7 +83,7 @@ complete -c nmap -l script -r -a "(__fish_complete_nmap_script)" -d 'script'
 complete -c nmap -l script -r -a "all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln" -d "category"
 complete -c nmap -l script -r -d 'Runs a script scan'
 complete -c nmap -l script-args -d 'provide arguments to NSE scripts'
-complete -c nmap -l script-args-file -r -a "(__fish_complete_path)" -d 'load arguments to NSE scripts from a file'
+complete -c nmap -l script-args-file -r -d 'load arguments to NSE scripts from a file'
 complete -c nmap -l script-help -r -a "(__fish_complete_nmap_script)"
 complete -c nmap -l script-help -r -a "all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln" -d "category"
 complete -c nmap -l script-help -r -d "Shows help about scripts"
@@ -142,8 +142,8 @@ complete -c nmap -l packet-trace -d 'Trace packets and data sent and received'
 complete -c nmap -l open -d 'Show only open (or possibly open) ports'
 complete -c nmap -l iflist -d 'List interfaces and routes'
 complete -c nmap -l append-output -d 'Append to rather than clobber output files'
-complete -c nmap -l resume -r -a "(__fish_complete_path)" -d 'Resume aborted scan'
-complete -c nmap -l stylesheet -r -a "(__fish_complete_path)" -d 'Set XSL stylesheet to transform XML output'
+complete -c nmap -l resume -r -d 'Resume aborted scan'
+complete -c nmap -l stylesheet -r -d 'Set XSL stylesheet to transform XML output'
 complete -c nmap -l webxml -d 'Load stylesheet from Nmap.Org'
 complete -c nmap -l no-stylesheet -d 'Omit XSL stylesheet declaration from XML'
 
@@ -151,8 +151,8 @@ complete -c nmap -l no-stylesheet -d 'Omit XSL stylesheet declaration from XML'
 complete -c nmap -s 6 -d 'Enable IPv6 scanning'
 complete -c nmap -s A -d 'Aggressive scan options'
 complete -c nmap -l datadir -r -a "(__fish_complete_directories)" -d 'Specify custom Nmap data file location'
-complete -c nmap -l servicedb -r -a "(__fish_complete_path)" -d 'Specify custom services file'
-complete -c nmap -l versiondb -r -a "(__fish_complete_path)" -d 'Specify custom service probes file'
+complete -c nmap -l servicedb -r -d 'Specify custom services file'
+complete -c nmap -l versiondb -r -d 'Specify custom service probes file'
 complete -c nmap -l send-eth -d 'Use raw ethernet sending'
 complete -c nmap -l send-ip -d 'Send at raw IP level'
 complete -c nmap -l privileged -d 'Assume that the user is fully privileged'

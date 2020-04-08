@@ -103,12 +103,15 @@ complete -c nmap -l min-rate -l max-rate -x -d 'Directly control the scanning ra
 complete -c nmap -l defeat-rst-ratelimit -d 'ignore ICMP-RST rate limits'
 complete -c nmap -l defeat-icmp-ratelimit -d 'ignore ICMP unreachable in UDP'
 complete -c nmap -l nsock-engine -x -d 'Enforce use of a given nsock IO multiplexing engine' -a "epoll kqueue poll select"
-complete -c nmap -s T -x -a "0 paranoid" -d 'paranoid timing template'
-complete -c nmap -s T -x -a "1 sneaky" -d 'sneaky timing template'
-complete -c nmap -s T -x -a "2 polite" -d 'polite timing template'
-complete -c nmap -s T -x -a "3 normal" -d 'normal timing template'
-complete -c nmap -s T -x -a "4 aggressive" -d 'aggressive timing template'
-complete -c nmap -s T -x -a "5 insane" -d 'insane timing template'
+function __fish_complete_nmap_timing-template
+    set i 0
+    for t in paranoid sneaky polite normal aggressive insane
+        printf "%i\t%s timing\n" $i $t
+        printf "%s\tTemplate %i\n" $t $i
+        set i (math $i + 1)
+    end
+end
+complete -c nmap -s T -x -a "(__fish_complete_nmap_timing-template)" -d 'Set a timing template'
 
 # FIREWALL/IDS EVASION AND SPOOFING
 complete -c nmap -s f -d 'fragment packets' -n "not __fish_contains_opt -s f"

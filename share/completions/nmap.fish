@@ -78,14 +78,15 @@ function __fish_complete_nmap_script
 			printf "%s\t%s\n" $cmd (string trim -l $l)
 		end
 	end
+	for cat in all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln
+		printf "%s\tCategory\n" $cat
+	end
 end
-complete -c nmap -l script -r -a "(__fish_complete_nmap_script)" -d 'script'
-complete -c nmap -l script -r -a "all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln" -d "category"
+complete -c nmap -l script -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
 complete -c nmap -l script -r -d 'Runs a script scan'
 complete -c nmap -l script-args -d 'provide arguments to NSE scripts'
 complete -c nmap -l script-args-file -r -d 'load arguments to NSE scripts from a file'
-complete -c nmap -l script-help -r -a "(__fish_complete_nmap_script)"
-complete -c nmap -l script-help -r -a "all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln" -d "category"
+complete -c nmap -l script-help -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
 complete -c nmap -l script-help -r -d "Shows help about scripts"
 complete -c nmap -l script-trace
 complete -c nmap -l script-updatedb

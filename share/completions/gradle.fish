@@ -2,7 +2,7 @@
 # See: https://gradle.org
 
 function __contains_gradle_build
-    test \( -e ./build.gradle -a -f ./build.gradle \) -o \( -e ./build.gradle.kts -a -f ./build.gradle.kts \)
+    test -f build.gradle -o -f build.gradle.kts
 end
 
 function __create_completion_cache_file
@@ -25,20 +25,19 @@ function __get_gradle_default_task_completion
         return
     end
 
-    string replace --all ' - ' \t -- "\
-        buildEnvironment - Displays all buildscript dependencies declared in root project.
-        components - Displays the components produced by root project.
-        dependencies - Displays all dependencies declared in root project.
-        dependencyInsight - Displays the insight into a specific dependency in root project.
-        dependentComponents - Displays the dependent components of components in root project.
-        help - Displays a help message.
-        init - Initializes a new Gradle build.
-        model - Displays the configuration model of root project.
-        projects - Displays the sub-projects of root project.
-        properties - Displays the properties of root project.
-        tasks - Displays the tasks runnable from root project.
-        wrapper - Generates Gradle wrapper files." \
-        | string trim
+    printf '%s\t%s\n' \
+        "buildEnvironment" "Displays all buildscript dependencies declared in root project." \
+        "components" "Displays the components produced by root project." \
+        "dependencies" "Displays all dependencies declared in root project." \
+        "dependencyInsight" "Displays the insight into a specific dependency in root project." \
+        "dependentComponents" "Displays the dependent components of components in root project." \
+        "help" "Displays a help message." \
+        "init" "Initializes a new Gradle build." \
+        "model" "Displays the configuration model of root project." \
+        "projects" "Displays the sub-projects of root project." \
+        "properties" "Displays the properties of root project." \
+        "tasks" "Displays the tasks runnable from root project." \
+        "wrapper" "Generates Gradle wrapper files."
 end
 
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
@@ -52,7 +51,7 @@ function __get_gradle_task_completion
     end
 
     set -l gradle_cache_file (__create_completion_cache_file "{$PWD}-tasks")
-    if not command test -f $gradle_cache_file
+    if not command test -f $gradle_cache_file -a -s $gradle_cache_file
         command gradle -q tasks --all 2>/dev/null | string match --regex '^[a-z][A-z:]+.*' | string replace ' - ' \t >$gradle_cache_file
     end
 
@@ -71,46 +70,42 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
 ###############################
 
 function __get_console_completion
-    string replace --all ' - ' \t -- "\
-        auto - Enable color and other rich output in the console output when the build process is attached to a console, or to generate plain text only when not attached to a console. This is the default when Gradle is attached to a terminal.
-        plain - This option disables all color and other rich output in the console output. This is the default when Gradle is not attached to a terminal.
-        rich - Enable color and other rich output in the console output, regardless of whether the build process is not attached to a console. When not attached to a console, the build output will use ANSI control characters to generate the rich output.
-        verbose - Enable color and other rich output like the rich, but output task names and outcomes at the lifecycle log level, as is done by default in Gradle 3.5 and earlier." \
-        | string trim
+    printf '%s\t%s\n' \
+        "auto" "Use 'rich' in console otherwise 'plain'" \
+        "plain" "Disable color and rich output." \
+        "rich" "Enable color and rich output." \
+        "verbose" "Enable color, rich output, output task names and outcomes at the lifecycle log level"
 end
 
 function __get_property_completion
-    string replace --all ' - ' \t -- "\
-        org.gradle.cache.reserved.mb - Reserve Gradle Daemon memory for operations.
-        org.gradle.caching - Set true to enable Gradle build cache.
-        org.gradle.console - Set type of console output to generate (plain auto rich verbose).
-        org.gradle.daemon.debug - Set true to debug Gradle Daemon.
-        org.gradle.daemon.idletimeout - Kill Gradle Daemon after # idle millis.
-        org.gradle.debug - Set true to debug Gradle Client.
-        org.gradle.jvmargs - Set JVM arguments.
-        org.gradle.java.home - Set JDK home dir.
-        org.gradle.logging.level - Set default Gradle log level (quiet warn lifecycle info debug).
-        org.gradle.parallel - Set true to enable parallel project builds (incubating).
-        org.gradle.priority - Set priority for Gradle worker processes (low normal).
-        org.gradle.warning.mode - Set types of warnings to log (all summary none).
-        org.gradle.workers.max - Set the number of workers Gradle is allowed to use." \
-        | string trim
+    printf '%s\t%s\n' \
+        "org.gradle.cache.reserved.mb" "Reserve Gradle Daemon memory for operations." \
+        "org.gradle.caching" "Set true to enable Gradle build cache." \
+        "org.gradle.console" "Set type of console output to generate (plain auto rich verbose)." \
+        "org.gradle.daemon.debug" "Set true to debug Gradle Daemon." \
+        "org.gradle.daemon.idletimeout" "Kill Gradle Daemon after" \
+        "org.gradle.debug" "Set true to debug Gradle Client." \
+        "org.gradle.jvmargs" "Set JVM arguments." \
+        "org.gradle.java.home" "Set JDK home dir." \
+        "org.gradle.logging.level" "Set default Gradle log level (quiet warn lifecycle info debug)." \
+        "org.gradle.parallel" "Set true to enable parallel project builds (incubating)." \
+        "org.gradle.priority" "Set priority for Gradle worker processes (low normal)." \
+        "org.gradle.warning.mode" "Set types of warnings to log (all summary none)." \
+        "org.gradle.workers.max" "Set the number of workers Gradle is allowed to use."
 end
 
 function __get_priority_completion
-    string replace --all ' - ' \t -- "\
-        normal - Set the default process priority.
-        low - Set a low process priority." \
-        | string trim
+    printf '%s\t%s\n' \
+        "normal" "Set the default process priority." \
+        "low" "Set a low process priority."
 end
 
 function __get_warning_mode_completion
-    string replace --all ' - ' \t -- "\
-        all - Log all warnings.
-        summary - Suppress all warnings and log a summary at the end of the build.
-        fail - Log all warnings and fail the build if there are any warnings.
-        none - Suppress all warnings, including the summary at the end of the build." \
-        | string trim
+    printf '%s\t%s\n' \
+        "all" "Log all warnings." \
+        "summary" "Suppress all warnings and log a summary at the end of the build." \
+        "fail" "Log all warnings and fail the build if there are any warnings." \
+        "none" "Suppress all warnings, including the summary at the end of the build."
 end
 
 complete --command 'gw' --command 'gradle' --command 'gradlew' \

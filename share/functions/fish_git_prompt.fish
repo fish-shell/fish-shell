@@ -414,7 +414,7 @@ function fish_git_prompt --description "Prompt function for Git"
             end
 
             if set -q __fish_git_prompt_showstashstate
-                and test -r $git_dir/refs/stash
+                and test -r $git_dir/logs/refs/stash
                 set s $___fish_git_prompt_char_stashstate
             end
 

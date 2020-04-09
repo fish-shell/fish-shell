@@ -16,7 +16,17 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import string, sys, re, os.path, bz2, gzip, traceback, errno, codecs
+import bz2
+import codecs
+import errno
+import gzip
+import os
+import re
+import string
+import subprocess
+import sys
+import traceback
+
 import argparse
 from deroff import Deroffer
 
@@ -61,8 +71,8 @@ def add_diagnostic(dgn, msg_verbosity=VERY_VERBOSE):
 
 def flush_diagnostics(where):
     if diagnostic_output:
-        output_str = "\n".join(diagnostic_output) + "\n"
-        where.write(output_str)
+        output_str = "\n".join(diagnostic_output)
+        print(output_str, file=where)
         diagnostic_output[:] = []
 
 
@@ -494,7 +504,7 @@ class Type4ManParser(ManParser):
         add_diagnostic("Command is %r" % CMDNAME)
 
         if options_matched == None:
-            print >>sys.stderr, "Unable to find options section"
+            print("Unable to find options section", file=sys.stderr)
             return False
 
         while options_matched != None:
@@ -947,40 +957,33 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 
 def get_paths_from_man_locations():
     # Return all the paths to man(1) and man(8) files in the manpath
-    import subprocess, os
 
-    proc = None
-    # $MANPATH takes precedence, just like with `man` on the CLI.
-    if os.getenv("MANPATH"):
+    parent_paths = None
+
+    # Most (GNU, macOS, Haiku) modern implementations of man support being called with `--path`.
+    # Traditional implementations require a second `manpath` program: these include the BSD and Solaris families.
+    # Prefer an external program first because these programs return a superset of the $MANPATH variable.
+    # NetBSD is special here: it uses `man -p`.
+    for prog in [["man", "--path"], ["manpath"], ["man", "-p"]]:
+        try:
+            output = subprocess.check_output(prog, stderr=subprocess.DEVNULL)
+            if IS_PY3:
+                output = output.decode("latin-1")
+            parent_paths = output.strip().split(":")
+        except (OSError, subprocess.CalledProcessError):
+            continue
+    # If we can't have the OS interpret $MANPATH, just use it as-is (gulp).
+    if not parent_paths and os.getenv("MANPATH"):
         parent_paths = os.getenv("MANPATH").strip().split(":")
-    else:
-        # Some systems have manpath, others have `man --path` (like Haiku).
-        for prog in [["manpath"], ["man", "--path"]]:
-            try:
-                proc = subprocess.Popen(
-                    prog, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-            except OSError:  # Command does not exist, keep trying
-                continue
-            break  # Command exists, use it.
-        manpath, err_data = proc.communicate()
-        parent_paths = manpath.decode().strip().split(":")
-    if (not parent_paths) or (proc and proc.returncode > 0):
-        # HACK: Use some fallbacks in case we can't get anything else.
-        # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set.
-        # The alternative is reading its config file (/etc/man.conf)
-        if os.path.isfile("/etc/man.conf"):
-            data = open("/etc/man.conf", "r")
-            for line in data:
-                if "manpath" in line or "MANPATH" in line:
-                    p = line.split(" ")[1]
-                    p = p.split()[0]
-                    parent_paths.append(p)
-        if not parent_paths:
-            sys.stderr.write(
-                "Unable to get the manpath, falling back to /usr/share/man:/usr/local/share/man. Please set $MANPATH if that is not correct.\n"
-            )
-        parent_paths = ["/usr/share/man", "/usr/local/share/man"]
+    # Fallback: hard-code some common paths. These should be likely for FHS Linux distros, BSDs, and macOS.
+    if not parent_paths:
+        parent_paths = ["/usr/share/man", "/usr/local/man", "/usr/local/share/man"]
+        print(
+            "Unable to get the manpath, falling back to %s." % ":".join(parent_paths),
+            "Explictly set $MANPATH to fix this error.",
+            file=sys.stderr
+        )
+
     result = []
     for parent_path in parent_paths:
         for section in ["man1", "man6", "man8"]:

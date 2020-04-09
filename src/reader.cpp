@@ -2173,6 +2173,7 @@ parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) 
             error_desc.push_back(L'\n');
         }
         std::fwprintf(stderr, L"\n%ls", error_desc.c_str());
+        event_fire_generic(parser, L"fish_postexec");
     }
     return res;
 }

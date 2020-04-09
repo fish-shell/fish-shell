@@ -5,7 +5,7 @@ complete -c nmap -f -a "(__fish_print_hostnames)"
 # TARGET SPECIFICATION
 complete -c nmap -o iL -F -d 'Input target from file'
 complete -c nmap -o iR -x -d 'Choose random targets'
-complete -c nmap -l exclude -r -a "(__fish_print_hostnames)" -d 'Exclude hosts/networks'
+complete -c nmap -l exclude -x -a "(__fish_print_hostnames)" -d 'Exclude hosts/networks'
 complete -c nmap -l excludefile -r -d 'Exclude list from file'
 
 # HOST DISCOVERY

@@ -43,14 +43,14 @@ complete -c ncat -l proxy-type -x -d "Specify proxy protocol"
 complete -c ncat -l proxy-auth -x -d "Specify proxy credentials"
 
 # COMMAND EXECUTION OPTIONS
-complete -c ncat -s e -l exec -x -d "Execute command"
-complete -c ncat -s c -l sh-exec -x -d "Execute command via sh"
+complete -c ncat -s e -l exec -r -d "Execute command"
+complete -c ncat -s c -l sh-exec -r -d "Execute command via sh"
 complete -c ncat -l lua-exec -r -d "Execute a .lua script"
 
 # ACCESS CONTROL OPTIONS
-complete -c ncat -l allow -a "(__fish_print_hostnames)" -d "Allow connections"
+complete -c ncat -l allow -x -a "(__fish_print_hostnames)" -d "Allow connections"
 complete -c ncat -l allowfile -r -d "Allow connections from file"
-complete -c ncat -l deny -a "(__fish_print_hostnames)" -d "Deny connections"
+complete -c ncat -l deny -x -a "(__fish_print_hostnames)" -d "Deny connections"
 complete -c ncat -l denyfile -r -d "Deny connections from file"
 
 # TIMING OPTIONS

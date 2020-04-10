@@ -71,7 +71,10 @@ complete -c nmap -l max-os-tries -d 'Set the maximum number of OS detection trie
 # NMAP SCRIPTING ENGINE (NSE)
 complete -c nmap -o sC -d 'Scan: Scripts (default)'
 function __fish_complete_nmap_script
-    for l in (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
+    if [ -z "$__fish_nmap_script_completion" ]
+        set -g __fish_nmap_script_completion (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
+    end
+    for l in $__fish_nmap_script_completion
         if string match -q -v --regex "^ " $l
             set cmd $l
         else

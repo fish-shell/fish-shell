@@ -29,7 +29,7 @@ complete -c ncat -l ssl-cert -r -d "Specify SSL certificate"
 complete -c ncat -l ssl-key -r -d "Specify SSL private key"
 complete -c ncat -l ssl-trustfile -r -d "List trusted certificates"
 function __fish_complete_openssl_ciphers
-    openssl ciphers -s -stdname | sed "s/^\([^ ]*\) - \([^ ]*\).*\$/\\2\t\\1/g"
+    openssl ciphers -s -stdname | string replace -r '^([^ ]*) - ([^ ]*).*$' '$2\t$1'
     for cs in COMPLEMENTOFDEFAULT ALL COMPLEMENTOFALL HIGH MEDIUM LOW eNULL NULL aNULL kRSA aRSA RSA kDHr kDHd kDH kDHE kEDH DH DHE EDH ADH kEECDH kECDHE ECDH ECDHE EECDH AECDH aDSS DSS aDH aECDSA ECDSA TLSv1.2 TLSv1.0 SSLv3 AES128 AES256 AES AESGCM AESCCM AESCCM8 ARIA128 ARIA256 ARIA CAMELLIA128 CAMELLIA256 CAMELLIA CHACHA20 3DES DES RC4 RC2 IDEA SEED MD5 SHA1 SHA SHA256 SHA384 aGOST aGOST01 kGOST GOST94 GOST89MAC PSK kPSK kECDHEPSK kDHEPSK kRSAPSK aPSK SUITEB128 SUITEB128ONLY SUITEB192
         printf "%s\tCipher String\n" $cs
     end

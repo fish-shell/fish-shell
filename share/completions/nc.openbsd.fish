@@ -30,9 +30,9 @@ complete -c nc.openbsd -s v -d "Have nc give more verbose output"
 complete -c nc.openbsd -s W -x -d "Terminate after receiving recvlimit packets from the network"
 complete -c nc.openbsd -s w -x -d "Connections which cannot be established or are idle timeout after timeout seconds"
 function __fish_complete_nc-connect-openbsd
-	printf "connect\tHTTPS proxy\n"
-	printf "4\tSOCKS v.4\n"
-	printf "5\tSOCKS v.5\n"
+    printf "connect\tHTTPS proxy\n"
+    printf "4\tSOCKS v.4\n"
+    printf "5\tSOCKS v.5\n"
 end
 complete -c nc.openbsd -s X -x -a "(__fish_complete_nc-connect-openbsd)" -d "Requests that nc should use the specified protocol when talking to the proxy server"
 complete -c nc.openbsd -s x -x -a "(__fish_print_hostnames)" -d "Requests that nc should connect to destination using a proxy at proxy_address and port"

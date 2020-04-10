@@ -958,13 +958,12 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 def get_paths_from_man_locations():
     # Return all the paths to man(1) and man(8) files in the manpath
 
-    parent_paths = None
+    parent_paths = []
 
     # Most (GNU, macOS, Haiku) modern implementations of man support being called with `--path`.
-    # Traditional implementations require a second `manpath` program: these include the BSD and Solaris families.
+    # Traditional implementations require a second `manpath` program: examples include FreeBSD and Solaris.
     # Prefer an external program first because these programs return a superset of the $MANPATH variable.
-    # NetBSD is special here: it uses `man -p`.
-    for prog in [["man", "--path"], ["manpath"], ["man", "-p"]]:
+    for prog in [["man", "--path"], ["manpath"]]:
         try:
             output = subprocess.check_output(prog, stderr=subprocess.DEVNULL)
             if IS_PY3:
@@ -975,6 +974,16 @@ def get_paths_from_man_locations():
     # If we can't have the OS interpret $MANPATH, just use it as-is (gulp).
     if not parent_paths and os.getenv("MANPATH"):
         parent_paths = os.getenv("MANPATH").strip().split(":")
+    # Fallback: With mandoc (OpenBSD, embedded Linux) and NetBSD man, the only way to get the default manpath is by reading /etc.
+    if not parent_paths:
+        try:
+            with open("/etc/man.conf", "r") as file:
+                data = file.read()
+                for key in ["MANPATH", "_default"]:
+                    for match in re.findall(r"^%s\s+(.*)$" % key, data, re.I | re.M):
+                        parent_paths.append(match)
+        except FileNotFoundError:
+            pass
     # Fallback: hard-code some common paths. These should be likely for FHS Linux distros, BSDs, and macOS.
     if not parent_paths:
         parent_paths = ["/usr/share/man", "/usr/local/man", "/usr/local/share/man"]
@@ -990,7 +999,7 @@ def get_paths_from_man_locations():
             directory_path = os.path.join(parent_path, section)
             try:
                 names = os.listdir(directory_path)
-            except OSError as e:
+            except OSError:
                 names = []
             names.sort()
             for name in names:

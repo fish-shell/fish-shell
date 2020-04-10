@@ -33,6 +33,8 @@
   - `tcpdump`
   - `tig`
 	- `nmap`, `ncat`
+	- `nc.openbsd`, `nc.traditional`
+	-  `nc` (tries to guess correct completion)
 
 ### Deprecations and removed features
 

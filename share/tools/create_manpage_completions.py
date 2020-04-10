@@ -16,6 +16,9 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+from __future__ import print_function
+from deroff import Deroffer
+import argparse
 import bz2
 import codecs
 import errno
@@ -27,9 +30,6 @@ import subprocess
 import sys
 import traceback
 
-import argparse
-from deroff import Deroffer
-
 lzma_available = True
 try:
     try:
@@ -38,6 +38,11 @@ try:
         from backports import lzma
 except ImportError:
     lzma_available = False
+
+try:
+    from subprocess import DEVNULL
+except ImportError:
+    DEVNULL = open(os.devnull, 'wb')
 
 # Whether we're Python 3
 IS_PY3 = sys.version_info[0] >= 3
@@ -965,7 +970,7 @@ def get_paths_from_man_locations():
     # Prefer an external program first because these programs return a superset of the $MANPATH variable.
     for prog in [["man", "--path"], ["manpath"]]:
         try:
-            output = subprocess.check_output(prog, stderr=subprocess.DEVNULL)
+            output = subprocess.check_output(prog, stderr=DEVNULL)
             if IS_PY3:
                 output = output.decode("latin-1")
             parent_paths = output.strip().split(":")

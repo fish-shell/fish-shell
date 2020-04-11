@@ -47,6 +47,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+// The number of spaces per indent isn't supposed to be configurable.
+// See discussion at https://github.com/fish-shell/fish-shell/pull/6790
 #define SPACES_PER_INDENT 4
 
 // An indent_t represents an abstract indent depth. 2 means we are in a doubly-nested block, etc.

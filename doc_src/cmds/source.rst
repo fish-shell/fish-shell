@@ -1,7 +1,7 @@
 .. _cmd-source:
 
-source - evaluate contents of file.
-===================================
+source - evaluate contents of file
+==================================
 
 Synopsis
 --------

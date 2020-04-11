@@ -16,7 +16,8 @@ function __fish_git
         end
     end
     # Using 'command git' to avoid interactions for aliases from git to (e.g.) hub
-    command git $global_args $saved_args
+    # Using eval to expand ~ and variables specified on the commandline.
+    eval command git $global_args \$saved_args
 end
 
 # Print an optspec for argparse to handle git's options that are independent of any subcommand.

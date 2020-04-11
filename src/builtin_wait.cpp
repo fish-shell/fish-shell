@@ -178,9 +178,11 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bool any_flag = false;  // flag for -n option
+    bool print_help = false;
 
-    static const wchar_t *const short_options = L":n";
+    static const wchar_t *const short_options = L":nh";
     static const struct woption long_options[] = {{L"any", no_argument, nullptr, 'n'},
+                                                  {L"help", no_argument, nullptr, 'h'},
                                                   {nullptr, 0, nullptr, 0}};
 
     int opt;
@@ -189,6 +191,9 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         switch (opt) {
             case 'n':
                 any_flag = true;
+                break;
+            case 'h':
+                print_help = true;
                 break;
             case ':': {
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
@@ -203,6 +208,11 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
         }
+    }
+
+    if (print_help) {
+        builtin_print_help(parser, streams, cmd);
+        return STATUS_CMD_OK;
     }
 
     if (w.woptind == argc) {

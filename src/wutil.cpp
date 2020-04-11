@@ -206,7 +206,7 @@ dir_t::~dir_t() {
 
 bool dir_t::valid() const { return this->dir != nullptr; }
 
-bool dir_t::read(wcstring &name) { return wreaddir(this->dir, name); }
+bool dir_t::read(wcstring &name) const { return wreaddir(this->dir, name); }
 
 int wstat(const wcstring &file_name, struct stat *buf) {
     const cstring tmp = wcs2string(file_name);
@@ -268,7 +268,7 @@ int fd_check_is_remote(int fd) {
     switch ((unsigned int)buf.f_type) {
         case 0x6969:       // NFS_SUPER_MAGIC
         case 0x517B:       // SMB_SUPER_MAGIC
-        case 0xFF534D42u:  // CIFS_MAGIC_NUMBER
+        case 0xFF534D42U:  // CIFS_MAGIC_NUMBER
             return 1;
         default:
             // Other FSes are assumed local.

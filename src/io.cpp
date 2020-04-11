@@ -31,7 +31,7 @@
 /// Provide the fd monitor used for background fillthread operations.
 static fd_monitor_t &fd_monitor() {
     // Deliberately leaked to avoid shutdown dtors.
-    static fd_monitor_t *fdm = new fd_monitor_t();
+    static auto fdm = new fd_monitor_t();
     return *fdm;
 }
 
@@ -202,7 +202,7 @@ io_buffer_t::~io_buffer_t() {
 
 void io_chain_t::remove(const shared_ptr<const io_data_t> &element) {
     // See if you can guess why std::find doesn't work here.
-    for (io_chain_t::iterator iter = this->begin(); iter != this->end(); ++iter) {
+    for (auto iter = this->begin(); iter != this->end(); ++iter) {
         if (*iter == element) {
             this->erase(iter);
             break;

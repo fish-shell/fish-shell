@@ -649,7 +649,12 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
 
         bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
         if (bad_pos != 0) {
-            append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
+            if (tail_begin[bad_pos] == L'0') {
+                append_syntax_error(errors, slice_begin - in + bad_pos,
+                                    L"array indices start at 1, not 0.");
+            } else {
+                append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
+            }
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
 
@@ -923,7 +928,7 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_list_t *o
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.
     wcstring next;
-    unescape_string(std::move(input), &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
+    unescape_string(input, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
 
     if (flags & expand_flag::skip_variables) {
         for (auto &i : next) {

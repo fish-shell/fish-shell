@@ -189,7 +189,7 @@ wcstring expand_escape_variable(const env_var_t &var);
 
 /// Convert a string value to a human readable form, i.e. escape things, handle arrays, etc.
 /// Suitable for pretty-printing.
-wcstring expand_escape_string(const wcstring &str);
+wcstring expand_escape_string(const wcstring &el);
 
 /// Perform tilde expansion and nothing else on the specified string, which is modified in place.
 ///

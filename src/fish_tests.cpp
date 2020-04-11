@@ -810,8 +810,8 @@ static void test_fd_monitor() {
     item_oneshot.always_exit = true;
     {
         fd_monitor_t monitor;
-        for (auto *item : {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout,
-                           &item42_nottimeout, &item42_thenclose, &item_oneshot}) {
+        for (auto item : {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout,
+                          &item42_nottimeout, &item42_thenclose, &item_oneshot}) {
             monitor.add(std::move(item->item));
         }
         item42_timeout.write42();

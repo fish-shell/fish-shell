@@ -1,6 +1,6 @@
 .. _cmd-breakpoint:
 
-breakpoint - Launch debug mode
+breakpoint - launch debug mode
 ==============================
 
 Synopsis

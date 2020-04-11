@@ -1,6 +1,6 @@
 set -l cmds 'scontrols scontents controls contents sget sset cset cget set get'
 complete -c amixer -xa "$cmds" -n "not __fish_seen_subcommand_from $cmds"
-complete -c amixer -n '__fish_seen_subcommand_from sset sget get set' -xa "(amixer scontrols | cut --delimiter \' --fields 2)"
+complete -c amixer -n '__fish_seen_subcommand_from sset sget get set' -xa "(amixer scontrols | string split -f 2 \')"
 
 complete -c amixer -s h -l help -d 'this help'
 complete -c amixer -s c -l card -r -d 'select the card'

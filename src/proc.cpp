@@ -96,7 +96,7 @@ void proc_init() { signal_set_handlers_once(false); }
 
 // Basic thread safe sorted vector of job IDs in use.
 // This is deliberately leaked to avoid dtor ordering issues - see #6539.
-static auto *const locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
+static const auto locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
 
 job_id_t acquire_job_id() {
     auto consumed_job_ids = locked_consumed_job_ids->acquire();
@@ -187,7 +187,11 @@ statuses_t job_t::get_statuses() const {
     statuses_t st{};
     st.pipestatus.reserve(processes.size());
     for (const auto &p : processes) {
-        st.pipestatus.push_back(p->status.status_value());
+        auto status = p->status;
+        if (status.signal_exited()) {
+            st.kill_signal = status.signal_code();
+        }
+        st.pipestatus.push_back(status.status_value());
     }
     int laststatus = st.pipestatus.back();
     st.status = flags().negate ? !laststatus : laststatus;
@@ -398,7 +402,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    for (const auto &j : parser.jobs()) {
+    for (auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 // Update the signal hup/int gen.
@@ -423,6 +427,9 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
+                            if (proc->status.stopped()) {
+                                j->mut_flags().foreground = false;
+                            }
                             if (proc->status.normal_exited() || proc->status.signal_exited()) {
                                 FLOGF(proc_reap_external,
                                       "Reaped external process '%ls' (pid %d, status %d)",

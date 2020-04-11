@@ -407,7 +407,7 @@ bool sigint_checker_t::check() {
     return changed;
 }
 
-void sigint_checker_t::wait() {
+void sigint_checker_t::wait() const {
     auto &tm = topic_monitor_t::principal();
     generation_list_t gens{};
     gens[topic_t::sighupint] = this->gen_;

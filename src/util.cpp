@@ -153,5 +153,5 @@ int wcsfilecmp_glob(const wchar_t *a, const wchar_t *b) {
 long long get_time() {
     struct timeval time_struct;
     gettimeofday(&time_struct, nullptr);
-    return 1000000ll * time_struct.tv_sec + time_struct.tv_usec;
+    return 1000000LL * time_struct.tv_sec + time_struct.tv_usec;
 }

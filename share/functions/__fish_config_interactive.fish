@@ -120,15 +120,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Print a greeting.
     # fish_greeting can be a function (preferred) or a variable.
     #
-    if status --is-interactive
-        if functions -q fish_greeting
-            fish_greeting
-        else
-            # The greeting used to be skipped when fish_greeting was empty (not just undefined)
-            # Keep it that way to not print superfluous newlines on old configuration
-            test -n "$fish_greeting"
-            and echo $fish_greeting
-        end
+    if functions -q fish_greeting
+        fish_greeting
+    else
+        # The greeting used to be skipped when fish_greeting was empty (not just undefined)
+        # Keep it that way to not print superfluous newlines on old configuration
+        test -n "$fish_greeting"
+        and echo $fish_greeting
     end
 
     #
@@ -170,7 +168,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # Only a few builtins take filenames; initialize the rest with no file completions
     #
-    complete -c(builtin -n | string match -rv '(source|cd|exec|realpath|set|\\[|test|for)') --no-files
+    complete -c(builtin -n | string match -rv '(\.|:|source|cd|contains|count|echo|exec|printf|random|realpath|set|\\[|test|for)') --no-files
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings

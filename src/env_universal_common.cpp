@@ -253,13 +253,13 @@ env_universal_t::env_universal_t(wcstring path)
     : narrow_vars_path(wcs2string(path)), explicit_vars_path(std::move(path)) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
-    var_table_t::const_iterator where = vars.find(name);
+    auto where = vars.find(name);
     if (where != vars.end()) return where->second;
     return none();
 }
 
 maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &name) const {
-    var_table_t::const_iterator where = vars.find(name);
+    auto where = vars.find(name);
     if (where != vars.end()) {
         return where->second.get_flags();
     }
@@ -360,7 +360,7 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
 void env_universal_t::acquire_variables(var_table_t &vars_to_acquire) {
     // Copy modified values from existing vars to vars_to_acquire.
     for (const auto &key : this->modified) {
-        var_table_t::iterator src_iter = this->vars.find(key);
+        auto src_iter = this->vars.find(key);
         if (src_iter == this->vars.end()) {
             /* The value has been deleted. */
             vars_to_acquire.erase(key);
@@ -1288,7 +1288,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 
     void make_pipe(const wchar_t *test_path);
 
-    void drain_excessive_data() {
+    void drain_excessive_data() const {
         // The pipe seems to have data on it, that won't go away. Read a big chunk out of it. We
         // don't read until it's exhausted, because if someone were to pipe say /dev/null, that
         // would cause us to hang!

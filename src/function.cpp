@@ -80,7 +80,7 @@ static owning_lock<function_set_t> function_set;
 bool function_set_t::allow_autoload(const wcstring &name) const {
     // Prohibit autoloading if we have a non-autoload (explicit) function, or if the function is
     // tombstoned.
-    const auto *info = get_info(name);
+    auto info = get_info(name);
     bool has_explicit_func = info && !info->is_autoload;
     bool is_tombstoned = autoload_tombstones.count(name) > 0;
     return !has_explicit_func && !is_tombstoned;
@@ -175,7 +175,7 @@ void function_add(wcstring name, wcstring description, function_properties_ref_t
 std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name) {
     if (parser_keywords_is_reserved(name)) return nullptr;
     auto funcset = function_set.acquire();
-    if (const auto *info = funcset->get_info(name)) {
+    if (auto info = funcset->get_info(name)) {
         return info->props;
     }
     return nullptr;

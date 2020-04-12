@@ -2173,8 +2173,6 @@ parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) 
             error_desc.push_back(L'\n');
         }
         std::fwprintf(stderr, L"\n%ls", error_desc.c_str());
-        wcstring_list_t argv(1, b);
-        event_fire_generic(parser, L"fish_postexec", &argv);
     }
     return res;
 }
@@ -2947,6 +2945,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             } else {
                 // Result must be some combination including an error. The error message will
                 // already be printed, all we need to do is repaint.
+                wcstring_list_t argv(1, el->text());
+                event_fire_generic(parser(), L"fish_posterror", &argv);
                 s_reset(&screen, screen_reset_abandon_line);
                 reader_repaint_needed();
             }

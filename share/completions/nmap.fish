@@ -71,19 +71,22 @@ complete -c nmap -l max-os-tries -d 'Set the maximum number of OS detection trie
 # NMAP SCRIPTING ENGINE (NSE)
 complete -c nmap -o sC -d 'Scan: Scripts (default)'
 function __fish_complete_nmap_script
-    if [ -z "$__fish_nmap_script_completion" ]
-        set -g __fish_nmap_script_completion (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
-    end
-    for l in $__fish_nmap_script_completion
-        if string match -q -v --regex "^ " $l
-            set cmd $l
-        else
-            printf "%s\t%s\n" $cmd (string trim -l $l)
+    # cache completion for 5 minutes (`nmap --script-help all` is slow)
+    if test -z "$__fish_nmap_script_completion_cache" -o (date -d "now - 5min" +"%s") -gt "$__fish_nmap_script_completion_cache_time"
+        set -g __fish_nmap_script_completion_cache_time (date +"%s")
+        set -g __fish_nmap_script_completion_cache ""
+        for l in (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
+            if string match -q -v --regex "^ " $l
+                set cmd $l
+            else
+                set __fish_nmap_script_completion_cache $__fish_nmap_script_completion_cache\n$cmd\t(string trim -l $l)
+            end
+        end
+        for cat in all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln
+            set __fish_nmap_script_completion_cache $__fish_nmap_script_completion_cache\n$cat\tCategory\n
         end
     end
-    for cat in all auth broadcast brute default discovery dos exploit external fuzzer intrusive malware safe version vuln
-        printf "%s\tCategory\n" $cat
-    end
+    echo -e $__fish_nmap_script_completion_cache
 end
 complete -c nmap -l script -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
 complete -c nmap -l script -r -d 'Runs a script scan'

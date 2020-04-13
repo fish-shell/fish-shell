@@ -1257,6 +1257,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     props.wants_terminal = wants_job_control && !ld.is_event;
     props.skip_notification =
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
+    props.in_subshell = ld.is_subshell;
     props.from_event_handler = ld.is_event;
     props.job_control = wants_job_control;
 

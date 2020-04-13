@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -l fish %fish' %s
+# RUN: %fish -C 'set -l fish %fish; set -lx fth %fish_test_helper' %s
 
 $fish -c 'function main; exit 4; true; end; main'
 echo $status
@@ -15,6 +15,31 @@ echo $status
 $fish -c 'function main; kill -SIGTERM %self; true; end; main'
 echo $status
 #CHECK: 143
+
+
+status job-control full
+
+# Block no signal by default.
+$fth print_blocked_signals
+
+# Block some job control signals in subshells.
+true ($fth print_blocked_signals)
+# TODO why is this 18 on macOS?
+# CHECKERR: {{Suspended 18|Stopped: 20}}
+# CHECKERR: Stopped (tty input): 21
+# CHECKERR: Stopped (tty output): 22
+
+# Also block the signals in event handlers.
+function event_handler --on-event event
+    $fth print_blocked_signals
+end
+emit event
+# CHECKERR: {{Suspended 18|Stopped: 20}}
+# CHECKERR: Stopped (tty input): 21
+# CHECKERR: Stopped (tty output): 22
+
+status job-control interactive
+
 
 function alarm --on-signal ALRM
     echo ALRM received

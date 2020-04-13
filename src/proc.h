@@ -335,6 +335,9 @@ class job_t {
         /// Whether the job wants to own the terminal when in the foreground.
         bool wants_terminal{};
 
+        /// Whether this job is within a subshell.
+        bool in_subshell{};
+
         /// Whether this job was created as part of an event handler.
         bool from_event_handler{};
 
@@ -500,6 +503,7 @@ class job_t {
         return !is_completed() && is_constructed() && !flags().disown_requested;
     }
     bool skip_notification() const { return properties.skip_notification; }
+    bool in_subshell() const { return properties.in_subshell; }
     bool from_event_handler() const { return properties.from_event_handler; }
 
     /// \return whether we should report process exit events.

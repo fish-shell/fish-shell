@@ -100,7 +100,7 @@ This line tells the shell to execute the file with the bash interpreter, that is
 
 For a script, written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example ``/bin/python`` for a ``python`` script)
 
-This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ```fish /path/to/script`` they aren't required (but don't hurt either!).
+This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script`` they aren't required (but don't hurt either!).
 
 .. _syntax:
 
@@ -133,11 +133,11 @@ Here is a list of some useful commands:
 - ``open``, open files with the default application associated with each filetype
 - ``less``, list the contents of files
 
-Commands and parameters are separated by the space character `' '`. Every command ends with either a newline (i.e. by pressing the return key) or a semicolon '``;``'. More than one command can be written on the same line by separating them with semicolons.
+Commands and parameters are separated by the space character ``' '``. Every command ends with either a newline (i.e. by pressing the return key) or a semicolon ``;``. More than one command can be written on the same line by separating them with semicolons.
 
-A switch is a very common special type of argument. Switches almost always start with one or more hyphens '``-``' and alter the way a command operates. For example, the '``ls``' command usually lists all the files and directories in the current working directory, but by using the '``-l``' switch, the behavior of '``ls``' is changed to not only display the filename, but also the size, permissions, owner and modification time of each file.
+A switch is a very common special type of argument. Switches almost always start with one or more hyphens ``-`` and alter the way a command operates. For example, the ``ls`` command usually lists all the files and directories in the current working directory, but by using the ``-l`` switch, the behavior of ``ls`` is changed to not only display the filename, but also the size, permissions, owner and modification time of each file.
 
-Switches differ between commands and are documented in the manual page for each command. Some switches are common to most command though, for example '``--help``' will usually display a help text, '``-i``' will often turn on interactive prompting before taking action, while '``-f``' will turn it off.
+Switches differ between commands and are documented in the manual page for each command. Some switches are common to most command though, for example ``--help`` will usually display a help text, ``-i`` will often turn on interactive prompting before taking action, while ``-f`` will turn it off.
 
 .. _syntax-words:
 
@@ -286,7 +286,7 @@ Example: ``echo Hello 2>output.stderr`` writes the standard error (file descript
 Piping
 ------
 
-The user can string together multiple commands into a *pipeline*. This means that the standard output of one command will be read in as standard input into the next command. This is done by separating the commands by the pipe character '``|``'. For example
+The user can string together multiple commands into a *pipeline*. This means that the standard output of one command will be read in as standard input into the next command. This is done by separating the commands by the pipe character ``|``. For example
 
 ::
 
@@ -337,20 +337,20 @@ Functions
 
 Functions are programs written in the fish syntax. They group together one or more commands and their arguments using a single name. It can also be used to start a specific command with additional arguments.
 
-For example, the following is a function definition that calls the command ``ls`` with the argument '``-l``' to print a detailed listing of the contents of the current directory::
+For example, the following is a function definition that calls the command ``ls`` with the argument ``-l`` to print a detailed listing of the contents of the current directory::
 
   function ll
       ls -l $argv
   end
 
-The first line tells fish that a function by the name of ``ll`` is to be defined. To use it, simply write ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. '``$argv``' is a list variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
+The first line tells fish that a function by the name of ``ll`` is to be defined. To use it, simply write ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. ``$argv`` is a list variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
 
 .. _syntax-function-wrappers:
 
 Defining aliases
 ----------------
 
-One of the most common uses for functions is to slightly alter the behavior of an already existing command. For example, one might want to redefine the ``ls`` command to display colors. The switch for turning on colors on GNU systems is '``--color=auto``'. An alias, or wrapper, around ``ls`` might look like this::
+One of the most common uses for functions is to slightly alter the behavior of an already existing command. For example, one might want to redefine the ``ls`` command to display colors. The switch for turning on colors on GNU systems is ``--color=auto``. An alias, or wrapper, around ``ls`` might look like this::
 
   function ls
       command ls --color=auto $argv
@@ -377,7 +377,7 @@ Functions can be defined on the commandline or in a configuration file, but they
 - If the function definition is changed, all running shells will automatically reload the altered version.
 - Startup time and memory usage is improved, etc.
 
-When fish needs to load a function, it searches through any directories in the list variable ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix '``.fish``' and loads the first it finds.
+When fish needs to load a function, it searches through any directories in the list variable ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix ``.fish`` and loads the first it finds.
 
 By default ``$fish_function_path`` contains the following:
 
@@ -437,11 +437,11 @@ Wildcards
 
 If a star (``*``) or a question mark (``?``) is present in the parameter, ``fish`` attempts to match the given parameter to any files in such a way that:
 
-- ``*`` can match any string of characters not containing '/'. This includes matching an empty string.
+- ``*`` can match any string of characters not containing ``/``. This includes matching an empty string.
 
-- ``**`` matches any string of characters. This includes matching an empty string. The matched string may include the ``/`` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (``$PWD``) if you separate the strings with a slash ("/"). This is unlike other shells such as zsh. For example, ``**\/*.fish`` in zsh will match ``.fish`` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories.
+- ``**`` matches any string of characters. This includes matching an empty string. The matched string may include the ``/`` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (``$PWD``) if you separate the strings with a slash (``/``). This is unlike other shells such as zsh. For example, ``**\/*.fish`` in zsh will match ``.fish`` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories.
 
-- ``?`` can match any single character except '/'. This is deprecated and can be disabled via the `qmark-noglob` :ref:`feature flag<featureflags>`, so `?` will just be an ordinary character.
+- ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the `qmark-noglob` :ref:`feature flag<featureflags>`, so `?` will just be an ordinary character.
 
 Other shells, such as zsh, provide a rich glob syntax for restricting the files matched by globs. For example, ``**(.)``, to only match regular files. Fish prefers to defer such features to programs, such as ``find``, rather than reinventing the wheel. Thus, if you want to limit the wildcard expansion to just regular files the fish approach is to define and use a function. For example,
 
@@ -671,7 +671,7 @@ Index range expansion
 
 Sometimes it's necessary to access only some of the elements of a list, or some of the lines a command substitution outputs. Both allow this by providing a set of indices in square brackets.
 
-Sequences of elements can be written with the range operator '``..``'. A range '``a..b``' ('a' and 'b' being integers) is expanded into a sequence of indices '``a a+1 a+2 ... b``' or '``a a-1 a-2 ... b``' depending on which of 'a' or 'b' is higher. Negative range limits are calculated from the end of the list. If an index is too large or small it's silently clamped to one or the size of the list as appropriate.
+Sequences of elements can be written with the range operator ``..``. A range ``a..b`` ('a' and 'b' being integers) is expanded into a sequence of indices ``a a+1 a+2 ... b`` or ``a a-1 a-2 ... b`` depending on which of 'a' or 'b' is higher. Negative range limits are calculated from the end of the list. If an index is too large or small it's silently clamped to one or the size of the list as appropriate.
 
 If the end is smaller than the start, or the start is larger than the end, range expansion will go in reverse. This is unless exactly one of the given indices is negative, so the direction doesn't change if the list has fewer elements than expected.
 
@@ -864,7 +864,7 @@ This syntax is supported since fish 3.1.
 More on universal variables
 ---------------------------
 
-Universal variables are variables that are shared between all the users' fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
+Universal variables are variables that are shared between all the user's fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
 
 To see universal variables in action, start two fish sessions side by side, and issue the following command in one of them ``set fish_color_cwd blue``. Since ``fish_color_cwd`` is a universal variable, the color of the current working directory listing in the prompt will instantly change to blue on both terminals.
 
@@ -1248,7 +1248,7 @@ These are the general purpose tab completions that ``fish`` provides:
 
 - Completion of usernames for tilde expansion.
 
-- Completion of filenames, even on strings with wildcards such as '``*``' and '``**``'.
+- Completion of filenames, even on strings with wildcards such as ``*`` and ``**``.
 
 ``fish`` provides a large number of program specific completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but some are more advanced. The latter include:
 
@@ -1326,7 +1326,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Alt`\ +\ :kbd:`O` opens the file at the cursor in a pager.
 
-- :kbd:`Alt`\ +\ :kbd:`P` adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
+- :kbd:`Alt`\ +\ :kbd:`P` adds the string ``&| less;`` to the end of the job under the cursor. The result is that the output of the command will be paged.
 
 - :kbd:`Alt`\ +\ :kbd:`W` prints a short description of the command under the cursor.
 

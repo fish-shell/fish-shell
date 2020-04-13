@@ -19,7 +19,7 @@ Description
 
 fish will search the working directory to resolve relative paths but will not search ``$PATH``.
 
-If no file is specified and stdin is not the terminal, or if the file name '``-``' is used, stdin will be read.
+If no file is specified and stdin is not the terminal, or if the file name ``-`` is used, stdin will be read.
 
 The exit status of ``source`` is the exit status of the last job to execute. If something goes wrong while opening or reading the file, ``source`` exits with a non-zero status.
 

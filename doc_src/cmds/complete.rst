@@ -76,13 +76,13 @@ the fish manual.
 
 - ``-u`` and ``--unauthoritative`` no longer do anything and are silently ignored.
 
-Command specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as '``-h``', '``-help``' or '``--help``'. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU version of the getopt library. These styles are:
+Command specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU version of the getopt library. These styles are:
 
-- Short options, like '``-a``'. Short options are a single character long, are preceded by a single hyphen and may be grouped together (like '``-la``', which is equivalent to '``-l -a``'). Option arguments may be specified in the following parameter ('``-w 32``') or by appending the option with the value ('``-w32``').
+- Short options, like ``-a``. Short options are a single character long, are preceded by a single hyphen and may be grouped together (like ``-la``, which is equivalent to ``-l -a``). Option arguments may be specified in the following parameter (``-w 32``) or by appending the option with the value (``-w32``).
 
-- Old style long options, like '``-Wall``'. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter ('``-ao null``').
+- Old style long options, like ``-Wall``. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter (``-ao null``).
 
-- GNU style long options, like '``--colors``'. GNU style long options can be more than one character long, are preceded by two hyphens, and may not be grouped together. Option arguments may be specified in the following parameter ('``--quoting-style shell``') or by appending the option with a '``=``' and the value ('``--quoting-style=shell``'). GNU style long options may be abbreviated so long as the abbreviation is unique ('``--h``') is equivalent to '``--help``' if help is the only long option beginning with an 'h').
+- GNU style long options, like ``--colors``. GNU style long options can be more than one character long, are preceded by two hyphens, and may not be grouped together. Option arguments may be specified in the following parameter (``--quoting-style shell``) or by appending the option with a ``=`` and the value (``--quoting-style=shell``). GNU style long options may be abbreviated so long as the abbreviation is unique (``--h``) is equivalent to ``--help`` if help is the only long option beginning with an 'h').
 
 The options for specifying command name and command path may be used multiple times to define the same completions for multiple commands.
 
@@ -111,7 +111,7 @@ The short style option ``-o`` for the ``gcc`` command requires that a file follo
     complete -c gcc -s o -r
 
 
-The short style option ``-d`` for the ``grep`` command requires that one of the strings '``read``', '``skip``' or '``recurse``' is used.  This can be specified writing:
+The short style option ``-d`` for the ``grep`` command requires that one of the strings ``read``, ``skip`` or ``recurse`` is used.  This can be specified writing:
 
 
 

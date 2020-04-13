@@ -31,7 +31,7 @@ Examples:
 
 - Having both aliases and functions is confusing, especially since both of them have limitations and problems. ``fish`` functions have none of the drawbacks of either syntax.
 
-- The many Posix quoting styles are silly, especially $''.
+- The many Posix quoting styles are silly, especially ``$``.
 
 
 The law of responsiveness

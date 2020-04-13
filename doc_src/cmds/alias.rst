@@ -27,26 +27,41 @@ You cannot create an alias to a function with the same name. Note that spaces ne
 
 The following options are available:
 
+- ``-e`` or ``--expand-next`` causes the alias to check the next command word for alias expansion. This feature can also be enabled by adding a trailing space at the end of ``DEFINITION``, for compatibility purposes.
+
 - ``-h`` or ``--help`` displays help about using this command.
 
-- ``-s`` or ``--save`` Automatically save the function created by the alias into your fish configuration directory using :ref:`funcsave <cmd-funcsave>`.
+- ``-s`` or ``--save`` automatically saves the function created by the alias into your fish configuration directory using :ref:`funcsave <cmd-funcsave>`.
 
 Example
 -------
 
 The following code will create ``rmi``, which runs ``rm`` with additional arguments on every invocation.
 
-
-
 ::
 
     alias rmi="rm -i"
-    
+
     # This is equivalent to entering the following function:
     function rmi --wraps rm --description 'alias rmi=rm -i'
         rm -i $argv
     end
-    
+
+Be careful when you use an alias with spaces in it:
+
+::
+
     # This needs to have the spaces escaped or "Chrome.app..." will be seen as an argument to "/Applications/Google":
     alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome banana'
 
+You can enable alias expansion of the second command word, useful for commands like sudo which takes another command.
+
+::
+
+    alias sudo='sudo' --expand-next
+    # or, for compatibility with Bash
+    alias sudo='sudo '
+
+    alias l="ls -l"
+    # this will execute `sudo ls -l`
+    sudo l

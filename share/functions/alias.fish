@@ -1,5 +1,5 @@
 function alias --description 'Creates a function wrapping a command'
-    set -l options h/help s/save
+    set -l options h/help s/save e/expand-next
     argparse -n alias --max-args=2 $options -- $argv
     or return
 
@@ -44,6 +44,9 @@ function alias --description 'Creates a function wrapping a command'
         return 1
     end
 
+    string trim --quiet --right $body
+    set -l has_trailing_space $status
+
     # Extract the first command from the body.
     printf '%s\n' $body | read -lt first_word body
 
@@ -58,7 +61,32 @@ function alias --description 'Creates a function wrapping a command'
     end
     set -l cmd_string (string escape -- "alias $argv")
     set wrapped_cmd (string join ' ' -- $first_word $body | string escape)
-    echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
+    if set -q _flag_expand_next || test $has_trailing_space -eq 0
+        echo "function $name --wraps $wrapped_cmd --description $cmd_string
+            if set -q \$argv
+                $prefix $first_word $body
+                return
+            end
+
+            set -l tmp (string split -m 1 ' ' -- \$argv)
+            set -l inner_name \$tmp[1]
+            set -l inner_body \$tmp[2]
+
+            for func in (alias)
+                set -l func_tmp (string split -m 2 ' ' -- \$func)
+                set -l func_name \$func_tmp[2]
+                set -l func_body \$func_tmp[3]
+                if test \$inner_name = \$func_name
+                    set inner_name \$func_body
+                    break
+                end
+            end
+
+            $prefix $first_word $body \$inner_name \$inner_body
+        end" | source
+    else
+        echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
+    end
     if set -q _flag_save
         funcsave $name
     end

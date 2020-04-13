@@ -1,7 +1,7 @@
 function __fish_ninja
     set -l saved_args $argv
     set -l dir .
-    if argparse -i C/dir= -- (commandline -opc) && set -ql _flag_C
+    if argparse -i C/dir= -- (commandline -opc)
         # Using eval to expand ~ and variables specified on the commandline.
         eval command ninja -C$_flag_C \$saved_args
     end

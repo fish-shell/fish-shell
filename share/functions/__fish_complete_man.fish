@@ -10,7 +10,7 @@ if test (uname) = Darwin
     # If this is fixed in later versions uncomment the second check.
     if test "$darwin_version[1]" = 19 # -a "$darwin_version[2]" -le 3
         set -l apropos (command -s apropos)
-        if test "$apropos" = "/usr/bin/apropos"
+        if test "$apropos" = /usr/bin/apropos
             function __fish_complete_man
             end
             # (remember: exit when `source`ing only exits the file, not the shell)

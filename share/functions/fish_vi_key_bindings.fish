@@ -171,7 +171,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert cge backward-kill-word repaint-mode
     bind -s --preset -m insert cgE backward-kill-bigword repaint-mode
 
-    bind -s --preset '~' capitalize-word
+    bind -s --preset '~' togglecase-letter forward-char
     bind -s --preset gu downcase-word
     bind -s --preset gU upcase-word
 
@@ -252,6 +252,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual t forward-jump-till
     bind -s --preset -M visual F backward-jump
     bind -s --preset -M visual T backward-jump-till
+
+    bind -s --preset -M visual '~' togglecase-selection
 
     for key in $eol_keys
         bind -s --preset -M visual $key end-of-line

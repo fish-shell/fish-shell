@@ -3050,6 +3050,52 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
+        case rl::togglecase_letter: {
+            editable_line_t *el = active_edit_line();
+            size_t str_pos = el->position;
+
+            if (str_pos < el->size()) {
+                wchar_t chr = el->text.at(str_pos);
+
+                bool make_uppercase = iswlower(chr);
+                if (make_uppercase) {
+                    chr = towupper(chr);
+                } else {
+                    chr = tolower(chr);
+                }
+
+                el->text.at(str_pos) = chr;
+            }
+
+            command_line_changed(el);
+            super_highlight_me_plenty();
+            reader_repaint_needed();
+            break;
+        }
+        case rl::togglecase_selection: {
+            editable_line_t *el = active_edit_line();
+
+            size_t start, len;
+            if (reader_get_selection(&start, &len)) {
+                for (size_t pos = start; pos < start + len; pos++) {
+                    wchar_t chr = el->text.at(pos);
+
+                    bool make_uppercase = iswlower(chr);
+                    if (make_uppercase) {
+                        chr = towupper(chr);
+                    } else {
+                        chr = tolower(chr);
+                    }
+
+                    el->text.at(pos) = chr;
+                }
+            }
+
+            command_line_changed(el);
+            super_highlight_me_plenty();
+            reader_repaint_needed();
+            break;
+        }
         case rl::upcase_word:
         case rl::downcase_word:
         case rl::capitalize_word: {

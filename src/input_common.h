@@ -47,6 +47,8 @@ enum class readline_cmd_t {
     upcase_word,
     downcase_word,
     capitalize_word,
+    togglecase_letter,
+    togglecase_selection,
     execute,
     beginning_of_buffer,
     end_of_buffer,

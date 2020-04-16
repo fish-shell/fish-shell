@@ -62,7 +62,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
 
             # Add a character for each file status if we have one
             # HACK: To allow this to work both with and without '?' globs
-            set -l q '?'
+            set -l dq '?'
             switch $line
                 case 'A '
                     set -a hg_statuses added

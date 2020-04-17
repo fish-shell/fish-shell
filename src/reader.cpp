@@ -3219,6 +3219,72 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
+        case rl::togglecase_char: {
+            editable_line_t *el = active_edit_line();
+            size_t buff_pos = el->position();
+
+            // Check that the cursor is on a character
+            if (buff_pos < el->size()) {
+                wchar_t chr = el->text().at(buff_pos);
+                wcstring replacement;
+
+                // Toggle the case of the current character
+                bool make_uppercase = iswlower(chr);
+                if (make_uppercase) {
+                    chr = towupper(chr);
+                } else {
+                    chr = tolower(chr);
+                }
+
+                replacement.push_back(chr);
+                el->replace_substring(buff_pos, (size_t)1, std::move(replacement));
+
+                // Restore the buffer position since replace_substring moves
+                // the buffer position ahead of the replaced text.
+                update_buff_pos(el, buff_pos);
+
+                command_line_changed(el);
+                super_highlight_me_plenty();
+                reader_repaint_needed();
+            }
+            break;
+        }
+        case rl::togglecase_selection: {
+            editable_line_t *el = active_edit_line();
+
+            // Check that we have an active selection and get the bounds.
+            size_t start, len;
+            if (reader_get_selection(&start, &len)) {
+                size_t buff_pos = el->position();
+                wcstring replacement;
+
+                // Loop through the selected characters and toggle their case.
+                for (size_t pos = start; pos < start + len && pos < el->size(); pos++) {
+                    wchar_t chr = el->text().at(pos);
+
+                    // Toggle the case of the current character.
+                    bool make_uppercase = iswlower(chr);
+                    if (make_uppercase) {
+                        chr = towupper(chr);
+                    } else {
+                        chr = tolower(chr);
+                    }
+
+                    replacement.push_back(chr);
+                }
+
+                el->replace_substring(start, len, std::move(replacement));
+
+                // Restore the buffer position since replace_substring moves
+                // the buffer position ahead of the replaced text.
+                update_buff_pos(el, buff_pos);
+
+                command_line_changed(el);
+                super_highlight_me_plenty();
+                reader_repaint_needed();
+            }
+            break;
+        }
         case rl::upcase_word:
         case rl::downcase_word:
         case rl::capitalize_word: {

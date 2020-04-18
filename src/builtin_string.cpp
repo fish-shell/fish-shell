@@ -156,6 +156,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool no_empty_valid = false;
     bool no_trim_newlines_valid = false;
     bool fields_valid = false;
+    bool allow_empty_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -171,6 +172,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool right = false;
     bool no_empty = false;
     bool no_trim_newlines = false;
+    bool allow_empty = false;
 
     long count = 0;
     long length = 0;
@@ -229,6 +231,9 @@ static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams
                          const wgetopter_t &w, options_t *opts) {
     if (opts->all_valid) {
         opts->all = true;
+        return STATUS_CMD_OK;
+    } else if (opts->allow_empty_valid) {
+        opts->allow_empty = true;
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -472,6 +477,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->no_empty_valid) short_opts.append(L"n");
     if (opts->no_trim_newlines_valid) short_opts.append(L"N");
     if (opts->fields_valid) short_opts.append(L"f:");
+    if (opts->allow_empty_valid) short_opts.append(L"a");
     return short_opts;
 }
 
@@ -500,6 +506,7 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"style", required_argument, nullptr, 1},
                                               {L"no-trim-newlines", no_argument, nullptr, 'N'},
                                               {L"fields", required_argument, nullptr, 'f'},
+                                              {L"allow-empty", no_argument, nullptr, 'a'},
                                               {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
@@ -1126,6 +1133,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
 
 static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv,
                                bool is_split0) {
+    wchar_t *cmd = argv[0];
     options_t opts;
     opts.quiet_valid = true;
     opts.right_valid = true;
@@ -1133,9 +1141,16 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
     opts.max = LONG_MAX;
     opts.no_empty_valid = true;
     opts.fields_valid = true;
+    opts.allow_empty_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, is_split0 ? 0 : 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
+
+    if (opts.fields.size() < 1 && opts.allow_empty) {
+    	streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--allow-empty is only valid with --fields"));
+        return STATUS_INVALID_ARGS;
+    }
 
     const wcstring sep = is_split0 ? wcstring(1, L'\0') : wcstring(opts.arg1);
 
@@ -1176,14 +1191,20 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
             }
             auto &buff = streams.out.buffer();
             if (opts.fields.size() > 0) {
-                for (const auto &field : opts.fields) {
-                    // field indexing starts from 1
-                    if (field - 1 >= (long)splits.size()) {
-                        return STATUS_CMD_ERROR;
+                // Print nothing and return error if any of the supplied
+                // fields do not exist, unless `--allow-empty` is used.
+                if (!opts.allow_empty) {
+                    for (const auto &field : opts.fields) {
+                        // field indexing starts from 1
+                        if (field - 1 >= (long)splits.size()) {
+                            return STATUS_CMD_ERROR;
+                        }
                     }
                 }
                 for (const auto &field : opts.fields) {
-                    buff.append(splits.at(field - 1), separation_type_t::explicitly);
+                    if (field - 1 < (long)splits.size()) {
+                        buff.append(splits.at(field - 1), separation_type_t::explicitly);
+                    }
                 }
             } else {
                 for (const wcstring &split : splits) {

@@ -111,6 +111,9 @@ string split -f1 ' ' 'a b' 'c d'
 # CHECK: a
 # CHECK: c
 
+string split --allow-empty --fields=2,9 "" abc
+# CHECK: b
+
 seq 3 | string join ...
 # CHECK: 1...2...3
 

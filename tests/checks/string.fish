@@ -107,6 +107,10 @@ string split --fields=1-3,5,9-7 "" 123456789
 # CHECK: 8
 # CHECK: 7
 
+string split -f1 ' ' 'a b' 'c d'
+# CHECK: a
+# CHECK: c
+
 seq 3 | string join ...
 # CHECK: 1...2...3
 

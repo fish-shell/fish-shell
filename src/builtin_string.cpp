@@ -1139,10 +1139,12 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
 
     const wcstring sep = is_split0 ? wcstring(1, L'\0') : wcstring(opts.arg1);
 
-    wcstring_list_t splits;
+    std::vector<wcstring_list_t> all_splits;
+    size_t split_count = 0;
     size_t arg_count = 0;
     arg_iterator_t aiter(argv, optind, streams, !is_split0);
     while (const wcstring *arg = aiter.nextstr()) {
+        wcstring_list_t splits;
         if (opts.right) {
             split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max,
                         opts.no_empty);
@@ -1150,44 +1152,46 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
             split_about(arg->begin(), arg->end(), sep.begin(), sep.end(), &splits, opts.max,
                         opts.no_empty);
         }
+        all_splits.push_back(splits);
+        split_count += splits.size();
         arg_count++;
     }
 
-    // If we are from the right, split_about gave us reversed strings, in reversed order!
-    if (opts.right) {
-        for (auto &split : splits) {
-            std::reverse(split.begin(), split.end());
+    for (auto &splits : all_splits) {
+        // If we are from the right, split_about gave us reversed strings, in reversed order!
+        if (opts.right) {
+            for (auto &split : splits) {
+                std::reverse(split.begin(), split.end());
+            }
+            std::reverse(splits.begin(), splits.end());
         }
-        std::reverse(splits.begin(), splits.end());
-    }
 
-    const size_t split_count = splits.size();
-    if (!opts.quiet) {
-        if (is_split0 && !splits.empty()) {
-            // split0 ignores a trailing \0, so a\0b\0 is two elements.
-            // In contrast to split, where a\nb\n is three - "a", "b" and "".
-            //
-            // Remove the last element if it is empty.
-            if (splits.back().empty()) splits.pop_back();
-        }
-        auto &buff = streams.out.buffer();
-        if (opts.fields.size() > 0) {
-            for (const auto &field : opts.fields) {
-                // field indexing starts from 1
-                if (field - 1 >= (long)split_count) {
-                    return STATUS_CMD_ERROR;
+        if (!opts.quiet) {
+            if (is_split0 && !splits.empty()) {
+                // split0 ignores a trailing \0, so a\0b\0 is two elements.
+                // In contrast to split, where a\nb\n is three - "a", "b" and "".
+                //
+                // Remove the last element if it is empty.
+                if (splits.back().empty()) splits.pop_back();
+            }
+            auto &buff = streams.out.buffer();
+            if (opts.fields.size() > 0) {
+                for (const auto &field : opts.fields) {
+                    // field indexing starts from 1
+                    if (field - 1 >= (long)splits.size()) {
+                        return STATUS_CMD_ERROR;
+                    }
+                }
+                for (const auto &field : opts.fields) {
+                    buff.append(splits.at(field - 1), separation_type_t::explicitly);
+                }
+            } else {
+                for (const wcstring &split : splits) {
+                    buff.append(split, separation_type_t::explicitly);
                 }
             }
-            for (const auto &field : opts.fields) {
-                buff.append(splits.at(field - 1), separation_type_t::explicitly);
-            }
-        } else {
-            for (const wcstring &split : splits) {
-                buff.append(split, separation_type_t::explicitly);
-            }
         }
     }
-
     // We split something if we have more split values than args.
     return split_count > arg_count ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }

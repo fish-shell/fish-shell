@@ -17,7 +17,7 @@ function alias --description 'Creates a function wrapping a command'
     if not set -q argv[1]
         # Print the known aliases.
         for func in (functions -n)
-            set -l output (functions $func | string match -r -- "^function .* --description '?alias(.*)")
+            set -l output (functions $func | string match -r -- "^function .* --description (?:'alias (.*)'|alias\\\\ (.*))\$")
             if set -q output[2]
                 set output (string replace -r -- '^'$func'[= ]' '' $output[2])
                 echo alias $func (string escape -- $output[1])

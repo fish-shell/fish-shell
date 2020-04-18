@@ -433,7 +433,12 @@ bool inputter_t::mapping_is_match(const input_mapping_t &m) {
     return true;
 }
 
-void inputter_t::queue_ch(const char_event_t &ch) { event_queue_.push_back(ch); }
+void inputter_t::queue_ch(const char_event_t &ch) {
+    if (ch.is_readline()) {
+        function_push_args(ch.get_readline());
+    }
+    event_queue_.push_back(ch);
+}
 
 void inputter_t::push_front(const char_event_t &ch) { event_queue_.push_front(ch); }
 

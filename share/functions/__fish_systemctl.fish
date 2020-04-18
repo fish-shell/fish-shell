@@ -74,12 +74,11 @@ function __fish_systemctl --description 'Call systemctl with some options from t
     # Output looks like
     # systemd-tmpfiles-clean.timer      [more whitespace] loaded    active     waiting   Daily Cleanup[...]
     # Use the last part as the description.
-    # Note that in some cases this prints a "●" or "*" (with C locale) marker at the beginning of the line. We have to remove it.
-    systemctl --no-legend --no-pager --all list-units $passflags | string trim -c ' *●' | string replace -r "(?: +(\S+)){4}" \t'$1'
+    systemctl --full --no-legend --no-pager --plain --all list-units $passflags | string replace -r "(?: +(\S+)){4}" \t'$1'
     # We need this for disabled/static units. Also instance units without an active instance.
     # Output looks like
     # systemd-tmpfiles-clean.timer               static
     # Just use the state as the description, since we won't get it here.
     # This is an issue for units that appear in both.
-    systemctl --no-legend --no-pager --all list-unit-files $passflags | string trim -c ' *●' | string replace -r "(?: +(\S+)){1}" \t'$1'
+    systemctl --full --no-legend --no-pager --plain --all list-unit-files $passflags | string replace -r "(?: +(\S+)){1}" \t'$1'
 end

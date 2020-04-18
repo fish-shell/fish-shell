@@ -28,7 +28,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     end
 
     set -l root (fish_print_hg_root)
-    or return 0
+    or return 1
 
     # Read branch and bookmark
     set -l branch (cat $root/branch 2>/dev/null; or echo default)

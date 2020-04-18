@@ -864,7 +864,7 @@ void reader_data_t::pager_selection_changed() {
     }
 
     // Trigger repaint (see issue #765).
-    reader_repaint_needed();
+    mark_repaint_needed();
 }
 
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
@@ -1774,7 +1774,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     current_page_rendering = page_rendering_t();
     // Modify the command line to reflect the new pager.
     pager_selection_changed();
-    reader_repaint_needed();
+    mark_repaint_needed();
     return false;
 }
 
@@ -2105,7 +2105,7 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
     // Clear history search and pager contents.
     history_search.reset();
     super_highlight_me_plenty();
-    reader_repaint_needed();
+    mark_repaint_needed();
 }
 
 void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
@@ -2609,7 +2609,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             while (el->position() > 0 && el->text().at(el->position() - 1) != L'\n') {
                 update_buff_pos(el, el->position() - 1);
             }
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::end_of_line: {
@@ -2623,17 +2623,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 accept_autosuggestion(true);
             }
 
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::beginning_of_buffer: {
             update_buff_pos(&command_line, 0);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::end_of_buffer: {
             update_buff_pos(&command_line, command_line.size());
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::cancel: {
@@ -2681,7 +2681,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // disclosed, then become so; otherwise cycle through our available completions.
                 if (current_page_rendering.remaining_to_disclose > 0) {
                     pager.set_fully_disclosed(true);
-                    reader_repaint_needed();
+                    mark_repaint_needed();
                 } else {
                     select_completion_in_direction(c == rl::complete ? selection_motion_t::next
                                                                      : selection_motion_t::prev);
@@ -2742,7 +2742,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (c == rl::complete_and_search && !rls.complete_did_insert && !pager.empty()) {
                     pager.set_search_field_shown(true);
                     select_completion_in_direction(selection_motion_t::next);
-                    reader_repaint_needed();
+                    mark_repaint_needed();
                 }
             }
             break;
@@ -2756,7 +2756,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (pager.is_search_field_shown() && !is_navigating_pager_contents()) {
                     select_completion_in_direction(selection_motion_t::south);
                 }
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
             break;
         }
@@ -2946,7 +2946,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Result must be some combination including an error. The error message will
                 // already be printed, all we need to do is repaint.
                 s_reset(&screen, screen_reset_abandon_line);
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
 
             break;
@@ -3010,7 +3010,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(selection_motion_t::west);
             } else if (el->position() > 0) {
                 update_buff_pos(el, el->position() - 1);
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
             break;
         }
@@ -3020,7 +3020,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(selection_motion_t::east);
             } else if (el->position() < el->size()) {
                 update_buff_pos(el, el->position() + 1);
-                reader_repaint_needed();
+                mark_repaint_needed();
             } else {
                 accept_autosuggestion(true);
             }
@@ -3144,7 +3144,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     total_offset_new = parse_util_get_offset(
                         el->text(), line_new, line_offset_old - 4 * (indent_new - indent_old));
                     update_buff_pos(el, total_offset_new);
-                    reader_repaint_needed();
+                    mark_repaint_needed();
                 }
             }
             break;
@@ -3152,7 +3152,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::suppress_autosuggestion: {
             suppress_autosuggestion = true;
             autosuggestion.clear();
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::accept_autosuggestion: {
@@ -3245,7 +3245,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 command_line_changed(el);
                 super_highlight_me_plenty();
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
             break;
         }
@@ -3281,7 +3281,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 command_line_changed(el);
                 super_highlight_me_plenty();
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
             break;
         }
@@ -3321,7 +3321,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             update_buff_pos(el);
             command_line_changed(el);
             super_highlight_me_plenty();
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::begin_selection:
@@ -3370,7 +3370,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             bool success = jump(direction, precision, el, target);
 
             inputter.function_set_status(success);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::repeat_jump: {
@@ -3382,7 +3382,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             inputter.function_set_status(success);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::reverse_repeat_jump: {
@@ -3404,7 +3404,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             last_jump_direction = original_dir;
 
             inputter.function_set_status(success);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
 

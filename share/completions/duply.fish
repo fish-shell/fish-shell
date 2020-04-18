@@ -1,6 +1,6 @@
 
 # First parameter is the profile name, or 'usage'
-complete --command duply --no-files --condition __fish_is_first_token --arguments '(/bin/ls /etc/duply 2>/dev/null) (/bin/ls ~/.duply 2>/dev/null)' -d Profile
+complete -c duply -f -n __fish_is_first_token - '(set -l files /etc/duply/* ~/.duply/*; string replace -r ".*/" "" --  $files)' -d Profile
 complete --command duply --no-files --arguments usage -d 'Get usage help text'
 
 # Second parameter is a duply command

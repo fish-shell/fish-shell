@@ -5,6 +5,6 @@ function __fish_complete_pids -d "Print a list of process identifiers along with
 
     # Display the tty if available
     # But not if it's just question marks, meaning no tty
-    ps axc -o pid,ucomm,tty | string match -r -v '^\s*'$fish_pid'\s' | tail -n +2 | string replace -r ' *([0-9]+) +([^ ].*[^ ]|[^ ]) +([^ ]+) *$' '$1\t$2 [$3]' | string replace -r ' *\[\?*\] *$' ''
+    __fish_ps -o pid,comm,tty | string match -r -v '^\s*'$fish_pid'\s' | tail -n +2 | string replace -r ' *([0-9]+) +([^ ].*[^ ]|[^ ]) +([^ ]+) *$' '$1\t$2 [$3]' | string replace -r ' *\[\?*\] *$' ''
 end
 

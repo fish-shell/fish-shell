@@ -21,10 +21,6 @@ The following options are available:
 
 - ``-c`` or ``--continuous`` begins a session where multiple key sequences can be inspected. By default the program exits after capturing a single key sequence.
 
-- ``-d`` or ``--debug=CATEGORY_GLOB`` enables debug output and specifies a glob for matching debug categories (like ``fish -d``). Defaults to empty.
-
-- ``-D`` or ``--debug-stack-frames=DEBUG_LEVEL`` specify how many stack frames to display when debug messages are written. The default is zero. A value of 3 or 4 is usually sufficient to gain insight into how a given debug call was reached but you can specify a value up to 128.
-
 - ``-h`` or ``--help`` prints usage information.
 
 - ``-v`` or ``--version`` prints fish_key_reader's version and exits.

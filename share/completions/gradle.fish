@@ -8,7 +8,7 @@ end
 function __create_completion_cache_file
     # Set up cache directory
     if test -z $XDG_CACHE_HOME
-        set XDG_CACHE_HOME $HOME/.cache/
+        set XDG_CACHE_HOME $HOME/.cache
     end
     mkdir -m 700 -p $XDG_CACHE_HOME/gradle-completions
 

@@ -50,7 +50,7 @@ function __fish_complete_npm -d "Complete the commandline using npm's 'completio
     if command -sq npm
         # npm completion is bash-centric, so we need to translate fish's "commandline" stuff to bash's $COMP_* stuff
         # COMP_LINE is an array with the words in the commandline
-        set -lx COMP_LINE (commandline -o)
+        set -lx COMP_LINE (commandline -opc)
         # COMP_CWORD is the index of the current word in COMP_LINE
         # bash starts arrays with 0, so subtract 1
         set -lx COMP_CWORD (math (count $COMP_LINE) - 1)

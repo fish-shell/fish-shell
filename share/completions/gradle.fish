@@ -1,11 +1,11 @@
 # Gradle is a build system.
 # See: https://gradle.org
 
-function __contains_gradle_build
+function __fish_gradle_contains_build_file
     test -f build.gradle -o -f build.gradle.kts
 end
 
-function __create_completion_cache_file
+function __fish_gradle_create_completion_cache_file
     # Set up cache directory
     if test -z $XDG_CACHE_HOME
         set XDG_CACHE_HOME $HOME/.cache
@@ -20,8 +20,8 @@ end
 ##############################
 
 # Outside of a Project
-function __get_gradle_default_task_completion
-    if __contains_gradle_build
+function __fish_gradle_get_default_task_completion
+    if __fish_gradle_contains_build_file
         return
     end
 
@@ -42,15 +42,15 @@ end
 
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --exclusive \
-    --arguments "(__get_gradle_default_task_completion)"
+    --arguments "(__fish_gradle_get_default_task_completion)"
 
 # Inside of a Project
-function __get_gradle_task_completion
-    if not __contains_gradle_build
+function __fish_gradle_get_task_completion
+    if not __fish_gradle_contains_build_file
         return
     end
 
-    set -l gradle_cache_file (__create_completion_cache_file "{$PWD}-tasks")
+    set -l gradle_cache_file (__fish_gradle_create_completion_cache_file "{$PWD}-tasks")
     if not command test -f $gradle_cache_file -a -s $gradle_cache_file
         command gradle -q tasks --all 2>/dev/null | string match --regex '^[a-z][A-z:]+.*' | string replace ' - ' \t >$gradle_cache_file
     end
@@ -60,16 +60,16 @@ function __get_gradle_task_completion
 end
 
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
-    --condition "__contains_gradle_build" \
+    --condition "__fish_gradle_contains_build_file" \
     --exclusive \
-    --arguments "(__get_gradle_task_completion)"
+    --arguments "(__fish_gradle_get_task_completion)"
 
 
 ###############################
 # Configure Option Completion #
 ###############################
 
-function __get_console_completion
+function __fish_gradle_get_console_completion
     printf '%s\t%s\n' \
         "auto" "Use 'rich' in console otherwise 'plain'" \
         "plain" "Disable color and rich output" \
@@ -77,7 +77,7 @@ function __get_console_completion
         "verbose" "Enable color, rich output, output task names and outcomes at the lifecycle log level"
 end
 
-function __get_property_completion
+function __fish_gradle_get_property_completion
     printf '%s\t%s\n' \
         "org.gradle.cache.reserved.mb" "Reserve Gradle Daemon memory for operations" \
         "org.gradle.caching" "Enable Gradle build cache" \
@@ -94,13 +94,13 @@ function __get_property_completion
         "org.gradle.workers.max" "Set the number of workers Gradle is allowed to use"
 end
 
-function __get_priority_completion
+function __fish_gradle_get_priority_completion
     printf '%s\t%s\n' \
         "normal" "Default process priority" \
         "low" "Low process priority"
 end
 
-function __get_warning_mode_completion
+function __fish_gradle_get_warning_mode_completion
     printf '%s\t%s\n' \
         "all" "Log all warnings" \
         "summary" "Suppress all warnings, log a summary at the end" \
@@ -136,7 +136,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'console' \
     --exclusive \
     --description 'Specify type of console output' \
-    --arguments "(__get_console_completion)"
+    --arguments "(__fish_gradle_get_console_completion)"
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'continue' \
     --description 'Continue task execution after task failures'
@@ -145,7 +145,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --short-option 'D' \
     --exclusive \
     --description 'Set system property of the JVM (e.g. -Dmyprop=myvalue)' \
-    --arguments "(__get_property_completion)"
+    --arguments "(__fish_gradle_get_property_completion)"
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'debug' \
     --short-option 'd' \
@@ -217,7 +217,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'priority' \
     --exclusive \
     --description 'Specify scheduling priority for the Gradle daemon and all processes launched by it' \
-    --arguments "(__get_priority_completion)"
+    --arguments "(__fish_gradle_get_priority_completion)"
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'profile' \
     --description 'Profile build execution time and generate report'
@@ -270,7 +270,7 @@ complete --command 'gw' --command 'gradle' --command 'gradlew' \
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'warning-mode' \
     --description 'Specify warn mode' \
-    --arguments "(__get_warning_mode_completion)"
+    --arguments "(__fish_gradle_get_warning_mode_completion)"
 complete --command 'gw' --command 'gradle' --command 'gradlew' \
     --long-option 'write-locks' \
     --description 'Persists dependency resolution for locked configurations [incubating]'

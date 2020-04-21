@@ -612,8 +612,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
               wchar_t target);
 
-    bool handle_completions(const completion_list_t &comp, size_t token_begin, size_t token_end,
-                            bool cont_after_prefix_insertion);
+    bool handle_completions(const completion_list_t &comp, size_t token_begin, size_t token_end);
 
     void sanity_check() const;
     void set_command_line_and_position(editable_line_t *el, wcstring &&new_str, size_t pos);
@@ -1622,21 +1621,18 @@ static fuzzy_match_type_t get_best_match_type(const completion_list_t &comp) {
 /// - If the list is empty, flash the terminal.
 /// - If the list contains one element, write the whole element, and if the element does not end on
 /// a '/', '@', ':', '.', ',' or a '=', also write a trailing space.
-/// - If the list contains multiple elements with a common prefix, write the prefix.
-/// - If the list contains multiple elements without a common prefix, call run_pager to display a
-/// list of completions. Depending on terminal size and the length of the list, run_pager may either
-/// show less than a screenfull and exit or use an interactive pager to allow the user to scroll
-/// through the completions.
+/// - If the list contains multiple elements, insert their common prefix, if any and display
+/// the list in the pager.  Depending on terminal size and the length of the list, the pager
+/// may either show less than a screenfull and exit or use an interactive pager to allow the
+/// user to scroll through the completions.
 ///
 /// \param comp the list of completion strings
 /// \param token_begin the position of the token to complete
 /// \param token_end the position after the token to complete
-/// \param cont_after_prefix_insertion If we have a shared prefix, whether to print the list of
-/// completions after inserting it.
 ///
 /// Return true if we inserted text into the command line, false if we did not.
 bool reader_data_t::handle_completions(const completion_list_t &comp, size_t token_begin,
-                                       size_t token_end, bool cont_after_prefix_insertion) {
+                                       size_t token_end) {
     bool done = false;
     bool success = false;
     const editable_line_t *el = &command_line;
@@ -1698,9 +1694,9 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     }
 
     bool use_prefix = false;
+    wcstring common_prefix;
     if (match_type_shares_prefix(best_match_type)) {
         // Try to find a common prefix to insert among the surviving completions.
-        wcstring common_prefix;
         complete_flags_t flags = 0;
         bool prefix_is_partial_completion = false;
         bool first = true;
@@ -1747,24 +1743,30 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
             // a prefix; don't insert a space after it.
             if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
             completion_insert(common_prefix.c_str(), token_end, flags);
+            cycle_command_line = command_line.text();
+            cycle_cursor_pos = command_line.position();
             success = true;
         }
     }
 
-    if (!cont_after_prefix_insertion && use_prefix) {
-        return success;
+    if (use_prefix) {
+        for (completion_t &c : surviving_completions) {
+            wcstring &comp = c.completion;
+            comp.erase(comp.begin(), comp.begin() + common_prefix.size());
+        }
     }
 
-    // We didn't get a common prefix, or we want to print the list anyways.
+    // Print the completion list.
     wcstring prefix;
     if (will_replace_token || match_type_requires_full_replacement(best_match_type)) {
         prefix.clear();  // no prefix
-    } else if (tok.size() <= PREFIX_MAX_LEN) {
-        prefix = tok;
+    } else if (tok.size() + common_prefix.size() <= PREFIX_MAX_LEN) {
+        prefix = tok + common_prefix;
     } else {
         // Append just the end of the string.
         prefix = wcstring{get_ellipsis_char()};
-        prefix.append(tok, tok.size() - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
+        prefix.append(tok + common_prefix, tok.size() + common_prefix.size() - PREFIX_MAX_LEN,
+                      PREFIX_MAX_LEN);
     }
 
     // Update the pager data.
@@ -2734,9 +2736,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 cycle_command_line = el->text();
                 cycle_cursor_pos = token_end - buff;
 
-                bool cont_after_prefix_insertion = (c == rl::complete_and_search);
-                rls.complete_did_insert = handle_completions(
-                    rls.comp, token_begin - buff, token_end - buff, cont_after_prefix_insertion);
+                rls.complete_did_insert =
+                    handle_completions(rls.comp, token_begin - buff, token_end - buff);
 
                 // Show the search field if requested and if we printed a list of completions.
                 if (c == rl::complete_and_search && !rls.complete_did_insert && !pager.empty()) {

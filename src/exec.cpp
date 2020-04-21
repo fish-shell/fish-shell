@@ -87,9 +87,8 @@ pgroup_provenance_t get_pgroup_provenance(const shared_ptr<job_t> &j,
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
-[[noreturn]]
-static void safe_launch_process(process_t *p, const char *actual_cmd, const char *const *cargv,
-                                const char *const *cenvv) {
+[[noreturn]] static void safe_launch_process(process_t *p, const char *actual_cmd,
+                                             const char *const *cargv, const char *const *cenvv) {
     UNUSED(p);
     int err;
 
@@ -133,8 +132,7 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
 /// calls exec) and therefore it can allocate memory.
-[[noreturn]]
-static void launch_process_nofork(env_stack_t &vars, process_t *p) {
+[[noreturn]] static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
 
@@ -349,7 +347,8 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         maybe_t<pid_t> new_termowner{};
         p->pid = getpid();
         child_set_group(job.get(), p);
-        child_setup_process(job->should_claim_terminal() ? job->pgid : INVALID_PID, *job, true, dup2s);
+        child_setup_process(job->should_claim_terminal() ? job->pgid : INVALID_PID, *job, true,
+                            dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }

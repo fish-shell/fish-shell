@@ -77,8 +77,9 @@ static void print_blocked_signals() {
         exit(EXIT_FAILURE);
     }
     // There is no obviously portable way to get the maximum number of signals.
-    // Here we limit it to 64 because strsignal on Linux returns "Unknown signal" for anything above.
-    for (int sig=1; sig < 65; sig++) {
+    // Here we limit it to 64 because strsignal on Linux returns "Unknown signal" for anything
+    // above.
+    for (int sig = 1; sig < 65; sig++) {
         if (sigismember(&sigs, sig)) {
             if (const char *s = strsignal(sig)) {
                 fprintf(stderr, "%s", s);
@@ -115,7 +116,8 @@ static fth_command_t s_commands[] = {
     {"print_pid_then_sleep", print_pid_then_sleep, "Print our pid, then sleep for .5 seconds"},
     {"print_pgrp", print_pgrp, "Print our pgroup to stdout"},
     {"print_fds", print_fds, "Print the list of active FDs to stdout"},
-    {"print_blocked_signals", print_blocked_signals, "Print to stdout the name(s) of blocked signals"},
+    {"print_blocked_signals", print_blocked_signals,
+     "Print to stdout the name(s) of blocked signals"},
     {"help", show_help, "Print list of fish_test_helper commands"},
 };
 

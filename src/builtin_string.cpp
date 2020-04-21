@@ -1147,7 +1147,7 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.fields.size() < 1 && opts.allow_empty) {
-    	streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
                                   _(L"--allow-empty is only valid with --fields"));
         return STATUS_INVALID_ARGS;
     }

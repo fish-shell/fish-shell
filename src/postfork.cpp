@@ -135,7 +135,8 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-int child_setup_process(pid_t new_termowner, const job_t &job, bool is_forked, const dup2_list_t &dup2s) {
+int child_setup_process(pid_t new_termowner, const job_t &job, bool is_forked,
+                        const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
         int err;

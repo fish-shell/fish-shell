@@ -436,9 +436,9 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                                       proc->argv0(), pid, proc->status.status_value());
                             } else {
                                 assert(proc->status.stopped() || proc->status.continued());
-                                FLOGF(proc_reap_external,
-                                      "External process '%ls' (pid %d, %s)",
-                                      proc->argv0(), pid, proc->status.stopped() ? "stopped" : "continued");
+                                FLOGF(proc_reap_external, "External process '%ls' (pid %d, %s)",
+                                      proc->argv0(), pid,
+                                      proc->status.stopped() ? "stopped" : "continued");
                             }
                         }
                     } else {

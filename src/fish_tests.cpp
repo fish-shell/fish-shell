@@ -3229,8 +3229,10 @@ static void test_autosuggest_suggest_special() {
 
     // Don't crash on ~ (issue #2696). Note this is cwd dependent.
     if (system("mkdir -p '~absolutelynosuchuser/path1/path2/'")) err(L"mkdir failed");
-    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchus", L"er/path1/path2/", vars, __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/path2/", vars, __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchus", L"er/path1/path2/", vars,
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/path2/", vars,
+                                       __LINE__);
     perform_one_completion_cd_test(L"cd ~absolutelynosuchus", L"er/", vars, __LINE__);
     perform_one_completion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/", vars, __LINE__);
 

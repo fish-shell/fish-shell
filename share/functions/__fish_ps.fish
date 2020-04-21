@@ -1,5 +1,5 @@
 function __fish_ps
-    switch (realpath (command -v ps) | string match -r '[^/]+$')
+    switch (builtin realpath (command -v ps) | string match -r '[^/]+$')
         case busybox
             command ps $argv
         case '*'

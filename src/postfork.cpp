@@ -9,7 +9,7 @@
 
 #include <cstring>
 #include <memory>
-#if FISH_USE_POSIX_SPAWN
+#ifdef FISH_USE_POSIX_SPAWN
 #include <spawn.h>
 #endif
 #include <cwchar>
@@ -135,7 +135,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s) {
+int child_setup_process(pid_t new_termowner, const job_t &job, bool is_forked, const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
         int err;
@@ -169,6 +169,11 @@ int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &
             signal(SIGTTOU, SIG_IGN);
             (void)tcsetpgrp(STDIN_FILENO, new_termowner);
         }
+    }
+    sigset_t sigmask;
+    sigemptyset(&sigmask);
+    if (blocked_signals_for_job(job, &sigmask)) {
+        sigprocmask(SIG_SETMASK, &sigmask, nullptr);
     }
     // Set the handling for job control signals back to the default.
     // Do this after any tcsetpgrp call so that we swallow SIGTTIN.
@@ -275,7 +280,10 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     // No signals blocked.
     sigset_t sigmask;
     sigemptyset(&sigmask);
-    if (!err && reset_sigmask) err = posix_spawnattr_setsigmask(attr, &sigmask);
+    if (!err && reset_sigmask) {
+        blocked_signals_for_job(*j, &sigmask);
+        err = posix_spawnattr_setsigmask(attr, &sigmask);
+    }
 
     // Apply our dup2s.
     for (const auto &act : dup2s.get_actions()) {

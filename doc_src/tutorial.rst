@@ -31,7 +31,7 @@ This prompt that you see above is the ``fish`` default prompt: it shows your use
 - to change this prompt see `how to change your prompt <#prompt>`_
 - to switch to fish permanently see `switch your default shell to fish <#switching-to-fish>`_.
 
-From now on, we'll pretend your prompt is just a '``>``' to save space.
+From now on, we'll pretend your prompt is just a ``>`` to save space.
 
 
 Learning fish
@@ -101,7 +101,7 @@ A command may be invalid because it does not exist, or refers to a file that you
 > cat :underline:`~/somefi`
 
 
-This tells you that there exists a file that starts with '``somefi``', which is useful feedback as you type.
+This tells you that there exists a file that starts with ``somefi``, which is useful feedback as you type.
 
 These colors, and many more, can be changed by running ``fish_config``, or by modifying variables directly.
 

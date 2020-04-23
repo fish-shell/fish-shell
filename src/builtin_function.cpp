@@ -29,7 +29,7 @@
 struct function_cmd_opts_t {
     bool print_help = false;
     bool shadow_scope = true;
-    wcstring description = L"";
+    wcstring description;
     std::vector<event_description_t> events;
     wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
@@ -164,7 +164,6 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }

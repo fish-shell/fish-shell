@@ -253,7 +253,10 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 
     for (const wcstring &wd : directories) {
         if (ctx.check_cancel()) return false;
-        const wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
+        wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
+        if (flags & PATH_FOR_CD) {
+            abs_path = normalize_path(abs_path);
+        }
 
         // Skip this if it's empty or we've already checked it.
         if (abs_path.empty() || checked_paths.count(abs_path)) continue;
@@ -330,7 +333,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     }
 
     // Call is_potential_path with all of these directories.
-    return is_potential_path(path, directories, ctx, flags | PATH_REQUIRE_DIR);
+    return is_potential_path(path, directories, ctx, flags | PATH_REQUIRE_DIR | PATH_FOR_CD);
 }
 
 // Given a plain statement node in a parse tree, get the command and return it, expanded

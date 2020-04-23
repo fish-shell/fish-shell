@@ -1,6 +1,6 @@
 .. _cmd-prompt_pwd:
 
-prompt_pwd - Print pwd suitable for prompt
+prompt_pwd - print pwd suitable for prompt
 ==========================================
 
 Synopsis

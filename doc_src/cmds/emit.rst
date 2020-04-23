@@ -1,6 +1,6 @@
 .. _cmd-emit:
 
-emit - Emit a generic event
+emit - emit a generic event
 ===========================
 
 Synopsis

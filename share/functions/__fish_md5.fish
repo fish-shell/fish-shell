@@ -15,7 +15,7 @@ function __fish_md5
         # BSD systems
         if set -q argv[2]
             if test $argv[1] = -s
-                md5 -s $argv[1]
+                md5 -s $argv[2]
             else
                 printf (_ "%s: Too many arguments %s\n") fish_md5 $argv
             end

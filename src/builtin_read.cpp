@@ -186,7 +186,6 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -204,6 +203,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
 
     // Don't keep history
     reader_push(parser, L"");
+    reader_get_history()->resolve_pending();
 
     reader_set_left_prompt(prompt);
     reader_set_right_prompt(right_prompt);

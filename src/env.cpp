@@ -93,6 +93,7 @@ static const electric_var_t electric_variables[] = {
     {L"_", electric_var_t::freadonly},
     {L"fish_private_mode", electric_var_t::freadonly},
     {L"umask", electric_var_t::fcomputed},
+    {L"fish_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
 };
 
 const electric_var_t *electric_var_t::for_name(const wcstring &name) {
@@ -106,7 +107,7 @@ const electric_var_t *electric_var_t::for_name(const wcstring &name) {
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wcstring &key) {
-    if (const auto *ev = electric_var_t::for_name(key)) {
+    if (auto ev = electric_var_t::for_name(key)) {
         return ev->readonly();
     }
     // Hack.
@@ -685,6 +686,9 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
     } else if (key == L"status") {
         const auto &js = perproc_data().statuses;
         return env_var_t(L"status", to_string(js.status));
+    } else if (key == L"fish_kill_signal") {
+        const auto &js = perproc_data().statuses;
+        return env_var_t(L"fish_kill_signal", to_string(js.kill_signal));
     } else if (key == L"umask") {
         // note umask() is an absurd API: you call it to set the value and it returns the old
         // value. Thus we have to call it twice, to reset the value. The env_lock protects

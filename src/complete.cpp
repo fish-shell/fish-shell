@@ -89,7 +89,7 @@ static const wcstring &C_(const wcstring &s) { return s; }
 /// If option is non-empty, it specifies a switch for the command. If \c comp is also not empty, it
 /// contains a list of non-switch arguments that may only follow directly after the specified
 /// switch.
-typedef struct complete_entry_opt {
+using complete_entry_opt_t = struct complete_entry_opt {
     // Text of the option (like 'foo').
     wcstring option;
     // Type of the option: args-oly, short, single_long, or double_long.
@@ -119,8 +119,7 @@ typedef struct complete_entry_opt {
         }
         DIE("unreachable");
     }
-
-} complete_entry_opt_t;
+};
 
 /// Last value used in the order field of completion_entry_t.
 static std::atomic<unsigned int> k_complete_order{0};
@@ -132,7 +131,6 @@ class completion_entry_t {
     /// List of all options.
     option_list_t options;
 
-   public:
     /// Command string.
     const wcstring cmd;
     /// True if command is a path.
@@ -422,7 +420,7 @@ bool completer_t::condition_test(const wcstring &condition) {
 
     ASSERT_IS_MAIN_THREAD();
     bool test_res;
-    condition_cache_t::iterator cached_entry = condition_cache.find(condition);
+    auto cached_entry = condition_cache.find(condition);
     if (cached_entry == condition_cache.end()) {
         // Compute new value and reinsert it.
         test_res =
@@ -476,7 +474,7 @@ void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
 /// option strings. Returns true if it is now empty and should be deleted, false if it's not empty.
 /// Must be called while locked.
 bool completion_entry_t::remove_option(const wcstring &option, complete_option_type_t type) {
-    option_list_t::iterator iter = this->options.begin();
+    auto iter = this->options.begin();
     while (iter != this->options.end()) {
         if (iter->option == option && iter->type == type) {
             iter = this->options.erase(iter);
@@ -493,10 +491,10 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
     auto completion_set = s_completion_set.acquire();
 
     completion_entry_t tmp_entry(cmd, cmd_is_path);
-    completion_entry_set_t::iterator iter = completion_set->find(tmp_entry);
+    auto iter = completion_set->find(tmp_entry);
     if (iter != completion_set->end()) {
         // const_cast: See SET_ELEMENTS_ARE_IMMUTABLE.
-        completion_entry_t &entry = const_cast<completion_entry_t &>(*iter);
+        auto &entry = const_cast<completion_entry_t &>(*iter);
 
         bool delete_it = entry.remove_option(option, type);
         if (delete_it) {
@@ -1788,7 +1786,7 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_
     auto locked_map = wrapper_map.acquire();
     wrapper_map_t &wraps = *locked_map;
     bool result = false;
-    wrapper_map_t::iterator current_targets_iter = wraps.find(command);
+    auto current_targets_iter = wraps.find(command);
     if (current_targets_iter != wraps.end()) {
         wcstring_list_t *targets = &current_targets_iter->second;
         auto where = std::find(targets->begin(), targets->end(), target_to_remove);

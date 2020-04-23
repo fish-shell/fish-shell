@@ -105,7 +105,6 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
         }
         default: {
             DIE("unexpected mode");
-            break;
         }
     }
 }
@@ -165,7 +164,6 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }

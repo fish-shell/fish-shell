@@ -302,7 +302,7 @@ void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woptio
 // Find a matching long opt.
 const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption *longopts,
                                                            wchar_t *nameend, int *exact, int *ambig,
-                                                           int *indfound) {
+                                                           int *indfound) const {
     const struct woption *pfound = nullptr;
     int option_index = 0;
 

@@ -3,6 +3,9 @@
 ## Notable improvements and fixes
 - `fish --no-execute` will no longer complain about unknown commands or non-matching wildcards, as these could be defined differently at runtime (especially for functions). #977
 - `jobs --quiet PID` will no longer print 'no suitable job' if the job for PID does not exist (e.g. because it has finished). #6809
+- A variable `fish_kill_signal` will be set to the signal that terminated the last foreground job, or `0` if the job exited normally.
+- On BSD systems, with the `-s` option, `fish_md5` does not use the given string, but `-s`. From now on the string is used.
+- Control-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
 
 ### Syntax changes and new commands
 
@@ -14,6 +17,7 @@
 
 #### New or improved bindings
 - New readline commands `undo` (Ctrl+_) and `redo` (Alt-/) can be used to revert changes to the command line or the pager search field (#6570).
+- New function `__fish_preview_current_file` (Alt+O) opens the current file at the cursor in a pager (#6838).
 
 #### Improved prompts
 - The default and example prompts print the correct exit status for commands prefixed with `not` (#6566).
@@ -29,12 +33,17 @@
   - `tcpdump`
   - `tig`
   - `windscribe`
+  - `zopfli`, and `zopflipng`
+  - `nmap`, `ncat`
+  - `nc`, `netcat`, `nc.openbsd`, `nc.traditional`
 
 ### Deprecations and removed features
 
 ### For distributors and developers
 - fish source tarballs are now distributed using the XZ compression method (#5460).
 - Allow finishing builds on OS X <10.13.6 (previously builds would fail at the `codesign` step)
+- The pkg-config file now uses pkg-config variables
+- The default values for the extra_completionsdir, extra_functionsdir and extra_confdir options now use the installation prefix instead of hardcoding `/usr/local`
 
 ---
 

@@ -1,0 +1,1 @@
+__fish_complete_netcat nc.openbsd

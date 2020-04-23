@@ -83,7 +83,7 @@ The `echo $flounder >&` is the first process, `less` the second and `and echo $c
 
 `$flounder` is the current token.
 
-More examples::
+More examples:
 
 
 ::

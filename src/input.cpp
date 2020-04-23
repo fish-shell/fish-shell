@@ -123,6 +123,8 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::upcase_word, L"upcase-word"},
     {readline_cmd_t::downcase_word, L"downcase-word"},
     {readline_cmd_t::capitalize_word, L"capitalize-word"},
+    {readline_cmd_t::togglecase_char, L"togglecase-char"},
+    {readline_cmd_t::togglecase_selection, L"togglecase-selection"},
     {readline_cmd_t::execute, L"execute"},
     {readline_cmd_t::beginning_of_buffer, L"beginning-of-buffer"},
     {readline_cmd_t::end_of_buffer, L"end-of-buffer"},
@@ -431,9 +433,9 @@ bool inputter_t::mapping_is_match(const input_mapping_t &m) {
     return true;
 }
 
-void inputter_t::queue_ch(const char_event_t &ch) { event_queue_.push_back(std::move(ch)); }
+void inputter_t::queue_ch(const char_event_t &ch) { event_queue_.push_back(ch); }
 
-void inputter_t::push_front(const char_event_t &ch) { event_queue_.push_front(std::move(ch)); }
+void inputter_t::push_front(const char_event_t &ch) { event_queue_.push_front(ch); }
 
 /// \return the first mapping that matches, walking first over the user's mapping list, then the
 /// preset list. \return null if nothing matches.

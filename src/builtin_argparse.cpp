@@ -51,7 +51,7 @@ struct argparse_cmd_opts_t {
     size_t min_args = 0;
     size_t max_args = SIZE_MAX;
     wchar_t implicit_int_flag = L'\0';
-    wcstring name = L"";
+    wcstring name;
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
     std::unordered_map<wchar_t, option_spec_ref_t> options;
@@ -398,7 +398,6 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }

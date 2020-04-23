@@ -73,7 +73,7 @@ char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, lon
 // these functions only exist on 10.7+.
 //
 // On other platforms, use what's detected at build time.
-#if __APPLE__
+#ifdef __APPLE__
 // Avoid warnings about unknown `clang::weak_import` attribute (e.g. GCC 8.2.0 on macOS 10.10)
 #if __DARWIN_C_LEVEL >= 200809L && __clang__ && __has_attribute(weak_import)
 // We have to explicitly redeclare these as weak, since we are forced to set the MIN_REQUIRED

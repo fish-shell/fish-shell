@@ -63,12 +63,13 @@ int fish_mkstemp_cloexec(char *name_template) {
     if (&mkostemp != nullptr) {
         return mkostemp(name_template, O_CLOEXEC);
     }
-#endif
+#else
     int result_fd = mkstemp(name_template);
     if (result_fd != -1) {
         fcntl(result_fd, F_SETFD, FD_CLOEXEC);
     }
     return result_fd;
+#endif
 }
 
 /// Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g.
@@ -77,7 +78,7 @@ int fish_mkstemp_cloexec(char *name_template) {
 // cppcheck-suppress unusedFunction
 [[gnu::unused]] static wchar_t *wcsdup_fallback(const wchar_t *in) {
     size_t len = std::wcslen(in);
-    wchar_t *out = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * (len + 1)));
+    auto out = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * (len + 1)));
     if (out == nullptr) {
         return nullptr;
     }
@@ -112,7 +113,7 @@ int fish_mkstemp_cloexec(char *name_template) {
     return wcsncasecmp_fallback(a + 1, b + 1, count - 1);
 }
 
-#if __APPLE__
+#ifdef __APPLE__
 #if __DARWIN_C_LEVEL >= 200809L
 // Note parens avoid the macro expansion.
 wchar_t *wcsdup_use_weak(const wchar_t *a) {
@@ -162,7 +163,7 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {
-    wchar_t *res = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * (c + 1)));
+    auto res = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * (c + 1)));
     if (res == nullptr) {
         return nullptr;
     }

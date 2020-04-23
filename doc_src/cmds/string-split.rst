@@ -8,8 +8,8 @@ Synopsis
 
 ::
 
-    string split [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] SEP [STRING...]
-    string split0 [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] [STRING...]
+    string split [(-f | --fields) FIELDS] [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] SEP [STRING...]
+    string split0 [(-f | --fields) FIELDS] [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] [STRING...]
 
 .. END SYNOPSIS
 
@@ -19,6 +19,8 @@ Description
 .. BEGIN DESCRIPTION
 
 ``string split`` splits each STRING on the separator SEP, which can be an empty string. If ``-m`` or ``--max`` is specified, at most MAX splits are done on each STRING. If ``-r`` or ``--right`` is given, splitting is performed right-to-left. This is useful in combination with ``-m`` or ``--max``. With ``-n`` or ``--no-empty``, empty results are excluded from consideration (e.g. ``hello\n\nworld`` would expand to two strings and not three). Exit status: 0 if at least one split was performed, or 1 otherwise.
+
+Use ``-f`` or ``--fields`` to print out specific fields. Unless ``--allow-empty`` is used, if a given field does not exist, then the command exits with status 1 and does not print anything.
 
 See also the ``--delimiter`` option of the :ref:`read <cmd-read>` command.
 
@@ -48,6 +50,11 @@ Examples
     a
     b
     c
+
+    >_ string split --allow-empty -f1,3,5 '' abc
+    a
+    c
+
 
 NUL Delimited Examples
 ^^^^^^^^^^^^^^^^^^^^^^

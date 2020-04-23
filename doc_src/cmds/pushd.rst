@@ -13,17 +13,13 @@ Synopsis
 Description
 -----------
 
-The ``pushd`` function adds ``DIRECTORY`` to the top of the directory stack and makes it the current working directory. :ref:`popd <cmd-popd>` will pop it off and return to the original directory.
+The ``pushd`` function adds ``DIRECTORY`` to the top of the :ref:`directory stack <directory-stack>` and makes it the current working directory. :ref:`popd <cmd-popd>` will pop it off and return to the original directory.
 
 Without arguments, it exchanges the top two directories in the stack.
 
 ``pushd +NUMBER`` rotates the stack counter-clockwise i.e. from bottom to top
 
 ``pushd -NUMBER`` rotates clockwise i.e. top to bottom.
-
-See also :ref:`dirs <cmd-dirs>` to print the stack and ``dirs -c`` to clear it.
-
-You may be interested in the :ref:`cdh <cmd-cdh>` command which provides a more intuitive way to navigate to recently visited directories.
 
 Example
 -------
@@ -49,3 +45,9 @@ Example
     popd
     # Working directory is now /usr/src/fish-shell
     # Directory stack contains /usr/src/fish-shell /tmp
+
+See Also
+--------
+
+- the :ref:`dirs <cmd-dirs>` command to print the directory stack
+- the :ref:`cdh <cmd-cdh>` command which provides a more intuitive way to navigate to recently visited directories.

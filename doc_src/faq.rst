@@ -176,7 +176,7 @@ Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter t
 
 I accidentally entered a directory path and fish changed directory. What happened?
 ----------------------------------------------------------------------------------
-If fish is unable to locate a command with a given name, and it starts with '``.``', '``/``' or '``~``', fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
+If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
 
 The open command doesn't work.
 ------------------------------

@@ -87,14 +87,15 @@ pgroup_provenance_t get_pgroup_provenance(const shared_ptr<job_t> &j,
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
+[[noreturn]]
 static void safe_launch_process(process_t *p, const char *actual_cmd, const char *const *cargv,
                                 const char *const *cenvv) {
     UNUSED(p);
     int err;
 
     // This function never returns, so we take certain liberties with constness.
-    char *const *envv = const_cast<char *const *>(cenvv);
-    char *const *argv = const_cast<char *const *>(cargv);
+    const auto envv = const_cast<char *const *>(cenvv);
+    const auto argv = const_cast<char *const *>(cargv);
 
     execve(actual_cmd, argv, envv);
     err = errno;
@@ -132,6 +133,7 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
 /// calls exec) and therefore it can allocate memory.
+[[noreturn]]
 static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
@@ -187,7 +189,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
 
     // child_setup_process makes sure signals are properly set up.
     dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
-    if (child_setup_process(INVALID_PID, false, redirs) == 0) {
+    if (child_setup_process(INVALID_PID, *j, false, redirs) == 0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -325,6 +327,16 @@ static void run_internal_process_or_short_circuit(parser_t &parser, const std::s
     }
 }
 
+bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask) {
+    // Block some signals in background jobs for which job control is turned off (#6828).
+    if (!job.is_foreground() && !job.wants_job_control()) {
+        sigaddset(sigmask, SIGINT);
+        sigaddset(sigmask, SIGQUIT);
+        return true;
+    }
+    return false;
+}
+
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
 /// context of the child. Returns true if fork succeeded, false if fork failed.
 static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t *p,
@@ -337,7 +349,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         maybe_t<pid_t> new_termowner{};
         p->pid = getpid();
         child_set_group(job.get(), p);
-        child_setup_process(job->should_claim_terminal() ? job->pgid : INVALID_PID, true, dup2s);
+        child_setup_process(job->should_claim_terminal() ? job->pgid : INVALID_PID, *job, true, dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }
@@ -855,7 +867,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
             // We should have handled exec up above.
             DIE("process_type_t::exec process found in pipeline, where it should never be. "
                 "Aborting.");
-            break;
         }
     }
     return true;
@@ -1062,8 +1073,7 @@ static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &bu
             const char *cursor = begin;
             while (cursor < end) {
                 // Look for the next separator.
-                const char *stop =
-                    static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
+                auto stop = static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
                 const bool hit_separator = (stop != nullptr);
                 if (!hit_separator) {
                     // If it's not found, just use the end.

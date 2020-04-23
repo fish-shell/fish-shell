@@ -120,7 +120,6 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -194,7 +193,6 @@ static wcstring functions_def(const wcstring &name) {
             case event_type_t::any:
             default: {
                 DIE("unexpected next->type");
-                break;
             }
         }
     }

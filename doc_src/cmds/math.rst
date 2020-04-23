@@ -1,6 +1,6 @@
 .. _cmd-math:
 
-math - Perform mathematics calculations
+math - perform mathematics calculations
 =======================================
 
 Synopsis

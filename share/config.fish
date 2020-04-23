@@ -106,15 +106,6 @@ else if not contains -- $__fish_data_dir/completions $fish_complete_path
     set -a fish_complete_path $__fish_data_dir/completions
 end
 
-# This cannot be in an autoload-file because `:.fish` is an invalid filename on windows.
-function : -d "no-op function"
-    # for compatibility with sh, bash, and others.
-    # Often used to insert a comment into a chain of commands without having
-    # it eat up the remainder of the line, handy in Makefiles.
-    # This command always succeeds
-    true
-end
-
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH
@@ -162,16 +153,6 @@ end
 # C/POSIX locale causes too many problems. Do this before reading the snippets because they might be
 # in UTF-8 (with non-ASCII characters).
 __fish_set_locale
-
-# "." alias for source; deprecated
-function . -d 'Evaluate a file (deprecated, use "source")' --no-scope-shadowing --wraps source
-    if [ (count $argv) -eq 0 ] && isatty 0
-        echo "source: using source via '.' is deprecated, and stdin doesn't work."\n"Did you mean 'source' or './'?" >&2
-        return 1
-    else
-        source $argv
-    end
-end
 
 # Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax.
 # This needs to be in share/config.fish because __fish_config_interactive is called after sourcing

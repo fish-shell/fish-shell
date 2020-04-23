@@ -191,7 +191,7 @@ which is logically equivalent to the following:
 Standards
 ---------
 
-``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <http://www.unix.com/man-page/POSIX/1/test/>`__. The following exceptions apply:
+``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <https://www.unix.com/man-page/posix/1p/test/>`__. The following exceptions apply:
 
 - The ``<`` and ``>`` operators for comparing strings are not implemented.
 

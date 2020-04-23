@@ -74,7 +74,6 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
         }
         default: {
             DIE("unexpected append_mode");
-            break;
         }
     }
     out.append(end);
@@ -275,7 +274,6 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -414,7 +412,6 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
         default: {
             DIE("unexpected buffer_part");
-            break;
         }
     }
 

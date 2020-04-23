@@ -1,7 +1,7 @@
 .. _cmd-set:
 
-set - display and change shell variables.
-=========================================
+set - display and change shell variables
+========================================
 
 Synopsis
 --------

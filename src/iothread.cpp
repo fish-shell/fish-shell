@@ -466,7 +466,7 @@ using void_func_t = std::function<void(void)>;
 static void *func_invoker(void *param) {
     // Acquire a thread id for this thread.
     (void)thread_id();
-    void_func_t *vf = static_cast<void_func_t *>(param);
+    auto vf = static_cast<void_func_t *>(param);
     (*vf)();
     delete vf;
     return nullptr;
@@ -474,7 +474,7 @@ static void *func_invoker(void *param) {
 
 bool make_detached_pthread(void_func_t &&func) {
     // Copy the function into a heap allocation.
-    void_func_t *vf = new void_func_t(std::move(func));
+    auto vf = new void_func_t(std::move(func));
     if (make_detached_pthread(func_invoker, vf)) {
         return true;
     }

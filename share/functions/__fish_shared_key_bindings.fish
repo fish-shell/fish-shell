@@ -84,6 +84,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \e. history-token-search-backward
 
     bind --preset $argv \el __fish_list_current_token
+    bind --preset $argv \eo __fish_preview_current_file
     bind --preset $argv \ew __fish_whatis_current_token
     # ncurses > 6.0 sends a "delete scrollback" sequence along with clear.
     # This string replace removes it.

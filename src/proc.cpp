@@ -96,7 +96,7 @@ void proc_init() { signal_set_handlers_once(false); }
 
 // Basic thread safe sorted vector of job IDs in use.
 // This is deliberately leaked to avoid dtor ordering issues - see #6539.
-static auto *const locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
+static const auto locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
 
 job_id_t acquire_job_id() {
     auto consumed_job_ids = locked_consumed_job_ids->acquire();
@@ -187,7 +187,11 @@ statuses_t job_t::get_statuses() const {
     statuses_t st{};
     st.pipestatus.reserve(processes.size());
     for (const auto &p : processes) {
-        st.pipestatus.push_back(p->status.status_value());
+        auto status = p->status;
+        if (status.signal_exited()) {
+            st.kill_signal = status.signal_code();
+        }
+        st.pipestatus.push_back(status.status_value());
     }
     int laststatus = st.pipestatus.back();
     st.status = flags().negate ? !laststatus : laststatus;
@@ -424,7 +428,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
                             if (proc->status.stopped()) {
-                                j->mut_flags().foreground = 0;
+                                j->mut_flags().foreground = false;
                             }
                             if (proc->status.normal_exited() || proc->status.signal_exited()) {
                                 FLOGF(proc_reap_external,
@@ -759,7 +763,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
         return notneeded;
     }
 
-    if (j->pgid == 0) {
+    if (j->pgid == INVALID_PID || j->pgid == 0) {
         FLOG(proc_termowner, L"terminal_give_to_job() returning early due to no process group");
         return notneeded;
     }
@@ -779,7 +783,22 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
     // http://curiousthing.org/sigttin-sigttou-deep-dive-linux In all cases, our goal here was just
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
-    if (j->pgid == INVALID_PID || tcgetpgrp(STDIN_FILENO) == j->pgid) {
+    int getpgrp_res = tcgetpgrp(STDIN_FILENO);
+    if (getpgrp_res < 0) {
+        if (errno == ENOTTY) {
+            // stdin is not a tty. This may come about if job control is enabled but we are not a
+            // tty - see #6573.
+            return notneeded;
+        } else if (errno == EBADF) {
+            // stdin has been closed. Workaround a glibc bug - see #3644.
+            redirect_tty_output();
+            return notneeded;
+        }
+        wperror(L"tcgetpgrp");
+        return error;
+    }
+    assert(getpgrp_res >= 0);
+    if (getpgrp_res == j->pgid) {
         FLOGF(proc_termowner, L"Process group %d already has control of terminal", j->pgid);
     } else {
         FLOGF(proc_termowner,
@@ -799,7 +818,6 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
             FLOGF(proc_termowner, L"tcsetpgrp failed: %d", errno);
 
             bool pgroup_terminated = false;
-            // No need to test for EINTR as we are blocking signals
             if (errno == EINVAL) {
                 // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
                 // too. Unlike EPERM below, EINVAL can only happen if the process group has
@@ -823,7 +841,9 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 }
             } else {
                 if (errno == ENOTTY) {
-                    redirect_tty_output();
+                    // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
+                    // call.
+                    return notneeded;
                 } else {
                     FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
                           j->job_id(), j->command_wcstr(), j->pgid);
@@ -850,15 +870,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
     if (continuing_from_stopped) {
         auto result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
         if (result == -1) {
-            // No need to test for EINTR and retry since we have blocked all signals
-            if (errno == ENOTTY) {
-                redirect_tty_output();
-            }
-
-            FLOGF(warning, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
-                  j->preview().c_str());
             wperror(L"tcsetattr");
-            return error;
         }
     }
 

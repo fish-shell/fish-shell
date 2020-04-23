@@ -16,11 +16,11 @@
 // block) and use use select() to poll it.
 #if defined(__has_feature)
 #if __has_feature(thread_sanitizer)
-#define TOPIC_MONITOR_TSAN_WORKAROUND 1
+#define TOPIC_MONITOR_TSAN_WORKAROUND
 #endif
 #endif
-#if __SANITIZE_THREAD__
-#define TOPIC_MONITOR_TSAN_WORKAROUND 1
+#ifdef __SANITIZE_THREAD__
+#define TOPIC_MONITOR_TSAN_WORKAROUND
 #endif
 
 /// Implementation of the principal monitor. This uses new (and leaks) to avoid registering a
@@ -49,7 +49,7 @@ topic_monitor_t::topic_monitor_t() {
     // The read end must block to avoid spinning in await.
     DIE_ON_FAILURE(make_fd_nonblocking(pipes_.write.fd()));
 
-#if TOPIC_MONITOR_TSAN_WORKAROUND
+#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
     DIE_ON_FAILURE(make_fd_nonblocking(pipes_.read.fd()));
 #endif
 }
@@ -144,7 +144,7 @@ generation_list_t topic_monitor_t::await_gens(const generation_list_t &input_gen
             assert(gens == input_gens &&
                    "Generations should not have changed if we are the reader.");
             int fd = pipes_.read.fd();
-#if TOPIC_MONITOR_TSAN_WORKAROUND
+#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
             // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
             // call until data is available (that is, fish would use 100% cpu while waiting for
             // processes). The select prevents that.

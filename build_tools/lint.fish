@@ -13,7 +13,7 @@ set all no
 set kernel_name (uname -s)
 set machine_type (uname -m)
 
-argparse a/all -- $argv
+argparse a/all p/project= -- $argv
 
 # We only want -D and -I options to be passed thru to cppcheck.
 for arg in $argv
@@ -116,6 +116,14 @@ if set -q c_files[1]
         # counts of the errors detected to stderr. Anyone running this who wants to capture its
         # output will expect those messages to be written to stdout.
         oclint $c_files -- $argv 2>&1
+    end
+
+    if type -q clang-tidy; and set -q _flag_project
+        echo
+        echo ========================================
+        echo Running clang-tidy
+        echo ========================================
+        clang-tidy -p $_flag_project $c_files
     end
 else
     echo

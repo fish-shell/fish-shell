@@ -16,7 +16,7 @@ complete -c wget -o nv -d "Turn off verbose without being completely quiet"
 complete -c wget -s i -l input-file -d "Read URLs from file" -r
 complete -c wget -s F -l force-html -d "Force input to be treated as HTML"
 complete -c wget -s B -l base -d "Prepend string to relative links" -x
-complete -c wget -l bind-adress -d "Bind address on local machine" -xa "(__fish_print_addresses; __fish_print_hostnames)"
+complete -c wget -l bind-address -d "Bind address on local machine" -xa "(__fish_print_addresses; __fish_print_hostnames)"
 complete -c wget -s t -l tries -d "Set number of retries to number" -xa "0 1 2 4 8 16 32 64 128"
 complete -c wget -s O -l output-document -d "Concatenate output to file" -r
 complete -c wget -l no-clobber -d "Never overwrite files with same name"

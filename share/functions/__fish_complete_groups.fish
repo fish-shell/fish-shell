@@ -1,8 +1,12 @@
 
 function __fish_complete_groups --description "Print a list of local groups, with group members as the description"
     if command -sq getent
-        getent group | cut -d ':' -f 1,4 | string replace : \t
+        getent group | while read -l line
+            string split -f 1,4 : -- $line | string join \t
+        end
     else
-        cut -d ':' -f 1,4 /etc/group | string replace : \t
+        while read -l line
+            string split -f 1,4 : -- $line | string join \t
+        end </etc/group
     end
 end

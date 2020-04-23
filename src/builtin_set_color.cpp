@@ -60,7 +60,7 @@ static const struct woption long_options[] = {{L"background", required_argument,
                                               {L"print-colors", no_argument, nullptr, 'c'},
                                               {nullptr, 0, nullptr, 0}};
 
-#if __APPLE__
+#ifdef __APPLE__
 static char sitm_esc[] = "\x1B[3m";
 static char ritm_esc[] = "\x1B[23m";
 static char dim_esc[] = "\x1B[2m";
@@ -73,7 +73,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
 // Hack in missing italics and dim capabilities omitted from MacOS xterm-256color terminfo
 // Helps Terminal.app/iTerm
-#if __APPLE__
+#ifdef __APPLE__
     const auto term_prog = parser.vars().get(L"TERM_PROGRAM");
     if (!term_prog.missing_or_empty() &&
         (term_prog->as_string() == L"Apple_Terminal" || term_prog->as_string() == L"iTerm.app")) {
@@ -145,7 +145,6 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }

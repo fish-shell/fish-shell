@@ -148,13 +148,13 @@ operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
 /// These are deliberately leaked to avoid shutdown dtor registration.
 static debounce_t &debounce_autosuggestions() {
     const long kAutosuggetTimeoutMs = 500;
-    static debounce_t *res = new debounce_t(kAutosuggetTimeoutMs);
+    static auto res = new debounce_t(kAutosuggetTimeoutMs);
     return *res;
 }
 
 static debounce_t &debounce_highlighting() {
     const long kHighlightTimeoutMs = 500;
-    static debounce_t *res = new debounce_t(kHighlightTimeoutMs);
+    static auto res = new debounce_t(kHighlightTimeoutMs);
     return *res;
 }
 
@@ -240,7 +240,7 @@ bool editable_line_t::undo() {
     edit_t inverse = edit_t(edit.offset, edit.replacement.size(), L"");
     inverse.replacement = edit.old;
     size_t old_position = edit.cursor_position_before_edit;
-    apply_edit(&text_, std::move(inverse));
+    apply_edit(&text_, inverse);
     set_position(old_position);
     undo_history.may_coalesce = false;
     return true;
@@ -549,7 +549,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     }
 
     editable_line_t *active_edit_line() {
-        const auto *cthis = this;
+        auto cthis = reinterpret_cast<const reader_data_t *>(this);
         return const_cast<editable_line_t *>(cthis->active_edit_line());
     }
 
@@ -864,7 +864,7 @@ void reader_data_t::pager_selection_changed() {
     }
 
     // Trigger repaint (see issue #765).
-    reader_repaint_needed();
+    mark_repaint_needed();
 }
 
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
@@ -1774,7 +1774,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     current_page_rendering = page_rendering_t();
     // Modify the command line to reflect the new pager.
     pager_selection_changed();
-    reader_repaint_needed();
+    mark_repaint_needed();
     return false;
 }
 
@@ -2105,7 +2105,7 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
     // Clear history search and pager contents.
     history_search.reset();
     super_highlight_me_plenty();
-    reader_repaint_needed();
+    mark_repaint_needed();
 }
 
 void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
@@ -2330,10 +2330,10 @@ void reader_set_expand_abbreviations(bool flag) { current_data()->expand_abbrevi
 void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
 
 void reader_set_highlight_function(highlight_function_t func) {
-    current_data()->highlight_func = std::move(func);
+    current_data()->highlight_func = func;
 }
 
-void reader_set_test_function(test_function_t f) { current_data()->test_func = std::move(f); }
+void reader_set_test_function(test_function_t f) { current_data()->test_func = f; }
 
 void reader_set_exit_on_interrupt(bool i) { current_data()->exit_on_interrupt = i; }
 
@@ -2536,7 +2536,7 @@ static bool event_is_normal_char(const char_event_t &evt) {
 }
 
 /// readline_loop_state_t encapsulates the state used in a readline loop.
-/// It is always stack allocated transient. This state should not be "publicly visible;" public
+/// It is always stack allocated transient. This state should not be "publicly visible"; public
 /// state should be in reader_data_t.
 struct readline_loop_state_t {
     /// The last command that was executed.
@@ -2545,8 +2545,8 @@ struct readline_loop_state_t {
     /// If the last command was a yank, the length of yanking that occurred.
     size_t yank_len{0};
 
-    /// If set, it means nothing has been inserted into the command line via completion machinery.
-    bool comp_empty{true};
+    /// If the last "complete" readline command has inserted text into the command line.
+    bool complete_did_insert{true};
 
     /// List of completions.
     completion_list_t comp;
@@ -2609,7 +2609,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             while (el->position() > 0 && el->text().at(el->position() - 1) != L'\n') {
                 update_buff_pos(el, el->position() - 1);
             }
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::end_of_line: {
@@ -2623,17 +2623,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 accept_autosuggestion(true);
             }
 
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::beginning_of_buffer: {
             update_buff_pos(&command_line, 0);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::end_of_buffer: {
             update_buff_pos(&command_line, command_line.size());
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::cancel: {
@@ -2676,12 +2676,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // Use the command line only; it doesn't make sense to complete in any other line.
             editable_line_t *el = &command_line;
             if (is_navigating_pager_contents() ||
-                (!rls.comp_empty && rls.last_cmd == rl::complete)) {
+                (!rls.complete_did_insert && rls.last_cmd == rl::complete)) {
                 // The user typed complete more than once in a row. If we are not yet fully
                 // disclosed, then become so; otherwise cycle through our available completions.
                 if (current_page_rendering.remaining_to_disclose > 0) {
                     pager.set_fully_disclosed(true);
-                    reader_repaint_needed();
+                    mark_repaint_needed();
                 } else {
                     select_completion_in_direction(c == rl::complete ? selection_motion_t::next
                                                                      : selection_motion_t::prev);
@@ -2735,14 +2735,14 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 cycle_cursor_pos = token_end - buff;
 
                 bool cont_after_prefix_insertion = (c == rl::complete_and_search);
-                rls.comp_empty = handle_completions(rls.comp, token_begin - buff, token_end - buff,
+                rls.complete_did_insert = handle_completions(rls.comp, token_begin - buff, token_end - buff,
                                                     cont_after_prefix_insertion);
 
                 // Show the search field if requested and if we printed a list of completions.
-                if (c == rl::complete_and_search && !rls.comp_empty && !pager.empty()) {
+                if (c == rl::complete_and_search && !rls.complete_did_insert && !pager.empty()) {
                     pager.set_search_field_shown(true);
                     select_completion_in_direction(selection_motion_t::next);
-                    reader_repaint_needed();
+                    mark_repaint_needed();
                 }
             }
             break;
@@ -2756,7 +2756,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (pager.is_search_field_shown() && !is_navigating_pager_contents()) {
                     select_completion_in_direction(selection_motion_t::south);
                 }
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
             break;
         }
@@ -2946,7 +2946,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Result must be some combination including an error. The error message will
                 // already be printed, all we need to do is repaint.
                 s_reset(&screen, screen_reset_abandon_line);
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
 
             break;
@@ -3010,7 +3010,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(selection_motion_t::west);
             } else if (el->position() > 0) {
                 update_buff_pos(el, el->position() - 1);
-                reader_repaint_needed();
+                mark_repaint_needed();
             }
             break;
         }
@@ -3020,7 +3020,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(selection_motion_t::east);
             } else if (el->position() < el->size()) {
                 update_buff_pos(el, el->position() + 1);
-                reader_repaint_needed();
+                mark_repaint_needed();
             } else {
                 accept_autosuggestion(true);
             }
@@ -3144,7 +3144,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     total_offset_new = parse_util_get_offset(
                         el->text(), line_new, line_offset_old - 4 * (indent_new - indent_old));
                     update_buff_pos(el, total_offset_new);
-                    reader_repaint_needed();
+                    mark_repaint_needed();
                 }
             }
             break;
@@ -3152,7 +3152,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::suppress_autosuggestion: {
             suppress_autosuggestion = true;
             autosuggestion.clear();
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::accept_autosuggestion: {
@@ -3219,6 +3219,72 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
+        case rl::togglecase_char: {
+            editable_line_t *el = active_edit_line();
+            size_t buff_pos = el->position();
+
+            // Check that the cursor is on a character
+            if (buff_pos < el->size()) {
+                wchar_t chr = el->text().at(buff_pos);
+                wcstring replacement;
+
+                // Toggle the case of the current character
+                bool make_uppercase = iswlower(chr);
+                if (make_uppercase) {
+                    chr = towupper(chr);
+                } else {
+                    chr = tolower(chr);
+                }
+
+                replacement.push_back(chr);
+                el->replace_substring(buff_pos, (size_t)1, std::move(replacement));
+
+                // Restore the buffer position since replace_substring moves
+                // the buffer position ahead of the replaced text.
+                update_buff_pos(el, buff_pos);
+
+                command_line_changed(el);
+                super_highlight_me_plenty();
+                mark_repaint_needed();
+            }
+            break;
+        }
+        case rl::togglecase_selection: {
+            editable_line_t *el = active_edit_line();
+
+            // Check that we have an active selection and get the bounds.
+            size_t start, len;
+            if (reader_get_selection(&start, &len)) {
+                size_t buff_pos = el->position();
+                wcstring replacement;
+
+                // Loop through the selected characters and toggle their case.
+                for (size_t pos = start; pos < start + len && pos < el->size(); pos++) {
+                    wchar_t chr = el->text().at(pos);
+
+                    // Toggle the case of the current character.
+                    bool make_uppercase = iswlower(chr);
+                    if (make_uppercase) {
+                        chr = towupper(chr);
+                    } else {
+                        chr = tolower(chr);
+                    }
+
+                    replacement.push_back(chr);
+                }
+
+                el->replace_substring(start, len, std::move(replacement));
+
+                // Restore the buffer position since replace_substring moves
+                // the buffer position ahead of the replaced text.
+                update_buff_pos(el, buff_pos);
+
+                command_line_changed(el);
+                super_highlight_me_plenty();
+                mark_repaint_needed();
+            }
+            break;
+        }
         case rl::upcase_word:
         case rl::downcase_word:
         case rl::capitalize_word: {
@@ -3255,7 +3321,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             update_buff_pos(el);
             command_line_changed(el);
             super_highlight_me_plenty();
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::begin_selection:
@@ -3304,7 +3370,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             bool success = jump(direction, precision, el, target);
 
             inputter.function_set_status(success);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::repeat_jump: {
@@ -3316,7 +3382,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             inputter.function_set_status(success);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
         case rl::reverse_repeat_jump: {
@@ -3338,7 +3404,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             last_jump_direction = original_dir;
 
             inputter.function_set_status(success);
-            reader_repaint_needed();
+            mark_repaint_needed();
             break;
         }
 

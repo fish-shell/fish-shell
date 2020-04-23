@@ -47,6 +47,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+// The number of spaces per indent isn't supposed to be configurable.
+// See discussion at https://github.com/fish-shell/fish-shell/pull/6790
 #define SPACES_PER_INDENT 4
 
 // An indent_t represents an abstract indent depth. 2 means we are in a doubly-nested block, etc.
@@ -571,12 +573,10 @@ int main(int argc, char *argv[]) {
             case 'h': {
                 print_help("fish_indent", 1);
                 exit(0);
-                break;
             }
             case 'v': {
                 std::fwprintf(stderr, _(L"%ls, version %s\n"), program_name, get_fish_version());
                 exit(0);
-                break;
             }
             case 'w': {
                 output_type = output_type_file;
@@ -632,7 +632,6 @@ int main(int argc, char *argv[]) {
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
                 exit(1);
-                break;
             }
         }
     }
@@ -706,7 +705,6 @@ int main(int argc, char *argv[]) {
             }
             case output_type_pygments_csv: {
                 DIE("pygments_csv should have been handled above");
-                break;
             }
         }
 

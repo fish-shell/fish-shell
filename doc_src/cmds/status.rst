@@ -23,7 +23,7 @@ Synopsis
     status function
     status line-number
     status stack-trace
-    status job-control CONTROL-TYPE
+    status job-control CONTROL_TYPE
     status features
     status test-feature FEATURE
 
@@ -63,7 +63,7 @@ The following operations (sub-commands) are available:
 
 - ``stack-trace`` prints a stack trace of all function calls on the call stack. Also ``print-stack-trace``, ``-t`` or ``--print-stack-trace``.
 
-- ``job-control CONTROL-TYPE`` sets the job control type, which can be ``none``, ``full``, or ``interactive``. Also ``-j CONTROL-TYPE`` or ``--job-control=CONTROL-TYPE``.
+- ``job-control CONTROL_TYPE`` sets the job control type, which can be ``none``, ``full``, or ``interactive``. Also ``-j CONTROL_TYPE`` or ``--job-control CONTROL_TYPE``.
 
 - ``features`` lists all available feature flags.
 

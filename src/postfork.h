@@ -31,7 +31,7 @@ bool child_set_group(job_t *j, process_t *p);     // called by child
 ///
 /// \return 0 on success, -1 on failure. When this function returns, signals are always unblocked.
 /// On failure, signal handlers, io redirections and process group of the process is undefined.
-int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s);
+int child_setup_process(pid_t new_termowner, const job_t &job, bool is_forked, const dup2_list_t &dup2s);
 
 /// Call fork(), retrying on failure a few times.
 pid_t execute_fork();
@@ -40,7 +40,7 @@ pid_t execute_fork();
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
 
-#if FISH_USE_POSIX_SPAWN
+#ifdef FISH_USE_POSIX_SPAWN
 /// Initializes and fills in a posix_spawnattr_t; on success, the caller should destroy it via
 /// posix_spawnattr_destroy.
 bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,

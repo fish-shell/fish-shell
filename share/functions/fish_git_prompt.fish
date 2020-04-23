@@ -656,7 +656,7 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
                 # Shorten the sha ourselves to 8 characters - this should be good for most repositories,
                 # and even for large ones it should be good for most commits
                 if set -q sha
-                    set branch (string match -r '^.{8}' -- $sha)…
+                    set branch (string match -r '^.{8}' -- $sha)...
                 else
                     set branch unknown
                 end

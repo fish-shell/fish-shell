@@ -1621,7 +1621,7 @@ static fuzzy_match_type_t get_best_match_type(const completion_list_t &comp) {
 ///
 /// - If the list is empty, flash the terminal.
 /// - If the list contains one element, write the whole element, and if the element does not end on
-/// a '/', '@', ':', or a '=', also write a trailing space.
+/// a '/', '@', ':', '.', ',' or a '=', also write a trailing space.
 /// - If the list contains multiple elements with a common prefix, write the prefix.
 /// - If the list contains multiple elements without a common prefix, call run_pager to display a
 /// list of completions. Depending on terminal size and the length of the list, run_pager may either

@@ -160,6 +160,8 @@ def built_command(options, description):
         elif option.startswith("-") and len(option) > 2:
             # Old style long option (-recursive)
             fish_options.append("-o " + fish_escape_single_quote(option[1:]))
+        else:
+            fish_options.append("-a " + fish_escape_single_quote(option))
 
     # Determine which options are new (not already in existing_options)
     # Then add those to the existing options
@@ -294,13 +296,10 @@ class Type1ManParser(ManParser):
             if len(data) > 1:  # and len(data[1]) <= 300):
                 optionName = data[0].strip()
 
-                if optionName.find("-") == -1:
-                    add_diagnostic("%r doesn't contain '-' " % optionName)
-                else:
-                    optionName = unquote_double_quotes(optionName)
-                    optionName = unquote_single_quotes(optionName)
-                    optionDescription = data[1].strip().replace("\n", " ")
-                    built_command(optionName, optionDescription)
+                optionName = unquote_double_quotes(optionName)
+                optionName = unquote_single_quotes(optionName)
+                optionDescription = data[1].strip().replace("\n", " ")
+                built_command(optionName, optionDescription)
 
             else:
                 add_diagnostic("Unable to split option from description")
@@ -323,13 +322,10 @@ class Type1ManParser(ManParser):
             data = data.split("\n", 1)
             if len(data) > 1 and len(data[1].strip()) > 0:  # and len(data[1])<400):
                 optionName = data[0].strip()
-                if optionName.find("-") == -1:
-                    add_diagnostic("%r doesn't contain '-'" % optionName)
-                else:
-                    optionName = unquote_double_quotes(optionName)
-                    optionName = unquote_single_quotes(optionName)
-                    optionDescription = data[1].strip().replace("\n", " ")
-                    built_command(optionName, optionDescription)
+                optionName = unquote_double_quotes(optionName)
+                optionName = unquote_single_quotes(optionName)
+                optionDescription = data[1].strip().replace("\n", " ")
+                built_command(optionName, optionDescription)
             else:
                 add_diagnostic("Unable to split option from description")
                 return False
@@ -358,14 +354,11 @@ class Type1ManParser(ManParser):
             if len(data) > 1 and len(data[1].strip()) > 0:  # and len(data[1])<400):
                 optionName = re.sub(trailing_num_regex, "", data[0].strip())
 
-                if "-" not in optionName:
-                    add_diagnostic("%r doesn't contain '-'" % optionName)
-                else:
-                    optionName = optionName.strip()
-                    optionName = unquote_double_quotes(optionName)
-                    optionName = unquote_single_quotes(optionName)
-                    optionDescription = data[1].strip().replace("\n", " ")
-                    built_command(optionName, optionDescription)
+                optionName = optionName.strip()
+                optionName = unquote_double_quotes(optionName)
+                optionName = unquote_single_quotes(optionName)
+                optionDescription = data[1].strip().replace("\n", " ")
+                built_command(optionName, optionDescription)
             else:
                 add_diagnostic("Unable to split option from description")
                 return False
@@ -410,15 +403,13 @@ class Type2ManParser(ManParser):
             data = data.split("\n", 1)
             if len(data) > 1 and len(data[1].strip()) > 0:  # and len(data[1])<400):
                 optionName = data[0].strip()
-                if "-" not in optionName:
-                    add_diagnostic("%r doesn't contain '-'" % optionName)
-                else:
-                    optionName = unquote_double_quotes(optionName)
-                    optionName = unquote_single_quotes(optionName)
-                    optionDescription = data[1].strip().replace("\n", " ")
-                    built_command(optionName, optionDescription)
+                optionName = unquote_double_quotes(optionName)
+                optionName = unquote_single_quotes(optionName)
+                optionDescription = data[1].strip().replace("\n", " ")
+                built_command(optionName, optionDescription)
             else:
                 add_diagnostic("Unable to split option from description")
+                print(data)
 
             options_section = options_section[options_matched.end() - 3 :]
             options_matched = re.search(options_parts_regex, options_section)
@@ -455,13 +446,10 @@ class Type3ManParser(ManParser):
 
             if len(data) > 1:  # and len(data[1])<400):
                 optionName = data[0].strip()
-                if optionName.find("-") == -1:
-                    add_diagnostic("%r doesn't contain '-'" % optionName)
-                else:
-                    optionName = unquote_double_quotes(optionName)
-                    optionName = unquote_single_quotes(optionName)
-                    optionDescription = data[1].strip().replace("\n", " ")
-                    built_command(optionName, optionDescription)
+                optionName = unquote_double_quotes(optionName)
+                optionName = unquote_single_quotes(optionName)
+                optionDescription = data[1].strip().replace("\n", " ")
+                built_command(optionName, optionDescription)
 
             else:
                 add_diagnostic("Unable to split option from description")
@@ -506,13 +494,10 @@ class Type4ManParser(ManParser):
 
             if len(data) > 1:  # and len(data[1])<400):
                 optionName = data[0].strip()
-                if optionName.find("-") == -1:
-                    add_diagnostic("%r doesn't contain '-' " % optionName)
-                else:
-                    optionName = unquote_double_quotes(optionName)
-                    optionName = unquote_single_quotes(optionName)
-                    optionDescription = data[1].strip().replace("\n", " ")
-                    built_command(optionName, optionDescription)
+                optionName = unquote_double_quotes(optionName)
+                optionName = unquote_single_quotes(optionName)
+                optionDescription = data[1].strip().replace("\n", " ")
+                built_command(optionName, optionDescription)
 
             else:
                 add_diagnostic("Unable to split option from description")

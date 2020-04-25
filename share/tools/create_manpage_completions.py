@@ -132,7 +132,7 @@ def output_complete_command(cmdname, args, description, output_list):
     comps = ["complete -c", cmdname]
     comps.extend(args)
     if description:
-        comps.append("--description")
+        comps.append("-d")
         comps.append(description)
     output_list.append(lossy_unicode(" ").join([lossy_unicode(c) for c in comps]))
 

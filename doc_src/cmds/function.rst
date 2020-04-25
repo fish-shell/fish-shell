@@ -54,11 +54,9 @@ By using one of the event handler switches, a function can be made to run automa
 
 - ``fish_preexec``, which is emitted right before executing an interactive command. The commandline is passed as the first parameter.
 
-  Note: This event will be emitted even if the command is invalid. The commandline parameter includes the entire commandline verbatim, and may potentially include newlines.
+- ``fish_posterror``, which is emitted right after executing a command with syntax errors. The commandline is passed as the first parameter.
 
 - ``fish_postexec``, which is emitted right after executing an interactive command. The commandline is passed as the first parameter.
-
-  Note: This event will be emitted even if the command is invalid. The commandline parameter includes the entire commandline verbatim, and may potentially include newlines.
 
 - ``fish_exit`` is emitted right before fish exits.
 

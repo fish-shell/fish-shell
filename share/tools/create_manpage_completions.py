@@ -206,6 +206,8 @@ def built_command(options, description):
         else:
             # No fit
             break
+    # Strip trailing dots
+    truncated_description = truncated_description.strip(udot)
 
     # If the first sentence does not fit, truncate if necessary
     if len(truncated_description) > max_description_width:

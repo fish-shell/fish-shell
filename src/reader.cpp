@@ -2946,6 +2946,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             } else {
                 // Result must be some combination including an error. The error message will
                 // already be printed, all we need to do is repaint.
+                wcstring_list_t argv(1, el->text());
+                event_fire_generic(parser(), L"fish_posterror", &argv);
                 s_reset(&screen, screen_reset_abandon_line);
                 mark_repaint_needed();
             }

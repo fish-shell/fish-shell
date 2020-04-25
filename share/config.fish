@@ -32,6 +32,7 @@ if status --is-interactive
         and not string match -q -- 'eterm*' $TERM
         and begin
             set -q KONSOLE_PROFILE_NAME # KDE's konsole
+            or test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge "200400" # konsole, but new.
             or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
             or string match -q -- "st-*" $TERM # suckless' st
             or test -n "$VTE_VERSION" -a "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0

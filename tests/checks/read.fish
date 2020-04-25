@@ -249,15 +249,10 @@ end
 
 # Confirm reading non-interactively works -- \#4206 regression
 echo abc\ndef | $fish -i -c 'read a; read b; set --show a; set --show b'
-#CHECK: $a: not set in local scope
 #CHECK: $a: set in global scope, unexported, with 1 elements
-#CHECK: $a[1]: length=3 value=|abc|
-#CHECK: $a: not set in universal scope
-#CHECK: 
-#CHECK: $b: not set in local scope
+#CHECK: $a[1]: |abc|
 #CHECK: $b: set in global scope, unexported, with 1 elements
-#CHECK: $b[1]: length=3 value=|def|
-#CHECK: $b: not set in universal scope
+#CHECK: $b[1]: |def|
 
 # Test --delimiter (and $IFS, for now)
 echo a=b | read -l foo bar

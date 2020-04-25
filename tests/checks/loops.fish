@@ -148,28 +148,16 @@ begin
 end
 set --show loop_var
 #CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=1 value=|c|
-#CHECK: $loop_var: not set in global scope
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
+#CHECK: $loop_var[1]: |c|
 #CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=1 value=|b|
+#CHECK: $loop_var[1]: |b|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
-#CHECK: $loop_var: not set in local scope
+#CHECK: $loop_var[1]: |global_val|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
+#CHECK: $loop_var[1]: |global_val|
 #CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=2 value=|cc|
+#CHECK: $loop_var[1]: |cc|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
-#CHECK: $loop_var: not set in local scope
+#CHECK: $loop_var[1]: |global_val|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
+#CHECK: $loop_var[1]: |global_val|

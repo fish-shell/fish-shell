@@ -1,4 +1,4 @@
-#loginctl (systemd 244)
+#loginctl (systemd 245)
 
 #variables
 set -l seen __fish_seen_subcommand_from
@@ -19,7 +19,7 @@ complete -c loginctl -x -n "not $seen $commands" -l machine -s M -d "Operate on 
 complete -c loginctl -f -n "not $seen $commands" -l no-ask-password -d "Don't prompt for password"
 complete -c loginctl -f -n "not $seen $commands" -l no-legend -d "Do not show the headers and footers"
 complete -c loginctl -f -n "not $seen $commands" -l no-pager -d "Do not pipe output into a pager"
-complete -c loginctl -x -n "not $seen $commands" -l output -a "$output" -s o -d "Change journal output mode"
+complete -c loginctl -x -n "not $seen $commands" -l output -s o -a "$output" -d "Change journal output mode"
 complete -c loginctl -x -n "not $seen $commands" -l property -s p -d "Show only properties by this name"
 complete -c loginctl -x -n "not $seen $commands" -l signal -s s -d "Which signal to send"
 complete -c loginctl -f -n "not $seen $commands" -l value -d "When showing properties, only print the value"

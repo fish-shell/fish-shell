@@ -33,6 +33,7 @@
   - `dhclient`
   - `tcpdump`
   - `tig`
+  - `windscribe`
   - `zopfli`, and `zopflipng`
   - `nmap`, `ncat`
   - `nc`, `netcat`, `nc.openbsd`, `nc.traditional`

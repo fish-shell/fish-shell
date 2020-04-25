@@ -6,6 +6,7 @@
 - A variable `fish_kill_signal` will be set to the signal that terminated the last foreground job, or `0` if the job exited normally.
 - On BSD systems, with the `-s` option, `fish_md5` does not use the given string, but `-s`. From now on the string is used.
 - Control-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
+- Improve Gradle completion
 
 ### Syntax changes and new commands
 

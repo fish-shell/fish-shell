@@ -575,7 +575,6 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
 
     const auto var = vars.get(var_name, scope);
     if (!var) {
-        streams.out.append_format(_(L"$%ls: not set in %ls scope\n"), var_name, scope_name);
         return;
     }
 
@@ -595,8 +594,8 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         }
         const wcstring value = vals[i];
         const wcstring escaped_val = escape_string(value, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
-        streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
-                                  value.size(), escaped_val.c_str());
+        streams.out.append_format(_(L"$%ls[%d]: |%ls|\n"), var_name, i + 1,
+                                  escaped_val.c_str());
     }
 }
 
@@ -613,7 +612,6 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
             show_scope(name.c_str(), ENV_LOCAL, streams, vars);
             show_scope(name.c_str(), ENV_GLOBAL, streams, vars);
             show_scope(name.c_str(), ENV_UNIVERSAL, streams, vars);
-            streams.out.push_back(L'\n');
         }
     } else {
         for (int i = 0; i < argc; i++) {
@@ -634,7 +632,6 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
             show_scope(arg, ENV_LOCAL, streams, vars);
             show_scope(arg, ENV_GLOBAL, streams, vars);
             show_scope(arg, ENV_UNIVERSAL, streams, vars);
-            streams.out.push_back(L'\n');
         }
     }
 

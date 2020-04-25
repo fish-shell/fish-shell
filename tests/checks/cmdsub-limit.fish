@@ -13,10 +13,8 @@ end
 # Command sub just under the limit should succeed
 set a (subme 511)
 set --show a
-#CHECK: $a: not set in local scope
 #CHECK: $a: set in global scope, unexported, with 1 elements
-#CHECK: $a[1]: length=511 value=|{{x{510}x}}|
-#CHECK: $a: not set in universal scope
+#CHECK: $a[1]: |{{x{510}x}}|
 
 # Command sub at the limit should fail
 set b (string repeat -n 512 x)
@@ -25,9 +23,6 @@ test $saved_status -eq 122
 or echo expected status 122, saw $saved_status >&2
 set --show b
 
-#CHECK: $b: not set in local scope
-#CHECK: $b: not set in global scope
-#CHECK: $b: not set in universal scope
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
 #CHECKERR: set b (string repeat -n 512 x)
 #CHECKERR:       ^
@@ -37,10 +32,8 @@ set --show b
 set c (subme 513)
 set --show c
 
-#CHECK: $c: not set in local scope
 #CHECK: $c: set in global scope, unexported, with 1 elements
-#CHECK: $c[1]: length=0 value=||
-#CHECK: $c: not set in universal scope
+#CHECK: $c[1]: ||
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
 #CHECKERR:     set -l x (string repeat -n $argv x)
 #CHECKERR:              ^

@@ -70,6 +70,34 @@ def output(*args):
     print("".join(args) + "\n")
 
 
+import unicodedata
+
+
+def esc(m):
+    map = {
+        "\n": "\\n",
+        "\\": "\\\\",
+        "'": "\\'",
+        '"': '\\"',
+        "\a": "\\a",
+        "\b": "\\b",
+        "\f": "\\f",
+        "\r": "\\r",
+        "\t": "\\t",
+        "\v": "\\v",
+    }
+    if m in map:
+        return map(m)
+    if unicodedata.category(m)[0] == "C":
+        return "\\x{:02x}".format(ord(m))
+    else:
+        return m
+
+
+def escape_string(s):
+    return "".join(esc(ch) for ch in s)
+
+
 class CheckerError(Exception):
     """Exception subclass for check line parsing.
 
@@ -248,21 +276,24 @@ class TestRun(object):
                 # This line matched this checker, continue on.
                 lineq.pop()
                 checkq.pop()
-                before.append(line.text)
+                before.append(line)
             elif line.is_empty_space():
                 # Skip all whitespace input lines.
                 lineq.pop()
             else:
                 # Failed to match.
                 lineq.pop()
+                line.text = escape_string(line.text.strip()) + "\n"
                 # Add context, ignoring empty lines.
                 return TestFailure(
                     line,
                     check,
                     self,
-                    before=before,
+                    before=[escape_string(line.text.strip()) + "\n" for line in before],
                     after=[
-                        line.text for line in lineq[::-1] if not line.is_empty_space()
+                        escape_string(line.text.strip()) + "\n"
+                        for line in lineq[::-1]
+                        if not line.is_empty_space()
                     ],
                 )
         # Drain empties.

@@ -577,8 +577,9 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
 }
 
 /// Perform cmdsubst expansion.
-static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t *out_list,
-                            parse_error_list_t *errors) {
+static bool expand_cmdsubst(wcstring input, const operation_context_t &ctx,
+                            completion_list_t *out_list, parse_error_list_t *errors) {
+    assert(ctx.parser && "Cannot expand without a parser");
     wchar_t *paren_begin = nullptr, *paren_end = nullptr;
     wchar_t *tail_begin = nullptr;
     size_t i, j;
@@ -605,14 +606,14 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t 
 
     wcstring_list_t sub_res;
     const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
-    if (exec_subshell(subcmd, parser, sub_res, true /* apply_exit_status */,
-                      true /* is_subcmd */) == -1) {
+    if (exec_subshell(subcmd, *ctx.parser, sub_res, true /* apply_exit_status */,
+                      true /* is_subcmd */, ctx.parent_pgid) == -1) {
         append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN,
                             L"Unknown error while evaluating command substitution");
         return false;
     }
 
-    if (parser.get_last_status() == STATUS_READ_TOO_MUCH) {
+    if (ctx.parser->get_last_status() == STATUS_READ_TOO_MUCH) {
         append_cmdsub_error(
             errors, in - paren_begin,
             _(L"Too much data emitted by command substitution so it was discarded\n"));
@@ -652,7 +653,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t 
     // Recursively call ourselves to expand any remaining command substitutions. The result of this
     // recursive call using the tail of the string is inserted into the tail_expand array list
     completion_list_t tail_expand;
-    expand_cmdsubst(tail_begin, parser, &tail_expand, errors);  // TODO: offset error locations
+    expand_cmdsubst(tail_begin, ctx, &tail_expand, errors);  // TODO: offset error locations
 
     // Combine the result of the current command substitution with the result of the recursive tail
     // expansion.
@@ -686,7 +687,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t 
         }
     }
 
-    return parser.get_last_status() != STATUS_READ_TOO_MUCH;
+    return ctx.parser->get_last_status() != STATUS_READ_TOO_MUCH;
 }
 
 // Given that input[0] is HOME_DIRECTORY or tilde (ugh), return the user's name. Return the empty
@@ -897,7 +898,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_list_t *ou
         }
     } else {
         assert(ctx.parser && "Must have a parser to expand command substitutions");
-        bool cmdsubst_ok = expand_cmdsubst(std::move(input), *ctx.parser, out, errors);
+        bool cmdsubst_ok = expand_cmdsubst(std::move(input), ctx, out, errors);
         if (!cmdsubst_ok) return expand_result_t::error;
     }
 

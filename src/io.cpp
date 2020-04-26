@@ -174,8 +174,10 @@ void io_buffer_t::complete_background_fillthread() {
     fillthread_waiter_ = {};
 }
 
-shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts,
-                                                    size_t buffer_limit) {
+shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts, size_t buffer_limit,
+                                                    int target) {
+    assert(target >= 0 && "Invalid target fd");
+
     // Construct our pipes.
     auto pipes = make_autoclose_pipes(conflicts);
     if (!pipes) {
@@ -192,7 +194,7 @@ shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts,
     // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
     auto buffer = std::make_shared<io_buffer_t>(buffer_limit);
     buffer->begin_background_fillthread(std::move(pipes->read));
-    return std::make_shared<io_bufferfill_t>(std::move(pipes->write), buffer);
+    return std::make_shared<io_bufferfill_t>(target, std::move(pipes->write), buffer);
 }
 
 std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfill_t> &&filler) {
@@ -345,4 +347,10 @@ shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
         }
     }
     return nullptr;
+}
+
+void output_stream_t::append_narrow_buffer(const separated_buffer_t<std::string> &buffer) {
+    for (const auto &rhs_elem : buffer.elements()) {
+        buffer_.append(str2wcstring(rhs_elem.contents), rhs_elem.separation);
+    }
 }

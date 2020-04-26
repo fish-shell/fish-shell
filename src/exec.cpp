@@ -911,6 +911,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
 
         case process_type_t::builtin: {
             io_streams_t builtin_io_streams{stdout_read_limit};
+            if (j->pgid != INVALID_PID) builtin_io_streams.parent_pgid = j->pgid;
             if (!exec_internal_builtin_proc(parser, j, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
                 return false;
@@ -1121,8 +1122,8 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     return true;
 }
 
-static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
-                                  bool apply_exit_status, bool is_subcmd) {
+static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, maybe_t<pid_t> parent_pgid,
+                                  wcstring_list_t *lst, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     auto &ld = parser.libdata();
     bool prev_subshell = ld.is_subshell;
@@ -1144,7 +1145,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     // be null.
     std::shared_ptr<io_buffer_t> buffer;
     if (auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit)) {
-        if (parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst) == eval_result_t::ok) {
+        if (parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst, parent_pgid) ==
+            eval_result_t::ok) {
             subcommand_statuses = parser.get_last_statuses();
         }
         buffer = io_bufferfill_t::finish(std::move(bufferfill));
@@ -1215,12 +1217,12 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
-                  bool apply_exit_status, bool is_subcmd) {
+                  bool apply_exit_status, bool is_subcmd, maybe_t<pid_t> parent_pgid) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, parser, &outputs, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, parser, parent_pgid, &outputs, apply_exit_status, is_subcmd);
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, parser, nullptr, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, parser, none(), nullptr, apply_exit_status, is_subcmd);
 }

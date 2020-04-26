@@ -22,10 +22,12 @@ bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j, const job_linea
 ///
 /// \param cmd the command to execute
 /// \param outputs The list to insert output into.
+/// \param parent_pgid if set, the pgid for any spawned jobs
 ///
 /// \return the status of the last job to exit, or -1 if en error was encountered.
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
-                  bool apply_exit_status, bool is_subcmd = false);
+                  bool apply_exit_status, bool is_subcmd = false,
+                  maybe_t<pid_t> parent_pgid = none());
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status,
                   bool is_subcmd = false);
 

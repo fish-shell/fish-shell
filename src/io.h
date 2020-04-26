@@ -252,7 +252,6 @@ class io_buffer_t;
 class io_chain_t;
 
 /// Represents filling an io_buffer_t. Very similar to io_pipe_t.
-/// Bufferfills always target stdout.
 class io_bufferfill_t : public io_data_t {
     /// Write end. The other end is connected to an io_buffer_t.
     const autoclose_fd_t write_fd_;
@@ -265,8 +264,8 @@ class io_bufferfill_t : public io_data_t {
 
     // The ctor is public to support make_shared() in the static create function below.
     // Do not invoke this directly.
-    io_bufferfill_t(autoclose_fd_t write_fd, std::shared_ptr<io_buffer_t> buffer)
-        : io_data_t(io_mode_t::bufferfill, STDOUT_FILENO, write_fd.fd()),
+    io_bufferfill_t(int target, autoclose_fd_t write_fd, std::shared_ptr<io_buffer_t> buffer)
+        : io_data_t(io_mode_t::bufferfill, target, write_fd.fd()),
           write_fd_(std::move(write_fd)),
           buffer_(std::move(buffer)) {
         assert(write_fd_.valid() && "fd is not valid");
@@ -279,9 +278,11 @@ class io_bufferfill_t : public io_data_t {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
     ///
+    /// \param target the fd which this will be dup2'd to - typically stdout.
     /// \param conflicts A set of fds. The function ensures that any pipe it makes does
     /// not conflict with an fd redirection in this list.
-    static shared_ptr<io_bufferfill_t> create(const fd_set_t &conflicts, size_t buffer_limit = 0);
+    static shared_ptr<io_bufferfill_t> create(const fd_set_t &conflicts, size_t buffer_limit = 0,
+                                              int target = STDOUT_FILENO);
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. \return the buffer.
@@ -421,6 +422,9 @@ class output_stream_t {
 
     void append(const wchar_t *s, size_t amt) { buffer_.append(s, s + amt); }
 
+    // Append data from a narrow buffer, widening it.
+    void append_narrow_buffer(const separated_buffer_t<std::string> &buffer);
+
     void push_back(wchar_t c) { append(c); }
 
     void append_format(const wchar_t *format, ...) {
@@ -453,6 +457,11 @@ struct io_streams_t {
 
     // Actual IO redirections. This is only used by the source builtin. Unowned.
     const io_chain_t *io_chain{nullptr};
+
+    // The pgid of the job, if any. This enables builtins which run more code like eval() to share
+    // pgid.
+    // TODO: this is awkwardly placed, consider just embedding a lineage here.
+    maybe_t<pid_t> parent_pgid{};
 
     // io_streams_t cannot be copied.
     io_streams_t(const io_streams_t &) = delete;

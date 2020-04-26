@@ -9,7 +9,7 @@ This release of fish fixes a number of major issues discovered in fish 3.1.0.
 - Redirections using the deprecated caret syntax to a file descriptor (eg `^&2`) work correctly (#6591).
 - Redirections that append to a file descriptor (eg `2>>&1`) work correctly (#6614).
 - Building fish on macOS (#6602) or with new versions of GCC (#6604, #6609) is now successful.
-- `time` is now correctly listed in the output of `builtins`, and `time --help` works correctly (#6598).
+- `time` is now correctly listed in the output of `builtin -n`, and `time --help` works correctly (#6598).
 - Exported universal variables now update properly (#6612).
 - `status current-command` gives the expected output when used with an environment override - that is, `F=B status current-command` returns `status` instead of `F=B` (#6635).
 - `test` no longer crashes when used with "`nan`" or "`inf`" arguments, erroring out instead (#6655).
@@ -19,7 +19,7 @@ This release of fish fixes a number of major issues discovered in fish 3.1.0.
 - Functions using `--on-signal INT` work reliably in interactive sessions, as they did in fish 2.7 and before (#6649). These handlers have never worked in non-interactive sessions, and making them work is an ongoing process.
 - Functions using `--on-variable` work reliably with variables which are set implicitly (rather than with `set`), such as "`fish_bind_mode`" and "`PWD`" (#6653).
 - 256 colors are properly enabled under certain conditions that were incorrectly detected in fish 3.1.0 (`$TERM` begins with xterm, does not include "`256color`", and `$TERM_PROGRAM` is not set) (#6701).
-- The Mercurial (`hg`) prompt no longer produces an error when the current working directory is removed (#6699), and the speed has been improved.
+- The Mercurial (`hg`) prompt no longer produces an error when the current working directory is removed (#6699). Also, for performance reasons it shows only basic information by default; to restore the detailed status, set `$fish_prompt_hg_show_informative_status`.
 - The VCS prompt, `fish_vcs_prompt`, no longer displays Subversion (`svn`) status by default, due to the potential slowness of this operation (#6681).
 - Pasting of commands has been sped up (#6713).
 - Using extended Unicode characters, such as emoji, in a non-Unicode capable locale (such as the `C` or `POSIX` locale) no longer renders all output blank (#6736).

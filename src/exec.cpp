@@ -845,6 +845,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
 
         case process_type_t::builtin: {
             io_streams_t builtin_io_streams{stdout_read_limit};
+            if (j->pgid != INVALID_PID) builtin_io_streams.parent_pgid = j->pgid;
             if (!exec_internal_builtin_proc(parser, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
                 return false;

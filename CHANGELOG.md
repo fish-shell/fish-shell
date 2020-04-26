@@ -7,6 +7,7 @@
 - On BSD systems, with the `-s` option, `fish_md5` does not use the given string, but `-s`. From now on the string is used.
 - Control-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
 - Improve Gradle completion
+- Fixed `pushd`'s behavior with respect to the directory stack when given an invalid argument
 
 ### Syntax changes and new commands
 

@@ -36,6 +36,8 @@ class builtin_bind_t {
     bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, io_streams_t &streams);
     bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool preset,
                   io_streams_t &streams);
+    bool check_conflicts(const wcstring &seq, const wchar_t *bind_mode, bool user, io_streams_t &streams);
+    bool check_conflicts(const wcstring &seq, const wchar_t *bind_mode, io_streams_t &streams);
 };
 
 inline int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

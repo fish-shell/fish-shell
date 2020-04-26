@@ -126,6 +126,61 @@ void builtin_bind_t::list(const wchar_t *bind_mode, bool user, io_streams_t &str
     }
 }
 
+/// Check if the given sequence conflicts with one that was already bound.
+/// Returns true if a conflict was found.
+bool builtin_bind_t::check_conflicts(const wcstring &seq, const wchar_t *bind_mode, bool user, io_streams_t &streams) {
+    const std::vector<input_mapping_name_t> lst = input_mappings_->get_names(user);
+
+    // The generic binding is allowed to be a prefix, because it's only used if nothing else matched.
+    if (seq.empty()) return false;
+    for (const input_mapping_name_t &binding : lst) {
+        if (bind_mode && bind_mode != binding.mode) {
+            continue;
+        }
+        auto &bseq = binding.seq;
+        if (bseq.empty()) continue;
+        // We're allowed to be equal because that just overrides it.
+        if (bseq == seq) continue;
+
+        // This is ugly - C++14 guarantees mismatch won't overrun the second element, but we're C++11.
+        if (bseq.size() < seq.size()) {
+            auto mismatch = std::mismatch(bseq.begin(), bseq.end(), seq.begin());
+            if (mismatch.first == bseq.end()) {
+                // Mismatches on escape are allowed because we treat that special (read timeout and such)
+                if (mismatch.first - bseq.begin() > 0 && *(mismatch.first - 1) == L'\e') continue;
+                streams.err.append_format(_(L"%ls: Sequence '%ls' has already bound sequence '%ls' as a prefix\n"), L"bind",
+                                          escape_string(seq, ESCAPE_ALL).c_str(), escape_string(bseq, ESCAPE_ALL).c_str());
+                return true;
+            }
+            if (mismatch.second == seq.end()) {
+                if (mismatch.second - bseq.begin() > 0 && *(mismatch.second - 1) == L'\e') continue;
+                streams.err.append_format(_(L"%ls: Sequence '%ls' is prefix of already bound sequence '%ls'\n"), L"bind",
+                                          escape_string(seq, ESCAPE_ALL).c_str(), escape_string(bseq, ESCAPE_ALL).c_str());
+                return true;
+            }
+        } else {
+            auto mismatch = std::mismatch(seq.begin(), seq.end(), bseq.begin());
+            if (mismatch.first == seq.end()) {
+                if (mismatch.first - seq.begin() > 0 && *(mismatch.first - 1) == L'\e') continue;
+                streams.err.append_format(_(L"%ls: Sequence '%ls' is prefix of already bound sequence '%ls'\n"), L"bind",
+                                          escape_string(seq, ESCAPE_ALL).c_str(), escape_string(bseq, ESCAPE_ALL).c_str());
+                return true;
+            }
+            if (mismatch.second == bseq.end()) {
+                if (mismatch.second - seq.begin() > 0 && *(mismatch.second - 1) == L'\e') continue;
+                streams.err.append_format(_(L"%ls: Sequence '%ls' has already bound sequence '%ls' as a prefix\n"), L"bind",
+                                          escape_string(seq, ESCAPE_ALL).c_str(), escape_string(bseq, ESCAPE_ALL).c_str());
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool builtin_bind_t::check_conflicts(const wcstring &seq, const wchar_t *bind_mode, io_streams_t &streams) {
+    return check_conflicts(seq, bind_mode, true, streams) || check_conflicts(seq, bind_mode, false, streams);
+}
+
 /// Print terminfo key binding names to string buffer used for standard output.
 ///
 /// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
@@ -175,6 +230,7 @@ bool builtin_bind_t::get_terminfo_sequence(const wcstring &seq, wcstring *out_se
 bool builtin_bind_t::add(const wcstring &seq, const wchar_t *const *cmds, size_t cmds_len,
                          const wchar_t *mode, const wchar_t *sets_mode, bool terminfo, bool user,
                          io_streams_t &streams) {
+    if (check_conflicts(seq, mode, streams)) return false;
     if (terminfo) {
         wcstring seq2;
         if (get_terminfo_sequence(seq, &seq2, streams)) {

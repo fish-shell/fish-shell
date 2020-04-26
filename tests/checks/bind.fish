@@ -87,4 +87,12 @@ bind --erase --user --preset \t
 bind \t
 # CHECK: bind --preset \t complete
 
+# Prefix conflicts
+bind prefix true
+bind prefixbanana true
+# CHECKERR: bind: Sequence 'prefixbanana' has already bound sequence 'prefix' as a prefix
+bind thingsuffix true
+bind thing true
+# CHECKERR: bind: Sequence 'thing' is prefix of already bound sequence 'thingsuffix'
+
 exit 0

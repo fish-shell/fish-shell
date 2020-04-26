@@ -454,6 +454,11 @@ struct io_streams_t {
     // Actual IO redirections. This is only used by the source builtin. Unowned.
     const io_chain_t *io_chain{nullptr};
 
+    // The pgid of the job, if any. This enables builtins which run more code like eval() to share
+    // pgid.
+    // TODO: this is awkwardly placed, consider just embedding a lineage here.
+    maybe_t<pid_t> parent_pgid{};
+
     // io_streams_t cannot be copied.
     io_streams_t(const io_streams_t &) = delete;
     void operator=(const io_streams_t &) = delete;

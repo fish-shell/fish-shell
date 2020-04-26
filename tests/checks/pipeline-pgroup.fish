@@ -37,3 +37,8 @@ end
 and echo "All pgroups agreed"
 or echo "Pgroups disagreed. Found $a0 $a1 $a2, and $b0 $b1 $b2"
 # CHECK: All pgroups agreed
+
+# Ensure that eval retains pgroups - #6806.
+# Our regex will capture the first pgroup and use a positive lookahead on the second.
+$fth print_pgrp | tr \n ' ' 1>&2 | eval '$fth print_pgrp' 1>&2
+# CHECKERR: {{(\d+) (?=\1)\d+}}

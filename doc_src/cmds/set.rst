@@ -53,7 +53,7 @@ The following options are available:
 
 - ``-n`` or ``--names`` List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
 
-- ``-S`` or ``--show`` Shows information about the given variables. If no variable names are given then all variables are shown in sorted order. No other flags can be used with this option. The information shown includes whether or not it is set in each of the local, global, and universal scopes. If it is set in one of those scopes whether or not it is exported is reported. The individual elements are also shown along with the length of each element.
+- ``-S`` or ``--show`` Shows information about the given variables. If no variable names are given then all variables are shown in sorted order. It shows the scopes the given variables are set in, along with the values in each and whether or not it is exported. No other flags can be used with this option.
 
 - ``-L`` or ``--long`` do not abbreviate long values when printing set variables
 

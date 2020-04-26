@@ -5,7 +5,7 @@
 - `jobs --quiet PID` will no longer print 'no suitable job' if the job for PID does not exist (e.g. because it has finished). #6809
 - A variable `fish_kill_signal` will be set to the signal that terminated the last foreground job, or `0` if the job exited normally.
 - On BSD systems, with the `-s` option, `fish_md5` does not use the given string, but `-s`. From now on the string is used.
-- Control-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
+- Ctrl-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
 - Improve Gradle completion
 - Fixed `pushd`'s behavior with respect to the directory stack when given an invalid argument
 
@@ -20,6 +20,7 @@
 #### New or improved bindings
 - New readline commands `undo` (Ctrl+_) and `redo` (Alt-/) can be used to revert changes to the command line or the pager search field (#6570).
 - New function `__fish_preview_current_file` (Alt+O) opens the current file at the cursor in a pager (#6838).
+- `edit_command_buffer` (Alt-E and Alt-V) passes the cursor position to the external editor if the editor is recognized (#6138).
 
 #### Improved prompts
 - The default and example prompts print the correct exit status for commands prefixed with `not` (#6566).
@@ -28,16 +29,18 @@
 
 #### Completions
 - Added completions for
-  - `gitk`
-  - `wireshark`, `tshark`, and `dumpcap`
-  - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
   - `dhclient`
+  - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
+  - `gitk`
+  - `nc`, `netcat`, `nc.openbsd`, `nc.traditional`
+  - `nmap`, `ncat`
   - `tcpdump`
   - `tig`
   - `windscribe`
+  - `wireshark`, `tshark`, and `dumpcap`
   - `zopfli`, and `zopflipng`
-  - `nmap`, `ncat`
-  - `nc`, `netcat`, `nc.openbsd`, `nc.traditional`
+- fish no longer inserts a space after a completion ending in `.` or `,` was accepted (#6928). 
+- When pressing Tab, fish displays ambiguous completions even when they have a common prefix, without the user having to press Tab again (#6924).
 
 ### Deprecations and removed features
 

@@ -46,13 +46,16 @@ void io_close_t::print() const { std::fwprintf(stderr, L"close %d\n", fd); }
 
 void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", source_fd, fd); }
 
-void io_file_t::print() const { std::fwprintf(stderr, L"file (%d)\n", file_fd_.fd()); }
+void io_file_t::print() const { std::fwprintf(stderr, L"file %d -> %d\n", file_fd_.fd(), fd); }
 
 void io_pipe_t::print() const {
-    std::fwprintf(stderr, L"pipe {%d} (input: %s)\n", source_fd, is_input_ ? "yes" : "no");
+    std::fwprintf(stderr, L"pipe {%d} (input: %s) -> %d\n", source_fd, is_input_ ? "yes" : "no",
+                  fd);
 }
 
-void io_bufferfill_t::print() const { std::fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
+void io_bufferfill_t::print() const {
+    std::fwprintf(stderr, L"bufferfill %d -> %d\n", write_fd_.fd(), fd);
+}
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     const separated_buffer_t<wcstring> &input = stream.buffer();

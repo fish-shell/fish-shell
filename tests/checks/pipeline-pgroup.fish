@@ -11,11 +11,13 @@ end
 # Here everything should live in the pgroup of the first fish_test_helper.
 $fth print_pgrp | read -g global_group | save_pgroup g1 | begin
     save_pgroup g2
+end | begin
+    echo (save_pgroup g3) >/dev/null
 end
 
-[ "$global_group" -eq "$g1" ] && [ "$g1" -eq "$g2" ]
+[ "$global_group" -eq "$g1" ] && [ "$g1" -eq "$g2" ] && [ "$g2" -eq "$g3" ]
 and echo "All pgroups agreed"
-or echo "Pgroups disagreed. Should be in $global_group but found $g1 and $g2"
+or echo "Pgroups disagreed. Should be in $global_group but found $g1, $g2, $g3"
 # CHECK: All pgroups agreed
 
 # Here everything should live in fish's pgroup.
@@ -37,6 +39,11 @@ end
 and echo "All pgroups agreed"
 or echo "Pgroups disagreed. Found $a0 $a1 $a2, and $b0 $b1 $b2"
 # CHECK: All pgroups agreed
+
+# Ensure that eval retains pgroups - #6806.
+# Our regex will capture the first pgroup and use a positive lookahead on the second.
+$fth print_pgrp | tr \n ' ' 1>&2 | eval '$fth print_pgrp' 1>&2
+# CHECKERR: {{(\d+) (?=\1)\d+}}
 
 # Ensure that if a background job launches another background job, that they have different pgroups.
 # The pipeline here will arrange for the two pgroups to be printed on the same line, like:

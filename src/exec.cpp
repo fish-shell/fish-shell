@@ -845,6 +845,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
 
         case process_type_t::builtin: {
             io_streams_t builtin_io_streams{stdout_read_limit};
+            if (j->pgid != INVALID_PID) builtin_io_streams.parent_pgid = j->pgid;
             if (!exec_internal_builtin_proc(parser, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
                 return false;
@@ -1096,13 +1097,15 @@ static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &bu
 
 /// Execute \p cmd in a subshell in \p parser. If \p lst is not null, populate it with the output.
 /// Return $status in \p out_status.
+/// If \p parent_pgid is set, any spawned commands should join that pgroup.
 /// If \p apply_exit_status is false, then reset $status back to its original value.
 /// \p is_subcmd controls whether we apply a read limit.
 /// \p break_expand is used to propagate whether the result should be "expansion breaking" in the
 /// sense that subshells used during string expansion should halt that expansion. \return the value
 /// of $status.
-static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
-                                  bool *break_expand, bool apply_exit_status, bool is_subcmd) {
+static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, maybe_t<pid_t> parent_pgid,
+                                  wcstring_list_t *lst, bool *break_expand, bool apply_exit_status,
+                                  bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     auto &ld = parser.libdata();
 
@@ -1125,7 +1128,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         *break_expand = true;
         return STATUS_CMD_ERROR;
     }
-    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst);
+    eval_res_t eval_res =
+        parser.eval(cmd, io_chain_t{bufferfill}, parent_pgid, block_type_t::subst);
     std::shared_ptr<io_buffer_t> buffer = io_bufferfill_t::finish(std::move(bufferfill));
     if (buffer->buffer().discarded()) {
         *break_expand = true;
@@ -1144,21 +1148,24 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     return eval_res.status.status_value();
 }
 
-int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs) {
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, maybe_t<pid_t> parent_pgid,
+                             wcstring_list_t &outputs) {
     ASSERT_IS_MAIN_THREAD();
     bool break_expand = false;
-    int ret = exec_subshell_internal(cmd, parser, &outputs, &break_expand, true, true);
+    int ret = exec_subshell_internal(cmd, parser, parent_pgid, &outputs, &break_expand, true, true);
     // Only return an error code if we should break expansion.
     return break_expand ? ret : STATUS_CMD_OK;
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status) {
     bool break_expand = false;
-    return exec_subshell_internal(cmd, parser, nullptr, &break_expand, apply_exit_status, false);
+    return exec_subshell_internal(cmd, parser, none(), nullptr, &break_expand, apply_exit_status,
+                                  false);
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
                   bool apply_exit_status) {
     bool break_expand = false;
-    return exec_subshell_internal(cmd, parser, &outputs, &break_expand, apply_exit_status, false);
+    return exec_subshell_internal(cmd, parser, none(), &outputs, &break_expand, apply_exit_status,
+                                  false);
 }

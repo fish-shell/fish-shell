@@ -33,6 +33,10 @@ This release also includes:
 - a number of improvements to completions; and
 - a number of content and formatting improvements to the documentation.
 
+## Errata for fish 3.1
+
+A new builtin, `time`, was introduced in the fish 3.1 releases. This builtin is a reserved word (like `test`, `function`, and others) because of the way it is implemented, and functions can no longer be named `time`. This was not clear in the fish 3.1b1 changelog.
+
 ---
 
 # fish 3.1.0 (released February 12, 2020)

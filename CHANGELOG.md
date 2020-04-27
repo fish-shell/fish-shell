@@ -1,4 +1,4 @@
-# fish 3.1.1
+# fish 3.1.1 (released April 27, 2020)
 
 This release of fish fixes a number of major issues discovered in fish 3.1.0.
 
@@ -26,12 +26,14 @@ This release of fish fixes a number of major issues discovered in fish 3.1.0.
 - `help` prefers to use `xdg-open`, avoiding the use of `open` on Debian systems where this command is actually `openvt` (#6739).
 - Command lines starting with a space, which are not saved in history, now do not get autosuggestions. This fixes an issue with Midnight Commander integration (#6763), but may be changed in a future version.
 - Copying to the clipboard no longer inserts a newline at the end of the content, matching fish 2.7 and earlier (#6927).
-- Fixes hangs when using `fzf` in complex pipes. More generally, code run as part of command substitutions or `eval` or will no longer have separate process groups. (#6624, #6806).
+- `fzf` in complex pipes no longer hangs. More generally, code run as part of command substitutions or `eval` will no longer have separate process groups. (#6624, #6806).
 
 This release also includes:
 - a number of changes to improve macOS compatibility with code signing and notarization;
 - a number of improvements to completions; and
 - a number of content and formatting improvements to the documentation.
+
+If you are upgrading from version 3.0.0 or before, please also review the release notes for 3.1.0 and 3.1b1 (included below).
 
 ## Errata for fish 3.1
 

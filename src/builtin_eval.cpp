@@ -27,6 +27,9 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         new_cmd += argv[i];
     }
 
+    // Copy the full io chain; we may append bufferfills.
+    io_chain_t ios = *streams.io_chain;
+
     // If stdout is piped, then its output must go to the streams, not to the io_chain in our
     // streams, because the pipe may be intended to be consumed by a process which
     // is not yet launched (#6806). If stdout is NOT redirected, it must see the tty (#6955). So
@@ -41,6 +44,7 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             // We were unable to create a pipe, probably fd exhaustion.
             return STATUS_CMD_ERROR;
         }
+        ios.push_back(stdout_fill);
     }
 
     // Of course the same applies to stderr.
@@ -51,12 +55,8 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (!stderr_fill) {
             return STATUS_CMD_ERROR;
         }
+        ios.push_back(stderr_fill);
     }
-
-    // Construct the full io chain, perhaps with our bufferfills appended.
-    io_chain_t ios = *streams.io_chain;
-    if (stdout_fill) ios.push_back(stdout_fill);
-    if (stderr_fill) ios.push_back(stderr_fill);
 
     int status = STATUS_CMD_OK;
     auto res = parser.eval(new_cmd, ios, streams.parent_pgid);

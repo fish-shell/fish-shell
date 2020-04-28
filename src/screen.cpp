@@ -1227,5 +1227,7 @@ bool screen_t::cursor_is_wrapped_to_own_line() const {
     // Note == comparison against the line count is correct: we do not create a line just for the
     // cursor. If there is a line containing the cursor, then it means that line has contents and we
     // should return false.
-    return actual.cursor.x == 0 && static_cast<size_t>(actual.cursor.y) == actual.line_count();
+    // Don't consider dumb terminals to have wrapping for the purposes of this function.
+    return actual.cursor.x == 0 && static_cast<size_t>(actual.cursor.y) == actual.line_count() &&
+           !is_dumb();
 }

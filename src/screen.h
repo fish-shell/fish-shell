@@ -154,6 +154,10 @@ class screen_t {
 
     /// \return the outputter for this screen.
     outputter_t &outp() { return outp_; }
+
+    /// \return whether we believe the cursor is wrapped onto the last line, and that line is
+    /// otherwise empty. This includes both soft and hard wrapping.
+    bool cursor_is_wrapped_to_own_line() const;
 };
 
 /// This is the main function for the screen putput library. It is used to define the desired

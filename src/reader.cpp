@@ -3581,7 +3581,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         repaint_if_needed();
     }
 
-    ignore_result(write(STDOUT_FILENO, "\n", 1));
+    // Emit a newline so that the output is on the line after the command.
+    // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
+    if (!screen.cursor_is_wrapped_to_own_line()) {
+        ignore_result(write(STDOUT_FILENO, "\n", 1));
+    }
 
     // Ensure we have no pager contents when we exit.
     if (!pager.empty()) {

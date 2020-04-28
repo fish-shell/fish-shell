@@ -416,9 +416,16 @@ static bool exec_internal_builtin_proc(parser_t &parser, process_t *p, const io_
         }
     }
 
+    // Pull out the IOs for stdout and stderr.
+    auto out_io = proc_io_chain.io_for_fd(STDOUT_FILENO);
+    auto err_io = proc_io_chain.io_for_fd(STDERR_FILENO);
+
+    // Set up our streams.
     streams.stdin_fd = local_builtin_stdin;
-    streams.out_is_redirected = proc_io_chain.io_for_fd(STDOUT_FILENO) != nullptr;
-    streams.err_is_redirected = proc_io_chain.io_for_fd(STDERR_FILENO) != nullptr;
+    streams.out_is_redirected = out_io != nullptr;
+    streams.err_is_redirected = err_io != nullptr;
+    streams.out_is_piped = (out_io != nullptr && out_io->io_mode == io_mode_t::pipe);
+    streams.err_is_piped = (err_io != nullptr && err_io->io_mode == io_mode_t::pipe);
     streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
     streams.io_chain = &proc_io_chain;
 

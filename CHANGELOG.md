@@ -52,6 +52,49 @@
 
 ---
 
+# fish 3.1.1 (released April 27, 2020)
+
+This release of fish fixes a number of major issues discovered in fish 3.1.0.
+
+- Commands which involve `. ( ... | psub)` now work correctly, as a bug in the `function --on-job-exit` option has been fixed (#6613).
+- Conflicts between upstream packages for ripgrep and bat, and the fish packages, have been resolved (#5822).
+- Starting fish in a directory without read access, such as via `su`, no longer crashes (#6597).
+- Glob ordering changes which were introduced in 3.1.0 have been reverted, returning the order of globs to the previous state (#6593).
+- Redirections using the deprecated caret syntax to a file descriptor (eg `^&2`) work correctly (#6591).
+- Redirections that append to a file descriptor (eg `2>>&1`) work correctly (#6614).
+- Building fish on macOS (#6602) or with new versions of GCC (#6604, #6609) is now successful.
+- `time` is now correctly listed in the output of `builtin -n`, and `time --help` works correctly (#6598).
+- Exported universal variables now update properly (#6612).
+- `status current-command` gives the expected output when used with an environment override - that is, `F=B status current-command` returns `status` instead of `F=B` (#6635).
+- `test` no longer crashes when used with "`nan`" or "`inf`" arguments, erroring out instead (#6655).
+- Copying from the end of the command line no longer crashes fish (#6680).
+- `read` no longer removes multiple separators when splitting a variable into a list, restoring the previous behaviour from fish 3.0 and before (#6650).
+- Functions using `--on-job-exit` and `--on-process-exit` work reliably again (#6679).
+- Functions using `--on-signal INT` work reliably in interactive sessions, as they did in fish 2.7 and before (#6649). These handlers have never worked in non-interactive sessions, and making them work is an ongoing process.
+- Functions using `--on-variable` work reliably with variables which are set implicitly (rather than with `set`), such as "`fish_bind_mode`" and "`PWD`" (#6653).
+- 256 colors are properly enabled under certain conditions that were incorrectly detected in fish 3.1.0 (`$TERM` begins with xterm, does not include "`256color`", and `$TERM_PROGRAM` is not set) (#6701).
+- The Mercurial (`hg`) prompt no longer produces an error when the current working directory is removed (#6699). Also, for performance reasons it shows only basic information by default; to restore the detailed status, set `$fish_prompt_hg_show_informative_status`.
+- The VCS prompt, `fish_vcs_prompt`, no longer displays Subversion (`svn`) status by default, due to the potential slowness of this operation (#6681).
+- Pasting of commands has been sped up (#6713).
+- Using extended Unicode characters, such as emoji, in a non-Unicode capable locale (such as the `C` or `POSIX` locale) no longer renders all output blank (#6736).
+- `help` prefers to use `xdg-open`, avoiding the use of `open` on Debian systems where this command is actually `openvt` (#6739).
+- Command lines starting with a space, which are not saved in history, now do not get autosuggestions. This fixes an issue with Midnight Commander integration (#6763), but may be changed in a future version.
+- Copying to the clipboard no longer inserts a newline at the end of the content, matching fish 2.7 and earlier (#6927).
+- `fzf` in complex pipes no longer hangs. More generally, code run as part of command substitutions or `eval` will no longer have separate process groups. (#6624, #6806).
+
+This release also includes:
+- a number of changes to improve macOS compatibility with code signing and notarization;
+- a number of improvements to completions; and
+- a number of content and formatting improvements to the documentation.
+
+If you are upgrading from version 3.0.0 or before, please also review the release notes for 3.1.0 and 3.1b1 (included below).
+
+## Errata for fish 3.1
+
+A new builtin, `time`, was introduced in the fish 3.1 releases. This builtin is a reserved word (like `test`, `function`, and others) because of the way it is implemented, and functions can no longer be named `time`. This was not clear in the fish 3.1b1 changelog.
+
+---
+
 # fish 3.1.0 (released February 12, 2020)
 
 Compared to the beta release of fish 3.1b1, fish version 3.1.0:

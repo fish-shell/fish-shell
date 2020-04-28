@@ -46,12 +46,6 @@
 /// The number of characters to indent new blocks.
 #define INDENT_STEP 4u
 
-/// The initial screen width.
-#define SCREEN_WIDTH_UNINITIALIZED (-1)
-
-/// A helper value for an invalid location.
-#define INVALID_LOCATION (screen_data_t::cursor_t(-1, -1))
-
 static void invalidate_soft_wrap(screen_t *scr);
 
 /// RAII class to begin and end buffering around stdoutput().
@@ -337,8 +331,8 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
 /// Stat stdout and stderr and save result. This should be done before calling a function that may
 /// cause output.
 void s_save_status(screen_t *s) {
-    fstat(1, &s->prev_buff_1);
-    fstat(2, &s->prev_buff_2);
+    fstat(STDOUT_FILENO, &s->prev_buff_1);
+    fstat(STDERR_FILENO, &s->prev_buff_2);
 }
 
 /// Stat stdout and stderr and compare result to previous result in reader_save_status. Repaint if
@@ -356,19 +350,20 @@ static void s_check_status(screen_t *s) {
         return;
     }
 
-    fstat(1, &s->post_buff_1);
-    fstat(2, &s->post_buff_2);
+    struct stat post_buff_1 {};
+    struct stat post_buff_2 {};
+    fstat(STDOUT_FILENO, &post_buff_1);
+    fstat(STDERR_FILENO, &post_buff_2);
 
-    bool changed = (s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime) ||
-                   (s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime);
+    bool changed = (s->prev_buff_1.st_mtime != post_buff_1.st_mtime) ||
+                   (s->prev_buff_2.st_mtime != post_buff_2.st_mtime);
 
 #if defined HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC
-    changed = changed ||
-              s->prev_buff_1.st_mtimespec.tv_nsec != s->post_buff_1.st_mtimespec.tv_nsec ||
-              s->prev_buff_2.st_mtimespec.tv_nsec != s->post_buff_2.st_mtimespec.tv_nsec;
+    changed = changed || s->prev_buff_1.st_mtimespec.tv_nsec != post_buff_1.st_mtimespec.tv_nsec ||
+              s->prev_buff_2.st_mtimespec.tv_nsec != post_buff_2.st_mtimespec.tv_nsec;
 #elif defined HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC
-    changed = changed || s->prev_buff_1.st_mtim.tv_nsec != s->post_buff_1.st_mtim.tv_nsec ||
-              s->prev_buff_2.st_mtim.tv_nsec != s->post_buff_2.st_mtim.tv_nsec;
+    changed = changed || s->prev_buff_1.st_mtim.tv_nsec != post_buff_1.st_mtim.tv_nsec ||
+              s->prev_buff_2.st_mtim.tv_nsec != post_buff_2.st_mtim.tv_nsec;
 #endif
 
     if (changed) {
@@ -537,8 +532,7 @@ static void s_write_char(screen_t *s, wchar_t c, size_t width) {
     s->actual.cursor.x += width;
     s->outp().writech(c);
     if (s->actual.cursor.x == s->actual_width && allow_soft_wrap()) {
-        s->soft_wrap_location.x = 0;
-        s->soft_wrap_location.y = s->actual.cursor.y + 1;
+        s->soft_wrap_location = screen_data_t::cursor_t{0, s->actual.cursor.y + 1};
 
         // Note that our cursor position may be a lie: Apple Terminal makes the right cursor stick
         // to the margin, while Ubuntu makes it "go off the end" (but still doesn't wrap). We rely
@@ -592,20 +586,21 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b) {
 // we believe we are already in the target position. This lets the terminal take care of wrapping,
 // which means that if you copy and paste the text, it won't have an embedded newline.
 static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y) {
-    if (x == scr->soft_wrap_location.x && y == scr->soft_wrap_location.y) {  //!OCLINT
+    if (scr->soft_wrap_location && x == scr->soft_wrap_location->x &&
+        y == scr->soft_wrap_location->y) {  //!OCLINT
         // We can soft wrap; but do we want to?
         if (scr->desired.line(y - 1).is_soft_wrapped && allow_soft_wrap()) {
             // Yes. Just update the actual cursor; that will cause us to elide emitting the commands
             // to move here, so we will just output on "one big line" (which the terminal soft
             // wraps.
-            scr->actual.cursor = scr->soft_wrap_location;
+            scr->actual.cursor = scr->soft_wrap_location.value();
         }
     }
     return false;
 }
 
 /// Make sure we don't soft wrap.
-static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = INVALID_LOCATION; }
+static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = none(); }
 
 /// Update the screen to match the desired output.
 static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring &right_prompt) {
@@ -628,7 +623,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
     if (scr->actual_width != screen_width) {
         // Ensure we don't issue a clear screen for the very first output, to avoid issue #402.
-        if (scr->actual_width != SCREEN_WIDTH_UNINITIALIZED) {
+        if (scr->actual_width > 0) {
             need_clear_screen = true;
             s_move(scr, 0, 0);
             s_reset(scr, screen_reset_mode_t::current_line_contents);
@@ -1226,16 +1221,4 @@ void screen_force_clear_to_end() {
     }
 }
 
-screen_t::screen_t()
-    : outp_(outputter_t::stdoutput()),
-      last_right_prompt_width(),
-      actual_width(SCREEN_WIDTH_UNINITIALIZED),
-      soft_wrap_location(INVALID_LOCATION),
-      autosuggestion_is_truncated(false),
-      need_clear_lines(false),
-      need_clear_screen(false),
-      actual_lines_before_reset(0),
-      prev_buff_1(),
-      prev_buff_2(),
-      post_buff_1(),
-      post_buff_2() {}
+screen_t::screen_t() : outp_(outputter_t::stdoutput()) {}

@@ -74,9 +74,9 @@ class screen_data_t {
 
    public:
     struct cursor_t {
-        int x;
-        int y;
-        cursor_t() : x(0), y(0) {}
+        int x{0};
+        int y{0};
+        cursor_t() = default;
         cursor_t(int a, int b) : x(a), y(b) {}
     } cursor;
 
@@ -119,37 +119,38 @@ class screen_t {
     outputter_t &outp_;
 
    public:
-    /// Constructor.
     screen_t();
 
     /// The internal representation of the desired screen contents.
-    screen_data_t desired;
+    screen_data_t desired{};
     /// The internal representation of the actual screen contents.
-    screen_data_t actual;
+    screen_data_t actual{};
     /// A string containing the prompt which was last printed to the screen.
-    wcstring actual_left_prompt;
+    wcstring actual_left_prompt{};
     /// Last right prompt width.
-    size_t last_right_prompt_width;
-    /// The actual width of the screen at the time of the last screen write.
-    int actual_width;
+    size_t last_right_prompt_width{0};
+    /// The actual width of the screen at the time of the last screen write, or negative if not yet
+    /// set.
+    int actual_width{-1};
     /// If we support soft wrapping, we can output to this location without any cursor motion.
-    screen_data_t::cursor_t soft_wrap_location;
+    maybe_t<screen_data_t::cursor_t> soft_wrap_location{};
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
-    bool autosuggestion_is_truncated;
+    bool autosuggestion_is_truncated{false};
     /// This flag is set to true when there is reason to suspect that the parts of the screen lines
     /// where the actual content is not filled in may be non-empty. This means that a clr_eol
     /// command has to be sent to the terminal at the end of each line, including
     /// actual_lines_before_reset.
-    bool need_clear_lines;
+    bool need_clear_lines{false};
     /// Whether there may be yet more content after the lines, and we issue a clr_eos if possible.
-    bool need_clear_screen;
+    bool need_clear_screen{false};
     /// If we need to clear, this is how many lines the actual screen had, before we reset it. This
     /// is used when resizing the window larger: if the cursor jumps to the line above, we need to
     /// remember to clear the subsequent lines.
-    size_t actual_lines_before_reset;
+    size_t actual_lines_before_reset{0};
     /// These status buffers are used to check if any output has occurred other than from fish's
     /// main loop, in which case we need to redraw.
-    struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
+    struct stat prev_buff_1 {};
+    struct stat prev_buff_2 {};
 
     /// \return the outputter for this screen.
     outputter_t &outp() { return outp_; }

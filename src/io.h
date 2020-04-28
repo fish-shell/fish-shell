@@ -451,7 +451,12 @@ struct io_streams_t {
     // < foo.txt
     bool stdin_is_directly_redirected{false};
 
-    // Indicates whether stdout and stderr are redirected (e.g. to a file or piped).
+    // Indicates whether stdout and stderr are specifically piped.
+    // If this is set, then the is_redirected flags must also be set.
+    bool out_is_piped{false};
+    bool err_is_piped{false};
+
+    // Indicates whether stdout and stderr are at all redirected (e.g. to a file or piped).
     bool out_is_redirected{false};
     bool err_is_redirected{false};
 

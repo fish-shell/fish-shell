@@ -7,12 +7,16 @@ end
 
 function __fish_gradle_create_completion_cache_file
     # Set up cache directory
-    if test -z $XDG_CACHE_HOME
+    if command test -z $XDG_CACHE_HOME
         set XDG_CACHE_HOME $HOME/.cache
     end
     mkdir -m 700 -p $XDG_CACHE_HOME/gradle-completions
 
-    string trim -- $XDG_CACHE_HOME/gradle-completions/(__fish_md5 -s $argv[1] | string split ' = ')[2]
+    set -l md5Hash (__fish_md5 -s $argv[1] | string split ' = ')
+    if command test (count $md5Hash) -gt 1
+        set -l md5Hash $md5Hash[2]
+    end
+    string trim -- $XDG_CACHE_HOME/gradle-completions/$md5Hash
 end
 
 ##############################

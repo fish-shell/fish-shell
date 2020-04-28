@@ -104,14 +104,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # Hence we'll call python directly.
             # c_m_p.py should work with any python version.
             set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
-            for py in python{3,2,}
-                if command -sq $py
-                    # Run python directly in the background and swallow all output
-                    $py $update_args >/dev/null 2>&1 &
-                    # Then disown the job so that it continues to run in case of an early exit (#6269)
-                    disown >/dev/null 2>&1
-                    break
-                end
+            if set -l python (__fish_anypython)
+                # Run python directly in the background and swallow all output
+                $python $update_args >/dev/null 2>&1 &
+                # Then disown the job so that it continues to run in case of an early exit (#6269)
+                disown >/dev/null 2>&1
             end
         end
     end

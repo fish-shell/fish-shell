@@ -193,15 +193,15 @@ void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
 /// Stat stdout and stderr and save result as the current timestamp.
 void s_save_status(screen_t *s);
 
-enum screen_reset_mode_t {
+enum class screen_reset_mode_t {
     /// Do not make a new line, do not repaint the prompt.
-    screen_reset_current_line_contents,
+    current_line_contents,
     /// Do not make a new line, do repaint the prompt.
-    screen_reset_current_line_and_prompt,
+    current_line_and_prompt,
     /// Abandon the current line, go to the next one, repaint the prompt.
-    screen_reset_abandon_line,
+    abandon_line,
     /// Abandon the current line, go to the next one, clear the rest of the screen.
-    screen_reset_abandon_line_and_clear_to_end_of_screen
+    abandon_line_and_clear_to_end_of_screen
 };
 
 void s_reset(screen_t *s, screen_reset_mode_t mode);

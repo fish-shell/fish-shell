@@ -378,7 +378,7 @@ static void s_check_status(screen_t *s) {
         // modeled cursor y-pos to its earlier value.
         int prev_line = s->actual.cursor.y;
         write_loop(STDOUT_FILENO, "\r", 1);
-        s_reset(s, screen_reset_current_line_and_prompt);
+        s_reset(s, screen_reset_mode_t::current_line_and_prompt);
         s->actual.cursor.y = prev_line;
     }
 }
@@ -631,7 +631,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         if (scr->actual_width != SCREEN_WIDTH_UNINITIALIZED) {
             need_clear_screen = true;
             s_move(scr, 0, 0);
-            s_reset(scr, screen_reset_current_line_contents);
+            s_reset(scr, screen_reset_mode_t::current_line_contents);
 
             need_clear_lines = need_clear_lines || scr->need_clear_lines;
             need_clear_screen = need_clear_screen || scr->need_clear_screen;
@@ -1093,19 +1093,19 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
 
     bool abandon_line = false, repaint_prompt = false, clear_to_eos = false;
     switch (mode) {
-        case screen_reset_current_line_contents: {
+        case screen_reset_mode_t::current_line_contents: {
             break;
         }
-        case screen_reset_current_line_and_prompt: {
+        case screen_reset_mode_t::current_line_and_prompt: {
             repaint_prompt = true;
             break;
         }
-        case screen_reset_abandon_line: {
+        case screen_reset_mode_t::abandon_line: {
             abandon_line = true;
             repaint_prompt = true;
             break;
         }
-        case screen_reset_abandon_line_and_clear_to_end_of_screen: {
+        case screen_reset_mode_t::abandon_line_and_clear_to_end_of_screen: {
             abandon_line = true;
             repaint_prompt = true;
             clear_to_eos = true;

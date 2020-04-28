@@ -1,3 +1,11 @@
+# fish 3.1.2
+
+This release of fish fixes the following issues:
+
+- `eval` buffered output too aggressively, leading to a hang when used with `fzf` (#6955).
+
+---
+
 # fish 3.1.1 (released April 27, 2020)
 
 This release of fish fixes a number of major issues discovered in fish 3.1.0.

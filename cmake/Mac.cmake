@@ -1,6 +1,7 @@
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
 
 # Code signing ID on Mac. A default '-' is ad-hoc codesign.
+# If this is falsey, codesigning is disabled.
 set(MAC_CODESIGN_ID "-" CACHE STRING "Mac code-signing identity")
 
 # Whether to inject the "get-task-allow" entitlement, which permits debugging
@@ -8,7 +9,7 @@ set(MAC_CODESIGN_ID "-" CACHE STRING "Mac code-signing identity")
 set(MAC_INJECT_GET_TASK_ALLOW ON CACHE BOOL "Inject get-task-allow on Mac")
 
 function(CODESIGN_ON_MAC target)
-  if(APPLE)
+  if((APPLE) AND (MAC_CODESIGN_ID))
     execute_process(COMMAND sw_vers "-productVersion" OUTPUT_VARIABLE OSX_VERSION)
     if(MAC_INJECT_GET_TASK_ALLOW)
       set(ENTITLEMENTS "--entitlements" "${CMAKE_SOURCE_DIR}/osx/fish_debug.entitlements")

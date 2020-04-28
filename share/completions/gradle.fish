@@ -7,16 +7,13 @@ end
 
 function __fish_gradle_create_completion_cache_file
     # Set up cache directory
-    if command test -z $XDG_CACHE_HOME
+    if test -z "$XDG_CACHE_HOME"
         set XDG_CACHE_HOME $HOME/.cache
     end
-    mkdir -m 700 -p $XDG_CACHE_HOME/gradle-completions
+    mkdir -m 700 -p "$XDG_CACHE_HOME/gradle-completions"
 
-    set -l md5Hash (__fish_md5 -s $argv[1] | string split ' = ')
-    if command test (count $md5Hash) -gt 1
-        set -l md5Hash $md5Hash[2]
-    end
-    string trim -- $XDG_CACHE_HOME/gradle-completions/$md5Hash
+    set -l md5Hash (__fish_md5 -s $argv[1] | string replace -r '.* = ' '')
+    string trim -- "$XDG_CACHE_HOME/gradle-completions/$md5Hash"
 end
 
 ##############################
@@ -55,12 +52,12 @@ function __fish_gradle_get_task_completion
     end
 
     set -l gradle_cache_file (__fish_gradle_create_completion_cache_file "{$PWD}-tasks")
-    if not command test -f $gradle_cache_file -a -s $gradle_cache_file
-        command gradle -q tasks --all 2>/dev/null | string match --regex '^[a-z][A-z:]+.*' | string replace ' - ' \t >$gradle_cache_file
+    if not test -f "$gradle_cache_file" -a -s "$gradle_cache_file"
+        command gradle -q tasks --all 2>/dev/null | string match --regex '^[a-z][A-z:]+.*' | string replace ' - ' \t >"$gradle_cache_file"
     end
 
     # return possible tasks
-    string trim -- <$gradle_cache_file
+    string trim -- <"$gradle_cache_file"
 end
 
 complete --command 'gw' --command 'gradle' --command 'gradlew' \

@@ -49,6 +49,7 @@
 - Allow finishing builds on OS X <10.13.6 (previously builds would fail at the `codesign` step)
 - The pkg-config file now uses pkg-config variables
 - The default values for the extra_completionsdir, extra_functionsdir and extra_confdir options now use the installation prefix instead of hardcoding `/usr/local`
+- A new CMake variable `FISH_USE_SYSTEM_PCRE2` controls whether fish builds with the system-installed PCRE2, or the version it bundles. By default it prefers the system library if available, unless Mac codesigning is enabled (#6952).
 
 ---
 

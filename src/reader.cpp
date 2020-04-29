@@ -3552,6 +3552,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                 history_search.reset();
             }
 
+            // Readline commands may be bound to \cc which also sets the cancel flag.
+            // See #6937.
+            parser().clear_cancel();
+
             rls.last_cmd = readline_cmd;
         } else {
             // Ordinary char.

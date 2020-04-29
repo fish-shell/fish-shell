@@ -53,11 +53,13 @@
 
 ---
 
-# fish 3.1.2
+# fish 3.1.2 (released April 29, 2020)
 
-This release of fish fixes the following issues:
+This release of fish fixes a major issue discovered in fish 3.1.1:
 
-- `eval` buffered output too aggressively, leading to a hang when used with `fzf` (#6955).
+- Commands such as `fzf` and `enhancd`, when used with `eval`, would hang. `eval` buffered output too aggressively, which has been fixed (#6955).
+
+If you are upgrading from version 3.0.0 or before, please also review the release notes for 3.1.1, 3.1.0 and 3.1b1 (included below).
 
 ---
 

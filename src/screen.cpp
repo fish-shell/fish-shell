@@ -642,6 +642,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     const size_t lines_with_stuff = std::max(actual_lines_before_reset, scr->actual.line_count());
     if (scr->desired.line_count() < lines_with_stuff) need_clear_screen = true;
 
+    // Output the left prompt if it has changed.
     if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, 0, 0);
         s_write_str(scr, left_prompt.c_str());
@@ -649,6 +650,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         scr->actual.cursor.x = static_cast<int>(left_prompt_width);
     }
 
+    // Output all lines.
     for (size_t i = 0; i < scr->desired.line_count(); i++) {
         const line_t &o_line = scr->desired.line(i);
         line_t &s_line = scr->actual.create_line(i);
@@ -657,9 +659,13 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         bool has_cleared_line = false;
 
         // If this is the last line, maybe we should clear the screen.
+        // Don't issue clr_eos if we think the cursor will end up in the last column - see #6951.
         const bool should_clear_screen_this_line =
-            need_clear_screen && i + 1 == scr->desired.line_count() && clr_eos != nullptr;
+            need_clear_screen && i + 1 == scr->desired.line_count() && clr_eos != nullptr &&
+            !(scr->desired.cursor.x == 0 &&
+              scr->desired.cursor.y == static_cast<int>(scr->desired.line_count()));
 
+        // skip_remaining is how many columns are unchanged on this line.
         // Note that skip_remaining is a width, not a character count.
         size_t skip_remaining = start_pos;
 

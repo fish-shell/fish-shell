@@ -32,11 +32,10 @@ function __fish_describe_command -d "Command used to find descriptions for comma
     apropos $argv 2>/dev/null | awk -v FS=" +- +" '{
 		split($1, names, ", ");
 		for (name in names)
-			if (names[name] ~ /^'"$argv_regex"'[^A-z._-]* *\([18]\)/ ) {
+			if (names[name] ~ /^'"$argv_regex"'.* *\([18]\)/ ) {
 				sub( "( |\t)*\\\([18]\\\)", "", names[name] );
 				sub( " \\\[.*\\\]", "", names[name] );
 				print names[name] "\t" $2;
-				exit;
 			}
 	}'
 end

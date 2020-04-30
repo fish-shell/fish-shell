@@ -453,40 +453,34 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     reap_disowned_pids();
 }
 
-/// Given a command like "cat file", truncate it to a reasonable length.
-static wcstring truncate_command(const wcstring &cmd) {
-    const size_t max_len = 32;
-    if (cmd.size() <= max_len) {
-        // No truncation necessary.
-        return cmd;
+/// Call the fish_job_summary function with the given args.
+static void print_job_summary(parser_t &parser, const wcstring_list_t &args) {
+    wcstring buffer = wcstring(L"fish_job_summary");
+    for (const wcstring &arg : args) {
+        buffer.push_back(L' ');
+        buffer.append(escape_string(arg, ESCAPE_ALL));
     }
+    event_t event(event_type_t::generic);
+    event.desc.str_param1 = L"fish_job_summary";
 
-    // Truncation required.
-    const wchar_t *ellipsis_str = get_ellipsis_str();
-    const size_t ellipsis_length = std::wcslen(ellipsis_str);  // no need for wcwidth
-    size_t trunc_length = max_len - ellipsis_length;
-    // Eat trailing whitespace.
-    while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
-        trunc_length -= 1;
-    }
-    wcstring result = wcstring(cmd, 0, trunc_length);
-    // Append ellipsis.
-    result.append(ellipsis_str);
-    return result;
+    auto prev_statuses = parser.get_last_statuses();
+
+    block_t *b = parser.push_block(block_t::event_block(event));
+    parser.eval(buffer, io_chain_t());
+    parser.pop_block(b);
+
+    parser.set_last_statuses(std::move(prev_statuses));
 }
 
 /// Format information about job status for the user to look at.
 using job_status_t = enum { JOB_STOPPED, JOB_ENDED };
-static void print_job_status(const job_t *j, job_status_t status) {
-    const wchar_t *msg = L"Job %d, '%ls' has ended";  // this is the most common status msg
-    if (status == JOB_STOPPED) msg = L"Job %d, '%ls' has stopped";
-    outputter_t outp;
-    outp.writestr("\r");
-    outp.writestr(format_string(_(msg), j->job_id(), truncate_command(j->command()).c_str()));
-    if (clr_eol) outp.term_puts(clr_eol, 1);
-    outp.writestr(L"\n");
-    fflush(stdout);
-    outp.flush_to(STDOUT_FILENO);
+static void print_job_status(parser_t &parser, const job_t *j, job_status_t status) {
+    wcstring_list_t args = {
+        format_string(L"%d", j->job_id()),
+        j->command(),
+        status == JOB_STOPPED ? L"STOPPED" : L"ENDED",
+    };
+    print_job_summary(parser, args);
 }
 
 event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
@@ -517,8 +511,8 @@ void remove_disowned_jobs(job_list_t &jobs) {
 /// Given a a process in a job, print the status message for the process as appropriate, and then
 /// mark the status code so we don't print again. Populate any events into \p exit_events.
 /// \return true if we printed a status message, false if not.
-static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t> *exit_events,
-                                     bool only_one_job) {
+static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
+                                     std::vector<event_t> *exit_events) {
     if (!p->completed || !p->pid) {
         return false;
     }
@@ -556,27 +550,17 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t
     // preference.
     bool printed = false;
     if (s.signal_code() != SIGINT || !j->is_foreground()) {
-        if (proc_is_job) {
-            // We want to report the job number, unless it's the only job, in which case
-            // we don't need to.
-            const wcstring job_number_desc =
-                only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id());
-            std::fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
-                          program_name, job_number_desc.c_str(),
-                          truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
-                          signal_get_desc(s.signal_code()));
-        } else {
-            const wcstring job_number_desc =
-                only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id());
-            const wchar_t *fmt =
-                _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
-            std::fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
-                          truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
-                          signal_get_desc(s.signal_code()));
+        wcstring_list_t args;
+        args.reserve(proc_is_job ? 4 : 6);
+        args.push_back(format_string(L"%d", j->job_id()));
+        args.push_back(j->command());
+        args.push_back(sig2wcs(s.signal_code()));
+        args.push_back(signal_get_desc(s.signal_code()));
+        if (!proc_is_job) {
+            args.push_back(format_string(L"%d", p->pid));
+            args.push_back(p->argv0());
         }
-
-        if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
-        std::fwprintf(stdout, L"\n");
+        print_job_summary(parser, args);
         printed = true;
     }
     // Clear status so it is not reported more than once.
@@ -635,7 +619,6 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     };
 
     // Print status messages for completed or stopped jobs.
-    const bool only_one_job = parser.jobs().size() == 1;
     for (const auto &j : parser.jobs()) {
         if (!should_process_job(j)) continue;
 
@@ -643,14 +626,14 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         // Note this may print the message on behalf of the job, affecting the result of
         // job_wants_message().
         for (process_ptr_t &p : j->processes) {
-            if (try_clean_process_in_job(p.get(), j.get(), &exit_events, only_one_job)) {
+            if (try_clean_process_in_job(parser, p.get(), j.get(), &exit_events)) {
                 printed = true;
             }
         }
 
         // Print the message if we need to.
         if (job_wants_message(j) && (j->is_completed() || j->is_stopped())) {
-            print_job_status(j.get(), j->is_completed() ? JOB_ENDED : JOB_STOPPED);
+            print_job_status(parser, j.get(), j->is_completed() ? JOB_ENDED : JOB_STOPPED);
             j->mut_flags().notified = true;
             printed = true;
         }

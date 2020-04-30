@@ -1,5 +1,6 @@
-function fish_job_summary -a job_id cmd_line signal_or_end_name signal_desc proc_pid proc_name
+function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name signal_desc proc_pid proc_name
     # job_id: ID of the job that stopped/terminated/ended.
+    # is_foreground: 1 if the job was running in the foreground, 0 otherwise.
     # cmd_line: The command line of the job.
     # signal_or_end_name: If terminated by signal, the name of the signal (e.g. SIGTERM).
     #   If ended, the string "ENDED". If stopped, the string "STOPPED".
@@ -9,6 +10,19 @@ function fish_job_summary -a job_id cmd_line signal_or_end_name signal_desc proc
     # proc_pid: the pid of the process affected.
     # proc_name: the name of that process.
     # If the job has only one process, these two arguments will not be provided.
+
+    # Print nothing if we get SIGINT in the foreground process group, to avoid spamming
+    # obvious stuff on the console (#1119). If we get SIGINT for the foreground
+    # process, assume the user typed ^C and can see it working. It's possible they
+    # didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM
+    # distinction is precisely to allow INT to be from a UI
+    # and TERM to be programmatic, so this assumption is keeping with the design of
+    # signals. If echoctl is on, then the terminal will have written ^C to the console.
+    # If off, it won't have. We don't echo ^C either way, so as to respect the user's
+    # preference.
+    if test $signal_or_end_name = "SIGINT"; and test $is_foreground -eq 1
+        return
+    end
 
     set -l ellipsis '...'
     if string match -iqr 'utf.?8' -- $LANG

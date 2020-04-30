@@ -13,7 +13,7 @@ send_line "sleep 0.5 &"
 sleep 0.050
 expect_prompt
 sleep 0.550
-expect -re "\[0-9]+:sleep 0.5 &:ENDED"
+expect -re "\[0-9]+:0:sleep 0.5 &:ENDED"
 send_line ""
 expect_prompt
 
@@ -24,7 +24,7 @@ sleep 0.100
 expect_prompt
 exec -- pkill -TERM sleep -P $pid
 sleep 0.100
-expect -re "\[0-9]+:sleep 10 &:SIGTERM:Polite quit request"
+expect -re "\[0-9]+:0:sleep 10 &:SIGTERM:Polite quit request"
 send_line ""
 expect_prompt
 
@@ -34,6 +34,6 @@ send_line "true | sleep 6"
 sleep 0.100
 exec -- pkill -KILL sleep -P $pid
 sleep 0.100
-expect -re "\[0-9]+:true | sleep 6:SIGKILL:Forced quit:\[0-9]+:sleep"
+expect -re "\[0-9]+:1:true|sleep 6:SIGKILL:Forced quit:\[0-9]+:sleep"
 send_line ""
 expect_prompt

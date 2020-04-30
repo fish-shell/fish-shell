@@ -477,6 +477,7 @@ using job_status_t = enum { JOB_STOPPED, JOB_ENDED };
 static void print_job_status(parser_t &parser, const job_t *j, job_status_t status) {
     wcstring_list_t args = {
         format_string(L"%d", j->job_id()),
+        format_string(L"%d", j->is_foreground()),
         j->command(),
         status == JOB_STOPPED ? L"STOPPED" : L"ENDED",
     };
@@ -539,34 +540,22 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
         return false;
     }
 
-    // Print nothing if we get SIGINT in the foreground process group, to avoid spamming
-    // obvious stuff on the console (#1119). If we get SIGINT for the foreground
-    // process, assume the user typed ^C and can see it working. It's possible they
-    // didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM
-    // distinction is precisely to allow INT to be from a UI
-    // and TERM to be programmatic, so this assumption is keeping with the design of
-    // signals. If echoctl is on, then the terminal will have written ^C to the console.
-    // If off, it won't have. We don't echo ^C either way, so as to respect the user's
-    // preference.
-    bool printed = false;
-    if (s.signal_code() != SIGINT || !j->is_foreground()) {
-        wcstring_list_t args;
-        args.reserve(proc_is_job ? 4 : 6);
-        args.push_back(format_string(L"%d", j->job_id()));
-        args.push_back(j->command());
-        args.push_back(sig2wcs(s.signal_code()));
-        args.push_back(signal_get_desc(s.signal_code()));
-        if (!proc_is_job) {
-            args.push_back(format_string(L"%d", p->pid));
-            args.push_back(p->argv0());
-        }
-        print_job_summary(parser, args);
-        printed = true;
+    wcstring_list_t args;
+    args.reserve(proc_is_job ? 5 : 7);
+    args.push_back(format_string(L"%d", j->job_id()));
+    args.push_back(format_string(L"%d", j->is_foreground()));
+    args.push_back(j->command());
+    args.push_back(sig2wcs(s.signal_code()));
+    args.push_back(signal_get_desc(s.signal_code()));
+    if (!proc_is_job) {
+        args.push_back(format_string(L"%d", p->pid));
+        args.push_back(p->argv0());
     }
+    print_job_summary(parser, args);
     // Clear status so it is not reported more than once.
     // TODO: this seems like a clumsy way to ensure that.
     p->status = proc_status_t::from_exit_code(0);
-    return printed;
+    return true;
 }
 
 /// \return whether this job wants a status message printed when it stops or completes.

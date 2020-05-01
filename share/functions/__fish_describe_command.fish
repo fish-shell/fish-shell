@@ -9,9 +9,8 @@
 # So we disable this entirely in that case.
 if test (uname) = Darwin
     set -l darwin_version (uname -r | string split .)
-    # macOS 15 is Darwin 19, this is an issue at least up to 10.15.3.
-    # If this is fixed in later versions uncomment the second check.
-    if test "$darwin_version[1]" = 19 # -a "$darwin_version[2]" -le 3
+    # macOS 15 is Darwin 19, this is an issue up to and including 10.15.3.
+    if test "$darwin_version[1]" = 19 -a "$darwin_version[2]" -le 3
         function __fish_describe_command
         end
         # (remember: exit when `source`ing only exits the file, not the shell)

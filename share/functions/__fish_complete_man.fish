@@ -6,9 +6,8 @@
 # `apropos` with their own, which presumably doesn't have the same problem.
 if test (uname) = Darwin
     set -l darwin_version (uname -r | string split .)
-    # macOS 15 is Darwin 19, this is an issue at least up to 10.15.3.
-    # If this is fixed in later versions uncomment the second check.
-    if test "$darwin_version[1]" = 19 # -a "$darwin_version[2]" -le 3
+    # macOS 15 is Darwin 19, this is an issue up to and including 10.15.3.
+    if test "$darwin_version[1]" = 19 -a "$darwin_version[2]" -le 3
         set -l apropos (command -s apropos)
         if test "$apropos" = /usr/bin/apropos
             function __fish_complete_man

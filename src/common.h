@@ -842,7 +842,7 @@ template <>
 struct hash<const wcstring> {
     std::size_t operator()(const wcstring &w) const {
         std::hash<wcstring> hasher;
-        return hasher(static_cast<wcstring>(w));
+        return hasher(w);
     }
 };
 }  // namespace std

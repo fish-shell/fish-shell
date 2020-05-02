@@ -38,6 +38,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # Note: Previous versions also checked $TMUX, and made sure that then $TERM was screen* or tmux*.
     # We don't care, since we *cannot* handle term-in-a-terms 100% correctly.
     if not set -q KONSOLE_PROFILE_NAME
+        and not test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge "200400" # konsole, but new.
         and not set -q ITERM_PROFILE
         and not set -q VTE_VERSION # which version is already checked above
         and not set -q XTERM_VERSION
@@ -63,11 +64,8 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     set -l function
     switch "$terminal"
         case auto
-            # TODO: Konsole as of 18.08 knows the xterm sequences,
-            # but there's still bugs with it (as of konsole 19.04.0).
-            #
-            # If it is fixed, we'd have to read $KONSOLE_VERSION for a while,
-            # though that was only introduced in 18.08 as well.
+            # Nowadays, konsole does not set $KONSOLE_PROFILE_NAME anymore,
+            # and it uses the xterm sequences.
             if set -q KONSOLE_PROFILE_NAME
                 set function __fish_cursor_konsole
             else if set -q ITERM_PROFILE

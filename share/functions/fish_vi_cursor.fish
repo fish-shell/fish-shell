@@ -45,6 +45,10 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         and not string match -rq '^st(-.*)$' -- $TERM
         and not string match -q 'xterm-kitty*' -- $TERM
         and not string match -q 'rxvt*' -- $TERM
+        and not begin
+            string match -q "$argv[1]" -- $TERM
+            and set -e argv[1]
+        end
         return
     end
 
@@ -113,4 +117,3 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
           end
          " | source
 end
-

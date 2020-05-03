@@ -8,6 +8,7 @@
 - Ctrl-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
 - Improve Gradle completion
 - Fixed `pushd`'s behavior with respect to the directory stack when given an invalid argument
+- `fish_vi_cursor` can now be given a `$TERM` value as an argument, forcing it to enable cursor shape setting when `$TERM` contains that value
 
 ### Syntax changes and new commands
 
@@ -39,7 +40,7 @@
   - `windscribe`
   - `wireshark`, `tshark`, and `dumpcap`
   - `zopfli`, and `zopflipng`
-- fish no longer inserts a space after a completion ending in `.` or `,` was accepted (#6928). 
+- fish no longer inserts a space after a completion ending in `.` or `,` was accepted (#6928).
 - When pressing Tab, fish displays ambiguous completions even when they have a common prefix, without the user having to press Tab again (#6924).
 
 ### Deprecations and removed features

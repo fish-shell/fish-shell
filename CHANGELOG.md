@@ -8,7 +8,7 @@
 - Ctrl-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
 - Improve Gradle completion
 - Fixed `pushd`'s behavior with respect to the directory stack when given an invalid argument
-- `fish_vi_cursor` can now be given a `$TERM` value as an argument, forcing it to enable cursor shape setting when `$TERM` contains that value
+- A new variable, `$fish_vi_force_cursor`, has been added. This can be set to force `fish_vi_cursor` to attempt changing the cursor shape in vi mode, regardless of terminal. Additionally, the `fish_vi_cursor` option `--force-iterm` has been removed; all usages can be replaced by setting `$fish_vi_force_cursor`.
 
 ### Syntax changes and new commands
 

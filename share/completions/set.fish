@@ -56,6 +56,7 @@ function __fish_set_special_vars
     printf %s\t%s\n fish_escape_delay_ms "How long fish waits to distinguish escape and alt"
     printf %s\t%s\n fish_greeting "The message to display at start (also a function)"
     printf %s\t%s\n fish_history "The session id to store history under"
+    printf %s\t%s\n fish_trace "Enables execution tracing (if set to non-empty value)"
     printf %s\t%s\n fish_user_paths "A list of dirs to prepend to PATH"
     printf %s\t%s\n BROWSER "The browser to use"
 end

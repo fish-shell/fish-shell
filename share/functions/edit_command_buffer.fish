@@ -54,6 +54,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
             set -a editor --goto $f:$line:$col --wait
         case subl
             set -a editor $f:$line:$col --wait
+        case micro
+            set -a editor $f:$line:$col
         case '*'
             set -a editor $f
     end

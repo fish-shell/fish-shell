@@ -3802,8 +3802,8 @@ msgstr ""
 "interactive sera effacé\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:5
-msgid "Command history cleared!"
-msgstr "Historique de commande effacé !"
+msgid "Command history cleared!\\n"
+msgstr "Historique de commande effacé !\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:6
 msgid "You did not say 'yes' so I will not clear your command history\\n"

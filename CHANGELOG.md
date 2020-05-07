@@ -26,6 +26,7 @@
 - The default and example prompts print the correct exit status for commands prefixed with `not` (#6566).
 
 #### Improved terminal output
+- After clearing command history, success message ends in newline.
 
 #### Completions
 - Added completions for

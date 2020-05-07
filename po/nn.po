@@ -3559,7 +3559,7 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/history.fish:5
-msgid "Command history cleared!"
+msgid "Command history cleared!\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/history.fish:6

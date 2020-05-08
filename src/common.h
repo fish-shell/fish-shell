@@ -774,9 +774,7 @@ void redirect_tty_output();
 
 std::string get_path_to_tmp_dir();
 
-// Minimum allowed terminal size and default size if the detected size is not reasonable.
-#define MIN_TERM_COL 20
-#define MIN_TERM_ROW 2
+// Default terminal size
 #define DFLT_TERM_COL 80
 #define DFLT_TERM_ROW 24
 #define DFLT_TERM_COL_STR L"80"

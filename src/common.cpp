@@ -1764,8 +1764,7 @@ void common_handle_winch(int signal) {
     s_termsize_valid = false;
 }
 
-/// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
-/// sane and if not fallback to a default of 80x24.
+/// Validate the new terminal size. Fallback to the env vars if necessary.
 static void validate_new_termsize(struct winsize *new_termsize, const environment_t &vars) {
     if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
 #ifdef HAVE_WINSIZE
@@ -1790,17 +1789,6 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
                 new_termsize->ws_row = row;
             }
         }
-    }
-
-    if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
-        // Also highly hackisk.
-        if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
-            FLOGF(warning,
-                  _(L"Current terminal parameters set terminal size to unreasonable value."));
-            FLOGF(warning, _(L"Defaulting terminal size to 80x24."));
-        }
-        new_termsize->ws_col = DFLT_TERM_COL;
-        new_termsize->ws_row = DFLT_TERM_ROW;
     }
 }
 

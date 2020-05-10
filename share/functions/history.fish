@@ -183,7 +183,7 @@ function history --description "display or manipulate interactive command histor
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
             if test "$choice" = yes
                 builtin history clear -- $argv
-                and printf (_ "Command history cleared!")
+                and printf (_ "Command history cleared!\n")
             else
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end

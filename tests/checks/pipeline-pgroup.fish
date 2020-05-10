@@ -40,10 +40,11 @@ and echo "All pgroups agreed"
 or echo "Pgroups disagreed. Found $a0 $a1 $a2, and $b0 $b1 $b2"
 # CHECK: All pgroups agreed
 
+### DISABLED - this fails a lot on Travis
 # Ensure that eval retains pgroups - #6806.
 # Our regex will capture the first pgroup and use a positive lookahead on the second.
-$fth print_pgrp | tr \n ' ' 1>&2 | eval '$fth print_pgrp' 1>&2
-# CHECKERR: {{(\d+) (?=\1)\d+}}
+# $fth print_pgrp | tr \n ' ' 1>&2 | eval '$fth print_pgrp' 1>&2
+## CHECKERR: {{(\d+) (?=\1)\d+}}
 
 # Ensure that if a background job launches another background job, that they have different pgroups.
 # The pipeline here will arrange for the two pgroups to be printed on the same line, like:

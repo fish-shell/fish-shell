@@ -69,7 +69,7 @@
 #define HISTORY_OUTPUT_BUFFER_SIZE (64 * 1024)
 
 // The file access mode we use for creating history files
-static constexpr int history_file_mode = 0644;
+static constexpr int history_file_mode = 0600;
 
 // How many times we retry to save
 // Saving may fail if the file is modified in between our opening

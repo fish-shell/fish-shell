@@ -44,7 +44,7 @@ struct functions_cmd_opts_t {
     wchar_t *handlers_type = nullptr;
     wchar_t *description = nullptr;
 };
-static const wchar_t *const short_options = L":HDacd:ehnqv";
+static const wchar_t *const short_options = L":Ht:Dacd:ehnqv";
 static const struct woption long_options[] = {{L"erase", no_argument, nullptr, 'e'},
                                               {L"description", required_argument, nullptr, 'd'},
                                               {L"names", no_argument, nullptr, 'n'},

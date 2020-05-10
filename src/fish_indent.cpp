@@ -575,7 +575,7 @@ int main(int argc, char *argv[]) {
                 exit(0);
             }
             case 'v': {
-                std::fwprintf(stderr, _(L"%ls, version %s\n"), program_name, get_fish_version());
+                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_fish_version());
                 exit(0);
             }
             case 'w': {

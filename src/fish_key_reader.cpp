@@ -284,13 +284,12 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
                 break;
             }
             case 'h': {
-                print_help("fish_key_reader", 0);
-                error = true;
-                break;
+                print_help("fish_key_reader", 1);
+                exit(0);
             }
             case 'v': {
-                std::fwprintf(stdout, L"%s\n", get_fish_version());
-                return false;
+                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_fish_version());
+                exit(0);
             }
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.

@@ -8,6 +8,7 @@
 - Ctrl-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
 - Improve Gradle completion
 - Fixed `pushd`'s behavior with respect to the directory stack when given an invalid argument
+- The history file is now created with user-private permissions, matching other shells (#6926). The directory containing the history file remains private, so there should not have been any private date revealed.
 
 ### Syntax changes and new commands
 

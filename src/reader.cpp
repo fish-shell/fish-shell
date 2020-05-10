@@ -3762,13 +3762,14 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     std::string fd_contents;
     for (;;) {
         char buff[4096];
-        size_t amt = read(fd, buff, sizeof buff);
+        ssize_t amt = read(fd, buff, sizeof buff);
         if (amt > 0) {
             fd_contents.append(buff, amt);
         } else if (amt == 0) {
             // EOF.
             break;
         } else {
+            assert(amt == -1);
             int err = errno;
             if (err == EINTR) {
                 continue;

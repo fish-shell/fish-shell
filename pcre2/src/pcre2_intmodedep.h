@@ -618,6 +618,7 @@ here.) */
 typedef struct pcre2_real_code {
   pcre2_memctl memctl;            /* Memory control fields */
   const uint8_t *tables;          /* The character tables */
+  void    *executable_jit;        /* Pointer to JIT code */
   uint8_t  start_bitmap[32];      /* Bitmap for starting code unit < 256 */
   CODE_BLOCKSIZE_TYPE blocksize;  /* Total (bytes) that was malloc-ed */
   uint32_t magic_number;          /* Paranoid and endianness check */

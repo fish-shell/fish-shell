@@ -1,5 +1,6 @@
 /* config.h for CMake builds */
 
+#cmakedefine HAVE_ATTRIBUTE_UNINITIALIZED 1
 #cmakedefine HAVE_DIRENT_H 1
 #cmakedefine HAVE_INTTYPES_H 1    
 #cmakedefine HAVE_STDINT_H 1                                                   
@@ -10,7 +11,10 @@
 #cmakedefine HAVE_WINDOWS_H 1
 
 #cmakedefine HAVE_BCOPY 1
+#cmakedefine HAVE_MEMFD_CREATE 1
 #cmakedefine HAVE_MEMMOVE 1
+#cmakedefine HAVE_SECURE_GETENV 1
+#cmakedefine HAVE_STRERROR 1
 
 #cmakedefine PCRE2_STATIC 1
 

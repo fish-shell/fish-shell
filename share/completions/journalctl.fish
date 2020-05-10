@@ -54,3 +54,15 @@ complete -c journalctl -f -l setup-keys -d 'Generate Forward Secure Sealing key 
 complete -c journalctl -f -l interval -d 'Change interval for the sealing'
 complete -c journalctl -f -l verify -d 'Check journal for internal consistency'
 complete -c journalctl -f -l verify-key -d 'Specifies FSS key for --verify'
+complete -c journalctl -f -s r -l reverse -d "Reverse output to show newest entries first"
+complete -c journalctl -f -l utc -d "Express time in Coordinated Universal Time (UTC)"
+complete -c journalctl -f -l no-hostname -d "Don't show the hostname field"
+complete -c journalctl -f -s x -l catalog -d "Augment log lines with explanation texts from the message catalog"
+complete -c journalctl -f -l list-boots -d "Show a list of boot numbers, their IDs and timestamps"
+complete -c journalctl -f -s k -l dmesg -d "Show only kernel messages"
+complete -c journalctl -f -s N -l fields -d "Print all field names used in all entries of the journal"
+complete -c journalctl -f -l update-catalog -d "Update the message catalog index"
+complete -c journalctl -f -l sync -d "Write all unwritten journal data and sync journals"
+complete -c journalctl -f -l flush -d "Flush log data from /run/log/journal/ into /var/log/journal/"
+complete -c journalctl -f -l relinquish-var -d "Write to /run/log/journal/ instead of /var/log/journal/"
+complete -c journalctl -f -l rotate -d "Mark active journal files as archived and create new empty ones"

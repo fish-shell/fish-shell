@@ -976,6 +976,7 @@ def get_paths_from_man_locations():
             if IS_PY3:
                 output = output.decode("latin-1")
             parent_paths = output.strip().split(":")
+            break
         except (OSError, subprocess.CalledProcessError):
             continue
     # If we can't have the OS interpret $MANPATH, just use it as-is (gulp).

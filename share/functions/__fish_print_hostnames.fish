@@ -109,7 +109,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
             # Print hosts from system wide ssh configuration file
             # Multiple names for a single host can be given separated by spaces, so just split it explicitly (#6698).
-            string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' -- $contents | string split " " | string match -v '*\**'
+            string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' -- $contents | string split " " | string match -rv '[\*\?]'
             # Also extract known_host paths.
             set known_hosts $known_hosts (string replace -rfi '.*KnownHostsFile\s*' '' -- $contents)
         end

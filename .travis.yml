@@ -56,9 +56,6 @@ matrix:
             - libpcre2-dev
             - python
     - os: osx
-      before_install:
-        - brew update
-        - brew install pcre2 # use system PCRE2
   fast_finish: true
 
 script:

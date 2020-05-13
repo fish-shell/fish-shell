@@ -39,6 +39,7 @@
   - `gitk`
   - `nc`, `netcat`, `nc.openbsd`, `nc.traditional`
   - `nmap`, `ncat`
+  - `sphinx-apidoc`, `sphinx-autogen`, `sphinx-build` and `sphinx-quickstart`
   - `tcpdump`
   - `tig`
   - `windscribe`

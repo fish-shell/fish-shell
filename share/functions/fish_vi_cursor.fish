@@ -53,7 +53,10 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         end
 
         # HACK: Explicitly disable on ITERM because of #3696, which is weirdness with multi-line prompts.
-        if set -q ITERM_PROFILE
+        # --force-iterm is now deprecated; set $fish_vi_force_cursor instead
+        if contains -- $argv[1] --force-iterm
+            set -e argv[1]
+        else if set -q ITERM_PROFILE
             return
         end
     end

@@ -33,6 +33,7 @@
 #### Completions
 - Added completions for
   - `asciidoctor`
+  - `cmark`
   - `dhclient`
   - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
   - `gitk`

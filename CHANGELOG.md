@@ -32,6 +32,7 @@
 
 #### Completions
 - Added completions for
+  - `asciidoctor`
   - `dhclient`
   - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
   - `gitk`
@@ -42,7 +43,7 @@
   - `windscribe`
   - `wireshark`, `tshark`, and `dumpcap`
   - `zopfli`, and `zopflipng`
-- fish no longer inserts a space after a completion ending in `.` or `,` was accepted (#6928). 
+- fish no longer inserts a space after a completion ending in `.` or `,` was accepted (#6928).
 - When pressing Tab, fish displays ambiguous completions even when they have a common prefix, without the user having to press Tab again (#6924).
 
 ### Deprecations and removed features

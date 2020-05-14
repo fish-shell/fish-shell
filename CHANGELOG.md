@@ -8,6 +8,7 @@
 - Ctrl-C no longer kills background jobs for which job control is disabled, matching POSIX semantics (#6828).
 - Improve Gradle completion
 - Fixed `pushd`'s behavior with respect to the directory stack when given an invalid argument
+- A new variable, `$fish_vi_force_cursor`, has been added. This can be set to force `fish_vi_cursor` to attempt changing the cursor shape in vi mode, regardless of terminal. Additionally, the `fish_vi_cursor` option `--force-iterm` has been deprecated; all usages can be replaced by setting `$fish_vi_force_cursor`.
 - The history file is now created with user-private permissions, matching other shells (#6926). The directory containing the history file remains private, so there should not have been any private date revealed.
 
 ### Syntax changes and new commands

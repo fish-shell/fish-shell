@@ -34,7 +34,7 @@ complete -c journalctl -f -s a -l all -d 'Show all fields in full'
 complete -c journalctl -f -s f -l follow -d 'Show live tail of entries'
 complete -c journalctl -f -s n -l lines -d 'Controls the number of journal lines'
 complete -c journalctl -f -l no-tail -d 'Show all lines, even in follow mode'
-complete -c journalctl -f -s o -l output -d 'Controls the formatting' -xa 'short short-monotonic verbose export json json-pretty json-sse cat'
+complete -c journalctl -f -s o -l output -d 'Controls the formatting' -xa '(journalctl --output=help | while read style; echo -e "$style\t"; end)'
 complete -c journalctl -f -s q -l quiet -d 'Suppress warning about normal user'
 complete -c journalctl -f -s m -l merge -d 'Show entries interleaved from all journals'
 
@@ -45,7 +45,7 @@ complete -c journalctl -f -s p -l priority -d 'Filter by priority' -xa 'emerg 0 
 complete -c journalctl -f -s c -l cursor -d 'Start from the passing cursor'
 complete -c journalctl -f -l since -d 'Entries on or newer than DATE' -xa 'yesterday today tomorrow now'
 complete -c journalctl -f -l until -d 'Entries on or older than DATE' -xa 'yesterday today tomorrow now'
-complete -c journalctl -f -s F -l field -d 'Print all possible data values'
+complete -c journalctl -f -s F -l field -d 'Print all possible data values of FIELD' -xa '(journalctl --fields | while read field; echo -e "$field\t"; end)'
 complete -c journalctl -f -s D -l directory -d 'Specify journal directory' -xa "(__fish_complete_directories)"
 complete -c journalctl -f -l new-id128 -d 'Generate a new 128 bit ID'
 complete -c journalctl -f -l header -d 'Show internal header information'
@@ -68,8 +68,8 @@ complete -c journalctl -f -l relinquish-var -d "Write to /run/log/journal/ inste
 complete -c journalctl -f -l smart-relinquish-var -d "Similar to --relinquish-var"
 complete -c journalctl -f -l rotate -d "Mark active journal files as archived and create new empty ones"
 complete -c journalctl -f -l output-fields -d "List of fields to be included in the output"
-complete -c journalctl -f -s t -l identifier -d "Show messages for specified syslog identifier"
-complete -c journalctl -f -l user-unit -d "Show messages for the specified user session unit"
+complete -c journalctl -f -s t -l identifier -d "Show messages for specified syslog identifier" -xa '(journalctl -F SYSLOG_IDENTIFIER | while read id; echo -e "$id\t"; end)'
+complete -c journalctl -f -l user-unit -d "Show messages for the specified user session unit" -xa '(journalctl -F _SYSTEMD_USER_UNIT | while read unit; echo -e "$unit\t"; end)'
 complete -c journalctl -f -l facility -d "Filter output by syslog facility"
 complete -c journalctl -f -s g -l grep -d "Show entries where MESSAGE field matches regex"
 complete -c journalctl -f -l case-sensitive -d "Toggle pattern matching case sensitivity"

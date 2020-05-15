@@ -302,6 +302,11 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 } else {
                     activate_flog_categories_by_pattern(str2wcstring(optarg));
                 }
+                for (auto cat : get_flog_categories()) {
+                    if (cat->enabled) {
+                        printf("Debug enabled for category: %ls\n", cat->name);
+                    }
+                }
                 break;
             }
             case 'o': {

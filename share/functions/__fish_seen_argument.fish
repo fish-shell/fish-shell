@@ -1,7 +1,7 @@
 function __fish_seen_argument
     argparse 's/short=+' 'o/old=+' 'l/long=+' -- $argv
 
-    set cmd (commandline -co)
+    set -l cmd (commandline -co)
     set -e cmd[1]
     for t in $cmd
         for s in $_flag_s

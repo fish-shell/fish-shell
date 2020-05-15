@@ -35,7 +35,7 @@ function realpath -d "return an absolute path without symlinks"
 
     # We don't implement any of the other flags so if any are set it's an error.
     if string match -q '_flag_*' -- (set -l)
-        set flags (set -l | string replace --filter _flag_ '')
+        set -l flags (set -l | string replace --filter _flag_ '')
         printf (_ "%s: These flags are not allowed by fish realpath: '%s'") realpath "$flags" >&2
         echo >&2
         __fish_print_help realpath

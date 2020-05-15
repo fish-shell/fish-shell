@@ -25,7 +25,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
     set -l options_with_param $argv
 
     if not string length -q -- $subcommand
-        set cmd (commandline -cop) (commandline -ct)
+        set -l cmd (commandline -cop) (commandline -ct)
         while set -q cmd[1]
             set -l token $cmd[1]
             set -e cmd[1]

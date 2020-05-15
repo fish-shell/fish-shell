@@ -113,8 +113,8 @@ function __fish_print_packages
         set -l cache_file $xdg_cache_home/.yum-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set max_age 21600
+            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set -l max_age 21600
             if test $age -lt $max_age
                 return
             end
@@ -135,8 +135,8 @@ function __fish_print_packages
         set -l cache_file $xdg_cache_home/.rpm-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set max_age 250
+            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set -l max_age 250
             if test $age -lt $max_age
                 return
             end
@@ -158,8 +158,8 @@ function __fish_print_packages
             set -l cache_file $xdg_cache_home/.eopkg-installed-cache.$USER
             if test -f $cache_file
                 cat $cache_file
-                set age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set max_age 500
+                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set -l max_age 500
                 if test $age -lt $max_age
                     return
                 end
@@ -172,8 +172,8 @@ function __fish_print_packages
             set -l cache_file $xdg_cache_home/.eopkg-available-cache.$USER
             if test -f $cache_file
                 cat $cache_file
-                set age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set max_age 500
+                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set -l max_age 500
                 if test $age -lt $max_age
                     return
                 end

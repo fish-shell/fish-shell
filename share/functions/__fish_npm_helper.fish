@@ -38,7 +38,7 @@ function __yarn_filtered_list_packages
 end
 
 function __yarn_find_package_json
-    set parents (__fish_parent_directories (pwd -P))
+    set -l parents (__fish_parent_directories (pwd -P))
 
     for p in $parents
         if test -f "$p/package.json"

@@ -65,7 +65,7 @@ function trap -d 'Perform an action when the shell receives a signal'
 
             for i in $argv
                 set -l sig (__trap_translate_signal $i)
-                set sw (__trap_switch $sig)
+                set -l sw (__trap_switch $sig)
 
                 if test -n "$sig"
                     echo "function __trap_handler_$sig $sw; $cmd; end" | source

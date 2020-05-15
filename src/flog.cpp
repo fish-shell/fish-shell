@@ -88,10 +88,15 @@ using namespace flog_details;
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 static void apply_one_wildcard(const wcstring &wc_esc, bool sense) {
     wcstring wc = parse_util_unescape_wildcards(wc_esc);
+    bool match_found = false;
     for (category_t *cat : s_all_categories) {
         if (wildcard_match(cat->name, wc)) {
             cat->enabled = sense;
+            match_found = true;
         }
+    }
+    if (!match_found) {
+        fprintf(stderr, "Failed to match debug category: %ls\n", wc_esc.c_str());
     }
 }
 

@@ -26,7 +26,7 @@ function funced --description 'Edit function definition'
         return 1
     end
 
-    set funcname $argv[1]
+    set -l funcname $argv[1]
 
     # Check VISUAL first since theoretically EDITOR could be ed.
     set -l editor

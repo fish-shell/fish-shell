@@ -6,12 +6,12 @@
 
 # We don't include "missingInclude" as that doesn't find our config.h.
 # Missing includes will quickly be found by... compiling the thing anyway.
-set cppchecks warning,performance,portability,information #,missingInclude
-set cppcheck_args
-set c_files
-set all no
-set kernel_name (uname -s)
-set machine_type (uname -m)
+set -l cppchecks warning,performance,portability,information #,missingInclude
+set -l cppcheck_args
+set -l c_files
+set -l all no
+set -l kernel_name (uname -s)
+set -l machine_type (uname -m)
 
 argparse a/all p/project= -- $argv
 
@@ -42,7 +42,7 @@ else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
     # Select (cached files) (modified but not cached, and untracked files)
-    set files (git diff-index --cached HEAD --name-only)
+    set -l files (git diff-index --cached HEAD --name-only)
     set files $files (git ls-files --exclude-standard --others --modified)
     if not set -q files[1]
         # No pending changes so lint the files in the most recent commit.

@@ -161,7 +161,7 @@ function __rustup_common_suffix
     set -l suffix
     set -l done 0
     while test $done -eq 0 -a $length -le $min_length
-        set match (string match -r -- ".{$length}\$" "$argv[1]")
+        set -l match (string match -r -- ".{$length}\$" "$argv[1]")
         for arg in $argv[2..-1]
             set -l value (string match -r -- ".{$length}\$" "$arg")
             if test "$value" = "$match"

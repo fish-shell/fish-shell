@@ -76,6 +76,7 @@ function fish_prompt
 
     set -l cwd $cyan(basename (prompt_pwd))
 
+    set -l repo_info
     if set -l repo_type (_repo_type)
         set -l repo_branch $red(_repo_branch_name $repo_type)
         set repo_info "$blue $repo_type:($repo_branch$blue)"

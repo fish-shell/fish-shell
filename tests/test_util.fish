@@ -138,10 +138,10 @@ end
 for program in {g,}date
     if command -q $program && $program --version 1>/dev/null 2>/dev/null
         set -g milli $program
-        set unit ms
+        set -g unit ms
         break
     else
-        set unit sec
+        set -g unit sec
     end
 end
 

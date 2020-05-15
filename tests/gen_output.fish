@@ -8,9 +8,9 @@
 #
 
 for i in $argv
-    set template_out (basename $i .in).out
-    set template_err (basename $i .in).err
-    set template_status (basename $i .in).status
+    set -l template_out (basename $i .in).out
+    set -l template_err (basename $i .in).err
+    set -l template_status (basename $i .in).status
 
     fish <$i >$template_out 2>$template_err
     echo $status >$template_status

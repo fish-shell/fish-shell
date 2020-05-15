@@ -566,7 +566,7 @@ git config -z --get-regexp 'alias\..*' | while read -lz alias command _
     # so we skip them here.
     string match -q '!*' -- $command; and continue
     # Git aliases can contain chars that variable names can't - escape them.
-    set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
+    set -l alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command
 end
 
@@ -586,7 +586,7 @@ function __fish_git_using_command
 end
 
 function __fish_git_stash_using_command
-    set cmd (commandline -opc)
+    set -l cmd (commandline -opc)
     __fish_git_using_command stash
     or return 2
     # The word after the stash command _must_ be the subcommand
@@ -600,7 +600,7 @@ function __fish_git_stash_using_command
 end
 
 function __fish_git_stash_not_using_subcommand
-    set cmd (commandline -opc)
+    set -l cmd (commandline -opc)
     __fish_git_using_command stash
     or return 2
     set cmd $cmd[(contains -i -- "stash" $cmd)..-1]

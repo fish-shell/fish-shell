@@ -1,4 +1,5 @@
 function __fish_complete_abook_formats --description 'Complete abook formats'
+    set -l format
     abook --formats | while read -l x
         switch $x
             case "input formats:"

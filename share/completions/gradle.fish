@@ -6,14 +6,15 @@ function __fish_gradle_contains_build_file
 end
 
 function __fish_gradle_create_completion_cache_file
+    set -l xdg_cache_home $XDG_CACHE_HOME
     # Set up cache directory
-    if test -z "$XDG_CACHE_HOME"
-        set XDG_CACHE_HOME $HOME/.cache
+    if test -z "$xdg_cache_home"
+        set xdg_cache_home $HOME/.cache
     end
-    mkdir -m 700 -p "$XDG_CACHE_HOME/gradle-completions"
+    mkdir -m 700 -p "$xdg_cache_home/gradle-completions"
 
     set -l md5Hash (__fish_md5 -s $argv[1] | string replace -r '.* = ' '')
-    string trim -- "$XDG_CACHE_HOME/gradle-completions/$md5Hash"
+    string trim -- "$xdg_cache_home/gradle-completions/$md5Hash"
 end
 
 ##############################

@@ -1,7 +1,6 @@
 function __fish_complete_apropos
     if test (commandline -ct)
-        set str (commandline -ct)
-        switch $str
+        switch (commandline -ct)
             case '-**'
 
             case '*'

@@ -26,8 +26,8 @@ set -l rust_docs (rustc -C help \
     | string match -r '^.*[^:]$')
 
 for line in $rust_docs
-    set docs (string split -m 1 ' ' $line)
-    set flag (string replace -r '^([a-z\-]+\=|[a-z\-]+)(.*)' '$1' \
+    set -l docs (string split -m 1 ' ' $line)
+    set -l flag (string replace -r '^([a-z\-]+\=|[a-z\-]+)(.*)' '$1' \
                                 $docs[1])
     complete -c rustc -x -s C -l codegen -a (string escape -- "$flag") -d "$docs[2]"
 end
@@ -40,8 +40,8 @@ if rustc +nightly >/dev/null 2>&1
         | string match -r '^.*[^:]$')
 
     for line in $rust_docs
-        set docs (string split -m 1 ' ' $line)
-        set flag (string replace -r '^([a-z\-]+\=|[a-z\-]+)(.*)' '$1' \
+        set -l docs (string split -m 1 ' ' $line)
+        set -l flag (string replace -r '^([a-z\-]+\=|[a-z\-]+)(.*)' '$1' \
                                        $docs[1])
         complete -c rustc -x -s Z -a (string escape -- "$flag") -d "$docs[2]"
     end
@@ -57,7 +57,7 @@ set -l rust_docs (rustc -W help  \
     | string match -r -v '^([a-z\-]+)(\s+)(allow|warn|deny|forbid)')
 
 for line in $rust_docs
-    set docs (string split -m 1 ' ' $line)
+    set -l docs (string split -m 1 ' ' $line)
     complete -c rustc -x -s W -l warn -a (string escape -- "$docs[1]") -d "$docs[2]"
     complete -c rustc -x -s A -l allow -a (string escape -- "$docs[1]") -d "$docs[2]"
     complete -c rustc -x -s D -l deny -a (string escape -- "$docs[1]") -d "$docs[2]"

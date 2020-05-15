@@ -13,7 +13,7 @@ function __minikube_no_command
 end
 
 function __minikube_using_command
-    set cmd (commandline -poc)
+    set -l cmd (commandline -poc)
 
     if test (count $cmd) -gt (count $argv)
         set -e cmd[1]
@@ -25,8 +25,8 @@ function __minikube_using_command
 end
 
 function __minikube_using_option
-    set cmd (commandline -poc)
-    set query "("(string join -- "|" (string escape --style=regex $argv))")"
+    set -l cmd (commandline -poc)
+    set -l query "("(string join -- "|" (string escape --style=regex $argv))")"
 
     if test (count $cmd) -gt 1
         if string match -qr -- $query $cmd[-1]
@@ -37,7 +37,7 @@ function __minikube_using_option
 end
 
 function __minikube_using_option_value -a option -a value
-    set cmd (commandline -poc)
+    set -l cmd (commandline -poc)
 
     if test (count $cmd) -gt 1
         string match -qr -- (string escape --style=regex $option)"[= ]"(string escape --style=regex $value) "$cmd"

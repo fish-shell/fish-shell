@@ -2,10 +2,12 @@
 # author: Acidhub - https://acidhub.click/
 
 function fish_prompt -d "Write out the prompt"
-    set laststatus $status
+    set -l laststatus $status
 
+    set -l git_info
     if set -l git_branch (command git symbolic-ref HEAD 2>/dev/null | string replace refs/heads/ '')
         set git_branch (set_color -o blue)"$git_branch"
+        set -l git_status
         if command git diff-index --quiet HEAD --
             if set -l count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)
                 echo $count | read -l ahead behind

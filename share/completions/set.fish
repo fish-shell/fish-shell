@@ -13,7 +13,7 @@ set -g __fish_locale_vars LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETAR
 #
 
 function __fish_set_is_color -d 'Test if We are specifying a color value for the prompt'
-    set cmd (commandline -poc)
+    set -l cmd (commandline -poc)
     set -e cmd[1]
     for i in $cmd
         switch $i
@@ -31,7 +31,7 @@ function __fish_set_is_color -d 'Test if We are specifying a color value for the
 end
 
 function __fish_set_is_locale -d 'Test if We are specifying a locale value for the prompt'
-    set cmd (commandline -poc)
+    set -l cmd (commandline -poc)
     set -e cmd[1]
     for i in $cmd
         switch $i

@@ -1,6 +1,6 @@
 #! /usr/bin/env fish
 
-set TAG $argv[1]
+set -l TAG $argv[1]
 
 if test -z "$TAG"
     echo "Tag name required."

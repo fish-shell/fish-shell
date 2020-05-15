@@ -3,11 +3,11 @@
 # This runs C++ files and fish scripts (*.fish) through their respective code
 # formatting programs.
 #
-set git_clang_format no
-set c_files
-set fish_files
-set python_files
-set all no
+set -l git_clang_format no
+set -l c_files
+set -l fish_files
+set -l python_files
+set -l all no
 
 if test "$argv[1]" = --all
     set all yes
@@ -20,7 +20,7 @@ if set -q argv[1]
 end
 
 if test $all = yes
-    set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
+    set -l files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
     if set -q files[1]
         echo
         echo You have uncommitted changes. Cowardly refusing to restyle the entire code base.
@@ -34,7 +34,7 @@ else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.
     # Select (cached files) (modified but not cached, and untracked files)
-    set files (git diff-index --cached HEAD --name-only) (git ls-files --exclude-standard --others --modified)
+    set -l files (git diff-index --cached HEAD --name-only) (git ls-files --exclude-standard --others --modified)
     if set -q files[1]
         set git_clang_format yes
     else

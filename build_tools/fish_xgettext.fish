@@ -16,11 +16,11 @@ xgettext -k -k_ -kN_ -LC++ --no-wrap -o messages.pot src/*.cpp src/*.h
 
 # This regex handles descriptions for `complete` and `function` statements. These messages are not
 # particularly important to translate. Hence the "implicit" label.
-set implicit_regex '(?:^| +)(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
+set -l implicit_regex '(?:^| +)(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
 
 # This regex handles explicit requests to translate a message. These are more important to translate
 # than messages which should be implicitly translated.
-set explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
+set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
 
 rm -r /tmp/fish
 

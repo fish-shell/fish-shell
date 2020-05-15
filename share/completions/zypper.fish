@@ -43,7 +43,7 @@ function __fish_zypper_print_repos
     # Because spaces and special characters are allowed in repo aliases (bad
     # practice though, but allowed), it's impossible to parse the aliases from
     # zypper's output correctly. So we fetch them from the repo files.
-    set repos (cat /etc/zypp/repos.d/*.repo | string replace -rf '^\[(.+)\]$' '$1')
+    set -l repos (cat /etc/zypp/repos.d/*.repo | string replace -rf '^\[(.+)\]$' '$1')
     # Then use the aliases to match their names from zypper's output.
     string replace -rf '^[\d\s]+\| ('(string escape -n $repos | string join \|)') +\| (.+)\s+\|.*\|.*\|.*$' '$1\t$2' -- $zypper_lr
 end

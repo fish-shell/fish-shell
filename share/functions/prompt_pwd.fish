@@ -13,7 +13,7 @@ function prompt_pwd --description "Print the current working directory, shortene
     or set -l fish_prompt_pwd_dir_length 1
 
     # Replace $HOME with "~"
-    set realhome ~
+    set -l realhome ~
     set -l tmp (string replace -r '^'"$realhome"'($|/)' '~$1' $PWD)
 
     if [ $fish_prompt_pwd_dir_length -eq 0 ]

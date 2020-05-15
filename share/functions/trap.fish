@@ -1,7 +1,7 @@
 # This defines a compatibility shim for the `trap` command found in other shells like bash and zsh.
 
 function __trap_translate_signal
-    set upper (echo $argv[1]|tr a-z A-Z)
+    set -l upper (echo $argv[1]|tr a-z A-Z)
     string replace -r '^SIG' '' -- $upper
 end
 

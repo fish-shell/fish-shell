@@ -1,7 +1,7 @@
 
 function __fish_get_vmctl_vms
     for line in (vmctl status | string match -e -v "MAXMEM")
-        set a (string split " " $line)
+        set -l a (string split " " $line)
         and printf "%s " $a[-1]
     end
 end

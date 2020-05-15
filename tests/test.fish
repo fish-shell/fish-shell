@@ -12,6 +12,7 @@ set -x FISH_UNIT_TESTS_RUNNING 1
 cd (dirname (status -f))
 
 # Test files specified on commandline, or all checks.
+set -l files_to_test
 if set -q argv[1]
     set files_to_test checks/$argv.fish
 else

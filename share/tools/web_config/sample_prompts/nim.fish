@@ -32,8 +32,8 @@ function fish_prompt
 
     function _nim_prompt_wrapper
         set retc $argv[1]
-        set field_name $argv[2]
-        set field_value $argv[3]
+        set -l field_name $argv[2]
+        set -l field_value $argv[3]
 
         set_color normal
         set_color $retc
@@ -107,7 +107,7 @@ function fish_prompt
     and _nim_prompt_wrapper $retc V (basename "$VIRTUAL_ENV")
 
     # git
-    set prompt_git (fish_git_prompt | string trim -c ' ()')
+    set -l prompt_git (fish_git_prompt | string trim -c ' ()')
     test -n "$prompt_git"
     and _nim_prompt_wrapper $retc G $prompt_git
 

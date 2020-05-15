@@ -18,6 +18,7 @@
 
 #include "common.h"
 #include "maybe.h"
+#include "safe_strerror.h"
 
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.
 int set_cloexec(int fd, bool should_set = true);
@@ -61,9 +62,6 @@ void wperror(const wchar_t *s);
 
 /// Async-safe version of perror().
 void safe_perror(const char *message);
-
-/// Async-safe version of std::strerror().
-const char *safe_strerror(int err);
 
 /// Wide character version of getcwd().
 wcstring wgetcwd();

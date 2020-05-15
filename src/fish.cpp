@@ -401,6 +401,7 @@ int main(int argc, char **argv) {
     int my_optind = 0;
 
     program_name = L"fish";
+    errno_list_init();
     set_main_thread();
     setup_fork_guards();
     signal_unblock_all();
@@ -536,6 +537,7 @@ int main(int argc, char **argv) {
     if (debug_output) {
         fclose(debug_output);
     }
+    errno_list_free();
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit
 }

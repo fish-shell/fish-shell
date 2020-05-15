@@ -29,7 +29,7 @@ function __fish_iptables_user_chains
         set tablearg "--table=$table"
     end
     # This only works as root, so ignore errors
-    iptables $tablearg -L 2>/dev/null | string match '*Chain*' | while read a b c
+    iptables $tablearg -L 2>/dev/null | string match '*Chain*' | while read -l a b c
         echo $b
     end
 end
@@ -78,7 +78,7 @@ end
 
 function __fish_iptables_has_chain
     # Remove descriptions
-    set -l chains (__fish_iptables_chains | string split -m1 "    " | while read a b; echo $a; end)
+    set -l chains (__fish_iptables_chains | string split -m1 "    " | while read -l a b; echo $a; end)
     set -l cmdline (commandline -op)
     for c in $chains
         if contains -- $c $cmdline

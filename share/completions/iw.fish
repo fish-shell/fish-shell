@@ -6,7 +6,7 @@ set -l iw_commands dev phy reg event features commands list
 # wdev not supported since it is barely documented
 
 function __fish_iw_device
-    __fish_print_interfaces | while read i
+    __fish_print_interfaces | while read -l i
         printf '%s\t%s\n' $i Device
     end
 end

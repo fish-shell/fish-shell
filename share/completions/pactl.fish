@@ -38,7 +38,7 @@ end
 function __fish_pa_complete_unloaded_modules
     # We need to get just the module names
     set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
-    pulseaudio --dump-modules | while read name description
+    pulseaudio --dump-modules | while read -l name description
         # This is a potential source of slowness, but on my system it's instantaneous
         # with 73 modules
         if not contains -- $name $loaded

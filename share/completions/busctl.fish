@@ -111,7 +111,7 @@ end
 
 function __fish_busctl_signature -a busname -a object -a interface -a member
     __fish_busctl introspect --list $busname $object $interface \
-        | string match ".$member *" | while read a b c d
+        | string match ".$member *" | while read -l a b c d
         echo $c
     end
 end

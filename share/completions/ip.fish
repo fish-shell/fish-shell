@@ -176,7 +176,7 @@ function __fish_ip_commandwords
 end
 
 function __fish_ip_device
-    ip -o link show | while read a b c
+    ip -o link show | while read -l a b c
         printf '%s\t%s\n' (string replace ':' '' -- $b) Device
     end
 end
@@ -195,7 +195,7 @@ function __fish_ip_scope
 end
 
 function __fish_ip_netns_list
-    ip netns list | while read a b c
+    ip netns list | while read -l a b c
         echo -- $a
     end
 end
@@ -264,7 +264,7 @@ function __fish_complete_ip
                     case delete
                         switch $count
                             case 3
-                                ip -o addr show | while read a b c d e
+                                ip -o addr show | while read -l a b c d e
                                     echo $d
                                 end
                             case 4
@@ -276,7 +276,7 @@ function __fish_complete_ip
                             case 5
                                 switch $cmd[-2]
                                     case dev
-                                        ip -o addr show | string match "*$cmd[3]*" | while read a b c
+                                        ip -o addr show | string match "*$cmd[3]*" | while read -l a b c
                                             echo $b
                                         end
                                         # TODO: Moar

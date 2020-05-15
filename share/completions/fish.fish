@@ -6,7 +6,7 @@ complete -c fish -s n -l no-execute -d "Only parse input, do not execute"
 complete -c fish -s i -l interactive -d "Run in interactive mode"
 complete -c fish -s l -l login -d "Run as a login shell"
 complete -c fish -s p -l profile -d "Output profiling information to specified file" -r
-complete -c fish -s d -l debug -d "Specify verbosity level" -x -a "0\t'Warnings silenced'
+complete -c fish -s d -l debug -d "Specify debug categories" -x -a "0\t'Warnings silenced'
 1\t'Default'
 2\t'Basic debug output'
 3\t'More debug output'

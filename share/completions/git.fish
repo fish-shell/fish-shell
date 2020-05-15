@@ -136,6 +136,8 @@ function __fish_git_files
     and set -l untracked_desc "Untracked file"
     contains -- modified-staged $argv; or set -ql all_staged; and set -l modified_staged
     and set -l staged_modified_desc "Staged modified file"
+    contains -- modified-staged-deleted $argv; or set -ql modified_staged; and set -l modified_staged_deleted
+    and set -l modified_staged_deleted_desc "Staged modified and deleted file"
     contains -- deleted $argv; and set -l deleted
     and set -l deleted_desc "Deleted file"
     contains -- deleted-staged $argv; or set -ql all_staged; and set -l deleted_staged
@@ -260,6 +262,10 @@ function __fish_git_files
                     set -ql modified
                     and set file "$line[9..-1]"
                     and set desc $modified_desc
+                case '1 MD*'
+                    set -ql modified_staged_deleted
+                    and set file "$line[9..-1]"
+                    and set desc $modified_staged_deleted_desc
                 case '1 M.*'
                     # If the character is first ("M."), then that means it's "our" change,
                     # which means it is staged.
@@ -1011,7 +1017,7 @@ complete -f -c git -n '__fish_git_using_command clone' -l recursive -d 'Initiali
 ### commit
 complete -c git -n __fish_git_needs_command -a commit -d 'Record changes to the repository'
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
-complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_files modified)'
+complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_files modified deleted modified-staged-deleted untracked)'
 complete -c git -n '__fish_git_using_command commit' -s a -l all -d 'Automatically stage modified and deleted files'
 complete -c git -n '__fish_git_using_command commit' -s p -l patch -d 'Use interactive patch selection interface'
 complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'

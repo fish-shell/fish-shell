@@ -18,7 +18,6 @@ function help --description 'Show help for the fish shell'
         end
     end
 
-    #
     # Find a suitable browser for viewing the help pages.
     # The first thing we try is $fish_help_browser.
     set -l fish_browser $fish_help_browser
@@ -112,6 +111,7 @@ function help --description 'Show help for the fish shell'
         end
     end
 
+    set -l fish_help_page
     switch "$fish_help_item"
         case "."
             set fish_help_page "cmds/source.html"
@@ -119,6 +119,8 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "index.html#expand"
         case (__fish_print_commands)
             set fish_help_page "cmds/$fish_help_item.html"
+        case 'completion-*'
+            set fish_help_page "completions.html#$fish_help_item"
         case 'tut_*'
             set fish_help_page "tutorial.html#"(string sub -s 5 -- $fish_help_item | string replace -a -- _ -)
         case tutorial

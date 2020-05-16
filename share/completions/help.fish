@@ -2,7 +2,7 @@ if test -d "$__fish_data_dir/man/man1/"
     complete -c help -x -a '(__fish_print_commands)' -d 'Help for this command'
 end
 
-# Help topics
+# Help topics in index.html
 # This was semi-automated with `grep 'class="anchor"' -A1 /usr/share/doc/fish/index.html
 # It's not fully automated since that requires parsing html with regex,
 # and since this is by definition in sync - we ship the html, and we ship these completions.
@@ -11,12 +11,7 @@ complete -c help -x -a builtin-overview -d 'Builtin commands'
 complete -c help -x -a cartesian-product -d 'Cartesian Products'
 complete -c help -x -a color -d 'Setting syntax highlighting colors'
 complete -c help -x -a combine -d 'Combining different expansions'
-complete -c help -x -a completion -d 'How tab-completion works'
-complete -c help -x -a completion-func -d 'Useful functions for writing completions'
-complete -c help -x -a completion-own -d 'Writing your own completions'
-complete -c help -x -a completion-path -d 'Where to put completions'
 complete -c help -x -a debugging -d 'Debugging fish scripts'
-complete -c help -x -a docs -d Help
 complete -c help -x -a editor -d 'Command line editor'
 complete -c help -x -a emacs-mode -d 'Emacs mode commands'
 complete -c help -x -a escapes -d 'Escaping characters'
@@ -56,9 +51,10 @@ complete -c help -x -a syntax-function-autoloading -d 'Autoloading functions'
 complete -c help -x -a syntax-function-wrappers -d 'Defining aliases'
 complete -c help -x -a syntax-job-control -d 'Job control'
 complete -c help -x -a syntax-words -d 'Some common words'
+complete -c help -x -a tab-completion -d 'How tab-completion works'
 complete -c help -x -a title -d 'Programmable title'
 complete -c help -x -a variables -d 'Shell variables'
-complete -c help -x -a variables-arrays -d Arrays
+complete -c help -x -a variables-lists -d Lists
 complete -c help -x -a variables-color -d 'Variables for changing highlighting colors'
 complete -c help -x -a variables-export -d 'Exporting variables'
 complete -c help -x -a variables-functions -d 'Variable scope for functions'
@@ -71,6 +67,11 @@ complete -c help -x -a vi-mode -d 'Vi mode commands'
 complete -c help -x -a vi-mode-command -d 'Command mode'
 complete -c help -x -a vi-mode-insert -d 'Insert mode'
 complete -c help -x -a vi-mode-visual -d 'Visual mode'
+
+# Completions
+complete -c help -x -a completion-own -d 'Writing your own completions'
+complete -c help -x -a completion-func -d 'Useful functions for writing completions'
+complete -c help -x -a completion-path -d 'Where to put completions'
 
 # Tutorial
 complete -c help -x -a tutorial -d Tutorial

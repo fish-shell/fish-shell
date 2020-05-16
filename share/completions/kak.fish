@@ -1,10 +1,11 @@
+# Kakoune editor - https://kakoune.org/
 complete -c kak -o c -x -a '(command kak -l)' -d 'connect to given session'
 complete -c kak -o e -x -d 'execute argument on client initialisation'
 complete -c kak -o E -x -d 'execute argument on server initialisation'
 complete -c kak -o n -d 'do not source kakrc files on startup'
 complete -c kak -o s -x -d 'set session name'
 complete -c kak -o d -d 'run as a headless session (requires -s)'
-complete -c kak -o p -x -d 'just send stdin as commands to the given session'
+complete -c kak -o p -x -a '(command kak -l)' -d 'just send stdin as commands to the given session'
 complete -c kak -o f -x -d 'filter: for each file, select the entire buffer and execute the given keys'
 complete -c kak -o i -x -d 'backup the files o nwhich a filter is applied using the given suffix'
 complete -c kak -o q -d 'in filter mode be quiet about errors applying keys'

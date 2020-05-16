@@ -636,6 +636,15 @@ static struct termios terminal_mode_on_startup;
 /// Mode we use to execute programs.
 static struct termios tty_modes_for_external_cmds;
 
+/// Restore terminal settings we care about, to prevent a broken shell.
+static void term_fix_modes(struct termios *modes) {
+    modes->c_iflag &= ~ICRNL;  // disable mapping CR (\cM) to NL (\cJ)
+    modes->c_iflag &= ~INLCR;  // disable mapping NL (\cJ) to CR (\cM)
+    modes->c_lflag &= ~ICANON;  // turn off canonical mode
+    modes->c_lflag &= ~ECHO;    // turn off echo mode
+    modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
+}
+
 /// Tracks a currently pending exit. This may be manipulated from a signal handler.
 
 /// Whether we should exit the current reader loop.
@@ -666,6 +675,14 @@ static void term_donate(outputter_t &outp) {
 
 /// Grab control of terminal.
 static void term_steal() {
+    // Copy the (potentially changed) terminal modes and use them from now on.
+    // This is where we could check them for obvious problems,
+    // but we haven't really done so - we use the modes fish is started with for
+    // external commands.
+    struct termios modes;
+    tcgetattr(STDIN_FILENO, &modes);
+    std::memcpy(&tty_modes_for_external_cmds, &modes,
+                sizeof tty_modes_for_external_cmds);
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
@@ -1085,20 +1102,17 @@ void reader_init() {
     // Set the mode used for program execution, initialized to the current mode.
     std::memcpy(&tty_modes_for_external_cmds, &terminal_mode_on_startup,
                 sizeof tty_modes_for_external_cmds);
-    tty_modes_for_external_cmds.c_iflag &= ~IXON;   // disable flow control
-    tty_modes_for_external_cmds.c_iflag &= ~IXOFF;  // disable flow control
+    // Disable flow control for external commands by default.
+    tty_modes_for_external_cmds.c_iflag &= ~IXON;
+    tty_modes_for_external_cmds.c_iflag &= ~IXOFF;
 
     // Set the mode used for the terminal, initialized to the current mode.
     std::memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
 
-    shell_modes.c_iflag &= ~ICRNL;  // disable mapping CR (\cM) to NL (\cJ)
-    shell_modes.c_iflag &= ~INLCR;  // disable mapping NL (\cJ) to CR (\cM)
-    shell_modes.c_iflag &= ~IXON;   // disable flow control
-    shell_modes.c_iflag &= ~IXOFF;  // disable flow control
-
-    shell_modes.c_lflag &= ~ICANON;  // turn off canonical mode
-    shell_modes.c_lflag &= ~ECHO;    // turn off echo mode
-    shell_modes.c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
+    term_fix_modes(&shell_modes);
+    // Disable flow control in the shell. We don't want to be stopped.
+    shell_modes.c_iflag &= ~IXON;
+    shell_modes.c_iflag &= ~IXOFF;
 
     shell_modes.c_cc[VMIN] = 1;
     shell_modes.c_cc[VTIME] = 0;

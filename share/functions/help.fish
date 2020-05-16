@@ -18,11 +18,6 @@ function help --description 'Show help for the fish shell'
         end
     end
 
-    set -l help_topics syntax completion editor job-control todo bugs history killring help
-    set -a help_topics color prompt title variables builtin-overview changes expand
-    set -a help_topics expand-variable expand-home expand-brace expand-wildcard
-    set -a help_topics expand-command-substitution expand-process
-
     #
     # Find a suitable browser for viewing the help pages.
     # The first thing we try is $fish_help_browser.
@@ -124,26 +119,14 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "index.html#expand"
         case (__fish_print_commands)
             set fish_help_page "cmds/$fish_help_item.html"
-        case $help_topics
-            set fish_help_page "index.html#$fish_help_item"
         case 'tut_*'
-            set fish_help_page "tutorial.html#$fish_help_item"
+            set fish_help_page "tutorial.html#"(string sub -s 5 -- $fish_help_item | string replace -a -- _ -)
         case tutorial
             set fish_help_page "tutorial.html"
-        case "*"
-            # If $fish_help_item is empty, this will fail,
-            # and $fish_help_page will end up as index.html
-            if type -q -f "$fish_help_item"
-                # Prefer to use fish's man pages, to avoid
-                # the annoying useless "builtin" man page bash
-                # installs on OS X
-                set -l man_arg "$__fish_data_dir/man/man1/$fish_help_item.1"
-                if test -f "$man_arg"
-                    man $man_arg
-                    return
-                end
-            end
+        case ''
             set fish_help_page "index.html"
+        case "*"
+            set fish_help_page "index.html#$fish_help_item"
     end
 
     set -l page_url

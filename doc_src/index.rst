@@ -1048,9 +1048,13 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``argv``, a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed by the user.
 
-- ``fish_pid``, the process ID (PID) of the shell.
+- ``CMD_DURATION``, the runtime of the last command in milliseconds.
 
-- ``last_pid``, the process ID (PID) of the last background process.
+- ``COLUMNS`` and ``LINES``, the current size of the terminal in height and width. These values are only used by fish if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
+
+- ``fish_kill_signal``, the signal that terminated the last foreground job, or `0` if the job exited normally.
+
+- ``fish_pid``, the process ID (PID) of the shell.
 
 - ``history``, a list containing the last commands that were entered.
 
@@ -1060,23 +1064,19 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``IFS``, the internal field separator that is used for word splitting with the :ref:`read <cmd-read>` builtin. Setting this to the empty string will also disable line splitting in `command substitution <#expand-command-substitution>`_. This variable can be changed by the user.
 
-- ``PWD``, the current working directory.
+- ``last_pid``, the process ID (PID) of the last background process.
 
-- ``status``, the `exit status <#variables-status>`_ of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
+- ``PWD``, the current working directory.
 
 - ``pipestatus``, a list of exit statuses of all processes that made up the last executed pipe.
 
-- ``fish_kill_signal``, the signal that terminated the last foreground job, or `0` if the job exited normally.
+- ``SHLVL``, the level of nesting of shells.
+
+- ``status``, the `exit status <#variables-status>`_ of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
 
 - ``USER``, the current username. This variable can be changed by the user.
 
-- ``CMD_DURATION``, the runtime of the last command in milliseconds.
-
 - ``version``, the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
-
-- ``SHLVL``, the level of nesting of shells
-
-- ``COLUMNS`` and ``LINES``, the current size of the terminal in height and width. These values are only used by fish if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
 
 The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 

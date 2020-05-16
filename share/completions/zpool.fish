@@ -4,7 +4,7 @@
 # - for eligible commands, with arguments of different types, only propose second type completions after the first have been selected; for instance, only propose pool members for offline command
 # - this has been written mainly from manpages, which are known to be out-of-sync with the real feature set; some discrepancies have been addressed, but it is highly likely that others still lie
 
-set -lx OS ""
+set -l OS ""
 switch (uname)
     case Linux
         set OS Linux
@@ -42,7 +42,7 @@ function __fish_zpool_list_used_vdevs -a pool
     zpool list -Hv | string replace -rf "^\t([^\t]+).*" '$1' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
 end
 
-function __fish_zpool_list_available_vdevs
+function __fish_zpool_list_available_vdevs -V OS
     if test $OS = Linux
         find /dev -type b | string replace /dev/ ''
     else if test $OS = FreeBSD
@@ -113,7 +113,7 @@ function __fish_zpool_list_vdev_types
     echo -e "cache\tL2ARC device"
 end
 
-function __fish_zpool_list_ro_properties
+function __fish_zpool_list_ro_properties -V OS
     echo -e "alloc\tPhysically allocated space"
     if contains -- $OS SunOS Linux
         echo -e "available\tAvailable space"

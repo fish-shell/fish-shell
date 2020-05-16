@@ -87,7 +87,7 @@ def esc(m):
         "\v": "\\v",
     }
     if m in map:
-        return map(m)
+        return map[m]
     if unicodedata.category(m)[0] == "C":
         return "\\x{:02x}".format(ord(m))
     else:

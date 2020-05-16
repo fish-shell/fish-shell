@@ -45,4 +45,4 @@ The following options are available:
 
 - ``-f`` or ``--features=FEATURES`` enables one or more :ref:`feature flags <featureflags>` (separated by a comma). These are how fish stages changes that might break scripts.
 
-The fish exit status is generally the exit status of the last foreground command. If fish is exiting because of a parse error, the exit status is 127.
+The fish exit status is generally the :ref:`exit status of the last foreground command <variables-status>`.

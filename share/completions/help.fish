@@ -22,7 +22,6 @@ complete -c help -x -a expand-command-substitution -d 'Command substitution'
 complete -c help -x -a expand-command-substitution -d 'Command substitution (SUBCOMMAND)'
 complete -c help -x -a expand-home -d 'Home directory expansion ~USER'
 complete -c help -x -a expand-index-range -d 'Index range expansion'
-complete -c help -x -a expand-process -d 'Process expansion %JOB'
 complete -c help -x -a expand-variable -d 'Variable expansion $VARNAME'
 complete -c help -x -a expand-wildcard -d 'Wildcard expansion *.*'
 # Note: This is hard-coded in help.fish - it's not an anchor in the html.

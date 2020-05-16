@@ -58809,10 +58809,6 @@ msgstr "Hjälp om jokertecken *.*"
 msgid "Help on command substitution (SUBCOMMAND)"
 msgstr "Hjälp om kommandosubstitution (UNDERKOMMANDO)"
 
-#: share/completions/help.fish:32
-msgid "Help on process expansion %JOB"
-msgstr "Hjälp om processexpansion %JOB"
-
 #: share/completions/history.fish:1
 msgid "Match history items that start with the given prefix"
 msgstr ""

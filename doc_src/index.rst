@@ -1048,6 +1048,10 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``argv``, a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed by the user.
 
+- ``fish_pid``, the process ID (PID) of the shell.
+
+- ``last_pid``, the process ID (PID) of the last background process.
+
 - ``history``, a list containing the last commands that were entered.
 
 - ``HOME``, the user's home directory. This variable can be changed by the user.

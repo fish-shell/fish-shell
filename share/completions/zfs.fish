@@ -10,7 +10,7 @@
 # - for the program command, complete the script to be executed
 # - for commands accepting several arguments of different types, propose arguments in the right order: for get, once the ZFS parameters have been given, only propose datasets
 
-set -lx OS ""
+set -l OS ""
 switch (uname)
     case Linux
         set OS Linux

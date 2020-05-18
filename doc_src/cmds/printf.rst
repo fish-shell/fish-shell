@@ -12,25 +12,27 @@ Synopsis
 
 Description
 -----------
-printf formats the string FORMAT with ARGUMENT, and displays the result.
+printf uses the format string FORMAT to print the ARGUMENT arguments. This means that it takes format specifiers in the format string and replaces each with an argument.
 
-The string FORMAT should contain format specifiers, each of which are replaced with successive arguments according to the specifier. Specifiers are detailed below, and are taken from the C library function ``printf(3)``.
+The ``format`` argument is re-used as many times as necessary to convert all of the given arguments. So ``printf %s\n flounder catfish clownfish shark`` will print four lines.
 
 Unlike :ref:`echo <cmd-echo>`, ``printf`` does not append a new line unless it is specified as part of the string.
 
-Valid format specifiers are:
+It doesn't support any options, so there is no need for a ``--`` separator, which makes it easier to use for arbitrary input than ``echo``. [#]_ 
 
-- ``%d``: Argument will be used as decimal integer (signed or unsigned)
+Format Specifiers
+-----------------
+Valid format specifiers are taken from the C library function ``printf(3)``:
 
-- ``%i``: Argument will be used as a signed integer
+- ``%d`` or ``%i``: Argument will be used as decimal integer (signed or unsigned)
 
 - ``%o``: An octal unsigned integer
 
-- ``%u``: An unsigned decimal integer
+- ``%u``: An unsigned decimal integer - this means negative numbers will wrap around
 
 - ``%x`` or ``%X``: An unsigned hexadecimal integer
 
-- ``%f``, ``%g`` or ``%G``: A floating-point number
+- ``%f``, ``%g`` or ``%G``: A floating-point number. ``%f`` defaults to 6 places after the decimal point (which is locale-dependent - e.g. in de_DE it will be a ``,``). ``%g`` and ``%G`` will trim trailing zeroes and switch to scientific notation (like ``%e``) if the numbers get small or large enough.
 
 - ``%e`` or ``%E``: A floating-point number in scientific (XXXeYY) notation
 
@@ -40,9 +42,12 @@ Valid format specifiers are:
 
 ``%%`` signifies a literal "%".
 
-Note that conversion may fail, e.g. "102.234" will not losslessly convert to an integer, causing printf to print an error.
+Conversion can fail, e.g. "102.234" can't losslessly convert to an integer, causing printf to print an error. If you are okay with losing information, silence errors with `2>/dev/null`.
 
+Backslash Escapes
+-----------------
 printf also knows a number of backslash escapes:
+
 - ``\"`` double quote
 - ``\\`` backslash
 - ``\a`` alert (bell)
@@ -59,11 +64,13 @@ printf also knows a number of backslash escapes:
 - ``\uhhhh`` 16-bit Unicode character (hhhh is 4 digits)
 - ``\Uhhhhhhhh`` 32-bit Unicode character (hhhhhhhh is 8 digits)
 
-The ``format`` argument is re-used as many times as necessary to convert all of the given arguments. If the given argument doesn't work for the given format, an error is printed. For example, ``printf '%d' "102.234"`` produces an error, as "102.234" cannot be formatted as an integer. printf will then also return non-zero.
+Errors and Return Status
+------------------------
+If the given argument doesn't work for the given format (like when you try to convert a number like `3.141592` to an integer), printf prints an error, to stderr. printf will then also return non-zero, but will still try to print as much as it can.
 
 It will also return non-zero if no argument at all was given, in which case it will print nothing.
 
-This file has been imported from the printf in GNU Coreutils version 6.9. If you would like to use a newer version of printf, for example the one shipped with your OS, try ``command printf``.
+This printf has been imported from the printf in GNU Coreutils version 6.9. If you would like to use a newer version of printf, for example the one shipped with your OS, try ``command printf``.
 
 Example
 -------
@@ -84,3 +91,7 @@ See Also
 --------
 
 - the :ref:`echo <cmd-echo>` command, for simpler output
+
+Footnotes
+---------
+.. [#] (in fact while fish's ``echo`` supports ``--``, POSIX forbids it, so other implementations can't be used if the input contains anything starting with `-`)

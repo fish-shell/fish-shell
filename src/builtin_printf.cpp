@@ -749,7 +749,6 @@ int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     argc -= optind;
     argv += optind;
     if (argc < 1) {
-        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc);
         return STATUS_INVALID_ARGS;
     }
 

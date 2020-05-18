@@ -59,7 +59,9 @@ printf also knows a number of backslash escapes:
 - ``\uhhhh`` 16-bit Unicode character (hhhh is 4 digits)
 - ``\Uhhhhhhhh`` 32-bit Unicode character (hhhhhhhh is 8 digits)
 
-The ``format`` argument is re-used as many times as necessary to convert all of the given arguments. If a format specifier is not appropriate for the given argument, an error is printed. For example, ``printf '%d' "102.234"`` produces an error, as "102.234" cannot be formatted as an integer.
+The ``format`` argument is re-used as many times as necessary to convert all of the given arguments. If the given argument doesn't work for the given format, an error is printed. For example, ``printf '%d' "102.234"`` produces an error, as "102.234" cannot be formatted as an integer. printf will then also return non-zero.
+
+It will also return non-zero if no argument at all was given, in which case it will print nothing.
 
 This file has been imported from the printf in GNU Coreutils version 6.9. If you would like to use a newer version of printf, for example the one shipped with your OS, try ``command printf``.
 

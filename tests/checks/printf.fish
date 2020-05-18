@@ -111,6 +111,11 @@ printf 'long signed %d\n' -498216206595
 printf 'long signed to unsigned %u\n' -498216206596
 # CHECK: long signed to unsigned 18446743575493345020
 
+# Just check that we print no error for no arguments
+printf
+echo $status
+# CHECK: 2
+
 # Verify numeric conversion still happens even if it couldn't be fully converted
 printf '%d\n' 15.1
 # CHECK: 15

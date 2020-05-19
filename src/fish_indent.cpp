@@ -656,7 +656,7 @@ int main(int argc, char *argv[]) {
                 fclose(fh);
                 output_location = argv[i];
             } else {
-                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv,
+                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), argv[i],
                               std::strerror(errno));
                 exit(1);
             }

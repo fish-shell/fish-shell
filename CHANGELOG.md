@@ -42,6 +42,7 @@
   - `gitk`
   - `nc`, `netcat`, `nc.openbsd`, `nc.traditional`
   - `nmap`, `ncat`
+  - `rst2html`, `rst2html4`, `rst2html5`, `rst2latex`, `rst2man`, `rst2odt`, `rst2pseudoxml`, `rst2s5`, `rst2xetex`, `rst2xml` and `rstpep2html`
   - `sphinx-apidoc`, `sphinx-autogen`, `sphinx-build` and `sphinx-quickstart`
   - `tcpdump`
   - `tig`

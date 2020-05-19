@@ -1,3 +1,7 @@
+function __complete_devices
+    kdeconnect-cli --shell-device-autocompletion=zsh | string replace -rf '(\w+)\[(.*)]' '$1\t$2'
+end
+
 complete -c kdeconnect-cli -s l -l list-devices -d "List all devices"
 complete -c kdeconnect-cli -s a -l list-available -d "List available (paired and reachable) devices"
 complete -c kdeconnect-cli -l id-only -d "Make --list-devices or --list-available print the devices id, to ease scripting"
@@ -12,7 +16,7 @@ complete -c kdeconnect-cli -l list-notifications -d "Display the notifications o
 complete -c kdeconnect-cli -l lock -d "Lock the specified device"
 complete -c kdeconnect-cli -l send-sms -f -r -d "Sends an SMS. Requires destination" # message
 complete -c kdeconnect-cli -l destination -f -r -d "Phone number to send the message" # phone number
-complete -c kdeconnect-cli -s d -l device -f -r -a '(kdeconnect-cli -l --id-only)' -d "Device ID" # dev
+complete -c kdeconnect-cli -s d -l device -f -r -a '(__complete_devices)'
 complete -c kdeconnect-cli -s n -l name -f -r -d "Device Name" # name
 complete -c kdeconnect-cli -l encryption-info -d "Get encryption info about said device"
 complete -c kdeconnect-cli -l list-commands -d "Lists remote commands and their ids"

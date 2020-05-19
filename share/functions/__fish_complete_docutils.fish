@@ -88,7 +88,7 @@ function __fish_complete_docutils_html -d "Completions for Docutils HTML options
     complete -c $cmd -l stylesheet-dirs -d "List of directories where stylesheets are found"
     complete -x -c $cmd -l initial-header-level -a "1 2 3 4 5 6" -d "Specify the initial header level"
 
-    if test $cmd != "rst2html5"
+    if test $cmd != rst2html5
         complete -c $cmd -l field-name-limit -d "Specify the limit for field names"
         complete -c $cmd -l option-limit -d "Specify the limit for options"
     end
@@ -100,15 +100,15 @@ function __fish_complete_docutils_html -d "Completions for Docutils HTML options
     complete -c $cmd -l compact-field-lists -d "Enable compact field lists"
     complete -c $cmd -l no-compact-field-lists -d "Disable compact field lists"
 
-    if test $cmd = "rst2html5"
+    if test $cmd = rst2html5
         complete -x -c $cmd -l table-style -a "borderless booktabs align-left align-center align-right colwidths-auto" -d "Specify table style"
     else
-        complete -x -c $cmd -l table-style -a "borderless" -d "Specify table style"
+        complete -x -c $cmd -l table-style -a borderless -d "Specify table style"
     end
 
     complete -x -c $cmd -l math-output -a "MathML HTML MathJax LaTeX" -d "Math output format"
 
-    if test $cmd = "rst2html5"
+    if test $cmd = rst2html5
         complete -c $cmd -l xml-declaration -d "Prepend an XML declaration"
     end
 
@@ -150,7 +150,7 @@ function __fish_complete_docutils_latex -d "Completions for Docutils LaTeX optio
     complete -x -c $cmd -l table-style -a "standard booktabs borderless" -d "Table style"
     complete -x -c $cmd -l graphicx-option -a "dvips pdftex auto" -d "LaTeX graphicx package option"
 
-    if test $cmd = "rst2latex"
+    if test $cmd = rst2latex
         complete -x -c $cmd -l font-encoding -a "T1 OT1 LGR,T1" -d "LaTeX font encoding"
     end
 

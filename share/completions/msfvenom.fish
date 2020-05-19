@@ -1,5 +1,5 @@
 function __fish_msf_db_running
-    msfdb status 2> /dev/null | string match -q -r 'Database started|Active: active'
+    msfdb status 2>/dev/null | string match -q -r 'Database started|Active: active'
 end
 
 function __fish_complete_msf_payloads

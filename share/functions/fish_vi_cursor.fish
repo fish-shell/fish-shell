@@ -41,7 +41,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         # Note: Previous versions also checked $TMUX, and made sure that then $TERM was screen* or tmux*.
         # We don't care, since we *cannot* handle term-in-a-terms 100% correctly.
         if not set -q KONSOLE_PROFILE_NAME
-            and not test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge "200400" # konsole, but new.
+            and not test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge 200400 # konsole, but new.
             and not set -q ITERM_PROFILE
             and not set -q VTE_VERSION # which version is already checked above
             and not set -q WT_PROFILE_ID

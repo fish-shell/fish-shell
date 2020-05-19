@@ -1,13 +1,13 @@
 complete -c msfdb -f
 
 # Commands
-complete -c msfdb -n '__fish_use_subcommand' -x -a init -d 'Initialize the component'
-complete -c msfdb -n '__fish_use_subcommand' -x -a reinit -d 'Delete and reinitialize the component'
-complete -c msfdb -n '__fish_use_subcommand' -x -a delete -d 'Delete and stop the component'
-complete -c msfdb -n '__fish_use_subcommand' -x -a status -d 'Check component status'
-complete -c msfdb -n '__fish_use_subcommand' -x -a start -d 'Start the component'
-complete -c msfdb -n '__fish_use_subcommand' -x -a stop -d 'Stop the component'
-complete -c msfdb -n '__fish_use_subcommand' -x -a restart -d 'Restart the component'
+complete -c msfdb -n __fish_use_subcommand -x -a init -d 'Initialize the component'
+complete -c msfdb -n __fish_use_subcommand -x -a reinit -d 'Delete and reinitialize the component'
+complete -c msfdb -n __fish_use_subcommand -x -a delete -d 'Delete and stop the component'
+complete -c msfdb -n __fish_use_subcommand -x -a status -d 'Check component status'
+complete -c msfdb -n __fish_use_subcommand -x -a start -d 'Start the component'
+complete -c msfdb -n __fish_use_subcommand -x -a stop -d 'Stop the component'
+complete -c msfdb -n __fish_use_subcommand -x -a restart -d 'Restart the component'
 
 # General Options
 complete -c msfdb -l component -x -a 'all database webservice' -d 'Component used with provided command'

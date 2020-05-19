@@ -39,5 +39,5 @@ complete -c asciidoctor -s w -l warnings -d "Turn on script warnings"
 complete -c asciidoctor -s t -l timings -d "Print timings report"
 
 # Program Information
-complete -x -c asciidoctor -s h -l help -a "manpage" -d "Print a help message"
+complete -x -c asciidoctor -s h -l help -a manpage -d "Print a help message"
 complete -c asciidoctor -s V -l version -d "Print program version"

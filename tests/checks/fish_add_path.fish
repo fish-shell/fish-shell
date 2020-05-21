@@ -5,6 +5,7 @@
 set -l tmpdir (mktemp -d)
 mkdir $tmpdir/bin
 mkdir $tmpdir/sbin
+mkdir $tmpdir/etc
 ln -s $tmpdir/bin $tmpdir/link
 
 # We set fish_user_paths to an empty global to have a starting point

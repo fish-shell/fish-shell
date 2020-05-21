@@ -47,7 +47,7 @@ def is_wsl():
     """ Return whether we are running under the Windows Subsystem for Linux """
     if "linux" in platform.system().lower() and os.access("/proc/version", os.R_OK):
         with open("/proc/version", "r") as f:
-            if "Microsoft" in f.read():
+            if "microsoft" in f.read():
                 return True
     return False
 

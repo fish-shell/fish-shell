@@ -17,7 +17,7 @@ Description
 -----------
 
 ``fish_add_path`` is a simple way to add more components to fish's $PATH. It does this by adding the components either to $fish_user_paths or directly to $PATH (if the ``--path`` switch is given).
-The idea is that it is (by default) safe to use ``fish_add_path`` in config.fish, or can be used once, interactively, and the paths will stay in future because of :ref:`universal variables <uvars>`. This is a "do what I mean" style command, if you need more control, consider modifying the variable yourself.
+The idea is that it is (by default) safe to use ``fish_add_path`` in config.fish, or can be used once, interactively, and the paths will stay in future because of :ref:`universal variables <variables-universal>`. This is a "do what I mean" style command, if you need more control, consider modifying the variable yourself.
 
 Components are normalized by :ref:`realpath <cmd-realpath>`. This means that trailing slashes are ignored and symlinks are resolved, and relative paths are made absolute.
 

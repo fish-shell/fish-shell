@@ -808,7 +808,7 @@ Variable scope
 
 There are three kinds of variables in fish: universal, global and local variables.
 
-- Universal variables are shared between all fish sessions a user is running on one computer.
+- :ref:`Universal variables <variables-universal>` are shared between all fish sessions a user is running on one computer.
 - Global variables are specific to the current fish session, but are not associated with any specific block scope, and will never be erased unless the user explicitly requests it using ``set -e``.
 - Local variables are specific to the current fish session, and associated with a specific block of commands, and is automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``.
 
@@ -836,6 +836,19 @@ The following code will not output anything::
     # This will not output anything, since the pirate was local
     echo $captain
     # This will output the good Captain's speech since $captain had function-scope.
+
+.. _variables-universal:
+
+Universal variables
+-------------------
+
+Universal variables are variables that are shared among your running fish sessions and stored on disk.
+
+Fish keeps them in ~/.config/fish/fish_variables, and when one running fish (of the same user) changes a universal variable, the others are notified and change their value accordingly.
+
+Because universal is a "larger" scope than global variables, global variables override univeral ones, and because exported variables are inherited as global variables, making a universal variable exported is not recommended.
+
+One common universal variable is $fish_user_paths, which fish will prepend to $PATH.
 
 .. _variables-override:
 

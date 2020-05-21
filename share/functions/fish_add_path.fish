@@ -49,6 +49,12 @@ function fish_add_path
         if not test -d "$p"
             printf (_ "%s: '%s' is not a directory\n") fish_add_path $path >&2
             set p $path
+
+            # Cheesy way to make the path absolute.
+            # If a directory component in the middle doesn't exist, realpath gives up entirely.
+            # So we simply add our $PWD because being absolute is more important than being canonical.
+            string match -q '/*' -- $p
+            or set p $PWD/$p
         end
 
         if set -l ind (contains -i -- $p $$var)

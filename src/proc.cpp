@@ -868,6 +868,8 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
 
     // Save jobs terminal modes.
     if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
+        // If it's not a tty, it's not a tty, and there are no attributes to save (or restore)
+        if (errno == ENOTTY) return false;
         if (errno == EIO) redirect_tty_output();
         FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");

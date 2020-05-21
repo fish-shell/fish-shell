@@ -83,7 +83,8 @@ function fish_add_path
     # to ensure a path is in $PATH.
     if set -q newpaths[1]; or set -q indexes[1]
         if set -q _flag_verbose; or set -q _flag_n
-            echo set $scope $var $newvar
+            # The escape helps make it unambiguous - so you see whether an argument includes a space or something.
+            echo (string escape -- set $scope $var $newvar)
         end
             
         not set -q _flag_n

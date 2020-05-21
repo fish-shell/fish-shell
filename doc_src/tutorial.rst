@@ -619,12 +619,16 @@ and it will be exported like that, and when fish starts it splits the $PATH it r
 
 You can do so directly in ``config.fish``, like you might do in other shells with ``.profile``. See :ref:`this example <path_example>`.
 
-A faster way is to modify the ``$fish_user_paths`` :ref:`universal variable <tut-universal>`, which is automatically prepended to ``$PATH``. For example, to permanently add ``/usr/local/bin`` to your ``$PATH``, you could write::
+A faster way is to use the :ref:`fish_add_path <cmd-fish_add_path>` function, which adds given directories to the path if they aren't already included. It does this by modifying the ``$fish_user_paths`` :ref:`universal variable <tut-universal>`, which is automatically prepended to ``$PATH``. For example, to permanently add ``/usr/local/bin`` to your ``$PATH``, you could write::
 
-    > set -U fish_user_paths /usr/local/bin $fish_user_paths
+    > fish_add_path /usr/local/bin
 
 
-The advantage is that you don't have to go mucking around in files: just run this once at the command line, and it will affect the current session and all future instances too. (Note: you should NOT add this line to ``config.fish``. If you do, the variable will get longer each time you run fish!)
+The advantage is that you don't have to go mucking around in files: just run this once at the command line, and it will affect the current session and all future instances too. You can also add this line to :ref:`config.fish <tut-config>`, as it only adds the component if necessary.
+
+Or you can modify $fish_user_paths yourself, but you should be careful *not* to append to it unconditionally in config.fish, or it will grow longer and longer.
+
+.. _tut-config:
 
 Startup (Where's .bashrc?)
 --------------------------

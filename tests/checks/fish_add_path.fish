@@ -32,7 +32,7 @@ string replace -- $tmpdir '' $fish_user_paths | string join ' '
 # CHECK: /sbin /bin
 
 set -l oldpath "$PATH"
-fish_add_path -nP /etc
+fish_add_path -nP $tmpdir/etc | string replace -- $tmpdir ''
 # Should print a set command to prepend /etc to $PATH, but not actually do it
 # CHECK: set PATH /etc{{.*}}
 

@@ -77,9 +77,10 @@ static void print_blocked_signals() {
         exit(EXIT_FAILURE);
     }
     // There is no obviously portable way to get the maximum number of signals.
-    // Here we limit it to 64 because strsignal on Linux returns "Unknown signal" for anything
+    // Here we limit it to 32 because strsignal on OpenBSD returns "Unknown signal" for anything
     // above.
-    for (int sig = 1; sig < 65; sig++) {
+    // NetBSD taps out at 63, Linux at 64.
+    for (int sig = 1; sig < 33; sig++) {
         if (sigismember(&sigs, sig)) {
             if (const char *s = strsignal(sig)) {
                 fprintf(stderr, "%s", s);

@@ -48,7 +48,7 @@ Instructions for other distributions may be found at [fishshell.com](https://fis
 
 ### Windows
 
-- On Windows 10, fish can be installed under the WSL Windows Subsystem for Linux with `sudo apt install fish` or from source with the instructions below.
+- On Windows 10, fish can be installed under the WSL Windows Subsystem for Linux with the instructions for the appropriate distribution listed above under "Packages for Linux", or from source with the instructions below.
 - Fish can also be installed on all versions of Windows using [Cygwin](https://cygwin.com/) (from the **Shells** category).
 
 ### Building from source

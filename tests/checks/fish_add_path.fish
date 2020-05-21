@@ -13,6 +13,11 @@ set -g fish_user_paths
 fish_add_path -v $tmpdir/bin
 # CHECK: set fish_user_paths {{.*}}/bin
 
+# Confirm that it actually ends up in $PATH
+contains -- (builtin realpath $tmpdir/bin) $PATH
+and echo Have bin
+# CHECK: Have bin
+
 # Not adding duplicates, so this adds nothing, so it's a failing status
 fish_add_path -v $tmpdir/bin
 echo $status

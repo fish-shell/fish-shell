@@ -430,6 +430,9 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                             if (proc->status.stopped()) {
                                 j->mut_flags().foreground = false;
                             }
+                            if (proc->status.continued()) {
+                                j->mut_flags().notified = false;
+                            }
                             if (proc->status.normal_exited() || proc->status.signal_exited()) {
                                 FLOGF(proc_reap_external,
                                       "Reaped external process '%ls' (pid %d, status %d)",

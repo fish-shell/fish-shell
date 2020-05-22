@@ -34,6 +34,18 @@ int fish_wcswidth(const wchar_t *str, size_t n);
 // otherwise it uses mkstemp followed by fcntl
 int fish_mkstemp_cloexec(char *);
 
+/// thread_local support.
+#if HAVE_CX11_THREAD_LOCAL
+# define FISH_THREAD_LOCAL thread_local
+#elif defined (__GNUC__)
+# define FISH_THREAD_LOCAL __thread
+#elif defined (_MSC_VER)
+# define FISH_THREAD_LOCAL __declspec(thread)
+#else // !C++11 && !__GNUC__ && !_MSC_VER
+# error "No known thread local storage qualifier for this platform"
+#endif
+
+
 #ifndef WCHAR_MAX
 /// This _should_ be defined by wchar.h, but e.g. OpenBSD doesn't.
 #define WCHAR_MAX INT_MAX

@@ -10,6 +10,9 @@
 /* Define to 1 if you have the `ctermid_r' function. */
 #cmakedefine HAVE_CTERMID_R 1
 
+/* Define to 1 if C++11 thread_local is supported. */
+#cmakedefine HAVE_CX11_THREAD_LOCAL 1
+
 /* Define to 1 if you have the `dirfd' function. */
 #cmakedefine HAVE_DIRFD 1
 

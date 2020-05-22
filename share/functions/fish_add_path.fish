@@ -1,14 +1,10 @@
-function fish_add_path
-    # Add paths to $fish_user_paths (or $PATH directly).
-    #
-    # This is meant to be the easy one-stop shop.
+function fish_add_path --description "Add paths to the PATH"
+    # This is meant to be the easy one-stop shop to adding stuff to $PATH.
     # By default it'll prepend the given paths to a universal $fish_user_paths, excluding the already-included ones.
     #
     # That means it can be executed once in an interactive session, or stuffed in config.fish,
     # and it will do The Right Thing.
     #
-    # If a user wants to just ensure a path is there without forcing priority, there's --append,
-    # and if they want to force priority even if the entry is already there, there is --move.
     # The options:
     # --prepend or --append to select whether to put the new paths first or last
     # --global or --universal to decide whether to use a universal or global fish_user_paths

@@ -196,8 +196,6 @@ int main () {
   HAVE_CX11_THREAD_LOCAL
 )
 
-find_program(SED sed)
-
 check_cxx_source_compiles("
 #include <atomic>
 #include <cstdint>

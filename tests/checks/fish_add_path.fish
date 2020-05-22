@@ -12,16 +12,23 @@ ln -s $tmpdir/bin $tmpdir/link
 set -g fish_user_paths
 fish_add_path -v $tmpdir/bin
 # CHECK: set fish_user_paths {{.*}}/bin
+echo $status
+# CHECK: 0
 
 # Confirm that it actually ends up in $PATH
 contains -- (builtin realpath $tmpdir/bin) $PATH
 and echo Have bin
 # CHECK: Have bin
 
-# Not adding duplicates, so this adds nothing, so it's a failing status
+# Not adding duplicates and not triggering variable handlers
+function checkpath --on-variable PATH --on-variable fish_user_paths; echo CHECKPATH: $argv; end
+set PATH $PATH
+# CHECK: CHECKPATH: VARIABLE SET PATH
 fish_add_path -v $tmpdir/bin
+# Nothing happened, so the status failed.
 echo $status
 # CHECK: 1
+functions --erase checkpath
 
 # Not adding a link either
 fish_add_path -v $tmpdir/link

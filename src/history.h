@@ -114,7 +114,8 @@ struct history_impl_t;
 
 class history_t {
     friend class history_tests_t;
-    const std::unique_ptr<owning_lock<history_impl_t>> impl_;
+    struct impl_wrapper_t;
+    const std::unique_ptr<impl_wrapper_t> wrap_;
 
     // No copying or moving.
     history_t() = delete;

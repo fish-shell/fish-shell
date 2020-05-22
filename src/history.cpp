@@ -1231,20 +1231,26 @@ static bool string_could_be_path(const wcstring &potential_path) {
     return !(potential_path.empty() || potential_path.at(0) == L'-');
 }
 
+/// impl_wrapper_t is used to avoid forming owning_lock<incomplete_type> in
+/// the .h file; see #7023.
+struct history_t::impl_wrapper_t {
+    owning_lock<history_impl_t> impl;
+    explicit impl_wrapper_t(wcstring &&name) : impl(history_impl_t(std::move(name))) {}
+};
+
 /// Very simple, just mark that we have no more pending items.
 void history_impl_t::resolve_pending() { this->has_pending_item = false; }
 
 bool history_t::chaos_mode = false;
 bool history_t::never_mmap = false;
 
-history_t::history_t(wcstring name)
-    : impl_(make_unique<owning_lock<history_impl_t>>(history_impl_t(std::move(name)))) {}
+history_t::history_t(wcstring name) : wrap_(make_unique<impl_wrapper_t>(std::move(name))) {}
 
 history_t::~history_t() = default;
 
-acquired_lock<history_impl_t> history_t::impl() { return impl_->acquire(); }
+acquired_lock<history_impl_t> history_t::impl() { return wrap_->impl.acquire(); }
 
-acquired_lock<const history_impl_t> history_t::impl() const { return impl_->acquire(); }
+acquired_lock<const history_impl_t> history_t::impl() const { return wrap_->impl.acquire(); }
 
 bool history_t::is_default() const { return impl()->is_default(); }
 

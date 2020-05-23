@@ -506,15 +506,17 @@ Examples::
 Command substitution
 --------------------
 
-The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If the output is more than one line long, each line will be expanded to a new parameter. Setting ``IFS`` to the empty string will disable line splitting.
+The output of a command (or an entire :ref:`pipeline <pipes>`) can be used as the arguments to another command.
 
-If the output is piped to :ref:`string split or string split0 <cmd-string-split>` as the last step, those splits are used as they appear and no additional splitting on newlines takes place.
+When you write a command in parenthesis like ``outercommand (innercommand)``, the `innercommand` will be executed first. Its output will be taken and each line given as a separate argument to `outercommand`, which will then be executed. [#]_
 
-The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution occurs in the context of a :ref:`set <cmd-set>` command.
+If the output is piped to :ref:`string split or string split0 <cmd-string-split>` as the last step, those splits are used as they appear instead of splitting lines.
 
-Only part of the output can be used, see `index range expansion <#expand-index-range>`_ for details.
+The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution happens in the context of a :ref:`set <cmd-set>` command (so `if set -l (something)` checks if `something` returned true).
 
-Fish has a default limit of 100 MiB on the amount of data a command substitution can output. If the limit is exceeded the entire command, not just the substitution, is failed and ``$status`` is set to 122. You can modify the limit by setting the ``fish_read_limit`` variable at any time including in the environment before fish starts running. If you set it to zero then no limit is imposed. This is a safety mechanism to keep the shell from consuming too much memory if a command outputs an unreasonable amount of data, typically your operating system also has a limit, and it's often much lower. Note that this limit also affects how much data the :ref:`read <cmd-read>` command will process.
+Only part of the output can be used, see :ref:`index range expansion <expand-index-range>` for details.
+
+Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :ref:`read <cmd-read>` command.
 
 Examples::
 
@@ -531,6 +533,8 @@ Examples::
 
     set data (cat data | string split0)
     # Set ``$data`` to the contents of data, splitting on NUL-bytes.
+
+.. [#] Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :ref:`string split <cmd-string-split>` instead.
 
 .. _expand-brace:
 

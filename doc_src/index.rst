@@ -393,26 +393,20 @@ Functions can be defined on the commandline or in a configuration file, but they
 - If the function definition is changed, all running shells will automatically reload the altered version.
 - Startup time and memory usage is improved, etc.
 
-When fish needs to load a function, it searches through any directories in the list variable ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix ``.fish`` and loads the first it finds.
+When fish needs to load a function, it searches through any directories in the :ref:`list variable <variables-lists>` ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix ``.fish`` and loads the first it finds.
 
 By default ``$fish_function_path`` contains the following:
 
 - A directory for end-users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
-- Directories for third-party software vendors to ship their own functions for their software. Fish searches the directories in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_functions.d`` directory; if this variable is not defined, the default is usually to search ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
+- Directories for other software to put their own functions. These are in the directories in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``fish/vendor_functions.d``. The default is usually ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
 - The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
-These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
-
-This wide search may be confusing. If you are unsure, your functions probably belong in ``~/.config/fish/functions``.
-
-It is very important that function definition files only contain the definition for the specified function and nothing else. Otherwise, it is possible that autoloading a function files requires that the function already be loaded, which creates a circular dependency.
+If you are unsure, your functions probably belong in ``~/.config/fish/functions``.
 
 Autoloading also won't work for `event handlers <#event>`_, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the `event handlers <#event>`_ section for more information.
 
-Autoloading is not applicable to functions created by the :ref:`alias <cmd-alias>` command. For functions simple enough that you prefer to use the ``alias`` command to define them you'll need to put those commands in your ``~/.config/fish/config.fish`` script or some other script run when the shell starts.
-
-If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
+If you are developing another program and want to install fish functions for it, install them to the "vendor" functions directory. As this path varies from system to system, you can use ``pkgconfig`` to discover it with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
 .. _abbreviations:
 

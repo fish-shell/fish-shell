@@ -247,17 +247,19 @@ Some characters can not be written directly on the command line. For these chara
 Input/Output Redirection
 -----------------------------
 
-Most programs use three input/output [#]_ streams, each represented by a number called a file descriptor (FD). These are:
+Most programs use three input/output [#]_ streams:
 
-- Standard input, FD 0, for reading, defaults to reading from the keyboard.
+- Standard input ("stdin"), FD 0, for reading, defaults to reading from the keyboard.
 
-- Standard output, FD 1, for writing, defaults to writing to the screen.
+- Standard output ("stdout"), FD 1, for writing, defaults to writing to the screen.
 
-- Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
+- Standard error ("stderr"), FD 2, for writing errors and warnings, defaults to writing to the screen.
 
-Any file descriptor can be directed to a different output than its default through a mechanism called a redirection.
+They are also represented by numbers: 0 for input, 1 for output, 2 for error. This number is called "file descriptor" or "FD".
 
-An example of a file redirection is ``echo hello > output.txt``, which directs the output of the echo command to the file output.txt.
+The destination of a stream can be changed by something known as *redirection*.
+
+An example of a redirection is ``echo hello > output.txt``, which directs the output of the echo command to the file output.txt.
 
 - To read standard input from a file, write ``<SOURCE_FILE``
 - To write standard output to a file, write ``>DESTINATION``
@@ -289,27 +291,33 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 Example: ``echo Hello 2>output.stderr`` writes the standard error (file descriptor 2) of the target program to ``output.stderr``.
 
 .. [#] Also shortened as "I/O" or "IO".
-.. [#] Previous versions of fish also allowed spelling this as ``^DESTINATION``, but that made another character special so it was deprecated and will be removed in future.
+.. [#] Previous versions of fish also allowed spelling this as ``^DESTINATION``, but that made another character special so it was deprecated and will be removed in future. See :ref:`feature flags<featureflags>`.
+
+.. _pipes:
 
 Piping
 ------
 
-The user can string together multiple commands into a *pipeline*. This means that the standard output of one command will be read in as standard input into the next command. This is done by separating the commands by the pipe character ``|``. For example
+Another way to redirect streams is a *pipe*. This connects streams with each other, usually the standard output of one command with the standard input of another.
+
+This is done by separating the commands by the pipe character ``|``. For example
 
 ::
 
   cat foo.txt | head
 
-will call the ``cat`` program with the parameter 'foo.txt', which will print the contents of the file 'foo.txt'. The contents of foo.txt will then be filtered through the program 'head', which will pass on the first ten lines of the file to the screen. For more information on how to combine commands through pipes, read the manual pages of the commands you want to use using the ``man`` command. If you want to find out more about the ``cat`` program, type ``man cat``.
+will call the ``cat`` program with the parameter 'foo.txt', which will print the contents of the file 'foo.txt'. The contents of foo.txt will then be sent to the 'head' program, which will write the first few lines it reads to its output - the screen.
 
-Pipes usually connect file descriptor 1 (standard output) of the first process to file descriptor 0 (standard input) of the second process. It is possible to use a different output file descriptor by prepending the desired FD number and then output redirect symbol to the pipe. For example::
+It is possible to use a different output file descriptor by prepending its FD number and then output redirect symbol to the pipe. For example::
 
   make fish 2>| less
 
 
-will attempt to build the fish program, and any errors will be shown using the less pager.
+will attempt to build `fish`, and any errors will be shown using the `less` pager. [#]_
 
-As a convenience, the pipe ``&|`` may be used to redirect both stdout and stderr to the same process. (Note this is different from bash, which uses ``|&``).
+As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. (Note this is different from bash, which uses ``|&``).
+
+.. [#] A "pager" here is a program that takes output and "paginates" it. `less` doesn't just do pages, it allows arbitrary scrolling (even back!).
 
 .. _syntax-background:
 

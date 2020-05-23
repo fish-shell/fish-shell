@@ -541,7 +541,7 @@ Examples::
 Brace expansion
 ---------------
 
-A comma separated list of characters enclosed in curly braces will be expanded so each element of the list becomes a new parameter. This is useful to save on typing, and to separate a variable name from surrounding text.
+Curly braces can be used to write comma-separated lists. They will be expanded with each element becoming a new parameter, with the surrounding string attached. This is useful to save on typing, and to separate a variable name from surrounding text.
 
 Examples::
 
@@ -558,7 +558,7 @@ Examples::
   > echo {$dogs}dog
   hotdog cooldog cutedog
 
-If two braces do not contain a "," or a variable expansion, they will not be expanded in this manner::
+If there is no "," or variable expansion between the curly braces, they will not be expanded::
 
     > echo foo-{}
     foo-{}
@@ -577,7 +577,7 @@ If there is nothing between a brace and a comma or two commas, it's interpreted 
     > echo {,,/usr}/bin
     /bin /bin /usr/bin
 
-To use a "," as an element, `quote <#quotes>`_ or `escape <#escapes>`_ it.
+To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 
 .. _expand-variable:
 

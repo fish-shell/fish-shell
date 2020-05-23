@@ -162,13 +162,16 @@ This is a short explanation of some of the commonly used words in fish.
 
 - **switch** a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
 
+.. _quotes:
 
 Quotes
 ------
 
-Sometimes features such as `parameter expansion <#expand>`_ and `character escapes <#escapes>`_ get in the way. When that happens, the user can write a parameter within quotes, either ``'`` (single quote) or ``"`` (double quote). There is one important difference between single quoted and double quoted strings: When using double quoted string, `variable expansion <#expand-variable>`_ still takes place. Other than that, no other kind of expansion (including `brace expansion <#expand-brace>`_ and parameter expansion) will take place, the parameter may contain spaces, and escape sequences are ignored.
+Sometimes features like `parameter expansion <#expand>`_ and `character escapes <#escapes>`_ get in the way. When that happens, you can use quotes, either ``'`` (single quote) or ``"`` (double quote). Between single quotes, fish will perform no expansions, in double quotes it will only do :ref:`variable expansion <expand-variable>`. No other kind of expansion (including :ref:`brace expansion <expand-brace>` and parameter expansion) will take place, the parameter can contain spaces, and escape sequences are ignored.
 
-The only backslash escape accepted within single quotes is ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only backslash escapes accepted within double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and lastly ``\\``, which escapes the backslash symbol. Single quotes have no special meaning within double quotes and vice versa.
+The only backslash escapes that mean anything in single quotes are ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only backslash escapes in double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and ``\\``, which escapes the backslash symbol.
+
+Single quotes have no special meaning within double quotes and vice versa.
 
 Example::
 
@@ -182,6 +185,11 @@ Will remove the file 'cumbersome filename.txt', while
 
 
 would remove the two files 'cumbersome' and 'filename.txt'.
+
+::
+   grep 'enabled)$' foo.txt
+
+will search for lines ending in "enabled)" in foo.txt (the `$` is special to `grep`).
 
 
 .. _escapes:

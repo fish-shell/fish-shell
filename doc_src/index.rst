@@ -433,30 +433,35 @@ The :ref:`switch <cmd-switch>` command is used to execute one of possibly many b
 The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See their documentation for more information.
 
 
+
 .. _expand:
 
-Parameter expansion (Globbing)
-------------------------------
+Parameter expansion
+-------------------
 
-When an argument for a program is given on the commandline, it undergoes the process of parameter expansion before it is sent on to the command. Parameter expansion is a powerful mechanism that allows you to expand the parameter in various ways, including performing wildcard matching on files, inserting the value of a shell variable into the parameter or even using the output of another command as a parameter list.
+When fish is given a commandline, it expands the parameters before sending them to the command. There are multiple different kinds of expansions:
+
+- :ref:`Wildcards <expand-wildcard>`, to create filenames from patterns
+- :ref:`Variable expansion <expand-variable>`, to use the value of a variable
+- :ref:`Command substitution <expand-command-substitution>`, to use the output of another command
+- :ref:`Brace expansion <expand-brace>`, to write lists with common pre- or suffixes in a shorter way
+- :ref:`Tilde expansion <expand-home>`, to turn the `~` at the beginning of paths into the path to the home directory
+
 
 .. _expand-wildcard:
 
-Wildcards
----------
+Wildcards ("Globbing")
+----------------------
 
-If a star (``*``) or a question mark (``?``) is present in the parameter, ``fish`` attempts to match the given parameter to any files in such a way that:
+When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk") or a ``?`` question mark, fish uses it as a wildcard to match files.
 
 - ``*`` can match any string of characters not containing ``/``. This includes matching an empty string.
 
-- ``**`` matches any string of characters. This includes matching an empty string. The matched string may include the ``/`` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (``$PWD``) if you separate the strings with a slash (``/``). This is unlike other shells such as zsh. For example, ``**\/*.fish`` in zsh will match ``.fish`` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories.
+- ``**`` matches any string of characters. This includes matching an empty string. The matched string can include the ``/`` character; that is, it goes into subdirectories. If a wildcard string with ``**`` contains a ``/``, that ``/`` still needs to be matched. For example, ``**\/*.fish`` won't match ``.fish`` files directly in the PWD, only in subdirectories. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories. [#]_
 
 - ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the `qmark-noglob` :ref:`feature flag<featureflags>`, so `?` will just be an ordinary character.
 
-Other shells, such as zsh, provide a rich glob syntax for restricting the files matched by globs. For example, ``**(.)``, to only match regular files. Fish prefers to defer such features to programs, such as ``find``, rather than reinventing the wheel. Thus, if you want to limit the wildcard expansion to just regular files the fish approach is to define and use a function. For example,
-
-
-::
+Other shells, such as zsh, have a much richer glob syntax, like ``**(.)`` to only match regular files. Fish does not. Instead of reinventing the whell, use programs like ``find`` to look for files. For example::
 
     function ff --description 'Like ** but only returns plain files.'
         # This also ignores .git directories.
@@ -464,11 +469,11 @@ Other shells, such as zsh, provide a rich glob syntax for restricting the files 
             sed -n -e '/^\.\/\.git$/n' -e 's/^\.\///p'
     end
 
-You would then use it in place of ``**`` like this, ``my_prog (ff)``, to pass only regular files in or below $PWD to ``my_prog``.
+You would then use it in place of ``**`` like this, ``my_prog (ff)``, to pass only regular files in or below $PWD to ``my_prog``. [#]_
 
-Wildcard matches are sorted case insensitively. When sorting matches containing numbers, consecutive digits are considered to be one element, so that the strings '1' '5' and '12' would be sorted in the order given.
+Wildcard matches are sorted case insensitively. When sorting matches containing numbers, they are naturally sorted, so that the strings '1' '5' and '12' would be sorted like 1, 5, 12.
 
-File names beginning with a dot are not considered when wildcarding unless a dot is specifically given as the first character of the file name.
+Hidden files (where the name begins with a dot) are not considered when wildcarding unless the wildcard string has a dot in that place.
 
 Examples:
 
@@ -478,7 +483,9 @@ Examples:
 
 - ``**`` matches any files and directories in the current directory and all of its subdirectories.
 
-Note that for most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is consistent with setting ``shopt -s failglob`` in bash. There are exactly 4 exceptions, namely :ref:`set <cmd-set>`, overriding variables in :ref:`overrides <variables-override>`, :ref:`count <cmd-count>` and :ref:`for <cmd-for>`. Their globs are permitted to expand to zero arguments, as with ``shopt -s nullglob`` in bash.
+- ``~/.*`` matches all hidden files (also known as "dotfiles") and directories in your home directory.
+
+For most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is like what bash does with ``shopt -s failglob``. There are exactly 4 exceptions, namely :ref:`set <cmd-set>`, overriding variables in :ref:`overrides <variables-override>`, :ref:`count <cmd-count>` and :ref:`for <cmd-for>`. Their globs will instead expand to zero arguments (so the command won't see them at all), like with ``shopt -s nullglob`` in bash.
 
 Examples::
 
@@ -490,6 +497,9 @@ Examples::
         ls $foos
     end
     # Lists the .foo files, if any.
+
+.. [#] Unlike other shells, notably zsh.
+.. [#] Technically, unix allows filenames with newlines, and this splits the `find` output on newlines. If you want to avoid that, use `find`s `-print0` option and :ref:`string split0<cmd-string-split0>`.
 
 .. _expand-command-substitution:
 

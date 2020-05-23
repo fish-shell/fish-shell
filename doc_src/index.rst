@@ -810,7 +810,7 @@ There are three kinds of variables in fish: universal, global and local variable
 
 - Universal variables are shared between all fish sessions a user is running on one computer.
 - Global variables are specific to the current fish session, but are not associated with any specific block scope, and will never be erased unless the user explicitly requests it using ``set -e``.
-- Local variables are specific to the current fish session, and associated with a specific block of commands, and is automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``.
+- Local variables are specific to the current fish session, and associated with a specific block of commands, and automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``.
 
 Variables can be explicitly set to be universal with the ``-U`` or ``--universal`` switch, global with the ``-g`` or ``--global`` switch, or local with the ``-l`` or ``--local`` switch.  The scoping rules when creating or updating a variable are:
 
@@ -823,6 +823,37 @@ Variables can be explicitly set to be universal with the ``-U`` or ``--universal
 There may be many variables with the same name, but different scopes. When using a variable, the variable scope will be searched from the inside out, i.e. a local variable will be used rather than a global variable with the same name, a global variable will be used rather than a universal variable with the same name.
 
 Example:
+
+There are a few possible uses for different scopes.
+
+Typically inside funcions you should use local scope::
+
+    function something
+        set -l file /path/to/my/file
+        if not test -e "$file"
+            set file /path/to/my/otherfile
+        end
+    end
+
+If you want to set something in config.fish, or set something in a function and have it available for the rest of the session, global scope is a good choice::
+
+    # Don't shorten the working directory in the prompt
+    set -g fish_prompt_pwd_dir_length 0
+
+    # Set my preferred cursor style:
+    function setcursors
+       set -g fish_cursor_default block
+       set -g fish_cursor_insert line
+       set -g fish_cursor_visual underscore
+    end
+
+    # Set my language (also :ref:`exported <variables-export>`):
+    set -gx LANG de_DE.UTF-8
+
+If you want to set some personal customization, universal variables are nice::
+
+     # Typically you'd run this interactively, fish takes care of keeping it.
+     set -U fish_color_autosuggestion 555
 
 The following code will not output anything::
 
@@ -919,6 +950,19 @@ Variables can be explicitly set to be exported with the ``-x`` or ``--export`` s
 - Global variables are accessible to functions whether they are exported or not.
 
 As a naming convention, exported variables are in uppercase and unexported variables are in lowercase.
+
+For example::
+
+    set -gx ANDROID_HOME ~/.android # /opt/android-sdk
+    set -gx ASPROOT ~/packages/asp
+    set -gx CDPATH . ~ (test -e ~/Videos; and echo ~/Videos)
+    set -gx EDITOR emacs -nw
+    set -gx GCC_COLORS 'error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+    set -gx GOPATH ~/dev/go
+    set -gx GTK2_RC_FILES "$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
+    set -gx LESSHISTFILE "-"
+
+It typically makes sense to make exported variables global as well, but local-exported variables can be useful if you need something more specific than :ref:`Overrides <variables-override>`. They are *copied* to functions so the function can't alter them outside, and still available to commands.
 
 .. _variables-lists:
 

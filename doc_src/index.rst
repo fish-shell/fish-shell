@@ -815,7 +815,7 @@ If the current directory contains the files 'foo' and 'bar', the command ``echo 
 Shell variables
 ---------------
 
-Shell variables are named pieces of data, which can be created, deleted and their values changed and used by the user.  Variables may optionally be "exported", so that a copy of the variable is available to any subprocesses the shell creates. An exported variable is referred to as an "environment variable".
+Variables are a way to save data and pass it around. They can be used by the shell, or they can be "exported", so that a copy of the variable is available to any external command the shell starts. An exported variable is referred to as an "environment variable".
 
 To set a variable value, use the :ref:`set <cmd-set>` command. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
@@ -825,9 +825,14 @@ To set the variable ``smurf_color`` to the value ``blue``, use the command ``set
 
 After a variable has been set, you can use the value of a variable in the shell through `variable expansion <#expand-variable>`_.
 
-Example:
+Example::
 
-To use the value of the variable ``smurf_color``, write ``$`` (dollar symbol) followed by the name of the variable, like ``echo Smurfs are usually $smurf_color``, which would print the result 'Smurfs are usually blue'.
+    set smurf_color blue
+    echo Smurfs are usually $smurf_color
+    set pants_color red
+    echo Papa smurf, who is $smurf_color, wears $pants_color pants
+
+So you set a variable with ``set``, and use it with a `$` and the name.
 
 .. _variables-scope:
 

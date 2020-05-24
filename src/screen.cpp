@@ -923,9 +923,11 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // 2. Left prompt visible, right prompt visible, command line visible, autosuggestion truncated
     // (possibly to zero).
     //
-    // 3. Left prompt visible, right prompt hidden, command line visible, autosuggestion hidden.
+    // 3. Left prompt visible, right prompt hidden, command line visible, autosuggestion visible
     //
-    // 4. Newline separator (left prompt visible, right prompt hidden, command line visible,
+    // 4. Left prompt visible, right prompt hidden, command line visible, autosuggestion truncated
+    //
+    // 5. Newline separator (left prompt visible, right prompt hidden, command line visible,
     // autosuggestion visible).
     //
     // A remark about layout #4: if we've pushed the command line to a new line, why can't we draw
@@ -972,15 +974,36 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 
     // Case 3
     if (!done) {
+      calculated_width = left_prompt_width + first_command_line_width + autosuggest_total_width;
+      if (calculated_width < screen_width) {
+	result.left_prompt = left_prompt;
+	result.left_prompt_space = left_prompt_width;
+	result.autosuggestion = autosuggestion;
+	done = true;
+      }      
+    }
+    
+    // Case 4
+    if (!done) {
         calculated_width = left_prompt_width + first_command_line_width;
         if (calculated_width < screen_width) {
             result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
+
+            // Need at least two characters to show an autosuggestion.	    
+	    size_t available_autosuggest_space =
+	      screen_width - (left_prompt_width + first_command_line_width);
+	    if (autosuggest_total_width > 0 && available_autosuggest_space > 2) {
+	      size_t truncation_offset = truncation_offset_for_width(autosuggest_truncated_widths,
+								     available_autosuggest_space - 2);
+	      result.autosuggestion = wcstring(autosuggestion, truncation_offset);
+	      result.autosuggestion.push_back(get_ellipsis_char());	      
+	    }	    
             done = true;
         }
     }
 
-    // Case 4
+    // Case 5
     if (!done) {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;

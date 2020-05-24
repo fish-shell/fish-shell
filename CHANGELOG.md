@@ -20,8 +20,10 @@
 - `string sub` has a new `--end` option to specify the end index of a substring (#6765).
 - `string split` has a new `--fields` option to specify fields to output, similar to `cut -f` (#6770).
 - `printf` no longer prints an error if not given an argument (not even a format string)
+- The `true` and `false` builtins ignore any arguments, like other shells (#7030).
 
 ### Interactive improvements
+- The prompt is reprinted after a background job exits (#1018).
 
 #### New or improved bindings
 - New readline commands `undo` (Ctrl+_) and `redo` (Alt-/) can be used to revert changes to the command line or the pager search field (#6570).

@@ -35,6 +35,7 @@
 
 #### Improved terminal output
 - After clearing command history, success message ends in newline.
+- Autosuggestions now show up also when the cursor passes the right prompt (#6948).
 
 #### Completions
 - Added completions for

@@ -640,53 +640,61 @@ When using this feature together with list brackets, the brackets will be used f
 
 .. _cartesian-product:
 
-Cartesian Products
-------------------
+Combining lists (Cartesian Product)
+-----------------------------------
 
-Lists adjacent to other lists or strings are expanded as cartesian products:
+When lists are expanded with other parts attached, they are expanded with these parts still attached. Even if two lists are attached to each other, they are expanded in all combinations. This is referred to as the `cartesian product` (like in mathematics), and works basically like :ref:`brace expansion <expand-brace>`.
 
 Examples::
 
+    # Brace expansion is the most familiar - all elements in the brace combine with the parts outside of the braces
     >_ echo {good,bad}" apples"
     good apples bad apples
 
+    # The same thing happens with variable expansion.
     >_ set -l a x y z
     >_ set -l b 1 2 3
 
+    # $a is {x,y,z}, $b is {1,2,3},
+    # so this is `echo {x,y,z}{1,2,3}`
     >_ echo $a$b
     x1 y1 z1 x2 y2 z2 x3 y3 z3
 
+    # Same thing if something is between the lsits
     >_ echo $a"-"$b
     x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3
 
+    # Or a brace expansion and a variable
     >_ echo {x,y,z}$b
     x1 y1 z1 x2 y2 z2 x3 y3 z3
 
+    # A combined brace-variable expansion
     >_ echo {$b}word
     1word 2word 3word
 
+    # Special case: If $c has no elements, this expands to nothing
     >_ echo {$c}word
     # Output is an empty line
 
-Be careful when you try to use braces to separate variable names from text. The problem shown above can be avoided by wrapping the variable in double quotes instead of braces (``echo "$c"word``).
+Sometimes this may be unwanted, especially that tokens can disappear after expansion. In those cases, you should double-quote variables - ``echo "$c"word``.
 
-This also happens after `command substitution <#expand-command-substitution>`_. Therefore strings might be eliminated. This can be avoided by making the inner command return a trailing newline.
+This also happens after `command substitution <#expand-command-substitution>`_. To avoid tokens disappearing there, make the inner command return a trailing newline, or store the output in a variable and double-quote it.
 
 E.g.
 
 ::
 
-    >_ echo (printf '%s' '')banana # the printf prints literally nothing
-    >_ echo (printf '%s\n' '')banana # the printf prints just a newline, so the command substitution expands to an empty string
-    banana
-    # After command substitution, the previous line looks like:
-    >_ echo ""banana
-
-Examples::
-
     >_ set b 1 2 3
     >_ echo (echo x)$b
     x1 x2 x3
+    >_ echo (printf '%s' '')banana # the printf prints nothing, so this is nothing times "banana", which is nothing.
+    >_ echo (printf '%s\n' '')banana # the printf prints a newline, so the command substitution expands to an empty string, so this is `''banana`
+    banana
+
+This can also be super useful. E.g. if you want to go through all the files in all the directories in $PATH, you can just do::
+
+    for file in $PATH/*
+    
 
 .. _expand-index-range:
 

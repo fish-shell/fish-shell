@@ -810,19 +810,6 @@ Example:
 
 If the current directory contains the files 'foo' and 'bar', the command ``echo a(ls){1,2,3}`` will output ``abar1 abar2 abar3 afoo1 afoo2 afoo3``.
 
-.. _identifiers:
-
-Shell variable and function names
----------------------------------
-
-The names given to shell objects like variables and function names are known as "identifiers". Each type of identifier has rules that define what sequences of characters are valid to use.
-
-A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
-
-A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
-
-A bind mode name (e.g., ``bind -m abc ...``) is restricted to the rules for valid variable names.
-
 .. _variables:
 
 Shell variables
@@ -1297,6 +1284,21 @@ Builtin commands
 Many other shells have a large library of builtin commands. Most of these commands are also available as standalone commands, but have been implemented in the shell anyway. To avoid code duplication, and to avoid the confusion of subtly differing versions of the same command, ``fish`` generally only implements builtins for actions which cannot be performed by a regular command.
 
 For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch of the command.
+
+.. _identifiers:
+
+Shell variable and function names
+---------------------------------
+
+The names given to variables and functions (so called "identifiers") have to follow certain rules:
+
+- A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+
+- A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
+
+- A bind mode name (e.g., ``bind -m abc ...``) is restricted to the rules for valid variable names.
+
+Other things have other restrictions. For instance what is allowed for file names depends on your system, but at the very least they cannot contain a "/" (because that is the path separator) or NULL byte (because that is how UNIX ends strings).
 
 Interactive use
 ===============

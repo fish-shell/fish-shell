@@ -842,7 +842,7 @@ Variable scope
 There are three kinds of variables in fish: universal, global and local variables.
 
 - Universal variables are shared between all fish sessions a user is running on one computer.
-- Global variables are specific to the current fish session, but are not associated with any specific block scope, and will never be erased unless the user explicitly requests it using ``set -e``.
+- Global variables are specific to the current fish session, and will never be erased unless the user explicitly requests it using ``set -e``.
 - Local variables are specific to the current fish session, and associated with a specific block of commands, and automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``.
 
 Variables can be explicitly set to be universal with the ``-U`` or ``--universal`` switch, global with the ``-g`` or ``--global`` switch, or local with the ``-l`` or ``--local`` switch.  The scoping rules when creating or updating a variable are:
@@ -853,7 +853,8 @@ Variables can be explicitly set to be universal with the ``-U`` or ``--universal
 
 - As a special case, when no scope is given and no variable has been defined the variable will belong to the scope of the currently executing *function*. Note that this is different from the ``--local`` flag``, which would make the variable local to the current *block*.
 
-There may be many variables with the same name, but different scopes. When using a variable, the variable scope will be searched from the inside out, i.e. a local variable will be used rather than a global variable with the same name, a global variable will be used rather than a universal variable with the same name.
+There can be many variables with the same name, but different scopes. When you :ref:`use a variable <expand-variable>`, the smallest scoped variable of that name will be used. If a local variable exists, it will be used instead of the global or universal variable of the same name.
+
 
 Example:
 

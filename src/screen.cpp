@@ -974,15 +974,15 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 
     // Case 3
     if (!done) {
-      calculated_width = left_prompt_width + first_command_line_width + autosuggest_total_width;
-      if (calculated_width < screen_width) {
-	result.left_prompt = left_prompt;
-	result.left_prompt_space = left_prompt_width;
-	result.autosuggestion = autosuggestion;
-	done = true;
-      }      
+        calculated_width = left_prompt_width + first_command_line_width + autosuggest_total_width;
+        if (calculated_width < screen_width) {
+            result.left_prompt = left_prompt;
+            result.left_prompt_space = left_prompt_width;
+            result.autosuggestion = autosuggestion;
+            done = true;
+        }
     }
-    
+
     // Case 4
     if (!done) {
         calculated_width = left_prompt_width + first_command_line_width;
@@ -990,15 +990,15 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
             result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
 
-            // Need at least two characters to show an autosuggestion.	    
-	    size_t available_autosuggest_space =
-	      screen_width - (left_prompt_width + first_command_line_width);
-	    if (autosuggest_total_width > 0 && available_autosuggest_space > 2) {
-	      size_t truncation_offset = truncation_offset_for_width(autosuggest_truncated_widths,
-								     available_autosuggest_space - 2);
-	      result.autosuggestion = wcstring(autosuggestion, truncation_offset);
-	      result.autosuggestion.push_back(get_ellipsis_char());	      
-	    }	    
+            // Need at least two characters to show an autosuggestion.
+            size_t available_autosuggest_space =
+                screen_width - (left_prompt_width + first_command_line_width);
+            if (autosuggest_total_width > 0 && available_autosuggest_space > 2) {
+                size_t truncation_offset = truncation_offset_for_width(
+                    autosuggest_truncated_widths, available_autosuggest_space - 2);
+                result.autosuggestion = wcstring(autosuggestion, truncation_offset);
+                result.autosuggestion.push_back(get_ellipsis_char());
+            }
             done = true;
         }
     }

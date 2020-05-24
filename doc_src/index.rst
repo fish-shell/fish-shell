@@ -701,13 +701,22 @@ This can also be super useful. E.g. if you want to go through all the files in a
 Index range expansion
 ---------------------
 
-Sometimes it's necessary to access only some of the elements of a list, or some of the lines a command substitution outputs. Both allow this by providing a set of indices in square brackets.
+Sometimes it's necessary to access only some of the elements of a list, or some of the lines a command substitution outputs. Both are possible in fish by writing a set of indices in brackets, like::
 
-Sequences of elements can be written with the range operator ``..``. A range ``a..b`` ('a' and 'b' being integers) is expanded into a sequence of indices ``a a+1 a+2 ... b`` or ``a a-1 a-2 ... b`` depending on which of 'a' or 'b' is higher. Negative range limits are calculated from the end of the list. If an index is too large or small it's silently clamped to one or the size of the list as appropriate.
+  $var[2]
+  # or
+  $var[1..3]
 
-If the end is smaller than the start, or the start is larger than the end, range expansion will go in reverse. This is unless exactly one of the given indices is negative, so the direction doesn't change if the list has fewer elements than expected.
+In index brackets, fish understands ranges written like ``a..b`` ('a' and 'b' being indices). They are expanded into a sequence of indices from a to b (so ``a a+1 a+2 ... b``), going up if b is larger and going down if a is larger. Negative indices can also be used - they are taken from the end of the list, so ``-1`` is the last element, and ``-2`` the one before it. If an index doesn't exist the range is clamped to the next possible index.
+
+If a list has 5 elements the indices go from 1 to 5, so a range of ``2..16`` will only go from element 2 to element 5.
+
+If the end is negative the range always goes up, so ``2..-2`` will go from element 2 to 4, and ``2..-16`` won't go anywhere because there is no way to go from the second element to one that doesn't exist, while going up.
+If the start is negative the range always goes down, so ``-2..1`` will go from element 4 to 1, and ``-16..2`` won't go anywhere because there is no way to go from the second element to one that doesn't exist, while going down.
 
 A missing starting index in a range defaults to 1. This is allowed if the range is the first index expression of the sequence. Similarly, a missing ending index, defaulting to -1 is allowed for the last index range in the sequence.
+
+Multiple ranges are also possible, seperated with a space.
 
 Some examples::
 

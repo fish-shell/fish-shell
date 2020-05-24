@@ -1088,7 +1088,7 @@ Variables can be marked or unmarked as PATH variables via the ``--path`` and ``-
 Special variables
 -----------------
 
-The user can change the settings of ``fish`` by changing the values of certain variables.
+You can change the settings of ``fish`` by changing the values of certain variables.
 
 - ``PATH``, a list of directories in which to search for commands
 
@@ -1096,11 +1096,11 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
 
-- A large number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See `Variables for changing highlighting colors <#variables-color>`__ for more information.
+- A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See `Variables for changing highlighting colors <#variables-color>`__ for more information.
 
-- ``fish_emoji_width`` controls the computed width of certain characters, in particular emoji, whose rendered width changed in Unicode 9 and hence varies across terminal emulators. This should be set to 2 if your terminal emulator supports Unicode >= 9 and renders them double-width, and 1 otherwise. Set this only if you see graphical glitching when printing emoji, typically it will be automatically detected.
+- ``fish_ambiguous_width`` controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_ambiguous_width`` controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
+- ``fish_emoji_width`` controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
 
 - ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. This is explained in the documentation for the :ref:`bind <cmd-bind-escape>` builtin command. This delay facilitates using escape as a meta key.
 
@@ -1118,9 +1118,9 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``umask``, the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.
 
-- ``BROWSER``, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
+- ``BROWSER``, your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
-``fish`` also sends additional information to the user through the values of certain environment variables. The user cannot change the values of most of these variables.
+``fish`` also sends additional information to the user through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
 
 - ``_``, the name of the currently running command (though this is deprecated, and the use of ``status current-command`` is preferred).
 
@@ -1156,9 +1156,9 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``version``, the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
 
-The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
+As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables.
 
-Variables whose name are in uppercase are generally exported to the commands started by fish, while those in lowercase are not exported (``CMD_DURATION`` is an exception, for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables. ``fish`` also uses several variables internally. Such variables are prefixed with the string ``__FISH`` or ``__fish.`` These should never be used by the user. Changing their value may break fish.
+``fish`` also uses some variables internally, their name usually starting with ``__fish``. These are internal and should not typically be modified directly.
 
 .. _variables-status:
 

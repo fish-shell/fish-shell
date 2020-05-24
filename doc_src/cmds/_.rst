@@ -1,0 +1,34 @@
+.. _cmd-_:
+
+_ - call fish's translations
+============================
+
+Synopsis
+--------
+
+::
+
+    _ STRING...
+
+Description
+-----------
+
+``_`` is used to let fish translate a string to another language. This can only be used to look up fish's own translations, and it requires fish to be built with gettext support, or it will simply echo the strings back.
+
+Which language it translates to depends on the current language settings - ``$LANG``, ``$LC_ALL`` and such.
+
+
+Options
+-------
+
+``_`` has no options.
+
+Examples
+--------
+
+
+
+::
+
+    > _ File
+    Datei

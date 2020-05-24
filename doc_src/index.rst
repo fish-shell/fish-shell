@@ -660,7 +660,7 @@ Examples::
     >_ echo $a$b
     x1 y1 z1 x2 y2 z2 x3 y3 z3
 
-    # Same thing if something is between the lsits
+    # Same thing if something is between the lists
     >_ echo $a"-"$b
     x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3
 
@@ -691,10 +691,10 @@ E.g.
     >_ echo (printf '%s\n' '')banana # the printf prints a newline, so the command substitution expands to an empty string, so this is `''banana`
     banana
 
-This can also be super useful. E.g. if you want to go through all the files in all the directories in $PATH, you can just do::
+This can also be useful. For example, if you want to go through all the files in all the directories in $PATH, use::
 
     for file in $PATH/*
-    
+
 
 .. _expand-index-range:
 
@@ -716,7 +716,7 @@ If the start is negative the range always goes down, so ``-2..1`` will go from e
 
 A missing starting index in a range defaults to 1. This is allowed if the range is the first index expression of the sequence. Similarly, a missing ending index, defaulting to -1 is allowed for the last index range in the sequence.
 
-Multiple ranges are also possible, seperated with a space.
+Multiple ranges are also possible, separated with a space.
 
 Some examples::
 

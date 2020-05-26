@@ -141,7 +141,7 @@ function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --descriptio
 end
 
 #
-# Whenever a prompt is displayed, make sure that interactive
+# When a prompt is first displayed, make sure that interactive
 # mode-specific initializations have been performed.
 # This handler removes itself after it is first called.
 #

@@ -218,10 +218,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Load key bindings
     __fish_reload_key_bindings
 
+    # Enable bracketed paste exception when running unit tests so we don't have to add
+    # the sequences to bind.expect
     if not set -q FISH_UNIT_TESTS_RUNNING
         # Enable bracketed paste before every prompt (see __fish_shared_bindings for the bindings).
-        # Disable it for unit tests so we don't have to add the sequences to bind.expect
-        function __fish_enable_bracketed_paste --on-event fish_prompt
+        # Enable bracketed paste when the read builtin is used.
+        function __fish_enable_bracketed_paste --on-event fish_prompt --on-event fish_read
             printf "\e[?2004h"
         end
 

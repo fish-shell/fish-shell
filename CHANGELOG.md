@@ -12,6 +12,7 @@
 - The history file is now created with user-private permissions, matching other shells (#6926). The directory containing the history file remains private, so there should not have been any private date revealed.
 - fish no longer disables flow control after every command. Enterprising users can now enable it for external commands with `stty`. (#2315)
 - Added a `fish_job_summary` function which is called whenever a background job stops or ends, or any job terminates from a signal. The default behaviour can now be customized by redefining this function.
+- The `fish_prompt` event no longer fires when `read` is used. If you need a function to run any time `read` is invoked by a script, use the new `fish_read` event instead.
 
 ### Syntax changes and new commands
 

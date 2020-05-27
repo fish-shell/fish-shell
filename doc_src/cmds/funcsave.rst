@@ -9,6 +9,7 @@ Synopsis
 ::
 
     funcsave FUNCTION_NAME
+    funcsave [(-d | --directory) where/to/save ] FUNCTION_NAME
 
 
 Description

@@ -280,7 +280,7 @@ or
 
 appear to work, because most of the time the string doesn't match and so it passes along the `string-*`, which is then interpreted by the receiving program.
 
-But it also causes bash to need workarounds like
+But it also means that these commands can stop working at any moment once a matching file is encountered (because it has been created or the command is executed in a different working directory), and for bash to need workarounds like
 
 .. code-block:: sh
 
@@ -291,8 +291,6 @@ But it also causes bash to need workarounds like
   done
 
 (from http://mywiki.wooledge.org/BashFAQ/004)
-
-And for commands to suddenly stop working once a file with a matching name is created.
 
 For these reasons, fish does not do this, and instead expects asterisks to be quoted or escaped if they aren't supposed to be expanded.
 

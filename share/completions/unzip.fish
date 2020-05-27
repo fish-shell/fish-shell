@@ -26,25 +26,7 @@ complete -c unzip -s M -d "pipe through `more` pager"
 
 # Debian version of unzip
 if unzip -v 2>/dev/null | string match -eq Debian
-
-    # the first non-switch argument should be the zipfile
-    complete -c unzip -n __fish_is_first_token -xa '(
-        __fish_complete_suffix .zip
-        __fish_complete_suffix .jar
-        __fish_complete_suffix .aar
-    )'
-
-    # Files thereafter are either files to include or exclude from the operation
+    # Files after the first token are either files to include or exclude from the operation
     set -l zipfile
     complete -c unzip -n 'not __fish_is_first_token' -xa '(unzip -l (eval set zipfile (__fish_first_token); echo $zipfile) | string replace -r --filter ".*:\S+\s+(.*)" "\$1")'
-
-else
-
-    # all tokens should be zip files
-    complete -c unzip -xa '(
-        __fish_complete_suffix .zip
-        __fish_complete_suffix .jar
-        __fish_complete_suffix .aar
-    )'
-
 end

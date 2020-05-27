@@ -734,7 +734,12 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key) con
 maybe_t<env_var_t> env_scoped_impl_t::get(const wcstring &key, env_mode_flags_t mode) const {
     const query_t query(mode);
 
-    maybe_t<env_var_t> result = try_get_computed(key);
+    maybe_t<env_var_t> result;
+    // Computed variables are effectively global and can't be shadowed.
+    if (query.global) {
+        result = try_get_computed(key);
+    }
+
     if (!result && query.local) {
         result = try_get_local(key);
     }

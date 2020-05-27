@@ -624,4 +624,15 @@ $FISH -c 'set __fish_test_universal_exported_var 2'
 env | string match -e __fish_test_universal_exported_var
 #CHECK: __fish_test_universal_exported_var=2
 
+# Test that computed variables are global.
+# If they can be set they can only be set in global scope,
+# so they should only be shown in global scope.
+set -S status
+#CHECK: $status: set in global scope, unexported, with 1 elements
+#CHECK: $status[1]: |0|
+
+set -ql history
+echo $status
+#CHECK: 1
+
 true

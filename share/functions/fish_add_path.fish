@@ -42,16 +42,9 @@ function fish_add_path --description "Add paths to the PATH"
 
         # realpath complains if a parent directory does not exist, so we silence stderr.
         set -l p (builtin realpath -- $path 2>/dev/null)
-        if not test -d "$p"
-            printf (_ "%s: '%s' is not a directory\n") fish_add_path $path >&2
-            set p $path
 
-            # Cheesy way to make the path absolute.
-            # If a directory component in the middle doesn't exist, realpath gives up entirely.
-            # So we simply add our $PWD because being absolute is more important than being canonical.
-            string match -q '/*' -- $p
-            or set p $PWD/$p
-        end
+        # Ignore non-existing paths
+        test -d "$p"; or continue
 
         if set -l ind (contains -i -- $p $$var)
             # In move-mode, we remove it from its current position and add it back.

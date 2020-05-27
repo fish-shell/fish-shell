@@ -26,7 +26,7 @@ Components are added in the order they are given, and they are prepended to the 
 
 If no component is new, the variable ($fish_user_paths or $PATH) is not set again or otherwise modified, so variable handlers are not triggered.
 
-If a component is not an existing directory, ``fish_add_path`` prints a warning and then adds it anyway.
+If a component is not an existing directory, ``fish_add_path`` ignores it.
 
 Options
 -------

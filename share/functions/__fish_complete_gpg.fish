@@ -110,7 +110,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
 
     complete -c $__fish_complete_gpg_command -l gen-key -d "Generate a new key pair"
 
-    complete -c $__fish_complete_gpg_command -l edit-key -d "Present a menu which enables you to do all key related tasks" -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)"
+    complete -c $__fish_complete_gpg_command -l edit-key -d "Present a menu which enables you to do all key related tasks" -xa "(__fish_complete_gpg_key_id $__fish_complete_gpg_command)"
 
     complete -c $__fish_complete_gpg_command -l sign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key"
     complete -c $__fish_complete_gpg_command -l lsign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key but mark it as non exportable"

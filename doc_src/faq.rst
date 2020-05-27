@@ -280,7 +280,7 @@ or
 
 appear to work, because most of the time the string doesn't match and so it passes along the `string-*`, which is then interpreted by the receiving program.
 
-But it also means that these commands can stop working at any moment once a matching file is encountered (because it has been created or the command is executed in a different working directory), and for bash to need workarounds like
+But it also means that these commands can stop working at any moment once a matching file is encountered (because it has been created or the command is executed in a different working directory), and that bash to need workarounds like
 
 .. code-block:: sh
 

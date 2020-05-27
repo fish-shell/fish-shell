@@ -248,6 +248,56 @@ In fish versions prior to 2.5.0 it was possible to create a function named ``-``
 
     abbr -a -- - 'cd -'
 
+My command prints "No matches for wildcard" but works in bash
+-------------------------------------------------------------
+
+In short: :ref:`quote <quotes>` or :ref:`escape <escapes>` the wildcard::
+
+  scp user@ip:/dir/"string-*"
+
+When fish sees an unquoted ``*``, it performs :ref:`wildcard expansion <expand-wildcard>`. That means it tries to match filenames to the given string.
+
+If the wildcard doesn't match any files, fish prints an error instead of running the command::
+
+  > echo *this*does*not*exist
+  fish: No matches for wildcard '*this*does*not*exist'. See `help expand`.
+  echo *this*does*not*exist 2>| xsel --clipboard
+       ^
+
+Now, bash also tries to match files in this case, but when it doesn't find a match, it passes along the literal wildcard string instead.
+
+That means that commands like the above
+
+.. code-block:: sh
+
+  scp user@ip:/dir/string-*
+
+or
+
+.. code-block:: sh
+
+  apt install postgres-*
+
+appear to work, because most of the time the string doesn't match and so it passes along the `string-*`, which is then interpreted by the receiving program.
+
+But it also causes bash to need workarounds like
+
+.. code-block:: sh
+
+  for f in ./*.mpg; do
+        # We need to test if the file really exists because the wildcard might have failed to match.
+        test -f "$f" || continue
+        mympgviewer "$f"
+  done
+
+(from http://mywiki.wooledge.org/BashFAQ/004)
+
+And for commands to suddenly stop working once a file with a matching name is created.
+
+For these reasons, fish does not do this, and instead expects asterisks to be quoted or escaped if they aren't supposed to be expanded.
+
+This is similar to bash's "failglob" option.
+
 .. _faq-unicode:
 
 I'm getting weird graphical glitches (a staircase effect, ghost characters,...)?

@@ -20,7 +20,7 @@ function funcsave --description "Save the current definition of all specified fu
     end
 
     if not mkdir -p $funcdir
-        printf (_ "%s: %s: Could not create configuration directory\n") funcsave $funcdir
+        printf (_ "%s: Could not create configuration directory '%s'\n") funcsave $funcdir
         return 1
     end
 

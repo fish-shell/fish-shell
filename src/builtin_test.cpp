@@ -182,9 +182,10 @@ class test_parser {
    private:
     wcstring_list_t strings;
     wcstring_list_t errors;
+    int error_idx;
 
-    unique_ptr<expression> error(const wchar_t *fmt, ...);
-    void add_error(const wchar_t *fmt, ...);
+    unique_ptr<expression> error(unsigned int idx, const wchar_t *fmt, ...);
+    void add_error(unsigned int idx, const wchar_t *fmt, ...);
 
     const wcstring &arg(unsigned int idx) { return strings.at(idx); }
 
@@ -287,26 +288,32 @@ class parenthetical_expression : public expression {
     bool evaluate(wcstring_list_t &errors) override;
 };
 
-void test_parser::add_error(const wchar_t *fmt, ...) {
+void test_parser::add_error(unsigned int idx, const wchar_t *fmt, ...) {
     assert(fmt != nullptr);
     va_list va;
     va_start(va, fmt);
     this->errors.push_back(vformat_string(fmt, va));
     va_end(va);
+    if (this->errors.size() == 1) {
+        this->error_idx = idx;
+    }
 }
 
-unique_ptr<expression> test_parser::error(const wchar_t *fmt, ...) {
+unique_ptr<expression> test_parser::error(unsigned int idx, const wchar_t *fmt, ...) {
     assert(fmt != nullptr);
     va_list va;
     va_start(va, fmt);
     this->errors.push_back(vformat_string(fmt, va));
     va_end(va);
+    if (this->errors.size() == 1) {
+        this->error_idx = idx;
+    }
     return nullptr;
 }
 
 unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, unsigned int end) {
     if (start >= end) {
-        return error(L"Missing argument at index %u", start);
+        return error(start, L"Missing argument at index %u", start);
     }
     token_t tok = token_for_string(arg(start))->tok;
     if (tok == test_bang) {
@@ -339,6 +346,7 @@ unique_ptr<expression> test_parser::parse_combining_expression(unsigned int star
                 this->errors.insert(
                     this->errors.begin(),
                     format_string(L"Expected a combining operator like '-a' at index %u", idx));
+                error_idx = idx;
                 break;
             }
             combiners.push_back(combiner);
@@ -348,7 +356,7 @@ unique_ptr<expression> test_parser::parse_combining_expression(unsigned int star
         // Parse another expression.
         unique_ptr<expression> expr = parse_unary_expression(idx, end);
         if (!expr) {
-            add_error(L"Missing argument at index %u", idx);
+            add_error(idx, L"Missing argument at index %u", idx);
             if (!first) {
                 // Clean up the dangling combiner, since it never got its right hand expression.
                 combiners.pop_back();
@@ -374,10 +382,10 @@ unique_ptr<expression> test_parser::parse_combining_expression(unsigned int star
 unique_ptr<expression> test_parser::parse_unary_primary(unsigned int start, unsigned int end) {
     // We need two arguments.
     if (start >= end) {
-        return error(L"Missing argument at index %u", start);
+        return error(start, L"Missing argument at index %u", start);
     }
     if (start + 1 >= end) {
-        return error(L"Missing argument at index %u", start + 1);
+        return error(start + 1, L"Missing argument at index %u", start + 1);
     }
 
     // All our unary primaries are prefix, so the operator is at start.
@@ -393,12 +401,12 @@ unique_ptr<expression> test_parser::parse_just_a_string(unsigned int start, unsi
 
     // We need one argument.
     if (start >= end) {
-        return error(L"Missing argument at index %u", start);
+        return error(start, L"Missing argument at index %u", start);
     }
 
     const token_info_t *info = token_for_string(arg(start));
     if (info->tok != test_unknown) {
-        return error(L"Unexpected argument type at index %u", start);
+        return error(start, L"Unexpected argument type at index %u", start);
     }
 
     // This is hackish; a nicer way to implement this would be with a "just a string" expression
@@ -410,7 +418,7 @@ unique_ptr<expression> test_parser::parse_binary_primary(unsigned int start, uns
     // We need three arguments.
     for (unsigned int idx = start; idx < start + 3; idx++) {
         if (idx >= end) {
-            return error(L"Missing argument at index %u", idx);
+            return error(idx, L"Missing argument at index %u", idx);
         }
     }
 
@@ -438,11 +446,11 @@ unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, uns
     unsigned close_index = subexpr->range.end;
     assert(close_index <= end);
     if (close_index == end) {
-        return error(L"Missing close paren at index %u", close_index);
+        return error(close_index, L"Missing close paren at index %u", close_index);
     }
     const token_info_t *close_paren = token_for_string(arg(close_index));
     if (close_paren->tok != test_paren_close) {
-        return error(L"Expected close paren at index %u", close_index);
+        return error(close_index, L"Expected close paren at index %u", close_index);
     }
 
     // Success.
@@ -452,7 +460,7 @@ unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, uns
 
 unique_ptr<expression> test_parser::parse_primary(unsigned int start, unsigned int end) {
     if (start >= end) {
-        return error(L"Missing argument at index %u", start);
+        return error(start, L"Missing argument at index %u", start);
     }
 
     unique_ptr<expression> expr = nullptr;
@@ -510,7 +518,7 @@ unique_ptr<expression> test_parser::parse_4_arg_expression(unsigned int start, u
 
 unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigned int end) {
     if (start >= end) {
-        return error(L"Missing argument at index %u", start);
+        return error(start, L"Missing argument at index %u", start);
     }
 
     unsigned int argc = end - start;
@@ -519,7 +527,7 @@ unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigne
             DIE("argc should not be zero");  // should have been caught by the above test
         }
         case 1: {
-            return error(L"Missing argument at index %u", start + 1);
+            return error(start + 1, L"Missing argument at index %u", start + 1);
         }
         case 2: {
             return parse_unary_expression(start, end);
@@ -548,10 +556,26 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
     // Handle errors.
     // For now we only show the first error.
     if (!parser.errors.empty()) {
+        int narg = 0;
+        int len_to_err = 0;
+        wcstring commandline;
+        for (auto arg: args) {
+            if (narg > 0) {
+                commandline.append(L" ");
+            }
+            commandline.append(arg);
+            narg++;
+            if (narg == parser.error_idx) {
+                len_to_err = fish_wcswidth(commandline.c_str(), commandline.length());
+            }
+        }
         err.append(program_name);
         err.append(L": ");
         err.append(parser.errors.at(0));
         err.push_back(L'\n');
+        err.append(commandline);
+        err.push_back(L'\n');
+        err.append(format_string(L"%*ls%ls\n", len_to_err + 1, L" ", L"^"));
     }
 
     if (result) {
@@ -863,7 +887,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     unique_ptr<expression> expr = test_parser::parse_args(args, err, program_name);
     if (!expr) {
         streams.err.append(err);
-        builtin_print_error_trailer(parser, streams.err, program_name);
+        streams.err.append(parser.current_line());
         return STATUS_CMD_ERROR;
     }
 

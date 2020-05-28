@@ -153,7 +153,7 @@ install(DIRECTORY share/tools/web_config
 install(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is important!
         DESTINATION ${docdir} OPTIONAL)
-install(FILES CHANGELOG.md DESTINATION ${docdir})
+install(FILES CHANGELOG.rst DESTINATION ${docdir})
 
 install(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 

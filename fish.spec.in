@@ -87,8 +87,8 @@ make %{?_smp_mflags}
 %if 0%{?suse_version}
 %suse_update_desktop_file fish "System;TerminalEmulator"
 %endif
-cp -a README.md %{buildroot}%{_pkgdocdir}
-cp -a CONTRIBUTING.md %{buildroot}%{_pkgdocdir}
+cp -a README.rst %{buildroot}%{_pkgdocdir}
+cp -a CONTRIBUTING.rst %{buildroot}%{_pkgdocdir}
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir

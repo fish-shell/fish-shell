@@ -15,7 +15,7 @@ Fish source should limit the C++ features it uses to those available in
 C++11. It should not use exceptions.
 
 Before introducing a new dependency, please make it optional with
-graceful failure if possible. Add any new dependencies to the README.md
+graceful failure if possible. Add any new dependencies to the README.rst
 under the *Running* and/or *Building* sections.
 
 Versioning

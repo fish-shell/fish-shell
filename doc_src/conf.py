@@ -191,6 +191,7 @@ def get_command_description(path, name):
 man_pages = [
     (master_doc, "fish-doc", "fish-shell Documentation", [author], 1),
     ("tutorial", "fish-tutorial", "fish-shell tutorial", [author], 1),
+    ("CHANGELOG", "fish-changelog", "fish-shell changelog", [author], 1),
     ("completions", "fish-completions", "Writing fish completions", [author], 1),
     ("faq", "fish-faq", "fish-shell faq", [author], 1),
 ]

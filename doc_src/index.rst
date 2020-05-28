@@ -1878,3 +1878,4 @@ Other help pages
    completions
    faq
    license
+   CHANGELOG

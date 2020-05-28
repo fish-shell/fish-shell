@@ -40,10 +40,10 @@ Notable improvements and fixes
    use the new ``fish_read`` event instead.
 
 Syntax changes and new commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 Scripting improvements
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 -  Range limits in index range expansions like ``$x[$start..$end]`` may
    be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last
@@ -58,7 +58,7 @@ Scripting improvements
    shells (#7030).
 
 Interactive improvements
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 -  The prompt is reprinted after a background job exits (#1018).
 
@@ -117,10 +117,10 @@ Completions
    (#6924).
 
 Deprecations and removed features
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 For distributors and developers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 -  fish source tarballs are now distributed using the XZ compression
    method (#5460).
@@ -302,7 +302,7 @@ Notable improvements and fixes
 .. _syntax-changes-and-new-commands-1:
 
 Syntax changes and new commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 -  A new builtin command, ``time``, which allows timing of fish
    functions and builtins as well as external commands (#117).
@@ -329,7 +329,7 @@ Syntax changes and new commands
 .. _scripting-improvements-1:
 
 Scripting improvements
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 -  ``string split0`` now returns 0 if it split something (#5701).
 -  In the interest of consistency, ``builtin -q`` and ``command -q`` can
@@ -428,7 +428,7 @@ Scripting improvements
 .. _interactive-improvements-1:
 
 Interactive improvements
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 -  New Base16 color options are available through the Web-based
    configuration (#6504).
@@ -656,7 +656,7 @@ Completions
 .. _deprecations-and-removed-features-1:
 
 Deprecations and removed features
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 -  The vcs-prompt functions have been promoted to names without
    double-underscore, so \__fish_git_prompt is now fish_git_prompt,
@@ -679,7 +679,7 @@ Deprecations and removed features
 .. _for-distributors-and-developers-1:
 
 For distributors and developers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 -  fish 3.0 introduced a CMake-based build system. In fish 3.1, both the
    Autotools-based build and legacy Xcode build system have been
@@ -719,7 +719,7 @@ fish 3.0.2 (released February 19, 2019)
 This release of fish fixes an issue discovered in fish 3.0.1.
 
 Fixes and improvements
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 -  The PWD environment variable is now ignored if it does not resolve to
    the true working directory, fixing strange behaviour in terminals
@@ -728,7 +728,6 @@ Fixes and improvements
 If you are upgrading from version 2.7.1 or before, please also review
 the release notes for 3.0.1, 3.0.0 and 3.0b1 (included below).
 
---------------
 
 fish 3.0.1 (released February 11, 2019)
 =======================================
@@ -739,7 +738,7 @@ This release of fish fixes a number of major issues discovered in fish
 .. _fixes-and-improvements-1:
 
 Fixes and improvements
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 -  ``exec`` does not complain about running foreground jobs when called
    (#5449).
@@ -778,7 +777,7 @@ Fixes and improvements
 -  Improvements to the documentation and certain completions.
 
 Known issues
-~~~~~~~~~~~~
+------------
 
 There is one significant known issue that was not corrected before the
 release:
@@ -920,7 +919,7 @@ Notable fixes and improvements
 .. _syntax-changes-and-new-commands-2:
 
 Syntax changes and new commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 -  fish now supports ``&&`` (like ``and``), ``||`` (like ``or``), and
    ``!`` (like ``not``), for better migration from POSIX-compliant
@@ -956,7 +955,7 @@ Syntax changes and new commands
    ``%self`` and ``%last``.
 
 New features in commands
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 -  ``alias`` has a new ``--save`` option to save the generated function
    immediately (#4878).
@@ -997,7 +996,7 @@ New features in commands
 .. _interactive-improvements-2:
 
 Interactive improvements
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 -  A pipe at the end of a line now allows the job to continue on the
    next line (#1285).
@@ -1111,7 +1110,7 @@ Interactive improvements
 -  Improved French translations.
 
 Other fixes and improvements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 -  Significant performance improvements to ``abbr`` (#4048), setting
    variables (#4200, #4341), executing functions, globs (#4579),
@@ -1143,7 +1142,7 @@ Other fixes and improvements
 .. _for-distributors-and-developers-2:
 
 For distributors and developers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 -  fish ships with a new build system based on CMake. CMake 3.2 is the
    minimum required version. Although the autotools-based Makefile and
@@ -1470,7 +1469,7 @@ Starting with version 2.5, fish requires a more up-to-date version of
 C++, specifically C++11 (from 2011). This affects some older platforms:
 
 Linux
-~~~~~
+^^^^^
 
 For users building from source, GCC’s g++ 4.8 or later, or LLVM’s clang
 3.3 or later, are known to work. Older platforms may require a newer
@@ -1488,7 +1487,7 @@ Installing newer version of fish on these systems will require building
 from source.
 
 OS X SnowLeopard
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Starting with version 2.5, fish requires a C++11 standard library on OS
 X 10.6 (“SnowLeopard”). If this library is not installed, you will see
@@ -1878,8 +1877,8 @@ Other notable fixes and improvements
 -  Directory autosuggestions will now descend as far as possible if
    there is only one child directory (#2531)
 -  Add support for bright colors (#1464)
--  Allow Ctrl-J (:raw-latex:`\cj`) to be bound separately from Ctrl-M
-   (:raw-latex:`\cm`) (#217)
+-  Allow Ctrl-J (`\cj`) to be bound separately from Ctrl-M
+   (`\cm`) (#217)
 -  psub now has a “-s”/“–suffix” option to name the temporary file with
    that suffix
 -  Enable 24-bit colors on select terminals (#2495)
@@ -1933,7 +1932,7 @@ fish 2.2.0 (released July 12, 2015)
 .. _significant-changes-4:
 
 Significant changes
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 -  Abbreviations: the new ``abbr`` command allows for
    interactively-expanded abbreviations, allowing quick access to
@@ -1954,7 +1953,7 @@ Significant changes
 .. _backward-incompatible-changes-1:
 
 Backward-incompatible changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 These are kept to a minimum, but either change undocumented features or
 are too hard to use in their existing forms. These changes may break
@@ -1975,7 +1974,7 @@ existing scripts.
 .. _other-notable-fixes-and-improvements-3:
 
 Other notable fixes and improvements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------
 
 -  New documentation design (#1662), which requires a Doxygen version
    1.8.7 or newer to build.
@@ -2083,7 +2082,7 @@ Distributors are highly encouraged to call ``killall fishd``,
 users to do so.
 
 Security fixes
-~~~~~~~~~~~~~~
+--------------
 
 -  The fish_config web interface now uses an authentication token to
    protect requests and only responds to requests from the local machine
@@ -2099,7 +2098,7 @@ Security fixes
    CVE-2014-3219). #1440
 
 Other fixes
-~~~~~~~~~~~
+-----------
 
 -  ``fishd`` now ignores SIGPIPE, fixing crashes using tools like GNU
    Parallel and which occurred more often as a result of the other
@@ -2162,7 +2161,7 @@ Other Notable Fixes
 
 -  Tab completions now work properly within nested subcommands. #913
 
--  ``printf`` supports :raw-latex:`\e`, the escape character. #910
+-  ``printf`` supports `\e`, the escape character. #910
 
 -  ``fish_config history`` no longer shows duplicate items. #900
 

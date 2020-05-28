@@ -214,7 +214,7 @@ On RedHat, CentOS, or Amazon EC2:
 Contributing Changes to the Code
 --------------------------------
 
-See the `Guide for Developers <CONTRIBUTING.md>`__.
+See the `Guide for Developers <CONTRIBUTING.rst>`__.
 
 Contact Us
 ----------

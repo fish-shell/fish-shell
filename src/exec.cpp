@@ -202,13 +202,13 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
 }
 
 /// If our pgroup assignment mode wants us to use the first external proc, then apply it here.
-static void maybe_assign_pgid_from_child(const std::shared_ptr<job_t> &j, pid_t child_pid) {
-    // If our assignment mode is the first process, then assign it.
-    if (j->pgid == INVALID_PID &&
-        j->pgroup_provenance == pgroup_provenance_t::first_external_proc) {
+/// \returns the job's pgid, which should always be set to something valid after this call.
+static pid_t maybe_assign_pgid_from_child(const std::shared_ptr<job_t> &j, pid_t child_pid) {
+    if (j->pgroup_provenance == pgroup_provenance_t::first_external_proc &&
+        !j->job_tree->get_pgid()) {
         j->job_tree->set_pgid(child_pid);
-        j->pgid = child_pid;
     }
+    return *j->job_tree->get_pgid();
 }
 
 /// Construct an internal process for the process p. In the background, write the data \p outdata to
@@ -338,15 +338,20 @@ bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask) {
 static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t *p,
                                    const dup2_list_t &dup2s, const char *fork_type,
                                    const std::function<void()> &child_action) {
+    assert(!job->job_tree->is_placeholder() &&
+           "Placeholders are for internal functions, they should never fork");
     pid_t pid = execute_fork();
     if (pid == 0) {
         // This is the child process. Setup redirections, print correct output to
         // stdout and stderr, and then exit.
-        maybe_t<pid_t> new_termowner{};
         p->pid = getpid();
-        child_set_group(job.get(), p);
-        child_setup_process(job->should_claim_terminal() ? job->pgid : INVALID_PID, *job, true,
-                            dup2s);
+        pid_t pgid = maybe_assign_pgid_from_child(job, p->pid);
+
+        // The child attempts to join the pgroup.
+        if (int err = execute_setpgid(p->pid, pgid, false /* not parent */)) {
+            report_setpgid_error(err, pgid, job.get(), p);
+        }
+        child_setup_process(job->should_claim_terminal() ? pgid : INVALID_PID, *job, true, dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }
@@ -364,8 +369,13 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
           p->argv0());
 
     p->pid = pid;
-    maybe_assign_pgid_from_child(job, p->pid);
-    set_child_group(job.get(), p->pid);
+    pid_t pgid = maybe_assign_pgid_from_child(job, p->pid);
+
+    // The parent attempts to send the child to its pgroup.
+    // EACCESS is an expected benign error as the child may have called exec().
+    if (int err = execute_setpgid(p->pid, pgid, true /* is parent */)) {
+        if (err != EACCES) report_setpgid_error(err, pgid, job.get(), p);
+    }
     terminal_maybe_give_to_job(job.get(), false);
     return true;
 }
@@ -576,12 +586,13 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
         // these are all things do_fork() takes care of normally (for forked processes):
         p->pid = pid;
-        maybe_assign_pgid_from_child(j, p->pid);
+        pid_t pgid = maybe_assign_pgid_from_child(j, p->pid);
 
+        // posix_spawn should in principle set the pgid before returning.
         // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
         // therefore the parent may not have seen it be set yet.
         // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
-        set_child_group(j.get(), p->pid);
+        execute_setpgid(p->pid, pgid, true /* is parent */);
         terminal_maybe_give_to_job(j.get(), false);
     } else
 #endif
@@ -942,17 +953,12 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
     const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == pgrp);
 
     // Perhaps we know our pgroup already.
-    assert(j->pgid == INVALID_PID && "Should not yet have a pid.");
     switch (j->pgroup_provenance) {
         case pgroup_provenance_t::lineage: {
-            auto pgid = j->job_tree->get_pgid();
-            assert(pgid && *pgid != INVALID_PID && "Should have valid pgid");
-            j->pgid = *pgid;
             break;
         }
 
         case pgroup_provenance_t::fish_itself:
-            j->pgid = pgrp;
             // TODO: should not need this 'if' here. Rationalize this.
             if (! j->job_tree->is_placeholder()) {
                 j->job_tree->set_pgid(pgrp);
@@ -1050,11 +1056,13 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
     }
 
     FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id(),
-          j->command_wcstr(), j->pgid);
+          j->command_wcstr(), j->get_pgid() ? *j->get_pgid() : -2);
 
     j->mark_constructed();
     if (!j->is_foreground()) {
-        parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
+        auto pgid = j->get_pgid();
+        assert(pgid.has_value() && "Backgroudn jobs should always have a pgroup");
+        parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(*pgid));
     }
 
     if (exec_error) {

@@ -53,6 +53,11 @@ static int cpu_use(const job_t *j) {
 
 /// Print information about the specified job.
 static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_t &streams) {
+    int pgid = INVALID_PID;
+    if (auto job_pgid = j->get_pgid()) {
+        pgid = *job_pgid;
+    }
+
     switch (mode) {
         case JOBS_PRINT_NOTHING: {
             break;
@@ -67,7 +72,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
                 streams.out.append(_(L"State\tCommand\n"));
             }
 
-            streams.out.append_format(L"%d\t%d\t", j->job_id(), j->pgid);
+            streams.out.append_format(L"%d\t%d\t", j->job_id(), pgid);
 
             if (have_proc_stat()) {
                 streams.out.append_format(L"%d%%\t", cpu_use(j));
@@ -84,7 +89,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
                 // Print table header before first job.
                 streams.out.append(_(L"Group\n"));
             }
-            streams.out.append_format(L"%d\n", j->pgid);
+            streams.out.append_format(L"%d\n", pgid);
             break;
         }
         case JOBS_PRINT_PID: {

@@ -145,7 +145,7 @@ bool job_t::should_report_process_exits() const {
     // itself.
     // TODO: rationalize this.
     // If we never got a pgid then we never launched the external process, so don't report it.
-    if (this->pgid == INVALID_PID) {
+    if (!this->get_pgid()) {
         return false;
     }
 
@@ -170,11 +170,11 @@ bool job_t::signal(int signal) {
     // Presumably we are distinguishing between the two cases below because we do
     // not want to send ourselves the signal in question in case the job shares
     // a pgid with the shell.
-
-    if (pgid != getpgrp()) {
-        if (killpg(pgid, signal) == -1) {
+    auto pgid = get_pgid();
+    if (pgid.has_value() && *pgid != getpgrp()) {
+        if (killpg(*pgid, signal) == -1) {
             char buffer[512];
-            sprintf(buffer, "killpg(%d, %s)", pgid, strsignal(signal));
+            sprintf(buffer, "killpg(%d, %s)", *pgid, strsignal(signal));
             wperror(str2wcstring(buffer).c_str());
             return false;
         }
@@ -692,8 +692,8 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         // handlers.
         if (!j->from_event_handler() && j->is_completed()) {
             if (j->should_report_process_exits()) {
-                exit_events.push_back(
-                    proc_create_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0));
+                pid_t pgid = *j->get_pgid();
+                exit_events.push_back(proc_create_event(L"JOB_EXIT", event_type_t::exit, -pgid, 0));
             }
             exit_events.push_back(
                 proc_create_event(L"JOB_EXIT", event_type_t::caller_exit, j->job_id(), 0));
@@ -796,7 +796,11 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
         return notneeded;
     }
 
-    if (j->pgid == INVALID_PID || j->pgid == 0) {
+    // Get the pgid; we may not have one.
+    pid_t pgid{};
+    if (auto mpgid = j->get_pgid()) {
+        pgid = *mpgid;
+    } else {
         FLOG(proc_termowner, L"terminal_give_to_job() returning early due to no process group");
         return notneeded;
     }
@@ -831,12 +835,12 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
         return error;
     }
     assert(getpgrp_res >= 0);
-    if (getpgrp_res == j->pgid) {
-        FLOGF(proc_termowner, L"Process group %d already has control of terminal", j->pgid);
+    if (getpgrp_res == pgid) {
+        FLOGF(proc_termowner, L"Process group %d already has control of terminal", pgid);
     } else {
         FLOGF(proc_termowner,
               L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d",
-              j->pgid);
+              pgid);
 
         // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
         // is not the process group ID of a process in the same session as the calling process."
@@ -847,7 +851,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
         // 4.4.0), EPERM does indeed disappear on retry. The important thing is that we can
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
-        while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
+        while (tcsetpgrp(STDIN_FILENO, pgid) != 0) {
             FLOGF(proc_termowner, L"tcsetpgrp failed: %d", errno);
 
             bool pgroup_terminated = false;
@@ -858,7 +862,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 pgroup_terminated = true;
             } else if (errno == EPERM) {
                 // Retry so long as this isn't because the process group is dead.
-                int wait_result = waitpid(-1 * j->pgid, &wait_result, WNOHANG);
+                int wait_result = waitpid(-1 * pgid, &wait_result, WNOHANG);
                 if (wait_result == -1) {
                     // Note that -1 is technically an "error" for waitpid in the sense that an
                     // invalid argument was specified because no such process group exists any
@@ -869,7 +873,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 } else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
-                    FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+                    FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", pgid);
                     continue;
                 }
             } else {
@@ -879,7 +883,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                     return notneeded;
                 } else {
                     FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
-                          j->job_id(), j->command_wcstr(), j->pgid);
+                          j->job_id(), j->command_wcstr(), pgid);
                     wperror(L"tcsetpgrp");
                 }
                 return error;
@@ -892,7 +896,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
                 FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n",
-                      j->pgid);
+                      pgid);
                 return notneeded;
             }
 
@@ -914,12 +918,13 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
 /// so that we can restore the terminal ownership to the job at a later time.
 static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     errno = 0;
-    if (j->pgid == 0) {
+    auto pgid = j->get_pgid();
+    if (!pgid.has_value()) {
         FLOG(proc_pgroup, "terminal_return_from_job() returning early due to no process group");
         return true;
     }
 
-    FLOG(proc_pgroup, "fish reclaiming terminal after job pgid", j->pgid);
+    FLOG(proc_pgroup, "fish reclaiming terminal after job pgid", *pgid);
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();
         FLOGF(warning, _(L"Could not return shell to foreground"));
@@ -956,6 +961,9 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     // Put job first in the job list.
     parser.job_promote(this);
     mut_flags().notified = false;
+
+    int pgid = -2;
+    if (auto tmp = get_pgid()) pgid = *tmp;
 
     FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
           send_sigcont ? L"Continue" : L"Start", job_id(), pgid, command_wcstr(),
@@ -1063,7 +1071,8 @@ void proc_wait_any(parser_t &parser) {
 void hup_jobs(const job_list_t &jobs) {
     pid_t fish_pgrp = getpgrp();
     for (const auto &j : jobs) {
-        if (j->pgid != INVALID_PID && j->pgid != fish_pgrp && !j->is_completed()) {
+        auto pgid = j->get_pgid();
+        if (pgid && *pgid != fish_pgrp && !j->is_completed()) {
             if (j->is_stopped()) {
                 j->signal(SIGCONT);
             }

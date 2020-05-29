@@ -18,8 +18,17 @@ class dup2_list_t;
 class job_t;
 class process_t;
 
-bool set_child_group(job_t *j, pid_t child_pid);  // called by parent
-bool child_set_group(job_t *j, process_t *p);     // called by child
+/// Tell the proc \p pid to join process group \p pgrp.
+/// If \p is_child is true, we are the child process; otherwise we are fish.
+/// Called by both parent and child; this is an unavoidable race inherent to Unix.
+/// If is_parent is set, then we are the parent process and should swallow EACCESS.
+/// \return 0 on success, an errno error code on failure.
+int execute_setpgid(pid_t pid, pid_t pgrp, bool is_parent);
+
+/// Report the error code \p err for a failed setpgid call.
+/// Note not all errors should be reported; in particular EACCESS is expected and benign in the
+/// parent only.
+void report_setpgid_error(int err, pid_t desired_pgid, const job_t *j, const process_t *p);
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the

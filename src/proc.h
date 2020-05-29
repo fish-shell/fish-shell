@@ -422,7 +422,7 @@ class job_t {
         } else if (p->pid <= 0) {
             // Can't reap without a pid.
             return false;
-        } else if (!is_constructed() && pgid > 0 && p->pid == pgid) {
+        } else if (!is_constructed() && this->get_pgid() == maybe_t<pid_t>{p->pid}) {
             // p is the the group leader in an under-construction job.
             return false;
         } else {
@@ -459,7 +459,12 @@ class job_t {
 
     /// Process group ID for the process group that this job is running in.
     /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
-    pid_t pgid{INVALID_PID};
+    // pid_t pgid{INVALID_PID};
+
+    /// \return the pgid for the job, based on the job tree.
+    /// This may be none if the job consists of just internal fish functions or builtins.
+    /// This may also be fish itself.
+    maybe_t<pid_t> get_pgid() const { return job_tree->get_pgid(); }
 
     /// How the above pgroup is assigned. This should be set at construction and not modified after.
     pgroup_provenance_t pgroup_provenance{};

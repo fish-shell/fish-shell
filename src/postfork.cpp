@@ -41,7 +41,7 @@
 static char *get_interpreter(const char *command, char *buffer, size_t buff_size);
 
 /// Report the error code \p err for a failed setpgid call.
-static void report_setpgid_error(int err, const job_t *j, const process_t *p) {
+void report_setpgid_error(int err, pid_t desired_pgid, const job_t *j, const process_t *p) {
     char pid_buff[128];
     char job_id_buff[128];
     char getpgid_buff[128];
@@ -52,7 +52,7 @@ static void report_setpgid_error(int err, const job_t *j, const process_t *p) {
     format_long_safe(pid_buff, p->pid);
     format_long_safe(job_id_buff, j->job_id());
     format_long_safe(getpgid_buff, getpgid(p->pid));
-    format_long_safe(job_pgid_buff, j->pgid);
+    format_long_safe(job_pgid_buff, desired_pgid);
     narrow_string_safe(argv0, p->argv0());
     narrow_string_safe(command, j->command_wcstr());
 
@@ -69,20 +69,22 @@ static void report_setpgid_error(int err, const job_t *j, const process_t *p) {
     safe_perror("setpgid");
 }
 
-/// Called only by the child to set its own process group (possibly creating a new group in the
-/// process if it is the first in a JOB_CONTROL job.
-/// Returns true on success, false on failure.
-bool child_set_group(job_t *j, process_t *p) {
-    if (j->pgid == INVALID_PID) {
-        assert(j->pgroup_provenance == pgroup_provenance_t::first_external_proc &&
-               "pgroup should only be unset if we need to become the leader");
-        j->pgid = p->pid;
-    }
-    // Put a cap on how many times we retry so we are never stuck here.
-    for (int i = 0; i < 100; i++) {
-        if (setpgid(p->pid, j->pgid) == 0) {
-            return true;
-        } else if (errno == EPERM) {
+int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent) {
+    // Historically we have looped here to support WSL.
+    unsigned eperm_count = 0;
+    for (;;) {
+        if (setpgid(pid, pgroup) == 0) {
+            return 0;
+        }
+        int err = errno;
+        if (err == EACCES && is_parent) {
+            // We are the parent process and our child has called exec().
+            // This is an unavoidable benign race.
+            return 0;
+        } else if (err == EINTR) {
+            // Paranoia.
+            continue;
+        } else if (err == EPERM && eperm_count++ < 100) {
             // The setpgid(2) man page says that EPERM is returned only if attempts are made
             // to move processes into groups across session boundaries (which can never be
             // the case in fish, anywhere) or to change the process group ID of a session
@@ -90,49 +92,9 @@ bool child_set_group(job_t *j, process_t *p) {
             // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
             debug_safe(2, "setpgid(2) returned EPERM. Retrying");
             continue;
-        } else if (errno == EINTR) {
-            // Retry on EINTR.
-            continue;
-        } else {
-            break;
         }
+        return err;
     }
-    report_setpgid_error(errno, j, p);
-    return false;
-}
-
-/// Called only by the parent only after a child forks and successfully calls child_set_group,
-/// guaranteeing the job control process group has been created and that the child belongs to the
-/// correct process group. Here we can update our job_t structure to reflect the correct process
-/// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
-/// if it's to run in the foreground.
-bool set_child_group(job_t *j, pid_t child_pid) {
-    if (j->wants_job_control()) {
-        assert(j->pgid != INVALID_PID &&
-               "set_child_group called with JOB_CONTROL before job pgid determined!");
-
-        // The parent sets the child's group. This incurs the well-known unavoidable race with the
-        // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
-        // Additionally ignoring EACCES. See #4715 and #4884.
-        if (setpgid(child_pid, j->pgid) < 0) {
-            if (errno != ESRCH && errno != EPERM && errno != EACCES) {
-                safe_perror("setpgid");
-                return false;
-            } else {
-                // Just in case it's ever not right to ignore the setpgid call, (i.e. if this
-                // ever leads to a terminal hang due if both this setpgid call AND posix_spawn's
-                // internal setpgid calls failed), write to the debug log so a future developer
-                // doesn't go crazy trying to track this down.
-                FLOGF(proc_pgroup,
-                      "Error %d while calling setpgid for child %d (probably harmless)", errno,
-                      child_pid);
-            }
-        }
-    } else {
-        j->pgid = getpgrp();
-    }
-
-    return true;
 }
 
 int child_setup_process(pid_t new_termowner, const job_t &job, bool is_forked,
@@ -240,17 +202,17 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
         return false;
     }
 
-    bool should_set_process_group_id = false;
-    int desired_process_group_id = 0;
-    if (j->wants_job_control()) {
-        should_set_process_group_id = true;
-
-        // set_child_group puts each job into its own process group
-        // do the same here if there is no PGID yet (i.e. PGID == -2)
-        desired_process_group_id = j->pgid;
-        if (desired_process_group_id == INVALID_PID) {
-            desired_process_group_id = 0;
-        }
+    // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
+    // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
+    maybe_t<pid_t> desired_pgid = none();
+    if (auto job_pgid = j->job_tree->get_pgid()) {
+        desired_pgid = *job_pgid;
+    } else {
+        assert(j->pgroup_provenance == pgroup_provenance_t::first_external_proc &&
+               "We should have already known our pgroup");
+        // We are the first external proc in the job tree. Set the desired_pgid to 0 to indicate we
+        // should creating a new process group.
+        desired_pgid = 0;
     }
 
     // Set the handling for job control signals back to the default.
@@ -263,13 +225,14 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     short flags = 0;
     if (reset_signal_handlers) flags |= POSIX_SPAWN_SETSIGDEF;
     if (reset_sigmask) flags |= POSIX_SPAWN_SETSIGMASK;
-    if (should_set_process_group_id) flags |= POSIX_SPAWN_SETPGROUP;
+    if (desired_pgid.has_value()) flags |= POSIX_SPAWN_SETPGROUP;
 
     int err = 0;
     if (!err) err = posix_spawnattr_setflags(attr, flags);
 
-    if (!err && should_set_process_group_id)
-        err = posix_spawnattr_setpgroup(attr, desired_process_group_id);
+    if (!err && desired_pgid.has_value()) {
+        err = posix_spawnattr_setpgroup(attr, *desired_pgid);
+    }
 
     // Everybody gets default handlers.
     if (!err && reset_signal_handlers) {

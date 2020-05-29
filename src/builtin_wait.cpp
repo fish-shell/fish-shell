@@ -19,7 +19,7 @@
 /// doesn't work properly, so use this function in wait command.
 static job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
     for (const auto &j : parser.jobs()) {
-        if (j->pgid == pid) {
+        if (j->get_pgid() == maybe_t<pid_t>{pid}) {
             return j->job_id();
         }
         // Check if the specified pid is a child process of the job.

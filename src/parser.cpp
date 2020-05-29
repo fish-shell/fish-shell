@@ -613,18 +613,10 @@ const job_t *parser_t::job_get(job_id_t id) const {
 }
 
 job_t *parser_t::job_get_from_pid(pid_t pid) const {
-    pid_t pgid = getpgid(pid);
-
-    if (pgid == -1) {
-        return nullptr;
-    }
-
     for (const auto &job : jobs()) {
-        if (job->pgid == pgid) {
-            for (const process_ptr_t &p : job->processes) {
-                if (p->pid == pid) {
-                    return job.get();
-                }
+        for (const process_ptr_t &p : job->processes) {
+            if (p->pid == pid) {
+                return job.get();
             }
         }
     }

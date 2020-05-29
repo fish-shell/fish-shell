@@ -88,10 +88,13 @@ static redirection_spec_t get_stderr_merge() {
     return redirection_spec_t{STDERR_FILENO, redirection_mode_t::fd, stdout_fileno_str};
 }
 
-parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree,
                                                      const operation_context_t &ctx,
-                                                     job_lineage_t lineage)
-    : pstree(std::move(pstree)), parser(p), ctx(ctx), lineage(std::move(lineage)) {}
+                                                     io_chain_t block_io)
+    : pstree(std::move(pstree)),
+      parser(ctx.parser.get()),
+      ctx(ctx),
+      block_io(std::move(block_io)) {}
 
 // Utilities
 
@@ -1251,7 +1254,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     bool wants_job_control =
         (job_control_mode == job_control_t::all) ||
         ((job_control_mode == job_control_t::interactive) && parser->is_interactive()) ||
-        (lineage.job_tree && lineage.job_tree->wants_job_control());
+        (ctx.job_tree && ctx.job_tree->wants_job_control());
 
     job_t::properties_t props{};
     props.wants_terminal = wants_job_control && !ld.is_event;
@@ -1285,8 +1288,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
         // Set the pgroup assignment mode and job tree, now that the job is populated.
-        job->pgroup_provenance = get_pgroup_provenance(job, lineage);
-        job_tree_t::populate_tree_for_job(job.get(), lineage.job_tree);
+        job_tree_t::populate_tree_for_job(job.get(), ctx.job_tree);
+        job->pgroup_provenance = get_pgroup_provenance(job);
         assert(job->job_tree && "Should have a job tree");
 
         // Success. Give the job to the parser - it will clean it up.
@@ -1302,7 +1305,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
         }
 
         // Actually execute the job.
-        if (!exec_job(*this->parser, job, lineage)) {
+        if (!exec_job(*this->parser, job, block_io)) {
             remove_job(*this->parser, job.get());
         }
 

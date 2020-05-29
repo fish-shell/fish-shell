@@ -52,17 +52,14 @@
 /// Number of calls to fork() or posix_spawn().
 static relaxed_atomic_t<int> s_fork_count{0};
 
-pgroup_provenance_t get_pgroup_provenance(const shared_ptr<job_t> &j,
-                                          const job_lineage_t &lineage) {
+pgroup_provenance_t get_pgroup_provenance(const shared_ptr<job_t> &j) {
     bool first_proc_is_internal = j->processes.front()->is_internal();
     bool has_internal = j->has_internal_proc();
     bool has_external = j->has_external_proc();
     assert(first_proc_is_internal ? has_internal : has_external);
 
-    if (lineage.job_tree && lineage.job_tree->get_pgid().has_value() && j->is_foreground()) {
-        // Our lineage indicates a pgid. This means the job is "nested" as a function or block
-        // inside another job, which has a real pgroup. We're going to use that, unless it's
-        // backgrounded, in which case it should not inherit a pgroup.
+    if (j->job_tree->get_pgid().has_value()) {
+        // Our job tree already has a pgid.
         return pgroup_provenance_t::lineage;
     } else if (!j->wants_job_control()) {
         // This job doesn't need job control, it can just live in the fish pgroup.
@@ -928,7 +925,7 @@ static bool allow_exec_with_background_jobs(parser_t &parser) {
     }
 }
 
-bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t &lineage) {
+bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &block_io) {
     assert(j && "null job_t passed to exec_job!");
 
     // Set to true if something goes wrong while executing the job, in which case the cleanup
@@ -948,7 +945,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     assert(j->pgid == INVALID_PID && "Should not yet have a pid.");
     switch (j->pgroup_provenance) {
         case pgroup_provenance_t::lineage: {
-            auto pgid = lineage.job_tree->get_pgid();
+            auto pgid = j->job_tree->get_pgid();
             assert(pgid && *pgid != INVALID_PID && "Should have valid pgid");
             j->pgid = *pgid;
             break;
@@ -971,7 +968,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     const size_t stdout_read_limit = parser.libdata().read_limit;
 
     // Get the list of all FDs so we can ensure our pipes do not conflict.
-    fd_set_t conflicts = lineage.block_io.fd_set();
+    fd_set_t conflicts = block_io.fd_set();
     for (const auto &p : j->processes) {
         for (const auto &spec : p->redirection_specs()) {
             conflicts.add(spec.fd);
@@ -985,7 +982,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
             return false;
         }
 
-        internal_exec(parser.vars(), j.get(), lineage.block_io);
+        internal_exec(parser.vars(), j.get(), block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
         int status = j->flags().negate ? 0 : 1;
@@ -1034,8 +1031,8 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         if (p.get() == deferred_process) {
             deferred_pipes = std::move(proc_pipes);
         } else {
-            if (!exec_process_in_job(parser, p.get(), j, lineage.block_io, std::move(proc_pipes),
-                                     conflicts, deferred_pipes, stdout_read_limit)) {
+            if (!exec_process_in_job(parser, p.get(), j, block_io, std::move(proc_pipes), conflicts,
+                                     deferred_pipes, stdout_read_limit)) {
                 exec_error = true;
                 break;
             }
@@ -1046,9 +1043,8 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     // Now execute any deferred process.
     if (!exec_error && deferred_process) {
         assert(deferred_pipes.write.valid() && "Deferred process should always have a write pipe");
-        if (!exec_process_in_job(parser, deferred_process, j, lineage.block_io,
-                                 std::move(deferred_pipes), conflicts, {}, stdout_read_limit,
-                                 true)) {
+        if (!exec_process_in_job(parser, deferred_process, j, block_io, std::move(deferred_pipes),
+                                 conflicts, {}, stdout_read_limit, true)) {
             exec_error = true;
         }
     }

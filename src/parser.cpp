@@ -710,8 +710,8 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
-    scoped_push<exc_ctx_ref_t> exc(&execution_context, make_unique<parse_execution_context_t>(
-                                                           ps, this, op_ctx, std::move(lineage)));
+    scoped_push<exc_ctx_ref_t> exc(
+        &execution_context, make_unique<parse_execution_context_t>(ps, op_ctx, lineage.block_io));
 
     // Check the exec count so we know if anything got executed.
     const size_t prev_exec_count = libdata().exec_count;

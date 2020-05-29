@@ -466,7 +466,7 @@ struct io_streams_t {
 
     // The job tree of the job, if any. This enables builtins which run more code like eval() to
     // share pgid.
-    // TODO: this is awkwardly placed, consider just embedding a lineage here.
+    // TODO: this is awkwardly placed.
     std::shared_ptr<job_tree_t> job_tree{};
 
     // io_streams_t cannot be copied.

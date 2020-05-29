@@ -655,16 +655,16 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
                                                   const io_chain_t &io_chain) {
     assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
-    // Make a lineage for our children.
-    job_lineage_t lineage;
-    lineage.job_tree = job->job_tree;
-    lineage.block_io = io_chain;
+    // We want to capture the job tree.
+    job_tree_ref_t job_tree = job->job_tree;
 
     if (p->type == process_type_t::block_node) {
         const parsed_source_ref_t &source = p->block_node_source;
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
-        return [=](parser_t &parser) { return parser.eval_node(source, node, lineage).status; };
+        return [=](parser_t &parser) {
+            return parser.eval_node(source, node, io_chain, job_tree).status;
+        };
     } else {
         assert(p->type == process_type_t::function);
         auto props = function_get_properties(p->argv0());
@@ -677,7 +677,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
             // Pull out the job list from the function.
             tnode_t<grammar::job_list> body = props->func_node.child<1>();
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            auto res = parser.eval_node(props->parsed_source, body, lineage);
+            auto res = parser.eval_node(props->parsed_source, body, io_chain, job_tree);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.

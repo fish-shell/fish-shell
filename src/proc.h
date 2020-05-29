@@ -343,20 +343,6 @@ using job_id_t = int;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jid);
 
-/// Information about where a job comes from.
-/// This should be safe to copy across threads; in particular that means this cannot contain a
-/// job_t. It is also important that job_t not contain this: because it stores block IO, it will
-/// extend the life of the IO which may prevent pipes from closing in a timely manner. See #6397.
-struct job_lineage_t {
-    /// The job tree.
-    /// If our job is "nested" as part of a function or block execution, and that function or block
-    /// is part of a pipeline, then this may be set.
-    job_tree_ref_t job_tree{};
-
-    /// The IO chain associated with any block containing this job.
-    /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
-    io_chain_t block_io{};
-};
 
 /// A job has a mode which describes how its pgroup is assigned (before the value is known).
 /// This is a constant property of the job.

@@ -301,7 +301,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.
     template <typename T>
-    eval_res_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, job_lineage_t lineage,
+    eval_res_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, const io_chain_t &block_io,
+                         const job_tree_ref_t &job_tree,
                          block_type_t block_type = block_type_t::top);
 
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and

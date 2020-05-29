@@ -665,12 +665,9 @@ eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
                           const job_tree_ref_t &job_tree, enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
     if (!ps->tree.empty()) {
-        job_lineage_t lineage;
-        lineage.block_io = io;
-        lineage.job_tree = job_tree;
         // Execute the first node.
         tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
-        return this->eval_node(ps, start, std::move(lineage), block_type);
+        return this->eval_node(ps, start, io, job_tree, block_type);
     } else {
         auto status = proc_status_t::from_exit_code(get_last_status());
         bool break_expand = false;
@@ -681,7 +678,8 @@ eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
 
 template <typename T>
 eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
-                               job_lineage_t lineage, block_type_t block_type) {
+                               const io_chain_t &block_io, const job_tree_ref_t &job_tree,
+                               block_type_t block_type) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
@@ -706,12 +704,12 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
     block_t *scope_block = this->push_block(block_t::scope_block(block_type));
 
     // Propogate our job tree.
-    op_ctx.job_tree = lineage.job_tree;
+    op_ctx.job_tree = job_tree;
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
-    scoped_push<exc_ctx_ref_t> exc(
-        &execution_context, make_unique<parse_execution_context_t>(ps, op_ctx, lineage.block_io));
+    scoped_push<exc_ctx_ref_t> exc(&execution_context,
+                                   make_unique<parse_execution_context_t>(ps, op_ctx, block_io));
 
     // Check the exec count so we know if anything got executed.
     const size_t prev_exec_count = libdata().exec_count;
@@ -736,9 +734,9 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
 
 // Explicit instantiations. TODO: use overloads instead?
 template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::statement>,
-                                        job_lineage_t, block_type_t);
+                                        const io_chain_t &, const job_tree_ref_t &, block_type_t);
 template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::job_list>,
-                                        job_lineage_t, block_type_t);
+                                        const io_chain_t &, const job_tree_ref_t &, block_type_t);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {

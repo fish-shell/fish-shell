@@ -1289,7 +1289,6 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     if (pop_result == end_execution_reason_t::ok) {
         // Set the pgroup assignment mode and job tree, now that the job is populated.
         job_tree_t::populate_tree_for_job(job.get(), ctx.job_tree);
-        job->pgroup_provenance = get_pgroup_provenance(job);
         assert(job->job_tree && "Should have a job tree");
 
         // Success. Give the job to the parser - it will clean it up.

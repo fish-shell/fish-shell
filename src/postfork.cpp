@@ -208,8 +208,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     if (auto job_pgid = j->job_tree->get_pgid()) {
         desired_pgid = *job_pgid;
     } else {
-        assert(j->pgroup_provenance == pgroup_provenance_t::first_external_proc &&
-               "We should have already known our pgroup");
+        assert(j->job_tree->needs_pgid_assignment() && "We should be expecting a pgid");
         // We are the first external proc in the job tree. Set the desired_pgid to 0 to indicate we
         // should creating a new process group.
         desired_pgid = 0;

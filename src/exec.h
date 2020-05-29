@@ -37,10 +37,6 @@ int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, const job_tr
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
 
-/// Compute the "pgroup provenance" for a job. This is a description of how the pgroup is
-/// assigned. It's factored out because the logic has subtleties, and this centralizes it.
-pgroup_provenance_t get_pgroup_provenance(const std::shared_ptr<job_t> &j);
-
 /// Add signals that should be masked for external processes in this job.
 bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask);
 

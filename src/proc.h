@@ -191,6 +191,10 @@ class job_tree_t {
     /// \return whether this is a placeholder.
     bool is_placeholder() const { return is_placeholder_; }
 
+    /// \return whether this job tree is awaiting a pgid.
+    /// This is true for non-placeholder trees that don't already have a pgid.
+    bool needs_pgid_assignment() const { return !is_placeholder_ && !pgid_.has_value(); }
+
     /// \return the job ID, or -1 if none.
     job_id_t get_id() const { return job_id_; }
 
@@ -344,24 +348,6 @@ job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jid);
 
 
-/// A job has a mode which describes how its pgroup is assigned (before the value is known).
-/// This is a constant property of the job.
-enum class pgroup_provenance_t {
-    /// The job has no pgroup assignment. This is used for e.g. a simple function invocation with no
-    /// pipeline.
-    unassigned,
-
-    /// The job's pgroup is fish's pgroup. This is used when fish needs to read from the terminal,
-    /// or if job control is disabled.
-    fish_itself,
-
-    /// The job's pgroup will come from its first external process.
-    first_external_proc,
-
-    /// The job's pgroup will come from its lineage. This is used for jobs that are run nested.
-    lineage,
-};
-
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t {
    public:
@@ -465,9 +451,6 @@ class job_t {
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This may also be fish itself.
     maybe_t<pid_t> get_pgid() const { return job_tree->get_pgid(); }
-
-    /// How the above pgroup is assigned. This should be set at construction and not modified after.
-    pgroup_provenance_t pgroup_provenance{};
 
     /// The id of this job.
     /// This is user-visible, is recycled, and may be -1.

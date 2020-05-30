@@ -40,12 +40,13 @@ static int cpu_use(const job_t *j) {
         double t2 = 1000000.0 * t.tv_sec + t.tv_usec;
 
         // Check for a race condition that can cause negative CPU usage to be reported (#7066)
-        if (t2 < t1 || jiffies < p->last_jiffies) {
+        unsigned long cached_last_jiffies = p->last_jiffies;
+        if (t2 < t1 || jiffies < cached_last_jiffies) {
             continue;
         }
 
         // std::fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n", t1, t2, jiffies, p->last_jiffies );
-        u += (static_cast<double>(jiffies - p->last_jiffies)) / (t2 - t1);
+        u += (static_cast<double>(jiffies - cached_last_jiffies)) / (t2 - t1);
     }
     return u * 1000000;
 }

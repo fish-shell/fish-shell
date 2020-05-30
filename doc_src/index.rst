@@ -390,7 +390,7 @@ Autoloading functions
 Functions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. This has some advantages:
 
 - An autoloaded function becomes available automatically to all running shells.
-- If the function definition is changed, all running shells will automatically reload the altered version.
+- If the function definition is changed, all running shells will automatically reload the altered version, after a while.
 - Startup time and memory usage is improved, etc.
 
 When fish needs to load a function, it searches through any directories in the :ref:`list variable <variables-lists>` ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix ``.fish`` and loads the first it finds.

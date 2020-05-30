@@ -227,6 +227,7 @@ void io_chain_t::append(const io_chain_t &chain) {
 }
 
 bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd) {
+    bool have_error = false;
     for (const auto &spec : specs) {
         switch (spec.mode) {
             case redirection_mode_t::fd: {
@@ -257,14 +258,15 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                     // and return false. This lets execution potentially recover and at least gives
                     // the shell a chance to gracefully regain control of the shell (see #7038).
                     this->push_back(make_unique<io_close_t>(spec.fd));
-                    return false;
+                    have_error = true;
+                    break;
                 }
                 this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file)));
                 break;
             }
         }
     }
-    return true;
+    return !have_error;
 }
 
 void io_chain_t::print() const {

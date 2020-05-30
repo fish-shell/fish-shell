@@ -19,17 +19,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     set -g __fish_config_interactive_done
     set -g __fish_active_key_bindings
 
-    if not set -q fish_greeting
-        set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
-        set -l line2 \n(printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
-        set -U fish_greeting "$line1$line2"
-    end
-
-    if set -q fish_private_mode; and string length -q -- $fish_greeting
-        set -l line (_ "fish is running in private mode, history will not be persisted.")
-        set -g fish_greeting $fish_greeting.\n$line
-    end
-
     # usage: __init_uvar VARIABLE VALUES...
     function __init_uvar -d "Sets a universal variable if it's not already set"
         if not set --query $argv[1]
@@ -115,18 +104,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     #
     # Print a greeting.
-    # fish_greeting can be a function (preferred) or a variable.
+    # The default just prints a variable of the same name.
     #
     # NOTE: This status check is necessary to not print the greeting when `read`ing in scripts. See #7080.
     if status --is-interactive
-        if functions -q fish_greeting
-            fish_greeting
-        else
-            # The greeting used to be skipped when fish_greeting was empty (not just undefined)
-            # Keep it that way to not print superfluous newlines on old configuration
-            test -n "$fish_greeting"
-            and echo $fish_greeting
-        end
+        and functions -q fish_greeting
+        fish_greeting
     end
 
     #

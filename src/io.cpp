@@ -253,6 +253,10 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                         FLOGF(warning, FILE_ERROR, spec.target.c_str());
                         if (should_flog(warning)) wperror(L"open");
                     }
+                    // If opening a file fails, insert a closed FD instead of the file redirection
+                    // and return false. This lets execution potentially recover and at least gives
+                    // the shell a chance to gracefully regain control of the shell (see #7038).
+                    this->push_back(make_unique<io_close_t>(spec.fd));
                     return false;
                 }
                 this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file)));

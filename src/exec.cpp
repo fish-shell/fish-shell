@@ -745,8 +745,8 @@ static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<j
     return true;
 }
 
-/// Executes a process \p in job \j, using the pipes \p pipes (which may have invalid fds if this is
-/// the first or last process).
+/// Executes a process \p \p in \p job, using the pipes \p pipes (which may have invalid fds if this
+/// is the first or last process).
 /// \p deferred_pipes represents the pipes from our deferred process; if set ensure they get closed
 /// in any child. If \p is_deferred_run is true, then this is a deferred run; this affects how
 /// certain buffering works. \returns true on success, false on exec error.
@@ -800,8 +800,18 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
     // This may fail.
     if (!process_net_io_chain.append_from_specs(p->redirection_specs(),
                                                 parser.vars().get_pwd_slash())) {
-        // Error.
-        return false;
+        // If the redirection to a file failed, append_from_specs closes the corresponding handle
+        // allowing us to recover from failure mid-way through execution of a piped job to e.g.
+        // recover from loss of terminal control, etc.
+
+        // It is unsafe to abort execution in the middle of a multi-command job as we might end up
+        // trying to resume execution without control of the terminal.
+        if (p->is_first_in_job) {
+            // It's OK to abort here
+            return false;
+        }
+        // Otherwise, just rely on the closed fd to take care of things. It's also probably more
+        // semantically correct!
     }
 
     // Read pipe goes last.

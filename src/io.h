@@ -216,7 +216,9 @@ class io_file_t : public io_data_t {
 
     io_file_t(int fd, autoclose_fd_t file)
         : io_data_t(io_mode_t::file, fd, file.fd()), file_fd_(std::move(file)) {
-        assert(file_fd_.valid() && "File is not valid");
+        // Invalid file redirections are replaced with a closed fd, so the following
+        // assertion isn't guaranteed to pass:
+        // assert(file_fd_.valid() && "File is not valid");
     }
 
     ~io_file_t() override;

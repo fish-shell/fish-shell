@@ -125,6 +125,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l desig-revoke -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Generate a designated revocation certificate for a key"
 
     complete -c $__fish_complete_gpg_command -l export -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d 'Export all or the given keys from all keyrings'
+    complete -c $__fish_complete_gpg_command -l export-ssh-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d 'Export all or the given keys in OpenSSH format'
     complete -c $__fish_complete_gpg_command -l send-keys -xa "(__fish_complete_gpg_key_id $__fish_complete_gpg_command)" -d "Same as --export but sends the keys to a keyserver"
     complete -c $__fish_complete_gpg_command -l export-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --export, but exports the secret keys instead"
     complete -c $__fish_complete_gpg_command -l export-secret-subkeys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --export, but exports the secret keys instead"

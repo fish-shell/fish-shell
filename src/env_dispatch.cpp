@@ -482,7 +482,7 @@ static void init_curses(const environment_t &vars) {
         tigetflag(const_cast<char *>("xenl")) == 1;  // does terminal have the eat_newline_glitch
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
-    cached_layouts.clear();
+    layout_cache_t::shared.clear();
     curses_initialized = true;
 }
 

@@ -60,7 +60,7 @@ class scoped_buffer_t {
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
 // Note this is deliberately exported so that init_curses can clear it.
-layout_cache_t cached_layouts;
+layout_cache_t layout_cache_t::shared;
 
 /// Tests if the specified narrow character sequence is present at the specified position of the
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
@@ -239,11 +239,11 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 /// Returns the number of characters in the escape code starting at 'code'. We only handle sequences
 /// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize
 /// the escape sequence based on querying terminfo and other heuristics.
-size_t escape_code_length(const wchar_t *code) {
+size_t layout_cache_t::escape_code_length(const wchar_t *code) {
     assert(code != nullptr);
     if (*code != L'\x1B') return 0;
 
-    size_t esc_seq_len = cached_layouts.find_escape_code(code);
+    size_t esc_seq_len = this->find_escape_code(code);
     if (esc_seq_len) return esc_seq_len;
 
     bool found = is_color_escape_seq(code, &esc_seq_len);
@@ -253,7 +253,7 @@ size_t escape_code_length(const wchar_t *code) {
     if (!found) found = is_three_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
-    if (found) cached_layouts.add_escape_code(wcstring(code, esc_seq_len));
+    if (found) this->add_escape_code(wcstring(code, esc_seq_len));
     return esc_seq_len;
 }
 
@@ -293,7 +293,7 @@ static prompt_layout_t calc_prompt_layout(const wcstring &prompt_str, layout_cac
     for (size_t j = 0; prompt[j]; j++) {
         if (prompt[j] == L'\x1B') {
             // This is the start of an escape code. Skip over it if it's at least one char long.
-            size_t len = escape_code_length(&prompt[j]);
+            size_t len = cache.escape_code_length(&prompt[j]);
             if (len > 0) j += len - 1;
         } else if (prompt[j] == L'\t') {
             current_line_width = next_tab_stop(current_line_width);
@@ -322,8 +322,8 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
     // appear in an escape sequence, so if we detect a newline we have to defer to
     // calc_prompt_width_and_lines.
     size_t result = 1;
-    if (prompt.find(L'\n') != wcstring::npos || prompt.find(L'\f') != wcstring::npos) {
-        result = calc_prompt_layout(prompt, cached_layouts).line_count;
+    if (prompt.find_first_of(L"\n\f") != wcstring::npos) {
+        result = calc_prompt_layout(prompt, layout_cache_t::shared).line_count;
     }
     return result;
 }
@@ -604,6 +604,7 @@ static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = none
 
 /// Update the screen to match the desired output.
 static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring &right_prompt) {
+    layout_cache_t &cached_layouts = layout_cache_t::shared;
     const environment_t &vars = env_stack_t::principal();
     const scoped_buffer_t buffering(*scr);
     const size_t left_prompt_width =
@@ -862,6 +863,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     const wchar_t *right_prompt = right_prompt_str.c_str();
     const wchar_t *autosuggestion = autosuggestion_str.c_str();
 
+    layout_cache_t &cached_layouts = layout_cache_t::shared;
     prompt_layout_t left_prompt_layout = calc_prompt_layout(left_prompt_str, cached_layouts);
     prompt_layout_t right_prompt_layout = calc_prompt_layout(right_prompt_str, cached_layouts);
 

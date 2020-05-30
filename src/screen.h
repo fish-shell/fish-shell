@@ -214,9 +214,6 @@ void s_reset(screen_t *s, screen_reset_mode_t mode);
 /// Issues an immediate clr_eos.
 void screen_force_clear_to_end();
 
-/// Returns the length of an escape code. Exposed for testing purposes only.
-size_t escape_code_length(const wchar_t *code);
-
 // Information about the layout of a prompt.
 struct prompt_layout_t {
     size_t line_count;       // how many lines the prompt consumes
@@ -250,6 +247,9 @@ class layout_cache_t {
         }
     }
 
+    /// \return the length of an escape code, accessing and perhaps populating the cache.
+    size_t escape_code_length(const wchar_t *code);
+
     /// \return the length of a string that matches a prefix of \p entry.
     size_t find_escape_code(const wchar_t *entry) const {
         // Do a binary search and see if the escape code right before our entry is a prefix of our
@@ -275,10 +275,14 @@ class layout_cache_t {
         esc_cache_.clear();
         prompt_cache_.clear();
     }
-};
 
-// Singleton that is exposed so that the cache can be invalidated when terminal related variables
-// change by calling `cached_esc_sequences.clear()`.
-extern layout_cache_t cached_layouts;
+    // Singleton that is exposed so that the cache can be invalidated when terminal related
+    // variables change by calling `cached_esc_sequences.clear()`.
+    static layout_cache_t shared;
+
+    layout_cache_t() = default;
+    layout_cache_t(const layout_cache_t &) = delete;
+    void operator=(const layout_cache_t &) = delete;
+};
 
 #endif

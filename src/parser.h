@@ -282,27 +282,28 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     ///
     /// \param cmd the string to evaluate
     /// \param io io redirections to perform on all started jobs
-    /// \param job_tree if set, the job tree to give to spawned jobs.
+    /// \param job_group if set, the job group to give to spawned jobs.
     /// \param block_type The type of block to push on the block stack, which must be either 'top'
     /// or 'subst'.
     /// \param break_expand If not null, return by reference whether the error ought to be an expand
     /// error. This includes nested expand errors, and command-not-found.
     ///
     /// \return the result of evaluation.
-    eval_res_t eval(const wcstring &cmd, const io_chain_t &io, const job_tree_ref_t &job_tree = {},
+    eval_res_t eval(const wcstring &cmd, const io_chain_t &io,
+                    const job_group_ref_t &job_group = {},
                     block_type_t block_type = block_type_t::top);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
     eval_res_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                    const job_tree_ref_t &job_tree = {},
+                    const job_group_ref_t &job_group = {},
                     block_type_t block_type = block_type_t::top);
 
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.
     template <typename T>
     eval_res_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, const io_chain_t &block_io,
-                         const job_tree_ref_t &job_tree,
+                         const job_group_ref_t &job_group,
                          block_type_t block_type = block_type_t::top);
 
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and

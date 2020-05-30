@@ -205,11 +205,11 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
     // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
     maybe_t<pid_t> desired_pgid = none();
-    if (auto job_pgid = j->job_tree->get_pgid()) {
+    if (auto job_pgid = j->group->get_pgid()) {
         desired_pgid = *job_pgid;
     } else {
-        assert(j->job_tree->needs_pgid_assignment() && "We should be expecting a pgid");
-        // We are the first external proc in the job tree. Set the desired_pgid to 0 to indicate we
+        assert(j->group->needs_pgid_assignment() && "We should be expecting a pgid");
+        // We are the first external proc in the job group. Set the desired_pgid to 0 to indicate we
         // should creating a new process group.
         desired_pgid = 0;
     }

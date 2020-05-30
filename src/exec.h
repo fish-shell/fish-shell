@@ -31,8 +31,8 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &output
 /// "success" (even though the command may have failed), a non-zero return means that we should
 /// halt expansion. If the \p pgid is supplied, then any spawned external commands should join that
 /// pgroup.
-int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, const job_tree_ref_t &job_tree,
-                             wcstring_list_t &outputs);
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
+                             const job_group_ref_t &job_group, wcstring_list_t &outputs);
 
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);

@@ -59,7 +59,7 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     int status = STATUS_CMD_OK;
-    auto res = parser.eval(new_cmd, ios, streams.job_tree);
+    auto res = parser.eval(new_cmd, ios, streams.job_group);
     if (res.was_empty) {
         // Issue #5692, in particular, to catch `eval ""`, `eval "begin; end;"`, etc.
         // where we have an argument but nothing is executed.

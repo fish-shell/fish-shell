@@ -175,7 +175,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
 /// If our pgroup assignment mode wants us to use the first external proc, then apply it here.
 /// \returns the job's pgid, which should always be set to something valid after this call.
 static pid_t maybe_assign_pgid_from_child(const std::shared_ptr<job_t> &j, pid_t child_pid) {
-    auto &jt = j->job_tree;
+    auto &jt = j->group;
     if (jt->needs_pgid_assignment()) {
         jt->set_pgid(child_pid);
     }
@@ -309,8 +309,7 @@ bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask) {
 static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t *p,
                                    const dup2_list_t &dup2s, const char *fork_type,
                                    const std::function<void()> &child_action) {
-    assert(!job->job_tree->is_placeholder() &&
-           "Placeholders are for internal functions, they should never fork");
+    assert(!job->group->is_internal() && "Internal groups should never need to fork");
     pid_t pid = execute_fork();
     if (pid == 0) {
         // This is the child process. Setup redirections, print correct output to
@@ -637,15 +636,15 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
                                                   const io_chain_t &io_chain) {
     assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
-    // We want to capture the job tree.
-    job_tree_ref_t job_tree = job->job_tree;
+    // We want to capture the job group.
+    job_group_ref_t job_group = job->group;
 
     if (p->type == process_type_t::block_node) {
         const parsed_source_ref_t &source = p->block_node_source;
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
         return [=](parser_t &parser) {
-            return parser.eval_node(source, node, io_chain, job_tree).status;
+            return parser.eval_node(source, node, io_chain, job_group).status;
         };
     } else {
         assert(p->type == process_type_t::function);
@@ -659,7 +658,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
             // Pull out the job list from the function.
             tnode_t<grammar::job_list> body = props->func_node.child<1>();
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            auto res = parser.eval_node(props->parsed_source, body, io_chain, job_tree);
+            auto res = parser.eval_node(props->parsed_source, body, io_chain, job_group);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.
@@ -832,7 +831,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
 
         case process_type_t::builtin: {
             io_streams_t builtin_io_streams{stdout_read_limit};
-            builtin_io_streams.job_tree = j->job_tree;
+            builtin_io_streams.job_group = j->group;
             if (!exec_internal_builtin_proc(parser, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
                 return false;
@@ -1066,14 +1065,14 @@ static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &bu
 
 /// Execute \p cmd in a subshell in \p parser. If \p lst is not null, populate it with the output.
 /// Return $status in \p out_status.
-/// If \p job_tree is set, any spawned commands should join that job tree.
+/// If \p job_group is set, any spawned commands should join that job group.
 /// If \p apply_exit_status is false, then reset $status back to its original value.
 /// \p is_subcmd controls whether we apply a read limit.
 /// \p break_expand is used to propagate whether the result should be "expansion breaking" in the
 /// sense that subshells used during string expansion should halt that expansion. \return the value
 /// of $status.
 static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
-                                  const job_tree_ref_t &job_tree, wcstring_list_t *lst,
+                                  const job_group_ref_t &job_group, wcstring_list_t *lst,
                                   bool *break_expand, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     auto &ld = parser.libdata();
@@ -1097,7 +1096,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
         *break_expand = true;
         return STATUS_CMD_ERROR;
     }
-    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, job_tree, block_type_t::subst);
+    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, job_group, block_type_t::subst);
     std::shared_ptr<io_buffer_t> buffer = io_bufferfill_t::finish(std::move(bufferfill));
     if (buffer->buffer().discarded()) {
         *break_expand = true;
@@ -1116,11 +1115,11 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
     return eval_res.status.status_value();
 }
 
-int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, const job_tree_ref_t &job_tree,
-                             wcstring_list_t &outputs) {
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
+                             const job_group_ref_t &job_group, wcstring_list_t &outputs) {
     ASSERT_IS_MAIN_THREAD();
     bool break_expand = false;
-    int ret = exec_subshell_internal(cmd, parser, job_tree, &outputs, &break_expand, true, true);
+    int ret = exec_subshell_internal(cmd, parser, job_group, &outputs, &break_expand, true, true);
     // Only return an error code if we should break expansion.
     return break_expand ? ret : STATUS_CMD_OK;
 }

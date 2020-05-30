@@ -145,7 +145,7 @@ class parse_execution_context_t {
 
    public:
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
-    /// The execution context may access the parser and job_tree through ctx.
+    /// The execution context may access the parser and group through ctx.
     parse_execution_context_t(parsed_source_ref_t pstree, const operation_context_t &ctx,
                               io_chain_t block_io);
 

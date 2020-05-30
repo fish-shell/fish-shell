@@ -1254,7 +1254,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     bool wants_job_control =
         (job_control_mode == job_control_t::all) ||
         ((job_control_mode == job_control_t::interactive) && parser->is_interactive()) ||
-        (ctx.job_tree && ctx.job_tree->wants_job_control());
+        (ctx.job_group && ctx.job_group->wants_job_control());
 
     job_t::properties_t props{};
     props.wants_terminal = wants_job_control && !ld.is_event;
@@ -1287,9 +1287,9 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
 
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
-        // Set the pgroup assignment mode and job tree, now that the job is populated.
-        job_tree_t::populate_tree_for_job(job.get(), ctx.job_tree);
-        assert(job->job_tree && "Should have a job tree");
+        // Set the pgroup assignment mode and job group, now that the job is populated.
+        job_group_t::populate_tree_for_job(job.get(), ctx.job_group);
+        assert(job->group && "Should have a job group");
 
         // Success. Give the job to the parser - it will clean it up.
         parser->job_add(job);

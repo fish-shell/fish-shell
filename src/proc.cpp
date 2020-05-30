@@ -164,7 +164,7 @@ bool job_t::should_report_process_exits() const {
     return false;
 }
 
-bool job_t::job_chain_is_fully_constructed() const { return job_tree->is_root_constructed(); }
+bool job_t::job_chain_is_fully_constructed() const { return group->is_root_constructed(); }
 
 bool job_t::signal(int signal) {
     // Presumably we are distinguishing between the two cases below because we do
@@ -241,38 +241,38 @@ void print_exit_warning_for_jobs(const job_list_t &jobs) {
     fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
-job_tree_t::job_tree_t(bool job_control, bool placeholder)
+job_group_t::job_group_t(bool job_control, bool internal)
     : job_control_(job_control),
-      is_placeholder_(placeholder),
-      job_id_(placeholder ? -1 : acquire_job_id()) {}
+      is_internal_(internal),
+      job_id_(internal ? -1 : acquire_job_id()) {}
 
-job_tree_t::~job_tree_t() {
+job_group_t::~job_group_t() {
     if (job_id_ > 0) {
         release_job_id(job_id_);
     }
 }
 
-void job_tree_t::set_pgid(pid_t pgid) {
-    // Note we need not be concerned about thread safety. job_trees are intended to be shared across
-    // threads, but their pgid should always have been set beforehand.
+void job_group_t::set_pgid(pid_t pgid) {
+    // Note we need not be concerned about thread safety. job_groups are intended to be shared
+    // across threads, but their pgid should always have been set beforehand.
     assert(needs_pgid_assignment() && "We should not be setting a pgid");
     assert(pgid >= 0 && "Invalid pgid");
     pgid_ = pgid;
 }
 
-maybe_t<pid_t> job_tree_t::get_pgid() const { return pgid_; }
+maybe_t<pid_t> job_group_t::get_pgid() const { return pgid_; }
 
-void job_tree_t::populate_tree_for_job(job_t *job, const job_tree_ref_t &proposed) {
+void job_group_t::populate_tree_for_job(job_t *job, const job_group_ref_t &proposed) {
     // Note there's three cases to consider:
-    //  nullptr         -> this is a root job, there is no inherited job tree
-    //  placeholder     -> the parent is running as part of a simple function execution
-    //                     We may need to create a new job tree if we are going to fork.
-    //  non-placeholder -> we are running as part of a real pipeline
-    // Decide if this job can use the placeholder tree.
+    //  nullptr         -> this is a root job, there is no inherited job group
+    //  internal        -> the parent is running as part of a simple function execution
+    //                      We may need to create a new job group if we are going to fork.
+    //  non-internal    -> we are running as part of a real pipeline
+    // Decide if this job can use an internal tree.
     // This is true if it's a simple foreground execution of an internal proc.
     bool first_proc_internal = job->processes.front()->is_internal();
-    bool can_use_placeholder = !job->is_initially_background() && job->processes.size() == 1 &&
-                               job->processes.front()->is_internal();
+    bool can_use_internal = !job->is_initially_background() && job->processes.size() == 1 &&
+                            job->processes.front()->is_internal();
 
     bool needs_new_tree = false;
     if (!proposed) {
@@ -281,8 +281,8 @@ void job_tree_t::populate_tree_for_job(job_t *job, const job_tree_ref_t &propose
     } else if (!job->is_foreground()) {
         // Background jobs always get a new tree.
         needs_new_tree = true;
-    } else if (proposed->is_placeholder() && !can_use_placeholder) {
-        // We cannot use the placeholder tree for this job.
+    } else if (proposed->is_internal() && !can_use_internal) {
+        // We cannot use the internal tree for this job.
         needs_new_tree = true;
     }
 
@@ -290,18 +290,18 @@ void job_tree_t::populate_tree_for_job(job_t *job, const job_tree_ref_t &propose
     bool job_control = job->wants_job_control();
 
     if (!needs_new_tree) {
-        job->job_tree = proposed;
-    } else if (can_use_placeholder) {
-        job->job_tree.reset(new job_tree_t(job_control, true));
+        job->group = proposed;
+    } else if (can_use_internal) {
+        job->group.reset(new job_group_t(job_control, true));
     } else {
-        job->job_tree.reset(new job_tree_t(job_control, false));
+        job->group.reset(new job_group_t(job_control, false));
 
         // Perhaps this job should immediately live in fish's pgroup.
         // There's two reasons why it may be so:
         //  1. The job doesn't need job control.
         //  2. The first process in the job is internal to fish; this needs to own the tty.
         if (!job_control || first_proc_internal) {
-            job->job_tree->set_pgid(getpgrp());
+            job->group->set_pgid(getpgrp());
         }
     }
 }
@@ -390,7 +390,7 @@ void job_t::mark_constructed() {
     assert(!is_constructed() && "Job was already constructed");
     mut_flags().constructed = true;
     if (flags().is_tree_root) {
-        job_tree->mark_root_constructed();
+        group->mark_root_constructed();
     }
 }
 

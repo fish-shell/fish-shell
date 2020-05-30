@@ -21,7 +21,7 @@
 
 using std::shared_ptr;
 
-class job_tree_t;
+class job_group_t;
 
 /// A simple set of FDs.
 struct fd_set_t {
@@ -464,10 +464,10 @@ struct io_streams_t {
     // Actual IO redirections. This is only used by the source builtin. Unowned.
     const io_chain_t *io_chain{nullptr};
 
-    // The job tree of the job, if any. This enables builtins which run more code like eval() to
+    // The job group of the job, if any. This enables builtins which run more code like eval() to
     // share pgid.
-    // TODO: this is awkwardly placed.
-    std::shared_ptr<job_tree_t> job_tree{};
+    // FIXME: this is awkwardly placed.
+    std::shared_ptr<job_group_t> job_group{};
 
     // io_streams_t cannot be copied.
     io_streams_t(const io_streams_t &) = delete;

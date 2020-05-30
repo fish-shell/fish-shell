@@ -160,26 +160,25 @@ using job_id_t = int;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jid);
 
-/// job_tree_t is conceptually similar to the idea of a process group. It represents data which
+/// job_group_t is conceptually similar to the idea of a process group. It represents data which
 /// is shared among all of the "subjobs" that may be spawned by a single job.
 /// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
-/// share the same job tree.
-/// There is also a notion of a "placeholder" job tree. Placeholders are used when executing a
-/// foreground function or block. These are not jobs as the user understands them - they do not
-/// consume a job ID, they do not show up in job lists, and they do not have a pgid because they
-/// contain no external procs.
-/// Note that job_tree_t is intended to eventually be shared between threads, and so must be thread
-/// safe.
+/// share the same job group.
+/// There is also a notion of a "internal" job group. Internal groups are used when executing a
+/// foreground function or block with no pipeline. These are not jobs as the user understands them -
+/// they do not consume a job ID, they do not show up in job lists, and they do not have a pgid
+/// because they contain no external procs. Note that job_group_t is intended to eventually be
+/// shared between threads, and so must be thread safe.
 class job_t;
-class job_tree_t;
-using job_tree_ref_t = std::shared_ptr<job_tree_t>;
+class job_group_t;
+using job_group_ref_t = std::shared_ptr<job_group_t>;
 
-class job_tree_t {
+class job_group_t {
    public:
-    /// Set the pgid for this job tree, latching it to this value.
+    /// Set the pgid for this job group, latching it to this value.
     /// The pgid should not already have been set.
     /// Of course this does not keep the pgid alive by itself.
-    /// The placeholder job tree does not have a pgid and it is an error to set it.
+    /// An internal job group does not have a pgid and it is an error to set it.
     void set_pgid(pid_t pgid);
 
     /// Get the pgid, or none() if it has not been set.
@@ -188,12 +187,12 @@ class job_tree_t {
     /// \return whether we want job control
     bool wants_job_control() const { return job_control_; }
 
-    /// \return whether this is a placeholder.
-    bool is_placeholder() const { return is_placeholder_; }
+    /// \return whether this is an internal group.
+    bool is_internal() const { return is_internal_; }
 
-    /// \return whether this job tree is awaiting a pgid.
-    /// This is true for non-placeholder trees that don't already have a pgid.
-    bool needs_pgid_assignment() const { return !is_placeholder_ && !pgid_.has_value(); }
+    /// \return whether this job group is awaiting a pgid.
+    /// This is true for non-internal trees that don't already have a pgid.
+    bool needs_pgid_assignment() const { return !is_internal_ && !pgid_.has_value(); }
 
     /// \return the job ID, or -1 if none.
     job_id_t get_id() const { return job_id_; }
@@ -204,20 +203,20 @@ class job_tree_t {
     void mark_root_constructed() { root_constructed_ = true; };
     bool is_root_constructed() const { return root_constructed_; }
 
-    /// Given a job and a proposed job tree (possibly null), populate the job's tree.
+    /// Given a job and a proposed job group (possibly null), populate the job's tree.
     /// The proposed tree is the tree from the parent job, or null if this is a root.
-    static void populate_tree_for_job(job_t *job, const job_tree_ref_t &proposed_tree);
+    static void populate_tree_for_job(job_t *job, const job_group_ref_t &proposed_tree);
 
-    ~job_tree_t();
+    ~job_group_t();
 
    private:
     maybe_t<pid_t> pgid_{};
     const bool job_control_;
-    const bool is_placeholder_;
+    const bool is_internal_;
     const job_id_t job_id_;
     relaxed_atomic_bool_t root_constructed_{};
 
-    explicit job_tree_t(bool job_control, bool placeholder);
+    explicit job_group_t(bool job_control, bool internal);
 };
 
 /// A structure representing a single fish process. Contains variables for tracking process state
@@ -347,7 +346,6 @@ using job_id_t = int;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jid);
 
-
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t {
    public:
@@ -439,22 +437,22 @@ class job_t {
     /// All the processes in this job.
     process_list_t processes;
 
-    // The tree containing this job.
+    // The group containing this job.
     // This is never null and not changed after construction.
-    job_tree_ref_t job_tree{};
+    job_group_ref_t group{};
 
     /// Process group ID for the process group that this job is running in.
     /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
     // pid_t pgid{INVALID_PID};
 
-    /// \return the pgid for the job, based on the job tree.
+    /// \return the pgid for the job, based on the job group.
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This may also be fish itself.
-    maybe_t<pid_t> get_pgid() const { return job_tree->get_pgid(); }
+    maybe_t<pid_t> get_pgid() const { return group->get_pgid(); }
 
     /// The id of this job.
     /// This is user-visible, is recycled, and may be -1.
-    job_id_t job_id() const { return job_tree->get_id(); }
+    job_id_t job_id() const { return group->get_id(); }
 
     /// A non-user-visible, never-recycled job ID.
     const internal_job_id_t internal_job_id;

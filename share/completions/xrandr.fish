@@ -13,6 +13,7 @@ function __fish_print_xrandr_modes --description 'Print xrandr modes'
         end
     end
 end
+
 complete -c xrandr -l verbose -d 'Be more verbose'
 complete -c xrandr -l dryrun -d 'Make no changes'
 complete -c xrandr -l nograb -d 'Apply modifications without grabbing the screen'
@@ -23,74 +24,48 @@ complete -c xrandr -s d -o display -l display -d 'Select X display to use' -x
 complete -c xrandr -l screen -d 'Select which screen to manipulate' -x
 complete -c xrandr -l q1 -d 'Use RandR version 1.1 protocol'
 complete -c xrandr -l q12 -d 'Use RandR version 1.2 protocol'
-
-set -l ver (xrandr -v | string replace -rf '.*RandR version ([0-9.]+)$' '$1' | string split ".")
-if not set -q ver[1]
-    set ver 10 10
-end
-
-if not set -q ver[2]
-    set ver[2] 0
-end
-
 complete -c xrandr -s s -l size -d 'Set the screen size (index or width x height)' -x
 complete -c xrandr -s r -l rate -l refresh -d 'Set the refresh rate closest to the specified value' -x
 complete -c xrandr -s o -l orientation -d 'Specify the orientation of the screen' -xa 'normal inverted left right'
 complete -c xrandr -s x -d 'Reflect across the X axis'
 complete -c xrandr -s y -d 'Reflect across the Y axis'
-
-# Version > 1.5
-if test $ver[1] -gt 1; or test "$ver[2]" -ge 5
-    complete -c xrandr -l listmonitors -d 'Print all defined monitors'
-    complete -c xrandr -l listactivemonitors -d 'Print all active monitors'
-    complete -c xrandr -l setmonitor -d 'Define new monitor' -x
-    complete -c xrandr -l delmonitor -d 'Delete monitor' -x
-end
-
-# Version > 1.4
-if test $ver[1] -gt 1; or test "$ver[2]" -ge 4
-    complete -c xrandr -l listproviders -d 'Print all available providers'
-    complete -c xrandr -l setprovideroutputsource -d 'Set source for a given provider'
-    complete -c xrandr -l setprovideroffloadsink  -d 'Set provider for a given sink'
-end
-
-# Version > 1.3
-if test $ver[1] -gt 1; or test "$ver[2]" -gt 2
-    complete -c xrandr -l noprimary -d "Don't define a primary output"
-    complete -c xrandr -l current -d 'Print current screen configuration'
-    complete -c xrandr -l panning -d 'Set panning parameters' -x
-    complete -c xrandr -l transform -d 'Set transformation matrix' -x
-    complete -c xrandr -l scale -d 'Set screen scale' -x
-    complete -c xrandr -l primary -d 'Set the output as primary'
-    complete -c xrandr -l filter -d 'Set scaling filter method' -xa 'bilinear nearest'
-end
-
-# Version > 1.1
-if test $ver[1] -gt 1; or test "$ver[2]" -gt 1
-    complete -c xrandr -l prop -l properties -d 'Display the contents of properties for each output'
-    complete -c xrandr -l fb -d 'Set screen size' -x
-    complete -c xrandr -l fbmm -d 'Set reported physical screen size' -x
-    complete -c xrandr -l dpi -d 'Set dpi to calculate reported physical screen size'
-    complete -c xrandr -l newmode -d 'Add new mode' -r
-    complete -c xrandr -l rmmode -d 'Removes a mode from the server' -xa '(__fish_print_xrandr_modes)'
-    complete -c xrandr -l addmode -d 'Add a mode to the set of valid modes for an output' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l delmode -d 'Remove a mode from the set of valid modes for an output' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l output -d 'Selects an output to reconfigure' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l auto -d 'Enable connected but disabled outputs'
-    complete -c xrandr -l mode -d 'This selects a mode' -xa '(__fish_print_xrandr_modes)'
-    complete -c xrandr -l preferred -d 'Select the same mode as --auto, but it do not automatically enable or disable the output'
-    complete -c xrandr -l pos -d 'Set output position within the secreen in pixels' -x
-    complete -c xrandr -l rate -d 'Set refresh rate' -x
-    complete -c xrandr -l reflect -d 'Set reflection' -xa 'normal x y xy'
-    complete -c xrandr -l rotate -d 'Set rotation' -xa 'normal left right inverted'
-    complete -c xrandr -l left-of -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l right-of -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l above -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l below -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l same-as -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
-    complete -c xrandr -l set -d 'Set the property value: --set <prop> <value>' -x
-    complete -c xrandr -l off -d 'Disables the output'
-    complete -c xrandr -l crtc -d 'Set the crtc' -x
-    complete -c xrandr -l gamma -d 'Set gamma correction [red:green:blue]' -x
-    complete -c xrandr -l brightness -d 'Set brightness. Multiplies gamma galues by brightness value'
-end
+complete -c xrandr -l listmonitors -d 'Print all defined monitors'
+complete -c xrandr -l listactivemonitors -d 'Print all active monitors'
+complete -c xrandr -l setmonitor -d 'Define new monitor' -x
+complete -c xrandr -l delmonitor -d 'Delete monitor' -x
+complete -c xrandr -l listproviders -d 'Print all available providers'
+complete -c xrandr -l setprovideroutputsource -d 'Set source for a given provider'
+complete -c xrandr -l setprovideroffloadsink  -d 'Set provider for a given sink'
+complete -c xrandr -l noprimary -d "Don't define a primary output"
+complete -c xrandr -l current -d 'Print current screen configuration'
+complete -c xrandr -l panning -d 'Set panning parameters' -x
+complete -c xrandr -l transform -d 'Set transformation matrix' -x
+complete -c xrandr -l scale -d 'Set screen scale' -x
+complete -c xrandr -l primary -d 'Set the output as primary'
+complete -c xrandr -l filter -d 'Set scaling filter method' -xa 'bilinear nearest'
+complete -c xrandr -l prop -l properties -d 'Display the contents of properties for each output'
+complete -c xrandr -l fb -d 'Set screen size' -x
+complete -c xrandr -l fbmm -d 'Set reported physical screen size' -x
+complete -c xrandr -l dpi -d 'Set dpi to calculate reported physical screen size'
+complete -c xrandr -l newmode -d 'Add new mode' -r
+complete -c xrandr -l rmmode -d 'Removes a mode from the server' -xa '(__fish_print_xrandr_modes)'
+complete -c xrandr -l addmode -d 'Add a mode to the set of valid modes for an output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l delmode -d 'Remove a mode from the set of valid modes for an output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l output -d 'Selects an output to reconfigure' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l auto -d 'Enable connected but disabled outputs'
+complete -c xrandr -l mode -d 'This selects a mode' -xa '(__fish_print_xrandr_modes)'
+complete -c xrandr -l preferred -d 'Select the same mode as --auto, but it do not automatically enable or disable the output'
+complete -c xrandr -l pos -d 'Set output position within the secreen in pixels' -x
+complete -c xrandr -l rate -d 'Set refresh rate' -x
+complete -c xrandr -l reflect -d 'Set reflection' -xa 'normal x y xy'
+complete -c xrandr -l rotate -d 'Set rotation' -xa 'normal left right inverted'
+complete -c xrandr -l left-of -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l right-of -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l above -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l below -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l same-as -d 'Set position relative to the output' -xa '(__fish_print_xrandr_outputs)'
+complete -c xrandr -l set -d 'Set the property value: --set <prop> <value>' -x
+complete -c xrandr -l off -d 'Disables the output'
+complete -c xrandr -l crtc -d 'Set the crtc' -x
+complete -c xrandr -l gamma -d 'Set gamma correction [red:green:blue]' -x
+complete -c xrandr -l brightness -d 'Set brightness. Multiplies gamma galues by brightness value'

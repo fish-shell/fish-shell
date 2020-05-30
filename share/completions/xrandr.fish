@@ -16,10 +16,10 @@ end
 complete -c xrandr -l verbose -d 'Be more verbose'
 complete -c xrandr -l dryrun -d 'Make no changes'
 complete -c xrandr -l nograb -d 'Apply modifications without grabbing the screen'
-complete -c xrandr -o help -d 'Print out a summary of the usage and exit'
+complete -c xrandr -o help -l help -d 'Print out a summary of the usage and exit'
 complete -c xrandr -s v -l version -d 'Print out the RandR version reported by the X server and exit'
 complete -c xrandr -s q -l query -d 'Display the current state of the system'
-complete -c xrandr -s d -o display -d 'Select X display to use' -x
+complete -c xrandr -s d -o display -l display -d 'Select X display to use' -x
 complete -c xrandr -l screen -d 'Select which screen to manipulate' -x
 complete -c xrandr -l q1 -d 'Use RandR version 1.1 protocol'
 complete -c xrandr -l q12 -d 'Use RandR version 1.2 protocol'
@@ -38,6 +38,32 @@ complete -c xrandr -s r -l rate -l refresh -d 'Set the refresh rate closest to t
 complete -c xrandr -s o -l orientation -d 'Specify the orientation of the screen' -xa 'normal inverted left right'
 complete -c xrandr -s x -d 'Reflect across the X axis'
 complete -c xrandr -s y -d 'Reflect across the Y axis'
+
+# Version > 1.5
+if test $ver[1] -gt 1; or test "$ver[2]" -ge 5
+    complete -c xrandr -l listmonitors -d 'Print all defined monitors'
+    complete -c xrandr -l listactivemonitors -d 'Print all active monitors'
+    complete -c xrandr -l setmonitor -d 'Define new monitor' -x
+    complete -c xrandr -l delmonitor -d 'Delete monitor' -x
+end
+
+# Version > 1.4
+if test $ver[1] -gt 1; or test "$ver[2]" -ge 4
+    complete -c xrandr -l listproviders -d 'Print all available providers'
+    complete -c xrandr -l setprovideroutputsource -d 'Set source for a given provider'
+    complete -c xrandr -l setprovideroffloadsink  -d 'Set provider for a given sink'
+end
+
+# Version > 1.3
+if test $ver[1] -gt 1; or test "$ver[2]" -gt 2
+    complete -c xrandr -l noprimary -d "Don't define a primary output"
+    complete -c xrandr -l current -d 'Print current screen configuration'
+    complete -c xrandr -l panning -d 'Set panning parameters' -x
+    complete -c xrandr -l transform -d 'Set transformation matrix' -x
+    complete -c xrandr -l scale -d 'Set screen scale' -x
+    complete -c xrandr -l primary -d 'Set the output as primary'
+    complete -c xrandr -l filter -d 'Set scaling filter method' -xa 'bilinear nearest'
+end
 
 # Version > 1.1
 if test $ver[1] -gt 1; or test "$ver[2]" -gt 1
@@ -68,13 +94,3 @@ if test $ver[1] -gt 1; or test "$ver[2]" -gt 1
     complete -c xrandr -l gamma -d 'Set gamma correction [red:green:blue]' -x
     complete -c xrandr -l brightness -d 'Set brightness. Multiplies gamma galues by brightness value'
 end
-
-if test $ver[1] -gt 1; or test "$ver[2]" -gt 2
-    complete -c xrandr -l noprimary -d "Don't define a primary output"
-    complete -c xrandr -l current -d 'Print current screen configuration'
-    complete -c xrandr -l panning -d 'Set panning: widthxheight[+x+y[/track_widthxtrack_height+track_x+track_y[/border_left/border_top/border_right/border_bottom]]]' -x
-    complete -c xrandr -l transform -d 'Set transformation matrix: a,b,c,d,e,f,g,h,i for [ [a,b,c], [d,e,f], [g,h,i] ]' -x
-    complete -c xrandr -l scale -d 'Set scren scale' -x
-    complete -c xrandr -l primary -d 'Set the output as primary'
-end
-

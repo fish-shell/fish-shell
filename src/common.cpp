@@ -2100,10 +2100,13 @@ void save_term_foreground_process_group() {
     initial_fg_process_group = tcgetpgrp(STDIN_FILENO);
 }
 
-void restore_term_foreground_process_group() {
+void restore_term_foreground_process_group_for_exit() {
     if (initial_fg_process_group != -1) {
         // This is called during shutdown and from a signal handler. We don't bother to complain on
         // failure because doing so is unlikely to be noticed.
+        // However we want this to fail if we are not the tty owner (#7060), so clear our SIGTTOU
+        // handler to allow it to fail properly. Note that we are about to exit.
+        (void)signal(SIGTTOU, SIG_DFL);
         (void)tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
     }
 }

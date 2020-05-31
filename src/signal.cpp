@@ -235,7 +235,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
 
         case SIGTERM:
             /// Handle sigterm. The only thing we do is restore the front process ID, then die.
-            restore_term_foreground_process_group();
+            restore_term_foreground_process_group_for_exit();
             signal(SIGTERM, SIG_DFL);
             raise(SIGTERM);
             break;

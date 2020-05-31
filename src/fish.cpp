@@ -528,7 +528,7 @@ int main(int argc, char **argv) {
     event_fire_generic(parser, L"fish_exit", &event_args);
 
     restore_term_mode();
-    restore_term_foreground_process_group();
+    restore_term_foreground_process_group_for_exit();
 
     if (g_profiling_active) {
         parser.emit_profiling(s_profiling_output_filename);

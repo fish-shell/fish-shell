@@ -684,8 +684,8 @@ void configure_thread_assertions_for_testing();
 void setup_fork_guards(void);
 
 /// Save the value of tcgetpgrp so we can restore it on exit.
-void save_term_foreground_process_group(void);
-void restore_term_foreground_process_group(void);
+void save_term_foreground_process_group();
+void restore_term_foreground_process_group_for_exit();
 
 /// Return whether we are the child of a fork.
 bool is_forked_child(void);

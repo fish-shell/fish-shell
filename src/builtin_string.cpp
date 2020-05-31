@@ -784,12 +784,8 @@ struct compiled_regex_t {
     }
 
     ~compiled_regex_t() {
-        if (match != nullptr) {
-            pcre2_match_data_free(match);
-        }
-        if (code != nullptr) {
-            pcre2_code_free(code);
-        }
+        pcre2_match_data_free(match);
+        pcre2_code_free(code);
     }
 };
 

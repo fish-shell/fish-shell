@@ -61,6 +61,7 @@ Interactive improvements
 ------------------------
 
 -  The prompt is reprinted after a background job exits (#1018).
+-  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with `"> "` (#904).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

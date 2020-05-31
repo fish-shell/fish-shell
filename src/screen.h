@@ -221,7 +221,7 @@ struct prompt_layout_t {
     size_t last_line_width;  // width of the last line
 };
 
-// Maintain a mapping of escape sequences to their length for fast lookup.
+// Maintain a mapping of escape sequences to their widths for fast lookup.
 class layout_cache_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings, ordered
@@ -230,11 +230,16 @@ class layout_cache_t {
 
     // LRU-list of prompts and their layouts.
     // Use a list so we can promote to the front on a cache hit.
-    using prompt_layout_pair_t = std::pair<wcstring, prompt_layout_t>;
-    std::list<prompt_layout_pair_t> prompt_cache_;
+    struct prompt_cache_entry_t {
+        wcstring text;           // Original prompt string.
+        size_t max_line_width;   // Max line width when computing layout (for truncation).
+        wcstring trunc_text;     // Resulting truncated prompt string.
+        prompt_layout_t layout;  // Resulting layout.
+    };
+    std::list<prompt_cache_entry_t> prompt_cache_;
 
    public:
-    static constexpr size_t prompt_cache_max_size = 8;
+    static constexpr size_t prompt_cache_max_size = 12;
 
     /// \return the size of the escape code cache.
     size_t esc_cache_size() const { return esc_cache_.size(); }
@@ -265,11 +270,11 @@ class layout_cache_t {
         return 0;
     }
 
-    // Finds the layout for a prompt, promoting it to the front. Returns none() if not found.
-    maybe_t<prompt_layout_t> find_prompt_layout(const wcstring &input);
-
-    // Adds a prompt layout for a given string.
-    void add_prompt_layout(wcstring input, prompt_layout_t layout);
+    /// Computes a prompt layout for \p prompt_str, perhaps truncating it to \p desired_line_width.
+    /// \return the layout, and optionally the truncated prompt itself, by reference.
+    prompt_layout_t calc_prompt_layout(
+        const wcstring &prompt_str, wcstring *out_trunc_prompt = nullptr,
+        size_t desired_line_width = std::numeric_limits<size_t>::max());
 
     void clear() {
         esc_cache_.clear();
@@ -283,6 +288,17 @@ class layout_cache_t {
     layout_cache_t() = default;
     layout_cache_t(const layout_cache_t &) = delete;
     void operator=(const layout_cache_t &) = delete;
+
+   private:
+    // Add a cache entry.
+    void add_prompt_layout(prompt_cache_entry_t entry);
+
+    // Finds the layout for a prompt, promoting it to the front. Returns nullptr if not found.
+    // Note this points into our cache; do not modify the cache while the pointer lives.
+    const prompt_cache_entry_t *find_prompt_layout(
+        const wcstring &input, size_t max_line_width = std::numeric_limits<size_t>::max());
+
+    friend void test_layout_cache();
 };
 
 #endif

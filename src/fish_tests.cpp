@@ -5524,23 +5524,81 @@ void test_layout_cache() {
     do_test(seqs.esc_cache_size() == 0);
     do_test(seqs.find_escape_code(L"abcd") == 0);
 
+    auto huge = std::numeric_limits<size_t>::max();
+
     // Verify prompt layout cache.
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         wcstring input = std::to_wstring(i);
         do_test(!seqs.find_prompt_layout(input));
-        seqs.add_prompt_layout(input, {i, 0, 0});
-        do_test(seqs.find_prompt_layout(input)->line_count == i);
+        seqs.add_prompt_layout({input, huge, input, {i, 0, 0}});
+        do_test(seqs.find_prompt_layout(input)->layout.line_count == i);
     }
 
     size_t expected_evictee = 3;
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         if (i != expected_evictee)
-            do_test(seqs.find_prompt_layout(std::to_wstring(i))->line_count == i);
+            do_test(seqs.find_prompt_layout(std::to_wstring(i))->layout.line_count == i);
     }
 
-    seqs.add_prompt_layout(L"whatever", {100, 0, 0});
+    seqs.add_prompt_layout({L"whatever", huge, L"whatever", {100, 0, 0}});
     do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
-    do_test(seqs.find_prompt_layout(L"whatever")->line_count == 100);
+    do_test(seqs.find_prompt_layout(L"whatever", huge)->layout.line_count == 100);
+}
+
+void test_prompt_truncation() {
+    layout_cache_t cache;
+    wcstring trunc;
+    prompt_layout_t layout;
+
+    /// Helper to return 'layout' formatted as a string for easy comparison.
+    auto format_layout = [&] {
+        return format_string(L"%lu,%lu,%lu", (unsigned long)layout.line_count,
+                             (unsigned long)layout.max_line_width,
+                             (unsigned long)layout.last_line_width);
+    };
+
+    /// Join some strings with newline.
+    auto join = [](std::initializer_list<wcstring> vals) { return join_strings(vals, L'\n'); };
+
+    wcstring ellipsis = {get_ellipsis_char()};
+
+    // No truncation.
+    layout = cache.calc_prompt_layout(L"abcd", &trunc);
+    do_test(format_layout() == L"1,4,4");
+    do_test(trunc == L"abcd");
+
+    // Basic truncation.
+    layout = cache.calc_prompt_layout(L"0123456789ABCDEF", &trunc, 8);
+    do_test(format_layout() == L"1,8,8");
+    do_test(trunc == ellipsis + L"9ABCDEF");
+
+    // Multiline truncation.
+    layout = cache.calc_prompt_layout(join({
+                                          L"0123456789ABCDEF",  //
+                                          L"012345",            //
+                                          L"0123456789abcdef",  //
+                                          L"xyz"                //
+                                      }),
+                                      &trunc, 8);
+    do_test(format_layout() == L"4,8,3");
+    do_test(trunc == join({ellipsis + L"9ABCDEF", L"012345", ellipsis + L"9abcdef", L"xyz"}));
+
+    // Escape sequences are not truncated.
+    layout =
+        cache.calc_prompt_layout(L"\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE", &trunc, 4);
+    do_test(format_layout() == L"1,4,4");
+    do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=test/foo\x07NCE");
+
+    // Newlines in escape sequences are skipped.
+    layout = cache.calc_prompt_layout(L"\x1B]50;CurrentDir=\ntest/foo\x07NOT_PART_OF_SEQUENCE",
+                                      &trunc, 4);
+    do_test(format_layout() == L"1,4,4");
+    do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=\ntest/foo\x07NCE");
+
+    // We will truncate down to one character if we have to.
+    layout = cache.calc_prompt_layout(L"Yay", &trunc, 1);
+    do_test(format_layout() == L"1,1,1");
+    do_test(trunc == ellipsis);
 }
 
 void test_normalize_path() {
@@ -5808,6 +5866,7 @@ int main(int argc, char **argv) {
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();
     if (should_test_function("layout_cache")) test_layout_cache();
+    if (should_test_function("prompt")) test_prompt_truncation();
     if (should_test_function("normalize")) test_normalize_path();
     if (should_test_function("topics")) test_topic_monitor();
     if (should_test_function("topics")) test_topic_monitor_torture();

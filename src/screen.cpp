@@ -257,64 +257,142 @@ size_t layout_cache_t::escape_code_length(const wchar_t *code) {
     return esc_seq_len;
 }
 
-maybe_t<prompt_layout_t> layout_cache_t::find_prompt_layout(const wcstring &input) {
-    auto start = prompt_cache_.begin();
-    auto end = prompt_cache_.end();
+const layout_cache_t::prompt_cache_entry_t *layout_cache_t::find_prompt_layout(
+    const wcstring &input, size_t max_line_width) {
+    auto start = prompt_cache_.cbegin();
+    auto end = prompt_cache_.cend();
     for (auto iter = start; iter != end; ++iter) {
-        if (iter->first == input) {
+        if (iter->text == input && iter->max_line_width == max_line_width) {
             // Found it. Move it to the front if not already there.
             if (iter != start) prompt_cache_.splice(start, prompt_cache_, iter);
-            return iter->second;
+            return &*prompt_cache_.begin();
         }
     }
-    return none();
+    return nullptr;
 }
 
-void layout_cache_t::add_prompt_layout(wcstring input, prompt_layout_t layout) {
-    assert(!find_prompt_layout(input) && "Should not have a prompt layout for this input");
-    prompt_cache_.emplace_front(std::move(input), layout);
+void layout_cache_t::add_prompt_layout(prompt_cache_entry_t entry) {
+    prompt_cache_.emplace_front(std::move(entry));
     if (prompt_cache_.size() > prompt_cache_max_size) {
         prompt_cache_.pop_back();
     }
 }
 
-/// Calculate layout information for the given prompt. Does some clever magic to detect common
-/// escape sequences that may be embedded in a prompt, such as those to set visual attributes.
-/// escape sequences that may be embedded in a prompt, such as those to set visual attributes.
-static prompt_layout_t calc_prompt_layout(const wcstring &prompt_str, layout_cache_t &cache) {
-    if (auto cached_layout = cache.find_prompt_layout(prompt_str)) {
-        return *cached_layout;
-    }
+/// \return whether \p c ends a measuring run.
+static bool is_run_terminator(wchar_t c) {
+    return c == L'\0' || c == L'\n' || c == L'\r' || c == L'\f';
+}
 
-    prompt_layout_t prompt_layout = {1, 0, 0};
-    size_t current_line_width = 0;
-
-    const wchar_t *prompt = prompt_str.c_str();
-    for (size_t j = 0; prompt[j]; j++) {
-        if (prompt[j] == L'\x1B') {
-            // This is the start of an escape code. Skip over it if it's at least one char long.
-            size_t len = cache.escape_code_length(&prompt[j]);
-            if (len > 0) j += len - 1;
-        } else if (prompt[j] == L'\t') {
-            current_line_width = next_tab_stop(current_line_width);
-        } else if (prompt[j] == L'\n' || prompt[j] == L'\f') {
-            // PCA: At least one prompt uses \f\r as a newline. It's unclear to me what this is
-            // meant to do, but terminals seem to treat it as a newline so we do the same.
-            current_line_width = 0;
-            prompt_layout.line_count += 1;
-        } else if (prompt[j] == L'\r') {
-            current_line_width = 0;
+/// Measure a run of characters in \p input starting at \p start.
+/// Stop when we reach a run terminator, and return its index in \p out_end (if not null).
+/// Note \0 is a run terminator so there will always be one.
+/// We permit escape sequences to have run terminators other than \0. That is, escape sequences may
+/// have embedded newlines, etc.; it's unclear if this is possible but we allow it.
+static size_t measure_run_from(const wchar_t *input, size_t start, size_t *out_end,
+                               layout_cache_t &cache) {
+    size_t width = 0;
+    size_t idx = start;
+    for (idx = start; !is_run_terminator(input[idx]); idx++) {
+        if (input[idx] == L'\x1B') {
+            // This is the start of an escape code; we assume it has width 0.
+            // -1 because we are going to increment in the loop.
+            size_t len = cache.escape_code_length(&input[idx]);
+            if (len > 0) idx += len - 1;
+        } else if (input[idx] == L'\t') {
+            width = next_tab_stop(width);
         } else {
             // Ordinary char. Add its width with care to ignore control chars which have width -1.
-            current_line_width += fish_wcwidth_min_0(prompt[j]);
-            if (current_line_width > prompt_layout.max_line_width) {
-                prompt_layout.max_line_width = current_line_width;
-            }
+            width += fish_wcwidth_min_0(input[idx]);
         }
     }
-    prompt_layout.last_line_width = current_line_width;
-    cache.add_prompt_layout(prompt, prompt_layout);
-    return prompt_layout;
+    if (out_end) *out_end = idx;
+    return width;
+}
+
+/// Attempt to truncate the prompt run \p run, which has width \p width, to \p no more than
+/// desired_width. \return the resulting width and run by reference.
+static void truncate_run(wcstring *run, size_t desired_width, size_t *width,
+                         layout_cache_t &cache) {
+    size_t curr_width = *width;
+    if (curr_width <= desired_width) {
+        return;
+    }
+
+    // Bravely prepend ellipsis char and skip it.
+    // Ellipsis is always width 1.
+    wchar_t ellipsis = get_ellipsis_char();
+    run->insert(0, 1, ellipsis);  // index, count, char
+    curr_width += 1;
+
+    // Start removing characters after ellipsis.
+    // Note we modify 'run' inside this loop.
+    size_t idx = 1;
+    while (curr_width > desired_width && idx < run->size()) {
+        wchar_t c = run->at(idx);
+        assert(!is_run_terminator(c) && "Should not have run terminator inside run");
+        if (c == L'\x1B') {
+            size_t len = cache.escape_code_length(run->c_str() + idx);
+            idx += std::max(len, (size_t)1);
+        } else if (c == '\t') {
+            // Tabs would seem to be quite annoying to measure while truncating.
+            // We simply remove these and start over.
+            run->erase(idx, 1);
+            curr_width = measure_run_from(run->c_str(), 0, nullptr, cache);
+            idx = 0;
+        } else {
+            size_t char_width = fish_wcwidth_min_0(c);
+            curr_width -= std::min(curr_width, char_width);
+            run->erase(idx, 1);
+        }
+    }
+    *width = curr_width;
+}
+
+prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
+                                                   wcstring *out_trunc_prompt,
+                                                   size_t max_line_width) {
+    // FIXME: we could avoid allocating trunc_prompt if max_line_width is max.
+    if (const auto *entry = this->find_prompt_layout(prompt_str, max_line_width)) {
+        if (out_trunc_prompt) out_trunc_prompt->assign(entry->trunc_text);
+        return entry->layout;
+    }
+
+    size_t prompt_len = prompt_str.size();
+    const wchar_t *prompt = prompt_str.c_str();
+
+    prompt_layout_t layout = {1, 0, 0};
+    wcstring trunc_prompt;
+
+    size_t run_start = 0;
+    while (run_start < prompt_len) {
+        size_t run_end;
+        size_t line_width = measure_run_from(prompt, run_start, &run_end, *this);
+        if (line_width <= max_line_width) {
+            // No truncation needed on this line.
+            trunc_prompt.append(&prompt[run_start], run_end - run_start);
+        } else {
+            // Truncation needed on this line.
+            wcstring run_storage(&prompt[run_start], run_end - run_start);
+            truncate_run(&run_storage, max_line_width, &line_width, *this);
+            trunc_prompt.append(run_storage);
+        }
+        layout.max_line_width = std::max(layout.max_line_width, line_width);
+        layout.last_line_width = line_width;
+
+        wchar_t endc = prompt[run_end];
+        if (endc) {
+            layout.line_count += (endc == L'\n' || endc == L'\f');
+            trunc_prompt.push_back(endc);
+            run_start = run_end + 1;
+        } else {
+            break;
+        }
+    }
+    this->add_prompt_layout(prompt_cache_entry_t{prompt, max_line_width, trunc_prompt, layout});
+    if (out_trunc_prompt) {
+        *out_trunc_prompt = std::move(trunc_prompt);
+    }
+    return layout;
 }
 
 static size_t calc_prompt_lines(const wcstring &prompt) {
@@ -323,7 +401,7 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
     // calc_prompt_width_and_lines.
     size_t result = 1;
     if (prompt.find_first_of(L"\n\f") != wcstring::npos) {
-        result = calc_prompt_layout(prompt, layout_cache_t::shared).line_count;
+        result = layout_cache_t::shared.calc_prompt_layout(prompt).line_count;
     }
     return result;
 }
@@ -607,10 +685,11 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     layout_cache_t &cached_layouts = layout_cache_t::shared;
     const environment_t &vars = env_stack_t::principal();
     const scoped_buffer_t buffering(*scr);
-    const size_t left_prompt_width =
-        calc_prompt_layout(left_prompt, cached_layouts).last_line_width;
+
+    // Determine size of left and right prompt. Note these have already been truncated.
+    const size_t left_prompt_width = cached_layouts.calc_prompt_layout(left_prompt).last_line_width;
     const size_t right_prompt_width =
-        calc_prompt_layout(right_prompt, cached_layouts).last_line_width;
+        cached_layouts.calc_prompt_layout(right_prompt).last_line_width;
 
     int screen_width = common_get_width();
 
@@ -852,45 +931,33 @@ static size_t truncation_offset_for_width(const std::vector<size_t> &width_by_of
 }
 
 static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
-                                      const wcstring &left_prompt_str,
-                                      const wcstring &right_prompt_str, const wcstring &commandline,
+                                      const wcstring &left_untrunc_prompt,
+                                      const wcstring &right_untrunc_prompt,
+                                      const wcstring &commandline,
                                       const wcstring &autosuggestion_str) {
     UNUSED(s);
     screen_layout_t result = {};
 
-    // Start by ensuring that the prompts themselves can fit.
-    const wchar_t *left_prompt = left_prompt_str.c_str();
-    const wchar_t *right_prompt = right_prompt_str.c_str();
-    const wchar_t *autosuggestion = autosuggestion_str.c_str();
+    // Truncate both prompts to screen width (#904).
+    wcstring left_prompt;
+    prompt_layout_t left_prompt_layout =
+        layout_cache_t::shared.calc_prompt_layout(left_untrunc_prompt, &left_prompt, screen_width);
 
-    layout_cache_t &cached_layouts = layout_cache_t::shared;
-    prompt_layout_t left_prompt_layout = calc_prompt_layout(left_prompt_str, cached_layouts);
-    prompt_layout_t right_prompt_layout = calc_prompt_layout(right_prompt_str, cached_layouts);
+    wcstring right_prompt;
+    prompt_layout_t right_prompt_layout = layout_cache_t::shared.calc_prompt_layout(
+        right_untrunc_prompt, &right_prompt, screen_width);
 
     size_t left_prompt_width = left_prompt_layout.last_line_width;
     size_t right_prompt_width = right_prompt_layout.last_line_width;
 
-    if (left_prompt_layout.max_line_width > screen_width) {
-        // If we have a multi-line prompt, see if the longest line fits; if not neuter the whole
-        // left prompt.
-        left_prompt = L"> ";
-        left_prompt_width = 2;
-    }
-
-    if (left_prompt_width + right_prompt_width >= screen_width) {
+    if (left_prompt_width + right_prompt_width > screen_width) {
         // Nix right_prompt.
         right_prompt = L"";
         right_prompt_width = 0;
     }
 
-    if (left_prompt_width + right_prompt_width >= screen_width) {
-        // Still doesn't fit, neuter left_prompt.
-        left_prompt = L"> ";
-        left_prompt_width = 2;
-    }
-
     // Now we should definitely fit.
-    assert(left_prompt_width + right_prompt_width < screen_width);
+    assert(left_prompt_width + right_prompt_width <= screen_width);
 
     // Get the width of the first line, and if there is more than one line.
     bool multiline = false;
@@ -906,6 +973,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     const size_t first_command_line_width = first_line_width;
 
     // If we have more than one line, ensure we have no autosuggestion.
+    const wchar_t *autosuggestion = autosuggestion_str.c_str();
     size_t autosuggest_total_width = 0;
     std::vector<size_t> autosuggest_truncated_widths;
     if (multiline) {
@@ -943,7 +1011,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     if (!done) {
         calculated_width = left_prompt_width + right_prompt_width + first_command_line_width +
                            autosuggest_total_width;
-        if (calculated_width < screen_width) {
+        if (calculated_width <= screen_width) {
             result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
             result.right_prompt = right_prompt;
@@ -956,7 +1024,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // between the left edge and the rprompt.
     if (!done) {
         calculated_width = left_prompt_width + right_prompt_width + first_command_line_width;
-        if (calculated_width < screen_width) {
+        if (calculated_width <= screen_width) {
             result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
             result.right_prompt = right_prompt;
@@ -977,7 +1045,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // Case 3
     if (!done) {
         calculated_width = left_prompt_width + first_command_line_width + autosuggest_total_width;
-        if (calculated_width < screen_width) {
+        if (calculated_width <= screen_width) {
             result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
             result.autosuggestion = autosuggestion;
@@ -988,7 +1056,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // Case 4
     if (!done) {
         calculated_width = left_prompt_width + first_command_line_width;
-        if (calculated_width < screen_width) {
+        if (calculated_width <= screen_width) {
             result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
 

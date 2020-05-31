@@ -2101,11 +2101,10 @@ void save_term_foreground_process_group() {
 }
 
 void restore_term_foreground_process_group() {
-    if (initial_fg_process_group == -1) return;
-    // This is called during shutdown and from a signal handler. We don't bother to complain on
-    // failure because doing so is unlikely to be noticed.
-    if (tcsetpgrp(STDIN_FILENO, initial_fg_process_group) == -1 && errno == ENOTTY) {
-        redirect_tty_output();
+    if (initial_fg_process_group != -1) {
+        // This is called during shutdown and from a signal handler. We don't bother to complain on
+        // failure because doing so is unlikely to be noticed.
+        (void)tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
     }
 }
 

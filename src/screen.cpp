@@ -259,8 +259,8 @@ size_t layout_cache_t::escape_code_length(const wchar_t *code) {
 
 const layout_cache_t::prompt_cache_entry_t *layout_cache_t::find_prompt_layout(
     const wcstring &input, size_t max_line_width) {
-    auto start = prompt_cache_.cbegin();
-    auto end = prompt_cache_.cend();
+    auto start = prompt_cache_.begin();
+    auto end = prompt_cache_.end();
     for (auto iter = start; iter != end; ++iter) {
         if (iter->text == input && iter->max_line_width == max_line_width) {
             // Found it. Move it to the front if not already there.

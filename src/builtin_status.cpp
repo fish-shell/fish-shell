@@ -19,6 +19,8 @@
 
 enum status_cmd_t {
     STATUS_CURRENT_CMD = 1,
+    STATUS_BASENAME,
+    STATUS_DIRNAME,
     STATUS_FEATURES,
     STATUS_FILENAME,
     STATUS_FISH_PATH,
@@ -40,10 +42,14 @@ enum status_cmd_t {
 
 // Must be sorted by string, not enum or random.
 const enum_map<status_cmd_t> status_enum_map[] = {
+    {STATUS_BASENAME, L"basename"},
+    {STATUS_BASENAME, L"current-basename"},
     {STATUS_CURRENT_CMD, L"current-command"},
+    {STATUS_DIRNAME, L"current-dirname"},
     {STATUS_FILENAME, L"current-filename"},
     {STATUS_FUNCTION, L"current-function"},
     {STATUS_LINE_NUMBER, L"current-line-number"},
+    {STATUS_DIRNAME, L"dirname"},
     {STATUS_FEATURES, L"features"},
     {STATUS_FILENAME, L"filename"},
     {STATUS_FISH_PATH, L"fish-path"},
@@ -357,12 +363,20 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             break;
         }
+        case STATUS_BASENAME:
+        case STATUS_DIRNAME:
         case STATUS_FILENAME: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            const wchar_t *fn = parser.current_filename();
-
-            if (!fn) fn = _(L"Standard input");
-            streams.out.append_format(L"%ls\n", fn);
+            auto res = parser.current_filename();
+            wcstring fn = res ? res : L"";
+            if (!fn.empty() && opts.status_cmd == STATUS_DIRNAME) {
+                fn = wdirname(fn);
+            } else if (!fn.empty() && opts.status_cmd == STATUS_BASENAME) {
+                fn = wbasename(fn);
+            } else if (fn.empty()) {
+                fn = _(L"Standard input");
+            }
+            streams.out.append_format(L"%ls\n", fn.c_str());
             break;
         }
         case STATUS_FUNCTION: {

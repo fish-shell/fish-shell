@@ -38,6 +38,9 @@ Notable improvements and fixes
 -  The ``fish_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
    use the new ``fish_read`` event instead.
+-  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in config.fish (#6960)
+-  The ``_`` helper function to call into fish's gettext catalog has been made a builtin for simplicity and performance (#7036)
+-  ``:`` (for doing nothing) and ``.`` (as a less readable name for ``source``) have also been made proper builtins rather than wrapper functions (#6854).
 
 Syntax changes and new commands
 -------------------------------
@@ -56,6 +59,10 @@ Scripting improvements
    even a format string)
 -  The ``true`` and ``false`` builtins ignore any arguments, like other
    shells (#7030).
+-  Computed ("electric") variables are now only global in scope, so ``set -Uq status`` returns false (#7032).
+-  ``set --show``s output has been shortened, only mentioning the scopes in which a variable exists (#6944).
+-  A new ``fish_posterror`` event fires when attempting to execute a command with syntax errors (#6880).
+- ``fish_indent`` now removes spurious quotes in simple cases (#6722)
 
 Interactive improvements
 ------------------------
@@ -73,6 +80,7 @@ New or improved bindings
    current file at the cursor in a pager (#6838).
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position
    to the external editor if the editor is recognized (#6138).
+-  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (#7012).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -86,6 +94,8 @@ Improved terminal output
 -  After clearing command history, success message ends in newline.
 -  Autosuggestions now show up also when the cursor passes the right
    prompt (#6948).
+-  The cursor shape in vi-mode is now also changed in Windows Terminal (#6999).
+-  The spurious warning about terminal size in small terminals has been removed (#6980).
 
 Completions
 ^^^^^^^^^^^

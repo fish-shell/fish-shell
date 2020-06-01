@@ -19,6 +19,8 @@ Synopsis
     status is-interactive-job-control
     status current-command
     status filename
+    status basename
+    status dirname
     status fish-path
     status function
     status line-number
@@ -52,7 +54,11 @@ The following operations (sub-commands) are available:
 
 - ``current-command`` prints the name of the currently-running function or command, like the deprecated ``_`` variable.
 
-- ``filename`` prints the filename of the currently running script. Also ``current-filename``, ``-f`` or ``--current-filename``.
+- ``filename`` prints the filename of the currently running script. Also ``current-filename``, ``-f`` or ``--current-filename``. This depends on how the script was called - if it was called via a symlink, the symlink will be returned, and if the current script was received via ``source`` it will be ``-``.
+
+- ``basename`` prints just the filename of the running script, without any path-components before.
+
+- ``dirname`` prints just the path to the running script, without the actual filename itself. This can be relative to $PWD (including just "."), depending on how the script was called. This is the same as passing the ``filename`` to ``dirname(3)``. It's useful if you want to use other files in the current script's directory or similar.
 
 - ``fish-path`` prints the absolute path to the currently executing instance of fish.
 

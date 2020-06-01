@@ -36,3 +36,18 @@ echo $status
 echo (status is-command-substitution; echo $status)
 # CHECK: 1
 # CHECK: 0
+
+test (status filename) = (status dirname)/(status basename)
+
+status basename
+#CHECK: status-command.fish
+
+status dirname | string match -q '*checks'
+echo $status
+#CHECK: 0
+
+echo "status dirname" | source
+#CHECK: .
+
+$FISH_PATH -c 'status dirname'
+#CHECK: Standard input

@@ -417,7 +417,8 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// One situation in which this breaks down is with screen, since screen supports setting the
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-static const wchar_t *const title_terms[] = {L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"};
+static const wchar_t *const title_terms[] = {L"xterm",  L"screen", L"tmux",
+                                             L"nxterm", L"rxvt",   L"alacritty"};
 static bool does_term_support_setting_title(const environment_t &vars) {
     const auto term_var = vars.get(L"TERM");
     if (term_var.missing_or_empty()) return false;

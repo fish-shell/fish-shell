@@ -635,4 +635,9 @@ set -ql history
 echo $status
 #CHECK: 1
 
+set --path newvariable foo
+set -S newvariable
+#CHECK: $newvariable: set in global scope, unexported, a path variable with 1 elements
+#CHECK: $newvariable[1]: |foo|
+
 true

@@ -579,9 +579,10 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
     }
 
     const wchar_t *exportv = var->exports() ? _(L"exported") : _(L"unexported");
+    const wchar_t *pathvarv = var->is_pathvar() ? _(L" a path variable") : L"";
     wcstring_list_t vals = var->as_list();
-    streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
-                              scope_name, exportv, vals.size());
+    streams.out.append_format(_(L"$%ls: set in %ls scope, %ls,%ls with %d elements\n"), var_name,
+                              scope_name, exportv, pathvarv, vals.size());
 
     for (size_t i = 0; i < vals.size(); i++) {
         if (vals.size() > 100) {

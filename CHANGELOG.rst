@@ -4,9 +4,6 @@ fish next-minor
 Notable improvements and fixes
 ------------------------------
 
--  ``fish --no-execute`` will no longer complain about unknown commands
-   or non-matching wildcards, as these could be defined differently at
-   runtime (especially for functions). #977
 -  ``jobs --quiet PID`` will no longer print ‘no suitable job’ if the
    job for PID does not exist (e.g. because it has finished). #6809
 -  A variable ``fish_kill_signal`` will be set to the signal that
@@ -16,9 +13,6 @@ Notable improvements and fixes
    given string, but ``-s``. From now on the string is used.
 -  Ctrl-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
--  Improve Gradle completion
--  Fixed ``pushd``\ ’s behavior with respect to the directory stack when
-   given an invalid argument
 -  A new variable, ``$fish_vi_force_cursor``, has been added. This can
    be set to force ``fish_vi_cursor`` to attempt changing the cursor
    shape in vi mode, regardless of terminal. Additionally, the
@@ -31,13 +25,6 @@ Notable improvements and fixes
 -  fish no longer disables flow control after every command.
    Enterprising users can now enable it for external commands with
    ``stty``. (#2315)
--  Added a ``fish_job_summary`` function which is called whenever a
-   background job stops or ends, or any job terminates from a signal.
-   The default behaviour can now be customized by redefining this
-   function.
--  The ``fish_prompt`` event no longer fires when ``read`` is used. If
-   you need a function to run any time ``read`` is invoked by a script,
-   use the new ``fish_read`` event instead.
 -  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in config.fish (#6960)
 -  The ``_`` helper function to call into fish's gettext catalog has been made a builtin for simplicity and performance (#7036)
 -  ``:`` (for doing nothing) and ``.`` (as a less readable name for ``source``) have also been made proper builtins rather than wrapper functions (#6854).
@@ -63,12 +50,29 @@ Scripting improvements
 -  ``set --show``s output has been shortened, only mentioning the scopes in which a variable exists (#6944).
 -  A new ``fish_posterror`` event fires when attempting to execute a command with syntax errors (#6880).
 - ``fish_indent`` now removes spurious quotes in simple cases (#6722)
+- ``pushd`` only adds a directory to the stack if changing to it was successful.
+-  ``fish --no-execute`` will no longer complain about unknown commands
+   or non-matching wildcards, as these could be defined differently at
+   runtime (especially for functions). #977
+-  Added a ``fish_job_summary`` function which is called whenever a
+   background job stops or ends, or any job terminates from a signal.
+   The default behaviour can now be customized by redefining this
+   function.
+-  The ``fish_prompt`` event no longer fires when ``read`` is used. If
+   you need a function to run any time ``read`` is invoked by a script,
+   use the new ``fish_read`` event instead.
 
 Interactive improvements
 ------------------------
 
 -  The prompt is reprinted after a background job exits (#1018).
 -  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with `"> "` (#904).
+-  fish no longer inserts a space after a completion ending in ``.`` or
+   ``,`` was accepted (#6928).
+-  When pressing Tab, fish displays ambiguous completions even when they
+   have a common prefix, without the user having to press Tab again
+   (#6924).
+
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -120,12 +124,6 @@ Completions
    -  ``windscribe``
    -  ``wireshark``, ``tshark``, and ``dumpcap``
    -  ``zopfli``, and ``zopflipng``
-
--  fish no longer inserts a space after a completion ending in ``.`` or
-   ``,`` was accepted (#6928).
--  When pressing Tab, fish displays ambiguous completions even when they
-   have a common prefix, without the user having to press Tab again
-   (#6924).
 
 Deprecations and removed features
 ---------------------------------

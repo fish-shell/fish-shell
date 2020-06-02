@@ -1870,3 +1870,18 @@ complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --
 
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n __fish_git_needs_command -a '(__fish_git_custom_commands)' -d 'Custom command'
+# source git-* commands' autocompletion file if exists
+set -l __fish_git_custom_commands_completion
+for complete_path in $fish_complete_path
+    for git_ext in $complete_path/git-*.fish
+        # ignore this completion as executable does not exists
+        set -l cmd (string replace '.fish' '' (basename $git_ext))
+        not command -q $cmd
+        and continue
+        # already sourced this git-* completion file from some other dir
+        contains -- $git_ext $__fish_git_custom_commands_completion
+        and continue
+        source $git_ext
+        set -a __fish_git_custom_commands_completion $git_ext
+    end
+end

@@ -47,7 +47,7 @@ Scripting improvements
 -  The ``true`` and ``false`` builtins ignore any arguments, like other
    shells (#7030).
 -  Computed ("electric") variables are now only global in scope, so ``set -Uq status`` returns false (#7032).
--  ``set --show``s output has been shortened, only mentioning the scopes in which a variable exists (#6944).
+-  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (#6944).
 -  A new ``fish_posterror`` event fires when attempting to execute a command with syntax errors (#6880).
 - ``fish_indent`` now removes spurious quotes in simple cases (#6722)
 - ``pushd`` only adds a directory to the stack if changing to it was successful.

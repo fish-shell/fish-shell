@@ -27,7 +27,7 @@ complete -c go -n "__fish_seen_subcommand_from build compile fix fmt install run
 
 # Completions for go cmds that takes pkg arguments
 complete -c go -n "__fish_seen_subcommand_from build doc fix fmt install test vet" -x -a "(
-            go list -e -f '{{.ImportPath}}	{{or .Doc \"Go package\"}}' (commandline -ct)... ^/dev/null
+            go list -e -f '{{.ImportPath}}	{{or .Doc \"Go package\"}}' (commandline -ct)... 2>/dev/null
     )" --description Package
 
 

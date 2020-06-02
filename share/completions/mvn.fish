@@ -71,7 +71,7 @@ function __fish_mvn_profiles
     # find line opening the profile-tag
     # read next line
     # extract contents of id-tag
-    sed -n -e '/<profile>/{n; s!^.*<id>\([^<]*\)</id>.*$!\1!; p}' ~/.m2/settings.xml pom.xml ^/dev/null
+    sed -n -e '/<profile>/{n; s!^.*<id>\([^<]*\)</id>.*$!\1!; p}' ~/.m2/settings.xml pom.xml 2>/dev/null
 end
 
 complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles)" -d "Comma-delimited list of profiles to activate"

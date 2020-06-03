@@ -1,5 +1,5 @@
 function __complete_devices
-    kdeconnect-cli --shell-device-autocompletion=zsh | string replace -rf -- '(\w+)\[(.*)]' '$1\t$2'
+    kdeconnect-cli --shell-device-autocompletion=zsh 2>/dev/null | string replace -rf -- '(\w+)\[(.*)]' '$1\t$2'
     or kdeconnect-cli --list-devices 2>/dev/null | string replace -rf -- '- (.*): (\w+) .*' '$2\t$1'
 end
 

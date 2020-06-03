@@ -228,7 +228,7 @@ Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
 Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.
 
-E.g. don't type "sudo !!" - first press Up, then Home, then type "sudo ". For ``sudo`` in particular there's a special binding, so you can press :kbd:`Alt`\ +\ :kbd:`S` to toggle a ``sudo`` prefix instead of typing ``sudo``.
+Most of the time, it's used as ``sudo !!``. In that case just press :kbd:`Alt`\ +\ :kbd:`S`, and it will recall your last commandline with `sudo` prefixed (or toggle a `sudo` prefix on the current commandline if there is anything).
 
 Fish's history recall is very simple yet effective:
 

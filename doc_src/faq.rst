@@ -226,7 +226,9 @@ Change the value of the variable ``fish_greeting`` or create a ``fish_greeting``
 
 Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
-Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.  E.g. don't type "sudo !!" - first press Up, then Home, then type "sudo ".
+Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.
+
+Most of the time, it's used as ``sudo !!``. In that case just press :kbd:`Alt`\ +\ :kbd:`S`, and it will recall your last commandline with `sudo` prefixed (or toggle a `sudo` prefix on the current commandline if there is anything).
 
 Fish's history recall is very simple yet effective:
 

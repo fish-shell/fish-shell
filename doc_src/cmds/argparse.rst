@@ -103,6 +103,31 @@ See the :ref:`fish_opt <cmd-fish_opt>` command for a friendlier but more verbose
 
 In the following examples if a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
 
+Note: Optional arguments
+------------------------
+
+An option defined with ``=?`` can take optional arguments. Optional arguments have to be *directly attached* to the option they belong to.
+
+That means you can only call::
+
+  cmd --flag=value
+  # or
+  cmd  -fvalue
+
+but not::
+
+  cmd --flag value
+  # "value" here will be used as a positional argument and "--flag" won't have an argument.
+
+If this weren't the case, using an option without an optional argument would be difficult if you also wanted to use positional arguments.
+
+For example::
+
+  grep --color auto
+  # Here "auto" will be used as the search string, "color" will not have an argument and will fall back to the default
+
+This isn't specific to argparse but common to all things using ``getopt(3)`` (if they have optional arguments at all).
+
 Flag Value Validation
 ---------------------
 

@@ -114,13 +114,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Print a greeting.
     # fish_greeting can be a function (preferred) or a variable.
     #
-    if functions -q fish_greeting
-        fish_greeting
-    else
-        # The greeting used to be skipped when fish_greeting was empty (not just undefined)
-        # Keep it that way to not print superfluous newlines on old configuration
-        test -n "$fish_greeting"
-        and echo $fish_greeting
+    # NOTE: This status check is necessary to not print the greeting when `read`ing in scripts. See #7080.
+    if status --is-interactive
+        if functions -q fish_greeting
+            fish_greeting
+        else
+            # The greeting used to be skipped when fish_greeting was empty (not just undefined)
+            # Keep it that way to not print superfluous newlines on old configuration
+            test -n "$fish_greeting"
+            and echo $fish_greeting
+        end
     end
 
     #

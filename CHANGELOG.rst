@@ -61,6 +61,9 @@ Scripting improvements
 -  The ``fish_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
    use the new ``fish_read`` event instead.
+-  ``status`` gained new ``dirname`` and ``basename`` convenience commands
+   to get just the directory to the running script or the name of it,
+   to simplify a common ``(dirname (status filename))`` idiom (#7076).
 
 Interactive improvements
 ------------------------
@@ -85,6 +88,8 @@ New or improved bindings
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position
    to the external editor if the editor is recognized (#6138).
 -  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (#7012).
+-  ``__fish_prepend_sudo`` (Alt-S) now uses the previous commandline if the current one is empty,
+   to simplify rerunning the previous command with ``sudo`` (#7079).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -100,6 +105,7 @@ Improved terminal output
    prompt (#6948).
 -  The cursor shape in vi-mode is now also changed in Windows Terminal (#6999).
 -  The spurious warning about terminal size in small terminals has been removed (#6980).
+-  Dynamic titles are now enabled in Alacritty with its new terminfo entry (#7073).
 
 Completions
 ^^^^^^^^^^^

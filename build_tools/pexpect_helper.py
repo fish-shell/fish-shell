@@ -64,18 +64,32 @@ def escape(s):
     return "".join(res)
 
 
+def pexpect_error_type(err):
+    """ Return a human-readable description of a pexpect error type. """
+    if isinstance(err, pexpect.EOF):
+        return "EOF"
+    elif isinstance(err, pexpect.TIMEOUT):
+        return "timeout"
+    else:
+        return "unknown error"
+
+
 class Message(object):
     """ Some text either sent-to or received-from the spawned proc.
 
     Attributes:
-        dir: the message direction, either DIR_SEND or DIR_RECV
+        dir: the message direction, either DIR_INPUT or DIR_OUTPUT
         filename: the name of the file from which the message was sent
         text: the text of the messages
         when: a timestamp of when the message was sent
     """
 
-    DIR_SEND = "SENT"
-    DIR_RECV = "RECV"
+    # Input is input into fish shell ("sent data").
+    DIR_INPUT = " INPUT"
+
+    # Output means output from fish shell ("received data").
+    DIR_OUTPUT = "OUTPUT"
+
     MODULE = sys.modules[__name__]
 
     def __init__(self, dir, text, when):
@@ -86,22 +100,14 @@ class Message(object):
         self.when = when
 
     @staticmethod
-    def sent(text, when):
-        """ Return a SEND message with the given text. """
-        return Message(Message.DIR_SEND, text, when)
+    def sent_input(text, when):
+        """ Return an input message with the given text. """
+        return Message(Message.DIR_INPUT, text, when)
 
     @staticmethod
-    def received(text, when):
-        """ Return a RECV message with the given text. """
-        return Message(Message.DIR_RECV, text, when)
-
-    def formatted(self):
-        """ Return a human-readable string representing this message. """
-        etext = escape(self.text)
-        timestamp = self.when * 1000.0
-        return "{dir} {timestamp:.2f} ({filename}:{lineno}): {etext}".format(
-            timestamp=timestamp, etext=etext, **vars(self)
-        )
+    def received_output(text, when):
+        """ Return a output message with the given text. """
+        return Message(Message.DIR_OUTPUT, text, when)
 
 
 class SpawnedProc(object):
@@ -150,7 +156,7 @@ class SpawnedProc(object):
         """
         res = self.spawn.send(s)
         when = self.time_since_first_message()
-        self.messages.append(Message.sent(s, when))
+        self.messages.append(Message.sent_input(s, when))
         return res
 
     def sendline(self, s):
@@ -161,16 +167,22 @@ class SpawnedProc(object):
 
     def expect_re(self, pat, pat_desc=None, unmatched=None, **kwargs):
         """ Cover over pexpect.spawn.expect().
-            Look through the "new" output of self.spawn until the given pattern is matched.
+            Consume all "new" output of self.spawn until the given pattern is matched, or
+            the timeout is reached.
+            Note that output between the current position and the location of the match is
+            consumed as well.
             The pattern is typically a regular expression in string form, but may also be
             any of the types accepted by pexpect.spawn.expect().
-            If the 'unmatched' parameter is given,
+            If the 'unmatched' parameter is given, it is printed as part of the error message
+            of any failure.
             On failure, this prints an error and exits.
         """
         try:
             res = self.spawn.expect(pat, **kwargs)
             when = self.time_since_first_message()
-            self.messages.append(Message.received(self.spawn.match.group(), when))
+            self.messages.append(
+                Message.received_output(self.spawn.match.group(), when)
+            )
             return res
         except pexpect.ExceptionPexpect as err:
             if not pat_desc:
@@ -205,26 +217,72 @@ class SpawnedProc(object):
             If 'unmatched' is set, print it to stdout.
         """
         colors = self.colors()
-        if unmatched:
-            print("{BOLD}{unmatched}{RESET}".format(unmatched=unmatched, **colors))
-        if isinstance(err, pexpect.EOF):
-            msg = "EOF"
-        elif isinstance(err, pexpect.TIMEOUT):
-            msg = "TIMEOUT"
-        else:
-            msg = "UNKNOWN"
+        failtype = pexpect_error_type(err)
+        fmtkeys = {"failtype": failtype, "pat": escape(pat)}
+        fmtkeys.update(**colors)
+
         filename, lineno, code_context = get_callsite()
-        print("{RED}Failed to match:{NORMAL} {pat}".format(pat=escape(pat), **colors))
-        print(
-            "{msg} from {filename}:{lineno}: {code}".format(
-                msg=msg, filename=filename, lineno=lineno, code="\n".join(code_context)
+        fmtkeys["filename"] = filename
+        fmtkeys["lineno"] = lineno
+        fmtkeys["code"] = "\n".join(code_context)
+
+        if unmatched:
+            print(
+                "{RED}Error: {NORMAL}{BOLD}{unmatched}{RESET}".format(
+                    unmatched=unmatched, **fmtkeys
+                )
             )
+        print(
+            "{RED}Failed to match pattern:{NORMAL} {BOLD}{pat}{RESET}".format(**fmtkeys)
         )
-        # Show the last 5 messages.
-        for m in self.messages[-5:]:
-            print(m.formatted())
-        print("Buffer:")
+        print(
+            "{filename}:{lineno}: {BOLD}{failtype}{RESET} from {code}".format(**fmtkeys)
+        )
+
+        print("")
+        print("{CYAN}Escaped buffer:{RESET}".format(**colors))
         print(escape(self.spawn.before))
+        print("")
+        if sys.stdout.isatty():
+            print(
+                "{CYAN}When written to the tty, this looks like:{RESET}".format(
+                    **colors
+                )
+            )
+            print("{CYAN}<-------{RESET}".format(**colors))
+            sys.stdout.write(self.spawn.before)
+            sys.stdout.flush()
+            print("{RESET}\n{CYAN}------->{RESET}".format(**colors))
+
+        print("")
+
+        # Show the last 5 messages.
+        print("Last 5 messages:")
+        delta = None
+        for m in self.messages[-5:]:
+            etext = escape(m.text)
+            timestamp = m.when * 1000.0
+            # Use relative timestamps and add a sign.
+            # This assumes a max length of 10^10 milliseconds (115 days) for the initial timestamp,
+            # and 11.5 days for the delta.
+            if delta:
+                timestamp -= delta
+                timestampstr = "{timestamp:+10.2f} ms".format(timestamp=timestamp)
+            else:
+                timestampstr = "{timestamp:10.2f} ms".format(timestamp=timestamp)
+            delta = m.when * 1000.0
+            dir = m.dir
+            print(
+                "{dir} {timestampstr} (Line {lineno}): {BOLD}{etext}{RESET}".format(
+                    dir=m.dir,
+                    timestampstr=timestampstr,
+                    filename=m.filename,
+                    lineno=m.lineno,
+                    etext=etext,
+                    **colors
+                )
+            )
+        print("")
         sys.exit(1)
 
     def sleep(self, secs):

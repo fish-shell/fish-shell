@@ -1,0 +1,204 @@
+Fishscript for bash users
+-------------------------
+
+This is to give you a quick overview if you come from bash (or to a lesser extent other shells zsh or ksh) and want to know how fish's scripting language works and how it differs.
+
+Many things are similar - they both fundamentally expand commandlines to execute commands, have pipes, redirections, variables, globs, use command output in various ways.
+
+Command substitutions
+---------------------
+
+Fish spells command substitutions as ``(command)`` instead of ``$(command)`` (or ```command```).
+
+In addition, it only splits them on newlines instead of $IFS. If you want to split on something else, use :ref:`string split <cmd-string-split>`, :ref:`string split0 <cmd-string-split>` or :ref:`string collect <cmd-string-collect>`. If those are used as the last command in a command substitution the splits they create are carried over. So::
+
+  for i in (find . -print0 | string split0)
+
+will correctly handle all possible filenames.
+
+Variables
+---------
+
+Fish sets and erases variables with :ref:`set <cmd-set>` instead of ``VAR=VAL`` and ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
+
+  set -gx PAGER less
+
+  set -l alocalvariable foo
+
+or to erase variables::
+
+  set -e PAGER
+
+
+``VAR=VAL`` statements are available as environment overrides::
+
+  PAGER=cat git log
+
+
+Fish does not perform word splitting. Once a variable has been set to a value, that value stays as it is, so double-quoting variable expansions isn't the necessity it is in bash.
+
+All variables are "arrays" (we use the term "lists"), and expanding a variable expands to all its elements, with each element as its own argument (like bash's ``"${var[@]}"``::
+
+  > set var "foo bar" banana
+  > printf %s\n $var
+  foo bar
+  banana
+
+Specific elements of a list can be selected::
+
+  echo $list[5..7]
+
+Wildcards (globs)
+-----------------
+
+Fish only supports the ``*`` and ``**`` glob (and the deprecated ``?`` glob). If a glob doesn't match it fails the command (like with bash's ``failglob``) unless the command is ``for``, ``set`` or ``count`` or the glob is used with an environment override (``VAR=* command``), in which case it expands to nothing (like with bash's ``nullglob`` option).
+
+Globbing doesn't happen on expanded variables, so::
+
+  set foo "*"
+  echo $foo
+
+will not match any files.
+
+There are no options to control globbing so it always behaves like that.
+
+Quoting
+-------
+
+Fish has two quoting styles: ``""`` and ``''``. Variables are expanded in double-quotes, nothing is expanded in single-quotes.
+
+There is no ``$''``, instead the sequences that would transform are transformed *when unquoted*::
+
+  > echo a\nb
+  a
+  b
+
+String manipulation
+-------------------
+
+Fish does not have ``${foo%bar}``, ``${foo#bar}`` and ``${foo/bar/baz}``. Instead string manipulation is done by the :ref:`string <cmd-string>` builtin.
+
+Special variables
+-----------------
+
+Some bash variables and their closest fish equivalent:
+
+- ``$*``, ``$@``, ``$1`` and so on: ``$argv``
+- ``$?``: ``$status``
+- ``$$``: ``$fish_pid``
+- ``$#``: No variable, instead use ``count $argv``
+- ``$!``: ``$last_pid``
+- ``$0``: ``status filename``
+
+Parameter substitution
+----------------------
+
+Instead of ``<(command)`` fish uses ``(command | psub)``. There is no equivalent to ``>(command)``.
+
+Heredocs
+--------
+
+Fish does not have ``<<EOF`` "heredocs". Instead of::
+
+  cat <<EOF
+  some string
+  some more string
+  EOF
+
+use::
+
+  printf %s\n "some string" "some more string"
+
+or::
+
+  echo "some string
+  some more string"
+
+Quotes are followed across newlines.
+
+Test (``test``, ``[``, ``[[``)
+------------------------------
+
+Fish has a POSIX-compatible ``test`` or ``[`` builtin. There is no ``[[`` and ``test`` does not accept ``==`` as a synonym for ``=``. It can compare floating point numbers, however.
+
+``set -q`` can be used to determine if a variable exists or has a certain number of elements (``set -q foo[2]``).
+
+Arithmetic Expansion
+---------------------
+
+Fish does not have ``$((i+1))`` arithmetic expansion, computation is handled by :ref:`math <cmd-math>`::
+
+  math $i + 1
+
+It can handle floating point numbers::
+
+  > math 5 / 2
+  2.5
+
+Prompts
+-------
+
+Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the ``fish_prompt`` function, plus the ``fish_mode_prompt`` function if vi-mode is enabled and the ``fish_right_prompt`` function for the right prompt.
+
+Blocks and loops
+----------------
+
+Fish's blocking constructs look a little different. They all start with a word, end in ``end`` and don't have a second starting word::
+
+  for i in 1 2 3; do
+     echo $i
+  done
+
+  # becomes
+  
+  for i in 1 2 3
+     echo $i
+  end
+
+  while true; do
+     echo Weeee
+  done
+
+  # becomes
+
+  while true
+     echo Weeeeeee
+  end
+
+  {
+     echo Hello
+  }
+
+  # becomes
+  
+  begin
+     echo Hello
+  end
+
+  if true; then
+     echo Yes I am true
+  else
+     echo "How is true not true?"
+  fi
+
+  # becomes
+
+  if true
+     echo Yes I am true
+  else
+     echo "How is true not true?"
+  end
+
+  foo() {
+     echo foo
+  }
+
+  # becomes
+
+  function foo
+      echo foo
+  end
+
+  # (note that bash specifically allows the word "function" as an extension, but POSIX only specifies the form without, so it's more compatible to just use the form without)
+
+Fish does not have an ``until``. Use ``while not`` or ``while !``.

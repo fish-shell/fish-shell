@@ -3778,7 +3778,7 @@ class history_tests_t {
 };
 
 static wcstring random_string() {
-    wcstring result = L"";
+    wcstring result;
     size_t max = 1 + random() % 32;
     while (max--) {
         wchar_t c = 1 + random() % ESCAPE_TEST_CHAR;

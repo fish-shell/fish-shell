@@ -260,6 +260,7 @@ def remove_groff_formatting(data):
     data = data.replace("\-", "-")
     data = data.replace(".I", "")
     data = data.replace("\f", "")
+    data = data.replace("\(cq", "'")
     return data
 
 

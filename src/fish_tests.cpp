@@ -1728,7 +1728,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
 
     void entry_was_evicted(const wcstring &key, int val) { evicted.emplace_back(key, val); }
 
-    std::vector<value_type> values() const {
+    __warn_unused std::vector<value_type> values() const {
         std::vector<value_type> result;
         for (const auto &p : *this) {
             result.emplace_back(p);
@@ -1736,7 +1736,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
         return result;
     }
 
-    std::vector<int> ints() const {
+    __warn_unused std::vector<int> ints() const {
         std::vector<int> result;
         for (const auto &p : *this) {
             result.push_back(p.second);
@@ -1800,8 +1800,8 @@ static void test_lru() {
 struct pwd_environment_t : public environment_t {
     std::map<wcstring, wcstring> extras;
 
-    maybe_t<env_var_t> get(const wcstring &key,
-                                   env_mode_flags_t mode = ENV_DEFAULT) const override {
+    __warn_unused maybe_t<env_var_t> get(const wcstring &key,
+                                         env_mode_flags_t mode = ENV_DEFAULT) const override {
         UNUSED(mode);
         if (key == L"PWD") {
             return env_var_t{wgetcwd(), 0};
@@ -1813,7 +1813,7 @@ struct pwd_environment_t : public environment_t {
         return {};
     }
 
-    wcstring_list_t get_names(int flags) const override {
+    __warn_unused wcstring_list_t get_names(int flags) const override {
         UNUSED(flags);
         return {L"PWD"};
     }
@@ -2791,13 +2791,13 @@ static void test_complete() {
     say(L"Testing complete");
 
     struct test_complete_vars_t : environment_t {
-        wcstring_list_t get_names(int flags) const override {
+        __warn_unused wcstring_list_t get_names(int flags) const override {
             UNUSED(flags);
             return {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
         }
 
-        maybe_t<env_var_t> get(const wcstring &key,
-                               env_mode_flags_t mode = ENV_DEFAULT) const override {
+        __warn_unused maybe_t<env_var_t> get(const wcstring &key,
+                                             env_mode_flags_t mode = ENV_DEFAULT) const override {
             UNUSED(mode);
             if (key == L"PWD") {
                 return env_var_t{wgetcwd(), 0};

@@ -120,7 +120,7 @@ struct thread_pool_t {
     static void *run_trampoline(void *vpool);
 
     /// Attempt to spawn a new pthread.
-    bool spawn() const;
+    __warn_unused bool spawn() const;
 
     /// No copying or moving.
     thread_pool_t(const thread_pool_t &) = delete;

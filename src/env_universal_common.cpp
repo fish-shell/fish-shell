@@ -1314,7 +1314,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
     }
 
-    int notification_fd() const override {
+    __warn_unused int notification_fd() const override {
         if (polling_due_to_readable_fd) {
             // We are in polling mode because we think our fd is readable. This means that, if we
             // return it to be select()'d on, we'll be called back immediately. So don't return it.
@@ -1358,7 +1358,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
     }
 
-    unsigned long usec_delay_between_polls() const override {
+    __warn_unused unsigned long usec_delay_between_polls() const override {
         unsigned long readback_delay = ULONG_MAX;
         if (this->readback_time_usec > 0) {
             // How long until the readback?

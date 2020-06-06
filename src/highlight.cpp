@@ -797,7 +797,7 @@ class highlighter_t {
     // Colors the source range of a node with a given color.
     void color_node(const parse_node_t &node, highlight_spec_t color);
     // return whether a plain statement is 'cd'.
-    bool is_cd(tnode_t<g::plain_statement> stmt) const;
+    __warn_unused bool is_cd(tnode_t<g::plain_statement> stmt) const;
 
    public:
     // Constructor

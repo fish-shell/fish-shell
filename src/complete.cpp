@@ -105,9 +105,9 @@ using complete_entry_opt_t = struct complete_entry_opt {
     // Completion flags.
     complete_flags_t flags;
 
-    wcstring localized_desc() const { return C_(desc); }
+    __warn_unused wcstring localized_desc() const { return C_(desc); }
 
-    size_t expected_dash_count() const {
+    __warn_unused size_t expected_dash_count() const {
         switch (this->type) {
             case option_type_args_only:
                 return 0;
@@ -140,7 +140,7 @@ class completion_entry_t {
     const unsigned int order;
 
     /// Getters for option list.
-    const option_list_t &get_options() const;
+    __warn_unused const option_list_t &get_options() const;
 
     /// Adds or removes an option.
     void add_option(const complete_entry_opt_t &opt);

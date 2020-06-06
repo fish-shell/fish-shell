@@ -71,11 +71,11 @@ struct electric_var_t {
     const wchar_t *name;
     uint32_t flags;
 
-    bool readonly() const { return flags & freadonly; }
+    __warn_unused bool readonly() const { return flags & freadonly; }
 
-    bool computed() const { return flags & fcomputed; }
+    __warn_unused bool computed() const { return flags & fcomputed; }
 
-    bool exports() const { return flags & fexports; }
+    __warn_unused bool exports() const { return flags & fexports; }
 
     static const electric_var_t *for_name(const wcstring &name);
 };
@@ -445,7 +445,7 @@ struct query_t {
         user = mode & ENV_USER;
     }
 
-    bool export_matches(const env_var_t &var) const {
+    __warn_unused bool export_matches(const env_var_t &var) const {
         if (has_export_unexport) {
             return var.exports() ? exports : unexports;
         } else {
@@ -478,7 +478,7 @@ class env_node_t {
         return none();
     }
 
-    bool exports() const { return export_gen > 0; }
+    __warn_unused bool exports() const { return export_gen > 0; }
 
     void changed_exported() { export_gen = next_export_generation(); }
 };
@@ -499,13 +499,14 @@ class env_scoped_impl_t : public environment_t {
         assert(locals_ && globals_ && "Nodes cannot be null");
     }
 
-    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
-    wcstring_list_t get_names(int flags) const override;
+    __warn_unused maybe_t<env_var_t> get(const wcstring &key,
+                                         env_mode_flags_t mode = ENV_DEFAULT) const override;
+    __warn_unused wcstring_list_t get_names(int flags) const override;
 
     perproc_data_t &perproc_data() { return perproc_data_; }
-    const perproc_data_t &perproc_data() const { return perproc_data_; }
+    __warn_unused const perproc_data_t &perproc_data() const { return perproc_data_; }
 
-    std::shared_ptr<environment_t> snapshot() const;
+    __warn_unused std::shared_ptr<environment_t> snapshot() const;
 
     ~env_scoped_impl_t() override = default;
 
@@ -538,10 +539,10 @@ class env_scoped_impl_t : public environment_t {
     // populated. A maybe_t<maybe_t<...>> is a bridge too far.
     // These may populate result with none() if a variable is present which does not match the
     // query.
-    maybe_t<env_var_t> try_get_computed(const wcstring &key) const;
-    maybe_t<env_var_t> try_get_local(const wcstring &key) const;
-    maybe_t<env_var_t> try_get_global(const wcstring &key) const;
-    maybe_t<env_var_t> try_get_universal(const wcstring &key) const;
+    __warn_unused maybe_t<env_var_t> try_get_computed(const wcstring &key) const;
+    __warn_unused maybe_t<env_var_t> try_get_local(const wcstring &key) const;
+    __warn_unused maybe_t<env_var_t> try_get_global(const wcstring &key) const;
+    __warn_unused maybe_t<env_var_t> try_get_universal(const wcstring &key) const;
 
     /// Invoke a function on the current (nonzero) export generations, in order.
     template <typename Func>
@@ -556,10 +557,10 @@ class env_scoped_impl_t : public environment_t {
     }
 
     /// \return whether the current export array is empty or out-of-date.
-    bool export_array_needs_regeneration() const;
+    __warn_unused bool export_array_needs_regeneration() const;
 
     /// \return a newly allocated export array.
-    std::shared_ptr<const null_terminated_array_t<char>> create_export_array() const;
+    __warn_unused std::shared_ptr<const null_terminated_array_t<char>> create_export_array() const;
 };
 
 /// Get the exported variables into a variable table.
@@ -887,7 +888,7 @@ class env_stack_impl_t final : public env_scoped_impl_t {
 
     /// Remove a variable from the chain \p node.
     /// \return true if the variable was found and removed.
-    bool remove_from_chain(const env_node_ref_t &node, const wcstring &key) const {
+    __warn_unused bool remove_from_chain(const env_node_ref_t &node, const wcstring &key) const {
         for (auto cursor = node; cursor; cursor = cursor->next) {
             auto iter = cursor->env.find(key);
             if (iter != cursor->env.end()) {
@@ -923,7 +924,7 @@ class env_stack_impl_t final : public env_scoped_impl_t {
 
     /// Get a pointer to an existing variable, or nullptr.
     /// This is used for inheriting pathvar and export status.
-    const env_var_t *find_variable(const wcstring &key) const {
+    __warn_unused const env_var_t *find_variable(const wcstring &key) const {
         env_node_ref_t node = find_in_chain(locals_, key);
         if (!node) node = find_in_chain(globals_, key);
         if (node) {

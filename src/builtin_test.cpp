@@ -96,13 +96,13 @@ class number_t {
 
     // Compare two numbers. Returns an integer -1, 0, 1 corresponding to whether we are less than,
     // equal to, or greater than the rhs.
-    int compare(number_t rhs) const {
+    __warn_unused int compare(number_t rhs) const {
         if (this->base != rhs.base) return (this->base > rhs.base) - (this->base < rhs.base);
         return (this->delta > rhs.delta) - (this->delta < rhs.delta);
     }
 
     // Return true if the number is a tty()/
-    bool isatty() const {
+    __warn_unused bool isatty() const {
         if (delta != 0.0 || base > INT_MAX || base < INT_MIN) return false;
         return ::isatty(static_cast<int>(base));
     }

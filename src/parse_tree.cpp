@@ -371,7 +371,7 @@ struct parse_stack_element_t {
     explicit parse_stack_element_t(production_element_t e, node_offset_t idx)
         : type(production_element_type(e)), keyword(production_element_keyword(e)), node_idx(idx) {}
 
-    wcstring describe() const {
+    __warn_unused wcstring describe() const {
         wcstring result = token_type_description(type);
         if (keyword != parse_keyword_none) {
             append_format(result, L" <%ls>", keyword_description(keyword));
@@ -380,7 +380,7 @@ struct parse_stack_element_t {
     }
 
     /// Returns a name that we can show to the user, e.g. "a command".
-    wcstring user_presentable_description() const {
+    __warn_unused wcstring user_presentable_description() const {
         return token_type_user_presentable_description(type, keyword);
     }
 };
@@ -508,7 +508,7 @@ class parse_ll_t {
     void report_tokenizer_error(const tok_t &tok);
 
     /// Indicate if we hit a fatal error.
-    bool has_fatal_error() const { return this->fatal_errored; }
+    __warn_unused bool has_fatal_error() const { return this->fatal_errored; }
 
     /// Indicate whether we want to generate error messages.
     void set_should_generate_error_messages(bool flag) {

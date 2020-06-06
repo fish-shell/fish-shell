@@ -692,7 +692,7 @@ class string_matcher_t {
 
     virtual ~string_matcher_t() = default;
     virtual bool report_matches(const wcstring &arg) = 0;
-    int match_count() const { return total_matched; }
+    __warn_unused int match_count() const { return total_matched; }
 };
 
 class wildcard_matcher_t : public string_matcher_t {
@@ -949,7 +949,7 @@ class string_replacer_t {
         : argv0(argv0_), opts(std::move(opts_)), total_replaced(0), streams(streams_) {}
 
     virtual ~string_replacer_t() = default;
-    int replace_count() const { return total_replaced; }
+    __warn_unused int replace_count() const { return total_replaced; }
     virtual bool replace_matches(const wcstring &arg) = 0;
 };
 

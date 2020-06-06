@@ -57,7 +57,7 @@ struct input_mapping_t {
     }
 
     /// \return true if this is a generic mapping, i.e. acts as a fallback.
-    bool is_generic() const { return seq.empty(); }
+    __warn_unused bool is_generic() const { return seq.empty(); }
 };
 
 /// A struct representing the mapping from a terminfo key name to a terminfo character sequence.

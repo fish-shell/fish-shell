@@ -207,9 +207,9 @@ static void run_internal_process(process_t *p, std::string &&outdata, std::strin
 
         proc_status_t success_status{};
 
-        bool skip_out() const { return outdata.empty() || src_outfd < 0; }
+        __warn_unused bool skip_out() const { return outdata.empty() || src_outfd < 0; }
 
-        bool skip_err() const { return errdata.empty() || src_errfd < 0; }
+        __warn_unused bool skip_err() const { return errdata.empty() || src_errfd < 0; }
     };
 
     auto f = std::make_shared<write_fields_t>();

@@ -164,7 +164,7 @@ The following special input functions are available:
 
 - ``repaint`` reexecutes the prompt functions and redraws the prompt. Multiple successive repaints are coalesced.
 
-- ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode. If no fish_mode_prompt exists, it acts like a normal repaint.
+- ``repaint-mode`` reexecutes the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists, it acts like a normal repaint.
 
 - ``self-insert``, inserts the matching sequence into the command line
 

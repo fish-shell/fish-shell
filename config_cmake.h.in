@@ -130,9 +130,6 @@
 /* Define to 1 if the _nl_msg_cat_cntr symbol is exported. */
 #cmakedefine HAVE__NL_MSG_CAT_CNTR 1
 
-/* Define to 1 if std::make_unique is available. */
-#cmakedefine HAVE_STD__MAKE_UNIQUE 1
-
 /* Define to 1 if the _sys_errs array is available. */
 #cmakedefine HAVE__SYS__ERRS 1
 

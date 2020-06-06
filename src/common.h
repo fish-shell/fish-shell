@@ -578,7 +578,7 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig);
 
-#ifdef HAVE_STD__MAKE_UNIQUE
+#ifdef __cpp_lib_make_unique
 using std::make_unique;
 #else
 /// make_unique implementation

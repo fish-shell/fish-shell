@@ -176,16 +176,6 @@ if(NOT POLICY CMP0067)
   list(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_EXTENSION_COMPILE_OPTION}")
 endif()
 
-check_cxx_source_compiles("
-#include <memory>
-
-int main () {
-  std::unique_ptr<int> foo = std::make_unique<int>();
-}
-"
-  HAVE_STD__MAKE_UNIQUE
-)
-
 # Detect support for thread_local.
 check_cxx_source_compiles("
 int main () {

@@ -163,7 +163,7 @@ static bool pushd(const char *path) {
         err(L"getcwd() from pushd() failed: errno = %d", errno);
         return false;
     }
-    pushed_dirs.push_back(cwd);
+    pushed_dirs.emplace_back(cwd);
 
     // We might need to create the directory. We don't care if this fails due to the directory
     // already being present.
@@ -1726,12 +1726,12 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
 
     std::vector<value_type> evicted;
 
-    void entry_was_evicted(const wcstring &key, int val) { evicted.push_back({key, val}); }
+    void entry_was_evicted(const wcstring &key, int val) { evicted.emplace_back(key, val); }
 
     std::vector<value_type> values() const {
         std::vector<value_type> result;
         for (const auto &p : *this) {
-            result.push_back(p);
+            result.emplace_back(p);
         }
         return result;
     }
@@ -1755,12 +1755,12 @@ static void test_lru() {
     for (int i = 0; i < total_nodes; i++) {
         do_test(cache.size() == size_t(std::min(i, 16)));
         do_test(cache.values() == expected_values);
-        if (i < 4) expected_evicted.push_back({to_string(i), i});
+        if (i < 4) expected_evicted.emplace_back(to_string(i), i);
         // Adding the node the first time should work, and subsequent times should fail.
         do_test(cache.insert(to_string(i), i));
         do_test(!cache.insert(to_string(i), i + 1));
 
-        expected_values.push_back({to_string(i), i});
+        expected_values.emplace_back(to_string(i), i);
         while (expected_values.size() > test_lru_t::test_capacity) {
             expected_values.erase(expected_values.begin());
         }
@@ -4898,7 +4898,7 @@ static void test_highlighting() {
         for (const highlight_component_t &comp : components) {
             if (!text.empty() && !comp.nospace) {
                 text.push_back(L' ');
-                expected_colors.push_back(highlight_spec_t{});
+                expected_colors.emplace_back();
             }
             text.append(comp.txt);
             expected_colors.resize(text.size(), comp.color);

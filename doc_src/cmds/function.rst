@@ -52,11 +52,11 @@ By using one of the event handler switches, a function can be made to run automa
 
 - ``fish_command_not_found``, which is emitted whenever a command lookup failed.
 
-- ``fish_preexec``, which is emitted right before executing an interactive command. The commandline is passed as the first parameter.
+- ``fish_preexec``, which is emitted right before executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
 
 - ``fish_posterror``, which is emitted right after executing a command with syntax errors. The commandline is passed as the first parameter.
 
-- ``fish_postexec``, which is emitted right after executing an interactive command. The commandline is passed as the first parameter.
+- ``fish_postexec``, which is emitted right after executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
 
 - ``fish_exit`` is emitted right before fish exits.
 

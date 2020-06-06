@@ -3323,8 +3323,8 @@ static void test_input() {
 
     {
         auto input_mapping = input_mappings();
-        input_mapping->add(prefix_binding.c_str(), L"up-line");
-        input_mapping->add(desired_binding.c_str(), L"down-line");
+        input_mapping->add(prefix_binding, L"up-line");
+        input_mapping->add(desired_binding, L"down-line");
     }
 
     // Push the desired binding to the queue.

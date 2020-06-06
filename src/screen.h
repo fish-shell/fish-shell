@@ -272,9 +272,9 @@ class layout_cache_t {
 
     /// Computes a prompt layout for \p prompt_str, perhaps truncating it to \p desired_line_width.
     /// \return the layout, and optionally the truncated prompt itself, by reference.
-    prompt_layout_t calc_prompt_layout(
-        const wcstring &prompt_str, wcstring *out_trunc_prompt = nullptr,
-        size_t desired_line_width = std::numeric_limits<size_t>::max());
+    prompt_layout_t calc_prompt_layout(const wcstring &prompt_str,
+                                       wcstring *out_trunc_prompt = nullptr,
+                                       size_t max_line_width = std::numeric_limits<size_t>::max());
 
     void clear() {
         esc_cache_.clear();

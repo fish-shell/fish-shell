@@ -23,7 +23,7 @@ class process_t;
 /// Called by both parent and child; this is an unavoidable race inherent to Unix.
 /// If is_parent is set, then we are the parent process and should swallow EACCESS.
 /// \return 0 on success, an errno error code on failure.
-int execute_setpgid(pid_t pid, pid_t pgrp, bool is_parent);
+int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent);
 
 /// Report the error code \p err for a failed setpgid call.
 /// Note not all errors should be reported; in particular EACCESS is expected and benign in the

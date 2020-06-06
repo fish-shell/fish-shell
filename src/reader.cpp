@@ -1430,7 +1430,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     // this should use shared_ptr
     return [=]() -> autosuggestion_result_t {
         ASSERT_IS_BACKGROUND_THREAD();
-        const autosuggestion_result_t nothing = {};
+        autosuggestion_result_t nothing = {};
         operation_context_t ctx = get_bg_context(vars, generation_count);
         if (ctx.check_cancel()) {
             return nothing;

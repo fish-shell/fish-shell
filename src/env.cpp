@@ -1220,7 +1220,7 @@ void env_stack_t::set_last_statuses(statuses_t s) {
 /// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable
 /// defaults. They will be updated later by the `get_current_winsize()` function if they need to be
 /// adjusted.
-void env_stack_t::set_termsize() {
+void env_stack_t::set_termsize() const {
     auto &vars = env_stack_t::globals();
     auto cols = get(L"COLUMNS");
     if (cols.missing_or_empty()) vars.set_one(L"COLUMNS", ENV_GLOBAL, DFLT_TERM_COL_STR);

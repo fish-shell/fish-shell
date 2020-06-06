@@ -781,7 +781,7 @@ static void test_fd_monitor() {
         item_maker_t(const item_maker_t &) = delete;
 
         // Write 42 bytes to our write end.
-        void write42() {
+        void write42() const {
             char buff[42] = {0};
             (void)write_loop(writer.fd(), buff, sizeof buff);
         }

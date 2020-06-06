@@ -503,7 +503,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
         }
 
         if (!color_name.empty()) {
-            rgb_color_t color = rgb_color_t(color_name);
+            auto color = rgb_color_t(color_name);
             if (!color.is_none()) {
                 candidates.push_back(color);
             }

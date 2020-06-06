@@ -342,7 +342,7 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
 
         // See if the value has changed.
         const env_var_t &new_entry = kv.second;
-        var_table_t::const_iterator existing = this->vars.find(key);
+        auto existing = this->vars.find(key);
 
         bool old_exports = (existing != this->vars.end() && existing->second.exports());
         bool export_changed = (old_exports != new_entry.exports());

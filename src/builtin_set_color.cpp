@@ -38,7 +38,7 @@ static void print_colors(io_streams_t &streams) {
 
     for (const auto &color_name : rgb_color_t::named_color_names()) {
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
-            rgb_color_t color = rgb_color_t(color_name);
+            auto color = rgb_color_t(color_name);
             outp.set_color(color, rgb_color_t::none());
         }
         outp.writestr(color_name);

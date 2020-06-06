@@ -841,7 +841,7 @@ void highlighter_t::color_command(tnode_t<g::tok_string> node) {
 
     // Get an iterator to the colors associated with the argument.
     const size_t arg_start = source_range->start;
-    const color_array_t::iterator colors = color_array.begin() + arg_start;
+    const auto colors = color_array.begin() + arg_start;
     color_string_internal(cmd_str, highlight_role_t::command, colors);
 }
 
@@ -854,7 +854,7 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
 
     // Get an iterator to the colors associated with the argument.
     const size_t arg_start = source_range->start;
-    const color_array_t::iterator arg_colors = color_array.begin() + arg_start;
+    const auto arg_colors = color_array.begin() + arg_start;
 
     // Color this argument without concern for command substitutions.
     color_string_internal(arg_str, highlight_role_t::param, arg_colors);
@@ -884,7 +884,7 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
 
         // Compute the cursor's position within the cmdsub. We must be past the open paren (hence >)
         // but can be at the end of the string or closed paren (hence <=).
-        size_t cursor_subpos = CURSOR_POSITION_INVALID;
+        auto cursor_subpos = CURSOR_POSITION_INVALID;
         if (cursor_pos != CURSOR_POSITION_INVALID && cursor_pos > arg_subcmd_start &&
             cursor_pos <= arg_subcmd_end) {
             // The -1 because the cmdsub_contents does not include the open paren.

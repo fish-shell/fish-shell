@@ -1800,7 +1800,7 @@ static void test_lru() {
 struct pwd_environment_t : public environment_t {
     std::map<wcstring, wcstring> extras;
 
-    virtual maybe_t<env_var_t> get(const wcstring &key,
+    maybe_t<env_var_t> get(const wcstring &key,
                                    env_mode_flags_t mode = ENV_DEFAULT) const override {
         UNUSED(mode);
         if (key == L"PWD") {

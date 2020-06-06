@@ -2478,10 +2478,10 @@ static int read_i(parser_t &parser) {
             data->command_line.clear();
             data->command_line_changed(&data->command_line);
             wcstring_list_t argv(1, command);
-            event_fire_generic(parser, L"fish_preexec", &argv);
+            if (!command.empty()) event_fire_generic(parser, L"fish_preexec", &argv);
             reader_run_command(parser, command);
             parser.clear_cancel();
-            event_fire_generic(parser, L"fish_postexec", &argv);
+            if (!command.empty()) event_fire_generic(parser, L"fish_postexec", &argv);
             // Allow any pending history items to be returned in the history array.
             if (data->history) {
                 data->history->resolve_pending();

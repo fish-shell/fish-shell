@@ -28,6 +28,8 @@ Notable improvements and fixes
 -  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in config.fish (#6960)
 -  The ``_`` helper function to call into fish's gettext catalog has been made a builtin for simplicity and performance (#7036)
 -  ``:`` (for doing nothing) and ``.`` (as a less readable name for ``source``) have also been made proper builtins rather than wrapper functions (#6854).
+- ``fish_preexec`` and ``fish_postexec`` events are no longer triggered
+  for empty commands.
 
 Syntax changes and new commands
 -------------------------------

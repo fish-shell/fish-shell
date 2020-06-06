@@ -348,13 +348,13 @@ static void test_unescape_sane() {
         {L"'\\143'", L"\\143"},       {L"\\n", L"\n"}  // \n normally becomes newline
     };
     wcstring output;
-    for (size_t i = 0; i < sizeof tests / sizeof *tests; i++) {
-        bool ret = unescape_string(tests[i].input, &output, UNESCAPE_DEFAULT);
+    for (auto test : tests) {
+        bool ret = unescape_string(test.input, &output, UNESCAPE_DEFAULT);
         if (!ret) {
-            err(L"Failed to unescape '%ls'\n", tests[i].input);
-        } else if (output != tests[i].expected) {
-            err(L"In unescaping '%ls', expected '%ls' but got '%ls'\n", tests[i].input,
-                tests[i].expected, output.c_str());
+            err(L"Failed to unescape '%ls'\n", test.input);
+        } else if (output != test.expected) {
+            err(L"In unescaping '%ls', expected '%ls' but got '%ls'\n", test.input, test.expected,
+                output.c_str());
         }
     }
 
@@ -1879,12 +1879,11 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
             }
             msg += L"], found [";
             first = true;
-            for (auto it = output.begin(), end = output.end();
-                 it != end; ++it) {
+            for (auto &it : output) {
                 if (!first) msg += L", ";
                 first = false;
                 msg += '"';
-                msg += it->completion;
+                msg += it.completion;
                 msg += '"';
             }
             msg += L"]";
@@ -2372,8 +2371,7 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
     std::set<size_t> stops;
 
     // Carets represent stops and should be cut out of the command.
-    for (size_t i = 0; i < test.size(); i++) {
-        wchar_t wc = test.at(i);
+    for (wchar_t wc : test) {
         if (wc == L'^') {
             stops.insert(command.size());
         } else {
@@ -3330,8 +3328,8 @@ static void test_input() {
     }
 
     // Push the desired binding to the queue.
-    for (size_t idx = 0; idx < desired_binding.size(); idx++) {
-        input.queue_ch(desired_binding.at(idx));
+    for (wchar_t idx : desired_binding) {
+        input.queue_ch(idx);
     }
 
     // Now test.
@@ -3949,7 +3947,7 @@ void history_tests_t::test_history_races() {
     history_t(L"race_test").clear();
 
     pid_t children[RACE_COUNT];
-    for (size_t i = 0; i < RACE_COUNT; i++) {
+    for (int &i : children) {
         pid_t pid = fork();
         if (!pid) {
             // Child process.
@@ -3958,14 +3956,14 @@ void history_tests_t::test_history_races() {
             exit_without_destructors(0);
         } else {
             // Parent process.
-            children[i] = pid;
+            i = pid;
         }
     }
 
     // Wait for all children.
-    for (size_t i = 0; i < RACE_COUNT; i++) {
+    for (int i : children) {
         int stat;
-        waitpid(children[i], &stat, WUNTRACED);
+        waitpid(i, &stat, WUNTRACED);
     }
 
     // Compute the expected lines.
@@ -4044,8 +4042,8 @@ void history_tests_t::test_history_merge() {
     const wcstring alt_texts[count] = {L"History Alt 1", L"History Alt 2", L"History Alt 3"};
 
     // Make sure history is clear.
-    for (size_t i = 0; i < count; i++) {
-        hists[i]->clear();
+    for (auto &hist : hists) {
+        hist->clear();
     }
 
     // Make sure we don't add an item in the same second as we created the history.
@@ -4057,8 +4055,8 @@ void history_tests_t::test_history_merge() {
     }
 
     // Save them.
-    for (size_t i = 0; i < count; i++) {
-        hists[i]->save();
+    for (auto &hist : hists) {
+        hist->save();
     }
 
     // Make sure each history contains what it ought to, but they have not leaked into each other.
@@ -4074,21 +4072,21 @@ void history_tests_t::test_history_merge() {
     // is newer, since we only pick up items whose timestamp is before the birth stamp.
     time_barrier();
     std::unique_ptr<history_t> everything = make_unique<history_t>(name);
-    for (size_t i = 0; i < count; i++) {
-        do_test(history_contains(everything, texts[i]));
+    for (const auto &text : texts) {
+        do_test(history_contains(everything, text));
     }
 
     // Tell all histories to merge. Now everybody should have everything.
-    for (size_t i = 0; i < count; i++) {
-        hists[i]->incorporate_external_changes();
+    for (auto &hist : hists) {
+        hist->incorporate_external_changes();
     }
 
     // Everyone should also have items in the same order (#2312)
     wcstring_list_t hist_vals1;
     hists[0]->get_history(hist_vals1);
-    for (size_t i = 0; i < count; i++) {
+    for (auto &hist : hists) {
         wcstring_list_t hist_vals2;
-        hists[i]->get_history(hist_vals2);
+        hist->get_history(hist_vals2);
         do_test(hist_vals1 == hist_vals2);
     }
 
@@ -4304,8 +4302,8 @@ static void test_new_parser_correctness() {
         {L"true || \n\n false", true},
     };
 
-    for (size_t i = 0; i < sizeof parser_tests / sizeof *parser_tests; i++) {
-        const parser_test_t *test = &parser_tests[i];
+    for (const auto &parser_test : parser_tests) {
+        const parser_test_t *test = &parser_test;
 
         parse_node_tree_t parse_tree;
         bool success = parse_tree_from_string(test->src, parse_flag_none, &parse_tree, nullptr);
@@ -4452,21 +4450,20 @@ static void test_new_parser_ll2() {
         {L"function", L"function", L"", parse_statement_decoration_none},
         {L"function --help", L"function", L"--help", parse_statement_decoration_none}};
 
-    for (size_t i = 0; i < sizeof tests / sizeof *tests; i++) {
+    for (const auto &test : tests) {
         wcstring cmd, args;
         enum parse_statement_decoration_t deco = parse_statement_decoration_none;
-        bool success = test_1_parse_ll2(tests[i].src, &cmd, &args, &deco);
-        if (!success)
-            err(L"Parse of '%ls' failed on line %ld", tests[i].cmd.c_str(), (long)__LINE__);
-        if (cmd != tests[i].cmd)
+        bool success = test_1_parse_ll2(test.src, &cmd, &args, &deco);
+        if (!success) err(L"Parse of '%ls' failed on line %ld", test.cmd.c_str(), (long)__LINE__);
+        if (cmd != test.cmd)
             err(L"When parsing '%ls', expected command '%ls' but got '%ls' on line %ld",
-                tests[i].src.c_str(), tests[i].cmd.c_str(), cmd.c_str(), (long)__LINE__);
-        if (args != tests[i].args)
+                test.src.c_str(), test.cmd.c_str(), cmd.c_str(), (long)__LINE__);
+        if (args != test.args)
             err(L"When parsing '%ls', expected args '%ls' but got '%ls' on line %ld",
-                tests[i].src.c_str(), tests[i].args.c_str(), args.c_str(), (long)__LINE__);
-        if (deco != tests[i].deco)
+                test.src.c_str(), test.args.c_str(), args.c_str(), (long)__LINE__);
+        if (deco != test.deco)
             err(L"When parsing '%ls', expected decoration %d but got %d on line %ld",
-                tests[i].src.c_str(), (int)tests[i].deco, (int)deco, (long)__LINE__);
+                test.src.c_str(), (int)test.deco, (int)deco, (long)__LINE__);
     }
 
     check_function_help<grammar::plain_statement>(L"function -h");
@@ -4516,9 +4513,9 @@ static void test_new_parser_errors() {
         {L"if true ; case ; end", parse_error_unbalancing_case},
     };
 
-    for (size_t i = 0; i < sizeof tests / sizeof *tests; i++) {
-        const wcstring src = tests[i].src;
-        parse_error_code_t expected_code = tests[i].code;
+    for (auto test : tests) {
+        const wcstring src = test.src;
+        parse_error_code_t expected_code = test.code;
 
         parse_error_list_t errors;
         parse_node_tree_t parse_tree;
@@ -4534,8 +4531,8 @@ static void test_new_parser_errors() {
             err(L"Source '%ls' was expected to produce error code %lu, but instead produced error "
                 L"code %lu",
                 src.c_str(), expected_code, (unsigned long)errors.at(0).code);
-            for (size_t i = 0; i < errors.size(); i++) {
-                err(L"\t\t%ls", errors.at(i).describe(src, true).c_str());
+            for (auto &error : errors) {
+                err(L"\t\t%ls", error.describe(src, true).c_str());
             }
         }
     }
@@ -4597,8 +4594,7 @@ static bool string_matches_format(const wcstring &string, const wchar_t *format)
     bool result = true;
     wcstring_list_t components = separate_by_format_specifiers(format);
     size_t idx = 0;
-    for (size_t i = 0; i < components.size(); i++) {
-        const wcstring &component = components.at(i);
+    for (auto &component : components) {
         size_t where = string.find(component, idx);
         if (where == wcstring::npos) {
             result = false;
@@ -4632,8 +4628,8 @@ static void test_error_messages() {
                        {L"echo \"foo$(foo)bar\"", ERROR_BAD_VAR_SUBCOMMAND1}};
 
     parse_error_list_t errors;
-    for (size_t i = 0; i < sizeof error_tests / sizeof *error_tests; i++) {
-        const struct error_test_t *test = &error_tests[i];
+    for (const auto &error_test : error_tests) {
+        const struct error_test_t *test = &error_test;
         errors.clear();
         parse_util_detect_errors(test->src, &errors, false /* allow_incomplete */);
         do_test(!errors.empty());

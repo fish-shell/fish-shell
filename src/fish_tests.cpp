@@ -94,7 +94,7 @@ static bool should_test_function(const char *func_name) {
     if (!s_arguments || !s_arguments[0]) {
         result = true;
     } else {
-        for (size_t i = 0; s_arguments[i] != NULL; i++) {
+        for (size_t i = 0; s_arguments[i] != nullptr; i++) {
             if (!std::strncmp(func_name, s_arguments[i], std::strlen(s_arguments[i]))) {
                 // Prefix match.
                 result = true;
@@ -159,7 +159,7 @@ static std::vector<std::string> pushed_dirs;
 /// Helper to chdir and then update $PWD.
 static bool pushd(const char *path) {
     char cwd[PATH_MAX] = {};
-    if (getcwd(cwd, sizeof cwd) == NULL) {
+    if (getcwd(cwd, sizeof cwd) == nullptr) {
         err(L"getcwd() from pushd() failed: errno = %d", errno);
         return false;
     }
@@ -979,7 +979,7 @@ static void test_debounce_timeout() {
 
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
     parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL, symbol_argument_list)) {
+    if (!parse_tree_from_string(src, parse_flag_none, &tree, nullptr, symbol_argument_list)) {
         return PARSER_TEST_ERROR;
     }
 
@@ -1277,44 +1277,46 @@ static void test_indents() {
         int indent;
     };
 
-    const indent_component_t components1[] = {{L"if foo", 0}, {L"end", 0}, {NULL, -1}};
+    const indent_component_t components1[] = {{L"if foo", 0}, {L"end", 0}, {nullptr, -1}};
 
     const indent_component_t components2[] = {{L"if foo", 0},
                                               {L"", 1},  // trailing newline!
-                                              {NULL, -1}};
+                                              {nullptr, -1}};
 
     const indent_component_t components3[] = {{L"if foo", 0},
                                               {L"foo", 1},
                                               {L"end", 0},  // trailing newline!
-                                              {NULL, -1}};
+                                              {nullptr, -1}};
 
     const indent_component_t components4[] = {{L"if foo", 0}, {L"if bar", 1}, {L"end", 1},
-                                              {L"end", 0},    {L"", 0},       {NULL, -1}};
+                                              {L"end", 0},    {L"", 0},       {nullptr, -1}};
 
-    const indent_component_t components5[] = {{L"if foo", 0}, {L"if bar", 1}, {L"", 2}, {NULL, -1}};
+    const indent_component_t components5[] = {
+        {L"if foo", 0}, {L"if bar", 1}, {L"", 2}, {nullptr, -1}};
 
-    const indent_component_t components6[] = {{L"begin", 0}, {L"foo", 1}, {L"", 1}, {NULL, -1}};
+    const indent_component_t components6[] = {{L"begin", 0}, {L"foo", 1}, {L"", 1}, {nullptr, -1}};
 
     const indent_component_t components7[] = {{L"begin", 0}, {L";", 1}, {L"end", 0},
-                                              {L"foo", 0},   {L"", 0},  {NULL, -1}};
+                                              {L"foo", 0},   {L"", 0},  {nullptr, -1}};
 
     const indent_component_t components8[] = {{L"if foo", 0}, {L"if bar", 1}, {L"baz", 2},
-                                              {L"end", 1},    {L"", 1},       {NULL, -1}};
+                                              {L"end", 1},    {L"", 1},       {nullptr, -1}};
 
-    const indent_component_t components9[] = {{L"switch foo", 0}, {L"", 1}, {NULL, -1}};
+    const indent_component_t components9[] = {{L"switch foo", 0}, {L"", 1}, {nullptr, -1}};
 
-    const indent_component_t components10[] = {
-        {L"switch foo", 0}, {L"case bar", 1}, {L"case baz", 1}, {L"quux", 2}, {L"", 2}, {NULL, -1}};
+    const indent_component_t components10[] = {{L"switch foo", 0}, {L"case bar", 1},
+                                               {L"case baz", 1},   {L"quux", 2},
+                                               {L"", 2},           {nullptr, -1}};
 
     const indent_component_t components11[] = {{L"switch foo", 0},
                                                {L"cas", 1},  // parse error indentation handling
-                                               {NULL, -1}};
+                                               {nullptr, -1}};
 
     const indent_component_t components12[] = {{L"while false", 0},
                                                {L"# comment", 1},   // comment indentation handling
                                                {L"command", 1},     // comment indentation handling
                                                {L"# comment2", 1},  // comment indentation handling
-                                               {NULL, -1}};
+                                               {nullptr, -1}};
 
     const indent_component_t *tests[] = {components1, components2,  components3,  components4,
                                          components5, components6,  components7,  components8,
@@ -1323,7 +1325,7 @@ static void test_indents() {
         const indent_component_t *components = tests[which];
         // Count how many we have.
         size_t component_count = 0;
-        while (components[component_count].txt != NULL) {
+        while (components[component_count].txt != nullptr) {
             component_count++;
         }
 
@@ -1360,7 +1362,7 @@ static void test_indents() {
 
 static void test_parse_util_cmdsubst_extent() {
     const wchar_t *a = L"echo (echo (echo hi";
-    const wchar_t *begin = NULL, *end = NULL;
+    const wchar_t *begin = nullptr, *end = nullptr;
 
     parse_util_cmdsubst_extent(a, 0, &begin, &end);
     if (begin != a || end != begin + std::wcslen(begin)) {
@@ -1432,7 +1434,7 @@ static struct wcsfilecmp_test {
                         {L"a00b", L"a0b", -1},
                         {L"a0b", L"a00b", 1},
                         {L"a-b", L"azb", 1},
-                        {NULL, NULL, 0}};
+                        {nullptr, nullptr, 0}};
 
 /// Verify the behavior of the `wcsfilecmp()` function.
 static void test_wcsfilecmp() {
@@ -1456,7 +1458,7 @@ static void test_utility_functions() {
 static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, size_t dlen,
                             int flags, size_t res, const char *descr) {
     size_t size;
-    wchar_t *mem = NULL;
+    wchar_t *mem = nullptr;
 
 #if WCHAR_MAX == 0xffff
     // Hack: if wchar is only UCS-2, and the UTF-8 input string contains astral characters, then
@@ -1475,7 +1477,7 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
 #endif
 
     if (!dst) {
-        size = utf8_to_wchar(src, slen, NULL, flags);
+        size = utf8_to_wchar(src, slen, nullptr, flags);
     } else {
         mem = (wchar_t *)malloc(dlen * sizeof(*mem));
         if (!mem) {
@@ -1507,7 +1509,7 @@ static void test_utf82wchar(const unsigned char *usrc, size_t slen, const wchar_
 static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, size_t dlen,
                             int flags, size_t res, const char *descr) {
     size_t size;
-    char *mem = NULL;
+    char *mem = nullptr;
 
 #if WCHAR_MAX == 0xffff
     // Hack: if wchar is simulating UCS-2, and the wchar_t input string contains astral characters,
@@ -1582,8 +1584,8 @@ static void test_utf8() {
                     sizeof(wbom2) / sizeof(*wbom2), "ubom2 skip BOM");
     test_utf82wchar(ubom2, sizeof(ubom2), wbom22, sizeof(wbom22) / sizeof(*wbom22), 0,
                     sizeof(wbom22) / sizeof(*wbom22), "ubom2 BOM");
-    test_utf82wchar(uc080, sizeof(uc080), NULL, 0, 0, 0, "uc080 c0 80 - forbitten by rfc3629");
-    test_utf82wchar(ub2, sizeof(ub2), NULL, 0, 0, 3, "ub2 resulted in forbitten wchars (len)");
+    test_utf82wchar(uc080, sizeof(uc080), nullptr, 0, 0, 0, "uc080 c0 80 - forbitten by rfc3629");
+    test_utf82wchar(ub2, sizeof(ub2), nullptr, 0, 0, 3, "ub2 resulted in forbitten wchars (len)");
     test_utf82wchar(ub2, sizeof(ub2), wb2, sizeof(wb2) / sizeof(*wb2), 0, 0,
                     "ub2 resulted in forbitten wchars");
     test_utf82wchar(ub2, sizeof(ub2), L"\x0a", 1, UTF8_IGNORE_ERROR, 1,
@@ -1594,15 +1596,16 @@ static void test_utf8() {
                     "u2/w2 2 octets chars");
     test_utf82wchar(u3, sizeof(u3), w3, sizeof(w3) / sizeof(*w3), 0, sizeof(w3) / sizeof(*w3),
                     "u3/w3 3 octets chars");
-    test_utf82wchar("\xff", 1, NULL, 0, 0, 0, "broken utf-8 0xff symbol");
-    test_utf82wchar("\xfe", 1, NULL, 0, 0, 0, "broken utf-8 0xfe symbol");
-    test_utf82wchar("\x8f", 1, NULL, 0, 0, 0, "broken utf-8, start from 10 higher bits");
-    test_utf82wchar((const char *)NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
-    test_utf82wchar(u1, 0, NULL, 0, 0, 0, "invalid params, src buf not NULL");
-    test_utf82wchar((const char *)NULL, 10, NULL, 0, 0, 0, "invalid params, src length is not 0");
+    test_utf82wchar("\xff", 1, nullptr, 0, 0, 0, "broken utf-8 0xff symbol");
+    test_utf82wchar("\xfe", 1, nullptr, 0, 0, 0, "broken utf-8 0xfe symbol");
+    test_utf82wchar("\x8f", 1, nullptr, 0, 0, 0, "broken utf-8, start from 10 higher bits");
+    test_utf82wchar((const char *)nullptr, 0, nullptr, 0, 0, 0, "invalid params, all 0");
+    test_utf82wchar(u1, 0, nullptr, 0, 0, 0, "invalid params, src buf not NULL");
+    test_utf82wchar((const char *)nullptr, 10, nullptr, 0, 0, 0,
+                    "invalid params, src length is not 0");
 
     // UCS-4 -> UTF-8 string.
-    const char *const nullc = NULL;
+    const char *const nullc = nullptr;
     test_wchar2utf8(wbom, sizeof(wbom) / sizeof(*wbom), ubom, sizeof(ubom), UTF8_SKIP_BOM,
                     sizeof(ubom), "BOM");
     test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), nullc, 0, 0, 0, "prohibited wchars");
@@ -1614,10 +1617,10 @@ static void test_utf8() {
                     "w2/u2 2 octets chars");
     test_wchar2utf8(w3, sizeof(w3) / sizeof(*w3), u3, sizeof(u3), 0, sizeof(u3),
                     "w3/u3 3 octets chars");
-    test_wchar2utf8(NULL, 0, nullc, 0, 0, 0, "invalid params, all 0");
+    test_wchar2utf8(nullptr, 0, nullc, 0, 0, 0, "invalid params, all 0");
     test_wchar2utf8(w1, 0, nullc, 0, 0, 0, "invalid params, src buf not NULL");
     test_wchar2utf8(w1, sizeof(w1) / sizeof(*w1), u1, 0, 0, 0, "invalid params, dst is not NULL");
-    test_wchar2utf8(NULL, 10, nullc, 0, 0, 0, "invalid params, src length is not 0");
+    test_wchar2utf8(nullptr, 10, nullc, 0, 0, 0, "invalid params, src length is not 0");
 
     test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um), 0, sizeof(um),
                     "wm/um mixed languages");
@@ -1630,7 +1633,8 @@ static void test_utf8() {
                     "um/wm mixed languages");
     test_utf82wchar(um, sizeof(um), wm, sizeof(wm) / sizeof(*wm) + 1, 0, sizeof(wm) / sizeof(*wm),
                     "um/wm boundaries +1");
-    test_utf82wchar(um, sizeof(um), NULL, 0, 0, sizeof(wm) / sizeof(*wm), "um/wm calculate length");
+    test_utf82wchar(um, sizeof(um), nullptr, 0, 0, sizeof(wm) / sizeof(*wm),
+                    "um/wm calculate length");
 
 // The following tests won't pass on systems (e.g., Cygwin) where sizeof wchar_t is 2. That's
 // due to several reasons but the primary one is that narrowing conversions of literals assigned
@@ -1650,8 +1654,8 @@ static void test_utf8() {
                     "calculate length, ignore bad chars");
     test_utf82wchar(ub1, sizeof(ub1), wb1, sizeof(wb1) / sizeof(*wb1), UTF8_IGNORE_ERROR,
                     sizeof(wb1) / sizeof(*wb1), "ub1/wb1 ignore bad chars");
-    test_utf82wchar(ub1, sizeof(ub1), NULL, 0, 0, 0, "ub1 calculate length of bad chars");
-    test_utf82wchar(ub1, sizeof(ub1), NULL, 0, UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1),
+    test_utf82wchar(ub1, sizeof(ub1), nullptr, 0, 0, 0, "ub1 calculate length of bad chars");
+    test_utf82wchar(ub1, sizeof(ub1), nullptr, 0, UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1),
                     "ub1 calculate length, ignore bad chars");
 #endif
 }
@@ -1844,7 +1848,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     wcstring_list_t expected;
 
     va_start(va, flags);
-    while ((arg = va_arg(va, wchar_t *)) != NULL) {
+    while ((arg = va_arg(va, wchar_t *)) != nullptr) {
         expected.push_back(wcstring(arg));
     }
     va_end(va);
@@ -1940,7 +1944,7 @@ static void test_expand() {
     // This is checking that .* does NOT match . and ..
     // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
     // components (e.g. "./*" has to match the same as "*".
-    const wchar_t *const wnull = NULL;
+    const wchar_t *const wnull = nullptr;
     expand_test(L"test/fish_expand_test/.*", noflags, L"test/fish_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
 
@@ -2324,9 +2328,9 @@ static void test_pager_layout() {
         {22, L"abcdefghij  (1234567…)"},   {21, L"abcdefghij  (123456…)"},
         {20, L"abcdefghij  (12345…)"},     {19, L"abcdefghij  (1234…)"},
         {18, L"abcdefgh…  (1234…)"},       {17, L"abcdefg…  (1234…)"},
-        {16, L"abcdefg…  (123…)"},         {0, NULL}  // sentinel terminator
+        {16, L"abcdefg…  (123…)"},         {0, nullptr}  // sentinel terminator
     };
-    for (size_t i = 0; testcases1[i].expected != NULL; i++) {
+    for (size_t i = 0; testcases1[i].expected != nullptr; i++) {
         testcases1[i].run(pager);
     }
 
@@ -2339,9 +2343,9 @@ static void test_pager_layout() {
         {22, L"abcdefghijklmnop…  (1)"},   {21, L"abcdefghijklmno…  (1)"},
         {20, L"abcdefghijklmn…  (1)"},     {19, L"abcdefghijklm…  (1)"},
         {18, L"abcdefghijkl…  (1)"},       {17, L"abcdefghijk…  (1)"},
-        {16, L"abcdefghij…  (1)"},         {0, NULL}  // sentinel terminator
+        {16, L"abcdefghij…  (1)"},         {0, nullptr}  // sentinel terminator
     };
-    for (size_t i = 0; testcases2[i].expected != NULL; i++) {
+    for (size_t i = 0; testcases2[i].expected != nullptr; i++) {
         testcases2[i].run(pager);
     }
 
@@ -2354,9 +2358,9 @@ static void test_pager_layout() {
         {22, L"abcdefghijklmnopqrst"}, {21, L"abcdefghijklmnopqrst"},
         {20, L"abcdefghijklmnopqrst"}, {19, L"abcdefghijklmnopqr…"},
         {18, L"abcdefghijklmnopq…"},   {17, L"abcdefghijklmnop…"},
-        {16, L"abcdefghijklmno…"},     {0, NULL}  // sentinel terminator
+        {16, L"abcdefghijklmno…"},     {0, nullptr}  // sentinel terminator
     };
-    for (size_t i = 0; testcases3[i].expected != NULL; i++) {
+    for (size_t i = 0; testcases3[i].expected != nullptr; i++) {
         testcases3[i].run(pager);
     }
 }
@@ -2490,7 +2494,7 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
         argv[i + 1] = (wchar_t *)L"]";
         i++;
     }
-    argv[i + 1] = NULL;
+    argv[i + 1] = nullptr;
     io_streams_t streams(0);
     int result = builtin_test(parser, streams, argv);
 
@@ -2912,8 +2916,8 @@ static void test_complete() {
     // Trailing spaces (#1261).
     completion_mode_t no_files{};
     no_files.no_files = true;
-    complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, no_files, NULL, L"qux",
-                 NULL, COMPLETE_AUTO_SPACE);
+    complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, no_files, nullptr, L"qux",
+                 nullptr, COMPLETE_AUTO_SPACE);
     completions = do_complete(L"foobarbaz ", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"qux");
@@ -3673,7 +3677,7 @@ bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
         FD_ZERO(&fds);
         FD_SET(fd, &fds);
         struct timeval tv = {0, 0};
-        if (select(fd + 1, &fds, NULL, NULL, &tv) > 0 && FD_ISSET(fd, &fds)) {
+        if (select(fd + 1, &fds, nullptr, nullptr, &tv) > 0 && FD_ISSET(fd, &fds)) {
             result = note->notification_fd_became_readable(fd);
         }
     }
@@ -3874,7 +3878,7 @@ void history_tests_t::test_history() {
         }
 
         // Record this item.
-        history_item_t item(value, time(NULL));
+        history_item_t item(value, time(nullptr));
         item.required_paths = paths;
         before.push_back(item);
         history.add(item);
@@ -3905,10 +3909,10 @@ void history_tests_t::test_history() {
 
 // Wait until the next second.
 static void time_barrier() {
-    time_t start = time(NULL);
+    time_t start = time(nullptr);
     do {
         usleep(1000);
-    } while (time(NULL) == start);
+    } while (time(nullptr) == start);
 }
 
 static wcstring_list_t generate_history_lines(size_t item_count, int pid) {
@@ -4152,7 +4156,7 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
     for (;;) {
         const wchar_t *expected = strings[array_idx];
         history_item_t item = hist.item_at_index(history_idx);
-        if (expected == NULL) {
+        if (expected == nullptr) {
             if (!item.empty()) {
                 err(L"Expected empty item at history index %lu", history_idx);
             }
@@ -4181,7 +4185,7 @@ void history_tests_t::test_history_formats() {
     } else {
         // Note: This is backwards from what appears in the file.
         const wchar_t *const expected[] = {
-            L"#def", L"echo #abc", L"function yay\necho hi\nend", L"cd foobar", L"ls /", NULL};
+            L"#def", L"echo #abc", L"function yay\necho hi\nend", L"cd foobar", L"ls /", nullptr};
 
         history_t &test_history = history_t::history_with_name(name);
         if (!history_equals(test_history, expected)) {
@@ -4196,7 +4200,7 @@ void history_tests_t::test_history_formats() {
         err(L"Couldn't open file tests/%ls", name);
     } else {
         const wchar_t *const expected[] = {L"echo this has\\\nbackslashes",
-                                           L"function foo\necho bar\nend", L"echo alpha", NULL};
+                                           L"function foo\necho bar\nend", L"echo alpha", nullptr};
 
         history_t &test_history = history_t::history_with_name(name);
         if (!history_equals(test_history, expected)) {
@@ -4219,7 +4223,7 @@ void history_tests_t::test_history_formats() {
                                      L"export XVAR='exported'",
                                      L"history --help",
                                      L"echo foo",
-                                     NULL};
+                                     nullptr};
         history_t &test_history = history_t::history_with_name(L"bash_import");
         test_history.populate_from_bash(f);
         if (!history_equals(test_history, expected)) {
@@ -4237,7 +4241,7 @@ void history_tests_t::test_history_formats() {
         // We simply invoke get_string_representation. If we don't die, the test is a success.
         history_t &test_history = history_t::history_with_name(name);
         const wchar_t *expected[] = {L"no_newline_at_end_of_file", L"corrupt_prefix",
-                                     L"this_command_is_ok", NULL};
+                                     L"this_command_is_ok", nullptr};
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
@@ -4304,7 +4308,7 @@ static void test_new_parser_correctness() {
         const parser_test_t *test = &parser_tests[i];
 
         parse_node_tree_t parse_tree;
-        bool success = parse_tree_from_string(test->src, parse_flag_none, &parse_tree, NULL);
+        bool success = parse_tree_from_string(test->src, parse_flag_none, &parse_tree, nullptr);
         if (success && !test->ok) {
             err(L"\"%ls\" should NOT have parsed, but did", test->src);
         } else if (!success && test->ok) {
@@ -4375,7 +4379,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     *out_deco = parse_statement_decoration_none;
 
     parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
+    if (!parse_tree_from_string(src, parse_flag_none, &tree, nullptr)) {
         return false;
     }
 
@@ -4408,7 +4412,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
 template <typename Type>
 static void check_function_help(const wchar_t *src) {
     parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
+    if (!parse_tree_from_string(src, parse_flag_none, &tree, nullptr)) {
         err(L"Failed to parse '%ls'", src);
     }
 
@@ -4478,7 +4482,7 @@ static void test_new_parser_ad_hoc() {
     // Ensure that 'case' terminates a job list.
     const wcstring src = L"switch foo ; case bar; case baz; end";
     parse_node_tree_t parse_tree;
-    bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, NULL);
+    bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, nullptr);
     if (!success) {
         err(L"Parsing failed");
     }
@@ -4545,10 +4549,10 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
     const wchar_t *end = format + std::wcslen(format);
     while (cursor < end) {
         const wchar_t *next_specifier = std::wcschr(cursor, '%');
-        if (next_specifier == NULL) {
+        if (next_specifier == nullptr) {
             next_specifier = end;
         }
-        assert(next_specifier != NULL);
+        assert(next_specifier != nullptr);
 
         // Don't return empty strings.
         if (next_specifier > cursor) {
@@ -4988,7 +4992,7 @@ static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
     streams.stdin_is_directly_redirected = false;  // read from argv instead of stdin
     int rc = builtin_string(parser, streams, const_cast<wchar_t **>(argv));
     wcstring args;
-    for (int i = 0; argv[i] != NULL; i++) {
+    for (int i = 0; argv[i] != nullptr; i++) {
         args += escape_string(argv[i], ESCAPE_ALL) + L' ';
     }
     args.resize(args.size() - 1);
@@ -5009,263 +5013,293 @@ static void test_string() {
         int expected_rc;
         const wchar_t *expected_out;
     } string_tests[] = {
-        {{L"string", L"escape", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"escape", L"", 0}, STATUS_CMD_OK, L"''\n"},
-        {{L"string", L"escape", L"-n", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"escape", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"escape", L"\x07", 0}, STATUS_CMD_OK, L"\\cg\n"},
-        {{L"string", L"escape", L"\"x\"", 0}, STATUS_CMD_OK, L"'\"x\"'\n"},
-        {{L"string", L"escape", L"hello world", 0}, STATUS_CMD_OK, L"'hello world'\n"},
-        {{L"string", L"escape", L"-n", L"hello world", 0}, STATUS_CMD_OK, L"hello\\ world\n"},
-        {{L"string", L"escape", L"hello", L"world", 0}, STATUS_CMD_OK, L"hello\nworld\n"},
-        {{L"string", L"escape", L"-n", L"~", 0}, STATUS_CMD_OK, L"\\~\n"},
+        {{L"string", L"escape", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"escape", L"", nullptr}, STATUS_CMD_OK, L"''\n"},
+        {{L"string", L"escape", L"-n", L"", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"escape", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"escape", L"\x07", nullptr}, STATUS_CMD_OK, L"\\cg\n"},
+        {{L"string", L"escape", L"\"x\"", nullptr}, STATUS_CMD_OK, L"'\"x\"'\n"},
+        {{L"string", L"escape", L"hello world", nullptr}, STATUS_CMD_OK, L"'hello world'\n"},
+        {{L"string", L"escape", L"-n", L"hello world", nullptr}, STATUS_CMD_OK, L"hello\\ world\n"},
+        {{L"string", L"escape", L"hello", L"world", nullptr}, STATUS_CMD_OK, L"hello\nworld\n"},
+        {{L"string", L"escape", L"-n", L"~", nullptr}, STATUS_CMD_OK, L"\\~\n"},
 
-        {{L"string", L"join", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"join", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"join", L"", L"", L"", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"join", L"", L"a", L"b", L"c", 0}, STATUS_CMD_OK, L"abc\n"},
-        {{L"string", L"join", L".", L"fishshell", L"com", 0}, STATUS_CMD_OK, L"fishshell.com\n"},
-        {{L"string", L"join", L"/", L"usr", 0}, STATUS_CMD_ERROR, L"usr\n"},
-        {{L"string", L"join", L"/", L"usr", L"local", L"bin", 0},
+        {{L"string", L"join", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"join", L"", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"join", L"", L"", L"", L"", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"join", L"", L"a", L"b", L"c", nullptr}, STATUS_CMD_OK, L"abc\n"},
+        {{L"string", L"join", L".", L"fishshell", L"com", nullptr},
+         STATUS_CMD_OK,
+         L"fishshell.com\n"},
+        {{L"string", L"join", L"/", L"usr", nullptr}, STATUS_CMD_ERROR, L"usr\n"},
+        {{L"string", L"join", L"/", L"usr", L"local", L"bin", nullptr},
          STATUS_CMD_OK,
          L"usr/local/bin\n"},
-        {{L"string", L"join", L"...", L"3", L"2", L"1", 0}, STATUS_CMD_OK, L"3...2...1\n"},
-        {{L"string", L"join", L"-q", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"join", L"-q", L".", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"join", L"-q", L".", L".", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"join", L"...", L"3", L"2", L"1", nullptr}, STATUS_CMD_OK, L"3...2...1\n"},
+        {{L"string", L"join", L"-q", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"join", L"-q", L".", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"join", L"-q", L".", L".", nullptr}, STATUS_CMD_ERROR, L""},
 
-        {{L"string", L"length", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"length", L"", 0}, STATUS_CMD_ERROR, L"0\n"},
-        {{L"string", L"length", L"", L"", L"", 0}, STATUS_CMD_ERROR, L"0\n0\n0\n"},
-        {{L"string", L"length", L"a", 0}, STATUS_CMD_OK, L"1\n"},
-        {{L"string", L"length", L"\U0002008A", 0}, STATUS_CMD_OK, L"1\n"},
-        {{L"string", L"length", L"um", L"dois", L"três", 0}, STATUS_CMD_OK, L"2\n4\n4\n"},
-        {{L"string", L"length", L"um", L"dois", L"três", 0}, STATUS_CMD_OK, L"2\n4\n4\n"},
-        {{L"string", L"length", L"-q", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"length", L"-q", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"length", L"-q", L"a", 0}, STATUS_CMD_OK, L""},
+        {{L"string", L"length", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"length", L"", nullptr}, STATUS_CMD_ERROR, L"0\n"},
+        {{L"string", L"length", L"", L"", L"", nullptr}, STATUS_CMD_ERROR, L"0\n0\n0\n"},
+        {{L"string", L"length", L"a", nullptr}, STATUS_CMD_OK, L"1\n"},
+        {{L"string", L"length", L"\U0002008A", nullptr}, STATUS_CMD_OK, L"1\n"},
+        {{L"string", L"length", L"um", L"dois", L"três", nullptr}, STATUS_CMD_OK, L"2\n4\n4\n"},
+        {{L"string", L"length", L"um", L"dois", L"três", nullptr}, STATUS_CMD_OK, L"2\n4\n4\n"},
+        {{L"string", L"length", L"-q", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"length", L"-q", L"", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"length", L"-q", L"a", nullptr}, STATUS_CMD_OK, L""},
 
-        {{L"string", L"match", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"match", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"?", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"*", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"**", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"*", L"xyzzy", 0}, STATUS_CMD_OK, L"xyzzy\n"},
-        {{L"string", L"match", L"**", L"plugh", 0}, STATUS_CMD_OK, L"plugh\n"},
-        {{L"string", L"match", L"a*b", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
-        {{L"string", L"match", L"a??b", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
-        {{L"string", L"match", L"-i", L"a??B", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
-        {{L"string", L"match", L"-i", L"a??b", L"Axxb", 0}, STATUS_CMD_OK, L"Axxb\n"},
-        {{L"string", L"match", L"a*", L"axxb", 0}, STATUS_CMD_OK, L"axxb\n"},
-        {{L"string", L"match", L"*a", L"xxa", 0}, STATUS_CMD_OK, L"xxa\n"},
-        {{L"string", L"match", L"*a*", L"axa", 0}, STATUS_CMD_OK, L"axa\n"},
-        {{L"string", L"match", L"*a*", L"xax", 0}, STATUS_CMD_OK, L"xax\n"},
-        {{L"string", L"match", L"*a*", L"bxa", 0}, STATUS_CMD_OK, L"bxa\n"},
-        {{L"string", L"match", L"*a", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"a*", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"a*b*c", L"axxbyyc", 0}, STATUS_CMD_OK, L"axxbyyc\n"},
-        {{L"string", L"match", L"\\*", L"*", 0}, STATUS_CMD_OK, L"*\n"},
-        {{L"string", L"match", L"a*\\", L"abc\\", 0}, STATUS_CMD_OK, L"abc\\\n"},
-        {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_OK, L"abc?\n"},
+        {{L"string", L"match", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"match", L"", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"", L"", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"match", L"?", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"*", L"", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"match", L"**", L"", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"match", L"*", L"xyzzy", nullptr}, STATUS_CMD_OK, L"xyzzy\n"},
+        {{L"string", L"match", L"**", L"plugh", nullptr}, STATUS_CMD_OK, L"plugh\n"},
+        {{L"string", L"match", L"a*b", L"axxb", nullptr}, STATUS_CMD_OK, L"axxb\n"},
+        {{L"string", L"match", L"a??b", L"axxb", nullptr}, STATUS_CMD_OK, L"axxb\n"},
+        {{L"string", L"match", L"-i", L"a??B", L"axxb", nullptr}, STATUS_CMD_OK, L"axxb\n"},
+        {{L"string", L"match", L"-i", L"a??b", L"Axxb", nullptr}, STATUS_CMD_OK, L"Axxb\n"},
+        {{L"string", L"match", L"a*", L"axxb", nullptr}, STATUS_CMD_OK, L"axxb\n"},
+        {{L"string", L"match", L"*a", L"xxa", nullptr}, STATUS_CMD_OK, L"xxa\n"},
+        {{L"string", L"match", L"*a*", L"axa", nullptr}, STATUS_CMD_OK, L"axa\n"},
+        {{L"string", L"match", L"*a*", L"xax", nullptr}, STATUS_CMD_OK, L"xax\n"},
+        {{L"string", L"match", L"*a*", L"bxa", nullptr}, STATUS_CMD_OK, L"bxa\n"},
+        {{L"string", L"match", L"*a", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"a*", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"a*b*c", L"axxbyyc", nullptr}, STATUS_CMD_OK, L"axxbyyc\n"},
+        {{L"string", L"match", L"\\*", L"*", nullptr}, STATUS_CMD_OK, L"*\n"},
+        {{L"string", L"match", L"a*\\", L"abc\\", nullptr}, STATUS_CMD_OK, L"abc\\\n"},
+        {{L"string", L"match", L"a*\\?", L"abc?", nullptr}, STATUS_CMD_OK, L"abc?\n"},
 
-        {{L"string", L"match", L"?", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"?", L"ab", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"??", L"a", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"?a", L"a", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"a?", L"a", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"a??B", L"axxb", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"a*b", L"axxbc", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"*b", L"bbba", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"0x[0-9a-fA-F][0-9a-fA-F]", L"0xbad", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?", L"", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?", L"ab", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"??", L"a", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?a", L"a", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"a?", L"a", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"a??B", L"axxb", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"a*b", L"axxbc", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"*b", L"bbba", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"0x[0-9a-fA-F][0-9a-fA-F]", L"0xbad", nullptr},
+         STATUS_CMD_ERROR,
+         L""},
 
-        {{L"string", L"match", L"-a", L"*", L"ab", L"cde", 0}, STATUS_CMD_OK, L"ab\ncde\n"},
-        {{L"string", L"match", L"*", L"ab", L"cde", 0}, STATUS_CMD_OK, L"ab\ncde\n"},
-        {{L"string", L"match", L"-n", L"*d*", L"cde", 0}, STATUS_CMD_OK, L"1 3\n"},
-        {{L"string", L"match", L"-n", L"*x*", L"cde", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"-q", L"a*", L"b", L"c", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"-q", L"a*", L"b", L"a", 0}, STATUS_CMD_OK, L""},
+        {{L"string", L"match", L"-a", L"*", L"ab", L"cde", nullptr}, STATUS_CMD_OK, L"ab\ncde\n"},
+        {{L"string", L"match", L"*", L"ab", L"cde", nullptr}, STATUS_CMD_OK, L"ab\ncde\n"},
+        {{L"string", L"match", L"-n", L"*d*", L"cde", nullptr}, STATUS_CMD_OK, L"1 3\n"},
+        {{L"string", L"match", L"-n", L"*x*", L"cde", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"-q", L"a*", L"b", L"c", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"-q", L"a*", L"b", L"a", nullptr}, STATUS_CMD_OK, L""},
 
-        {{L"string", L"match", L"-r", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"match", L"-r", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"-r", L"", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"-r", L".", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"-r", L".*", L"", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"-r", L"a*b", L"b", 0}, STATUS_CMD_OK, L"b\n"},
-        {{L"string", L"match", L"-r", L"a*b", L"aab", 0}, STATUS_CMD_OK, L"aab\n"},
-        {{L"string", L"match", L"-r", L"-i", L"a*b", L"Aab", 0}, STATUS_CMD_OK, L"Aab\n"},
-        {{L"string", L"match", L"-r", L"-a", L"a[bc]", L"abadac", 0}, STATUS_CMD_OK, L"ab\nac\n"},
-        {{L"string", L"match", L"-r", L"a", L"xaxa", L"axax", 0}, STATUS_CMD_OK, L"a\na\n"},
-        {{L"string", L"match", L"-r", L"-a", L"a", L"xaxa", L"axax", 0},
+        {{L"string", L"match", L"-r", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"match", L"-r", L"", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"-r", L"", L"", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"match", L"-r", L".", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"-r", L".*", L"", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"match", L"-r", L"a*b", L"b", nullptr}, STATUS_CMD_OK, L"b\n"},
+        {{L"string", L"match", L"-r", L"a*b", L"aab", nullptr}, STATUS_CMD_OK, L"aab\n"},
+        {{L"string", L"match", L"-r", L"-i", L"a*b", L"Aab", nullptr}, STATUS_CMD_OK, L"Aab\n"},
+        {{L"string", L"match", L"-r", L"-a", L"a[bc]", L"abadac", nullptr},
+         STATUS_CMD_OK,
+         L"ab\nac\n"},
+        {{L"string", L"match", L"-r", L"a", L"xaxa", L"axax", nullptr}, STATUS_CMD_OK, L"a\na\n"},
+        {{L"string", L"match", L"-r", L"-a", L"a", L"xaxa", L"axax", nullptr},
          STATUS_CMD_OK,
          L"a\na\na\na\n"},
-        {{L"string", L"match", L"-r", L"a[bc]", L"abadac", 0}, STATUS_CMD_OK, L"ab\n"},
-        {{L"string", L"match", L"-r", L"-q", L"a[bc]", L"abadac", 0}, STATUS_CMD_OK, L""},
-        {{L"string", L"match", L"-r", L"-q", L"a[bc]", L"ad", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"-r", L"(a+)b(c)", L"aabc", 0}, STATUS_CMD_OK, L"aabc\naa\nc\n"},
-        {{L"string", L"match", L"-r", L"-a", L"(a)b(c)", L"abcabc", 0},
+        {{L"string", L"match", L"-r", L"a[bc]", L"abadac", nullptr}, STATUS_CMD_OK, L"ab\n"},
+        {{L"string", L"match", L"-r", L"-q", L"a[bc]", L"abadac", nullptr}, STATUS_CMD_OK, L""},
+        {{L"string", L"match", L"-r", L"-q", L"a[bc]", L"ad", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"-r", L"(a+)b(c)", L"aabc", nullptr},
+         STATUS_CMD_OK,
+         L"aabc\naa\nc\n"},
+        {{L"string", L"match", L"-r", L"-a", L"(a)b(c)", L"abcabc", nullptr},
          STATUS_CMD_OK,
          L"abc\na\nc\nabc\na\nc\n"},
-        {{L"string", L"match", L"-r", L"(a)b(c)", L"abcabc", 0}, STATUS_CMD_OK, L"abc\na\nc\n"},
-        {{L"string", L"match", L"-r", L"(a|(z))(bc)", L"abc", 0}, STATUS_CMD_OK, L"abc\na\nbc\n"},
-        {{L"string", L"match", L"-r", L"-n", L"a", L"ada", L"dad", 0},
+        {{L"string", L"match", L"-r", L"(a)b(c)", L"abcabc", nullptr},
+         STATUS_CMD_OK,
+         L"abc\na\nc\n"},
+        {{L"string", L"match", L"-r", L"(a|(z))(bc)", L"abc", nullptr},
+         STATUS_CMD_OK,
+         L"abc\na\nbc\n"},
+        {{L"string", L"match", L"-r", L"-n", L"a", L"ada", L"dad", nullptr},
          STATUS_CMD_OK,
          L"1 1\n2 1\n"},
-        {{L"string", L"match", L"-r", L"-n", L"-a", L"a", L"bacadae", 0},
+        {{L"string", L"match", L"-r", L"-n", L"-a", L"a", L"bacadae", nullptr},
          STATUS_CMD_OK,
          L"2 1\n4 1\n6 1\n"},
-        {{L"string", L"match", L"-r", L"-n", L"(a).*(b)", L"a---b", 0},
+        {{L"string", L"match", L"-r", L"-n", L"(a).*(b)", L"a---b", nullptr},
          STATUS_CMD_OK,
          L"1 5\n1 1\n5 1\n"},
-        {{L"string", L"match", L"-r", L"-n", L"(a)(b)", L"ab", 0},
+        {{L"string", L"match", L"-r", L"-n", L"(a)(b)", L"ab", nullptr},
          STATUS_CMD_OK,
          L"1 2\n1 1\n2 1\n"},
-        {{L"string", L"match", L"-r", L"-n", L"(a)(b)", L"abab", 0},
+        {{L"string", L"match", L"-r", L"-n", L"(a)(b)", L"abab", nullptr},
          STATUS_CMD_OK,
          L"1 2\n1 1\n2 1\n"},
-        {{L"string", L"match", L"-r", L"-n", L"-a", L"(a)(b)", L"abab", 0},
+        {{L"string", L"match", L"-r", L"-n", L"-a", L"(a)(b)", L"abab", nullptr},
          STATUS_CMD_OK,
          L"1 2\n1 1\n2 1\n3 2\n3 1\n4 1\n"},
-        {{L"string", L"match", L"-r", L"*", L"", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"match", L"-r", L"-a", L"a*", L"b", 0}, STATUS_CMD_OK, L"\n\n"},
-        {{L"string", L"match", L"-r", L"foo\\Kbar", L"foobar", 0}, STATUS_CMD_OK, L"bar\n"},
-        {{L"string", L"match", L"-r", L"(foo)\\Kbar", L"foobar", 0}, STATUS_CMD_OK, L"bar\nfoo\n"},
-        {{L"string", L"match", L"-r", L"(?=ab\\K)", L"ab", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"-r", L"(?=ab\\K)..(?=cd\\K)", L"abcd", 0}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"match", L"-r", L"*", L"", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"match", L"-r", L"-a", L"a*", L"b", nullptr}, STATUS_CMD_OK, L"\n\n"},
+        {{L"string", L"match", L"-r", L"foo\\Kbar", L"foobar", nullptr}, STATUS_CMD_OK, L"bar\n"},
+        {{L"string", L"match", L"-r", L"(foo)\\Kbar", L"foobar", nullptr},
+         STATUS_CMD_OK,
+         L"bar\nfoo\n"},
+        {{L"string", L"match", L"-r", L"(?=ab\\K)", L"ab", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"match", L"-r", L"(?=ab\\K)..(?=cd\\K)", L"abcd", nullptr},
+         STATUS_CMD_OK,
+         L"\n"},
 
-        {{L"string", L"replace", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"replace", L"", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"replace", L"", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"replace", L"", L"", L"", 0}, STATUS_CMD_ERROR, L"\n"},
-        {{L"string", L"replace", L"", L"", L" ", 0}, STATUS_CMD_ERROR, L" \n"},
-        {{L"string", L"replace", L"a", L"b", L"", 0}, STATUS_CMD_ERROR, L"\n"},
-        {{L"string", L"replace", L"a", L"b", L"a", 0}, STATUS_CMD_OK, L"b\n"},
-        {{L"string", L"replace", L"a", L"b", L"xax", 0}, STATUS_CMD_OK, L"xbx\n"},
-        {{L"string", L"replace", L"a", L"b", L"xax", L"axa", 0}, STATUS_CMD_OK, L"xbx\nbxa\n"},
-        {{L"string", L"replace", L"bar", L"x", L"red barn", 0}, STATUS_CMD_OK, L"red xn\n"},
-        {{L"string", L"replace", L"x", L"bar", L"red xn", 0}, STATUS_CMD_OK, L"red barn\n"},
-        {{L"string", L"replace", L"--", L"x", L"-", L"xyz", 0}, STATUS_CMD_OK, L"-yz\n"},
-        {{L"string", L"replace", L"--", L"y", L"-", L"xyz", 0}, STATUS_CMD_OK, L"x-z\n"},
-        {{L"string", L"replace", L"--", L"z", L"-", L"xyz", 0}, STATUS_CMD_OK, L"xy-\n"},
-        {{L"string", L"replace", L"-i", L"z", L"X", L"_Z_", 0}, STATUS_CMD_OK, L"_X_\n"},
-        {{L"string", L"replace", L"-a", L"a", L"A", L"aaa", 0}, STATUS_CMD_OK, L"AAA\n"},
-        {{L"string", L"replace", L"-i", L"a", L"z", L"AAA", 0}, STATUS_CMD_OK, L"zAA\n"},
-        {{L"string", L"replace", L"-q", L"x", L">x<", L"x", 0}, STATUS_CMD_OK, L""},
-        {{L"string", L"replace", L"-a", L"x", L"", L"xxx", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"replace", L"-a", L"***", L"_", L"*****", 0}, STATUS_CMD_OK, L"_**\n"},
-        {{L"string", L"replace", L"-a", L"***", L"***", L"******", 0}, STATUS_CMD_OK, L"******\n"},
-        {{L"string", L"replace", L"-a", L"a", L"b", L"xax", L"axa", 0},
+        {{L"string", L"replace", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"", L"", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"replace", L"", L"", L"", nullptr}, STATUS_CMD_ERROR, L"\n"},
+        {{L"string", L"replace", L"", L"", L" ", nullptr}, STATUS_CMD_ERROR, L" \n"},
+        {{L"string", L"replace", L"a", L"b", L"", nullptr}, STATUS_CMD_ERROR, L"\n"},
+        {{L"string", L"replace", L"a", L"b", L"a", nullptr}, STATUS_CMD_OK, L"b\n"},
+        {{L"string", L"replace", L"a", L"b", L"xax", nullptr}, STATUS_CMD_OK, L"xbx\n"},
+        {{L"string", L"replace", L"a", L"b", L"xax", L"axa", nullptr},
+         STATUS_CMD_OK,
+         L"xbx\nbxa\n"},
+        {{L"string", L"replace", L"bar", L"x", L"red barn", nullptr}, STATUS_CMD_OK, L"red xn\n"},
+        {{L"string", L"replace", L"x", L"bar", L"red xn", nullptr}, STATUS_CMD_OK, L"red barn\n"},
+        {{L"string", L"replace", L"--", L"x", L"-", L"xyz", nullptr}, STATUS_CMD_OK, L"-yz\n"},
+        {{L"string", L"replace", L"--", L"y", L"-", L"xyz", nullptr}, STATUS_CMD_OK, L"x-z\n"},
+        {{L"string", L"replace", L"--", L"z", L"-", L"xyz", nullptr}, STATUS_CMD_OK, L"xy-\n"},
+        {{L"string", L"replace", L"-i", L"z", L"X", L"_Z_", nullptr}, STATUS_CMD_OK, L"_X_\n"},
+        {{L"string", L"replace", L"-a", L"a", L"A", L"aaa", nullptr}, STATUS_CMD_OK, L"AAA\n"},
+        {{L"string", L"replace", L"-i", L"a", L"z", L"AAA", nullptr}, STATUS_CMD_OK, L"zAA\n"},
+        {{L"string", L"replace", L"-q", L"x", L">x<", L"x", nullptr}, STATUS_CMD_OK, L""},
+        {{L"string", L"replace", L"-a", L"x", L"", L"xxx", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"replace", L"-a", L"***", L"_", L"*****", nullptr}, STATUS_CMD_OK, L"_**\n"},
+        {{L"string", L"replace", L"-a", L"***", L"***", L"******", nullptr},
+         STATUS_CMD_OK,
+         L"******\n"},
+        {{L"string", L"replace", L"-a", L"a", L"b", L"xax", L"axa", nullptr},
          STATUS_CMD_OK,
          L"xbx\nbxb\n"},
 
-        {{L"string", L"replace", L"-r", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"replace", L"-r", L"", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"replace", L"-r", L"", L"", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"replace", L"-r", L"", L"", L"", 0}, STATUS_CMD_OK, L"\n"},  // pcre2 behavior
-        {{L"string", L"replace", L"-r", L"", L"", L" ", 0},
+        {{L"string", L"replace", L"-r", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"-r", L"", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"-r", L"", L"", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"replace", L"-r", L"", L"", L"", nullptr},
+         STATUS_CMD_OK,
+         L"\n"},  // pcre2 behavior
+        {{L"string", L"replace", L"-r", L"", L"", L" ", nullptr},
          STATUS_CMD_OK,
          L" \n"},  // pcre2 behavior
-        {{L"string", L"replace", L"-r", L"a", L"b", L"", 0}, STATUS_CMD_ERROR, L"\n"},
-        {{L"string", L"replace", L"-r", L"a", L"b", L"a", 0}, STATUS_CMD_OK, L"b\n"},
-        {{L"string", L"replace", L"-r", L".", L"x", L"abc", 0}, STATUS_CMD_OK, L"xbc\n"},
-        {{L"string", L"replace", L"-r", L".", L"", L"abc", 0}, STATUS_CMD_OK, L"bc\n"},
-        {{L"string", L"replace", L"-r", L"(\\w)(\\w)", L"$2$1", L"ab", 0}, STATUS_CMD_OK, L"ba\n"},
-        {{L"string", L"replace", L"-r", L"(\\w)", L"$1$1", L"ab", 0}, STATUS_CMD_OK, L"aab\n"},
-        {{L"string", L"replace", L"-r", L"-a", L".", L"x", L"abc", 0}, STATUS_CMD_OK, L"xxx\n"},
-        {{L"string", L"replace", L"-r", L"-a", L"(\\w)", L"$1$1", L"ab", 0},
+        {{L"string", L"replace", L"-r", L"a", L"b", L"", nullptr}, STATUS_CMD_ERROR, L"\n"},
+        {{L"string", L"replace", L"-r", L"a", L"b", L"a", nullptr}, STATUS_CMD_OK, L"b\n"},
+        {{L"string", L"replace", L"-r", L".", L"x", L"abc", nullptr}, STATUS_CMD_OK, L"xbc\n"},
+        {{L"string", L"replace", L"-r", L".", L"", L"abc", nullptr}, STATUS_CMD_OK, L"bc\n"},
+        {{L"string", L"replace", L"-r", L"(\\w)(\\w)", L"$2$1", L"ab", nullptr},
+         STATUS_CMD_OK,
+         L"ba\n"},
+        {{L"string", L"replace", L"-r", L"(\\w)", L"$1$1", L"ab", nullptr},
+         STATUS_CMD_OK,
+         L"aab\n"},
+        {{L"string", L"replace", L"-r", L"-a", L".", L"x", L"abc", nullptr},
+         STATUS_CMD_OK,
+         L"xxx\n"},
+        {{L"string", L"replace", L"-r", L"-a", L"(\\w)", L"$1$1", L"ab", nullptr},
          STATUS_CMD_OK,
          L"aabb\n"},
-        {{L"string", L"replace", L"-r", L"-a", L".", L"", L"abc", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"replace", L"-r", L"a", L"x", L"bc", L"cd", L"de", 0},
+        {{L"string", L"replace", L"-r", L"-a", L".", L"", L"abc", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"replace", L"-r", L"a", L"x", L"bc", L"cd", L"de", nullptr},
          STATUS_CMD_ERROR,
          L"bc\ncd\nde\n"},
-        {{L"string", L"replace", L"-r", L"a", L"x", L"aba", L"caa", 0},
+        {{L"string", L"replace", L"-r", L"a", L"x", L"aba", L"caa", nullptr},
          STATUS_CMD_OK,
          L"xba\ncxa\n"},
-        {{L"string", L"replace", L"-r", L"-a", L"a", L"x", L"aba", L"caa", 0},
+        {{L"string", L"replace", L"-r", L"-a", L"a", L"x", L"aba", L"caa", nullptr},
          STATUS_CMD_OK,
          L"xbx\ncxx\n"},
-        {{L"string", L"replace", L"-r", L"-i", L"A", L"b", L"xax", 0}, STATUS_CMD_OK, L"xbx\n"},
-        {{L"string", L"replace", L"-r", L"-i", L"[a-z]", L".", L"1A2B", 0},
+        {{L"string", L"replace", L"-r", L"-i", L"A", L"b", L"xax", nullptr},
+         STATUS_CMD_OK,
+         L"xbx\n"},
+        {{L"string", L"replace", L"-r", L"-i", L"[a-z]", L".", L"1A2B", nullptr},
          STATUS_CMD_OK,
          L"1.2B\n"},
-        {{L"string", L"replace", L"-r", L"A", L"b", L"xax", 0}, STATUS_CMD_ERROR, L"xax\n"},
-        {{L"string", L"replace", L"-r", L"a", L"$1", L"a", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"replace", L"-r", L"(a)", L"$2", L"a", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"replace", L"-r", L"*", L".", L"a", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"replace", L"-ra", L"x", L"\\c", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"replace", L"-r", L"^(.)", L"\t$1", L"abc", L"x", 0},
+        {{L"string", L"replace", L"-r", L"A", L"b", L"xax", nullptr}, STATUS_CMD_ERROR, L"xax\n"},
+        {{L"string", L"replace", L"-r", L"a", L"$1", L"a", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"-r", L"(a)", L"$2", L"a", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"-r", L"*", L".", L"a", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"-ra", L"x", L"\\c", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"replace", L"-r", L"^(.)", L"\t$1", L"abc", L"x", nullptr},
          STATUS_CMD_OK,
          L"\tabc\n\tx\n"},
 
-        {{L"string", L"split", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"split", L":", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"split", L".", L"www.ch.ic.ac.uk", 0},
+        {{L"string", L"split", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"split", L":", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"split", L".", L"www.ch.ic.ac.uk", nullptr},
          STATUS_CMD_OK,
          L"www\nch\nic\nac\nuk\n"},
-        {{L"string", L"split", L"..", L"....", 0}, STATUS_CMD_OK, L"\n\n\n"},
-        {{L"string", L"split", L"-m", L"x", L"..", L"....", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"split", L"-m1", L"..", L"....", 0}, STATUS_CMD_OK, L"\n..\n"},
-        {{L"string", L"split", L"-m0", L"/", L"/usr/local/bin/fish", 0},
+        {{L"string", L"split", L"..", L"....", nullptr}, STATUS_CMD_OK, L"\n\n\n"},
+        {{L"string", L"split", L"-m", L"x", L"..", L"....", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"split", L"-m1", L"..", L"....", nullptr}, STATUS_CMD_OK, L"\n..\n"},
+        {{L"string", L"split", L"-m0", L"/", L"/usr/local/bin/fish", nullptr},
          STATUS_CMD_ERROR,
          L"/usr/local/bin/fish\n"},
-        {{L"string", L"split", L"-m2", L":", L"a:b:c:d", L"e:f:g:h", 0},
+        {{L"string", L"split", L"-m2", L":", L"a:b:c:d", L"e:f:g:h", nullptr},
          STATUS_CMD_OK,
          L"a\nb\nc:d\ne\nf\ng:h\n"},
-        {{L"string", L"split", L"-m1", L"-r", L"/", L"/usr/local/bin/fish", 0},
+        {{L"string", L"split", L"-m1", L"-r", L"/", L"/usr/local/bin/fish", nullptr},
          STATUS_CMD_OK,
          L"/usr/local/bin\nfish\n"},
-        {{L"string", L"split", L"-r", L".", L"www.ch.ic.ac.uk", 0},
+        {{L"string", L"split", L"-r", L".", L"www.ch.ic.ac.uk", nullptr},
          STATUS_CMD_OK,
          L"www\nch\nic\nac\nuk\n"},
-        {{L"string", L"split", L"--", L"--", L"a--b---c----d", 0},
+        {{L"string", L"split", L"--", L"--", L"a--b---c----d", nullptr},
          STATUS_CMD_OK,
          L"a\nb\n-c\n\nd\n"},
-        {{L"string", L"split", L"-r", L"..", L"....", 0}, STATUS_CMD_OK, L"\n\n\n"},
-        {{L"string", L"split", L"-r", L"--", L"--", L"a--b---c----d", 0},
+        {{L"string", L"split", L"-r", L"..", L"....", nullptr}, STATUS_CMD_OK, L"\n\n\n"},
+        {{L"string", L"split", L"-r", L"--", L"--", L"a--b---c----d", nullptr},
          STATUS_CMD_OK,
          L"a\nb-\nc\n\nd\n"},
-        {{L"string", L"split", L"", L"", 0}, STATUS_CMD_ERROR, L"\n"},
-        {{L"string", L"split", L"", L"a", 0}, STATUS_CMD_ERROR, L"a\n"},
-        {{L"string", L"split", L"", L"ab", 0}, STATUS_CMD_OK, L"a\nb\n"},
-        {{L"string", L"split", L"", L"abc", 0}, STATUS_CMD_OK, L"a\nb\nc\n"},
-        {{L"string", L"split", L"-m1", L"", L"abc", 0}, STATUS_CMD_OK, L"a\nbc\n"},
-        {{L"string", L"split", L"-r", L"", L"", 0}, STATUS_CMD_ERROR, L"\n"},
-        {{L"string", L"split", L"-r", L"", L"a", 0}, STATUS_CMD_ERROR, L"a\n"},
-        {{L"string", L"split", L"-r", L"", L"ab", 0}, STATUS_CMD_OK, L"a\nb\n"},
-        {{L"string", L"split", L"-r", L"", L"abc", 0}, STATUS_CMD_OK, L"a\nb\nc\n"},
-        {{L"string", L"split", L"-r", L"-m1", L"", L"abc", 0}, STATUS_CMD_OK, L"ab\nc\n"},
-        {{L"string", L"split", L"-q", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"split", L"-q", L":", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"split", L"-q", L"x", L"axbxc", 0}, STATUS_CMD_OK, L""},
+        {{L"string", L"split", L"", L"", nullptr}, STATUS_CMD_ERROR, L"\n"},
+        {{L"string", L"split", L"", L"a", nullptr}, STATUS_CMD_ERROR, L"a\n"},
+        {{L"string", L"split", L"", L"ab", nullptr}, STATUS_CMD_OK, L"a\nb\n"},
+        {{L"string", L"split", L"", L"abc", nullptr}, STATUS_CMD_OK, L"a\nb\nc\n"},
+        {{L"string", L"split", L"-m1", L"", L"abc", nullptr}, STATUS_CMD_OK, L"a\nbc\n"},
+        {{L"string", L"split", L"-r", L"", L"", nullptr}, STATUS_CMD_ERROR, L"\n"},
+        {{L"string", L"split", L"-r", L"", L"a", nullptr}, STATUS_CMD_ERROR, L"a\n"},
+        {{L"string", L"split", L"-r", L"", L"ab", nullptr}, STATUS_CMD_OK, L"a\nb\n"},
+        {{L"string", L"split", L"-r", L"", L"abc", nullptr}, STATUS_CMD_OK, L"a\nb\nc\n"},
+        {{L"string", L"split", L"-r", L"-m1", L"", L"abc", nullptr}, STATUS_CMD_OK, L"ab\nc\n"},
+        {{L"string", L"split", L"-q", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"split", L"-q", L":", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"split", L"-q", L"x", L"axbxc", nullptr}, STATUS_CMD_OK, L""},
 
-        {{L"string", L"sub", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"sub", L"abcde", 0}, STATUS_CMD_OK, L"abcde\n"},
-        {{L"string", L"sub", L"-l", L"x", L"abcde", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"sub", L"-s", L"x", L"abcde", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"sub", L"-l0", L"abcde", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"sub", L"-l2", L"abcde", 0}, STATUS_CMD_OK, L"ab\n"},
-        {{L"string", L"sub", L"-l5", L"abcde", 0}, STATUS_CMD_OK, L"abcde\n"},
-        {{L"string", L"sub", L"-l6", L"abcde", 0}, STATUS_CMD_OK, L"abcde\n"},
-        {{L"string", L"sub", L"-l-1", L"abcde", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"sub", L"-s0", L"abcde", 0}, STATUS_INVALID_ARGS, L""},
-        {{L"string", L"sub", L"-s1", L"abcde", 0}, STATUS_CMD_OK, L"abcde\n"},
-        {{L"string", L"sub", L"-s5", L"abcde", 0}, STATUS_CMD_OK, L"e\n"},
-        {{L"string", L"sub", L"-s6", L"abcde", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"sub", L"-s-1", L"abcde", 0}, STATUS_CMD_OK, L"e\n"},
-        {{L"string", L"sub", L"-s-5", L"abcde", 0}, STATUS_CMD_OK, L"abcde\n"},
-        {{L"string", L"sub", L"-s-6", L"abcde", 0}, STATUS_CMD_OK, L"abcde\n"},
-        {{L"string", L"sub", L"-s1", L"-l0", L"abcde", 0}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"sub", L"-s1", L"-l1", L"abcde", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"sub", L"-s2", L"-l2", L"abcde", 0}, STATUS_CMD_OK, L"bc\n"},
-        {{L"string", L"sub", L"-s-1", L"-l1", L"abcde", 0}, STATUS_CMD_OK, L"e\n"},
-        {{L"string", L"sub", L"-s-1", L"-l2", L"abcde", 0}, STATUS_CMD_OK, L"e\n"},
-        {{L"string", L"sub", L"-s-3", L"-l2", L"abcde", 0}, STATUS_CMD_OK, L"cd\n"},
-        {{L"string", L"sub", L"-s-3", L"-l4", L"abcde", 0}, STATUS_CMD_OK, L"cde\n"},
-        {{L"string", L"sub", L"-q", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"sub", L"-q", L"abcde", 0}, STATUS_CMD_OK, L""},
+        {{L"string", L"sub", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"sub", L"abcde", nullptr}, STATUS_CMD_OK, L"abcde\n"},
+        {{L"string", L"sub", L"-l", L"x", L"abcde", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"sub", L"-s", L"x", L"abcde", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"sub", L"-l0", L"abcde", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"sub", L"-l2", L"abcde", nullptr}, STATUS_CMD_OK, L"ab\n"},
+        {{L"string", L"sub", L"-l5", L"abcde", nullptr}, STATUS_CMD_OK, L"abcde\n"},
+        {{L"string", L"sub", L"-l6", L"abcde", nullptr}, STATUS_CMD_OK, L"abcde\n"},
+        {{L"string", L"sub", L"-l-1", L"abcde", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"sub", L"-s0", L"abcde", nullptr}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"sub", L"-s1", L"abcde", nullptr}, STATUS_CMD_OK, L"abcde\n"},
+        {{L"string", L"sub", L"-s5", L"abcde", nullptr}, STATUS_CMD_OK, L"e\n"},
+        {{L"string", L"sub", L"-s6", L"abcde", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"sub", L"-s-1", L"abcde", nullptr}, STATUS_CMD_OK, L"e\n"},
+        {{L"string", L"sub", L"-s-5", L"abcde", nullptr}, STATUS_CMD_OK, L"abcde\n"},
+        {{L"string", L"sub", L"-s-6", L"abcde", nullptr}, STATUS_CMD_OK, L"abcde\n"},
+        {{L"string", L"sub", L"-s1", L"-l0", L"abcde", nullptr}, STATUS_CMD_OK, L"\n"},
+        {{L"string", L"sub", L"-s1", L"-l1", L"abcde", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"sub", L"-s2", L"-l2", L"abcde", nullptr}, STATUS_CMD_OK, L"bc\n"},
+        {{L"string", L"sub", L"-s-1", L"-l1", L"abcde", nullptr}, STATUS_CMD_OK, L"e\n"},
+        {{L"string", L"sub", L"-s-1", L"-l2", L"abcde", nullptr}, STATUS_CMD_OK, L"e\n"},
+        {{L"string", L"sub", L"-s-3", L"-l2", L"abcde", nullptr}, STATUS_CMD_OK, L"cd\n"},
+        {{L"string", L"sub", L"-s-3", L"-l4", L"abcde", nullptr}, STATUS_CMD_OK, L"cde\n"},
+        {{L"string", L"sub", L"-q", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"sub", L"-q", L"abcde", nullptr}, STATUS_CMD_OK, L""},
 
-        {{L"string", L"trim", 0}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"trim", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"trim", L""}, STATUS_CMD_ERROR, L"\n"},
         {{L"string", L"trim", L" "}, STATUS_CMD_OK, L"\n"},
         {{L"string", L"trim", L"  \f\n\r\t"}, STATUS_CMD_OK, L"\n"},
@@ -5295,24 +5329,24 @@ static void test_string() {
 
     const auto saved_flags = fish_features();
     const struct string_test qmark_noglob_tests[] = {
-        {{L"string", L"match", L"a*b?c", L"axxb?c", 0}, STATUS_CMD_OK, L"axxb?c\n"},
-        {{L"string", L"match", L"*?", L"a", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"*?", L"ab", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"?*", L"a", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"?*", L"ab", 0}, STATUS_CMD_ERROR, L""},
-        {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_ERROR, L""}};
+        {{L"string", L"match", L"a*b?c", L"axxb?c", nullptr}, STATUS_CMD_OK, L"axxb?c\n"},
+        {{L"string", L"match", L"*?", L"a", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"*?", L"ab", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?*", L"a", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"?*", L"ab", nullptr}, STATUS_CMD_ERROR, L""},
+        {{L"string", L"match", L"a*\\?", L"abc?", nullptr}, STATUS_CMD_ERROR, L""}};
     mutable_fish_features().set(features_t::qmark_noglob, true);
     for (const auto &t : qmark_noglob_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }
 
     const struct string_test qmark_glob_tests[] = {
-        {{L"string", L"match", L"a*b?c", L"axxbyc", 0}, STATUS_CMD_OK, L"axxbyc\n"},
-        {{L"string", L"match", L"*?", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"*?", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
-        {{L"string", L"match", L"?*", L"a", 0}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"match", L"?*", L"ab", 0}, STATUS_CMD_OK, L"ab\n"},
-        {{L"string", L"match", L"a*\\?", L"abc?", 0}, STATUS_CMD_OK, L"abc?\n"}};
+        {{L"string", L"match", L"a*b?c", L"axxbyc", nullptr}, STATUS_CMD_OK, L"axxbyc\n"},
+        {{L"string", L"match", L"*?", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"*?", L"ab", nullptr}, STATUS_CMD_OK, L"ab\n"},
+        {{L"string", L"match", L"?*", L"a", nullptr}, STATUS_CMD_OK, L"a\n"},
+        {{L"string", L"match", L"?*", L"ab", nullptr}, STATUS_CMD_OK, L"ab\n"},
+        {{L"string", L"match", L"a*\\?", L"abc?", nullptr}, STATUS_CMD_OK, L"abc?\n"}};
     mutable_fish_features().set(features_t::qmark_noglob, false);
     for (const auto &t : qmark_glob_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
@@ -5345,7 +5379,7 @@ long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
 /// Verify that setting special env vars have the expected effect on the current shell process.
 static void test_timezone_env_vars() {
     // Confirm changing the timezone affects fish's idea of the local time.
-    time_t tstamp = time(NULL);
+    time_t tstamp = time(nullptr);
 
     long first_tstamp = return_timezone_hour(tstamp, L"UTC-1");
     long second_tstamp = return_timezone_hour(tstamp, L"UTC-2");
@@ -5761,7 +5795,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    srandom((unsigned int)time(NULL));
+    srandom((unsigned int)time(nullptr));
     configure_thread_assertions_for_testing();
 
     // Set the program name to this sentinel value

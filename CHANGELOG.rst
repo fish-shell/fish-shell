@@ -30,6 +30,7 @@ Notable improvements and fixes
 -  ``:`` (for doing nothing) and ``.`` (as a less readable name for ``source``) have also been made proper builtins rather than wrapper functions (#6854).
 - ``fish_preexec`` and ``fish_postexec`` events are no longer triggered
   for empty commands.
+- The ``test`` builtin now better shows where an error occured (#6030).
 
 Syntax changes and new commands
 -------------------------------

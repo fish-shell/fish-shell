@@ -190,30 +190,16 @@ void s_write(screen_t *s, int screen_width, const wcstring &left_prompt,
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
              size_t cursor_pos, const page_rendering_t &pager_data, bool cursor_is_within_pager);
 
+/// Resets the screen buffer's internal knowledge about the contents of the screen,
+/// optionally repainting the prompt as well.
+/// This function assumes that the current line is still valid.
+void s_reset_line(screen_t *s, bool repaint_prompt = false);
 
-enum class screen_reset_mode_t {
-    /// Do not make a new line, do not repaint the prompt.
-    current_line_contents,
-    /// Do not make a new line, do repaint the prompt.
-    current_line_and_prompt,
-    /// Abandon the current line, go to the next one, repaint the prompt.
-    abandon_line,
-    /// Abandon the current line, go to the next one, clear the rest of the screen.
-    abandon_line_and_clear_to_end_of_screen
-};
-
-/// This function resets the screen buffers internal knowledge about the contents of the screen. Use
-/// this function when some other function than s_write has written to the screen.
-///
-/// \param s the screen to reset
-/// \param screen_width the current width of the screen
-/// \param mode the sort of screen reset to apply
-///
-/// If reset_cursor is incorrectly set to false, this may result in screen contents being erased. If
-/// it is incorrectly set to true, it may result in one or more lines of garbage on screen on the
-/// next repaint. If this happens during a loop, such as an interactive resizing, there will be one
-/// line of garbage for every repaint, which will quickly fill the screen.
-void s_reset(screen_t *s, int screen_width, screen_reset_mode_t mode);
+/// Resets the screen buffer's internal knowldge about the contents of the screen,
+/// abandoning the current line and going to the next line.
+/// If clear_to_eos is set,
+/// The screen width must be provided for the PROMPT_SP hack.
+void s_reset_abandoning_line(screen_t *s, int screen_width);
 
 /// Stat stdout and stderr and save result as the current timestamp.
 void s_save_status(screen_t *s);

@@ -351,7 +351,7 @@ static void truncate_run(wcstring *run, size_t desired_width, size_t *width,
 prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
                                                    wcstring *out_trunc_prompt,
                                                    size_t max_line_width) {
-    // FIXME: we could avoid allocating trunc_prompt if max_line_width is max.
+    // FIXME: we could avoid allocating trunc_prompt if max_line_width is SIZE_T_MAX.
     if (const auto *entry = this->find_prompt_layout(prompt_str, max_line_width)) {
         if (out_trunc_prompt) out_trunc_prompt->assign(entry->trunc_text);
         return entry->layout;

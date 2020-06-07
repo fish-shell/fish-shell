@@ -4,7 +4,7 @@ include(FeatureSummary)
 
 option(WITH_GETTEXT "translate messages if gettext is available" ON)
 if(WITH_GETTEXT)
-  find_package(Intl)
+  find_package(Intl QUIET)
   find_package(Gettext)
   if(GETTEXT_FOUND)
       set(HAVE_GETTEXT 1)

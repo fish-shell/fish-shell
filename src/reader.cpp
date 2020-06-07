@@ -799,8 +799,9 @@ void reader_data_t::repaint() {
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position();
 
     // Prepend the mode prompt to the left prompt.
-    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
-            cmd_line->size(), colors, indents, cursor_position, current_page_rendering,
+    int screen_width = common_get_width();
+    s_write(&screen, screen_width, mode_prompt_buff + left_prompt_buff, right_prompt_buff,
+            full_line, cmd_line->size(), colors, indents, cursor_position, current_page_rendering,
             focused_on_pager);
 
     repaint_needed = false;
@@ -974,7 +975,7 @@ void reader_data_t::repaint_if_needed() {
 
     if (needs_reset) {
         exec_prompt();
-        s_reset(&screen, screen_reset_mode_t::current_line_and_prompt);
+        s_reset(&screen, common_get_width(), screen_reset_mode_t::current_line_and_prompt);
         screen_reset_needed = false;
     }
 
@@ -2327,7 +2328,7 @@ void reader_pop() {
         reader_interactive_destroy();
     } else {
         s_end_current_loop = false;
-        s_reset(&new_reader->screen, screen_reset_mode_t::abandon_line);
+        s_reset(&new_reader->screen, common_get_width(), screen_reset_mode_t::abandon_line);
     }
 }
 
@@ -2666,7 +2667,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // elsewhere, we detect if the mode output is empty.
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
-                s_reset(&screen, screen_reset_mode_t::current_line_and_prompt);
+                s_reset(&screen, common_get_width(), screen_reset_mode_t::current_line_and_prompt);
                 screen_reset_needed = false;
                 repaint();
                 break;
@@ -2679,7 +2680,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (!rls.coalescing_repaints) {
                 rls.coalescing_repaints = true;
                 exec_prompt();
-                s_reset(&screen, screen_reset_mode_t::current_line_and_prompt);
+                s_reset(&screen, common_get_width(), screen_reset_mode_t::current_line_and_prompt);
                 screen_reset_needed = false;
                 repaint();
             }
@@ -2962,7 +2963,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // already be printed, all we need to do is repaint.
                 wcstring_list_t argv(1, el->text());
                 event_fire_generic(parser(), L"fish_posterror", &argv);
-                s_reset(&screen, screen_reset_mode_t::abandon_line);
+                s_reset(&screen, common_get_width(), screen_reset_mode_t::abandon_line);
                 mark_repaint_needed();
             }
 
@@ -3483,7 +3484,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     history_search.reset();
 
-    s_reset(&screen, screen_reset_mode_t::abandon_line);
+    s_reset(&screen, common_get_width(), screen_reset_mode_t::abandon_line);
     event_fire_generic(parser(), L"fish_prompt");
     exec_prompt();
 

@@ -459,7 +459,7 @@ static void s_check_status(screen_t *s) {
         // modeled cursor y-pos to its earlier value.
         int prev_line = s->actual.cursor.y;
         write_loop(STDOUT_FILENO, "\r", 1);
-        s_reset(s, screen_reset_mode_t::current_line_and_prompt);
+        s_reset(s, common_get_width(), screen_reset_mode_t::current_line_and_prompt);
         s->actual.cursor.y = prev_line;
     }
 }
@@ -488,7 +488,7 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         current.clear();
         s->desired.cursor.x = 0;
     } else {
-        int screen_width = common_get_width();
+        int screen_width = s->desired.screen_width;
         int cw = bwidth;
 
         s->desired.create_line(line_no);
@@ -531,7 +531,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We
     // don't know! We can fix it up though.
-    if (s->actual.cursor.x == common_get_width()) {
+    if (s->actual.cursor.x == s->actual.screen_width) {
         // Either issue a cr to go back to the beginning of this line, or a nl to go to the
         // beginning of the next one, depending on what we think is more efficient.
         if (new_y <= s->actual.cursor.y) {
@@ -617,7 +617,7 @@ static void s_write_char(screen_t *s, wchar_t c, size_t width) {
     scoped_buffer_t outp(*s);
     s->actual.cursor.x += width;
     s->outp().writech(c);
-    if (s->actual.cursor.x == s->actual_width && allow_soft_wrap()) {
+    if (s->actual.cursor.x == s->actual.screen_width && allow_soft_wrap()) {
         s->soft_wrap_location = screen_data_t::cursor_t{0, s->actual.cursor.y + 1};
 
         // Note that our cursor position may be a lie: Apple Terminal makes the right cursor stick
@@ -699,8 +699,6 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     const size_t right_prompt_width =
         cached_layouts.calc_prompt_layout(right_prompt).last_line_width;
 
-    int screen_width = common_get_width();
-
     // Figure out how many following lines we need to clear (probably 0).
     size_t actual_lines_before_reset = scr->actual_lines_before_reset;
     scr->actual_lines_before_reset = 0;
@@ -709,17 +707,19 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     bool need_clear_screen = scr->need_clear_screen;
     bool has_cleared_screen = false;
 
-    if (scr->actual_width != screen_width) {
+    const int screen_width = scr->desired.screen_width;
+
+    if (scr->actual.screen_width != screen_width) {
         // Ensure we don't issue a clear screen for the very first output, to avoid issue #402.
-        if (scr->actual_width > 0) {
+        if (scr->actual.screen_width > 0) {
             need_clear_screen = true;
             s_move(scr, 0, 0);
-            s_reset(scr, screen_reset_mode_t::current_line_contents);
+            s_reset(scr, screen_width, screen_reset_mode_t::current_line_contents);
 
             need_clear_lines = need_clear_lines || scr->need_clear_lines;
             need_clear_screen = need_clear_screen || scr->need_clear_screen;
         }
-        scr->actual_width = screen_width;
+        scr->actual.screen_width = screen_width;
     }
 
     scr->need_clear_lines = false;
@@ -792,7 +792,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
                 }
                 if (next_line_will_change) {
                     skip_remaining =
-                        std::min(skip_remaining, static_cast<size_t>(scr->actual_width - 2));
+                        std::min(skip_remaining, static_cast<size_t>(scr->actual.screen_width - 2));
                 }
             }
         }
@@ -1097,8 +1097,8 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     return result;
 }
 
-void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
-             const wcstring &commandline, size_t explicit_len,
+void s_write(screen_t *s, int screen_width, const wcstring &left_prompt,
+             const wcstring &right_prompt, const wcstring &commandline, size_t explicit_len,
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
              size_t cursor_pos, const page_rendering_t &pager, bool cursor_is_within_pager) {
     static relaxed_atomic_t<uint32_t> s_repaints{0};
@@ -1123,7 +1123,6 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     }
 
     s_check_status(s);
-    const size_t screen_width = common_get_width();
 
     // Completely ignore impossibly small screens.
     if (screen_width < 4) {
@@ -1138,7 +1137,8 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     s->autosuggestion_is_truncated =
         !autosuggestion.empty() && autosuggestion != layout.autosuggestion;
 
-    // Clear the desired screen.
+    // Clear the desired screen and set its width.
+    s->desired.screen_width = screen_width;
     s->desired.resize(0);
     s->desired.cursor.x = s->desired.cursor.y = 0;
 
@@ -1189,7 +1189,8 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     s_update(s, layout.left_prompt, layout.right_prompt);
     s_save_status(s);
 }
-void s_reset(screen_t *s, screen_reset_mode_t mode) {
+
+void s_reset(screen_t *s, int screen_width, screen_reset_mode_t mode) {
     assert(s && "Null screen");
 
     bool abandon_line = false, repaint_prompt = false, clear_to_eos = false;
@@ -1245,9 +1246,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
 
     if (abandon_line) {
         // Do the PROMPT_SP hack.
-        int screen_width = common_get_width();
         wcstring abandon_line_string;
-        abandon_line_string.reserve(screen_width + 32);  // should be enough
+        abandon_line_string.reserve(screen_width + 32);
 
         // Don't need to check for fish_wcwidth errors; this is done when setting up
         // omitted_newline_char in common.cpp.

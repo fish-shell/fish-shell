@@ -774,11 +774,6 @@ void redirect_tty_output();
 
 std::string get_path_to_tmp_dir();
 
-// Default terminal size
-#define DFLT_TERM_COL 80
-#define DFLT_TERM_ROW 24
-#define DFLT_TERM_COL_STR L"80"
-#define DFLT_TERM_ROW_STR L"24"
 void invalidate_termsize(bool invalidate_vars = false);
 struct winsize get_current_winsize();
 

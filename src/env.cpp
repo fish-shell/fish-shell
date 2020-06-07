@@ -46,8 +46,12 @@
 extern char **environ;
 
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
-static const wchar_t PATH_ARRAY_SEP = L':';
-static const wchar_t NONPATH_ARRAY_SEP = L' ';
+static constexpr wchar_t PATH_ARRAY_SEP = L':';
+static constexpr wchar_t NONPATH_ARRAY_SEP = L' ';
+
+// Default terminal sizes.
+static constexpr size_t DFLT_TERM_COL = 80;
+static constexpr size_t DFLT_TERM_ROW = 24;
 
 bool curses_initialized = false;
 
@@ -357,7 +361,12 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     } else {
         vars.set_pwd_from_getcwd();
     }
-    vars.set_termsize();  // initialize the terminal size variables
+
+    // Initialize termsize variables.
+    if (vars.get(L"COLUMNS").missing_or_empty())
+        vars.set_one(L"COLUMNS", ENV_GLOBAL, to_string(DFLT_TERM_COL));
+    if (vars.get(L"LINES").missing_or_empty())
+        vars.set_one(L"LINES", ENV_GLOBAL, to_string(DFLT_TERM_ROW));
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
@@ -1214,17 +1223,6 @@ int env_stack_t::get_last_status() const { return acquire_impl()->perproc_data()
 
 void env_stack_t::set_last_statuses(statuses_t s) {
     acquire_impl()->perproc_data().statuses = std::move(s);
-}
-
-/// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable
-/// defaults. They will be updated later by the `get_current_winsize()` function if they need to be
-/// adjusted.
-void env_stack_t::set_termsize() {
-    auto cols = get(L"COLUMNS");
-    if (cols.missing_or_empty()) set_one(L"COLUMNS", ENV_GLOBAL, DFLT_TERM_COL_STR);
-
-    auto rows = get(L"LINES");
-    if (rows.missing_or_empty()) set_one(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
 }
 
 /// Update the PWD variable directory from the result of getcwd().

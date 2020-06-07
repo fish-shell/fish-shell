@@ -35,12 +35,12 @@ Examples
     >_ echo \"(echo one\ntwo\nthree | string collect)\"
     "one
     two
-    three
-    "
+    three"
 
     >_ echo \"(echo one\ntwo\nthree | string collect -N)\"
     "one
     two
-    three"
+    three
+    "
 
 .. END EXAMPLES

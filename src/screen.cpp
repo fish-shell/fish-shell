@@ -84,6 +84,14 @@ static size_t next_tab_stop(size_t current_line_width) {
 /// Like fish_wcwidth, but returns 0 for control characters instead of -1.
 static int fish_wcwidth_min_0(wchar_t widechar) { return std::max(0, fish_wcwidth(widechar)); }
 
+int line_t::wcswidth_min_0(size_t max) const {
+    int result = 0;
+    for (size_t idx = 0, end = std::min(max, text.size()); idx < end; idx++) {
+        result += fish_wcwidth_min_0(text[idx].first);
+    }
+    return result;
+}
+
 /// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
 /// physical line on a wrapped logical line; instead we just output it.
 static bool allow_soft_wrap() {
@@ -767,9 +775,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // over the shared prefix of what we want to output now, and what we output before, to
         // avoid repeatedly outputting it.
         if (skip_prefix > 0) {
-            size_t skip_width = shared_prefix < skip_prefix
-                                    ? skip_prefix
-                                    : fish_wcswidth(&o_line.text.at(0), shared_prefix);
+            size_t skip_width =
+                shared_prefix < skip_prefix ? skip_prefix : o_line.wcswidth_min_0(shared_prefix);
             if (skip_width > skip_remaining) skip_remaining = skip_width;
         }
 
@@ -846,7 +853,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             // Only do it if the previous line could conceivably be wider.
             // That means if it is a prefix of the current one we can skip it.
             if (s_line.text.size() != shared_prefix) {
-                int prev_width = fish_wcswidth(&s_line.text.at(0), s_line.text.size());
+                int prev_width = s_line.wcswidth_min_0();
                 clear_remainder = prev_width > current_width;
             }
         }

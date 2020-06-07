@@ -2294,7 +2294,10 @@ struct pager_layout_testcase_t {
                 std::replace(expected.begin(), expected.end(), L'\x2026', ellipsis_char);
             }
 
-            wcstring text = sd.line(0).to_string();
+            wcstring text;
+            for (const auto &p : sd.line(0).text) {
+                text.push_back(p.first);
+            }
             if (text != expected) {
                 std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
                               text.length(), text.c_str(), expected.length(), expected.c_str());

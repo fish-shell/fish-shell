@@ -20,6 +20,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -30,42 +31,47 @@ class page_rendering_t;
 
 /// A class representing a single line of a screen.
 struct line_t {
-    std::vector<wchar_t> text;
-    std::vector<highlight_spec_t> colors;
-    bool is_soft_wrapped;
-    size_t indentation;
+    /// A pair of a character, and the color with which to draw it.
+    using highlighted_char_t = std::pair<wchar_t, highlight_spec_t>;
+    std::vector<highlighted_char_t> text{};
+    bool is_soft_wrapped{false};
+    size_t indentation{0};
 
-    line_t() : text(), colors(), is_soft_wrapped(false), indentation(0) {}
+    line_t() = default;
 
+    /// Clear the line's contents.
     void clear(void) {
         text.clear();
-        colors.clear();
     }
 
-    void append(wchar_t txt, highlight_spec_t color) {
-        text.push_back(txt);
-        colors.push_back(color);
-    }
+    /// Append a single character \p txt to the line with color \p c.
+    void append(wchar_t c, highlight_spec_t color) { text.push_back({c, color}); }
 
+    /// Append a nul-terminated string \p txt to the line, giving each character \p color.
     void append(const wchar_t *txt, highlight_spec_t color) {
         for (size_t i = 0; txt[i]; i++) {
-            text.push_back(txt[i]);
-            colors.push_back(color);
+            text.push_back({txt[i], color});
         }
     }
 
-    size_t size(void) const { return text.size(); }
+    /// \return the number of characters.
+    size_t size() const { return text.size(); }
 
-    wchar_t char_at(size_t idx) const { return text.at(idx); }
+    /// \return the character at a char index.
+    wchar_t char_at(size_t idx) const { return text.at(idx).first; }
 
-    highlight_spec_t color_at(size_t idx) const { return colors.at(idx); }
+    /// \return the color at a char index.
+    highlight_spec_t color_at(size_t idx) const { return text.at(idx).second; }
 
+    /// Append the contents of \p line to this line.
     void append_line(const line_t &line) {
         text.insert(text.end(), line.text.begin(), line.text.end());
-        colors.insert(colors.end(), line.colors.begin(), line.colors.end());
     }
 
-    wcstring to_string() const { return wcstring(this->text.begin(), this->text.end()); }
+    /// \return the width of this line, counting up to no more than \p max characters.
+    /// This follows fish_wcswidth() semantics, except that characters whose width would be -1 are
+    /// treated as 0.
+    int wcswidth_min_0(size_t max = std::numeric_limits<size_t>::max()) const;
 };
 
 /// A class representing screen contents.

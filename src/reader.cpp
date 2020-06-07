@@ -2472,16 +2472,16 @@ static int read_i(parser_t &parser) {
 
         if (shell_is_exiting()) {
             handle_end_loop(parser);
-        } else if (tmp) {
+        } else if (tmp && !tmp->empty()) {
             const wcstring command = tmp.acquire();
             data->update_buff_pos(&data->command_line, 0);
             data->command_line.clear();
             data->command_line_changed(&data->command_line);
             wcstring_list_t argv(1, command);
-            if (!command.empty()) event_fire_generic(parser, L"fish_preexec", &argv);
+            event_fire_generic(parser, L"fish_preexec", &argv);
             reader_run_command(parser, command);
             parser.clear_cancel();
-            if (!command.empty()) event_fire_generic(parser, L"fish_postexec", &argv);
+            event_fire_generic(parser, L"fish_postexec", &argv);
             // Allow any pending history items to be returned in the history array.
             if (data->history) {
                 data->history->resolve_pending();

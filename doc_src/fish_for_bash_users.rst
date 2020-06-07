@@ -1,9 +1,9 @@
-Fishscript for bash users
--------------------------
+Fish for bash users
+###################
 
-This is to give you a quick overview if you come from bash (or to a lesser extent other shells zsh or ksh) and want to know how fish's scripting language works and how it differs.
+This is to give you a quick overview if you come from bash (or to a lesser extent other shells zsh or ksh) and want to know how fish differs. Fish is intentionally not POSIX-compatible and as such some of the things you are used to work differently.
 
-Many things are similar - they both fundamentally expand commandlines to execute commands, have pipes, redirections, variables, globs, use command output in various ways.
+Many things are similar - they both fundamentally expand commandlines to execute commands, have pipes, redirections, variables, globs, use command output in various ways. This document is there to quickly show you the differences.
 
 Command substitutions
 ---------------------
@@ -89,6 +89,7 @@ Some bash variables and their closest fish equivalent:
 - ``$#``: No variable, instead use ``count $argv``
 - ``$!``: ``$last_pid``
 - ``$0``: ``status filename``
+- ``$-``: Mostly ``status is-interactive`` and ``status is-login``
 
 Parameter substitution
 ----------------------
@@ -202,3 +203,14 @@ Fish's blocking constructs look a little different. They all start with a word, 
   # (note that bash specifically allows the word "function" as an extension, but POSIX only specifies the form without, so it's more compatible to just use the form without)
 
 Fish does not have an ``until``. Use ``while not`` or ``while !``.
+
+Builtins
+--------
+
+By now it has become apparent that fish puts much more of a focus on its builtins rather than its syntax. So here are some helpful builtins and their rough equivalent in bash:
+
+- :ref:`string <cmd-string>` - this replaces most of the string transformation (``${i%foo}`` et al) and can also be used instead of ``grep`` and ``sed`` and such.
+- :ref:`math <cmd-math>` - this replaces ``$((i + 1))`` arithmetic and can also do floats and some simple functions (sine and friends).
+- :ref:`argparse <cmd-argparse>` - this can handle a script's option parsing, for which bash would probably use ``getopt`` (zsh provides ``zparseopts``).
+- :ref:`count <cmd-count>` can be used to count things and therefore replaces ``$#`` and can be used instead of ``wc``.
+- :ref:`status <cmd-status>` provides information about the shell status, e.g. if it's interactive or what the current linenumber is. This replaces ``$-`` and ``$BASH_LINENO`` and other variables.

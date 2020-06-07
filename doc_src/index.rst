@@ -1879,3 +1879,4 @@ Other help pages
    faq
    license
    CHANGELOG
+   fish_for_bash_users

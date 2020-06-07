@@ -102,8 +102,8 @@ static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Use common_get_width()/common_get_height() to read it lazily.
-static constexpr struct winsize k_invalid_termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
-static owning_lock<struct winsize> s_termsize{k_invalid_termsize};
+static owning_lock<struct winsize> s_termsize{
+    (struct winsize){USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX}};
 
 static relaxed_atomic_bool_t s_termsize_valid{false};
 

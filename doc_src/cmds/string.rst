@@ -37,6 +37,8 @@ Most subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usu
 
 The following subcommands are available.
 
+.. _cmd-string-collect:
+
 "collect" subcommand
 --------------------
 

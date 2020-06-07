@@ -121,7 +121,7 @@ set(FISH_SRCS
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
     src/future_feature_flags.cpp src/redirection.cpp src/topic_monitor.cpp
     src/flog.cpp src/trace.cpp src/timer.cpp src/null_terminated_array.cpp
-    src/operation_context.cpp src/fd_monitor.cpp
+    src/operation_context.cpp src/fd_monitor.cpp src/termsize.cpp
 )
 
 # Header files are just globbed.

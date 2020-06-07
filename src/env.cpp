@@ -32,6 +32,7 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
+#include "termsize.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Some configuration path environment variables.
@@ -48,10 +49,6 @@ extern char **environ;
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
 static constexpr wchar_t PATH_ARRAY_SEP = L':';
 static constexpr wchar_t NONPATH_ARRAY_SEP = L' ';
-
-// Default terminal sizes.
-static constexpr size_t DFLT_TERM_COL = 80;
-static constexpr size_t DFLT_TERM_ROW = 24;
 
 bool curses_initialized = false;
 
@@ -363,10 +360,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     }
 
     // Initialize termsize variables.
+    auto termsize = termsize_container_t::shared().initialize(vars);
     if (vars.get(L"COLUMNS").missing_or_empty())
-        vars.set_one(L"COLUMNS", ENV_GLOBAL, to_string(DFLT_TERM_COL));
+        vars.set_one(L"COLUMNS", ENV_GLOBAL, to_string(termsize.width));
     if (vars.get(L"LINES").missing_or_empty())
-        vars.set_one(L"LINES", ENV_GLOBAL, to_string(DFLT_TERM_ROW));
+        vars.set_one(L"LINES", ENV_GLOBAL, to_string(termsize.height));
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);

@@ -186,23 +186,6 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
              size_t cursor_pos, const page_rendering_t &pager_data, bool cursor_is_within_pager);
 
-/// This function resets the screen buffers internal knowledge about the contents of the screen. Use
-/// this function when some other function than s_write has written to the screen.
-///
-/// \param s the screen to reset
-/// \param reset_cursor whether the line on which the cursor has changed should be assumed to have
-/// changed. If \c reset_cursor is false, the library will attempt to make sure that the screen area
-/// does not seem to move up or down on repaint.
-/// \param reset_prompt whether to reset the prompt as well.
-///
-/// If reset_cursor is incorrectly set to false, this may result in screen contents being erased. If
-/// it is incorrectly set to true, it may result in one or more lines of garbage on screen on the
-/// next repaint. If this happens during a loop, such as an interactive resizing, there will be one
-/// line of garbage for every repaint, which will quickly fill the screen.
-void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
-
-/// Stat stdout and stderr and save result as the current timestamp.
-void s_save_status(screen_t *s);
 
 enum class screen_reset_mode_t {
     /// Do not make a new line, do not repaint the prompt.
@@ -215,7 +198,20 @@ enum class screen_reset_mode_t {
     abandon_line_and_clear_to_end_of_screen
 };
 
+/// This function resets the screen buffers internal knowledge about the contents of the screen. Use
+/// this function when some other function than s_write has written to the screen.
+///
+/// \param s the screen to reset
+/// \param mode the sort of screen reset to apply
+///
+/// If reset_cursor is incorrectly set to false, this may result in screen contents being erased. If
+/// it is incorrectly set to true, it may result in one or more lines of garbage on screen on the
+/// next repaint. If this happens during a loop, such as an interactive resizing, there will be one
+/// line of garbage for every repaint, which will quickly fill the screen.
 void s_reset(screen_t *s, screen_reset_mode_t mode);
+
+/// Stat stdout and stderr and save result as the current timestamp.
+void s_save_status(screen_t *s);
 
 /// Issues an immediate clr_eos.
 void screen_force_clear_to_end();

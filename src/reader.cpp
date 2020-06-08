@@ -791,8 +791,9 @@ void reader_data_t::repaint() {
     // term size, minus the number of lines consumed by our string. (Note this doesn't yet consider
     // wrapping).
     int full_line_count = 1 + std::count(full_line.cbegin(), full_line.cend(), L'\n');
-    pager.set_term_size(std::max(1, common_get_width()),
-                        std::max(1, common_get_height() - full_line_count));
+    termsize_t curr_termsize = termsize_last();
+    pager.set_term_size(termsize_t{std::max(1, curr_termsize.width),
+                                   std::max(1, curr_termsize.height - full_line_count)});
     pager.update_rendering(&current_page_rendering);
 
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;

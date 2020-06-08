@@ -393,9 +393,9 @@ void pager_t::set_completions(const completion_list_t &raw_completions) {
 
 void pager_t::set_prefix(const wcstring &pref) { prefix = pref; }
 
-void pager_t::set_term_size(size_t w, size_t h) {
-    available_term_width = w;
-    available_term_height = h;
+void pager_t::set_term_size(termsize_t ts) {
+    available_term_width = ts.width > 0 ? ts.width : 0;
+    available_term_height = ts.height > 0 ? ts.height : 0;
 }
 
 /// Try to print the list of completions lst with the prefix prefix using cols as the number of

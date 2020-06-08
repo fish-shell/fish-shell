@@ -2201,7 +2201,7 @@ static void test_pager_navigation() {
 
     pager_t pager;
     pager.set_completions(completions);
-    pager.set_term_size(80, 24);
+    pager.set_term_size(termsize_t::defaults());
     page_rendering_t render = pager.render();
 
     if (render.term_width != 80) err(L"Wrong term width");
@@ -2275,14 +2275,14 @@ static void test_pager_navigation() {
 }
 
 struct pager_layout_testcase_t {
-    size_t width;
+    int width;
     const wchar_t *expected;
 
     // Run ourselves as a test case.
     // Set our data on the pager, and then check the rendering.
     // We should have one line, and it should have our expected text.
     void run(pager_t &pager) const {
-        pager.set_term_size(this->width, 24);
+        pager.set_term_size(termsize_t{this->width, 24});
         page_rendering_t rendering = pager.render();
         const screen_data_t &sd = rendering.screen_data;
         do_test(sd.line_count() == 1);

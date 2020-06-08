@@ -1,7 +1,7 @@
 # Completions for the `apt` command
 
 set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends
-set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends
+set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends autoremove
 set -l installed_pkg_subcmds remove
 set -l handle_file_pkg_subcmds install
 

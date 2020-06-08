@@ -107,4 +107,7 @@ struct termsize_container_t {
     friend termsize_tester_t;
 };
 
+/// Convenience helper to return the last known termsize.
+inline termsize_t termsize_last() { return termsize_container_t::shared().last(); }
+
 #endif  // FISH_TERMSIZE_H

@@ -62,6 +62,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "signal.h"
+#include "termsize.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -778,10 +779,10 @@ void narrow_string_safe(char buff[64], const wchar_t *s) {
     buff[idx] = '\0';
 }
 
-wcstring reformat_for_screen(const wcstring &msg) {
+wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
     wcstring buff;
     int line_width = 0;
-    int screen_width = common_get_width();
+    int screen_width = termsize.width;
 
     if (screen_width) {
         const wchar_t *start = msg.c_str();

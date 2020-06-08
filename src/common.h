@@ -38,6 +38,8 @@
 typedef std::wstring wcstring;
 typedef std::vector<wcstring> wcstring_list_t;
 
+struct termsize_t;
+
 // Maximum number of bytes used by a single utf-8 character.
 #define MAX_UTF8_BYTES 6
 
@@ -662,8 +664,8 @@ int common_get_height();
 /// variable used by common_get_wisth and common_get_height().
 void common_handle_winch(int signal);
 
-/// Write the given paragraph of output, redoing linebreaks to fit the current screen.
-wcstring reformat_for_screen(const wcstring &msg);
+/// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
+wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize);
 
 /// Print a short message about how to file a bug report to stderr.
 void bugreport();

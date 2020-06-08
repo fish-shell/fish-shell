@@ -21,9 +21,9 @@ Variables
 
 Fish sets and erases variables with :ref:`set <cmd-set>` instead of ``VAR=VAL`` and ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
 
-  set -gx PAGER less
+  set -gx PAGER less # $PAGER is now global and exported, so this is like `export PAGER=less`
 
-  set -l alocalvariable foo
+  set -l alocalvariable foo # $alocalvariable is now only locally defined.
 
 or to erase variables::
 
@@ -91,10 +91,20 @@ Some bash variables and their closest fish equivalent:
 - ``$0``: ``status filename``
 - ``$-``: Mostly ``status is-interactive`` and ``status is-login``
 
-Parameter substitution
+Process substitution
 ----------------------
 
 Instead of ``<(command)`` fish uses ``(command | psub)``. There is no equivalent to ``>(command)``.
+
+Note that both of these are bashisms, and most things can easily be expressed without. E.g. instead of::
+
+  source (command | psub)
+
+just use::
+
+  command | source
+
+as fish's :ref:`source <cmd-source>` can read from stdin.
 
 Heredocs
 --------
@@ -204,13 +214,15 @@ Fish's blocking constructs look a little different. They all start with a word, 
 
 Fish does not have an ``until``. Use ``while not`` or ``while !``.
 
-Builtins
---------
+Builtins and other commands
+---------------------------
 
-By now it has become apparent that fish puts much more of a focus on its builtins rather than its syntax. So here are some helpful builtins and their rough equivalent in bash:
+By now it has become apparent that fish puts much more of a focus on its builtins and external commands rather than its syntax. So here are some helpful builtins and their rough equivalent in bash:
 
 - :ref:`string <cmd-string>` - this replaces most of the string transformation (``${i%foo}`` et al) and can also be used instead of ``grep`` and ``sed`` and such.
 - :ref:`math <cmd-math>` - this replaces ``$((i + 1))`` arithmetic and can also do floats and some simple functions (sine and friends).
 - :ref:`argparse <cmd-argparse>` - this can handle a script's option parsing, for which bash would probably use ``getopt`` (zsh provides ``zparseopts``).
 - :ref:`count <cmd-count>` can be used to count things and therefore replaces ``$#`` and can be used instead of ``wc``.
 - :ref:`status <cmd-status>` provides information about the shell status, e.g. if it's interactive or what the current linenumber is. This replaces ``$-`` and ``$BASH_LINENO`` and other variables.
+
+- ``seq(1)`` can be used as a replacement for ``{1..10}`` range expansion. If your OS doesn't ship a `seq` fish includes a replacement function.

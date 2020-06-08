@@ -30,7 +30,7 @@ function __fish_list_heroku_releases
 end
 
 function __fish_heroku_needs_command
-    set cmd (commandline -opc)
+    set -l cmd (commandline -opc)
     if [ (count $cmd) -eq 1 ]
         return 0
     end
@@ -38,7 +38,7 @@ function __fish_heroku_needs_command
 end
 
 function __fish_heroku_using_command
-    set cmd (commandline -opc)
+    set -l cmd (commandline -opc)
     if [ (count $cmd) -gt 1 ]
         if [ $argv[1] = $cmd[2] ]
             return 0
@@ -47,7 +47,7 @@ function __fish_heroku_using_command
     return 1
 end
 
-set -l heroku_looking -c heroku -n '__fish_heroku_needs_command'
+set -l heroku_looking -c heroku -n __fish_heroku_needs_command
 
 # Main commands
 complete $heroku_looking -xa addons -d 'list installed addons'

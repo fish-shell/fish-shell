@@ -10,8 +10,8 @@ complete -c sshfs -x -a '(__fish_complete_directories (commandline -ct) "Mount p
 # Command options
 #
 complete -c sshfs -s V -d "Display version and exit"
-complete -c sshfs -s p -x -d "Port"
-complete -c sshfs -s C -d "Compression"
+complete -c sshfs -s p -x -d Port
+complete -c sshfs -s C -d Compression
 complete -c sshfs -s o -x -d "Mount options"
 complete -c sshfs -s d -d "Enable debug"
 complete -c sshfs -s f -d "Foreground operation"

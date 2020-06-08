@@ -6,14 +6,14 @@
 
 # We don't include "missingInclude" as that doesn't find our config.h.
 # Missing includes will quickly be found by... compiling the thing anyway.
-set cppchecks warning,performance,portability,information #,missingInclude
-set cppcheck_args
-set c_files
-set all no
-set kernel_name (uname -s)
-set machine_type (uname -m)
+set -l cppchecks warning,performance,portability,information #,missingInclude
+set -l cppcheck_args
+set -l c_files
+set -l all no
+set -l kernel_name (uname -s)
+set -l machine_type (uname -m)
 
-argparse a/all -- $argv
+argparse a/all p/project= -- $argv
 
 # We only want -D and -I options to be passed thru to cppcheck.
 for arg in $argv
@@ -31,7 +31,7 @@ end
 # be harmless everywhere else.
 set cppcheck_args $cppcheck_args -I /usr/include -I .
 
-if test "$machine_type" = "x86_64"
+if test "$machine_type" = x86_64
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
 end
 
@@ -42,7 +42,7 @@ else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
     # Select (cached files) (modified but not cached, and untracked files)
-    set files (git diff-index --cached HEAD --name-only)
+    set -l files (git diff-index --cached HEAD --name-only)
     set files $files (git ls-files --exclude-standard --others --modified)
     if not set -q files[1]
         # No pending changes so lint the files in the most recent commit.
@@ -116,6 +116,14 @@ if set -q c_files[1]
         # counts of the errors detected to stderr. Anyone running this who wants to capture its
         # output will expect those messages to be written to stdout.
         oclint $c_files -- $argv 2>&1
+    end
+
+    if type -q clang-tidy; and set -q _flag_project
+        echo
+        echo ========================================
+        echo Running clang-tidy
+        echo ========================================
+        clang-tidy -p $_flag_project $c_files
     end
 else
     echo

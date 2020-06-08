@@ -5,7 +5,7 @@ __fish_complete_wireshark tshark
 function __fish_tshark_protocols
     set -l tok (commandline -ct | string collect)
     set -l tok_param (string replace -r -- '^-O' '' $tok)
-    command tshark -G protocols | while read -d \t name shortname identifier
+    command tshark -G protocols | while read -l -d \t name shortname identifier
         printf "%s%s\t%s\n" (string replace -r -- '(.+),[^,]*$' '$1,' $tok_param) $tok_no_comma $identifier $name
     end
 end
@@ -48,7 +48,7 @@ text\t"Default"'
 complete -c tshark -s U -d "PDUs export according to given tap name" -xa '(
     printf "%s\tTap name\n" (command tshark -U "" 2>| string replace -rf "^tshark:\s*" "")[2..-1])'
 complete -c tshark -s V -d 'Causes TShark to print a view of packet details'
-complete -c tshark -s W -d 'Save extra information in the capture file if the format supports it' -xa "n"
+complete -c tshark -s W -d 'Save extra information in the capture file if the format supports it' -xa n
 complete -c tshark -s x -d 'Print hex and ASCII dumps of packet data'
 complete -c tshark -s M -d 'Automatically reset internal session when reaching N packets' -x
 complete -c tshark -l color -d 'Enable coloring of packets according to standard Wireshark color filters'

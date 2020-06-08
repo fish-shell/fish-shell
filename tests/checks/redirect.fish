@@ -8,6 +8,11 @@ end
 outnerr 0 &| count
 #CHECK: 2
 
+
+outnerr appendfd 2>>&1
+#CHECK: out appendfd
+#CHECK: err appendfd
+
 set -l tmpdir (mktemp -d)
 outnerr overwrite &>$tmpdir/file.txt
 cat $tmpdir/file.txt
@@ -47,7 +52,11 @@ rm -Rf $tmpdir
 
 # Verify that we can turn stderr into stdout and then pipe it
 # Note that the order here has historically been unspecified - 'errput' could conceivably appear before 'output'.
-begin ; echo output ; echo errput 1>&2  ; end 2>&1 | sort | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
+begin
+    echo output
+    echo errput 1>&2
+end 2>&1 | sort | tee ../test/temp/tee_test.txt
+cat ../test/temp/tee_test.txt
 #CHECK: errput
 #CHECK: output
 #CHECK: errput
@@ -60,8 +69,12 @@ echo caret_no_redirect 12345^
 # Verify that we can pipe something other than stdout
 # The first line should be printed, since we output to stdout but pipe stderr to /dev/null
 # The second line should not be printed, since we output to stderr and pipe it to /dev/null
-begin ; echo is_stdout ; end 2>| cat > /dev/null
-begin ; echo is_stderr 1>&2 ; end 2>| cat > /dev/null
+begin
+    echo is_stdout
+end 2>| cat >/dev/null
+begin
+    echo is_stderr 1>&2
+end 2>| cat >/dev/null
 #CHECK: is_stdout
 
 # "Verify that pipes don't conflict with fd redirections"

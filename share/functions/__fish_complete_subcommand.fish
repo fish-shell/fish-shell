@@ -14,9 +14,9 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
         switch $arg
             case '--fcs-skip=*'
                 set skip_next (string split = -- $arg)[2]
-            case '--allow-functions-and-builtins'
+            case --allow-functions-and-builtins
                 set allow_functions_and_builtins true
-            case '--commandline'
+            case --commandline
                 set subcommand $argv
                 set -e argv
                 break
@@ -25,7 +25,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
     set -l options_with_param $argv
 
     if not string length -q -- $subcommand
-        set cmd (commandline -cop) (commandline -ct)
+        set -l cmd (commandline -cop) (commandline -ct)
         while set -q cmd[1]
             set -l token $cmd[1]
             set -e cmd[1]
@@ -49,7 +49,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
     end
 
     if test $allow_functions_and_builtins = false && test (count $subcommand) -eq 1
-        __fish_complete_external_command
+        __fish_complete_external_command "$subcommand"
     else
         printf "%s\n" (complete -C "$subcommand")
     end

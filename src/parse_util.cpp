@@ -299,7 +299,7 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
         return;
     }
 
-    assert(cursor_pos >= (size_t)(begin - buff));
+    assert(cursor_pos >= static_cast<size_t>(begin - buff));
     const size_t pos = cursor_pos - (begin - buff);
 
     if (a) *a = begin;
@@ -677,6 +677,12 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     const size_t src_size = src.size();
     std::vector<int> indents(src_size, -1);
 
+    // Simple trick: if our source does not contain a newline, then all indents are 0.
+    if (src.find('\n') == wcstring::npos) {
+        std::fill(indents.begin(), indents.end(), 0);
+        return indents;
+    }
+
     // Parse the string. We pass continue_after_error to produce a forest; the trailing indent of
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
@@ -1008,7 +1014,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
             }
             default: {
                 DIE("unexpected parse_util_locate_cmdsubst() return value");
-                break;
             }
         }
     }

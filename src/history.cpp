@@ -14,17 +14,18 @@
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
 #include <wctype.h>
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cwchar>
 #include <functional>
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <random>
 #include <type_traits>
 #include <unordered_set>
 
@@ -68,7 +69,7 @@
 #define HISTORY_OUTPUT_BUFFER_SIZE (64 * 1024)
 
 // The file access mode we use for creating history files
-static constexpr int history_file_mode = 0644;
+static constexpr int history_file_mode = 0600;
 
 // How many times we retry to save
 // Saving may fail if the file is modified in between our opening
@@ -79,7 +80,7 @@ namespace {
 
 /// If the size of \p buffer is at least \p min_size, output the contents of a string \p str to \p
 /// fd, and clear the string. \return 0 on success, an error code on failure.
-static int flush_to_fd(std::string *buffer, int fd, size_t min_size) {
+int flush_to_fd(std::string *buffer, int fd, size_t min_size) {
     if (buffer->empty() || buffer->size() < min_size) {
         return 0;
     }
@@ -108,7 +109,7 @@ class time_profiler_t {
 
 /// \return the path for the history file for the given \p session_id, or none() if it could not be
 /// loaded. If suffix is provided, append that suffix to the path; this is used for temporary files.
-static maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &suffix = {}) {
+maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &suffix = {}) {
     if (session_id.empty()) return none();
 
     wcstring result;
@@ -123,7 +124,7 @@ static maybe_t<wcstring> history_filename(const wcstring &session_id, const wcst
 
 /// Lock the history file.
 /// Returns true on success, false on failure.
-static bool history_file_lock(int fd, int lock_type) {
+bool history_file_lock(int fd, int lock_type) {
     static std::atomic<bool> do_locking(true);
     if (!do_locking) return false;
 
@@ -396,9 +397,12 @@ void history_impl_t::save_unless_disabled() {
     // the counter.
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0) {
-        unsigned int seed = static_cast<unsigned int>(time(nullptr));
         // Generate a number in the range [0, kVacuumFrequency).
-        countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
+        std::uniform_int_distribution<unsigned> dist{0, kVacuumFrequency - 1};
+        unsigned seed =
+            static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count());
+        std::minstd_rand gen{seed};
+        countdown_to_vacuum = dist(gen);
     }
 
     // Determine if we're going to vacuum.
@@ -462,8 +466,7 @@ void history_impl_t::set_valid_file_paths(const wcstring_list_t &valid_file_path
     }
 
     // Look for an item with the given identifier. It is likely to be at the end of new_items.
-    for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter != new_items.rend();
-         ++iter) {
+    for (auto iter = new_items.rbegin(); iter != new_items.rend(); ++iter) {
         if (iter->identifier == ident) {  // found it
             iter->required_paths = valid_file_paths;
             break;
@@ -599,7 +602,7 @@ void history_impl_t::load_old_if_needed() {
 
 bool history_search_t::go_backwards() {
     // Backwards means increasing our index.
-    const size_t max_index = static_cast<size_t>(-1);
+    const auto max_index = static_cast<size_t>(-1);
 
     if (current_index_ == max_index) return false;
 
@@ -1228,20 +1231,26 @@ static bool string_could_be_path(const wcstring &potential_path) {
     return !(potential_path.empty() || potential_path.at(0) == L'-');
 }
 
+/// impl_wrapper_t is used to avoid forming owning_lock<incomplete_type> in
+/// the .h file; see #7023.
+struct history_t::impl_wrapper_t {
+    owning_lock<history_impl_t> impl;
+    explicit impl_wrapper_t(wcstring &&name) : impl(history_impl_t(std::move(name))) {}
+};
+
 /// Very simple, just mark that we have no more pending items.
 void history_impl_t::resolve_pending() { this->has_pending_item = false; }
 
 bool history_t::chaos_mode = false;
 bool history_t::never_mmap = false;
 
-history_t::history_t(wcstring name)
-    : impl_(make_unique<owning_lock<history_impl_t>>(history_impl_t(std::move(name)))) {}
+history_t::history_t(wcstring name) : wrap_(make_unique<impl_wrapper_t>(std::move(name))) {}
 
 history_t::~history_t() = default;
 
-acquired_lock<history_impl_t> history_t::impl() { return impl_->acquire(); }
+acquired_lock<history_impl_t> history_t::impl() { return wrap_->impl.acquire(); }
 
-acquired_lock<const history_impl_t> history_t::impl() const { return impl_->acquire(); }
+acquired_lock<const history_impl_t> history_t::impl() const { return wrap_->impl.acquire(); }
 
 bool history_t::is_default() const { return impl()->is_default(); }
 

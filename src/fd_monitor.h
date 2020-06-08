@@ -4,6 +4,8 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+// Needed for musl
+#include <sys/select.h>  // IWYU pragma: keep
 
 #include "common.h"
 #include "maybe.h"

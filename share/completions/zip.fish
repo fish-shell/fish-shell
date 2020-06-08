@@ -26,7 +26,6 @@ complete -c zip -s T -d "Test zipfile integrity"
 complete -c zip -s X -d "Exclude extra file attributes"
 complete -c zip -s y -d "Store symbolic links as links"
 complete -c zip -s R -d "PKZIP recursion"
-complete -c zip -s e -d "Encrypt"
-complete -c zip -s n -r -d "Don\'t compress files with these suffixes"
+complete -c zip -s e -d Encrypt
+complete -c zip -s n -r -d "Don't compress files with these suffixes"
 complete -c zip -s h -d "Display help and exit"
-

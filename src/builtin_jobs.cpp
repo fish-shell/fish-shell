@@ -32,21 +32,32 @@ static int cpu_use(const job_t *j) {
 
     for (const process_ptr_t &p : j->processes) {
         struct timeval t;
-        int jiffies;
+        unsigned long jiffies;
         gettimeofday(&t, nullptr);
         jiffies = proc_get_jiffies(p.get());
 
         double t1 = 1000000.0 * p->last_time.tv_sec + p->last_time.tv_usec;
         double t2 = 1000000.0 * t.tv_sec + t.tv_usec;
 
+        // Check for a race condition that can cause negative CPU usage to be reported (#7066)
+        unsigned long cached_last_jiffies = p->last_jiffies;
+        if (t2 < t1 || jiffies < cached_last_jiffies) {
+            continue;
+        }
+
         // std::fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n", t1, t2, jiffies, p->last_jiffies );
-        u += (static_cast<double>(jiffies - p->last_jiffies)) / (t2 - t1);
+        u += (static_cast<double>(jiffies - cached_last_jiffies)) / (t2 - t1);
     }
     return u * 1000000;
 }
 
 /// Print information about the specified job.
 static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_t &streams) {
+    int pgid = INVALID_PID;
+    if (auto job_pgid = j->get_pgid()) {
+        pgid = *job_pgid;
+    }
+
     switch (mode) {
         case JOBS_PRINT_NOTHING: {
             break;
@@ -61,7 +72,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
                 streams.out.append(_(L"State\tCommand\n"));
             }
 
-            streams.out.append_format(L"%d\t%d\t", j->job_id(), j->pgid);
+            streams.out.append_format(L"%d\t%d\t", j->job_id(), pgid);
 
             if (have_proc_stat()) {
                 streams.out.append_format(L"%d%%\t", cpu_use(j));
@@ -78,7 +89,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
                 // Print table header before first job.
                 streams.out.append(_(L"Group\n"));
             }
-            streams.out.append_format(L"%d\n", j->pgid);
+            streams.out.append_format(L"%d\n", pgid);
             break;
         }
         case JOBS_PRINT_PID: {
@@ -105,7 +116,6 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
         }
         default: {
             DIE("unexpected mode");
-            break;
         }
     }
 }
@@ -165,7 +175,6 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -209,7 +218,9 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     builtin_jobs_print(j, mode, false, streams);
                     found = true;
                 } else {
-                    streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
+                    if (mode != JOBS_PRINT_NOTHING) {
+                        streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
+                    }
                     return STATUS_CMD_ERROR;
                 }
             }

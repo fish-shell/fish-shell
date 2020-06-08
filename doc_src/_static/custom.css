@@ -1,0 +1,10 @@
+.sphinxsidebar ul.current > li.current { font-weight: bold }
+
+kbd {
+  background-color: #f9f9f9;
+  border: 1px solid #aaa;
+  border-radius: .2em;
+  box-shadow: 0.1em 0.1em 0.2em rgba(0,0,0,0.1);
+  color: #000;
+  padding: 0.1em 0.3em;
+}

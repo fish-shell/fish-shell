@@ -101,9 +101,9 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
     auto get_unit = [](int64_t micros) {
         if (micros > 900 * 1E6) {
             return tunit::minutes;
-        } else if (micros > 1 * 1E6) {
+        } else if (micros >= 999995) {  // Move to seconds if we would overflow the %6.2 format.
             return tunit::seconds;
-        } else if (micros > 1E3) {
+        } else if (micros >= 1000) {
             return tunit::milliseconds;
         } else {
             return tunit::microseconds;
@@ -156,7 +156,7 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
     };
 
     auto wall_unit = get_unit(net_wall_micros);
-    auto cpu_unit = get_unit((net_sys_micros + net_usr_micros) / 2);
+    auto cpu_unit = get_unit(std::max(net_sys_micros, net_usr_micros));
     auto wall_time = convert(net_wall_micros, wall_unit);
     auto usr_time = convert(net_usr_micros, cpu_unit);
     auto sys_time = convert(net_sys_micros, cpu_unit);
@@ -172,25 +172,27 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
                       wall_time, unit_name(wall_unit), usr_time, unit_name(cpu_unit), sys_time,
                       unit_name(cpu_unit));
     } else {
-        auto fish_unit = get_unit((fish_sys_micros + fish_usr_micros) / 2);
-        auto child_unit = get_unit((child_sys_micros + child_usr_micros) / 2);
+        auto fish_unit = get_unit(std::max(fish_sys_micros, fish_usr_micros));
+        auto child_unit = get_unit(std::max(child_sys_micros, child_usr_micros));
         auto fish_usr_time = convert(fish_usr_micros, fish_unit);
         auto fish_sys_time = convert(fish_sys_micros, fish_unit);
         auto child_usr_time = convert(child_usr_micros, child_unit);
         auto child_sys_time = convert(child_sys_micros, child_unit);
 
+        auto column2_unit_len =
+            std::max(strlen(unit_short_name(wall_unit)), strlen(unit_short_name(cpu_unit)));
         append_format(output,
                       L"\n________________________________________________________"
-                      L"\nExecuted in  %6.2F %s   %*s           %*s "
-                      L"\n   usr time  %6.2F %s  %6.2F %s  %6.2F %s "
-                      L"\n   sys time  %6.2F %s  %6.2F %s  %6.2F %s "
+                      L"\nExecuted in  %6.2F %-*s    %-*s  %s"
+                      L"\n   usr time  %6.2F %-*s  %6.2F %s  %6.2F %s"
+                      L"\n   sys time  %6.2F %-*s  %6.2F %s  %6.2F %s"
                       L"\n",
-                      wall_time, unit_short_name(wall_unit), strlen(unit_short_name(wall_unit)) - 1,
-                      "fish", strlen(unit_short_name(fish_unit)) - 1, "external", usr_time,
-                      unit_short_name(cpu_unit), fish_usr_time, unit_short_name(fish_unit),
-                      child_usr_time, unit_short_name(child_unit), sys_time,
-                      unit_short_name(cpu_unit), fish_sys_time, unit_short_name(fish_unit),
-                      child_sys_time, unit_short_name(child_unit));
+                      wall_time, column2_unit_len, unit_short_name(wall_unit),
+                      strlen(unit_short_name(fish_unit)) + 7, "fish", "external",            //
+                      usr_time, column2_unit_len, unit_short_name(cpu_unit), fish_usr_time,  //
+                      unit_short_name(fish_unit), child_usr_time, unit_short_name(child_unit),
+                      sys_time, column2_unit_len, unit_short_name(cpu_unit), fish_sys_time,
+                      unit_short_name(fish_unit), child_sys_time, unit_short_name(child_unit));
     }
 
     return output;
@@ -199,13 +201,13 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
 static std::vector<timer_snapshot_t> active_timers;
 
 static void pop_timer() {
-    auto t1 = std::move(active_timers.back());
+    auto t1 = active_timers.back();
     active_timers.pop_back();
     auto t2 = timer_snapshot_t::take();
 
     // Well, this is awkward. By defining `time` as a decorator and not a built-in, there's
     // no associated stream for its output!
-    auto output = timer_snapshot_t::print_delta(std::move(t1), std::move(t2), true);
+    auto output = timer_snapshot_t::print_delta(t1, t2, true);
     std::fwprintf(stderr, L"%S\n", output.c_str());
 }
 

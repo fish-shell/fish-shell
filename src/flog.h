@@ -52,6 +52,8 @@ class category_list_t {
     category_t debug{L"debug", L"Debugging aid (on by default)", true};
 
     category_t warning{L"warning", L"Warnings (on by default)", true};
+    category_t warning_path{
+        L"warning-path", L"Warnings about unusable paths for config/history (on by default)", true};
 
     category_t config{L"config", L"Finding and reading configuration"};
 
@@ -61,6 +63,7 @@ class category_list_t {
 
     category_t exec_fork{L"exec-fork", L"Calls to fork()"};
 
+    category_t output_invalid{L"output-invalid", L"Trying to print invalid output"};
     category_t parse_productions{L"parse-productions", L"Resolving tokens"};
     category_t parse_productions_chatty{L"parse-productions-chatty",
                                         L"Resolving tokens (chatty messages)"};
@@ -101,6 +104,8 @@ class category_list_t {
     category_t reader{L"reader", L"The interactive reader/input system"};
     category_t complete{L"complete", L"The completion system"};
     category_t path{L"path", L"Searching/using paths"};
+
+    category_t screen{L"screen", L"Screen repaints"};
 };
 
 /// The class responsible for logging.

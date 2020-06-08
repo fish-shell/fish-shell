@@ -43,7 +43,6 @@ static const wchar_t *ctrl_symbolic_names[] = {
     L"\\b",  L"\\t",  L"\\n",  L"\\v",  L"\\f",  L"\\r",  nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, L"\\e",  nullptr, nullptr, nullptr, nullptr};
-static bool keep_running = true;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
 static bool should_exit(wchar_t wc) {
@@ -204,8 +203,8 @@ static void process_input(bool continuous_mode) {
     input_event_queue_t queue;
     std::vector<wchar_t> bind_chars;
 
-    std::fwprintf(stderr, L"Press a key\n\n");
-    while (keep_running) {
+    std::fwprintf(stderr, L"Press a key:\n");
+    for (;;) {
         char_event_t evt{0};
         if (reader_test_and_clear_interrupted()) {
             evt = char_event_t{shell_modes.c_cc[VINTR]};
@@ -242,56 +241,19 @@ static void process_input(bool continuous_mode) {
     }
 }
 
-/// Make sure we cleanup before exiting if we receive a signal that should cause us to exit.
-/// Otherwise just report receipt of the signal.
-static struct sigaction old_sigactions[32];
-static void signal_handler(int signo, siginfo_t *siginfo, void *siginfo_arg) {
-    std::fwprintf(stdout, _(L"signal #%d (%ls) received\n"), signo, sig2wcs(signo));
-    if (signo == SIGHUP || signo == SIGTERM || signo == SIGABRT || signo == SIGSEGV) {
-        keep_running = false;
-    }
-
-    if (old_sigactions[signo].sa_handler != SIG_IGN &&
-        old_sigactions[signo].sa_handler != SIG_DFL) {
-        int needs_siginfo = old_sigactions[signo].sa_flags & SA_SIGINFO;
-        if (needs_siginfo) {
-            old_sigactions[signo].sa_sigaction(signo, siginfo, siginfo_arg);
-        } else {
-            old_sigactions[signo].sa_handler(signo);
-        }
-    }
-}
-
-/// Install a handler for every signal.  This allows us to restore the tty modes so the terminal is
-/// still usable when we die.  If the signal already has a handler arrange to invoke it from within
-/// our handler.
-static void install_our_signal_handlers() {
-    struct sigaction new_sa, old_sa;
-    sigemptyset(&new_sa.sa_mask);
-    new_sa.sa_flags = SA_SIGINFO;
-    new_sa.sa_sigaction = signal_handler;
-
-    for (int signo = 1; signo < 32; signo++) {
-        if (sigaction(signo, &new_sa, &old_sa) != -1) {
-            std::memcpy(&old_sigactions[signo], &old_sa, sizeof(old_sa));
-        }
-    }
-}
-
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
-static void setup_and_process_keys(bool continuous_mode) {
-    set_interactive_session(
-        session_interactivity_t::implied);  // by definition this program is interactive
+[[noreturn]] static void setup_and_process_keys(bool continuous_mode) {
+    set_interactive_session(session_interactivity_t::implied);
     set_main_thread();
     setup_fork_guards();
     env_init();
     reader_init();
     parser_t &parser = parser_t::principal_parser();
     scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
+    signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
     tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);
-    install_our_signal_handlers();
 
     if (continuous_mode) {
         std::fwprintf(stderr, L"\n");
@@ -304,43 +266,12 @@ static void setup_and_process_keys(bool continuous_mode) {
 
     process_input(continuous_mode);
     restore_term_mode();
-    restore_term_foreground_process_group();
-}
-
-static bool parse_debug_level_flag() {
-    errno = 0;
-    char *end;
-    long tmp = strtol(optarg, &end, 10);
-
-    if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
-        debug_level = static_cast<int>(tmp);
-    } else {
-        std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag\n"), optarg);
-        return false;
-    }
-
-    return true;
-}
-
-static bool parse_debug_frames_flag() {
-    errno = 0;
-    char *end;
-    long tmp = strtol(optarg, &end, 10);
-    if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-        set_debug_stack_frames(static_cast<int>(tmp));
-    } else {
-        std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag\n"), optarg);
-        return false;
-    }
-
-    return true;
+    _exit(0);
 }
 
 static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
-    const char *short_opts = "+cd:D:hv";
+    const char *short_opts = "+chv";
     const struct option long_opts[] = {{"continuous", no_argument, nullptr, 'c'},
-                                       {"debug-level", required_argument, nullptr, 'd'},
-                                       {"debug-stack-frames", required_argument, nullptr, 'D'},
                                        {"help", no_argument, nullptr, 'h'},
                                        {"version", no_argument, nullptr, 'v'},
                                        {nullptr, 0, nullptr, 0}};
@@ -353,21 +284,12 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
                 break;
             }
             case 'h': {
-                print_help("fish_key_reader", 0);
-                error = true;
-                break;
-            }
-            case 'd': {
-                error = !parse_debug_level_flag();
-                break;
-            }
-            case 'D': {
-                error = !parse_debug_frames_flag();
-                break;
+                print_help("fish_key_reader", 1);
+                exit(0);
             }
             case 'v': {
-                std::fwprintf(stdout, L"%s\n", get_fish_version());
-                return false;
+                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_fish_version());
+                exit(0);
             }
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
@@ -400,5 +322,6 @@ int main(int argc, char **argv) {
     }
 
     setup_and_process_keys(continuous_mode);
-    return 0;
+    exit_without_destructors(0);
+    return EXIT_FAILURE;  // above should exit
 }

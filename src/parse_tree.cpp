@@ -275,7 +275,8 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
         case token_type_t::comment:
             return parse_special_type_comment;
     }
-    FLOGF(error, L"Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
+    FLOGF(error, L"Bad token type %d passed to %s", static_cast<int>(tokenizer_token_type),
+          __FUNCTION__);
     DIE("bad token type");
     return token_type_invalid;
 }
@@ -406,7 +407,8 @@ class parse_ll_t {
     void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *fmt, ...);
     void parse_error_at_location(size_t source_start, size_t source_length, size_t error_location,
                                  parse_error_code_t code, const wchar_t *fmt, ...);
-    void parse_error_failed_production(struct parse_stack_element_t &elem, parse_token_t token);
+    void parse_error_failed_production(const struct parse_stack_element_t &elem,
+                                       parse_token_t token);
     void parse_error_unbalancing_token(parse_token_t token);
 
     // Reports an error for an unclosed block, e.g. 'begin;'. Returns true on success, false on
@@ -452,7 +454,7 @@ class parse_ll_t {
         // it's lowest on the stack)
         const size_t child_start_big = nodes.size();
         assert(child_start_big < NODE_OFFSET_INVALID);
-        node_offset_t child_start = static_cast<node_offset_t>(child_start_big);
+        auto child_start = static_cast<node_offset_t>(child_start_big);
 
         // To avoid constructing multiple nodes, we make a single one that we modify.
         parse_node_t representative_child(token_type_invalid);
@@ -486,7 +488,7 @@ class parse_ll_t {
         while (idx--) {
             production_element_t elem = production[idx];
             PARSE_ASSERT(production_element_is_valid(elem));
-            symbol_stack.push_back(parse_stack_element_t(elem, child_start + idx));
+            symbol_stack.emplace_back(elem, child_start + idx);
         }
     }
 
@@ -701,7 +703,7 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token) {
 }
 
 /// This is a 'generic' parse error when we can't match the top of the stack element.
-void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &stack_elem,
+void parse_ll_t::parse_error_failed_production(const struct parse_stack_element_t &stack_elem,
                                                parse_token_t token) {
     fatal_errored = true;
     if (this->should_generate_error_messages) {
@@ -727,11 +729,11 @@ void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_tok
 
 void parse_ll_t::reset_symbols(enum parse_token_type_t goal) {
     // Add a new goal node, and then reset our symbol list to point at it.
-    node_offset_t where = static_cast<node_offset_t>(nodes.size());
+    auto where = static_cast<node_offset_t>(nodes.size());
     nodes.push_back(parse_node_t(goal));
 
     symbol_stack.clear();
-    symbol_stack.push_back(parse_stack_element_t(goal, where));  // goal token
+    symbol_stack.emplace_back(goal, where);  // goal token
     this->fatal_errored = false;
 }
 
@@ -806,7 +808,7 @@ bool parse_ll_t::report_error_for_unclosed_block() {
 bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
     PARSE_ASSERT(!symbol_stack.empty());  //!OCLINT(multiple unary operator)
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
-    parse_stack_element_t &stack_top = symbol_stack.back();
+    const auto &stack_top = symbol_stack.back();
 
     if (!type_is_terminal_type(stack_top.type)) {
         return false;  // was not handled
@@ -1071,26 +1073,6 @@ static constexpr parse_token_t kTerminalToken = {parse_token_type_terminate};
 
 static inline bool is_help_argument(const wcstring &txt) {
     return txt == L"-h" || txt == L"--help";
-}
-
-// Return the location of the equals sign, or npos if the string does
-// not look like a variable assignment like FOO=bar.  The detection
-// works similar as in some POSIX shells: only letters and numbers qre
-// allowed on the left hand side, no quotes or escaping.
-maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt) {
-    enum { init, has_some_variable_identifier } state = init;
-    // TODO bracket indexing
-    for (size_t i = 0; i < txt.size(); i++) {
-        wchar_t c = txt[i];
-        if (state == init) {
-            if (!valid_var_name_char(c)) return {};
-            state = has_some_variable_identifier;
-        } else {
-            if (c == '=') return {i};
-            if (!valid_var_name_char(c)) return {};
-        }
-    }
-    return {};
 }
 
 /// Return a new parse token, advancing the tokenizer.

@@ -42,7 +42,7 @@ prefix="fish-$VERSION"
 path=${FISH_ARTEFACT_PATH:-~/fish_built}/$prefix.tar
 
 # Clean up stuff we've written before
-rm -f "$path" "$path".gz
+rm -f "$path" "$path".xz
 
 # git starts the archive
 git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
@@ -63,9 +63,9 @@ $TAR_APPEND version
 cd -
 rm -r "$PREFIX_TMPDIR"
 
-# gzip it
-gzip "$path"
+# xz it
+xz "$path"
 
 # Output what we did, and the sha1 hash
-echo "Tarball written to $path".gz
-openssl dgst -sha256 "$path".gz
+echo "Tarball written to $path".xz
+openssl dgst -sha256 "$path".xz

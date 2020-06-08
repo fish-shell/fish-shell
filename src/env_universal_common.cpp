@@ -48,8 +48,8 @@
 #include "wcstringutil.h"
 #include "wutil.h"
 
-#if __APPLE__
-#define FISH_NOTIFYD_AVAILABLE 1
+#ifdef __APPLE__
+#define FISH_NOTIFYD_AVAILABLE
 #include <notify.h>
 #endif
 
@@ -253,13 +253,13 @@ env_universal_t::env_universal_t(wcstring path)
     : narrow_vars_path(wcs2string(path)), explicit_vars_path(std::move(path)) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
-    var_table_t::const_iterator where = vars.find(name);
+    auto where = vars.find(name);
     if (where != vars.end()) return where->second;
     return none();
 }
 
 maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &name) const {
-    var_table_t::const_iterator where = vars.find(name);
+    auto where = vars.find(name);
     if (where != vars.end()) {
         return where->second.get_flags();
     }
@@ -346,11 +346,12 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
 
         bool old_exports = (existing != this->vars.end() && existing->second.exports());
         bool export_changed = (old_exports != new_entry.exports());
-        if (export_changed) {
+        bool value_changed = existing != this->vars.end() && existing->second != new_entry;
+        if (export_changed || value_changed) {
             export_generation += 1;
         }
-        if (existing == this->vars.end() || export_changed || existing->second != new_entry) {
-            // Value has changed.
+        if (existing == this->vars.end() || export_changed || value_changed) {
+            // Value is set for the first time, or has changed.
             callbacks.push_back(callback_data_t(key, new_entry.as_string()));
         }
     }
@@ -359,7 +360,7 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
 void env_universal_t::acquire_variables(var_table_t &vars_to_acquire) {
     // Copy modified values from existing vars to vars_to_acquire.
     for (const auto &key : this->modified) {
-        var_table_t::iterator src_iter = this->vars.find(key);
+        auto src_iter = this->vars.find(key);
         if (src_iter == this->vars.end()) {
             /* The value has been deleted. */
             vars_to_acquire.erase(key);
@@ -955,7 +956,7 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
     const int dummy = socket(AF_INET, SOCK_STREAM, 0);
     if (dummy >= 0) {
         struct ifreq r;
-        strncpy((char *)r.ifr_name, interface, sizeof r.ifr_name - 1);
+        strncpy(const_cast<char *>(r.ifr_name), interface, sizeof r.ifr_name - 1);
         r.ifr_name[sizeof r.ifr_name - 1] = 0;
         if (ioctl(dummy, SIOCGIFHWADDR, &r) >= 0) {
             std::memcpy(macaddr, r.ifr_hwaddr.sa_data, MAC_ADDRESS_MAX_LEN);
@@ -1177,7 +1178,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     }
 #else  // this class isn't valid on this system
    public:
-    universal_notifier_shmem_poller_t() {
+    [[noreturn]] universal_notifier_shmem_poller_t() {
         DIE("universal_notifier_shmem_poller_t cannot be used on this system");
     }
 #endif
@@ -1185,7 +1186,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
 
 /// A notifyd-based notifier. Very straightforward.
 class universal_notifier_notifyd_t : public universal_notifier_t {
-#if FISH_NOTIFYD_AVAILABLE
+#ifdef FISH_NOTIFYD_AVAILABLE
     int notify_fd;
     int token;
     std::string name;
@@ -1256,7 +1257,7 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
     }
 #else  // this class isn't valid on this system
    public:
-    universal_notifier_notifyd_t() {
+    [[noreturn]] universal_notifier_notifyd_t() {
         DIE("universal_notifier_notifyd_t cannot be used on this system");
     }
 #endif
@@ -1287,7 +1288,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 
     void make_pipe(const wchar_t *test_path);
 
-    void drain_excessive_data() {
+    void drain_excessive_data() const {
         // The pipe seems to have data on it, that won't go away. Read a big chunk out of it. We
         // don't read until it's exhausted, because if someone were to pipe say /dev/null, that
         // would cause us to hang!
@@ -1298,7 +1299,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
     }
 
    public:
-    universal_notifier_named_pipe_t(const wchar_t *test_path)
+    explicit universal_notifier_named_pipe_t(const wchar_t *test_path)
         : pipe_fd(-1),
           readback_time_usec(0),
           readback_amount(0),
@@ -1434,7 +1435,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 };
 
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
-#if FISH_NOTIFYD_AVAILABLE
+#ifdef FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;

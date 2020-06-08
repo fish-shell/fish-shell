@@ -96,7 +96,7 @@ enum : wchar_t {
     VARIABLE_EXPAND_EMPTY,
     /// This is a special pseudo-char that is not used other than to mark the end of the the special
     /// characters so we can sanity check the enum range.
-    EXPAND_SENTINAL
+    EXPAND_SENTINEL
 };
 
 /// These are the possible return values for expand_string.
@@ -189,7 +189,7 @@ wcstring expand_escape_variable(const env_var_t &var);
 
 /// Convert a string value to a human readable form, i.e. escape things, handle arrays, etc.
 /// Suitable for pretty-printing.
-wcstring expand_escape_string(const wcstring &str);
+wcstring expand_escape_string(const wcstring &el);
 
 /// Perform tilde expansion and nothing else on the specified string, which is modified in place.
 ///

@@ -84,7 +84,7 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
             // skip non-printable characters
             continue;
         }
-        size_t width_c = size_t(iwidth_c);
+        auto width_c = size_t(iwidth_c);
 
         if (width_c > remaining) break;
 
@@ -139,7 +139,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
 
     auto modify_role = [=](highlight_role_t role) -> highlight_role_t {
         using uint_t = typename std::underlying_type<highlight_role_t>::type;
-        uint_t base = static_cast<uint_t>(role);
+        auto base = static_cast<uint_t>(role);
         if (selected) {
             base += static_cast<uint_t>(highlight_role_t::pager_selected_background) -
                     static_cast<uint_t>(highlight_role_t::pager_background);
@@ -393,9 +393,9 @@ void pager_t::set_completions(const completion_list_t &raw_completions) {
 
 void pager_t::set_prefix(const wcstring &pref) { prefix = pref; }
 
-void pager_t::set_term_size(size_t w, size_t h) {
-    available_term_width = w;
-    available_term_height = h;
+void pager_t::set_term_size(termsize_t ts) {
+    available_term_width = ts.width > 0 ? ts.width : 0;
+    available_term_height = ts.height > 0 ? ts.height : 0;
 }
 
 /// Try to print the list of completions lst with the prefix prefix using cols as the number of
@@ -732,7 +732,6 @@ bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
             }
             default: {
                 DIE("unknown cardinal direction");
-                break;
             }
         }
 

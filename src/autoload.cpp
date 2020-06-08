@@ -141,7 +141,7 @@ maybe_t<autoloadable_file_t> autoload_file_cache_t::check(const wcstring &cmd, b
 autoload_t::autoload_t(wcstring env_var_name)
     : env_var_name_(std::move(env_var_name)), cache_(make_unique<autoload_file_cache_t>()) {}
 
-autoload_t::autoload_t(autoload_t &&) = default;
+autoload_t::autoload_t(autoload_t &&) noexcept = default;
 autoload_t::~autoload_t() = default;
 
 void autoload_t::invalidate_cache() {

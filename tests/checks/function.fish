@@ -13,54 +13,43 @@ end
 
 frob
 #CHECK: $foo: set in local scope, unexported, with 1 elements
-#CHECK: $foo[1]: length=9 value=|local foo|
+#CHECK: $foo[1]: |local foo|
 #CHECK: $foo: set in global scope, unexported, with 1 elements
-#CHECK: $foo[1]: length=10 value=|global foo|
-#CHECK: $foo: not set in universal scope
-#CHECK: 
+#CHECK: $foo[1]: |global foo|
 #CHECK: $bar: set in local scope, unexported, with 5 elements
-#CHECK: $bar[1]: length=3 value=|one|
-#CHECK: $bar[2]: length=8 value=|two    2|
-#CHECK: $bar[3]: length=1 value=|\t|
-#CHECK: $bar[4]: length=0 value=||
-#CHECK: $bar[5]: length=1 value=|3|
+#CHECK: $bar[1]: |one|
+#CHECK: $bar[2]: |two    2|
+#CHECK: $bar[3]: |\t|
+#CHECK: $bar[4]: ||
+#CHECK: $bar[5]: |3|
 #CHECK: $bar: set in global scope, unexported, with 5 elements
-#CHECK: $bar[1]: length=3 value=|one|
-#CHECK: $bar[2]: length=8 value=|two    2|
-#CHECK: $bar[3]: length=1 value=|\t|
-#CHECK: $bar[4]: length=0 value=||
-#CHECK: $bar[5]: length=1 value=|3|
-#CHECK: $bar: not set in universal scope
-#CHECK: 
+#CHECK: $bar[1]: |one|
+#CHECK: $bar[2]: |two    2|
+#CHECK: $bar[3]: |\t|
+#CHECK: $bar[4]: ||
+#CHECK: $bar[5]: |3|
 #CHECK: $baz: set in local scope, unexported, with 0 elements
 #CHECK: $baz: set in global scope, unexported, with 0 elements
-#CHECK: $baz: not set in universal scope
 
 set foo 'bad foo'
 set bar 'bad bar'
 set baz 'bad baz'
 frob
 #CHECK: $foo: set in local scope, unexported, with 1 elements
-#CHECK: $foo[1]: length=9 value=|local foo|
+#CHECK: $foo[1]: |local foo|
 #CHECK: $foo: set in global scope, unexported, with 1 elements
-#CHECK: $foo[1]: length=10 value=|global foo|
-#CHECK: $foo: not set in universal scope
-#CHECK: 
+#CHECK: $foo[1]: |global foo|
 #CHECK: $bar: set in local scope, unexported, with 5 elements
-#CHECK: $bar[1]: length=3 value=|one|
-#CHECK: $bar[2]: length=8 value=|two    2|
-#CHECK: $bar[3]: length=1 value=|\t|
-#CHECK: $bar[4]: length=0 value=||
-#CHECK: $bar[5]: length=1 value=|3|
+#CHECK: $bar[1]: |one|
+#CHECK: $bar[2]: |two    2|
+#CHECK: $bar[3]: |\t|
+#CHECK: $bar[4]: ||
+#CHECK: $bar[5]: |3|
 #CHECK: $bar: set in global scope, unexported, with 1 elements
-#CHECK: $bar[1]: length=7 value=|bad bar|
-#CHECK: $bar: not set in universal scope
-#CHECK: 
+#CHECK: $bar[1]: |bad bar|
 #CHECK: $baz: set in local scope, unexported, with 0 elements
 #CHECK: $baz: set in global scope, unexported, with 1 elements
-#CHECK: $baz[1]: length=7 value=|bad baz|
-#CHECK: $baz: not set in universal scope
-#CHECK: 
+#CHECK: $baz[1]: |bad baz|
 
 # This sequence of tests originally verified that functions `name2` and
 # `name4` were created. See issue #2068. That behavior is not what we want.
@@ -69,18 +58,24 @@ frob
 function name1 -a arg1 arg2
     echo hello
 end
-function -a arg1 arg2 name2 ; end
+function -a arg1 arg2 name2
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Illegal function name '-a'
-#CHECKERR: function -a arg1 arg2 name2 ; end
+#CHECKERR: function -a arg1 arg2 name2
 #CHECKERR: ^
-function name3 --argument-names arg1 arg2 ; echo hello; echo goodbye; end
-function --argument-names arg1 arg2 name4 ; end
+function name3 --argument-names arg1 arg2
+    echo hello
+    echo goodbye
+end
+function --argument-names arg1 arg2 name4
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Illegal function name '--argument-names'
-#CHECKERR: function --argument-names arg1 arg2 name4 ; end
+#CHECKERR: function --argument-names arg1 arg2 name4
 #CHECKERR: ^
-function name5 abc --argument-names def ; end
+function name5 abc --argument-names def
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Unexpected positional argument 'abc'
-#CHECKERR: function name5 abc --argument-names def ; end
+#CHECKERR: function name5 abc --argument-names def
 #CHECKERR: ^
 functions -q name1; and echo "Function name1 found"
 functions -q name2; or echo "Function name2 not found as expected"
@@ -110,12 +105,14 @@ test "$name1[3..-1]" = "$name1a[2..-1]"; and echo "1 = 1a"
 test "$name3[3..-1]" = "$name3a[2..-1]"; and echo "3 = 3a"
 #CHECK: 3 = 3a
 
-function test; echo banana; end
+function test
+    echo banana
+end
 #CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: The name 'test' is reserved,
 #CHECKERR: and can not be used as a function name
-#CHECKERR: function test; echo banana; end
+#CHECKERR: function test
 #CHECKERR: ^
 
-functions -q; or echo "False"
+functions -q; or echo False
 #CHECK: False
 exit 0

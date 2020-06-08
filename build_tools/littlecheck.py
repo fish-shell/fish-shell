@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import argparse
+from collections import deque
+import datetime
 import io
 import re
 import shlex
@@ -32,6 +34,8 @@ class Config(object):
         self.progress = False
         # How many after lines to print
         self.after = 5
+        # How many before lines to print
+        self.before = 5
 
     def colors(self):
         """ Return a dictionary mapping color names to ANSI escapes """
@@ -64,6 +68,34 @@ class Config(object):
 
 def output(*args):
     print("".join(args) + "\n")
+
+
+import unicodedata
+
+
+def esc(m):
+    map = {
+        "\n": "\\n",
+        "\\": "\\\\",
+        "'": "\\'",
+        '"': '\\"',
+        "\a": "\\a",
+        "\b": "\\b",
+        "\f": "\\f",
+        "\r": "\\r",
+        "\t": "\\t",
+        "\v": "\\v",
+    }
+    if m in map:
+        return map[m]
+    if unicodedata.category(m)[0] == "C":
+        return "\\x{:02x}".format(ord(m))
+    else:
+        return m
+
+
+def escape_string(s):
+    return "".join(esc(ch) for ch in s)
 
 
 class CheckerError(Exception):
@@ -117,13 +149,14 @@ class RunCmd(object):
 
 
 class TestFailure(object):
-    def __init__(self, line, check, testrun, after = None):
+    def __init__(self, line, check, testrun, before=None, after=None):
         self.line = line
         self.check = check
         self.testrun = testrun
         self.error_annotation_line = None
         # The output that comes *after* the failure.
         self.after = after
+        self.before = before
 
     def message(self):
         afterlines = self.testrun.config.after
@@ -180,12 +213,17 @@ class TestFailure(object):
                 "  additional output on stderr:{error_annotation_lineno}:",
                 "    {BOLD}{error_annotation}{RESET}",
             ]
-        if self.after:
+        if self.before:
+            fields["before_output"] = "    ".join(self.before)
             fields["additional_output"] = "    ".join(self.after[:afterlines])
             fmtstrs += [
-                "  additional output:",
+                "  Context:",
+                "    {BOLD}{before_output}    {RED}{output_line}{RESET} <= does not match '{LIGHTBLUE}{input_line}{RESET}'",
                 "    {BOLD}{additional_output}{RESET}",
-                ]
+            ]
+        elif self.after:
+            fields["additional_output"] = "    ".join(self.after[:afterlines])
+            fmtstrs += ["  additional output:", "    {BOLD}{additional_output}{RESET}"]
         fmtstrs += ["  when running command:", "    {subbed_command}"]
         return "\n".join(fmtstrs).format(**fields)
 
@@ -229,6 +267,8 @@ class TestRun(object):
         # Reverse our lines and checks so we can pop off the end.
         lineq = lines[::-1]
         checkq = checks[::-1]
+        # We keep the last couple of lines in a deque so we can show context.
+        before = deque(maxlen=self.config.before)
         while lineq and checkq:
             line = lineq[-1]
             check = checkq[-1]
@@ -236,14 +276,26 @@ class TestRun(object):
                 # This line matched this checker, continue on.
                 lineq.pop()
                 checkq.pop()
+                before.append(line)
             elif line.is_empty_space():
                 # Skip all whitespace input lines.
                 lineq.pop()
             else:
                 # Failed to match.
                 lineq.pop()
+                line.text = escape_string(line.text.strip()) + "\n"
                 # Add context, ignoring empty lines.
-                return TestFailure(line, check, self, after = [line.text for line in lineq[::-1] if not line.is_empty_space()])
+                return TestFailure(
+                    line,
+                    check,
+                    self,
+                    before=[escape_string(line.text.strip()) + "\n" for line in before],
+                    after=[
+                        escape_string(line.text.strip()) + "\n"
+                        for line in lineq[::-1]
+                        if not line.is_empty_space()
+                    ],
+                )
         # Drain empties.
         while lineq and lineq[-1].is_empty_space():
             lineq.pop()
@@ -440,16 +492,25 @@ def get_argparse():
     parser.add_argument(
         "-p",
         "--progress",
-        action='store_true',
-        dest='progress',
+        action="store_true",
+        dest="progress",
         help="Show the files to be checked",
         default=False,
     )
     parser.add_argument("file", nargs="+", help="File to check")
     parser.add_argument(
-        "-A", "--after",
+        "-A",
+        "--after",
         type=int,
         help="How many non-empty lines of output after a failure to print (default: 5)",
+        action="store",
+        default=5,
+    )
+    parser.add_argument(
+        "-B",
+        "--before",
+        type=int,
+        help="How many non-empty lines of output before a failure to print (default: 5)",
         action="store",
         default=5,
     )
@@ -462,23 +523,37 @@ def main():
     def_subs = {"%": "%"}
     def_subs.update(parse_subs(args.substitute))
 
-    success = True
+    failure_count = 0
     config = Config()
     config.colorize = sys.stdout.isatty()
     config.progress = args.progress
     fields = config.colors()
     config.after = args.after
+    config.before = args.before
+    if config.before < 0:
+        raise ValueError("Before must be at least 0")
+    if config.after < 0:
+        raise ValueError("After must be at least 0")
+
     for path in args.file:
         fields["path"] = path
         if config.progress:
-            print("Testing file {path} ... ".format(**fields), end='')
+            print("Testing file {path} ... ".format(**fields), end="")
+            sys.stdout.flush()
         subs = def_subs.copy()
         subs["s"] = path
+        starttime = datetime.datetime.now()
         if not check_path(path, subs, config, TestFailure.print_message):
-            success = False
+            failure_count += 1
         elif config.progress:
-            print("{GREEN}ok{RESET}".format(**fields))
-    sys.exit(0 if success else 1)
+            endtime = datetime.datetime.now()
+            duration_ms = round((endtime - starttime).total_seconds() * 1000)
+            print(
+                "{GREEN}ok{RESET} ({duration} ms)".format(
+                    duration=duration_ms, **fields
+                )
+            )
+    sys.exit(failure_count)
 
 
 if __name__ == "__main__":

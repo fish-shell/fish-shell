@@ -74,7 +74,6 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
         }
         default: {
             DIE("unexpected append_mode");
-            break;
         }
     }
     out.append(end);
@@ -275,7 +274,6 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -342,11 +340,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     if (append_mode && !(argc - w.woptind)) {
-        streams.err.append_format(
-            BUILTIN_ERR_COMBO2, cmd,
-            L"insertion mode switches can not be used when not in insertion mode");
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        // No tokens in insert mode just means we do nothing.
+        return STATUS_CMD_ERROR;
     }
 
     // Set default modes.
@@ -414,7 +409,6 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
         default: {
             DIE("unexpected buffer_part");
-            break;
         }
     }
 

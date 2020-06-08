@@ -150,7 +150,7 @@ void builtin_bind_t::function_names(io_streams_t &streams) {
 
 /// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
 bool builtin_bind_t::get_terminfo_sequence(const wcstring &seq, wcstring *out_seq,
-                                           io_streams_t &streams) {
+                                           io_streams_t &streams) const {
     if (input_terminfo_get_sequence(seq, out_seq)) {
         return true;
     }
@@ -404,7 +404,6 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }

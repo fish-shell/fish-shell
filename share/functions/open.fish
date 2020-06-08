@@ -4,7 +4,7 @@
 #
 if not command -sq open
     function open --description "Open file in default application"
-        set -l options 'h/help'
+        set -l options h/help
         argparse -n open $options -- $argv
         or return
 

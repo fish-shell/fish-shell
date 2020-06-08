@@ -38,7 +38,7 @@ end
 function __fish_pa_complete_unloaded_modules
     # We need to get just the module names
     set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
-    pulseaudio --dump-modules | while read name description
+    pulseaudio --dump-modules | while read -l name description
         # This is a potential source of slowness, but on my system it's instantaneous
         # with 73 modules
         if not contains -- $name $loaded
@@ -47,14 +47,14 @@ function __fish_pa_complete_unloaded_modules
     end
 end
 
-complete -f -e -c pactl
+complete -f -c pactl
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a "$ctlcommands"
 
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a stat -d 'Show statistics about memory usage'
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a info -d 'Show info about the daemon'
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a list -d 'Show all loaded things of the specified type'
 complete -f -c pactl -n "__fish_seen_subcommand_from list" -a "modules sinks sources sink-inputs source-outputs clients samples cards"
-complete -f -c pactl -n "__fish_seen_subcommand_from list" -a "short" -d "Show shorter output"
+complete -f -c pactl -n "__fish_seen_subcommand_from list" -a short -d "Show shorter output"
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a exit -d 'Ask the daemon to exit'
 
 complete -c pactl -n "not __fish_seen_subcommand_from $commands" -a upload-sample -d 'Upload a file to the sample cache'
@@ -79,9 +79,9 @@ for t in source sink
     complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
         -a "(__fish_pa_complete_type "$t"s)"
     complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a '0 false off' -d "Resume"
+        -a '0 false off' -d Resume
     complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a '1 true on' -d "Suspend"
+        -a '1 true on' -d Suspend
     complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
         -a "(__fish_pa_complete_type "$t"s)"
     complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
@@ -97,11 +97,11 @@ for t in source sink source-output sink-input
     complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
         -a "(__fish_pa_complete_type "$t"s)"
     complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "1 true on" -d "Muted"
+        -a "1 true on" -d Muted
     complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "0 false off" -d "Unmuted"
+        -a "0 false off" -d Unmuted
     complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-        -a "toggle"
+        -a toggle
 end
 
 complete -f -c pactl -n "__fish_seen_subcommand_from set-card-profile; and not __fish_seen_subcommand_from (__fish_pa_print_type cards)" \

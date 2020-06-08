@@ -1,65 +1,70 @@
 #RUN: %fish -C 'set -g fish %fish' %s
 
 function never_runs
-	while false
-	end
+    while false
+    end
 end
 
 function early_return
-	while true
-		return 2
-	end
+    while true
+        return 2
+    end
 end
 
 function runs_once
-	set -l i 1
-	while test $i -ne 0 && set i (math $i - 1)
-	end
+    set -l i 1
+    while test $i -ne 0 && set i (math $i - 1)
+    end
 end
 
 # this should return 0
-never_runs; echo "Empty Loop in Function: $status"
+never_runs
+echo "Empty Loop in Function: $status"
 #CHECK: Empty Loop in Function: 0
 
 # this should return 0
-runs_once; echo "Runs Once: $status"
+runs_once
+echo "Runs Once: $status"
 #CHECK: Runs Once: 0
 
 # this should return 2
-early_return; echo "Early Return: $status"
+early_return
+echo "Early Return: $status"
 #CHECK: Early Return: 2
 
-function set_status ; return $argv[1]; end
+function set_status
+    return $argv[1]
+end
 
 # The previous status is visible in the loop condition.
 # This includes both the incoming status, and the last command in the
 # loop body.
 set_status 36
 while begin
-    set -l saved $status
-    echo "Condition Status: $status"
-    set_status $saved
-end
-true
+        set -l saved $status
+        echo "Condition Status: $status"
+        set_status $saved
+    end
+    true
 end
 #CHECK: Condition Status: 36
 
 # The condition status IS visible in the loop body.
 set_status 55
 while true
-  echo "Body Status: $status"
-  break
+    echo "Body Status: $status"
+    break
 end
 #CHECK: Body Status: 0
 
 # The status of the last command is visible in the loop condition
 set_status 13
 while begin
-     set -l saved $status
-     echo "Condition 2 Status: $saved"
-     test $saved -ne 5
-  end
-  set_status 5
+        set -l saved $status
+        echo "Condition 2 Status: $saved"
+        test $saved -ne 5
+    end
+    set_status 5
 end
 #CHECK: Condition 2 Status: 13
 #CHECK: Condition 2 Status: 5
@@ -67,29 +72,33 @@ end
 # The status of the last command is visible outside the loop
 set rem 5 7 11
 while [ (count $rem) -gt 0 ]
-  set_status $rem[1]
-  set rem $rem[2..-1]
+    set_status $rem[1]
+    set rem $rem[2..-1]
 end
 echo "Loop Exit Status: $status"
 #CHECK: Loop Exit Status: 11
 
 # Empty loops succeed.
 false
-while false; end
+while false
+end
 echo "Empty Loop Status: $status"
 #CHECK: Empty Loop Status: 0
 
 # Loop control in conditions, should have no output.
 for i in 1 2 3
-    while break; end
+    while break
+    end
     echo $i
 end
 for i in 1 2 3
-    while continue; end
+    while continue
+    end
     echo $i
 end
 
-if false ; or --help ; end
+if false; or --help
+end
 
 # Make sure while loops don't run forever with no-exec (#1543)
 echo "while true; end" | $fish --no-execute
@@ -139,28 +148,16 @@ begin
 end
 set --show loop_var
 #CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=1 value=|c|
-#CHECK: $loop_var: not set in global scope
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
+#CHECK: $loop_var[1]: |c|
 #CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=1 value=|b|
+#CHECK: $loop_var[1]: |b|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
-#CHECK: $loop_var: not set in local scope
+#CHECK: $loop_var[1]: |global_val|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
+#CHECK: $loop_var[1]: |global_val|
 #CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=2 value=|cc|
+#CHECK: $loop_var[1]: |cc|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
-#CHECK: 
-#CHECK: $loop_var: not set in local scope
+#CHECK: $loop_var[1]: |global_val|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: length=10 value=|global_val|
-#CHECK: $loop_var: not set in universal scope
+#CHECK: $loop_var[1]: |global_val|

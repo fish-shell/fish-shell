@@ -9,7 +9,7 @@ function __fish_complete_gsettings_args
     set -e cmd[1]
 
     if set -q cmd[2]
-        and string match -q -- '--schemadir' $cmd[1]
+        and string match -q -- --schemadir $cmd[1]
         # TODO: This needs to support proper expansion of paths (~, variables, etc.)
         set schemadir --schemadir $cmd[2]
         set -e cmd[1..2]
@@ -46,7 +46,7 @@ function __fish_complete_gsettings_args
         return 0
     end
 
-    if test $subcommand != 'set'
+    if test $subcommand != set
         return 1
     end
 
@@ -59,7 +59,7 @@ function __fish_complete_gsettings_args
             case 'type b'
                 echo true
                 echo false
-            case 'enum'
+            case enum
                 string join \n $range
             case '*'
                 # If no sensible suggestions can be made, just use the current value.
@@ -74,23 +74,23 @@ end
 
 set -l valid_commands get monitor writable range describe set reset reset-recursively list-schemas list-relocatable-schemas list-keys list-children list-recursively help
 
-complete -f -e -c gsettings
+complete -f -c gsettings
 
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l 'version' -d 'Print the version information'
-complete -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l 'schemadir' -d 'Specify a custom schemas directory' -xa "(__fish_complete_directories (commandline -ct))"
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l version -d 'Print the version information'
+complete -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -l schemadir -d 'Specify a custom schemas directory' -xa "(__fish_complete_directories (commandline -ct))"
 
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'get' -d 'Get the value of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'writable' -d 'Determine if a key is writable'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'range' -d 'Determine the valid value range of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'describe' -d 'Print the description of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'set' -d 'Set the value of a key'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'reset' -d 'Reset a key to its default value'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'reset-recursively' -d 'Reset all keys under the given schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-schemas' -d 'List all installed, non-relocatable schemas'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-relocatable-schemas' -d 'List all installed, relocatable schemas'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-keys' -d 'List all keys in a schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-children' -d 'List all children of a schema'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'list-recursively' -d 'List keys and values, recursively'
-complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a 'help' -d 'Print help'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a get -d 'Get the value of a key'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a writable -d 'Determine if a key is writable'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a range -d 'Determine the valid value range of a key'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a describe -d 'Print the description of a key'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a set -d 'Set the value of a key'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a reset -d 'Reset a key to its default value'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a reset-recursively -d 'Reset all keys under the given schema'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-schemas -d 'List all installed, non-relocatable schemas'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-relocatable-schemas -d 'List all installed, relocatable schemas'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-keys -d 'List all keys in a schema'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-children -d 'List all children of a schema'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a list-recursively -d 'List keys and values, recursively'
+complete -f -c gsettings -n "not __fish_seen_subcommand_from $valid_commands" -a help -d 'Print help'
 
 complete -f -c gsettings -n "__fish_seen_subcommand_from $valid_commands" -xa "(__fish_complete_gsettings_args)"

@@ -1,6 +1,6 @@
 function help --description 'Show help for the fish shell'
-    set -l options 'h/help'
-    argparse -n help --max-args=1 $options -- $argv
+    set -l options h/help
+    argparse -n help $options -- $argv
     or return
 
     if set -q _flag_help
@@ -9,12 +9,15 @@ function help --description 'Show help for the fish shell'
     end
 
     set -l fish_help_item $argv[1]
-    set -l help_topics syntax completion editor job-control todo bugs history killring help
-    set -a help_topics color prompt title variables builtin-overview changes expand
-    set -a help_topics expand-variable expand-home expand-brace expand-wildcard
-    set -a help_topics expand-command-substitution expand-process
+    if test (count $argv) -gt 1
+        if string match -q string $argv[1]
+            set fish_help_item (string join '-' $argv[1] $argv[2])
+        else
+            echo "help: Expected at most 1 args, got 2"
+            return 1
+        end
+    end
 
-    #
     # Find a suitable browser for viewing the help pages.
     # The first thing we try is $fish_help_browser.
     set -l fish_browser $fish_help_browser
@@ -68,8 +71,7 @@ function help --description 'Show help for the fish shell'
             if type -q cygstart
                 set fish_browser cygstart
                 # If xdg-open is available, just use that
-                # but only if an X session is running
-            else if type -q xdg-open; and set -q -x DISPLAY
+            else if type -q xdg-open
                 set fish_browser xdg-open
             end
 
@@ -77,7 +79,8 @@ function help --description 'Show help for the fish shell'
             #
             # We use this instead of xdg-open because that's useless without a backend
             # like wsl-open which we'll check in a minute.
-            if not type -q cygstart
+            if test -f /proc/version
+                and string match -riq 'Microsoft|WSL' </proc/version
                 and set -l cmd (command -s cmd.exe /mnt/c/Windows/System32/cmd.exe)
                 # Use the first of these.
                 set fish_browser $cmd[1]
@@ -98,7 +101,7 @@ function help --description 'Show help for the fish shell'
     # In Cygwin, start the user-specified browser using cygstart,
     # only if a Windows browser is to be used.
     if type -q cygstart
-        if test $fish_browser != "cygstart"
+        if test $fish_browser != cygstart
             and not command -sq $fish_browser[1]
             # Escaped quotes are necessary to work with spaces in the path
             # when the command is finally eval'd.
@@ -108,6 +111,7 @@ function help --description 'Show help for the fish shell'
         end
     end
 
+    set -l fish_help_page
     switch "$fish_help_item"
         case "."
             set fish_help_page "cmds/source.html"
@@ -115,26 +119,16 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "index.html#expand"
         case (__fish_print_commands)
             set fish_help_page "cmds/$fish_help_item.html"
-        case $help_topics
-            set fish_help_page "index.html#$fish_help_item"
+        case 'completion-*'
+            set fish_help_page "completions.html#$fish_help_item"
         case 'tut_*'
-            set fish_help_page "tutorial.html#$fish_help_item"
+            set fish_help_page "tutorial.html#"(string sub -s 5 -- $fish_help_item | string replace -a -- _ -)
         case tutorial
             set fish_help_page "tutorial.html"
-        case "*"
-            # If $fish_help_item is empty, this will fail,
-            # and $fish_help_page will end up as index.html
-            if type -q -f "$fish_help_item"
-                # Prefer to use fish's man pages, to avoid
-                # the annoying useless "builtin" man page bash
-                # installs on OS X
-                set -l man_arg "$__fish_data_dir/man/man1/$fish_help_item.1"
-                if test -f "$man_arg"
-                    man $man_arg
-                    return
-                end
-            end
+        case ''
             set fish_help_page "index.html"
+        case "*"
+            set fish_help_page "index.html#$fish_help_item"
     end
 
     set -l page_url
@@ -145,7 +139,7 @@ function help --description 'Show help for the fish shell'
         # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
         # but only if a Windows browser is being used
         if type -q cygpath
-            and string match -qr "cygstart" $fish_browser[1]
+            and string match -qr cygstart $fish_browser[1]
             set page_url file://(cygpath -m $__fish_help_dir)/$fish_help_page
         else if type -q wslpath
             and string match -qr '.exe' $fish_browser[1]
@@ -153,7 +147,7 @@ function help --description 'Show help for the fish shell'
         end
     else
         # Go to the web. Only include one dot in the version string
-        set -l version_string (echo $version| cut -d . -f 1,2)
+        set -l version_string (string split . -f 1,2 -- $version | string join .)
         set page_url https://fishshell.com/docs/$version_string/$fish_help_page
         # We don't need a trampoline for a remote URL.
         set need_trampoline
@@ -174,7 +168,7 @@ function help --description 'Show help for the fish shell'
             # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
             # but only if a Windows browser is being used
             if type -q cygpath
-                and string match -qr "cygstart" $fish_browser[1]
+                and string match -qr cygstart $fish_browser[1]
                 set page_url file://(cygpath -m $tmpname)
             else if type -q wslpath
                 and string match -qr '.exe' $fish_browser[1]
@@ -189,7 +183,7 @@ function help --description 'Show help for the fish shell'
         # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
-            case 'htmlview' 'x-www-browser'
+            case htmlview x-www-browser
                 printf (_ 'help: Help is being displayed in your default browser.\n')
             case '*'
                 printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]

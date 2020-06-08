@@ -1,10 +1,7 @@
-# Completions for yaourt
-
 set -l progname yaourt
-complete -e -c $progname
 complete -c $progname -f
 
-set -l listinstalled "(pacman -Q | string replace ' ' \t)"
+set -l listinstalled "(__fish_print_packages --installed)"
 # This might be an issue if another package manager is also installed (e.g. for containers)
 set -l listall "(__fish_print_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
@@ -25,9 +22,9 @@ set -l upgrade '__fish_contains_opt -s U upgrade'
 set -l files '__fish_contains_opt -s F files'
 
 # HACK: We only need these three to coerce fish to stop file completion and complete options
-complete -c $progname -n $noopt -a "-D" -d "Modify the package database"
-complete -c $progname -n $noopt -a "-Q" -d "Query the package database"
-complete -c $progname -n $noopt -a "-C" -d "Manage .pac* files"
+complete -c $progname -n $noopt -a -D -d "Modify the package database"
+complete -c $progname -n $noopt -a -Q -d "Query the package database"
+complete -c $progname -n $noopt -a -C -d "Manage .pac* files"
 # Primary operations
 complete -c $progname -s D -f -l database -n $noopt -d 'Modify the package database'
 complete -c $progname -s Q -f -l query -n $noopt -d 'Query the package database'

@@ -28,12 +28,18 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     end
 
     set -l root (fish_print_hg_root)
-    or return 0
+    or return 1
 
     # Read branch and bookmark
     set -l branch (cat $root/branch 2>/dev/null; or echo default)
     if set -l bookmark (cat $root/bookmarks.current 2>/dev/null)
         set branch "$branch|$bookmark"
+    end
+
+    if not set -q fish_prompt_hg_show_informative_status
+        set_color normal
+        echo -n " ($branch)"
+        return
     end
 
     echo -n '|'
@@ -56,7 +62,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
 
             # Add a character for each file status if we have one
             # HACK: To allow this to work both with and without '?' globs
-            set -l q '?'
+            set -l dq '?'
             switch $line
                 case 'A '
                     set -a hg_statuses added
@@ -68,7 +74,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
                     set -a hg_statuses deleted
                 case "$dq "
                     set -a hg_statuses untracked
-                case 'U*' '*U' 'DD' 'AA'
+                case 'U*' '*U' DD AA
                     set -a hg_statuses unmerged
             end
         end

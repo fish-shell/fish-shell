@@ -1,31 +1,31 @@
-complete -c rustup -e
+complete -c rustup
 
 set -l subcmds \
-    "show" \
-    "update" \
-    "default" \
-    "toolchain" \
-    "target" \
-    "component" \
-    "override" \
-    "run" \
-    "which" \
-    "doc" \
-    "man" \
-    "self" \
-    "set" \
+    show \
+    update \
+    default \
+    toolchain \
+    target \
+    component \
+    override \
+    run \
+    which \
+    doc \
+    man \
+    self \
+    set \
     # "completions" \
-    "help"
+    help
 
 set -l rustup_show \
-    "active-toolchain" \
-    "home" \
-    "profile" \
-    "help"
+    active-toolchain \
+    home \
+    profile \
+    help
 
 # rustup does not really expose a mechanism of retrieving a list of all valid components without the archs appended
 function __rustup_components
-    rustup component list | string match -r "^\S+" | string replace -f -- "-x86_64-unknown-linux-gnu" ""
+    rustup component list | string match -r "^\S+" | string replace -f -- -x86_64-unknown-linux-gnu ""
 end
 
 # function __rustup_installable_components
@@ -37,110 +37,110 @@ end
 function __rustup_triples
     # The list below must be kept sorted alphabetically
     printf "%s\n" \
-        "aarch64-apple-ios" \
-        "aarch64-linux-android" \
-        "aarch64-pc-windows-msvc" \
-        "aarch64-unknown-cloudabi" \
-        "aarch64-unknown-fuchsia" \
-        "aarch64-unknown-linux-gnu" \
-        "aarch64-unknown-linux-musl" \
-        "aarch64-unknown-redox" \
-        "armebv7r-none-eabi" \
-        "armebv7r-none-eabihf" \
-        "arm-linux-androideabi" \
-        "arm-unknown-linux-gnueabi" \
-        "arm-unknown-linux-gnueabihf" \
-        "arm-unknown-linux-musleabi" \
-        "arm-unknown-linux-musleabihf" \
-        "armv5te-unknown-linux-gnueabi" \
-        "armv5te-unknown-linux-musleabi" \
-        "armv7-apple-ios" \
-        "armv7-linux-androideabi" \
-        "armv7r-none-eabi" \
-        "armv7r-none-eabihf" \
-        "armv7s-apple-ios" \
-        "armv7-unknown-cloudabi-eabihf" \
-        "armv7-unknown-linux-gnueabi" \
-        "armv7-unknown-linux-gnueabihf" \
-        "armv7-unknown-linux-musleabi" \
-        "armv7-unknown-linux-musleabihf" \
-        "asmjs-unknown-emscripten" \
-        "i386-apple-ios" \
-        "i586-pc-windows-msvc" \
-        "i586-unknown-linux-gnu" \
-        "i586-unknown-linux-musl" \
-        "i686-apple-darwin" \
-        "i686-linux-android" \
-        "i686-pc-windows-gnu" \
-        "i686-pc-windows-msvc" \
-        "i686-unknown-cloudabi" \
-        "i686-unknown-freebsd" \
-        "i686-unknown-haiku" \
-        "i686-unknown-linux-gnu" \
-        "i686-unknown-linux-musl" \
-        "i686-unknown-netbsd" \
-        "le32-unknown-nacl" \
-        "mips64el-unknown-linux-gnuabi64" \
-        "mips64-unknown-linux-gnuabi64" \
-        "mipsel-unknown-linux-gnu" \
-        "mipsel-unknown-linux-musl" \
-        "mipsel-unknown-linux-uclibc" \
-        "mipsisa32r6el-unknown-linux-gnu" \
-        "mipsisa32r6-unknown-linux-gnu" \
-        "mipsisa64r6el-unknown-linux-gnuabi64" \
-        "mipsisa64r6-unknown-linux-gnuabi64" \
-        "mips-unknown-linux-gnu" \
-        "mips-unknown-linux-musl" \
-        "mips-unknown-linux-uclibc" \
-        "msp430-none-elf" \
-        "nvptx64-nvidia-cuda" \
-        "powerpc64le-unknown-linux-gnu" \
-        "powerpc64-unknown-linux-gnu" \
-        "powerpc-unknown-linux-gnu" \
-        "powerpc-unknown-linux-gnuspe" \
-        "riscv32imac-unknown-none-elf" \
-        "riscv32imc-unknown-none-elf" \
-        "riscv32i-unknown-none-elf" \
-        "riscv64gc-unknown-none-elf" \
-        "riscv64imac-unknown-none-elf" \
-        "s390x-unknown-linux-gnu" \
-        "sparc64-unknown-linux-gnu" \
-        "sparc64-unknown-netbsd" \
-        "sparc-unknown-linux-gnu" \
-        "sparcv9-sun-solaris" \
-        "thumbv6m-none-eabi" \
-        "thumbv7em-none-eabi" \
-        "thumbv7em-none-eabihf" \
-        "thumbv7m-none-eabi" \
-        "thumbv7neon-linux-androideabi" \
-        "thumbv7neon-unknown-linux-gnueabihf" \
+        aarch64-apple-ios \
+        aarch64-linux-android \
+        aarch64-pc-windows-msvc \
+        aarch64-unknown-cloudabi \
+        aarch64-unknown-fuchsia \
+        aarch64-unknown-linux-gnu \
+        aarch64-unknown-linux-musl \
+        aarch64-unknown-redox \
+        armebv7r-none-eabi \
+        armebv7r-none-eabihf \
+        arm-linux-androideabi \
+        arm-unknown-linux-gnueabi \
+        arm-unknown-linux-gnueabihf \
+        arm-unknown-linux-musleabi \
+        arm-unknown-linux-musleabihf \
+        armv5te-unknown-linux-gnueabi \
+        armv5te-unknown-linux-musleabi \
+        armv7-apple-ios \
+        armv7-linux-androideabi \
+        armv7r-none-eabi \
+        armv7r-none-eabihf \
+        armv7s-apple-ios \
+        armv7-unknown-cloudabi-eabihf \
+        armv7-unknown-linux-gnueabi \
+        armv7-unknown-linux-gnueabihf \
+        armv7-unknown-linux-musleabi \
+        armv7-unknown-linux-musleabihf \
+        asmjs-unknown-emscripten \
+        i386-apple-ios \
+        i586-pc-windows-msvc \
+        i586-unknown-linux-gnu \
+        i586-unknown-linux-musl \
+        i686-apple-darwin \
+        i686-linux-android \
+        i686-pc-windows-gnu \
+        i686-pc-windows-msvc \
+        i686-unknown-cloudabi \
+        i686-unknown-freebsd \
+        i686-unknown-haiku \
+        i686-unknown-linux-gnu \
+        i686-unknown-linux-musl \
+        i686-unknown-netbsd \
+        le32-unknown-nacl \
+        mips64el-unknown-linux-gnuabi64 \
+        mips64-unknown-linux-gnuabi64 \
+        mipsel-unknown-linux-gnu \
+        mipsel-unknown-linux-musl \
+        mipsel-unknown-linux-uclibc \
+        mipsisa32r6el-unknown-linux-gnu \
+        mipsisa32r6-unknown-linux-gnu \
+        mipsisa64r6el-unknown-linux-gnuabi64 \
+        mipsisa64r6-unknown-linux-gnuabi64 \
+        mips-unknown-linux-gnu \
+        mips-unknown-linux-musl \
+        mips-unknown-linux-uclibc \
+        msp430-none-elf \
+        nvptx64-nvidia-cuda \
+        powerpc64le-unknown-linux-gnu \
+        powerpc64-unknown-linux-gnu \
+        powerpc-unknown-linux-gnu \
+        powerpc-unknown-linux-gnuspe \
+        riscv32imac-unknown-none-elf \
+        riscv32imc-unknown-none-elf \
+        riscv32i-unknown-none-elf \
+        riscv64gc-unknown-none-elf \
+        riscv64imac-unknown-none-elf \
+        s390x-unknown-linux-gnu \
+        sparc64-unknown-linux-gnu \
+        sparc64-unknown-netbsd \
+        sparc-unknown-linux-gnu \
+        sparcv9-sun-solaris \
+        thumbv6m-none-eabi \
+        thumbv7em-none-eabi \
+        thumbv7em-none-eabihf \
+        thumbv7m-none-eabi \
+        thumbv7neon-linux-androideabi \
+        thumbv7neon-unknown-linux-gnueabihf \
         "thumbv8m.base-none-eabi" \
         "thumbv8m.main-none-eabi" \
         "thumbv8m.main-none-eabihf" \
-        "wasm32-unknown-emscripten" \
-        "wasm32-unknown-unknown" \
-        "x86_64-apple-darwin" \
-        "x86_64-apple-ios" \
-        "x86_64-fortanix-unknown-sgx" \
-        "x86_64-linux-android" \
-        "x86_64-pc-solaris" \
-        "x86_64-pc-windows-gnu" \
-        "x86_64-pc-windows-msvc" \
-        "x86_64-rumprun-netbsd" \
-        "x86_64-sun-solaris" \
-        "x86_64-unknown-bitrig" \
-        "x86_64-unknown-cloudabi" \
-        "x86_64-unknown-dragonfly" \
-        "x86_64-unknown-freebsd" \
-        "x86_64-unknown-fuchsia" \
-        "x86_64-unknown-haiku" \
-        "x86_64-unknown-linux-gnu" \
-        "x86_64-unknown-linux-gnu" \
-        "x86_64-unknown-linux-gnux32" \
-        "x86_64-unknown-linux-musl" \
-        "x86_64-unknown-netbsd" \
-        "x86_64-unknown-openbsd" \
-        "x86_64-unknown-redox"
+        wasm32-unknown-emscripten \
+        wasm32-unknown-unknown \
+        x86_64-apple-darwin \
+        x86_64-apple-ios \
+        x86_64-fortanix-unknown-sgx \
+        x86_64-linux-android \
+        x86_64-pc-solaris \
+        x86_64-pc-windows-gnu \
+        x86_64-pc-windows-msvc \
+        x86_64-rumprun-netbsd \
+        x86_64-sun-solaris \
+        x86_64-unknown-bitrig \
+        x86_64-unknown-cloudabi \
+        x86_64-unknown-dragonfly \
+        x86_64-unknown-freebsd \
+        x86_64-unknown-fuchsia \
+        x86_64-unknown-haiku \
+        x86_64-unknown-linux-gnu \
+        x86_64-unknown-linux-gnu \
+        x86_64-unknown-linux-gnux32 \
+        x86_64-unknown-linux-musl \
+        x86_64-unknown-netbsd \
+        x86_64-unknown-openbsd \
+        x86_64-unknown-redox
 end
 
 # Given n arguments, return the longest suffix common to all
@@ -161,7 +161,7 @@ function __rustup_common_suffix
     set -l suffix
     set -l done 0
     while test $done -eq 0 -a $length -le $min_length
-        set match (string match -r -- ".{$length}\$" "$argv[1]")
+        set -l match (string match -r -- ".{$length}\$" "$argv[1]")
         for arg in $argv[2..-1]
             set -l value (string match -r -- ".{$length}\$" "$arg")
             if test "$value" = "$match"
@@ -194,6 +194,7 @@ function __rustup_strip_common_suffix_strict
 end
 
 function __rustup_all_toolchains
+    set -l __rustup_channels beta stable nightly
     printf "%s\n" $__rustup_channels
     printf "%s\n" $__rustup_channels-(__rustup_triples)
 end
@@ -223,16 +224,13 @@ set -l __rustup_toolchains (rustup toolchain list | string replace -r "\s+.*" ''
 # but a shorter version can be used if it is unambiguous.
 set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_toolchains)
 
-# Needs to be global to retain access from functions
-set __rustup_channels "beta" "stable" "nightly"
+set -l rustup_profiles minimal default complete
 
-set rustup_profiles "minimal" "default" "complete"
+complete -c rustup -n __fish_should_complete_switches -s v -l verbose
+complete -c rustup -n __fish_should_complete_switches -s h -l help
+complete -c rustup -n __fish_should_complete_switches -s V -l version
 
-complete -c rustup -n "__fish_should_complete_switches" -s v -l verbose
-complete -c rustup -n "__fish_should_complete_switches" -s h -l help
-complete -c rustup -n "__fish_should_complete_switches" -s V -l version
-
-complete -c rustup -n "__fish_is_first_token" -xa "$subcmds"
+complete -c rustup -n __fish_is_first_token -xa "$subcmds"
 
 complete -c rustup -n "__fish_prev_arg_in default" -xa "$__rustup_toolchains_short $__rustup_toolchains"
 complete -c rustup -n "__fish_prev_arg_in toolchain" -xa "add install list remove uninstall link help"

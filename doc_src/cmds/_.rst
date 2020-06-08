@@ -1,0 +1,38 @@
+.. _cmd-_:
+
+_ - call fish's translations
+============================
+
+Synopsis
+--------
+
+::
+
+    _ STRING...
+
+Description
+-----------
+
+``_`` translates its arguments into the current language, if possible.
+
+It is equivalent to ``gettext fish STRING``, meaning it can only be used to look up fish's own translations.
+
+It requires fish to be built with gettext support. If that support is disabled, or there is no translation it will simply echo the argument back.
+
+The language depends on the current locale, set with ``$LANG`` and ``$LC_MESSAGES``.
+
+
+Options
+-------
+
+``_`` has no options.
+
+Examples
+--------
+
+
+
+::
+
+    > _ File
+    Datei

@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <cwchar>
@@ -72,6 +73,8 @@
 #include "redirection.h"
 #include "screen.h"
 #include "signal.h"
+#include "termsize.h"
+#include "timer.h"
 #include "tnode.h"
 #include "tokenizer.h"
 #include "topic_monitor.h"
@@ -808,8 +811,8 @@ static void test_fd_monitor() {
     item_oneshot.always_exit = true;
     {
         fd_monitor_t monitor;
-        for (auto *item : {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout,
-                           &item42_nottimeout, &item42_thenclose, &item_oneshot}) {
+        for (auto item : {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout,
+                          &item42_nottimeout, &item42_thenclose, &item_oneshot}) {
             monitor.add(std::move(item->item));
         }
         item42_timeout.write42();
@@ -847,7 +850,7 @@ static void test_fd_monitor() {
 static void test_iothread() {
     say(L"Testing iothreads");
     std::unique_ptr<std::atomic<int>> int_ptr = make_unique<std::atomic<int>>(0);
-    int iterations = 50000;
+    int iterations = 64;
     int max_achieved_thread_count = 0;
     double start = timef();
     for (int i = 0; i < iterations; i++) {
@@ -879,6 +882,100 @@ static void test_pthread() {
     do_test(made);
     promise.get_future().wait();
     do_test(val == 5);
+}
+
+static void test_debounce() {
+    say(L"Testing debounce");
+    // Run 8 functions using a condition variable.
+    // Only the first and last should run.
+    debounce_t db;
+    constexpr size_t count = 8;
+    std::array<bool, count> handler_ran = {};
+    std::array<bool, count> completion_ran = {};
+
+    bool ready_to_go = false;
+    std::mutex m;
+    std::condition_variable cv;
+
+    // "Enqueue" all functions. Each one waits until ready_to_go.
+    for (size_t idx = 0; idx < count; idx++) {
+        do_test(handler_ran[idx] == false);
+        db.perform(
+            [&, idx] {
+                std::unique_lock<std::mutex> lock(m);
+                cv.wait(lock, [&] { return ready_to_go; });
+                handler_ran[idx] = true;
+                return idx;
+            },
+            [&](size_t idx) { completion_ran[idx] = true; });
+    }
+
+    // We're ready to go.
+    {
+        std::unique_lock<std::mutex> lock(m);
+        ready_to_go = true;
+    }
+    cv.notify_all();
+
+    // Wait until the last completion is done.
+    while (!completion_ran.back()) {
+        iothread_service_completion();
+    }
+    iothread_drain_all();
+
+    // Each perform() call may displace an existing queued operation.
+    // Each operation waits until all are queued.
+    // Therefore we expect the last perform() to have run, and at most one more.
+
+    do_test(handler_ran.back());
+    do_test(completion_ran.back());
+
+    size_t total_ran = 0;
+    for (size_t idx = 0; idx < count; idx++) {
+        total_ran += (handler_ran[idx] ? 1 : 0);
+        do_test(handler_ran[idx] == completion_ran[idx]);
+    }
+    do_test(total_ran <= 2);
+}
+
+static void test_debounce_timeout() {
+    using namespace std::chrono;
+    say(L"Testing debounce timeout");
+
+    // Verify that debounce doesn't wait forever.
+    // Use a shared_ptr so we don't have to join our threads.
+    const long timeout_ms = 50;
+    struct data_t {
+        debounce_t db{timeout_ms};
+        bool exit_ok = false;
+        std::mutex m;
+        std::condition_variable cv;
+        relaxed_atomic_t<uint32_t> running{0};
+    };
+    auto data = std::make_shared<data_t>();
+
+    // Our background handler. Note this just blocks until exit_ok is set.
+    std::function<void()> handler = [data] {
+        data->running++;
+        std::unique_lock<std::mutex> lock(data->m);
+        data->cv.wait(lock, [&] { return data->exit_ok; });
+    };
+
+    // Spawn the handler twice. This should not modify the thread token.
+    uint64_t token1 = data->db.perform(handler);
+    uint64_t token2 = data->db.perform(handler);
+    do_test(token1 == token2);
+
+    // Wait 75 msec, then enqueue something else; this should spawn a new thread.
+    std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms + timeout_ms / 2));
+    do_test(data->running == 1);
+    uint64_t token3 = data->db.perform(handler);
+    do_test(token3 > token2);
+
+    // Release all the threads.
+    std::unique_lock<std::mutex> lock(data->m);
+    data->exit_ok = true;
+    data->cv.notify_all();
 }
 
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
@@ -1590,28 +1687,30 @@ static void test_feature_flags() {
 
 static void test_escape_sequences() {
     say(L"Testing escape_sequences");
-    if (escape_code_length(L"") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"abcd") != 0)
+    layout_cache_t lc;
+    if (lc.escape_code_length(L"") != 0)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B[2J") != 4)
+    if (lc.escape_code_length(L"abcd") != 0)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B[38;5;123mABC") != std::strlen("\x1B[38;5;123m"))
+    if (lc.escape_code_length(L"\x1B[2J") != 4)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B@") != 2)
+    if (lc.escape_code_length(L"\x1B[38;5;123mABC") != std::strlen("\x1B[38;5;123m"))
+        err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (lc.escape_code_length(L"\x1B@") != 2)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
 
     // iTerm2 escape sequences.
-    if (escape_code_length(L"\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE") != 25)
+    if (lc.escape_code_length(L"\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE") != 25)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13)
+    if (lc.escape_code_length(L"\x1B]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 28)
+    if (lc.escape_code_length(L"\x1B]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 28)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B]Pg4040ff\x1B\\NOT_PART_OF_SEQUENCE") != 12)
+    if (lc.escape_code_length(L"\x1B]Pg4040ff\x1B\\NOT_PART_OF_SEQUENCE") != 12)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B]blahblahblah\x1B\\") != 16)
+    if (lc.escape_code_length(L"\x1B]blahblahblah\x1B\\") != 16)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B]blahblahblah\x07") != 15)
+    if (lc.escape_code_length(L"\x1B]blahblahblah\x07") != 15)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
 }
 
@@ -2102,7 +2201,7 @@ static void test_pager_navigation() {
 
     pager_t pager;
     pager.set_completions(completions);
-    pager.set_term_size(80, 24);
+    pager.set_term_size(termsize_t::defaults());
     page_rendering_t render = pager.render();
 
     if (render.term_width != 80) err(L"Wrong term width");
@@ -2176,14 +2275,14 @@ static void test_pager_navigation() {
 }
 
 struct pager_layout_testcase_t {
-    size_t width;
+    int width;
     const wchar_t *expected;
 
     // Run ourselves as a test case.
     // Set our data on the pager, and then check the rendering.
     // We should have one line, and it should have our expected text.
     void run(pager_t &pager) const {
-        pager.set_term_size(this->width, 24);
+        pager.set_term_size(termsize_t{this->width, 24});
         page_rendering_t rendering = pager.render();
         const screen_data_t &sd = rendering.screen_data;
         do_test(sd.line_count() == 1);
@@ -2196,7 +2295,10 @@ struct pager_layout_testcase_t {
                 std::replace(expected.begin(), expected.end(), L'\x2026', ellipsis_char);
             }
 
-            wcstring text = sd.line(0).to_string();
+            wcstring text;
+            for (const auto &p : sd.line(0).text) {
+                text.push_back(p.first);
+            }
             if (text != expected) {
                 std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
                               text.length(), text.c_str(), expected.length(), expected.c_str());
@@ -2356,26 +2458,26 @@ static void test_is_potential_path() {
     const wcstring wd = L"test/is_potential_path_test/";
     const wcstring_list_t wds({L".", wd});
 
-    const auto &vars = env_stack_t::principal();
-    do_test(is_potential_path(L"al", wds, vars, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"alpha/", wds, vars, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"aard", wds, vars, 0));
+    operation_context_t ctx{env_stack_t::principal()};
+    do_test(is_potential_path(L"al", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"alpha/", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"aard", wds, ctx, 0));
 
-    do_test(!is_potential_path(L"balpha/", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aard", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aarde", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aarde", wds, vars, 0));
+    do_test(!is_potential_path(L"balpha/", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aard", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aarde", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aarde", wds, ctx, 0));
 
-    do_test(is_potential_path(L"test/is_potential_path_test/aardvark", wds, vars, 0));
-    do_test(is_potential_path(L"test/is_potential_path_test/al", wds, vars, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"test/is_potential_path_test/aardv", wds, vars, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardvark", wds, ctx, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/al", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardv", wds, ctx, 0));
 
     do_test(
-        !is_potential_path(L"test/is_potential_path_test/aardvark", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"test/is_potential_path_test/al/", wds, vars, 0));
-    do_test(!is_potential_path(L"test/is_potential_path_test/ar", wds, vars, 0));
+        !is_potential_path(L"test/is_potential_path_test/aardvark", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"test/is_potential_path_test/al/", wds, ctx, 0));
+    do_test(!is_potential_path(L"test/is_potential_path_test/ar", wds, ctx, 0));
 
-    do_test(is_potential_path(L"/usr", wds, vars, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"/usr", wds, ctx, PATH_REQUIRE_DIR));
 }
 
 /// Test the 'test' builtin.
@@ -3132,11 +3234,13 @@ static void test_autosuggest_suggest_special() {
                                        __LINE__);
 
     // Don't crash on ~ (issue #2696). Note this is cwd dependent.
-    if (system("mkdir -p '~hahaha/path1/path2/'")) err(L"mkdir failed");
-    perform_one_autosuggestion_cd_test(L"cd ~haha", L"ha/path1/path2/", vars, __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd ~hahaha/", L"path1/path2/", vars, __LINE__);
-    perform_one_completion_cd_test(L"cd ~haha", L"ha/", vars, __LINE__);
-    perform_one_completion_cd_test(L"cd ~hahaha/", L"path1/", vars, __LINE__);
+    if (system("mkdir -p '~absolutelynosuchuser/path1/path2/'")) err(L"mkdir failed");
+    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchus", L"er/path1/path2/", vars,
+                                       __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/path2/", vars,
+                                       __LINE__);
+    perform_one_completion_cd_test(L"cd ~absolutelynosuchus", L"er/", vars, __LINE__);
+    perform_one_completion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/", vars, __LINE__);
 
     parser_t::principal_parser().vars().remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
     popd();
@@ -3221,8 +3325,8 @@ static void test_input() {
 
     {
         auto input_mapping = input_mappings();
-        input_mapping->add(prefix_binding.c_str(), L"up-line");
-        input_mapping->add(desired_binding.c_str(), L"down-line");
+        input_mapping->add(prefix_binding, L"up-line");
+        input_mapping->add(desired_binding, L"down-line");
     }
 
     // Push the desired binding to the queue.
@@ -3678,7 +3782,7 @@ class history_tests_t {
 };
 
 static wcstring random_string() {
-    wcstring result = L"";
+    wcstring result;
     size_t max = 1 + random() % 32;
     while (max--) {
         wchar_t c = 1 + random() % ESCAPE_TEST_CHAR;
@@ -5424,23 +5528,81 @@ void test_layout_cache() {
     do_test(seqs.esc_cache_size() == 0);
     do_test(seqs.find_escape_code(L"abcd") == 0);
 
+    auto huge = std::numeric_limits<size_t>::max();
+
     // Verify prompt layout cache.
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         wcstring input = std::to_wstring(i);
         do_test(!seqs.find_prompt_layout(input));
-        seqs.add_prompt_layout(input, {i, 0, 0});
-        do_test(seqs.find_prompt_layout(input)->line_count == i);
+        seqs.add_prompt_layout({input, huge, input, {i, 0, 0}});
+        do_test(seqs.find_prompt_layout(input)->layout.line_count == i);
     }
 
     size_t expected_evictee = 3;
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         if (i != expected_evictee)
-            do_test(seqs.find_prompt_layout(std::to_wstring(i))->line_count == i);
+            do_test(seqs.find_prompt_layout(std::to_wstring(i))->layout.line_count == i);
     }
 
-    seqs.add_prompt_layout(L"whatever", {100, 0, 0});
+    seqs.add_prompt_layout({L"whatever", huge, L"whatever", {100, 0, 0}});
     do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
-    do_test(seqs.find_prompt_layout(L"whatever")->line_count == 100);
+    do_test(seqs.find_prompt_layout(L"whatever", huge)->layout.line_count == 100);
+}
+
+void test_prompt_truncation() {
+    layout_cache_t cache;
+    wcstring trunc;
+    prompt_layout_t layout;
+
+    /// Helper to return 'layout' formatted as a string for easy comparison.
+    auto format_layout = [&] {
+        return format_string(L"%lu,%lu,%lu", (unsigned long)layout.line_count,
+                             (unsigned long)layout.max_line_width,
+                             (unsigned long)layout.last_line_width);
+    };
+
+    /// Join some strings with newline.
+    auto join = [](std::initializer_list<wcstring> vals) { return join_strings(vals, L'\n'); };
+
+    wcstring ellipsis = {get_ellipsis_char()};
+
+    // No truncation.
+    layout = cache.calc_prompt_layout(L"abcd", &trunc);
+    do_test(format_layout() == L"1,4,4");
+    do_test(trunc == L"abcd");
+
+    // Basic truncation.
+    layout = cache.calc_prompt_layout(L"0123456789ABCDEF", &trunc, 8);
+    do_test(format_layout() == L"1,8,8");
+    do_test(trunc == ellipsis + L"9ABCDEF");
+
+    // Multiline truncation.
+    layout = cache.calc_prompt_layout(join({
+                                          L"0123456789ABCDEF",  //
+                                          L"012345",            //
+                                          L"0123456789abcdef",  //
+                                          L"xyz"                //
+                                      }),
+                                      &trunc, 8);
+    do_test(format_layout() == L"4,8,3");
+    do_test(trunc == join({ellipsis + L"9ABCDEF", L"012345", ellipsis + L"9abcdef", L"xyz"}));
+
+    // Escape sequences are not truncated.
+    layout =
+        cache.calc_prompt_layout(L"\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE", &trunc, 4);
+    do_test(format_layout() == L"1,4,4");
+    do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=test/foo\x07NCE");
+
+    // Newlines in escape sequences are skipped.
+    layout = cache.calc_prompt_layout(L"\x1B]50;CurrentDir=\ntest/foo\x07NOT_PART_OF_SEQUENCE",
+                                      &trunc, 4);
+    do_test(format_layout() == L"1,4,4");
+    do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=\ntest/foo\x07NCE");
+
+    // We will truncate down to one character if we have to.
+    layout = cache.calc_prompt_layout(L"Yay", &trunc, 1);
+    do_test(format_layout() == L"1,1,1");
+    do_test(trunc == ellipsis);
 }
 
 void test_normalize_path() {
@@ -5547,6 +5709,107 @@ static void test_topic_monitor_torture() {
     for (auto &t : threads) t.join();
 }
 
+static void test_timer_format() {
+    say(L"Testing timer format");
+    // This test uses numeric output, so we need to set the locale.
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, nullptr));
+    setlocale(LC_NUMERIC, "C");
+    auto t1 = timer_snapshot_t::take();
+    t1.cpu_fish.ru_utime.tv_usec = 0;
+    t1.cpu_fish.ru_stime.tv_usec = 0;
+    t1.cpu_children.ru_utime.tv_usec = 0;
+    t1.cpu_children.ru_stime.tv_usec = 0;
+    auto t2 = t1;
+    t2.cpu_fish.ru_utime.tv_usec = 999995;
+    t2.cpu_fish.ru_stime.tv_usec = 999994;
+    t2.cpu_children.ru_utime.tv_usec = 1000;
+    t2.cpu_children.ru_stime.tv_usec = 500;
+    t2.wall += std::chrono::microseconds(500);
+    auto expected =
+        LR"(
+________________________________________________________
+Executed in  500.00 micros    fish         external
+   usr time    1.00 secs      1.00 secs    1.00 millis
+   sys time    1.00 secs      1.00 secs    0.50 millis
+)";  //        (a)            (b)            (c)
+     // (a) remaining columns should align even if there are different units
+     // (b) carry to the next unit when it would overflow %6.2F
+     // (c) carry to the next unit when the larger one exceeds 1000
+    std::wstring actual = timer_snapshot_t::print_delta(t1, t2, true);
+    if (actual != expected) {
+        err(L"Failed to format timer snapshot\nExpected: %ls\nActual:%ls\n", expected,
+            actual.c_str());
+    }
+    setlocale(LC_NUMERIC, saved_locale);
+    free(saved_locale);
+}
+
+struct termsize_tester_t {
+    static void test();
+};
+
+void termsize_tester_t::test() {
+    say(L"Testing termsize");
+
+    parser_t &parser = parser_t::principal_parser();
+    env_stack_t &vars = parser.vars();
+
+    // Use a static variable so we can pretend we're the kernel exposing a terminal size.
+    static maybe_t<termsize_t> stubby_termsize{};
+    termsize_container_t ts([] { return stubby_termsize; });
+
+    // Initially default value.
+    do_test(ts.last() == termsize_t::defaults());
+
+    // Haha we change the value, it doesn't even know.
+    stubby_termsize = termsize_t{42, 84};
+    do_test(ts.last() == termsize_t::defaults());
+
+    // Ok let's tell it. But it still doesn't update right away.
+    ts.handle_winch();
+    do_test(ts.last() == termsize_t::defaults());
+
+    // Ok now we tell it to update.
+    ts.updating(parser);
+    do_test(ts.last() == *stubby_termsize);
+    do_test(vars.get(L"COLUMNS")->as_string() == L"42");
+    do_test(vars.get(L"LINES")->as_string() == L"84");
+
+    // Wow someone set COLUMNS and LINES to a weird value.
+    // Now the tty's termsize doesn't matter.
+    vars.set(L"COLUMNS", ENV_GLOBAL, {L"75"});
+    vars.set(L"LINES", ENV_GLOBAL, {L"150"});
+    ts.handle_columns_lines_var_change(vars);
+    do_test(ts.last() == termsize_t(75, 150));
+    do_test(vars.get(L"COLUMNS")->as_string() == L"75");
+    do_test(vars.get(L"LINES")->as_string() == L"150");
+
+    vars.set(L"COLUMNS", ENV_GLOBAL, {L"33"});
+    ts.handle_columns_lines_var_change(vars);
+    do_test(ts.last() == termsize_t(33, 150));
+
+    // Oh it got SIGWINCH, now the tty matters again.
+    ts.handle_winch();
+    do_test(ts.last() == termsize_t(33, 150));
+    do_test(ts.updating(parser) == *stubby_termsize);
+    do_test(vars.get(L"COLUMNS")->as_string() == L"42");
+    do_test(vars.get(L"LINES")->as_string() == L"84");
+
+    // Test initialize().
+    vars.set(L"COLUMNS", ENV_GLOBAL, {L"83"});
+    vars.set(L"LINES", ENV_GLOBAL, {L"38"});
+    ts.initialize(vars);
+    do_test(ts.last() == termsize_t(83, 38));
+
+    // initialize() even beats the tty reader until a sigwinch.
+    termsize_container_t ts2([] { return stubby_termsize; });
+    ts.initialize(vars);
+    ts2.updating(parser);
+    do_test(ts.last() == termsize_t(83, 38));
+    ts2.handle_winch();
+    do_test(ts2.updating(parser) == *stubby_termsize);
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -5619,6 +5882,8 @@ int main(int argc, char **argv) {
     if (should_test_function("fd_monitor")) test_fd_monitor();
     if (should_test_function("iothread")) test_iothread();
     if (should_test_function("pthread")) test_pthread();
+    if (should_test_function("debounce")) test_debounce();
+    if (should_test_function("debounce")) test_debounce_timeout();
     if (should_test_function("parser")) test_parser();
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
@@ -5671,10 +5936,14 @@ int main(int argc, char **argv) {
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();
     if (should_test_function("layout_cache")) test_layout_cache();
+    if (should_test_function("prompt")) test_prompt_truncation();
     if (should_test_function("normalize")) test_normalize_path();
     if (should_test_function("topics")) test_topic_monitor();
     if (should_test_function("topics")) test_topic_monitor_torture();
+    if (should_test_function("timer_format")) test_timer_format();
     // history_tests_t::test_history_speed();
+
+    if (should_test_function("termsize")) termsize_tester_t::test();
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");

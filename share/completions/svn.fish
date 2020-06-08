@@ -69,42 +69,42 @@ set -l unlock unlock
 set -l update 'up update'
 set -l upgrade upgrade
 
-complete -c svn -n '__fish_use_subcommand' -x -a $add -d 'Put files and directories under version control, scheduling them for addition to repository.  They will be added in next commit.'
-complete -c svn -n '__fish_use_subcommand' -x -a $blame -d 'Output the content of specified files or URLs with revision and author information in-line.'
-complete -c svn -n '__fish_use_subcommand' -x -a $cat -d 'Output the content of specified files or URLs.'
-complete -c svn -n '__fish_use_subcommand' -x -a $changelist -d 'Output the content of specified files or URLs with revision and author information in-line.'
-complete -c svn -n '__fish_use_subcommand' -x -a $checkout -d 'Check out a working copy from a repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $cleanup -d 'Recursively clean up the working copy, removing locks, resuming unfinished operations, etc.'
-complete -c svn -n '__fish_use_subcommand' -x -a $commit -d 'Send changes from your working copy to the repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $copy -d 'Duplicate something in working copy or repository, remembering history.'
-complete -c svn -n '__fish_use_subcommand' -x -a $diff -d 'Display the differences between two revisions or paths.'
-complete -c svn -n '__fish_use_subcommand' -x -a $export -d 'Create an unversioned copy of a tree.'
-complete -c svn -n '__fish_use_subcommand' -x -a $help -d 'Describe the usage of this program or its subcommands.'
-complete -c svn -n '__fish_use_subcommand' -x -a $import -d 'Commit an unversioned file or tree into the repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $info -d 'Display information about a local or remote item.'
-complete -c svn -n '__fish_use_subcommand' -x -a $list -d 'List directory entries in the repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $lock -d 'Lock working copy paths or URLs in the repository, so that no other user can commit changes to them.'
-complete -c svn -n '__fish_use_subcommand' -x -a $log -d 'Show the log messages for a set of revision(s) and/or file(s).'
-complete -c svn -n '__fish_use_subcommand' -x -a $merge -d 'Apply the differences between two sources to a working copy path.'
-complete -c svn -n '__fish_use_subcommand' -x -a $mergeinfo -d 'Display information related to merges'
-complete -c svn -n '__fish_use_subcommand' -x -a $mkdir -d 'Create a new directory under version control.'
-complete -c svn -n '__fish_use_subcommand' -x -a $move -d 'Move and/or rename something in working copy or repository.'
-complete -c svn -n '__fish_use_subcommand' -x -a $patch -d 'Apply a unidiff patch to the working copy'
-complete -c svn -n '__fish_use_subcommand' -x -a $propdel -d 'Remove a property from files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $propedit -d 'Edit a property with an external editor.'
-complete -c svn -n '__fish_use_subcommand' -x -a $propget -d 'Print the value of a property on files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $proplist -d 'List all properties on files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $propset -d 'Set the value of a property on files, dirs, or revisions.'
-complete -c svn -n '__fish_use_subcommand' -x -a $relocate -d 'Rewrite working copy url metadata'
-complete -c svn -n '__fish_use_subcommand' -x -a $remove -d 'Remove files and directories from version control.'
-complete -c svn -n '__fish_use_subcommand' -x -a $resolve -d 'Remove conflicts on working copy files or directories.'
-complete -c svn -n '__fish_use_subcommand' -x -a $resolved -d 'Remove \'conflicted\' state on working copy files or directories.'
-complete -c svn -n '__fish_use_subcommand' -x -a $revert -d 'Restore pristine working copy file (undo most local edits).'
-complete -c svn -n '__fish_use_subcommand' -x -a $stat -d 'Print the status of working copy files and directories.'
-complete -c svn -n '__fish_use_subcommand' -x -a $switch -d 'Update the working copy to a different URL.'
-complete -c svn -n '__fish_use_subcommand' -x -a $unlock -d 'Unlock working copy paths or URLs.'
-complete -c svn -n '__fish_use_subcommand' -x -a $update -d 'Bring changes from the repository into the working copy.'
-complete -c svn -n '__fish_use_subcommand' -x -a $upgrade -d 'Upgrade the metadata storage format for a working copy.'
+complete -c svn -n __fish_use_subcommand -x -a $add -d 'Put files and directories under version control, scheduling them for addition to repository.  They will be added in next commit.'
+complete -c svn -n __fish_use_subcommand -x -a $blame -d 'Output the content of specified files or URLs with revision and author information in-line.'
+complete -c svn -n __fish_use_subcommand -x -a $cat -d 'Output the content of specified files or URLs.'
+complete -c svn -n __fish_use_subcommand -x -a $changelist -d 'Output the content of specified files or URLs with revision and author information in-line.'
+complete -c svn -n __fish_use_subcommand -x -a $checkout -d 'Check out a working copy from a repository.'
+complete -c svn -n __fish_use_subcommand -x -a $cleanup -d 'Recursively clean up the working copy, removing locks, resuming unfinished operations, etc.'
+complete -c svn -n __fish_use_subcommand -x -a $commit -d 'Send changes from your working copy to the repository.'
+complete -c svn -n __fish_use_subcommand -x -a $copy -d 'Duplicate something in working copy or repository, remembering history.'
+complete -c svn -n __fish_use_subcommand -x -a $diff -d 'Display the differences between two revisions or paths.'
+complete -c svn -n __fish_use_subcommand -x -a $export -d 'Create an unversioned copy of a tree.'
+complete -c svn -n __fish_use_subcommand -x -a $help -d 'Describe the usage of this program or its subcommands.'
+complete -c svn -n __fish_use_subcommand -x -a $import -d 'Commit an unversioned file or tree into the repository.'
+complete -c svn -n __fish_use_subcommand -x -a $info -d 'Display information about a local or remote item.'
+complete -c svn -n __fish_use_subcommand -x -a $list -d 'List directory entries in the repository.'
+complete -c svn -n __fish_use_subcommand -x -a $lock -d 'Lock working copy paths or URLs in the repository, so that no other user can commit changes to them.'
+complete -c svn -n __fish_use_subcommand -x -a $log -d 'Show the log messages for a set of revision(s) and/or file(s).'
+complete -c svn -n __fish_use_subcommand -x -a $merge -d 'Apply the differences between two sources to a working copy path.'
+complete -c svn -n __fish_use_subcommand -x -a $mergeinfo -d 'Display information related to merges'
+complete -c svn -n __fish_use_subcommand -x -a $mkdir -d 'Create a new directory under version control.'
+complete -c svn -n __fish_use_subcommand -x -a $move -d 'Move and/or rename something in working copy or repository.'
+complete -c svn -n __fish_use_subcommand -x -a $patch -d 'Apply a unidiff patch to the working copy'
+complete -c svn -n __fish_use_subcommand -x -a $propdel -d 'Remove a property from files, dirs, or revisions.'
+complete -c svn -n __fish_use_subcommand -x -a $propedit -d 'Edit a property with an external editor.'
+complete -c svn -n __fish_use_subcommand -x -a $propget -d 'Print the value of a property on files, dirs, or revisions.'
+complete -c svn -n __fish_use_subcommand -x -a $proplist -d 'List all properties on files, dirs, or revisions.'
+complete -c svn -n __fish_use_subcommand -x -a $propset -d 'Set the value of a property on files, dirs, or revisions.'
+complete -c svn -n __fish_use_subcommand -x -a $relocate -d 'Rewrite working copy url metadata'
+complete -c svn -n __fish_use_subcommand -x -a $remove -d 'Remove files and directories from version control.'
+complete -c svn -n __fish_use_subcommand -x -a $resolve -d 'Remove conflicts on working copy files or directories.'
+complete -c svn -n __fish_use_subcommand -x -a $resolved -d 'Remove \'conflicted\' state on working copy files or directories.'
+complete -c svn -n __fish_use_subcommand -x -a $revert -d 'Restore pristine working copy file (undo most local edits).'
+complete -c svn -n __fish_use_subcommand -x -a $stat -d 'Print the status of working copy files and directories.'
+complete -c svn -n __fish_use_subcommand -x -a $switch -d 'Update the working copy to a different URL.'
+complete -c svn -n __fish_use_subcommand -x -a $unlock -d 'Unlock working copy paths or URLs.'
+complete -c svn -n __fish_use_subcommand -x -a $update -d 'Bring changes from the repository into the working copy.'
+complete -c svn -n __fish_use_subcommand -x -a $upgrade -d 'Upgrade the metadata storage format for a working copy.'
 
 #
 # Global commands
@@ -311,21 +311,21 @@ _svn_cmpl_ $propset -a "$props"
 
 _svn_cmpl_ svn:eol-style -a "native LF CR CRLF"
 _svn_cmpl_ svn:mime-type -a "(__fish_print_xdg_mimetypes)"
-_svn_cmpl_ svn:keywords -a "URL" -d 'The URL for the head version of the object'
-_svn_cmpl_ svn:keywords -a "Author" -d 'The last person to modify the file'
-_svn_cmpl_ svn:keywords -a "Date" -d 'Last changed date'
-_svn_cmpl_ svn:keywords -a "Rev" -d 'The last revision the object changed'
-_svn_cmpl_ svn:keywords -a "Id" -d 'A compressed summary of all keywords'
+_svn_cmpl_ svn:keywords -a URL -d 'The URL for the head version of the object'
+_svn_cmpl_ svn:keywords -a Author -d 'The last person to modify the file'
+_svn_cmpl_ svn:keywords -a Date -d 'Last changed date'
+_svn_cmpl_ svn:keywords -a Rev -d 'The last revision the object changed'
+_svn_cmpl_ svn:keywords -a Id -d 'A compressed summary of all keywords'
 
 #
 # Completions for the 'relocate' subcommand
 #
-_svn_cmpl_ $relocate -xa '( svn info | string match "*URL:*" | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
+_svn_cmpl_ $relocate -xa '( svn info | string match "*URL:*" | string split -f2 " ") http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
 
 #
 # Completions for the 'switch', 'sw' subcommands
 #
-_svn_cmpl_ $switch -l relocate -d 'Relocate via URL-rewriting' -xa '( svn info | string match "*URL:*" | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
+_svn_cmpl_ $switch -l relocate -d 'Relocate via URL-rewriting' -xa '( svn info | string match "*URL:*" | string split -f2 " ") http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
 
 #
 # Completions for the 'status', 'st' subcommands

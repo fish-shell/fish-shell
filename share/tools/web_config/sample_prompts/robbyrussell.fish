@@ -47,10 +47,10 @@ function fish_prompt
 
         function _repo_type
             if _is_hg_repo
-                echo 'hg'
+                echo hg
                 return 0
             else if _is_git_repo
-                echo 'git'
+                echo git
                 return 0
             end
             return 1
@@ -70,12 +70,13 @@ function fish_prompt
     end
 
     set -l arrow "$arrow_color➜ "
-    if test "$USER" = 'root'
+    if test "$USER" = root
         set arrow "$arrow_color# "
     end
 
     set -l cwd $cyan(basename (prompt_pwd))
 
+    set -l repo_info
     if set -l repo_type (_repo_type)
         set -l repo_branch $red(_repo_branch_name $repo_type)
         set repo_info "$blue $repo_type:($repo_branch$blue)"

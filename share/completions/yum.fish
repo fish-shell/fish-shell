@@ -14,18 +14,18 @@ function __fish_yum_package_ok
     return 1
 end
 
-complete -c yum -n '__fish_use_subcommand' -xa install -d "Install the latest version of a package"
-complete -c yum -n '__fish_use_subcommand' -xa 'update upgrade' -d "Update specified packages (defaults to all packages)"
-complete -c yum -n '__fish_use_subcommand' -xa check-update -d "Print list of available updates"
-complete -c yum -n '__fish_use_subcommand' -xa 'remove erase' -d "Remove the specified packages and packages that depend on them"
-complete -c yum -n '__fish_use_subcommand' -xa list -d "List available packages"
-complete -c yum -n '__fish_use_subcommand' -xa info -d "Describe available packages"
-complete -c yum -n '__fish_use_subcommand' -xa 'provides whatprovides' -d "Find package providing a feature or file"
-complete -c yum -n '__fish_use_subcommand' -xa search -d "find packages matching description regexp"
-complete -c yum -n '__fish_use_subcommand' -xa clean -d "Clean up cache directory"
-complete -c yum -n '__fish_use_subcommand' -xa generate-rss -d "Generate rss changelog"
+complete -c yum -n __fish_use_subcommand -xa install -d "Install the latest version of a package"
+complete -c yum -n __fish_use_subcommand -xa 'update upgrade' -d "Update specified packages (defaults to all packages)"
+complete -c yum -n __fish_use_subcommand -xa check-update -d "Print list of available updates"
+complete -c yum -n __fish_use_subcommand -xa 'remove erase' -d "Remove the specified packages and packages that depend on them"
+complete -c yum -n __fish_use_subcommand -xa list -d "List available packages"
+complete -c yum -n __fish_use_subcommand -xa info -d "Describe available packages"
+complete -c yum -n __fish_use_subcommand -xa 'provides whatprovides' -d "Find package providing a feature or file"
+complete -c yum -n __fish_use_subcommand -xa search -d "find packages matching description regexp"
+complete -c yum -n __fish_use_subcommand -xa clean -d "Clean up cache directory"
+complete -c yum -n __fish_use_subcommand -xa generate-rss -d "Generate rss changelog"
 
-complete -c yum -n '__fish_yum_package_ok' -a "(__fish_print_packages)"
+complete -c yum -n __fish_yum_package_ok -a "(__fish_print_packages)"
 
 complete -c yum -s h -l help -d "Display help and exit"
 complete -c yum -s y -d "Assume yes to all questions"

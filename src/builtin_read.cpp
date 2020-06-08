@@ -186,7 +186,6 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -204,6 +203,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
 
     // Don't keep history
     reader_push(parser, L"");
+    reader_get_history()->resolve_pending();
 
     reader_set_left_prompt(prompt);
     reader_set_right_prompt(right_prompt);
@@ -221,7 +221,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     reader_set_buffer(commandline, std::wcslen(commandline));
     scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
 
-    event_fire_generic(parser, L"fish_prompt");
+    event_fire_generic(parser, L"fish_read");
     auto mline = reader_readline(nchars);
     interactive.restore();
     if (mline) {
@@ -429,7 +429,6 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
 int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    auto &vars = parser.vars();
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     wcstring buff;
@@ -519,22 +518,22 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     }
                 }
 
-                vars.set(*var_ptr++, opts.place, tokens);
+                parser.set_var_and_fire(*var_ptr++, opts.place, std::move(tokens));
             } else {
                 maybe_t<tok_t> t;
                 while ((vars_left() - 1 > 0) && (t = tok.next())) {
                     auto text = tok.text_of(*t);
                     if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
-                        vars.set_one(*var_ptr++, opts.place, out);
+                        parser.set_var_and_fire(*var_ptr++, opts.place, out);
                     } else {
-                        vars.set_one(*var_ptr++, opts.place, text);
+                        parser.set_var_and_fire(*var_ptr++, opts.place, text);
                     }
                 }
 
                 // If we still have tokens, set the last variable to them.
                 if ((t = tok.next())) {
                     wcstring rest = wcstring(buff, t->offset);
-                    vars.set_one(*var_ptr++, opts.place, rest);
+                    parser.set_var_and_fire(*var_ptr++, opts.place, std::move(rest));
                 }
             }
             // The rest of the loop is other split-modes, we don't care about those.
@@ -567,12 +566,12 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
             if (opts.array) {
                 // Array mode: assign each char as a separate element of the sole var.
-                vars.set(*var_ptr++, opts.place, chars);
+                parser.set_var_and_fire(*var_ptr++, opts.place, chars);
             } else {
                 // Not array mode: assign each char to a separate var with the remainder being
                 // assigned to the last var.
                 for (const auto &c : chars) {
-                    vars.set_one(*var_ptr++, opts.place, c);
+                    parser.set_var_and_fire(*var_ptr++, opts.place, c);
                 }
             }
         } else if (opts.array) {
@@ -588,14 +587,14 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                      loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
                     tokens.emplace_back(wcstring(buff, loc.first, loc.second));
                 }
-                vars.set(*var_ptr++, opts.place, tokens);
+                parser.set_var_and_fire(*var_ptr++, opts.place, tokens);
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
                 wcstring_list_t splits;
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                             &splits);
 
-                vars.set(*var_ptr++, opts.place, splits);
+                parser.set_var_and_fire(*var_ptr++, opts.place, splits);
             }
         } else {
             // Not array mode. Split the input into tokens and assign each to the vars in sequence.
@@ -607,17 +606,9 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     wcstring substr;
                     loc = wcstring_tok(buff, (vars_left() > 1) ? opts.delimiter : wcstring(), loc);
                     if (loc.first != wcstring::npos) {
-                        if (vars_left() == 1) {  // Discard trailing delimiters, see #6406
-                            loc.first =
-                                std::find_if(buff.begin() + loc.first, buff.end(),
-                                             [&opts](wchar_t c) {
-                                                 return opts.delimiter.find(c) == wcstring::npos;
-                                             }) -
-                                buff.begin();
-                        }
                         substr = wcstring(buff, loc.first, loc.second);
                     }
-                    vars.set_one(*var_ptr++, opts.place, substr);
+                    parser.set_var_and_fire(*var_ptr++, opts.place, substr);
                 }
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
@@ -626,9 +617,9 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 // is set to the remaining string.
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                             &splits, argc - 1);
-                assert(splits.size() <= (size_t)vars_left());
+                assert(splits.size() <= static_cast<size_t>(vars_left()));
                 for (const auto &split : splits) {
-                    vars.set_one(*var_ptr++, opts.place, split);
+                    parser.set_var_and_fire(*var_ptr++, opts.place, split);
                 }
             }
         }

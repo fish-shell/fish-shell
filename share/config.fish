@@ -32,6 +32,7 @@ if status --is-interactive
         and not string match -q -- 'eterm*' $TERM
         and begin
             set -q KONSOLE_PROFILE_NAME # KDE's konsole
+            or test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge 200400 # konsole, but new.
             or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
             or string match -q -- "st-*" $TERM # suckless' st
             or test -n "$VTE_VERSION" -a "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
@@ -106,15 +107,6 @@ else if not contains -- $__fish_data_dir/completions $fish_complete_path
     set -a fish_complete_path $__fish_data_dir/completions
 end
 
-# This cannot be in an autoload-file because `:.fish` is an invalid filename on windows.
-function : -d "no-op function"
-    # for compatibility with sh, bash, and others.
-    # Often used to insert a comment into a chain of commands without having
-    # it eat up the remainder of the line, handy in Makefiles.
-    # This command always succeeds
-    true
-end
-
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH
@@ -149,7 +141,7 @@ function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --descriptio
 end
 
 #
-# Whenever a prompt is displayed, make sure that interactive
+# When a prompt is first displayed, make sure that interactive
 # mode-specific initializations have been performed.
 # This handler removes itself after it is first called.
 #
@@ -162,16 +154,6 @@ end
 # C/POSIX locale causes too many problems. Do this before reading the snippets because they might be
 # in UTF-8 (with non-ASCII characters).
 __fish_set_locale
-
-# "." alias for source; deprecated
-function . -d 'Evaluate a file (deprecated, use "source")' --no-scope-shadowing --wraps source
-    if [ (count $argv) -eq 0 ] && isatty 0
-        echo "source: using source via '.' is deprecated, and stdin doesn't work."\n"Did you mean 'source' or './'?" >&2
-        return 1
-    else
-        source $argv
-    end
-end
 
 # Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax.
 # This needs to be in share/config.fish because __fish_config_interactive is called after sourcing
@@ -220,9 +202,9 @@ if status --is-login
             set -xg $argv[1] $result
         end
 
-        __fish_macos_set_env 'PATH' '/etc/paths' '/etc/paths.d'
+        __fish_macos_set_env PATH /etc/paths '/etc/paths.d'
         if [ -n "$MANPATH" ]
-            __fish_macos_set_env 'MANPATH' '/etc/manpaths' '/etc/manpaths.d'
+            __fish_macos_set_env MANPATH /etc/manpaths '/etc/manpaths.d'
         end
         functions -e __fish_macos_set_env
     end
@@ -246,9 +228,7 @@ __fish_reconstruct_path
 function __fish_expand_pid_args
     for arg in $argv
         if string match -qr '^%\d+$' -- $arg
-            # set newargv $newargv (jobs -p $arg)
-            jobs -p $arg
-            if not test $status -eq 0
+            if not jobs -p $arg
                 return 1
             end
         else

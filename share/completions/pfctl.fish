@@ -1,4 +1,4 @@
-complete -c pfctl -s s --description 'Show a filter parameter by modifier' -xa \
+complete -c pfctl -s s -d 'Show a filter parameter by modifier' -xa \
     'queue\t"Show loaded queue definitions" \
 	rules\t"Show loaded filter rules" \
 	Anchors\t"Show anchors attached to main ruleset" \
@@ -12,7 +12,7 @@ complete -c pfctl -s s --description 'Show a filter parameter by modifier' -xa \
 	osfp\t"Show a list of OS fingerprints" \
 	Interfaces\t"List PF interfaces/drivers" \
 	all\t"Everything."'
-complete -c pfctl -s F --description 'Flush filter params specified by mod' -xa \
+complete -c pfctl -s F -d 'Flush filter params specified by mod' -xa \
     'rules\t"Flush filter rules" \
 	states\t"Flush state table" \
 	Sources\t"Flush source tracking table" \
@@ -20,7 +20,7 @@ complete -c pfctl -s F --description 'Flush filter params specified by mod' -xa 
 	Tables\t"Flush the tables" \
 	ospf\t"Flush the passive OS fingerprints" \
 	all\t"Flush everything"'
-complete -c pfctl -s T --description 'Table command' -xa \
+complete -c pfctl -s T -d 'Table command' -xa \
     'kill\t"Kill a table." \
 	flush\t"Flush addresses of a table" \
 	add\t"Add one or more addresses in table" \

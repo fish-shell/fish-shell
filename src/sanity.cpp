@@ -24,7 +24,7 @@ void sanity_lose() {
 
 void validate_pointer(const void *ptr, const wchar_t *err, int null_ok) {
     // Test if the pointer data crosses a segment boundary.
-    if ((0x00000003l & (intptr_t)ptr) != 0) {
+    if ((0x00000003L & reinterpret_cast<intptr_t>(ptr)) != 0) {
         FLOGF(error, _(L"The pointer '%ls' is invalid"), err);
         sanity_lose();
     }

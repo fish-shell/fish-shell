@@ -58,6 +58,9 @@ expect_prompt
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 
+send_line "sleep .3 &; kill -STOP %1; kill -CONT %1; jobs | string match -r running; wait"
+expect_prompt "running" {} unmatched { puts stderr "continued job should be running: Fail" }
+
 # return immediately when no jobs
 set error_msg "return immediately when no jobs: Fail"
 

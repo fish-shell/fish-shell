@@ -8,8 +8,8 @@ License:                GPL-2.0
 Group:                  System/Shells
 URL:                    https://fishshell.com/
 
-Source0:                %{name}_@VERSION@.orig.tar.gz
-BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
+Source0:                %{name}_@VERSION@.orig.tar.xz
+BuildRequires:          ncurses-devel gettext gcc-c++ xz
 
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3
@@ -22,7 +22,7 @@ BuildRequires: update-desktop-files
 %endif
 
 %if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
-BuildRequires: gcc48 gcc48-c++ python-argparse
+BuildRequires: gcc48 gcc48-c++
 %endif
 
 # for tests
@@ -38,7 +38,11 @@ BuildRequires: python3
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+%if 0%{?rhel} && 0%{?rhel} < 8
 Requires:		python
+%else
+Requires:		python3
+%endif
 Requires:		man
 
 %description
@@ -83,13 +87,20 @@ make %{?_smp_mflags}
 %if 0%{?suse_version}
 %suse_update_desktop_file fish "System;TerminalEmulator"
 %endif
+cp -a README.rst %{buildroot}%{_pkgdocdir}
+cp -a CONTRIBUTING.rst %{buildroot}%{_pkgdocdir}
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
 %if 0%{?__builddir:1}
 cd %__builddir
 %endif
+# Turn off tests on RHEL 6, they are hard to keep running
+%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
+./fish -c 'exit 0'
+%else
 make test SHOW_INTERACTIVE_LOG=1
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -111,12 +122,10 @@ fi
 %defattr(-,root,root,-)
 
 # The documentation directory
-%docdir %{_datadir}/doc/fish/
-%{_datadir}/doc/fish/
+%doc %{_datadir}/doc/fish/
 
 # man files
 %{_mandir}/man1/*
-%docdir %{_datadir}/fish/man/man1/
 %{_datadir}/fish/man/man1/
 
 # The program binaries

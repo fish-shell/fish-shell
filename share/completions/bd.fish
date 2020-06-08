@@ -1,4 +1,3 @@
-#!/usr/bin/env fish
 # -*-  mode:fish; tab-width:4  -*-
 #
 # fish-completion for fish-bd
@@ -13,7 +12,7 @@ complete -c bd -s i -d "Case insensitive move (implies seems mode)"
 complete -c bd -s h -x -d "Display help and exit"
 
 function __fish_bd_complete_dirs
-    string split "/" -- $PWD
+    string split / -- $PWD
 end
 
 complete -c bd -a '(__fish_bd_complete_dirs)'

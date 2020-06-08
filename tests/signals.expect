@@ -2,11 +2,45 @@
 #
 # Test signal handling for interactive shells.
 
+set pid [spawn $fish -C "sleep 10&"]
+expect_prompt
+
+send "\x03"
+sleep 0.010
+send_line "jobs"
+expect_prompt -re {sleep.10} {} unmatched {
+    puts stderr "background job missing after SIGINT"
+}
+send_line "kill %1"
+expect_prompt 
+
+# Verify that the fish_postexec handler is called after SIGINT.
+send_line "function postexec --on-event fish_postexec; echo fish_postexec spotted; end"
+expect_prompt
+send_line read
+expect -re "\\r\\n?read> $"
+exec -- kill -INT $pid
+expect "fish_postexec spotted"
+expect_prompt
+
+# Verify that the fish_kill_signal is set.
+send_line "functions -e postexec; function postexec --on-event fish_postexec; echo fish_kill_signal \$fish_kill_signal; end"
+expect_prompt
+send_line "sleep 5"
+sleep 0.100
+exec -- pkill -INT sleep -P $pid
+expect "fish_kill_signal 2"
+expect_prompt
+
+send_line "sleep 5"
+sleep 0.100
+exec -- pkill -TERM sleep -P $pid
+expect "fish_kill_signal 15"
+expect_prompt
+
 # Verify that sending SIGHUP to the shell, such as will happen when the tty is
 # closed by the terminal, terminates the shell and the foreground command and
 # any background commands run from that shell.
-set pid [spawn $fish]
-expect_prompt
 send "sleep 130 &\r"
 expect_prompt
 send "sleep 131 &\r"

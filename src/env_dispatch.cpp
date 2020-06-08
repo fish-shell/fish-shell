@@ -51,6 +51,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "screen.h"
+#include "termsize.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 #define DEFAULT_TERM1 "ansi"
@@ -217,12 +218,12 @@ void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &cal
     }
 }
 
-static void handle_fish_term_change(env_stack_t &vars) {
+static void handle_fish_term_change(const env_stack_t &vars) {
     update_fish_color_support(vars);
     reader_react_to_color_change();
 }
 
-static void handle_change_ambiguous_width(env_stack_t &vars) {
+static void handle_change_ambiguous_width(const env_stack_t &vars) {
     int new_width = 1;
     if (auto width_str = vars.get(L"fish_ambiguous_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());
@@ -230,26 +231,25 @@ static void handle_change_ambiguous_width(env_stack_t &vars) {
     g_fish_ambiguous_width = std::max(0, new_width);
 }
 
-static void handle_term_size_change(env_stack_t &vars) {
-    UNUSED(vars);
-    invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
+static void handle_term_size_change(const env_stack_t &vars) {
+    termsize_container_t::shared().handle_columns_lines_var_change(vars);
 }
 
-static void handle_fish_history_change(env_stack_t &vars) {
+static void handle_fish_history_change(const env_stack_t &vars) {
     reader_change_history(history_session_id(vars));
 }
 
-static void handle_function_path_change(env_stack_t &vars) {
+static void handle_function_path_change(const env_stack_t &vars) {
     UNUSED(vars);
     function_invalidate_path();
 }
 
-static void handle_complete_path_change(env_stack_t &vars) {
+static void handle_complete_path_change(const env_stack_t &vars) {
     UNUSED(vars);
     complete_invalidate_path();
 }
 
-static void handle_tz_change(const wcstring &var_name, env_stack_t &vars) {
+static void handle_tz_change(const wcstring &var_name, const env_stack_t &vars) {
     handle_timezone(var_name.c_str(), vars);
 }
 
@@ -348,17 +348,17 @@ static void update_fish_color_support(const environment_t &vars) {
         // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
         wcstring term_program;
         if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
-        if (auto tpv = vars.get(L"TERM_PROGRAM_VERSION")) {
-            if (term_program == L"Apple_Terminal" &&
-                fish_wcstod(tpv->as_string().c_str(), nullptr) > 299) {
+        if (term_program == L"Apple_Terminal") {
+            auto tpv = vars.get(L"TERM_PROGRAM_VERSION");
+            if (tpv && fish_wcstod(tpv->as_string().c_str(), nullptr) > 299) {
                 // OS X Lion is version 299+, it has 256 color support (see github Wiki)
                 support_term256 = true;
                 FLOGF(term_support, L"256 color support enabled for TERM=%ls on Terminal.app",
                       term.c_str());
-            } else {
-                support_term256 = true;
-                FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
             }
+        } else {
+            support_term256 = true;
+            debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
         }
     } else if (cur_term != nullptr) {
         // See if terminfo happens to identify 256 colors
@@ -417,7 +417,8 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// One situation in which this breaks down is with screen, since screen supports setting the
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-static const wchar_t *const title_terms[] = {L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"};
+static const wchar_t *const title_terms[] = {L"xterm",  L"screen", L"tmux",
+                                             L"nxterm", L"rxvt",   L"alacritty"};
 static bool does_term_support_setting_title(const environment_t &vars) {
     const auto term_var = vars.get(L"TERM");
     if (term_var.missing_or_empty()) return false;
@@ -478,10 +479,11 @@ static void init_curses(const environment_t &vars) {
     }
 
     can_set_term_title = does_term_support_setting_title(vars);
-    term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
+    term_has_xn =
+        tigetflag(const_cast<char *>("xenl")) == 1;  // does terminal have the eat_newline_glitch
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
-    cached_layouts.clear();
+    layout_cache_t::shared.clear();
     curses_initialized = true;
 }
 

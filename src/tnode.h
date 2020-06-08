@@ -97,7 +97,7 @@ class tnode_t {
     uint8_t child_count() const { return nodeptr ? nodeptr->child_count : 0; }
 
     maybe_t<source_range_t> source_range() const {
-        if (nodeptr->source_start == NODE_OFFSET_INVALID) return none();
+        if (!nodeptr || nodeptr->source_start == NODE_OFFSET_INVALID) return none();
         return source_range_t{nodeptr->source_start, nodeptr->source_length};
     }
 

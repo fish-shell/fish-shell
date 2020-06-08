@@ -74,13 +74,13 @@ typedef struct te_expr {
     te_expr *parameters[];
 } te_expr;
 
-typedef struct te_builtin {
+using te_builtin = struct {
     const char *name;
     const void *address;
     int type;
-} te_builtin;
+};
 
-typedef struct state {
+using state = struct {
     union {
         double value;
         const void *function;
@@ -89,7 +89,7 @@ typedef struct state {
     const char *next;
     int type;
     te_error_type_t error;
-} state;
+};
 
 /* Parses the input expression. */
 /* Returns NULL on error. */
@@ -109,7 +109,7 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
     const int arity = get_arity(type);
     const int psize = sizeof(te_expr *) * arity;
     const int size = sizeof(te_expr) + psize;
-    te_expr *ret = static_cast<te_expr *>(malloc(size));
+    auto ret = static_cast<te_expr *>(malloc(size));
     // This sets float to 0, which depends on the implementation.
     // We rely on IEEE-754 floats anyway, so it's okay.
     std::memset(ret, 0, size);
@@ -142,7 +142,7 @@ static constexpr double e() { return M_E; }
 static double fac(double a) { /* simplest version of fac */
     if (a < 0.0) return NAN;
     if (a > UINT_MAX) return INFINITY;
-    unsigned int ua = static_cast<unsigned int>(a);
+    auto ua = static_cast<unsigned int>(a);
     unsigned long int result = 1, i;
     for (i = 1; i <= ua; i++) {
         if (i > ULONG_MAX / result) return INFINITY;
@@ -448,7 +448,7 @@ static te_expr *factor(state *s) {
 
     while (s->type == TOK_INFIX &&
            (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(pow)))) {
-        te_fun2 t = (te_fun2)s->function;
+        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
         next_token(s);
 
         if (insertion) {
@@ -475,7 +475,7 @@ static te_expr *term(state *s) {
            (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(mul)) ||
             s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(divide)) ||
             s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(fmod)))) {
-        te_fun2 t = (te_fun2)s->function;
+        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, factor(s));
         ret->function = reinterpret_cast<const void *>(t);
@@ -489,7 +489,7 @@ static te_expr *expr(state *s) {
     te_expr *ret = term(s);
 
     while (s->type == TOK_INFIX && (s->function == add || s->function == sub)) {
-        te_fun2 t = (te_fun2)s->function;
+        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, term(s));
         ret->function = reinterpret_cast<const void *>(t);

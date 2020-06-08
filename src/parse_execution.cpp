@@ -88,10 +88,13 @@ static redirection_spec_t get_stderr_merge() {
     return redirection_spec_t{STDERR_FILENO, redirection_mode_t::fd, stdout_fileno_str};
 }
 
-parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree,
                                                      const operation_context_t &ctx,
-                                                     job_lineage_t lineage)
-    : pstree(std::move(pstree)), parser(p), ctx(ctx), lineage(std::move(lineage)) {}
+                                                     io_chain_t block_io)
+    : pstree(std::move(pstree)),
+      parser(ctx.parser.get()),
+      ctx(ctx),
+      block_io(std::move(block_io)) {}
 
 // Utilities
 
@@ -189,7 +192,10 @@ maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution()
     if (shell_is_exiting()) {
         return end_execution_reason_t::cancelled;
     }
-    if (parser && parser->cancellation_signal) {
+    if (nullptr == parser) {
+        return none();
+    }
+    if (parser->cancellation_signal) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();
@@ -403,9 +409,9 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     }
     int retval;
     if (var) {
-        retval = parser->vars().set(for_var_name, ENV_LOCAL | ENV_USER, var->as_list());
+        retval = parser->set_var_and_fire(for_var_name, ENV_LOCAL | ENV_USER, var->as_list());
     } else {
-        retval = parser->vars().set_empty(for_var_name, ENV_LOCAL | ENV_USER);
+        retval = parser->set_empty_var_and_fire(for_var_name, ENV_LOCAL | ENV_USER);
     }
     assert(retval == ENV_OK);
 
@@ -424,7 +430,7 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
             break;
         }
 
-        int retval = parser->vars().set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
+        int retval = parser->set_var_and_fire(for_var_name, ENV_DEFAULT | ENV_USER, val);
         assert(retval == ENV_OK && "for loop variable should have been successfully set");
         (void)retval;
 
@@ -482,7 +488,7 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
 
     // If we expanded to nothing, match the empty string.
     assert(switch_values_expanded.size() <= 1 && "Should have at most one expansion");
-    wcstring switch_value_expanded = L"";
+    wcstring switch_value_expanded;
     if (!switch_values_expanded.empty()) {
         switch_value_expanded = std::move(switch_values_expanded.front().completion);
     }
@@ -718,7 +724,8 @@ end_execution_reason_t parse_execution_context_t::expand_command(
     assert(expand_err == expand_result_t::ok);
 
     // Complain if the resulting expansion was empty, or expanded to an empty string.
-    if (out_cmd->empty()) {
+    // For no-exec it's okay, as we can't really perform the expansion.
+    if (out_cmd->empty() && !no_exec()) {
         return this->report_error(STATUS_ILLEGAL_CMD, statement,
                                   _(L"The expanded command was empty."));
     }
@@ -741,36 +748,12 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
     if (ret != end_execution_reason_t::ok) {
         return ret;
     }
+    // For no-exec, having an empty command is okay. We can't do anything more with it tho.
+    if (no_exec()) return end_execution_reason_t::ok;
     assert(!cmd.empty() && "expand_command should not produce an empty command");
 
     // Determine the process type.
     enum process_type_t process_type = process_type_for_command(statement, cmd);
-
-    // Protect against exec with background processes running
-    if (process_type == process_type_t::exec && parser->is_interactive()) {
-        bool have_bg = false;
-        for (const auto &bg : parser->jobs()) {
-            // The assumption here is that if it is a foreground job,
-            // it's related to us.
-            // This stops us from asking if we're doing `exec` inside a function.
-            if (!bg->is_completed() && !bg->is_foreground()) {
-                have_bg = true;
-                break;
-            }
-        }
-
-        if (have_bg) {
-            uint64_t current_run_count = reader_run_count();
-            uint64_t &last_exec_run_count = parser->libdata().last_exec_run_counter;
-            if (isatty(STDIN_FILENO) && current_run_count - 1 != last_exec_run_count) {
-                reader_bg_job_warning(*parser);
-                last_exec_run_count = current_run_count;
-                return end_execution_reason_t::error;
-            } else {
-                hup_background_jobs(*parser);
-            }
-        }
-    }
 
     wcstring path_to_external_command;
     if (process_type == process_type_t::external || process_type == process_type_t::exec) {
@@ -795,7 +778,8 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         }
 
         if (!has_command && !use_implicit_cd) {
-            // No command.
+            // No command. If we're --no-execute return okay - it might be a function.
+            if (no_exec()) return end_execution_reason_t::ok;
             return this->handle_command_not_found(cmd, statement, no_cmd_err_code);
         }
     }
@@ -875,6 +859,8 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
             }
             case expand_result_t::wildcard_no_match: {
                 if (glob_behavior == failglob) {
+                    // For no_exec, ignore the error - this might work at runtime.
+                    if (no_exec()) return end_execution_reason_t::ok;
                     // Report the unmatched wildcard error and stop processing.
                     return report_error(STATUS_UNMATCHED_WILDCARD, arg_node, WILDCARD_ERR_MSG,
                                         get_source(arg_node).c_str());
@@ -886,7 +872,6 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
             }
             default: {
                 DIE("unexpected expand_string() return value");
-                break;
             }
         }
 
@@ -1026,7 +1011,6 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
 
             default: {
                 DIE("unexpected expand_string() return value");
-                break;
             }
         }
         wcstring_list_t vals;
@@ -1034,7 +1018,7 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
             vals.emplace_back(std::move(completion.completion));
         }
         if (proc) proc->variable_assignments.push_back({variable_name, vals});
-        parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
+        parser->set_var_and_fire(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
     }
     return end_execution_reason_t::ok;
 }
@@ -1180,6 +1164,9 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
         return *ret;
     }
 
+    // We definitely do not want to execute anything if we're told we're --no-execute!
+    if (no_exec()) return end_execution_reason_t::ok;
+
     // Get terminal modes.
     struct termios tmodes = {};
     if (parser->is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {
@@ -1208,7 +1195,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     // is significantly faster.
     if (job_is_simple_block(job_node)) {
         tnode_t<g::optional_time> optional_time = job_node.child<0>();
-        cleanup_t timer = push_timer(optional_time.tag() == parse_optional_time_time);
+        // If no-exec has been given, there is nothing to time.
+        cleanup_t timer = push_timer(optional_time.tag() == parse_optional_time_time && !no_exec());
         tnode_t<g::variable_assignments> variable_assignments = job_node.child<1>();
         const block_t *block = nullptr;
         end_execution_reason_t result =
@@ -1266,19 +1254,20 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     bool wants_job_control =
         (job_control_mode == job_control_t::all) ||
         ((job_control_mode == job_control_t::interactive) && parser->is_interactive()) ||
-        lineage.root_has_job_control;
+        (ctx.job_group && ctx.job_group->wants_job_control());
 
     job_t::properties_t props{};
     props.wants_terminal = wants_job_control && !ld.is_event;
+    props.initial_background = job_node_is_background(job_node);
     props.skip_notification =
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
     props.job_control = wants_job_control;
 
-    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, this->lineage);
+    shared_ptr<job_t> job = std::make_shared<job_t>(props);
     job->tmodes = tmodes;
 
-    job->mut_flags().foreground = !job_node_is_background(job_node);
+    job->mut_flags().foreground = !props.initial_background;
 
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
@@ -1298,8 +1287,9 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
 
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
-        // Set the pgroup assignment mode, now that the job is populated.
-        job->pgroup_provenance = get_pgroup_provenance(job, lineage);
+        // Set the pgroup assignment mode and job group, now that the job is populated.
+        job_group_t::populate_tree_for_job(job.get(), ctx.job_group);
+        assert(job->group && "Should have a job group");
 
         // Success. Give the job to the parser - it will clean it up.
         parser->job_add(job);
@@ -1314,7 +1304,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
         }
 
         // Actually execute the job.
-        if (!exec_job(*this->parser, job, lineage)) {
+        if (!exec_job(*this->parser, job, block_io)) {
             remove_job(*this->parser, job.get());
         }
 

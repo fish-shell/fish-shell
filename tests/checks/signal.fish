@@ -8,11 +8,11 @@ $fish -c 'begin; exit 5; true; end'
 echo $status
 #CHECK: 5
 
-$fish -c 'kill -SIGHUP %self'
+$fish -c 'kill -SIGHUP $fish_pid'
 echo $status
 #CHECK: 129
 
-$fish -c 'function main; kill -SIGTERM %self; true; end; main'
+$fish -c 'function main; kill -SIGTERM $fish_pid; true; end; main'
 echo $status
 #CHECK: 143
 

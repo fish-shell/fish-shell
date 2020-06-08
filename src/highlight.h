@@ -122,10 +122,12 @@ enum {
     // The path must be to a directory.
     PATH_REQUIRE_DIR = 1 << 0,
     // Expand any leading tilde in the path.
-    PATH_EXPAND_TILDE = 1 << 1
+    PATH_EXPAND_TILDE = 1 << 1,
+    // Normalize directories before resolving, as "cd".
+    PATH_FOR_CD = 1 << 2,
 };
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories,
-                       const environment_t &vars, path_flags_t flags);
+                       const operation_context_t &ctx, path_flags_t flags);
 
 #endif

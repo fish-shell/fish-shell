@@ -4,9 +4,9 @@
 # Compiler output
 complete -c vbc -o nologo -d "Suppresses compiler banner information"
 complete -c vbc -o utf8output -o "utf8output+" -d "Displays compiler output using UTF-8 encoding"
-complete -c vbc -o "utf8output-" -d "Disable -utf8output"
+complete -c vbc -o utf8output- -d "Disable -utf8output"
 complete -c vbc -o verbose -o "verbose+" -d "Outputs extra information during compilation"
-complete -c vbc -o "verbose-" -d "Disable -verbose"
+complete -c vbc -o verbose- -d "Disable -verbose"
 complete -c vbc -o "modulename:" -d "Specify the name of the source module"
 complete -c vbc -o "preferreduilang:" -d "Specify a language for compiler output"
 
@@ -16,11 +16,11 @@ for bytes in 512 1024 2048 4096 8192
 end
 
 complete -c vbc -o optimize -o "optimize+" -d "Enable optimizations"
-complete -c vbc -o "optimize-" -d "Disable optimizations"
+complete -c vbc -o optimize- -d "Disable optimizations"
 
 # Output files
 complete -c vbc -o doc -o "doc:" -o "doc+" -d "Process documentation comments to an XML file"
-complete -c vbc -o "doc-" -d "Disable -doc"
+complete -c vbc -o doc- -d "Disable -doc"
 complete -c vbc -o deterministic -d "Causes the compiler to output an assembly whose binary content is identical across compilations if inputs are identical"
 complete -c vbc -o netcf -d "Sets the compiler to target the .NET Compact Framework"
 complete -c vbc -o "out:" -d "Specifies an output file"
@@ -36,7 +36,7 @@ complete -c vbc -o "t:winmdobj" -o "target:winmdobj" -d "Causes the compiler to 
 # .NET assemblies
 complete -c vbc -o "addmodule:" -d "Causes the compiler to make all type information from the specified file(s) available to the project you are currently compiling"
 complete -c vbc -o delaysign -o "delaysign+" -d "Specifies whether the assembly will be fully or partially signed"
-complete -c vbc -o "delaysign-" -d "Disable -delaysign"
+complete -c vbc -o delaysign- -d "Disable -delaysign"
 complete -c vbc -o "imports:" -d "Imports a namespace from a specified assembly"
 complete -c vbc -o "keycontainer:" -d "Specifies a key container name for a key pair to give an assembly a strong name"
 complete -c vbc -o "keyfile:" -d "Specifies a file containing a key or key pair to give an assembly a strong name"
@@ -53,14 +53,14 @@ complete -c vbc -o debug -o "debug+" -d "Produces debugging information"
 for arguments in full pdbonly
     complete -c vbc -o "debug:$arguments" -d "Produces debugging information"
 end
-complete -c vbc -o "debug-" -d "Disable -debug"
+complete -c vbc -o debug- -d "Disable -debug"
 
 complete -c vbc -o nowarn -o "nowarn:" -d "Suppresses the compiler's ability to generate warnings"
 complete -c vbc -o quiet -d "Prevents the compiler from displaying code for syntax-related errors and warnings"
 complete -c vbc -o removeintchecks -o "removeintchecks+" -d "Disables integer overflow checking"
-complete -c vbc -o "removeintchecks-" -d "Disable -removeintchecks"
+complete -c vbc -o removeintchecks- -d "Disable -removeintchecks"
 complete -c vbc -o warnaserror -o "warnaserror:" -o "warnaserror+" -o "warnaserror+:" -d "Promotes warnings to errors"
-complete -c vbc -o "warnaserror-" -o "warnaserror-:" -d "Disable -warnaserror"
+complete -c vbc -o warnaserror- -o "warnaserror-:" -d "Disable -warnaserror"
 complete -c vbc -o "ruleset:" -d "Specify a ruleset file that disables specific diagnostics"
 
 # Help
@@ -84,16 +84,16 @@ for version_number in (seq 9 15)
 end
 
 complete -c vbc -o optionexplicit -o "optionexplicit+" -d "Enforces explicit declaration of variables"
-complete -c vbc -o "optionexplicit-" -d "Disable -optionexplicit"
+complete -c vbc -o optionexplicit- -d "Disable -optionexplicit"
 complete -c vbc -o optionstrict -o "optionstrict+" -o "optionstrict:" -d "Enforces strict type semantics"
-complete -c vbc -o "optionstrict-" -d "Disable -optionstrict"
+complete -c vbc -o optionstrict- -d "Disable -optionstrict"
 
 for arguments in binary text
     complete -c vbc -o "optioncompare:$arguments" -d "Specifies whether string comparisons should be binary or use locale-specific text semantics"
 end
 
 complete -c vbc -o optioninfer -o "optioninfer+" -d "Enables the use of local type inference in variable declarations"
-complete -c vbc -o "optioninfer-" -d "Disable -optioninfer"
+complete -c vbc -o optioninfer- -d "Disable -optioninfer"
 
 # Preprocessor
 complete -c vbc -o "d:" -o "define:" -d "Defines symbols for conditional compilation"
@@ -113,7 +113,7 @@ for arguments in prompt queue send none
 end
 
 complete -c vbc -o highentropyva -o "highentropyva+" -d "Tells the Windows kernel whether a particular executable supports high entropy Address Space Layout Randomization (ASLR)"
-complete -c vbc -o "highentropyva-" -d "Disable -highentropyva"
+complete -c vbc -o highentropyva- -d "Disable -highentropyva"
 complete -c vbc -o "m:" -o "main:" -d "Specifies the class that contains the Sub Main procedure to use at startup"
 complete -c vbc -o noconfig -d "Do not compile with Vbc.rsp"
 complete -c vbc -o nostdlib -d "Causes the compiler not to reference the standard libraries"
@@ -135,6 +135,6 @@ end
 
 complete -c vbc -o "win32manifest:" -d "Identifies a user-defined Win32 application manifest file to be embedded into a project's portable executable (PE) file"
 complete -c vbc -o parallel -o "parallel+" -d "Specifies whether to use concurrent build"
-complete -c vbc -o "parallel-" -d "Disable -parallel"
+complete -c vbc -o parallel- -d "Disable -parallel"
 complete -c vbc -o "checksumalgorithm:SHA1" -d "Specify SHA1 as the algorithm for calculating the source file checksum stored in PDB (default)"
 complete -c vbc -o "checksumalgorithm:SHA256" -d "Specify SHA256 as the algorithm for calculating the source file checksum stored in PDB"

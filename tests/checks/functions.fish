@@ -21,7 +21,7 @@ functions --details f1
 # Verify that `functions --details` works as expected when given the name of an
 # unknown function.
 set x (functions -D f2)
-if test "$x" != "n/a"
+if test "$x" != n/a
     echo "Unexpected output for 'functions --details f2': $x" >&2
 end
 
@@ -30,7 +30,7 @@ end
 # function that could be autoloaded but isn't currently loaded.
 set x (functions -D abbr)
 if test (count $x) -ne 1
-or not string match -q '*/share/functions/abbr.fish' "$x"
+    or not string match -q '*/share/functions/abbr.fish' "$x"
     echo "Unexpected output for 'functions -D abbr': $x" >&2
 end
 
@@ -39,11 +39,11 @@ end
 # function that was autoloaded.
 set x (functions -v -D abbr)
 if test (count $x) -ne 5
-or not string match -q '*/share/functions/abbr.fish' $x[1]
-or test $x[2] != autoloaded
-or test $x[3] != 1
-or test $x[4] != scope-shadowing
-or test $x[5] != 'Manage abbreviations'
+    or not string match -q '*/share/functions/abbr.fish' $x[1]
+    or test $x[2] != autoloaded
+    or test $x[3] != 1
+    or test $x[4] != scope-shadowing
+    or test $x[5] != 'Manage abbreviations'
     echo "Unexpected output for 'functions -v -D abbr': $x" >&2
 end
 
@@ -60,7 +60,8 @@ end
 
 # ==========
 # Verify function description setting
-function test_func_desc ; end
+function test_func_desc
+end
 functions test_func_desc | string match --quiet '*description*'
 and echo "Unexpected description" >&2
 

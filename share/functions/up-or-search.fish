@@ -14,7 +14,7 @@ function up-or-search -d "Depending on cursor position and current mode, either 
     # We are not already in search mode.
     # If we are on the top line, start search mode,
     # otherwise move up
-    set lineno (commandline -L)
+    set -l lineno (commandline -L)
 
     switch $lineno
         case 1

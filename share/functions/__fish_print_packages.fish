@@ -1,6 +1,6 @@
 # Use --installed to limit to installed packages only
 function __fish_print_packages
-    argparse --name=__fish_print_packages 'i/installed' -- $argv
+    argparse --name=__fish_print_packages i/installed -- $argv
     or return
 
     set -l only_installed 1
@@ -15,9 +15,6 @@ function __fish_print_packages
         case '-**'
             return
     end
-
-    #Get the word 'Package' in the current language
-    set -l package (_ "Package")
 
     if type -q -f apt-cache
         if not set -q only_installed
@@ -49,46 +46,51 @@ function __fish_print_packages
     # Listing /var/db/pkg is a clean alternative.
     if type -q -f pkg_add
         set -l files /var/db/pkg/*
-        string replace '/var/db/pkg/' '' -- $files
+        string replace /var/db/pkg/ '' -- $files
         return
     end
 
     ### BEGIN CACHED RESULTS ###
 
     # Set up cache directory
-    if test -z "$XDG_CACHE_HOME"
-        set XDG_CACHE_HOME $HOME/.cache
+    set -l xdg_cache_home $XDG_CACHE_HOME
+    if test -z "$xdg_cache_home"
+        set xdg_cache_home $HOME/.cache
     end
-    mkdir -m 700 -p $XDG_CACHE_HOME
+    mkdir -m 700 -p $xdg_cache_home
 
     # Caches for 5 minutes
     if type -q -f pacman
-        set cache_file $XDG_CACHE_HOME/.pac-cache.$USER
-        if test -f $cache_file
-            cat $cache_file
-            set age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set max_age 250
-            if test $age -lt $max_age
-                return
+        if not set -q only_installed
+            set -l cache_file $xdg_cache_home/.pac-cache.$USER
+            if test -f $cache_file
+                cat $cache_file
+                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set -l max_age 250
+                if test $age -lt $max_age
+                    return
+                end
             end
+            # prints: <package name>	Package
+            pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
+            return
+        else
+            pacman -Q | string replace ' ' \t
+            return
         end
-
-        # prints: <package name>	Package
-        pacman -Ssq | sed -e 's/$/\t'$package'/' >$cache_file &
-        return
     end
 
     # Zypper needs caching as it is slow
     if type -q -f zypper
         # Use libzypp cache file if available
         if test -f /var/cache/zypp/solv/@System/solv.idx
-            awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\t$package'}' /var/cache/zypp/solv/*/solv.idx
+            awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\tPackage'}' /var/cache/zypp/solv/*/solv.idx
             return
         end
 
         # If the cache is less than five minutes old, we do not recalculate it
 
-        set -l cache_file $XDG_CACHE_HOME/.zypper-cache.$USER
+        set -l cache_file $xdg_cache_home/.zypper-cache.$USER
         if test -f $cache_file
             cat $cache_file
             set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
@@ -99,7 +101,7 @@ function __fish_print_packages
         end
 
         # Remove package version information from output and pipe into cache file
-        zypper --quiet --non-interactive search --type=package | tail -n +4 | sed -r 's/^. \| ((\w|[-_.])+).*/\1\t'$package'/g' >$cache_file &
+        zypper --quiet --non-interactive search --type=package | tail -n +4 | sed -r 's/^. \| ((\w|[-_.])+).*/\1\t'Package'/g' >$cache_file &
         return
     end
 
@@ -108,18 +110,18 @@ function __fish_print_packages
 
         # If the cache is less than six hours old, we do not recalculate it
 
-        set cache_file $XDG_CACHE_HOME/.yum-cache.$USER
+        set -l cache_file $xdg_cache_home/.yum-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set max_age 21600
+            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set -l max_age 21600
             if test $age -lt $max_age
                 return
             end
         end
 
         # Remove package version information from output and pipe into cache file
-        /usr/share/yum-cli/completion-helper.py list all -d 0 -C | sed "s/\..*/\t$package/" >$cache_file &
+        /usr/share/yum-cli/completion-helper.py list all -d 0 -C | sed "s/\..*/\tPackage/" >$cache_file &
         return
     end
 
@@ -130,18 +132,18 @@ function __fish_print_packages
 
         # If the cache is less than five minutes old, we do not recalculate it
 
-        set cache_file $XDG_CACHE_HOME/.rpm-cache.$USER
+        set -l cache_file $xdg_cache_home/.rpm-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set max_age 250
+            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set -l max_age 250
             if test $age -lt $max_age
                 return
             end
         end
 
         # Remove package version information from output and pipe into cache file
-        rpm -qa | sed -e 's/-[^-]*-[^-]*$/\t'$package'/' >$cache_file &
+        rpm -qa | sed -e 's/-[^-]*-[^-]*$/\t'Package'/' >$cache_file &
         return
     end
 
@@ -153,11 +155,11 @@ function __fish_print_packages
         # Determine whether to print installed/available packages
 
         if set -q only_installed
-            set cache_file $XDG_CACHE_HOME/.eopkg-installed-cache.$USER
+            set -l cache_file $xdg_cache_home/.eopkg-installed-cache.$USER
             if test -f $cache_file
                 cat $cache_file
-                set age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set max_age 500
+                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set -l max_age 500
                 if test $age -lt $max_age
                     return
                 end
@@ -167,11 +169,11 @@ function __fish_print_packages
             eopkg list-installed -N | cut -d ' ' -f 1 >$cache_file &
             return
         else
-            set cache_file $XDG_CACHE_HOME/.eopkg-available-cache.$USER
+            set -l cache_file $xdg_cache_home/.eopkg-available-cache.$USER
             if test -f $cache_file
                 cat $cache_file
-                set age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set max_age 500
+                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set -l max_age 500
                 if test $age -lt $max_age
                     return
                 end
@@ -204,7 +206,7 @@ function __fish_print_packages
     # don't save unix time, but the actual date. Also BSD stat is vastly
     # different from linux stat and converting its time format is tedious
     if type -q -f port
-        set cache_file $XDG_CACHE_HOME/.port-cache.$USER
+        set -l cache_file $xdg_cache_home/.port-cache.$USER
         if test -e $cache_file
             # Delete if cache is older than 15 minutes
             find "$cache_file" -ctime +15m | awk '{$1=$1;print}' | xargs rm

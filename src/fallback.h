@@ -34,6 +34,18 @@ int fish_wcswidth(const wchar_t *str, size_t n);
 // otherwise it uses mkstemp followed by fcntl
 int fish_mkstemp_cloexec(char *);
 
+/// thread_local support.
+#if HAVE_CX11_THREAD_LOCAL
+# define FISH_THREAD_LOCAL thread_local
+#elif defined (__GNUC__)
+# define FISH_THREAD_LOCAL __thread
+#elif defined (_MSC_VER)
+# define FISH_THREAD_LOCAL __declspec(thread)
+#else // !C++11 && !__GNUC__ && !_MSC_VER
+# error "No known thread local storage qualifier for this platform"
+#endif
+
+
 #ifndef WCHAR_MAX
 /// This _should_ be defined by wchar.h, but e.g. OpenBSD doesn't.
 #define WCHAR_MAX INT_MAX
@@ -73,7 +85,7 @@ char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, lon
 // these functions only exist on 10.7+.
 //
 // On other platforms, use what's detected at build time.
-#if __APPLE__
+#ifdef __APPLE__
 // Avoid warnings about unknown `clang::weak_import` attribute (e.g. GCC 8.2.0 on macOS 10.10)
 #if __DARWIN_C_LEVEL >= 200809L && __clang__ && __has_attribute(weak_import)
 // We have to explicitly redeclare these as weak, since we are forced to set the MIN_REQUIRED

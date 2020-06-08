@@ -16,7 +16,9 @@
 #ifdef SunOS
 #include <procfs.h>
 #endif
-#if __APPLE__
+#ifdef __APPLE__
+#include <sys/time.h>  // Required to build with old SDK versions
+// proc.h needs to be included *after* time.h, this comment stops clang-format from reordering.
 #include <sys/proc.h>
 #else
 #include <dirent.h>
@@ -45,6 +47,7 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
+#include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -188,11 +191,20 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         }
 
         const wchar_t *end;
-        long tmp = fish_wcstol(&in[pos], &end);
-        // We don't test `*end` as is typically done because we expect it to not be the null char.
-        // Ignore the case of errno==-1 because it means the end char wasn't the null char.
-        if (errno > 0) {
-            return pos;
+        long tmp;
+        if (idx.empty() && in[pos] == L'.' && in[pos + 1] == L'.') {
+            // If we are at the first index expression, a missing start index means the range starts
+            // at the first item.
+            tmp = 1;  // first index
+            end = &in[pos];
+        } else {
+            tmp = fish_wcstol(&in[pos], &end);
+            if (errno > 0) {
+                // We don't test `*end` as is typically done because we expect it to not be the null
+                // char. Ignore the case of errno==-1 because it means the end char wasn't the null
+                // char.
+                return pos;
+            }
         }
 
         long i1 = tmp > -1 ? tmp : size + tmp + 1;
@@ -201,11 +213,20 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         if (in[pos] == L'.' && in[pos + 1] == L'.') {
             pos += 2;
             while (in[pos] == INTERNAL_SEPARATOR) pos++;
+            while (iswspace(in[pos])) pos++;  // Allow the space in "[.. ]".
 
-            long tmp1 = fish_wcstol(&in[pos], &end);
-            // Ignore the case of errno==-1 because it means the end char wasn't the null char.
-            if (errno > 0) {
-                return pos;
+            long tmp1;
+            // Check if we are at the last index range expression, a missing end index means the
+            // range spans until the last item.
+            if (in[pos] == L']') {
+                tmp1 = -1;  // last index
+                end = &in[pos];
+            } else {
+                tmp1 = fish_wcstol(&in[pos], &end);
+                // Ignore the case of errno==-1 because it means the end char wasn't the null char.
+                if (errno > 0) {
+                    return pos;
+                }
             }
             pos = end - in;
 
@@ -570,10 +591,12 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags, com
     return expand_result_t::ok;
 }
 
-/// Expand a command substitution \p input, executing on \p parser, and inserting the results into
+/// Expand a command substitution \p input, executing on \p ctx, and inserting the results into
 /// \p out_list, or any errors into \p errors. \return an expand result.
-static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
+static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t &ctx,
                                        completion_list_t *out_list, parse_error_list_t *errors) {
+    assert(ctx.parser && "Cannot expand without a parser");
+
     wchar_t *paren_begin = nullptr, *paren_end = nullptr;
     wchar_t *tail_begin = nullptr;
     size_t i, j;
@@ -594,13 +617,12 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
         }
         default: {
             DIE("unhandled parse_ret value");
-            break;
         }
     }
 
     wcstring_list_t sub_res;
     const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
-    int subshell_status = exec_subshell_for_expand(subcmd, parser, sub_res);
+    int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.job_group, sub_res);
     if (subshell_status != 0) {
         // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
         const wchar_t *err;
@@ -628,7 +650,12 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
 
         bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
         if (bad_pos != 0) {
-            append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
+            if (tail_begin[bad_pos] == L'0') {
+                append_syntax_error(errors, slice_begin - in + bad_pos,
+                                    L"array indices start at 1, not 0.");
+            } else {
+                append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
+            }
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
 
@@ -649,7 +676,7 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
     // Recursively call ourselves to expand any remaining command substitutions. The result of this
     // recursive call using the tail of the string is inserted into the tail_expand array list
     completion_list_t tail_expand;
-    expand_cmdsubst(tail_begin, parser, &tail_expand, errors);  // TODO: offset error locations
+    expand_cmdsubst(tail_begin, ctx, &tail_expand, errors);  // TODO: offset error locations
 
     // Combine the result of the current command substitution with the result of the recursive tail
     // expansion.
@@ -894,7 +921,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_list_t *ou
         }
     } else {
         assert(ctx.parser && "Must have a parser to expand command substitutions");
-        return expand_cmdsubst(std::move(input), *ctx.parser, out, errors);
+        return expand_cmdsubst(std::move(input), ctx, out, errors);
     }
 }
 
@@ -1013,7 +1040,11 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
             }
         }
 
-        std::sort(expanded.begin(), expanded.end(), completion_t::is_naturally_less_than);
+        std::sort(expanded.begin(), expanded.end(),
+                  [&](const completion_t &a, const completion_t &b) {
+                      return wcsfilecmp_glob(a.completion.c_str(), b.completion.c_str()) < 0;
+                  });
+
         std::move(expanded.begin(), expanded.end(), std::back_inserter(*out));
     } else {
         // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing

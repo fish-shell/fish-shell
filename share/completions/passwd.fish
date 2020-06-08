@@ -25,7 +25,7 @@ if passwd --help >/dev/null 2>&1
     complete -c passwd -s w -l warndays -x -d "Define maximum period of password validity"
     complete -c passwd -n '__fish_not_contain_opt -s A all' -f -a '(__fish_complete_users)' -d "Account to be altered"
 else # Not Linux, so let's see what it is, with the ugly uname
-    set os_type (uname)
+    set -l os_type (uname)
     switch $os_type
         case Darwin # macOS family
             complete -c passwd -f -a '(__fish_complete_users)' -d "Account to be altered"

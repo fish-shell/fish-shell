@@ -1,5 +1,5 @@
 function prevd --description "Move back in the directory history"
-    set -l options 'h/help' 'l/list'
+    set -l options h/help l/list
     argparse -n prevd --max-args=1 $options -- $argv
     or return
 

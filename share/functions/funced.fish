@@ -12,7 +12,7 @@ function __funced_md5
 end
 
 function funced --description 'Edit function definition'
-    set -l options 'h/help' 'e/editor=' 'i/interactive' 's/save'
+    set -l options h/help 'e/editor=' i/interactive s/save
     argparse -n funced --max-args=1 $options -- $argv
     or return
 
@@ -26,7 +26,7 @@ function funced --description 'Edit function definition'
         return 1
     end
 
-    set funcname $argv[1]
+    set -l funcname $argv[1]
 
     # Check VISUAL first since theoretically EDITOR could be ed.
     set -l editor

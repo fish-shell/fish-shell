@@ -1,7 +1,5 @@
-set __fish_facl_spec_keywords default user group mask other
-
 function __fish_facl_list_spec_keyword
-    for keyword in $__fish_facl_spec_keywords
+    for keyword in default user group mask other
         echo $keyword:
     end
 end
@@ -18,8 +16,8 @@ function __fish_facl_extract_acl
     commandline -ct | string replace -ar '.*(\w*:).*' '$1'
 end
 
-complete -c setfacl -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_user' -a '(__fish_facl_extract_acl)(__fish_complete_users  | string replace -a "\t" ":\t")'
-complete -c setfacl -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_group' -a '(__fish_facl_extract_acl)(__fish_complete_groups | string replace -a "\t" ":\t")'
+complete -c setfacl -s m -s x -l modify -l remove -l set -n __fish_facl_starts_with_spec_user -a '(__fish_facl_extract_acl)(__fish_complete_users  | string replace -a "\t" ":\t")'
+complete -c setfacl -s m -s x -l modify -l remove -l set -n __fish_facl_starts_with_spec_group -a '(__fish_facl_extract_acl)(__fish_complete_groups | string replace -a "\t" ":\t")'
 complete -c setfacl -f -s m -s x -l modify -l remove -l set -a '(__fish_facl_list_spec_keyword)'
 
 complete -c setfacl -s b -l remove-all -d 'Remove all extended ACL entries'

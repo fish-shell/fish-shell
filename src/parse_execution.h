@@ -36,13 +36,18 @@ class parse_execution_context_t {
     parsed_source_ref_t pstree;
     parser_t *const parser;
     const operation_context_t &ctx;
+
     // The currently executing job node, used to indicate the line number.
     tnode_t<grammar::job> executing_job_node{};
+
     // Cached line number information.
     size_t cached_lineno_offset = 0;
     int cached_lineno_count = 0;
-    // The lineage for any jobs created by this context.
-    const job_lineage_t lineage;
+
+    /// The block IO chain.
+    /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
+    io_chain_t block_io{};
+
     // No copying allowed.
     parse_execution_context_t(const parse_execution_context_t &) = delete;
     parse_execution_context_t &operator=(const parse_execution_context_t &) = delete;
@@ -139,8 +144,10 @@ class parse_execution_context_t {
     int line_offset_of_character_at_offset(size_t offset);
 
    public:
-    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
-                              const operation_context_t &ctx, job_lineage_t lineage);
+    /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
+    /// The execution context may access the parser and group through ctx.
+    parse_execution_context_t(parsed_source_ref_t pstree, const operation_context_t &ctx,
+                              io_chain_t block_io);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
     /// cached_lineno_offset.

@@ -919,7 +919,7 @@ msgstr "$%ls : paramétrée dans la portée %ls, %ls, avec %d éléments\n"
 
 #: src/builtin_set.cpp:554
 #, c-format
-msgid "$%ls[%d]: length=%d value=|%ls|\n"
+msgid "$%ls[%d]: |%ls|\n"
 msgstr "$%ls[%d] : taille=%d valeur=|%ls|\n"
 
 #: src/builtin_set.cpp:578
@@ -3711,8 +3711,8 @@ msgstr "Contexte SELinux pour l’i-nœud racine du système de fichiers"
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "Bienvenue dans fish, le shell amical et interactif"
 
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:1
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:2
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:1
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:2
 msgid "%s: Too many arguments %s\\n"
 msgstr "%s: Trop d'arguments %s\\n"
 
@@ -3802,8 +3802,8 @@ msgstr ""
 "interactive sera effacé\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:5
-msgid "Command history cleared!"
-msgstr "Historique de commande effacé !"
+msgid "Command history cleared!\\n"
+msgstr "Historique de commande effacé !\\n"
 
 #: /tmp/fish/explicit/share/functions/history.fish:6
 msgid "You did not say 'yes' so I will not clear your command history\\n"

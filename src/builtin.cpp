@@ -11,10 +11,10 @@
 // 2). Add a line like { L"NAME", &builtin_NAME, N_(L"Bla bla bla") }, to the builtin_data_t
 // variable. The description is used by the completion system. Note that this array is sorted.
 //
-// 3). Create a file sphinx_doc_src/NAME.rst, containing the manual for the builtin in
+// 3). Create a file doc_src/NAME.rst, containing the manual for the builtin in
 // reStructuredText-format. Check the other builtin manuals for proper syntax.
 //
-// 4). Use 'git add sphinx_doc_src/NAME.txt' to start tracking changes to the documentation file.
+// 4). Use 'git add doc_src/NAME.txt' to start tracking changes to the documentation file.
 #include "config.h"  // IWYU pragma: keep
 
 #include "builtin.h"
@@ -137,7 +137,6 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -152,7 +151,7 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
 ///    builtin or function name to get up help for
 ///
 /// Process and print help for the specified builtin or function.
-void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *name,
+void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
                         wcstring *error_message) {
     UNUSED(streams);
     // This won't ever work if no_exec is set.
@@ -317,21 +316,24 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
 int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv[1] != nullptr) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv) - 1);
-        return STATUS_INVALID_ARGS;
-    }
+    UNUSED(argv);
     return STATUS_CMD_OK;
 }
 
 int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv[1] != nullptr) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv) - 1);
-        return STATUS_INVALID_ARGS;
-    }
+    UNUSED(argv);
     return STATUS_CMD_ERROR;
+}
+
+int builtin_gettext(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    UNUSED(parser);
+    UNUSED(streams);
+    for (int i = 1; i < builtin_count_args(argv); i++) {
+        streams.out.append(_(argv[i]));
+    }
+    return STATUS_CMD_OK;
 }
 
 // END OF BUILTIN COMMANDS
@@ -342,7 +344,10 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 // Functions that are bound to builtin_generic are handled directly by the parser.
 // NOTE: These must be kept in sorted order!
 static const builtin_data_t builtin_datas[] = {
+    {L".", &builtin_source, N_(L"Evaluate contents of file")},
+    {L":", &builtin_true, N_(L"Return a successful result")},
     {L"[", &builtin_test, N_(L"Test a condition")},
+    {L"_", &builtin_gettext, N_(L"Translate a string")},
     {L"and", &builtin_generic, N_(L"Execute command if previous command succeeded")},
     {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
@@ -394,10 +399,12 @@ static const builtin_data_t builtin_datas[] = {
     {L"string", &builtin_string, N_(L"Manipulate strings")},
     {L"switch", &builtin_generic, N_(L"Conditionally execute a block of commands")},
     {L"test", &builtin_test, N_(L"Test a condition")},
+    {L"time", &builtin_generic, N_(L"Measure how long a command or block takes")},
     {L"true", &builtin_true, N_(L"Return a successful result")},
     {L"ulimit", &builtin_ulimit, N_(L"Set or get the shells resource usage limits")},
     {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},
-    {L"while", &builtin_generic, N_(L"Perform a command multiple times")}};
+    {L"while", &builtin_generic, N_(L"Perform a command multiple times")},
+};
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
 

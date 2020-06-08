@@ -31,6 +31,9 @@
 /// given above.
 int wcsfilecmp(const wchar_t *a, const wchar_t *b);
 
+/// wcsfilecmp, but frozen in time for glob usage.
+int wcsfilecmp_glob(const wchar_t *a, const wchar_t *b);
+
 /// Get the current time in microseconds since Jan 1, 1970.
 long long get_time();
 

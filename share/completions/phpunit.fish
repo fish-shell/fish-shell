@@ -11,7 +11,7 @@ end
 # Lists PHPUnit objects corresponding to the given option
 function __fish_phpunit_list --argument option
     # Use the same PHPUnit binary as in the command being completed
-    set -l phpunit (commandline -o)[1]
+    set -l phpunit (commandline -opc)[1]
     test -x $phpunit
     or return
 
@@ -64,7 +64,7 @@ complete -f -c phpunit -l globals-backup -d 'Backup and restore $GLOBALS for eac
 complete -f -c phpunit -l static-backup -d 'Backup and restore static attributes for each test'
 
 complete -f -c phpunit -l colors -a 'never auto always' -d 'Use colors in output'
-complete -x -c phpunit -l columns -a 'max' -d 'Number of columns to use for progress output'
+complete -x -c phpunit -l columns -a max -d 'Number of columns to use for progress output'
 complete -f -c phpunit -l stderr -d 'Write to STDERR instead of STDOUT'
 complete -f -c phpunit -l stop-on-defect -d 'Stop execution upon first not-passed test'
 complete -f -c phpunit -l stop-on-error -d 'Stop execution upon first error'

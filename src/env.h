@@ -63,6 +63,10 @@ struct statuses_t {
     /// Status of the last job to exit.
     int status{0};
 
+    /// Signal from the most recent process in the last job that was terminated by a signal.
+    /// 0 if all processes exited normally.
+    int kill_signal{0};
+
     /// Pipestatus value.
     std::vector<int> pipestatus{};
 
@@ -289,9 +293,6 @@ class env_stack_t final : public environment_t {
     statuses_t get_last_statuses() const;
     int get_last_status() const;
     void set_last_statuses(statuses_t s);
-
-    /// Update the termsize variable.
-    void set_termsize();
 
     /// Sets up argv as the given list of strings.
     void set_argv(wcstring_list_t argv);

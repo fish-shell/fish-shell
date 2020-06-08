@@ -7,6 +7,7 @@
 
 class environment_t;
 class parser_t;
+class job_group_t;
 
 /// A common helper which always returns false.
 bool no_cancel();
@@ -28,6 +29,11 @@ class operation_context_t {
     // The set of variables. It is the creator's responsibility to ensure this lives as log as the
     // context itself.
     const environment_t &vars;
+
+    /// The job group of the parental job.
+    /// This is used only when expanding command substitutions. If this is set, any jobs created by
+    /// the command substitions should use this tree.
+    std::shared_ptr<job_group_t> job_group{};
 
     // A function which may be used to poll for cancellation.
     cancel_checker_t cancel_checker;

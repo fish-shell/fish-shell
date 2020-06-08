@@ -16,6 +16,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "signal.h"
+#include "termsize.h"
 #include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -219,8 +220,8 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
     switch (sig) {
 #ifdef SIGWINCH
         case SIGWINCH:
-            /// Respond to a winch signal by checking the terminal size.
-            common_handle_winch(sig);
+            /// Respond to a winch signal by telling the termsize container.
+            termsize_container_t::handle_winch();
             break;
 #endif
 
@@ -235,7 +236,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
 
         case SIGTERM:
             /// Handle sigterm. The only thing we do is restore the front process ID, then die.
-            restore_term_foreground_process_group();
+            restore_term_foreground_process_group_for_exit();
             signal(SIGTERM, SIG_DFL);
             raise(SIGTERM);
             break;
@@ -407,7 +408,7 @@ bool sigint_checker_t::check() {
     return changed;
 }
 
-void sigint_checker_t::wait() {
+void sigint_checker_t::wait() const {
     auto &tm = topic_monitor_t::principal();
     generation_list_t gens{};
     gens[topic_t::sighupint] = this->gen_;

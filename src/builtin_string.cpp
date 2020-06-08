@@ -1,5 +1,5 @@
 // Implementation of the string builtin.
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
 #define PCRE2_CODE_UNIT_WIDTH WCHAR_T_BITS
 #ifdef _WIN32
@@ -133,7 +133,7 @@ class arg_iterator_t {
 
 // This is used by the string subcommands to communicate with the option parser which flags are
 // valid and get the result of parsing the command for flags.
-typedef struct {  //!OCLINT(too many fields)
+using options_t = struct options_t {  //!OCLINT(too many fields)
     bool all_valid = false;
     bool chars_valid = false;
     bool count_valid = false;
@@ -151,9 +151,12 @@ typedef struct {  //!OCLINT(too many fields)
     bool regex_valid = false;
     bool right_valid = false;
     bool start_valid = false;
+    bool end_valid = false;
     bool style_valid = false;
     bool no_empty_valid = false;
     bool no_trim_newlines_valid = false;
+    bool fields_valid = false;
+    bool allow_empty_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -169,22 +172,26 @@ typedef struct {  //!OCLINT(too many fields)
     bool right = false;
     bool no_empty = false;
     bool no_trim_newlines = false;
+    bool allow_empty = false;
 
     long count = 0;
     long length = 0;
     long max = 0;
     long start = 0;
+    long end = 0;
 
-    const wchar_t *chars_to_trim = L" \f\n\r\t";
+    std::vector<int> fields;
+
+    const wchar_t *chars_to_trim = L" \f\n\r\t\v";
     const wchar_t *arg1 = nullptr;
     const wchar_t *arg2 = nullptr;
 
     escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
-} options_t;
+};
 
 /// This handles the `--style=xxx` flag.
-static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     const wchar_t *cmd = argv[0];
 
     if (opts->style_valid) {
@@ -207,8 +214,8 @@ static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->no_newline_valid) {
         opts->no_newline = true;
         return STATUS_CMD_OK;
@@ -220,18 +227,21 @@ static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->all_valid) {
         opts->all = true;
+        return STATUS_CMD_OK;
+    } else if (opts->allow_empty_valid) {
+        opts->allow_empty = true;
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->chars_valid) {
         opts->chars_to_trim = w.woptarg;
         return STATUS_CMD_OK;
@@ -240,9 +250,19 @@ static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
-    if (opts->entire_valid) {
+static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->end_valid) {
+        opts->end = fish_wcstol(w.woptarg);
+        if (opts->end == 0 || opts->end == LONG_MIN || errno == ERANGE) {
+            string_error(streams, _(L"%ls: Invalid end value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        return STATUS_CMD_OK;
+    } else if (opts->entire_valid) {
         opts->entire = true;
         return STATUS_CMD_OK;
     }
@@ -250,18 +270,63 @@ static int handle_flag_e(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_f(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->filter_valid) {
         opts->filter = true;
+        return STATUS_CMD_OK;
+    } else if (opts->fields_valid) {
+        for (const wcstring &s : split_string(w.woptarg, L',')) {
+            wcstring_list_t range = split_string(s, L'-');
+            if (range.size() == 2) {
+                int begin = fish_wcstoi(range.at(0).c_str());
+                if (begin <= 0 || errno == ERANGE) {
+                    string_error(streams, _(L"%ls: Invalid range value for field '%ls'\n"), argv[0],
+                                 w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+                int end = fish_wcstoi(range.at(1).c_str());
+                if (end <= 0 || errno == ERANGE) {
+                    string_error(streams, _(L"%ls: Invalid range value for field '%ls'\n"), argv[0],
+                                 w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+                if (begin <= end) {
+                    for (int i = begin; i <= end; i++) {
+                        opts->fields.push_back(i);
+                    }
+                } else {
+                    for (int i = begin; i >= end; i--) {
+                        opts->fields.push_back(i);
+                    }
+                }
+            } else {
+                int field = fish_wcstoi(s.c_str());
+                if (field <= 0 || errno == ERANGE) {
+                    string_error(streams, _(L"%ls: Invalid fields value '%ls'\n"), argv[0],
+                                 w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                } else if (errno) {
+                    string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+                opts->fields.push_back(field);
+            }
+        }
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->ignore_case_valid) {
         opts->ignore_case = true;
         return STATUS_CMD_OK;
@@ -273,8 +338,8 @@ static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->length_valid) {
         opts->length = fish_wcstol(w.woptarg);
         if (opts->length < 0 || opts->length == LONG_MIN || errno == ERANGE) {
@@ -293,8 +358,8 @@ static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->max_valid) {
         opts->max = fish_wcstol(w.woptarg);
         if (opts->max < 0 || errno == ERANGE) {
@@ -310,8 +375,8 @@ static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->count_valid) {
         opts->count = fish_wcstol(w.woptarg);
         if (opts->count < 0 || errno == ERANGE) {
@@ -336,8 +401,8 @@ static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_q(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_q(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->quiet_valid) {
         opts->quiet = true;
         return STATUS_CMD_OK;
@@ -346,8 +411,8 @@ static int handle_flag_q(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->regex_valid) {
         opts->regex = true;
         return STATUS_CMD_OK;
@@ -359,8 +424,8 @@ static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->start_valid) {
         opts->start = fish_wcstol(w.woptarg);
         if (opts->start == 0 || opts->start == LONG_MIN || errno == ERANGE) {
@@ -376,8 +441,8 @@ static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams, wgetopter_t &w,
-                         options_t *opts) {
+static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
     if (opts->invert_valid) {
         opts->invert_match = true;
         return STATUS_CMD_OK;
@@ -408,8 +473,11 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->regex_valid) short_opts.append(L"r");
     if (opts->right_valid) short_opts.append(L"r");
     if (opts->start_valid) short_opts.append(L"s:");
+    if (opts->end_valid) short_opts.append(L"e:");
     if (opts->no_empty_valid) short_opts.append(L"n");
     if (opts->no_trim_newlines_valid) short_opts.append(L"N");
+    if (opts->fields_valid) short_opts.append(L"f:");
+    if (opts->allow_empty_valid) short_opts.append(L"a");
     return short_opts;
 }
 
@@ -420,6 +488,7 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"chars", required_argument, nullptr, 'c'},
                                               {L"count", required_argument, nullptr, 'n'},
                                               {L"entire", no_argument, nullptr, 'e'},
+                                              {L"end", required_argument, nullptr, 'e'},
                                               {L"filter", no_argument, nullptr, 'f'},
                                               {L"ignore-case", no_argument, nullptr, 'i'},
                                               {L"index", no_argument, nullptr, 'n'},
@@ -436,6 +505,8 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"start", required_argument, nullptr, 's'},
                                               {L"style", required_argument, nullptr, 1},
                                               {L"no-trim-newlines", no_argument, nullptr, 'N'},
+                                              {L"fields", required_argument, nullptr, 'f'},
+                                              {L"allow-empty", no_argument, nullptr, 'a'},
                                               {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
@@ -617,7 +688,7 @@ class string_matcher_t {
 
    public:
     string_matcher_t(options_t opts_, io_streams_t &streams_)
-        : opts(opts_), streams(streams_), total_matched(0) {}
+        : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
 
     virtual ~string_matcher_t() = default;
     virtual bool report_matches(const wcstring &arg) = 0;
@@ -713,12 +784,8 @@ struct compiled_regex_t {
     }
 
     ~compiled_regex_t() {
-        if (match != nullptr) {
-            pcre2_match_data_free(match);
-        }
-        if (code != nullptr) {
-            pcre2_code_free(code);
-        }
+        pcre2_match_data_free(match);
+        pcre2_code_free(code);
     }
 };
 
@@ -807,7 +874,7 @@ class pcre2_matcher_t : public string_matcher_t {
         if (opts.invert_match) return true;
 
         // Report any additional matches.
-        for (auto *ovector = pcre2_get_ovector_pointer(regex.match); opts.all; total_matched++) {
+        for (auto ovector = pcre2_get_ovector_pointer(regex.match); opts.all; total_matched++) {
             uint32_t options = 0;
             PCRE2_SIZE offset = ovector[1];  // start at end of previous match
 
@@ -879,7 +946,7 @@ class string_replacer_t {
 
    public:
     string_replacer_t(const wchar_t *argv0_, options_t opts_, io_streams_t &streams_)
-        : argv0(argv0_), opts(opts_), total_replaced(0), streams(streams_) {}
+        : argv0(argv0_), opts(std::move(opts_)), total_replaced(0), streams(streams_) {}
 
     virtual ~string_replacer_t() = default;
     int replace_count() const { return total_replaced; }
@@ -988,7 +1055,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
     size_t arglen = arg.length();
     PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
-    wchar_t *output = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * bufsize));
+    auto output = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * bufsize));
     int pcre2_rc;
     PCRE2_SIZE outlen = bufsize;
 
@@ -1007,8 +1074,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
             done = true;
         } else {
             bufsize = outlen;
-            wchar_t *new_output =
-                static_cast<wchar_t *>(realloc(output, sizeof(wchar_t) * bufsize));
+            auto new_output = static_cast<wchar_t *>(realloc(output, sizeof(wchar_t) * bufsize));
             if (new_output) output = new_output;
         }
     }
@@ -1063,22 +1129,33 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
 
 static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv,
                                bool is_split0) {
+    wchar_t *cmd = argv[0];
     options_t opts;
     opts.quiet_valid = true;
     opts.right_valid = true;
     opts.max_valid = true;
     opts.max = LONG_MAX;
     opts.no_empty_valid = true;
+    opts.fields_valid = true;
+    opts.allow_empty_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, is_split0 ? 0 : 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
+    if (opts.fields.size() < 1 && opts.allow_empty) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--allow-empty is only valid with --fields"));
+        return STATUS_INVALID_ARGS;
+    }
+
     const wcstring sep = is_split0 ? wcstring(1, L'\0') : wcstring(opts.arg1);
 
-    wcstring_list_t splits;
+    std::vector<wcstring_list_t> all_splits;
+    size_t split_count = 0;
     size_t arg_count = 0;
     arg_iterator_t aiter(argv, optind, streams, !is_split0);
     while (const wcstring *arg = aiter.nextstr()) {
+        wcstring_list_t splits;
         if (opts.right) {
             split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max,
                         opts.no_empty);
@@ -1086,32 +1163,52 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
             split_about(arg->begin(), arg->end(), sep.begin(), sep.end(), &splits, opts.max,
                         opts.no_empty);
         }
+        all_splits.push_back(splits);
+        split_count += splits.size();
         arg_count++;
     }
 
-    // If we are from the right, split_about gave us reversed strings, in reversed order!
-    if (opts.right) {
-        for (auto &split : splits) {
-            std::reverse(split.begin(), split.end());
+    for (auto &splits : all_splits) {
+        // If we are from the right, split_about gave us reversed strings, in reversed order!
+        if (opts.right) {
+            for (auto &split : splits) {
+                std::reverse(split.begin(), split.end());
+            }
+            std::reverse(splits.begin(), splits.end());
         }
-        std::reverse(splits.begin(), splits.end());
-    }
 
-    const size_t split_count = splits.size();
-    if (!opts.quiet) {
-        if (is_split0 && !splits.empty()) {
-            // split0 ignores a trailing \0, so a\0b\0 is two elements.
-            // In contrast to split, where a\nb\n is three - "a", "b" and "".
-            //
-            // Remove the last element if it is empty.
-            if (splits.back().empty()) splits.pop_back();
-        }
-        auto &buff = streams.out.buffer();
-        for (const wcstring &split : splits) {
-            buff.append(split, separation_type_t::explicitly);
+        if (!opts.quiet) {
+            if (is_split0 && !splits.empty()) {
+                // split0 ignores a trailing \0, so a\0b\0 is two elements.
+                // In contrast to split, where a\nb\n is three - "a", "b" and "".
+                //
+                // Remove the last element if it is empty.
+                if (splits.back().empty()) splits.pop_back();
+            }
+            auto &buff = streams.out.buffer();
+            if (opts.fields.size() > 0) {
+                // Print nothing and return error if any of the supplied
+                // fields do not exist, unless `--allow-empty` is used.
+                if (!opts.allow_empty) {
+                    for (const auto &field : opts.fields) {
+                        // field indexing starts from 1
+                        if (field - 1 >= (long)splits.size()) {
+                            return STATUS_CMD_ERROR;
+                        }
+                    }
+                }
+                for (const auto &field : opts.fields) {
+                    if (field - 1 < (long)splits.size()) {
+                        buff.append(splits.at(field - 1), separation_type_t::explicitly);
+                    }
+                }
+            } else {
+                for (const wcstring &split : splits) {
+                    buff.append(split, separation_type_t::explicitly);
+                }
+            }
         }
     }
-
     // We split something if we have more split values than args.
     return split_count > arg_count ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
@@ -1201,14 +1298,23 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
+
     options_t opts;
     opts.length_valid = true;
     opts.quiet_valid = true;
     opts.start_valid = true;
+    opts.end_valid = true;
     opts.length = -1;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
+
+    if (opts.length != -1 && opts.end != 0) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--end and --length are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
 
     int nsub = 0;
     arg_iterator_t aiter(argv, optind, streams);
@@ -1216,19 +1322,31 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         using size_type = wcstring::size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
+
         if (opts.start > 0) {
             pos = static_cast<size_type>(opts.start - 1);
         } else if (opts.start < 0) {
             assert(opts.start != LONG_MIN);  // checked above
-            size_type n = static_cast<size_type>(-opts.start);
+            auto n = static_cast<size_type>(-opts.start);
             pos = n > s->length() ? 0 : s->length() - n;
         }
+
         if (pos > s->length()) {
             pos = s->length();
         }
 
         if (opts.length >= 0) {
             count = static_cast<size_type>(opts.length);
+        } else if (opts.end != 0) {
+            size_type n;
+            if (opts.end > 0) {
+                n = static_cast<size_type>(opts.end);
+            } else {
+                assert(opts.end != LONG_MIN);  // checked above
+                n = static_cast<size_type>(-opts.end);
+                n = n > s->length() ? 0 : s->length() - n;
+            }
+            count = n < pos ? 0 : n - pos;
         }
 
         // Note that std::string permits count to extend past end of string.

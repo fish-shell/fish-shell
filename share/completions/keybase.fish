@@ -1,4 +1,4 @@
-#Keybase 5.1.1
+#Keybase 5.3.0
 
 function __fish_keybase_line_ends_with
     set -l line (commandline -poc | string match -v -r '^-')
@@ -13,24 +13,25 @@ end
 set -l ends __fish_keybase_line_ends_with
 set -l seen __fish_seen_subcommand_from
 #L1
-set -l keybase account blocks bot chat ctl currency decrypt deprovision device encrypt follow fs git h help id list-followers list-following log login logout oneshot paperkey passphrase pgp ping prove rekey selfprovision service sign signup sigs status team track unfollow untrack update verify version wallet
+set -l keybase account blocks bot chat ctl currency decrypt deprovision device encrypt follow fs git h help id kvstore list-followers list-following log login logout oneshot paperkey passphrase pgp ping prove rekey selfprovision service sign signup sigs status team track unfollow untrack update verify version wallet whoami
 #L2
-set -l keybase_account delete email h help lockdown recover-username upload-avatar
-set -l keybase_blocks h help list-users
+set -l keybase_account contact-settings delete email h help lockdown recover-username upload-avatar
+set -l keybase_blocks h help list-users list-teams
 set -l keybase_bot h help signup token
-set -l keybase_chat add-to-channel api api-listen create-channel delete-channel delete-history download h help hide join-channel leave-channel list list-channels list-members list-unread ls lsur min-writer-role mute notification-settings read readd-member rename-channel report retention-policy search search-regexp send upload
-set -l keybase_ctl app-exit autostart h help init log-rotate redirector reload restart start stop watchdog watchdog2
+set -l keybase_chat add-bot-member add-to-channel api api-listen bot-member-settings clear-commands conv-info create-channel default-channels delete-channel delete-history download edit-bot-member featured-bots h help hide join-channel leave-channel list list-channels list-members list-unread ls lsur min-writer-role mute notification-settings read readd-member remove-bot-member rename-channel report retention-policy search search-bots search-regexp send upload
+set -l keybase_ctl app-exit autostart h help init log-rotate redirector reload restart start stop wait watchdog watchdog2
 set -l keybase_currency add h help
 set -l keybase_device add h help list remove
 set -l keybase_fs clear-conflicts cp debug finish-resolving-conflicts get-status h help history kill ln ls mkdir mv ps quota read recover reset rm set-debug-level stat sync uploads write
-set -l keybase_git create delete gc h help list settings
+set -l keybase_git create delete gc h help lfs-config list settings
 set -l keybase_help advanced gpg keyring tor
+set -l keybase_kvstore api h help
 set -l keybase_log h help send
 set -l keybase_passphrase change check h help recover remember set
 set -l keybase_pgp decrypt drop encrypt export gen h help import list pull pull-private purge push-private select sign update verify
 set -l keybase_rekey h help paper status
 set -l keybase_sigs h help list revoke
-set -l keybase_team accept-invite add-member add-members-bulk api create delete edit-member h help ignore-request leave list-members list-memberships list-requests remove-member rename request-access settings show-tree
+set -l keybase_team accept-invite add-member add-members-bulk api bot-settings create delete edit-member h help ignore-request leave list-members list-memberships list-requests remove-member rename request-access search settings show-tree
 set -l keybase_update check check-in-use notify
 set -l keybase_wallet accounts add-trustline api asset-search balances cancel cancel-request change-trustline-limit delete-trustline detail details export get-inflation get-started h help history import list lookup merge popular-assets reclaim rename request send send-path-payment set-currency set-inflation set-primary sign
 #L3
@@ -48,11 +49,9 @@ complete -c keybase -f -n "$ends keybase" -l auto-fork
 complete -c keybase -f -n "$ends keybase" -l bg-identifier-disabled
 complete -c keybase -f -n "$ends keybase" -l chat-db
 complete -c keybase -f -n "$ends keybase" -l code-signing-kids
-complete -c keybase -f -n "$ends keybase" -l config-file
-complete -c keybase -f -n "$ends keybase" -s c -d "--config-file"
+complete -c keybase -f -n "$ends keybase" -l config-file -s c
 complete -c keybase -f -n "$ends keybase" -l db
-complete -c keybase -f -n "$ends keybase" -l debug
-complete -c keybase -f -n "$ends keybase" -s d -d "--debug"
+complete -c keybase -f -n "$ends keybase" -l debug -s d
 complete -c keybase -f -n "$ends keybase" -l debug-journeycard
 complete -c keybase -f -n "$ends keybase" -l disable-bg-conv-loader
 complete -c keybase -f -n "$ends keybase" -l disable-cert-pinning
@@ -71,18 +70,15 @@ complete -c keybase -f -n "$ends keybase" -l gpg
 complete -c keybase -f -n "$ends keybase" -l gpg-options
 complete -c keybase -f -n "$ends keybase" -l gpgdir
 complete -c keybase -f -n "$ends keybase" -l gui-config-file
-complete -c keybase -f -n "$ends keybase" -l help
-complete -c keybase -f -n "$ends keybase" -s h -d "--help"
-complete -c keybase -f -n "$ends keybase" -l home
-complete -c keybase -f -n "$ends keybase" -s H -d "--home"
+complete -c keybase -f -n "$ends keybase" -l help -s h
+complete -c keybase -f -n "$ends keybase" -l home -s H
 complete -c keybase -f -n "$ends keybase" -l leveldb-num-files
 complete -c keybase -f -n "$ends keybase" -l local-rpc-debug-unsafe
 complete -c keybase -f -n "$ends keybase" -l log-file
 complete -c keybase -f -n "$ends keybase" -l log-format
 complete -c keybase -f -n "$ends keybase" -l log-prefix
 complete -c keybase -f -n "$ends keybase" -l merkle-kids
-complete -c keybase -f -n "$ends keybase" -l no-auto-fork
-complete -c keybase -f -n "$ends keybase" -s F -d "--no-auto-fork"
+complete -c keybase -f -n "$ends keybase" -l no-auto-fork -s F
 complete -c keybase -f -n "$ends keybase" -l no-debug
 complete -c keybase -f -n "$ends keybase" -l paramproof-kit
 complete -c keybase -f -n "$ends keybase" -l pgpdir
@@ -101,8 +97,7 @@ complete -c keybase -f -n "$ends keybase" -l remember-passphrase
 complete -c keybase -f -n "$ends keybase" -l run-mode
 complete -c keybase -f -n "$ends keybase" -l scraper-timeout
 complete -c keybase -f -n "$ends keybase" -l secret-keyring
-complete -c keybase -f -n "$ends keybase" -l server
-complete -c keybase -f -n "$ends keybase" -s s -d "--server"
+complete -c keybase -f -n "$ends keybase" -l server -s s
 complete -c keybase -f -n "$ends keybase" -l session-file
 complete -c keybase -f -n "$ends keybase" -l slow-gregor-conn
 complete -c keybase -f -n "$ends keybase" -l socket-file
@@ -116,11 +111,11 @@ complete -c keybase -f -n "$ends keybase" -l use-default-log-file
 complete -c keybase -f -n "$ends keybase" -l use-root-config-file
 complete -c keybase -f -n "$ends keybase" -l user-cache-size
 complete -c keybase -f -n "$ends keybase" -l vdebug
-complete -c keybase -f -n "$ends keybase" -l version
-complete -c keybase -f -n "$ends keybase" -s v -d "--version"
+complete -c keybase -f -n "$ends keybase" -l version -s v
 
 #commands
 #L1
+complete -c keybase -f -n "not $ends keybase"
 complete -c keybase -f -n "$ends keybase" -a "$keybase"
 #L2
 complete -c keybase -f -n "$ends keybase account" -a "$keybase_account"
@@ -134,6 +129,7 @@ complete -c keybase -f -n "$ends keybase fs" -a "$keybase_fs"
 complete -c keybase -f -n "$ends keybase git" -a "$keybase_git"
 complete -c keybase -f -n "$ends keybase h" -a "$keybase_help"
 complete -c keybase -f -n "$ends keybase help" -a "$keybase_help"
+complete -c keybase -f -n "$ends keybase kvstore" -a "$keybase_kvstore"
 complete -c keybase -f -n "$ends keybase log" -a "$keybase_log"
 complete -c keybase -f -n "$ends keybase passphrase" -a "$keybase_passphrase"
 complete -c keybase -f -n "$ends keybase pgp" -a "$keybase_pgp"
@@ -142,6 +138,7 @@ complete -c keybase -f -n "$ends keybase sigs" -a "$keybase_sigs"
 complete -c keybase -f -n "$ends keybase team" -a "$keybase_team"
 complete -c keybase -f -n "$ends keybase update" -a "$keybase_update"
 complete -c keybase -f -n "$ends keybase wallet" -a "$keybase_wallet"
+#...
 #L3
 complete -c keybase -f -n "$ends keybase account email" -a "$keybase_account_email"
 complete -c keybase -f -n "$ends keybase fs debug" -a "$keybase_fs_debug"

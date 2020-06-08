@@ -1,0 +1,48 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  ubuntu:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: |
+        sudo apt install expect gettext libncurses5-dev libpcre2-dev
+    - name: cmake
+      run: |
+        mkdir build && cd build
+        cmake ..
+    - name: make
+      run: |
+        make
+    - name: make test
+      run: |
+        make test
+
+  # macos:
+
+  #   runs-on: macos-latest
+
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Install deps
+  #     run: |
+  #       brew install pcre2
+  #   - name: cmake
+  #     run: |
+  #       mkdir build && cd build
+  #       cmake .. 
+  #   - name: make
+  #     run: |
+  #       make
+  #   - name: make test
+  #     run: |
+  #       make test

@@ -1,5 +1,5 @@
 function __fish_complete_wvdial_peers --description 'Complete wvdial peers' --argument cfgfiles
-    set -q cfgfiles[0]
+    set -q cfgfiles[1]
     or set -l cfgfiles /etc/wvdial.conf ~/.wvdialrc
 
     # test if there is an alternative config file specified

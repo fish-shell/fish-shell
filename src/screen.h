@@ -20,6 +20,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -30,42 +31,47 @@ class page_rendering_t;
 
 /// A class representing a single line of a screen.
 struct line_t {
-    std::vector<wchar_t> text;
-    std::vector<highlight_spec_t> colors;
-    bool is_soft_wrapped;
-    size_t indentation;
+    /// A pair of a character, and the color with which to draw it.
+    using highlighted_char_t = std::pair<wchar_t, highlight_spec_t>;
+    std::vector<highlighted_char_t> text{};
+    bool is_soft_wrapped{false};
+    size_t indentation{0};
 
-    line_t() : text(), colors(), is_soft_wrapped(false), indentation(0) {}
+    line_t() = default;
 
+    /// Clear the line's contents.
     void clear(void) {
         text.clear();
-        colors.clear();
     }
 
-    void append(wchar_t txt, highlight_spec_t color) {
-        text.push_back(txt);
-        colors.push_back(color);
-    }
+    /// Append a single character \p txt to the line with color \p c.
+    void append(wchar_t c, highlight_spec_t color) { text.push_back({c, color}); }
 
+    /// Append a nul-terminated string \p txt to the line, giving each character \p color.
     void append(const wchar_t *txt, highlight_spec_t color) {
         for (size_t i = 0; txt[i]; i++) {
-            text.push_back(txt[i]);
-            colors.push_back(color);
+            text.push_back({txt[i], color});
         }
     }
 
-    size_t size(void) const { return text.size(); }
+    /// \return the number of characters.
+    size_t size() const { return text.size(); }
 
-    wchar_t char_at(size_t idx) const { return text.at(idx); }
+    /// \return the character at a char index.
+    wchar_t char_at(size_t idx) const { return text.at(idx).first; }
 
-    highlight_spec_t color_at(size_t idx) const { return colors.at(idx); }
+    /// \return the color at a char index.
+    highlight_spec_t color_at(size_t idx) const { return text.at(idx).second; }
 
+    /// Append the contents of \p line to this line.
     void append_line(const line_t &line) {
         text.insert(text.end(), line.text.begin(), line.text.end());
-        colors.insert(colors.end(), line.colors.begin(), line.colors.end());
     }
 
-    wcstring to_string() const { return wcstring(this->text.begin(), this->text.end()); }
+    /// \return the width of this line, counting up to no more than \p max characters.
+    /// This follows fish_wcswidth() semantics, except that characters whose width would be -1 are
+    /// treated as 0.
+    int wcswidth_min_0(size_t max = std::numeric_limits<size_t>::max()) const;
 };
 
 /// A class representing screen contents.
@@ -73,12 +79,18 @@ class screen_data_t {
     std::vector<line_t> line_datas;
 
    public:
+    /// The width of the screen in this rendering.
+    /// -1 if not set, i.e. we have not rendered before.
+    int screen_width{-1};
+
+    /// Where the cursor is in (x, y) coordinates.
     struct cursor_t {
-        int x;
-        int y;
-        cursor_t() : x(0), y(0) {}
+        int x{0};
+        int y{0};
+        cursor_t() = default;
         cursor_t(int a, int b) : x(a), y(b) {}
-    } cursor;
+    };
+    cursor_t cursor;
 
     line_t &add_line(void) {
         line_datas.resize(line_datas.size() + 1);
@@ -119,40 +131,42 @@ class screen_t {
     outputter_t &outp_;
 
    public:
-    /// Constructor.
     screen_t();
 
     /// The internal representation of the desired screen contents.
-    screen_data_t desired;
+    screen_data_t desired{};
     /// The internal representation of the actual screen contents.
-    screen_data_t actual;
+    screen_data_t actual{};
     /// A string containing the prompt which was last printed to the screen.
-    wcstring actual_left_prompt;
+    wcstring actual_left_prompt{};
     /// Last right prompt width.
-    size_t last_right_prompt_width;
-    /// The actual width of the screen at the time of the last screen write.
-    int actual_width;
+    size_t last_right_prompt_width{0};
     /// If we support soft wrapping, we can output to this location without any cursor motion.
-    screen_data_t::cursor_t soft_wrap_location;
+    maybe_t<screen_data_t::cursor_t> soft_wrap_location{};
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
-    bool autosuggestion_is_truncated;
+    bool autosuggestion_is_truncated{false};
     /// This flag is set to true when there is reason to suspect that the parts of the screen lines
     /// where the actual content is not filled in may be non-empty. This means that a clr_eol
     /// command has to be sent to the terminal at the end of each line, including
     /// actual_lines_before_reset.
-    bool need_clear_lines;
+    bool need_clear_lines{false};
     /// Whether there may be yet more content after the lines, and we issue a clr_eos if possible.
-    bool need_clear_screen;
+    bool need_clear_screen{false};
     /// If we need to clear, this is how many lines the actual screen had, before we reset it. This
     /// is used when resizing the window larger: if the cursor jumps to the line above, we need to
     /// remember to clear the subsequent lines.
-    size_t actual_lines_before_reset;
+    size_t actual_lines_before_reset{0};
     /// These status buffers are used to check if any output has occurred other than from fish's
     /// main loop, in which case we need to redraw.
-    struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
+    struct stat prev_buff_1 {};
+    struct stat prev_buff_2 {};
 
     /// \return the outputter for this screen.
     outputter_t &outp() { return outp_; }
+
+    /// \return whether we believe the cursor is wrapped onto the last line, and that line is
+    /// otherwise empty. This includes both soft and hard wrapping.
+    bool cursor_is_wrapped_to_own_line() const;
 };
 
 /// This is the main function for the screen putput library. It is used to define the desired
@@ -160,6 +174,7 @@ class screen_t {
 /// screen in order to render the desired output using as few terminal commands as possible.
 ///
 /// \param s the screen on which to write
+/// \param int screen_width the width of the screen to render
 /// \param left_prompt the prompt to prepend to the command line
 /// \param right_prompt the right prompt, or NULL if none
 /// \param commandline the command line
@@ -170,47 +185,27 @@ class screen_t {
 /// \param cursor_pos where the cursor is
 /// \param pager_data any pager data, to append to the screen
 /// \param cursor_is_within_pager whether the position is within the pager line (first line)
-void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
-             const wcstring &commandline, size_t explicit_len,
+void s_write(screen_t *s, int screen_width, const wcstring &left_prompt,
+             const wcstring &right_prompt, const wcstring &commandline, size_t explicit_len,
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
              size_t cursor_pos, const page_rendering_t &pager_data, bool cursor_is_within_pager);
 
-/// This function resets the screen buffers internal knowledge about the contents of the screen. Use
-/// this function when some other function than s_write has written to the screen.
-///
-/// \param s the screen to reset
-/// \param reset_cursor whether the line on which the cursor has changed should be assumed to have
-/// changed. If \c reset_cursor is false, the library will attempt to make sure that the screen area
-/// does not seem to move up or down on repaint.
-/// \param reset_prompt whether to reset the prompt as well.
-///
-/// If reset_cursor is incorrectly set to false, this may result in screen contents being erased. If
-/// it is incorrectly set to true, it may result in one or more lines of garbage on screen on the
-/// next repaint. If this happens during a loop, such as an interactive resizing, there will be one
-/// line of garbage for every repaint, which will quickly fill the screen.
-void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
+/// Resets the screen buffer's internal knowledge about the contents of the screen,
+/// optionally repainting the prompt as well.
+/// This function assumes that the current line is still valid.
+void s_reset_line(screen_t *s, bool repaint_prompt = false);
+
+/// Resets the screen buffer's internal knowldge about the contents of the screen,
+/// abandoning the current line and going to the next line.
+/// If clear_to_eos is set,
+/// The screen width must be provided for the PROMPT_SP hack.
+void s_reset_abandoning_line(screen_t *s, int screen_width);
 
 /// Stat stdout and stderr and save result as the current timestamp.
 void s_save_status(screen_t *s);
 
-enum screen_reset_mode_t {
-    /// Do not make a new line, do not repaint the prompt.
-    screen_reset_current_line_contents,
-    /// Do not make a new line, do repaint the prompt.
-    screen_reset_current_line_and_prompt,
-    /// Abandon the current line, go to the next one, repaint the prompt.
-    screen_reset_abandon_line,
-    /// Abandon the current line, go to the next one, clear the rest of the screen.
-    screen_reset_abandon_line_and_clear_to_end_of_screen
-};
-
-void s_reset(screen_t *s, screen_reset_mode_t mode);
-
 /// Issues an immediate clr_eos.
 void screen_force_clear_to_end();
-
-/// Returns the length of an escape code. Exposed for testing purposes only.
-size_t escape_code_length(const wchar_t *code);
 
 // Information about the layout of a prompt.
 struct prompt_layout_t {
@@ -219,7 +214,7 @@ struct prompt_layout_t {
     size_t last_line_width;  // width of the last line
 };
 
-// Maintain a mapping of escape sequences to their length for fast lookup.
+// Maintain a mapping of escape sequences to their widths for fast lookup.
 class layout_cache_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings, ordered
@@ -228,11 +223,16 @@ class layout_cache_t {
 
     // LRU-list of prompts and their layouts.
     // Use a list so we can promote to the front on a cache hit.
-    using prompt_layout_pair_t = std::pair<wcstring, prompt_layout_t>;
-    std::list<prompt_layout_pair_t> prompt_cache_;
+    struct prompt_cache_entry_t {
+        wcstring text;           // Original prompt string.
+        size_t max_line_width;   // Max line width when computing layout (for truncation).
+        wcstring trunc_text;     // Resulting truncated prompt string.
+        prompt_layout_t layout;  // Resulting layout.
+    };
+    std::list<prompt_cache_entry_t> prompt_cache_;
 
    public:
-    static constexpr size_t prompt_cache_max_size = 8;
+    static constexpr size_t prompt_cache_max_size = 12;
 
     /// \return the size of the escape code cache.
     size_t esc_cache_size() const { return esc_cache_.size(); }
@@ -244,6 +244,9 @@ class layout_cache_t {
             esc_cache_.emplace(where, std::move(str));
         }
     }
+
+    /// \return the length of an escape code, accessing and perhaps populating the cache.
+    size_t escape_code_length(const wchar_t *code);
 
     /// \return the length of a string that matches a prefix of \p entry.
     size_t find_escape_code(const wchar_t *entry) const {
@@ -260,20 +263,35 @@ class layout_cache_t {
         return 0;
     }
 
-    // Finds the layout for a prompt, promoting it to the front. Returns none() if not found.
-    maybe_t<prompt_layout_t> find_prompt_layout(const wcstring &input);
-
-    // Adds a prompt layout for a given string.
-    void add_prompt_layout(wcstring input, prompt_layout_t layout);
+    /// Computes a prompt layout for \p prompt_str, perhaps truncating it to \p max_line_width.
+    /// \return the layout, and optionally the truncated prompt itself, by reference.
+    prompt_layout_t calc_prompt_layout(const wcstring &prompt_str,
+                                       wcstring *out_trunc_prompt = nullptr,
+                                       size_t max_line_width = std::numeric_limits<size_t>::max());
 
     void clear() {
         esc_cache_.clear();
         prompt_cache_.clear();
     }
-};
 
-// Singleton that is exposed so that the cache can be invalidated when terminal related variables
-// change by calling `cached_esc_sequences.clear()`.
-extern layout_cache_t cached_layouts;
+    // Singleton that is exposed so that the cache can be invalidated when terminal related
+    // variables change by calling `cached_esc_sequences.clear()`.
+    static layout_cache_t shared;
+
+    layout_cache_t() = default;
+    layout_cache_t(const layout_cache_t &) = delete;
+    void operator=(const layout_cache_t &) = delete;
+
+   private:
+    // Add a cache entry.
+    void add_prompt_layout(prompt_cache_entry_t entry);
+
+    // Finds the layout for a prompt, promoting it to the front. Returns nullptr if not found.
+    // Note this points into our cache; do not modify the cache while the pointer lives.
+    const prompt_cache_entry_t *find_prompt_layout(
+        const wcstring &input, size_t max_line_width = std::numeric_limits<size_t>::max());
+
+    friend void test_layout_cache();
+};
 
 #endif

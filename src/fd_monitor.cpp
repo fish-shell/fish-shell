@@ -26,7 +26,7 @@ fd_monitor_t::fd_monitor_t() {
     // Add an item for ourselves.
     // We don't need to go through 'pending' because we have not yet launched the thread, and don't
     // want to yet.
-    auto callback = [this](autoclose_fd_t &fd, bool timed_out) {
+    auto callback = [this](const autoclose_fd_t &fd, bool timed_out) {
         ASSERT_IS_BACKGROUND_THREAD();
         assert(!timed_out && "Should not time out with kNoTimeout");
         (void)timed_out;

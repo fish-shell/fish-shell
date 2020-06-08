@@ -21,10 +21,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     if not set -q fish_greeting
         set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
-        set -l line2 ''
-        if test $__fish_initialized -lt 2300
-            set line2 \n(_ 'Type `help` for instructions on how to use fish')
-        end
+        set -l line2 \n(printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
         set -U fish_greeting "$line1$line2"
     end
 
@@ -104,15 +101,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # Hence we'll call python directly.
             # c_m_p.py should work with any python version.
             set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
-            for py in python{3,2,}
-                if command -sq $py
-                    set -l c $py $update_args
-                    # Run python directly in the background and swallow all output
-                    $c (: fish_update_completions: generating completions from man pages) >/dev/null 2>&1 &
-                    # Then disown the job so that it continues to run in case of an early exit (#6269)
-                    disown 2>&1 >/dev/null
-                    break
-                end
+            if set -l python (__fish_anypython)
+                # Run python directly in the background and swallow all output
+                $python $update_args >/dev/null 2>&1 &
+                # Then disown the job so that it continues to run in case of an early exit (#6269)
+                disown >/dev/null 2>&1
             end
         end
     end
@@ -121,6 +114,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Print a greeting.
     # fish_greeting can be a function (preferred) or a variable.
     #
+    # NOTE: This status check is necessary to not print the greeting when `read`ing in scripts. See #7080.
     if status --is-interactive
         if functions -q fish_greeting
             fish_greeting
@@ -171,7 +165,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # Only a few builtins take filenames; initialize the rest with no file completions
     #
-    complete -c(builtin -n | string match -rv '(source|cd|exec|realpath|set|\\[|test|for)') --no-files
+    complete -c(builtin -n | string match -rv '(\.|:|source|cd|contains|count|echo|exec|printf|random|realpath|set|\\[|test|for)') --no-files
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
@@ -227,10 +221,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Load key bindings
     __fish_reload_key_bindings
 
+    # Enable bracketed paste exception when running unit tests so we don't have to add
+    # the sequences to bind.expect
     if not set -q FISH_UNIT_TESTS_RUNNING
         # Enable bracketed paste before every prompt (see __fish_shared_bindings for the bindings).
-        # Disable it for unit tests so we don't have to add the sequences to bind.expect
-        function __fish_enable_bracketed_paste --on-event fish_prompt
+        # Enable bracketed paste when the read builtin is used.
+        function __fish_enable_bracketed_paste --on-event fish_prompt --on-event fish_read
             printf "\e[?2004h"
         end
 
@@ -269,7 +265,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     # Notify terminals when $PWD changes (issue #906).
     # VTE based terminals, Terminal.app, and iTerm.app (TODO) support this.
-    if test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -a (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
+    if test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = Apple_Terminal -a (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution || set -q INSIDE_EMACS
                 return

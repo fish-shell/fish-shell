@@ -82,6 +82,9 @@ class proc_status_t {
     /// \return if we are stopped (as in SIGSTOP).
     bool stopped() const { return WIFSTOPPED(status_); }
 
+    /// \return if we are continued (as in SIGCONT).
+    bool continued() const { return WIFCONTINUED(status_); }
+
     /// \return if we exited normally (not a signal).
     bool normal_exited() const { return WIFEXITED(status_); }
 
@@ -150,6 +153,71 @@ class internal_proc_t {
 /// -1 should not be used; it is a possible return value of the getpgid()
 ///   function
 enum { INVALID_PID = -2 };
+
+/// A job ID, corresponding to what is printed in 'jobs'.
+/// 1 is the first valid job ID.
+using job_id_t = int;
+job_id_t acquire_job_id(void);
+void release_job_id(job_id_t jid);
+
+/// job_group_t is conceptually similar to the idea of a process group. It represents data which
+/// is shared among all of the "subjobs" that may be spawned by a single job.
+/// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
+/// share the same job group.
+/// There is also a notion of a "internal" job group. Internal groups are used when executing a
+/// foreground function or block with no pipeline. These are not jobs as the user understands them -
+/// they do not consume a job ID, they do not show up in job lists, and they do not have a pgid
+/// because they contain no external procs. Note that job_group_t is intended to eventually be
+/// shared between threads, and so must be thread safe.
+class job_t;
+class job_group_t;
+using job_group_ref_t = std::shared_ptr<job_group_t>;
+
+class job_group_t {
+   public:
+    /// Set the pgid for this job group, latching it to this value.
+    /// The pgid should not already have been set.
+    /// Of course this does not keep the pgid alive by itself.
+    /// An internal job group does not have a pgid and it is an error to set it.
+    void set_pgid(pid_t pgid);
+
+    /// Get the pgid, or none() if it has not been set.
+    maybe_t<pid_t> get_pgid() const;
+
+    /// \return whether we want job control
+    bool wants_job_control() const { return job_control_; }
+
+    /// \return whether this is an internal group.
+    bool is_internal() const { return is_internal_; }
+
+    /// \return whether this job group is awaiting a pgid.
+    /// This is true for non-internal trees that don't already have a pgid.
+    bool needs_pgid_assignment() const { return !is_internal_ && !pgid_.has_value(); }
+
+    /// \return the job ID, or -1 if none.
+    job_id_t get_id() const { return job_id_; }
+
+    /// Mark the root as constructed.
+    /// This is used to avoid reaping a process group leader while there are still procs that may
+    /// want to enter its group.
+    void mark_root_constructed() { root_constructed_ = true; };
+    bool is_root_constructed() const { return root_constructed_; }
+
+    /// Given a job and a proposed job group (possibly null), populate the job's tree.
+    /// The proposed tree is the tree from the parent job, or null if this is a root.
+    static void populate_tree_for_job(job_t *job, const job_group_ref_t &proposed_tree);
+
+    ~job_group_t();
+
+   private:
+    maybe_t<pid_t> pgid_{};
+    const bool job_control_;
+    const bool is_internal_;
+    const job_id_t job_id_;
+    relaxed_atomic_bool_t root_constructed_{};
+
+    explicit job_group_t(bool job_control, bool internal);
+};
 
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
@@ -278,47 +346,6 @@ using job_id_t = int;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jid);
 
-/// Information about where a job comes from.
-/// This should be safe to copy across threads; in particular that means this cannot contain a
-/// job_t. It is also important that job_t not contain this: because it stores block IO, it will
-/// extend the life of the IO which may prevent pipes from closing in a timely manner. See #6397.
-struct job_lineage_t {
-    /// The pgid of the parental job.
-    /// If our job is "nested" as part of a function or block execution, and that function or block
-    /// is part of a pipeline, then this may be set.
-    maybe_t<pid_t> parent_pgid{};
-
-    /// Whether job control is on for the root.
-    /// This is set if our job is nested as part of a function or block execution.
-    bool root_has_job_control{false};
-
-    /// The IO chain associated with any block containing this job.
-    /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
-    io_chain_t block_io{};
-
-    /// A shared pointer indicating that the entire tree of jobs is safe to disown.
-    /// This is set to true by the "root" job after it is constructed.
-    std::shared_ptr<relaxed_atomic_bool_t> root_constructed{};
-};
-
-/// A job has a mode which describes how its pgroup is assigned (before the value is known).
-/// This is a constant property of the job.
-enum class pgroup_provenance_t {
-    /// The job has no pgroup assignment. This is used for e.g. a simple function invocation with no
-    /// pipeline.
-    unassigned,
-
-    /// The job's pgroup is fish's pgroup. This is used when fish needs to read from the terminal,
-    /// or if job control is disabled.
-    fish_itself,
-
-    /// The job's pgroup will come from its first external process.
-    first_external_proc,
-
-    /// The job's pgroup will come from its lineage. This is used for jobs that are run nested.
-    lineage,
-};
-
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t {
    public:
@@ -331,6 +358,11 @@ class job_t {
 
         /// Whether the job wants to own the terminal when in the foreground.
         bool wants_terminal{};
+
+        /// Whether the job had the background ampersand when constructed, e.g. /bin/echo foo &
+        /// Note that a job may move between foreground and background; this just describes what the
+        /// initial state should be.
+        bool initial_background{};
 
         /// Whether this job was created as part of an event handler.
         bool from_event_handler{};
@@ -347,15 +379,12 @@ class job_t {
     /// messages about job status on the terminal.
     wcstring command_str;
 
-    /// The job_id for this job.
-    job_id_t job_id_;
-
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage);
+    explicit job_t(const properties_t &props);
     ~job_t();
 
     /// Returns the command as a wchar_t *. */
@@ -377,7 +406,7 @@ class job_t {
         } else if (p->pid <= 0) {
             // Can't reap without a pid.
             return false;
-        } else if (!is_constructed() && pgid > 0 && p->pid == pgid) {
+        } else if (!is_constructed() && this->get_pgid() == maybe_t<pid_t>{p->pid}) {
             // p is the the group leader in an under-construction job.
             return false;
         } else {
@@ -408,44 +437,37 @@ class job_t {
     /// All the processes in this job.
     process_list_t processes;
 
+    // The group containing this job.
+    // This is never null and not changed after construction.
+    job_group_ref_t group{};
+
     /// Process group ID for the process group that this job is running in.
     /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
-    pid_t pgid{INVALID_PID};
+    // pid_t pgid{INVALID_PID};
 
-    /// How the above pgroup is assigned. This should be set at construction and not modified after.
-    pgroup_provenance_t pgroup_provenance{};
+    /// \return the pgid for the job, based on the job group.
+    /// This may be none if the job consists of just internal fish functions or builtins.
+    /// This may also be fish itself.
+    maybe_t<pid_t> get_pgid() const { return group->get_pgid(); }
 
     /// The id of this job.
     /// This is user-visible, is recycled, and may be -1.
-    job_id_t job_id() const { return job_id_; }
+    job_id_t job_id() const { return group->get_id(); }
 
     /// A non-user-visible, never-recycled job ID.
     const internal_job_id_t internal_job_id;
-
-    /// Mark this job as internal. Internal jobs' job_ids are removed from the
-    /// list of jobs so that, among other things, they don't take a job_id
-    /// entry.
-    void mark_internal() {
-        release_job_id(job_id_);
-        job_id_ = -1;
-    }
 
     /// The saved terminal modes of this job. This needs to be saved so that we can restore the
     /// terminal to the same state after temporarily taking control over the terminal when a job
     /// stops.
     struct termios tmodes {};
 
-    /// Whether the specified job is completely constructed, i.e. completely parsed, and every
-    /// process in the job has been forked, etc.
-    /// This is a shared_ptr because it may be passed to child jobs through the lineage.
-    const std::shared_ptr<relaxed_atomic_bool_t> constructed =
-        std::make_shared<relaxed_atomic_bool_t>(false);
-
-    /// Whether the root job is constructed; this may share a reference with 'constructed'.
-    const std::shared_ptr<relaxed_atomic_bool_t> root_constructed;
-
     /// Flags associated with the job.
     struct flags_t {
+        /// Whether the specified job is completely constructed: every process in the job has been
+        /// forked, etc.
+        bool constructed{false};
+
         /// Whether the user has been told about stopped job.
         bool notified{false};
 
@@ -460,6 +482,10 @@ class job_t {
 
         /// Whether to print timing for this job.
         bool has_time_prefix{false};
+
+        // Indicates that we are the "tree root." Any other jobs using this tree are nested.
+        bool is_tree_root{false};
+
     } job_flags{};
 
     /// Access the job flags.
@@ -474,6 +500,10 @@ class job_t {
     /// \return if this job should own the terminal when it runs.
     bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }
 
+    /// \return whether this job is initially going to run in the background, because & was
+    /// specified.
+    bool is_initially_background() const { return properties.initial_background; }
+
     /// Mark this job as constructed. The job must not have previously been marked as constructed.
     void mark_constructed();
 
@@ -485,7 +515,7 @@ class job_t {
 
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched
-    bool is_constructed() const { return *constructed; }
+    bool is_constructed() const { return flags().constructed; }
     /// The job was launched in the foreground and has control of the terminal
     bool is_foreground() const { return flags().foreground; }
     /// The job is complete, i.e. all its member processes have been reaped
@@ -553,6 +583,14 @@ void set_job_control_mode(job_control_t mode);
 class parser_t;
 bool job_reap(parser_t &parser, bool interactive);
 
+/// \return the list of background jobs which we should warn the user about, if the user attempts to
+/// exit. An empty result (common) means no such jobs.
+job_list_t jobs_requiring_warning_on_exit(const parser_t &parser);
+
+/// Print the exit warning for the given jobs, which should have been obtained via
+/// jobs_requiring_warning_on_exit().
+void print_exit_warning_for_jobs(const job_list_t &jobs);
+
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc);
 
@@ -583,8 +621,8 @@ void proc_wait_any(parser_t &parser);
 void set_is_within_fish_initialization(bool flag);
 bool is_within_fish_initialization();
 
-/// Terminate all background jobs
-void hup_background_jobs(const parser_t &parser);
+/// Send SIGHUP to the list \p jobs, excepting those which are in fish's pgroup.
+void hup_jobs(const job_list_t &jobs);
 
 /// Give ownership of the terminal to the specified job, if it wants it.
 ///

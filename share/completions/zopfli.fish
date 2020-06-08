@@ -1,0 +1,8 @@
+complete -c zopfli -s h -d "Gives this help"
+complete -c zopfli -s c -d "Write the result on stdout"
+complete -c zopfli -s v -d "Verbose mode"
+complete -c zopfli -l i -d "Number of iterations"
+complete -c zopfli -l gzip -d "Output to gzip format (default)"
+complete -c zopfli -l zlib -d "Output to zlib format"
+complete -c zopfli -l deflate -d "Output to deflate format"
+complete -c zopfli -l splitlast -d "Left for backwards compatibility"

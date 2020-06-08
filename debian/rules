@@ -7,9 +7,9 @@ export DH_VERBOSE=1
 %:
 	dh $@
 
+# Setting the build system is still required, because otherwise the GNUmakefile gets picked up
 override_dh_auto_configure:
-	# Until all platforms have debhelper 9.20151004, Debian bug 719148 needs to be worked around
-	dh_auto_configure --buildsystem=cmake --parallel -- -DCMAKE_INSTALL_SYSCONFDIR=/etc
+	dh_auto_configure --buildsystem=cmake --parallel
 
 override_dh_installdocs:
 	dh_installdocs --link-doc=fish

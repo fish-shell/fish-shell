@@ -1,7 +1,7 @@
 # Don't go invoking valgrind unless it is installed
 
 set -l skin tool
-if type -q valgrind; and valgrind --version 2>/dev/null | string match -qr -- '-2\.[012]\.'
+if valgrind --version 2>/dev/null | string match -qr -- '-2\.[012]\.'
     # In older versions of Valgrind, the skin selection option was
     # '--skin'
     # But someone decided that it would be fun to change this to
@@ -9,7 +9,7 @@ if type -q valgrind; and valgrind --version 2>/dev/null | string match -qr -- '-
     set skin skin
 end
 
-complete -xc valgrind -l $skin -d "Skin" -a "
+complete -xc valgrind -l $skin -d Skin -a "
 	memcheck\tHeavyweight\ memory\ checker
 	cachegrind\tCache-miss\ profiler
 	addrcheck\tLightweight\ memory\ checker

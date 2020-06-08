@@ -7,7 +7,7 @@ function __fish_iptables_current_table
             case "--table=*"
                 echo (string split -m1 = -- $token)[2]
                 return 0
-            case "--table"
+            case --table
                 set next_is_table 0
             case "-*t*"
                 set next_is_table 0
@@ -29,7 +29,7 @@ function __fish_iptables_user_chains
         set tablearg "--table=$table"
     end
     # This only works as root, so ignore errors
-    iptables $tablearg -L 2>/dev/null | string match '*Chain*' | while read a b c
+    iptables $tablearg -L 2>/dev/null | string match '*Chain*' | while read -l a b c
         echo $b
     end
 end
@@ -45,24 +45,24 @@ function __fish_iptables_chains
     set -l forward "FORWARD	For packets being routed through"
     set -l postrouting "POSTROUTING	For packets that are about to go out"
     switch $table
-        case "filter"
+        case filter
             echo $input
             echo $forward
             echo $output
-        case "nat"
+        case nat
             echo $prerouting
             echo $output
             echo $postrouting
-        case "mangle"
+        case mangle
             echo $prerouting
             echo $input
             echo $output
             echo $forward
             echo $postrouting
-        case "raw"
+        case raw
             echo $prerouting
             echo $output
-        case "security"
+        case security
             echo $input
             echo $output
             echo $forward
@@ -78,7 +78,7 @@ end
 
 function __fish_iptables_has_chain
     # Remove descriptions
-    set -l chains (__fish_iptables_chains | string split -m1 "    " | while read a b; echo $a; end)
+    set -l chains (__fish_iptables_chains | string split -m1 "    " | while read -l a b; echo $a; end)
     set -l cmdline (commandline -op)
     for c in $chains
         if contains -- $c $cmdline
@@ -90,9 +90,9 @@ end
 
 # A target is a user-defined chain, one of "ACCEPT DROP RETURN" or an extension (TODO)
 function __fish_iptables_targets
-    echo "ACCEPT"
-    echo "DROP"
-    echo "RETURN"
+    echo ACCEPT
+    echo DROP
+    echo RETURN
     __fish_iptables_chains
 end
 
@@ -106,8 +106,8 @@ complete -c iptables -n '__fish_contains_opt -s A -s C -s D append check delete;
 '(__fish_iptables_targets)'
 
 complete -c iptables -n '__fish_contains_opt -s A -s C -s D append check delete; and __fish_iptables_has_chain' -s m -l match -d 'Specify a match to use' -f
-complete -c iptables -n '__fish_iptables_has_chain' -a 'ACCEPT DROP RETURN' -f
-complete -c iptables -n '__fish_iptables_has_chain' -a '( __fish_iptables_user_chains)' -f
+complete -c iptables -n __fish_iptables_has_chain -a 'ACCEPT DROP RETURN' -f
+complete -c iptables -n __fish_iptables_has_chain -a '( __fish_iptables_user_chains)' -f
 complete -c iptables -s I -l insert -d 'Insert rules in the beginning of a chain' -a '(__fish_iptables_chains)' -f
 complete -c iptables -s R -l replace -d 'Replace a rule in a chain' -a '(__fish_iptables_chains)' -f
 complete -c iptables -s L -l list -d 'List all rules in a chain' -a '(__fish_iptables_chains)' -f
@@ -118,7 +118,7 @@ complete -c iptables -s N -l new-chain -d 'Create a new user-defined chain by th
 complete -c iptables -s X -l delete-chain -d 'Delete the optional user-defined chain specified' -a '(__fish_iptables_chains)' -f
 complete -c iptables -s P -l policy -d 'Set the policy for the chain to the given target' -a '(__fish_iptables_chains)' -f
 complete -c iptables -s E -l rename-chain -d 'Rename the user specified chain to the user supplied name' -a '(__fish_iptables_chains)' -f
-complete -c iptables -s h -d 'Help' -f
+complete -c iptables -s h -d Help -f
 
 complete -c iptables -s p -l protocol -d 'The protocol of the rule or of the packet to check' -f
 complete -c iptables -s s -l source -d 'Source specification' -f

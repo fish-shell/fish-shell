@@ -1,5 +1,5 @@
 function __fish_gnu_complete -d "Wrapper for the complete built-in. Skips the long completions on non-GNU systems"
-    set is_gnu 0
+    set -l is_gnu 0
 
     set -l argv_out
 

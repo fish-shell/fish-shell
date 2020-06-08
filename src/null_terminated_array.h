@@ -34,7 +34,7 @@ class null_terminated_array_t {
     }
 
     void free(void) {
-        ::free((void *)array);
+        ::free(reinterpret_cast<void *>(array));
         array = nullptr;
     }
 
@@ -64,7 +64,7 @@ class null_terminated_array_t {
     /// Convert from a null terminated list to a vector of strings.
     static string_list_t to_list(const CharT *const *arr) {
         string_list_t result;
-        for (const auto *cursor = arr; cursor && *cursor; cursor++) {
+        for (auto cursor = arr; cursor && *cursor; cursor++) {
             result.push_back(*cursor);
         }
         return result;

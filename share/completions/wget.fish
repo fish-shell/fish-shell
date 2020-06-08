@@ -16,7 +16,7 @@ complete -c wget -o nv -d "Turn off verbose without being completely quiet"
 complete -c wget -s i -l input-file -d "Read URLs from file" -r
 complete -c wget -s F -l force-html -d "Force input to be treated as HTML"
 complete -c wget -s B -l base -d "Prepend string to relative links" -x
-complete -c wget -l bind-adress -d "Bind address on local machine" -xa "(__fish_print_addresses; __fish_print_hostnames)"
+complete -c wget -l bind-address -d "Bind address on local machine" -xa "(__fish_print_addresses; __fish_print_hostnames)"
 complete -c wget -s t -l tries -d "Set number of retries to number" -xa "0 1 2 4 8 16 32 64 128"
 complete -c wget -s O -l output-document -d "Concatenate output to file" -r
 complete -c wget -l no-clobber -d "Never overwrite files with same name"
@@ -42,7 +42,7 @@ complete -c wget -l waitretry -d "Wait time between retries" -x
 complete -c wget -l random-wait -d "Wait random amount of time between retrievals"
 complete -c wget -s Y -l proxy -d "Toggle proxy support" -xa "on off"
 complete -c wget -s Q -l quota -d "Specify download quota for automatic retrievals" -x
-complete -c wget -l dns-cache -d "Turn off caching of DNS lookups" -xa "off"
+complete -c wget -l dns-cache -d "Turn off caching of DNS lookups" -xa off
 complete -c wget -l restrict-file-names -d "Change which characters found in remote URLs may show up in local file names" -a "
 	unix\t'Escape slash and non-printing characters'
 	windows\t'Escape most non-alphabetical characters'

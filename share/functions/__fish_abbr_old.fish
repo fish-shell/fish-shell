@@ -7,23 +7,23 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
     while set -q argv[1]
         set -l new_mode
         switch $argv[1]
-            case '-h' '--help'
+            case -h --help
                 __fish_print_help abbr
                 return 0
-            case '-a' '--add'
+            case -a --add
                 set new_mode add
                 set needs_arg multi
-            case '-r' '--rename'
+            case -r --rename
                 set new_mode rename
                 set needs_arg double
-            case '-e' '--erase'
+            case -e --erase
                 set new_mode erase
                 set needs_arg single
-            case '-l' '--list'
+            case -l --list
                 set new_mode list
-            case '-s' '--show'
+            case -s --show
                 set new_mode show
-            case '--'
+            case --
                 set -e argv[1]
                 break
             case '-*'
@@ -87,7 +87,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
     end
 
     switch $mode
-        case 'add'
+        case add
             # Convert from old "key=value" syntax
             # TODO: This should be removed later
             if not set -q mode_arg[2]
@@ -124,7 +124,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
             set fish_user_abbreviations $fish_user_abbreviations "$key $value"
             return 0
 
-        case 'rename'
+        case rename
             set -l old_name $param1
             set -l new_name $param2
 
@@ -150,7 +150,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
             set fish_user_abbreviations[$idx] "$new_name $value"
             return 0
 
-        case 'erase'
+        case erase
             if set -l idx (__fish_abbr_get_by_key $mode_arg)
                 set -e fish_user_abbreviations[$idx]
                 return 0
@@ -159,7 +159,7 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
                 return 2
             end
 
-        case 'show'
+        case show
             for i in $fish_user_abbreviations
                 set -l opt_double_dash
                 set -l kv (string split " " -m 1 -- $i)
@@ -169,12 +169,12 @@ function __fish_abbr_old --description "Manage abbreviations using old fish 2.x 
                 # Check to see if either key or value has a leading dash
                 # If so, we need to write --
                 string match -q -- '-*' $key $value
-                and set opt_double_dash '--'
+                and set opt_double_dash --
                 echo abbr $opt_double_dash (string escape -- $key $value)
             end
             return 0
 
-        case 'list'
+        case list
             for i in $fish_user_abbreviations
                 set -l key (string split " " -m 1 -- $i)[1]
                 printf "%s\n" $key

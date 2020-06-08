@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "color.h"
 #include "common.h"
 #include "env.h"
+#include "expand.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "highlight.h"
@@ -46,6 +47,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+// The number of spaces per indent isn't supposed to be configurable.
+// See discussion at https://github.com/fish-shell/fish-shell/pull/6790
 #define SPACES_PER_INDENT 4
 
 // An indent_t represents an abstract indent depth. 2 means we are in a doubly-nested block, etc.
@@ -205,8 +208,22 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
 
         if (dump_parse_tree) dump_node(node_indent, node, source);
 
-        // Prepend any escaped newline.
-        maybe_prepend_escaped_newline(node);
+        // Prepend any escaped newline, but only for certain cases.
+        // We allow it to split arguments (including at the end - this is like trailing commas in
+        // lists, makes for better diffs), to separate pipelines (but it has to be *before* the
+        // pipe, so the pipe symbol is the first thing on the new line after the indent) and to
+        // separate &&/|| job lists (`and` and `or` are handled separately below, as they *allow*
+        // semicolons)
+        // TODO: Handle
+        //     foo | \
+        //         bar
+        // so it just removes the escape - pipes don't need it. This was changed in some fish
+        // version, figure out which it was and if it is worth supporting.
+        if (prev_node_type == symbol_arguments_or_redirections_list ||
+            prev_node_type == symbol_argument_list || node_type == parse_token_type_andand ||
+            node_type == parse_token_type_pipe || node_type == parse_token_type_end) {
+            maybe_prepend_escaped_newline(node);
+        }
 
         // handle comments, which come before the text
         if (node.has_comments()) {
@@ -251,7 +268,31 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
                 if (prev_node_type != parse_token_type_redirection) {
                     append_whitespace(node_indent);
                 }
-                output.append(source, node.source_start, node.source_length);
+                wcstring unescaped{source, node.source_start, node.source_length};
+                // Unescape the string - this leaves special markers around if there are any
+                // expansions or anything. We specifically tell it to not compute backslash-escapes
+                // like \U or \x, because we want to leave them intact.
+                unescape_string_in_place(&unescaped, UNESCAPE_SPECIAL | UNESCAPE_NO_BACKSLASHES);
+
+                // Remove INTERNAL_SEPARATOR because that's a quote.
+                auto quote = [](wchar_t ch) { return ch == INTERNAL_SEPARATOR; };
+                unescaped.erase(std::remove_if(unescaped.begin(), unescaped.end(), quote),
+                                unescaped.end());
+
+                // If no non-"good" char is left, use the unescaped version.
+                // This can be extended to other characters, but giving the precise list is tough,
+                // can change over time (see "^", "%" and "?", in some cases "{}") and it just makes
+                // people feel more at ease.
+                auto goodchars = [](wchar_t ch) {
+                    return fish_iswalnum(ch) || ch == L'_' || ch == L'-' || ch == L'/';
+                };
+                if (std::find_if_not(unescaped.begin(), unescaped.end(), goodchars) ==
+                        unescaped.end() &&
+                    !unescaped.empty()) {
+                    output.append(unescaped);
+                } else {
+                    output.append(source, node.source_start, node.source_length);
+                }
                 has_new_line = false;
             }
         }
@@ -532,12 +573,10 @@ int main(int argc, char *argv[]) {
             case 'h': {
                 print_help("fish_indent", 1);
                 exit(0);
-                break;
             }
             case 'v': {
-                std::fwprintf(stderr, _(L"%ls, version %s\n"), program_name, get_fish_version());
+                std::fwprintf(stdout, _(L"%ls, version %s\n"), program_name, get_fish_version());
                 exit(0);
-                break;
             }
             case 'w': {
                 output_type = output_type_file;
@@ -593,7 +632,6 @@ int main(int argc, char *argv[]) {
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
                 exit(1);
-                break;
             }
         }
     }
@@ -618,7 +656,7 @@ int main(int argc, char *argv[]) {
                 fclose(fh);
                 output_location = argv[i];
             } else {
-                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv,
+                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), argv[i],
                               std::strerror(errno));
                 exit(1);
             }
@@ -667,7 +705,6 @@ int main(int argc, char *argv[]) {
             }
             case output_type_pygments_csv: {
                 DIE("pygments_csv should have been handled above");
-                break;
             }
         }
 

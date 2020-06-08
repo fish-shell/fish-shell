@@ -109,9 +109,9 @@ static void print_rusage_self(FILE *fp) {
     long rss_kb = rs.ru_maxrss;
 #endif
     fprintf(fp, "  rusage self:\n");
-    fprintf(fp, "      user time: %llu ms\n", tv_to_msec(rs.ru_utime));
-    fprintf(fp, "       sys time: %llu ms\n", tv_to_msec(rs.ru_stime));
-    fprintf(fp, "     total time: %llu ms\n", tv_to_msec(rs.ru_utime) + tv_to_msec(rs.ru_stime));
+    fprintf(fp, "      user time: %lld ms\n", tv_to_msec(rs.ru_utime));
+    fprintf(fp, "       sys time: %lld ms\n", tv_to_msec(rs.ru_stime));
+    fprintf(fp, "     total time: %lld ms\n", tv_to_msec(rs.ru_utime) + tv_to_msec(rs.ru_stime));
     fprintf(fp, "        max rss: %ld kb\n", rss_kb);
     fprintf(fp, "        signals: %ld\n", rs.ru_nsignals);
 #endif
@@ -236,7 +236,7 @@ static void source_config_in_directory(parser_t &parser, const wcstring &dir) {
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
-static int read_init(parser_t &parser, const struct config_paths_t &paths) {
+static void read_init(parser_t &parser, const struct config_paths_t &paths) {
     source_config_in_directory(parser, paths.data);
     source_config_in_directory(parser, paths.sysconf);
 
@@ -247,8 +247,6 @@ static int read_init(parser_t &parser, const struct config_paths_t &paths) {
     if (path_get_config(config_dir)) {
         source_config_in_directory(parser, config_dir);
     }
-
-    return 1;
 }
 
 int run_command_list(parser_t &parser, std::vector<std::string> *cmds, const io_chain_t &io) {
@@ -285,11 +283,11 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {
         switch (opt) {
             case 'c': {
-                opts->batch_cmds.push_back(optarg);
+                opts->batch_cmds.emplace_back(optarg);
                 break;
             }
             case 'C': {
-                opts->postconfig_cmds.push_back(optarg);
+                opts->postconfig_cmds.emplace_back(optarg);
                 break;
             }
             case 'd': {
@@ -304,6 +302,11 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 } else {
                     activate_flog_categories_by_pattern(str2wcstring(optarg));
                 }
+                for (auto cat : get_flog_categories()) {
+                    if (cat->enabled) {
+                        printf("Debug enabled for category: %ls\n", cat->name);
+                    }
+                }
                 break;
             }
             case 'o': {
@@ -315,7 +318,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'h': {
-                opts->batch_cmds.push_back("__fish_print_help fish");
+                opts->batch_cmds.emplace_back("__fish_print_help fish");
                 break;
             }
             case 'i': {
@@ -338,17 +341,16 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 auto cats = get_flog_categories();
                 // Compute width of longest name.
                 int name_width = 0;
-                for (const auto *cat : cats) {
+                for (auto cat : cats) {
                     name_width = std::max(name_width, static_cast<int>(wcslen(cat->name)));
                 }
                 // A little extra space.
                 name_width += 2;
-                for (const auto *cat : cats) {
+                for (auto cat : cats) {
                     // Negating the name width left-justifies.
                     printf("%*ls %ls\n", -name_width, cat->name, _(cat->description));
                 }
                 exit(0);
-                break;
             }
             case 'p': {
                 s_profiling_output_filename = optarg;
@@ -362,7 +364,6 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             case 'v': {
                 std::fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
                 exit(0);
-                break;
             }
             case 'D': {
                 char *end;
@@ -383,7 +384,6 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             default: {
                 // We assume getopt_long() has already emitted a diagnostic msg.
                 exit(1);
-                break;
             }
         }
     }
@@ -416,8 +416,8 @@ int main(int argc, char **argv) {
 
     const char *dummy_argv[2] = {"fish", nullptr};
     if (!argv[0]) {
-        argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
-        argc = 1;                    //!OCLINT(parameter reassignment)
+        argv = const_cast<char **>(dummy_argv);  //!OCLINT(parameter reassignment)
+        argc = 1;                                //!OCLINT(parameter reassignment)
     }
     fish_cmd_opts_t opts{};
     my_optind = fish_parse_opt(argc, argv, &opts);
@@ -473,48 +473,47 @@ int main(int argc, char **argv) {
 
     parser_t &parser = parser_t::principal_parser();
 
-    if (read_init(parser, paths)) {
-        // Stomp the exit status of any initialization commands (issue #635).
-        parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
+    read_init(parser, paths);
+    // Stomp the exit status of any initialization commands (issue #635).
+    parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 
-        // Run post-config commands specified as arguments, if any.
-        if (!opts.postconfig_cmds.empty()) {
-            res = run_command_list(parser, &opts.postconfig_cmds, {});
+    // Run post-config commands specified as arguments, if any.
+    if (!opts.postconfig_cmds.empty()) {
+        res = run_command_list(parser, &opts.postconfig_cmds, {});
+    }
+
+    if (!opts.batch_cmds.empty()) {
+        // Run the commands specified as arguments, if any.
+        if (get_login()) {
+            // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
+            fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
+                                               argv + my_optind);
         }
-
-        if (!opts.batch_cmds.empty()) {
-            // Run the commands specified as arguments, if any.
-            if (get_login()) {
-                // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
-                fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
-                                                   argv + my_optind);
-            }
-            res = run_command_list(parser, &opts.batch_cmds, {});
-            reader_set_end_loop(false);
-        } else if (my_optind == argc) {
-            // Implicitly interactive mode.
-            res = reader_read(parser, STDIN_FILENO, {});
+        res = run_command_list(parser, &opts.batch_cmds, {});
+        reader_set_end_loop(false);
+    } else if (my_optind == argc) {
+        // Implicitly interactive mode.
+        res = reader_read(parser, STDIN_FILENO, {});
+    } else {
+        const char *file = *(argv + (my_optind++));
+        autoclose_fd_t fd(open_cloexec(file, O_RDONLY));
+        if (!fd.valid()) {
+            perror(file);
         } else {
-            const char *file = *(argv + (my_optind++));
-            autoclose_fd_t fd(open_cloexec(file, O_RDONLY));
-            if (!fd.valid()) {
-                perror(file);
-            } else {
-                wcstring_list_t list;
-                for (char **ptr = argv + my_optind; *ptr; ptr++) {
-                    list.push_back(str2wcstring(*ptr));
-                }
-                parser.vars().set(L"argv", ENV_DEFAULT, list);
+            wcstring_list_t list;
+            for (char **ptr = argv + my_optind; *ptr; ptr++) {
+                list.push_back(str2wcstring(*ptr));
+            }
+            parser.vars().set(L"argv", ENV_DEFAULT, std::move(list));
 
-                auto &ld = parser.libdata();
-                wcstring rel_filename = str2wcstring(file);
-                scoped_push<const wchar_t *> filename_push{&ld.current_filename,
-                                                           intern(rel_filename.c_str())};
-                res = reader_read(parser, fd.fd(), {});
-                if (res) {
-                    FLOGF(warning, _(L"Error while reading file %ls\n"),
-                          ld.current_filename ? ld.current_filename : _(L"Standard input"));
-                }
+            auto &ld = parser.libdata();
+            wcstring rel_filename = str2wcstring(file);
+            scoped_push<const wchar_t *> filename_push{&ld.current_filename,
+                                                       intern(rel_filename.c_str())};
+            res = reader_read(parser, fd.fd(), {});
+            if (res) {
+                FLOGF(warning, _(L"Error while reading file %ls\n"),
+                      ld.current_filename ? ld.current_filename : _(L"Standard input"));
             }
         }
     }
@@ -529,7 +528,7 @@ int main(int argc, char **argv) {
     event_fire_generic(parser, L"fish_exit", &event_args);
 
     restore_term_mode();
-    restore_term_foreground_process_group();
+    restore_term_foreground_process_group_for_exit();
 
     if (g_profiling_active) {
         parser.emit_profiling(s_profiling_output_filename);

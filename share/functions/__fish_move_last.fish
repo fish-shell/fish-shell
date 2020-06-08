@@ -14,7 +14,7 @@ function __fish_move_last -d "Move the last element of a directory history from 
     # Append current dir to the end of the destination
     set -g (echo $dest) $$dest $PWD
 
-    set ssrc $$src
+    set -l ssrc $$src
 
     # Change dir to the last entry in the source dir-hist
     builtin cd $ssrc[$size_src]

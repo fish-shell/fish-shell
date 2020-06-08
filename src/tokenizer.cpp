@@ -362,6 +362,7 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
         }
         case L'>': {
             consume(L'>');
+            if (try_consume(L'>')) result.mode = redirection_mode_t::append;
             if (try_consume(L'|')) {
                 // Note we differ from bash here.
                 // Consider `echo foo 2>| bar`
@@ -374,6 +375,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                                    : STDOUT_FILENO;              // like >|
             } else if (try_consume(L'&')) {
                 // This is a redirection to an fd.
+                // Note that we allow ">>&", but it's still just writing to the fd - "appending" to
+                // it doesn't make sense.
                 result.mode = redirection_mode_t::fd;
                 result.fd = has_fd ? parse_fd(fd_start, fd_end)  // like 1>&2
                                    : STDOUT_FILENO;              // like >&2
@@ -381,11 +384,11 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                 // This is a redirection to a file.
                 result.fd = has_fd ? parse_fd(fd_start, fd_end)  // like 1> file.txt
                                    : STDOUT_FILENO;              // like > file.txt
+                if (result.mode != redirection_mode_t::append)
+                    result.mode = redirection_mode_t::overwrite;
                 // Note 'echo abc >>? file' is valid: it means append and noclobber.
                 // But here "noclobber" means the file must not exist, so appending
                 // can be ignored.
-                result.mode = redirection_mode_t::overwrite;
-                if (try_consume(L'>')) result.mode = redirection_mode_t::append;
                 if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
             }
             break;
@@ -412,7 +415,12 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                 consume(L'^');
                 result.fd = STDERR_FILENO;
                 result.mode = redirection_mode_t::overwrite;
-                if (try_consume(L'^')) result.mode = redirection_mode_t::append;
+                if (try_consume(L'^')) {
+                    result.mode = redirection_mode_t::append;
+                } else if (try_consume(L'&')) {
+                    // This is a redirection to an fd.
+                    result.mode = redirection_mode_t::fd;
+                }
                 if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
                 break;
             }
@@ -657,6 +665,21 @@ wcstring tok_first(const wcstring &str) {
     return {};
 }
 
+wcstring tok_command(const wcstring &str) {
+    tokenizer_t t(str.c_str(), 0);
+    while (auto token = t.next()) {
+        if (token->type != token_type_t::string) {
+            return {};
+        }
+        wcstring text = t.text_of(*token);
+        if (variable_assignment_equals_pos(text)) {
+            continue;
+        }
+        return text;
+    }
+    return {};
+}
+
 bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
     enum { s_always_one = 0, s_rest, s_whitespace_rest, s_whitespace, s_alphanumeric, s_end };
 
@@ -843,3 +866,23 @@ move_word_state_machine_t::move_word_state_machine_t(move_word_style_t syl)
     : state(0), style(syl) {}
 
 void move_word_state_machine_t::reset() { state = 0; }
+
+// Return the location of the equals sign, or npos if the string does
+// not look like a variable assignment like FOO=bar.  The detection
+// works similar as in some POSIX shells: only letters and numbers qre
+// allowed on the left hand side, no quotes or escaping.
+maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt) {
+    enum { init, has_some_variable_identifier } state = init;
+    // TODO bracket indexing
+    for (size_t i = 0; i < txt.size(); i++) {
+        wchar_t c = txt[i];
+        if (state == init) {
+            if (!valid_var_name_char(c)) return {};
+            state = has_some_variable_identifier;
+        } else {
+            if (c == '=') return {i};
+            if (!valid_var_name_char(c)) return {};
+        }
+    }
+    return {};
+}

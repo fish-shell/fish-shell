@@ -780,7 +780,7 @@ msgstr ""
 
 #: src/builtin_set.cpp:554
 #, c-format
-msgid "$%ls[%d]: length=%d value=|%ls|\n"
+msgid "$%ls[%d]: |%ls|\n"
 msgstr ""
 
 #: src/builtin_set.cpp:578
@@ -3471,8 +3471,8 @@ msgstr ""
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr ""
 
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:1
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:2
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:1
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:2
 msgid "%s: Too many arguments %s\\n"
 msgstr ""
 
@@ -3558,7 +3558,7 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/history.fish:5
-msgid "Command history cleared!"
+msgid "Command history cleared!\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/history.fish:6

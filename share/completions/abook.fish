@@ -1,15 +1,28 @@
-
 function __fish_complete_abook_formats --description 'Complete abook formats'
-    set -l pat
+    set -l format
+    abook --formats | while read -l x
+        switch $x
+            case "input formats:"
+                set format input
+            case "output formats:"
+                set format output
+            case "query-compatible output formats:"
+                set format ignore
+        end
+        set --append "$format" (string replace -rf '\t(.*\t.*)' '$1' -- $x)
+    end
     switch $argv[1]
         case in
-            set pat '/output:/,$d; /input:\|^$/d'
+            for l in $input
+                echo $l
+            end
         case out
-            set pat '/input:/,/output:/d; /^$/d'
+            for l in $output
+                echo $l
+            end
         case '*'
             return 1
     end
-    abook --formats | sed -e $pat -e 's/^\s\+//'
 end
 
 complete -c abook -s h -d 'Show usage'

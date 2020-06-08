@@ -7,7 +7,7 @@
 # Retrieve the likely compile-time PREFIX for openocd based off of where the binary
 # is located. e.g. if openocd is /usr/local/bin/openocd return /usr/local
 function __fish_openocd_prefix
-    string replace "/bin/openocd" "" (which openocd)
+    string replace /bin/openocd "" (command -s openocd)
 end
 
 # The results of this function are as if __fish_complete_suffix were called

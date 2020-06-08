@@ -48,7 +48,6 @@ static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, wcha
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }

@@ -11,9 +11,9 @@ function __fish_busctl
     # We also need to pass the _last_ of these (`busctl --user --system` operates on the system bus)
     set -l mode
     if __fish_contains_opt user
-        set mode "--user"
+        set mode --user
     else
-        set mode "--system"
+        set mode --system
     end
     command busctl $mode $argv --no-legend --no-pager 2>/dev/null
 end
@@ -111,7 +111,7 @@ end
 
 function __fish_busctl_signature -a busname -a object -a interface -a member
     __fish_busctl introspect --list $busname $object $interface \
-        | string match ".$member *" | while read a b c d
+        | string match ".$member *" | while read -l a b c d
         echo $c
     end
 end
@@ -119,7 +119,7 @@ end
 ### Commands
 set -l commands list status monitor capture tree introspect call get-property set-property help
 
-complete -f -e -c busctl
+complete -f -c busctl
 complete -f -c busctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
 ### Arguments to commands

@@ -47,7 +47,8 @@ def is_wsl():
     """ Return whether we are running under the Windows Subsystem for Linux """
     if "linux" in platform.system().lower() and os.access("/proc/version", os.R_OK):
         with open("/proc/version", "r") as f:
-            if "Microsoft" in f.read():
+            # Find 'Microsoft' for wsl1 and 'microsoft' for wsl2
+            if "microsoft" in f.read().lower():
                 return True
     return False
 
@@ -1478,7 +1479,7 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
 # CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
-f = tempfile.NamedTemporaryFile(prefix='web_config', suffix='.html', mode='w')
+f = tempfile.NamedTemporaryFile(prefix="web_config", suffix=".html", mode="w")
 
 f.write(redirect_template_html % (url, url))
 f.flush()

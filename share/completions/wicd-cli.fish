@@ -2,8 +2,8 @@ complete -c wicd-cli -s h -l help -d 'Print help and exit'
 complete -c wicd-cli -s S -l scan -d 'Scan for networks'
 complete -c wicd-cli -s l -l list-networks -d 'List networks'
 complete -c wicd-cli -s d -l network-details -d 'Show network details'
-complete -c wicd-cli -s x -l disconnect -d 'Disconnect'
-complete -c wicd-cli -s c -l connect -d 'Connect'
+complete -c wicd-cli -s x -l disconnect -d Disconnect
+complete -c wicd-cli -s c -l connect -d Connect
 complete -c wicd-cli -s e -l list-encryption-types -d 'List encryption types'
 complete -c wicd-cli -s y -l wireless -d 'Perform operation on wireless network'
 complete -c wicd-cli -s z -l wired -d 'Perform operation on wired network'

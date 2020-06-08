@@ -6,8 +6,8 @@ set -l iw_commands dev phy reg event features commands list
 # wdev not supported since it is barely documented
 
 function __fish_iw_device
-    __fish_print_interfaces | while read i
-        printf '%s\t%s\n' $i "Device"
+    __fish_print_interfaces | while read -l i
+        printf '%s\t%s\n' $i Device
     end
 end
 
@@ -67,7 +67,7 @@ function __fish_complete_iw
                         printf '%s\t%s\n' join "Join an IBSS cell or create one" \
                             leave "Leave the current IBSS cell"
                     end
-                case 'switch'
+                case switch
                     if not set -q cmd[5]
                         echo channel
                         echo freq
@@ -180,7 +180,7 @@ function __fish_complete_iw
                         cqm "Set connection quality monitor RSSI threshold" \
                         ftm "Control the FTM responder" \
                         ibss "Join or leave a IBSS cell" \
-                        'switch' "Switch the operating channel by sending a CSA" \
+                        switch "Switch the operating channel by sending a CSA" \
                         info "Show information for this interface" \
                         del "Remove this virtual interface" \
                         interface "Control the interface" \
@@ -208,7 +208,7 @@ function __fish_complete_iw
                         printf '%s\t%s\n' show "Show coalesce status" \
                             disable "Disable coalesce" \
                             enable "Enable coalesce"
-                    else if [ "$cmd[5]" = "enable" ] && not set -q cmd[6]
+                    else if [ "$cmd[5]" = enable ] && not set -q cmd[6]
                         __fish_complete_path # Enable takes a config file
                     end
                 case hwsim
@@ -273,6 +273,6 @@ complete -f -c iw -n "__fish_seen_subcommand_from event" -s t -d 'Print timestam
 complete -f -c iw -n "__fish_seen_subcommand_from event" -s r -d 'Print relative timestamp'
 complete -f -c iw -n "__fish_seen_subcommand_from event" -s f -d 'Print full frame for auth/assoc'
 
-complete -f -c iw -n "__fish_seen_subcommand_from reg" -a 'reload' -d 'Reload the kernel\'s regulatory database'
-complete -f -c iw -n "__fish_seen_subcommand_from reg" -a 'get' -d 'Print the kernel\'s current regulatory domain information'
-complete -f -c iw -n "__fish_seen_subcommand_from reg" -a 'set' -d 'Notify the kernel about the current regulatory domain'
+complete -f -c iw -n "__fish_seen_subcommand_from reg" -a reload -d 'Reload the kernel\'s regulatory database'
+complete -f -c iw -n "__fish_seen_subcommand_from reg" -a get -d 'Print the kernel\'s current regulatory domain information'
+complete -f -c iw -n "__fish_seen_subcommand_from reg" -a set -d 'Notify the kernel about the current regulatory domain'

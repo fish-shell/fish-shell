@@ -144,6 +144,9 @@ class tokenizer_t {
 /// returns the empty string.
 wcstring tok_first(const wcstring &str);
 
+/// Like to tok_first, but skip variable assignments like A=B.
+wcstring tok_command(const wcstring &str);
+
 /// Struct wrapping up a parsed pipe or redirection.
 struct pipe_or_redir_t {
     // The redirected fd, or -1 on overflow.
@@ -209,5 +212,8 @@ class move_word_state_machine_t {
     bool consume_char(wchar_t c);
     void reset();
 };
+
+/// The position of the equal sign in a variable assignment like foo=bar.
+maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt);
 
 #endif

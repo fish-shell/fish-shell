@@ -7,7 +7,7 @@ complete -c type -s p -l path -d "Print path to command, or nothing if name is n
 complete -c type -s P -l force-path -d "Print path to command"
 complete -c type -s q -l quiet -d "Suppress output"
 
-complete -c type -a "(builtin -n)" -d "Builtin"
-complete -c type -a "(functions -n)" -d "Function"
+complete -c type -a "(builtin -n)" -d Builtin
+complete -c type -a "(functions -n)" -d Function
 
 complete -c type -a "(__fish_complete_command)" -x

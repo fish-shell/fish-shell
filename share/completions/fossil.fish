@@ -50,7 +50,7 @@ complete -c fossil -n '__fish_fossil_command add' -l case-sensitive -x -a 'yes n
 complete -c fossil -n '__fish_fossil_command add' -l dotfiles -d 'Include dotfiles'
 complete -c fossil -n '__fish_fossil_command add' -l ignore -r -d 'Files to ignore'
 complete -c fossil -n '__fish_fossil_command add' -l clean -r -d 'Files to ignore'
-complete -c fossil -n '__fish_fossil_command add' -a '(__fish_fossil extra --rel-paths)' -x -d 'File'
+complete -c fossil -n '__fish_fossil_command add' -a '(__fish_fossil extra --rel-paths)' -x -d File
 
 # addremove
 complete -c fossil -n __fish_fossil_needs_command -a addremove -f -d 'Remove and add files to checkout'
@@ -85,9 +85,9 @@ complete -c fossil -n '__fish_fossil_subcommand bisect' -a log -d 'Show log of b
 complete -c fossil -n '__fish_fossil_subcommand bisect' -a chart -d 'Show log of bisects in check-in order'
 complete -c fossil -n '__fish_fossil_subcommand bisect' -a next -d 'Skip version'
 complete -c fossil -n '__fish_fossil_subcommand bisect' -a options -d 'Show bisect options'
-complete -c fossil -n '__fish_fossil_subsubcommand_only bisect options' -x -a 'auto-next' -d 'Automatically run bisect next'
-complete -c fossil -n '__fish_fossil_subsubcommand_only bisect options' -x -a 'direct-only' -d 'Follow only primary parent-child links'
-complete -c fossil -n '__fish_fossil_subsubcommand_only bisect options' -x -a 'display' -d 'Command to show after bisect next'
+complete -c fossil -n '__fish_fossil_subsubcommand_only bisect options' -x -a auto-next -d 'Automatically run bisect next'
+complete -c fossil -n '__fish_fossil_subsubcommand_only bisect options' -x -a direct-only -d 'Follow only primary parent-child links'
+complete -c fossil -n '__fish_fossil_subsubcommand_only bisect options' -x -a display -d 'Command to show after bisect next'
 complete -c fossil -n '__fish_fossil_subsubsubcommand_only bisect options auto-next' -x -a 'on off' -d 'Automatically run bisect next'
 complete -c fossil -n '__fish_fossil_subsubsubcommand_only bisect options direct-only' -x -a 'on off' -d 'Follow only primary parent-child links'
 complete -c fossil -n '__fish_fossil_subsubsubcommand_only bisect options display' -x -a chart -d 'Show log of bisects in check-in order'
@@ -157,7 +157,7 @@ complete -c fossil -n '__fish_fossil_command clone' -l ssl-identity -r -d 'Use S
 
 # commit
 complete -c fossil -n __fish_fossil_needs_command -a 'ci commit' -d 'Create new revision'
-complete -c fossil -n '__fish_fossil_command ci commit' -a '(__fish_fossil changes --rel-paths | cut -c12-)' -x -d 'File'
+complete -c fossil -n '__fish_fossil_command ci commit' -a '(__fish_fossil changes --rel-paths | cut -c12-)' -x -d File
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-conflict -d 'Allow unresolved merge conflicts'
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-empty -d 'Allow empty check-ins'
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-fork -d 'Allow forking'
@@ -247,13 +247,13 @@ complete -c fossil -n '__fish_fossil_command json' -s R -l repository -r -d 'Run
 
 # ls
 complete -c fossil -n __fish_fossil_needs_command -a ls -d 'List files'
-complete -c fossil -n '__fish_fossil_command ls' -s r -x -a '(__fish_fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_command ls' -s r -x -a '(__fish_fossil tag list)' -d Tag
 complete -c fossil -n '__fish_fossil_command ls' -l age -d 'Show commit time'
 complete -c fossil -n '__fish_fossil_command ls' -s v -l verbose -d 'Provide extra information'
 
 # merge
 complete -c fossil -n __fish_fossil_needs_command -a merge -d 'Merge commits'
-complete -c fossil -n '__fish_fossil_command merge' -a '(__fish_fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_command merge' -a '(__fish_fossil tag list)' -d Tag
 complete -c fossil -n '__fish_fossil_command merge' -l baseline -a '(__fish_fossil tag list)' -x -d 'Use baseline'
 complete -c fossil -n '__fish_fossil_command merge' -l binary -r -d 'Binary files glob pattern'
 complete -c fossil -n '__fish_fossil_command merge' -l case-sensitive -x -a 'yes no' -d 'Case insensitive file matching'
@@ -300,7 +300,7 @@ complete -c fossil -n __fish_fossil_needs_command -a remote-url -d 'Default serv
 
 # revert
 complete -c fossil -n __fish_fossil_needs_command -f -a revert -d 'Revert a commit'
-complete -c fossil -n '__fish_fossil_command revert' -a '(__fish_fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_command revert' -a '(__fish_fossil tag list)' -d Tag
 complete -c fossil -n '__fish_fossil_command revert' -s r -x -a '(__fish_fossil tag list)' -d 'Revert back to given revision'
 
 # rm
@@ -392,13 +392,13 @@ complete -c fossil -n '__fish_fossil_subcommand tag' -x -a add -d 'Add tag to ch
 complete -c fossil -n '__fish_fossil_subsubcommand tag add' -l raw -d 'Add raw tag'
 complete -c fossil -n '__fish_fossil_subsubcommand tag add' -l propagate -d 'Propagate tag'
 complete -c fossil -n '__fish_fossil_subcommand tag' -x -a remove -d 'Remove tag from check-in'
-complete -c fossil -n '__fish_fossil_subsubcommand tag remove' -a '(__fish_fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_subsubcommand tag remove' -a '(__fish_fossil tag list)' -d Tag
 complete -c fossil -n '__fish_fossil_subsubcommand tag remove' -l raw -d 'Remove raw tag'
 complete -c fossil -n '__fish_fossil_subcommand tag' -x -a find -d 'Find tag'
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -l raw -d 'Find raw tag'
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -s t -l type -x -a 'ci e' -d 'Find tag type'
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -s n -l limit -x -d 'Limit number of tags'
-complete -c fossil -n '__fish_fossil_subsubcommand tag find' -a '(__fish_fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_subsubcommand tag find' -a '(__fish_fossil tag list)' -d Tag
 complete -c fossil -n '__fish_fossil_subcommand tag' -x -a list -d 'List tags'
 complete -c fossil -n '__fish_fossil_subsubcommand tag list' -l raw -d 'List raw tags'
 
@@ -416,7 +416,7 @@ complete -c fossil -n '__fish_fossil_command server' -l localhost -d 'Only liste
 complete -c fossil -n '__fish_fossil_command ui server' -s P -l port -d 'Port to listen on'
 complete -c fossil -n '__fish_fossil_command ui server' -l th-trace -d 'Trace TH1 execution'
 complete -c fossil -n '__fish_fossil_command ui server' -l baseurl -d 'Use base URL'
-complete -c fossil -n '__fish_fossil_command ui server' -l notfound -d 'Redirect'
+complete -c fossil -n '__fish_fossil_command ui server' -l notfound -d Redirect
 complete -c fossil -n '__fish_fossil_command ui server' -l files -d 'Static files glob'
 complete -c fossil -n '__fish_fossil_command ui server' -l scgi -d 'Use SCGI rather than HTTP'
 

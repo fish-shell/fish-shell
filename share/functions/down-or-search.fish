@@ -15,8 +15,8 @@ function down-or-search -d "Depending on cursor position and current mode, eithe
     # We are not already in search mode.
     # If we are on the bottom line, start search mode,
     # otherwise move down
-    set lineno (commandline -L)
-    set line_count (count (commandline))
+    set -l lineno (commandline -L)
+    set -l line_count (count (commandline))
 
     switch $lineno
         case $line_count

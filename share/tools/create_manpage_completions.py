@@ -16,8 +16,19 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import string, sys, re, os.path, bz2, gzip, traceback, getopt, errno, codecs
+from __future__ import print_function
 from deroff import Deroffer
+import argparse
+import bz2
+import codecs
+import errno
+import gzip
+import os
+import re
+import string
+import subprocess
+import sys
+import traceback
 
 lzma_available = True
 try:
@@ -27,6 +38,11 @@ try:
         from backports import lzma
 except ImportError:
     lzma_available = False
+
+try:
+    from subprocess import DEVNULL
+except ImportError:
+    DEVNULL = open(os.devnull, 'wb')
 
 # Whether we're Python 3
 IS_PY3 = sys.version_info[0] >= 3
@@ -48,8 +64,8 @@ diagnostic_indent = 0
 VERY_VERBOSE, BRIEF_VERBOSE, NOT_VERBOSE = 2, 1, 0
 
 # Pick some reasonable default values for settings
-global VERBOSITY, WRITE_TO_STDOUT, DEROFF_ONLY
-VERBOSITY, WRITE_TO_STDOUT, DEROFF_ONLY = NOT_VERBOSE, False, False
+global VERBOSITY, WRITE_TO_STDOUT, DEROFF_ONLY, KEEP_FILES
+VERBOSITY, WRITE_TO_STDOUT, DEROFF_ONLY, KEEP_FILES = NOT_VERBOSE, False, False, False
 
 
 def add_diagnostic(dgn, msg_verbosity=VERY_VERBOSE):
@@ -60,8 +76,8 @@ def add_diagnostic(dgn, msg_verbosity=VERY_VERBOSE):
 
 def flush_diagnostics(where):
     if diagnostic_output:
-        output_str = "\n".join(diagnostic_output) + "\n"
-        where.write(output_str)
+        output_str = "\n".join(diagnostic_output)
+        print(output_str, file=where)
         diagnostic_output[:] = []
 
 
@@ -131,7 +147,7 @@ def output_complete_command(cmdname, args, description, output_list):
     comps = ["complete -c", cmdname]
     comps.extend(args)
     if description:
-        comps.append("--description")
+        comps.append("-d")
         comps.append(description)
     output_list.append(lossy_unicode(" ").join([lossy_unicode(c) for c in comps]))
 
@@ -205,6 +221,8 @@ def built_command(options, description):
         else:
             # No fit
             break
+    # Strip trailing dots
+    truncated_description = truncated_description.strip(udot)
 
     # If the first sentence does not fit, truncate if necessary
     if len(truncated_description) > max_description_width:
@@ -242,6 +260,7 @@ def remove_groff_formatting(data):
     data = data.replace("\-", "-")
     data = data.replace(".I", "")
     data = data.replace("\f", "")
+    data = data.replace("\(cq", "'")
     return data
 
 
@@ -493,7 +512,7 @@ class Type4ManParser(ManParser):
         add_diagnostic("Command is %r" % CMDNAME)
 
         if options_matched == None:
-            print >>sys.stderr, "Unable to find options section"
+            print("Unable to find options section", file=sys.stderr)
             return False
 
         while options_matched != None:
@@ -946,47 +965,50 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 
 def get_paths_from_man_locations():
     # Return all the paths to man(1) and man(8) files in the manpath
-    import subprocess, os
 
-    proc = None
-    # $MANPATH takes precedence, just like with `man` on the CLI.
-    if os.getenv("MANPATH"):
+    parent_paths = []
+
+    # Most (GNU, macOS, Haiku) modern implementations of man support being called with `--path`.
+    # Traditional implementations require a second `manpath` program: examples include FreeBSD and Solaris.
+    # Prefer an external program first because these programs return a superset of the $MANPATH variable.
+    for prog in [["man", "--path"], ["manpath"]]:
+        try:
+            output = subprocess.check_output(prog, stderr=DEVNULL)
+            if IS_PY3:
+                output = output.decode("latin-1")
+            parent_paths = output.strip().split(":")
+            break
+        except (OSError, subprocess.CalledProcessError):
+            continue
+    # If we can't have the OS interpret $MANPATH, just use it as-is (gulp).
+    if not parent_paths and os.getenv("MANPATH"):
         parent_paths = os.getenv("MANPATH").strip().split(":")
-    else:
-        # Some systems have manpath, others have `man --path` (like Haiku).
-        for prog in [["manpath"], ["man", "--path"]]:
-            try:
-                proc = subprocess.Popen(
-                    prog, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-            except OSError:  # Command does not exist, keep trying
-                continue
-            break  # Command exists, use it.
-        manpath, err_data = proc.communicate()
-        parent_paths = manpath.decode().strip().split(":")
-    if (not parent_paths) or (proc and proc.returncode > 0):
-        # HACK: Use some fallbacks in case we can't get anything else.
-        # `mandoc` does not provide `manpath` or `man --path` and $MANPATH might not be set.
-        # The alternative is reading its config file (/etc/man.conf)
-        if os.path.isfile("/etc/man.conf"):
-            data = open("/etc/man.conf", "r")
-            for line in data:
-                if "manpath" in line or "MANPATH" in line:
-                    p = line.split(" ")[1]
-                    p = p.split()[0]
-                    parent_paths.append(p)
-        if not parent_paths:
-            sys.stderr.write(
-                "Unable to get the manpath, falling back to /usr/share/man:/usr/local/share/man. Please set $MANPATH if that is not correct.\n"
-            )
-        parent_paths = ["/usr/share/man", "/usr/local/share/man"]
+    # Fallback: With mandoc (OpenBSD, embedded Linux) and NetBSD man, the only way to get the default manpath is by reading /etc.
+    if not parent_paths:
+        try:
+            with open("/etc/man.conf", "r") as file:
+                data = file.read()
+                for key in ["MANPATH", "_default"]:
+                    for match in re.findall(r"^%s\s+(.*)$" % key, data, re.I | re.M):
+                        parent_paths.append(match)
+        except FileNotFoundError:
+            pass
+    # Fallback: hard-code some common paths. These should be likely for FHS Linux distros, BSDs, and macOS.
+    if not parent_paths:
+        parent_paths = ["/usr/share/man", "/usr/local/man", "/usr/local/share/man"]
+        print(
+            "Unable to get the manpath, falling back to %s." % ":".join(parent_paths),
+            "Explictly set $MANPATH to fix this error.",
+            file=sys.stderr
+        )
+
     result = []
     for parent_path in parent_paths:
         for section in ["man1", "man6", "man8"]:
             directory_path = os.path.join(parent_path, section)
             try:
                 names = os.listdir(directory_path)
-            except OSError as e:
+            except OSError:
                 names = []
             names.sort()
             for name in names:
@@ -994,100 +1016,88 @@ def get_paths_from_man_locations():
     return result
 
 
-def usage(script_name):
-    print(
-        "Usage: {0} [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress] files...".format(
-            script_name
-        )
-    )
-    print(
-        """Command options are:
-     -h, --help\t\tShow this help message
-     -v, --verbose [0, 1, 2]\tShow debugging output to stderr. Larger is more verbose.
-     -s, --stdout\tWrite all completions to stdout (trumps the --directory option)
-     -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.local/share/fish/generated_completions
-     -m, --manpath\tProcess all man1 and man8 files available in the manpath (as determined by manpath)
-     -p, --progress\tShow progress
-    """
-    )
-
-
 if __name__ == "__main__":
     script_name = sys.argv[0]
-    try:
-        opts, file_paths = getopt.gnu_getopt(
-            sys.argv[1:],
-            "v:sd:hmpc:z",
-            [
-                "verbose=",
-                "stdout",
-                "directory=",
-                "cleanup-in=",
-                "help",
-                "manpath",
-                "progress",
-            ],
-        )
-    except getopt.GetoptError as err:
-        print(err.msg)  # will print something like "option -a not recognized"
-        usage(script_name)
-        sys.exit(2)
+    parser = argparse.ArgumentParser(
+        description="create_manpage_completions: Generate fish-shell completions from manpages"
+    )
+    parser.add_argument(
+        "-c",
+        "--cleanup-in",
+        type=str,
+        help="Directories to clean up in",
+        action="append",
+    )
+    parser.add_argument(
+        "-d", "--directory", type=str, help="The directory to save the completions in",
+    )
+    parser.add_argument(
+        "-k",
+        "--keep",
+        help="Whether to keep files in the target directory",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-m", "--manpath", help="Whether to use manpath", action="store_true",
+    )
+    parser.add_argument(
+        "-p", "--progress", help="Whether to show progress", action="store_true",
+    )
+    parser.add_argument(
+        "-s", "--stdout", help="Write the completions to stdout", action="store_true",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        type=int,
+        choices=[0, 1, 2],
+        help="The level of debug output to show",
+    )
+    parser.add_argument(
+        "-z", "--deroff-only", help="Whether to just deroff", action="store_true",
+    )
+    parser.add_argument("file_paths", type=str, nargs="*")
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        VERBOSITY = args.verbose
+    if args.stdout:
+        WRITE_TO_STDOUT = True
+    if args.deroff_only:
+        DEROFF_ONLY = True
+    if args.keep:
+        KEEP_FILES = True
+    if args.manpath:
+        # Fetch all man1 and man8 files from the manpath or man.conf
+        args.file_paths.extend(get_paths_from_man_locations())
 
     # Directories within which we will clean up autogenerated completions
     # This script originally wrote completions into ~/.config/fish/completions
     # Now it writes them into a separate directory
-    cleanup_directories = []
-
-    use_manpath, show_progress, custom_dir = False, False, False
-    output_directory = ""
-    for opt, value in opts:
-        if opt in ("-v", "--verbose"):
-            VERBOSITY = int(value)
-        elif opt in ("-s", "--stdout"):
-            WRITE_TO_STDOUT = True
-        elif opt in ("-d", "--directory"):
-            output_directory = value
-        elif opt in ("-h", "--help"):
-            usage(script_name)
-            sys.exit(0)
-        elif opt in ("-m", "--manpath"):
-            use_manpath = True
-        elif opt in ("-p", "--progress"):
-            show_progress = True
-        elif opt in ("-c", "--cleanup-in"):
-            cleanup_directories.append(value)
-        elif opt in ("-z",):
-            DEROFF_ONLY = True
-        else:
-            assert False, "unhandled option"
-
-    if use_manpath:
-        # Fetch all man1 and man8 files from the manpath or man.conf
-        file_paths.extend(get_paths_from_man_locations())
-
-    if cleanup_directories:
-        for cleanup_dir in cleanup_directories:
+    if args.cleanup_in:
+        for cleanup_dir in args.cleanup_in:
             cleanup_autogenerated_completions_in_directory(cleanup_dir)
 
-    if not file_paths:
+    if not args.file_paths:
         print("No paths specified")
         sys.exit(0)
 
-    if not WRITE_TO_STDOUT and not output_directory:
+    if not args.stdout and not args.directory:
         # Default to ~/.local/share/fish/generated_completions/
         # Create it if it doesn't exist
         xdg_data_home = os.getenv("XDG_DATA_HOME", "~/.local/share")
-        output_directory = os.path.expanduser(
+        args.directory = os.path.expanduser(
             xdg_data_home + "/fish/generated_completions/"
         )
         try:
-            os.makedirs(output_directory)
+            os.makedirs(args.directory)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
 
-    if not WRITE_TO_STDOUT:
+    if not args.stdout and not args.keep:
         # Remove old generated files
-        cleanup_autogenerated_completions_in_directory(output_directory)
+        cleanup_autogenerated_completions_in_directory(args.directory)
 
-    parse_and_output_man_pages(file_paths, output_directory, show_progress)
+    parse_and_output_man_pages(args.file_paths, args.directory, args.progress)

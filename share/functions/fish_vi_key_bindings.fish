@@ -10,7 +10,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # This needs to be checked here because if we are called again
     # via the variable handler the argument will be gone.
     set -l rebind true
-    if test "$argv[1]" = "--no-erase"
+    if test "$argv[1]" = --no-erase
         set rebind false
         set -e argv[1]
     else
@@ -20,8 +20,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Allow just calling this function to correctly set the bindings.
     # Because it's a rather discoverable name, users will execute it
     # and without this would then have subtly broken bindings.
-    if test "$fish_key_bindings" != "fish_vi_key_bindings"
-        and test "$rebind" = "true"
+    if test "$fish_key_bindings" != fish_vi_key_bindings
+        and test "$rebind" = true
         # Allow the user to set the variable universally.
         set -q fish_key_bindings
         or set -g fish_key_bindings
@@ -56,6 +56,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M insert "" self-insert
     # Space expands abbrs _and_ inserts itself.
     bind -s --preset -M insert " " self-insert expand-abbr
+    bind --preset $argv ")" self-insert expand-abbr
+    # Ctrl-space inserts space without expanding abbrs
+    bind -k nul 'commandline -i " "'
 
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
@@ -151,6 +154,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset dt begin-selection forward-jump backward-char kill-selection end-selection
     bind -s --preset dF begin-selection backward-jump kill-selection end-selection
     bind -s --preset dT begin-selection backward-jump forward-char kill-selection end-selection
+    bind -s --preset dh backward-char delete-char
+    bind -s --preset dl delete-char
+    bind -s --preset di backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
+    bind -s --preset da backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
 
     bind -s --preset -m insert s delete-char repaint-mode
     bind -s --preset -m insert S kill-whole-line repaint-mode
@@ -158,6 +165,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert C kill-line repaint-mode
     bind -s --preset -m insert c\$ kill-line repaint-mode
     bind -s --preset -m insert c\^ backward-kill-line repaint-mode
+    bind -s --preset -m insert c0 backward-kill-line repaint-mode
     bind -s --preset -m insert cw kill-word repaint-mode
     bind -s --preset -m insert cW kill-bigword repaint-mode
     bind -s --preset -m insert ciw forward-char forward-char backward-word kill-word repaint-mode
@@ -170,8 +178,16 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert cB backward-kill-bigword repaint-mode
     bind -s --preset -m insert cge backward-kill-word repaint-mode
     bind -s --preset -m insert cgE backward-kill-bigword repaint-mode
+    bind -s --preset -m insert cf begin-selection forward-jump kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ct begin-selection forward-jump backward-char kill-selection end-selection repaint-mode
+    bind -s --preset -m insert cF begin-selection backward-jump kill-selection end-selection repaint-mode
+    bind -s --preset -m insert cT begin-selection backward-jump forward-char kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ch backward-char begin-selection kill-selection end-selection repaint-mode
+    bind -s --preset -m insert cl begin-selection kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ci backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ca backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
 
-    bind -s --preset '~' capitalize-word
+    bind -s --preset '~' togglecase-char forward-char
     bind -s --preset gu downcase-word
     bind -s --preset gU upcase-word
 
@@ -182,6 +198,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset Y kill-whole-line yank
     bind -s --preset y\$ kill-line yank
     bind -s --preset y\^ backward-kill-line yank
+    bind -s --preset y0 backward-kill-line yank
     bind -s --preset yw kill-word yank
     bind -s --preset yW kill-bigword yank
     bind -s --preset yiw forward-char forward-char backward-word kill-word yank
@@ -194,6 +211,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset yB backward-kill-bigword yank
     bind -s --preset yge backward-kill-word yank
     bind -s --preset ygE backward-kill-bigword yank
+    bind -s --preset yf begin-selection forward-jump kill-selection yank end-selection
+    bind -s --preset yt begin-selection forward-jump-till kill-selection yank end-selection
+    bind -s --preset yF begin-selection backward-jump kill-selection yank end-selection
+    bind -s --preset yT begin-selection backward-jump-till kill-selection yank end-selection
+    bind -s --preset yh backward-char begin-selection kill-selection yank end-selection
+    bind -s --preset yl begin-selection kill-selection yank end-selection
+    bind -s --preset yi backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
+    bind -s --preset ya backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
 
     bind -s --preset f forward-jump
     bind -s --preset F backward-jump
@@ -266,6 +291,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual -m default X kill-whole-line end-selection repaint-mode
     bind -s --preset -M visual -m default y kill-selection yank end-selection repaint-mode
     bind -s --preset -M visual -m default '"*y' "commandline -s | xsel -p; commandline -f end-selection repaint-mode"
+    bind -s --preset -M visual -m default '~' togglecase-selection end-selection repaint-mode
 
     bind -s --preset -M visual -m default \cc end-selection repaint-mode
     bind -s --preset -M visual -m default \e end-selection repaint-mode

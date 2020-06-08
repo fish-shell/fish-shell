@@ -1,6 +1,6 @@
 #! /usr/bin/env fish
 
-set TAG $argv[1]
+set -l TAG $argv[1]
 
 if test -z "$TAG"
     echo "Tag name required."
@@ -12,8 +12,8 @@ if not contains -- $TAG (git tag)
     exit 1
 end
 
-set committers_to_tag (mktemp)
-set committers_from_tag (mktemp)
+set -l committers_to_tag (mktemp)
+set -l committers_from_tag (mktemp)
 
 # You might think it would be better to case-insensitively sort/compare the names
 # to produce a more natural-looking list.

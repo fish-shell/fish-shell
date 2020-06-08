@@ -163,7 +163,6 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -172,7 +171,8 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
     return STATUS_CMD_OK;
 }
 
-static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLINT(npath complexity)
+static int validate_cmd_opts(const wchar_t *cmd,
+                             const set_cmd_opts_t &opts,  //!OCLINT(npath complexity)
                              int argc, parser_t &parser, io_streams_t &streams) {
     // Can't query and erase or list.
     if (opts.query && (opts.erase || opts.list)) {
@@ -235,8 +235,9 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLIN
 
 // Check if we are setting a uvar and a global of the same name exists. See
 // https://github.com/fish-shell/fish-shell/issues/806
-static int check_global_scope_exists(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t *dest,
-                                     io_streams_t &streams, const parser_t &parser) {
+static int check_global_scope_exists(const wchar_t *cmd, const set_cmd_opts_t &opts,
+                                     const wchar_t *dest, io_streams_t &streams,
+                                     const parser_t &parser) {
     if (opts.universal) {
         auto global_dest = parser.vars().get(dest, ENV_GLOBAL);
         if (global_dest && parser.is_interactive()) {
@@ -334,7 +335,6 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
         }
         default: {
             DIE("unexpected vars.set() ret val");
-            break;
         }
     }
 }
@@ -414,7 +414,7 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
 }
 
 static int update_values(wcstring_list_t &list, std::vector<long> &indexes,
-                         wcstring_list_t &values) {
+                         const wcstring_list_t &values) {
     // Replace values where needed.
     for (size_t i = 0; i < indexes.size(); i++) {
         // The '- 1' below is because the indices in fish are one-based, but the vector uses
@@ -452,7 +452,7 @@ static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes
     }
 }
 
-static env_mode_flags_t compute_scope(set_cmd_opts_t &opts) {
+static env_mode_flags_t compute_scope(const set_cmd_opts_t &opts) {
     int scope = ENV_USER;
     if (opts.local) scope |= ENV_LOCAL;
     if (opts.global) scope |= ENV_GLOBAL;
@@ -570,20 +570,19 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         }
         default: {
             DIE("invalid scope");
-            break;
         }
     }
 
     const auto var = vars.get(var_name, scope);
     if (!var) {
-        streams.out.append_format(_(L"$%ls: not set in %ls scope\n"), var_name, scope_name);
         return;
     }
 
     const wchar_t *exportv = var->exports() ? _(L"exported") : _(L"unexported");
+    const wchar_t *pathvarv = var->is_pathvar() ? _(L" a path variable") : L"";
     wcstring_list_t vals = var->as_list();
-    streams.out.append_format(_(L"$%ls: set in %ls scope, %ls, with %d elements\n"), var_name,
-                              scope_name, exportv, vals.size());
+    streams.out.append_format(_(L"$%ls: set in %ls scope, %ls,%ls with %d elements\n"), var_name,
+                              scope_name, exportv, pathvarv, vals.size());
 
     for (size_t i = 0; i < vals.size(); i++) {
         if (vals.size() > 100) {
@@ -596,16 +595,16 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         }
         const wcstring value = vals[i];
         const wcstring escaped_val = escape_string(value, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
-        streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
-                                  value.size(), escaped_val.c_str());
+        streams.out.append_format(_(L"$%ls[%d]: |%ls|\n"), var_name, i + 1,
+                                  escaped_val.c_str());
     }
 }
 
 /// Show mode. Show information about the named variable(s).
-static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
-                            parser_t &parser, io_streams_t &streams) {
+static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int argc,
+                            wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     UNUSED(opts);
-    auto &vars = parser.vars();
+    const auto &vars = parser.vars();
     if (argc == 0) {  // show all vars
         wcstring_list_t names = parser.vars().get_names(ENV_USER);
         sort(names.begin(), names.end());
@@ -614,7 +613,6 @@ static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
             show_scope(name.c_str(), ENV_LOCAL, streams, vars);
             show_scope(name.c_str(), ENV_GLOBAL, streams, vars);
             show_scope(name.c_str(), ENV_UNIVERSAL, streams, vars);
-            streams.out.push_back(L'\n');
         }
     } else {
         for (int i = 0; i < argc; i++) {
@@ -635,7 +633,6 @@ static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
             show_scope(arg, ENV_LOCAL, streams, vars);
             show_scope(arg, ENV_GLOBAL, streams, vars);
             show_scope(arg, ENV_UNIVERSAL, streams, vars);
-            streams.out.push_back(L'\n');
         }
     }
 
@@ -696,9 +693,9 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 }
 
 /// This handles the common case of setting the entire var to a set of values.
-static int set_var_array(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t *varname,
+static int set_var_array(const wchar_t *cmd, const set_cmd_opts_t &opts, const wchar_t *varname,
                          wcstring_list_t &new_values, int argc, wchar_t **argv, parser_t &parser,
-                         io_streams_t &streams) {
+                         const io_streams_t &streams) {
     UNUSED(cmd);
     UNUSED(streams);
 

@@ -41,11 +41,11 @@ function __fish_emerge_possible_args
         # TODO deselect=y
     else if __fish_contains_opt config -s c depclean info -s P prune -s C unmerge
         __fish_emerge_print_sets
-        __fish_portage_print_installed_pkgs
+        __fish_print_portage_installed_pkgs
         # TODO deselect=n
     else
         __fish_emerge_print_sets
-        __fish_portage_print_available_pkgs
+        __fish_print_portage_available_pkgs
     end
 end
 

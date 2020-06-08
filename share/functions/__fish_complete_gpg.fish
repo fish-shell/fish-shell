@@ -110,7 +110,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
 
     complete -c $__fish_complete_gpg_command -l gen-key -d "Generate a new key pair"
 
-    complete -c $__fish_complete_gpg_command -l edit-key -d "Present a menu which enables you to do all key related tasks" -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)"
+    complete -c $__fish_complete_gpg_command -l edit-key -d "Present a menu which enables you to do all key related tasks" -xa "(__fish_complete_gpg_key_id $__fish_complete_gpg_command)"
 
     complete -c $__fish_complete_gpg_command -l sign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key"
     complete -c $__fish_complete_gpg_command -l lsign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key but mark it as non exportable"
@@ -125,6 +125,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l desig-revoke -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Generate a designated revocation certificate for a key"
 
     complete -c $__fish_complete_gpg_command -l export -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d 'Export all or the given keys from all keyrings'
+    complete -c $__fish_complete_gpg_command -l export-ssh-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d 'Export all or the given keys in OpenSSH format'
     complete -c $__fish_complete_gpg_command -l send-keys -xa "(__fish_complete_gpg_key_id $__fish_complete_gpg_command)" -d "Same as --export but sends the keys to a keyserver"
     complete -c $__fish_complete_gpg_command -l export-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --export, but exports the secret keys instead"
     complete -c $__fish_complete_gpg_command -l export-secret-subkeys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --export, but exports the secret keys instead"
@@ -342,6 +343,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l with-colons -d "Print key listings delimited by colons"
     complete -c $__fish_complete_gpg_command -l with-key-data -d "Print key listings delimited by colons (like --with-colons) and print the public key data"
     complete -c $__fish_complete_gpg_command -l with-fingerprint -d "Same as the command --fingerprint but changes only the format of the output and may be used together with another command"
+    complete -c $__fish_complete_gpg_command -l with-subkey-fingerprint -d "Force printing of all subkeys"
 
     complete -c $__fish_complete_gpg_command -l fast-list-mode -d "Changes the output of the list commands to work faster"
     complete -c $__fish_complete_gpg_command -l fixed-list-mode -d "Do not merge primary user ID and primary key in --with-colon listing mode and print all timestamps as UNIX timestamps"

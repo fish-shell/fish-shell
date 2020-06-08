@@ -41,7 +41,7 @@ function __bower_args
 end
 
 function __bower_matching_pkgs
-    bower search (commandline -ct) | string match -r "\S+[^\s]" | string match -v "Search"
+    bower search (commandline -ct) | string match -r "\S+[^\s]" | string match -v Search
 end
 
 # Output of `bower list` is a) slow, b) convoluted. Use `python` or `jq` instead.
@@ -52,8 +52,8 @@ function __bower_list_installed
 
     if set -l python (__fish_anypython)
         # Warning: That weird indentation is necessary, because python.
-        $python -c 'import json, sys; data = json.load(sys.stdin);
-for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' bower.json 2>/dev/null
+        $python -S -c 'import json, sys; data = json.load(sys.stdin);
+for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' <bower.json 2>/dev/null
         return
     end
 
@@ -64,7 +64,7 @@ for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' bower.json 2>
     jq -r '.dependencies | to_entries[] | .key' bower.json
 end
 
-complete -c bower -n "__fish_is_first_token" -x -a '(__bower_cmds)'
-complete -c bower -n "__fish_should_complete_switches" -x -a '(__bower_args)'
+complete -c bower -n __fish_is_first_token -x -a '(__bower_cmds)'
+complete -c bower -n __fish_should_complete_switches -x -a '(__bower_args)'
 complete -c bower -n "__fish_seen_subcommand_from install" -x -a '(__bower_matching_pkgs)'
 complete -c bower -n "__fish_seen_subcommand_from uninstall" -x -a '(__bower_list_installed)'

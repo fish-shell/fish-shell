@@ -7,7 +7,7 @@ for bytes in 512 1024 2048 4096 8192
 end
 
 complete -c csc -s o -o "o+" -o optimize -o "optimize+" -d "Enable optimizations"
-complete -c csc -o "o-" -o "optimize-" -d "Disable optimizations"
+complete -c csc -o o- -o optimize- -d "Disable optimizations"
 
 # Output Files
 complete -c csc -o deterministic -d "Causes the compiler to output an assembly whose binary content is identical across compilations if inputs are identical"
@@ -36,12 +36,12 @@ complete -c csc -o "modulename:" -d "Specify the name of the source module"
 # .NET Framework Assemblies
 complete -c csc -o "addmodule:" -d "Specifies one or more modules to be part of this assembly"
 complete -c csc -o delaysign -o "delaysign+" -d "Instructs the compiler to add the public key but to leave the assembly unsigned"
-complete -c csc -o "delaysign-" -d "Disable -delaysign"
+complete -c csc -o delaysign- -d "Disable -delaysign"
 complete -c csc -o "keycontainer:" -d "Specifies the name of the cryptographic key container"
 complete -c csc -o "keyfile:" -d "Specifies the filename containing the cryptographic key"
 complete -c csc -o "lib:" -d "Specifies the location of assemblies referenced by means of -reference"
 complete -c csc -o nostdlib -o "nostdlib+" -d "Instructs the compiler not to import the standard library (mscorlib.dll)"
-complete -c csc -o "nostdlib-" -d "Disable -nostdlib"
+complete -c csc -o nostdlib- -d "Disable -nostdlib"
 complete -c csc -o publicsign -d "Apply a public key without signing the assembly, but set the bit in the assembly indicating the assembly is signed"
 complete -c csc -o "r:" -o "reference:" -d "Imports metadata from a file that contains an assembly"
 complete -c csc -o "a:" -o "analyzer:" -d "Run the analyzers from this assembly"
@@ -52,13 +52,13 @@ complete -c csc -o "embed:" -d "Embed specific files in the PDB"
 # Debugging/Error Checking
 complete -c csc -o "bugreport:" -d "Creates a file that contains information that makes it easy to report a bug"
 complete -c csc -o checked -o "checked+" -d "Specifies whether integer arithmetic that overflows the bounds of the data type will cause an exception at run time"
-complete -c csc -o "checked-" -d "Disable -checked"
+complete -c csc -o checked- -d "Disable -checked"
 
 complete -c csc -o debug -o "debug+" -d "Instruct the compiler to emit debugging information"
 for arguments in full pdbonly
     complete -c csc -o "debug:$arguments" -d "Instruct the compiler to emit debugging information"
 end
-complete -c csc -o "debug-" -d "Disable -debug"
+complete -c csc -o debug- -d "Disable -debug"
 
 for arguments in none prompt queue send
     complete -c csc -o "errorreport:$arguments" -d "Sets error reporting behavior"
@@ -76,7 +76,7 @@ for warning_level in (seq 0 4)
 end
 
 complete -c csc -o warnaserror -o "warnaserror+" -d "Promotes warnings to errors"
-complete -c csc -o "warnaserror-" -d "Disable -warnaserror"
+complete -c csc -o warnaserror- -d "Disable -warnaserror"
 complete -c csc -o "ruleset:" -d "Specify a ruleset file that disables specific diagnostics"
 
 # Preprocessor
@@ -94,7 +94,7 @@ complete -c csc -s "?" -o help -d "Lists compiler options to stdout"
 complete -c csc -o "baseaddress:" -d "Specifies the preferred base address at which to load a DLL"
 complete -c csc -o "codepage:" -d "Specifies the code page to use for all source code files in the compilation"
 complete -c csc -o highentropyva -o "highentropyva+" -d "Specifies that the executable file supports address space layout randomization (ASLR)"
-complete -c csc -o "highentropyva-" -d "Disable -highentropyva"
+complete -c csc -o highentropyva- -d "Disable -highentropyva"
 
 complete -c csc -o "langversion:?" -d "Display the allowed values for language version"
 complete -c csc -o "langversion:default" -d "Specify latest major version as language version"
@@ -125,6 +125,6 @@ complete -c csc -o "subsystemversion:" -d "Specifies the minimum version of the 
 complete -c csc -o unsafe -d "Enables compilation of code that uses the unsafe keyword"
 complete -c csc -o utf8output -d "Displays compiler output using UTF-8 encoding"
 complete -c csc -o parallel -o "parallel+" -d "Specifies whether to use concurrent build"
-complete -c csc -o "parallel-" -d "Disable -parallel"
+complete -c csc -o parallel- -d "Disable -parallel"
 complete -c csc -o "checksumalgorithm:SHA1" -d "Specify SHA1 as the algorithm for calculating the source file checksum stored in PDB (default)"
 complete -c csc -o "checksumalgorithm:SHA256" -d "Specify SHA256 as the algorithm for calculating the source file checksum stored in PDB"

@@ -1,7 +1,7 @@
 function __fish_print_user_ids
     if command -sq getent
         for line in (getent passwd)
-            set v (string split : -- $line)
+            set -l v (string split : -- $line)
             printf "%s\t%s\n" $v[3] $v[1]
         end
     end
@@ -10,7 +10,7 @@ end
 function __fish_print_group_ids
     if command -sq getent
         for line in (getent group)
-            set v (string split : -- $line)
+            set -l v (string split : -- $line)
             printf "%s\t%s\n" $v[3] $v[1]
         end
     end

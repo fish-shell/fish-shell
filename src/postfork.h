@@ -18,8 +18,17 @@ class dup2_list_t;
 class job_t;
 class process_t;
 
-bool set_child_group(job_t *j, pid_t child_pid);  // called by parent
-bool child_set_group(job_t *j, process_t *p);     // called by child
+/// Tell the proc \p pid to join process group \p pgrp.
+/// If \p is_child is true, we are the child process; otherwise we are fish.
+/// Called by both parent and child; this is an unavoidable race inherent to Unix.
+/// If is_parent is set, then we are the parent process and should swallow EACCESS.
+/// \return 0 on success, an errno error code on failure.
+int execute_setpgid(pid_t pid, pid_t pgrp, bool is_parent);
+
+/// Report the error code \p err for a failed setpgid call.
+/// Note not all errors should be reported; in particular EACCESS is expected and benign in the
+/// parent only.
+void report_setpgid_error(int err, pid_t desired_pgid, const job_t *j, const process_t *p);
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the
@@ -31,7 +40,8 @@ bool child_set_group(job_t *j, process_t *p);     // called by child
 ///
 /// \return 0 on success, -1 on failure. When this function returns, signals are always unblocked.
 /// On failure, signal handlers, io redirections and process group of the process is undefined.
-int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s);
+int child_setup_process(pid_t new_termowner, const job_t &job, bool is_forked,
+                        const dup2_list_t &dup2s);
 
 /// Call fork(), retrying on failure a few times.
 pid_t execute_fork();
@@ -40,7 +50,7 @@ pid_t execute_fork();
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
 
-#if FISH_USE_POSIX_SPAWN
+#ifdef FISH_USE_POSIX_SPAWN
 /// Initializes and fills in a posix_spawnattr_t; on success, the caller should destroy it via
 /// posix_spawnattr_destroy.
 bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,

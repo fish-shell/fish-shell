@@ -29,8 +29,39 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     end
 
     commandline -b >$f
+    set -l offset (commandline --cursor)
+    # compute cursor line/column
+    set -l lines (commandline)\n
+    set -l line 1
+    while test $offset -ge (string length -- $lines[1])
+        set offset (math $offset - (string length -- $lines[1]))
+        set line (math $line + 1)
+        set -e lines[1]
+    end
+    set col (math $offset + 1)
+
+    set -l basename (string match -r '[^/]*$' -- $editor[1])
+    switch $basename
+        case vi vim nvim
+            set -a editor +$line +"norm $col|" $f
+        case emacs emacsclient gedit kak
+            set -a editor +$line:$col $f
+        case nano
+            set -a editor +$line,$col $f
+        case joe ee
+            set -a editor +$line $f
+        case code code-oss
+            set -a editor --goto $f:$line:$col --wait
+        case subl
+            set -a editor $f:$line:$col --wait
+        case micro
+            set -a editor $f:$line:$col
+        case '*'
+            set -a editor $f
+    end
+
     __fish_disable_bracketed_paste
-    $editor $f
+    $editor
     set -l editor_status $status
     __fish_enable_bracketed_paste
 

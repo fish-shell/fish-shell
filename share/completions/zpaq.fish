@@ -9,16 +9,16 @@ set -l command3 x extract
 
 #commands
 complete -c zpaq -f -n "not $seen $commands" -a "$commands"
-complete -c zpaq -f -n "not $seen $commands" -a a -d "add"
+complete -c zpaq -f -n "not $seen $commands" -a a -d add
 complete -c zpaq -f -n "not $seen $commands" -a add -d "Append files to archive if dates have changed"
-complete -c zpaq -f -n "not $seen $commands" -a x -d "extract"
+complete -c zpaq -f -n "not $seen $commands" -a x -d extract
 complete -c zpaq -f -n "not $seen $commands" -a extract -d "Extract most recent versions of files"
-complete -c zpaq -f -n "not $seen $commands" -a l -d "list"
+complete -c zpaq -f -n "not $seen $commands" -a l -d list
 complete -c zpaq -f -n "not $seen $commands" -a list -d "List or compare external files to archive"
 
 #options
 complete -c zpaq -x -n "$seen $commands" -o all -a N -d "Extract/list versions in N [4] digit directories"
-complete -c zpaq -f -n "$seen $commands" -s f -d "-force"
+complete -c zpaq -f -n "$seen $commands" -s f -d -force
 complete -c zpaq -f -n "$seen $command1" -o force -d "Append files if contents have changed"
 complete -c zpaq -f -n "$seen $command2" -o force -d "Compare file contents instead of dates"
 complete -c zpaq -f -n "$seen $command3" -o force -d "Overwrite existing output files"
@@ -32,7 +32,7 @@ complete -c zpaq -f -n "$seen $commands" -o noattributes -d "Ignore/don't save f
 complete -c zpaq -r -n "$seen $commands" -o not -d "Exclude. * and ? match any string or char"
 complete -c zpaq -r -n "$seen $command2" -o not -d "Exclude. =[+-#^?] exclude by comparison result"
 complete -c zpaq -r -n "$seen $commands" -o only -d "Include only matches (default: *)"
-complete -c zpaq -x -n "$seen $command3" -o repack -a "F X" -d "Extract to new archive F with key [X] (default: none)"
+complete -c zpaq -x -n "$seen $command3" -o repack -a F -d "Extract to new archive F with key [X] (default: none)"
 complete -c zpaq -x -n "$seen $commands" -o sN -d "-summary N"
 complete -c zpaq -x -n "$seen $commands" -o summary -a N -d "If N > 0 show brief progress"
 complete -c zpaq -x -n "$seen $command2" -o summary -a N -d "Show top N sorted by size. -1: show frag IDs"

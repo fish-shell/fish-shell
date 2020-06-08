@@ -21,17 +21,17 @@ end
 ### Commands
 set -l commands read list write reset compile update watch dump load help
 
-complete -f -e -c dconf
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'read' -d 'Read the value of a key'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'list' -d 'List the sub-keys and sub-directories of a directory'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'write' -d 'Write a new value to a key'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'reset' -d 'Delete a key or an entire directory'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'compile' -d 'Compile a binary database from keyfiles'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'update' -d 'Update the system dconf databases'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'watch' -d 'Watch a key or directory for changes'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'dump' -d 'Dump an entire subpath to stdout'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'load' -d 'Populate a subpath from stdin'
-complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a 'help' -d 'Display help and exit'
+complete -f -c dconf
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a read -d 'Read the value of a key'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a list -d 'List the sub-keys and sub-directories of a directory'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a write -d 'Write a new value to a key'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a reset -d 'Delete a key or an entire directory'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a compile -d 'Compile a binary database from keyfiles'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a update -d 'Update the system dconf databases'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a watch -d 'Watch a key or directory for changes'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a dump -d 'Dump an entire subpath to stdout'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a load -d 'Populate a subpath from stdin'
+complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a help -d 'Display help and exit'
 
 
 ### Arguments to commands

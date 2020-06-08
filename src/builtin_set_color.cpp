@@ -60,7 +60,7 @@ static const struct woption long_options[] = {{L"background", required_argument,
                                               {L"print-colors", no_argument, nullptr, 'c'},
                                               {nullptr, 0, nullptr, 0}};
 
-#if __APPLE__
+#ifdef __APPLE__
 static char sitm_esc[] = "\x1B[3m";
 static char ritm_esc[] = "\x1B[23m";
 static char dim_esc[] = "\x1B[2m";
@@ -73,7 +73,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
 // Hack in missing italics and dim capabilities omitted from MacOS xterm-256color terminfo
 // Helps Terminal.app/iTerm
-#if __APPLE__
+#ifdef __APPLE__
     const auto term_prog = parser.vars().get(L"TERM_PROGRAM");
     if (!term_prog.missing_or_empty() &&
         (term_prog->as_string() == L"Apple_Terminal" || term_prog->as_string() == L"iTerm.app")) {
@@ -145,7 +145,6 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
     }
@@ -186,7 +185,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     outputter_t outp;
 
     if (bold && enter_bold_mode) {
-        writembs_nofail(outp, tparm((char *)enter_bold_mode));
+        writembs_nofail(outp, tparm(const_cast<char *>(enter_bold_mode)));
     }
 
     if (underline && enter_underline_mode) {
@@ -208,12 +207,12 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (bgcolor != nullptr && bg.is_normal()) {
-        writembs_nofail(outp, tparm((char *)exit_attribute_mode));
+        writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
     }
 
     if (!fg.is_none()) {
         if (fg.is_normal() || fg.is_reset()) {
-            writembs_nofail(outp, tparm((char *)exit_attribute_mode));
+            writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
         } else {
             if (!outp.write_color(fg, true /* is_fg */)) {
                 // We need to do *something* or the lack of any output messes up

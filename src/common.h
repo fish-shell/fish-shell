@@ -38,6 +38,8 @@
 typedef std::wstring wcstring;
 typedef std::vector<wcstring> wcstring_list_t;
 
+struct termsize_t;
+
 // Maximum number of bytes used by a single utf-8 character.
 #define MAX_UTF8_BYTES 6
 
@@ -59,8 +61,8 @@ typedef std::vector<wcstring> wcstring_list_t;
 // Use Unicode "noncharacters" for internal characters as much as we can. This
 // gives us 32 "characters" for internal use that we can guarantee should not
 // appear in our input stream. See http://www.unicode.org/faq/private_use.html.
-#define RESERVED_CHAR_BASE (wchar_t)0xFDD0
-#define RESERVED_CHAR_END (wchar_t)0xFDF0
+#define RESERVED_CHAR_BASE static_cast<wchar_t>(0xFDD0)
+#define RESERVED_CHAR_END static_cast<wchar_t>(0xFDF0)
 // Split the available noncharacter values into two ranges to ensure there are
 // no conflicts among the places we use these special characters.
 #define EXPAND_RESERVED_BASE RESERVED_CHAR_BASE
@@ -86,7 +88,7 @@ typedef std::vector<wcstring> wcstring_list_t;
 // Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
 // of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
-#define ENCODE_DIRECT_BASE (wchar_t)0xF600
+#define ENCODE_DIRECT_BASE static_cast<wchar_t>(0xF600)
 #define ENCODE_DIRECT_END (ENCODE_DIRECT_BASE + 256)
 
 // NAME_MAX is not defined on Solaris
@@ -119,9 +121,10 @@ enum escape_string_style_t {
 
 // Flags for unescape_string functions.
 enum {
-    UNESCAPE_DEFAULT = 0,         // default behavior
-    UNESCAPE_SPECIAL = 1 << 0,    // escape special fish syntax characters like the semicolon
-    UNESCAPE_INCOMPLETE = 1 << 1  // allow incomplete escape sequences
+    UNESCAPE_DEFAULT = 0,              // default behavior
+    UNESCAPE_SPECIAL = 1 << 0,         // escape special fish syntax characters like the semicolon
+    UNESCAPE_INCOMPLETE = 1 << 1,      // allow incomplete escape sequences
+    UNESCAPE_NO_BACKSLASHES = 1 << 2,  // don't handle backslash escapes
 };
 typedef unsigned int unescape_flags_t;
 
@@ -398,7 +401,7 @@ void assert_is_background_thread(const char *who);
 /// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
 /// it, which it would be nice if it did, but here it is anyways.
 void assert_is_locked(void *mutex, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(x) assert_is_locked((void *)(&x), #x, __FUNCTION__)
+#define ASSERT_IS_LOCKED(x) assert_is_locked(reinterpret_cast<void *>(&x), #x, __FUNCTION__)
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);
@@ -645,24 +648,9 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
 bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style = STRING_STYLE_SCRIPT);
 
-/// Returns the width of the terminal window, so that not all functions that use these values
-/// continually have to keep track of it separately.
-///
-/// Only works if common_handle_winch is registered to handle winch signals.
-int common_get_width();
 
-/// Returns the height of the terminal window, so that not all functions that use these values
-/// continually have to keep track of it separatly.
-///
-/// Only works if common_handle_winch is registered to handle winch signals.
-int common_get_height();
-
-/// Handle a window change event by looking up the new window size and saving it in an internal
-/// variable used by common_get_wisth and common_get_height().
-void common_handle_winch(int signal);
-
-/// Write the given paragraph of output, redoing linebreaks to fit the current screen.
-wcstring reformat_for_screen(const wcstring &msg);
+/// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
+wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize);
 
 /// Print a short message about how to file a bug report to stderr.
 void bugreport();
@@ -683,8 +671,8 @@ void configure_thread_assertions_for_testing();
 void setup_fork_guards(void);
 
 /// Save the value of tcgetpgrp so we can restore it on exit.
-void save_term_foreground_process_group(void);
-void restore_term_foreground_process_group(void);
+void save_term_foreground_process_group();
+void restore_term_foreground_process_group_for_exit();
 
 /// Return whether we are the child of a fork.
 bool is_forked_child(void);
@@ -736,7 +724,7 @@ struct enum_map {
     const wchar_t *const str;
 };
 
-/// Given a string return the matching enum. Return the sentinal enum if no match is made. The map
+/// Given a string return the matching enum. Return the sentinel enum if no match is made. The map
 /// must be sorted by the `str` member. A binary search is twice as fast as a linear search with 16
 /// elements in the map.
 template <typename T>
@@ -772,16 +760,6 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
 void redirect_tty_output();
 
 std::string get_path_to_tmp_dir();
-
-// Minimum allowed terminal size and default size if the detected size is not reasonable.
-#define MIN_TERM_COL 20
-#define MIN_TERM_ROW 2
-#define DFLT_TERM_COL 80
-#define DFLT_TERM_ROW 24
-#define DFLT_TERM_COL_STR L"80"
-#define DFLT_TERM_ROW_STR L"24"
-void invalidate_termsize(bool invalidate_vars = false);
-struct winsize get_current_winsize();
 
 bool valid_var_name_char(wchar_t chr);
 bool valid_var_name(const wcstring &str);
@@ -841,7 +819,7 @@ template <>
 struct hash<const wcstring> {
     std::size_t operator()(const wcstring &w) const {
         std::hash<wcstring> hasher;
-        return hasher((wcstring)w);
+        return hasher(w);
     }
 };
 }  // namespace std

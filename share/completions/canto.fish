@@ -1,6 +1,6 @@
 
 function __fish_canto_using_command
-    set cmd (commandline -opc)
+    set -l cmd (commandline -opc)
     if [ (count $cmd) -gt 1 ]
         if [ $argv[1] = $cmd[2] ]
             return 0
@@ -22,7 +22,7 @@ complete -f -c canto -s l -l list -d 'List feeds'
 complete -f -c canto -s a -l checkall -d 'Show number of new items'
 
 complete -f -c canto -s n -l checknew -d 'Show number of new items for feed'
-complete -f -c canto -n '__fish_canto_using_command -l --checknew' -d 'Feed' -a '(command canto -l)'
+complete -f -c canto -n '__fish_canto_using_command -l --checknew' -d Feed -a '(command canto -l)'
 
 complete -c canto -s o -l opml -d 'Print conf as OPML'
 complete -c canto -s i -l import -d 'Import from OPML'

@@ -22,29 +22,31 @@ static CharT **make_null_terminated_array_helper(
     }
 
     // Now allocate their sum.
-    unsigned char *base =
+    auto base =
         static_cast<unsigned char *>(malloc(pointers_allocation_len + strings_allocation_len));
     if (!base) return nullptr;
 
     // Divvy it up into the pointers and strings.
-    CharT **pointers = reinterpret_cast<CharT **>(base);
-    CharT *strings = reinterpret_cast<CharT *>(base + pointers_allocation_len);
+    auto pointers = reinterpret_cast<CharT **>(base);
+    auto strings = reinterpret_cast<CharT *>(base + pointers_allocation_len);
 
     // Start copying.
     for (size_t i = 0; i < count; i++) {
         const std::basic_string<CharT> &str = argv.at(i);
         *pointers++ = strings;  // store the current string pointer into self
         strings = std::copy(str.begin(), str.end(), strings);  // copy the string into strings
-        *strings++ = (CharT)(0);  // each string needs a null terminator
+        *strings++ = static_cast<CharT>(0);  // each string needs a null terminator
     }
     *pointers++ = nullptr;  // array of pointers needs a null terminator
 
     // Make sure we know what we're doing.
-    assert((unsigned char *)pointers - base == (std::ptrdiff_t)pointers_allocation_len);
-    assert((unsigned char *)strings - (unsigned char *)pointers ==
-           (std::ptrdiff_t)strings_allocation_len);
-    assert((unsigned char *)strings - base ==
-           (std::ptrdiff_t)(pointers_allocation_len + strings_allocation_len));
+    assert(reinterpret_cast<unsigned char *>(pointers) - base ==
+           static_cast<std::ptrdiff_t>(pointers_allocation_len));
+    assert(reinterpret_cast<unsigned char *>(strings) -
+               reinterpret_cast<unsigned char *>(pointers) ==
+           static_cast<std::ptrdiff_t>(strings_allocation_len));
+    assert(reinterpret_cast<unsigned char *>(strings) - base ==
+           static_cast<std::ptrdiff_t>(pointers_allocation_len + strings_allocation_len));
 
     return reinterpret_cast<CharT **>(base);
 }

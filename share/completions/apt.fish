@@ -6,13 +6,13 @@ set -l installed_pkg_subcmds remove
 set -l handle_file_pkg_subcmds install
 
 function __fish_apt_subcommand --no-scope-shadowing
-    set subcommand $argv[1]
+    set -l subcommand $argv[1]
     set -e argv[1]
     complete -f -c apt -n "not __fish_seen_subcommand_from $all_subcmds" -a $subcommand $argv
 end
 
 function __fish_apt_option
-    set subcommand $argv[1]
+    set -l subcommand $argv[1]
     set -e argv[1]
     complete -f -c apt -n "__fish_seen_subcommand_from $subcommand" $argv
 end
@@ -20,7 +20,7 @@ end
 complete -c apt -f
 
 complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 250 | sort)'
-complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)' -d 'Package'
+complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)' -d Package
 complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -a '(__fish_complete_suffix .deb)'
 
 # Support flags

@@ -13,7 +13,7 @@
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
 /// Execute the processes specified by \p j in the parser \p.
-bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j, const job_lineage_t &lineage);
+bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j, const io_chain_t &block_io);
 
 /// Evaluate a command.
 ///
@@ -29,14 +29,15 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &output
 
 /// Like exec_subshell, but only returns expansion-breaking errors. That is, a zero return means
 /// "success" (even though the command may have failed), a non-zero return means that we should
-/// halt expansion.
-int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs);
+/// halt expansion. If the \p pgid is supplied, then any spawned external commands should join that
+/// pgroup.
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
+                             const job_group_ref_t &job_group, wcstring_list_t &outputs);
 
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
 
-/// Compute the "pgroup provenance" for a job. This is a description of how the pgroup is
-/// assigned. It's factored out because the logic has subtleties, and this centralizes it.
-pgroup_provenance_t get_pgroup_provenance(const std::shared_ptr<job_t> &j,
-                                          const job_lineage_t &lineage);
+/// Add signals that should be masked for external processes in this job.
+bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask);
+
 #endif

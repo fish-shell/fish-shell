@@ -1,38 +1,41 @@
 # Define fish_tests.
-ADD_EXECUTABLE(fish_tests EXCLUDE_FROM_ALL
+add_executable(fish_tests EXCLUDE_FROM_ALL
                src/fish_tests.cpp)
-FISH_LINK_DEPS(fish_tests)
+fish_link_deps_and_sign(fish_tests)
 
 # The "test" directory.
-SET(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)
+set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)
 
 # The directory into which fish is installed.
-SET(TEST_INSTALL_DIR ${TEST_DIR}/buildroot)
+set(TEST_INSTALL_DIR ${TEST_DIR}/buildroot)
 
 # The directory where the tests expect to find the fish root (./bin, etc)
-SET(TEST_ROOT_DIR ${TEST_DIR}/root)
+set(TEST_ROOT_DIR ${TEST_DIR}/root)
 
 # Copy tests files.
-FILE(GLOB TESTS_FILES tests/*)
-ADD_CUSTOM_TARGET(tests_dir DEPENDS tests)
+file(GLOB TESTS_FILES tests/*)
+add_custom_target(tests_dir DEPENDS tests)
 
-IF(NOT FISH_IN_TREE_BUILD)
-    ADD_CUSTOM_COMMAND(TARGET tests_dir
+if(NOT FISH_IN_TREE_BUILD)
+    add_custom_command(TARGET tests_dir
                        COMMAND ${CMAKE_COMMAND} -E copy_directory
                        ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
                        COMMENT "Copying test files to binary dir"
                        VERBATIM)
 
-    ADD_DEPENDENCIES(fish_tests tests_dir)
-ENDIF()
+    add_dependencies(fish_tests tests_dir)
+endif()
 
 # Copy littlecheck.py
-CONFIGURE_FILE(build_tools/littlecheck.py littlecheck.py COPYONLY)
+configure_file(build_tools/littlecheck.py littlecheck.py COPYONLY)
+
+# Copy pexpect_helper.py
+configure_file(build_tools/pexpect_helper.py pexpect_helper.py COPYONLY)
 
 # Make the directory in which to run tests.
 # Also symlink fish to where the tests expect it to be.
 # Lastly put fish_test_helper there too.
-ADD_CUSTOM_TARGET(tests_buildroot_target
+add_custom_target(tests_buildroot_target
                   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
                   COMMAND DESTDIR=${TEST_INSTALL_DIR} ${CMAKE_COMMAND}
                           --build ${CMAKE_CURRENT_BINARY_DIR} --target install
@@ -43,20 +46,20 @@ ADD_CUSTOM_TARGET(tests_buildroot_target
                           ${TEST_ROOT_DIR}
                   DEPENDS fish fish_test_helper)
 
-IF(NOT FISH_IN_TREE_BUILD)
+if(NOT FISH_IN_TREE_BUILD)
   # We need to symlink share/functions for the tests.
   # This should be simplified.
-  ADD_CUSTOM_TARGET(symlink_functions
+  add_custom_target(symlink_functions
     COMMAND ${CMAKE_COMMAND} -E create_symlink
             ${CMAKE_CURRENT_SOURCE_DIR}/share/functions
             ${CMAKE_CURRENT_BINARY_DIR}/share/functions)
-  ADD_DEPENDENCIES(tests_buildroot_target symlink_functions)
-ELSE()
-  ADD_CUSTOM_TARGET(symlink_functions)
-ENDIF()
+  add_dependencies(tests_buildroot_target symlink_functions)
+else()
+  add_custom_target(symlink_functions)
+endif()
 
 # Prep the environment for running the unit tests.
-ADD_CUSTOM_TARGET(test_prep
+add_custom_target(test_prep
                   COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/data
                   COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/home
                   COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/temp
@@ -69,46 +72,46 @@ ADD_CUSTOM_TARGET(test_prep
 # Each test is conceptually independent.
 # However when running all tests, we want to run them serially for sanity's sake.
 # So define both a normal target, and a serial variant which enforces ordering.
-FOREACH(TESTTYPE test serial_test)
-  ADD_CUSTOM_TARGET(${TESTTYPE}_low_level
+foreach(TESTTYPE test serial_test)
+  add_custom_target(${TESTTYPE}_low_level
     COMMAND env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS fish_tests
     USES_TERMINAL)
 
-  ADD_CUSTOM_TARGET(${TESTTYPE}_fishscript
+  add_custom_target(${TESTTYPE}_fishscript
                     COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish test.fish
                     DEPENDS test_prep
                     USES_TERMINAL)
 
-  ADD_CUSTOM_TARGET(${TESTTYPE}_interactive
+  add_custom_target(${TESTTYPE}_interactive
       COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish interactive.fish
       DEPENDS test_prep
       USES_TERMINAL)
-ENDFOREACH(TESTTYPE)
+endforeach(TESTTYPE)
 
 # Now add a dependency chain between the serial versions.
 # This ensures they run in order.
-ADD_DEPENDENCIES(serial_test_fishscript serial_test_low_level)
-ADD_DEPENDENCIES(serial_test_interactive serial_test_fishscript)
+add_dependencies(serial_test_fishscript serial_test_low_level)
+add_dependencies(serial_test_interactive serial_test_fishscript)
 
 
-ADD_CUSTOM_TARGET(serial_test_high_level
+add_custom_target(serial_test_high_level
                   DEPENDS serial_test_interactive serial_test_fishscript)
 
 # Create the 'test' target.
 # Set a policy so CMake stops complaining about the name 'test'.
-CMAKE_POLICY(PUSH)
+cmake_policy(PUSH)
 
-IF(${CMAKE_VERSION} VERSION_LESS 3.11.0 AND POLICY CMP0037)
-  CMAKE_POLICY(SET CMP0037 OLD)
-ENDIF()
-ADD_CUSTOM_TARGET(test)
-CMAKE_POLICY(POP)
-ADD_DEPENDENCIES(test serial_test_high_level)
+if(${CMAKE_VERSION} VERSION_LESS 3.11.0 AND POLICY CMP0037)
+  cmake_policy(SET CMP0037 OLD)
+endif()
+add_custom_target(test)
+cmake_policy(POP)
+add_dependencies(test serial_test_high_level)
 
 # Group test targets into a TestTargets folder
-SET_PROPERTY(TARGET test tests_dir
+set_property(TARGET test tests_dir
                     test_low_level
                     test_fishscript
                     test_interactive

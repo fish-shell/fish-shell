@@ -31,7 +31,7 @@
 /// Provide the fd monitor used for background fillthread operations.
 static fd_monitor_t &fd_monitor() {
     // Deliberately leaked to avoid shutdown dtors.
-    static fd_monitor_t *fdm = new fd_monitor_t();
+    static auto fdm = new fd_monitor_t();
     return *fdm;
 }
 
@@ -46,13 +46,16 @@ void io_close_t::print() const { std::fwprintf(stderr, L"close %d\n", fd); }
 
 void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", source_fd, fd); }
 
-void io_file_t::print() const { std::fwprintf(stderr, L"file (%d)\n", file_fd_.fd()); }
+void io_file_t::print() const { std::fwprintf(stderr, L"file %d -> %d\n", file_fd_.fd(), fd); }
 
 void io_pipe_t::print() const {
-    std::fwprintf(stderr, L"pipe {%d} (input: %s)\n", source_fd, is_input_ ? "yes" : "no");
+    std::fwprintf(stderr, L"pipe {%d} (input: %s) -> %d\n", source_fd, is_input_ ? "yes" : "no",
+                  fd);
 }
 
-void io_bufferfill_t::print() const { std::fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
+void io_bufferfill_t::print() const {
+    std::fwprintf(stderr, L"bufferfill %d -> %d\n", write_fd_.fd(), fd);
+}
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     const separated_buffer_t<wcstring> &input = stream.buffer();
@@ -163,8 +166,10 @@ void io_buffer_t::complete_background_fillthread() {
     fillthread_waiter_ = {};
 }
 
-shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts,
-                                                    size_t buffer_limit) {
+shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts, size_t buffer_limit,
+                                                    int target) {
+    assert(target >= 0 && "Invalid target fd");
+
     // Construct our pipes.
     auto pipes = make_autoclose_pipes(conflicts);
     if (!pipes) {
@@ -181,7 +186,7 @@ shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts,
     // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
     auto buffer = std::make_shared<io_buffer_t>(buffer_limit);
     buffer->begin_filling(std::move(pipes->read));
-    return std::make_shared<io_bufferfill_t>(std::move(pipes->write), buffer);
+    return std::make_shared<io_bufferfill_t>(target, std::move(pipes->write), buffer);
 }
 
 std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfill_t> &&filler) {
@@ -202,7 +207,7 @@ io_buffer_t::~io_buffer_t() {
 
 void io_chain_t::remove(const shared_ptr<const io_data_t> &element) {
     // See if you can guess why std::find doesn't work here.
-    for (io_chain_t::iterator iter = this->begin(); iter != this->end(); ++iter) {
+    for (auto iter = this->begin(); iter != this->end(); ++iter) {
         if (*iter == element) {
             this->erase(iter);
             break;
@@ -222,6 +227,7 @@ void io_chain_t::append(const io_chain_t &chain) {
 }
 
 bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd) {
+    bool have_error = false;
     for (const auto &spec : specs) {
         switch (spec.mode) {
             case redirection_mode_t::fd: {
@@ -248,14 +254,19 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                         FLOGF(warning, FILE_ERROR, spec.target.c_str());
                         if (should_flog(warning)) wperror(L"open");
                     }
-                    return false;
+                    // If opening a file fails, insert a closed FD instead of the file redirection
+                    // and return false. This lets execution potentially recover and at least gives
+                    // the shell a chance to gracefully regain control of the shell (see #7038).
+                    this->push_back(make_unique<io_close_t>(spec.fd));
+                    have_error = true;
+                    break;
                 }
                 this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file)));
                 break;
             }
         }
     }
-    return true;
+    return !have_error;
 }
 
 void io_chain_t::print() const {
@@ -264,13 +275,13 @@ void io_chain_t::print() const {
         return;
     }
 
-    std::fwprintf(stderr, L"Chain %p (%ld items):\n", this, (long)this->size());
+    std::fwprintf(stderr, L"Chain %p (%ld items):\n", this, static_cast<long>(this->size()));
     for (size_t i = 0; i < this->size(); i++) {
         const auto &io = this->at(i);
         if (io == nullptr) {
             std::fwprintf(stderr, L"\t(null)\n");
         } else {
-            std::fwprintf(stderr, L"\t%lu: fd:%d, ", (unsigned long)i, io->fd);
+            std::fwprintf(stderr, L"\t%lu: fd:%d, ", static_cast<unsigned long>(i), io->fd);
             io->print();
         }
     }
@@ -334,4 +345,10 @@ shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
         }
     }
     return nullptr;
+}
+
+void output_stream_t::append_narrow_buffer(const separated_buffer_t<std::string> &buffer) {
+    for (const auto &rhs_elem : buffer.elements()) {
+        buffer_.append(str2wcstring(rhs_elem.contents), rhs_elem.separation);
+    }
 }

@@ -1,0 +1,17 @@
+---
+Checks:          'clang-diagnostic-*,clang-analyzer-*,cert-*,performance-*,portability-*,modernize-use-auto,modernize-loop-convert,modernize-use-bool-literals,modernize-use-using,hicpp-uppercase-literal-suffix,readability-make-member-function-const,readability-redundant-string-init,readability-inconsistent-declaration-parameter-name,readability-redundant-access-specifiers'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle:     File
+CheckOptions:
+  - key:             cert-dcl16-c.NewSuffixes
+    value:           'L;LL;LU;LLU'
+  - key:             cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField
+    value:           '0'
+  - key:             modernize-loop-convert.MinConfidence
+    value:           'risky'
+  - key:             modernize-use-auto.RemoveStars
+    value:           '1'
+...
+

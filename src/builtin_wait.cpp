@@ -19,7 +19,7 @@
 /// doesn't work properly, so use this function in wait command.
 static job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
     for (const auto &j : parser.jobs()) {
-        if (j->pgid == pid) {
+        if (j->get_pgid() == maybe_t<pid_t>{pid}) {
             return j->job_id();
         }
         // Check if the specified pid is a child process of the job.
@@ -178,9 +178,11 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bool any_flag = false;  // flag for -n option
+    bool print_help = false;
 
-    static const wchar_t *const short_options = L":n";
+    static const wchar_t *const short_options = L":nh";
     static const struct woption long_options[] = {{L"any", no_argument, nullptr, 'n'},
+                                                  {L"help", no_argument, nullptr, 'h'},
                                                   {nullptr, 0, nullptr, 0}};
 
     int opt;
@@ -189,6 +191,9 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         switch (opt) {
             case 'n':
                 any_flag = true;
+                break;
+            case 'h':
+                print_help = true;
                 break;
             case ':': {
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
@@ -200,9 +205,13 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
-                break;
             }
         }
+    }
+
+    if (print_help) {
+        builtin_print_help(parser, streams, cmd);
+        return STATUS_CMD_OK;
     }
 
     if (w.woptind == argc) {

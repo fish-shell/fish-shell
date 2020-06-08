@@ -17,11 +17,11 @@ end
 function history --description "display or manipulate interactive command history"
     set -l cmd history
     set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,X'
-    set -a options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
-    set -a options 'C/case-sensitive' 'R/reverse' 'z/null' 't/show-time=?' 'n#max'
+    set -a options h/help c/contains e/exact p/prefix
+    set -a options C/case-sensitive R/reverse z/null 't/show-time=?' 'n#max'
     # The following options are deprecated and will be removed in the next major release.
     # Note that they do not have usable short flags.
-    set -a options 'S-search' 'D-delete' 'M-merge' 'V-save' 'X-clear'
+    set -a options S-search D-delete M-merge V-save X-clear
     argparse -n $cmd $options -- $argv
     or return
 
@@ -81,7 +81,7 @@ function history --description "display or manipulate interactive command histor
     switch $hist_cmd
         case search # search the interactive command history
             test -z "$search_mode"
-            and set search_mode "--contains"
+            and set search_mode --contains
 
             if isatty stdout
                 set -l pager less
@@ -110,10 +110,10 @@ function history --description "display or manipulate interactive command histor
             end
 
             if test -z "$search_mode"
-                set search_mode "--contains"
+                set search_mode --contains
             end
 
-            if test $search_mode = "--exact"
+            if test $search_mode = --exact
                 builtin history delete $search_mode $_flag_case_sensitive $searchterm
                 return
             end
@@ -140,7 +140,7 @@ function history --description "display or manipulate interactive command histor
                     return
                 end
 
-                if test "$choice" = "all"
+                if test "$choice" = all
                     printf "Deleting all matching entries!\n"
                     for item in $found_items
                         builtin history delete --exact --case-sensitive -- $item
@@ -181,9 +181,9 @@ function history --description "display or manipulate interactive command histor
 
             printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
-            if test "$choice" = "yes"
+            if test "$choice" = yes
                 builtin history clear -- $argv
-                and printf (_ "Command history cleared!")
+                and printf (_ "Command history cleared!\n")
             else
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end

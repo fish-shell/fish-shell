@@ -1,8 +1,8 @@
-#cryptsetup 2.2.2
+#cryptsetup 2.3.1
 
 #variables
 set -l seen __fish_seen_subcommand_from
-set -l actions benchmark close config convert erase isLuks luksAddKey luksChangeKey luksConvertKey luksDump luksFormat luksHeaderBackup luksHeaderRestore luksKillSlot luksRemoveKey luksResume luksSuspend luksUUID open reencrypt repair resize status tcryptDump token
+set -l actions benchmark bitlkDump close config convert erase isLuks luksAddKey luksChangeKey luksConvertKey luksDump luksFormat luksHeaderBackup luksHeaderRestore luksKillSlot luksRemoveKey luksResume luksSuspend luksUUID open reencrypt repair resize status tcryptDump token
 
 #actions
 complete -c cryptsetup -x -n "not $seen $actions" -a "$actions"
@@ -17,7 +17,7 @@ complete -c cryptsetup -l debug -d "Show debug messages"
 complete -c cryptsetup -l debug-json -d "Show debug messages including JSON metadata"
 complete -c cryptsetup -l decrypt -d "Decrypt LUKS2 device (remove encryption)"
 complete -c cryptsetup -l deferred -d "Device removal is deferred until the last user closes it"
-complete -c cryptsetup -l device-size -d "Use only specified device size (ignore rest of device). DANGEROUS!"
+complete -c cryptsetup -l device-size -d "Use only specified device size (ignore rest of device) DANGEROUS!"
 complete -c cryptsetup -l disable-keyring -d "Disable loading volume keys via kernel keyring"
 complete -c cryptsetup -l disable-locks -d "Disable locking of on-disk metadata"
 complete -c cryptsetup -l dump-master-key -d "Dump volume (master) key instead of keyslots info"
@@ -26,10 +26,11 @@ complete -c cryptsetup -l force-password -d "Disable password quality check (if 
 complete -c cryptsetup -l hash -s h -d "The hash used to create the encryption key from the passphrase"
 complete -c cryptsetup -l header -d "Device or file with separated LUKS header"
 complete -c cryptsetup -l header-backup-file -d "File with LUKS header and keyslots backup"
-complete -c cryptsetup -l help -s '?' -d "Show help message"
+complete -c cryptsetup -l help -s '?' -d "Show this help message"
 complete -c cryptsetup -l hotzone-size -d "Maximal reencryption hotzone size"
 complete -c cryptsetup -l init-only -d "Initialize LUKS2 reencryption in metadata only"
 complete -c cryptsetup -l integrity -s I -d "Data integrity algorithm (LUKS2 only)"
+complete -c cryptsetup -l integrity-legacy-padding -d "Use inefficient legacy padding (old kernels)"
 complete -c cryptsetup -l integrity-no-journal -d "Disable journal for integrity device"
 complete -c cryptsetup -l integrity-no-wipe -d "Do not wipe device after format"
 complete -c cryptsetup -l iter-time -s i -d "PBKDF iteration time for LUKS (in ms)"
@@ -59,7 +60,7 @@ complete -c cryptsetup -l persistent -d "Set activation flags persistent for dev
 complete -c cryptsetup -l priority -d "Keyslot priority: ignore, normal, prefer"
 complete -c cryptsetup -l progress-frequency -d "Progress line update (in seconds)"
 complete -c cryptsetup -l readonly -s r -d "Create a readonly mapping"
-complete -c cryptsetup -l reduce-device-size -d "Reduce data device size (move data offset). DANGEROUS!"
+complete -c cryptsetup -l reduce-device-size -d "Reduce data device size (move data offset) DANGEROUS!"
 complete -c cryptsetup -l refresh -d "Refresh (reactivate) device with new parameters"
 complete -c cryptsetup -l resilience -d "Reencryption hotzone resilience type (checksum,journal,none)"
 complete -c cryptsetup -l resilience-hash -d "Reencryption hotzone checksums hash"
@@ -78,7 +79,7 @@ complete -c cryptsetup -l timeout -s t -d "Timeout for interactive passphrase pr
 complete -c cryptsetup -l token-id -d "Token number (default: any)"
 complete -c cryptsetup -l token-only -d "Do not ask for passphrase if activation by token fails"
 complete -c cryptsetup -l tries -s T -d "How often the input of the passphrase can be retried"
-complete -c cryptsetup -l type -s M -d "Type of device metadata: luks, luks1, luks2, plain, loopaes, tcrypt"
+complete -c cryptsetup -l type -s M -d "Type of device metadata: luks, luks1, luks2, plain, loopaes, tcrypt, bitlk"
 complete -c cryptsetup -l unbound -d "Create unbound (no assigned data segment) LUKS2 keyslot"
 complete -c cryptsetup -l usage -d "Display brief usage"
 complete -c cryptsetup -l use-random -d "Use /dev/random for generating volume key"

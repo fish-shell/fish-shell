@@ -10,50 +10,56 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         return
     end
 
-    # Emacs Makes All Cursors Suck
-    if set -q INSIDE_EMACS
-        return
-    end
+    # If this variable is set, skip all checks
+    if not set -q fish_vi_force_cursor
 
-    # vte-based terms set $TERM = xterm*, but only gained support in 2015.
-    # From https://bugzilla.gnome.org/show_bug.cgi?id=720821, it appears it was version 0.40.0
-    if set -q VTE_VERSION
-        and test "$VTE_VERSION" -lt 4000 2>/dev/null
-        return
-    end
+        # Emacs Makes All Cursors Suck
+        if set -q INSIDE_EMACS
+            return
+        end
 
-    # Similarly, genuine XTerm can do it since v280.
-    if set -q XTERM_VERSION
-        and not test (string replace -r "XTerm\((\d+)\)" '$1' -- "$XTERM_VERSION") -ge 280 2>/dev/null
-        return
-    end
+        # vte-based terms set $TERM = xterm*, but only gained support in 2015.
+        # From https://bugzilla.gnome.org/show_bug.cgi?id=720821, it appears it was version 0.40.0
+        if set -q VTE_VERSION
+            and test "$VTE_VERSION" -lt 4000 2>/dev/null
+            return
+        end
 
-    # We need one of these terms.
-    # It would be lovely if we could rely on terminfo, but:
-    # - The "Ss" entry isn't a thing in macOS' old and crusty terminfo
-    # - It is set for xterm, and everyone and their dog claims to be xterm
-    #
-    # So we just don't care about $TERM, unless it is one of the few terminals that actually have their own entry.
-    #
-    # Note: Previous versions also checked $TMUX, and made sure that then $TERM was screen* or tmux*.
-    # We don't care, since we *cannot* handle term-in-a-terms 100% correctly.
-    if not set -q KONSOLE_PROFILE_NAME
-        and not set -q ITERM_PROFILE
-        and not set -q VTE_VERSION # which version is already checked above
-        and not set -q XTERM_VERSION
-        and not string match -rq '^st(-.*)$' -- $TERM
-        and not string match -q 'xterm-kitty*' -- $TERM
-        and not string match -q 'rxvt*' -- $TERM
-        return
-    end
+        # Similarly, genuine XTerm can do it since v280.
+        if set -q XTERM_VERSION
+            and not test (string replace -r "XTerm\((\d+)\)" '$1' -- "$XTERM_VERSION") -ge 280 2>/dev/null
+            return
+        end
 
-    # HACK: Explicitly disable on ITERM because of #3696, which is weirdness with multi-line prompts.
-    # We allow an explicit "--force-iterm" as first argument to skip this.
-    # It's recommended only if you don't use a multi-line prompt.
-    if contains -- $argv[1] --force-iterm
-        set -e argv[1]
-    else if set -q ITERM_PROFILE
-        return
+        # We need one of these terms.
+        # It would be lovely if we could rely on terminfo, but:
+        # - The "Ss" entry isn't a thing in macOS' old and crusty terminfo
+        # - It is set for xterm, and everyone and their dog claims to be xterm
+        #
+        # So we just don't care about $TERM, unless it is one of the few terminals that actually have their own entry.
+        #
+        # Note: Previous versions also checked $TMUX, and made sure that then $TERM was screen* or tmux*.
+        # We don't care, since we *cannot* handle term-in-a-terms 100% correctly.
+        if not set -q KONSOLE_PROFILE_NAME
+            and not test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge 200400 # konsole, but new.
+            and not set -q ITERM_PROFILE
+            and not set -q VTE_VERSION # which version is already checked above
+            and not set -q WT_PROFILE_ID
+            and not set -q XTERM_VERSION
+            and not string match -rq '^st(-.*)$' -- $TERM
+            and not string match -q 'xterm-kitty*' -- $TERM
+            and not string match -q 'rxvt*' -- $TERM
+            and not string match -q 'alacritty*' -- $TERM
+            return
+        end
+
+        # HACK: Explicitly disable on ITERM because of #3696, which is weirdness with multi-line prompts.
+        # --force-iterm is now deprecated; set $fish_vi_force_cursor instead
+        if contains -- $argv[1] --force-iterm
+            set -e argv[1]
+        else if set -q ITERM_PROFILE
+            return
+        end
     end
 
     set -l terminal $argv[1]
@@ -63,11 +69,8 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     set -l function
     switch "$terminal"
         case auto
-            # TODO: Konsole as of 18.08 knows the xterm sequences,
-            # but there's still bugs with it (as of konsole 19.04.0).
-            #
-            # If it is fixed, we'd have to read $KONSOLE_VERSION for a while,
-            # though that was only introduced in 18.08 as well.
+            # Nowadays, konsole does not set $KONSOLE_PROFILE_NAME anymore,
+            # and it uses the xterm sequences.
             if set -q KONSOLE_PROFILE_NAME
                 set function __fish_cursor_konsole
             else if set -q ITERM_PROFILE
@@ -115,4 +118,3 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
           end
          " | source
 end
-

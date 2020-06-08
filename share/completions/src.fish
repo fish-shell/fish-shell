@@ -3,27 +3,27 @@
 # TODO?: add short synonyms like ci, am
 # TODO: extract tag/branch names and feed to -a for tag delete, branch delete, rename
 
-complete -c src -f -n '__fish_use_subcommand' -a help -d 'Displays help for commands'
+complete -c src -f -n __fish_use_subcommand -a help -d 'Displays help for commands'
 complete -c src -f -n '__fish_seen_subcommand_from help' -a 'intro revisions commands commit amend checkout cat status log list diff fast-export fast-import ignores'
 
-complete -c src -n '__fish_use_subcommand' -a commit -d 'Enters a commit for the specified files'
+complete -c src -n __fish_use_subcommand -a commit -d 'Enters a commit for the specified files'
 complete -c src -x -n '__fish_seen_subcommand_from commit' -s m -d 'Enter commit message as a string'
 complete -c src -r -n '__fish_seen_subcommand_from commit' -s f -d 'Enter file containing commit message'
 complete -c src -n '__fish_seen_subcommand_from commit' -s e -d 'Further edit commit message'
 
-complete -c src -r -n '__fish_use_subcommand' -a amend -d 'Amends the stored comment for a specified revision'
+complete -c src -r -n __fish_use_subcommand -a amend -d 'Amends the stored comment for a specified revision'
 complete -c src -x -n '__fish_seen_subcommand_from amend' -s m -d 'Enter commit message as a string'
 complete -c src -r -n '__fish_seen_subcommand_from amend' -s f -d 'Enter file containing commit message'
 complete -c src -n '__fish_seen_subcommand_from amend' -s e -d 'Further edit commit message'
 
-complete -c src -r -n '__fish_use_subcommand' -a checkout -d 'Refresh working copy from history'
+complete -c src -r -n __fish_use_subcommand -a checkout -d 'Refresh working copy from history'
 
-complete -c src -r -n '__fish_use_subcommand' -a cat -d 'Send the specified revision of the files to standard output'
+complete -c src -r -n __fish_use_subcommand -a cat -d 'Send the specified revision of the files to standard output'
 
-complete -c src -r -n '__fish_use_subcommand' -a status -d 'Show status of files'
+complete -c src -r -n __fish_use_subcommand -a status -d 'Show status of files'
 complete -c src -n '__fish_seen_subcommand_from status' -s a -d 'Show all files'
 
-complete -c src -r -n '__fish_use_subcommand' -a tag -d 'List/create/delete tags'
+complete -c src -r -n __fish_use_subcommand -a tag -d 'List/create/delete tags'
 complete -c src -n '__fish_seen_subcommand_from tag' -a list -d 'List tags'
 complete -c src -n '__fish_seen_subcommand_from tag' -s l -d 'List tags'
 complete -c src -r -n '__fish_seen_subcommand_from tag' -a create -d 'Create tag'
@@ -31,7 +31,7 @@ complete -c src -r -n '__fish_seen_subcommand_from tag' -s c -d 'Create tag'
 complete -c src -r -n '__fish_seen_subcommand_from tag' -a delete -d 'Delete tag'
 complete -c src -r -n '__fish_seen_subcommand_from tag' -s d -d 'Delete tag'
 
-complete -c src -r -n '__fish_use_subcommand' -a branch -d 'List/create/delete branches'
+complete -c src -r -n __fish_use_subcommand -a branch -d 'List/create/delete branches'
 complete -c src -n '__fish_seen_subcommand_from branch' -a list -d 'List branches'
 complete -c src -n '__fish_seen_subcommand_from branch' -s l -d 'List branches'
 complete -c src -r -n '__fish_seen_subcommand_from branch' -a create -d 'Create branch'
@@ -39,15 +39,15 @@ complete -c src -r -n '__fish_seen_subcommand_from branch' -s c -d 'Create branc
 complete -c src -r -n '__fish_seen_subcommand_from branch' -a delete -d 'Delete branch'
 complete -c src -r -n '__fish_seen_subcommand_from branch' -s d -d 'Delete branch'
 
-complete -c src -r -n '__fish_use_subcommand' -a rename -d 'Rename tag/branch'
+complete -c src -r -n __fish_use_subcommand -a rename -d 'Rename tag/branch'
 
-complete -c src -r -n '__fish_use_subcommand' -a list -d 'List information about commits'
+complete -c src -r -n __fish_use_subcommand -a list -d 'List information about commits'
 # TODO: support `src list -<n>`
 complete -c src -x -n '__fish_seen_subcommand_from list' -s l -d 'Limit per-file commit count'
 complete -c src -x -n '__fish_seen_subcommand_from list' -s f -d 'Specify format string'
 
 # NOTE: pretending -b and -w are old-style options means they won’t be suggested as, say, “-pb” (which src can’t handle)
-complete -c src -r -n '__fish_use_subcommand' -a log -d 'List information about commits'
+complete -c src -r -n __fish_use_subcommand -a log -d 'List information about commits'
 complete -c src -x -n '__fish_seen_subcommand_from log' -s v -d 'Be more verbose'
 # TODO: support `src log -<n>`
 complete -c src -x -n '__fish_seen_subcommand_from log' -s l -d 'Limit per-file log entries'
@@ -59,26 +59,26 @@ complete -c src -n '__fish_seen_subcommand_from log' -n '__fish_contains_opt -s 
 complete -c src -n '__fish_seen_subcommand_from log' -n '__fish_contains_opt -s u' -o w -d 'Ignore all whitespace'
 
 # NOTE: pretending -b and -w are old-style options means they won’t be suggested as, say, “-pb” (which src can’t handle)
-complete -c src -r -n '__fish_use_subcommand' -a diff -d 'Print diff'
+complete -c src -r -n __fish_use_subcommand -a diff -d 'Print diff'
 complete -c src -n '__fish_seen_subcommand_from diff' -s u -d 'Print unified-format diff'
 complete -c src -n '__fish_seen_subcommand_from diff' -s c -d 'Print context diff'
 complete -c src -n '__fish_seen_subcommand_from diff' -o b -d 'Ignore whitespace changes'
 complete -c src -n '__fish_seen_subcommand_from diff' -o w -d 'Ignore all whitespace'
 
-complete -c src -r -n '__fish_use_subcommand' -a ls -d 'List all registered files'
+complete -c src -r -n __fish_use_subcommand -a ls -d 'List all registered files'
 
-complete -c src -r -n '__fish_use_subcommand' -a visualize -d 'Emit DOT visualization'
+complete -c src -r -n __fish_use_subcommand -a visualize -d 'Emit DOT visualization'
 
-complete -c src -r -n '__fish_use_subcommand' -a move -d 'Rename a workfile and its history'
+complete -c src -r -n __fish_use_subcommand -a move -d 'Rename a workfile and its history'
 
-complete -c src -r -n '__fish_use_subcommand' -a copy -d 'Copy a file and its master'
+complete -c src -r -n __fish_use_subcommand -a copy -d 'Copy a file and its master'
 
-complete -c src -r -n '__fish_use_subcommand' -a fast-export -d 'Export as a Git fast-import stream'
+complete -c src -r -n __fish_use_subcommand -a fast-export -d 'Export as a Git fast-import stream'
 
-complete -c src -r -n '__fish_use_subcommand' -a fast-import -d 'Parse a git-fast-import stream from stdin'
+complete -c src -r -n __fish_use_subcommand -a fast-import -d 'Parse a git-fast-import stream from stdin'
 complete -c src -n '__fish_seen_subcommand_from fast-import' -s p -d 'Discards metadata'
 
-complete -c src -r -n '__fish_use_subcommand' -a release -d 'Release locks on files'
+complete -c src -r -n __fish_use_subcommand -a release -d 'Release locks on files'
 
 complete -c src -s d -d 'Enable debugging output'
 complete -c src -r -s S -d 'Set repository directory'

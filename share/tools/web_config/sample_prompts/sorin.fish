@@ -13,7 +13,7 @@ function fish_prompt
     echo -n (set_color blue)(prompt_pwd)' '
 
     set_color -o
-    if test "$USER" = 'root'
+    if test "$USER" = root
         echo -n (set_color red)'# '
     end
     echo -n (set_color red)'❯'(set_color yellow)'❯'(set_color green)'❯ '
@@ -122,7 +122,7 @@ function fish_right_prompt
         set status_modified 1
     end
     set -l status_renamed 0
-    if string match -qe 'R' $porcelain_status
+    if string match -qe R $porcelain_status
         set status_renamed 1
     end
     set -l status_unmerged 0

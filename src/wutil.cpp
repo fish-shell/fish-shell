@@ -166,11 +166,10 @@ int open_cloexec(const std::string &path, int flags, mode_t mode) {
 }
 
 int open_cloexec(const char *path, int flags, mode_t mode) {
-    ASSERT_IS_NOT_FORKED_CHILD();
     int fd;
 
+// Prefer to use O_CLOEXEC.
 #ifdef O_CLOEXEC
-    // Prefer to use O_CLOEXEC. It has to both be defined and nonzero.
     fd = open(path, flags | O_CLOEXEC, mode);
 #else
     fd = open(path, flags, mode);
@@ -206,7 +205,7 @@ dir_t::~dir_t() {
 
 bool dir_t::valid() const { return this->dir != nullptr; }
 
-bool dir_t::read(wcstring &name) { return wreaddir(this->dir, name); }
+bool dir_t::read(wcstring &name) const { return wreaddir(this->dir, name); }
 
 int wstat(const wcstring &file_name, struct stat *buf) {
     const cstring tmp = wcs2string(file_name);
@@ -264,10 +263,12 @@ int fd_check_is_remote(int fd) {
     }
     // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
     // these are in varying headers. Simply hard code them.
-    switch (buf.f_type) {
-        case 0x6969:      // NFS_SUPER_MAGIC
-        case 0x517B:      // SMB_SUPER_MAGIC
-        case 0xFF534D42:  // CIFS_MAGIC_NUMBER
+    // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
+    switch (static_cast<unsigned int>(buf.f_type)) {
+        case 0x6969:       // NFS_SUPER_MAGIC
+        case 0x517B:       // SMB_SUPER_MAGIC
+        case 0xFE534D42U:  // SMB2_MAGIC_NUMBER - not in the manpage
+        case 0xFF534D42U:  // CIFS_MAGIC_NUMBER
             return 1;
         default:
             // Other FSes are assumed local.

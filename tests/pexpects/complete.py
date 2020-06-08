@@ -1,9 +1,11 @@
-# vim: set filetype=expect:
-spawn $fish
-set sid $spawn_id
-expect_prompt
+#!/usr/bin/env python3
+from pexpect_helper import SpawnedProc
 
-send_line {
+sp = SpawnedProc()
+send, sendline, sleep, expect_prompt, expect_re = sp.send, sp.sendline, sp.sleep, sp.expect_prompt, sp.expect_re
+expect_prompt()
+
+sendline("""
     complete -c my_is -n 'test (count (commandline -opc)) = 1' -xa arg
     complete -c my_is -n '__fish_seen_subcommand_from not' -xa '(
 	set -l cmd (commandline -opc) (commandline -ct)
@@ -11,10 +13,8 @@ send_line {
 	commandline --replace --current-process $cmd
 	complete -C"$cmd"
     )'
-}
-send "my_is not \t"
-send "still.alive"
-expect -re {.*still.alive} {
-} eof {
-    error "did fish crash?"
-}
+""")
+
+send("my_is not \t")
+send("still.alive")
+expect_re(".*still.alive")

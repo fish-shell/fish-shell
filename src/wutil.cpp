@@ -166,11 +166,10 @@ int open_cloexec(const std::string &path, int flags, mode_t mode) {
 }
 
 int open_cloexec(const char *path, int flags, mode_t mode) {
-    ASSERT_IS_NOT_FORKED_CHILD();
     int fd;
 
+// Prefer to use O_CLOEXEC.
 #ifdef O_CLOEXEC
-    // Prefer to use O_CLOEXEC. It has to both be defined and nonzero.
     fd = open(path, flags | O_CLOEXEC, mode);
 #else
     fd = open(path, flags, mode);

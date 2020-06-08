@@ -2,6 +2,7 @@
 from pexpect_helper import SpawnedProc
 import subprocess
 import sys
+import time
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re = (
@@ -49,6 +50,8 @@ expect_prompt()
 # Verify that asking to exit a second time does so.
 send("exit\r")
 
+# This is cheesy, but on Travis with thread-sanitizer this can be slow enough that the process is still running, so we sleep for a bit.
+time.sleep(0.2)
 proc = subprocess.run(
     ["pgrep", "-l", "-f", "sleep 11"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
 )

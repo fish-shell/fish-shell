@@ -62,6 +62,9 @@ struct termsize_container_t {
     /// Naturally this may be called from within a signal handler.
     static void handle_winch();
 
+    /// Invalidate the tty in the sense that we need to re-fetch its termsize.
+    static void invalidate_tty();
+
     /// Note that COLUMNS and/or LINES global variables changed.
     void handle_columns_lines_var_change(const environment_t &vars);
 
@@ -79,9 +82,9 @@ struct termsize_container_t {
         // The last termsize seen from the environment (COLUMNS/LINES), or none if none.
         maybe_t<termsize_t> last_from_env{};
 
-        // The last-seen winch generation count.
+        // The last-seen tty-invalidation generation count.
         // Set to a huge value so it's initially stale.
-        uint32_t last_winch_gen_count{UINT32_MAX};
+        uint32_t last_tty_gen_count{UINT32_MAX};
 
         /// \return the current termsize from this data.
         termsize_t current() const;

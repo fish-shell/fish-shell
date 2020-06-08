@@ -6,9 +6,8 @@
 #include "parser.h"
 #include "wutil.h"
 
-// A counter which is incremented every SIGWINCH.
-// This is only updated from termsize_handle_winch().
-static volatile uint32_t s_sigwinch_gen_count{0};
+// A counter which is incremented every SIGWINCH, or when the tty is otherwise invalidated.
+static volatile uint32_t s_tty_termsize_gen_count{0};
 
 /// \return a termsize from ioctl, or none on error or if not supported.
 static maybe_t<termsize_t> read_termsize_from_tty() {
@@ -41,7 +40,7 @@ void termsize_container_t::data_t::mark_override_from_env(termsize_t ts) {
     // Here we pretend to have an up-to-date tty value so that we will prefer the environment value.
     this->last_from_env = ts;
     this->last_from_tty.reset();
-    this->last_winch_gen_count = s_sigwinch_gen_count;
+    this->last_tty_gen_count = s_tty_termsize_gen_count;
 }
 
 termsize_t termsize_container_t::last() const { return this->data_.acquire()->current(); }
@@ -58,11 +57,11 @@ termsize_t termsize_container_t::updating(parser_t &parser) {
 
         // Critical read of signal-owned variable.
         // This must happen before the TIOCGWINSZ ioctl.
-        const uint32_t sigwinch_gen_count = s_sigwinch_gen_count;
-        if (data->last_winch_gen_count != sigwinch_gen_count) {
-            // We have received a sigwinch (or we have not yet computed the value).
+        const uint32_t tty_gen_count = s_tty_termsize_gen_count;
+        if (data->last_tty_gen_count != tty_gen_count) {
+            // Our idea of the size of the terminal may be stale.
             // Apply any updates.
-            data->last_winch_gen_count = sigwinch_gen_count;
+            data->last_tty_gen_count = tty_gen_count;
             data->last_from_tty = this->tty_size_reader_();
         }
         new_size = data->current();
@@ -103,7 +102,7 @@ termsize_t termsize_container_t::initialize(const environment_t &vars) {
     if (new_termsize.width > 0 && new_termsize.height > 0) {
         data->mark_override_from_env(new_termsize);
     } else {
-        data->last_winch_gen_count = s_sigwinch_gen_count;
+        data->last_tty_gen_count = s_tty_termsize_gen_count;
         data->last_from_tty = this->tty_size_reader_();
     }
     return data->current();
@@ -124,4 +123,7 @@ void termsize_container_t::handle_columns_lines_var_change(const environment_t &
 }
 
 // static
-void termsize_container_t::handle_winch() { s_sigwinch_gen_count += 1; }
+void termsize_container_t::handle_winch() { s_tty_termsize_gen_count += 1; }
+
+// static
+void termsize_container_t::invalidate_tty() { s_tty_termsize_gen_count += 1; }

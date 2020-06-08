@@ -136,6 +136,7 @@ Completions
 
 Deprecations and removed features
 ---------------------------------
+- fish no longer attempts to modify the terminal size via `TIOCSWINSZ`.
 
 For distributors and developers
 -------------------------------

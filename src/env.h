@@ -294,9 +294,6 @@ class env_stack_t final : public environment_t {
     int get_last_status() const;
     void set_last_statuses(statuses_t s);
 
-    /// Update the termsize variable.
-    void set_termsize();
-
     /// Sets up argv as the given list of strings.
     void set_argv(wcstring_list_t argv);
 

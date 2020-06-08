@@ -16,6 +16,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "signal.h"
+#include "termsize.h"
 #include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -219,8 +220,8 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
     switch (sig) {
 #ifdef SIGWINCH
         case SIGWINCH:
-            /// Respond to a winch signal by checking the terminal size.
-            common_handle_winch(sig);
+            /// Respond to a winch signal by telling the termsize container.
+            termsize_container_t::handle_winch();
             break;
 #endif
 

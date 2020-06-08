@@ -74,6 +74,7 @@
 #include "sanity.h"
 #include "screen.h"
 #include "signal.h"
+#include "termsize.h"
 #include "tnode.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -621,6 +622,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_command_line_from_history_search();
     void set_buffer_maintaining_pager(const wcstring &b, size_t pos, bool transient = false);
     void delete_char(bool backward = true);
+
+    /// Called to update the termsize, including $COLUMNS and $LINES, as necessary.
+    void update_termsize() { (void)termsize_container_t::shared().updating(parser()); }
 };
 
 /// This variable is set to a signal by the signal handler when ^C is pressed.
@@ -695,7 +699,7 @@ static void term_steal() {
             break;
     }
 
-    invalidate_termsize();
+    termsize_container_t::shared().invalidate_tty();
 }
 
 bool reader_exit_forced() { return s_exit_forced; }
@@ -791,16 +795,17 @@ void reader_data_t::repaint() {
     // term size, minus the number of lines consumed by our string. (Note this doesn't yet consider
     // wrapping).
     int full_line_count = 1 + std::count(full_line.cbegin(), full_line.cend(), L'\n');
-    pager.set_term_size(std::max(1, common_get_width()),
-                        std::max(1, common_get_height() - full_line_count));
+    termsize_t curr_termsize = termsize_last();
+    pager.set_term_size(termsize_t{std::max(1, curr_termsize.width),
+                                   std::max(1, curr_termsize.height - full_line_count)});
     pager.update_rendering(&current_page_rendering);
 
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position();
 
     // Prepend the mode prompt to the left prompt.
-    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
-            cmd_line->size(), colors, indents, cursor_position, current_page_rendering,
+    s_write(&screen, termsize_last().width, mode_prompt_buff + left_prompt_buff, right_prompt_buff,
+            full_line, cmd_line->size(), colors, indents, cursor_position, current_page_rendering,
             focused_on_pager);
 
     repaint_needed = false;
@@ -974,7 +979,7 @@ void reader_data_t::repaint_if_needed() {
 
     if (needs_reset) {
         exec_prompt();
-        s_reset(&screen, screen_reset_mode_t::current_line_and_prompt);
+        s_reset_line(&screen, true /* repaint prompt */);
         screen_reset_needed = false;
     }
 
@@ -1051,9 +1056,9 @@ void reader_data_t::exec_prompt() {
     // Do not allow the exit status of the prompts to leak through.
     const bool apply_exit_status = false;
 
-    // HACK: Query winsize again because it might have changed.
+    // Update the termsize now.
     // This allows prompts to react to $COLUMNS.
-    (void)get_current_winsize();
+    update_termsize();
 
     // If we have any prompts, they must be run non-interactively.
     if (!left_prompt.empty() || !right_prompt.empty()) {
@@ -1089,7 +1094,8 @@ void reader_data_t::exec_prompt() {
 }
 
 void reader_init() {
-    auto &vars = parser_t::principal_parser().vars();
+    parser_t &parser = parser_t::principal_parser();
+    auto &vars = parser.vars();
 
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
@@ -1119,7 +1125,7 @@ void reader_init() {
 
     // We do this not because we actually need the window size but for its side-effect of correctly
     // setting the COLUMNS and LINES env vars.
-    get_current_winsize();
+    termsize_container_t::shared().updating(parser);
 }
 
 /// Restore the term mode if we own the terminal. It's important we do this before
@@ -1970,7 +1976,7 @@ static void reader_interactive_init(parser_t &parser) {
         }
     }
 
-    invalidate_termsize();
+    termsize_container_t::shared().invalidate_tty();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     parser.vars().set_one(L"_", ENV_GLOBAL, L"fish");
@@ -2327,7 +2333,7 @@ void reader_pop() {
         reader_interactive_destroy();
     } else {
         s_end_current_loop = false;
-        s_reset(&new_reader->screen, screen_reset_mode_t::abandon_line);
+        s_reset_abandoning_line(&new_reader->screen, termsize_last().width);
     }
 }
 
@@ -2666,7 +2672,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // elsewhere, we detect if the mode output is empty.
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
-                s_reset(&screen, screen_reset_mode_t::current_line_and_prompt);
+                s_reset_line(&screen, true /* redraw prompt */);
                 screen_reset_needed = false;
                 repaint();
                 break;
@@ -2679,7 +2685,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (!rls.coalescing_repaints) {
                 rls.coalescing_repaints = true;
                 exec_prompt();
-                s_reset(&screen, screen_reset_mode_t::current_line_and_prompt);
+                s_reset_line(&screen, true /* redraw prompt */);
                 screen_reset_needed = false;
                 repaint();
             }
@@ -2962,7 +2968,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // already be printed, all we need to do is repaint.
                 wcstring_list_t argv(1, el->text());
                 event_fire_generic(parser(), L"fish_posterror", &argv);
-                s_reset(&screen, screen_reset_mode_t::abandon_line);
+                s_reset_abandoning_line(&screen, termsize_last().width);
                 mark_repaint_needed();
             }
 
@@ -3483,7 +3489,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     history_search.reset();
 
-    s_reset(&screen, screen_reset_mode_t::abandon_line);
+    s_reset_abandoning_line(&screen, termsize_last().width);
     event_fire_generic(parser(), L"fish_prompt");
     exec_prompt();
 
@@ -3508,6 +3514,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     }
 
     while (!rls.finished && !shell_is_exiting()) {
+        // Perhaps update the termsize. This is cheap if it has not changed.
+        update_termsize();
+
         if (rls.nchars <= command_line.size()) {
             // We've already hit the specified character limit.
             rls.finished = true;

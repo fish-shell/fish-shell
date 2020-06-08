@@ -51,6 +51,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "screen.h"
+#include "termsize.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 #define DEFAULT_TERM1 "ansi"
@@ -231,8 +232,7 @@ static void handle_change_ambiguous_width(const env_stack_t &vars) {
 }
 
 static void handle_term_size_change(const env_stack_t &vars) {
-    UNUSED(vars);
-    invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
+    termsize_container_t::shared().handle_columns_lines_var_change(vars);
 }
 
 static void handle_fish_history_change(const env_stack_t &vars) {

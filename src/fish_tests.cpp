@@ -73,6 +73,7 @@
 #include "redirection.h"
 #include "screen.h"
 #include "signal.h"
+#include "termsize.h"
 #include "timer.h"
 #include "tnode.h"
 #include "tokenizer.h"
@@ -2200,7 +2201,7 @@ static void test_pager_navigation() {
 
     pager_t pager;
     pager.set_completions(completions);
-    pager.set_term_size(80, 24);
+    pager.set_term_size(termsize_t::defaults());
     page_rendering_t render = pager.render();
 
     if (render.term_width != 80) err(L"Wrong term width");
@@ -2274,14 +2275,14 @@ static void test_pager_navigation() {
 }
 
 struct pager_layout_testcase_t {
-    size_t width;
+    int width;
     const wchar_t *expected;
 
     // Run ourselves as a test case.
     // Set our data on the pager, and then check the rendering.
     // We should have one line, and it should have our expected text.
     void run(pager_t &pager) const {
-        pager.set_term_size(this->width, 24);
+        pager.set_term_size(termsize_t{this->width, 24});
         page_rendering_t rendering = pager.render();
         const screen_data_t &sd = rendering.screen_data;
         do_test(sd.line_count() == 1);
@@ -2294,7 +2295,10 @@ struct pager_layout_testcase_t {
                 std::replace(expected.begin(), expected.end(), L'\x2026', ellipsis_char);
             }
 
-            wcstring text = sd.line(0).to_string();
+            wcstring text;
+            for (const auto &p : sd.line(0).text) {
+                text.push_back(p.first);
+            }
             if (text != expected) {
                 std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
                               text.length(), text.c_str(), expected.length(), expected.c_str());
@@ -5740,6 +5744,72 @@ Executed in  500.00 micros    fish         external
     free(saved_locale);
 }
 
+struct termsize_tester_t {
+    static void test();
+};
+
+void termsize_tester_t::test() {
+    say(L"Testing termsize");
+
+    parser_t &parser = parser_t::principal_parser();
+    env_stack_t &vars = parser.vars();
+
+    // Use a static variable so we can pretend we're the kernel exposing a terminal size.
+    static maybe_t<termsize_t> stubby_termsize{};
+    termsize_container_t ts([] { return stubby_termsize; });
+
+    // Initially default value.
+    do_test(ts.last() == termsize_t::defaults());
+
+    // Haha we change the value, it doesn't even know.
+    stubby_termsize = termsize_t{42, 84};
+    do_test(ts.last() == termsize_t::defaults());
+
+    // Ok let's tell it. But it still doesn't update right away.
+    ts.handle_winch();
+    do_test(ts.last() == termsize_t::defaults());
+
+    // Ok now we tell it to update.
+    ts.updating(parser);
+    do_test(ts.last() == *stubby_termsize);
+    do_test(vars.get(L"COLUMNS")->as_string() == L"42");
+    do_test(vars.get(L"LINES")->as_string() == L"84");
+
+    // Wow someone set COLUMNS and LINES to a weird value.
+    // Now the tty's termsize doesn't matter.
+    vars.set(L"COLUMNS", ENV_GLOBAL, {L"75"});
+    vars.set(L"LINES", ENV_GLOBAL, {L"150"});
+    ts.handle_columns_lines_var_change(vars);
+    do_test(ts.last() == termsize_t(75, 150));
+    do_test(vars.get(L"COLUMNS")->as_string() == L"75");
+    do_test(vars.get(L"LINES")->as_string() == L"150");
+
+    vars.set(L"COLUMNS", ENV_GLOBAL, {L"33"});
+    ts.handle_columns_lines_var_change(vars);
+    do_test(ts.last() == termsize_t(33, 150));
+
+    // Oh it got SIGWINCH, now the tty matters again.
+    ts.handle_winch();
+    do_test(ts.last() == termsize_t(33, 150));
+    do_test(ts.updating(parser) == *stubby_termsize);
+    do_test(vars.get(L"COLUMNS")->as_string() == L"42");
+    do_test(vars.get(L"LINES")->as_string() == L"84");
+
+    // Test initialize().
+    vars.set(L"COLUMNS", ENV_GLOBAL, {L"83"});
+    vars.set(L"LINES", ENV_GLOBAL, {L"38"});
+    ts.initialize(vars);
+    do_test(ts.last() == termsize_t(83, 38));
+
+    // initialize() even beats the tty reader until a sigwinch.
+    termsize_container_t ts2([] { return stubby_termsize; });
+    ts.initialize(vars);
+    ts2.updating(parser);
+    do_test(ts.last() == termsize_t(83, 38));
+    ts2.handle_winch();
+    do_test(ts2.updating(parser) == *stubby_termsize);
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -5872,6 +5942,8 @@ int main(int argc, char **argv) {
     if (should_test_function("topics")) test_topic_monitor_torture();
     if (should_test_function("timer_format")) test_timer_format();
     // history_tests_t::test_history_speed();
+
+    if (should_test_function("termsize")) termsize_tester_t::test();
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");

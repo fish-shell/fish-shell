@@ -12,6 +12,7 @@
 #include "complete.h"
 #include "reader.h"
 #include "screen.h"
+#include "termsize.h"
 
 #define PAGER_SELECTION_NONE static_cast<size_t>(-1)
 
@@ -146,8 +147,8 @@ class pager_t {
     // Sets the prefix.
     void set_prefix(const wcstring &pref);
 
-    // Sets the terminal width and height.
-    void set_term_size(size_t w, size_t h);
+    // Sets the terminal size.
+    void set_term_size(termsize_t ts);
 
     // Changes the selected completion in the given direction according to the layout of the given
     // rendering. Returns true if the selection changed.

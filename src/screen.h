@@ -20,6 +20,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "common.h"
@@ -30,42 +31,47 @@ class page_rendering_t;
 
 /// A class representing a single line of a screen.
 struct line_t {
-    std::vector<wchar_t> text;
-    std::vector<highlight_spec_t> colors;
-    bool is_soft_wrapped;
-    size_t indentation;
+    /// A pair of a character, and the color with which to draw it.
+    using highlighted_char_t = std::pair<wchar_t, highlight_spec_t>;
+    std::vector<highlighted_char_t> text{};
+    bool is_soft_wrapped{false};
+    size_t indentation{0};
 
-    line_t() : text(), colors(), is_soft_wrapped(false), indentation(0) {}
+    line_t() = default;
 
+    /// Clear the line's contents.
     void clear(void) {
         text.clear();
-        colors.clear();
     }
 
-    void append(wchar_t txt, highlight_spec_t color) {
-        text.push_back(txt);
-        colors.push_back(color);
-    }
+    /// Append a single character \p txt to the line with color \p c.
+    void append(wchar_t c, highlight_spec_t color) { text.push_back({c, color}); }
 
+    /// Append a nul-terminated string \p txt to the line, giving each character \p color.
     void append(const wchar_t *txt, highlight_spec_t color) {
         for (size_t i = 0; txt[i]; i++) {
-            text.push_back(txt[i]);
-            colors.push_back(color);
+            text.push_back({txt[i], color});
         }
     }
 
-    size_t size(void) const { return text.size(); }
+    /// \return the number of characters.
+    size_t size() const { return text.size(); }
 
-    wchar_t char_at(size_t idx) const { return text.at(idx); }
+    /// \return the character at a char index.
+    wchar_t char_at(size_t idx) const { return text.at(idx).first; }
 
-    highlight_spec_t color_at(size_t idx) const { return colors.at(idx); }
+    /// \return the color at a char index.
+    highlight_spec_t color_at(size_t idx) const { return text.at(idx).second; }
 
+    /// Append the contents of \p line to this line.
     void append_line(const line_t &line) {
         text.insert(text.end(), line.text.begin(), line.text.end());
-        colors.insert(colors.end(), line.colors.begin(), line.colors.end());
     }
 
-    wcstring to_string() const { return wcstring(this->text.begin(), this->text.end()); }
+    /// \return the width of this line, counting up to no more than \p max characters.
+    /// This follows fish_wcswidth() semantics, except that characters whose width would be -1 are
+    /// treated as 0.
+    int wcswidth_min_0(size_t max = std::numeric_limits<size_t>::max()) const;
 };
 
 /// A class representing screen contents.
@@ -73,12 +79,18 @@ class screen_data_t {
     std::vector<line_t> line_datas;
 
    public:
+    /// The width of the screen in this rendering.
+    /// -1 if not set, i.e. we have not rendered before.
+    int screen_width{-1};
+
+    /// Where the cursor is in (x, y) coordinates.
     struct cursor_t {
         int x{0};
         int y{0};
         cursor_t() = default;
         cursor_t(int a, int b) : x(a), y(b) {}
-    } cursor;
+    };
+    cursor_t cursor;
 
     line_t &add_line(void) {
         line_datas.resize(line_datas.size() + 1);
@@ -129,9 +141,6 @@ class screen_t {
     wcstring actual_left_prompt{};
     /// Last right prompt width.
     size_t last_right_prompt_width{0};
-    /// The actual width of the screen at the time of the last screen write, or negative if not yet
-    /// set.
-    int actual_width{-1};
     /// If we support soft wrapping, we can output to this location without any cursor motion.
     maybe_t<screen_data_t::cursor_t> soft_wrap_location{};
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
@@ -165,6 +174,7 @@ class screen_t {
 /// screen in order to render the desired output using as few terminal commands as possible.
 ///
 /// \param s the screen on which to write
+/// \param int screen_width the width of the screen to render
 /// \param left_prompt the prompt to prepend to the command line
 /// \param right_prompt the right prompt, or NULL if none
 /// \param commandline the command line
@@ -175,41 +185,24 @@ class screen_t {
 /// \param cursor_pos where the cursor is
 /// \param pager_data any pager data, to append to the screen
 /// \param cursor_is_within_pager whether the position is within the pager line (first line)
-void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
-             const wcstring &commandline, size_t explicit_len,
+void s_write(screen_t *s, int screen_width, const wcstring &left_prompt,
+             const wcstring &right_prompt, const wcstring &commandline, size_t explicit_len,
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
              size_t cursor_pos, const page_rendering_t &pager_data, bool cursor_is_within_pager);
 
-/// This function resets the screen buffers internal knowledge about the contents of the screen. Use
-/// this function when some other function than s_write has written to the screen.
-///
-/// \param s the screen to reset
-/// \param reset_cursor whether the line on which the cursor has changed should be assumed to have
-/// changed. If \c reset_cursor is false, the library will attempt to make sure that the screen area
-/// does not seem to move up or down on repaint.
-/// \param reset_prompt whether to reset the prompt as well.
-///
-/// If reset_cursor is incorrectly set to false, this may result in screen contents being erased. If
-/// it is incorrectly set to true, it may result in one or more lines of garbage on screen on the
-/// next repaint. If this happens during a loop, such as an interactive resizing, there will be one
-/// line of garbage for every repaint, which will quickly fill the screen.
-void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
+/// Resets the screen buffer's internal knowledge about the contents of the screen,
+/// optionally repainting the prompt as well.
+/// This function assumes that the current line is still valid.
+void s_reset_line(screen_t *s, bool repaint_prompt = false);
+
+/// Resets the screen buffer's internal knowldge about the contents of the screen,
+/// abandoning the current line and going to the next line.
+/// If clear_to_eos is set,
+/// The screen width must be provided for the PROMPT_SP hack.
+void s_reset_abandoning_line(screen_t *s, int screen_width);
 
 /// Stat stdout and stderr and save result as the current timestamp.
 void s_save_status(screen_t *s);
-
-enum class screen_reset_mode_t {
-    /// Do not make a new line, do not repaint the prompt.
-    current_line_contents,
-    /// Do not make a new line, do repaint the prompt.
-    current_line_and_prompt,
-    /// Abandon the current line, go to the next one, repaint the prompt.
-    abandon_line,
-    /// Abandon the current line, go to the next one, clear the rest of the screen.
-    abandon_line_and_clear_to_end_of_screen
-};
-
-void s_reset(screen_t *s, screen_reset_mode_t mode);
 
 /// Issues an immediate clr_eos.
 void screen_force_clear_to_end();

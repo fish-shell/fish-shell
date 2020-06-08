@@ -27,6 +27,7 @@
 #include "parser_keywords.h"
 #include "proc.h"
 #include "signal.h"
+#include "termsize.h"
 #include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -371,7 +372,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 buff.append(name);
                 buff.append(L", ");
             }
-            streams.out.append(reformat_for_screen(buff));
+            streams.out.append(reformat_for_screen(buff, termsize_last()));
         } else {
             for (const auto &name : names) {
                 streams.out.append(name.c_str());

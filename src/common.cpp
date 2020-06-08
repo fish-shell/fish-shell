@@ -28,12 +28,6 @@
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
-#ifdef HAVE_SIGINFO_H
-#include <siginfo.h>
-#endif
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
 
 #ifdef __linux__
 // Includes for WSL detection
@@ -62,6 +56,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "signal.h"
+#include "termsize.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -99,13 +94,6 @@ int get_debug_stack_frames() { return debug_stack_frames; }
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
 static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
-
-/// This struct maintains the current state of the terminal size. It is updated on demand after
-/// receiving a SIGWINCH. Use common_get_width()/common_get_height() to read it lazily.
-static constexpr struct winsize k_invalid_termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
-static owning_lock<struct winsize> s_termsize{k_invalid_termsize};
-
-static relaxed_atomic_bool_t s_termsize_valid{false};
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(wchar_t msg_level, const wcstring &msg);
@@ -778,10 +766,10 @@ void narrow_string_safe(char buff[64], const wchar_t *s) {
     buff[idx] = '\0';
 }
 
-wcstring reformat_for_screen(const wcstring &msg) {
+wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
     wcstring buff;
     int line_width = 0;
-    int screen_width = common_get_width();
+    int screen_width = termsize.width;
 
     if (screen_width) {
         const wchar_t *start = msg.c_str();
@@ -1745,113 +1733,6 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
     if (!success) output->clear();
     return success;
 }
-
-/// Used to invalidate our idea of having a valid window size. This can occur when either the
-/// COLUMNS or LINES variables are changed. This is also invoked when the shell regains control of
-/// the tty since it is possible the terminal size changed while an external command was running.
-void invalidate_termsize(bool invalidate_vars) {
-    s_termsize_valid = false;
-    if (invalidate_vars) {
-        auto termsize = s_termsize.acquire();
-        termsize->ws_col = termsize->ws_row = USHRT_MAX;
-    }
-}
-
-/// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
-/// possible the terminal size changed while an external command was running.
-void common_handle_winch(int signal) {
-    (void)signal;
-    s_termsize_valid = false;
-}
-
-/// Validate the new terminal size. Fallback to the env vars if necessary.
-static void validate_new_termsize(struct winsize *new_termsize, const environment_t &vars) {
-    if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
-#ifdef HAVE_WINSIZE
-        // Highly hackish. This seems like it should be moved.
-        if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
-            FLOGF(warning, _(L"Current terminal parameters have rows and/or columns set to zero."));
-            FLOGF(warning, _(L"The stty command can be used to correct this "
-                             L"(e.g., stty rows 80 columns 24)."));
-        }
-#endif
-        // Fallback to the environment vars.
-        maybe_t<env_var_t> col_var = vars.get(L"COLUMNS");
-        maybe_t<env_var_t> row_var = vars.get(L"LINES");
-        if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
-            // Both vars have to have valid values.
-            int col = fish_wcstoi(col_var->as_string().c_str());
-            bool col_ok = errno == 0 && col > 0 && col <= USHRT_MAX;
-            int row = fish_wcstoi(row_var->as_string().c_str());
-            bool row_ok = errno == 0 && row > 0 && row <= USHRT_MAX;
-            if (col_ok && row_ok) {
-                new_termsize->ws_col = col;
-                new_termsize->ws_row = row;
-            }
-        }
-    }
-}
-
-/// Export the new terminal size as env vars and to the kernel if possible.
-static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars) {
-    auto cols = vars.get(L"COLUMNS", ENV_EXPORT);
-    vars.set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT),
-                 std::to_wstring(int(new_termsize->ws_col)));
-
-    auto lines = vars.get(L"LINES", ENV_EXPORT);
-    vars.set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT),
-                 std::to_wstring(int(new_termsize->ws_row)));
-
-#ifdef HAVE_WINSIZE
-    // Only write the new terminal size if we are in the foreground (#4477)
-    if (tcgetpgrp(STDOUT_FILENO) == getpgrp()) {
-        ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
-    }
-#endif
-}
-
-/// Get the current termsize, lazily computing it. Return by reference if it changed.
-static struct winsize get_current_winsize_prim(bool *changed, const environment_t &vars) {
-    auto termsize = s_termsize.acquire();
-    if (s_termsize_valid) return *termsize;
-
-    struct winsize new_termsize = {0, 0, 0, 0};
-#ifdef HAVE_WINSIZE
-    errno = 0;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
-        new_termsize.ws_col == termsize->ws_col && new_termsize.ws_row == termsize->ws_row) {
-        s_termsize_valid = true;
-        return *termsize;
-    }
-#endif
-    validate_new_termsize(&new_termsize, vars);
-    termsize->ws_col = new_termsize.ws_col;
-    termsize->ws_row = new_termsize.ws_row;
-    *changed = true;
-    s_termsize_valid = true;
-    return *termsize;
-}
-
-/// Updates termsize as needed, and returns a copy of the winsize.
-struct winsize get_current_winsize() {
-    bool changed = false;
-    auto &vars = env_stack_t::globals();
-    struct winsize termsize = get_current_winsize_prim(&changed, vars);
-    if (changed) {
-        // TODO: this may call us reentrantly through the environment dispatch mechanism. We need to
-        // rationalize this.
-        export_new_termsize(&termsize, vars);
-        // Hack: due to the dispatch the termsize may have just become invalid. Stomp it back to
-        // valid. What a mess.
-        *s_termsize.acquire() = termsize;
-        s_termsize_valid = true;
-    }
-    return termsize;
-}
-
-int common_get_width() { return get_current_winsize().ws_col; }
-
-int common_get_height() { return get_current_winsize().ws_row; }
 
 /// Returns true if seq, represented as a subsequence, is contained within string.
 static bool subsequence_in_string(const wcstring &seq, const wcstring &str) {

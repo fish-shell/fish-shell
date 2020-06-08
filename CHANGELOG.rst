@@ -117,6 +117,7 @@ Completions
 
    -  ``asciidoctor``
    -  ``cmark``
+   -  ``create_ap``
    -  ``dhclient``
    -  ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
       ``pg_dumpall``

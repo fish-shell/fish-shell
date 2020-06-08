@@ -1801,13 +1801,6 @@ static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars)
     auto lines = vars.get(L"LINES", ENV_EXPORT);
     vars.set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT),
                  std::to_wstring(int(new_termsize->ws_row)));
-
-#ifdef HAVE_WINSIZE
-    // Only write the new terminal size if we are in the foreground (#4477)
-    if (tcgetpgrp(STDOUT_FILENO) == getpgrp()) {
-        ioctl(STDOUT_FILENO, TIOCSWINSZ, new_termsize);
-    }
-#endif
 }
 
 /// Get the current termsize, lazily computing it. Return by reference if it changed.

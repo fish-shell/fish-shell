@@ -1,7 +1,0 @@
-saw expected startup prompt
-ctrl-a handled
-unicode char, handled
-\c@ handled
-invalid terminate sequence handled
-valid terminate sequence handled
-exited on seeing valid terminate

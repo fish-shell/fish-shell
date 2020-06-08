@@ -10,7 +10,9 @@ expect_prompt()
 
 send("echo ready to go\r")
 expect_prompt("\r\nready to go\r\n")
-send("function add_change --on-variable fish_bind_mode ; set -g MODE_CHANGES $MODE_CHANGES $fish_bind_mode ; end\r")
+send(
+    "function add_change --on-variable fish_bind_mode ; set -g MODE_CHANGES $MODE_CHANGES $fish_bind_mode ; end\r"
+)
 expect_prompt()
 
 # normal mode

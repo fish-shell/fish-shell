@@ -93,19 +93,19 @@ typedef uint8_t parse_node_tag_t;
 class parse_node_t {
    public:
     // Start in the source code.
-    source_offset_t source_start;
+    source_offset_t source_start{SOURCE_OFFSET_INVALID};
     // Length of our range in the source code.
-    source_offset_t source_length;
+    source_offset_t source_length{0};
     // Parent
-    node_offset_t parent;
+    node_offset_t parent{NODE_OFFSET_INVALID};
     // Children
-    node_offset_t child_start;
+    node_offset_t child_start{0};
     // Number of children.
-    uint8_t child_count;
+    uint8_t child_count{0};
     // Type of the node.
     enum parse_token_type_t type;
     // Keyword associated with node.
-    enum parse_keyword_t keyword;
+    enum parse_keyword_t keyword { parse_keyword_t::none };
     // Node flags.
     parse_node_flags_t flags : 4;
     // This is used to store e.g. the statement decoration.
@@ -114,16 +114,7 @@ class parse_node_t {
     wcstring describe() const;
 
     // Constructor
-    explicit parse_node_t(parse_token_type_t ty)
-        : source_start(SOURCE_OFFSET_INVALID),
-          source_length(0),
-          parent(NODE_OFFSET_INVALID),
-          child_start(0),
-          child_count(0),
-          type(ty),
-          keyword(parse_keyword_t::none),
-          flags(0),
-          tag(0) {}
+    explicit parse_node_t(parse_token_type_t ty) : type(ty), flags(0), tag(0) {}
 
     node_offset_t child_offset(node_offset_t which) const {
         PARSE_ASSERT(which < child_count);

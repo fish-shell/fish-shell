@@ -89,7 +89,7 @@ matrix:
             - python3-pip
       before_install:
         - sudo pip3 install pexpect
-        - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+        - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
       env:
           - secure: "Q1AS5iEi17s+xsRaMwfkxmm62UDaV47uE39pvXsNL+DO9YWbMMuhTpIOeYhxLvFNL3LMUFU2TwVpVRYX2YFGhNNaMSmjQfyQ+7q7/oSEo0aSqvQkwelpK/pwuRAXdv1MU4aQ6FrCEQ4VMO45WRo0o5WD26pvxjqRyAQ6ry+serA="
           # Some warnings upgraded to errors to match Open Build Service platforms

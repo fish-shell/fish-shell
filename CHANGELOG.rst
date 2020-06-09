@@ -133,6 +133,7 @@ Completions
    -  ``tig``
    -  ``windscribe``
    -  ``wireshark``, ``tshark``, and ``dumpcap``
+   -  ``yadm``
    -  ``zopfli``, and ``zopflipng``
 
 Deprecations and removed features

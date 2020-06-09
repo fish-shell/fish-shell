@@ -30,7 +30,7 @@ inline parse_keyword_t production_element_keyword(production_element_t elem) {
         // First keyword is LAST_TOKEN_OR_SYMBOL + 1.
         return static_cast<parse_keyword_t>(elem - LAST_TOKEN_OR_SYMBOL - 1);
     } else {
-        return parse_keyword_none;
+        return parse_keyword_t::none;
     }
 }
 

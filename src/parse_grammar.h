@@ -46,7 +46,7 @@ struct keyword {
     static constexpr parse_token_type_t token = parse_token_type_string;
     static constexpr production_element_t element() {
         // Convert a parse_keyword_t enum to a production_element_t enum.
-        return Keyword + LAST_TOKEN_OR_SYMBOL + 1;
+        return static_cast<uint32_t>(Keyword) + LAST_TOKEN_OR_SYMBOL + 1;
     }
 };
 
@@ -208,8 +208,8 @@ DEF_ALT(job_list) {
 
 // Job decorators are 'and' and 'or'. These apply to the whole job.
 DEF_ALT(job_decorator) {
-    using ands = single<keyword<parse_keyword_and>>;
-    using ors = single<keyword<parse_keyword_or>>;
+    using ands = single<keyword<parse_keyword_t::kw_and>>;
+    using ors = single<keyword<parse_keyword_t::kw_or>>;
     using empty = grammar::empty;
     ALT_BODY(job_decorator, ands, ors, empty);
 };
@@ -227,7 +227,7 @@ DEF_ALT(job_conjunction_continuation) {
 /// The time builtin.
 DEF_ALT(optional_time) {
     using empty = grammar::empty;
-    using time = single<keyword<parse_keyword_time>>;
+    using time = single<keyword<parse_keyword_t::kw_time>>;
     ALT_BODY(optional_time, empty, time);
 };
 
@@ -271,12 +271,12 @@ produces_sequence<if_clause, else_clause, end_command, arguments_or_redirections
     BODY(if_statement)};
 
 DEF(if_clause)
-produces_sequence<keyword<parse_keyword_if>, job_conjunction, tok_end, andor_job_list, job_list>{
-    BODY(if_clause)};
+produces_sequence<keyword<parse_keyword_t::kw_if>, job_conjunction, tok_end, andor_job_list,
+                  job_list>{BODY(if_clause)};
 
 DEF_ALT(else_clause) {
     using empty = grammar::empty;
-    using else_cont = seq<keyword<parse_keyword_else>, else_continuation>;
+    using else_cont = seq<keyword<parse_keyword_t::kw_else>, else_continuation>;
     ALT_BODY(else_clause, empty, else_cont);
 };
 
@@ -287,8 +287,8 @@ DEF_ALT(else_continuation) {
 };
 
 DEF(switch_statement)
-produces_sequence<keyword<parse_keyword_switch>, argument, tok_end, case_item_list, end_command,
-                  arguments_or_redirections_list>{BODY(switch_statement)};
+produces_sequence<keyword<parse_keyword_t::kw_switch>, argument, tok_end, case_item_list,
+                  end_command, arguments_or_redirections_list>{BODY(switch_statement)};
 
 DEF_ALT(case_item_list) {
     using empty = grammar::empty;
@@ -298,7 +298,8 @@ DEF_ALT(case_item_list) {
 };
 
 DEF(case_item)
-produces_sequence<keyword<parse_keyword_case>, argument_list, tok_end, job_list>{BODY(case_item)};
+produces_sequence<keyword<parse_keyword_t::kw_case>, argument_list, tok_end, job_list>{
+    BODY(case_item)};
 
 DEF(block_statement)
 produces_sequence<block_header, job_list, end_command, arguments_or_redirections_list>{
@@ -313,24 +314,25 @@ DEF_ALT(block_header) {
 };
 
 DEF(for_header)
-produces_sequence<keyword<parse_keyword_for>, tok_string, keyword<parse_keyword_in>, argument_list,
-                  tok_end>{BODY(for_header)};
+produces_sequence<keyword<parse_keyword_t::kw_for>, tok_string, keyword<parse_keyword_t::kw_in>,
+                  argument_list, tok_end>{BODY(for_header)};
 
 DEF(while_header)
-produces_sequence<keyword<parse_keyword_while>, job_conjunction, tok_end, andor_job_list>{
+produces_sequence<keyword<parse_keyword_t::kw_while>, job_conjunction, tok_end, andor_job_list>{
     BODY(while_header)};
 
-DEF(begin_header) produces_single<keyword<parse_keyword_begin>>{BODY(begin_header)};
+DEF(begin_header) produces_single<keyword<parse_keyword_t::kw_begin>>{BODY(begin_header)};
 
 // Functions take arguments, and require at least one (the name). No redirections allowed.
 DEF(function_header)
-produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_end>{
+produces_sequence<keyword<parse_keyword_t::kw_function>, argument, argument_list, tok_end>{
     BODY(function_header)};
 
 DEF_ALT(not_statement) {
-    using nots = seq<keyword<parse_keyword_not>, variable_assignments, optional_time, statement>;
+    using nots =
+        seq<keyword<parse_keyword_t::kw_not>, variable_assignments, optional_time, statement>;
     using exclams =
-        seq<keyword<parse_keyword_exclam>, variable_assignments, optional_time, statement>;
+        seq<keyword<parse_keyword_t::kw_exclam>, variable_assignments, optional_time, statement>;
     ALT_BODY(not_statement, nots, exclams);
 };
 
@@ -347,9 +349,9 @@ DEF_ALT(andor_job_list) {
 // "builtin" or "command" or "exec"
 DEF_ALT(decorated_statement) {
     using plains = single<plain_statement>;
-    using cmds = seq<keyword<parse_keyword_command>, plain_statement>;
-    using builtins = seq<keyword<parse_keyword_builtin>, plain_statement>;
-    using execs = seq<keyword<parse_keyword_exec>, plain_statement>;
+    using cmds = seq<keyword<parse_keyword_t::kw_command>, plain_statement>;
+    using builtins = seq<keyword<parse_keyword_t::kw_builtin>, plain_statement>;
+    using execs = seq<keyword<parse_keyword_t::kw_exec>, plain_statement>;
     ALT_BODY(decorated_statement, plains, cmds, builtins, execs);
 };
 
@@ -378,7 +380,7 @@ DEF_ALT(optional_background) {
     ALT_BODY(optional_background, empty, background);
 };
 
-DEF(end_command) produces_single<keyword<parse_keyword_end>>{BODY(end_command)};
+DEF(end_command) produces_single<keyword<parse_keyword_t::kw_end>>{BODY(end_command)};
 
 // Note optional_newlines only allows newline-style tok_end, not semicolons.
 DEF_ALT(optional_newlines) {

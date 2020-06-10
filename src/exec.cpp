@@ -993,7 +993,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
     j->mark_constructed();
     if (!j->is_foreground()) {
         auto pgid = j->get_pgid();
-        assert(pgid.has_value() && "Backgroudn jobs should always have a pgroup");
+        assert(pgid.has_value() && "Background jobs should always have a pgroup");
         parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(*pgid));
     }
 

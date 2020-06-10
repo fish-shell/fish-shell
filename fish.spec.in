@@ -45,6 +45,12 @@ Requires:		python3
 %endif
 Requires:		man
 
+# Although the build scripts mangle the version number to be RPM compatible
+# for continuous builds (transforming the output of `git describe`), Fedora 32+
+# also validates the version inside the pkgconfig file. There's no impetus for this
+# with fish.
+%define _wrong_version_format_terminate_build 0
+
 %description
 
 fish is a shell geared towards interactive use. Its features are

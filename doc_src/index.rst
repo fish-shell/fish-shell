@@ -382,6 +382,24 @@ There are a few important things that need to be noted about aliases:
 
 To easily create a function of this form, you can use the :ref:`alias <cmd-alias>` command.
 
+Comments
+--------
+
+Anything after a ``#`` until the end of the line is a comment. That means it's purely for the reader's benefit, fish ignores it.
+
+This is useful to explain what and why you are doing something::
+
+  function ls
+      # The function is called ls, so we have to explicitly call `command ls` to avoid calling ourselves.
+      command ls --color=auto $argv
+  end
+
+There are no multiline comments. If you want to make a comment span multiple lines, simply start each line with a ``#``.
+
+Comments can also appear after a line like so::
+
+  set -gx EDITOR emacs # I don't like vim.
+
 .. _syntax-function-autoloading:
 
 Autoloading functions

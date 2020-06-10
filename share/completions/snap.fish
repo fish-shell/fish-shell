@@ -65,7 +65,7 @@ end
 function __fish_snap_interfaces -d 'List of interfaces'
     for snap in (__fish_snap_installed_snaps)
         if test $snap != core
-            snap interfaces $snap | string replace -r '[- ]*([^ ]*)[ ]+([^ ]+)' '$2$1' | string match -v "*Slot*"
+            snap interfaces $snap 2>/dev/null | string replace -r '[- ]*([^ ]*)[ ]+([^ ]+)' '$2$1' | string match -v "*Slot*"
         end
     end
 end

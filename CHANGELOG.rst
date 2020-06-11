@@ -115,6 +115,7 @@ Completions
 
 -  Added completions for
 
+   -  ``apk``
    -  ``asciidoctor``
    -  ``cmark``
    -  ``create_ap``

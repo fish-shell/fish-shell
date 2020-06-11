@@ -30,9 +30,7 @@ BuildRequires: gcc48 gcc48-c++
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en
 %endif
-%if 0%{?rhel} && 0%{?rhel} < 8
-BuildRequires: python
-%else
+%if 0%{?rhel} != 6
 BuildRequires: python3
 %endif
 

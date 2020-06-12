@@ -122,6 +122,7 @@ Completions
    -  ``dhclient``
    -  ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
       ``pg_dumpall``
+   -  ``gh``
    -  ``gitk``
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
    -  ``nmap``, ``ncat``

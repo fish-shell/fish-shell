@@ -1,7 +1,0 @@
-cmd1 found in default histfile
-cmd2 found in my histfile
-cmd2 not found in default histfile
-cmd3 found in default histfile
-cmd3 not found in my histfile
-cmd4 found in env histfile
-cmd4 not found in default histfile

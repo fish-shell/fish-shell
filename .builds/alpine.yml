@@ -4,12 +4,13 @@ packages:
   - ninja
   - ncurses-dev
   - pcre2-dev
-  - expect
-  - python
+  - python3
+  - py-pip
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:
   - build: |
+          pip3 install pexpect
           cd fish
           mkdir build || :
           cd build

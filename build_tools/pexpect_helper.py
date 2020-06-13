@@ -31,9 +31,13 @@ def get_prompt_re(counter):
     """ Return a regular expression for matching a with a given prompt counter. """
     return re.compile(
         r"""(?:\r\n?|^)   # beginning of line
+            (?:\x1b[\d\[KB(m]*)* # optional colors
             (?:\[.\]\ )?  # optional vi mode prompt
          """
-        + (r"prompt\ %d>" % counter),  # prompt with counter
+        + (r"prompt\ %d>" % counter) # prompt with counter
+        + r"""
+            (?:\x1b[\d\[KB(m]*)* # optional colors
+        """,
         re.VERBOSE,
     )
 

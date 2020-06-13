@@ -260,10 +260,10 @@ class SpawnedProc(object):
 
         print("")
 
-        # Show the last 5 messages.
-        print("Last 5 messages:")
+        # Show the last 10 messages.
+        print("Last 10 messages:")
         delta = None
-        for m in self.messages[-5:]:
+        for m in self.messages[-10:]:
             etext = escape(m.text)
             timestamp = m.when * 1000.0
             # Use relative timestamps and add a sign.

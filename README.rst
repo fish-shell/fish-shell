@@ -158,6 +158,8 @@ Compiling fish requires:
 Sphinx is also optionally required to build the documentation from a
 cloned git repository.
 
+Additionally, running the test suite requires python 3.3+ and the pexpect package.
+
 Building from source (all platforms) - Makefile generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

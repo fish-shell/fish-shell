@@ -156,6 +156,7 @@ For distributors and developers
    builds with the system-installed PCRE2, or the version it bundles. By
    default it prefers the system library if available, unless Mac
    codesigning is enabled (#6952).
+-  Running the interactive tests now depends on python 3.3+ and the pexpect package (#6825).
 
 --------------
 

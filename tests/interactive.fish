@@ -14,7 +14,7 @@ end
 set -gx FISH_UNIT_TESTS_RUNNING 1
 
 # Change to directory containing this script
-cd (dirname (status -f))
+cd (status dirname)
 
 # These env vars should not be inherited from the user environment because they can affect the
 # behavior of the tests. So either remove them or set them to a known value.

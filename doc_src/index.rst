@@ -1702,28 +1702,28 @@ Configuration files are evaluated in the following order:
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
 
 - System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__fish_sysconf_dir`` (usually ``/etc/fish/config.fish``).
-- User initialization, usually in `~/.config/fish/config.fish` (controlled by the ``XDG_CONFIG_HOME`` environment variable, and accessible as ``$__fish_config_dir``).
+- User initialization, usually in ``~/.config/fish/config.fish`` (controlled by the ``XDG_CONFIG_HOME`` environment variable, and accessible as ``$__fish_config_dir``).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
-This wide search may be confusing. If you are unsure where to put your own customisations, use `~/.config/fish/config.fish`.
+This wide search may be confusing. If you are unsure where to put your own customisations, use ``~/.config/fish/config.fish``.
 
-Note that ~/.config/fish/config.fish is sourced _after_ the snippets. This is so users can copy snippets and override some of their behavior.
+Note that ``~/.config/fish/config.fish`` is sourced `after` the snippets. This is so users can copy snippets and override some of their behavior.
 
-These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead. This will speed up the starting of non-interactive or non-login shells.
+These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command ``status --is-interactive`` to determine if the shell is interactive. If you want to run a command only when using a login shell, use ``status --is-login`` instead. This will speed up the starting of non-interactive or non-login shells.
 
-If you are developing another program, you may wish to install configuration which is run for all users of the fish shell on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells will not benefit from the Fish-specific configuration. However, if they are absolutely required, you may install them to the "vendor" configuration directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of `pkg-config --variable confdir fish`.
+If you are developing another program, you may wish to install configuration which is run for all users of the fish shell on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells will not benefit from the Fish-specific configuration. However, if they are absolutely required, you may install them to the "vendor" configuration directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of ``pkg-config --variable confdir fish``.
 
 Examples:
 
-If you want to add the directory ``~/linux/bin`` to your PATH variable when using a login shell, add the following to your `~/.config/fish/config.fish` file::
+If you want to add the directory ``~/linux/bin`` to your PATH variable when using a login shell, add the following to your ``~/.config/fish/config.fish`` file::
 
     if status --is-login
         set -x PATH $PATH ~/linux/bin
     end
 
 
-If you want to run a set of commands when ``fish`` exits, use an `event handler <#event>`_ that is triggered by the exit of the shell::
+If you want to run a set of commands when fish exits, use an `event handler <#event>`_ that is triggered by the exit of the shell::
 
 
     function on_exit --on-event fish_exit

@@ -74,7 +74,7 @@ controllers.controller("colorsController", function($scope, $http) {
         $scope.noteThemeChanged();
     }
 
-    $scope.sampleTerminalBackgroundColors = ['white', '#' + solarized.base3, '#300', '#003', '#' + solarized.base03, '#232323', '#'+nord.nord0, 'black'];
+    $scope.sampleTerminalBackgroundColors = ['white', solarized.base3, '#300', '#003', solarized.base03, '#232323', nord.nord0, 'black'];
 
     /* Array of FishColorSchemes */
     $scope.colorSchemes = [color_scheme_fish_default, color_scheme_solarized_light, color_scheme_solarized_dark, color_scheme_tomorrow, color_scheme_tomorrow_night, color_scheme_tomorrow_night_bright, color_scheme_nord, color_scheme_base16_default_dark, color_scheme_base16_default_light, color_scheme_base16_eighties];
@@ -140,6 +140,11 @@ controllers.controller("colorsController", function($scope, $http) {
             } else {
                 selected = $scope.selectedColorScheme[name];
             }
+
+            if (selected.startsWith('#')) {
+                selected = selected.substring(1);
+            }
+
             var postData = "what=" + name + "&color=" + selected + "&background_color=&bold=&underline=&dim=&reverse=&italics=";
             $http.post("set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
             	if (status == 200) {

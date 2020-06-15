@@ -35,6 +35,8 @@ Notable improvements and fixes
 Syntax changes and new commands
 -------------------------------
 
+- New command ``fc`` to process the command history list.
+
 Scripting improvements
 ----------------------
 

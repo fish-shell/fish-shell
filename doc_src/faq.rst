@@ -300,6 +300,25 @@ For these reasons, fish does not do this, and instead expects asterisks to be qu
 
 This is similar to bash's "failglob" option.
 
+.. _faq-ssh-interactive:
+
+Why won't SSH/SCP/rsync connect properly when fish is my login shell?
+---------------------------------------------------------------------
+
+This problem may manifest as messages such as "``Received message too long``", "``open terminal
+failed: not a terminal``", "``Bad packet length``", or "``Connection refused``" with strange output
+in ``ssh_exchange_identification`` messages in the debug log.
+
+These problems are generally caused by the :ref:`user initialization file <initialization>` (usually
+``~/.config/fish/config.fish``) producing output when started in non-interactive mode.
+
+All statements in initialization files that output to the terminal should be guarded with something
+like the following::
+
+  if status is-interactive
+    ...
+  end
+
 .. _faq-unicode:
 
 I'm getting weird graphical glitches (a staircase effect, ghost characters,...)?

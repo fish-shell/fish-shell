@@ -130,7 +130,6 @@ fi
 
 # man files
 %{_mandir}/man1/*
-%{_datadir}/fish/man/man1/
 
 # The program binaries
 %attr(0755,root,root) %{_bindir}/*

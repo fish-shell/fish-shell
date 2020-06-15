@@ -81,8 +81,8 @@ function adjust_lightness(color_str, func) {
     }
 
     /* More hacks */
-    if (color_str == 'black') color_str = '#000000';
-    if (color_str == 'white') color_str = '#c0c0c0';
+    if (color_str == 'black') color_str = '000000';
+    if (color_str == 'white') color_str = 'c0c0c0';
 
 
     rgb = parseInt(color_str, 16)

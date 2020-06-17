@@ -31,6 +31,7 @@ Notable improvements and fixes
 - ``fish_preexec`` and ``fish_postexec`` events are no longer triggered
   for empty commands.
 - The ``test`` builtin now better shows where an error occured (#6030).
+- Add a helper function to know if the user is root (#7031).
 
 Syntax changes and new commands
 -------------------------------

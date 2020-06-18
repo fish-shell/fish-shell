@@ -135,7 +135,8 @@ class arg_iterator_t {
 // valid and get the result of parsing the command for flags.
 using options_t = struct options_t {  //!OCLINT(too many fields)
     bool all_valid = false;
-    bool chars_valid = false;
+    bool char_to_pad_valid = false;
+    bool chars_to_trim_valid = false;
     bool count_valid = false;
     bool entire_valid = false;
     bool filter_valid = false;
@@ -179,6 +180,8 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     long max = 0;
     long start = 0;
     long end = 0;
+
+    wchar_t char_to_pad = ' ';
 
     std::vector<int> fields;
 
@@ -242,8 +245,15 @@ static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams
 
 static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
-    if (opts->chars_valid) {
+    if (opts->chars_to_trim_valid) {
         opts->chars_to_trim = w.woptarg;
+        return STATUS_CMD_OK;
+    } else if (opts->char_to_pad_valid) {
+        if (wcslen(w.woptarg) != 1) {
+            string_error(streams, _(L"%ls: Padding should be a character '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        opts->char_to_pad = w.woptarg[0];
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -457,7 +467,8 @@ static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams
 static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath complexity)
     wcstring short_opts(L":");
     if (opts->all_valid) short_opts.append(L"a");
-    if (opts->chars_valid) short_opts.append(L"c:");
+    if (opts->char_to_pad_valid) short_opts.append(L"c:");
+    if (opts->chars_to_trim_valid) short_opts.append(L"c:");
     if (opts->count_valid) short_opts.append(L"n:");
     if (opts->entire_valid) short_opts.append(L"e");
     if (opts->filter_valid) short_opts.append(L"f");
@@ -1244,6 +1255,46 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wch
     return buff.size() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.char_to_pad_valid = true;
+    opts.count_valid = true;
+    opts.left_valid = true;
+    opts.right_valid = true;
+    opts.quiet_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    // If neither left or right is specified, we pad only on the left.
+    if (!opts.left && !opts.right) {
+        opts.left = true;
+        opts.right = false;
+    }
+
+    size_t npad = 0;
+
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wcstring *arg = aiter.nextstr()) {
+        size_t begin = 0, end = arg->size();
+        wcstring padded_arg = wcstring(*arg, 0, arg->size());
+        if (opts.right) {
+            padded_arg.append(opts.count, opts.char_to_pad);
+        }
+        if (opts.left) {
+            padded_arg.insert(0, opts.count, opts.char_to_pad);
+        }
+        // assert(begin <= end && end <= arg->size());
+        npad += arg->size() - (end - begin);
+        if (!opts.quiet) {
+            streams.out.append(padded_arg);
+            streams.out.append(L'\n');
+        }
+    }
+
+    return npad > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
 // Helper function to abstract the repeat logic from string_repeat
 // returns the to_repeat string, repeated count times.
 static wcstring wcsrepeat(const wcstring &to_repeat, size_t count) {
@@ -1362,7 +1413,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     options_t opts;
-    opts.chars_valid = true;
+    opts.chars_to_trim_valid = true;
     opts.left_valid = true;
     opts.right_valid = true;
     opts.quiet_valid = true;
@@ -1447,6 +1498,7 @@ string_subcommands[] = {
     {L"split", &string_split},   {L"split0", &string_split0},     {L"sub", &string_sub},
     {L"trim", &string_trim},     {L"lower", &string_lower},       {L"upper", &string_upper},
     {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {L"collect", &string_collect},
+    {L"pad", &string_pad},
     {nullptr, nullptr}};
 
 /// The string builtin, for manipulating strings.

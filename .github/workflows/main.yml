@@ -28,22 +28,23 @@ jobs:
       run: |
         make test
 
-  # macos:
+  macos:
 
-  #   runs-on: macos-latest
+    runs-on: macos-latest
 
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Install deps
-  #     run: |
-  #       brew install pcre2
-  #   - name: cmake
-  #     run: |
-  #       mkdir build && cd build
-  #       cmake .. 
-  #   - name: make
-  #     run: |
-  #       make
-  #   - name: make test
-  #     run: |
-  #       make test
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: |
+        brew install pcre2 python3
+        sudo pip3 install pexpect
+    - name: cmake
+      run: |
+        mkdir build && cd build
+        cmake ..
+    - name: make
+      run: |
+        make
+    - name: make test
+      run: |
+        make test

@@ -36,12 +36,12 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install deps
       run: |
-        brew install pcre2 python3
+        brew install python3
         sudo pip3 install pexpect
     - name: cmake
       run: |
         mkdir build && cd build
-        cmake ..
+        cmake -DWITH_GETTEXT=NO ..
     - name: make
       run: |
         make

@@ -42,6 +42,15 @@ string length "hello, world"
 string length -q ""; and echo not zero length; or echo zero length
 # CHECK: zero length
 
+string pad -l foo
+# CHECK: foo
+
+string pad -r -n 4 -c '-' foo
+# CHECK: foo----
+
+string pad --left --right -n 2 -c '=' foo
+# CHECK: ==foo==
+
 string sub --length 2 abcde
 # CHECK: ab
 

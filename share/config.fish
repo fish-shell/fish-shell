@@ -42,6 +42,9 @@ if status --is-interactive
         set -q fish_term24bit
         or set -g fish_term24bit 1
     end
+
+    abbr --add --global ll ls -lh
+    abbr --add --global la ls -lah
 else
     # Hook up the default as the principal command_not_found handler
     # in case we are not interactive

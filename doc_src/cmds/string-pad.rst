@@ -1,5 +1,5 @@
 string-pad - pad characters before and after string
-========================================
+===================================================
 
 Synopsis
 --------

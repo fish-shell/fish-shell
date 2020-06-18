@@ -9,7 +9,6 @@ matrix:
       addons:
         apt:
           packages:
-            - expect
             - gettext
             - libncurses5-dev
             - libpcre2-dev
@@ -25,7 +24,6 @@ matrix:
       addons:
         apt:
           packages: # Don't use libpcre2-dev here, so that one build uses the vendored code
-            - expect
             - gettext
             - lib32ncurses5-dev
             - g++-multilib
@@ -46,7 +44,6 @@ matrix:
       addons:
         apt:
           packages:
-            - expect
             - gettext
             - libncurses5-dev
             - libpcre2-dev
@@ -62,7 +59,6 @@ matrix:
       addons:
         apt:
           packages:
-            - expect
             - gettext
             - libncurses5-dev
             - libpcre2-dev

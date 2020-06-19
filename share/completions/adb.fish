@@ -49,7 +49,7 @@ function __fish_adb_run_command -d 'Runs adb with any -s parameters already give
 end
 
 function __fish_adb_list_packages
-    __fish_adb_run_command pm list packages 2>/dev/null | string replace 'package:' ''
+    __fish_adb_run_command pm list packages 2\>/dev/null | string replace 'package:' ''
 end
 
 
@@ -67,9 +67,9 @@ function __fish_adb_list_files
     end
 
     # Return list of directories suffixed with '/'
-    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type d 2>/dev/null | awk '{print $1"/"}'
+    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type d 2\>/dev/null | awk '{print $1"/"}'
     # Return list of files
-    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type f 2>/dev/null
+    __fish_adb_run_command find -H "$token*" -maxdepth 0 -type f 2\>/dev/null
 end
 
 

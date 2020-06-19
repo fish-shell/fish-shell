@@ -647,6 +647,8 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_lflag &= ~ICANON;  // turn off canonical mode
     modes->c_lflag &= ~ECHO;    // turn off echo mode
     modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
+    modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
+    modes->c_oflag |= OPOST;  // turn on "implementation-defined post processing" - this often changes how line breaks work.
 }
 
 /// Tracks a currently pending exit. This may be manipulated from a signal handler.
@@ -680,13 +682,19 @@ static void term_donate(outputter_t &outp) {
 /// Grab control of terminal.
 static void term_steal() {
     // Copy the (potentially changed) terminal modes and use them from now on.
-    // This is where we could check them for obvious problems,
-    // but we haven't really done so - we use the modes fish is started with for
-    // external commands.
     struct termios modes;
     tcgetattr(STDIN_FILENO, &modes);
     std::memcpy(&tty_modes_for_external_cmds, &modes,
                 sizeof tty_modes_for_external_cmds);
+    // Turning off OPOST breaks output (staircase effect), we don't allow it.
+    // See #7133.
+    tty_modes_for_external_cmds.c_oflag |= OPOST;
+    // These cause other ridiculous behaviors like input not being shown.
+    tty_modes_for_external_cmds.c_lflag |= ICANON;
+    tty_modes_for_external_cmds.c_lflag |= IEXTEN;
+    tty_modes_for_external_cmds.c_lflag |= ECHO;
+
+
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
@@ -1111,6 +1119,7 @@ void reader_init() {
     // Disable flow control for external commands by default.
     tty_modes_for_external_cmds.c_iflag &= ~IXON;
     tty_modes_for_external_cmds.c_iflag &= ~IXOFF;
+    tty_modes_for_external_cmds.c_oflag |= OPOST;
 
     // Set the mode used for the terminal, initialized to the current mode.
     std::memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);

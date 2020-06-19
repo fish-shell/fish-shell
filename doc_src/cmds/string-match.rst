@@ -85,13 +85,13 @@ Match Regex Examples
     cat4
     dog4
 
-    >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
+    >_ string match -r '(\d\d?):(\d\d):(\d\d)' 2:34:56
     2:34:56
     2
     34
     56
 
-    >_ string match -r '^(\\w{{2,4}})\\g1$' papa mud murmur
+    >_ string match -r '^(\w{2,4})\1$' papa mud murmur
     papa
     pa
     murmur

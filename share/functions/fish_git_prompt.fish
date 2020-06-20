@@ -529,10 +529,7 @@ function __fish_git_prompt_dirty --description "fish_git_prompt helper, tells wh
     return $os
 end
 
-set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
-if set -q __fish_git_prompt_showstashstate
-    set -a ___fish_git_prompt_status_order stashstate
-end
+set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 
 function __fish_git_prompt_informative_status
 

@@ -212,6 +212,7 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
     // Binary search
     named_color_t search;
     search.name = str.c_str();
+    auto len = str.length();
 
     // Optimized conversion to lowercase with early abort
     wcstring lowercase;
@@ -231,7 +232,8 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
 
     auto result = std::lower_bound(named_colors_begin, named_colors_end, search,
             [&](const named_color_t &c1, const named_color_t &c2) {
-            return wcscmp(c1.name, c2.name) < 0; });
+                return wcsncmp(c1.name, c2.name, len) < 0;
+            });
 
     if (result != named_colors_end && !(wcscmp(search.name, result->name) < 0)) {
         data.name_idx = result->idx;

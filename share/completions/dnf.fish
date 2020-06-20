@@ -8,7 +8,11 @@ end
 
 function __dnf_list_available_packages
     if type -q sqlite3
-        sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE \"$cur%\"" 2>/dev/null
+        # This schema is bad, there is only a "pkg" field with the full
+        #    packagename-version-release.fedorarelease.architecture
+        # tuple. We are only interested in the packagename.
+        sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE \"$cur%\"" 2>/dev/null |
+        string replace -r -- '-[^-]*-[^-]*$' ''
     end
 end
 

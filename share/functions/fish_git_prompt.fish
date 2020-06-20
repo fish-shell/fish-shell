@@ -507,26 +507,14 @@ function __fish_git_prompt_staged --description "fish_git_prompt helper, tells w
 end
 
 function __fish_git_prompt_untracked --description "fish_git_prompt helper, tells whether or not the current repository has untracked files"
-    set -l ret 1
-    if command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>&1
-        set ret $status
-        set untracked $___fish_git_prompt_char_untrackedfiles
-    end
-    echo $untracked
-    return $ret
+    command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>&1
+    and echo $___fish_git_prompt_char_untrackedfiles
 end
 
 function __fish_git_prompt_dirty --description "fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
-    set -l dirty
-
     # Like staged, invert the status because we want 0 to mean there are dirty files.
     not command git diff --no-ext-diff --quiet --exit-code 2>/dev/null
-    set -l os $status
-    if test $os -eq 0
-        set dirty $___fish_git_prompt_char_dirtystate
-    end
-    echo $dirty
-    return $os
+    and echo $___fish_git_prompt_char_dirtystate
 end
 
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate

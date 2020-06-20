@@ -796,7 +796,7 @@ for var in repaint describe_style show_informative_status use_informative_chars 
 end
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"
     if status --is-interactive
-        if test $argv[3] = __fish_git_prompt_show_informative_status
+        if contains -- $argv[3] __fish_git_prompt_show_informative_status __fish_git_prompt_use_informative_chars
             # Clear characters that have different defaults with/without informative status
             for name in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind
                 set -e ___fish_git_prompt_char_$name

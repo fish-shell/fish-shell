@@ -1256,9 +1256,12 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wch
 }
 
 static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
+
     options_t opts;
     opts.char_to_pad_valid = true;
     opts.count_valid = true;
+    opts.max_valid = true;
     opts.left_valid = true;
     opts.right_valid = true;
     opts.quiet_valid = true;
@@ -1272,21 +1275,56 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         opts.right = false;
     }
 
+    // If both count and max is specified, we raise an error.
+    if (opts.count && opts.max) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--count and --max are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
+
     size_t npad = 0;
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        wcstring padded_arg = wcstring(*arg, 0, arg->size());
-        if (opts.right) {
-            padded_arg.append(opts.count, opts.char_to_pad);
+        wcstring padded = wcstring(*arg);
+        size_t pad_left = 0;
+        size_t pad_right = 0;
+
+        if (opts.count && opts.right) {
+            pad_right = opts.count;
         }
-        if (opts.left) {
-            padded_arg.insert(0, opts.count, opts.char_to_pad);
+
+        if (opts.count && opts.left) {
+            pad_left = opts.count;
         }
-        // assert(begin <= end && end <= arg->size());
-        npad += arg->size() + 2 * opts.count;
+
+        if (opts.max >= padded.size()) {
+            if (opts.left && opts.right) {
+                // pad_left will get one more character
+                pad_left = (opts.max - padded.size() + 1) / 2;
+                pad_right = (opts.max - padded.size()) / 2;
+            }
+
+            if (!opts.left && opts.right) {
+                pad_right = opts.max - padded.size();
+            }
+
+            if (opts.left && !opts.right) {
+                pad_left = opts.max - padded.size();
+            }
+        }
+
+        if (pad_left) {
+            padded.insert(0, pad_left, opts.char_to_pad);
+        }
+
+        if (pad_right) {
+            padded.append(pad_right, opts.char_to_pad);
+        }
+
+        npad += padded.size();
         if (!opts.quiet) {
-            streams.out.append(padded_arg);
+            streams.out.append(padded);
             streams.out.append(L'\n');
         }
     }

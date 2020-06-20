@@ -693,6 +693,8 @@ static void term_steal() {
     tty_modes_for_external_cmds.c_lflag |= ICANON;
     tty_modes_for_external_cmds.c_lflag |= IEXTEN;
     tty_modes_for_external_cmds.c_lflag |= ECHO;
+    tty_modes_for_external_cmds.c_iflag |= ICRNL;
+    tty_modes_for_external_cmds.c_iflag |= INLCR;
 
 
     while (true) {

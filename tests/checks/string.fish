@@ -45,11 +45,23 @@ string length -q ""; and echo not zero length; or echo zero length
 string pad -l foo
 # CHECK: foo
 
+string pad -l -n 2 foo
+# CHECK:   foo
+
 string pad -r -n 4 -c '-' foo
 # CHECK: foo----
 
 string pad --left --right -n 2 -c '=' foo
 # CHECK: ==foo==
+
+string pad --left -m 4 -c '=' foo
+# CHECK: =foo
+
+string pad --left --right -m 6 --chars '=' foo
+# CHECK: ==foo=
+
+string pad --left --right -m 7 --chars '-' bar
+# CHECK: --bar--
 
 string sub --length 2 abcde
 # CHECK: ab

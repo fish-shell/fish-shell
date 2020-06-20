@@ -528,11 +528,9 @@ bool parser_t::function_stack_is_overflowing() const {
         return false;
     }
     // Count the functions.
-    int depth = 0;
-    for (const auto &b : block_list) {
-        depth += b.is_function_call();
-    }
-    return depth > FISH_MAX_STACK_DEPTH;
+    return std::accumulate(block_list.begin(), block_list.end(), 0, [](int d, const block_t &b) {
+               return d + b.is_function_call();
+           }) > FISH_MAX_STACK_DEPTH;
 }
 
 wcstring parser_t::current_line() {

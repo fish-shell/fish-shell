@@ -6,6 +6,7 @@
 #include <wctype.h>
 
 #include <locale>
+#include <numeric>
 
 #include "common.h"
 
@@ -178,10 +179,8 @@ wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
 
     // Reserve the size we will need.
     // count-1 separators, plus the length of all strings.
-    size_t size = vals.size() - 1;
-    for (const wcstring &s : vals) {
-        size += s.size();
-    }
+    size_t size = std::accumulate(vals.begin(), vals.end(), (vals.size() - 1),
+                                  [](size_t a, const wcstring &s) { return a + s.size(); });
 
     // Construct the string.
     wcstring result;

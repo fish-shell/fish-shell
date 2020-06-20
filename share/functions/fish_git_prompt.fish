@@ -408,7 +408,11 @@ function fish_git_prompt --description "Prompt function for Git"
             # This has to be set explicitly.
             if test "$dirty" = true
                 set w (__fish_git_prompt_dirty)
-                set i (__fish_git_prompt_staged $sha)
+                if test -n "$sha"
+                    set i (__fish_git_prompt_staged)
+                else
+                    set i $___fish_git_prompt_char_invalidstate
+                end
             end
 
             if set -q __fish_git_prompt_showstashstate
@@ -485,23 +489,11 @@ end
 ### helper functions
 
 function __fish_git_prompt_staged --description "fish_git_prompt helper, tells whether or not the current branch has staged files"
-    set -l sha $argv[1]
-    set -l staged
-    set -l ret 0
-
-    if test -n "$sha"
-        # The "diff" functions all return > 0 if there _is_ a diff,
-        # but we want to return 0 if there are staged changes.
-        # So we invert the status.
-        not command git diff-index --cached --quiet HEAD -- 2>/dev/null
-        and set staged $___fish_git_prompt_char_stagedstate
-        set ret $status
-    else
-        set staged $___fish_git_prompt_char_invalidstate
-        set ret 2
-    end
-    echo $staged
-    return $ret
+    # The "diff" functions all return > 0 if there _is_ a diff,
+    # but we want to return 0 if there are staged changes.
+    # So we invert the status.
+    not command git diff-index --cached --quiet HEAD -- 2>/dev/null
+    and echo $___fish_git_prompt_char_stagedstate
 end
 
 function __fish_git_prompt_untracked --description "fish_git_prompt helper, tells whether or not the current repository has untracked files"

@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cwchar>  // IWYU pragma: keep
+#include <cwctype>
+#include <algorithm>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -150,29 +152,40 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name) {
 
 struct named_color_t {
     const wchar_t *name;
-    unsigned char idx;
+    uint8_t idx;
     unsigned char rgb[3];
     bool hidden;
 };
 
-static const named_color_t named_colors[] = {
-    {L"black", 0, {0x00, 0x00, 0x00}, false},      {L"red", 1, {0x80, 0x00, 0x00}, false},
-    {L"green", 2, {0x00, 0x80, 0x00}, false},      {L"brown", 3, {0x72, 0x50, 0x00}, true},
-    {L"yellow", 3, {0x80, 0x80, 0x00}, false},     {L"blue", 4, {0x00, 0x00, 0x80}, false},
-    {L"magenta", 5, {0x80, 0x00, 0x80}, false},    {L"purple", 5, {0x80, 0x00, 0x80}, true},
-    {L"cyan", 6, {0x00, 0x80, 0x80}, false},       {L"white", 7, {0xC0, 0xC0, 0xC0}, false},
-    {L"grey", 7, {0xE5, 0xE5, 0xE5}, true},        {L"brblack", 8, {0x80, 0x80, 0x80}, false},
-    {L"brgrey", 8, {0x55, 0x55, 0x55}, true},      {L"brred", 9, {0xFF, 0x00, 0x00}, false},
-    {L"brgreen", 10, {0x00, 0xFF, 0x00}, false},   {L"brbrown", 11, {0xFF, 0xFF, 0x00}, true},
-    {L"bryellow", 11, {0xFF, 0xFF, 0x00}, false},  {L"brblue", 12, {0x00, 0x00, 0xFF}, false},
-    {L"brmagenta", 13, {0xFF, 0x00, 0xFF}, false}, {L"brpurple", 13, {0xFF, 0x00, 0xFF}, true},
-    {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},
+// Keep this sorted alphabetically
+static const std::vector<named_color_t> named_colors {
+    {L"black", 0, {0x00, 0x00, 0x00}, false},
+    {L"blue", 4, {0x00, 0x00, 0x80}, false},
+    {L"brblack", 8, {0x80, 0x80, 0x80}, false},
+    {L"brblue", 12, {0x00, 0x00, 0xFF}, false},
+    {L"brbrown", 11, {0xFF, 0xFF, 0x00}, true},
+    {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},
+    {L"brgreen", 10, {0x00, 0xFF, 0x00}, false},
+    {L"brgrey", 8, {0x55, 0x55, 0x55}, true},
+    {L"brmagenta", 13, {0xFF, 0x00, 0xFF}, false},
+    {L"brown", 3, {0x72, 0x50, 0x00}, true},
+    {L"brpurple", 13, {0xFF, 0x00, 0xFF}, true},
+    {L"brred", 9, {0xFF, 0x00, 0x00}, false},
+    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},
+    {L"bryellow", 11, {0xFF, 0xFF, 0x00}, false},
+    {L"cyan", 6, {0x00, 0x80, 0x80}, false},
+    {L"green", 2, {0x00, 0x80, 0x00}, false},
+    {L"grey", 7, {0xE5, 0xE5, 0xE5}, true},
+    {L"magenta", 5, {0x80, 0x00, 0x80}, false},
+    {L"purple", 5, {0x80, 0x00, 0x80}, true},
+    {L"red", 1, {0x80, 0x00, 0x00}, false},
+    {L"white", 7, {0xC0, 0xC0, 0xC0}, false},
+    {L"yellow", 3, {0x80, 0x80, 0x00}, false},
 };
 
 wcstring_list_t rgb_color_t::named_color_names() {
-    const size_t count = sizeof named_colors / sizeof *named_colors;
     wcstring_list_t result;
-    result.reserve(1 + count);
+    result.reserve(1 + named_colors.size());
     for (const auto &named_color : named_colors) {
         if (!named_color.hidden) {
             result.push_back(named_color.name);
@@ -188,23 +201,53 @@ wcstring_list_t rgb_color_t::named_color_names() {
 }
 
 bool rgb_color_t::try_parse_named(const wcstring &str) {
+    static auto named_colors_begin = named_colors.begin();
+    static auto named_colors_end = named_colors.end();
     std::memset(&data, 0, sizeof data);
-    size_t max = sizeof named_colors / sizeof *named_colors;
-    for (size_t idx = 0; idx < max; idx++) {
-        if (0 == wcscasecmp(str.c_str(), named_colors[idx].name)) {
-            data.name_idx = named_colors[idx].idx;
-            this->type = type_named;
-            return true;
-        }
+
+    if (str.size() == 0) {
+        return false;
     }
+
+    // Binary search
+    named_color_t search;
+    search.name = str.c_str();
+
+    // Optimized conversion to lowercase with early abort
+    wcstring lowercase;
+    for (auto &c : str) {
+        if (c >= L'a' && c <= L'z') {
+            continue;
+        }
+        if (c >= L'A' && c <= L'Z') {
+            lowercase.reserve(str.length());
+            std::transform(str.begin(), str.end(), lowercase.begin(), std::towlower);
+            search.name = lowercase.c_str();
+            break;
+        }
+        // Cannot be a named color
+        return false;
+    }
+
+    auto result = std::lower_bound(named_colors_begin, named_colors_end, search,
+            [&](const named_color_t &c1, const named_color_t &c2) {
+            return wcscmp(c1.name, c2.name) < 0; });
+
+    if (result != named_colors_end && !(wcscmp(search.name, result->name) < 0)) {
+        data.name_idx = result->idx;
+        this->type = type_named;
+        return true;
+    }
+
     return false;
 }
 
 static const wchar_t *name_for_color_idx(unsigned char idx) {
-    size_t max = sizeof named_colors / sizeof *named_colors;
-    for (size_t i = 0; i < max; i++) {
-        if (named_colors[i].idx == idx) {
-            return named_colors[i].name;
+    if (idx < named_colors.size()) {
+        for (auto &color : named_colors) {
+            if (idx == color.idx) {
+                return color.name;
+            }
         }
     }
     return L"unknown";

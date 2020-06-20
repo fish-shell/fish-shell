@@ -175,8 +175,6 @@
 # __fish_git_prompt_shorten_branch_char_suffix. Customize suffixed char of shorten branch. Defaults to (…).
 
 function __fish_git_prompt_show_upstream --description "Helper function for fish_git_prompt"
-    set -q __fish_git_prompt_showupstream
-    or set -l __fish_git_prompt_showupstream
     set -l show_upstream $__fish_git_prompt_showupstream
     set -l svn_prefix # For better SVN upstream information
     set -l informative
@@ -624,8 +622,7 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     end
 
     if test -z "$branch"
-        set branch (command git symbolic-ref HEAD 2>/dev/null; set os $status)
-        if test $os -ne 0
+        if not set branch (command git symbolic-ref HEAD 2>/dev/null)
             set detached yes
             set branch (switch "$__fish_git_prompt_describe_style"
 						case contains

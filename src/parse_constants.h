@@ -13,6 +13,17 @@
         exit_without_destructors(-1);  \
     } while (0)
 
+// A range of source code.
+struct source_range_t {
+    uint32_t start;
+    uint32_t length;
+
+    uint32_t end() const {
+        assert(start + length >= start && "Overflow");
+        return start + length;
+    }
+};
+
 // IMPORTANT: If the following enum table is modified you must also update token_enum_map below.
 enum parse_token_type_t : uint8_t {
     token_type_invalid = 1,
@@ -193,6 +204,26 @@ enum parse_error_code_t {
     parse_error_andor_in_pipeline,         // "and" or "or" after a pipe
 };
 
+enum {
+    parse_flag_none = 0,
+
+    /// Attempt to build a "parse tree" no matter what. This may result in a 'forest' of
+    /// disconnected trees. This is intended to be used by syntax highlighting.
+    parse_flag_continue_after_error = 1 << 0,
+    /// Include comment tokens.
+    parse_flag_include_comments = 1 << 1,
+    /// Indicate that the tokenizer should accept incomplete tokens */
+    parse_flag_accept_incomplete_tokens = 1 << 2,
+    /// Indicate that the parser should not generate the terminate token, allowing an 'unfinished'
+    /// tree where some nodes may have no productions.
+    parse_flag_leave_unterminated = 1 << 3,
+    /// Indicate that the parser should generate job_list entries for blank lines.
+    parse_flag_show_blank_lines = 1 << 4,
+    /// Indicate that extra semis should be generated.
+    parse_flag_show_extra_semis = 1 << 5,
+};
+typedef unsigned int parse_tree_flags_t;
+
 enum { PARSER_TEST_ERROR = 1, PARSER_TEST_INCOMPLETE = 2 };
 typedef unsigned int parser_test_error_bits_t;
 
@@ -213,6 +244,9 @@ struct parse_error_t {
                                   bool skip_caret) const;
 };
 typedef std::vector<parse_error_t> parse_error_list_t;
+
+wcstring token_type_user_presentable_description(parse_token_type_t type,
+                                                 parse_keyword_t keyword = parse_keyword_t::none);
 
 // Special source_start value that means unknown.
 #define SOURCE_LOCATION_UNKNOWN (static_cast<size_t>(-1))

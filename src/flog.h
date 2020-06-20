@@ -67,6 +67,7 @@ class category_list_t {
     category_t parse_productions{L"parse-productions", L"Resolving tokens"};
     category_t parse_productions_chatty{L"parse-productions-chatty",
                                         L"Resolving tokens (chatty messages)"};
+    category_t ast_construction{L"ast-construction", L"Parsing fish AST"};
 
     category_t proc_job_run{L"proc-job-run", L"Jobs getting started or continued"};
 

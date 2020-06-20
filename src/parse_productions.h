@@ -4,6 +4,7 @@
 
 #include <sys/types.h>
 
+#include "ast.h"
 #include "parse_constants.h"
 
 struct parse_token_t;

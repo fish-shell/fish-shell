@@ -255,7 +255,7 @@ DEF_ALT(variable_assignments) {
 // A string token like VAR=value
 DEF(variable_assignment) produces_single<tok_string>{BODY(variable_assignment)};
 
-// A statement is a normal command, or an if / while / and etc
+// A statement is a normal command, or an if / while / etc
 DEF_ALT(statement) {
     using nots = single<not_statement>;
     using block = single<block_statement>;

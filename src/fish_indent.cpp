@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <tuple>
 #include <vector>
 
+#include "ast.h"
 #include "color.h"
 #include "common.h"
 #include "env.h"
@@ -404,6 +405,12 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
     if (dump_parse_tree) {
         const wcstring dump = parse_dump_tree(parse_tree, src);
         std::fwprintf(stderr, L"%ls\n", dump.c_str());
+
+        auto ast =
+            ast::ast_t::parse(src, parse_flag_leave_unterminated | parse_flag_include_comments |
+                                       parse_flag_show_extra_semis);
+        wcstring ast_dump = ast.dump(src);
+        std::fwprintf(stderr, L"%ls\n", ast_dump.c_str());
     }
 
     // We may have a forest of disconnected trees on a parse failure. We have to handle all nodes

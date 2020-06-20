@@ -30,7 +30,7 @@ static bool production_is_empty(const production_element_t *production) {
     return *production == token_type_invalid;
 }
 
-static parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err) {
+parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err) {
     switch (err) {
         case tokenizer_error_t::none:
             return parse_error_none;
@@ -168,8 +168,7 @@ const wchar_t *keyword_description(parse_keyword_t type) {
     return L"unknown_keyword";
 }
 
-static wcstring token_type_user_presentable_description(
-    parse_token_type_t type, parse_keyword_t keyword = parse_keyword_t::none) {
+wcstring token_type_user_presentable_description(parse_token_type_t type, parse_keyword_t keyword) {
     if (keyword != parse_keyword_t::none) {
         return format_string(L"keyword '%ls'", keyword_description(keyword));
     }
@@ -1078,8 +1077,7 @@ static inline bool is_help_argument(const wcstring &txt) {
 }
 
 /// Return a new parse token, advancing the tokenizer.
-static inline parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *out_token,
-                                             wcstring *storage) {
+parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *out_token, wcstring *storage) {
     *out_token = tok->next();
     if (!out_token->has_value()) {
         return kTerminalToken;
@@ -1098,7 +1096,8 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *o
     result.is_help_argument = result.has_dash_prefix && is_help_argument(text);
     result.is_newline = (result.type == parse_token_type_end && text == L"\n");
     result.preceding_escaped_nl = token.preceding_escaped_nl;
-    result.may_be_variable_assignment = bool(variable_assignment_equals_pos(text));
+    result.may_be_variable_assignment = variable_assignment_equals_pos(text).has_value();
+    result.tok_error = token.error;
 
     // These assertions are totally bogus. Basically our tokenizer works in size_t but we work in
     // uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably just

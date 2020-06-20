@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#include <deque>
 #include <memory>
 #include <vector>
 
@@ -25,11 +26,6 @@ typedef uint32_t source_offset_t;
 
 constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
 
-struct source_range_t {
-    uint32_t start;
-    uint32_t length;
-};
-
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
     enum parse_token_type_t type;  // The type of the token as represented by the parser
@@ -41,8 +37,19 @@ struct parse_token_t {
     bool is_newline{false};            // Hackish: if TOK_END, whether the source is a newline.
     bool preceding_escaped_nl{false};  // Whether there was an escaped newline preceding this token.
     bool may_be_variable_assignment{false};  // Hackish: whether this token is a string like FOO=bar
+    tokenizer_error_t tok_error{tokenizer_error_t::none}; // If this is a tokenizer error, that error.
     source_offset_t source_start{SOURCE_OFFSET_INVALID};
     source_offset_t source_length{0};
+
+    /// \return the source range.
+    source_range_t range() const {
+        return source_range_t{source_start, source_length};
+    }
+
+    /// \return whether we are a string with the dash prefix set.
+    bool is_dash_prefix_string() const {
+        return type == parse_token_type_string && has_dash_prefix;
+    }
 
     wcstring describe() const;
     wcstring user_presentable_description() const;
@@ -50,28 +57,15 @@ struct parse_token_t {
     constexpr parse_token_t(parse_token_type_t type) : type(type) {}
 };
 
-enum {
-    parse_flag_none = 0,
-
-    /// Attempt to build a "parse tree" no matter what. This may result in a 'forest' of
-    /// disconnected trees. This is intended to be used by syntax highlighting.
-    parse_flag_continue_after_error = 1 << 0,
-    /// Include comment tokens.
-    parse_flag_include_comments = 1 << 1,
-    /// Indicate that the tokenizer should accept incomplete tokens */
-    parse_flag_accept_incomplete_tokens = 1 << 2,
-    /// Indicate that the parser should not generate the terminate token, allowing an 'unfinished'
-    /// tree where some nodes may have no productions.
-    parse_flag_leave_unterminated = 1 << 3,
-    /// Indicate that the parser should generate job_list entries for blank lines.
-    parse_flag_show_blank_lines = 1 << 4
-};
-typedef unsigned int parse_tree_flags_t;
+/// Return a new parse token, advancing the tokenizer.
+parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *out_token, wcstring *storage);
 
 wcstring parse_dump_tree(const parse_node_tree_t &nodes, const wcstring &src);
 
 const wchar_t *token_type_description(parse_token_type_t type);
 const wchar_t *keyword_description(parse_keyword_t type);
+
+parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err);
 
 // Node flags.
 enum {

@@ -385,14 +385,9 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
                              const wcstring &working_directory, const environment_t &vars);
 
 static bool has_expand_reserved(const wcstring &str) {
-    bool result = false;
-    for (auto wc : str) {
-        if (wc >= EXPAND_RESERVED_BASE && wc <= EXPAND_RESERVED_END) {
-            result = true;
-            break;
-        }
-    }
-    return result;
+    return std::any_of(str.begin(), str.end(), [](const wchar_t &wc) {
+        return wc >= EXPAND_RESERVED_BASE && wc <= EXPAND_RESERVED_END;
+    });
 }
 
 // Parse a command line. Return by reference the first command, and the first argument to that

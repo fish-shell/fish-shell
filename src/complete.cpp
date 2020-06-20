@@ -588,14 +588,9 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
         return;
     }
 
-    bool skip = true;
-    for (const auto &c : completions) {
-        if (c.completion.empty() || (c.completion[c.completion.size() - 1] != L'/')) {
-            skip = false;
-            break;
-        }
-    }
-
+    bool skip = std::none_of(completions.begin(), completions.end(), [](completion_t &c) {
+        return c.completion.empty() || (c.completion[c.completion.size() - 1] != L'/');
+    });
     if (skip) {
         return;
     }

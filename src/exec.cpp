@@ -386,12 +386,9 @@ static bool exec_internal_builtin_proc(parser_t &parser, process_t *p, const io_
     } else {
         // We are not a pipe. Check if there is a redirection local to the process
         // that's not io_mode_t::close.
-        for (const auto &redir : p->redirection_specs()) {
-            if (redir.fd == STDIN_FILENO && !redir.is_close()) {
-                stdin_is_directly_redirected = true;
-                break;
-            }
-        }
+        stdin_is_directly_redirected = std::any_of(
+            p->redirection_specs().begin(), p->redirection_specs().end(),
+            [](const redirection_spec_t &r) { return r.fd == STDIN_FILENO && !r.is_close(); });
     }
 
     // Pull out the IOs for stdout and stderr.

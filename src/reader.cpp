@@ -1710,13 +1710,9 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
 
     // Determine whether we are going to replace the token or not. If any commands of the best
     // type do not require replacement, then ignore all those that want to use replacement.
-    bool will_replace_token = true;
-    for (const completion_t &el : comp) {
-        if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
-            will_replace_token = false;
-            break;
-        }
-    }
+    bool will_replace_token = std::none_of(comp.begin(), comp.end(), [=](const completion_t &el) {
+        return el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN);
+    });
 
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.

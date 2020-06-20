@@ -358,13 +358,9 @@ bool pager_t::completion_info_passes_filter(const comp_t &info) const {
     }
 
     // Match against the completion strings.
-    for (const auto &i : info.comp) {
-        if (string_fuzzy_match_string(needle, prefix + i, limit).type != fuzzy_match_none) {
-            return true;
-        }
-    }
-
-    return false;  // no match
+    return std::any_of(info.comp.begin(), info.comp.end(), [&](const wcstring &i) {
+        return string_fuzzy_match_string(needle, prefix + i, limit).type != fuzzy_match_none;
+    });
 }
 
 // Update completion_infos from unfiltered_completion_infos, to reflect the filter.

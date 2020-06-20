@@ -1341,13 +1341,10 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         parser->job_add(job);
 
         // Check to see if this contained any external commands.
-        bool job_contained_external_command = false;
-        for (const auto &proc : job->processes) {
-            if (proc->type == process_type_t::external) {
-                job_contained_external_command = true;
-                break;
-            }
-        }
+        bool job_contained_external_command = std::any_of(
+            job->processes.begin(), job->processes.end(), [](const std::unique_ptr<process_t> &p) {
+                return p->type == process_type_t::external;
+            });
 
         // Actually execute the job.
         if (!exec_job(*this->parser, job, block_io)) {

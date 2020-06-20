@@ -120,23 +120,15 @@ void release_job_id(job_id_t jid) {
 
 /// Return true if all processes in the job have stopped or completed.
 bool job_t::is_stopped() const {
-    for (const process_ptr_t &p : processes) {
-        if (!p->completed && !p->stopped) {
-            return false;
-        }
-    }
-    return true;
+    return std::none_of(processes.begin(), processes.end(),
+                        [](const process_ptr_t &p) { return !p->completed && !p->stopped; });
 }
 
 /// Return true if the last processes in the job has completed.
 bool job_t::is_completed() const {
     assert(!processes.empty());
-    for (const process_ptr_t &p : processes) {
-        if (!p->completed) {
-            return false;
-        }
-    }
-    return true;
+    return std::none_of(processes.begin(), processes.end(),
+                        [](const process_ptr_t &p) { return !p->completed; });
 }
 
 bool job_t::should_report_process_exits() const {
@@ -156,12 +148,8 @@ bool job_t::should_report_process_exits() const {
     }
 
     // Return whether we have an external process.
-    for (const auto &p : this->processes) {
-        if (p->type == process_type_t::external) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(this->processes.begin(), this->processes.end(),
+                       [](const process_ptr_t &p) { return p->type == process_type_t::external; });
 }
 
 bool job_t::job_chain_is_fully_constructed() const { return group->is_root_constructed(); }
@@ -395,17 +383,13 @@ void job_t::mark_constructed() {
 }
 
 bool job_t::has_internal_proc() const {
-    for (const auto &p : processes) {
-        if (p->is_internal()) return true;
-    }
-    return false;
+    return std::any_of(processes.begin(), processes.end(),
+                       [](const process_ptr_t &p) { return p->is_internal(); });
 }
 
 bool job_t::has_external_proc() const {
-    for (const auto &p : processes) {
-        if (!p->is_internal()) return true;
-    }
-    return false;
+    return std::none_of(processes.begin(), processes.end(),
+                        [](const process_ptr_t &p) { return p->is_internal(); });
 }
 
 /// A list of pids/pgids that have been disowned. They are kept around until either they exit or

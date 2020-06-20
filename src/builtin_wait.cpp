@@ -33,14 +33,10 @@ static job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
 }
 
 static bool all_jobs_finished(const parser_t &parser) {
-    for (const auto &j : parser.jobs()) {
-        // If any job is not completed, return false.
-        // If there are stopped jobs, they are ignored.
-        if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
-            return false;
-        }
-    }
-    return true;
+    return std::none_of(parser.jobs().begin(), parser.jobs().end(),
+                        [](const std::shared_ptr<job_t> &j) {
+                            return j->is_constructed() && !j->is_completed() && !j->is_stopped();
+                        });
 }
 
 static bool any_jobs_finished(size_t jobs_len, const parser_t &parser) {

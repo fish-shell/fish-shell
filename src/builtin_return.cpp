@@ -90,13 +90,8 @@ int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     // Find the function block.
-    bool has_function_block = false;
-    for (const auto &b : parser.blocks()) {
-        if (b.is_function_call()) {
-            has_function_block = true;
-            break;
-        }
-    }
+    bool has_function_block = std::any_of(parser.blocks().begin(), parser.blocks().end(),
+                                          [](const block_t &b) { return b.is_function_call(); });
 
     if (!has_function_block) {
         streams.err.append_format(_(L"%ls: Not inside of function\n"), cmd);

@@ -790,13 +790,9 @@ static void unexpand_tildes(const wcstring &input, const environment_t &vars,
 
     // We only operate on completions that replace their contents. If we don't have any, we're done.
     // In particular, empty vectors are common.
-    bool has_candidate_completion = false;
-    for (const auto &completion : *completions) {
-        if (completion.flags & COMPLETE_REPLACES_TOKEN) {
-            has_candidate_completion = true;
-            break;
-        }
-    }
+    bool has_candidate_completion =
+        std::any_of(completions->begin(), completions->end(),
+                    [](const completion_t &c) { return c.flags & COMPLETE_REPLACES_TOKEN; });
     if (!has_candidate_completion) return;
 
     size_t tail_idx;

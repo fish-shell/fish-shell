@@ -171,23 +171,15 @@ void parser_t::pop_block(const block_t *expected) {
     if (old.wants_pop_env) vars().pop();
 
     // Figure out if `status is-block` should consider us to be in a block now.
-    bool new_is_block = false;
-    for (const auto &b : block_list) {
-        if (b.type() != block_type_t::top && b.type() != block_type_t::subst) {
-            new_is_block = true;
-            break;
-        }
-    }
+    bool new_is_block = std::any_of(block_list.begin(), block_list.end(), [](const block_t &b) {
+        return b.type() != block_type_t::top && b.type() != block_type_t::subst;
+    });
     libdata().is_block = new_is_block;
 
     // Are we still in a breakpoint?
-    bool new_is_breakpoint = false;
-    for (const auto &b : block_list) {
-        if (b.type() == block_type_t::breakpoint) {
-            new_is_breakpoint = true;
-            break;
-        }
-    }
+    bool new_is_breakpoint =
+        std::any_of(block_list.begin(), block_list.end(),
+                    [](const block_t &b) { return b.type() == block_type_t::breakpoint; });
     libdata().is_breakpoint = new_is_breakpoint;
 }
 

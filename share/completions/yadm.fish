@@ -12,7 +12,7 @@ end
 # Config values accepted by `yadm config`
 # See `yadm gitconfig` for setting git config values
 function __fish_yadm_config_keys
-    yadm introspect configs | string replace \n " "
+    yadm introspect configs
 end
 
 set -l __fish_yadm_subcommands (yadm introspect commands)
@@ -71,7 +71,7 @@ function __fish_complete_yadm_like_git
     set -l git_wrapper_cmd "git --work-tree $yadm_work_tree --git-dir $yadm_repo $cmdline"
 
     # `complete -a` expects each completion to be separated by space, not newline
-    complete -C "$git_wrapper_cmd" | string replace '\n' ' '
+    complete -C "$git_wrapper_cmd"
 end
 
 # General git wrapping

@@ -92,18 +92,18 @@ complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l 
 # Complete some fish configuration variables even if they aren't set.
 complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase' -x -a "(__fish_set_special_vars)"
 # Complete scope-specific variables
-complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s l -l local' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
-complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s g -l global' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"
-complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s U -l universal' -x -a "(set -U | string match -rv '^__' | string replace ' ' \t'Universal Variable: ')"
+complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s l -l local' -x -a "(set -l | string replace ' ' \t'Local Variable: ')"
+complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s g -l global' -x -a "(set -g | string replace ' ' \t'Global Variable: ')"
+complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s U -l universal' -x -a "(set -U | string replace ' ' \t'Universal Variable: ')"
 
 # Complete using preexisting variable names for `set --erase`
-complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -g | string match -rv '^_|^fish_' | string replace ' ' \tGlobal\ Variable:\ )"
-complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -l | string match -rv '^_|^fish_' | string replace ' ' \tLocal\ Variable:\ )"
-complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -U | string match -rv '^_|^fish_' | string replace ' ' \tUniversal\ Variable:\ )"
+complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -g | string replace ' ' \tGlobal\ Variable:\ )"
+complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -l | string replace ' ' \tLocal\ Variable:\ )"
+complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -U | string replace ' ' \tUniversal\ Variable:\ )"
 # Complete scope-specific variables for `set --erase`
-complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s g -l global' -f -a "(set -g | string match -rv '^_|^fish_' | string replace ' ' \t'Global Variable: ')"
-complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s U -l universal' -f -a "(set -U | string match -rv '^_|^fish_' | string replace ' ' \t'Universal Variable: ')"
-complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s l -l local' -f -a "(set -l | string match -rv '^_|^fish_' | string replace ' ' \t'Local Variable: ')"
+complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s g -l global' -f -a "(set -g | string replace ' ' \t'Global Variable: ')"
+complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s U -l universal' -f -a "(set -U | string replace ' ' \t'Universal Variable: ')"
+complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s l -l local' -f -a "(set -l | string replace ' ' \t'Local Variable: ')"
 
 # Color completions
 complete -c set -n __fish_set_is_color -x -a '(set_color --print-colors)'

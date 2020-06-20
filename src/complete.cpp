@@ -655,9 +655,8 @@ static wcstring complete_function_desc(const wcstring &fn) {
     if (!has_description) {
         function_get_definition(fn, result);
         // A completion description is a single line.
-        for (wchar_t &c : result) {
-            if (c == L'\n') c = L' ';
-        }
+        std::replace_if(
+            result.begin(), result.end(), [](const wchar_t &c) { return c == L'\n'; }, L' ');
     }
     return result;
 }

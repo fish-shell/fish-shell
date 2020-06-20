@@ -538,10 +538,9 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             wcstring_list_t result;
             auto dest_str = parser.vars().get(dest, scope);
             if (dest_str) dest_str->to_list(result);
-
-            for (auto idx : indexes) {
-                if (idx < 1 || static_cast<size_t>(idx) > result.size()) retval++;
-            }
+            retval = std::count_if(indexes.begin(), indexes.end(), [=](long idx) {
+                return idx < 1 || size_t(idx) > result.size();
+            });
         } else {
             if (!parser.vars().get(arg, scope)) retval++;
         }

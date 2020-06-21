@@ -29,6 +29,7 @@
 #include <type_traits>
 #include <unordered_set>
 
+#include "ast.h"
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -1096,8 +1097,7 @@ void history_impl_t::populate_from_config_path() {
 static bool should_import_bash_history_line(const wcstring &line) {
     if (line.empty()) return false;
 
-    parse_node_tree_t parse_tree;
-    if (!parse_tree_from_string(line, parse_flag_none, &parse_tree, nullptr)) return false;
+    if (ast::ast_t::parse(line).errored()) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     parse_error_list_t errors;

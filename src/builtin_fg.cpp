@@ -39,13 +39,16 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Select last constructed job (i.e. first job in the job queue) that can be brought
         // to the foreground.
 
-        for (const auto &j : parser.jobs()) {
-            if (j->is_constructed() && (!j->is_completed()) &&
-                ((j->is_stopped() || (!j->is_foreground())) && j->wants_job_control())) {
-                job = j.get();
-                break;
-            }
+        auto it = std::find_if(
+            parser.jobs().begin(), parser.jobs().end(), [](const std::shared_ptr<job_t> &j) {
+                return j->is_constructed() && (!j->is_completed()) &&
+                       ((j->is_stopped() || (!j->is_foreground())) && j->wants_job_control());
+            });
+
+        if (it != parser.jobs().end()) {
+            job = it->get();
         }
+
         if (!job) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
         }

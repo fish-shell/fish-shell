@@ -181,14 +181,14 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (print_last) {
         // Ignore unconstructed jobs, i.e. ourself.
-        for (const auto &j : parser.jobs()) {
-            if (j->is_visible()) {
-                builtin_jobs_print(j.get(), mode, !streams.out_is_redirected, streams);
-                return STATUS_CMD_OK;
-            }
+        auto it = std::find_if(parser.jobs().begin(), parser.jobs().end(),
+                               [](const std::shared_ptr<job_t> &j) { return j->is_visible(); });
+        if (it != parser.jobs().end()) {
+            builtin_jobs_print(it->get(), mode, !streams.out_is_redirected, streams);
+            return STATUS_CMD_OK;
         }
-        return STATUS_CMD_ERROR;
 
+        return STATUS_CMD_ERROR;
     } else {
         if (w.woptind < argc) {
             int i;

@@ -61,14 +61,12 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Stopped jobs can be disowned (they will be continued).
         // Foreground jobs can be disowned.
         // Even jobs that aren't under job control can be disowned!
-        job_t *job = nullptr;
-        for (const auto &j : parser.jobs()) {
-            if (j->is_constructed() && (!j->is_completed())) {
-                job = j.get();
-                break;
-            }
-        }
+        auto it = std::find_if(parser.jobs().begin(), parser.jobs().end(),
+                               [](const std::shared_ptr<job_t> &j) {
+                                   return j->is_constructed() && (!j->is_completed());
+                               });
 
+        job_t *job = (it != parser.jobs().end()) ? it->get() : nullptr;
         if (job) {
             retval = disown_job(cmd, parser, streams, job);
         } else {

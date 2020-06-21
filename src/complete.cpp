@@ -819,13 +819,11 @@ size_t short_option_pos(const wcstring &arg, const option_list_t &options) {
     }
     for (size_t pos = 1; pos < arg.size(); pos++) {
         wchar_t arg_char = arg.at(pos);
-        const complete_entry_opt_t *match = nullptr;
-        for (const complete_entry_opt_t &o : options) {
-            if (o.type == option_type_short && o.option.at(0) == arg_char) {
-                match = &o;
-                break;
-            }
-        }
+        auto it = std::find_if(options.begin(), options.end(), [=](const complete_entry_opt_t &o) {
+            return o.type == option_type_short && o.option.at(0) == arg_char;
+        });
+        const complete_entry_opt_t *match = (it != options.end()) ? &(*it) : nullptr;
+
         if (match == nullptr) {
             // The first character after the dash is not a valid option.
             if (pos == 1) return wcstring::npos;

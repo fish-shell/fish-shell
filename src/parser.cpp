@@ -588,17 +588,16 @@ void parser_t::job_promote(job_t *job) {
 }
 
 job_t *parser_t::job_get(job_id_t id) {
-    for (const auto &job : job_list) {
-        if (id <= 0 || job->job_id() == id) return job.get();
-    }
-    return nullptr;
+    auto it = std::find_if(job_list.begin(), job_list.end(),
+                           [=](std::shared_ptr<job_t> j) { return id <= 0 || j->job_id() == id; });
+    return it != job_list.end() ? it->get() : nullptr;
 }
 
 const job_t *parser_t::job_get(job_id_t id) const {
-    for (const auto &job : job_list) {
-        if (id <= 0 || job->job_id() == id) return job.get();
-    }
-    return nullptr;
+    auto it = std::find_if(job_list.begin(), job_list.end(), [=](const std::shared_ptr<job_t> j) {
+        return id <= 0 || j->job_id() == id;
+    });
+    return it != job_list.end() ? it->get() : nullptr;
 }
 
 job_t *parser_t::job_get_from_pid(pid_t pid) const {

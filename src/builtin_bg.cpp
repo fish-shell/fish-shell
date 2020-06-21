@@ -52,14 +52,12 @@ int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (optind == argc) {
         // No jobs were specified so use the most recent (i.e., last) job.
-        job_t *job = nullptr;
-        for (const auto &j : parser.jobs()) {
-            if (j->is_stopped() && j->wants_job_control() && (!j->is_completed())) {
-                job = j.get();
-                break;
-            }
-        }
+        auto it = std::find_if(
+            parser.jobs().begin(), parser.jobs().end(), [](const std::shared_ptr<job_t> &j) {
+                return j->is_stopped() && j->wants_job_control() && !j->is_completed();
+            });
 
+        job_t *job = (it != parser.jobs().end()) ? it->get() : nullptr;
         if (!job) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
             retval = STATUS_CMD_ERROR;

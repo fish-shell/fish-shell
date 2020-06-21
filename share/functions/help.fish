@@ -142,7 +142,7 @@ function help --description 'Show help for the fish shell'
             and string match -qr 'cygstart|cmd\.exe$' $fish_browser[1]
             set page_url file://(cygpath -m $__fish_help_dir)/$fish_help_page
         else if type -q wslpath
-            and string match -qr 'cmd\.exe$' $fish_browser[1]
+            and string match -qr '\.exe$' $fish_browser[1]
             set page_url file://(wslpath -w $__fish_help_dir)/$fish_help_page
         end
     else
@@ -171,7 +171,7 @@ function help --description 'Show help for the fish shell'
                 and string match -qr 'cygstart|cmd\.exe$' $fish_browser[1]
                 set page_url file://(cygpath -m $tmpname)
             else if type -q wslpath
-                and string match -qr 'cmd\.exe$' $fish_browser[1]
+                and string match -qr '\.exe$' $fish_browser[1]
                 set page_url file://(wslpath -w $tmpname)
             end
         end

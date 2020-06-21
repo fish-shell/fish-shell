@@ -1,4 +1,4 @@
-fishconfig = angular.module("fishconfig", ["filters", "controllers", "ngSanitize"]);
+fishconfig = angular.module("fishconfig", ["filters", "controllers", "ngRoute", "ngSanitize"]);
 
 fishconfig.config(
     ["$routeProvider", function($routeProvider) {
@@ -44,26 +44,29 @@ fishconfig.config(function($httpProvider, $compileProvider) {
         global_error_element.text(content);
     };
 
-    $httpProvider.responseInterceptors.push(function($q) {
-        return function(promise) {
-            return promise.then(function(successResponse) {
-                showMessage('');
-                return successResponse;
-            }, function(errorResponse) {
-                switch (errorResponse.status) {
-                    case 0:
-                        showMessage("The request received an error. Perhaps the server has shut down.");
-                        break;
-                   case 500:
-                        showMessage('Server internal error: ' + errorResponse.data);
-                        break;
-                    default:
-                        showMessage('Error ' + errorResponse.status + ': ' + errorResponse.data);
-                }
-                return $q.reject(errorResponse);
-            });
-        };
-    });
+    // $httpProvider.factory('myHttpInterceptor', function($q) {
+    //     return {
+    //         'request' : function(promise) {
+    //             return promise.then(function(successResponse) {
+    //                 showMessage('');
+    //                 return successResponse;
+    //             })},
+    //         'requestError' : function(errorResponse) {
+    //             switch (errorResponse.status) {
+    //             case 0:
+    //                 showMessage("The request received an error. Perhaps the server has shut down.");
+    //                 break;
+    //             case 500:
+    //                 showMessage('Server internal error: ' + errorResponse.data);
+    //                 break;
+    //             default:
+    //                 showMessage('Error ' + errorResponse.status + ': ' + errorResponse.data);
+    //             }
+    //             return $q.reject(errorResponse);
+    //         }
+    //     }
+    // });
+    // $httpProvider.interceptors.push('myHttpInterceptor');
 
     $compileProvider.directive('errorMessage', function() {
         return {

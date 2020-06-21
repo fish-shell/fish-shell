@@ -11,6 +11,7 @@
 #include <memory>
 #include <utility>
 
+#include "ast.h"
 #include "common.h"
 #include "env.h"
 #include "event.h"
@@ -328,19 +329,18 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
                                                  expand_flags_t eflags,
                                                  const operation_context_t &ctx) {
     // Parse the string as an argument list.
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, nullptr /* errors */,
-                                symbol_freestanding_argument_list)) {
+    auto ast = ast::ast_t::parse_argument_list(arg_list_src);
+    if (ast.errored()) {
         // Failed to parse. Here we expect to have reported any errors in test_args.
         return {};
     }
 
     // Get the root argument list and extract arguments from it.
     completion_list_t result;
-    assert(!tree.empty());
-    tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
-    while (auto arg = arg_list.next_in_list<grammar::argument>()) {
-        const wcstring arg_src = arg.get_source(arg_list_src);
+    const ast::freestanding_argument_list_t *list =
+        ast.top()->as<ast::freestanding_argument_list_t>();
+    for (const ast::argument_t &arg : list->arguments) {
+        wcstring arg_src = arg.source(arg_list_src);
         if (expand_string(arg_src, &result, eflags, ctx) == expand_result_t::error) {
             break;  // failed to expand a string
         }

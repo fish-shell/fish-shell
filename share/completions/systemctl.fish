@@ -59,6 +59,7 @@ complete -f -c systemctl -l no-legend -d 'Do not print header and footer'
 # system and user/global are mutually exclusive
 complete -f -c systemctl -l user -d 'Talk to the service manager of the calling user' -n "not __fish_contains_opt system"
 complete -f -c systemctl -l system -d 'Talk to the service manager of the system.' -n "not __fish_contains_opt system global"
+complete -c systemctl -l failed -d 'List units in failed state'
 complete -f -c systemctl -l global -d 'Enable or disable for all users' -n "not __fish_contains_opt system"
 complete -f -c systemctl -l no-wall -d 'Do not send wall message before halt'
 complete -f -c systemctl -l no-reload -d 'Do not reload daemon configuration'

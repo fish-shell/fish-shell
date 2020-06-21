@@ -14,6 +14,7 @@
 #include <string>
 #include <type_traits>
 
+#include "ast.h"
 #include "builtin.h"
 #include "common.h"
 #include "expand.h"
@@ -565,121 +566,16 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
     return result;
 }
 
-/// We are given a parse tree, the index of a node within the tree, its indent, and a vector of
-/// indents the same size as the original source string. Set the indent correspdonding to the node's
-/// source range, if appropriate.
-///
-/// trailing_indent is the indent for nodes with unrealized source, i.e. if I type 'if false <ret>'
-/// then we have an if node with an empty job list (without source) but we want the last line to be
-/// indented anyways.
-///
-/// switch statements also indent.
-///
-/// max_visited_node_idx is the largest index we visited.
-static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset_t node_idx,
-                                      int node_indent, parse_token_type_t parent_type,
-                                      std::vector<int> *indents, int *trailing_indent,
-                                      node_offset_t *max_visited_node_idx) {
-    // Guard against incomplete trees.
-    if (node_idx > tree.size()) return;
-
-    // Update max_visited_node_idx.
-    if (node_idx > *max_visited_node_idx) *max_visited_node_idx = node_idx;
-
-    // We could implement this by utilizing the fish grammar. But there's an easy trick instead:
-    // almost everything that wraps a job list should be indented by 1. So just find all of the job
-    // lists. One exception is switch, which wraps a case_item_list instead of a job_list. The other
-    // exception is job_list itself: a job_list is a job and a job_list, and we want that child list
-    // to be indented the same as the parent. So just find all job_lists whose parent is not a
-    // job_list, and increment their indent by 1. We also want to treat andor_job_list like
-    // job_lists.
-    const parse_node_t &node = tree.at(node_idx);
-    const parse_token_type_t node_type = node.type;
-
-    // Increment the indent if we are either a root job_list, or root case_item_list.
-    const bool is_root_job_list = node_type != parent_type && (node_type == symbol_job_list ||
-                                                               node_type == symbol_andor_job_list);
-    const bool is_root_case_item_list =
-        node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
-    if (is_root_job_list || is_root_case_item_list) {
-        node_indent += 1;
-    }
-
-    // If we have source, store the trailing indent unconditionally. If we do not have source, store
-    // the trailing indent only if ours is bigger; this prevents the trailing "run" of terminal job
-    // lists from affecting the trailing indent. For example, code like this:
-    //
-    //   if foo
-    //
-    // will be parsed as this:
-    //
-    //   job_list
-    //     job
-    //        if_statement
-    //          job [if]
-    //          job_list [empty]
-    //     job_list [empty]
-    //
-    // There's two "terminal" job lists, and we want the innermost one.
-    //
-    // Note we are relying on the fact that nodes are in the same order as the source, i.e. an
-    // in-order traversal of the node tree also traverses the source from beginning to end.
-    if (node.has_source() || node_indent > *trailing_indent) {
-        *trailing_indent = node_indent;
-    }
-
-    // Store the indent into the indent array.
-    if (node.source_start != SOURCE_OFFSET_INVALID && node.source_start < indents->size()) {
-        if (node.has_source()) {
-            // A normal non-empty node. Store the indent unconditionally.
-            indents->at(node.source_start) = node_indent;
-        } else {
-            // An empty node. We have a source offset but no source length. This can come about when
-            // a node is legitimately empty:
-            //
-            //   while true; end
-            //
-            // The job_list inside the while loop is empty. It still has a source offset (at the end
-            // of the while statement) but no source extent. We still need to capture that indent,
-            // because there may be comments inside:
-            //
-            //      while true
-            //         # loop forever
-            //      end
-            //
-            // The 'loop forever' comment must be indented, by virtue of storing the indent.
-            //
-            // Now consider what happens if we remove the end:
-            //
-            //     while true
-            //       # loop forever
-            //
-            // Now both the job_list and end_command are unmaterialized. However, we want the indent
-            // to be of the job_list and not the end_command.  Therefore, we only store the indent
-            // if it's bigger.
-            if (node_indent > indents->at(node.source_start)) {
-                indents->at(node.source_start) = node_indent;
-            }
-        }
-    }
-
-    // Recursive to all our children.
-    for (node_offset_t idx = 0; idx < node.child_count; idx++) {
-        // Note we pass our type to our child, which becomes its parent node type.
-        compute_indents_recursive(tree, node.child_start + idx, node_indent, node_type, indents,
-                                  trailing_indent, max_visited_node_idx);
-    }
-}
-
 std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // Make a vector the same size as the input string, which contains the indents. Initialize them
-    // to -1.
+    // to 0.
+    static wcstring ssss;
+    ssss = src;
     const size_t src_size = src.size();
-    std::vector<int> indents(src_size, -1);
+    std::vector<int> indents(src_size, 0);
 
     // Simple trick: if our source does not contain a newline, then all indents are 0.
     if (src.find('\n') == wcstring::npos) {
-        std::fill(indents.begin(), indents.end(), 0);
         return indents;
     }
 
@@ -687,78 +583,141 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
-    parse_node_tree_t tree;
-    parse_tree_from_string(src,
-                           parse_flag_continue_after_error | parse_flag_include_comments |
-                               parse_flag_accept_incomplete_tokens,
-                           &tree, nullptr /* errors */);
+    using namespace ast;
+    auto ast =
+        ast_t::parse(src, parse_flag_continue_after_error | parse_flag_include_comments |
+                              parse_flag_accept_incomplete_tokens | parse_flag_leave_unterminated);
 
-    // Start indenting at the first node. If we have a parse error, we'll have to start indenting
-    // from the top again.
-    node_offset_t start_node_idx = 0;
-    int last_trailing_indent = 0;
+    // Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
+    // visiting its children.
+    struct indent_visitor_t {
+        explicit indent_visitor_t(std::vector<int> &indents) : indents(indents) {}
 
-    while (start_node_idx < tree.size()) {
-        // The indent that we'll get for the last line.
-        int trailing_indent = 0;
+        void visit(const node_t &node) {
+            int inc = 0;
+            int dec = 0;
+            switch (node.type) {
+                case type_t::job_list:
+                case type_t::andor_job_list:
+                    // Job lists are never unwound.
+                    inc = 1;
+                    dec = 1;
+                    break;
 
-        // Biggest offset we visited.
-        node_offset_t max_visited_node_idx = 0;
+                // Increment indents for conditions in headers (#1665).
+                case type_t::job_conjunction:
+                    if (node.parent->type == type_t::while_header ||
+                        node.parent->type == type_t::if_clause) {
+                        inc = 1;
+                        dec = 1;
+                    }
+                    break;
 
-        // Invoke the recursive version. As a hack, pass job_list for the 'parent' token type, which
-        // will prevent the really-root job list from indenting.
-        compute_indents_recursive(tree, start_node_idx, last_trailing_indent, symbol_job_list,
-                                  &indents, &trailing_indent, &max_visited_node_idx);
+                // Increment indents for piped remainders.
+                case type_t::job_continuation_list:
+                    if (node.as<job_continuation_list_t>()->count() > 0) {
+                        inc = 1;
+                        dec = 1;
+                    }
+                    break;
 
-        // We may have more to indent. The trailing indent becomes our current indent. Start at the
-        // node after the last we visited.
-        last_trailing_indent = trailing_indent;
-        start_node_idx = max_visited_node_idx + 1;
-    }
+                case type_t::case_item_list:
+                    // Here's a hack. Consider:
+                    // switch abc
+                    //    cas
+                    //
+                    // fish will see that 'cas' is not valid inside a switch statement because it is
+                    // not "case". It will then unwind back to the top level job list, producing a
+                    // parse tree like:
+                    //
+                    //   job_list
+                    //      switch_job
+                    //         <err>
+                    //      normal_job
+                    //         cas
+                    //
+                    // And so we will think that the 'cas' job is at the same level as the switch.
+                    // To address this, if we see that the switch statement was not closed, do not
+                    // decrement the indent afterwards.
+                    inc = 1;
+                    dec = node.parent->as<switch_statement_t>()->end.unsourced ? 0 : 1;
+                    break;
 
-    // Handle comments. Each comment node has a parent (which is whatever the top of the symbol
-    // stack was when the comment was encountered). So the source range of the comment has the same
-    // indent as its parent.
-    const size_t tree_size = tree.size();
-    for (node_offset_t i = 0; i < tree_size; i++) {
-        const parse_node_t &node = tree.at(i);
-        if (node.type == parse_special_type_comment && node.has_source() &&
-            node.parent < tree_size) {
-            const parse_node_t &parent = tree.at(node.parent);
-            if (parent.source_start != SOURCE_OFFSET_INVALID) {
-                indents.at(node.source_start) = indents.at(parent.source_start);
+                default:
+                    break;
             }
-        }
-    }
+            indent += inc;
 
-    // Now apply the indents. The indents array has -1 for places where the indent does not change,
-    // so start at each value and extend it along the run of -1s.
-    int last_indent = 0;
-    for (size_t i = 0; i < src_size; i++) {
-        int this_indent = indents.at(i);
-        if (this_indent < 0) {
-            indents.at(i) = last_indent;
+            // If we increased the indentation, apply it to the remainder of the string, even if the
+            // list is empty. For example (where _ represents the cursor):
+            //
+            //    if foo
+            //       _
+            //
+            // we want to indent the newline.
+            if (inc) {
+                std::fill(indents.begin() + last_leaf_end, indents.end(), indent);
+                last_indent = indent;
+            }
+
+            // If this is a leaf node, apply the current indentation.
+            if (node.category == category_t::leaf) {
+                auto range = node.source_range();
+                if (range.length > 0) {
+                    // Fill to the end.
+                    // Later nodes will come along and overwrite these.
+                    std::fill(indents.begin() + range.start, indents.end(), indent);
+                    last_leaf_end = range.start + range.length;
+                    last_indent = indent;
+                }
+            }
+
+
+            node_visitor(*this).accept_children_of(&node);
+            indent -= dec;
+        }
+
+        // The one-past-the-last index of the most recently encountered leaf node.
+        // We use this to populate the indents even if there's no tokens in the range.
+        size_t last_leaf_end{0};
+
+        // The last indent which we assigned.
+        int last_indent{-1};
+
+        // List of indents, which we populate.
+        std::vector<int> &indents;
+
+        // Initialize our starting indent to -1, as our top-level node is a job list which
+        // will immediately increment it.
+        int indent{-1};
+    };
+
+    indent_visitor_t iv(indents);
+    node_visitor(iv).accept(ast.top());
+
+    // All newlines now get the *next* indent.
+    // For example, in this code:
+    //    if true
+    //       stuff
+    // the newline "belongs" to the if statement as it ends its job.
+    // But when rendered, it visually belongs to the job list.
+
+    // FIXME: if there's a middle newline, we will indent it wrongly.
+    // For example:
+    //    if true
+    //
+    //    end
+    // Here the middle newline should be indented by 1.
+
+    size_t idx = src_size;
+    int next_indent = iv.last_indent;
+    while (idx--) {
+        if (src.at(idx) == L'\n') {
+            indents.at(idx) = next_indent;
         } else {
-            // New indent level.
-            last_indent = this_indent;
-            // Make all whitespace before a token have the new level. This avoid using the wrong
-            // indentation level if a new line starts with whitespace.
-            size_t prev_char_idx = i;
-            while (prev_char_idx--) {
-                if (!std::wcschr(L" \n\t\r", src.at(prev_char_idx))) break;
-                indents.at(prev_char_idx) = last_indent;
-            }
+            next_indent = indents.at(idx);
         }
     }
-
-    // Ensure trailing whitespace has the trailing indent. This makes sure a new line is correctly
-    // indented even if it is empty.
-    size_t suffix_idx = src_size;
-    while (suffix_idx--) {
-        if (!std::wcschr(L" \n\t\r", src.at(suffix_idx))) break;
-        indents.at(suffix_idx) = last_trailing_indent;
-    }
-
     return indents;
 }
 

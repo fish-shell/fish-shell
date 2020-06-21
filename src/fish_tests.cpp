@@ -1268,75 +1268,121 @@ static void test_cancellation() {
     parser.clear_cancel();
 }
 
+namespace indent_tests {
+// A struct which is either text or a new indent.
+struct segment_t {
+    // The indent to set
+    int indent{0};
+    const char *text{nullptr};
+
+    /* implicit */ segment_t(int indent) : indent(indent) {}
+    /* implicit */ segment_t(const char *text) : text(text) {}
+};
+
+using test_t = std::vector<segment_t>;
+using test_list_t = std::vector<test_t>;
+
+// Add a new test to a test list based on a series of ints and texts.
+template <typename... Types>
+void add_test(test_list_t *v, const Types &... types) {
+    segment_t segments[] = {types...};
+    v->emplace_back(std::begin(segments), std::end(segments));
+}
+}  // namespace indent_tests
+
 static void test_indents() {
     say(L"Testing indents");
+    using namespace indent_tests;
 
-    // Here are the components of our source and the indents we expect those to be.
-    struct indent_component_t {
-        const wchar_t *txt;
-        int indent;
-    };
+    test_list_t tests;
+    add_test(&tests,              //
+             0, "if", 1, " foo",  //
+             0, "\nend");
 
-    const indent_component_t components1[] = {{L"if foo", 0}, {L"end", 0}, {NULL, -1}};
+    add_test(&tests,              //
+             0, "if", 1, " foo",  //
+             1, "\nfoo",          //
+             0, "\nend");
 
-    const indent_component_t components2[] = {{L"if foo", 0},
-                                              {L"", 1},  // trailing newline!
-                                              {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             1, "\nend",            //
+             0, "\nend");
 
-    const indent_component_t components3[] = {{L"if foo", 0},
-                                              {L"foo", 1},
-                                              {L"end", 0},  // trailing newline!
-                                              {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             1, "\n",  // FIXME: this should be 2 but parse_util_compute_indents has a bug
+             1, "\nend\n");
 
-    const indent_component_t components4[] = {{L"if foo", 0}, {L"if bar", 1}, {L"end", 1},
-                                              {L"end", 0},    {L"", 0},       {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             2, "\n");
 
-    const indent_component_t components5[] = {{L"if foo", 0}, {L"if bar", 1}, {L"", 2}, {NULL, -1}};
+    add_test(&tests,      //
+             0, "begin",  //
+             1, "\nfoo",  //
+             1, "\n");
 
-    const indent_component_t components6[] = {{L"begin", 0}, {L"foo", 1}, {L"", 1}, {NULL, -1}};
+    add_test(&tests,      //
+             0, "begin",  //
+             1, "\n;",    //
+             0, "end",    //
+             0, "\nfoo", 0, "\n");
 
-    const indent_component_t components7[] = {{L"begin", 0}, {L";", 1}, {L"end", 0},
-                                              {L"foo", 0},   {L"", 0},  {NULL, -1}};
+    add_test(&tests,      //
+             0, "begin",  //
+             1, "\n;",    //
+             0, "end",    //
+             0, "\nfoo", 0, "\n");
 
-    const indent_component_t components8[] = {{L"if foo", 0}, {L"if bar", 1}, {L"baz", 2},
-                                              {L"end", 1},    {L"", 1},       {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             2, "\nbaz",            //
+             1, "\nend", 1, "\n");
 
-    const indent_component_t components9[] = {{L"switch foo", 0}, {L"", 1}, {NULL, -1}};
+    add_test(&tests,           //
+             0, "switch foo",  //
+             1, "\n"           //
+    );
 
-    const indent_component_t components10[] = {
-        {L"switch foo", 0}, {L"case bar", 1}, {L"case baz", 1}, {L"quux", 2}, {L"", 2}, {NULL, -1}};
+    add_test(&tests,           //
+             0, "switch foo",  //
+             1, "\ncase bar",  //
+             1, "\ncase baz",  //
+             2, "\nquux",      //
+             2, "\nquux"       //
+    );
 
-    const indent_component_t components11[] = {{L"switch foo", 0},
-                                               {L"cas", 1},  // parse error indentation handling
-                                               {NULL, -1}};
+    add_test(&tests,           //
+             0, "switch foo",  //
+             1, "\ncas"        // parse error indentation handling
+    );
 
-    const indent_component_t components12[] = {{L"while false", 0},
-                                               {L"# comment", 1},   // comment indentation handling
-                                               {L"command", 1},     // comment indentation handling
-                                               {L"# comment2", 1},  // comment indentation handling
-                                               {NULL, -1}};
+    add_test(&tests,                   //
+             0, "while", 1, " false",  //
+             1, "\n# comment",         // comment indentation handling
+             1, "\ncommand",           //
+             1, "\n# comment 2"        //
+    );
 
-    const indent_component_t *tests[] = {components1, components2,  components3,  components4,
-                                         components5, components6,  components7,  components8,
-                                         components9, components10, components11, components12};
-    for (size_t which = 0; which < sizeof tests / sizeof *tests; which++) {
-        const indent_component_t *components = tests[which];
-        // Count how many we have.
-        size_t component_count = 0;
-        while (components[component_count].txt != NULL) {
-            component_count++;
-        }
-
-        // Generate the expected indents.
+    int test_idx = 0;
+    for (const test_t &test : tests) {
+        // Construct the input text and expected indents.
         wcstring text;
         std::vector<int> expected_indents;
-        for (size_t i = 0; i < component_count; i++) {
-            if (i > 0) {
-                text.push_back(L'\n');
-                expected_indents.push_back(components[i].indent);
+        int current_indent = 0;
+        for (const segment_t &segment : test) {
+            if (!segment.text) {
+                current_indent = segment.indent;
+            } else {
+                wcstring tmp = str2wcstring(segment.text);
+                text.append(tmp);
+                expected_indents.insert(expected_indents.end(), tmp.size(), current_indent);
             }
-            text.append(components[i].txt);
-            expected_indents.resize(text.size(), components[i].indent);
         }
         do_test(expected_indents.size() == text.size());
 
@@ -1350,11 +1396,13 @@ static void test_indents() {
         do_test(expected_indents.size() == indents.size());
         for (size_t i = 0; i < text.size(); i++) {
             if (expected_indents.at(i) != indents.at(i)) {
-                err(L"Wrong indent at index %lu in test #%lu (expected %d, actual %d):\n%ls\n", i,
-                    which + 1, expected_indents.at(i), indents.at(i), text.c_str());
-                break;  // don't keep showing errors for the rest of the line
+                err(L"Wrong indent at index %lu (char 0x%02x) in test #%lu (expected %d, actual "
+                    L"%d):\n%ls\n",
+                    i, text.at(i), test_idx, expected_indents.at(i), indents.at(i), text.c_str());
+                break;  // don't keep showing errors for the rest of the test
             }
         }
+        test_idx++;
     }
 }
 

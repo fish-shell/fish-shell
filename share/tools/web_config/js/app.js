@@ -1,5 +1,12 @@
 fishconfig = angular.module("fishconfig", ["filters", "controllers", "ngRoute", "ngSanitize"]);
 
+angular.module('fishconfig')
+    .filter('to_trusted', ['$sce', function($sce){
+        return function(text) {
+            return $sce.trustAsHtml(text);
+        };
+    }]);
+
 fishconfig.config(
     ["$routeProvider", function($routeProvider) {
         $routeProvider

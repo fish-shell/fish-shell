@@ -49,6 +49,9 @@ function __fish_adb_run_command -d 'Runs adb with any -s parameters already give
 end
 
 function __fish_adb_list_packages
+    # That "2\>" is to pass the redirection *to adb*.
+    # It sends stderr from commands it executes to its stdout as well.
+    # Why it does that, I don't know - crossing the streams is a bad idea (c.f. Ghostbusters)
     __fish_adb_run_command pm list packages 2\>/dev/null | string replace 'package:' ''
 end
 

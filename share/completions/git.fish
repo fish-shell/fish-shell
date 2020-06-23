@@ -550,7 +550,7 @@ end
 
 function __fish_git_config_keys
     # Print already defined config values first
-    git config -l | string match -r '[^=]+'
+    git config -l | string replace '=' \t
     # Print all recognized config keys; duplicates are not shown twice by fish
     printf '%s\n' (__fish_git help --config)[1..-2] # Last line is a footer; ignore it
 end

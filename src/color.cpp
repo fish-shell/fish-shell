@@ -16,12 +16,25 @@
 bool rgb_color_t::try_parse_special(const wcstring &special) {
     std::memset(&data, 0, sizeof data);
     const wchar_t *name = special.c_str();
-    if (!wcscasecmp(name, L"normal")) {
-        this->type = type_normal;
-    } else if (!wcscasecmp(name, L"reset")) {
-        this->type = type_reset;
-    } else {
-        this->type = type_none;
+
+    // wcscasecmp is so slow that using it directly causes `try_parse_special` to consume up to
+    // 3% of all of fish's cpu time due to extremely inefficient invariant case lookups for wide
+    // characters (tested: Fedora Server 32 w/ glibc 2.31 with -O2). (This function is also called
+    // virtually non-stop while emitting output to determine colorization.)
+
+    // Take advantage of the fact that std::string length is O(1) to speed things up, and perform
+    // what amounts to a simple memcmp before needing to access the invariant case lookup tables.
+    static auto normal_len = wcslen(L"normal");
+    static auto reset_len = wcslen(L"reset");
+    this->type = type_none;
+    if (special.size() == normal_len) {
+        if (!wcscmp(name, L"normal") || !wcscasecmp(name, L"normal")) {
+            this->type = type_normal;
+        }
+    } else if (special.size() == reset_len) {
+        if (!wcscmp(name, L"reset") || !wcscasecmp(name, L"reset")) {
+            this->type = type_reset;
+        }
     }
     return this->type != type_none;
 }

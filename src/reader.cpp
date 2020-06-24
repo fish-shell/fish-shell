@@ -647,7 +647,6 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_lflag &= ~ICANON;  // turn off canonical mode
     modes->c_lflag &= ~ECHO;    // turn off echo mode
     modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
-    modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
     modes->c_oflag |= OPOST;  // turn on "implementation-defined post processing" - this often changes how line breaks work.
 
     // Disable flow control in the shell. We don't want to be stopped.

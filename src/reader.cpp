@@ -649,6 +649,20 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
     modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
     modes->c_oflag |= OPOST;  // turn on "implementation-defined post processing" - this often changes how line breaks work.
+
+    // Disable flow control in the shell. We don't want to be stopped.
+    modes->c_iflag &= ~IXON;
+    modes->c_iflag &= ~IXOFF;
+
+    modes->c_cc[VMIN] = 1;
+    modes->c_cc[VTIME] = 0;
+
+    // We ignore these anyway, so there is no need to sacrifice a character.
+    modes->c_cc[VSUSP] = '\0';
+
+    // (these two are already disabled because of IXON/IXOFF)
+    modes->c_cc[VSTOP] = '\0';
+    modes->c_cc[VSTART] = '\0';
 }
 
 /// Tracks a currently pending exit. This may be manipulated from a signal handler.
@@ -1127,12 +1141,6 @@ void reader_init() {
     std::memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
 
     term_fix_modes(&shell_modes);
-    // Disable flow control in the shell. We don't want to be stopped.
-    shell_modes.c_iflag &= ~IXON;
-    shell_modes.c_iflag &= ~IXOFF;
-
-    shell_modes.c_cc[VMIN] = 1;
-    shell_modes.c_cc[VTIME] = 0;
 
     // We do this not because we actually need the window size but for its side-effect of correctly
     // setting the COLUMNS and LINES env vars.

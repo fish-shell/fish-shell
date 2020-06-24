@@ -78,6 +78,7 @@ Interactive improvements
 -  When pressing Tab, fish displays ambiguous completions even when they
    have a common prefix, without the user having to press Tab again
    (#6924).
+-  Control-z is now available for binding (#7152).
 
 
 New or improved bindings

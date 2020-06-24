@@ -1,6 +1,21 @@
 function __fish_wajig_no_subcommand -d 'Test if wajig has yet to be given the subcommand'
     for i in (commandline -opc)
-        if contains -- $i addcdrom auto-alts auto-clean auto-download auto-install available bug build build-depend changelog clean commands daily-upgrade dependents describe describe-new detail detail-new dist-upgrade docs download file-download file-install file-remove find-file find-pkg fix-configure fix-install fix-missing force help hold init install installr installrs installs integrity large last-update list list-all list-alts list-cache list-commands list-daemons list-files list-hold list-installed list-log list-names list-orphans list-scripts list-section list-section list-status list-wide local-dist-upgrade local-upgrade madison move new news new-upgrades non-free orphans package policy purge purge-depend purge-orphans readme recursive recommended reconfigure reinstall reload remove remove-depend remove-orphans repackage reset restart rpminstall rpmtodeb search search-apt setup show showdistupgrade showinstall showremove showupgrade size sizes snapshot source start status status-match status-search stop suggested tasksel toupgrade unhold unofficial update update-alts update-pci-ids update-usb-ids upgrade versions whatis whichpkg
+        if contains -- $i addcdrom auto-alts auto-clean auto-download auto-install \
+                available bug build build-depend changelog clean commands daily-upgrade \
+                dependents describe describe-new detail detail-new dist-upgrade docs download \
+                file-download file-install file-remove find-file find-pkg fix-configure \
+                fix-install fix-missing force help hold init install installr installrs \
+                installs integrity large last-update list list-all list-alts list-cache \
+                list-commands list-daemons list-files list-hold list-installed list-log \
+                list-names list-orphans list-scripts list-section list-section list-status \
+                list-wide local-dist-upgrade local-upgrade madison move new news new-upgrades \
+                non-free orphans package policy purge purge-depend purge-orphans readme \
+                recursive recommended reconfigure reinstall reload remove remove-depend \
+                remove-orphans repackage reset restart rpminstall rpmtodeb search search-apt \
+                setup show showdistupgrade showinstall showremove showupgrade size sizes \
+                snapshot source start status status-match status-search stop suggested \
+                tasksel toupgrade unhold unofficial update update-alts update-pci-ids \
+                update-usb-ids upgrade versions whatis whichpkg
             return 1
         end
     end
@@ -9,7 +24,11 @@ end
 
 function __fish_wajig_use_package -d 'Test if wajig command should have packages as potential completion'
     for i in (commandline -opc)
-        if contains -- $i contains bug build build-depend changelog dependents describe detail hold install installr installrs installs list list-files news package purge purge-depend readme recursive recommended reconfigure reinstall remove remove-depend repackage show showinstall showremove showupgrade size sizes source suggested unhold upgrade versions whatis
+        if contains -- $i contains bug build build-depend changelog dependents describe \
+                detail hold install installr installrs installs list list-files news \
+                package purge purge-depend readme recursive recommended reconfigure \
+                reinstall remove remove-depend repackage show showinstall showremove \
+                showupgrade size sizes source suggested unhold upgrade versions whatis
             return 0
         end
     end

@@ -94,6 +94,8 @@ New or improved bindings
 -  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (#7012).
 -  ``__fish_prepend_sudo`` (Alt-S) now uses the previous commandline if the current one is empty,
    to simplify rerunning the previous command with ``sudo`` (#7079).
+- ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
+  from history if the commandline is empty (#7137).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

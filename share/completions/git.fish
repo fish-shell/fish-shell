@@ -549,7 +549,15 @@ function __fish_git_needs_command
 end
 
 function __fish_git_config_keys
-    git config -l | string match -r '[^=]+'
+    # Print already defined config values first
+    # Config keys may span multiple lines, so parse using null char
+    # With -z, key and value are separated by space, not "="
+    git config -lz | while read -lz key value
+        # Print only first line of value(with an ellipsis) if multiline
+        printf '%s\t%s\n' $key (string replace \n …\n $value)[1]
+    end
+    # Print all recognized config keys; duplicates are not shown twice by fish
+    printf '%s\n' (__fish_git help --config)[1..-2] # Last line is a footer; ignore it
 end
 
 # HACK: Aliases
@@ -1838,15 +1846,16 @@ complete -f -c git -n '__fish_git_using_command config' -s f -l file -d 'Read co
 complete -f -c git -n '__fish_git_using_command config' -l blob -d 'Read config from blob' -ra '(__fish_complete_suffix '')'
 
 # If no argument is specified, it's as if --get was used
-complete -c git -n '__fish_git_using_command config; and __fish_is_token_n 3' -fa '(__fish_git_config_keys)'
-complete -f -c git -n '__fish_git_using_command config; and __fish_is_first_arg' -l get -d 'Get config with name' -ra '(__fish_git_config_keys)'
-complete -f -c git -n '__fish_git_using_command config' -l get -d 'Get config with name' -ra '(__fish_git_config_keys)'
-complete -f -c git -n '__fish_git_using_command config' -l get-all -d 'Get all values matching key' -a '(__fish_git_config_keys)'
+# Use -k with `__fish_git_config_keys` so that user defined valeus are shown first
+complete -c git -n '__fish_git_using_command config; and __fish_is_token_n 3' -kfa '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config; and __fish_is_first_arg' -l get -d 'Get config with name' -kra '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l get -d 'Get config with name' -kra '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l get-all -d 'Get all values matching key' -ka '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-urlmatch -d 'Get value specific for the section url' -r
-complete -f -c git -n '__fish_git_using_command config' -l replace-all -d 'Replace all matching variables' -ra '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l replace-all -d 'Replace all matching variables' -kra '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l add -d 'Add a new variable' -r
-complete -f -c git -n '__fish_git_using_command config' -l unset -d 'Remove a variable' -a '(__fish_git_config_keys)'
-complete -f -c git -n '__fish_git_using_command config' -l unset-all -d 'Remove matching variables' -a '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l unset -d 'Remove a variable' -ka '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l unset-all -d 'Remove matching variables' -ka '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l rename-section -d 'Rename section' -r
 complete -f -c git -n '__fish_git_using_command config' -s l -l list -d 'List all variables'
 complete -f -c git -n '__fish_git_using_command config' -s e -l edit -d 'Open configuration in an editor'

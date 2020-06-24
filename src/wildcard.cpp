@@ -98,27 +98,29 @@ bool wildcard_has(const wcstring &str, bool internal) {
 /// \param wc The wildcard.
 /// \param leading_dots_fail_to_match Whether files beginning with dots should not be matched
 /// against wildcards.
-static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const wchar_t *wc,
+static enum fuzzy_match_type_t wildcard_match_internal(const wcstring &str, const wcstring &wc,
                                                        bool leading_dots_fail_to_match) {
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
-    if (leading_dots_fail_to_match && (!std::wcscmp(str, L".") || !std::wcscmp(str, L".."))) {
-        // The string is '.' or '..'. Return true if the wildcard exactly matches.
-        return std::wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
+    if (leading_dots_fail_to_match && str[0] == L'.' &&
+            (str[1] == L'\0' || (str[1] == L'.' && str[2] == L'\0'))) {
+        // The string is '.' or '..' so the only possible match is an exact match.
+        return str == wc ? fuzzy_match_exact : fuzzy_match_none;
     }
 
     // Near Linear implementation as proposed here https://research.swtch.com/glob.
-    const wchar_t *wc_x = wc;
-    const wchar_t *str_x = str;
-    const wchar_t *restart_wc_x = wc;
-    const wchar_t *restart_str_x = str;
+    const wchar_t *wc_x = wc.c_str();
+    const wchar_t *str_x = str.c_str();
+    const wchar_t *restart_wc_x = wc.c_str();
+    const wchar_t *restart_str_x = str.c_str();
+
     bool restart_is_out_of_str = false;
     for (; *wc_x != 0 || *str_x != 0;) {
         bool is_first = (str_x == str);
         if (*wc_x != 0) {
             if (*wc_x == ANY_STRING || *wc_x == ANY_STRING_RECURSIVE) {
                 // Ignore hidden file
-                if (leading_dots_fail_to_match && is_first && *str == L'.') {
+                if (leading_dots_fail_to_match && is_first && str[0] == L'.') {
                     return fuzzy_match_none;
                 }
 
@@ -201,7 +203,20 @@ static bool has_prefix_match(const completion_list_t *comps, size_t first) {
 ///
 /// We ignore ANY_STRING_RECURSIVE here. The consequence is that you cannot tab complete **
 /// wildcards. This is historic behavior.
-static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
+static bool wildcard_complete_internal(const wchar_t * const str, size_t str_len,
+                                       const wchar_t * const wc, size_t wc_len,
+                                       const wc_complete_pack_t &params, complete_flags_t flags,
+                                       completion_list_t *out, bool is_first_call);
+__attribute__((unused))
+static bool wildcard_complete_internal(const wchar_t * const str, const wchar_t * const wc,
+                                       const wc_complete_pack_t &params, complete_flags_t flags,
+                                       completion_list_t *out, bool is_first_call = false) {
+    return wildcard_complete_internal(
+            str, std::wcslen(str), wc, std::wcslen(wc), params, flags, out, is_first_call);
+}
+
+static bool wildcard_complete_internal(const wchar_t * const str, size_t str_len,
+                                       const wchar_t * const wc, size_t wc_len,
                                        const wc_complete_pack_t &params, complete_flags_t flags,
                                        completion_list_t *out, bool is_first_call = false) {
     assert(str != nullptr);
@@ -218,6 +233,11 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
 
     // Maybe we have no more wildcards at all. This includes the empty string.
     if (next_wc_char_pos == wcstring::npos) {
+        // A string cannot fuzzy match a wildcard that is longer than the string itself
+        if (wc_len > str_len) {
+            return false;
+        }
+
         auto match = string_fuzzy_match_string(wc, str);
 
         // If we're allowing fuzzy match, any match is OK. Otherwise we require a prefix match.
@@ -238,8 +258,8 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
 
         // If we are not replacing the token, be careful to only store the part of the string after
         // the wildcard.
-        assert(!full_replacement || std::wcslen(wc) <= std::wcslen(str));
-        wcstring out_completion = full_replacement ? params.orig : str + std::wcslen(wc);
+        assert(!full_replacement || wc_len <= str_len);
+        wcstring out_completion = full_replacement ? params.orig : str + wc_len;
         wcstring out_desc = resolve_description(params.orig, &out_completion, params.expand_flags,
                                                 params.desc_func);
 
@@ -249,17 +269,25 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         append_completion(out, out_completion, out_desc, local_flags, std::move(match));
         return match_acceptable;
     } else if (next_wc_char_pos > 0) {
+        // The literal portion of a wildcard cannot be longer than the string itself,
+        // e.g. `abc*` can never match a string that is only two characters long.
+        if (next_wc_char_pos >= str_len) {
+            return false;
+        }
+
         // Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before
         // a wildcard, so just do case comparison and then recurse.
         if (std::wcsncmp(str, wc, next_wc_char_pos) == 0) {
             // Normal match.
-            return wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params,
-                                              flags, out);
+            return wildcard_complete_internal(str + next_wc_char_pos, str_len - next_wc_char_pos,
+                                              wc + next_wc_char_pos, wc_len - next_wc_char_pos,
+                                              params, flags, out);
         }
         if (wcsncasecmp(str, wc, next_wc_char_pos) == 0) {
             // Case insensitive match.
-            return wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params,
-                                              flags | COMPLETE_REPLACES_TOKEN, out);
+            return wildcard_complete_internal(str + next_wc_char_pos, str_len - next_wc_char_pos,
+                                              wc + next_wc_char_pos, wc_len - next_wc_char_pos,
+                                              params, flags | COMPLETE_REPLACES_TOKEN, out);
         }
         return false;  // no match
     }
@@ -271,13 +299,13 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             if (str[0] == L'\0') {
                 return false;
             }
-            return wildcard_complete_internal(str + 1, wc + 1, params, flags, out);
+            return wildcard_complete_internal(str + 1, str_len - 1, wc + 1, wc_len - 1, params, flags, out);
         }
         case ANY_STRING: {
             // Hackish. If this is the last character of the wildcard, then just complete with
             // the empty string. This fixes cases like "f*<tab>" -> "f*o".
             if (wc[1] == L'\0') {
-                return wildcard_complete_internal(L"", L"", params, flags, out);
+                return wildcard_complete_internal(L"", 0, L"", 0, params, flags, out);
             }
 
             // Try all submatches. Issue #929: if the recursive call gives us a prefix match,
@@ -287,7 +315,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             bool has_match = false;
             for (size_t i = 0; str[i] != L'\0'; i++) {
                 const size_t before_count = out ? out->size() : 0;
-                if (wildcard_complete_internal(str + i, wc + 1, params, flags, out)) {
+                if (wildcard_complete_internal(str + i, str_len - i, wc + 1, wc_len - 1, params, flags, out)) {
                     // We found a match.
                     has_match = true;
 
@@ -319,7 +347,8 @@ bool wildcard_complete(const wcstring &str, const wchar_t *wc,
     // Note out may be NULL.
     assert(wc != nullptr);
     wc_complete_pack_t params(str, desc_func, expand_flags);
-    return wildcard_complete_internal(str.c_str(), wc, params, flags, out, true /* first call */);
+    return wildcard_complete_internal(str.c_str(), str.size(), wc, std::wcslen(wc), params, flags,
+            out, true /* first call */);
 }
 
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match) {

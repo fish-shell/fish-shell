@@ -181,7 +181,7 @@ function help --description 'Show help for the fish shell'
     if string match -qr 'cmd\.exe$' -- $fish_browser[1]
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
-    # If browser is known to be graphical, put into background
+        # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
             case htmlview x-www-browser

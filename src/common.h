@@ -648,7 +648,6 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
 bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style = STRING_STYLE_SCRIPT);
 
-
 /// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
 wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize);
 

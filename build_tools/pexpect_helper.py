@@ -34,7 +34,7 @@ def get_prompt_re(counter):
             (?:\x1b[\d\[KB(m]*)* # optional colors
             (?:\[.\]\ )?  # optional vi mode prompt
          """
-        + (r"prompt\ %d>" % counter) # prompt with counter
+        + (r"prompt\ %d>" % counter)  # prompt with counter
         + r"""
             (?:\x1b[\d\[KB(m]*)* # optional colors
         """,

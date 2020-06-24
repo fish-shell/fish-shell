@@ -3,12 +3,12 @@
 
 #include "color.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cwchar>  // IWYU pragma: keep
 #include <cwctype>
-#include <algorithm>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -171,29 +171,18 @@ struct named_color_t {
 };
 
 // Keep this sorted alphabetically
-static const std::vector<named_color_t> named_colors {
-    {L"black", 0, {0x00, 0x00, 0x00}, false},
-    {L"blue", 4, {0x00, 0x00, 0x80}, false},
-    {L"brblack", 8, {0x80, 0x80, 0x80}, false},
-    {L"brblue", 12, {0x00, 0x00, 0xFF}, false},
-    {L"brbrown", 11, {0xFF, 0xFF, 0x00}, true},
-    {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},
-    {L"brgreen", 10, {0x00, 0xFF, 0x00}, false},
-    {L"brgrey", 8, {0x55, 0x55, 0x55}, true},
-    {L"brmagenta", 13, {0xFF, 0x00, 0xFF}, false},
-    {L"brown", 3, {0x72, 0x50, 0x00}, true},
-    {L"brpurple", 13, {0xFF, 0x00, 0xFF}, true},
-    {L"brred", 9, {0xFF, 0x00, 0x00}, false},
-    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},
-    {L"bryellow", 11, {0xFF, 0xFF, 0x00}, false},
-    {L"cyan", 6, {0x00, 0x80, 0x80}, false},
-    {L"green", 2, {0x00, 0x80, 0x00}, false},
-    {L"grey", 7, {0xE5, 0xE5, 0xE5}, true},
-    {L"magenta", 5, {0x80, 0x00, 0x80}, false},
-    {L"purple", 5, {0x80, 0x00, 0x80}, true},
-    {L"red", 1, {0x80, 0x00, 0x00}, false},
-    {L"white", 7, {0xC0, 0xC0, 0xC0}, false},
-    {L"yellow", 3, {0x80, 0x80, 0x00}, false},
+static const std::vector<named_color_t> named_colors{
+    {L"black", 0, {0x00, 0x00, 0x00}, false},      {L"blue", 4, {0x00, 0x00, 0x80}, false},
+    {L"brblack", 8, {0x80, 0x80, 0x80}, false},    {L"brblue", 12, {0x00, 0x00, 0xFF}, false},
+    {L"brbrown", 11, {0xFF, 0xFF, 0x00}, true},    {L"brcyan", 14, {0x00, 0xFF, 0xFF}, false},
+    {L"brgreen", 10, {0x00, 0xFF, 0x00}, false},   {L"brgrey", 8, {0x55, 0x55, 0x55}, true},
+    {L"brmagenta", 13, {0xFF, 0x00, 0xFF}, false}, {L"brown", 3, {0x72, 0x50, 0x00}, true},
+    {L"brpurple", 13, {0xFF, 0x00, 0xFF}, true},   {L"brred", 9, {0xFF, 0x00, 0x00}, false},
+    {L"brwhite", 15, {0xFF, 0xFF, 0xFF}, false},   {L"bryellow", 11, {0xFF, 0xFF, 0x00}, false},
+    {L"cyan", 6, {0x00, 0x80, 0x80}, false},       {L"green", 2, {0x00, 0x80, 0x00}, false},
+    {L"grey", 7, {0xE5, 0xE5, 0xE5}, true},        {L"magenta", 5, {0x80, 0x00, 0x80}, false},
+    {L"purple", 5, {0x80, 0x00, 0x80}, true},      {L"red", 1, {0x80, 0x00, 0x00}, false},
+    {L"white", 7, {0xC0, 0xC0, 0xC0}, false},      {L"yellow", 3, {0x80, 0x80, 0x00}, false},
 };
 
 wcstring_list_t rgb_color_t::named_color_names() {
@@ -234,7 +223,8 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
         }
         if (c >= L'A' && c <= L'Z') {
             lowercase = str;
-            std::transform(lowercase.value().begin(), lowercase.value().end(), lowercase.value().begin(), std::towlower);
+            std::transform(lowercase.value().begin(), lowercase.value().end(),
+                           lowercase.value().begin(), std::towlower);
             search.name = lowercase.value().c_str();
             break;
         }
@@ -243,8 +233,9 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
     }
 
     auto result = std::lower_bound(named_colors_begin, named_colors_end, search,
-            [&](const named_color_t &c1, const named_color_t &c2) {
-            return wcscmp(c1.name, c2.name) < 0; });
+                                   [&](const named_color_t &c1, const named_color_t &c2) {
+                                       return wcscmp(c1.name, c2.name) < 0;
+                                   });
 
     if (result != named_colors_end && !(wcscmp(search.name, result->name) < 0)) {
         data.name_idx = result->idx;

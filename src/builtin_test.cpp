@@ -559,7 +559,7 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
         int narg = 0;
         int len_to_err = 0;
         wcstring commandline;
-        for (auto arg: args) {
+        for (auto arg : args) {
             if (narg > 0) {
                 commandline.append(L" ");
             }

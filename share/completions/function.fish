@@ -14,13 +14,13 @@ function __fish_complete_variables
 end
 
 function __fish_complete_function_event_handlers
-    set -l handlers "fish_prompt"            "When new prompt is about to be displayed"   \
-                    "fish_command_not_found" "When command lookup fails"                  \
-                    "fish_preexec"           "Before executing an interactive command"    \
-                    "fish_postexec"          "After executing an interactive command"     \
-                    "fish_exit"              "Right before fish exits"                    \
-                    "fish_cancel"            "When commandline is cleared"                \
-                    "fish_posterror"         "After executing command with syntax errors"
+    set -l handlers fish_prompt "When new prompt is about to be displayed" \
+        fish_command_not_found "When command lookup fails" \
+        fish_preexec "Before executing an interactive command" \
+        fish_postexec "After executing an interactive command" \
+        fish_exit "Right before fish exits" \
+        fish_cancel "When commandline is cleared" \
+        fish_posterror "After executing command with syntax errors"
 
     printf "%s\t%s\n" $handlers
 end

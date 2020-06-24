@@ -642,12 +642,13 @@ static struct termios tty_modes_for_external_cmds;
 
 /// Restore terminal settings we care about, to prevent a broken shell.
 static void term_fix_modes(struct termios *modes) {
-    modes->c_iflag &= ~ICRNL;  // disable mapping CR (\cM) to NL (\cJ)
-    modes->c_iflag &= ~INLCR;  // disable mapping NL (\cJ) to CR (\cM)
+    modes->c_iflag &= ~ICRNL;   // disable mapping CR (\cM) to NL (\cJ)
+    modes->c_iflag &= ~INLCR;   // disable mapping NL (\cJ) to CR (\cM)
     modes->c_lflag &= ~ICANON;  // turn off canonical mode
     modes->c_lflag &= ~ECHO;    // turn off echo mode
     modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
-    modes->c_oflag |= OPOST;  // turn on "implementation-defined post processing" - this often changes how line breaks work.
+    modes->c_oflag |= OPOST;    // turn on "implementation-defined post processing" - this often
+                                // changes how line breaks work.
 
     // Disable flow control in the shell. We don't want to be stopped.
     modes->c_iflag &= ~IXON;
@@ -697,8 +698,7 @@ static void term_steal() {
     // Copy the (potentially changed) terminal modes and use them from now on.
     struct termios modes;
     tcgetattr(STDIN_FILENO, &modes);
-    std::memcpy(&tty_modes_for_external_cmds, &modes,
-                sizeof tty_modes_for_external_cmds);
+    std::memcpy(&tty_modes_for_external_cmds, &modes, sizeof tty_modes_for_external_cmds);
     // Turning off OPOST breaks output (staircase effect), we don't allow it.
     // See #7133.
     tty_modes_for_external_cmds.c_oflag |= OPOST;
@@ -708,7 +708,6 @@ static void term_steal() {
     tty_modes_for_external_cmds.c_lflag |= ECHO;
     tty_modes_for_external_cmds.c_iflag |= ICRNL;
     tty_modes_for_external_cmds.c_iflag |= INLCR;
-
 
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {

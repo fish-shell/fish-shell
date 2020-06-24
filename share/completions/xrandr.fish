@@ -35,7 +35,7 @@ complete -c xrandr -l setmonitor -d 'Define new monitor' -x
 complete -c xrandr -l delmonitor -d 'Delete monitor' -x
 complete -c xrandr -l listproviders -d 'Print all available providers'
 complete -c xrandr -l setprovideroutputsource -d 'Set source for a given provider'
-complete -c xrandr -l setprovideroffloadsink  -d 'Set provider for a given sink'
+complete -c xrandr -l setprovideroffloadsink -d 'Set provider for a given sink'
 complete -c xrandr -l noprimary -d "Don't define a primary output"
 complete -c xrandr -l current -d 'Print current screen configuration'
 complete -c xrandr -l panning -d 'Set panning parameters' -x

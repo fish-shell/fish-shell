@@ -26,7 +26,7 @@ sleep(0.010)
 sendline("jobs")
 expect_prompt("sleep.10")
 sendline("kill %1")
-expect_prompt ()
+expect_prompt()
 
 # Verify that the fish_postexec handler is called after SIGINT.
 sendline("function postexec --on-event fish_postexec; echo fish_postexec spotted; end")
@@ -38,7 +38,9 @@ expect_str("fish_postexec spotted")
 expect_prompt()
 
 # Verify that the fish_kill_signal is set.
-sendline("functions -e postexec; function postexec --on-event fish_postexec; echo fish_kill_signal $fish_kill_signal; end")
+sendline(
+    "functions -e postexec; function postexec --on-event fish_postexec; echo fish_kill_signal $fish_kill_signal; end"
+)
 expect_prompt()
 sendline("sleep 5")
 sleep(0.100)

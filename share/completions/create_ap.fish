@@ -32,7 +32,7 @@ complete -c create_ap -l stop -x -d 'Send stop command to an already running cre
 complete -c create_ap -l list-running -d 'Show already running create_ap processes'
 complete -c create_ap -l list-clients -x -d 'List clients connected to create_ap instance with given pid'
 complete -c create_ap -l mkconfig -F -d 'Store configs in file'
-complete -c create_ap -l config -F  -d 'Load configs from file'
+complete -c create_ap -l config -F -d 'Load configs from file'
 complete -c create_ap -l no-dns -d 'Disable dnsmasq DNS server'
 complete -c create_ap -l no-dnsmasq -d 'Disable dnsmasq server completely'
 complete -c create_ap -s g -x -d 'IPv4 Gateway for the Access Point'

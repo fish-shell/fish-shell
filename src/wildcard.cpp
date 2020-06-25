@@ -150,7 +150,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wcstring &str, cons
             }
         }
         // Mismatch. Maybe restart.
-        if (restart_str_x != str && !restart_is_out_of_str) {
+        if (restart_str_x != str.c_str() && !restart_is_out_of_str) {
             wc_x = restart_wc_x;
             str_x = restart_str_x;
             continue;

@@ -353,7 +353,7 @@ bool wildcard_complete(const wcstring &str, const wchar_t *wc,
 
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match) {
     enum fuzzy_match_type_t match =
-        wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match);
+        wildcard_match_internal(str, wc, leading_dots_fail_to_match);
     return match != fuzzy_match_none;
 }
 

@@ -441,7 +441,14 @@ std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
     contents.append(SAVE_MSG);
     contents.append("# VERSION: " UVARS_VERSION_3_0 "\n");
 
-    for (const auto &kv : vars) {
+    // Preserve legacy behavior by sorting the values first
+    typedef std::pair<std::reference_wrapper<const wcstring>, std::reference_wrapper<const env_var_t>> env_pair_t;
+    std::vector<env_pair_t> cloned(vars.begin(), vars.end());
+    std::sort(cloned.begin(), cloned.end(), [](const env_pair_t &p1, const env_pair_t &p2) {
+        return p1.first.get() < p2.first.get();
+    });
+
+    for (const auto &kv : cloned) {
         // Append the entry. Note that append_file_entry may fail, but that only affects one
         // variable; soldier on.
         const wcstring &key = kv.first;

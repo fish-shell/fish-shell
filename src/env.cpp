@@ -635,7 +635,7 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
             assert(var && "Variable should be present in uvars");
             // Note that std::map::insert does NOT overwrite a value already in the map,
             // which we depend on here.
-            vals.insert(std::make_pair(key, *var));
+            vals.insert(std::move(std::make_pair(std::move(key), std::move(*var))));
         }
     }
 

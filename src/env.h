@@ -5,9 +5,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "common.h"
@@ -186,7 +186,7 @@ class env_var_t {
     }
     bool operator!=(const env_var_t &rhs) const { return !(*this == rhs); }
 };
-typedef std::map<wcstring, env_var_t> var_table_t;
+typedef std::unordered_map<wcstring, env_var_t> var_table_t;
 
 /// An environment is read-only access to variable values.
 class environment_t {

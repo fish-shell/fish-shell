@@ -137,7 +137,8 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 return STATUS_CMD_OK;
             }
             case ':': {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                // We don't error here because "-b" is the only option that requires an argument,
+                // and we don't error for missing colors.
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
@@ -158,12 +159,6 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             return STATUS_INVALID_ARGS;
         }
         fgcolors.push_back(fg);
-    }
-
-    if (fgcolors.empty() && bgcolor == nullptr && !bold && !underline && !italics && !dim &&
-        !reverse) {
-        streams.err.append_format(_(L"%ls: Expected an argument\n"), argv[0]);
-        return STATUS_INVALID_ARGS;
     }
 
     // #1323: We may have multiple foreground colors. Choose the best one. If we had no foreground

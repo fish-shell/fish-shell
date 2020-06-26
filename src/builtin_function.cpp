@@ -189,7 +189,7 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 
     if (parser_keywords_is_reserved(function_name)) {
         streams.err.append_format(
-            _(L"%ls: The name '%ls' is reserved,\nand can not be used as a function name"), cmd,
+            _(L"%ls: The name '%ls' is reserved, and cannot be used as a function name"), cmd,
             function_name.c_str());
         return STATUS_INVALID_ARGS;
     }

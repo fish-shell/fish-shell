@@ -318,7 +318,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                         sz1, sz2);
                 } else {
                     // MAX_ARG_STRLEN, a linux thing that limits the size of one argument. It's
-                    // defined in binfmt.h, but we don't want to include that just to be able to
+                    // defined in binfmts.h, but we don't want to include that just to be able to
                     // print the real limit.
                     debug_safe(0,
                                "One of your arguments exceeds the operating system's argument "

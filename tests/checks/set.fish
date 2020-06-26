@@ -585,7 +585,7 @@ end
 set -x TESTVAR0
 set -x TESTVAR1 a
 set -x TESTVAR2 a b
-env | grep TESTVAR | cat -v
+env | grep TESTVAR | sort | cat -v
 #CHECK: TESTVAR0=
 #CHECK: TESTVAR1=a
 #CHECK: TESTVAR2=a b

@@ -821,98 +821,87 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
         make_fd_blocking(STDIN_FILENO);
     }
 
-    // It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no
-    // longer the controlling process group for the terminal and no longer have permission to set
-    // the process group that is in control, causing tcsetpgrp to return EPERM, even though that's
-    // not the documented behavior in tcsetpgrp(3), which instead says other bad things will happen
-    // (it says SIGTTOU will be sent to all members of the background *calling* process group, but
-    // it's more complicated than that, SIGTTOU may or may not be sent depending on the TTY
-    // configuration and whether or not signal handlers for SIGTTOU are installed. Read:
-    // http://curiousthing.org/sigttin-sigttou-deep-dive-linux In all cases, our goal here was just
-    // to hand over control of the terminal to this process group, which is a no-op if it's already
-    // been done.
-    int getpgrp_res = tcgetpgrp(STDIN_FILENO);
-    if (getpgrp_res < 0) {
-        if (errno == ENOTTY) {
-            // stdin is not a tty. This may come about if job control is enabled but we are not a
-            // tty - see #6573.
-            return notneeded;
-        } else if (errno == EBADF) {
-            // stdin has been closed. Workaround a glibc bug - see #3644.
-            redirect_tty_output();
-            return notneeded;
-        }
-        wperror(L"tcgetpgrp");
-        return error;
-    }
-    assert(getpgrp_res >= 0);
-    if (getpgrp_res == pgid) {
-        FLOGF(proc_termowner, L"Process group %d already has control of terminal", pgid);
-    } else {
-        FLOGF(proc_termowner,
-              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d",
-              pgid);
+    // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
+    // is not the process group ID of a process in the same session as the calling process."
+    // Since we _guarantee_ that this isn't the case (the child calls setpgid before it calls
+    // SIGSTOP, and the child was created in the same session as us), it seems that EPERM is
+    // being thrown because of an caching issue - the call to tcsetpgrp isn't seeing the
+    // newly-created process group just yet. On this developer's test machine (WSL running Linux
+    // 4.4.0), EPERM does indeed disappear on retry. The important thing is that we can
+    // guarantee the process isn't going to exit while we wait (which would cause us to possibly
+    // block indefinitely).
+    while (tcsetpgrp(STDIN_FILENO, pgid) != 0) {
+        FLOGF(proc_termowner, L"tcsetpgrp failed: %d", errno);
 
-        // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
-        // is not the process group ID of a process in the same session as the calling process."
-        // Since we _guarantee_ that this isn't the case (the child calls setpgid before it calls
-        // SIGSTOP, and the child was created in the same session as us), it seems that EPERM is
-        // being thrown because of an caching issue - the call to tcsetpgrp isn't seeing the
-        // newly-created process group just yet. On this developer's test machine (WSL running Linux
-        // 4.4.0), EPERM does indeed disappear on retry. The important thing is that we can
-        // guarantee the process isn't going to exit while we wait (which would cause us to possibly
-        // block indefinitely).
-        while (tcsetpgrp(STDIN_FILENO, pgid) != 0) {
-            FLOGF(proc_termowner, L"tcsetpgrp failed: %d", errno);
-
-            bool pgroup_terminated = false;
-            if (errno == EINVAL) {
-                // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
-                // too. Unlike EPERM below, EINVAL can only happen if the process group has
-                // terminated.
-                pgroup_terminated = true;
-            } else if (errno == EPERM) {
-                // Retry so long as this isn't because the process group is dead.
-                int wait_result = waitpid(-1 * pgid, &wait_result, WNOHANG);
-                if (wait_result == -1) {
-                    // Note that -1 is technically an "error" for waitpid in the sense that an
-                    // invalid argument was specified because no such process group exists any
-                    // longer. This is the observed behavior on Linux 4.4.0. a "success" result
-                    // would mean processes from the group still exist but is still running in some
-                    // state or the other.
-                    pgroup_terminated = true;
-                } else {
-                    // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
-                    // then retry until not EPERM or the process group has exited.
-                    FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", pgid);
-                    continue;
-                }
-            } else {
-                if (errno == ENOTTY) {
-                    // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
-                    // call.
+        // Before anything else, make sure that it's even necessary to call tcsetpgrp.
+        // Since it usually _is_ necessary, we only check in case it fails so as to avoid the
+        // unnecessary syscall and associated context switch, which profiling has shown to have
+        // a significant cost when running process groups in quick succession.
+        int getpgrp_res = tcgetpgrp(STDIN_FILENO);
+        if (getpgrp_res < 0) {
+            switch (errno) {
+                case ENOTTY:
+                    // stdin is not a tty. This may come about if job control is enabled but we are
+                    // not a tty - see #6573.
                     return notneeded;
-                } else {
-                    FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
-                          j->job_id(), j->command_wcstr(), pgid);
-                    wperror(L"tcsetpgrp");
-                }
-                return error;
+                case EBADF:
+                    // stdin has been closed. Workaround a glibc bug - see #3644.
+                    redirect_tty_output();
+                    return notneeded;
+                default:
+                    wperror(L"tcgetpgrp");
+                    return error;
             }
-
-            if (pgroup_terminated) {
-                // All processes in the process group has exited.
-                // Since we delay reaping any processes in a process group until all members of that
-                // job/group have been started, the only way this can happen is if the very last
-                // process in the group terminated and didn't need to access the terminal, otherwise
-                // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n",
-                      pgid);
-                return notneeded;
-            }
-
-            break;
         }
+        if (getpgrp_res == pgid) {
+            FLOGF(proc_termowner, L"Process group %d already has control of terminal", pgid);
+            return notneeded;
+        }
+
+        bool pgroup_terminated = false;
+        if (errno == EINVAL) {
+            // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
+            // too. Unlike EPERM below, EINVAL can only happen if the process group has
+            // terminated.
+            pgroup_terminated = true;
+        } else if (errno == EPERM) {
+            // Retry so long as this isn't because the process group is dead.
+            int wait_result = waitpid(-1 * pgid, &wait_result, WNOHANG);
+            if (wait_result == -1) {
+                // Note that -1 is technically an "error" for waitpid in the sense that an
+                // invalid argument was specified because no such process group exists any
+                // longer. This is the observed behavior on Linux 4.4.0. a "success" result
+                // would mean processes from the group still exist but is still running in some
+                // state or the other.
+                pgroup_terminated = true;
+            } else {
+                // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
+                // then retry until not EPERM or the process group has exited.
+                FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", pgid);
+                continue;
+            }
+        } else if (errno == ENOTTY) {
+            // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
+            // call's EBADF handler above.
+            return notneeded;
+        } else {
+            FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                  j->job_id(), j->command_wcstr(), pgid);
+            wperror(L"tcsetpgrp");
+            return error;
+        }
+
+        if (pgroup_terminated) {
+            // All processes in the process group has exited.
+            // Since we delay reaping any processes in a process group until all members of that
+            // job/group have been started, the only way this can happen is if the very last
+            // process in the group terminated and didn't need to access the terminal, otherwise
+            // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
+            FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n", pgid);
+            return notneeded;
+        }
+
+        break;
     }
 
     if (continuing_from_stopped) {

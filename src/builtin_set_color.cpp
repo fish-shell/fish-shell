@@ -87,7 +87,6 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 #endif
 
     // Variables used for parsing the argument list.
-    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
 
     // Some code passes variables to set_color that don't exist, like $fish_user_whatever. As a

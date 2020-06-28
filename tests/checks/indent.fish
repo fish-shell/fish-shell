@@ -49,7 +49,7 @@ end' | $fish_indent
 #CHECK: c
 #CHECK: echo thing
 #CHECK: end
-    
+
 echo 'echo foo |
 echo banana' | $fish_indent
 #CHECK: echo foo |
@@ -57,12 +57,11 @@ echo banana' | $fish_indent
 
 echo 'echo foo \\
 ;' | $fish_indent
-#CHECK: echo foo \
-#CHECK: 
+#CHECK: echo foo
 
 echo 'echo foo \\
 ' | $fish_indent
-#CHECK: echo foo \
+#CHECK: echo foo
 
 echo -n '
 begin
@@ -201,9 +200,9 @@ end; echo alpha "
 #CHECK: begin
 #CHECK: {{    }}echo hi
 #CHECK: else
+#CHECK:
 #CHECK: {{^}}echo bye
-#CHECK: end
-#CHECK: echo alpha "
+#CHECK: end; echo alpha "
 
 # issue 1665
 echo -n '
@@ -285,7 +284,7 @@ echo bye
 #CHECK: 
 #CHECK: echo hi |
 #CHECK: 
-#CHECK: echo bye
+#CHECK: {{    }}echo bye
 
 echo 'a;;;;;;' | $fish_indent
 #CHECK: a

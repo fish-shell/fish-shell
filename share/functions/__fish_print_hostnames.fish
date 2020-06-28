@@ -3,7 +3,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     # `getent` did not exist or `getent hosts` failed, based off the (documented) assumption that
     # the former *might* return more hosts than the latter, which has never been officially noted
     # to be the case. As `getent` is several times slower, involves shelling out, and is not
-    # available on some platforms (Cygin and at least some versions of macOS, such as 10.10), that
+    # available on some platforms (Cygwin and at least some versions of macOS, such as 10.10), that
     # order is now reversed and `getent hosts` is only used if the hosts file is not found at
     # `/etc/hosts` for portability reasons.
 
@@ -115,8 +115,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         end
     end
 
-    # Avoid shelling out to `awk` more than once by reading all files and operating on their
-    # combined contents
+    # Read all files and operate on their combined content
     for file in $known_hosts
         if test -r $file
             read -z <$file
@@ -131,8 +130,8 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     # string match -ar "(?:^|,)(?![@|*!])\[?([^ ,:\]]+)\]?"
     #
     # Instead, manually piece together the regular expressions
-    string match -v -r '^\s*[!*|@#]' | string replace -r '^\s*(\S+) .*' '$1' |
-    string split ',' | string replace -r '\[?([^:\]]+).*' '$1'
+    string match -v -r '^\s*[!*|@#]' | string replace -rf '^\s*(\S+) .*' '$1' |
+    string split ',' | string replace -r '\[?([^\]]+).*' '$1'
 
     return 0
 end

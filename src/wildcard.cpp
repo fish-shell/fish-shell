@@ -233,7 +233,8 @@ static bool wildcard_complete_internal(const wchar_t * const str, size_t str_len
 
     // Maybe we have no more wildcards at all. This includes the empty string.
     if (next_wc_char_pos == wcstring::npos) {
-        // A string cannot fuzzy match a wildcard that is longer than the string itself
+        // A string cannot fuzzy match a pattern without wildcards that is longer than the string
+        // itself
         if (wc_len > str_len) {
             return false;
         }

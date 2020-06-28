@@ -1063,6 +1063,8 @@ complete -x -c git -n '__fish_git_using_command commit' -l date -d 'Override the
 complete -x -c git -n '__fish_git_using_command commit' -s m -l message -d 'Use the given message as the commit message'
 complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the selected commit message without launching an editor'
 complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
+complete -f -c git -n '__fish_git_using_command commit' -l allow-empty -d 'Create a commit with no changes'
+complete -f -c git -n '__fish_git_using_command commit' -l allow-empty-message -d 'Create a commit with no commit message'
 # TODO options
 
 ### count-objects

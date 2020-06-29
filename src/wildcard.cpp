@@ -403,7 +403,7 @@ static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
         return COMPLETE_SOCKET_DESC;
     } else if (S_ISDIR(buf.st_mode)) {
         return COMPLETE_DIRECTORY_DESC;
-    } else if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXGRP) && waccess(filename, X_OK) == 0) {
+    } else if (buf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH) && waccess(filename, X_OK) == 0) {
         // Weird group permissions and other such issues make it non-trivial to find out if we can
         // actually execute a file using the result from stat. It is much safer to use the access
         // function, since it tells us exactly what we want to know.

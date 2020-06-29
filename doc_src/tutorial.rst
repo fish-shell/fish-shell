@@ -397,7 +397,7 @@ To write them on the same line, use the semicolon (";"). That means the followin
 Exit Status
 -----------
 
-When a command exits, it returns a status code as a natural number.
+When a command exits, it returns a status code as a non-negative integer.
 
 Unlike other shells, ``fish`` stores the exit status of the last command in ``$status`` instead of ``$?``.
 

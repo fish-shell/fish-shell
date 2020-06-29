@@ -1478,7 +1478,7 @@ Emacs mode commands
 
 - :kbd:`Alt`\ +\ :kbd:`T` transposes the last two words.
 
-- :kbd:`Control`\ +\ :kbd:`_` (:kbd:`Control`\ +\ :kbd:`/` on some terminals) undoes the most recent edit of the line.
+- :kbd:`Control`\ +\ :kbd:`Z`, :kbd:`Control`\ +\ :kbd:`_` (:kbd:`Control`\ +\ :kbd:`/` on some terminals) undo the most recent edit of the line.
 
 - :kbd:`Alt`\ +\ :kbd:`/` reverts the most recent undo.
 

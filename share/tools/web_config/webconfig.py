@@ -14,11 +14,9 @@ import multiprocessing.pool
 import operator
 import os
 import platform
-import random
 import re
 import select
 import socket
-import string
 import subprocess
 import sys
 import tempfile

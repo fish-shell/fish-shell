@@ -141,6 +141,7 @@ Completions
    -  ``windscribe``
    -  ``wireshark``, ``tshark``, and ``dumpcap``
    -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum``
+   -  ``yadm``
    -  ``zopfli``, and ``zopflipng``
 
 Deprecations and removed features

@@ -108,13 +108,13 @@ Note: Optional arguments
 
 An option defined with ``=?`` can take optional arguments. Optional arguments have to be *directly attached* to the option they belong to.
 
-That means you can only call::
+That means the argument will only be used for the option if you use it like::
 
   cmd --flag=value
   # or
   cmd  -fvalue
 
-but not::
+but not if used like::
 
   cmd --flag value
   # "value" here will be used as a positional argument and "--flag" won't have an argument.
@@ -124,9 +124,9 @@ If this weren't the case, using an option without an optional argument would be 
 For example::
 
   grep --color auto
-  # Here "auto" will be used as the search string, "color" will not have an argument and will fall back to the default
+  # Here "auto" will be used as the search string, "color" will not have an argument and will fall back to the default, which also *happens to be* auto.
 
-This isn't specific to argparse but common to all things using ``getopt(3)`` (if they have optional arguments at all).
+This isn't specific to argparse but common to all things using ``getopt(3)`` (if they have optional arguments at all). That ``grep`` example is how GNU grep actually behaves.
 
 Flag Value Validation
 ---------------------

@@ -3,11 +3,11 @@ packages:
   - ncurses
   - gcc
   - gettext
-  - expect
   - cmake
   - gmake
   - pcre2
   - python
+  - py37-pexpect
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:

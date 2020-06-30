@@ -52,7 +52,7 @@ complete -c sudo -n __fish_sudo_no_subcommand -s e -rF -d Edit
 complete -c sudo -n __fish_sudo_no_subcommand -s g -a "(__fish_complete_groups)" -x -d "Run command as group"
 complete -c sudo -n __fish_sudo_no_subcommand -s i -d "Run a login shell"
 complete -c sudo -n __fish_sudo_no_subcommand -s k -d "Reset or ignore the credential timestamp"
-complete -c sudo -n __fish_sudo_no_subcommand -s l -d "List the allowed and forbidden commands for the given user, or the full path to the given command if it is allowed"
+complete -c sudo -n __fish_sudo_no_subcommand -s l -d "List the allowed and forbidden commands for the given user"
 complete -c sudo -n __fish_sudo_no_subcommand -s n -d "Do not prompt for a password - if one is needed, fail"
 complete -c sudo -n __fish_sudo_no_subcommand -s p -d "Specify a custom password prompt"
 complete -c sudo -n __fish_sudo_no_subcommand -s s -d "Run the given command in a shell"

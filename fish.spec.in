@@ -30,9 +30,7 @@ BuildRequires: gcc48 gcc48-c++
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en
 %endif
-%if 0%{?rhel} && 0%{?rhel} < 8
-BuildRequires: python
-%else
+%if 0%{?rhel} != 6
 BuildRequires: python3
 %endif
 
@@ -44,6 +42,12 @@ Requires:		python
 Requires:		python3
 %endif
 Requires:		man
+
+# Although the build scripts mangle the version number to be RPM compatible
+# for continuous builds (transforming the output of `git describe`), Fedora 32+
+# also validates the version inside the pkgconfig file. There's no impetus for this
+# with fish.
+%define _wrong_version_format_terminate_build 0
 
 %description
 
@@ -87,8 +91,8 @@ make %{?_smp_mflags}
 %if 0%{?suse_version}
 %suse_update_desktop_file fish "System;TerminalEmulator"
 %endif
-cp -a README.rst %{buildroot}%{_pkgdocdir}
-cp -a CONTRIBUTING.rst %{buildroot}%{_pkgdocdir}
+cp -a README.rst %{buildroot}%{_datadir}/doc/fish/
+cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
@@ -126,7 +130,6 @@ fi
 
 # man files
 %{_mandir}/man1/*
-%{_datadir}/fish/man/man1/
 
 # The program binaries
 %attr(0755,root,root) %{_bindir}/*

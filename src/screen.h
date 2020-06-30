@@ -40,9 +40,7 @@ struct line_t {
     line_t() = default;
 
     /// Clear the line's contents.
-    void clear(void) {
-        text.clear();
-    }
+    void clear(void) { text.clear(); }
 
     /// Append a single character \p txt to the line with color \p c.
     void append(wchar_t c, highlight_spec_t color) { text.push_back({c, color}); }

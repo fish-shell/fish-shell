@@ -2,8 +2,8 @@ image: archlinux
 packages:
   - cmake
   - ninja
-  - expect
   - python
+  - python-pexpect
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:

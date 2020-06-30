@@ -264,8 +264,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     # Notify terminals when $PWD changes (issue #906).
-    # VTE based terminals, Terminal.app, and iTerm.app (TODO) support this.
-    if test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = Apple_Terminal -a (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
+    # VTE based terminals, Terminal.app, iTerm.app (TODO), and foot support this.
+    if test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = Apple_Terminal -a (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309 -o "$TERM" = foot
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
             if status --is-command-substitution || set -q INSIDE_EMACS
                 return

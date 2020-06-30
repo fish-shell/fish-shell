@@ -169,8 +169,8 @@ const wchar_t *keyword_description(parse_keyword_t type) {
 }
 
 static wcstring token_type_user_presentable_description(
-    parse_token_type_t type, parse_keyword_t keyword = parse_keyword_none) {
-    if (keyword != parse_keyword_none) {
+    parse_token_type_t type, parse_keyword_t keyword = parse_keyword_t::none) {
+    if (keyword != parse_keyword_t::none) {
         return format_string(L"keyword '%ls'", keyword_description(keyword));
     }
 
@@ -241,7 +241,7 @@ wcstring parse_node_t::describe() const {
 /// Returns a string description of the given parse token.
 wcstring parse_token_t::describe() const {
     wcstring result = token_type_description(type);
-    if (keyword != parse_keyword_none) {
+    if (keyword != parse_keyword_t::none) {
         append_format(result, L" <%ls>", keyword_description(keyword));
     }
     return result;
@@ -366,14 +366,14 @@ struct parse_stack_element_t {
     node_offset_t node_idx;
 
     explicit parse_stack_element_t(parse_token_type_t t, node_offset_t idx)
-        : type(t), keyword(parse_keyword_none), node_idx(idx) {}
+        : type(t), keyword(parse_keyword_t::none), node_idx(idx) {}
 
     explicit parse_stack_element_t(production_element_t e, node_offset_t idx)
         : type(production_element_type(e)), keyword(production_element_keyword(e)), node_idx(idx) {}
 
     wcstring describe() const {
         wcstring result = token_type_description(type);
-        if (keyword != parse_keyword_none) {
+        if (keyword != parse_keyword_t::none) {
             append_format(result, L" <%ls>", keyword_description(keyword));
         }
         return result;
@@ -668,16 +668,16 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token) {
     this->fatal_errored = true;
     if (this->should_generate_error_messages) {
         switch (token.keyword) {
-            case parse_keyword_end: {
+            case parse_keyword_t::kw_end: {
                 this->parse_error(token, parse_error_unbalancing_end, L"'end' outside of a block");
                 break;
             }
-            case parse_keyword_else: {
+            case parse_keyword_t::kw_else: {
                 this->parse_error(token, parse_error_unbalancing_else,
                                   L"'else' builtin not inside of if block");
                 break;
             }
-            case parse_keyword_case: {
+            case parse_keyword_t::kw_case: {
                 this->parse_error(token, parse_error_unbalancing_case,
                                   L"'case' builtin not inside of switch block");
                 break;
@@ -823,7 +823,7 @@ bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
         if (stack_top.type == parse_token_type_string) {
             // We matched if the keywords match, or no keyword was required.
             matched =
-                (stack_top.keyword == parse_keyword_none || stack_top.keyword == token.keyword);
+                (stack_top.keyword == parse_keyword_t::none || stack_top.keyword == token.keyword);
         } else {
             // For other types, we only require that the types match.
             matched = true;
@@ -843,19 +843,20 @@ bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
         // Failure
         if (stack_top.type == parse_token_type_string && token.type == parse_token_type_string) {
             // Keyword failure. We should unify this with the 'matched' computation above.
-            assert(stack_top.keyword != parse_keyword_none && stack_top.keyword != token.keyword);
+            assert(stack_top.keyword != parse_keyword_t::none &&
+                   stack_top.keyword != token.keyword);
 
             // Check to see which keyword we got which was considered wrong.
             switch (token.keyword) {
                 // Some keywords are only valid in certain contexts. If this cascaded all the
                 // way down through the outermost job_list, it was not in a valid context.
-                case parse_keyword_case:
-                case parse_keyword_end:
-                case parse_keyword_else: {
+                case parse_keyword_t::kw_case:
+                case parse_keyword_t::kw_end:
+                case parse_keyword_t::kw_else: {
                     this->parse_error_unbalancing_token(token);
                     break;
                 }
-                case parse_keyword_none: {
+                case parse_keyword_t::none: {
                     // This is a random other string (not a keyword).
                     const wcstring expected = keyword_description(stack_top.keyword);
                     this->parse_error(token, parse_error_generic, L"Expected keyword '%ls'",
@@ -864,9 +865,9 @@ bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
                 }
                 default: {
                     // Got a real keyword we can report.
-                    const wcstring actual =
-                        (token.keyword == parse_keyword_none ? token.describe()
-                                                             : keyword_description(token.keyword));
+                    const wcstring actual = (token.keyword == parse_keyword_t::none
+                                                 ? token.describe()
+                                                 : keyword_description(token.keyword));
                     const wcstring expected = keyword_description(stack_top.keyword);
                     this->parse_error(token, parse_error_generic,
                                       L"Expected keyword '%ls', instead got keyword '%ls'",
@@ -874,7 +875,7 @@ bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
                     break;
                 }
             }
-        } else if (stack_top.keyword == parse_keyword_end &&
+        } else if (stack_top.keyword == parse_keyword_t::kw_end &&
                    token.type == parse_token_type_terminate &&
                    this->report_error_for_unclosed_block()) {
             // handled by report_error_for_unclosed_block
@@ -941,7 +942,8 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
             tnode_t<grammar::variable_assignments> variable_assignments;
             if (const parse_node_t *parent = nodes.get_parent(node)) {
                 if (parent->type == symbol_statement &&
-                    (token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or)) {
+                    (token1.keyword == parse_keyword_t::kw_and ||
+                     token1.keyword == parse_keyword_t::kw_or)) {
                     if (const parse_node_t *grandparent = nodes.get_parent(*parent)) {
                         if (grandparent->type == symbol_job_continuation) {
                             parse_error(token1, parse_error_andor_in_pipeline, L" "
@@ -1026,11 +1028,11 @@ static bool is_keyword_char(wchar_t c) {
            c == L'\'' || c == L'"' || c == L'\\' || c == '\n' || c == L'!';
 }
 
-/// Given a token, returns the keyword it matches, or parse_keyword_none.
+/// Given a token, returns the keyword it matches, or parse_keyword_t::none.
 static parse_keyword_t keyword_for_token(token_type_t tok, const wcstring &token) {
     /* Only strings can be keywords */
     if (tok != token_type_t::string) {
-        return parse_keyword_none;
+        return parse_keyword_t::none;
     }
 
     // If tok_txt is clean (which most are), we can compare it directly. Otherwise we have to expand
@@ -1038,7 +1040,7 @@ static parse_keyword_t keyword_for_token(token_type_t tok, const wcstring &token
     // expansions. So we do our own "cleanliness" check; if we find a character not in our allowed
     // set we know it's not a keyword, and if we never find a quote we don't have to expand! Note
     // that this lowercase set could be shrunk to be just the characters that are in keywords.
-    parse_keyword_t result = parse_keyword_none;
+    parse_keyword_t result = parse_keyword_t::none;
     bool needs_expand = false, all_chars_valid = true;
     const wchar_t *tok_txt = token.c_str();
     for (size_t i = 0; tok_txt[i] != L'\0'; i++) {

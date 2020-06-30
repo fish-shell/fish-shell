@@ -189,17 +189,35 @@ pid_t execute_fork() {
 }
 
 #if FISH_USE_POSIX_SPAWN
-bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
-                                        posix_spawn_file_actions_t *actions, const job_t *j,
-                                        const dup2_list_t &dup2s) {
-    // Initialize the output.
-    if (posix_spawnattr_init(attr) != 0) {
-        return false;
+
+// Given an error code, if it is the first error, record it.
+// \return whether we have any error.
+bool posix_spawner_t::check_fail(int err) {
+    if (error_ == 0) error_ = err;
+    return error_ != 0;
+}
+
+posix_spawner_t::~posix_spawner_t() {
+    if (attr_) {
+        posix_spawnattr_destroy(this->attr());
+    }
+    if (actions_) {
+        posix_spawn_file_actions_destroy(this->actions());
+    }
+}
+
+posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
+    // Initialize our fields. This may fail.
+    {
+        posix_spawnattr_t attr;
+        if (check_fail(posix_spawnattr_init(&attr))) return;
+        this->attr_ = attr;
     }
 
-    if (posix_spawn_file_actions_init(actions) != 0) {
-        posix_spawnattr_destroy(attr);
-        return false;
+    {
+        posix_spawn_file_actions_t actions;
+        if (check_fail(posix_spawn_file_actions_init(&actions))) return;
+        this->actions_ = actions;
     }
 
     // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
@@ -226,46 +244,45 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     if (reset_sigmask) flags |= POSIX_SPAWN_SETSIGMASK;
     if (desired_pgid.has_value()) flags |= POSIX_SPAWN_SETPGROUP;
 
-    int err = 0;
-    if (!err) err = posix_spawnattr_setflags(attr, flags);
+    if (check_fail(posix_spawnattr_setflags(attr(), flags))) return;
 
-    if (!err && desired_pgid.has_value()) {
-        err = posix_spawnattr_setpgroup(attr, *desired_pgid);
+    if (desired_pgid.has_value()) {
+        if (check_fail(posix_spawnattr_setpgroup(attr(), *desired_pgid))) return;
     }
 
     // Everybody gets default handlers.
-    if (!err && reset_signal_handlers) {
+    if (reset_signal_handlers) {
         sigset_t sigdefault;
         get_signals_with_handlers(&sigdefault);
-        err = posix_spawnattr_setsigdefault(attr, &sigdefault);
+        if (check_fail(posix_spawnattr_setsigdefault(attr(), &sigdefault))) return;
     }
 
     // No signals blocked.
-    sigset_t sigmask;
-    sigemptyset(&sigmask);
-    if (!err && reset_sigmask) {
+    if (reset_sigmask) {
+        sigset_t sigmask;
+        sigemptyset(&sigmask);
         blocked_signals_for_job(*j, &sigmask);
-        err = posix_spawnattr_setsigmask(attr, &sigmask);
+        if (check_fail(posix_spawnattr_setsigmask(attr(), &sigmask))) return;
     }
 
     // Apply our dup2s.
     for (const auto &act : dup2s.get_actions()) {
-        if (err) break;
         if (act.target < 0) {
-            err = posix_spawn_file_actions_addclose(actions, act.src);
+            if (check_fail(posix_spawn_file_actions_addclose(actions(), act.src))) return;
         } else {
-            err = posix_spawn_file_actions_adddup2(actions, act.src, act.target);
+            if (check_fail(posix_spawn_file_actions_adddup2(actions(), act.src, act.target)))
+                return;
         }
     }
-
-    // Clean up on error.
-    if (err) {
-        posix_spawnattr_destroy(attr);
-        posix_spawn_file_actions_destroy(actions);
-    }
-
-    return !err;
 }
+
+maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char *const envp[]) {
+    if (get_error()) return none();
+    pid_t pid = -1;
+    if (check_fail(posix_spawn(&pid, cmd, &*actions_, &*attr_, argv, envp))) return none();
+    return pid;
+}
+
 #endif  // FISH_USE_POSIX_SPAWN
 
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
@@ -301,7 +318,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                         sz1, sz2);
                 } else {
                     // MAX_ARG_STRLEN, a linux thing that limits the size of one argument. It's
-                    // defined in binfmt.h, but we don't want to include that just to be able to
+                    // defined in binfmts.h, but we don't want to include that just to be able to
                     // print the real limit.
                     debug_safe(0,
                                "One of your arguments exceeds the operating system's argument "
@@ -385,4 +402,4 @@ static char *get_interpreter(const char *command, char *buffer, size_t buff_size
         return buffer + 2;
     }
     return nullptr;
-}
+};

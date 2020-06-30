@@ -94,7 +94,7 @@ Running fish requires:
    ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sort``, ``tee``, ``tr``,
    ``uname`` and ``sed`` at least, but the full coreutils plus find, sed
    and awk is preferred)
--  gettext (library and ``gettext`` command), if compiled with
+-  The gettext library, if compiled with
    translation support
 
 The following optional features also have specific requirements:
@@ -157,6 +157,8 @@ Compiling fish requires:
 
 Sphinx is also optionally required to build the documentation from a
 cloned git repository.
+
+Additionally, running the test suite requires python 3.3+ and the pexpect package.
 
 Building from source (all platforms) - Makefile generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

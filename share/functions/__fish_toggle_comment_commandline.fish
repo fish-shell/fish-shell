@@ -4,12 +4,13 @@
 # retrieving the command from the shell history and removing the comment chars.
 #
 # This deliberately does not execute the command when removing the comment characters to give you an
-# opportunity to modify the command.
+# opportunity to modify the command. Also if the commandline is empty, the most recently commented
+# out history item is uncommented and presented.
 
 function __fish_toggle_comment_commandline --description 'Comment/uncomment the current command'
     set -l cmdlines (commandline -b)
     if test "$cmdlines" = ""
-        return
+        history search -p "#" -z | read -z cmdlines
     end
     set -l cmdlines (printf '%s\n' '#'$cmdlines | string replace -r '^##' '')
     commandline -r $cmdlines

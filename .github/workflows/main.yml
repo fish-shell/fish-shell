@@ -15,7 +15,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install deps
       run: |
-        sudo apt install expect gettext libncurses5-dev libpcre2-dev
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip
+        sudo pip3 install pexpect
     - name: cmake
       run: |
         mkdir build && cd build
@@ -35,11 +36,12 @@ jobs:
   #   - uses: actions/checkout@v2
   #   - name: Install deps
   #     run: |
-  #       brew install pcre2
+  #       brew install python3
+  #       sudo pip3 install pexpect
   #   - name: cmake
   #     run: |
   #       mkdir build && cd build
-  #       cmake .. 
+  #       cmake -DWITH_GETTEXT=NO ..
   #   - name: make
   #     run: |
   #       make

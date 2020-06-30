@@ -15,15 +15,10 @@ emit linenumber
 
 type --nonexistent-option-so-we-get-a-backtrace
 # CHECKERR: type: Unknown option '--nonexistent-option-so-we-get-a-backtrace'
-# CHECKERR: {{.*/type.fish}} (line 7):
-# CHECKERR:    argparse -n type -x t,p,P $options -- $argv
-# CHECKERR:    ^
-# CHECKERR: in function 'type' with arguments '--nonexistent-option-so-we-get-a-backtrace'
-# CHECKERR:     called on line 16 of file {{.*}}line-number.fish
 
 function line-number
     status line-number
 end
 
 line-number
-# CHECK: 25
+# CHECK: 20

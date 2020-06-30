@@ -255,7 +255,8 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
             if (last_was_semicolon) {
                 // We keep the semicolon for `; and` and `; or`,
                 // others we turn into newlines.
-                if (node.keyword != parse_keyword_and && node.keyword != parse_keyword_or) {
+                if (node.keyword != parse_keyword_t::kw_and &&
+                    node.keyword != parse_keyword_t::kw_or) {
                     append_newline();
                 } else {
                     output.push_back(L';');

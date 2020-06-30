@@ -64,7 +64,7 @@ static bool any_jobs_finished(size_t jobs_len, const parser_t &parser) {
 }
 
 static int wait_for_backgrounds(parser_t &parser, bool any_flag) {
-    sigint_checker_t sigint;
+    sigchecker_t sigint(topic_t::sighupint);
     size_t jobs_len = parser.jobs().size();
     while ((!any_flag && !all_jobs_finished(parser)) ||
            (any_flag && !any_jobs_finished(jobs_len, parser))) {
@@ -106,7 +106,7 @@ static bool any_specified_jobs_finished(const parser_t &parser, const std::vecto
 
 static int wait_for_backgrounds_specified(parser_t &parser, const std::vector<job_id_t> &ids,
                                           bool any_flag) {
-    sigint_checker_t sigint;
+    sigchecker_t sigint(topic_t::sighupint);
     while ((!any_flag && !all_specified_jobs_finished(parser, ids)) ||
            (any_flag && !any_specified_jobs_finished(parser, ids))) {
         if (sigint.check()) {

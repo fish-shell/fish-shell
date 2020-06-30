@@ -108,8 +108,7 @@ test "$name3[3..-1]" = "$name3a[2..-1]"; and echo "3 = 3a"
 function test
     echo banana
 end
-#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: The name 'test' is reserved,
-#CHECKERR: and can not be used as a function name
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: The name 'test' is reserved, and cannot be used as a function name
 #CHECKERR: function test
 #CHECKERR: ^
 

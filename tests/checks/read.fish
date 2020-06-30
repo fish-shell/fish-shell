@@ -244,7 +244,7 @@ if test $status -ne 0
     echo the read of the max amount of data failed unexpectedly
 end
 if test (string length "$x") -ne $fish_read_limit
-    echo reading the max amount of data with --nchars failed the length test: (string length "$x")
+    echo reading the max amount of data with --nchars failed the length test: (string length "$x") / $fish_read_limit
 end
 
 # Confirm reading non-interactively works -- \#4206 regression

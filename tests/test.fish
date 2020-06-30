@@ -9,7 +9,7 @@
 set -x FISH_UNIT_TESTS_RUNNING 1
 
 # Change to directory containing this script
-cd (dirname (status -f))
+cd (status dirname)
 
 # Test files specified on commandline, or all checks.
 set -l files_to_test

@@ -81,27 +81,33 @@ struct electric_var_t {
     static const electric_var_t *for_name(const wcstring &name);
 };
 
-static const electric_var_t electric_variables[] = {
+// Keep sorted alphabetically
+static const std::vector<electric_var_t> electric_variables {
+    {L"FISH_VERSION", electric_var_t::freadonly},
     {L"PWD", electric_var_t::freadonly | electric_var_t::fcomputed | electric_var_t::fexports},
     {L"SHLVL", electric_var_t::freadonly | electric_var_t::fexports},
+    {L"_", electric_var_t::freadonly},
+    {L"fish_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"fish_pid", electric_var_t::freadonly},
+    {L"fish_private_mode", electric_var_t::freadonly},
     {L"history", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"hostname", electric_var_t::freadonly},
     {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"status", electric_var_t::freadonly | electric_var_t::fcomputed},
-    {L"version", electric_var_t::freadonly},
-    {L"FISH_VERSION", electric_var_t::freadonly},
-    {L"fish_pid", electric_var_t::freadonly},
-    {L"hostname", electric_var_t::freadonly},
-    {L"_", electric_var_t::freadonly},
-    {L"fish_private_mode", electric_var_t::freadonly},
     {L"umask", electric_var_t::fcomputed},
-    {L"fish_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"version", electric_var_t::freadonly},
 };
 
 const electric_var_t *electric_var_t::for_name(const wcstring &name) {
-    for (const auto &var : electric_variables) {
-        if (name == var.name) {
-            return &var;
-        }
+    static auto first = electric_variables.begin();
+    static auto last = electric_variables.end();
+    electric_var_t search { name.c_str(), 0 };
+    auto binsearch = std::lower_bound(first, last, search,
+            [&](const electric_var_t &v1, const electric_var_t &v2) {
+                return wcscmp(v1.name, v2.name) < 0;
+            });
+    if (binsearch != last && wcscmp(name.c_str(), binsearch->name) == 0) {
+        return &*binsearch;
     }
     return nullptr;
 }
@@ -629,7 +635,9 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
             assert(var && "Variable should be present in uvars");
             // Note that std::map::insert does NOT overwrite a value already in the map,
             // which we depend on here.
-            vals.insert(std::make_pair(key, *var));
+            // Note: Using std::move around make_pair prevents the compiler from implementing
+            // copy elision.
+            vals.insert(std::make_pair(std::move(key), std::move(*var)));
         }
     }
 

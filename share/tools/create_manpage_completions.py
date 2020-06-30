@@ -42,7 +42,7 @@ except ImportError:
 try:
     from subprocess import DEVNULL
 except ImportError:
-    DEVNULL = open(os.devnull, 'wb')
+    DEVNULL = open(os.devnull, "wb")
 
 # Whether we're Python 3
 IS_PY3 = sys.version_info[0] >= 3
@@ -999,7 +999,7 @@ def get_paths_from_man_locations():
         print(
             "Unable to get the manpath, falling back to %s." % ":".join(parent_paths),
             "Explictly set $MANPATH to fix this error.",
-            file=sys.stderr
+            file=sys.stderr,
         )
 
     result = []

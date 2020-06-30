@@ -31,6 +31,7 @@ Notable improvements and fixes
 - ``fish_preexec`` and ``fish_postexec`` events are no longer triggered
   for empty commands.
 - The ``test`` builtin now better shows where an error occured (#6030).
+- Add a helper function to know if the user is root (#7031).
 
 Syntax changes and new commands
 -------------------------------
@@ -78,6 +79,7 @@ Interactive improvements
 -  When pressing Tab, fish displays ambiguous completions even when they
    have a common prefix, without the user having to press Tab again
    (#6924).
+-  Control-z is now available for binding (#7152).
 
 
 New or improved bindings
@@ -93,6 +95,8 @@ New or improved bindings
 -  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (#7012).
 -  ``__fish_prepend_sudo`` (Alt-S) now uses the previous commandline if the current one is empty,
    to simplify rerunning the previous command with ``sudo`` (#7079).
+- ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
+  from history if the commandline is empty (#7137).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -115,12 +119,15 @@ Completions
 
 -  Added completions for
 
+   -  ``apk``
    -  ``asciidoctor``
    -  ``cmark``
    -  ``create_ap``
+   -  ``deno``
    -  ``dhclient``
    -  ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
       ``pg_dumpall``
+   -  ``gh``
    -  ``gitk``
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
    -  ``nmap``, ``ncat``
@@ -133,6 +140,7 @@ Completions
    -  ``tig``
    -  ``windscribe``
    -  ``wireshark``, ``tshark``, and ``dumpcap``
+   -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum``
    -  ``yadm``
    -  ``zopfli``, and ``zopflipng``
 
@@ -155,6 +163,7 @@ For distributors and developers
    builds with the system-installed PCRE2, or the version it bundles. By
    default it prefers the system library if available, unless Mac
    codesigning is enabled (#6952).
+-  Running the interactive tests now depends on python 3.3+ and the pexpect package (#6825).
 
 --------------
 

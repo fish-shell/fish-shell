@@ -38,9 +38,9 @@ RESOLVE(job_list) {
         case parse_token_type_string: {
             // Some keywords are special.
             switch (token1.keyword) {
-                case parse_keyword_end:
-                case parse_keyword_else:
-                case parse_keyword_case: {
+                case parse_keyword_t::kw_end:
+                case parse_keyword_t::kw_else:
+                case parse_keyword_t::kw_case: {
                     return production_for<empty>();  // end this job list
                 }
                 default: {
@@ -74,11 +74,11 @@ RESOLVE(job_decorator) {
     }
 
     switch (token1.keyword) {
-        case parse_keyword_and: {
+        case parse_keyword_t::kw_and: {
             *out_tag = parse_job_decoration_and;
             return production_for<ands>();
         }
-        case parse_keyword_or: {
+        case parse_keyword_t::kw_or: {
             *out_tag = parse_job_decoration_or;
             return production_for<ors>();
         }
@@ -132,16 +132,16 @@ RESOLVE(statement) {
     if (token1.type == parse_token_type_string) {
         // If we are a function, then look for help arguments. Otherwise, if the next token looks
         // like an option (starts with a dash), then parse it as a decorated statement.
-        if (token1.keyword == parse_keyword_function && token2.is_help_argument) {
+        if (token1.keyword == parse_keyword_t::kw_function && token2.is_help_argument) {
             return production_for<decorated>();
-        } else if (token1.keyword != parse_keyword_function && token2.has_dash_prefix) {
+        } else if (token1.keyword != parse_keyword_t::kw_function && token2.has_dash_prefix) {
             return production_for<decorated>();
         }
 
         // Likewise if the next token doesn't look like an argument at all. This corresponds to e.g.
         // a "naked if".
-        bool naked_invocation_invokes_help =
-            (token1.keyword != parse_keyword_begin && token1.keyword != parse_keyword_end);
+        bool naked_invocation_invokes_help = (token1.keyword != parse_keyword_t::kw_begin &&
+                                              token1.keyword != parse_keyword_t::kw_end);
         if (naked_invocation_invokes_help &&
             (token2.type == parse_token_type_end || token2.type == parse_token_type_terminate)) {
             return production_for<decorated>();
@@ -151,26 +151,26 @@ RESOLVE(statement) {
     switch (token1.type) {
         case parse_token_type_string: {
             switch (token1.keyword) {
-                case parse_keyword_not:
-                case parse_keyword_exclam: {
+                case parse_keyword_t::kw_not:
+                case parse_keyword_t::kw_exclam: {
                     return production_for<nots>();
                 }
-                case parse_keyword_for:
-                case parse_keyword_while:
-                case parse_keyword_function:
-                case parse_keyword_begin: {
+                case parse_keyword_t::kw_for:
+                case parse_keyword_t::kw_while:
+                case parse_keyword_t::kw_function:
+                case parse_keyword_t::kw_begin: {
                     return production_for<block>();
                 }
-                case parse_keyword_if: {
+                case parse_keyword_t::kw_if: {
                     return production_for<ifs>();
                 }
-                case parse_keyword_else: {
+                case parse_keyword_t::kw_else: {
                     return NO_PRODUCTION;
                 }
-                case parse_keyword_switch: {
+                case parse_keyword_t::kw_switch: {
                     return production_for<switchs>();
                 }
-                case parse_keyword_end: {
+                case parse_keyword_t::kw_end: {
                     return NO_PRODUCTION;
                 }
                 // All other keywords fall through to decorated statement.
@@ -196,7 +196,7 @@ RESOLVE(else_clause) {
     UNUSED(out_tag);
 
     switch (token1.keyword) {
-        case parse_keyword_else: {
+        case parse_keyword_t::kw_else: {
             return production_for<else_cont>();
         }
         default: {
@@ -210,7 +210,7 @@ RESOLVE(else_continuation) {
     UNUSED(out_tag);
 
     switch (token1.keyword) {
-        case parse_keyword_if: {
+        case parse_keyword_t::kw_if: {
             return production_for<else_if>();
         }
         default: {
@@ -223,7 +223,7 @@ RESOLVE(case_item_list) {
     UNUSED(token2);
     UNUSED(out_tag);
 
-    if (token1.keyword == parse_keyword_case)
+    if (token1.keyword == parse_keyword_t::kw_case)
         return production_for<case_items>();
     else if (token1.type == parse_token_type_end)
         return production_for<blank_line>();
@@ -235,9 +235,9 @@ RESOLVE(not_statement) {
     UNUSED(token2);
     UNUSED(out_tag);
     switch (token1.keyword) {
-        case parse_keyword_not:
+        case parse_keyword_t::kw_not:
             return production_for<nots>();
-        case parse_keyword_exclam:
+        case parse_keyword_t::kw_exclam:
             return production_for<exclams>();
         default:
             return NO_PRODUCTION;
@@ -249,7 +249,8 @@ RESOLVE(andor_job_list) {
 
     if (token1.type == parse_token_type_end) {
         return production_for<empty_line>();
-    } else if (token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or) {
+    } else if (token1.keyword == parse_keyword_t::kw_and ||
+               token1.keyword == parse_keyword_t::kw_or) {
         // Check that the argument to and/or is a string that's not help. Otherwise it's either 'and
         // --help' or a naked 'and', and not part of this list.
         if (token2.type == parse_token_type_string && !token2.is_help_argument) {
@@ -295,16 +296,16 @@ RESOLVE(block_header) {
     UNUSED(out_tag);
 
     switch (token1.keyword) {
-        case parse_keyword_for: {
+        case parse_keyword_t::kw_for: {
             return production_for<forh>();
         }
-        case parse_keyword_while: {
+        case parse_keyword_t::kw_while: {
             return production_for<whileh>();
         }
-        case parse_keyword_function: {
+        case parse_keyword_t::kw_function: {
             return production_for<funch>();
         }
-        case parse_keyword_begin: {
+        case parse_keyword_t::kw_begin: {
             return production_for<beginh>();
         }
         default: {
@@ -327,7 +328,7 @@ RESOLVE(decorated_statement) {
     // and/or are typically parsed in job_conjunction at the beginning of a job
     // However they may be reached here through e.g. true && and false.
     // Refuse to parse them as a command except for --help. See #6089.
-    if ((token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or) &&
+    if ((token1.keyword == parse_keyword_t::kw_and || token1.keyword == parse_keyword_t::kw_or) &&
         !token2.is_help_argument) {
         return NO_PRODUCTION;
     }
@@ -340,15 +341,15 @@ RESOLVE(decorated_statement) {
     }
 
     switch (token1.keyword) {
-        case parse_keyword_command: {
+        case parse_keyword_t::kw_command: {
             *out_tag = parse_statement_decoration_command;
             return production_for<cmds>();
         }
-        case parse_keyword_builtin: {
+        case parse_keyword_t::kw_builtin: {
             *out_tag = parse_statement_decoration_builtin;
             return production_for<builtins>();
         }
-        case parse_keyword_exec: {
+        case parse_keyword_t::kw_exec: {
             *out_tag = parse_statement_decoration_exec;
             return production_for<execs>();
         }
@@ -396,7 +397,7 @@ RESOLVE(optional_background) {
 }
 
 RESOLVE(optional_time) {
-    if (token1.keyword == parse_keyword_time && !token2.is_help_argument) {
+    if (token1.keyword == parse_keyword_t::kw_time && !token2.is_help_argument) {
         *out_tag = parse_optional_time_time;
         return production_for<time>();
     }

@@ -395,22 +395,23 @@ void signal_unblock_all() {
     sigprocmask(SIG_SETMASK, &iset, nullptr);
 }
 
-sigint_checker_t::sigint_checker_t() {
+sigchecker_t::sigchecker_t(topic_t signal) {
+    topic_ = signal;
     // Call check() to update our generation.
     check();
 }
 
-bool sigint_checker_t::check() {
+bool sigchecker_t::check() {
     auto &tm = topic_monitor_t::principal();
-    generation_t gen = tm.generation_for_topic(topic_t::sighupint);
+    generation_t gen = tm.generation_for_topic(topic_);
     bool changed = this->gen_ != gen;
     this->gen_ = gen;
     return changed;
 }
 
-void sigint_checker_t::wait() const {
+void sigchecker_t::wait() const {
     auto &tm = topic_monitor_t::principal();
     generation_list_t gens{};
-    gens[topic_t::sighupint] = this->gen_;
-    tm.check(&gens, {topic_t::sighupint}, true /* wait */);
+    gens[topic_] = this->gen_;
+    tm.check(&gens, {topic_}, true /* wait */);
 }

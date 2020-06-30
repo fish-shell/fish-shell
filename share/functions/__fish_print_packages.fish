@@ -232,4 +232,14 @@ function __fish_print_packages
         end
     end
 
+    if type -q -f apk
+        if set -q only_installed
+            apk info
+            return
+        else
+            apk search -q
+            return
+        end
+    end
+
 end

@@ -563,12 +563,6 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
                                                          streams);
             } else if (!opts.ignore_unknown) {
                 streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
-                // We don't use builtin_print_error_trailer as that
-                // says to use the cmd help,
-                // which doesn't work if it's a command that does not belong to fish.
-                //
-                // Plus this particular error is not an error in argparse usage.
-                streams.err.append(parser.current_line());
                 retval = STATUS_INVALID_ARGS;
             } else {
                 // Any unrecognized option is put back if ignore_unknown is used.
@@ -697,7 +691,13 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK) {
+        // This is an error in argparse usage, so we append the error trailer with a stack trace.
+        // The other errors are an error in using *the command* that is using argparse,
+        // so our help doesn't apply.
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return retval;
+    }
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);

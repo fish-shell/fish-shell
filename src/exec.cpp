@@ -518,44 +518,26 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
     bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, dup2s);
     if (use_posix_spawn) {
         s_fork_count++;  // spawn counts as a fork+exec
-        // Create posix spawn attributes and actions.
-        pid_t pid = 0;
-        posix_spawnattr_t attr = posix_spawnattr_t();
-        posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
-        bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j.get(), dup2s);
-        if (made_it) {
-            // We successfully made the attributes and actions; actually call
-            // posix_spawn.
-            int spawn_ret =
-                posix_spawn(&pid, actual_cmd, &actions, &attr, const_cast<char *const *>(argv),
-                            const_cast<char *const *>(envv));
 
-            // This usleep can be used to test for various race conditions
-            // (https://github.com/fish-shell/fish-shell/issues/360).
-            // usleep(10000);
-
-            if (spawn_ret != 0) {
-                safe_report_exec_error(spawn_ret, actual_cmd, argv, envv);
-                // Make sure our pid isn't set.
-                pid = 0;
-            }
-
-            // Clean up our actions.
-            posix_spawn_file_actions_destroy(&actions);
-            posix_spawnattr_destroy(&attr);
-        }
-
-        // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
-        // told when it's exited, so we have to mark the process as failed.
-        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'",
-              int(s_fork_count), pid, actual_cmd, file ? file : L"<no file>");
-        if (pid == 0) {
+        posix_spawner_t spawner(j.get(), dup2s);
+        maybe_t<pid_t> pid = spawner.spawn(actual_cmd, const_cast<char *const *>(argv),
+                                           const_cast<char *const *>(envv));
+        if (int err = spawner.get_error()) {
+            safe_report_exec_error(err, actual_cmd, argv, envv);
             job_mark_process_as_failed(j, p);
             return false;
         }
+        assert(pid.has_value() && *pid > 0 && "Should have either a valid pid, or an error");
+
+        // This usleep can be used to test for various race conditions
+        // (https://github.com/fish-shell/fish-shell/issues/360).
+        // usleep(10000);
+
+        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'",
+              int(s_fork_count), *pid, actual_cmd, file ? file : L"<no file>");
 
         // these are all things do_fork() takes care of normally (for forked processes):
-        p->pid = pid;
+        p->pid = *pid;
         pid_t pgid = maybe_assign_pgid_from_child(j, p->pid);
 
         // posix_spawn should in principle set the pgid before returning.
@@ -1011,7 +993,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
     j->mark_constructed();
     if (!j->is_foreground()) {
         auto pgid = j->get_pgid();
-        assert(pgid.has_value() && "Backgroudn jobs should always have a pgroup");
+        assert(pgid.has_value() && "Background jobs should always have a pgroup");
         parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(*pgid));
     }
 

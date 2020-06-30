@@ -22,6 +22,7 @@ import string
 import subprocess
 import sys
 import tempfile
+import threading
 from itertools import chain
 
 FISH_BIN_PATH = False  # will be set later
@@ -1495,14 +1496,20 @@ print(
 )
 print("%sHit ENTER to stop.%s" % (esc["bold"], esc["exit_attribute_mode"]))
 
-if isMacOS10_12_5_OrLater():
-    subprocess.check_call(["open", fileurl])
-elif is_wsl():
-    subprocess.call(["cmd.exe", "/c", "start %s" % url])
-elif is_termux():
-    subprocess.call(["termux-open-url", url])
-else:
-    webbrowser.open(fileurl)
+def runThing():
+    if isMacOS10_12_5_OrLater():
+        subprocess.check_call(["open", fileurl])
+    elif is_wsl():
+        subprocess.call(["cmd.exe", "/c", "start %s" % url])
+    elif is_termux():
+        subprocess.call(["termux-open-url", url])
+    else:
+        webbrowser.open(fileurl)
+
+# Some browsers still block webbrowser.open if they haven't been opened before,
+# so we just spawn it in a thread.
+thread = threading.Thread(target=runThing)
+thread.start()
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()
@@ -1521,3 +1528,4 @@ except KeyboardInterrupt:
 
 # Clean up temporary file
 f.close()
+thread.join()

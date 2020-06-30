@@ -31,9 +31,13 @@ def get_prompt_re(counter):
     """ Return a regular expression for matching a with a given prompt counter. """
     return re.compile(
         r"""(?:\r\n?|^)   # beginning of line
+            (?:\x1b[\d\[KB(m]*)* # optional colors
             (?:\[.\]\ )?  # optional vi mode prompt
          """
-        + (r"prompt\ %d>" % counter),  # prompt with counter
+        + (r"prompt\ %d>" % counter)  # prompt with counter
+        + r"""
+            (?:\x1b[\d\[KB(m]*)* # optional colors
+        """,
         re.VERBOSE,
     )
 
@@ -256,10 +260,10 @@ class SpawnedProc(object):
 
         print("")
 
-        # Show the last 5 messages.
-        print("Last 5 messages:")
+        # Show the last 10 messages.
+        print("Last 10 messages:")
         delta = None
-        for m in self.messages[-5:]:
+        for m in self.messages[-10:]:
             etext = escape(m.text)
             timestamp = m.when * 1000.0
             # Use relative timestamps and add a sign.

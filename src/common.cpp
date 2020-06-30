@@ -1953,7 +1953,7 @@ extern "C" {
 [[gnu::noinline]] void debug_thread_error(void) {
     // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
     // thread.
-    sigint_checker_t sigint;
+    sigchecker_t sigint(topic_t::sighupint);
     sigint.wait();
 }
 }

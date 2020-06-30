@@ -103,7 +103,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wcstring &str, cons
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
     if (leading_dots_fail_to_match && str[0] == L'.' &&
-            (str[1] == L'\0' || (str[1] == L'.' && str[2] == L'\0'))) {
+        (str[1] == L'\0' || (str[1] == L'.' && str[2] == L'\0'))) {
         // The string is '.' or '..' so the only possible match is an exact match.
         return str == wc ? fuzzy_match_exact : fuzzy_match_none;
     }
@@ -203,20 +203,19 @@ static bool has_prefix_match(const completion_list_t *comps, size_t first) {
 ///
 /// We ignore ANY_STRING_RECURSIVE here. The consequence is that you cannot tab complete **
 /// wildcards. This is historic behavior.
-static bool wildcard_complete_internal(const wchar_t * const str, size_t str_len,
-                                       const wchar_t * const wc, size_t wc_len,
+static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
+                                       const wchar_t *const wc, size_t wc_len,
                                        const wc_complete_pack_t &params, complete_flags_t flags,
                                        completion_list_t *out, bool is_first_call);
-__attribute__((unused))
-static bool wildcard_complete_internal(const wchar_t * const str, const wchar_t * const wc,
-                                       const wc_complete_pack_t &params, complete_flags_t flags,
-                                       completion_list_t *out, bool is_first_call = false) {
-    return wildcard_complete_internal(
-            str, std::wcslen(str), wc, std::wcslen(wc), params, flags, out, is_first_call);
+__attribute__((unused)) static bool wildcard_complete_internal(
+    const wchar_t *const str, const wchar_t *const wc, const wc_complete_pack_t &params,
+    complete_flags_t flags, completion_list_t *out, bool is_first_call = false) {
+    return wildcard_complete_internal(str, std::wcslen(str), wc, std::wcslen(wc), params, flags,
+                                      out, is_first_call);
 }
 
-static bool wildcard_complete_internal(const wchar_t * const str, size_t str_len,
-                                       const wchar_t * const wc, size_t wc_len,
+static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
+                                       const wchar_t *const wc, size_t wc_len,
                                        const wc_complete_pack_t &params, complete_flags_t flags,
                                        completion_list_t *out, bool is_first_call = false) {
     assert(str != nullptr);
@@ -300,7 +299,8 @@ static bool wildcard_complete_internal(const wchar_t * const str, size_t str_len
             if (str[0] == L'\0') {
                 return false;
             }
-            return wildcard_complete_internal(str + 1, str_len - 1, wc + 1, wc_len - 1, params, flags, out);
+            return wildcard_complete_internal(str + 1, str_len - 1, wc + 1, wc_len - 1, params,
+                                              flags, out);
         }
         case ANY_STRING: {
             // Hackish. If this is the last character of the wildcard, then just complete with
@@ -316,7 +316,8 @@ static bool wildcard_complete_internal(const wchar_t * const str, size_t str_len
             bool has_match = false;
             for (size_t i = 0; str[i] != L'\0'; i++) {
                 const size_t before_count = out ? out->size() : 0;
-                if (wildcard_complete_internal(str + i, str_len - i, wc + 1, wc_len - 1, params, flags, out)) {
+                if (wildcard_complete_internal(str + i, str_len - i, wc + 1, wc_len - 1, params,
+                                               flags, out)) {
                     // We found a match.
                     has_match = true;
 
@@ -349,12 +350,11 @@ bool wildcard_complete(const wcstring &str, const wchar_t *wc,
     assert(wc != nullptr);
     wc_complete_pack_t params(str, desc_func, expand_flags);
     return wildcard_complete_internal(str.c_str(), str.size(), wc, std::wcslen(wc), params, flags,
-            out, true /* first call */);
+                                      out, true /* first call */);
 }
 
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match) {
-    enum fuzzy_match_type_t match =
-        wildcard_match_internal(str, wc, leading_dots_fail_to_match);
+    enum fuzzy_match_type_t match = wildcard_match_internal(str, wc, leading_dots_fail_to_match);
     return match != fuzzy_match_none;
 }
 
@@ -412,7 +412,6 @@ static int fast_waccess(const struct stat &stat_buf, uint8_t mode) {
 
     return -1;
 }
-
 
 /// Obtain a description string for the file specified by the filename.
 ///

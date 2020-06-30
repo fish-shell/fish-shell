@@ -20,12 +20,12 @@ class dup2_list_t;
 class job_t;
 class process_t;
 
-/// Tell the proc \p pid to join process group \p pgrp.
+/// Tell the proc \p pid to join process group \p pgroup.
 /// If \p is_child is true, we are the child process; otherwise we are fish.
 /// Called by both parent and child; this is an unavoidable race inherent to Unix.
 /// If is_parent is set, then we are the parent process and should swallow EACCESS.
 /// \return 0 on success, an errno error code on failure.
-int execute_setpgid(pid_t pid, pid_t pgrp, bool is_parent);
+int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent);
 
 /// Report the error code \p err for a failed setpgid call.
 /// Note not all errors should be reported; in particular EACCESS is expected and benign in the

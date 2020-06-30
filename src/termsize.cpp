@@ -24,7 +24,7 @@ static maybe_t<termsize_t> read_termsize_from_tty() {
 // static
 termsize_container_t &termsize_container_t::shared() {
     // Heap-allocated to avoid runtime dtor registration.
-    static termsize_container_t *res = new termsize_container_t(read_termsize_from_tty);
+    static auto *res = new termsize_container_t(read_termsize_from_tty);
     return *res;
 }
 

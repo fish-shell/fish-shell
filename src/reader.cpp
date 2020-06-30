@@ -1683,7 +1683,6 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
         // No suitable completions found, flash screen and return.
         flash();
         done = true;
-        success = false;
     } else if (size == 1) {
         // Exactly one suitable completion found - insert it.
         const completion_t &c = comp.at(0);
@@ -1783,7 +1782,6 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
             completion_insert(common_prefix.c_str(), token_end, flags);
             cycle_command_line = command_line.text();
             cycle_cursor_pos = command_line.position();
-            success = true;
         }
     }
 
@@ -3434,7 +3432,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             editable_line_t *el = active_edit_line();
             bool success = false;
             jump_direction_t original_dir, dir;
-            original_dir = dir = last_jump_direction;
+            original_dir = last_jump_direction;
 
             if (last_jump_direction == jump_direction_t::forward) {
                 dir = jump_direction_t::backward;

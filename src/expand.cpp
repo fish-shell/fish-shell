@@ -645,7 +645,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
     if (*tail_begin == L'[') {
         std::vector<long> slice_idx;
         const wchar_t *const slice_begin = tail_begin;
-        wchar_t *slice_end;
+        wchar_t *slice_end = nullptr;
         size_t bad_pos;
 
         bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());

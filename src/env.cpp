@@ -82,7 +82,7 @@ struct electric_var_t {
 };
 
 // Keep sorted alphabetically
-static const std::vector<electric_var_t> electric_variables {
+static const std::vector<electric_var_t> electric_variables{
     {L"FISH_VERSION", electric_var_t::freadonly},
     {L"PWD", electric_var_t::freadonly | electric_var_t::fcomputed | electric_var_t::fexports},
     {L"SHLVL", electric_var_t::freadonly | electric_var_t::fexports},
@@ -101,11 +101,11 @@ static const std::vector<electric_var_t> electric_variables {
 const electric_var_t *electric_var_t::for_name(const wcstring &name) {
     static auto first = electric_variables.begin();
     static auto last = electric_variables.end();
-    electric_var_t search { name.c_str(), 0 };
+    electric_var_t search{name.c_str(), 0};
     auto binsearch = std::lower_bound(first, last, search,
-            [&](const electric_var_t &v1, const electric_var_t &v2) {
-                return wcscmp(v1.name, v2.name) < 0;
-            });
+                                      [&](const electric_var_t &v1, const electric_var_t &v2) {
+                                          return wcscmp(v1.name, v2.name) < 0;
+                                      });
     if (binsearch != last && wcscmp(name.c_str(), binsearch->name) == 0) {
         return &*binsearch;
     }
@@ -637,7 +637,7 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
             // which we depend on here.
             // Note: Using std::move around make_pair prevents the compiler from implementing
             // copy elision.
-            vals.insert(std::make_pair(std::move(key), std::move(*var)));
+            vals.insert(std::make_pair(key, std::move(*var)));
         }
     }
 

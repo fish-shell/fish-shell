@@ -522,7 +522,7 @@ def append_html_for_ansi_escape(full_val, result, span_open):
             result.append("</span>")
 
     # term256 foreground color
-    match = re.match("38;5;(\d+)", val)
+    match = re.match(r"38;5;(\d+)", val)
     if match is not None:
         close_span()
         html_color = html_color_for_ansi_color_index(int(match.group(1)))

@@ -2059,10 +2059,9 @@ void reader_data_t::update_command_line_from_history_search() {
     }
     if (history_search.by_token()) {
         replace_current_token(std::move(new_text));
-    } else if (history_search.by_line() || history_search.by_prefix()) {
-        el->replace_substring(0, el->size(), std::move(new_text));
     } else {
-        return;
+        assert(history_search.by_line() || history_search.by_prefix());
+        el->replace_substring(0, el->size(), std::move(new_text));
     }
     command_line_has_transient_edit = true;
     assert(el == &command_line);
@@ -3124,7 +3123,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 } else {
                     history_search.go_to_end();
                 }
-                update_command_line_from_history_search();
+                if (history_search.active()) {
+                    update_command_line_from_history_search();
+                }
             }
             break;
         }

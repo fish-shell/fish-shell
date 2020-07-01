@@ -2679,6 +2679,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 outputter_t &outp = outputter_t::stdoutput();
                 // Move cursor to the end of the line.
                 update_buff_pos(&command_line, command_line.size());
+                autosuggestion.clear();
                 // Repaint also changes the actual cursor position
                 repaint();
 

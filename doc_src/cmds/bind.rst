@@ -98,6 +98,8 @@ The following special input functions are available:
 
 - ``cancel``, cancel the current commandline and replace it with a new empty one
 
+- ``cancel-commandline``, cancel the current commandline and replace it with a new empty one, leaving the old one in place with a marker to show that it was cancelled
+
 - ``capitalize-word``, make the current word begin with a capital letter
 
 - ``complete``, guess the remainder of the current token

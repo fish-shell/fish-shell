@@ -1174,6 +1174,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::history_token_search_forward:
         case rl::accept_autosuggestion:
         case rl::delete_or_exit:
+        case rl::cancel_commandline:
         case rl::cancel: {
             // These commands always end paging.
             return true;
@@ -2671,6 +2672,29 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::end_of_buffer: {
             update_buff_pos(&command_line, command_line.size());
             mark_repaint_needed();
+            break;
+        }
+        case rl::cancel_commandline: {
+            if (command_line.size()) {
+                outputter_t &outp = outputter_t::stdoutput();
+                // Move cursor to the end of the line.
+                update_buff_pos(&command_line, command_line.size());
+                // Repaint also changes the actual cursor position
+                repaint();
+
+                auto fish_color_cancel = vars.get(L"fish_color_cancel");
+                if (fish_color_cancel) {
+                    outp.set_color(parse_color(*fish_color_cancel, false), parse_color(*fish_color_cancel, true));
+                }
+                outp.writestr(L"^C");
+                outp.set_color(rgb_color_t::reset(), rgb_color_t::reset());
+
+                // We print a newline last so the prompt_sp hack doesn't get us.
+                outp.push_back('\n');
+
+                set_command_line_and_position(&command_line, L"", 0);
+                s_reset_abandoning_line(&screen, termsize_last().width - command_line.size());
+            }
             break;
         }
         case rl::cancel: {

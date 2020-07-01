@@ -89,7 +89,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # ncurses > 6.0 sends a "delete scrollback" sequence along with clear.
     # This string replace removes it.
     bind --preset $argv \cl 'echo -n (clear | string replace \e\[3J ""); commandline -f repaint'
-    bind --preset $argv \cc __fish_cancel_commandline
+    bind --preset $argv \cc cancel-commandline
     bind --preset $argv \cu backward-kill-line
     bind --preset $argv \cw backward-kill-path-component
     bind --preset $argv \e\[F end-of-line

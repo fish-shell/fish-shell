@@ -27,13 +27,6 @@ function __fish_xinput_nth_token
     end
 end
 
-function __fish_xinput_is_nth_token
-    set -l n $argv[1]
-    set -l tokens (commandline -poc)
-    set -l tokens (string replace -r --filter '^([^-].*)' '$1' -- $tokens)
-    test (count $tokens) -eq "$n"
-end
-
 complete -c xinput -f -n "not __fish_seen_subcommand_from $cmds" -a "$cmds"
-complete -c xinput -f -n "__fish_xinput_is_nth_token 2; and __fish_seen_subcommand_from list get-feedbacks set-pointer set-mode set-ptr-feedback set-integer-feedback set-button-map query-state list-props set-int-prop set-float-prop set-prop watch-props" -a "(__fish_xinput_devices)"
-complete -c xinput -f -n "__fish_seen_subcommand_from list set-int-prop set-float-prop set-prop watch-props; and not __fish_xinput_is_nth_token 2" -xa "(__fish_xinput_device_props (__fish_xinput_nth_token 2))"
+complete -c xinput -f -n "__fish_is_nth_token 2; and __fish_seen_subcommand_from list get-feedbacks set-pointer set-mode set-ptr-feedback set-integer-feedback set-button-map query-state list-props set-int-prop set-float-prop set-prop watch-props" -a "(__fish_xinput_devices)"
+complete -c xinput -f -n "__fish_seen_subcommand_from list set-int-prop set-float-prop set-prop watch-props; and not __fish_is_nth_token 2" -xa "(__fish_xinput_device_props (__fish_xinput_nth_token 2))"

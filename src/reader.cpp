@@ -656,12 +656,20 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_cc[VMIN] = 1;
     modes->c_cc[VTIME] = 0;
 
+    unsigned char disabling_char = '\0';
+    // Prefer to use _POSIX_VDISABLE to disable control functions.
+    // This permits separately binding nul (typically control-space).
+    // POSIX calls out -1 as a special value which should be ignored.
+#ifdef _POSIX_VDISABLE
+    if (_POSIX_VDISABLE != -1) disabling_char = _POSIX_VDISABLE;
+#endif
+
     // We ignore these anyway, so there is no need to sacrifice a character.
-    modes->c_cc[VSUSP] = '\0';
+    modes->c_cc[VSUSP] = disabling_char;
 
     // (these two are already disabled because of IXON/IXOFF)
-    modes->c_cc[VSTOP] = '\0';
-    modes->c_cc[VSTART] = '\0';
+    modes->c_cc[VSTOP] = disabling_char;
+    modes->c_cc[VSTART] = disabling_char;
 }
 
 /// Tracks a currently pending exit. This may be manipulated from a signal handler.

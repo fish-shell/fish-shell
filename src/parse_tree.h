@@ -42,6 +42,7 @@ struct parse_token_t {
     source_offset_t source_length{0};
 
     /// \return the source range.
+    /// Note the start may be invalid.
     source_range_t range() const {
         return source_range_t{source_start, source_length};
     }

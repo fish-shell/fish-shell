@@ -40,6 +40,7 @@
 #include <utility>
 #include <vector>
 
+#include "ast.h"
 #include "autoload.h"
 #include "builtin.h"
 #include "color.h"
@@ -978,15 +979,18 @@ static void test_debounce_timeout() {
 }
 
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL, symbol_argument_list)) {
+    using namespace ast;
+    auto ast = ast_t::parse_argument_list(src, parse_flag_none);
+    if (ast.errored()) {
         return PARSER_TEST_ERROR;
     }
-
-    assert(!tree.empty());  //!OCLINT(multiple unary operator)
-    tnode_t<grammar::argument_list> arg_list{&tree, &tree.at(0)};
-    auto first_arg = arg_list.next_in_list<grammar::argument>();
-    return parse_util_detect_errors_in_argument(first_arg, first_arg.get_source(src));
+    const ast::argument_t *first_arg =
+        ast.top()->as<freestanding_argument_list_t>()->arguments.at(0);
+    if (!first_arg) {
+        err(L"Failed to parse an argument");
+        return 0;
+    }
+    return parse_util_detect_errors_in_argument(*first_arg, first_arg->source(src));
 }
 
 /// Test the parser.
@@ -1084,7 +1088,7 @@ static void test_parser() {
     }
 
     if (parse_util_detect_errors(L"echo (\nfoo\n  bar") != PARSER_TEST_INCOMPLETE) {
-        err(L"unterminated multiline subhsell not reported properly");
+        err(L"unterminated multiline subshell not reported properly");
     }
 
     if (parse_util_detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {

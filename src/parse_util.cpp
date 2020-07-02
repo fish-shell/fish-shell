@@ -749,17 +749,13 @@ bool parse_util_argument_is_help(const wchar_t *s) {
     return std::wcscmp(L"-h", s) == 0 || std::wcscmp(L"--help", s) == 0;
 }
 
-/// Check if the first argument under the given node is --help.
-static bool first_argument_is_help(tnode_t<grammar::plain_statement> statement,
-                                   const wcstring &src) {
-    bool is_help = false;
-    auto arg_nodes = get_argument_nodes(statement.child<1>());
-    if (!arg_nodes.empty()) {
-        // Check the first argument only.
-        wcstring first_arg_src = arg_nodes.front().get_source(src);
-        is_help = parse_util_argument_is_help(first_arg_src.c_str());
+// \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
+// there are no arguments.
+const ast::argument_t *get_first_arg(const ast::argument_or_redirection_list_t &list) {
+    for (const ast::argument_or_redirection_t &v : list) {
+        if (v.is_argument()) return &v.argument();
     }
-    return is_help;
+    return nullptr;
 }
 
 /// Given a wide character immediately after a dollar sign, return the appropriate error message.
@@ -915,11 +911,13 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator.
-parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::argument> node,
+parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argument_t &arg,
                                                               const wcstring &arg_src,
                                                               parse_error_list_t *out_errors) {
-    assert(node.has_source() && "argument has no source");
-    auto source_start = node.source_range()->start;
+    maybe_t<source_range_t> source_range = arg.try_source_range();
+    if (!source_range.has_value()) return 0;
+
+    size_t source_start = source_range->start;
     int err = 0;
     wchar_t *paran_begin, *paran_end;
     int do_loop = 1;
@@ -1013,10 +1011,10 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
 }
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
-static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
+static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
                                               parse_error_list_t *parse_errors) {
-    namespace g = grammar;
-    auto source_range = job.source_range();
+    using namespace ast;
+    auto source_range = job.try_source_range();
     if (!source_range) return false;
 
     bool errored = false;
@@ -1025,54 +1023,77 @@ static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    auto job_conj = job.try_get_parent<g::job_conjunction>();
-    if (job_conj.try_get_parent<g::if_clause>()) {
-        errored = append_syntax_error(parse_errors, source_range->start,
-                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (job_conj.try_get_parent<g::while_header>()) {
-        errored = append_syntax_error(parse_errors, source_range->start,
-                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (auto jlist = job_conj.try_get_parent<g::job_list>()) {
-        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
-        // Fetch the job list and then advance it by one.
-        auto first_jconj = jlist.next_in_list<g::job_conjunction>();
-        assert(first_jconj == job.try_get_parent<g::job_conjunction>() &&
-               "Expected first job to be the node we found");
-        (void)first_jconj;
+    const job_conjunction_t *job_conj = job.parent->try_as<job_conjunction_t>();
+    if (!job_conj) return false;
 
-        // Try getting the next job's decorator.
-        if (auto next_job_dec = jlist.next_in_list<g::job_decorator>()) {
-            // The next job is indeed a boolean statement.
-            parse_job_decoration_t bool_type = bool_statement_type(next_job_dec);
-            if (bool_type == parse_job_decoration_and) {
-                errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
-                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-            } else if (bool_type == parse_job_decoration_or) {
-                errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
-                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+    if (job_conj->parent->try_as<if_clause_t>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (job_conj->parent->try_as<while_header_t>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (const ast::job_list_t *jlist = job_conj->parent->try_as<ast::job_list_t>()) {
+        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
+        // Find the index of ourselves in the job list.
+        size_t index;
+        for (index = 0; index < jlist->count(); index++) {
+            if (jlist->at(index) == job_conj) break;
+        }
+        assert(index < jlist->count() && "Should have found the job in the list");
+
+        // Try getting the next job and check its decorator.
+        if (const job_conjunction_t *next = jlist->at(index + 1)) {
+            if (const keyword_base_t *deco = next->decorator.contents.get()) {
+                assert(
+                    (deco->kw == parse_keyword_t::kw_and || deco->kw == parse_keyword_t::kw_or) &&
+                    "Unexpected decorator keyword");
+                const wchar_t *deco_name = (deco->kw == parse_keyword_t::kw_and ? L"and" : L"or");
+                errored = append_syntax_error(parse_errors, deco->source_range().start,
+                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, deco_name);
             }
         }
     }
     return errored;
 }
 
-static bool detect_errors_in_plain_statement(const wcstring &buff_src,
-                                             const parse_node_tree_t &node_tree,
-                                             tnode_t<grammar::plain_statement> pst,
-                                             parse_error_list_t *parse_errors) {
-    using namespace grammar;
+static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
+                                                 const ast::decorated_statement_t &dst,
+                                                 parse_error_list_t *parse_errors) {
+    using namespace ast;
     bool errored = false;
-    auto source_start = pst.source_range()->start;
+    auto source_start = dst.source_range().start;
+    const parse_statement_decoration_t decoration = dst.decoration();
 
-    // In a few places below, we want to know if we are in a pipeline.
-    tnode_t<statement> st = pst.try_get_parent<decorated_statement>().try_get_parent<statement>();
-    pipeline_position_t pipe_pos = get_pipeline_position(st);
-    bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
+    // Determine if the first argument is help.
+    bool first_arg_is_help = false;
+    if (const auto *arg = get_first_arg(dst.args_or_redirs)) {
+        wcstring arg_src = arg->source(buff_src);
+        first_arg_is_help = parse_util_argument_is_help(arg_src.c_str());
+    }
 
-    // We need to know the decoration.
-    const enum parse_statement_decoration_t decoration = get_decoration(pst);
+    // Get the statement we are part of.
+    const statement_t *st = dst.parent->as<statement_t>();
+
+    // Walk up to the job.
+    const ast::job_t *job = nullptr;
+    for (const node_t *cursor = st; job == nullptr; cursor = cursor->parent) {
+        assert(cursor && "Reached root without finding a job");
+        job = cursor->try_as<ast::job_t>();
+    }
+    assert(job && "Should have found the job");
+
+    // Check our pipeline position.
+    pipeline_position_t pipe_pos;
+    if (job->continuation.empty()) {
+        pipe_pos = pipeline_position_t::none;
+    } else if (&job->statement == st) {
+        pipe_pos = pipeline_position_t::first;
+    } else {
+        pipe_pos = pipeline_position_t::subsequent;
+    }
 
     // Check that we don't try to pipe through exec.
+    bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
     if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
         errored = append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, L"exec");
     }
@@ -1083,14 +1104,14 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
     if (pipe_pos == pipeline_position_t::subsequent) {
         // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
         // commands.
-        wcstring command = pst.child<0>().get_source(buff_src);
+        wcstring command = dst.command.source(buff_src);
         if (command == L"and" || command == L"or") {
             errored =
                 append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
         }
     }
 
-    if (maybe_t<wcstring> unexp_command = command_for_plain_statement(pst, buff_src)) {
+    if (maybe_t<wcstring> unexp_command = dst.command.try_source(buff_src)) {
         wcstring command;
         // Check that we can expand the command.
         if (expand_to_command_and_args(*unexp_command, operation_context_t::empty(), &command,
@@ -1107,40 +1128,40 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
 
         // Check that we don't return from outside a function. But we allow it if it's
         // 'return --help'.
-        if (!errored && command == L"return") {
+        if (!errored && command == L"return" && !first_arg_is_help) {
+            // See if we are in a function.
             bool found_function = false;
-            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
-                 ancestor = node_tree.get_parent(*ancestor)) {
-                auto fh = tnode_t<block_statement>::try_create(&node_tree, ancestor)
-                              .child<0>()
-                              .try_get_child<function_header, 0>();
-                if (fh) {
-                    found_function = true;
-                    break;
+            for (const node_t *cursor = &dst; cursor != nullptr; cursor = cursor->parent) {
+                if (const auto *bs = cursor->try_as<block_statement_t>()) {
+                    if (bs->header->type == type_t::function_header) {
+                        found_function = true;
+                        break;
+                    }
                 }
             }
-            if (!found_function && !first_argument_is_help(pst, buff_src)) {
+
+            if (!found_function) {
                 errored = append_syntax_error(parse_errors, source_start, INVALID_RETURN_ERR_MSG);
             }
         }
 
         // Check that we don't break or continue from outside a loop.
-        if (!errored && (command == L"break" || command == L"continue")) {
+        if (!errored && (command == L"break" || command == L"continue") && !first_arg_is_help) {
             // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
             // stop the search; we can't break an outer loop from inside a function.
             // This is a little funny because we can't tell if it's a 'for' or 'while'
             // loop from the ancestor alone; we need the header. That is, we hit a
             // block_statement, and have to check its header.
             bool found_loop = false;
-            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
-                 ancestor = node_tree.get_parent(*ancestor)) {
-                tnode_t<block_header> bh =
-                    tnode_t<block_statement>::try_create(&node_tree, ancestor).child<0>();
-                if (bh.try_get_child<while_header, 0>() || bh.try_get_child<for_header, 0>()) {
+            for (const node_t *ancestor = &dst; ancestor != nullptr; ancestor = ancestor->parent) {
+                const auto *block = ancestor->try_as<block_statement_t>();
+                if (!block) continue;
+                if (block->header->type == type_t::for_header ||
+                    block->header->type == type_t::while_header) {
                     // This is a loop header, so we can break or continue.
                     found_loop = true;
                     break;
-                } else if (bh.try_get_child<function_header, 0>()) {
+                } else if (block->header->type == type_t::function_header) {
                     // This is a function header, so we cannot break or
                     // continue. We stop our search here.
                     found_loop = false;
@@ -1148,7 +1169,7 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
                 }
             }
 
-            if (!found_loop && !first_argument_is_help(pst, buff_src)) {
+            if (!found_loop) {
                 errored = append_syntax_error(
                     parse_errors, source_start,
                     (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
@@ -1167,12 +1188,22 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
     return errored;
 }
 
+// Given we have a trailing argument_or_redirection_list, like `begin; end > /dev/null`, verify that
+// there are no arguments in the list.
+static bool detect_errors_in_block_redirection_list(
+    const ast::argument_or_redirection_list_t &args_or_redirs, parse_error_list_t *out_errors) {
+    if (const auto *first_arg = get_first_arg(args_or_redirs)) {
+        return append_syntax_error(out_errors, first_arg->source_range().start,
+                                   BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    }
+    return false;
+}
+
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
                                                   parsed_source_ref_t *out_pstree) {
     namespace g = grammar;
-    parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
 
     parser_test_error_bits_t res = 0;
@@ -1192,12 +1223,15 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // allow_incomplete is set.
     bool has_unclosed_quote_or_subshell = false;
 
-    // Parse the input string into a parse tree. Some errors are detected here.
-    bool parsed = parse_tree_from_string(
-        buff_src, allow_incomplete ? parse_flag_leave_unterminated : parse_flag_none, &node_tree,
-        &parse_errors);
+    const parse_tree_flags_t parse_flags =
+        allow_incomplete ? parse_flag_leave_unterminated : parse_flag_none;
 
+    // Parse the input string into an ast. Some errors are detected here.
+    using namespace ast;
+    auto ast = ast_t::parse(buff_src, parse_flags, &parse_errors);
     if (allow_incomplete) {
+        // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
+        // successfully.
         size_t idx = parse_errors.size();
         while (idx--) {
             if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote ||
@@ -1209,19 +1243,14 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         }
     }
 
-    // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
-    // successfully. A better fix would be to have parse_tree_from_string return this information
-    // directly (but it would be a shame to munge up its nice bool return).
-    if (parse_errors.empty() && has_unclosed_quote_or_subshell) {
-        parsed = true;
-    }
-
-    if (!parsed) {
-        errored = true;
-    }
-
     // has_unclosed_quote_or_subshell may only be set if allow_incomplete is true.
     assert(!has_unclosed_quote_or_subshell || allow_incomplete);
+    if (has_unclosed_quote_or_subshell) {
+        // We do not bother to validate the rest of the tree in this case.
+        return PARSER_TEST_INCOMPLETE;
+    }
+
+    errored = !parse_errors.empty();
 
     // Expand all commands.
     // Verify 'or' and 'and' not used inside pipelines.
@@ -1230,21 +1259,17 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Verify no variable expansions.
 
     if (!errored) {
-        for (const parse_node_t &node : node_tree) {
-            if (node.type == symbol_end_command && !node.has_source()) {
-                // An 'end' without source is an unclosed block.
-                has_unclosed_block = true;
-            } else if (node.type == symbol_statement && !node.has_source()) {
-                // Check for a statement without source in a pipeline, i.e. unterminated pipeline.
-                auto pipe_pos = get_pipeline_position({&node_tree, &node});
-                if (pipe_pos != pipeline_position_t::none) {
+        for (const node_t &node : ast) {
+            if (const job_continuation_t *jc = node.try_as<job_continuation_t>()) {
+                // Somewhat clumsy way of checking for a statement without source in a pipeline.
+                // See if our pipe has source but our statement does not.
+                if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
                     has_unclosed_pipe = true;
                 }
-            } else if (node.type == symbol_argument) {
-                tnode_t<g::argument> arg{&node_tree, &node};
-                const wcstring arg_src = node.get_source(buff_src);
-                res |= parse_util_detect_errors_in_argument(arg, arg_src, &parse_errors);
-            } else if (node.type == symbol_job) {
+            } else if (const argument_t *arg = node.try_as<argument_t>()) {
+                wcstring arg_src = arg->source(buff_src);
+                res |= parse_util_detect_errors_in_argument(*arg, arg_src, &parse_errors);
+            } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
                 // Disallow background in the following cases:
                 //
                 // foo & ; and bar
@@ -1252,25 +1277,27 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 // if foo & ; end
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
-                auto job = tnode_t<g::job>{&node_tree, &node};
-                if (job_node_is_background(job)) {
-                    errored |= detect_errors_in_backgrounded_job(job, &parse_errors);
+                if (job->bg) {
+                    errored |= detect_errors_in_backgrounded_job(*job, &parse_errors);
                 }
-            } else if (node.type == symbol_arguments_or_redirections_list) {
-                // verify no arguments to the end command of if, switch, begin (#986).
-                auto list = tnode_t<g::arguments_or_redirections_list>{&node_tree, &node};
-                if (list.try_get_parent<g::if_statement>() ||
-                    list.try_get_parent<g::switch_statement>() ||
-                    list.try_get_parent<g::block_statement>()) {
-                    if (auto arg = list.next_in_list<g::argument>()) {
-                        errored = append_syntax_error(&parse_errors, arg.source_range()->start,
-                                                      END_ARG_ERR_MSG);
-                    }
-                }
-            } else if (node.type == symbol_plain_statement) {
-                tnode_t<grammar::plain_statement> pst{&node_tree, &node};
+            } else if (const ast::decorated_statement_t *stmt =
+                           node.try_as<decorated_statement_t>()) {
+                errored |= detect_errors_in_decorated_statement(buff_src, *stmt, &parse_errors);
+            } else if (const auto *block = node.try_as<block_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (block->end.unsourced) has_unclosed_block = true;
                 errored |=
-                    detect_errors_in_plain_statement(buff_src, node_tree, pst, &parse_errors);
+                    detect_errors_in_block_redirection_list(block->args_or_redirs, &parse_errors);
+            } else if (const auto *ifs = node.try_as<if_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (ifs->end.unsourced) has_unclosed_block = true;
+                errored |=
+                    detect_errors_in_block_redirection_list(ifs->args_or_redirs, &parse_errors);
+            } else if (const auto *switchs = node.try_as<switch_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (switchs->end.unsourced) has_unclosed_block = true;
+                errored |=
+                    detect_errors_in_block_redirection_list(switchs->args_or_redirs, &parse_errors);
             }
         }
     }
@@ -1285,7 +1312,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     }
 
     if (out_pstree != nullptr) {
-        *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(node_tree));
+        // TODO: legacy
+        *out_pstree = parse_source(buff_src, parse_flags, nullptr);
     }
 
     return res;
@@ -1300,25 +1328,21 @@ maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_
                                                  false /* don't skip caret */);
     };
 
-    // Parse the string as an argument list.
+    // Parse the string as a freestanding argument list.
+    using namespace ast;
     parse_error_list_t errors;
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors,
-                                symbol_freestanding_argument_list)) {
-        // Failed to parse.
+    auto ast = ast_t::parse_argument_list(arg_list_src, parse_flag_none, &errors);
+    if (!errors.empty()) {
         return get_error_text(errors);
     }
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
-    assert(!tree.empty() && "Should have parsed a tree");
-    tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
-    while (auto arg = arg_list.next_in_list<grammar::argument>()) {
-        const wcstring arg_src = arg.get_source(arg_list_src);
+    for (const argument_t &arg : ast.top()->as<freestanding_argument_list_t>()->arguments) {
+        const wcstring arg_src = arg.source(arg_list_src);
         if (parse_util_detect_errors_in_argument(arg, arg_src, &errors)) {
             return get_error_text(errors);
         }
     }
-
     return none();
 }

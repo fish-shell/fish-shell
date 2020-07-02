@@ -4350,12 +4350,12 @@ static void test_new_parser_correctness() {
         {L"true || false; and true", true},
         {L"true || ||", false},
         {L"|| true", false},
-        {L"true || \n\n false", true},
+        {L"true || \n\n false", false},
     };
 
     for (const auto &test : parser_tests) {
-        parse_node_tree_t parse_tree;
-        bool success = parse_tree_from_string(test.src, parse_flag_none, &parse_tree, NULL);
+        auto ast = ast::ast_t::parse(test.src);
+        bool success = !ast.errored();
         if (success && !test.ok) {
             err(L"\"%ls\" should NOT have parsed, but did", test.src);
         } else if (!success && test.ok) {
@@ -4384,7 +4384,7 @@ static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_co
 }
 
 static void test_new_parser_fuzzing() {
-    say(L"Fuzzing parser (node size: %lu)", sizeof(parse_node_t));
+    say(L"Fuzzing parser");
     const wcstring fuzzes[] = {
         L"if",      L"else", L"for", L"in",  L"while", L"begin", L"function",
         L"switch",  L"case", L"end", L"and", L"or",    L"not",   L"command",
@@ -4395,7 +4395,6 @@ static void test_new_parser_fuzzing() {
     wcstring src;
     src.reserve(128);
 
-    parse_node_tree_t node_tree;
     parse_error_list_t errors;
 
     double start = timef();
@@ -4409,7 +4408,7 @@ static void test_new_parser_fuzzing() {
         unsigned long permutation = 0;
         while (string_for_permutation(fuzzes, sizeof fuzzes / sizeof *fuzzes, len, permutation++,
                                       &src)) {
-            parse_tree_from_string(src, parse_flag_continue_after_error, &node_tree, &errors);
+            ast::ast_t::parse(src);
         }
         if (log_it) std::fwprintf(stderr, L"done (%lu)\n", permutation);
     }
@@ -4421,33 +4420,36 @@ static void test_new_parser_fuzzing() {
 // true if successful.
 static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *out_joined_args,
                              enum parse_statement_decoration_t *out_deco) {
+    using namespace ast;
     out_cmd->clear();
     out_joined_args->clear();
     *out_deco = parse_statement_decoration_none;
 
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
-        return false;
-    }
+    auto ast = ast_t::parse(src);
+    if (ast.errored()) return false;
 
     // Get the statement. Should only have one.
-    tnode_t<grammar::job_list> job_list{&tree, &tree.at(0)};
-    auto stmts = job_list.descendants<grammar::plain_statement>();
-    if (stmts.size() != 1) {
-        say(L"Unexpected number of statements (%lu) found in '%ls'", stmts.size(), src.c_str());
-        return false;
+    const decorated_statement_t *statement = nullptr;
+    for (const auto &n : ast) {
+        if (const auto *tmp = n.try_as<decorated_statement_t>()) {
+            if (statement) {
+                say(L"More than one decorated statement found in '%ls'", src.c_str());
+                return false;
+            }
+            statement = tmp;
+        }
     }
-    tnode_t<grammar::plain_statement> stmt = stmts.at(0);
 
     // Return its decoration and command.
-    *out_deco = get_decoration(stmt);
-    *out_cmd = *command_for_plain_statement(stmt, src);
+    *out_deco = statement->decoration();
+    *out_cmd = statement->command.source(src);
 
     // Return arguments separated by spaces.
     bool first = true;
-    for (auto arg_node : stmt.descendants<grammar::argument>()) {
+    for (const ast::argument_or_redirection_t &arg : statement->args_or_redirs) {
+        if (!arg.is_argument()) continue;
         if (!first) out_joined_args->push_back(L' ');
-        out_joined_args->append(arg_node.get_source(src));
+        out_joined_args->append(arg.source(src));
         first = false;
     }
 
@@ -4456,19 +4458,22 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
 
 // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
 // not (issue #1240).
-template <typename Type>
+template <ast::type_t Type>
 static void check_function_help(const wchar_t *src) {
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
+    using namespace ast;
+    auto ast = ast_t::parse(src);
+    if (ast.errored()) {
         err(L"Failed to parse '%ls'", src);
     }
 
-    tnode_t<grammar::job_list> node{&tree, &tree.at(0)};
-    auto node_list = node.descendants<Type>();
-    if (node_list.size() == 0) {
-        err(L"Failed to find node of type '%ls'", token_type_description(Type::token));
-    } else if (node_list.size() > 1) {
-        err(L"Found too many nodes of type '%ls'", token_type_description(Type::token));
+    int count = 0;
+    for (const node_t &node : ast) {
+        count += (node.type == Type);
+    }
+    if (count == 0) {
+        err(L"Failed to find node of type '%ls'", ast_type_to_string(Type));
+    } else if (count > 1) {
+        err(L"Found too many nodes of type '%ls'", ast_type_to_string(Type));
     }
 }
 
@@ -4515,30 +4520,32 @@ static void test_new_parser_ll2() {
                 test.src.c_str(), (int)test.deco, (int)deco, (long)__LINE__);
     }
 
-    check_function_help<grammar::plain_statement>(L"function -h");
-    check_function_help<grammar::plain_statement>(L"function --help");
-    check_function_help<grammar::function_header>(L"function --foo; end");
-    check_function_help<grammar::function_header>(L"function foo; end");
+    check_function_help<ast::type_t::decorated_statement>(L"function -h");
+    check_function_help<ast::type_t::decorated_statement>(L"function --help");
+    check_function_help<ast::type_t::function_header>(L"function --foo; end");
+    check_function_help<ast::type_t::function_header>(L"function foo; end");
 }
 
 static void test_new_parser_ad_hoc() {
+    using namespace ast;
     // Very ad-hoc tests for issues encountered.
     say(L"Testing new parser ad hoc tests");
 
     // Ensure that 'case' terminates a job list.
     const wcstring src = L"switch foo ; case bar; case baz; end";
-    parse_node_tree_t parse_tree;
-    bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, NULL);
-    if (!success) {
+    auto ast = ast_t::parse(src);
+    if (ast.errored()) {
         err(L"Parsing failed");
     }
 
-    // Expect three case_item_lists: one for each case, and a terminal one. The bug was that we'd
+    // Expect two case_item_lists. The bug was that we'd
     // try to run a command 'case'.
-    tnode_t<grammar::job_list> root{&parse_tree, &parse_tree.at(0)};
-    auto node_list = root.descendants<grammar::case_item_list>();
-    if (node_list.size() != 3) {
-        err(L"Expected 3 case item nodes, found %lu", node_list.size());
+    int count = 0;
+    for (const auto &n : ast) {
+        count += (n.type == type_t::case_item);
+    }
+    if (count != 2) {
+        err(L"Expected 2 case item nodes, found %d", count);
     }
 }
 
@@ -4559,7 +4566,7 @@ static void test_new_parser_errors() {
         {L"if true ; end ; else", parse_error_unbalancing_else},
 
         {L"case", parse_error_unbalancing_case},
-        {L"if true ; case ; end", parse_error_unbalancing_case},
+        {L"if true ; case ; end", parse_error_generic},
     };
 
     for (const auto &test : tests) {
@@ -4567,15 +4574,17 @@ static void test_new_parser_errors() {
         parse_error_code_t expected_code = test.code;
 
         parse_error_list_t errors;
-        parse_node_tree_t parse_tree;
-        bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, &errors);
-        if (success) {
+        auto ast = ast::ast_t::parse(src, parse_flag_none, &errors);
+        if (!ast.errored()) {
             err(L"Source '%ls' was expected to fail to parse, but succeeded", src.c_str());
         }
 
         if (errors.size() != 1) {
             err(L"Source '%ls' was expected to produce 1 error, but instead produced %lu errors",
                 src.c_str(), errors.size());
+            for (const auto &err : errors) {
+                fprintf(stderr, "%ls\n", err.describe(src, false).c_str());
+            }
         } else if (errors.at(0).code != expected_code) {
             err(L"Source '%ls' was expected to produce error code %lu, but instead produced error "
                 L"code %lu",

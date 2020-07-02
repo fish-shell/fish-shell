@@ -1,4 +1,4 @@
-// Provides the "linkage" between a parse_node_tree_t and actual execution structures (job_t, etc.).
+// Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 #ifndef FISH_PARSE_EXECUTION_H
 #define FISH_PARSE_EXECUTION_H
 
@@ -78,9 +78,6 @@ class parse_execution_context_t {
     // arguments. Prints an error message on error.
     end_execution_reason_t expand_command(const ast::decorated_statement_t &statement,
                                           wcstring *out_cmd, wcstring_list_t *out_args) const;
-
-    /// Return whether we should skip a job with the given bool statement type.
-    bool should_skip(parse_job_decoration_t type) const;
 
     /// Indicates whether a job is a simple block (one block, no redirections).
     bool job_is_simple_block(const ast::job_t &job) const;

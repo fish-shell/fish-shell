@@ -26,7 +26,6 @@
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"
-#include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class io_chain_t;

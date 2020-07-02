@@ -46,7 +46,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "print_help.h"
-#include "tnode.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // The number of spaces per indent isn't supposed to be configurable.

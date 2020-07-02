@@ -75,7 +75,6 @@
 #include "screen.h"
 #include "signal.h"
 #include "termsize.h"
-#include "tnode.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 

@@ -1,11 +1,4 @@
-// Provides the "linkage" between a parse_node_tree_t and actual execution structures (job_t, etc.)
-//
-// A note on error handling: fish has two kind of errors, fatal parse errors non-fatal runtime
-// errors. A fatal error prevents execution of the entire file, while a non-fatal error skips that
-// job.
-//
-// Non-fatal errors are printed as soon as they are encountered; otherwise you would have to wait
-// for the execution to finish to see them.
+// Provides the "linkage" between an ast and actual execution structures (job_t, etc.)
 #include "config.h"  // IWYU pragma: keep
 
 #include "parse_execution.h"
@@ -1414,19 +1407,6 @@ end_execution_reason_t parse_execution_context_t::run_job_conjunction(
         }
     }
     return result;
-}
-
-bool parse_execution_context_t::should_skip(parse_job_decoration_t type) const {
-    switch (type) {
-        case parse_job_decoration_and:
-            // AND. Skip if the last job failed.
-            return parser->get_last_status() != 0;
-        case parse_job_decoration_or:
-            // OR. Skip if the last job succeeded.
-            return parser->get_last_status() == 0;
-        default:
-            return false;
-    }
 }
 
 end_execution_reason_t parse_execution_context_t::test_and_run_1_job_conjunction(

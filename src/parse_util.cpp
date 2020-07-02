@@ -23,7 +23,6 @@
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
-#include "tnode.h"
 #include "tokenizer.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
@@ -1203,7 +1202,6 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
                                                   parsed_source_ref_t *out_pstree) {
-    namespace g = grammar;
     parse_error_list_t parse_errors;
 
     parser_test_error_bits_t res = 0;

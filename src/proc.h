@@ -21,7 +21,6 @@
 #include "global_safety.h"
 #include "io.h"
 #include "parse_tree.h"
-#include "tnode.h"
 #include "topic_monitor.h"
 
 /// Types of processes.

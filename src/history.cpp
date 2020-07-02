@@ -45,7 +45,6 @@
 #include "parser.h"
 #include "path.h"
 #include "reader.h"
-#include "tnode.h"
 #include "wcstringutil.h"
 #include "wildcard.h"  // IWYU pragma: keep
 #include "wutil.h"     // IWYU pragma: keep

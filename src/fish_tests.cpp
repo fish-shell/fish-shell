@@ -76,7 +76,6 @@
 #include "signal.h"
 #include "termsize.h"
 #include "timer.h"
-#include "tnode.h"
 #include "tokenizer.h"
 #include "topic_monitor.h"
 #include "utf8.h"

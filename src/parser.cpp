@@ -656,10 +656,10 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
 eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
                           const job_group_ref_t &job_group, enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
-    if (!ps->tree.empty()) {
-        // Execute the first node.
-        tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
-        return this->eval_node(ps, start, io, job_group, block_type);
+    const auto *job_list = ps->ast->top()->as<ast::job_list_t>();
+    if (!job_list->empty()) {
+        // Execute the top job list.
+        return this->eval_node(ps, *job_list, io, job_group, block_type);
     } else {
         auto status = proc_status_t::from_exit_code(get_last_status());
         bool break_expand = false;
@@ -669,11 +669,11 @@ eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
 }
 
 template <typename T>
-eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
+eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
                                const io_chain_t &block_io, const job_group_ref_t &job_group,
                                block_type_t block_type) {
     static_assert(
-        std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
+        std::is_same<T, ast::statement_t>::value || std::is_same<T, ast::job_list_t>::value,
         "Unexpected node type");
     // Handle cancellation requests. If our block stack is currently empty, then we already did
     // successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is
@@ -725,9 +725,9 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
 }
 
 // Explicit instantiations. TODO: use overloads instead?
-template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::statement>,
+template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::statement_t &,
                                         const io_chain_t &, const job_group_ref_t &, block_type_t);
-template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::job_list>,
+template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, const ast::job_list_t &,
                                         const io_chain_t &, const job_group_ref_t &, block_type_t);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,

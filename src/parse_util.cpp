@@ -1311,9 +1311,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         *out_errors = std::move(parse_errors);
     }
 
+    // \return the ast to our caller if requested.
     if (out_pstree != nullptr) {
-        // TODO: legacy
-        *out_pstree = parse_source(buff_src, parse_flags, nullptr);
+        *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(ast));
     }
 
     return res;

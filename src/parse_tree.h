@@ -206,19 +206,26 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags,
                             parse_node_tree_t *output, parse_error_list_t *errors,
                             parse_token_type_t goal = symbol_job_list);
 
+namespace ast {
+class ast_t;
+}
+
 /// A type wrapping up a parse tree and the original source behind it.
 struct parsed_source_t {
     wcstring src;
-    parse_node_tree_t tree;
+    std::unique_ptr<ast::ast_t> ast;
 
-    parsed_source_t(wcstring s, parse_node_tree_t t) : src(std::move(s)), tree(std::move(t)) {}
+    parsed_source_t(wcstring s, ast::ast_t &&ast);
+    ~parsed_source_t();
 
     parsed_source_t(const parsed_source_t &) = delete;
     void operator=(const parsed_source_t &) = delete;
-    parsed_source_t(parsed_source_t &&) = default;
-    parsed_source_t &operator=(parsed_source_t &&) = default;
+    parsed_source_t(parsed_source_t &&) = delete;
+    parsed_source_t &operator=(parsed_source_t &&) = delete;
 };
+
 /// Return a shared pointer to parsed_source_t, or null on failure.
+/// If parse_flag_continue_after_error is not set, this will return null on any error.
 using parsed_source_ref_t = std::shared_ptr<const parsed_source_t>;
 parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags,
                                  parse_error_list_t *errors);

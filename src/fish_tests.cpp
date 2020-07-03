@@ -4567,6 +4567,8 @@ static void test_new_parser_errors() {
 
         {L"case", parse_error_unbalancing_case},
         {L"if true ; case ; end", parse_error_generic},
+
+        {L"true | and", parse_error_andor_in_pipeline},
     };
 
     for (const auto &test : tests) {

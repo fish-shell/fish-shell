@@ -200,8 +200,7 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 /// Define a function. Calls into `function.cpp` to perform the heavy lifting of defining a
 /// function.
 int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                     const parsed_source_ref_t &source,
-                     tnode_t<grammar::block_statement> func_node) {
+                     const parsed_source_ref_t &source, const ast::block_statement_t &func_node) {
     assert(source && "Missing source in builtin_function");
     // The wgetopt function expects 'function' as the first argument. Make a new wcstring_list with
     // that property. This is needed because this builtin has a different signature than the other
@@ -252,7 +251,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     props->shadow_scope = opts.shadow_scope;
     props->named_arguments = std::move(opts.named_arguments);
     props->parsed_source = source;
-    props->func_node = func_node;
+    props->func_node = &func_node;
 
     // Populate inherit_vars.
     for (const wcstring &name : opts.inherit_vars) {

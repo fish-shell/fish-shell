@@ -224,17 +224,14 @@ bool function_get_definition(const wcstring &name, wcstring &out_definition) {
     const function_info_t *func = funcset->get_info(name);
     if (!func || !func->props) return false;
     // We want to preserve comments that the AST attaches to the header (#5285).
-    // Take everything from the end of the header to the end of the body.
+    // Take everything from the end of the header to the 'end' keyword.
     const auto &props = func->props;
-    namespace g = grammar;
-    tnode_t<g::block_header> header = props->func_node.child<0>();
-    tnode_t<g::job_list> jobs = props->func_node.child<1>();
-    auto header_src = header.source_range();
-    auto jobs_src = jobs.source_range();
-    if (header_src && jobs_src) {
+    auto header_src = props->func_node->header->try_source_range();
+    auto end_kw_src = props->func_node->end.try_source_range();
+    if (header_src && end_kw_src) {
         uint32_t body_start = header_src->start + header_src->length;
-        uint32_t body_end = jobs_src->start + jobs_src->length;
-        assert(body_start <= jobs_src->start && "job list must come after header");
+        uint32_t body_end = end_kw_src->start;
+        assert(body_start <= body_end && "end keyword should come after header");
         out_definition = wcstring(props->parsed_source->src, body_start, body_end - body_start);
     }
     return true;
@@ -313,7 +310,7 @@ int function_get_definition_lineno(const wcstring &name) {
     // return one plus the number of newlines at offsets less than the start of our function's
     // statement (which includes the header).
     // TODO: merge with line_offset_of_character_at_offset?
-    auto source_range = func->props->func_node.source_range();
+    auto source_range = func->props->func_node->try_source_range();
     assert(source_range && "Function has no source range");
     uint32_t func_start = source_range->start;
     const wcstring &source = func->props->parsed_source->src;

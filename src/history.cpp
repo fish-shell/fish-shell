@@ -29,6 +29,7 @@
 #include <type_traits>
 #include <unordered_set>
 
+#include "ast.h"
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -44,7 +45,6 @@
 #include "parser.h"
 #include "path.h"
 #include "reader.h"
-#include "tnode.h"
 #include "wcstringutil.h"
 #include "wildcard.h"  // IWYU pragma: keep
 #include "wutil.h"     // IWYU pragma: keep
@@ -1096,8 +1096,7 @@ void history_impl_t::populate_from_config_path() {
 static bool should_import_bash_history_line(const wcstring &line) {
     if (line.empty()) return false;
 
-    parse_node_tree_t parse_tree;
-    if (!parse_tree_from_string(line, parse_flag_none, &parse_tree, nullptr)) return false;
+    if (ast::ast_t::parse(line).errored()) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     parse_error_list_t errors;
@@ -1274,38 +1273,33 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
 
     // Find all arguments that look like they could be file paths.
     bool needs_sync_write = false;
-    parse_node_tree_t tree;
-    parse_tree_from_string(str, parse_flag_none, &tree, nullptr);
+    using namespace ast;
+    auto ast = ast_t::parse(str);
 
     path_list_t potential_paths;
-    for (const parse_node_t &node : tree) {
-        if (!node.has_source()) {
-            continue;
-        }
-
-        if (node.type == symbol_argument) {
-            wcstring potential_path = node.get_source(str);
+    for (const node_t &node : ast) {
+        if (const argument_t *arg = node.try_as<argument_t>()) {
+            wcstring potential_path = arg->source(str);
             bool unescaped = unescape_string_in_place(&potential_path, UNESCAPE_DEFAULT);
             if (unescaped && string_could_be_path(potential_path)) {
                 potential_paths.push_back(potential_path);
             }
-        } else if (node.type == symbol_plain_statement) {
+        } else if (const decorated_statement_t *stmt = node.try_as<decorated_statement_t>()) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.
             // Also skip it for 'echo'. This is because echo doesn't take file paths, but also
             // because the history file test wants to find the commands in the history file
             // immediately after running them, so it can't tolerate the asynchronous file detection.
-            if (get_decoration({&tree, &node}) == parse_statement_decoration_exec) {
+            if (stmt->decoration() == parse_statement_decoration_exec) {
                 needs_sync_write = true;
             }
 
-            if (maybe_t<wcstring> command = command_for_plain_statement({&tree, &node}, str)) {
-                unescape_string_in_place(&*command, UNESCAPE_DEFAULT);
-                if (*command == L"exit" || *command == L"reboot" || *command == L"restart" ||
-                    *command == L"echo") {
-                    needs_sync_write = true;
-                }
+            wcstring command = stmt->command.source(str);
+            unescape_string_in_place(&command, UNESCAPE_DEFAULT);
+            if (command == L"exit" || command == L"reboot" || command == L"restart" ||
+                command == L"echo") {
+                needs_sync_write = true;
             }
         }
     }

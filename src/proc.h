@@ -21,7 +21,6 @@
 #include "global_safety.h"
 #include "io.h"
 #include "parse_tree.h"
-#include "tnode.h"
 #include "topic_monitor.h"
 
 /// Types of processes.
@@ -43,6 +42,10 @@ enum class job_control_t {
     interactive,
     none,
 };
+
+namespace ast {
+struct statement_t;
+}
 
 /// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
 /// etc.
@@ -261,10 +264,10 @@ class process_t {
     /// Type of process.
     process_type_t type{process_type_t::external};
 
-    /// For internal block processes only, the node offset of the statement.
+    /// For internal block processes only, the node of the statement.
     /// This is always either block, ifs, or switchs, never boolean or decorated.
     parsed_source_ref_t block_node_source{};
-    tnode_t<grammar::statement> internal_block_node{};
+    const ast::statement_t *internal_block_node{};
 
     struct concrete_assignment {
         wcstring variable_name;

@@ -45,7 +45,6 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "tnode.h"
 #include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"

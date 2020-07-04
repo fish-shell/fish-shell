@@ -40,6 +40,7 @@
 #include <utility>
 #include <vector>
 
+#include "ast.h"
 #include "autoload.h"
 #include "builtin.h"
 #include "color.h"
@@ -75,7 +76,6 @@
 #include "signal.h"
 #include "termsize.h"
 #include "timer.h"
-#include "tnode.h"
 #include "tokenizer.h"
 #include "topic_monitor.h"
 #include "utf8.h"
@@ -978,15 +978,18 @@ static void test_debounce_timeout() {
 }
 
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL, symbol_argument_list)) {
+    using namespace ast;
+    auto ast = ast_t::parse_argument_list(src, parse_flag_none);
+    if (ast.errored()) {
         return PARSER_TEST_ERROR;
     }
-
-    assert(!tree.empty());  //!OCLINT(multiple unary operator)
-    tnode_t<grammar::argument_list> arg_list{&tree, &tree.at(0)};
-    auto first_arg = arg_list.next_in_list<grammar::argument>();
-    return parse_util_detect_errors_in_argument(first_arg, first_arg.get_source(src));
+    const ast::argument_t *first_arg =
+        ast.top()->as<freestanding_argument_list_t>()->arguments.at(0);
+    if (!first_arg) {
+        err(L"Failed to parse an argument");
+        return 0;
+    }
+    return parse_util_detect_errors_in_argument(*first_arg, first_arg->source(src));
 }
 
 /// Test the parser.
@@ -1084,7 +1087,7 @@ static void test_parser() {
     }
 
     if (parse_util_detect_errors(L"echo (\nfoo\n  bar") != PARSER_TEST_INCOMPLETE) {
-        err(L"unterminated multiline subhsell not reported properly");
+        err(L"unterminated multiline subshell not reported properly");
     }
 
     if (parse_util_detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {
@@ -1268,75 +1271,121 @@ static void test_cancellation() {
     parser.clear_cancel();
 }
 
+namespace indent_tests {
+// A struct which is either text or a new indent.
+struct segment_t {
+    // The indent to set
+    int indent{0};
+    const char *text{nullptr};
+
+    /* implicit */ segment_t(int indent) : indent(indent) {}
+    /* implicit */ segment_t(const char *text) : text(text) {}
+};
+
+using test_t = std::vector<segment_t>;
+using test_list_t = std::vector<test_t>;
+
+// Add a new test to a test list based on a series of ints and texts.
+template <typename... Types>
+void add_test(test_list_t *v, const Types &... types) {
+    segment_t segments[] = {types...};
+    v->emplace_back(std::begin(segments), std::end(segments));
+}
+}  // namespace indent_tests
+
 static void test_indents() {
     say(L"Testing indents");
+    using namespace indent_tests;
 
-    // Here are the components of our source and the indents we expect those to be.
-    struct indent_component_t {
-        const wchar_t *txt;
-        int indent;
-    };
+    test_list_t tests;
+    add_test(&tests,              //
+             0, "if", 1, " foo",  //
+             0, "\nend");
 
-    const indent_component_t components1[] = {{L"if foo", 0}, {L"end", 0}, {NULL, -1}};
+    add_test(&tests,              //
+             0, "if", 1, " foo",  //
+             1, "\nfoo",          //
+             0, "\nend");
 
-    const indent_component_t components2[] = {{L"if foo", 0},
-                                              {L"", 1},  // trailing newline!
-                                              {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             1, "\nend",            //
+             0, "\nend");
 
-    const indent_component_t components3[] = {{L"if foo", 0},
-                                              {L"foo", 1},
-                                              {L"end", 0},  // trailing newline!
-                                              {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             1, "\n",  // FIXME: this should be 2 but parse_util_compute_indents has a bug
+             1, "\nend\n");
 
-    const indent_component_t components4[] = {{L"if foo", 0}, {L"if bar", 1}, {L"end", 1},
-                                              {L"end", 0},    {L"", 0},       {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             2, "\n");
 
-    const indent_component_t components5[] = {{L"if foo", 0}, {L"if bar", 1}, {L"", 2}, {NULL, -1}};
+    add_test(&tests,      //
+             0, "begin",  //
+             1, "\nfoo",  //
+             1, "\n");
 
-    const indent_component_t components6[] = {{L"begin", 0}, {L"foo", 1}, {L"", 1}, {NULL, -1}};
+    add_test(&tests,      //
+             0, "begin",  //
+             1, "\n;",    //
+             0, "end",    //
+             0, "\nfoo", 0, "\n");
 
-    const indent_component_t components7[] = {{L"begin", 0}, {L";", 1}, {L"end", 0},
-                                              {L"foo", 0},   {L"", 0},  {NULL, -1}};
+    add_test(&tests,      //
+             0, "begin",  //
+             1, "\n;",    //
+             0, "end",    //
+             0, "\nfoo", 0, "\n");
 
-    const indent_component_t components8[] = {{L"if foo", 0}, {L"if bar", 1}, {L"baz", 2},
-                                              {L"end", 1},    {L"", 1},       {NULL, -1}};
+    add_test(&tests,                //
+             0, "if", 1, " foo",    //
+             1, "\nif", 2, " bar",  //
+             2, "\nbaz",            //
+             1, "\nend", 1, "\n");
 
-    const indent_component_t components9[] = {{L"switch foo", 0}, {L"", 1}, {NULL, -1}};
+    add_test(&tests,           //
+             0, "switch foo",  //
+             1, "\n"           //
+    );
 
-    const indent_component_t components10[] = {
-        {L"switch foo", 0}, {L"case bar", 1}, {L"case baz", 1}, {L"quux", 2}, {L"", 2}, {NULL, -1}};
+    add_test(&tests,           //
+             0, "switch foo",  //
+             1, "\ncase bar",  //
+             1, "\ncase baz",  //
+             2, "\nquux",      //
+             2, "\nquux"       //
+    );
 
-    const indent_component_t components11[] = {{L"switch foo", 0},
-                                               {L"cas", 1},  // parse error indentation handling
-                                               {NULL, -1}};
+    add_test(&tests,           //
+             0, "switch foo",  //
+             1, "\ncas"        // parse error indentation handling
+    );
 
-    const indent_component_t components12[] = {{L"while false", 0},
-                                               {L"# comment", 1},   // comment indentation handling
-                                               {L"command", 1},     // comment indentation handling
-                                               {L"# comment2", 1},  // comment indentation handling
-                                               {NULL, -1}};
+    add_test(&tests,                   //
+             0, "while", 1, " false",  //
+             1, "\n# comment",         // comment indentation handling
+             1, "\ncommand",           //
+             1, "\n# comment 2"        //
+    );
 
-    const indent_component_t *tests[] = {components1, components2,  components3,  components4,
-                                         components5, components6,  components7,  components8,
-                                         components9, components10, components11, components12};
-    for (size_t which = 0; which < sizeof tests / sizeof *tests; which++) {
-        const indent_component_t *components = tests[which];
-        // Count how many we have.
-        size_t component_count = 0;
-        while (components[component_count].txt != NULL) {
-            component_count++;
-        }
-
-        // Generate the expected indents.
+    int test_idx = 0;
+    for (const test_t &test : tests) {
+        // Construct the input text and expected indents.
         wcstring text;
         std::vector<int> expected_indents;
-        for (size_t i = 0; i < component_count; i++) {
-            if (i > 0) {
-                text.push_back(L'\n');
-                expected_indents.push_back(components[i].indent);
+        int current_indent = 0;
+        for (const segment_t &segment : test) {
+            if (!segment.text) {
+                current_indent = segment.indent;
+            } else {
+                wcstring tmp = str2wcstring(segment.text);
+                text.append(tmp);
+                expected_indents.insert(expected_indents.end(), tmp.size(), current_indent);
             }
-            text.append(components[i].txt);
-            expected_indents.resize(text.size(), components[i].indent);
         }
         do_test(expected_indents.size() == text.size());
 
@@ -1350,11 +1399,13 @@ static void test_indents() {
         do_test(expected_indents.size() == indents.size());
         for (size_t i = 0; i < text.size(); i++) {
             if (expected_indents.at(i) != indents.at(i)) {
-                err(L"Wrong indent at index %lu in test #%lu (expected %d, actual %d):\n%ls\n", i,
-                    which + 1, expected_indents.at(i), indents.at(i), text.c_str());
-                break;  // don't keep showing errors for the rest of the line
+                err(L"Wrong indent at index %lu (char 0x%02x) in test #%lu (expected %d, actual "
+                    L"%d):\n%ls\n",
+                    i, text.at(i), test_idx, expected_indents.at(i), indents.at(i), text.c_str());
+                break;  // don't keep showing errors for the rest of the test
             }
         }
+        test_idx++;
     }
 }
 
@@ -4298,12 +4349,12 @@ static void test_new_parser_correctness() {
         {L"true || false; and true", true},
         {L"true || ||", false},
         {L"|| true", false},
-        {L"true || \n\n false", true},
+        {L"true || \n\n false", false},
     };
 
     for (const auto &test : parser_tests) {
-        parse_node_tree_t parse_tree;
-        bool success = parse_tree_from_string(test.src, parse_flag_none, &parse_tree, NULL);
+        auto ast = ast::ast_t::parse(test.src);
+        bool success = !ast.errored();
         if (success && !test.ok) {
             err(L"\"%ls\" should NOT have parsed, but did", test.src);
         } else if (!success && test.ok) {
@@ -4332,7 +4383,7 @@ static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_co
 }
 
 static void test_new_parser_fuzzing() {
-    say(L"Fuzzing parser (node size: %lu)", sizeof(parse_node_t));
+    say(L"Fuzzing parser");
     const wcstring fuzzes[] = {
         L"if",      L"else", L"for", L"in",  L"while", L"begin", L"function",
         L"switch",  L"case", L"end", L"and", L"or",    L"not",   L"command",
@@ -4343,7 +4394,6 @@ static void test_new_parser_fuzzing() {
     wcstring src;
     src.reserve(128);
 
-    parse_node_tree_t node_tree;
     parse_error_list_t errors;
 
     double start = timef();
@@ -4357,7 +4407,7 @@ static void test_new_parser_fuzzing() {
         unsigned long permutation = 0;
         while (string_for_permutation(fuzzes, sizeof fuzzes / sizeof *fuzzes, len, permutation++,
                                       &src)) {
-            parse_tree_from_string(src, parse_flag_continue_after_error, &node_tree, &errors);
+            ast::ast_t::parse(src);
         }
         if (log_it) std::fwprintf(stderr, L"done (%lu)\n", permutation);
     }
@@ -4369,33 +4419,36 @@ static void test_new_parser_fuzzing() {
 // true if successful.
 static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *out_joined_args,
                              enum parse_statement_decoration_t *out_deco) {
+    using namespace ast;
     out_cmd->clear();
     out_joined_args->clear();
     *out_deco = parse_statement_decoration_none;
 
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
-        return false;
-    }
+    auto ast = ast_t::parse(src);
+    if (ast.errored()) return false;
 
     // Get the statement. Should only have one.
-    tnode_t<grammar::job_list> job_list{&tree, &tree.at(0)};
-    auto stmts = job_list.descendants<grammar::plain_statement>();
-    if (stmts.size() != 1) {
-        say(L"Unexpected number of statements (%lu) found in '%ls'", stmts.size(), src.c_str());
-        return false;
+    const decorated_statement_t *statement = nullptr;
+    for (const auto &n : ast) {
+        if (const auto *tmp = n.try_as<decorated_statement_t>()) {
+            if (statement) {
+                say(L"More than one decorated statement found in '%ls'", src.c_str());
+                return false;
+            }
+            statement = tmp;
+        }
     }
-    tnode_t<grammar::plain_statement> stmt = stmts.at(0);
 
     // Return its decoration and command.
-    *out_deco = get_decoration(stmt);
-    *out_cmd = *command_for_plain_statement(stmt, src);
+    *out_deco = statement->decoration();
+    *out_cmd = statement->command.source(src);
 
     // Return arguments separated by spaces.
     bool first = true;
-    for (auto arg_node : stmt.descendants<grammar::argument>()) {
+    for (const ast::argument_or_redirection_t &arg : statement->args_or_redirs) {
+        if (!arg.is_argument()) continue;
         if (!first) out_joined_args->push_back(L' ');
-        out_joined_args->append(arg_node.get_source(src));
+        out_joined_args->append(arg.source(src));
         first = false;
     }
 
@@ -4404,19 +4457,22 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
 
 // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
 // not (issue #1240).
-template <typename Type>
+template <ast::type_t Type>
 static void check_function_help(const wchar_t *src) {
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL)) {
+    using namespace ast;
+    auto ast = ast_t::parse(src);
+    if (ast.errored()) {
         err(L"Failed to parse '%ls'", src);
     }
 
-    tnode_t<grammar::job_list> node{&tree, &tree.at(0)};
-    auto node_list = node.descendants<Type>();
-    if (node_list.size() == 0) {
-        err(L"Failed to find node of type '%ls'", token_type_description(Type::token));
-    } else if (node_list.size() > 1) {
-        err(L"Found too many nodes of type '%ls'", token_type_description(Type::token));
+    int count = 0;
+    for (const node_t &node : ast) {
+        count += (node.type == Type);
+    }
+    if (count == 0) {
+        err(L"Failed to find node of type '%ls'", ast_type_to_string(Type));
+    } else if (count > 1) {
+        err(L"Found too many nodes of type '%ls'", ast_type_to_string(Type));
     }
 }
 
@@ -4463,30 +4519,32 @@ static void test_new_parser_ll2() {
                 test.src.c_str(), (int)test.deco, (int)deco, (long)__LINE__);
     }
 
-    check_function_help<grammar::plain_statement>(L"function -h");
-    check_function_help<grammar::plain_statement>(L"function --help");
-    check_function_help<grammar::function_header>(L"function --foo; end");
-    check_function_help<grammar::function_header>(L"function foo; end");
+    check_function_help<ast::type_t::decorated_statement>(L"function -h");
+    check_function_help<ast::type_t::decorated_statement>(L"function --help");
+    check_function_help<ast::type_t::function_header>(L"function --foo; end");
+    check_function_help<ast::type_t::function_header>(L"function foo; end");
 }
 
 static void test_new_parser_ad_hoc() {
+    using namespace ast;
     // Very ad-hoc tests for issues encountered.
     say(L"Testing new parser ad hoc tests");
 
     // Ensure that 'case' terminates a job list.
     const wcstring src = L"switch foo ; case bar; case baz; end";
-    parse_node_tree_t parse_tree;
-    bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, NULL);
-    if (!success) {
+    auto ast = ast_t::parse(src);
+    if (ast.errored()) {
         err(L"Parsing failed");
     }
 
-    // Expect three case_item_lists: one for each case, and a terminal one. The bug was that we'd
+    // Expect two case_item_lists. The bug was that we'd
     // try to run a command 'case'.
-    tnode_t<grammar::job_list> root{&parse_tree, &parse_tree.at(0)};
-    auto node_list = root.descendants<grammar::case_item_list>();
-    if (node_list.size() != 3) {
-        err(L"Expected 3 case item nodes, found %lu", node_list.size());
+    int count = 0;
+    for (const auto &n : ast) {
+        count += (n.type == type_t::case_item);
+    }
+    if (count != 2) {
+        err(L"Expected 2 case item nodes, found %d", count);
     }
 }
 
@@ -4507,7 +4565,9 @@ static void test_new_parser_errors() {
         {L"if true ; end ; else", parse_error_unbalancing_else},
 
         {L"case", parse_error_unbalancing_case},
-        {L"if true ; case ; end", parse_error_unbalancing_case},
+        {L"if true ; case ; end", parse_error_generic},
+
+        {L"true | and", parse_error_andor_in_pipeline},
     };
 
     for (const auto &test : tests) {
@@ -4515,15 +4575,17 @@ static void test_new_parser_errors() {
         parse_error_code_t expected_code = test.code;
 
         parse_error_list_t errors;
-        parse_node_tree_t parse_tree;
-        bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, &errors);
-        if (success) {
+        auto ast = ast::ast_t::parse(src, parse_flag_none, &errors);
+        if (!ast.errored()) {
             err(L"Source '%ls' was expected to fail to parse, but succeeded", src.c_str());
         }
 
         if (errors.size() != 1) {
             err(L"Source '%ls' was expected to produce 1 error, but instead produced %lu errors",
                 src.c_str(), errors.size());
+            for (const auto &err : errors) {
+                fprintf(stderr, "%ls\n", err.describe(src, false).c_str());
+            }
         } else if (errors.at(0).code != expected_code) {
             err(L"Source '%ls' was expected to produce error code %lu, but instead produced error "
                 L"code %lu",
@@ -4860,6 +4922,12 @@ static void test_highlighting() {
     highlight_tests.push_back({
         {L"echo", highlight_role_t::command},
         {L")", highlight_role_t::error},
+    });
+
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"stuff", highlight_role_t::param},
+        {L"# comment", highlight_role_t::comment},
     });
 
     auto &vars = parser_t::principal_parser().vars();

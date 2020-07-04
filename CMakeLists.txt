@@ -114,14 +114,14 @@ set(FISH_SRCS
     src/fallback.cpp src/fish_version.cpp src/function.cpp src/highlight.cpp
     src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp src/intern.cpp
     src/io.cpp src/iothread.cpp src/kill.cpp src/output.cpp src/pager.cpp
-    src/parse_execution.cpp src/parse_productions.cpp src/parse_tree.cpp
+    src/parse_execution.cpp src/parse_tree.cpp
     src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
-    src/signal.cpp src/tinyexpr.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
+    src/signal.cpp src/tinyexpr.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
     src/future_feature_flags.cpp src/redirection.cpp src/topic_monitor.cpp
     src/flog.cpp src/trace.cpp src/timer.cpp src/null_terminated_array.cpp
-    src/operation_context.cpp src/fd_monitor.cpp src/termsize.cpp
+    src/operation_context.cpp src/fd_monitor.cpp src/termsize.cpp src/ast.cpp
 )
 
 # Header files are just globbed.

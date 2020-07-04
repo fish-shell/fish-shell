@@ -44,6 +44,7 @@
 #include <set>
 #include <stack>
 
+#include "ast.h"
 #include "color.h"
 #include "common.h"
 #include "complete.h"
@@ -74,7 +75,6 @@
 #include "screen.h"
 #include "signal.h"
 #include "termsize.h"
-#include "tnode.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -935,33 +935,29 @@ maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, s
     const size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
 
     // Parse this subcmd.
-    parse_node_tree_t parse_tree;
-    parse_tree_from_string(subcmd,
-                           parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens,
-                           &parse_tree, nullptr);
+    using namespace ast;
+    auto ast =
+        ast_t::parse(subcmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens |
+                                 parse_flag_leave_unterminated);
 
     // Look for plain statements where the cursor is at the end of the command.
-    using namespace grammar;
-    tnode_t<tok_string> matching_cmd_node;
-    for (const parse_node_t &node : parse_tree) {
-        // Only interested in plain statements with source.
-        if (node.type != symbol_plain_statement || !node.has_source()) continue;
+    const ast::string_t *matching_cmd_node = nullptr;
+    for (const node_t &n : ast) {
+        const decorated_statement_t *stmt = n.try_as<decorated_statement_t>();
+        if (!stmt) continue;
 
-        // Get the command node. Skip it if we can't or it has no source.
-        tnode_t<plain_statement> statement(&parse_tree, &node);
-        tnode_t<tok_string> cmd_node = statement.child<0>();
+        // Skip if we have a decoration.
+        if (stmt->opt_decoration) continue;
 
-        // Skip decorated statements.
-        if (get_decoration(statement) != parse_statement_decoration_none) continue;
-
-        auto msource = cmd_node.source_range();
+        // See if the command's source range range contains our cursor, including at the end.
+        auto msource = stmt->command.try_source_range();
         if (!msource) continue;
 
         // Now see if its source range contains our cursor, including at the end.
         if (subcmd_cursor_pos >= msource->start &&
             subcmd_cursor_pos <= msource->start + msource->length) {
             // Success!
-            matching_cmd_node = cmd_node;
+            matching_cmd_node = &stmt->command;
             break;
         }
     }
@@ -969,11 +965,12 @@ maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, s
     // Now if we found a command node, expand it.
     maybe_t<edit_t> result{};
     if (matching_cmd_node) {
-        const wcstring token = matching_cmd_node.get_source(subcmd);
+        assert(!matching_cmd_node->unsourced && "Should not be unsourced");
+        const wcstring token = matching_cmd_node->source(subcmd);
         if (auto abbreviation = expand_abbreviation(token, vars)) {
             // There was an abbreviation! Replace the token in the full command. Maintain the
             // relative position of the cursor.
-            source_range_t r = *matching_cmd_node.source_range();
+            source_range_t r = matching_cmd_node->source_range();
             result = edit_t(subcmd_offset + r.start, r.length, std::move(*abbreviation));
         }
     }

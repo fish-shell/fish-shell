@@ -11,9 +11,12 @@
 #include "env.h"
 #include "event.h"
 #include "parse_tree.h"
-#include "tnode.h"
 
 class parser_t;
+
+namespace ast {
+struct block_statement_t;
+}
 
 /// A function's constant properties. These do not change once initialized.
 struct function_properties_t {
@@ -23,7 +26,7 @@ struct function_properties_t {
     /// Node containing the function statement, pointing into parsed_source.
     /// We store block_statement, not job_list, so that comments attached to the header are
     /// preserved.
-    tnode_t<grammar::block_statement> func_node;
+    const ast::block_statement_t *func_node;
 
     /// List of all named arguments for this function.
     wcstring_list_t named_arguments;

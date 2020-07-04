@@ -300,9 +300,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
                     block_type_t block_type = block_type_t::top);
 
     /// Evaluates a node.
-    /// The node type must be grammar::statement or grammar::job_list.
+    /// The node type must be ast_t::statement_t or ast::job_list_t.
     template <typename T>
-    eval_res_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, const io_chain_t &block_io,
+    eval_res_t eval_node(const parsed_source_ref_t &ps, const T &node, const io_chain_t &block_io,
                          const job_group_ref_t &job_group,
                          block_type_t block_type = block_type_t::top);
 

@@ -14,6 +14,7 @@
 #include <string>
 #include <type_traits>
 
+#include "ast.h"
 #include "builtin.h"
 #include "common.h"
 #include "expand.h"
@@ -22,7 +23,6 @@
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
-#include "tnode.h"
 #include "tokenizer.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
@@ -565,121 +565,16 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
     return result;
 }
 
-/// We are given a parse tree, the index of a node within the tree, its indent, and a vector of
-/// indents the same size as the original source string. Set the indent correspdonding to the node's
-/// source range, if appropriate.
-///
-/// trailing_indent is the indent for nodes with unrealized source, i.e. if I type 'if false <ret>'
-/// then we have an if node with an empty job list (without source) but we want the last line to be
-/// indented anyways.
-///
-/// switch statements also indent.
-///
-/// max_visited_node_idx is the largest index we visited.
-static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset_t node_idx,
-                                      int node_indent, parse_token_type_t parent_type,
-                                      std::vector<int> *indents, int *trailing_indent,
-                                      node_offset_t *max_visited_node_idx) {
-    // Guard against incomplete trees.
-    if (node_idx > tree.size()) return;
-
-    // Update max_visited_node_idx.
-    if (node_idx > *max_visited_node_idx) *max_visited_node_idx = node_idx;
-
-    // We could implement this by utilizing the fish grammar. But there's an easy trick instead:
-    // almost everything that wraps a job list should be indented by 1. So just find all of the job
-    // lists. One exception is switch, which wraps a case_item_list instead of a job_list. The other
-    // exception is job_list itself: a job_list is a job and a job_list, and we want that child list
-    // to be indented the same as the parent. So just find all job_lists whose parent is not a
-    // job_list, and increment their indent by 1. We also want to treat andor_job_list like
-    // job_lists.
-    const parse_node_t &node = tree.at(node_idx);
-    const parse_token_type_t node_type = node.type;
-
-    // Increment the indent if we are either a root job_list, or root case_item_list.
-    const bool is_root_job_list = node_type != parent_type && (node_type == symbol_job_list ||
-                                                               node_type == symbol_andor_job_list);
-    const bool is_root_case_item_list =
-        node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
-    if (is_root_job_list || is_root_case_item_list) {
-        node_indent += 1;
-    }
-
-    // If we have source, store the trailing indent unconditionally. If we do not have source, store
-    // the trailing indent only if ours is bigger; this prevents the trailing "run" of terminal job
-    // lists from affecting the trailing indent. For example, code like this:
-    //
-    //   if foo
-    //
-    // will be parsed as this:
-    //
-    //   job_list
-    //     job
-    //        if_statement
-    //          job [if]
-    //          job_list [empty]
-    //     job_list [empty]
-    //
-    // There's two "terminal" job lists, and we want the innermost one.
-    //
-    // Note we are relying on the fact that nodes are in the same order as the source, i.e. an
-    // in-order traversal of the node tree also traverses the source from beginning to end.
-    if (node.has_source() || node_indent > *trailing_indent) {
-        *trailing_indent = node_indent;
-    }
-
-    // Store the indent into the indent array.
-    if (node.source_start != SOURCE_OFFSET_INVALID && node.source_start < indents->size()) {
-        if (node.has_source()) {
-            // A normal non-empty node. Store the indent unconditionally.
-            indents->at(node.source_start) = node_indent;
-        } else {
-            // An empty node. We have a source offset but no source length. This can come about when
-            // a node is legitimately empty:
-            //
-            //   while true; end
-            //
-            // The job_list inside the while loop is empty. It still has a source offset (at the end
-            // of the while statement) but no source extent. We still need to capture that indent,
-            // because there may be comments inside:
-            //
-            //      while true
-            //         # loop forever
-            //      end
-            //
-            // The 'loop forever' comment must be indented, by virtue of storing the indent.
-            //
-            // Now consider what happens if we remove the end:
-            //
-            //     while true
-            //       # loop forever
-            //
-            // Now both the job_list and end_command are unmaterialized. However, we want the indent
-            // to be of the job_list and not the end_command.  Therefore, we only store the indent
-            // if it's bigger.
-            if (node_indent > indents->at(node.source_start)) {
-                indents->at(node.source_start) = node_indent;
-            }
-        }
-    }
-
-    // Recursive to all our children.
-    for (node_offset_t idx = 0; idx < node.child_count; idx++) {
-        // Note we pass our type to our child, which becomes its parent node type.
-        compute_indents_recursive(tree, node.child_start + idx, node_indent, node_type, indents,
-                                  trailing_indent, max_visited_node_idx);
-    }
-}
-
 std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // Make a vector the same size as the input string, which contains the indents. Initialize them
-    // to -1.
+    // to 0.
+    static wcstring ssss;
+    ssss = src;
     const size_t src_size = src.size();
-    std::vector<int> indents(src_size, -1);
+    std::vector<int> indents(src_size, 0);
 
     // Simple trick: if our source does not contain a newline, then all indents are 0.
     if (src.find('\n') == wcstring::npos) {
-        std::fill(indents.begin(), indents.end(), 0);
         return indents;
     }
 
@@ -687,78 +582,141 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
-    parse_node_tree_t tree;
-    parse_tree_from_string(src,
-                           parse_flag_continue_after_error | parse_flag_include_comments |
-                               parse_flag_accept_incomplete_tokens,
-                           &tree, nullptr /* errors */);
+    using namespace ast;
+    auto ast =
+        ast_t::parse(src, parse_flag_continue_after_error | parse_flag_include_comments |
+                              parse_flag_accept_incomplete_tokens | parse_flag_leave_unterminated);
 
-    // Start indenting at the first node. If we have a parse error, we'll have to start indenting
-    // from the top again.
-    node_offset_t start_node_idx = 0;
-    int last_trailing_indent = 0;
+    // Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
+    // visiting its children.
+    struct indent_visitor_t {
+        explicit indent_visitor_t(std::vector<int> &indents) : indents(indents) {}
 
-    while (start_node_idx < tree.size()) {
-        // The indent that we'll get for the last line.
-        int trailing_indent = 0;
+        void visit(const node_t &node) {
+            int inc = 0;
+            int dec = 0;
+            switch (node.type) {
+                case type_t::job_list:
+                case type_t::andor_job_list:
+                    // Job lists are never unwound.
+                    inc = 1;
+                    dec = 1;
+                    break;
 
-        // Biggest offset we visited.
-        node_offset_t max_visited_node_idx = 0;
+                // Increment indents for conditions in headers (#1665).
+                case type_t::job_conjunction:
+                    if (node.parent->type == type_t::while_header ||
+                        node.parent->type == type_t::if_clause) {
+                        inc = 1;
+                        dec = 1;
+                    }
+                    break;
 
-        // Invoke the recursive version. As a hack, pass job_list for the 'parent' token type, which
-        // will prevent the really-root job list from indenting.
-        compute_indents_recursive(tree, start_node_idx, last_trailing_indent, symbol_job_list,
-                                  &indents, &trailing_indent, &max_visited_node_idx);
+                // Increment indents for piped remainders.
+                case type_t::job_continuation_list:
+                    if (node.as<job_continuation_list_t>()->count() > 0) {
+                        inc = 1;
+                        dec = 1;
+                    }
+                    break;
 
-        // We may have more to indent. The trailing indent becomes our current indent. Start at the
-        // node after the last we visited.
-        last_trailing_indent = trailing_indent;
-        start_node_idx = max_visited_node_idx + 1;
-    }
+                case type_t::case_item_list:
+                    // Here's a hack. Consider:
+                    // switch abc
+                    //    cas
+                    //
+                    // fish will see that 'cas' is not valid inside a switch statement because it is
+                    // not "case". It will then unwind back to the top level job list, producing a
+                    // parse tree like:
+                    //
+                    //   job_list
+                    //      switch_job
+                    //         <err>
+                    //      normal_job
+                    //         cas
+                    //
+                    // And so we will think that the 'cas' job is at the same level as the switch.
+                    // To address this, if we see that the switch statement was not closed, do not
+                    // decrement the indent afterwards.
+                    inc = 1;
+                    dec = node.parent->as<switch_statement_t>()->end.unsourced ? 0 : 1;
+                    break;
 
-    // Handle comments. Each comment node has a parent (which is whatever the top of the symbol
-    // stack was when the comment was encountered). So the source range of the comment has the same
-    // indent as its parent.
-    const size_t tree_size = tree.size();
-    for (node_offset_t i = 0; i < tree_size; i++) {
-        const parse_node_t &node = tree.at(i);
-        if (node.type == parse_special_type_comment && node.has_source() &&
-            node.parent < tree_size) {
-            const parse_node_t &parent = tree.at(node.parent);
-            if (parent.source_start != SOURCE_OFFSET_INVALID) {
-                indents.at(node.source_start) = indents.at(parent.source_start);
+                default:
+                    break;
             }
-        }
-    }
+            indent += inc;
 
-    // Now apply the indents. The indents array has -1 for places where the indent does not change,
-    // so start at each value and extend it along the run of -1s.
-    int last_indent = 0;
-    for (size_t i = 0; i < src_size; i++) {
-        int this_indent = indents.at(i);
-        if (this_indent < 0) {
-            indents.at(i) = last_indent;
+            // If we increased the indentation, apply it to the remainder of the string, even if the
+            // list is empty. For example (where _ represents the cursor):
+            //
+            //    if foo
+            //       _
+            //
+            // we want to indent the newline.
+            if (inc) {
+                std::fill(indents.begin() + last_leaf_end, indents.end(), indent);
+                last_indent = indent;
+            }
+
+            // If this is a leaf node, apply the current indentation.
+            if (node.category == category_t::leaf) {
+                auto range = node.source_range();
+                if (range.length > 0) {
+                    // Fill to the end.
+                    // Later nodes will come along and overwrite these.
+                    std::fill(indents.begin() + range.start, indents.end(), indent);
+                    last_leaf_end = range.start + range.length;
+                    last_indent = indent;
+                }
+            }
+
+
+            node_visitor(*this).accept_children_of(&node);
+            indent -= dec;
+        }
+
+        // The one-past-the-last index of the most recently encountered leaf node.
+        // We use this to populate the indents even if there's no tokens in the range.
+        size_t last_leaf_end{0};
+
+        // The last indent which we assigned.
+        int last_indent{-1};
+
+        // List of indents, which we populate.
+        std::vector<int> &indents;
+
+        // Initialize our starting indent to -1, as our top-level node is a job list which
+        // will immediately increment it.
+        int indent{-1};
+    };
+
+    indent_visitor_t iv(indents);
+    node_visitor(iv).accept(ast.top());
+
+    // All newlines now get the *next* indent.
+    // For example, in this code:
+    //    if true
+    //       stuff
+    // the newline "belongs" to the if statement as it ends its job.
+    // But when rendered, it visually belongs to the job list.
+
+    // FIXME: if there's a middle newline, we will indent it wrongly.
+    // For example:
+    //    if true
+    //
+    //    end
+    // Here the middle newline should be indented by 1.
+
+    size_t idx = src_size;
+    int next_indent = iv.last_indent;
+    while (idx--) {
+        if (src.at(idx) == L'\n') {
+            indents.at(idx) = next_indent;
         } else {
-            // New indent level.
-            last_indent = this_indent;
-            // Make all whitespace before a token have the new level. This avoid using the wrong
-            // indentation level if a new line starts with whitespace.
-            size_t prev_char_idx = i;
-            while (prev_char_idx--) {
-                if (!std::wcschr(L" \n\t\r", src.at(prev_char_idx))) break;
-                indents.at(prev_char_idx) = last_indent;
-            }
+            next_indent = indents.at(idx);
         }
     }
-
-    // Ensure trailing whitespace has the trailing indent. This makes sure a new line is correctly
-    // indented even if it is empty.
-    size_t suffix_idx = src_size;
-    while (suffix_idx--) {
-        if (!std::wcschr(L" \n\t\r", src.at(suffix_idx))) break;
-        indents.at(suffix_idx) = last_trailing_indent;
-    }
-
     return indents;
 }
 
@@ -790,17 +748,13 @@ bool parse_util_argument_is_help(const wchar_t *s) {
     return std::wcscmp(L"-h", s) == 0 || std::wcscmp(L"--help", s) == 0;
 }
 
-/// Check if the first argument under the given node is --help.
-static bool first_argument_is_help(tnode_t<grammar::plain_statement> statement,
-                                   const wcstring &src) {
-    bool is_help = false;
-    auto arg_nodes = get_argument_nodes(statement.child<1>());
-    if (!arg_nodes.empty()) {
-        // Check the first argument only.
-        wcstring first_arg_src = arg_nodes.front().get_source(src);
-        is_help = parse_util_argument_is_help(first_arg_src.c_str());
+// \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
+// there are no arguments.
+const ast::argument_t *get_first_arg(const ast::argument_or_redirection_list_t &list) {
+    for (const ast::argument_or_redirection_t &v : list) {
+        if (v.is_argument()) return &v.argument();
     }
-    return is_help;
+    return nullptr;
 }
 
 /// Given a wide character immediately after a dollar sign, return the appropriate error message.
@@ -956,11 +910,13 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator.
-parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::argument> node,
+parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argument_t &arg,
                                                               const wcstring &arg_src,
                                                               parse_error_list_t *out_errors) {
-    assert(node.has_source() && "argument has no source");
-    auto source_start = node.source_range()->start;
+    maybe_t<source_range_t> source_range = arg.try_source_range();
+    if (!source_range.has_value()) return 0;
+
+    size_t source_start = source_range->start;
     int err = 0;
     wchar_t *paran_begin, *paran_end;
     int do_loop = 1;
@@ -1054,10 +1010,10 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
 }
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
-static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
+static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
                                               parse_error_list_t *parse_errors) {
-    namespace g = grammar;
-    auto source_range = job.source_range();
+    using namespace ast;
+    auto source_range = job.try_source_range();
     if (!source_range) return false;
 
     bool errored = false;
@@ -1066,54 +1022,77 @@ static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    auto job_conj = job.try_get_parent<g::job_conjunction>();
-    if (job_conj.try_get_parent<g::if_clause>()) {
-        errored = append_syntax_error(parse_errors, source_range->start,
-                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (job_conj.try_get_parent<g::while_header>()) {
-        errored = append_syntax_error(parse_errors, source_range->start,
-                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (auto jlist = job_conj.try_get_parent<g::job_list>()) {
-        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
-        // Fetch the job list and then advance it by one.
-        auto first_jconj = jlist.next_in_list<g::job_conjunction>();
-        assert(first_jconj == job.try_get_parent<g::job_conjunction>() &&
-               "Expected first job to be the node we found");
-        (void)first_jconj;
+    const job_conjunction_t *job_conj = job.parent->try_as<job_conjunction_t>();
+    if (!job_conj) return false;
 
-        // Try getting the next job's decorator.
-        if (auto next_job_dec = jlist.next_in_list<g::job_decorator>()) {
-            // The next job is indeed a boolean statement.
-            parse_job_decoration_t bool_type = bool_statement_type(next_job_dec);
-            if (bool_type == parse_job_decoration_and) {
-                errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
-                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-            } else if (bool_type == parse_job_decoration_or) {
-                errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
-                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+    if (job_conj->parent->try_as<if_clause_t>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (job_conj->parent->try_as<while_header_t>()) {
+        errored = append_syntax_error(parse_errors, source_range->start,
+                                      BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    } else if (const ast::job_list_t *jlist = job_conj->parent->try_as<ast::job_list_t>()) {
+        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
+        // Find the index of ourselves in the job list.
+        size_t index;
+        for (index = 0; index < jlist->count(); index++) {
+            if (jlist->at(index) == job_conj) break;
+        }
+        assert(index < jlist->count() && "Should have found the job in the list");
+
+        // Try getting the next job and check its decorator.
+        if (const job_conjunction_t *next = jlist->at(index + 1)) {
+            if (const keyword_base_t *deco = next->decorator.contents.get()) {
+                assert(
+                    (deco->kw == parse_keyword_t::kw_and || deco->kw == parse_keyword_t::kw_or) &&
+                    "Unexpected decorator keyword");
+                const wchar_t *deco_name = (deco->kw == parse_keyword_t::kw_and ? L"and" : L"or");
+                errored = append_syntax_error(parse_errors, deco->source_range().start,
+                                              BOOL_AFTER_BACKGROUND_ERROR_MSG, deco_name);
             }
         }
     }
     return errored;
 }
 
-static bool detect_errors_in_plain_statement(const wcstring &buff_src,
-                                             const parse_node_tree_t &node_tree,
-                                             tnode_t<grammar::plain_statement> pst,
-                                             parse_error_list_t *parse_errors) {
-    using namespace grammar;
+static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
+                                                 const ast::decorated_statement_t &dst,
+                                                 parse_error_list_t *parse_errors) {
+    using namespace ast;
     bool errored = false;
-    auto source_start = pst.source_range()->start;
+    auto source_start = dst.source_range().start;
+    const parse_statement_decoration_t decoration = dst.decoration();
 
-    // In a few places below, we want to know if we are in a pipeline.
-    tnode_t<statement> st = pst.try_get_parent<decorated_statement>().try_get_parent<statement>();
-    pipeline_position_t pipe_pos = get_pipeline_position(st);
-    bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
+    // Determine if the first argument is help.
+    bool first_arg_is_help = false;
+    if (const auto *arg = get_first_arg(dst.args_or_redirs)) {
+        wcstring arg_src = arg->source(buff_src);
+        first_arg_is_help = parse_util_argument_is_help(arg_src.c_str());
+    }
 
-    // We need to know the decoration.
-    const enum parse_statement_decoration_t decoration = get_decoration(pst);
+    // Get the statement we are part of.
+    const statement_t *st = dst.parent->as<statement_t>();
+
+    // Walk up to the job.
+    const ast::job_t *job = nullptr;
+    for (const node_t *cursor = st; job == nullptr; cursor = cursor->parent) {
+        assert(cursor && "Reached root without finding a job");
+        job = cursor->try_as<ast::job_t>();
+    }
+    assert(job && "Should have found the job");
+
+    // Check our pipeline position.
+    pipeline_position_t pipe_pos;
+    if (job->continuation.empty()) {
+        pipe_pos = pipeline_position_t::none;
+    } else if (&job->statement == st) {
+        pipe_pos = pipeline_position_t::first;
+    } else {
+        pipe_pos = pipeline_position_t::subsequent;
+    }
 
     // Check that we don't try to pipe through exec.
+    bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
     if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
         errored = append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, L"exec");
     }
@@ -1124,14 +1103,14 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
     if (pipe_pos == pipeline_position_t::subsequent) {
         // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
         // commands.
-        wcstring command = pst.child<0>().get_source(buff_src);
+        wcstring command = dst.command.source(buff_src);
         if (command == L"and" || command == L"or") {
             errored =
                 append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
         }
     }
 
-    if (maybe_t<wcstring> unexp_command = command_for_plain_statement(pst, buff_src)) {
+    if (maybe_t<wcstring> unexp_command = dst.command.try_source(buff_src)) {
         wcstring command;
         // Check that we can expand the command.
         if (expand_to_command_and_args(*unexp_command, operation_context_t::empty(), &command,
@@ -1148,40 +1127,40 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
 
         // Check that we don't return from outside a function. But we allow it if it's
         // 'return --help'.
-        if (!errored && command == L"return") {
+        if (!errored && command == L"return" && !first_arg_is_help) {
+            // See if we are in a function.
             bool found_function = false;
-            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
-                 ancestor = node_tree.get_parent(*ancestor)) {
-                auto fh = tnode_t<block_statement>::try_create(&node_tree, ancestor)
-                              .child<0>()
-                              .try_get_child<function_header, 0>();
-                if (fh) {
-                    found_function = true;
-                    break;
+            for (const node_t *cursor = &dst; cursor != nullptr; cursor = cursor->parent) {
+                if (const auto *bs = cursor->try_as<block_statement_t>()) {
+                    if (bs->header->type == type_t::function_header) {
+                        found_function = true;
+                        break;
+                    }
                 }
             }
-            if (!found_function && !first_argument_is_help(pst, buff_src)) {
+
+            if (!found_function) {
                 errored = append_syntax_error(parse_errors, source_start, INVALID_RETURN_ERR_MSG);
             }
         }
 
         // Check that we don't break or continue from outside a loop.
-        if (!errored && (command == L"break" || command == L"continue")) {
+        if (!errored && (command == L"break" || command == L"continue") && !first_arg_is_help) {
             // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
             // stop the search; we can't break an outer loop from inside a function.
             // This is a little funny because we can't tell if it's a 'for' or 'while'
             // loop from the ancestor alone; we need the header. That is, we hit a
             // block_statement, and have to check its header.
             bool found_loop = false;
-            for (const parse_node_t *ancestor = pst.node(); ancestor != nullptr;
-                 ancestor = node_tree.get_parent(*ancestor)) {
-                tnode_t<block_header> bh =
-                    tnode_t<block_statement>::try_create(&node_tree, ancestor).child<0>();
-                if (bh.try_get_child<while_header, 0>() || bh.try_get_child<for_header, 0>()) {
+            for (const node_t *ancestor = &dst; ancestor != nullptr; ancestor = ancestor->parent) {
+                const auto *block = ancestor->try_as<block_statement_t>();
+                if (!block) continue;
+                if (block->header->type == type_t::for_header ||
+                    block->header->type == type_t::while_header) {
                     // This is a loop header, so we can break or continue.
                     found_loop = true;
                     break;
-                } else if (bh.try_get_child<function_header, 0>()) {
+                } else if (block->header->type == type_t::function_header) {
                     // This is a function header, so we cannot break or
                     // continue. We stop our search here.
                     found_loop = false;
@@ -1189,7 +1168,7 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
                 }
             }
 
-            if (!found_loop && !first_argument_is_help(pst, buff_src)) {
+            if (!found_loop) {
                 errored = append_syntax_error(
                     parse_errors, source_start,
                     (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
@@ -1208,12 +1187,21 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
     return errored;
 }
 
+// Given we have a trailing argument_or_redirection_list, like `begin; end > /dev/null`, verify that
+// there are no arguments in the list.
+static bool detect_errors_in_block_redirection_list(
+    const ast::argument_or_redirection_list_t &args_or_redirs, parse_error_list_t *out_errors) {
+    if (const auto *first_arg = get_first_arg(args_or_redirs)) {
+        return append_syntax_error(out_errors, first_arg->source_range().start,
+                                   BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+    }
+    return false;
+}
+
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors,
                                                   bool allow_incomplete,
                                                   parsed_source_ref_t *out_pstree) {
-    namespace g = grammar;
-    parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
 
     parser_test_error_bits_t res = 0;
@@ -1233,12 +1221,15 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // allow_incomplete is set.
     bool has_unclosed_quote_or_subshell = false;
 
-    // Parse the input string into a parse tree. Some errors are detected here.
-    bool parsed = parse_tree_from_string(
-        buff_src, allow_incomplete ? parse_flag_leave_unterminated : parse_flag_none, &node_tree,
-        &parse_errors);
+    const parse_tree_flags_t parse_flags =
+        allow_incomplete ? parse_flag_leave_unterminated : parse_flag_none;
 
+    // Parse the input string into an ast. Some errors are detected here.
+    using namespace ast;
+    auto ast = ast_t::parse(buff_src, parse_flags, &parse_errors);
     if (allow_incomplete) {
+        // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
+        // successfully.
         size_t idx = parse_errors.size();
         while (idx--) {
             if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote ||
@@ -1250,19 +1241,14 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         }
     }
 
-    // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
-    // successfully. A better fix would be to have parse_tree_from_string return this information
-    // directly (but it would be a shame to munge up its nice bool return).
-    if (parse_errors.empty() && has_unclosed_quote_or_subshell) {
-        parsed = true;
-    }
-
-    if (!parsed) {
-        errored = true;
-    }
-
     // has_unclosed_quote_or_subshell may only be set if allow_incomplete is true.
     assert(!has_unclosed_quote_or_subshell || allow_incomplete);
+    if (has_unclosed_quote_or_subshell) {
+        // We do not bother to validate the rest of the tree in this case.
+        return PARSER_TEST_INCOMPLETE;
+    }
+
+    errored = !parse_errors.empty();
 
     // Expand all commands.
     // Verify 'or' and 'and' not used inside pipelines.
@@ -1271,21 +1257,17 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Verify no variable expansions.
 
     if (!errored) {
-        for (const parse_node_t &node : node_tree) {
-            if (node.type == symbol_end_command && !node.has_source()) {
-                // An 'end' without source is an unclosed block.
-                has_unclosed_block = true;
-            } else if (node.type == symbol_statement && !node.has_source()) {
-                // Check for a statement without source in a pipeline, i.e. unterminated pipeline.
-                auto pipe_pos = get_pipeline_position({&node_tree, &node});
-                if (pipe_pos != pipeline_position_t::none) {
+        for (const node_t &node : ast) {
+            if (const job_continuation_t *jc = node.try_as<job_continuation_t>()) {
+                // Somewhat clumsy way of checking for a statement without source in a pipeline.
+                // See if our pipe has source but our statement does not.
+                if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
                     has_unclosed_pipe = true;
                 }
-            } else if (node.type == symbol_argument) {
-                tnode_t<g::argument> arg{&node_tree, &node};
-                const wcstring arg_src = node.get_source(buff_src);
-                res |= parse_util_detect_errors_in_argument(arg, arg_src, &parse_errors);
-            } else if (node.type == symbol_job) {
+            } else if (const argument_t *arg = node.try_as<argument_t>()) {
+                wcstring arg_src = arg->source(buff_src);
+                res |= parse_util_detect_errors_in_argument(*arg, arg_src, &parse_errors);
+            } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
                 // Disallow background in the following cases:
                 //
                 // foo & ; and bar
@@ -1293,25 +1275,27 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 // if foo & ; end
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
-                auto job = tnode_t<g::job>{&node_tree, &node};
-                if (job_node_is_background(job)) {
-                    errored |= detect_errors_in_backgrounded_job(job, &parse_errors);
+                if (job->bg) {
+                    errored |= detect_errors_in_backgrounded_job(*job, &parse_errors);
                 }
-            } else if (node.type == symbol_arguments_or_redirections_list) {
-                // verify no arguments to the end command of if, switch, begin (#986).
-                auto list = tnode_t<g::arguments_or_redirections_list>{&node_tree, &node};
-                if (list.try_get_parent<g::if_statement>() ||
-                    list.try_get_parent<g::switch_statement>() ||
-                    list.try_get_parent<g::block_statement>()) {
-                    if (auto arg = list.next_in_list<g::argument>()) {
-                        errored = append_syntax_error(&parse_errors, arg.source_range()->start,
-                                                      END_ARG_ERR_MSG);
-                    }
-                }
-            } else if (node.type == symbol_plain_statement) {
-                tnode_t<grammar::plain_statement> pst{&node_tree, &node};
+            } else if (const ast::decorated_statement_t *stmt =
+                           node.try_as<decorated_statement_t>()) {
+                errored |= detect_errors_in_decorated_statement(buff_src, *stmt, &parse_errors);
+            } else if (const auto *block = node.try_as<block_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (block->end.unsourced) has_unclosed_block = true;
                 errored |=
-                    detect_errors_in_plain_statement(buff_src, node_tree, pst, &parse_errors);
+                    detect_errors_in_block_redirection_list(block->args_or_redirs, &parse_errors);
+            } else if (const auto *ifs = node.try_as<if_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (ifs->end.unsourced) has_unclosed_block = true;
+                errored |=
+                    detect_errors_in_block_redirection_list(ifs->args_or_redirs, &parse_errors);
+            } else if (const auto *switchs = node.try_as<switch_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (switchs->end.unsourced) has_unclosed_block = true;
+                errored |=
+                    detect_errors_in_block_redirection_list(switchs->args_or_redirs, &parse_errors);
             }
         }
     }
@@ -1325,8 +1309,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         *out_errors = std::move(parse_errors);
     }
 
+    // \return the ast to our caller if requested.
     if (out_pstree != nullptr) {
-        *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(node_tree));
+        *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(ast));
     }
 
     return res;
@@ -1341,25 +1326,21 @@ maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_
                                                  false /* don't skip caret */);
     };
 
-    // Parse the string as an argument list.
+    // Parse the string as a freestanding argument list.
+    using namespace ast;
     parse_error_list_t errors;
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors,
-                                symbol_freestanding_argument_list)) {
-        // Failed to parse.
+    auto ast = ast_t::parse_argument_list(arg_list_src, parse_flag_none, &errors);
+    if (!errors.empty()) {
         return get_error_text(errors);
     }
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
-    assert(!tree.empty() && "Should have parsed a tree");
-    tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
-    while (auto arg = arg_list.next_in_list<grammar::argument>()) {
-        const wcstring arg_src = arg.get_source(arg_list_src);
+    for (const argument_t &arg : ast.top()->as<freestanding_argument_list_t>()->arguments) {
+        const wcstring arg_src = arg.source(arg_list_src);
         if (parse_util_detect_errors_in_argument(arg, arg_src, &errors)) {
             return get_error_text(errors);
         }
     }
-
     return none();
 }

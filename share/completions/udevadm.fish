@@ -1,5 +1,3 @@
-complete -c udevadm -e
-
 set -l commands info trigger settle control monitor test test-builtin
 complete -c udevadm -n '__fish_is_first_token' -xa "$commands"
 

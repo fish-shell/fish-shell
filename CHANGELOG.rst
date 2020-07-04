@@ -128,6 +128,7 @@ Completions
       ``pg_dumpall``
    -  ``gh``
    -  ``gitk``
+   -  ``mpc``
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
    -  ``nmap``, ``ncat``
    -  ``rst2html``, ``rst2html4``, ``rst2html5``, ``rst2latex``,

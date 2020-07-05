@@ -87,6 +87,9 @@
 static const char *const *s_arguments;
 static int s_test_run_count = 0;
 
+#define system_assert(command) if (system(command)) \
+    { err(L"Non-zero result on line %d: %s", __LINE__, command); }
+
 // Indicate if we should test the given function. Either we test everything (all arguments) or we
 // run only tests that have a prefix in s_arguments.
 static bool should_test_function(const char *func_name) {
@@ -3540,7 +3543,7 @@ static void test_universal() {
             }
         }
     }
-    (void)system("rm -Rf test/fish_uvars_test/");
+    system_assert("rm -Rf test/fish_uvars_test/");
 }
 
 static void test_universal_output() {
@@ -3661,7 +3664,7 @@ static void test_universal_callbacks() {
     do_test(callbacks.at(1).val == wcstring{L"1"});
     do_test(callbacks.at(2).key == L"delta");
     do_test(callbacks.at(2).val == none());
-    (void)system("rm -Rf test/fish_uvars_test/");
+    system_assert("rm -Rf test/fish_uvars_test/");
 }
 
 static void test_universal_formats() {
@@ -3710,7 +3713,7 @@ static void test_universal_ok_to_save() {
     // Ensure file is same.
     file_id_t after_id = file_id_for_path(UVARS_TEST_PATH);
     do_test(before_id == after_id && "UVARS_TEST_PATH should not have changed");
-    (void)system("rm -Rf test/fish_uvars_test/");
+    system_assert("rm -Rf test/fish_uvars_test/");
 }
 
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {

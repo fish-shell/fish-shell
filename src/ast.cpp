@@ -749,6 +749,10 @@ class ast_t::populator_t {
             return;
         }
 
+        // HACK We sometimes unwind after not consuming anything, for example on "a=".
+        // To avoid an infinite loop, remember the current token to be able to detect this case.
+        uint32_t first_token = peek_token().range().start;
+
         for (;;) {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
             // loop type.
@@ -756,12 +760,14 @@ class ast_t::populator_t {
                 if (!list_type_stops_unwind(ListType)) {
                     break;
                 }
+                bool consume_first = peek_token().range().start == first_token;
                 // We are going to stop unwinding.
                 // Rather hackish. Just chomp until we get to a string or end node.
                 for (auto type = peek_type();
-                     type != parse_token_type_string && type != parse_token_type_terminate &&
-                     type != parse_token_type_end;
+                     (consume_first || type != parse_token_type_string) &&
+                     type != parse_token_type_terminate && type != parse_token_type_end;
                      type = peek_type()) {
+                    consume_first = false;
                     parse_token_t tok = tokens_.pop();
                     ast_->extras_.errors.push_back(tok.range());
                     FLOGF(ast_construction, L"%*schomping range %u-%u", spaces(), "",

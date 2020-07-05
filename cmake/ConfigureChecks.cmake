@@ -4,13 +4,18 @@
 # `wcstod_l` is a GNU-extension, sometimes hidden behind GNU-related defines.
 # This is the case for at least Cygwin and Newlib.
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
+include(CheckCXXCompilerFlag)
 
 if(APPLE)
-    include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag("-Werror=unguarded-availability" REQUIRES_UNGUARDED_AVAILABILITY)
     if(REQUIRES_UNGUARDED_AVAILABILITY)
         list(APPEND CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS} "-Werror=unguarded-availability")
     endif()
+endif()
+
+check_cxx_compiler_flag("-Wno-redundant-move" HAS_NO_REDUNDANT_MOVE)
+if (HAS_NO_REDUNDANT_MOVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-redundant-move")
 endif()
 
 # Try using CMake's own logic to locate curses/ncurses

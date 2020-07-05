@@ -50,7 +50,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra \
 -Wno-comment \
 -Wno-address \
 -Wno-strict-aliasing \
--Wno-redundant-move \
 ")
 
 # Disable exception handling.

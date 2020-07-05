@@ -4546,6 +4546,20 @@ static void test_new_parser_ad_hoc() {
     if (count != 2) {
         err(L"Expected 2 case item nodes, found %d", count);
     }
+
+    // Ensure that naked variable assignments don't hang.
+    // The bug was that "a=" would produce an error but not be consumed,
+    // leading to an infinite loop.
+
+    // By itself it should produce an error.
+    ast = ast_t::parse(L"a=");
+    do_test(ast.errored());
+
+    // If we are leaving things unterminated, this should not produce an error.
+    // i.e. when typing "a=" at the command line, it should be treated as valid
+    // because we don't want to color it as an error.
+    ast = ast_t::parse(L"a=", parse_flag_leave_unterminated);
+    do_test(!ast.errored());
 }
 
 static void test_new_parser_errors() {
@@ -4568,6 +4582,8 @@ static void test_new_parser_errors() {
         {L"if true ; case ; end", parse_error_generic},
 
         {L"true | and", parse_error_andor_in_pipeline},
+
+        {L"a=", parse_error_bare_variable_assignment},
     };
 
     for (const auto &test : tests) {
@@ -4928,6 +4944,10 @@ static void test_highlighting() {
         {L"echo", highlight_role_t::command},
         {L"stuff", highlight_role_t::param},
         {L"# comment", highlight_role_t::comment},
+    });
+
+    highlight_tests.push_back({
+        {L"a=", highlight_role_t::param},
     });
 
     auto &vars = parser_t::principal_parser().vars();

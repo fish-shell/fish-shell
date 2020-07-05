@@ -43,11 +43,10 @@ parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err) {
 /// Returns a string description of this parse error.
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix,
                                              bool is_interactive, bool skip_caret) const {
-    if (skip_caret && this->text.empty()) return L"";
-
     wcstring result = prefix;
     switch (code) {
         default:
+            if (skip_caret && this->text.empty()) return L"";
             break;
         case parse_error_andor_in_pipeline:
             append_format(result, EXEC_ERR_MSG,

@@ -663,11 +663,23 @@ class ast_t::populator_t {
     }
 
     bool can_parse(variable_assignment_t *) {
-        // We can parse a variable_assignment if our token is a variable assignment and the next
-        // token is a string. If the next token is not a string, then we have either a bare
-        // assignment like `foo=bar` or perhaps `foo=bar | `, etc. In that case we want to allow
-        // statement to see this assignment so it can produce an error.
-        return peek_token(0).may_be_variable_assignment && peek_type(1) == parse_token_type_string;
+        // Do we have a variable assignment at all?
+        if (!peek_token(0).may_be_variable_assignment) return false;
+
+        // What is the token after it?
+        switch (peek_type(1)) {
+            case parse_token_type_string:
+                // We have `a= cmd` and should treat it as a variable assignment.
+                return true;
+            case parse_token_type_terminate:
+                // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
+                return allow_incomplete();
+            default:
+                // We have e.g. `a= >` which is an error.
+                // Note that we do not produce an error here. Instead we return false so this the
+                // token will be seen by allocate_populate_statement_contents.
+                return false;
+        }
     }
 
     template <parse_token_type_t... Tok>
@@ -749,10 +761,6 @@ class ast_t::populator_t {
             return;
         }
 
-        // HACK We sometimes unwind after not consuming anything, for example on "a=".
-        // To avoid an infinite loop, remember the current token to be able to detect this case.
-        uint32_t first_token = peek_token().range().start;
-
         for (;;) {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
             // loop type.
@@ -760,14 +768,12 @@ class ast_t::populator_t {
                 if (!list_type_stops_unwind(ListType)) {
                     break;
                 }
-                bool consume_first = peek_token().range().start == first_token;
                 // We are going to stop unwinding.
                 // Rather hackish. Just chomp until we get to a string or end node.
                 for (auto type = peek_type();
-                     (consume_first || type != parse_token_type_string) &&
-                     type != parse_token_type_terminate && type != parse_token_type_end;
+                     type != parse_token_type_string && type != parse_token_type_terminate &&
+                     type != parse_token_type_end;
                      type = peek_type()) {
-                    consume_first = false;
                     parse_token_t tok = tokens_.pop();
                     ast_->extras_.errors.push_back(tok.range());
                     FLOGF(ast_construction, L"%*schomping range %u-%u", spaces(), "",
@@ -822,7 +828,8 @@ class ast_t::populator_t {
         } else if (token1.may_be_variable_assignment) {
             // Here we have a variable assignment which we chose to not parse as a variable
             // assignment because there was no string after it.
-            parse_error(token1, parse_error_bare_variable_assignment, L"");
+            // Ensure we consume the token, so we don't get back here again at the same place.
+            parse_error(consume_any_token(), parse_error_bare_variable_assignment, L"");
             return got_error();
         }
 

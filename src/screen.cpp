@@ -1096,10 +1096,13 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     return result;
 }
 
-void s_write(screen_t *s, int screen_width, const wcstring &left_prompt,
-             const wcstring &right_prompt, const wcstring &commandline, size_t explicit_len,
+void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
+             const wcstring &commandline, size_t explicit_len,
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
-             size_t cursor_pos, const page_rendering_t &pager, bool cursor_is_within_pager) {
+             size_t cursor_pos, pager_t &pager, page_rendering_t &page_rendering,
+             bool cursor_is_within_pager) {
+    termsize_t curr_termsize = termsize_last();
+    int screen_width = curr_termsize.width;
     static relaxed_atomic_t<uint32_t> s_repaints{0};
     FLOGF(screen, "Repaint %u", static_cast<unsigned>(++s_repaints));
     screen_data_t::cursor_t cursor_arr;
@@ -1182,8 +1185,14 @@ void s_write(screen_t *s, int screen_width, const wcstring &left_prompt,
         s->desired.cursor.y = static_cast<int>(s->desired.line_count());
     }
 
+    // Re-render our completions page if necessary. Limit the term size of the pager to the true
+    // term size, minus the number of lines consumed by our string.
+    int full_line_count = cursor_arr.y + 1;
+    pager.set_term_size(termsize_t{std::max(1, curr_termsize.width),
+                                   std::max(1, curr_termsize.height - full_line_count)});
+    pager.update_rendering(&page_rendering);
     // Append pager_data (none if empty).
-    s->desired.append_lines(pager.screen_data);
+    s->desired.append_lines(page_rendering.screen_data);
 
     s_update(s, layout.left_prompt, layout.right_prompt);
     s_save_status(s);

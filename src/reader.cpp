@@ -820,21 +820,12 @@ void reader_data_t::repaint() {
     std::vector<int> indents = this->indents;
     indents.resize(len);
 
-    // Re-render our completions page if necessary. Limit the term size of the pager to the true
-    // term size, minus the number of lines consumed by our string. (Note this doesn't yet consider
-    // wrapping).
-    int full_line_count = 1 + std::count(full_line.cbegin(), full_line.cend(), L'\n');
-    termsize_t curr_termsize = termsize_last();
-    pager.set_term_size(termsize_t{std::max(1, curr_termsize.width),
-                                   std::max(1, curr_termsize.height - full_line_count)});
-    pager.update_rendering(&current_page_rendering);
-
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position();
 
     // Prepend the mode prompt to the left prompt.
-    s_write(&screen, termsize_last().width, mode_prompt_buff + left_prompt_buff, right_prompt_buff,
-            full_line, cmd_line->size(), colors, indents, cursor_position, current_page_rendering,
+    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
+            cmd_line->size(), colors, indents, cursor_position, pager, current_page_rendering,
             focused_on_pager);
 
     repaint_needed = false;
@@ -2690,7 +2681,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 auto fish_color_cancel = vars.get(L"fish_color_cancel");
                 if (fish_color_cancel) {
-                    outp.set_color(parse_color(*fish_color_cancel, false), parse_color(*fish_color_cancel, true));
+                    outp.set_color(parse_color(*fish_color_cancel, false),
+                                   parse_color(*fish_color_cancel, true));
                 }
                 outp.writestr(L"^C");
                 outp.set_color(rgb_color_t::reset(), rgb_color_t::reset());

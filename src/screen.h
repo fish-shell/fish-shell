@@ -27,6 +27,7 @@
 #include "highlight.h"
 #include "wcstringutil.h"
 
+class pager_t;
 class page_rendering_t;
 
 /// A class representing a single line of a screen.
@@ -176,7 +177,6 @@ class screen_t {
 /// screen in order to render the desired output using as few terminal commands as possible.
 ///
 /// \param s the screen on which to write
-/// \param int screen_width the width of the screen to render
 /// \param left_prompt the prompt to prepend to the command line
 /// \param right_prompt the right prompt, or NULL if none
 /// \param commandline the command line
@@ -185,12 +185,14 @@ class screen_t {
 /// \param colors the colors to use for the comand line
 /// \param indent the indent to use for the command line
 /// \param cursor_pos where the cursor is
-/// \param pager_data any pager data, to append to the screen
+/// \param pager the pager to render below the command line
+/// \param page_rendering to cache the current pager view
 /// \param cursor_is_within_pager whether the position is within the pager line (first line)
-void s_write(screen_t *s, int screen_width, const wcstring &left_prompt,
-             const wcstring &right_prompt, const wcstring &commandline, size_t explicit_len,
+void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
+             const wcstring &commandline, size_t explicit_len,
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
-             size_t cursor_pos, const page_rendering_t &pager_data, bool cursor_is_within_pager);
+             size_t cursor_pos, pager_t &pager, page_rendering_t &page_rendering,
+             bool cursor_is_within_pager);
 
 /// Resets the screen buffer's internal knowledge about the contents of the screen,
 /// optionally repainting the prompt as well.

@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 #
 # Tool to generate messages.pot
-# Extended to replace the old Makefile rule which did not port easily to CMak
+# Extended to replace the old Makefile rule which did not port easily to CMake
 
 # This script was originally motivated to work around a quirk (or bug depending on your viewpoint)
 # of the xgettext command. See https://lists.gnu.org/archive/html/bug-gettext/2014-11/msg00006.html.
@@ -30,7 +30,7 @@ mkdir -p /tmp/fish/explicit/share/completions /tmp/fish/explicit/share/functions
 for f in share/config.fish share/completions/*.fish share/functions/*.fish
     # Extract explicit attempts to translate a message. That is, those that are of the form
     # `(_ "message")`.
-    string replace --filter --regex $explicit_regex 'echo $1' <$f | fish >/tmp/fish/explicit/$f.tmp ^/dev/null
+    string replace --filter --regex $explicit_regex 'echo $1' <$f | fish >/tmp/fish/explicit/$f.tmp 2>/dev/null
     while read description
         echo 'N_ "'(string replace --all '"' '\\"' -- $description)'"'
     end </tmp/fish/explicit/$f.tmp >/tmp/fish/explicit/$f
@@ -39,7 +39,7 @@ for f in share/config.fish share/completions/*.fish share/functions/*.fish
     # Handle `complete` / `function` description messages. The `| fish` is subtle. It basically
     # avoids the need to use `source` with a command substitution that could affect the current
     # shell.
-    string replace --filter --regex $implicit_regex 'echo $1' <$f | fish >/tmp/fish/implicit/$f.tmp ^/dev/null
+    string replace --filter --regex $implicit_regex 'echo $1' <$f | fish >/tmp/fish/implicit/$f.tmp 2>/dev/null
     while read description
         # We don't use `string escape` as shown in the next comment because it produces output that
         # is not parsed correctly by xgettext. Instead just escape double-quotes and quote the

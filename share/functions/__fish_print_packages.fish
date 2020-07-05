@@ -234,7 +234,7 @@ function __fish_print_packages
 
     if type -q -f apk
         if set -q only_installed
-            apk info
+            apk info -q
             return
         else
             apk search -q

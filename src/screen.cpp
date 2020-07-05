@@ -87,7 +87,7 @@ static int fish_wcwidth_min_0(wchar_t widechar) { return std::max(0, fish_wcwidt
 int line_t::wcswidth_min_0(size_t max) const {
     int result = 0;
     for (size_t idx = 0, end = std::min(max, text.size()); idx < end; idx++) {
-        result += fish_wcwidth_min_0(text[idx].first);
+        result += fish_wcwidth_min_0(text[idx].character);
     }
     return result;
 }

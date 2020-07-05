@@ -31,8 +31,12 @@ class page_rendering_t;
 
 /// A class representing a single line of a screen.
 struct line_t {
+    struct highlighted_char_t {
+        highlight_spec_t highlight;
+        wchar_t character;
+    };
+
     /// A pair of a character, and the color with which to draw it.
-    using highlighted_char_t = std::pair<wchar_t, highlight_spec_t>;
     std::vector<highlighted_char_t> text{};
     bool is_soft_wrapped{false};
     size_t indentation{0};
@@ -43,12 +47,12 @@ struct line_t {
     void clear(void) { text.clear(); }
 
     /// Append a single character \p txt to the line with color \p c.
-    void append(wchar_t c, highlight_spec_t color) { text.push_back({c, color}); }
+    void append(wchar_t c, highlight_spec_t color) { text.push_back({color, c}); }
 
     /// Append a nul-terminated string \p txt to the line, giving each character \p color.
     void append(const wchar_t *txt, highlight_spec_t color) {
         for (size_t i = 0; txt[i]; i++) {
-            text.push_back({txt[i], color});
+            text.push_back({color, txt[i]});
         }
     }
 
@@ -56,10 +60,10 @@ struct line_t {
     size_t size() const { return text.size(); }
 
     /// \return the character at a char index.
-    wchar_t char_at(size_t idx) const { return text.at(idx).first; }
+    wchar_t char_at(size_t idx) const { return text.at(idx).character; }
 
     /// \return the color at a char index.
-    highlight_spec_t color_at(size_t idx) const { return text.at(idx).second; }
+    highlight_spec_t color_at(size_t idx) const { return text.at(idx).highlight; }
 
     /// Append the contents of \p line to this line.
     void append_line(const line_t &line) {

@@ -474,9 +474,9 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 
     std::vector<rgb_color_t> candidates;
 
-    static const wchar_t *prefix = L"--background=";
+    const wchar_t *prefix = L"--background=";
     // wcslen is not available as constexpr
-    static auto prefix_len = wcslen(prefix);
+    size_t prefix_len = wcslen(prefix);
 
     wcstring color_name;
     for (const wcstring &next : var.as_list()) {

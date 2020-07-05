@@ -77,35 +77,6 @@ char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, lon
                            long p5 = 0, long p6 = 0, long p7 = 0, long p8 = 0, long p9 = 0);
 #endif
 
-// On OS X, use weak linking for wcsdup and wcscasecmp. Weak linking allows you to call the
-// function only if it exists at runtime. You can detect it by testing the function pointer against
-// NULL. To avoid making the callers do that, redefine wcsdup to wcsdup_use_weak, and likewise with
-// wcscasecmp. This lets us use the same binary on SnowLeopard (10.6) and Lion+ (10.7), even though
-// these functions only exist on 10.7+.
-//
-// On other platforms, use what's detected at build time.
-#ifdef __APPLE__
-// Avoid warnings about unknown `clang::weak_import` attribute (e.g. GCC 8.2.0 on macOS 10.10)
-#if __DARWIN_C_LEVEL >= 200809L && __clang__ && __has_attribute(weak_import)
-// We have to explicitly redeclare these as weak, since we are forced to set the MIN_REQUIRED
-// availability macro to 10.7 to use libc++, which in turn exposes these as strong
-[[clang::weak_import]] wchar_t *wcsdup(const wchar_t *);
-[[clang::weak_import]] int wcscasecmp(const wchar_t *, const wchar_t *);
-[[clang::weak_import]] int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n);
-wchar_t *wcsdup_use_weak(const wchar_t *);
-int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
-int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);
-#define wcsdup(a) wcsdup_use_weak((a))
-#define wcscasecmp(a, b) wcscasecmp_use_weak((a), (b))
-#define wcsncasecmp(a, b, c) wcsncasecmp_use_weak((a), (b), (c))
-#else
-wchar_t *wcsdup(const wchar_t *in);
-int wcscasecmp(const wchar_t *a, const wchar_t *b);
-int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
-wchar_t *wcsndup(const wchar_t *in, size_t c);
-#endif  // clang::weak_import
-#else   // __APPLE__
-
 /// These functions are missing from Solaris 10, and only accessible from
 /// Solaris 11 in the std:: namespace.
 #ifndef HAVE_WCSDUP
@@ -202,8 +173,6 @@ int flock(int fd, int op);
 #define LOCK_EX 2  // Exclusive lock.
 #define LOCK_UN 8  // Unlock.
 #define LOCK_NB 4  // Don't block when locking.
-#endif
-
 #endif
 
 // NetBSD _has_ wcstod_l, but it's doing some weak linking hullabaloo that I don't get.

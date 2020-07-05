@@ -13,7 +13,9 @@ if(APPLE)
     endif()
 endif()
 
-check_cxx_compiler_flag("-Wno-redundant-move" HAS_NO_REDUNDANT_MOVE)
+# An unrecognized flag is usually a warning and not an error, which CMake apparently does
+# not pick up on. Combine it with -Werror to determine if it's actually supported.
+check_cxx_compiler_flag("-Wno-redundant-move -Werror" HAS_NO_REDUNDANT_MOVE)
 if (HAS_NO_REDUNDANT_MOVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-redundant-move")
 endif()

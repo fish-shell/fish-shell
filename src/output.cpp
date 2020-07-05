@@ -474,14 +474,17 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 
     std::vector<rgb_color_t> candidates;
 
+    static const wchar_t *prefix = L"--background=";
+    // wcslen is not available as constexpr
+    static auto prefix_len = wcslen(prefix);
+
     wcstring color_name;
     for (const wcstring &next : var.as_list()) {
         color_name.clear();
         if (is_background) {
             // Look for something like "--background=red".
-            const wchar_t *prefix = L"--background=";
             if (string_prefixes_string(prefix, next)) {
-                color_name = wcstring(next, wcslen(prefix));
+                color_name = wcstring(next, prefix_len);
             }
             // Reverse should be meaningful in either context
             if (next == L"--reverse" || next == L"-r") {

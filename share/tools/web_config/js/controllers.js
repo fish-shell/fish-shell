@@ -34,6 +34,8 @@ controllers.controller("colorsController", function($scope, $http) {
 
     $scope.border_color_for_color = border_color_for_color;
 
+    $scope.interpret_color = interpret_color;
+
     $scope.getColorArraysArray = function() {
         var result = null;
         if ( $scope.selectedColorScheme.colors && $scope.selectedColorScheme.colors.length > 0)
@@ -165,7 +167,6 @@ controllers.controller("promptController", function($scope, $http) {
     $scope.fetchSamplePrompts= function() {
         $http.get("sample_prompts/").then(function(arg) {
             $scope.samplePrompts = arg.data;
-            $scope.samplePromptsArrayArray = get_colors_as_nested_array($scope.samplePrompts, 1);
 
             if ($scope.selectedPrompt == null) {
                 $scope.selectPrompt($scope.samplePrompts[0]);

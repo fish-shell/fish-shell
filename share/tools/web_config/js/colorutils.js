@@ -192,34 +192,35 @@ function master_color_for_color(color_str) {
 }
 
 /* Given a color name, like 'normal' or 'red' or 'FF00F0', return an RGB color string (or empty
-   string) */
+   string). If multiple colors are given, as in '555 brblack', interpret the first color. */
 function interpret_color(str) {
-    str = str.toLowerCase();
-    if (str == 'black') return '000000';
-    if (str == 'red') return '800000';
-    if (str == 'green') return '008000';
-    if (str == 'brown') return '725000';
-    if (str == 'yellow') return '808000';
-    if (str == 'blue') return '000080';
-    if (str == 'magenta') return '800080';
-    if (str == 'purple') return '800080';
-    if (str == 'cyan') return '008080';
-    if (str == 'white') return 'c0c0c0';
-    if (str == 'grey') return 'e5e5e5';
-    if (str == 'brgrey') return '555555';
-    if (str == 'brblack') return '808080';
-    if (str == 'brred') return 'ff0000';
-    if (str == 'brgreen') return '00ff00';
-    if (str == 'brbrown') return 'ffff00';
-    if (str == 'bryellow') return 'ffff00';
-    if (str == 'brblue') return '0000ff';
-    if (str == 'brmagenta') return 'ff00ff';
-    if (str == 'brpurple') return 'ff00ff';
-    if (str == 'brcyan') return '00ffff';
-    if (str == 'brwhite') return 'ffffff';
+    if (!str) return '';
+    str = str.toLowerCase().split(" ")[0];
+    if (str == 'black') return '#000000';
+    if (str == 'red') return '#800000';
+    if (str == 'green') return '#008000';
+    if (str == 'brown') return '#725000';
+    if (str == 'yellow') return '#808000';
+    if (str == 'blue') return '#000080';
+    if (str == 'magenta') return '#800080';
+    if (str == 'purple') return '#800080';
+    if (str == 'cyan') return '#008080';
+    if (str == 'white') return '#c0c0c0';
+    if (str == 'grey') return '#e5e5e5';
+    if (str == 'brgrey') return '#555555';
+    if (str == 'brblack') return '#808080';
+    if (str == 'brred') return '#ff0000';
+    if (str == 'brgreen') return '#00ff00';
+    if (str == 'brbrown') return '#ffff00';
+    if (str == 'bryellow') return '#ffff00';
+    if (str == 'brblue') return '#0000ff';
+    if (str == 'brmagenta') return '#ff00ff';
+    if (str == 'brpurple') return '#ff00ff';
+    if (str == 'brcyan') return '#00ffff';
+    if (str == 'brwhite') return '#ffffff';
     if (str == 'normal') return '';
     if (str == 'reset') return '';
-    return str
+    return '#' + str
 }
 
 var color_scheme_fish_default = {

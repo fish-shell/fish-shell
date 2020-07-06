@@ -229,7 +229,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             /// Respond to a hup signal by exiting, unless it is caught by a shellscript function,
             /// in which case we do nothing.
             if (!observed) {
-                reader_force_exit();
+                reader_sighup();
             }
             topic_monitor_t::principal().post(topic_t::sighupint);
             break;

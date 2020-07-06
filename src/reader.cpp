@@ -677,11 +677,20 @@ static void term_fix_modes(struct termios *modes) {
 /// Whether we should exit the current reader loop.
 static relaxed_atomic_bool_t s_end_current_loop{false};
 
+static relaxed_atomic_bool_t s_tty_redirected{false};
+static volatile sig_atomic_t s_sighup{false};
 /// Whether we should exit all reader loops. This is set in response to a HUP signal and it
 /// latches (once set it is never cleared). This should never be reset to false.
 static volatile sig_atomic_t s_exit_forced{false};
 
-static bool should_exit() { return s_end_current_loop || s_exit_forced; }
+static bool should_exit() {
+    if (!s_tty_redirected && s_sighup) {
+        redirect_tty_output();
+        s_tty_redirected = true;
+    }
+
+    return s_end_current_loop || s_exit_forced;
+}
 
 /// Give up control of terminal.
 static void term_donate(outputter_t &outp) {
@@ -1156,6 +1165,10 @@ void reader_set_end_loop(bool flag) { s_end_current_loop = flag; }
 void reader_force_exit() {
     // Beware, we may be in a signal handler.
     s_exit_forced = true;
+}
+void reader_sighup() {
+    // Beware, we are in a signal handler
+    s_sighup = true;
 }
 
 /// Indicates if the given command char ends paging.
@@ -2414,7 +2427,7 @@ void reader_bg_job_warning(const job_list_t &jobs) {
 
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
-static void handle_end_loop(const parser_t &parser) {
+static void handle_end_loop(parser_t &parser) {
     if (!reader_exit_forced()) {
         for (const auto &b : parser.blocks()) {
             if (b.type() == block_type_t::breakpoint) {
@@ -2488,7 +2501,20 @@ static int read_i(parser_t &parser) {
         // reader_set_buffer during evaluation.
         maybe_t<wcstring> tmp = reader_readline(0);
 
-        if (shell_is_exiting()) {
+        // To make fish_exit safe to use in the event of SIGHUP, first redirect the tty
+        // to avoid a user script triggering SIGTTIN or SIGTTOU.
+        if (s_sighup) {
+            if (!s_tty_redirected) {
+                redirect_tty_output();
+                s_tty_redirected = true;
+            }
+            // If we call reader_force_exit first, we'll be unable to run fish_exit handlers
+            event_fire_generic(parser, L"fish_exit");
+            s_sighup = false;
+            reader_force_exit();
+        }
+
+        if (should_exit()) {
             handle_end_loop(parser);
         } else if (tmp && !tmp->empty()) {
             const wcstring command = tmp.acquire();
@@ -2504,7 +2530,7 @@ static int read_i(parser_t &parser) {
             if (data->history) {
                 data->history->resolve_pending();
             }
-            if (shell_is_exiting()) {
+            if (should_exit()) {
                 handle_end_loop(parser);
             } else {
                 data->prev_end_loop = false;
@@ -3554,7 +3580,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
     }
 
-    while (!rls.finished && !shell_is_exiting()) {
+    while (!rls.finished && !should_exit()) {
         // Perhaps update the termsize. This is cheap if it has not changed.
         update_termsize();
 

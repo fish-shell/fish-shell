@@ -121,6 +121,9 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 /// Tell the shell whether it should exit after the currently running command finishes.
 void reader_set_end_loop(bool flag);
 
+/// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
+void reader_sighup();
+
 /// Mark that the reader should forcibly exit. This may be invoked from a signal handler.
 void reader_force_exit();
 

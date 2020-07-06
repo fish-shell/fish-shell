@@ -34,11 +34,13 @@ If the output of ``jobs`` is redirected or if it is part of a command substituti
 
 The exit status of ``jobs`` is ``0`` if there are running background jobs and ``1`` otherwise.
 
-no output.
-----------
-
-
 Example
 -------
 
-``jobs`` outputs a summary of the current jobs.
+``jobs`` outputs a summary of the current jobs, such as two long-running tasks in this example:
+
+.. code-block:: none
+
+   Job Group   State   Command
+   2   26012   running nc -l 55232 < /dev/random &
+   1   26011   running python tests/test_11.py &

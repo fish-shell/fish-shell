@@ -677,19 +677,39 @@ static void term_fix_modes(struct termios *modes) {
 /// Whether we should exit the current reader loop.
 static relaxed_atomic_bool_t s_end_current_loop{false};
 
-static relaxed_atomic_bool_t s_tty_redirected{false};
-static volatile sig_atomic_t s_sighup{false};
 /// Whether we should exit all reader loops. This is set in response to a HUP signal and it
 /// latches (once set it is never cleared). This should never be reset to false.
 static volatile sig_atomic_t s_exit_forced{false};
+static volatile sig_atomic_t s_pending_exit_forced{false};
 
-static bool should_exit() {
-    if (!s_tty_redirected && s_sighup) {
+void reader_sighup() {
+    // Beware, we are in a signal handler
+    s_pending_exit_forced = true;
+}
+
+static bool should_exit(parser_t *parser = nullptr) {
+    static bool s_tty_redirected = false;
+    // To make fish_exit safe to use in the event of SIGHUP, first redirect the tty
+    // to avoid a user script triggering SIGTTIN or SIGTTOU.
+    if (!s_tty_redirected && s_pending_exit_forced) {
         redirect_tty_output();
         s_tty_redirected = true;
     }
 
-    return s_end_current_loop || s_exit_forced;
+    // s_exit_forced cannot be unset and prevents all future execution. Since we might
+    // still have to run the fish_exit handlers, we first set s_pending_exit_force and
+    // then translate that into s_exit_forced here, after running whatever we need to
+    // guarantee runs.
+    if (parser && s_pending_exit_forced) {
+        s_pending_exit_forced = false;
+        // If we don't call fish_exit here, it'll be called later but won't be able to
+        // execute anything as our loop will be blocked from running.
+        event_fire_generic(*parser, L"fish_exit");
+        // Only now can the flag be set
+        s_exit_forced = true;
+    }
+
+    return s_exit_forced || s_end_current_loop;
 }
 
 /// Give up control of terminal.
@@ -1162,13 +1182,11 @@ void restore_term_mode() {
 /// Exit the current reader loop. This may be invoked from a signal handler.
 void reader_set_end_loop(bool flag) { s_end_current_loop = flag; }
 
+/// Called only when we're not able to read/write to our standard input/output,
+/// namely EOF and SIGHUP.
 void reader_force_exit() {
     // Beware, we may be in a signal handler.
-    s_exit_forced = true;
-}
-void reader_sighup() {
-    // Beware, we are in a signal handler
-    s_sighup = true;
+    s_pending_exit_forced = true;
 }
 
 /// Indicates if the given command char ends paging.
@@ -2501,20 +2519,7 @@ static int read_i(parser_t &parser) {
         // reader_set_buffer during evaluation.
         maybe_t<wcstring> tmp = reader_readline(0);
 
-        // To make fish_exit safe to use in the event of SIGHUP, first redirect the tty
-        // to avoid a user script triggering SIGTTIN or SIGTTOU.
-        if (s_sighup) {
-            if (!s_tty_redirected) {
-                redirect_tty_output();
-                s_tty_redirected = true;
-            }
-            // If we call reader_force_exit first, we'll be unable to run fish_exit handlers
-            event_fire_generic(parser, L"fish_exit");
-            s_sighup = false;
-            reader_force_exit();
-        }
-
-        if (should_exit()) {
+        if (should_exit(&parser)) {
             handle_end_loop(parser);
         } else if (tmp && !tmp->empty()) {
             const wcstring command = tmp.acquire();
@@ -2530,7 +2535,7 @@ static int read_i(parser_t &parser) {
             if (data->history) {
                 data->history->resolve_pending();
             }
-            if (should_exit()) {
+            if (should_exit(&parser)) {
                 handle_end_loop(parser);
             } else {
                 data->prev_end_loop = false;
@@ -3580,7 +3585,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
     }
 
-    while (!rls.finished && !should_exit()) {
+    while (!rls.finished && !should_exit(&parser())) {
         // Perhaps update the termsize. This is cheap if it has not changed.
         update_termsize();
 

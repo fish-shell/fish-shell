@@ -122,11 +122,11 @@ The following special input functions are available:
 
 - ``end-selection``, end selecting text
 
-- ``expand-abbr`` expands any abbreviation currently under the cursor
+- ``expand-abbr``, expands any abbreviation currently under the cursor
 
-- ``execute`` run the current commandline
+- ``execute``, run the current commandline
 
-- ``force-repaint`` reexecute the prompt functions without coalescing
+- ``force-repaint``, reexecute the prompt functions without coalescing
 
 - ``forward-bigword``, move one whitespace-delimited word to the right
 
@@ -164,9 +164,9 @@ The following special input functions are available:
 
 - ``pager-toggle-search``, toggles the search field if the completions pager is visible.
 
-- ``repaint`` reexecutes the prompt functions and redraws the prompt. Multiple successive repaints are coalesced.
+- ``repaint``, reexecutes the prompt functions and redraws the prompt. Multiple successive repaints are coalesced.
 
-- ``repaint-mode`` reexecutes the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists, it acts like a normal repaint.
+- ``repaint-mode``, reexecutes the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists, it acts like a normal repaint.
 
 - ``self-insert``, inserts the matching sequence into the command line
 

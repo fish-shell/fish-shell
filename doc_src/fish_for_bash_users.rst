@@ -35,7 +35,22 @@ or to erase variables::
   PAGER=cat git log
 
 
-Fish does not perform word splitting. Once a variable has been set to a value, that value stays as it is, so double-quoting variable expansions isn't the necessity it is in bash.
+Fish does not perform word splitting. Once a variable has been set to a value, that value stays as it is, so double-quoting variable expansions isn't the necessity it is in bash. [#]_
+
+For instance, here's bash
+
+.. code-block:: sh
+
+  > foo="bar baz"
+  > printf '"%s"\n' $foo # will print two lines, because we didn't double-quote, so the variable is split
+  "bar"
+  "baz"
+
+And here is fish::
+
+  > set foo "bar baz"
+  > printf '"%s"\n' $foo # foo was set as one element, so it will be passed as one element, so this is one line
+  "bar baz"
 
 All variables are "arrays" (we use the term "lists"), and expanding a variable expands to all its elements, with each element as its own argument (like bash's ``"${var[@]}"``::
 
@@ -47,6 +62,8 @@ All variables are "arrays" (we use the term "lists"), and expanding a variable e
 Specific elements of a list can be selected::
 
   echo $list[5..7]
+
+.. [#] zsh also does not perform word splitting by default (the SH_WORD_SPLIT option controls this)
 
 Wildcards (globs)
 -----------------

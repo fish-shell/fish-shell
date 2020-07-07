@@ -306,7 +306,6 @@ parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *out_token, wcst
     result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
     result.is_help_argument = result.has_dash_prefix && is_help_argument(text);
     result.is_newline = (result.type == parse_token_type_end && text == L"\n");
-    result.preceding_escaped_nl = token.preceding_escaped_nl;
     result.may_be_variable_assignment = variable_assignment_equals_pos(text).has_value();
     result.tok_error = token.error;
 

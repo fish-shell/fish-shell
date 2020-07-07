@@ -28,7 +28,6 @@ struct parse_token_t {
     bool has_dash_prefix{false};       // Hackish: whether the source contains a dash prefix
     bool is_help_argument{false};      // Hackish: whether the source looks like '-h' or '--help'
     bool is_newline{false};            // Hackish: if TOK_END, whether the source is a newline.
-    bool preceding_escaped_nl{false};  // Whether there was an escaped newline preceding this token.
     bool may_be_variable_assignment{false};  // Hackish: whether this token is a string like FOO=bar
     tokenizer_error_t tok_error{tokenizer_error_t::none}; // If this is a tokenizer error, that error.
     source_offset_t source_start{SOURCE_OFFSET_INVALID};
@@ -58,21 +57,6 @@ const wchar_t *token_type_description(parse_token_type_t type);
 const wchar_t *keyword_description(parse_keyword_t type);
 
 parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err);
-
-// Node flags.
-enum {
-    /// Flag indicating that the node has associated comment nodes.
-    parse_node_flag_has_comments = 1 << 0,
-
-    /// Flag indicating that the token was preceded by an escaped newline, e.g.
-    ///   echo abc | \
-    ///      cat
-    parse_node_flag_preceding_escaped_nl = 1 << 1,
-};
-typedef uint8_t parse_node_flags_t;
-
-/// Node-type specific tag value.
-typedef uint8_t parse_node_tag_t;
 
 namespace ast {
 class ast_t;

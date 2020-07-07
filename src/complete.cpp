@@ -1053,10 +1053,12 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
             wcstring whole_opt(o.expected_dash_count(), L'-');
             whole_opt.append(o.option);
 
+            if (whole_opt.length() < str.length()) {
+                continue;
+            }
             int match = string_prefixes_string(str, whole_opt);
             if (!match) {
                 bool match_no_case = wcsncasecmp(str.c_str(), whole_opt.c_str(), str.length()) == 0;
-
                 if (!match_no_case) {
                     continue;
                 }

@@ -23,6 +23,84 @@ static tok_flags_t tokenizer_flags_from_parse_flags(parse_tree_flags_t flags) {
     return tok_flags;
 }
 
+// Given an expanded string, returns any keyword it matches.
+static parse_keyword_t keyword_with_name(const wchar_t *name) {
+    return str_to_enum(name, keyword_enum_map, keyword_enum_map_len);
+}
+
+static bool is_keyword_char(wchar_t c) {
+    return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9') ||
+           c == L'\'' || c == L'"' || c == L'\\' || c == '\n' || c == L'!';
+}
+
+/// Given a token, returns the keyword it matches, or parse_keyword_t::none.
+static parse_keyword_t keyword_for_token(token_type_t tok, const wcstring &token) {
+    /* Only strings can be keywords */
+    if (tok != token_type_t::string) {
+        return parse_keyword_t::none;
+    }
+
+    // If tok_txt is clean (which most are), we can compare it directly. Otherwise we have to expand
+    // it. We only expand quotes, and we don't want to do expensive expansions like tilde
+    // expansions. So we do our own "cleanliness" check; if we find a character not in our allowed
+    // set we know it's not a keyword, and if we never find a quote we don't have to expand! Note
+    // that this lowercase set could be shrunk to be just the characters that are in keywords.
+    parse_keyword_t result = parse_keyword_t::none;
+    bool needs_expand = false, all_chars_valid = true;
+    const wchar_t *tok_txt = token.c_str();
+    for (size_t i = 0; tok_txt[i] != L'\0'; i++) {
+        wchar_t c = tok_txt[i];
+        if (!is_keyword_char(c)) {
+            all_chars_valid = false;
+            break;
+        }
+        // If we encounter a quote, we need expansion.
+        needs_expand = needs_expand || c == L'"' || c == L'\'' || c == L'\\';
+    }
+
+    if (all_chars_valid) {
+        // Expand if necessary.
+        if (!needs_expand) {
+            result = keyword_with_name(tok_txt);
+        } else {
+            wcstring storage;
+            if (unescape_string(tok_txt, &storage, 0)) {
+                result = keyword_with_name(storage.c_str());
+            }
+        }
+    }
+    return result;
+}
+
+/// Convert from tokenizer_t's token type to a parse_token_t type.
+static parse_token_type_t parse_token_type_from_tokenizer_token(
+    enum token_type_t tokenizer_token_type) {
+    switch (tokenizer_token_type) {
+        case token_type_t::string:
+            return parse_token_type_string;
+        case token_type_t::pipe:
+            return parse_token_type_pipe;
+        case token_type_t::andand:
+            return parse_token_type_andand;
+        case token_type_t::oror:
+            return parse_token_type_oror;
+        case token_type_t::end:
+            return parse_token_type_end;
+        case token_type_t::background:
+            return parse_token_type_background;
+        case token_type_t::redirect:
+            return parse_token_type_redirection;
+        case token_type_t::error:
+            return parse_special_type_tokenizer_error;
+        case token_type_t::comment:
+            return parse_special_type_comment;
+    }
+    FLOGF(error, L"Bad token type %d passed to %s", static_cast<int>(tokenizer_token_type),
+          __FUNCTION__);
+    DIE("bad token type");
+    return token_type_invalid;
+}
+
 /// A token stream generates a sequence of parser tokens, permitting arbitrary lookahead.
 class token_stream_t {
    public:
@@ -64,16 +142,50 @@ class token_stream_t {
     // Helper to mask our circular buffer.
     static constexpr size_t mask(size_t idx) { return idx % kMaxLookahead; }
 
+    /// \return the next parse token from the tokenizer.
+    /// This consumes and stores comments.
     parse_token_t next_from_tok() {
         for (;;) {
-            maybe_t<tok_t> tokenizer_tok{};
-            parse_token_t res = next_parse_token(&tok_, &tokenizer_tok, &storage_);
+            parse_token_t res = advance_1();
             if (res.type == parse_special_type_comment) {
                 comment_ranges.push_back(res.range());
                 continue;
             }
             return res;
         }
+    }
+
+    /// \return a new parse token, advancing the tokenizer.
+    /// This returns comments.
+    parse_token_t advance_1() {
+        auto mtoken = tok_.next();
+        if (!mtoken.has_value()) {
+            return parse_token_t{parse_token_type_terminate};
+        }
+        const tok_t &token = *mtoken;
+        // Set the type, keyword, and whether there's a dash prefix. Note that this is quite
+        // sketchy, because it ignores quotes. This is the historical behavior. For example,
+        // `builtin --names` lists builtins, but `builtin "--names"` attempts to run --names as a
+        // command. Amazingly as of this writing (10/12/13) nobody seems to have noticed this.
+        // Squint at it really hard and it even starts to look like a feature.
+        parse_token_t result{parse_token_type_from_tokenizer_token(token.type)};
+        const wcstring &text = tok_.copy_text_of(token, &storage_);
+        result.keyword = keyword_for_token(token.type, text);
+        result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
+        result.is_help_argument = (text == L"-h" || text == L"--help");
+        result.is_newline = (result.type == parse_token_type_end && text == L"\n");
+        result.may_be_variable_assignment = variable_assignment_equals_pos(text).has_value();
+        result.tok_error = token.error;
+
+        // These assertions are totally bogus. Basically our tokenizer works in size_t but we work
+        // in uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably
+        // just crash.
+        assert(token.offset < SOURCE_OFFSET_INVALID);
+        result.source_start = static_cast<source_offset_t>(token.offset);
+
+        assert(token.length <= SOURCE_OFFSET_INVALID);
+        result.source_length = static_cast<source_offset_t>(token.length);
+        return result;
     }
 
     // The maximum number of lookahead supported.

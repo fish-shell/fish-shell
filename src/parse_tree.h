@@ -50,9 +50,6 @@ struct parse_token_t {
     constexpr parse_token_t(parse_token_type_t type) : type(type) {}
 };
 
-/// Return a new parse token, advancing the tokenizer.
-parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *out_token, wcstring *storage);
-
 const wchar_t *token_type_description(parse_token_type_t type);
 const wchar_t *keyword_description(parse_keyword_t type);
 

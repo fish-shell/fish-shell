@@ -381,7 +381,7 @@ rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_backg
     return result;
 }
 
-static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoration_t decoration,
+static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
                              const wcstring &working_directory, const environment_t &vars);
 
 static bool has_expand_reserved(const wcstring &str) {
@@ -1190,19 +1190,19 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
 }
 
 /// Determine if a command is valid.
-static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoration_t decoration,
+static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
                              const wcstring &working_directory, const environment_t &vars) {
     // Determine which types we check, based on the decoration.
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,
          implicit_cd_ok = true;
-    if (decoration == parse_statement_decoration_command ||
-        decoration == parse_statement_decoration_exec) {
+    if (decoration == statement_decoration_t::command ||
+        decoration == statement_decoration_t::exec) {
         builtin_ok = false;
         function_ok = false;
         abbreviation_ok = false;
         command_ok = true;
         implicit_cd_ok = false;
-    } else if (decoration == parse_statement_decoration_builtin) {
+    } else if (decoration == statement_decoration_t::builtin) {
         builtin_ok = true;
         function_ok = false;
         abbreviation_ok = false;

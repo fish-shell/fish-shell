@@ -1291,7 +1291,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
             // Also skip it for 'echo'. This is because echo doesn't take file paths, but also
             // because the history file test wants to find the commands in the history file
             // immediately after running them, so it can't tolerate the asynchronous file detection.
-            if (stmt->decoration() == parse_statement_decoration_exec) {
+            if (stmt->decoration() == statement_decoration_t::exec) {
                 needs_sync_write = true;
             }
 

@@ -108,14 +108,12 @@ const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_t::kw_excla
                                                       {parse_keyword_t::none, nullptr}};
 #define keyword_enum_map_len (sizeof keyword_enum_map / sizeof *keyword_enum_map)
 
-// Node tag values.
-
-// Statement decorations.
-enum parse_statement_decoration_t {
-    parse_statement_decoration_none,
-    parse_statement_decoration_command,
-    parse_statement_decoration_builtin,
-    parse_statement_decoration_exec,
+// Statement decorations like 'command' or 'exec'.
+enum class statement_decoration_t {
+    none,
+    command,
+    builtin,
+    exec,
 };
 
 // Parse error code list.

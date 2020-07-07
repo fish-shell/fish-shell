@@ -4421,11 +4421,11 @@ static void test_new_parser_fuzzing() {
 // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
 // true if successful.
 static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *out_joined_args,
-                             enum parse_statement_decoration_t *out_deco) {
+                             enum statement_decoration_t *out_deco) {
     using namespace ast;
     out_cmd->clear();
     out_joined_args->clear();
-    *out_deco = parse_statement_decoration_none;
+    *out_deco = statement_decoration_t::none;
 
     auto ast = ast_t::parse(src);
     if (ast.errored()) return false;
@@ -4490,25 +4490,24 @@ static void test_new_parser_ll2() {
         wcstring src;
         wcstring cmd;
         wcstring args;
-        enum parse_statement_decoration_t deco;
-    } tests[] = {
-        {L"echo hello", L"echo", L"hello", parse_statement_decoration_none},
-        {L"command echo hello", L"echo", L"hello", parse_statement_decoration_command},
-        {L"exec echo hello", L"echo", L"hello", parse_statement_decoration_exec},
-        {L"command command hello", L"command", L"hello", parse_statement_decoration_command},
-        {L"builtin command hello", L"command", L"hello", parse_statement_decoration_builtin},
-        {L"command --help", L"command", L"--help", parse_statement_decoration_none},
-        {L"command -h", L"command", L"-h", parse_statement_decoration_none},
-        {L"command", L"command", L"", parse_statement_decoration_none},
-        {L"command -", L"command", L"-", parse_statement_decoration_none},
-        {L"command --", L"command", L"--", parse_statement_decoration_none},
-        {L"builtin --names", L"builtin", L"--names", parse_statement_decoration_none},
-        {L"function", L"function", L"", parse_statement_decoration_none},
-        {L"function --help", L"function", L"--help", parse_statement_decoration_none}};
+        enum statement_decoration_t deco;
+    } tests[] = {{L"echo hello", L"echo", L"hello", statement_decoration_t::none},
+                 {L"command echo hello", L"echo", L"hello", statement_decoration_t::command},
+                 {L"exec echo hello", L"echo", L"hello", statement_decoration_t::exec},
+                 {L"command command hello", L"command", L"hello", statement_decoration_t::command},
+                 {L"builtin command hello", L"command", L"hello", statement_decoration_t::builtin},
+                 {L"command --help", L"command", L"--help", statement_decoration_t::none},
+                 {L"command -h", L"command", L"-h", statement_decoration_t::none},
+                 {L"command", L"command", L"", statement_decoration_t::none},
+                 {L"command -", L"command", L"-", statement_decoration_t::none},
+                 {L"command --", L"command", L"--", statement_decoration_t::none},
+                 {L"builtin --names", L"builtin", L"--names", statement_decoration_t::none},
+                 {L"function", L"function", L"", statement_decoration_t::none},
+                 {L"function --help", L"function", L"--help", statement_decoration_t::none}};
 
     for (const auto &test : tests) {
         wcstring cmd, args;
-        enum parse_statement_decoration_t deco = parse_statement_decoration_none;
+        enum statement_decoration_t deco = statement_decoration_t::none;
         bool success = test_1_parse_ll2(test.src, &cmd, &args, &deco);
         if (!success) err(L"Parse of '%ls' failed on line %ld", test.cmd.c_str(), (long)__LINE__);
         if (cmd != test.cmd)

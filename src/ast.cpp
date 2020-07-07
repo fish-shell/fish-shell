@@ -262,20 +262,20 @@ static std::pair<source_range_t, const wchar_t *> find_block_open_keyword(const 
 }
 
 /// \return the decoration for this statement.
-parse_statement_decoration_t decorated_statement_t::decoration() const {
+statement_decoration_t decorated_statement_t::decoration() const {
     if (!opt_decoration) {
-        return parse_statement_decoration_none;
+        return statement_decoration_t::none;
     }
     switch (opt_decoration->kw) {
         case parse_keyword_t::kw_command:
-            return parse_statement_decoration_command;
+            return statement_decoration_t::command;
         case parse_keyword_t::kw_builtin:
-            return parse_statement_decoration_builtin;
+            return statement_decoration_t::builtin;
         case parse_keyword_t::kw_exec:
-            return parse_statement_decoration_exec;
+            return statement_decoration_t::exec;
         default:
             assert(0 && "Unexpected keyword in statement decoration");
-            return parse_statement_decoration_none;
+            return statement_decoration_t::none;
     }
 }
 

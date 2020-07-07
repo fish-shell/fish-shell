@@ -674,7 +674,7 @@ struct decorated_statement_t final : public branch_t<type_t::decorated_statement
     argument_or_redirection_list_t args_or_redirs;
 
     // Helper to return the decoration.
-    parse_statement_decoration_t decoration() const;
+    statement_decoration_t decoration() const;
 
     FIELDS(opt_decoration, command, args_or_redirs)
 };

@@ -161,7 +161,7 @@ parse_execution_context_t::infinite_recursive_statement_in_job_list(const ast::j
 
         // Ignore statements with decorations like 'builtin' or 'command', since those
         // are not infinite recursion. In particular that is what enables 'wrapper functions'.
-        if (dc->decoration() != parse_statement_decoration_none) return nullptr;
+        if (dc->decoration() != statement_decoration_t::none) return nullptr;
 
         // Check the command.
         wcstring cmd = dc->command.source(pstree->src);
@@ -201,16 +201,16 @@ process_type_t parse_execution_context_t::process_type_for_command(
     // Determine the process type, which depends on the statement decoration (command, builtin,
     // etc).
     switch (statement.decoration()) {
-        case parse_statement_decoration_exec:
+        case statement_decoration_t::exec:
             process_type = process_type_t::exec;
             break;
-        case parse_statement_decoration_command:
+        case statement_decoration_t::command:
             process_type = process_type_t::external;
             break;
-        case parse_statement_decoration_builtin:
+        case statement_decoration_t::builtin:
             process_type = process_type_t::builtin;
             break;
-        case parse_statement_decoration_none:
+        case statement_decoration_t::none:
             if (function_exists(cmd, *parser)) {
                 process_type = process_type_t::function;
             } else if (builtin_exists(cmd)) {
@@ -816,7 +816,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         const int no_cmd_err_code = errno;
 
         // If the specified command does not exist, and is undecorated, try using an implicit cd.
-        if (!has_command && statement.decoration() == parse_statement_decoration_none) {
+        if (!has_command && statement.decoration() == statement_decoration_t::none) {
             // Implicit cd requires an empty argument and redirection list.
             if (statement.args_or_redirs.empty()) {
                 // Ok, no arguments or redirections; check to see if the command is a directory.

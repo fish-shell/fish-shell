@@ -1061,7 +1061,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     using namespace ast;
     bool errored = false;
     auto source_start = dst.source_range().start;
-    const parse_statement_decoration_t decoration = dst.decoration();
+    const statement_decoration_t decoration = dst.decoration();
 
     // Determine if the first argument is help.
     bool first_arg_is_help = false;
@@ -1093,7 +1093,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 
     // Check that we don't try to pipe through exec.
     bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
-    if (is_in_pipeline && decoration == parse_statement_decoration_exec) {
+    if (is_in_pipeline && decoration == statement_decoration_t::exec) {
         errored = append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, L"exec");
     }
 
@@ -1176,7 +1176,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         }
 
         // Check that we don't do an invalid builtin (issue #1252).
-        if (!errored && decoration == parse_statement_decoration_builtin &&
+        if (!errored && decoration == statement_decoration_t::builtin &&
             expand_one(*unexp_command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
                        parse_errors) &&
             !builtin_exists(*unexp_command)) {

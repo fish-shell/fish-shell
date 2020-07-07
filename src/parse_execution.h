@@ -164,7 +164,7 @@ class parse_execution_context_t {
     const wcstring &get_source() const { return pstree->src; }
 
     /// Return the parsed ast.
-    const ast::ast_t &ast() const { return *pstree->ast; }
+    const ast::ast_t &ast() const { return pstree->ast; }
 
     /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.

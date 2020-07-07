@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 
+#include "ast.h"
 #include "common.h"
 #include "maybe.h"
 #include "parse_constants.h"
@@ -62,7 +63,7 @@ class ast_t;
 /// A type wrapping up a parse tree and the original source behind it.
 struct parsed_source_t {
     wcstring src;
-    std::unique_ptr<ast::ast_t> ast;
+    ast::ast_t ast;
 
     parsed_source_t(wcstring s, ast::ast_t &&ast);
     ~parsed_source_t();

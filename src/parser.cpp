@@ -655,7 +655,7 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
 eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
                           const job_group_ref_t &job_group, enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
-    const auto *job_list = ps->ast->top()->as<ast::job_list_t>();
+    const auto *job_list = ps->ast.top()->as<ast::job_list_t>();
     if (!job_list->empty()) {
         // Execute the top job list.
         return this->eval_node(ps, *job_list, io, job_group, block_type);

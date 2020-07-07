@@ -203,7 +203,7 @@ wcstring parse_token_t::user_presentable_description() const {
 }
 
 parsed_source_t::parsed_source_t(wcstring s, ast::ast_t &&ast)
-    : src(std::move(s)), ast(make_unique<ast::ast_t>(std::move(ast))) {}
+    : src(std::move(s)), ast(std::move(ast)) {}
 
 parsed_source_t::~parsed_source_t() = default;
 

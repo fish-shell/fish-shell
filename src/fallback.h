@@ -126,22 +126,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
 #endif
 
-#if 0
-// These are not currently used.
-#ifndef HAVE_LRAND48_R
-/// Data structure for the lrand48_r fallback implementation.
-struct drand48_data {
-    unsigned int seed;
-};
-
-/// Fallback implementation of lrand48_r. Internally uses rand_r, so it is pretty weak.
-int lrand48_r(struct drand48_data *buffer, long int *result);
-
-/// Fallback implementation of srand48_r, the seed function for lrand48_r.
-int srand48_r(long int seedval, struct drand48_data *buffer);
-#endif
-#endif
-
 #ifndef HAVE_FUTIMES
 int futimes(int fd, const struct timeval *times);
 #endif

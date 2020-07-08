@@ -1,8 +1,7 @@
 // This file only contains fallback implementations of functions which have been found to be missing
 // or broken by the configuration scripts.
 //
-// Many of these functions are more or less broken and incomplete. lrand28_r internally uses the
-// regular (bad) rand_r function, the gettext function doesn't actually do anything, etc.
+// Many of these functions are more or less broken and incomplete.
 #include "config.h"
 
 // IWYU likes to recommend adding term.h when we want ncurses.h.

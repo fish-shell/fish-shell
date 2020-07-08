@@ -80,7 +80,6 @@ check_cxx_symbol_exists(getpwent pwd.h HAVE_GETPWENT)
 check_cxx_symbol_exists(getrusage sys/resource.h HAVE_GETRUSAGE)
 check_cxx_symbol_exists(gettext libintl.h HAVE_GETTEXT)
 check_cxx_symbol_exists(killpg "sys/types.h;signal.h" HAVE_KILLPG)
-check_cxx_symbol_exists(lrand48_r stdlib.h HAVE_LRAND48_R)
 # mkostemp is in stdlib in glibc and FreeBSD, but unistd on macOS
 check_cxx_symbol_exists(mkostemp "stdlib.h;unistd.h" HAVE_MKOSTEMP)
 set(HAVE_CURSES_H ${CURSES_HAVE_CURSES_H})

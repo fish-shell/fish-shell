@@ -7,12 +7,16 @@ function __dnf_list_installed_packages
 end
 
 function __dnf_list_available_packages
+    # dnf --cacheonly list --available gives a list of non-installed packages dnf is aware of,
+    # but it is slow as molasses. Unfortunately, sqlite3 is not available oob (Fedora Server 32).
     if type -q sqlite3
         # This schema is bad, there is only a "pkg" field with the full
         #    packagename-version-release.fedorarelease.architecture
         # tuple. We are only interested in the packagename.
         sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE \"$cur%\"" 2>/dev/null |
-        string replace -r -- '-[^-]*-[^-]*$' ''
+            string replace -r -- '-[^-]*-[^-]*$' ''
+    else
+        dnf repoquery --cacheonly "$cur*" --qf "%{NAME}" --available 2>/dev/null
     end
 end
 

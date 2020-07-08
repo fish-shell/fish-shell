@@ -166,21 +166,21 @@ wcstring token_type_user_presentable_description(parse_token_type_t type, parse_
     }
 
     switch (type) {
-        case parse_token_type_string:
+        case parse_token_type_t::string:
             return L"a string";
-        case parse_token_type_pipe:
+        case parse_token_type_t::pipe:
             return L"a pipe";
-        case parse_token_type_redirection:
+        case parse_token_type_t::redirection:
             return L"a redirection";
-        case parse_token_type_background:
+        case parse_token_type_t::background:
             return L"a '&'";
-        case parse_token_type_andand:
+        case parse_token_type_t::andand:
             return L"'&&'";
-        case parse_token_type_oror:
+        case parse_token_type_t::oror:
             return L"'||'";
-        case parse_token_type_end:
+        case parse_token_type_t::end:
             return L"end of the statement";
-        case parse_token_type_terminate:
+        case parse_token_type_t::terminate:
             return L"end of the input";
         default: {
             return format_string(L"a %ls", token_type_description(type));

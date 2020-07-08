@@ -42,7 +42,7 @@ struct parse_token_t {
 
     /// \return whether we are a string with the dash prefix set.
     bool is_dash_prefix_string() const {
-        return type == parse_token_type_string && has_dash_prefix;
+        return type == parse_token_type_t::string && has_dash_prefix;
     }
 
     wcstring describe() const;

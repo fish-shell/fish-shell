@@ -77,28 +77,28 @@ static parse_token_type_t parse_token_type_from_tokenizer_token(
     enum token_type_t tokenizer_token_type) {
     switch (tokenizer_token_type) {
         case token_type_t::string:
-            return parse_token_type_string;
+            return parse_token_type_t::string;
         case token_type_t::pipe:
-            return parse_token_type_pipe;
+            return parse_token_type_t::pipe;
         case token_type_t::andand:
-            return parse_token_type_andand;
+            return parse_token_type_t::andand;
         case token_type_t::oror:
-            return parse_token_type_oror;
+            return parse_token_type_t::oror;
         case token_type_t::end:
-            return parse_token_type_end;
+            return parse_token_type_t::end;
         case token_type_t::background:
-            return parse_token_type_background;
+            return parse_token_type_t::background;
         case token_type_t::redirect:
-            return parse_token_type_redirection;
+            return parse_token_type_t::redirection;
         case token_type_t::error:
-            return parse_special_type_tokenizer_error;
+            return parse_token_type_t::tokenizer_error;
         case token_type_t::comment:
-            return parse_special_type_comment;
+            return parse_token_type_t::comment;
     }
     FLOGF(error, L"Bad token type %d passed to %s", static_cast<int>(tokenizer_token_type),
           __FUNCTION__);
     DIE("bad token type");
-    return token_type_invalid;
+    return parse_token_type_t::invalid;
 }
 
 /// A token stream generates a sequence of parser tokens, permitting arbitrary lookahead.
@@ -108,7 +108,7 @@ class token_stream_t {
         : src_(src), tok_(src_.c_str(), tokenizer_flags_from_parse_flags(flags)) {}
 
     /// \return the token at the given index, without popping it. If the token stream is exhausted,
-    /// it will have parse_token_type_terminate. idx = 0 means the next token, idx = 1 means the
+    /// it will have parse_token_type_t::terminate. idx = 0 means the next token, idx = 1 means the
     /// next-next token, and so forth.
     /// We must have that idx < kMaxLookahead.
     const parse_token_t &peek(size_t idx = 0) {
@@ -147,7 +147,7 @@ class token_stream_t {
     parse_token_t next_from_tok() {
         for (;;) {
             parse_token_t res = advance_1();
-            if (res.type == parse_special_type_comment) {
+            if (res.type == parse_token_type_t::comment) {
                 comment_ranges.push_back(res.range());
                 continue;
             }
@@ -160,7 +160,7 @@ class token_stream_t {
     parse_token_t advance_1() {
         auto mtoken = tok_.next();
         if (!mtoken.has_value()) {
-            return parse_token_t{parse_token_type_terminate};
+            return parse_token_t{parse_token_type_t::terminate};
         }
         const tok_t &token = *mtoken;
         // Set the type, keyword, and whether there's a dash prefix. Note that this is quite
@@ -173,7 +173,7 @@ class token_stream_t {
         result.keyword = keyword_for_token(token.type, text);
         result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
         result.is_help_argument = (text == L"-h" || text == L"--help");
-        result.is_newline = (result.type == parse_token_type_end && text == L"\n");
+        result.is_newline = (result.type == parse_token_type_t::end && text == L"\n");
         result.may_be_variable_assignment = variable_assignment_equals_pos(text).has_value();
         result.tok_error = token.error;
 
@@ -196,7 +196,7 @@ class token_stream_t {
     // This prevents using vector (which may reallocate).
     // Deque would work but is too heavyweight for just 2 items.
     std::array<parse_token_t, kMaxLookahead> lookahead_ = {
-        {token_type_invalid, token_type_invalid}};
+        {parse_token_type_t::invalid, parse_token_type_t::invalid}};
 
     // Starting index in our lookahead.
     // The "first" token is at this index.
@@ -453,7 +453,7 @@ class ast_t::populator_t {
         if (unwinding_) {
             return status_t::unwinding;
         } else if ((flags_ & parse_flag_leave_unterminated) &&
-                   peek_type() == parse_token_type_terminate) {
+                   peek_type() == parse_token_type_t::terminate) {
             return status_t::unsourcing;
         }
         return status_t::ok;
@@ -585,10 +585,10 @@ class ast_t::populator_t {
         bool chomp_newlines = list_type_chomps_newlines(type);
         for (;;) {
             const auto &peek = this->tokens_.peek();
-            if (chomp_newlines && peek.type == parse_token_type_end && peek.is_newline) {
+            if (chomp_newlines && peek.type == parse_token_type_t::end && peek.is_newline) {
                 // Just skip this newline, no need to save it.
                 this->tokens_.pop();
-            } else if (chomp_semis && peek.type == parse_token_type_end && !peek.is_newline) {
+            } else if (chomp_semis && peek.type == parse_token_type_t::end && !peek.is_newline) {
                 auto tok = this->tokens_.pop();
                 // Perhaps save this extra semi.
                 if (flags_ & parse_flag_show_extra_semis) {
@@ -659,15 +659,15 @@ class ast_t::populator_t {
     // \return the token.
     parse_token_t consume_any_token() {
         parse_token_t tok = tokens_.pop();
-        assert(tok.type != parse_special_type_comment && "Should not be a comment");
-        assert(tok.type != parse_token_type_terminate &&
+        assert(tok.type != parse_token_type_t::comment && "Should not be a comment");
+        assert(tok.type != parse_token_type_t::terminate &&
                "Cannot consume terminate token, caller should check status first");
         return tok;
     }
 
     // Consume the next token which is expected to be of the given type.
     source_range_t consume_token_type(parse_token_type_t type) {
-        assert(type != parse_token_type_terminate &&
+        assert(type != parse_token_type_t::terminate &&
                "Should not attempt to consume terminate token");
         auto tok = consume_any_token();
         if (tok.type != type) {
@@ -693,14 +693,14 @@ class ast_t::populator_t {
         if (this->top_type_ == type_t::freestanding_argument_list) {
             this->parse_error(
                 tok, parse_error_generic, _(L"Expected %ls, but found %ls"),
-                token_type_user_presentable_description(parse_token_type_string).c_str(),
+                token_type_user_presentable_description(parse_token_type_t::string).c_str(),
                 tok.user_presentable_description().c_str());
             return;
         }
 
         assert(this->top_type_ == type_t::job_list);
         switch (tok.type) {
-            case parse_token_type_string:
+            case parse_token_type_t::string:
                 // There are three keywords which end a job list.
                 switch (tok.keyword) {
                     case parse_keyword_t::kw_end:
@@ -722,24 +722,24 @@ class ast_t::populator_t {
                         break;
                 }
                 break;
-            case parse_token_type_pipe:
-            case parse_token_type_redirection:
-            case parse_token_type_background:
-            case parse_token_type_andand:
-            case parse_token_type_oror:
+            case parse_token_type_t::pipe:
+            case parse_token_type_t::redirection:
+            case parse_token_type_t::background:
+            case parse_token_type_t::andand:
+            case parse_token_type_t::oror:
                 parse_error(tok, parse_error_generic, _(L"Expected a string, but found %ls"),
                             tok.user_presentable_description().c_str());
                 break;
 
-            case parse_special_type_tokenizer_error:
+            case parse_token_type_t::tokenizer_error:
                 parse_error(tok, parse_error_from_tokenizer_error(tok.tok_error), L"%ls",
                             tokenizer_get_error_message(tok.tok_error));
                 break;
 
-            case parse_token_type_end:
+            case parse_token_type_t::end:
                 internal_error(__FUNCTION__, L"End token should never be excess");
                 break;
-            case parse_token_type_terminate:
+            case parse_token_type_t::terminate:
                 internal_error(__FUNCTION__, L"Terminate token should never be excess");
                 break;
             default:
@@ -755,7 +755,7 @@ class ast_t::populator_t {
     // overloading purposes.
     bool can_parse(job_conjunction_t *) {
         const auto &token = peek_token();
-        if (token.type != parse_token_type_string) return false;
+        if (token.type != parse_token_type_t::string) return false;
         switch (peek_token().keyword) {
             case parse_keyword_t::kw_end:
             case parse_keyword_t::kw_else:
@@ -768,8 +768,8 @@ class ast_t::populator_t {
         }
     }
 
-    bool can_parse(argument_t *) { return peek_type() == parse_token_type_string; }
-    bool can_parse(redirection_t *) { return peek_type() == parse_token_type_redirection; }
+    bool can_parse(argument_t *) { return peek_type() == parse_token_type_t::string; }
+    bool can_parse(redirection_t *) { return peek_type() == parse_token_type_t::redirection; }
     bool can_parse(argument_or_redirection_t *) {
         return can_parse((argument_t *)nullptr) || can_parse((redirection_t *)nullptr);
     }
@@ -780,10 +780,10 @@ class ast_t::populator_t {
 
         // What is the token after it?
         switch (peek_type(1)) {
-            case parse_token_type_string:
+            case parse_token_type_t::string:
                 // We have `a= cmd` and should treat it as a variable assignment.
                 return true;
-            case parse_token_type_terminate:
+            case parse_token_type_t::terminate:
                 // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
                 return allow_incomplete();
             default:
@@ -817,7 +817,7 @@ class ast_t::populator_t {
         }
         // Is it like `command --stuff` or `command` by itself?
         auto tok1 = peek_token(1);
-        return tok1.type == parse_token_type_string && !tok1.is_dash_prefix_string();
+        return tok1.type == parse_token_type_t::string && !tok1.is_dash_prefix_string();
     }
 
     bool can_parse(keyword_t<parse_keyword_t::kw_time> *) {
@@ -826,11 +826,11 @@ class ast_t::populator_t {
                !peek_token(1).is_dash_prefix_string();
     }
 
-    bool can_parse(job_continuation_t *) { return peek_type() == parse_token_type_pipe; }
+    bool can_parse(job_continuation_t *) { return peek_type() == parse_token_type_t::pipe; }
 
     bool can_parse(job_conjunction_continuation_t *) {
         auto type = peek_type();
-        return type == parse_token_type_andand || type == parse_token_type_oror;
+        return type == parse_token_type_t::andand || type == parse_token_type_t::oror;
     }
 
     bool can_parse(andor_job_t *) {
@@ -841,7 +841,7 @@ class ast_t::populator_t {
                 // either 'and
                 // --help' or a naked 'and', and not part of this list.
                 const auto &nexttok = peek_token(1);
-                return nexttok.type == parse_token_type_string && !nexttok.is_help_argument;
+                return nexttok.type == parse_token_type_t::string && !nexttok.is_help_argument;
             }
             default:
                 return false;
@@ -858,7 +858,7 @@ class ast_t::populator_t {
 
     // Given that we are a list of type ListNodeType, whose contents type is ContentsNode, populate
     // as many elements as we can.
-    // If exhaust_stream is set, then keep going until we get parse_token_type_terminate.
+    // If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
     template <type_t ListType, typename ContentsNode>
     void populate_list(list_t<ListType, ContentsNode> &list, bool exhaust_stream = false) {
         // Do not attempt to parse a list if we are unwinding.
@@ -883,8 +883,8 @@ class ast_t::populator_t {
                 // We are going to stop unwinding.
                 // Rather hackish. Just chomp until we get to a string or end node.
                 for (auto type = peek_type();
-                     type != parse_token_type_string && type != parse_token_type_terminate &&
-                     type != parse_token_type_end;
+                     type != parse_token_type_t::string && type != parse_token_type_t::terminate &&
+                     type != parse_token_type_t::end;
                      type = peek_type()) {
                     parse_token_t tok = tokens_.pop();
                     ast_->extras_.errors.push_back(tok.range());
@@ -901,7 +901,7 @@ class ast_t::populator_t {
             // Now try parsing a node.
             if (auto node = this->try_parse<ContentsNode>()) {
                 list.contents.push_back(std::move(node));
-            } else if (exhaust_stream && peek_type() != parse_token_type_terminate) {
+            } else if (exhaust_stream && peek_type() != parse_token_type_t::terminate) {
                 // We aren't allowed to stop. Produce an error and keep going.
                 consume_excess_token_generating_error();
             } else {
@@ -927,11 +927,11 @@ class ast_t::populator_t {
 
         using pkt = parse_keyword_t;
         const auto &token1 = peek_token(0);
-        if (token1.type == parse_token_type_terminate && allow_incomplete()) {
+        if (token1.type == parse_token_type_t::terminate && allow_incomplete()) {
             // This may happen if we just have a 'time' prefix.
             // Construct a decorated statement, which will be unsourced.
             return this->allocate_visit<decorated_statement_t>();
-        } else if (token1.type != parse_token_type_string) {
+        } else if (token1.type != parse_token_type_t::string) {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
             parse_error(token1, parse_error_generic, _(L"Expected a command, but found %ls"),
@@ -952,7 +952,7 @@ class ast_t::populator_t {
         // If we are 'function', then we are a non-block if we are invoked with -h or --help
         // If we are anything else, we require an argument, so do the same thing if the subsequent
         // token is a statement terminator.
-        if (token1.type == parse_token_type_string) {
+        if (token1.type == parse_token_type_t::string) {
             const auto &token2 = peek_token(1);
             // If we are a function, then look for help arguments. Otherwise, if the next token
             // looks like an option (starts with a dash), then parse it as a decorated statement.
@@ -966,8 +966,8 @@ class ast_t::populator_t {
             // e.g. a "naked if".
             bool naked_invocation_invokes_help =
                 (token1.keyword != pkt::kw_begin && token1.keyword != pkt::kw_end);
-            if (naked_invocation_invokes_help && (token2.type == parse_token_type_end ||
-                                                  token2.type == parse_token_type_terminate)) {
+            if (naked_invocation_invokes_help && (token2.type == parse_token_type_t::end ||
+                                                  token2.type == parse_token_type_t::terminate)) {
                 return allocate_visit<decorated_statement_t>();
             }
         }
@@ -1029,7 +1029,7 @@ class ast_t::populator_t {
             arg.unsourced = true;
             return;
         }
-        arg.range = consume_token_type(parse_token_type_string);
+        arg.range = consume_token_type(parse_token_type_t::string);
     }
 
     void visit_node_field(variable_assignment_t &varas) {
@@ -1041,7 +1041,7 @@ class ast_t::populator_t {
             internal_error(__FUNCTION__,
                            L"Should not have created variable_assignment_t from this token");
         }
-        varas.range = consume_token_type(parse_token_type_string);
+        varas.range = consume_token_type(parse_token_type_t::string);
     }
 
     void visit_node_field(job_continuation_t &node) {
@@ -1136,7 +1136,7 @@ class ast_t::populator_t {
         // stream, even if there are no newlines.
         nls.range = {0, 0};
         while (peek_token().is_newline) {
-            auto r = consume_token_type(parse_token_type_end);
+            auto r = consume_token_type(parse_token_type_t::end);
             if (nls.range.length == 0) {
                 nls.range = r;
             } else {
@@ -1296,22 +1296,22 @@ wcstring ast_t::dump(const wcstring &orig) const {
         } else if (const auto *n = node->try_as<token_base_t>()) {
             wcstring desc;
             switch (n->type) {
-                case parse_token_type_string:
+                case parse_token_type_t::string:
                     desc = format_string(L"string");
                     if (auto strsource = n->try_source(orig)) {
                         append_format(desc, L": '%ls'", strsource->c_str());
                     }
                     break;
-                case parse_token_type_redirection:
+                case parse_token_type_t::redirection:
                     desc = L"redirection";
                     if (auto strsource = n->try_source(orig)) {
                         append_format(desc, L": '%ls'", strsource->c_str());
                     }
                     break;
-                case parse_token_type_end:
+                case parse_token_type_t::end:
                     desc = L"<;>";
                     break;
-                case token_type_invalid:
+                case parse_token_type_t::invalid:
                     // This may occur with errors, e.g. we expected to see a string but saw a
                     // redirection.
                     desc = L"<error>";

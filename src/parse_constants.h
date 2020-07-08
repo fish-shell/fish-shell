@@ -24,39 +24,39 @@ struct source_range_t {
 };
 
 // IMPORTANT: If the following enum table is modified you must also update token_enum_map below.
-enum parse_token_type_t : uint8_t {
-    token_type_invalid = 1,
+enum class parse_token_type_t : uint8_t {
+    invalid = 1,
 
     // Terminal types.
-    parse_token_type_string,
-    parse_token_type_pipe,
-    parse_token_type_redirection,
-    parse_token_type_background,
-    parse_token_type_andand,
-    parse_token_type_oror,
-    parse_token_type_end,
+    string,
+    pipe,
+    redirection,
+    background,
+    andand,
+    oror,
+    end,
     // Special terminal type that means no more tokens forthcoming.
-    parse_token_type_terminate,
+    terminate,
     // Very special terminal types that don't appear in the production list.
-    parse_special_type_parse_error,
-    parse_special_type_tokenizer_error,
-    parse_special_type_comment,
+    error,
+    tokenizer_error,
+    comment,
 };
 
 const enum_map<parse_token_type_t> token_enum_map[] = {
-    {parse_special_type_comment, L"parse_special_type_comment"},
-    {parse_special_type_parse_error, L"parse_special_type_parse_error"},
-    {parse_special_type_tokenizer_error, L"parse_special_type_tokenizer_error"},
-    {parse_token_type_background, L"parse_token_type_background"},
-    {parse_token_type_end, L"parse_token_type_end"},
-    {parse_token_type_pipe, L"parse_token_type_pipe"},
-    {parse_token_type_redirection, L"parse_token_type_redirection"},
-    {parse_token_type_string, L"parse_token_type_string"},
-    {parse_token_type_andand, L"parse_token_type_andand"},
-    {parse_token_type_oror, L"parse_token_type_oror"},
-    {parse_token_type_terminate, L"parse_token_type_terminate"},
-    {token_type_invalid, L"token_type_invalid"},
-    {token_type_invalid, nullptr}};
+    {parse_token_type_t::comment, L"parse_token_type_t::comment"},
+    {parse_token_type_t::error, L"parse_token_type_t::error"},
+    {parse_token_type_t::tokenizer_error, L"parse_token_type_t::tokenizer_error"},
+    {parse_token_type_t::background, L"parse_token_type_t::background"},
+    {parse_token_type_t::end, L"parse_token_type_t::end"},
+    {parse_token_type_t::pipe, L"parse_token_type_t::pipe"},
+    {parse_token_type_t::redirection, L"parse_token_type_t::redirection"},
+    {parse_token_type_t::string, L"parse_token_type_t::string"},
+    {parse_token_type_t::andand, L"parse_token_type_t::andand"},
+    {parse_token_type_t::oror, L"parse_token_type_t::oror"},
+    {parse_token_type_t::terminate, L"parse_token_type_t::terminate"},
+    {parse_token_type_t::invalid, L"parse_token_type_t::invalid"},
+    {parse_token_type_t::invalid, nullptr}};
 #define token_enum_map_len (sizeof token_enum_map / sizeof *token_enum_map)
 
 // IMPORTANT: If the following enum is modified you must update the corresponding keyword_enum_map

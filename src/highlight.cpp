@@ -979,18 +979,18 @@ void highlighter_t::visit(const ast::keyword_base_t &kw) {
 void highlighter_t::visit(const ast::token_base_t &tok) {
     maybe_t<highlight_role_t> role = highlight_role_t::normal;
     switch (tok.type) {
-        case parse_token_type_end:
-        case parse_token_type_pipe:
-        case parse_token_type_background:
+        case parse_token_type_t::end:
+        case parse_token_type_t::pipe:
+        case parse_token_type_t::background:
             role = highlight_role_t::statement_terminator;
             break;
 
-        case parse_token_type_andand:
-        case parse_token_type_oror:
+        case parse_token_type_t::andand:
+        case parse_token_type_t::oror:
             role = highlight_role_t::operat;
             break;
 
-        case parse_token_type_string:
+        case parse_token_type_t::string:
             // Assume all strings are params. This handles e.g. the variables a for header or
             // function header. Other strings (like arguments to commands) need more complex
             // handling, which occurs in their respective overrides of visit().

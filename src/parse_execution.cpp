@@ -1391,11 +1391,11 @@ end_execution_reason_t parse_execution_context_t::run_job_conjunction(
         // Check the conjunction type.
         bool skip = false;
         switch (jc.conjunction.type) {
-            case parse_token_type_andand:
+            case parse_token_type_t::andand:
                 // AND. Skip if the last job failed.
                 skip = parser->get_last_status() != 0;
                 break;
-            case parse_token_type_oror:
+            case parse_token_type_t::oror:
                 // OR. Skip if the last job succeeded.
                 skip = parser->get_last_status() == 0;
                 break;

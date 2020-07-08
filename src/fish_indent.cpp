@@ -185,9 +185,9 @@ struct pretty_printer_t {
             case type_t::token_base:
                 // Allow escaped newlines before && and ||, and also pipes.
                 switch (node.as<token_base_t>()->type) {
-                    case parse_token_type_andand:
-                    case parse_token_type_oror:
-                    case parse_token_type_pipe:
+                    case parse_token_type_t::andand:
+                    case parse_token_type_t::oror:
+                    case parse_token_type_t::pipe:
                         result |= allow_escaped_newlines;
                         break;
                     default:

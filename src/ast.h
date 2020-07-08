@@ -404,7 +404,7 @@ struct keyword_t final : public keyword_base_t {
 
 struct token_base_t : public leaf_t<type_t::token_base> {
     // The token type which was parsed.
-    parse_token_type_t type{token_type_invalid};
+    parse_token_type_t type{parse_token_type_t::invalid};
 };
 
 // A token node is a node which contains a token, which must be one of the provided values.
@@ -419,10 +419,10 @@ struct maybe_newlines_t final : public leaf_t<type_t::maybe_newlines> {};
 
 // A single newline or semicolon, terminating statements.
 // Note this is not a separate type, it is just a convenience typedef.
-using semi_nl_t = token_t<parse_token_type_end>;
+using semi_nl_t = token_t<parse_token_type_t::end>;
 
 // Convenience typedef for string nodes.
-using string_t = token_t<parse_token_type_string>;
+using string_t = token_t<parse_token_type_t::string>;
 
 // An argument is just a node whose source range determines its contents.
 // This is a separate type because it is sometimes useful to find all arguments.
@@ -431,7 +431,7 @@ struct argument_t final : public leaf_t<type_t::argument> {};
 // A redirection has an operator like > or 2>, and a target like /dev/null or &1.
 // Note that pipes are not redirections.
 struct redirection_t final : public branch_t<type_t::redirection> {
-    token_t<parse_token_type_redirection> oper;
+    token_t<parse_token_type_t::redirection> oper;
     string_t target;
 
     FIELDS(oper, target)
@@ -491,7 +491,7 @@ struct job_t final : public branch_t<type_t::job> {
     job_continuation_list_t continuation;
 
     // Maybe backgrounded.
-    optional_t<token_t<parse_token_type_background>> bg;
+    optional_t<token_t<parse_token_type_t::background>> bg;
 
     FIELDS(time, variables, statement, continuation, bg)
 };
@@ -692,7 +692,7 @@ struct not_statement_t final : public branch_t<type_t::not_statement> {
 };
 
 struct job_continuation_t final : public branch_t<type_t::job_continuation> {
-    token_t<parse_token_type_pipe> pipe;
+    token_t<parse_token_type_t::pipe> pipe;
     maybe_newlines_t newlines;
     variable_assignment_list_t variables;
     statement_t statement;
@@ -703,7 +703,7 @@ struct job_continuation_t final : public branch_t<type_t::job_continuation> {
 struct job_conjunction_continuation_t final
     : public branch_t<type_t::job_conjunction_continuation> {
     // The && or || token.
-    token_t<parse_token_type_andand, parse_token_type_oror> conjunction;
+    token_t<parse_token_type_t::andand, parse_token_type_t::oror> conjunction;
 
     // The job itself.
     job_t job;

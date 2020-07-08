@@ -33,6 +33,14 @@ if(NOT ${CURSES_FOUND})
     set(CURSES_LIBRARY ${CURSES_LIBRARIES})
 endif()
 
+# Fix undefined reference to tparm on RHEL 6 and potentially others
+# If curses is found via CMake, it also links against tinfo if it exists. But if we use our
+# fallback pkg-config logic above, we need to do this manually.
+find_library(CURSES_TINFO tinfo)
+if (CURSES_TINFO)
+    set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
+endif()
+
 # Get threads.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 # FindThreads < 3.4.0 doesn't work for C++-only projects

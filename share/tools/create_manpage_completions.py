@@ -929,15 +929,9 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
             sys.stdout.write("\r{0}\r".format(padded_progress_str))
             sys.stdout.flush()
 
-        # Maybe we want to skip this item
-        skip = False
         if not WRITE_TO_STDOUT:
             # Compute the path that we would write to
             output_path = os.path.join(output_directory, output_file_name)
-
-        # Now skip if requested
-        if skip:
-            continue
 
         try:
             if parse_manpage_at_path(manpage_path, output_directory):

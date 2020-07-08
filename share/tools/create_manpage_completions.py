@@ -916,7 +916,6 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
         # Get the "base" command, e.g. gcc.1.gz -> gcc
         man_file_name = os.path.basename(manpage_path)
         CMDNAME = man_file_name.split(".", 1)[0]
-        output_file_name = CMDNAME + ".fish"
 
         # Show progress if we're doing that
         if show_progress:
@@ -928,10 +927,6 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
             last_progress_string_length = len(progress_str)
             sys.stdout.write("\r{0}\r".format(padded_progress_str))
             sys.stdout.flush()
-
-        if not WRITE_TO_STDOUT:
-            # Compute the path that we would write to
-            output_path = os.path.join(output_directory, output_file_name)
 
         try:
             if parse_manpage_at_path(manpage_path, output_directory):

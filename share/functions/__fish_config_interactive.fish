@@ -92,7 +92,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # Don't do this if we're being invoked as part of running unit tests.
     if not set -q FISH_UNIT_TESTS_RUNNING
-        if not test -d $__fish_user_data_dir/generated_completions
+        # Check if our manpage completion script exists because some distros split it out.
+        # (#7183)
+        set -l script $__fish_data_dir/tools/create_manpage_completions.py
+        if not test -d $__fish_user_data_dir/generated_completions; and test -e "$script"
             # Generating completions from man pages needs python (see issue #3588).
 
             # We cannot simply do `fish_update_completions &` because it is a function.

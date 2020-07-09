@@ -392,7 +392,7 @@ class Type2ManParser(ManParser):
         options_section_regex = re.compile("\.SH OPTIONS(.*?)(\.SH|\Z)", re.DOTALL)
         options_section = re.search(options_section_regex, manpage).group(1)
 
-        options_parts_regex = re.compile("\.[I|T]P( \d+(\.\d)?i?)?(.*?)\.([I|T]P|UNINDENT)", re.DOTALL)
+        options_parts_regex = re.compile("\.[IT]P( \d+(\.\d)?i?)?(.*?)\.([IT]P|UNINDENT)", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
         add_diagnostic("Command is %r" % CMDNAME)
 

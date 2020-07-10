@@ -341,7 +341,11 @@ static void reap_disowned_pids() {
     auto disowned_pids = s_disowned_pids.acquire();
     auto try_reap1 = [](pid_t pid) {
         int status;
-        return waitpid(pid, &status, WNOHANG) > 0;
+        int ret = waitpid(pid, &status, WNOHANG) > 0;
+        if (ret) {
+            FLOGF(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
+        }
+        return ret;
     };
     disowned_pids->erase(std::remove_if(disowned_pids->begin(), disowned_pids->end(), try_reap1),
                          disowned_pids->end());

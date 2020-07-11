@@ -1286,7 +1286,7 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        wcstring padded = wcstring(*arg);
+        wcstring padded = *arg;
         size_t pad_left = 0;
         size_t pad_right = 0;
 
@@ -1314,13 +1314,8 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
             }
         }
 
-        if (pad_left) {
-            padded.insert(0, pad_left, opts.char_to_pad);
-        }
-
-        if (pad_right) {
-            padded.append(pad_right, opts.char_to_pad);
-        }
+        padded.insert(0, pad_left, opts.char_to_pad);
+        padded.append(pad_right, opts.char_to_pad);
 
         npad += padded.size();
         if (!opts.quiet) {

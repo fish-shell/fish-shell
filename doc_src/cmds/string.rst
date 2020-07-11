@@ -15,6 +15,7 @@ Synopsis
     string length [(-q | --quiet)] [STRING...]
     string lower [(-q | --quiet)] [STRING...]
     string match [(-a | --all)] [(-e | --entire)] [(-i | --ignore-case)] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
+    string pad [(-l | --left)] [(-r | --right)] [(-c | --char) CHAR] [(-n | --count) INTEGER] [(-m | --max) INTEGER] [STRING...]
     string repeat [(-n | --count) COUNT] [(-m | --max) MAX] [(-N | --no-newline)] [(-q | --quiet)] [STRING...]
     string replace [(-a | --all)] [(-f | --filter)] [(-i | --ignore-case)] [(-r | --regex)] [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
     string split [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] SEP [STRING...]
@@ -138,6 +139,21 @@ Examples
    :end-before: END DESCRIPTION
 
 .. include:: string-match.rst
+   :start-after: BEGIN EXAMPLES
+   :end-before: END EXAMPLES
+
+"pad" subcommand
+------------------
+
+.. include:: string-pad.rst
+   :start-after: BEGIN SYNOPSIS
+   :end-before: END SYNOPSIS
+
+.. include:: string-pad.rst
+   :start-after: BEGIN DESCRIPTION
+   :end-before: END DESCRIPTION
+
+.. include:: string-pad.rst
    :start-after: BEGIN EXAMPLES
    :end-before: END EXAMPLES
 

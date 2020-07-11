@@ -286,7 +286,7 @@ class Type1ManParser(ManParser):
         options_section_regex = re.compile('\.SH "OPTIONS"(.*?)(\.SH|\Z)', re.DOTALL)
         options_section_matched = re.search(options_section_regex, manpage)
 
-        options_section = options_section_matched.group(0)
+        options_section = options_section_matched.group(1)
         #   print options_section
         options_parts_regex = re.compile("\.PP(.*?)\.RE", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)

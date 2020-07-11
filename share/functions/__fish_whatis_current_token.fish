@@ -5,21 +5,23 @@ function __fish_whatis_current_token -d "Show man page entries or function descr
 
     if test -n "$token"
         printf "\n"
-        whatis $token 2>/dev/null
+        set -l desc "$token: nothing appropriate."
 
-        if test $status -eq 16 # no match found
-            set -l tokentype (type --type $token 2>/dev/null)
-            set -l desc ": nothing appropriate."
+        set -l tokentype (type --type $token 2>/dev/null)
 
-            if test "$tokentype" = "function"
+        switch "$tokentype"
+            case "function"
                 set -l funcinfo (functions $token --details --verbose)
 
                 test $funcinfo[5] != "n/a"
-                and set desc " - $funcinfo[5]"
-            end
+                and set desc "$token - $funcinfo[5]"
 
-            printf "%s%s\n" $token $desc
+            case "file"
+                set -l tmpdesc (whatis $token 2>/dev/null)
+                and set desc $tmpdesc
         end
+
+        printf "%s\n" $desc
 
         set -l line_count (count (fish_prompt))
         # Ensure line_count is greater than one to accomodate different

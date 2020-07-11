@@ -96,6 +96,7 @@ New or improved bindings
    to simplify rerunning the previous command with ``sudo`` (#7079).
 - ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
   from history if the commandline is empty (#7137).
+- ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (#7191)
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

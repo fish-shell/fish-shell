@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    string pad [(-l | --left)] [(-r | --right)] [(-c | --char) CHAR] [(-n | --count) INTEGER] [(-m | --max) INTEGER] [(-q | --quiet)] [STRING...]
+    string pad [(-l | --left)] [(-r | --right)] [(-c | --char) CHAR] [(-n | --count) INTEGER] [(-m | --max) INTEGER] [STRING...]
 
 .. END SYNOPSIS
 

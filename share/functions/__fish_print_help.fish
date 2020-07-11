@@ -1,6 +1,11 @@
 function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item error_message
-    if test "$item" = '.'
-        set item source
+    switch $item
+        case .
+            set item source
+        case :
+            set item true
+        case '['
+            set item test
     end
 
     # Do nothing if the file does not exist

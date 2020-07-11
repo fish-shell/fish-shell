@@ -948,6 +948,78 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     return matcher->match_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    wchar_t *cmd = argv[0];
+
+    options_t opts;
+    opts.char_to_pad_valid = true;
+    opts.count_valid = true;
+    opts.max_valid = true;
+    opts.left_valid = true;
+    opts.right_valid = true;
+    opts.quiet_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    // If neither left or right is specified, we pad only on the left.
+    if (!opts.left && !opts.right) {
+        opts.left = true;
+        opts.right = false;
+    }
+
+    // If both count and max is specified, we raise an error.
+    if (opts.count && opts.max) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--count and --max are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
+
+    size_t npad = 0;
+
+    arg_iterator_t aiter(argv, optind, streams);
+    while (const wcstring *arg = aiter.nextstr()) {
+        wcstring padded = *arg;
+        size_t pad_left = 0;
+        size_t pad_right = 0;
+
+        if (opts.count && opts.right) {
+            pad_right = opts.count;
+        }
+
+        if (opts.count && opts.left) {
+            pad_left = opts.count;
+        }
+
+        if (opts.max >= padded.size()) {
+            if (opts.left && opts.right) {
+                // pad_left will get one more character
+                pad_left = (opts.max - padded.size() + 1) / 2;
+                pad_right = (opts.max - padded.size()) / 2;
+            }
+
+            if (!opts.left && opts.right) {
+                pad_right = opts.max - padded.size();
+            }
+
+            if (opts.left && !opts.right) {
+                pad_left = opts.max - padded.size();
+            }
+        }
+
+        padded.insert(0, pad_left, opts.char_to_pad);
+        padded.append(pad_right, opts.char_to_pad);
+
+        npad += padded.size();
+        if (!opts.quiet) {
+            streams.out.append(padded);
+            streams.out.append(L'\n');
+        }
+    }
+
+    return npad > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
 class string_replacer_t {
    protected:
     const wchar_t *argv0;
@@ -1253,78 +1325,6 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wch
     }
 
     return buff.size() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
-
-    options_t opts;
-    opts.char_to_pad_valid = true;
-    opts.count_valid = true;
-    opts.max_valid = true;
-    opts.left_valid = true;
-    opts.right_valid = true;
-    opts.quiet_valid = true;
-    int optind;
-    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
-
-    // If neither left or right is specified, we pad only on the left.
-    if (!opts.left && !opts.right) {
-        opts.left = true;
-        opts.right = false;
-    }
-
-    // If both count and max is specified, we raise an error.
-    if (opts.count && opts.max) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
-                                  _(L"--count and --max are mutually exclusive"));
-        return STATUS_INVALID_ARGS;
-    }
-
-    size_t npad = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wcstring *arg = aiter.nextstr()) {
-        wcstring padded = *arg;
-        size_t pad_left = 0;
-        size_t pad_right = 0;
-
-        if (opts.count && opts.right) {
-            pad_right = opts.count;
-        }
-
-        if (opts.count && opts.left) {
-            pad_left = opts.count;
-        }
-
-        if (opts.max >= padded.size()) {
-            if (opts.left && opts.right) {
-                // pad_left will get one more character
-                pad_left = (opts.max - padded.size() + 1) / 2;
-                pad_right = (opts.max - padded.size()) / 2;
-            }
-
-            if (!opts.left && opts.right) {
-                pad_right = opts.max - padded.size();
-            }
-
-            if (opts.left && !opts.right) {
-                pad_left = opts.max - padded.size();
-            }
-        }
-
-        padded.insert(0, pad_left, opts.char_to_pad);
-        padded.append(pad_right, opts.char_to_pad);
-
-        npad += padded.size();
-        if (!opts.quiet) {
-            streams.out.append(padded);
-            streams.out.append(L'\n');
-        }
-    }
-
-    return npad > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 // Helper function to abstract the repeat logic from string_repeat

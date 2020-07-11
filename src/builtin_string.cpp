@@ -957,7 +957,6 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     opts.max_valid = true;
     opts.left_valid = true;
     opts.right_valid = true;
-    opts.quiet_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;

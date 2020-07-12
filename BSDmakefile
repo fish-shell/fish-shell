@@ -20,20 +20,22 @@ _GENERATOR!=which ninja 2>/dev/null >/dev/null && echo Ninja || echo "Unix Makef
 GENERATOR?=$(_GENERATOR)
 
 .if $(GENERATOR) == "Ninja"
-BUILDFILE=build/build.ninja
+BUILDFILE=build.ninja
 .else
-BUILDFILE=build/Makefile
+BUILDFILE=Makefile
 .endif
 
 PREFIX?=/usr/local
 
+.PHONY: build/fish
 build/fish: build/$(BUILDFILE)
 	$(CMAKE) --build build
 
-build:
+# Don't split the mkdir into its own rule because that would cause CMake to regenerate the build 
+# files after each build (because it adds the mdate of the build directory into the out-of-date
+# calculation tree). GNUmake supports order-only dependencies, BSDmake does not seem to.
+build/$(BUILDFILE):
 	mkdir -p build
-
-build/$(BUILDFILE): build
 	cd build; $(CMAKE) .. -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
 .PHONY: install

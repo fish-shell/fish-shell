@@ -31,15 +31,18 @@ else
 
 all: .begin build/fish
 
-PHONY: .begin
+.PHONY: .begin
 .begin:
 	@which $(CMAKE) > /dev/null 2> /dev/null || \
 		 (echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
 
+.PHONY: build/fish
 build/fish: build/$(BUILDFILE)
 	$(CMAKE) --build build
 
-build/$(BUILDFILE): build
+# Use build as an order-only dependency. This prevents the target from always being outdated
+# after a make run, and more importantly, doesn't clobber manually specified CMake options.
+build/$(BUILDFILE): | build
 	cd build; $(CMAKE) .. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "$(GENERATOR)" \
 		-DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo

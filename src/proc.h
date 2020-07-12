@@ -209,6 +209,12 @@ class job_group_t {
     /// \return the job ID, or -1 if none.
     job_id_t get_id() const { return props_.job_id; }
 
+    /// Get the cancel signal, or 0 if none.
+    int get_cancel_signal() const { return cancel_signal_; }
+
+    /// Mark that a process in this group got a signal, and so should cancel.
+    void set_cancel_signal(int sig) { cancel_signal_ = sig; }
+
     /// Mark the root as constructed.
     /// This is used to avoid reaping a process group leader while there are still procs that may
     /// want to enter its group.
@@ -247,6 +253,9 @@ class job_group_t {
 
     // Whether the root job is constructed. If not, we cannot reap it yet.
     relaxed_atomic_bool_t root_constructed_{};
+
+    // If not zero, a signal indicating cancellation.
+    int cancel_signal_{};
 
     explicit job_group_t(const properties_t &props) : props_(props) {}
 };

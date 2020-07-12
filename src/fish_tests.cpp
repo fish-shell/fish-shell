@@ -1251,7 +1251,6 @@ static void test_cancellation() {
     say(L"Testing Ctrl-C cancellation. If this hangs, that's a bug!");
 
     // Enable fish's signal handling here.
-    parser_t &parser = parser_t::principal_parser();
     signal_set_handlers(true);
 
     // This tests that we can correctly ctrl-C out of certain loop constructs, and that nothing gets
@@ -1271,7 +1270,7 @@ static void test_cancellation() {
 
     // Ensure that we don't think we should cancel.
     reader_reset_interrupted();
-    parser.clear_cancel();
+    signal_clear_cancel();
 }
 
 namespace indent_tests {

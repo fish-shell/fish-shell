@@ -26,6 +26,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"
+#include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class io_chain_t;
@@ -100,11 +101,6 @@ std::shared_ptr<parser_t> parser_t::principal{new parser_t()};
 parser_t &parser_t::principal_parser() {
     ASSERT_IS_MAIN_THREAD();
     return *principal;
-}
-
-void parser_t::cancel_requested(int sig) {
-    assert(sig != 0 && "Signal must not be 0");
-    principal->cancellation_signal = sig;
 }
 
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
@@ -350,7 +346,7 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
 std::shared_ptr<parser_t> parser_t::shared() { return shared_from_this(); }
 
 cancel_checker_t parser_t::cancel_checker() const {
-    return [this]() { return this->cancellation_signal != 0; };
+    return [] { return signal_check_cancel() != 0; };
 }
 
 operation_context_t parser_t::context() {
@@ -674,19 +670,39 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
     static_assert(
         std::is_same<T, ast::statement_t>::value || std::is_same<T, ast::job_list_t>::value,
         "Unexpected node type");
-    // Handle cancellation requests. If our block stack is currently empty, then we already did
-    // successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is
-    // not empty, we are still in the process of cancelling; refuse to evaluate anything.
-    if (this->cancellation_signal) {
-        if (!block_list.empty()) {
-            return proc_status_t::from_signal(this->cancellation_signal);
-        }
-        this->cancellation_signal = 0;
-    }
 
     // Only certain blocks are allowed.
     assert((block_type == block_type_t::top || block_type == block_type_t::subst) &&
            "Invalid block type");
+
+    // If fish itself got a cancel signal, then we want to unwind back to the principal parser.
+    // If we are the principal parser and our block stack is empty, then we want to clear the
+    // signal.
+    // Note this only happens in interactive sessions. In non-interactive sessions, SIGINT will
+    // cause fish to exit.
+    if (int sig = signal_check_cancel()) {
+        if (this == principal.get() && block_list.empty()) {
+            signal_clear_cancel();
+        } else {
+            return proc_status_t::from_signal(sig);
+        }
+    }
+
+    // A helper to detect if we got a signal.
+    // This includes both signals sent to fish (user hit control-C while fish is foreground) and
+    // signals from the job group (e.g. some external job terminated with SIGQUIT).
+    auto check_cancel_signal = [=] {
+        // Did fish itself get a signal?
+        int sig = signal_check_cancel();
+        // Has this job group been cancelled?
+        if (!sig && job_group) sig = job_group->get_cancel_signal();
+        return sig;
+    };
+
+    // If we have a job group which is cancelled, then do nothing.
+    if (int sig = check_cancel_signal()) {
+        return proc_status_t::from_signal(sig);
+    }
 
     job_reap(*this, false);  // not sure why we reap jobs here
 
@@ -696,6 +712,9 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
 
     // Propogate our job group.
     op_ctx.job_group = job_group;
+
+    // Replace the context's cancel checker with one that checks the job group's signal.
+    op_ctx.cancel_checker = [=] { return check_cancel_signal() != 0; };
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
@@ -712,9 +731,9 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
 
     job_reap(*this, false);  // reap again
 
-    if (this->cancellation_signal) {
+    if (int sig = check_cancel_signal()) {
         // We were signalled.
-        return proc_status_t::from_signal(this->cancellation_signal);
+        return proc_status_t::from_signal(sig);
     } else {
         auto status = proc_status_t::from_exit_code(this->get_last_status());
         bool break_expand = (reason == end_execution_reason_t::error);

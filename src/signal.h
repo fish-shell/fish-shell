@@ -33,6 +33,15 @@ void signal_unblock_all();
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);
 
+/// \return the most recent cancellation signal received by the fish process.
+/// Currently only SIGINT is considered a cancellation signal.
+/// This is thread safe.
+int signal_check_cancel();
+
+/// Set the cancellation signal to zero.
+/// In generaly this should only be done in interactive sessions.
+void signal_clear_cancel();
+
 enum class topic_t : uint8_t;
 /// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
 class sigchecker_t {

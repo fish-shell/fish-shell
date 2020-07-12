@@ -886,7 +886,6 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
 
 // This is called from a signal handler!
 void reader_handle_sigint() {
-    parser_t::cancel_requested(SIGINT);
     interrupted = SIGINT;
 }
 
@@ -2529,7 +2528,7 @@ static int read_i(parser_t &parser) {
             wcstring_list_t argv(1, command);
             event_fire_generic(parser, L"fish_preexec", &argv);
             reader_run_command(parser, command);
-            parser.clear_cancel();
+            signal_clear_cancel();
             event_fire_generic(parser, L"fish_postexec", &argv);
             // Allow any pending history items to be returned in the history array.
             if (data->history) {
@@ -3650,7 +3649,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
             // Readline commands may be bound to \cc which also sets the cancel flag.
             // See #6937.
-            parser().clear_cancel();
+            signal_clear_cancel();
 
             rls.last_cmd = readline_cmd;
         } else {
@@ -3768,7 +3767,6 @@ int reader_reading_interrupted() {
     reader_data_t *data = current_data_or_null();
     if (res && data && data->exit_on_interrupt) {
         reader_set_end_loop(true);
-        parser_t::cancel_requested(res);
         // We handled the interrupt ourselves, our caller doesn't need to handle it.
         return 0;
     }

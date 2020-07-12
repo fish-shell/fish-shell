@@ -225,14 +225,11 @@ process_type_t parse_execution_context_t::process_type_for_command(
 }
 
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
-    if (shell_is_exiting()) {
+    if (ctx.check_cancel() || shell_is_exiting()) {
         return end_execution_reason_t::cancelled;
     }
     if (nullptr == parser) {
         return none();
-    }
-    if (parser->cancellation_signal) {
-        return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();
     if (ld.returning) {
@@ -675,7 +672,7 @@ end_execution_reason_t parse_execution_context_t::report_error(int status, const
 
 end_execution_reason_t parse_execution_context_t::report_errors(
     int status, const parse_error_list_t &error_list) const {
-    if (!parser->cancellation_signal) {
+    if (!ctx.check_cancel()) {
         if (error_list.empty()) {
             FLOG(error, L"Error reported but no error text found.");
         }

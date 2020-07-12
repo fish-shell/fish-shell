@@ -321,7 +321,8 @@ void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process
 }
 
 /// Set the status of \p proc to \p status.
-static void handle_child_status(process_t *proc, proc_status_t status) {
+static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
+                                proc_status_t status) {
     proc->status = status;
     if (status.stopped()) {
         proc->stopped = true;
@@ -336,9 +337,8 @@ static void handle_child_status(process_t *proc, proc_status_t status) {
         int sig = status.signal_code();
         if (sig == SIGINT || sig == SIGQUIT) {
             if (session_interactivity() != session_interactivity_t::not_interactive) {
-                // In an interactive session, tell the principal parser to skip all blocks we're
-                // executing so control-C returns control to the user.
-                parser_t::cancel_requested(sig);
+                // Mark the job group as cancelled.
+                job->group->set_cancel_signal(sig);
             } else {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
                 struct sigaction act;
@@ -485,7 +485,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                     if (proc->internal_proc_) {
                         // Try reaping an internal process.
                         if (proc->internal_proc_->exited()) {
-                            handle_child_status(proc.get(), proc->internal_proc_->get_status());
+                            handle_child_status(j, proc.get(), proc->internal_proc_->get_status());
                             FLOGF(proc_reap_internal,
                                   "Reaped internal process '%ls' (id %llu, status %d)",
                                   proc->argv0(), proc->internal_proc_->get_id(),
@@ -497,7 +497,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                         auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED | WCONTINUED);
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
-                            handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
+                            handle_child_status(j, proc.get(), proc_status_t::from_waitpid(status));
                             if (proc->status.stopped()) {
                                 j->group->set_is_foreground(false);
                             }

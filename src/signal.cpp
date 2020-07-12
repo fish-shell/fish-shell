@@ -199,6 +199,14 @@ static bool reraise_if_forked_child(int sig) {
     return true;
 }
 
+/// The cancellation signal we have received.
+/// Of course this is modified from a signal handler.
+static volatile sig_atomic_t s_cancellation_signal = 0;
+
+void signal_clear_cancel() { s_cancellation_signal = 0; }
+
+int signal_check_cancel() { return s_cancellation_signal; }
+
 /// The single signal handler. By centralizing signal handling we ensure that we can never install
 /// the "wrong" signal handler (see #5969).
 static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
@@ -244,6 +252,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
         case SIGINT:
             /// Interactive mode ^C handler. Respond to int signal by setting interrupted-flag and
             /// stopping all loops and conditionals.
+            s_cancellation_signal = SIGINT;
             reader_handle_sigint();
             topic_monitor_t::principal().post(topic_t::sighupint);
             break;

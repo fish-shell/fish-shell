@@ -1078,7 +1078,7 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
 void highlighter_t::visit(const ast::redirection_t &redir) {
     maybe_t<pipe_or_redir_t> oper =
         pipe_or_redir_t::from_string(redir.oper.source(this->buff));  // like 2>
-    wcstring target = redir.target.source(this->buff);                 // like &1 or file path
+    wcstring target = redir.target.source(this->buff);                // like &1 or file path
 
     assert(oper.has_value() &&
            "Should have successfully parsed a pipe_or_redir_t since it was in our ast");
@@ -1177,9 +1177,8 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
                     }
 
                     // NOCLOB means that we must not overwrite files that exist.
-                    target_is_valid =
-                        file_is_writable &&
-                        !(file_exists && oper->mode == redirection_mode_t::noclob);
+                    target_is_valid = file_is_writable &&
+                                      !(file_exists && oper->mode == redirection_mode_t::noclob);
                     break;
                 }
             }

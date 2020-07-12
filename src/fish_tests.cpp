@@ -87,8 +87,10 @@
 static const char *const *s_arguments;
 static int s_test_run_count = 0;
 
-#define system_assert(command) if (system(command)) \
-    { err(L"Non-zero result on line %d: %s", __LINE__, command); }
+#define system_assert(command)                                     \
+    if (system(command)) {                                         \
+        err(L"Non-zero result on line %d: %s", __LINE__, command); \
+    }
 
 // Indicate if we should test the given function. Either we test everything (all arguments) or we
 // run only tests that have a prefix in s_arguments.

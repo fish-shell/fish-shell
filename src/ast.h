@@ -153,7 +153,6 @@ struct optional_t {
     bool has_value() const { return contents != nullptr; }
 };
 
-
 namespace horrible_template_goop {
 
 // void if B is true, SFINAE'd away otherwise.
@@ -1015,4 +1014,4 @@ class ast_t {
 };
 
 }  // namespace ast
-#endif // FISH_AST_H
+#endif  // FISH_AST_H

@@ -671,7 +671,6 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
                 }
             }
 
-
             node_visitor(*this).accept_children_of(&node);
             indent -= dec;
         }

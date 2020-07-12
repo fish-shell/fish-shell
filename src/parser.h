@@ -220,6 +220,7 @@ struct eval_res_t {
 
 class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
+
    private:
     /// The current execution context.
     std::unique_ptr<parse_execution_context_t> execution_context;

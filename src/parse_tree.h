@@ -25,20 +25,19 @@ struct parse_token_t {
     enum parse_token_type_t type;  // The type of the token as represented by the parser
     enum parse_keyword_t keyword {
         parse_keyword_t::none
-    };                                 // Any keyword represented by this token
-    bool has_dash_prefix{false};       // Hackish: whether the source contains a dash prefix
-    bool is_help_argument{false};      // Hackish: whether the source looks like '-h' or '--help'
-    bool is_newline{false};            // Hackish: if TOK_END, whether the source is a newline.
+    };                             // Any keyword represented by this token
+    bool has_dash_prefix{false};   // Hackish: whether the source contains a dash prefix
+    bool is_help_argument{false};  // Hackish: whether the source looks like '-h' or '--help'
+    bool is_newline{false};        // Hackish: if TOK_END, whether the source is a newline.
     bool may_be_variable_assignment{false};  // Hackish: whether this token is a string like FOO=bar
-    tokenizer_error_t tok_error{tokenizer_error_t::none}; // If this is a tokenizer error, that error.
+    tokenizer_error_t tok_error{
+        tokenizer_error_t::none};  // If this is a tokenizer error, that error.
     source_offset_t source_start{SOURCE_OFFSET_INVALID};
     source_offset_t source_length{0};
 
     /// \return the source range.
     /// Note the start may be invalid.
-    source_range_t range() const {
-        return source_range_t{source_start, source_length};
-    }
+    source_range_t range() const { return source_range_t{source_start, source_length}; }
 
     /// \return whether we are a string with the dash prefix set.
     bool is_dash_prefix_string() const {

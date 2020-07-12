@@ -885,9 +885,7 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
 }
 
 // This is called from a signal handler!
-void reader_handle_sigint() {
-    interrupted = SIGINT;
-}
+void reader_handle_sigint() { interrupted = SIGINT; }
 
 /// Make sure buffers are large enough to hold the current string length.
 void reader_data_t::command_line_changed(const editable_line_t *el) {

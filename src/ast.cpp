@@ -291,6 +291,18 @@ const wchar_t *ast_type_to_string(type_t type) {
     return L"(unknown)";
 }
 
+/// Delete an untyped node.
+void node_deleter_t::operator()(node_t *n) {
+    if (!n) return;
+    switch (n->type) {
+#define ELEM(T)                \
+    case type_t::T:            \
+        delete n->as<T##_t>(); \
+        break;
+#include "ast_node_types.inc"
+    }
+}
+
 wcstring node_t::describe() const {
     wcstring res = ast_type_to_string(this->type);
     if (const auto *n = this->try_as<token_base_t>()) {
@@ -300,8 +312,6 @@ wcstring node_t::describe() const {
     }
     return res;
 }
-
-node_t::~node_t() = default;
 
 /// From C++14.
 template <bool B, typename T = void>
@@ -395,12 +405,12 @@ class ast_t::populator_t {
         if (top_type == type_t::job_list) {
             unique_ptr<job_list_t> list = allocate<job_list_t>();
             this->populate_list(*list, true /* exhaust_stream */);
-            this->ast_->top_ = std::move(list);
+            this->ast_->top_.reset(list.release());
         } else {
             unique_ptr<freestanding_argument_list_t> list =
                 allocate<freestanding_argument_list_t>();
             this->populate_list(list->arguments, true /* exhaust_stream */);
-            this->ast_->top_ = std::move(list);
+            this->ast_->top_.reset(list.release());
         }
         // Chomp trailing extras, etc.
         chomp_extras(type_t::job_list);
@@ -1185,15 +1195,15 @@ class ast_t::populator_t {
         assert(ptr && "Statement contents must never be null");
     }
 
-    void visit_union_field(argument_or_redirection_t::contents_ptr_t &ptr) {
+    void visit_union_field(argument_or_redirection_t::contents_ptr_t &contents) {
         if (auto arg = try_parse<argument_t>()) {
-            ptr.contents = std::move(arg);
+            contents = std::move(arg);
         } else if (auto redir = try_parse<redirection_t>()) {
-            ptr.contents = std::move(redir);
+            contents = std::move(redir);
         } else {
             internal_error(__FUNCTION__, L"Unable to parse argument or redirection");
         }
-        assert(ptr && "Statement contents must never be null");
+        assert(contents && "Statement contents must never be null");
     }
 
     void visit_union_field(block_statement_t::header_ptr_t &ptr) {

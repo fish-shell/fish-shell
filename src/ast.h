@@ -103,24 +103,18 @@ const wchar_t *ast_type_to_string(type_t type);
  * };
  */
 
-namespace template_goo {
-/// \return true if type Type is in the Candidates list.
-template <typename Type>
-constexpr bool type_in_list() {
-    return false;
-}
-
-template <typename Type, typename Candidate, typename... Rest>
-constexpr bool type_in_list() {
-    return std::is_same<Type, Candidate>::value || type_in_list<Type, Rest...>();
-}
-}  // namespace template_goo
+// Our node base type is not virtual, so we must not invoke its destructor directly.
+// If you want to delete a node and don't know its concrete type, use this deleter type.
+struct node_deleter_t {
+    void operator()(node_t *node);
+};
+using node_unique_ptr_t = std::unique_ptr<node_t, node_deleter_t>;
 
 // A union pointer field is a pointer to one of a fixed set of node types.
 // It is never null after construction.
 template <typename... Nodes>
 struct union_ptr_t {
-    std::unique_ptr<node_t> contents{};
+    node_unique_ptr_t contents{};
 
     /// \return a pointer to the node contents.
     const node_t *get() const {
@@ -133,16 +127,15 @@ struct union_ptr_t {
 
     const node_t *operator->() const { return get(); }
 
-    /// \return whether this union pointer can hold the given node.
-    static inline bool allows_node(const node_t &node);
-
     union_ptr_t() = default;
 
+    // Allow setting a typed unique pointer.
     template <typename Node>
-    /* implicit */ union_ptr_t(std::unique_ptr<Node> n) : contents(std::move(n)) {
-        static_assert(template_goo::type_in_list<Node, Nodes...>(),
-                      "Cannot construct from this node type");
-    }
+    inline void operator=(std::unique_ptr<Node> n);
+
+    // Construct from a typed unique pointer.
+    template <typename Node>
+    inline union_ptr_t(std::unique_ptr<Node> n);
 };
 
 // A pointer to something, or nullptr if not present.
@@ -312,10 +305,11 @@ struct node_t {
         return *storage;
     }
 
-    // We are a pure virtual class.
-    // Note that it is NOT necessary to declare virtual destructors for all subclasses - these will
-    // be made virtual automatically.
-    virtual ~node_t() = 0;
+   protected:
+    // We are NOT a virtual class - we have no vtable or virtual methods and our destructor is not
+    // virtual, so as to keep the size down. Only typed nodes should invoke the destructor.
+    // Use node_deleter_t to delete an untyped node.
+    ~node_t() = default;
 };
 
 // Base class for all "branch" nodes: nodes with at least one ast child.
@@ -409,7 +403,7 @@ struct list_t : public node_t {
     }
 
     list_t() : node_t(ListType, Category) {}
-    ~list_t() override { delete[] contents; }
+    ~list_t() { delete[] contents; }
 
     // Disallow moving as we own a raw pointer.
     list_t(list_t &&) = delete;
@@ -790,6 +784,34 @@ bool keyword_t<KWs...>::allows_keyword(parse_keyword_t kw) {
     return false;
 }
 
+namespace template_goo {
+/// \return true if type Type is in the Candidates list.
+template <typename Type>
+constexpr bool type_in_list() {
+    return false;
+}
+
+template <typename Type, typename Candidate, typename... Rest>
+constexpr bool type_in_list() {
+    return std::is_same<Type, Candidate>::value || type_in_list<Type, Rest...>();
+}
+}  // namespace template_goo
+
+template <typename... Nodes>
+template <typename Node>
+void union_ptr_t<Nodes...>::operator=(std::unique_ptr<Node> n) {
+    static_assert(template_goo::type_in_list<Node, Nodes...>(),
+                  "Cannot construct from this node type");
+    contents.reset(n.release());
+}
+
+template <typename... Nodes>
+template <typename Node>
+union_ptr_t<Nodes...>::union_ptr_t(std::unique_ptr<Node> n) : contents(n.release()) {
+    static_assert(template_goo::type_in_list<Node, Nodes...>(),
+                  "Cannot construct from this node type");
+}
+
 /**
  * A node visitor is like a field visitor, but adapted to only visit actual nodes, as const
  * references. It calls the visit() function of its visitor with a const reference to each node
@@ -1025,7 +1047,7 @@ class ast_t {
 
     // The top node.
     // Its type depends on what was requested to parse.
-    std::unique_ptr<node_t> top_{};
+    node_unique_ptr_t top_{};
 
     /// Whether any errors were encountered during parsing.
     bool any_error_{false};

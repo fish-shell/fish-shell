@@ -151,7 +151,7 @@ bool job_t::should_report_process_exits() const {
 
     // Only report root job exits.
     // For example in `ls | begin ; cat ; end` we don't need to report the cat sub-job.
-    if (!flags().is_tree_root) {
+    if (!flags().is_group_root) {
         return false;
     }
 
@@ -257,34 +257,35 @@ void job_group_t::set_pgid(pid_t pgid) {
 
 maybe_t<pid_t> job_group_t::get_pgid() const { return pgid_; }
 
-void job_group_t::populate_tree_for_job(job_t *job, const job_group_ref_t &proposed) {
+void job_group_t::populate_group_for_job(job_t *job, const job_group_ref_t &proposed) {
+    assert(!job->group && "Job already has a group");
     // Note there's three cases to consider:
     //  nullptr         -> this is a root job, there is no inherited job group
     //  internal        -> the parent is running as part of a simple function execution
     //                      We may need to create a new job group if we are going to fork.
     //  non-internal    -> we are running as part of a real pipeline
-    // Decide if this job can use an internal tree.
+    // Decide if this job can use an internal group.
     // This is true if it's a simple foreground execution of an internal proc.
     bool initial_bg = job->is_initially_background();
     bool first_proc_internal = job->processes.front()->is_internal();
     bool can_use_internal =
         !initial_bg && job->processes.size() == 1 && job->processes.front()->is_internal();
 
-    bool needs_new_tree = false;
+    bool needs_new_group = false;
     if (!proposed) {
-        // We don't have a tree yet.
-        needs_new_tree = true;
+        // We don't have a group yet.
+        needs_new_group = true;
     } else if (initial_bg) {
-        // Background jobs always get a new tree.
-        needs_new_tree = true;
+        // Background jobs always get a new group.
+        needs_new_group = true;
     } else if (proposed->is_internal() && !can_use_internal) {
-        // We cannot use the internal tree for this job.
-        needs_new_tree = true;
+        // We cannot use the internal group for this job.
+        needs_new_group = true;
     }
 
-    job->mut_flags().is_tree_root = needs_new_tree;
+    job->mut_flags().is_group_root = needs_new_group;
 
-    if (!needs_new_tree) {
+    if (!needs_new_group) {
         job->group = proposed;
     } else {
         properties_t props{};
@@ -390,7 +391,7 @@ job_t::~job_t() = default;
 void job_t::mark_constructed() {
     assert(!is_constructed() && "Job was already constructed");
     mut_flags().constructed = true;
-    if (flags().is_tree_root) {
+    if (flags().is_group_root) {
         group->mark_root_constructed();
     }
 }

@@ -215,9 +215,9 @@ class job_group_t {
     void mark_root_constructed() { root_constructed_ = true; };
     bool is_root_constructed() const { return root_constructed_; }
 
-    /// Given a job and a proposed job group (possibly null), populate the job's tree.
-    /// The proposed tree is the tree from the parent job, or null if this is a root.
-    static void populate_tree_for_job(job_t *job, const job_group_ref_t &proposed_tree);
+    /// Given a job and a proposed job group (possibly null), populate the job's group field.
+    /// The proposed group is the group from the parent job, or null if this is a root.
+    static void populate_group_for_job(job_t *job, const job_group_ref_t &proposed_tree);
 
     ~job_group_t();
 
@@ -512,8 +512,8 @@ class job_t {
         /// Whether to print timing for this job.
         bool has_time_prefix{false};
 
-        // Indicates that we are the "tree root." Any other jobs using this tree are nested.
-        bool is_tree_root{false};
+        // Indicates that we are the "group root." Any other jobs using this tree are nested.
+        bool is_group_root{false};
 
     } job_flags{};
 

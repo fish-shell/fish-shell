@@ -1332,7 +1332,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
         // Set the pgroup assignment mode and job group, now that the job is populated.
-        job_group_t::populate_tree_for_job(job.get(), ctx.job_group);
+        job_group_t::populate_group_for_job(job.get(), ctx.job_group);
         assert(job->group && "Should have a job group");
 
         // Success. Give the job to the parser - it will clean it up.

@@ -211,14 +211,14 @@ void accept_field_visitor(FieldVisitor &v, bool reverse, Field &field, Rest &...
 /// node_t is the base node of all AST nodes.
 /// It is not a template: it is possible to work concretely with this type.
 struct node_t {
+    /// The parent node, or null if this is root.
+    const node_t *parent{nullptr};
+
     /// The type of this node.
     const type_t type;
 
     /// The category of this node.
     const category_t category;
-
-    /// The parent node, or null if this is root.
-    const node_t *parent{nullptr};
 
     constexpr explicit node_t(type_t t, category_t c) : type(t), category(c) {}
 

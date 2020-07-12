@@ -103,6 +103,19 @@ const wchar_t *ast_type_to_string(type_t type);
  * };
  */
 
+namespace template_goo {
+/// \return true if type Type is in the Candidates list.
+template <typename Type>
+constexpr bool type_in_list() {
+    return false;
+}
+
+template <typename Type, typename Candidate, typename... Rest>
+constexpr bool type_in_list() {
+    return std::is_same<Type, Candidate>::value || type_in_list<Type, Rest...>();
+}
+}  // namespace template_goo
+
 // A union pointer field is a pointer to one of a fixed set of node types.
 // It is never null after construction.
 template <typename... Nodes>
@@ -127,9 +140,8 @@ struct union_ptr_t {
 
     template <typename Node>
     /* implicit */ union_ptr_t(std::unique_ptr<Node> n) : contents(std::move(n)) {
-        // TODO: this could be made statically type safe.
-        assert(contents != nullptr && allows_node(*contents) &&
-               "union_ptr constructed from invalid node type");
+        static_assert(template_goo::type_in_list<Node, Nodes...>(),
+                      "Cannot construct from this node type");
     }
 };
 
@@ -153,7 +165,7 @@ struct optional_t {
     bool has_value() const { return contents != nullptr; }
 };
 
-namespace horrible_template_goop {
+namespace template_goo {
 
 // void if B is true, SFINAE'd away otherwise.
 template <bool B>
@@ -198,14 +210,14 @@ void accept_field_visitor(FieldVisitor &v, bool reverse, Field &field, Rest &...
     if (reverse) visit_1_field(v, field);
 }
 
-}  // namespace horrible_template_goop
+}  // namespace template_goo
 
-#define FIELDS(...)                                                                   \
-    template <typename FieldVisitor>                                                  \
-    void accept(FieldVisitor &visitor, bool reversed = false) {                       \
-        visitor.will_visit_fields_of(*this);                                          \
-        horrible_template_goop::accept_field_visitor(visitor, reversed, __VA_ARGS__); \
-        visitor.did_visit_fields_of(*this);                                           \
+#define FIELDS(...)                                                         \
+    template <typename FieldVisitor>                                        \
+    void accept(FieldVisitor &visitor, bool reversed = false) {             \
+        visitor.will_visit_fields_of(*this);                                \
+        template_goo::accept_field_visitor(visitor, reversed, __VA_ARGS__); \
+        visitor.did_visit_fields_of(*this);                                 \
     }
 
 /// node_t is the base node of all AST nodes.
@@ -774,15 +786,6 @@ template <parse_keyword_t... KWs>
 bool keyword_t<KWs...>::allows_keyword(parse_keyword_t kw) {
     for (parse_keyword_t k : {KWs...}) {
         if (k == kw) return true;
-    }
-    return false;
-}
-
-// static
-template <typename... Nodes>
-bool union_ptr_t<Nodes...>::allows_node(const node_t &node) {
-    for (type_t t : {Nodes::AstType...}) {
-        if (t == node.type) return true;
     }
     return false;
 }

@@ -861,6 +861,8 @@ class ast_t::populator_t {
     // If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
     template <type_t ListType, typename ContentsNode>
     void populate_list(list_t<ListType, ContentsNode> &list, bool exhaust_stream = false) {
+        assert(list.contents == nullptr && "List is not initially empty");
+
         // Do not attempt to parse a list if we are unwinding.
         if (is_unwinding()) {
             assert(!exhaust_stream &&
@@ -872,6 +874,10 @@ class ast_t::populator_t {
             assert(list.empty() && "Should be an empty list");
             return;
         }
+
+        // We're going to populate a vector with our nodes.
+        // Later on we will copy this to the heap with a single allocation.
+        std::vector<std::unique_ptr<ContentsNode>> contents;
 
         for (;;) {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
@@ -900,7 +906,7 @@ class ast_t::populator_t {
 
             // Now try parsing a node.
             if (auto node = this->try_parse<ContentsNode>()) {
-                list.contents.push_back(std::move(node));
+                contents.push_back(std::move(node));
             } else if (exhaust_stream && peek_type() != parse_token_type_t::terminate) {
                 // We aren't allowed to stop. Produce an error and keep going.
                 consume_excess_token_generating_error();
@@ -909,6 +915,20 @@ class ast_t::populator_t {
                 // exhausted the stream as requested.
                 break;
             }
+        }
+
+        // Populate our list from our contents.
+        if (!contents.empty()) {
+            assert(contents.size() <= UINT32_MAX && "Contents size out of bounds");
+            assert(list.contents == nullptr && "List should still be empty");
+
+            // We're going to heap-allocate our array.
+            using contents_ptr_t = typename list_t<ListType, ContentsNode>::contents_ptr_t;
+            contents_ptr_t *array = new contents_ptr_t[contents.size()];
+            std::move(contents.begin(), contents.end(), array);
+
+            list.length = static_cast<uint32_t>(contents.size());
+            list.contents = array;
         }
 
         FLOGF(ast_construction, L"%*s%ls size: %lu", spaces(), "", ast_type_to_string(ListType),

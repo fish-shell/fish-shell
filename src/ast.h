@@ -352,8 +352,9 @@ struct list_t : public node_t {
     // This enables more natural iteration:
     //    for (const argument_t &arg : argument_list) ...
     struct contents_ptr_t {
-        std::unique_ptr<ContentsNode> ptr;
-        /* implicit */ contents_ptr_t(std::unique_ptr<ContentsNode> v) : ptr(std::move(v)) {}
+        std::unique_ptr<ContentsNode> ptr{};
+
+        void operator=(std::unique_ptr<ContentsNode> p) { ptr = std::move(p); }
 
         const ContentsNode *get() const {
             assert(ptr && "Null pointer");
@@ -362,7 +363,11 @@ struct list_t : public node_t {
 
         /* implicit */ operator const ContentsNode &() const { return *get(); }
     };
-    std::vector<contents_ptr_t> contents{};
+
+    // We use a new[]-allocated array to store our contents pointers, to reduce size.
+    // This would be a nice use case for std::dynarray.
+    uint32_t length{0};
+    const contents_ptr_t *contents{};
 
     /// \return a node at a given index, or nullptr if out of range.
     const ContentsNode *at(size_t idx, bool reverse = false) const {
@@ -371,15 +376,15 @@ struct list_t : public node_t {
     }
 
     /// \return our count.
-    size_t count() const { return contents.size(); }
+    size_t count() const { return length; }
 
     /// \return whether we are empty.
-    bool empty() const { return contents.size() == 0; }
+    bool empty() const { return length == 0; }
 
     /// Iteration support.
-    using iterator = typename decltype(contents)::const_iterator;
-    iterator begin() const { return contents.begin(); }
-    iterator end() const { return contents.end(); }
+    using iterator = const contents_ptr_t *;
+    iterator begin() const { return contents; }
+    iterator end() const { return contents + length; }
 
     // list types pretend their child nodes are direct embeddings.
     // This isn't used during AST construction because we need to construct the list.
@@ -392,6 +397,11 @@ struct list_t : public node_t {
     }
 
     list_t() : node_t(ListType, Category) {}
+    ~list_t() override { delete[] contents; }
+
+    // Disallow moving as we own a raw pointer.
+    list_t(list_t &&) = delete;
+    void operator=(list_t &&) = delete;
 };
 
 // Fully define all list types, as they are very uniform.

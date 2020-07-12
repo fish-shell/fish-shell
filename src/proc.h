@@ -188,17 +188,26 @@ class job_group_t {
     maybe_t<pid_t> get_pgid() const;
 
     /// \return whether we want job control
-    bool wants_job_control() const { return job_control_; }
+    bool wants_job_control() const { return props_.job_control; }
 
     /// \return whether this is an internal group.
-    bool is_internal() const { return is_internal_; }
+    bool is_internal() const { return props_.is_internal; }
+
+    /// \return whether we are currently the foreground group.
+    bool is_foreground() const { return is_foreground_; }
+
+    /// Mark whether we are in the foreground.
+    void set_is_foreground(bool flag) { is_foreground_ = flag; }
+
+    /// \return if this job group should own the terminal when it runs.
+    bool should_claim_terminal() const { return props_.wants_terminal && is_foreground(); }
 
     /// \return whether this job group is awaiting a pgid.
     /// This is true for non-internal trees that don't already have a pgid.
-    bool needs_pgid_assignment() const { return !is_internal_ && !pgid_.has_value(); }
+    bool needs_pgid_assignment() const { return !props_.is_internal && !pgid_.has_value(); }
 
     /// \return the job ID, or -1 if none.
-    job_id_t get_id() const { return job_id_; }
+    job_id_t get_id() const { return props_.job_id; }
 
     /// Mark the root as constructed.
     /// This is used to avoid reaping a process group leader while there are still procs that may
@@ -213,13 +222,33 @@ class job_group_t {
     ~job_group_t();
 
    private:
+    // The pgid to assign to jobs, or none if not yet set.
     maybe_t<pid_t> pgid_{};
-    const bool job_control_;
-    const bool is_internal_;
-    const job_id_t job_id_;
+
+    // Set of properties, which are constant.
+    struct properties_t {
+        // Whether jobs in this group should have job control.
+        bool job_control{};
+
+        // Whether we should claim the terminal when we run in the foreground.
+        // TODO: this is effectively the same as job control, rationalize this.
+        bool wants_terminal{};
+
+        // Whether we are an internal job group.
+        bool is_internal{};
+
+        // The job ID of this group.
+        job_id_t job_id{};
+    };
+    const properties_t props_;
+
+    // Whether we are in the foreground, meaning that the user is waiting for this.
+    relaxed_atomic_bool_t is_foreground_{};
+
+    // Whether the root job is constructed. If not, we cannot reap it yet.
     relaxed_atomic_bool_t root_constructed_{};
 
-    explicit job_group_t(bool job_control, bool internal);
+    explicit job_group_t(const properties_t &props) : props_(props) {}
 };
 
 /// A structure representing a single fish process. Contains variables for tracking process state
@@ -474,9 +503,6 @@ class job_t {
         /// Whether the user has been told about stopped job.
         bool notified{false};
 
-        /// Whether this job is in the foreground.
-        bool foreground{false};
-
         /// Whether the exit status should be negated. This flag can only be set by the not builtin.
         bool negate{false};
 
@@ -500,9 +526,6 @@ class job_t {
     /// \return if we want job control.
     bool wants_job_control() const { return properties.job_control; }
 
-    /// \return if this job should own the terminal when it runs.
-    bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }
-
     /// \return whether this job is initially going to run in the background, because & was
     /// specified.
     bool is_initially_background() const { return properties.initial_background; }
@@ -519,8 +542,6 @@ class job_t {
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched
     bool is_constructed() const { return flags().constructed; }
-    /// The job was launched in the foreground and has control of the terminal
-    bool is_foreground() const { return flags().foreground; }
     /// The job is complete, i.e. all its member processes have been reaped
     bool is_completed() const;
     /// The job is in a stopped state
@@ -531,6 +552,9 @@ class job_t {
     }
     bool skip_notification() const { return properties.skip_notification; }
     bool from_event_handler() const { return properties.from_event_handler; }
+
+    /// \return whether this job's group is in the foreground.
+    bool is_foreground() const { return group->is_foreground(); }
 
     /// \return whether we should report process exit events.
     /// This implements some historical behavior which has not been justified.

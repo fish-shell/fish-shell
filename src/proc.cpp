@@ -241,14 +241,9 @@ void print_exit_warning_for_jobs(const job_list_t &jobs) {
     fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
-job_group_t::job_group_t(bool job_control, bool internal)
-    : job_control_(job_control),
-      is_internal_(internal),
-      job_id_(internal ? -1 : acquire_job_id()) {}
-
 job_group_t::~job_group_t() {
-    if (job_id_ > 0) {
-        release_job_id(job_id_);
+    if (props_.job_id > 0) {
+        release_job_id(props_.job_id);
     }
 }
 
@@ -270,15 +265,16 @@ void job_group_t::populate_tree_for_job(job_t *job, const job_group_ref_t &propo
     //  non-internal    -> we are running as part of a real pipeline
     // Decide if this job can use an internal tree.
     // This is true if it's a simple foreground execution of an internal proc.
+    bool initial_bg = job->is_initially_background();
     bool first_proc_internal = job->processes.front()->is_internal();
-    bool can_use_internal = !job->is_initially_background() && job->processes.size() == 1 &&
-                            job->processes.front()->is_internal();
+    bool can_use_internal =
+        !initial_bg && job->processes.size() == 1 && job->processes.front()->is_internal();
 
     bool needs_new_tree = false;
     if (!proposed) {
         // We don't have a tree yet.
         needs_new_tree = true;
-    } else if (!job->is_foreground()) {
+    } else if (initial_bg) {
         // Background jobs always get a new tree.
         needs_new_tree = true;
     } else if (proposed->is_internal() && !can_use_internal) {
@@ -287,20 +283,25 @@ void job_group_t::populate_tree_for_job(job_t *job, const job_group_ref_t &propo
     }
 
     job->mut_flags().is_tree_root = needs_new_tree;
-    bool job_control = job->wants_job_control();
 
     if (!needs_new_tree) {
         job->group = proposed;
-    } else if (can_use_internal) {
-        job->group.reset(new job_group_t(job_control, true));
     } else {
-        job->group.reset(new job_group_t(job_control, false));
+        properties_t props{};
+        props.job_control = job->wants_job_control();
+        props.wants_terminal = job->wants_job_control() && !job->from_event_handler();
+        props.is_internal = can_use_internal;
+        props.job_id = can_use_internal ? -1 : acquire_job_id();
+        job->group.reset(new job_group_t(props));
+
+        // Mark if it's foreground.
+        job->group->set_is_foreground(!initial_bg);
 
         // Perhaps this job should immediately live in fish's pgroup.
         // There's two reasons why it may be so:
         //  1. The job doesn't need job control.
         //  2. The first process in the job is internal to fish; this needs to own the tty.
-        if (!job_control || first_proc_internal) {
+        if (!can_use_internal && (!props.job_control || first_proc_internal)) {
             job->group->set_pgid(getpgrp());
         }
     }
@@ -497,7 +498,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
                             if (proc->status.stopped()) {
-                                j->mut_flags().foreground = false;
+                                j->group->set_is_foreground(false);
                             }
                             if (proc->status.continued()) {
                                 j->mut_flags().notified = false;
@@ -802,7 +803,7 @@ void proc_update_jiffies(parser_t &parser) {
 int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
     enum { notneeded = 0, success = 1, error = -1 };
 
-    if (!j->should_claim_terminal()) {
+    if (!j->group->should_claim_terminal()) {
         // The job doesn't want the terminal.
         return notneeded;
     }

@@ -136,7 +136,7 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
     if (job->wants_job_control()) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
         // process group ID. But will it be foregrounded?
-        if (job->should_claim_terminal()) {
+        if (job->group->should_claim_terminal()) {
             // It will be foregrounded, so we will call tcsetpgrp(), therefore do not use
             // posix_spawn.
             return false;
@@ -321,7 +321,8 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         if (int err = execute_setpgid(p->pid, pgid, false /* not parent */)) {
             report_setpgid_error(err, pgid, job.get(), p);
         }
-        child_setup_process(job->should_claim_terminal() ? pgid : INVALID_PID, *job, true, dup2s);
+        child_setup_process(job->group->should_claim_terminal() ? pgid : INVALID_PID, *job, true,
+                            dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }

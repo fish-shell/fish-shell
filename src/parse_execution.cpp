@@ -992,7 +992,7 @@ end_execution_reason_t parse_execution_context_t::populate_not_process(
     flags.negate = !flags.negate;
     if (not_statement.time) {
         flags.has_time_prefix = true;
-        if (!job->mut_flags().foreground) {
+        if (job->is_initially_background()) {
             return this->report_error(STATUS_INVALID_ARGS, not_statement, ERROR_TIME_BACKGROUND);
         }
     }
@@ -1312,8 +1312,6 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
 
     shared_ptr<job_t> job = std::make_shared<job_t>(props);
     job->tmodes = tmodes;
-
-    job->mut_flags().foreground = !props.initial_background;
 
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record

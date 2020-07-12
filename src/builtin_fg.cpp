@@ -104,7 +104,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     reader_write_title(job->command(), parser);
 
     parser.job_promote(job);
-    job->mut_flags().foreground = true;
+    job->group->set_is_foreground(true);
 
     job->continue_job(parser, true, job->is_stopped());
     return STATUS_CMD_OK;

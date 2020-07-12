@@ -426,7 +426,8 @@ bool autosuggest_validate_from_history(const history_item_t &item,
                                        const operation_context_t &ctx) {
     ASSERT_IS_BACKGROUND_THREAD();
 
-    bool handled = false, suggestionOK = false;
+    bool handled = false;
+    bool suggestion_ok = false;
 
     // Parse the string.
     wcstring parsed_command;
@@ -442,14 +443,14 @@ bool autosuggest_validate_from_history(const history_item_t &item,
             if (!is_help) {
                 auto path = path_get_cdpath(cd_dir, working_directory, ctx.vars);
                 if (path && !paths_are_same_file(working_directory, *path)) {
-                    suggestionOK = true;
+                    suggestion_ok = true;
                 }
             }
         }
     }
 
     if (handled) {
-        return suggestionOK;
+        return suggestion_ok;
     }
 
     // Not handled specially so handle it here.
@@ -459,10 +460,10 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     if (cmd_ok) {
         const path_list_t &paths = item.get_required_paths();
-        suggestionOK = all_paths_are_valid(paths, working_directory);
+        suggestion_ok = all_paths_are_valid(paths, working_directory);
     }
 
-    return suggestionOK;
+    return suggestion_ok;
 }
 
 // Highlights the variable starting with 'in', setting colors within the 'colors' array. Returns the

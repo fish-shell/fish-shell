@@ -1780,7 +1780,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
 
     std::vector<value_type> values() const {
         std::vector<value_type> result;
-        for (const auto &p : *this) {
+        for (auto p : *this) {
             result.push_back(p);
         }
         return result;
@@ -1788,7 +1788,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
 
     std::vector<int> ints() const {
         std::vector<int> result;
-        for (const auto &p : *this) {
+        for (auto p : *this) {
             result.push_back(p.second);
         }
         return result;

@@ -318,7 +318,7 @@ class lru_cache_t {
 
         // Count iterators
         size_t iter_dist = 0;
-        for (const auto &p : *this) {
+        for (auto p : *this) {
             UNUSED(p);
             iter_dist++;
         }

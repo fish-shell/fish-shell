@@ -453,12 +453,9 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     }
 
     // Not handled specially so handle it here.
-    bool cmd_ok = false;
-    if (path_get_path(parsed_command, nullptr, ctx.vars)) {
-        cmd_ok = true;
-    } else if (builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command)) {
-        cmd_ok = true;
-    }
+    bool cmd_ok = builtin_exists(parsed_command)
+        || function_exists_no_autoload(parsed_command)
+        || path_get_path(parsed_command, nullptr, ctx.vars);
 
     if (cmd_ok) {
         const path_list_t &paths = item.get_required_paths();

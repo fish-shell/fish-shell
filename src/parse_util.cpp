@@ -1054,8 +1054,11 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
     return errored;
 }
 
+/// Given a source buffer \p buff_src and decorated statement \p dst within it, return true if there
+/// is an error and false if not. \p storage may be used to reduce allocations.
 static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
                                                  const ast::decorated_statement_t &dst,
+                                                 wcstring *storage,
                                                  parse_error_list_t *parse_errors) {
     using namespace ast;
     bool errored = false;
@@ -1065,7 +1068,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     // Determine if the first argument is help.
     bool first_arg_is_help = false;
     if (const auto *arg = get_first_arg(dst.args_or_redirs)) {
-        wcstring arg_src = arg->source(buff_src);
+        const wcstring &arg_src = arg->source(buff_src, storage);
         first_arg_is_help = parse_util_argument_is_help(arg_src.c_str());
     }
 
@@ -1102,17 +1105,18 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     if (pipe_pos == pipeline_position_t::subsequent) {
         // check if our command is 'and' or 'or'. This is very clumsy; we don't catch e.g. quoted
         // commands.
-        wcstring command = dst.command.source(buff_src);
+        const wcstring &command = dst.command.source(buff_src, storage);
         if (command == L"and" || command == L"or") {
             errored =
                 append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
         }
     }
 
-    if (maybe_t<wcstring> unexp_command = dst.command.try_source(buff_src)) {
+    const wcstring &unexp_command = dst.command.source(buff_src, storage);
+    if (!unexp_command.empty()) {
         wcstring command;
         // Check that we can expand the command.
-        if (expand_to_command_and_args(*unexp_command, operation_context_t::empty(), &command,
+        if (expand_to_command_and_args(unexp_command, operation_context_t::empty(), &command,
                                        nullptr, parse_errors) == expand_result_t::error) {
             errored = true;
             parse_error_offset_source_start(parse_errors, source_start);
@@ -1175,12 +1179,14 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         }
 
         // Check that we don't do an invalid builtin (issue #1252).
-        if (!errored && decoration == statement_decoration_t::builtin &&
-            expand_one(*unexp_command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
-                       parse_errors) &&
-            !builtin_exists(*unexp_command)) {
-            errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
-                                          unexp_command->c_str());
+        if (!errored && decoration == statement_decoration_t::builtin) {
+            wcstring command = unexp_command;
+            if (expand_one(command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
+                           parse_errors) &&
+                !builtin_exists(unexp_command)) {
+                errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
+                                              unexp_command.c_str());
+            }
         }
     }
     return errored;
@@ -1254,6 +1260,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Verify pipes via parser_is_pipe_forbidden.
     // Verify return only within a function.
     // Verify no variable expansions.
+    wcstring storage;
 
     if (!errored) {
         for (const node_t &node : ast) {
@@ -1264,7 +1271,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                     has_unclosed_pipe = true;
                 }
             } else if (const argument_t *arg = node.try_as<argument_t>()) {
-                wcstring arg_src = arg->source(buff_src);
+                const wcstring &arg_src = arg->source(buff_src, &storage);
                 res |= parse_util_detect_errors_in_argument(*arg, arg_src, &parse_errors);
             } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
                 // Disallow background in the following cases:
@@ -1279,7 +1286,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                 }
             } else if (const ast::decorated_statement_t *stmt =
                            node.try_as<decorated_statement_t>()) {
-                errored |= detect_errors_in_decorated_statement(buff_src, *stmt, &parse_errors);
+                errored |=
+                    detect_errors_in_decorated_statement(buff_src, *stmt, &storage, &parse_errors);
             } else if (const auto *block = node.try_as<block_statement_t>()) {
                 // If our 'end' had no source, we are unsourced.
                 if (block->end.unsourced) has_unclosed_block = true;

@@ -289,6 +289,17 @@ struct node_t {
         return res;
     }
 
+    /// \return the source code for this node, or an empty string if unsourced.
+    /// This uses \p storage to reduce allocations.
+    const wcstring &source(const wcstring &orig, wcstring *storage) const {
+        if (auto r = try_source_range()) {
+            storage->assign(orig, r->start, r->length);
+        } else {
+            storage->clear();
+        }
+        return *storage;
+    }
+
     // We are a pure virtual class.
     // Note that it is NOT necessary to declare virtual destructors for all subclasses - these will
     // be made virtual automatically.

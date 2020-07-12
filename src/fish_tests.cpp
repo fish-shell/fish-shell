@@ -1001,117 +1001,119 @@ static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
 static void test_parser() {
     say(L"Testing parser");
 
-    auto parser = parser_t::principal_parser().shared();
+    auto detect_errors = [](const wcstring &s) {
+        return parse_util_detect_errors(s, nullptr, true /* accept incomplete */);
+    };
 
     say(L"Testing block nesting");
-    if (!parse_util_detect_errors(L"if; end")) {
+    if (!detect_errors(L"if; end")) {
         err(L"Incomplete if statement undetected");
     }
-    if (!parse_util_detect_errors(L"if test; echo")) {
+    if (!detect_errors(L"if test; echo")) {
         err(L"Missing end undetected");
     }
-    if (!parse_util_detect_errors(L"if test; end; end")) {
+    if (!detect_errors(L"if test; end; end")) {
         err(L"Unbalanced end undetected");
     }
 
     say(L"Testing detection of invalid use of builtin commands");
-    if (!parse_util_detect_errors(L"case foo")) {
+    if (!detect_errors(L"case foo")) {
         err(L"'case' command outside of block context undetected");
     }
-    if (!parse_util_detect_errors(L"switch ggg; if true; case foo;end;end")) {
+    if (!detect_errors(L"switch ggg; if true; case foo;end;end")) {
         err(L"'case' command outside of switch block context undetected");
     }
-    if (!parse_util_detect_errors(L"else")) {
+    if (!detect_errors(L"else")) {
         err(L"'else' command outside of conditional block context undetected");
     }
-    if (!parse_util_detect_errors(L"else if")) {
+    if (!detect_errors(L"else if")) {
         err(L"'else if' command outside of conditional block context undetected");
     }
-    if (!parse_util_detect_errors(L"if false; else if; end")) {
+    if (!detect_errors(L"if false; else if; end")) {
         err(L"'else if' missing command undetected");
     }
 
-    if (!parse_util_detect_errors(L"break")) {
+    if (!detect_errors(L"break")) {
         err(L"'break' command outside of loop block context undetected");
     }
 
-    if (parse_util_detect_errors(L"break --help")) {
+    if (detect_errors(L"break --help")) {
         err(L"'break --help' incorrectly marked as error");
     }
 
-    if (!parse_util_detect_errors(L"while false ; function foo ; break ; end ; end ")) {
+    if (!detect_errors(L"while false ; function foo ; break ; end ; end ")) {
         err(L"'break' command inside function allowed to break from loop outside it");
     }
 
-    if (!parse_util_detect_errors(L"exec ls|less") || !parse_util_detect_errors(L"echo|return")) {
+    if (!detect_errors(L"exec ls|less") || !detect_errors(L"echo|return")) {
         err(L"Invalid pipe command undetected");
     }
 
-    if (parse_util_detect_errors(L"for i in foo ; switch $i ; case blah ; break; end; end ")) {
+    if (detect_errors(L"for i in foo ; switch $i ; case blah ; break; end; end ")) {
         err(L"'break' command inside switch falsely reported as error");
     }
 
-    if (parse_util_detect_errors(L"or cat | cat") || parse_util_detect_errors(L"and cat | cat")) {
+    if (detect_errors(L"or cat | cat") || detect_errors(L"and cat | cat")) {
         err(L"boolean command at beginning of pipeline falsely reported as error");
     }
 
-    if (!parse_util_detect_errors(L"cat | and cat")) {
+    if (!detect_errors(L"cat | and cat")) {
         err(L"'and' command in pipeline not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"cat | or cat")) {
+    if (!detect_errors(L"cat | or cat")) {
         err(L"'or' command in pipeline not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"cat | exec") || !parse_util_detect_errors(L"exec | cat")) {
+    if (!detect_errors(L"cat | exec") || !detect_errors(L"exec | cat")) {
         err(L"'exec' command in pipeline not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"begin ; end arg")) {
+    if (!detect_errors(L"begin ; end arg")) {
         err(L"argument to 'end' not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"switch foo ; end arg")) {
+    if (!detect_errors(L"switch foo ; end arg")) {
         err(L"argument to 'end' not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"if true; else if false ; end arg")) {
+    if (!detect_errors(L"if true; else if false ; end arg")) {
         err(L"argument to 'end' not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"if true; else ; end arg")) {
+    if (!detect_errors(L"if true; else ; end arg")) {
         err(L"argument to 'end' not reported as error");
     }
 
-    if (parse_util_detect_errors(L"begin ; end 2> /dev/null")) {
+    if (detect_errors(L"begin ; end 2> /dev/null")) {
         err(L"redirection after 'end' wrongly reported as error");
     }
 
-    if (parse_util_detect_errors(L"true | ") != PARSER_TEST_INCOMPLETE) {
+    if (detect_errors(L"true | ") != PARSER_TEST_INCOMPLETE) {
         err(L"unterminated pipe not reported properly");
     }
 
-    if (parse_util_detect_errors(L"echo (\nfoo\n  bar") != PARSER_TEST_INCOMPLETE) {
+    if (detect_errors(L"echo (\nfoo\n  bar") != PARSER_TEST_INCOMPLETE) {
         err(L"unterminated multiline subshell not reported properly");
     }
 
-    if (parse_util_detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {
+    if (detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {
         err(L"unterminated pipe not reported properly");
     }
 
-    if (parse_util_detect_errors(L" | true ") != PARSER_TEST_ERROR) {
+    if (detect_errors(L" | true ") != PARSER_TEST_ERROR) {
         err(L"leading pipe not reported properly");
     }
 
-    if (parse_util_detect_errors(L"true | # comment") != PARSER_TEST_INCOMPLETE) {
+    if (detect_errors(L"true | # comment") != PARSER_TEST_INCOMPLETE) {
         err(L"comment after pipe not reported as incomplete");
     }
 
-    if (parse_util_detect_errors(L"true | # comment \n false ")) {
+    if (detect_errors(L"true | # comment \n false ")) {
         err(L"comment and newline after pipe wrongly reported as error");
     }
 
-    if (parse_util_detect_errors(L"true | ; false ") != PARSER_TEST_ERROR) {
+    if (detect_errors(L"true | ; false ") != PARSER_TEST_ERROR) {
         err(L"semicolon after pipe not detected as error");
     }
 
@@ -1149,59 +1151,59 @@ static void test_parser() {
         err(L"Bad escape in nested command substitution not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"false & ; and cat")) {
+    if (!detect_errors(L"false & ; and cat")) {
         err(L"'and' command after background not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"true & ; or cat")) {
+    if (!detect_errors(L"true & ; or cat")) {
         err(L"'or' command after background not reported as error");
     }
 
-    if (parse_util_detect_errors(L"true & ; not cat")) {
+    if (detect_errors(L"true & ; not cat")) {
         err(L"'not' command after background falsely reported as error");
     }
 
-    if (!parse_util_detect_errors(L"if true & ; end")) {
+    if (!detect_errors(L"if true & ; end")) {
         err(L"backgrounded 'if' conditional not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"if false; else if true & ; end")) {
+    if (!detect_errors(L"if false; else if true & ; end")) {
         err(L"backgrounded 'else if' conditional not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"while true & ; end")) {
+    if (!detect_errors(L"while true & ; end")) {
         err(L"backgrounded 'while' conditional not reported as error");
     }
 
-    if (!parse_util_detect_errors(L"true | || false")) {
+    if (!detect_errors(L"true | || false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
-    if (!parse_util_detect_errors(L"|| false")) {
+    if (!detect_errors(L"|| false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
-    if (!parse_util_detect_errors(L"&& false")) {
+    if (!detect_errors(L"&& false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
-    if (!parse_util_detect_errors(L"true ; && false")) {
+    if (!detect_errors(L"true ; && false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
-    if (!parse_util_detect_errors(L"true ; || false")) {
+    if (!detect_errors(L"true ; || false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
-    if (!parse_util_detect_errors(L"true || && false")) {
+    if (!detect_errors(L"true || && false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
-    if (!parse_util_detect_errors(L"true && || false")) {
+    if (!detect_errors(L"true && || false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
-    if (!parse_util_detect_errors(L"true && && false")) {
+    if (!detect_errors(L"true && && false")) {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
@@ -1209,6 +1211,7 @@ static void test_parser() {
 
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.
+    auto parser = parser_t::principal_parser().shared();
     say(L"Testing recursion detection");
     parser->eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t());
 #if 0
@@ -4708,7 +4711,7 @@ static void test_error_messages() {
     parse_error_list_t errors;
     for (const auto &test : error_tests) {
         errors.clear();
-        parse_util_detect_errors(test.src, &errors, false /* allow_incomplete */);
+        parse_util_detect_errors(test.src, &errors);
         do_test(!errors.empty());
         if (!errors.empty()) {
             do_test1(string_matches_format(errors.at(0).text, test.error_text_format), test.src);

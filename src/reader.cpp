@@ -3887,10 +3887,18 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
         str.erase(0, 1);
     }
 
+    // Parse into an ast and detect errors.
     parse_error_list_t errors;
-    parsed_source_ref_t pstree;
-    if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */, &pstree)) {
-        parser.eval(pstree, io);
+    auto ast = ast::ast_t::parse(str, parse_flag_none, &errors);
+    bool errored = ast.errored();
+    if (!errored) {
+        errored = parse_util_detect_errors(ast, str, &errors);
+    }
+    if (!errored) {
+        // Construct a parsed source ref.
+        // Be careful to transfer ownership, this could be a very large string.
+        parsed_source_ref_t ps = std::make_shared<parsed_source_t>(std::move(str), std::move(ast));
+        parser.eval(ps, io);
         return 0;
     } else {
         wcstring sb;

@@ -722,6 +722,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
 /// Append a syntax error to the given error list.
 static bool append_syntax_error(parse_error_list_t *errors, size_t source_location,
                                 const wchar_t *fmt, ...) {
+    if (!errors) return true;
     parse_error_t error;
     error.source_start = source_location;
     error.source_length = 0;
@@ -732,7 +733,7 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
     error.text = vformat_string(fmt, va);
     va_end(va);
 
-    errors->push_back(error);
+    errors->push_back(std::move(error));
     return true;
 }
 
@@ -944,8 +945,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                 working_copy.replace(cmd_sub_start, cmd_sub_len, wcstring(1, INTERNAL_SEPARATOR));
 
                 parse_error_list_t subst_errors;
-                err |= parse_util_detect_errors(subst, &subst_errors,
-                                                false /* do not accept incomplete */);
+                err |= parse_util_detect_errors(subst, &subst_errors);
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
@@ -1203,12 +1203,9 @@ static bool detect_errors_in_block_redirection_list(
     return false;
 }
 
-parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
-                                                  parse_error_list_t *out_errors,
-                                                  bool allow_incomplete,
-                                                  parsed_source_ref_t *out_pstree) {
-    parse_error_list_t parse_errors;
-
+parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const wcstring &buff_src,
+                                                  parse_error_list_t *out_errors) {
+    using namespace ast;
     parser_test_error_bits_t res = 0;
 
     // Whether we encountered a parse error.
@@ -1222,6 +1219,65 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // detecting job_continuations that have source for pipes but not the statement.
     bool has_unclosed_pipe = false;
 
+    // Expand all commands.
+    // Verify 'or' and 'and' not used inside pipelines.
+    // Verify pipes via parser_is_pipe_forbidden.
+    // Verify return only within a function.
+    // Verify no variable expansions.
+    wcstring storage;
+
+        for (const node_t &node : ast) {
+            if (const job_continuation_t *jc = node.try_as<job_continuation_t>()) {
+                // Somewhat clumsy way of checking for a statement without source in a pipeline.
+                // See if our pipe has source but our statement does not.
+                if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
+                    has_unclosed_pipe = true;
+                }
+            } else if (const argument_t *arg = node.try_as<argument_t>()) {
+                const wcstring &arg_src = arg->source(buff_src, &storage);
+                res |= parse_util_detect_errors_in_argument(*arg, arg_src, out_errors);
+            } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
+                // Disallow background in the following cases:
+                //
+                // foo & ; and bar
+                // foo & ; or bar
+                // if foo & ; end
+                // while foo & ; end
+                // If it's not a background job, nothing to do.
+                if (job->bg) {
+                    errored |= detect_errors_in_backgrounded_job(*job, out_errors);
+                }
+            } else if (const ast::decorated_statement_t *stmt =
+                           node.try_as<decorated_statement_t>()) {
+                errored |=
+                    detect_errors_in_decorated_statement(buff_src, *stmt, &storage, out_errors);
+            } else if (const auto *block = node.try_as<block_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (block->end.unsourced) has_unclosed_block = true;
+                errored |=
+                    detect_errors_in_block_redirection_list(block->args_or_redirs, out_errors);
+            } else if (const auto *ifs = node.try_as<if_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (ifs->end.unsourced) has_unclosed_block = true;
+                errored |= detect_errors_in_block_redirection_list(ifs->args_or_redirs, out_errors);
+            } else if (const auto *switchs = node.try_as<switch_statement_t>()) {
+                // If our 'end' had no source, we are unsourced.
+                if (switchs->end.unsourced) has_unclosed_block = true;
+                errored |=
+                    detect_errors_in_block_redirection_list(switchs->args_or_redirs, out_errors);
+            }
+        }
+
+    if (errored) res |= PARSER_TEST_ERROR;
+
+    if (has_unclosed_block || has_unclosed_pipe) res |= PARSER_TEST_INCOMPLETE;
+
+    return res;
+}
+
+parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
+                                                  parse_error_list_t *out_errors,
+                                                  bool allow_incomplete) {
     // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
     // allow_incomplete is set.
     bool has_unclosed_quote_or_subshell = false;
@@ -1231,6 +1287,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     // Parse the input string into an ast. Some errors are detected here.
     using namespace ast;
+    parse_error_list_t parse_errors;
     auto ast = ast_t::parse(buff_src, parse_flags, &parse_errors);
     if (allow_incomplete) {
         // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
@@ -1253,75 +1310,14 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         return PARSER_TEST_INCOMPLETE;
     }
 
-    errored = !parse_errors.empty();
-
-    // Expand all commands.
-    // Verify 'or' and 'and' not used inside pipelines.
-    // Verify pipes via parser_is_pipe_forbidden.
-    // Verify return only within a function.
-    // Verify no variable expansions.
-    wcstring storage;
-
-    if (!errored) {
-        for (const node_t &node : ast) {
-            if (const job_continuation_t *jc = node.try_as<job_continuation_t>()) {
-                // Somewhat clumsy way of checking for a statement without source in a pipeline.
-                // See if our pipe has source but our statement does not.
-                if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
-                    has_unclosed_pipe = true;
-                }
-            } else if (const argument_t *arg = node.try_as<argument_t>()) {
-                const wcstring &arg_src = arg->source(buff_src, &storage);
-                res |= parse_util_detect_errors_in_argument(*arg, arg_src, &parse_errors);
-            } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
-                // Disallow background in the following cases:
-                //
-                // foo & ; and bar
-                // foo & ; or bar
-                // if foo & ; end
-                // while foo & ; end
-                // If it's not a background job, nothing to do.
-                if (job->bg) {
-                    errored |= detect_errors_in_backgrounded_job(*job, &parse_errors);
-                }
-            } else if (const ast::decorated_statement_t *stmt =
-                           node.try_as<decorated_statement_t>()) {
-                errored |=
-                    detect_errors_in_decorated_statement(buff_src, *stmt, &storage, &parse_errors);
-            } else if (const auto *block = node.try_as<block_statement_t>()) {
-                // If our 'end' had no source, we are unsourced.
-                if (block->end.unsourced) has_unclosed_block = true;
-                errored |=
-                    detect_errors_in_block_redirection_list(block->args_or_redirs, &parse_errors);
-            } else if (const auto *ifs = node.try_as<if_statement_t>()) {
-                // If our 'end' had no source, we are unsourced.
-                if (ifs->end.unsourced) has_unclosed_block = true;
-                errored |=
-                    detect_errors_in_block_redirection_list(ifs->args_or_redirs, &parse_errors);
-            } else if (const auto *switchs = node.try_as<switch_statement_t>()) {
-                // If our 'end' had no source, we are unsourced.
-                if (switchs->end.unsourced) has_unclosed_block = true;
-                errored |=
-                    detect_errors_in_block_redirection_list(switchs->args_or_redirs, &parse_errors);
-            }
-        }
+    // Early parse error, stop here.
+    if (!parse_errors.empty()) {
+        if (out_errors) vec_append(*out_errors, std::move(parse_errors));
+        return PARSER_TEST_ERROR;
     }
 
-    if (errored) res |= PARSER_TEST_ERROR;
-
-    if (has_unclosed_block || has_unclosed_quote_or_subshell || has_unclosed_pipe)
-        res |= PARSER_TEST_INCOMPLETE;
-
-    if (out_errors != nullptr) {
-        *out_errors = std::move(parse_errors);
-    }
-
-    // \return the ast to our caller if requested.
-    if (out_pstree != nullptr) {
-        *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(ast));
-    }
-
-    return res;
+    // Defer to the tree-walking version.
+    return parse_util_detect_errors(ast, buff_src, out_errors);
 }
 
 maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_list_src,

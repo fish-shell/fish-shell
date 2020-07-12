@@ -133,8 +133,12 @@ std::vector<int> parse_util_compute_indents(const wcstring &src);
 /// error. If out_pstree is not NULL, the resulting tree is returned by reference.
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors = nullptr,
-                                                  bool allow_incomplete = true,
-                                                  parsed_source_ref_t *out_pstree = nullptr);
+                                                  bool allow_incomplete = false);
+
+/// Like parse_util_detect_errors but accepts an already-parsed ast.
+/// The top of the ast is assumed to be a job list.
+parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const wcstring &buff_src,
+                                                  parse_error_list_t *out_errors);
 
 /// Detect errors in the specified string when parsed as an argument list. Returns the text of an
 /// error, or none if no error occurred.

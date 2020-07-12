@@ -631,7 +631,7 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
                           const job_group_ref_t &job_group, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     parse_error_list_t error_list;
-    if (parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list)) {
+    if (parsed_source_ref_t ps = parse_source(wcstring{cmd}, parse_flag_none, &error_list)) {
         return this->eval(ps, io, job_group, block_type);
     } else {
         // Get a backtrace. This includes the message.

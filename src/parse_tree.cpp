@@ -202,12 +202,12 @@ wcstring parse_token_t::user_presentable_description() const {
     return token_type_user_presentable_description(type, keyword);
 }
 
-parsed_source_t::parsed_source_t(wcstring s, ast::ast_t &&ast)
+parsed_source_t::parsed_source_t(wcstring &&s, ast::ast_t &&ast)
     : src(std::move(s)), ast(std::move(ast)) {}
 
 parsed_source_t::~parsed_source_t() = default;
 
-parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags,
+parsed_source_ref_t parse_source(wcstring &&src, parse_tree_flags_t flags,
                                  parse_error_list_t *errors) {
     using namespace ast;
     ast_t ast = ast_t::parse(src, flags, errors);

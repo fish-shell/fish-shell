@@ -1100,7 +1100,7 @@ static bool should_import_bash_history_line(const wcstring &line) {
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     parse_error_list_t errors;
-    parse_util_detect_errors(line, &errors, false);
+    parse_util_detect_errors(line, &errors);
     if (!errors.empty()) return false;
 
     // The following are Very naive tests!

@@ -77,19 +77,25 @@ else
     set xdg_data_dirs $__fish_data_dir
 end
 
-set -l vendor_completionsdirs $xdg_data_dirs/vendor_completions.d
-set -l vendor_functionsdirs $xdg_data_dirs/vendor_functions.d
-set -l vendor_confdirs $xdg_data_dirs/vendor_conf.d
+set -l vendor_completionsdirs
+set -l vendor_functionsdirs
+set -l vendor_confdirs
+# Don't load vendor directories when running unit tests
+if not set -q FISH_UNIT_TESTS_RUNNING
+    set vendor_completionsdirs $xdg_data_dirs/vendor_completions.d
+    set vendor_functionsdirs $xdg_data_dirs/vendor_functions.d
+    set vendor_confdirs $xdg_data_dirs/vendor_conf.d
 
-# Ensure that extra directories are always included.
-if not contains -- $__extra_completionsdir $vendor_completionsdirs
-    set -a vendor_completionsdirs $__extra_completionsdir
-end
-if not contains -- $__extra_functionsdir $vendor_functionsdirs
-    set -a vendor_functionsdirs $__extra_functionsdir
-end
-if not contains -- $__extra_confdir $vendor_confdirs
-    set -a vendor_confdirs $__extra_confdir
+    # Ensure that extra directories are always included.
+    if not contains -- $__extra_completionsdir $vendor_completionsdirs
+        set -a vendor_completionsdirs $__extra_completionsdir
+    end
+    if not contains -- $__extra_functionsdir $vendor_functionsdirs
+        set -a vendor_functionsdirs $__extra_functionsdir
+    end
+    if not contains -- $__extra_confdir $vendor_confdirs
+        set -a vendor_confdirs $__extra_confdir
+    end
 end
 
 # Set up function and completion paths. Make sure that the fish

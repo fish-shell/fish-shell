@@ -397,7 +397,7 @@ static bool has_expand_reserved(const wcstring &str) {
 
 // Parse a command line. Return by reference the first command, and the first argument to that
 // command (as a string), if any. This is used to validate autosuggestions.
-static bool autosuggest_parse_command(const wcstring &buff, const operation_context_t &ctx,
+static void autosuggest_parse_command(const wcstring &buff, const operation_context_t &ctx,
                                       wcstring *out_expanded_command, wcstring *out_arg) {
     auto ast = ast::ast_t::parse(
         buff, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens);
@@ -416,9 +416,7 @@ static bool autosuggest_parse_command(const wcstring &buff, const operation_cont
                 *out_arg = arg_or_redir->argument().source(buff);
             }
         }
-        return true;
     }
-    return false;
 }
 
 bool autosuggest_validate_from_history(const history_item_t &item,
@@ -432,7 +430,12 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     // Parse the string.
     wcstring parsed_command;
     wcstring cd_dir;
-    if (!autosuggest_parse_command(item.str(), ctx, &parsed_command, &cd_dir)) return false;
+    autosuggest_parse_command(item.str(), ctx, &parsed_command, &cd_dir);
+
+    // This is for autosuggestions which are not decorated commands, e.g. function declarations.
+    if (parsed_command.empty()) {
+        return true;
+    }
 
     if (parsed_command == L"cd" && !cd_dir.empty()) {
         // We can possibly handle this specially.

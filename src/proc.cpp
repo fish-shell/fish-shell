@@ -96,10 +96,10 @@ void proc_init() { signal_set_handlers_once(false); }
 
 // Basic thread safe sorted vector of job IDs in use.
 // This is deliberately leaked to avoid dtor ordering issues - see #6539.
-static const auto locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
+static const auto locked_consumed_job_ids = new thread_exclusive<std::vector<job_id_t>>();
 
 job_id_t acquire_job_id() {
-    auto consumed_job_ids = locked_consumed_job_ids->acquire();
+    auto &consumed_job_ids = *locked_consumed_job_ids;
 
     // The new job ID should be larger than the largest currently used ID (#6053).
     job_id_t jid = consumed_job_ids->empty() ? 1 : consumed_job_ids->back() + 1;
@@ -109,7 +109,7 @@ job_id_t acquire_job_id() {
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    auto consumed_job_ids = locked_consumed_job_ids->acquire();
+    auto &consumed_job_ids = *locked_consumed_job_ids;
 
     // Our job ID vector is sorted, but the number of jobs is typically 1 or 2 so a binary search
     // isn't worth it.
@@ -412,7 +412,7 @@ bool job_t::has_external_proc() const {
 
 /// A list of pids/pgids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
-static owning_lock<std::vector<pid_t>> s_disowned_pids;
+static thread_exclusive<std::vector<pid_t>> s_disowned_pids;
 
 void add_disowned_pgid(pid_t pgid) {
     // NEVER add our own (or an invalid) pgid as they are not unique to only
@@ -420,19 +420,19 @@ void add_disowned_pgid(pid_t pgid) {
     if (pgid != getpgrp() && pgid > 0) {
         // waitpid(2) is signalled to wait on a process group rather than a
         // process id by using the negative of its value.
-        s_disowned_pids.acquire()->push_back(pgid * -1);
+        s_disowned_pids->push_back(pgid * -1);
     }
 }
 
 // Reap any pids in our disowned list that have exited. This is used to avoid zombies.
 static void reap_disowned_pids() {
-    auto disowned_pids = s_disowned_pids.acquire();
+    auto &disowned_pids = *s_disowned_pids;
     auto try_reap1 = [](pid_t pid) {
         int status;
         return waitpid(pid, &status, WNOHANG) > 0;
     };
-    disowned_pids->erase(std::remove_if(disowned_pids->begin(), disowned_pids->end(), try_reap1),
-                         disowned_pids->end());
+    disowned_pids.erase(std::remove_if(disowned_pids.begin(), disowned_pids.end(), try_reap1),
+                        disowned_pids.end());
 }
 
 /// See if any reapable processes have exited, and mark them accordingly.

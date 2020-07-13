@@ -372,6 +372,11 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 buff.append(name);
                 buff.append(L", ");
             }
+            if (names.size() > 0) {
+                // Trim trailing ", "
+                buff.resize(buff.size() - 2, '\0');
+            }
+
             streams.out.append(reformat_for_screen(buff, termsize_last()));
         } else {
             for (const auto &name : names) {

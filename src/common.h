@@ -503,28 +503,6 @@ class owning_lock {
     acquired_lock<Data> acquire() { return {lock, &data}; }
 };
 
-// An owning wrapper with exclusive ownership semantics, guaranteed by
-// our thread_id() value. Allows us to avoid syscalls as compared to
-// owning_lock.
-template <typename T>
-class thread_exclusive {
-    T data;
-
-   public:
-    thread_exclusive(T &&t) : data(std::move(t)) {}
-    thread_exclusive(T &t) : data(t) {}
-    thread_exclusive() : data() {}
-
-    inline T &operator*() {
-        ASSERT_IS_MAIN_THREAD();
-        return data;
-    }
-    inline T *operator->() {
-        ASSERT_IS_MAIN_THREAD();
-        return &data;
-    }
-};
-
 /// A scoped manager to save the current value of some variable, and optionally set it to a new
 /// value. On destruction it restores the variable to its old value.
 ///

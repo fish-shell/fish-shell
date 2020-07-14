@@ -238,7 +238,7 @@ In general, fish's history recall works like this:
 
 - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
 
-- :kbd:`Alt`\ +\ :kbd:`↑` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. An alternate key binding is :kbd:`Alt`\ +\ :kbd:`.`.
+- :kbd:`Alt`\ +\ :kbd:`↑` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. As an alternate key binding, :kbd:`Alt`\ +\ :kbd:`.` can be used.
 
 - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt`\ +\ :kbd:`↑`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
 

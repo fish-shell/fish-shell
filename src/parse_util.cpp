@@ -917,35 +917,30 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
     if (!source_range.has_value()) return 0;
 
     size_t source_start = source_range->start;
-    int err = 0;
-    int do_loop = 1;
-    wcstring working_copy = arg_src;
+    parser_test_error_bits_t err = 0;
 
+    size_t cursor = 0;
+    wcstring subst;
+
+    bool do_loop = true;
     while (do_loop) {
         size_t paren_begin = 0;
         size_t paren_end = 0;
-        size_t cursor = 0;
-        wcstring subst;
-
-        switch (parse_util_locate_cmdsubst_range(working_copy, &cursor, &subst, &paren_begin,
-                                                 &paren_end, false)) {
+        switch (parse_util_locate_cmdsubst_range(arg_src, &cursor, &subst, &paren_begin, &paren_end,
+                                                 false)) {
             case -1: {
-                err = 1;
+                err |= PARSER_TEST_ERROR;
                 if (out_errors) {
                     append_syntax_error(out_errors, source_start, L"Mismatched parenthesis");
                 }
                 return err;
             }
             case 0: {
-                do_loop = 0;
+                do_loop = false;
                 break;
             }
             case 1: {
-                // Replace the command substitution with just INTERNAL_SEPARATOR.
                 assert(paren_begin < paren_end && "Parens out of order?");
-                working_copy.replace(paren_begin, paren_end - paren_begin + 1, 1,
-                                     INTERNAL_SEPARATOR);
-
                 parse_error_list_t subst_errors;
                 err |= parse_util_detect_errors(subst, &subst_errors);
 
@@ -962,9 +957,9 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                     // after we've replaced with internal separators, we can't distinguish between
                     // "" and (), and also we no longer have the source of the command substitution.
                     // As an optimization, this is only necessary if the last character is a $.
-                    if (paren_begin > 0 && working_copy.at(paren_begin - 1) == L'$') {
+                    if (paren_begin > 0 && arg_src.at(paren_begin - 1) == L'$') {
                         err |= detect_dollar_cmdsub_errors(
-                            source_start, working_copy.substr(0, paren_begin), subst, out_errors);
+                            source_start, arg_src.substr(0, paren_begin), subst, out_errors);
                     }
                 }
                 break;
@@ -976,10 +971,9 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
     }
 
     wcstring unesc;
-    if (!unescape_string(working_copy, &unesc, UNESCAPE_SPECIAL)) {
+    if (!unescape_string(arg_src, &unesc, UNESCAPE_SPECIAL)) {
         if (out_errors) {
-            append_syntax_error(out_errors, source_start, L"Invalid token '%ls'",
-                                working_copy.c_str());
+            append_syntax_error(out_errors, source_start, L"Invalid token '%ls'", arg_src.c_str());
         }
         return 1;
     }

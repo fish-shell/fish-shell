@@ -1,4 +1,19 @@
 #RUN: %fish %s
+
+# Verify zombies are not left by disown (#7183, #5342)
+# Do this first to avoid colliding with the other disowned processes below, which may
+# still be running at the end of the script
+sleep 0.2 &
+disown
+sleep 0.2
+echo Trigger process reaping
+#CHECK: Trigger process reaping
+# The initial approach here was to kill the PID of the sleep process, which should
+# be gone by the time we get here. Unfortunately, kill from procps on pre-2016 distributions
+# does not print an error for non-existent PIDs, so instead look for zombies in this session
+# (there should be none).
+ps -o state | string match 'Z*'
+
 jobs -q
 echo $status
 #CHECK: 1

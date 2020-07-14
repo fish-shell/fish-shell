@@ -20,3 +20,7 @@ alias | grep -Ev '^alias (fish_indent|fish_key_reader) '
 # CHECK: alias a-3 echo\\\ hello\\\\\\\ there
 # CHECK: alias foo '"a b" c d e'
 # CHECK: alias my_alias 'foo; and echo foo ran'
+
+# #4756 - missing "--" argument to string causing issues with "--" options
+alias l. "ls -d .*"
+# No output

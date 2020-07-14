@@ -596,14 +596,13 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags, com
 static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t &ctx,
                                        completion_list_t *out_list, parse_error_list_t *errors) {
     assert(ctx.parser && "Cannot expand without a parser");
+    size_t cursor = 0;
+    size_t paren_begin = 0;
+    size_t paren_end = 0;
+    wcstring subcmd;
 
-    wchar_t *paren_begin = nullptr, *paren_end = nullptr;
-    wchar_t *tail_begin = nullptr;
-    size_t i, j;
-
-    const wchar_t *const in = input.c_str();
-
-    switch (parse_util_locate_cmdsubst(in, &paren_begin, &paren_end, false)) {
+    switch (parse_util_locate_cmdsubst_range(input, &cursor, &subcmd, &paren_begin, &paren_end,
+                                             false)) {
         case -1: {
             append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Mismatched parenthesis");
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
@@ -621,7 +620,6 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
     }
 
     wcstring_list_t sub_res;
-    const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
     int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.job_group, sub_res);
     if (subshell_status != 0) {
         // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
@@ -637,20 +635,20 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
                 err = L"Unknown error while evaluating command substitution";
                 break;
         }
-        append_cmdsub_error(errors, in - paren_begin, _(err));
+        append_cmdsub_error(errors, paren_begin, _(err));
         return expand_result_t::make_error(subshell_status);
     }
 
-    tail_begin = paren_end + 1;
-    if (*tail_begin == L'[') {
+    // Expand slices like (cat /var/words)[1]
+    size_t tail_begin = paren_end + 1;
+    if (tail_begin < input.size() && input.at(tail_begin) == L'[') {
+        const wchar_t *in = input.c_str();
         std::vector<long> slice_idx;
-        const wchar_t *const slice_begin = tail_begin;
+        const wchar_t *const slice_begin = in + tail_begin;
         wchar_t *slice_end = nullptr;
-        size_t bad_pos;
-
-        bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
+        size_t bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
         if (bad_pos != 0) {
-            if (tail_begin[bad_pos] == L'0') {
+            if (slice_begin[bad_pos] == L'0') {
                 append_syntax_error(errors, slice_begin - in + bad_pos,
                                     L"array indices start at 1, not 0.");
             } else {
@@ -660,15 +658,13 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
         }
 
         wcstring_list_t sub_res2;
-        tail_begin = slice_end;
-        for (i = 0; i < slice_idx.size(); i++) {
-            long idx = slice_idx.at(i);
+        tail_begin = slice_end - in;
+        for (long idx : slice_idx) {
             if (static_cast<size_t>(idx) > sub_res.size() || idx < 1) {
                 continue;
             }
-            idx = idx - 1;
-
-            sub_res2.push_back(sub_res.at(idx));
+            // -1 to convert from 1-based slice index to C++ 0-based vector index.
+            sub_res2.push_back(sub_res.at(idx - 1));
         }
         sub_res = std::move(sub_res2);
     }
@@ -676,36 +672,22 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
     // Recursively call ourselves to expand any remaining command substitutions. The result of this
     // recursive call using the tail of the string is inserted into the tail_expand array list
     completion_list_t tail_expand;
-    expand_cmdsubst(tail_begin, ctx, &tail_expand, errors);  // TODO: offset error locations
+    expand_cmdsubst(input.substr(tail_begin), ctx, &tail_expand,
+                    errors);  // TODO: offset error locations
 
     // Combine the result of the current command substitution with the result of the recursive tail
     // expansion.
-    for (i = 0; i < sub_res.size(); i++) {
-        const wcstring &sub_item = sub_res.at(i);
-        const wcstring sub_item2 = escape_string(sub_item, 1);
-
-        wcstring whole_item;
-
-        for (j = 0; j < tail_expand.size(); j++) {
-            whole_item.clear();
-            const wcstring &tail_item = tail_expand.at(j).completion;
-
-            // sb_append_substring( &whole_item, in, len1 );
-            whole_item.append(in, paren_begin - in);
-
-            // sb_append_char( &whole_item, INTERNAL_SEPARATOR );
+    for (const wcstring &sub_item : sub_res) {
+        wcstring sub_item2 = escape_string(sub_item, ESCAPE_ALL);
+        for (const completion_t &tail_item : tail_expand) {
+            wcstring whole_item;
+            whole_item.reserve(paren_begin + 1 + sub_item2.size() + 1 +
+                               tail_item.completion.size());
+            whole_item.append(input, 0, paren_begin);
             whole_item.push_back(INTERNAL_SEPARATOR);
-
-            // sb_append_substring( &whole_item, sub_item2, item_len );
             whole_item.append(sub_item2);
-
-            // sb_append_char( &whole_item, INTERNAL_SEPARATOR );
             whole_item.push_back(INTERNAL_SEPARATOR);
-
-            // sb_append( &whole_item, tail_item );
-            whole_item.append(tail_item);
-
-            // al_push( out, whole_item.buff );
+            whole_item.append(tail_item.completion);
             append_completion(out_list, std::move(whole_item));
         }
     }

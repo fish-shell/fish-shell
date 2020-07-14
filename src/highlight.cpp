@@ -1076,6 +1076,14 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     }
 }
 
+/// \return whether a string contains a command substitution.
+static bool has_cmdsub(const wcstring &src) {
+    size_t cursor = 0;
+    size_t start = 0;
+    size_t end = 0;
+    return parse_util_locate_cmdsubst_range(src, &cursor, nullptr, &start, &end, true) != 0;
+}
+
 void highlighter_t::visit(const ast::redirection_t &redir) {
     maybe_t<pipe_or_redir_t> oper =
         pipe_or_redir_t::from_string(redir.oper.source(this->buff));  // like 2>
@@ -1098,7 +1106,7 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
     // Color the target part.
     // Check if the argument contains a command substitution. If so, highlight it as a param
     // even though it's a command redirection, and don't try to do any other validation.
-    if (parse_util_locate_cmdsubst(target.c_str(), nullptr, nullptr, true) != 0) {
+    if (has_cmdsub(target)) {
         this->color_as_argument(redir.target);
     } else {
         // No command substitution, so we can highlight the target file or fd. For example,

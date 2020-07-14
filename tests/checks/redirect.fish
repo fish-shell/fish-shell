@@ -48,6 +48,18 @@ echo -n 2>$tmpdir/file.txt
 test -f $tmpdir/file.txt && echo "File exists" || echo "File does not exist"
 #CHECK: File exists
 
+function foo
+    if set -q argv[1]
+        foo > $argv[1]
+    end
+    echo foo
+end
+
+foo $tmpdir/bar
+# CHECK: foo
+cat $tmpdir/bar
+# CHECK: foo
+
 rm -Rf $tmpdir
 
 # Verify that we can turn stderr into stdout and then pipe it

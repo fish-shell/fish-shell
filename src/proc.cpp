@@ -326,13 +326,23 @@ bool job_t::has_external_proc() const {
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
 static owning_lock<std::vector<pid_t>> s_disowned_pids;
 
-void add_disowned_pgid(pid_t pgid) {
+void add_disowned_job(job_t *j) {
+    if (j == nullptr) return;
+
     // NEVER add our own (or an invalid) pgid as they are not unique to only
     // one job, and may result in a deadlock if we attempt the wait.
-    if (pgid != getpgrp() && pgid > 0) {
+    auto pgid = j->get_pgid();
+    if (pgid && *pgid != getpgrp() && *pgid > 0) {
         // waitpid(2) is signalled to wait on a process group rather than a
         // process id by using the negative of its value.
-        s_disowned_pids.acquire()->push_back(pgid * -1);
+        s_disowned_pids.acquire()->push_back(*pgid * -1);
+    } else {
+        // Instead, add the PIDs of any external processes
+        for (auto &process : j->processes) {
+            if (process->pid) {
+                s_disowned_pids.acquire()->push_back(process->pid);
+            }
+        }
     }
 }
 
@@ -341,12 +351,14 @@ static void reap_disowned_pids() {
     auto disowned_pids = s_disowned_pids.acquire();
     auto try_reap1 = [](pid_t pid) {
         int status;
-        int ret = waitpid(pid, &status, WNOHANG) > 0;
-        if (ret) {
+        int ret = waitpid(pid, &status, WNOHANG);
+        if (ret > 0) {
             FLOGF(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
         }
         return ret;
     };
+    // waitpid returns 0 iff the PID/PGID in question has not changed state; remove the pid/pgid
+    // if it has changed or an error occurs (presumably ECHILD because the child does not exist)
     disowned_pids->erase(std::remove_if(disowned_pids->begin(), disowned_pids->end(), try_reap1),
                          disowned_pids->end());
 }

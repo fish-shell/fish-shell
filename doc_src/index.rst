@@ -1764,6 +1764,7 @@ Features will only be set on startup, so this variable will only take effect if 
 You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob".
 
 Prefixing a feature with ``no-`` turns it off instead.
+
 .. _other:
 
 Other features

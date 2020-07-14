@@ -918,13 +918,17 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
 
     size_t source_start = source_range->start;
     int err = 0;
-    wchar_t *paran_begin, *paran_end;
     int do_loop = 1;
     wcstring working_copy = arg_src;
 
     while (do_loop) {
-        const wchar_t *working_copy_cstr = working_copy.c_str();
-        switch (parse_util_locate_cmdsubst(working_copy_cstr, &paran_begin, &paran_end, false)) {
+        size_t paren_begin = 0;
+        size_t paren_end = 0;
+        size_t cursor = 0;
+        wcstring subst;
+
+        switch (parse_util_locate_cmdsubst_range(working_copy, &cursor, &subst, &paren_begin,
+                                                 &paren_end, false)) {
             case -1: {
                 err = 1;
                 if (out_errors) {
@@ -937,12 +941,10 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                 break;
             }
             case 1: {
-                const wcstring subst(paran_begin + 1, paran_end);
-
                 // Replace the command substitution with just INTERNAL_SEPARATOR.
-                size_t cmd_sub_start = paran_begin - working_copy_cstr;
-                size_t cmd_sub_len = paran_end + 1 - paran_begin;
-                working_copy.replace(cmd_sub_start, cmd_sub_len, wcstring(1, INTERNAL_SEPARATOR));
+                assert(paren_begin < paren_end && "Parens out of order?");
+                working_copy.replace(paren_begin, paren_end - paren_begin + 1, 1,
+                                     INTERNAL_SEPARATOR);
 
                 parse_error_list_t subst_errors;
                 err |= parse_util_detect_errors(subst, &subst_errors);
@@ -950,7 +952,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
                 // within the string, and the offset of the node.
-                size_t error_offset = cmd_sub_start + 1 + source_start;
+                size_t error_offset = paren_begin + 1 + source_start;
                 parse_error_offset_source_start(&subst_errors, error_offset);
 
                 if (out_errors != nullptr) {
@@ -960,9 +962,9 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                     // after we've replaced with internal separators, we can't distinguish between
                     // "" and (), and also we no longer have the source of the command substitution.
                     // As an optimization, this is only necessary if the last character is a $.
-                    if (cmd_sub_start > 0 && working_copy.at(cmd_sub_start - 1) == L'$') {
+                    if (paren_begin > 0 && working_copy.at(paren_begin - 1) == L'$') {
                         err |= detect_dollar_cmdsub_errors(
-                            source_start, working_copy.substr(0, cmd_sub_start), subst, out_errors);
+                            source_start, working_copy.substr(0, paren_begin), subst, out_errors);
                     }
                 }
                 break;

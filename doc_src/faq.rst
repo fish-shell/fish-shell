@@ -174,7 +174,7 @@ add a statement to your :ref:`user initialization file <initialization>` (usuall
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the `fish_color family of environment variables <index#variables-color>`__.
+Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
 
 I accidentally entered a directory path and fish changed directory. What happened?
 ----------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ If fish is unable to locate a command with a given name, and it starts with ``.`
 
 The open command doesn't work.
 ------------------------------
-The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider `asking for more help <index#more-help>`__.
+The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider :ref:`asking for more help <more-help>`.
 
 How do I make fish my default shell?
 ------------------------------------

@@ -39,6 +39,6 @@ function ls --description "List contents of directory"
     __fish_set_lscolors
 
     isatty stdout
-    and set -a opt -F
+    and set -a opt -Fh
     command ls $__fish_ls_color_opt $argv
 end

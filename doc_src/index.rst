@@ -60,14 +60,19 @@ Executing Bash
 
 If fish is your default shell and you want to copy commands from the internet that are written in a different shell language, bash for example, you can proceed in the following way:
 
-Consider, that ``bash`` is also a command. With ``man bash`` you can see that there are two ways to do this:
+Consider that ``bash`` is also a command. With ``man bash`` you can see that there are two ways to do this:
 
 - ``bash`` has a switch ``-c`` to read from a string::
 
-    > bash -c SomeBashCommand
+    > bash -c 'some bash command'
 
 
-or ``bash`` without a switch, opens a bash shell that you can use and ``exit`` afterwards.
+- ``bash`` without a switch opens a bash shell that you can use and ``exit`` afterwards::
+
+    > bash
+    $ some bash command
+    $ exit
+    > _
 
 
 Default Shell

@@ -701,19 +701,14 @@ Switching to fish?
 ------------------
 
 If you wish to use fish (or any other shell) as your default shell,
-you need to enter your new shell's executable ``/usr/local/bin/fish`` in two places:
-- add ``/usr/local/bin/fish`` to ``/etc/shells``
-- change your default shell with ``chsh -s /usr/local/bin/fish``
+you need to enter your new shell's executable in two places.
 
-You can use the following commands for this:
-
-Add the fish shell ``/usr/local/bin/fish``
-to ``/etc/shells`` with::
+Add the shell to ``/etc/shells`` with::
 
     > echo /usr/local/bin/fish | sudo tee -a /etc/shells
 
 
-Change your default shell to fish with::
+Change your default shell with::
 
     > chsh -s /usr/local/bin/fish
 

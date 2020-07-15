@@ -74,10 +74,11 @@ Default Shell
 -------------
 
 You can make fish your default shell by adding fish's  executable in two places:
-- add ``/usr/local/bin/fish``  to  ``/etc/shells``
+
+- add ``/usr/local/bin/fish`` to ``/etc/shells``
 - change your default shell with ``chsh -s`` to ``/usr/local/bin/fish``
 
-For for detailed instructions see :ref:`Switching to fish <switching-to-fish>`.
+For detailed instructions see :ref:`Switching to fish <switching-to-fish>`.
 
 Uninstalling
 ------------

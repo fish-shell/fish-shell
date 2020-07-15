@@ -93,18 +93,16 @@ For uninstalling fish: see :ref:`FAQ: Uninstalling fish <faq-uninstalling>`.
 Shebang Line
 ------------
 
-Since scripts for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them: For this they are expected to have a first line, the shebang line, which names an executable for this purpose:
+Since scripts for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them. For this they are expected to have a first line, the shebang line, which names an executable for this purpose.
 
-Example:
-
-A scripts written in ``bash`` it would need a first line like this::
+A script written in ``bash`` would need a first line like this::
 
     #!/bin/bash
 
 
 This line tells the shell to execute the file with the bash interpreter, that is located at the path ``/bin/bash``.
 
-For a script, written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example ``/bin/python`` for a ``python`` script)
+For a script written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example: ``/bin/python`` for a python script, or ``/usr/local/bin/fish`` for a fish script).
 
 This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script`` they aren't required (but don't hurt either!).
 

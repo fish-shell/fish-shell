@@ -181,19 +181,20 @@ Example::
 
   rm "cumbersome filename.txt"
 
-Will remove the file 'cumbersome filename.txt', while
+removes the file ``cumbersome filename.txt``, while
 
 ::
 
   rm cumbersome filename.txt
 
 
-would remove the two files 'cumbersome' and 'filename.txt'.
+removes two files, ``cumbersome`` and ``filename.txt``.
 
 ::
+
    grep 'enabled)$' foo.txt
 
-will search for lines ending in "enabled)" in foo.txt (the `$` is special to `grep`).
+searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special to ``grep``: it matches the end of the line).
 
 
 .. _escapes:

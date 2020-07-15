@@ -1587,6 +1587,28 @@ Visual mode
 
 - :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`C` enter `command mode <#vi-mode-command>`_.
 
+.. _custom-binds:
+
+Custom bindings
+---------------
+
+In addition to the standard bindings listed here, you can also define your own with :ref:`bind <cmd-bind>`::
+
+  # Just clear the commandline on control-c
+  bind \cc 'commandline -r ""'
+
+Put ``bind`` statements into :ref:`config.fish <initialization>` or a function called ``fish_user_key_bindings``.
+
+The key sequence (the ``\cc``) here depends on your setup, in particular the terminal. To find out what the terminal sends use :ref:`fish_key_reader <cmd-fish_key_reader>`::
+
+  > fish_key_reader
+  Press a key:
+              hex:    3  char: \cC
+  Press [ctrl-C] again to exit
+  bind \cC 'do something'
+
+Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about.
+
 .. _killring:
 
 Copy and paste (Kill Ring)

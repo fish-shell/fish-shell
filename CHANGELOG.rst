@@ -251,10 +251,12 @@ This release of fish fixes a number of major issues discovered in fish
    part of command substitutions or ``eval`` will no longer have
    separate process groups. (#6624, #6806).
 
-This release also includes: - a number of changes to improve macOS
-compatibility with code signing and notarization; - a number of
-improvements to completions; and - a number of content and formatting
-improvements to the documentation.
+This release also includes:
+
+-  several changes to improve macOS compatibility with code signing
+   and notarization;
+-  several improvements to completions; and
+-  several content and formatting improvements to the documentation.
 
 If you are upgrading from version 3.0.0 or before, please also review
 the release notes for 3.1.0 and 3.1b1 (included below).

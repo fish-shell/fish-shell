@@ -223,7 +223,11 @@ class TestFailure(object):
             ]
         elif self.after:
             fields["additional_output"] = "    ".join(self.after[:afterlines])
-            fmtstrs += ["  additional output:", "    {BOLD}{additional_output}{RESET}"]
+            fmtstrs += [
+                "  Context:",
+                "    {RED}{output_line}{RESET} <= does not match '{LIGHTBLUE}{input_line}{RESET}'",
+                "    {BOLD}{additional_output}{RESET}"
+            ]
         fmtstrs += ["  when running command:", "    {subbed_command}"]
         return "\n".join(fmtstrs).format(**fields)
 

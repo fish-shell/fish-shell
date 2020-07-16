@@ -1,5 +1,5 @@
 language: cpp
-dist: xenial
+dist: bionic
 sudo: required
 
 matrix:

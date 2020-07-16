@@ -1208,6 +1208,11 @@ mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
 }
 
 bool env_stack_t::universal_barrier() {
+    // Only perform universal barriers for the principal env stack.
+    // This means that changes from other fish processes will only be visible when the "main thread
+    // runs."
+    if (!is_principal()) return false;
+
     ASSERT_IS_MAIN_THREAD();
     if (!uvars()) return false;
 

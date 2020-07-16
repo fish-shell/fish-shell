@@ -10,4 +10,4 @@ complete -rc k3d -n __fish_use_subcommand -a load -d "Load an in image into a cl
 complete -rc k3d -n __fish_use_subcommand -a start -d "Start a resource [cluster, node]"
 complete -rc k3d -n __fish_use_subcommand -a stop -d "Stop a resource [cluster, node]"
 complete -rc k3d -n __fish_use_subcommand -a version -d "Print k3d version"
-complete -rc k3d -n __fish_use_subcommand -a --help -d "Show usage help"
+complete -rc k3d -l help -d "Show usage help"

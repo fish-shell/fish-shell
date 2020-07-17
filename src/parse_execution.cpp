@@ -1297,7 +1297,6 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         (ctx.job_group && ctx.job_group->wants_job_control());
 
     job_t::properties_t props{};
-    props.wants_terminal = wants_job_control && !ld.is_event;
     props.initial_background = job_node.bg.has_value();
     props.skip_notification =
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();

@@ -430,14 +430,14 @@ class job_t {
 
     /// The original command which led to the creation of this job. It is used for displaying
     /// messages about job status on the terminal.
-    wcstring command_str;
+    const wcstring command_str;
 
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
 
    public:
-    explicit job_t(const properties_t &props);
+    job_t(const properties_t &props, wcstring command_str);
     ~job_t();
 
     /// Returns the command as a wchar_t *. */
@@ -445,9 +445,6 @@ class job_t {
 
     /// Returns the command.
     const wcstring &command() const { return command_str; }
-
-    /// Sets the command.
-    void set_command(wcstring cmd) { command_str = std::move(cmd); }
 
     /// \return whether it is OK to reap a given process. Sometimes we want to defer reaping a
     /// process if it is the group leader and the job is not yet constructed, because then we might

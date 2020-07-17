@@ -383,8 +383,10 @@ static uint64_t next_internal_job_id() {
     return ++s_next;
 }
 
-job_t::job_t(const properties_t &props)
-    : properties(props), internal_job_id(next_internal_job_id()) {}
+job_t::job_t(const properties_t &props, wcstring command_str)
+    : properties(props),
+      command_str(std::move(command_str)),
+      internal_job_id(next_internal_job_id()) {}
 
 job_t::~job_t() = default;
 

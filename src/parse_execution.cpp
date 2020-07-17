@@ -1136,9 +1136,6 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
     job_t *j, const ast::job_t &job_node, const block_t *associated_block) {
     UNUSED(associated_block);
 
-    // Tell the job what its command is.
-    j->set_command(get_source(job_node));
-
     // We are going to construct process_t structures for every statement in the job.
     // Create processes. Each one may fail.
     process_list_t processes;
@@ -1307,7 +1304,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     props.from_event_handler = ld.is_event;
     props.job_control = wants_job_control;
 
-    shared_ptr<job_t> job = std::make_shared<job_t>(props);
+    shared_ptr<job_t> job = std::make_shared<job_t>(props, get_source(job_node));
 
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record

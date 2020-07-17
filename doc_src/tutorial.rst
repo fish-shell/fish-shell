@@ -380,6 +380,8 @@ Unlike other shells, fish does not split command substitutions on any whitespace
     -lglib-2.0
 
 
+.. _tut_semicolon:
+
 Separating Commands (Semicolon)
 -------------------------------
 
@@ -415,6 +417,8 @@ There is also a ``$pipestatus`` list variable for the exit statuses [#]_ of proc
 
 .. [#] or "stati" if you prefer, or "statūs" if you've time-travelled from ancient Rome or work as a latin teacher
 
+.. _tut_combiners:
+
 Combiners (And, Or, Not)
 ------------------------
 
@@ -422,15 +426,15 @@ fish supports the familiar ``&&`` and ``||`` to combine commands, and ``!`` to n
 
     > ./configure && make && sudo make install
 
-Here, `make` is only executed if `./configure` succeeds (returns 0), and `sudo make install` is only executed if both `./configure` and `make` succeed.
+Here, ``make`` is only executed if ``./configure`` succeeds (returns 0), and ``sudo make install`` is only executed if both ``./configure`` and ``make`` succeed.
 
-fish also supports ``and``, ``or``, and ``not``. The first two are job modifiers and have lower precedence. Example usage::
+fish also supports :ref:`and <cmd-and>`, :ref:`or <cmd-or>`, and :ref:`not <cmd-not>`. The first two are job modifiers and have lower precedence. Example usage::
 
     > cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt ; and echo "Backup successful"; or echo "Backup failed"
     Backup failed
 
 
-As mentioned in `the section on the semicolon <#tut_semicolon>`__, this can also be written in multiple lines, like so::
+As mentioned in :ref:`the section on the semicolon <tut_semicolon>`, this can also be written in multiple lines, like so::
 
     cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt
     and echo "Backup successful"
@@ -440,7 +444,7 @@ As mentioned in `the section on the semicolon <#tut_semicolon>`__, this can also
 Conditionals (If, Else, Switch)
 -------------------------------
 
-Use ``if``, ``else if``, and ``else`` to conditionally execute code, based on the exit status of a command.
+Use :ref:`if <cmd-if>` and :ref:`else <cmd-else>` to conditionally execute code, based on the exit status of a command.
 
 
 ::
@@ -479,7 +483,7 @@ To compare strings or numbers or check file properties (whether a file exists or
         echo We do not have a hosts file
     end
 
-`Combiners <#tut_combiners>`__ can also be used to make more complex conditions, like
+:ref:`Combiners <tut_combiners>` can also be used to make more complex conditions, like
 
 
 ::
@@ -489,9 +493,9 @@ To compare strings or numbers or check file properties (whether a file exists or
     end
 
 
-For even more complex conditions, use ``begin`` and ``end`` to group parts of them.
+For even more complex conditions, use :ref:`begin <cmd-begin>` and :ref:`end <cmd-end>` to group parts of them.
 
-There is also a ``switch`` command::
+There is also a :ref:`switch <cmd-switch>` command::
 
     switch (uname)
     case Linux
@@ -505,13 +509,13 @@ There is also a ``switch`` command::
     end
 
 
-Note that ``case`` does not fall through, and can accept multiple arguments or (quoted) wildcards.
+Note that :ref:`case <cmd-case>` does not fall through, and can accept multiple arguments or (quoted) wildcards.
 
 
 Functions
 ---------
 
-A ``fish`` function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the :ref:`function <cmd-function>` builtin::
+A fish function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the :ref:`function <cmd-function>` builtin::
 
     > function say_hello
          echo Hello $argv
@@ -522,12 +526,12 @@ A ``fish`` function is a list of commands, which may optionally take arguments. 
     Hello everybody!
 
 
-Unlike other shells, ``fish`` does not have aliases or special prompt syntax. Functions take their place.
+Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place.
 
-You can list the names of all functions with the ``functions`` keyword (note the plural!). ``fish`` starts out with a number of functions::
+You can list the names of all functions with the :ref:`functions <cmd-functions>` builtin (note the plural!). fish starts out with a number of functions::
 
     > functions
-    alias, cd, delete-or-exit, dirh, dirs, down-or-search, eval, export, fish_command_not_found_setup, fish_config, fish_default_key_bindings, fish_prompt, fish_right_prompt, fish_sigtrap_handler, fish_update_completions, funced, funcsave, grep, help, history, isatty, ls, man, math, nextd, nextd-or-forward-word, open, popd, prevd, prevd-or-backward-word, prompt_pwd, psub, pushd, seq, setenv, trap, type, umask, up-or-search, vared
+    N_, abbr, alias, bg, cd, cdh, contains_seq, delete-or-exit, dirh, dirs, disown, down-or-search, edit_command_buffer, export, fg, fish_add_path, fish_breakpoint_prompt, fish_clipboard_copy, fish_clipboard_paste, fish_config, fish_default_key_bindings, fish_default_mode_prompt, fish_git_prompt, fish_hg_prompt, fish_hybrid_key_bindings, fish_indent, fish_is_root_user, fish_job_summary, fish_key_reader, fish_md5, fish_mode_prompt, fish_npm_helper, fish_opt, fish_print_git_action, fish_print_hg_root, fish_prompt, fish_sigtrap_handler, fish_svn_prompt, fish_title, fish_update_completions, fish_vcs_prompt, fish_vi_cursor, fish_vi_key_bindings, funced, funcsave, grep, help, history, hostname, isatty, kill, la, ll, ls, man, nextd, nextd-or-forward-word, open, popd, prevd, prevd-or-backward-word, prompt_hostname, prompt_pwd, psub, pushd, realpath, seq, setenv, suspend, trap, type, umask, up-or-search, vared, wait
 
 
 You can see the source for any function by passing its name to ``functions``::

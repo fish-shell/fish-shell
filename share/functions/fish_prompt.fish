@@ -1,6 +1,8 @@
 # name: Classic + Vcs
 # author: Lily Ballard
 
+set __fish_prompt_status_generation $status_generation
+
 function fish_prompt --description 'Write out the prompt'
     set -l last_pipestatus $pipestatus
     set -l last_status $status
@@ -23,7 +25,12 @@ function fish_prompt --description 'Write out the prompt'
     end
 
     # Write pipestatus
-    set -l prompt_status (__fish_print_pipestatus $last_status " [" "]" "|" (set_color $fish_color_status) (set_color --bold $fish_color_status) $last_pipestatus)
+    set -l bold_flag '--bold'
+    if test $__fish_prompt_status_generation = $status_generation
+        set bold_flag
+    end
+    set __fish_prompt_status_generation $status_generation
+    set -l prompt_status (__fish_print_pipestatus $last_status " [" "]" "|" (set_color $fish_color_status) (set_color $bold_flag $fish_color_status) $last_pipestatus)
 
     echo -n -s (set_color $fish_color_user) "$USER" $normal @ (set_color $color_host) (prompt_hostname) $normal ' ' (set_color $color_cwd) (prompt_pwd) $normal (fish_vcs_prompt) $normal $prompt_status $suffix " "
 end

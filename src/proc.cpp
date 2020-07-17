@@ -801,17 +801,17 @@ void proc_update_jiffies(parser_t &parser) {
 
 // Return control of the terminal to a job's process group. restore_attrs is true if we are
 // restoring a previously-stopped job, in which case we need to restore terminal attributes.
-int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
+int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from_stopped) {
     enum { notneeded = 0, success = 1, error = -1 };
 
-    if (!j->group->should_claim_terminal()) {
+    if (!jg->should_claim_terminal()) {
         // The job doesn't want the terminal.
         return notneeded;
     }
 
     // Get the pgid; we may not have one.
     pid_t pgid{};
-    if (auto mpgid = j->get_pgid()) {
+    if (auto mpgid = jg->get_pgid()) {
         pgid = *mpgid;
     } else {
         FLOG(proc_termowner, L"terminal_give_to_job() returning early due to no process group");
@@ -888,7 +888,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
             return notneeded;
         } else {
             FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
-                  j->job_id(), j->command_wcstr(), pgid);
+                  jg->get_id(), jg->get_command().c_str(), pgid);
             wperror(L"tcsetpgrp");
             return error;
         }
@@ -906,8 +906,8 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
         break;
     }
 
-    if (continuing_from_stopped) {
-        auto result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
+    if (continuing_from_stopped && jg->tmodes.has_value()) {
+        int result = tcsetattr(STDIN_FILENO, TCSADRAIN, &jg->tmodes.value());
         if (result == -1) {
             wperror(L"tcsetattr");
         }
@@ -916,11 +916,11 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
     return success;
 }
 
-/// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
-/// so that we can restore the terminal ownership to the job at a later time.
-static bool terminal_return_from_job(job_t *j, int restore_attrs) {
+/// Returns control of the terminal to the shell, and saves the terminal attribute state to the job
+/// group, so that we can restore the terminal ownership to the job at a later time.
+static bool terminal_return_from_job_group(job_group_t *jg, bool restore_attrs) {
     errno = 0;
-    auto pgid = j->get_pgid();
+    auto pgid = jg->get_pgid();
     if (!pgid.has_value()) {
         FLOG(proc_pgroup, "terminal_return_from_job() returning early due to no process group");
         return true;
@@ -935,7 +935,8 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     }
 
     // Save jobs terminal modes.
-    if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
+    struct termios tmodes {};
+    if (tcgetattr(STDIN_FILENO, &tmodes)) {
         // If it's not a tty, it's not a tty, and there are no attributes to save (or restore)
         if (errno == ENOTTY) return false;
         if (errno == EIO) redirect_tty_output();
@@ -943,6 +944,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
         wperror(L"tcgetattr");
         return false;
     }
+    jg->tmodes = tmodes;
 
     // Need to restore the terminal's attributes or `bind \cF fg` will put the
     // terminal into a broken state (until "enter" is pressed).
@@ -974,17 +976,17 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
 
     // Make sure we retake control of the terminal before leaving this function.
     bool term_transferred = false;
-    cleanup_t take_term_back([&]() {
+    cleanup_t take_term_back([&] {
         if (term_transferred && reclaim_foreground_pgrp) {
             // Only restore terminal attrs if we're continuing a job. See:
             // https://github.com/fish-shell/fish-shell/issues/121
             // https://github.com/fish-shell/fish-shell/issues/2114
-            terminal_return_from_job(this, send_sigcont);
+            terminal_return_from_job_group(this->group.get(), send_sigcont);
         }
     });
 
     if (!is_completed()) {
-        int transfer = terminal_maybe_give_to_job(this, send_sigcont);
+        int transfer = terminal_maybe_give_to_job_group(this->group.get(), send_sigcont);
         if (transfer < 0) {
             // terminal_maybe_give_to_job prints an error.
             return;

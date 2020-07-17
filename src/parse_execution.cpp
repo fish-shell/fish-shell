@@ -1308,7 +1308,6 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     props.job_control = wants_job_control;
 
     shared_ptr<job_t> job = std::make_shared<job_t>(props);
-    job->tmodes = tmodes;
 
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record

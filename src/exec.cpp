@@ -347,7 +347,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
     if (int err = execute_setpgid(p->pid, pgid, true /* is parent */)) {
         if (err != EACCES) report_setpgid_error(err, pgid, job.get(), p);
     }
-    terminal_maybe_give_to_job(job.get(), false);
+    terminal_maybe_give_to_job_group(job->group.get(), false);
     return true;
 }
 
@@ -546,7 +546,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
         // therefore the parent may not have seen it be set yet.
         // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
         execute_setpgid(p->pid, pgid, true /* is parent */);
-        terminal_maybe_give_to_job(j.get(), false);
+        terminal_maybe_give_to_job_group(j->group.get(), false);
     } else
 #endif
     {

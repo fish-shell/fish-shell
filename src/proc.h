@@ -230,6 +230,11 @@ class job_group_t {
 
     ~job_group_t();
 
+    /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
+    /// the terminal to the same state after temporarily taking control over the terminal when a job
+    /// stops.
+    maybe_t<struct termios> tmodes{};
+
    private:
     // The pgid to assign to jobs, or none if not yet set.
     maybe_t<pid_t> pgid_{};
@@ -505,11 +510,6 @@ class job_t {
     /// A non-user-visible, never-recycled job ID.
     const internal_job_id_t internal_job_id;
 
-    /// The saved terminal modes of this job. This needs to be saved so that we can restore the
-    /// terminal to the same state after temporarily taking control over the terminal when a job
-    /// stops.
-    struct termios tmodes {};
-
     /// Flags associated with the job.
     struct flags_t {
         /// Whether the specified job is completely constructed: every process in the job has been
@@ -667,14 +667,14 @@ bool is_within_fish_initialization();
 /// Send SIGHUP to the list \p jobs, excepting those which are in fish's pgroup.
 void hup_jobs(const job_list_t &jobs);
 
-/// Give ownership of the terminal to the specified job, if it wants it.
+/// Give ownership of the terminal to the specified job group, if it wants it.
 ///
-/// \param j The job to give the terminal to.
+/// \param jg The job group to give the terminal to.
 /// \param continuing_from_stopped If this variable is set, we are giving back control to a job that
 /// was previously stopped. In that case, we need to set the terminal attributes to those saved in
 /// the job.
 /// \return 1 if transferred, 0 if no transfer was necessary, -1 on error.
-int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped);
+int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from_stopped);
 
 /// Add a pid to the list of pids we wait on even though they are not associated with any jobs.
 /// Used to avoid zombie processes after disown.

@@ -212,6 +212,9 @@ class job_group_t {
     /// Get the cancel signal, or 0 if none.
     int get_cancel_signal() const { return cancel_signal_; }
 
+    /// \return the command which produced this job tree.
+    const wcstring &get_command() const { return command_; }
+
     /// Mark that a process in this group got a signal, and so should cancel.
     void set_cancel_signal(int sig) { cancel_signal_ = sig; }
 
@@ -248,6 +251,9 @@ class job_group_t {
     };
     const properties_t props_;
 
+    // The original command which produced this job tree.
+    const wcstring command_;
+
     // Whether we are in the foreground, meaning that the user is waiting for this.
     relaxed_atomic_bool_t is_foreground_{};
 
@@ -257,7 +263,8 @@ class job_group_t {
     // If not zero, a signal indicating cancellation.
     int cancel_signal_{};
 
-    explicit job_group_t(const properties_t &props) : props_(props) {}
+    job_group_t(const properties_t &props, wcstring command)
+        : props_(props), command_(std::move(command)) {}
 };
 
 /// A structure representing a single fish process. Contains variables for tracking process state

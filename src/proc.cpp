@@ -293,7 +293,7 @@ void job_group_t::populate_group_for_job(job_t *job, const job_group_ref_t &prop
         props.wants_terminal = job->wants_job_control() && !job->from_event_handler();
         props.is_internal = can_use_internal;
         props.job_id = can_use_internal ? -1 : acquire_job_id();
-        job->group.reset(new job_group_t(props));
+        job->group.reset(new job_group_t(props, job->command()));
 
         // Mark if it's foreground.
         job->group->set_is_foreground(!initial_bg);

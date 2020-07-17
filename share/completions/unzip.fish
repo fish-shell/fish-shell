@@ -1,3 +1,5 @@
+complete -c unzip -x -a "(__fish_complete_suffix .zip)"
+
 complete -c unzip -s p -d "extract files to pipe, no messages"
 complete -c unzip -s f -d "freshen existing files, create none"
 complete -c unzip -s u -d "update files, create if necessary"

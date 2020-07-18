@@ -289,7 +289,11 @@ static void run_internal_process_or_short_circuit(parser_t &parser, const std::s
         if (p->is_last_in_job) {
             FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
                   j->job_id(), j->preview().c_str(), p->status);
-            parser.set_last_statuses(j->get_statuses());
+            auto statuses = j->get_statuses();
+            if (statuses) {
+                parser.set_last_statuses(statuses.value());
+                parser.libdata().status_count++;
+            }
         }
     } else {
         run_internal_process(p, std::move(outdata), std::move(errdata), ios);

@@ -121,7 +121,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 }
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
-int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Pointer to what the commandline builtin considers to be the current contents of the command
     // line buffer.
     const wchar_t *current_buffer = nullptr;

@@ -392,13 +392,17 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
     buffered_output_stream_t outs(0);
     buffered_output_stream_t errs(0);
     io_streams_t streams(outs, errs);
-    int err = builtin_function(*parser, streams, arguments, pstree, statement);
-    parser->libdata().status_count++;
-    parser->set_last_statuses(statuses_t::just(err));
+    int err_code = 0;
+    maybe_t<int> err = builtin_function(*parser, streams, arguments, pstree, statement);
+    if (err) {
+        err_code = err.value();
+        parser->libdata().status_count++;
+        parser->set_last_statuses(statuses_t::just(err_code));
+    }
 
     wcstring errtext = errs.contents();
     if (!errtext.empty()) {
-        return this->report_error(err, header, L"%ls", errtext.c_str());
+        return this->report_error(err_code, header, L"%ls", errtext.c_str());
     }
     return result;
 }

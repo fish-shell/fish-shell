@@ -54,7 +54,12 @@ using job_group_ref_t = std::shared_ptr<job_group_t>;
 class proc_status_t {
     int status_{};
 
-    explicit proc_status_t(int status) : status_(status) {}
+    /// If set, there is no actual status to report, e.g. background or variable assignment.
+    bool empty_{};
+
+    explicit proc_status_t(int status) : status_(status), empty_(false) {}
+
+    proc_status_t(int status, bool empty) : status_(status), empty_(empty) {}
 
     /// Encode a return value \p ret and signal \p sig into a status value like waitpid() does.
     static constexpr int w_exitcode(int ret, int sig) {
@@ -84,6 +89,12 @@ class proc_status_t {
         return proc_status_t(w_exitcode(0 /* ret */, sig));
     }
 
+    /// Construct an empty status_t (e.g. `set foo bar`).
+    static proc_status_t empty() {
+        bool empty = true;
+        return proc_status_t(0, empty);
+    }
+
     /// \return if we are stopped (as in SIGSTOP).
     bool stopped() const { return WIFSTOPPED(status_); }
 
@@ -110,6 +121,9 @@ class proc_status_t {
 
     /// \return if this status represents success.
     bool is_success() const { return normal_exited() && exit_code() == EXIT_SUCCESS; }
+
+    /// \return if this status is empty.
+    bool is_empty() const { return empty_; }
 
     /// \return the value appropriate to populate $status.
     int status_value() const {
@@ -465,7 +479,7 @@ class job_t {
     bool signal(int signal);
 
     /// \returns the statuses for this job.
-    statuses_t get_statuses() const;
+    maybe_t<statuses_t> get_statuses() const;
 };
 
 /// Whether this shell is attached to the keyboard at all.

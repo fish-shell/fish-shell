@@ -172,7 +172,7 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
 
 /// The following function is invoked on the main thread, because the job operation is not thread
 /// safe. It waits for child jobs, not for child processes individually.
-int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
     int retval = STATUS_CMD_OK;
     const wchar_t *cmd = argv[0];

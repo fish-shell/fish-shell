@@ -232,7 +232,7 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
 }
 
 /// The math builtin evaluates math expressions.
-int builtin_math(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_math(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     math_cmd_opts_t opts;

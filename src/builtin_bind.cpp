@@ -413,7 +413,7 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
 }
 
 /// The bind builtin, used for setting character sequences.
-int builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bind_cmd_opts_t opts;

@@ -42,7 +42,7 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
 }
 
 /// Builtin for removing jobs from the job list.
-int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     help_only_cmd_opts_t opts;

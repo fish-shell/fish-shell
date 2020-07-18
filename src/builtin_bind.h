@@ -11,7 +11,7 @@ struct bind_cmd_opts_t;
 
 class builtin_bind_t {
    public:
-    int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv);
+    maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 
     builtin_bind_t() : input_mappings_(input_mappings()) {}
 
@@ -38,7 +38,7 @@ class builtin_bind_t {
                   io_streams_t &streams);
 };
 
-inline int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+inline maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     builtin_bind_t bind;
     return bind.builtin_bind(parser, streams, argv);
 }

@@ -7,5 +7,5 @@
 
 class parser_t;
 
-int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv);
+maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 #endif

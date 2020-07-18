@@ -149,7 +149,7 @@ static int set_limit(int resource, int hard, int soft, rlim_t value, io_streams_
 }
 
 /// The ulimit builtin, used for setting resource limits.
-int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bool report_all = false;

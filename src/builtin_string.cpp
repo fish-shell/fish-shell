@@ -1451,7 +1451,7 @@ string_subcommands[] = {
     {nullptr, nullptr}};
 
 /// The string builtin, for manipulating strings.
-int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     if (argc <= 1) {

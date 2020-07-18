@@ -2519,7 +2519,7 @@ static void test_is_potential_path() {
 }
 
 /// Test the 'test' builtin.
-int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
+maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) {
     parser_t &parser = parser_t::principal_parser();
     size_t i, count = lst.size();
@@ -2535,13 +2535,16 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
     argv[i + 1] = NULL;
     null_output_stream_t null{};
     io_streams_t streams(null, null);
-    int result = builtin_test(parser, streams, argv);
+    maybe_t<int> result = builtin_test(parser, streams, argv);
 
-    if (expected != result) err(L"expected builtin_test() to return %d, got %d", expected, result);
+    if (result != expected) {
+        std::wstring got = result ? std::to_wstring(result.value()) : L"nothing";
+        err(L"expected builtin_test() to return %d, got %s", expected, got.c_str());
+    }
 
     delete[] argv;
 
-    return expected == result;
+    return result == expected;
 }
 
 static bool run_test_test(int expected, const wcstring &str) {
@@ -5098,7 +5101,7 @@ static void test_pcre2_escape() {
     }
 }
 
-int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
+maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
                                 const wchar_t *expected_out) {
     parser_t &parser = parser_t::principal_parser();
@@ -5106,15 +5109,16 @@ static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
     null_output_stream_t errs{};
     io_streams_t streams(outs, errs);
     streams.stdin_is_directly_redirected = false;  // read from argv instead of stdin
-    int rc = builtin_string(parser, streams, const_cast<wchar_t **>(argv));
+    maybe_t<int> rc = builtin_string(parser, streams, const_cast<wchar_t **>(argv));
     wcstring args;
     for (int i = 0; argv[i] != NULL; i++) {
         args += escape_string(argv[i], ESCAPE_ALL) + L' ';
     }
     args.resize(args.size() - 1);
     if (rc != expected_rc) {
-        err(L"Test failed on line %lu: [%ls]: expected return code %d but got %d", __LINE__,
-            args.c_str(), expected_rc, rc);
+        std::wstring got = rc ? std::to_wstring(rc.value()) : L"nothing";
+        err(L"Test failed on line %lu: [%ls]: expected return code %d but got %s", __LINE__,
+            args.c_str(), expected_rc, got.c_str());
     } else if (outs.contents() != expected_out) {
         err(L"Test failed on line %lu: [%ls]: expected [%ls] but got [%ls]", __LINE__, args.c_str(),
             escape_string(expected_out, ESCAPE_ALL).c_str(),

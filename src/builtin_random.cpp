@@ -27,7 +27,7 @@ static std::minstd_rand get_seeded_engine() {
 }
 
 /// The random builtin generates random numbers.
-int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     help_only_cmd_opts_t opts;

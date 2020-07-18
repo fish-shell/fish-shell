@@ -284,7 +284,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
 }
 
 /// The functions builtin, used for listing and erasing functions.
-int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     functions_cmd_opts_t opts;

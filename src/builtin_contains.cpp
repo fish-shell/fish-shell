@@ -58,7 +58,7 @@ static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, wcha
 
 /// Implementation of the builtin contains command, used to check if a specified string is part of
 /// a list.
-int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     contains_cmd_opts_t opts;

@@ -17,7 +17,7 @@
 /// An implementation of the external realpath command. Doesn't support any options.
 /// In general scripts shouldn't invoke this directly. They should just use `realpath` which
 /// will fallback to this builtin if an external command cannot be found.
-int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     help_only_cmd_opts_t opts;
     int argc = builtin_count_args(argv);

@@ -73,7 +73,7 @@ static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, wchar
 
 /// Implementation of the builtin 'command'. Actual command running is handled by the parser, this
 /// just processes the flags.
-int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     command_cmd_opts_t opts;

@@ -684,7 +684,7 @@ static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_
 /// an external command also means its output has to be in a form that can be eval'd. Because our
 /// version is a builtin it can directly set variables local to the current scope (e.g., a
 /// function). It doesn't need to write anything to stdout that then needs to be eval'd.
-int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     argparse_cmd_opts_t opts;

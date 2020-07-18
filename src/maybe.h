@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <type_traits>
+#include <utility>
 
 namespace maybe_detail {
 // Template magic to make maybe_t<T> copyable iff T is copyable.

@@ -274,7 +274,7 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
 }
 
 /// The status builtin. Gives various status information on fish.
-int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     status_cmd_opts_t opts;

@@ -737,7 +737,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
 }
 
 /// The printf builtin.
-int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     help_only_cmd_opts_t opts;

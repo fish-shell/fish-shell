@@ -4,7 +4,7 @@
 //
 // 1). Create a function in builtin.c with the following signature:
 //
-//     <tt>static int builtin_NAME(parser_t &parser, io_streams_t &streams, wchar_t **argv)</tt>
+//     <tt>static maybe_t<int> builtin_NAME(parser_t &parser, io_streams_t &streams, wchar_t **argv)</tt>
 //
 // where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
 //
@@ -201,7 +201,7 @@ void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wch
 
 /// A generic bultin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
-static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     help_only_cmd_opts_t opts;
@@ -228,7 +228,7 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
 // Since this is just for counting, it can be massive.
 #define COUNT_CHUNK_SIZE (512 * 256)
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
-static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     int argc = 0;
 
@@ -256,7 +256,7 @@ static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
-static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int is_break = (std::wcscmp(argv[0], L"break") == 0);
     int argc = builtin_count_args(argv);
 
@@ -287,7 +287,7 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
 }
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
-static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+static maybe_t<int> builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     if (argv[1] != nullptr) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 0, builtin_count_args(argv) - 1);
@@ -313,21 +313,21 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
     return parser.get_last_status();
 }
 
-int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     UNUSED(argv);
     return STATUS_CMD_OK;
 }
 
-int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     UNUSED(argv);
     return STATUS_CMD_ERROR;
 }
 
-int builtin_gettext(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     for (int i = 1; i < builtin_count_args(argv); i++) {
@@ -459,8 +459,11 @@ proc_status_t builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &stream
     }
 
     if (const builtin_data_t *data = builtin_lookup(argv[0])) {
-        int ret = data->func(parser, streams, argv);
-        return proc_status_t::from_exit_code(ret);
+        maybe_t<int> ret = data->func(parser, streams, argv);
+        if (!ret) {
+            return proc_status_t::empty();
+        }
+        return proc_status_t::from_exit_code(ret.value());
     }
 
     FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);

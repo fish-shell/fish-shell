@@ -180,7 +180,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 ///
 /// Bash only respects -n if it's the first argument. We'll do the same. We also support a new,
 /// fish specific, option -s to mean "no spaces".
-int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     UNUSED(cmd);
     int argc = builtin_count_args(argv);

@@ -200,7 +200,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
 }
 
 /// Manipulate history of interactive commands executed by the user.
-int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     history_cmd_opts_t opts;

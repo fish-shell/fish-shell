@@ -22,7 +22,7 @@
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.
-int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);

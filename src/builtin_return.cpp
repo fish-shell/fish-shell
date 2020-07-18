@@ -57,7 +57,7 @@ static int parse_cmd_opts(return_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
 }
 
 /// Function for handling the return builtin.
-int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     return_cmd_opts_t opts;

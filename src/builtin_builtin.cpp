@@ -65,7 +65,7 @@ static int parse_cmd_opts(builtin_cmd_opts_t &opts, int *optind, int argc, wchar
 /// The builtin builtin, used for giving builtins precedence over functions. Mostly handled by the
 /// parser. All this code does is some additional operational modes, such as printing a list of all
 /// builtins, printing help, etc.
-int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     builtin_cmd_opts_t opts;

@@ -15,7 +15,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Implementation of eval builtin.
-int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     if (argc <= 1) {
         return STATUS_CMD_OK;

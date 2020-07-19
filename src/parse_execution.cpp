@@ -30,6 +30,7 @@
 #include "flog.h"
 #include "function.h"
 #include "io.h"
+#include "job_group.h"
 #include "maybe.h"
 #include "parse_constants.h"
 #include "parse_util.h"

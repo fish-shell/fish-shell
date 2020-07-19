@@ -20,6 +20,7 @@
 #include "flog.h"
 #include "function.h"
 #include "intern.h"
+#include "job_group.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "parse_util.h"

@@ -19,6 +19,7 @@
 #include "flog.h"
 #include "io.h"
 #include "iothread.h"
+#include "job_group.h"
 #include "postfork.h"
 #include "proc.h"
 #include "redirection.h"

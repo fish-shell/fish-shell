@@ -13,6 +13,7 @@
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "job_group.h"
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"

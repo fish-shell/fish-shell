@@ -36,6 +36,7 @@
 #include "function.h"
 #include "io.h"
 #include "iothread.h"
+#include "job_group.h"
 #include "null_terminated_array.h"
 #include "parse_tree.h"
 #include "parser.h"

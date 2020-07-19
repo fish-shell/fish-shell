@@ -291,7 +291,7 @@ void event_fire_delayed(parser_t &parser) {
     // Do not invoke new event handlers if we are unwinding (#6649).
     if (signal_check_cancel()) return;
 
-    std::vector<shared_ptr<event_t>> to_send;
+    std::vector<shared_ptr<const event_t>> to_send;
     to_send.swap(ld.blocked_events);
     assert(ld.blocked_events.empty());
 

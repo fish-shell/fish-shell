@@ -96,31 +96,31 @@ endif()
 
 # All objects that the system needs to build fish, except fish.cpp
 set(FISH_SRCS
-    src/autoload.cpp src/builtin.cpp src/builtin_bg.cpp src/builtin_bind.cpp
-    src/builtin_block.cpp src/builtin_builtin.cpp src/builtin_cd.cpp
-    src/builtin_command.cpp src/builtin_commandline.cpp
-    src/builtin_complete.cpp src/builtin_contains.cpp src/builtin_disown.cpp
-    src/builtin_echo.cpp src/builtin_emit.cpp src/builtin_exit.cpp
-    src/builtin_fg.cpp src/builtin_function.cpp src/builtin_functions.cpp
-    src/builtin_argparse.cpp src/builtin_history.cpp src/builtin_jobs.cpp
-    src/builtin_math.cpp src/builtin_printf.cpp src/builtin_pwd.cpp
-    src/builtin_random.cpp src/builtin_read.cpp src/builtin_realpath.cpp
-    src/builtin_return.cpp src/builtin_set.cpp src/builtin_set_color.cpp
-    src/builtin_source.cpp src/builtin_status.cpp src/builtin_string.cpp
-    src/builtin_test.cpp src/builtin_ulimit.cpp src/builtin_wait.cpp src/builtin_eval.cpp
-    src/color.cpp src/common.cpp src/complete.cpp src/env.cpp src/env_dispatch.cpp
-    src/env_universal_common.cpp src/event.cpp src/exec.cpp src/expand.cpp
-    src/fallback.cpp src/fish_version.cpp src/function.cpp src/highlight.cpp
-    src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp src/intern.cpp
-    src/io.cpp src/iothread.cpp src/kill.cpp src/output.cpp src/pager.cpp
-    src/parse_execution.cpp src/parse_tree.cpp
-    src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
-    src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
-    src/signal.cpp src/tinyexpr.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
+    src/ast.cpp src/autoload.cpp src/builtin.cpp src/builtin_argparse.cpp
+    src/builtin_bg.cpp src/builtin_bind.cpp src/builtin_block.cpp
+    src/builtin_builtin.cpp src/builtin_cd.cpp src/builtin_command.cpp
+    src/builtin_commandline.cpp src/builtin_complete.cpp src/builtin_contains.cpp
+    src/builtin_disown.cpp src/builtin_echo.cpp src/builtin_emit.cpp
+    src/builtin_eval.cpp src/builtin_exit.cpp src/builtin_fg.cpp
+    src/builtin_function.cpp src/builtin_functions.cpp src/builtin_history.cpp
+    src/builtin_jobs.cpp src/builtin_math.cpp src/builtin_printf.cpp
+    src/builtin_pwd.cpp src/builtin_random.cpp src/builtin_read.cpp
+    src/builtin_realpath.cpp src/builtin_return.cpp src/builtin_set.cpp
+    src/builtin_set_color.cpp src/builtin_source.cpp src/builtin_status.cpp
+    src/builtin_string.cpp src/builtin_test.cpp src/builtin_ulimit.cpp
+    src/builtin_wait.cpp src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
+    src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp src/exec.cpp
+    src/expand.cpp src/fallback.cpp src/fd_monitor.cpp src/fish_version.cpp
+    src/flog.cpp src/function.cpp src/future_feature_flags.cpp src/highlight.cpp
+    src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp
+    src/intern.cpp src/io.cpp src/iothread.cpp src/kill.cpp
+    src/null_terminated_array.cpp src/operation_context.cpp src/output.cpp
+    src/pager.cpp src/parse_execution.cpp src/parse_tree.cpp src/parse_util.cpp
+    src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
+    src/proc.cpp src/reader.cpp src/redirection.cpp src/sanity.cpp src/screen.cpp
+    src/signal.cpp src/termsize.cpp src/timer.cpp src/tinyexpr.cpp
+    src/tokenizer.cpp src/topic_monitor.cpp src/trace.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
-    src/future_feature_flags.cpp src/redirection.cpp src/topic_monitor.cpp
-    src/flog.cpp src/trace.cpp src/timer.cpp src/null_terminated_array.cpp
-    src/operation_context.cpp src/fd_monitor.cpp src/termsize.cpp src/ast.cpp
 )
 
 # Header files are just globbed.

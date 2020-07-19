@@ -1821,7 +1821,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     // Print the completion list.
     wcstring prefix;
     if (will_replace_token || match_type_requires_full_replacement(best_match_type)) {
-        prefix.clear();  // no prefix
+        if (use_prefix) prefix = std::move(common_prefix);
     } else if (tok.size() + common_prefix.size() <= PREFIX_MAX_LEN) {
         prefix = tok + common_prefix;
     } else {

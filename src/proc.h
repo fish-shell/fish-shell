@@ -488,10 +488,6 @@ class job_t {
     // This is never null and not changed after construction.
     job_group_ref_t group{};
 
-    /// Process group ID for the process group that this job is running in.
-    /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
-    // pid_t pgid{INVALID_PID};
-
     /// \return the pgid for the job, based on the job group.
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This may also be fish itself.

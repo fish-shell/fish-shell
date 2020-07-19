@@ -714,8 +714,13 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                     return 0;
                 }
 
+                const wchar_t *argument = L"";
+                if (argc > 0) {
+                    argument = *argv++;
+                    argc--;
+                }
                 print_direc(direc_start, direc_length, *f, have_field_width, field_width,
-                            have_precision, precision, (argc <= 0 ? L"" : (argc--, *argv++)));
+                            have_precision, precision, argument);
                 break;
             }
             case L'\\': {

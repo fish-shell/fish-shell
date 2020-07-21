@@ -601,7 +601,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_result_t result);
     void update_autosuggestion();
-    void accept_autosuggestion(bool full, move_word_style_t style = move_word_style_punctuation);
+    void accept_autosuggestion(bool full, bool single = false, move_word_style_t style = move_word_style_punctuation);
     void super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
     void highlight_search();
@@ -1207,6 +1207,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::complete_and_search:
         case rl::backward_char:
         case rl::forward_char:
+        case rl::forward_single_char:
         case rl::up_line:
         case rl::down_line:
         case rl::repaint:
@@ -1574,7 +1575,7 @@ void reader_data_t::update_autosuggestion() {
 
 // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
 // thing; if it's false, then respect the passed in style.
-void reader_data_t::accept_autosuggestion(bool full, move_word_style_t style) {
+void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_style_t style) {
     if (!autosuggestion.empty()) {
         // Accepting an autosuggestion clears the pager.
         clear_pager();
@@ -1583,6 +1584,9 @@ void reader_data_t::accept_autosuggestion(bool full, move_word_style_t style) {
         if (full) {
             // Just take the whole thing.
             command_line.replace_substring(0, command_line.size(), std::move(autosuggestion));
+        } else if (single) {
+            command_line.replace_substring(command_line.size(), 0,
+                                           autosuggestion.substr(command_line.size(), 1));
         } else {
             // Accept characters according to the specified style.
             move_word_state_machine_t state(style);
@@ -3117,6 +3121,18 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
+        case rl::forward_single_char: {
+            editable_line_t *el = active_edit_line();
+            if (is_navigating_pager_contents()) {
+                select_completion_in_direction(selection_motion_t::east);
+            } else if (el->position() < el->size()) {
+                update_buff_pos(el, el->position() + 1);
+                mark_repaint_needed();
+            } else {
+                accept_autosuggestion(false, true);
+            }
+            break;
+        }
         case rl::backward_kill_word:
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword: {
@@ -3158,7 +3174,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (el->position() < el->size()) {
                 move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);
             } else {
-                accept_autosuggestion(false, move_style);
+                accept_autosuggestion(false, false, move_style);
             }
             break;
         }

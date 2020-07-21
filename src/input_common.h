@@ -14,6 +14,7 @@ enum class readline_cmd_t {
     end_of_line,
     forward_char,
     backward_char,
+    forward_single_char,
     forward_word,
     backward_word,
     forward_bigword,

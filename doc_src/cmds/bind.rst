@@ -132,6 +132,8 @@ The following special input functions are available:
 
 - ``forward-char``, move one character to the right
 
+- ``forward-single-char``, move one character to the right; if an autosuggestion is available, only take a single char from it
+
 - ``forward-word``, move one word to the right
 
 - ``history-search-backward``, search the history for the previous match

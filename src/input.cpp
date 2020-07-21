@@ -89,6 +89,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::end_of_line, L"end-of-line"},
     {readline_cmd_t::forward_char, L"forward-char"},
     {readline_cmd_t::backward_char, L"backward-char"},
+    {readline_cmd_t::forward_single_char, L"forward-single-char"},
     {readline_cmd_t::forward_word, L"forward-word"},
     {readline_cmd_t::backward_word, L"backward-word"},
     {readline_cmd_t::forward_bigword, L"forward-bigword"},

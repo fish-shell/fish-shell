@@ -74,7 +74,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert \r execute
     bind -s --preset -m insert i repaint-mode
     bind -s --preset -m insert I beginning-of-line repaint-mode
-    bind -s --preset -m insert a forward-char repaint-mode
+    bind -s --preset -m insert a forward-single-char repaint-mode
     bind -s --preset -m insert A end-of-line repaint-mode
     bind -s --preset -m visual v begin-selection repaint-mode
 
@@ -103,9 +103,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset B backward-bigword
     bind -s --preset ge backward-word
     bind -s --preset gE backward-bigword
-    bind -s --preset w forward-word forward-char
-    bind -s --preset W forward-bigword forward-char
-    bind -s --preset e forward-char forward-word backward-char
+    bind -s --preset w forward-word forward-single-char
+    bind -s --preset W forward-bigword forward-single-char
+    bind -s --preset e forward-single-char forward-word backward-char
     bind -s --preset E forward-bigword backward-char
 
     # OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
@@ -118,10 +118,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Vi moves the cursor back if, after deleting, it is at EOL.
     # To emulate that, move forward, then backward, which will be a NOP
     # if there is something to move forward to.
-    bind -s --preset -M default x delete-char forward-char backward-char
+    bind -s --preset -M default x delete-char forward-single-char backward-char
     bind -s --preset -M default X backward-delete-char
-    bind -s --preset -M insert -k dc delete-char forward-char backward-char
-    bind -s --preset -M default -k dc delete-char forward-char backward-char
+    bind -s --preset -M insert -k dc delete-char forward-single-char backward-char
+    bind -s --preset -M default -k dc delete-char forward-single-char backward-char
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
     bind -s --preset -M insert -k backspace backward-delete-char
@@ -140,10 +140,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset d0 backward-kill-line
     bind -s --preset dw kill-word
     bind -s --preset dW kill-bigword
-    bind -s --preset diw forward-char forward-char backward-word kill-word
-    bind -s --preset diW forward-char forward-char backward-bigword kill-bigword
-    bind -s --preset daw forward-char forward-char backward-word kill-word
-    bind -s --preset daW forward-char forward-char backward-bigword kill-bigword
+    bind -s --preset diw forward-single-char forward-single-char backward-word kill-word
+    bind -s --preset diW forward-single-char forward-single-char backward-bigword kill-bigword
+    bind -s --preset daw forward-single-char forward-single-char backward-word kill-word
+    bind -s --preset daW forward-single-char forward-single-char backward-bigword kill-bigword
     bind -s --preset de kill-word
     bind -s --preset dE kill-bigword
     bind -s --preset db backward-kill-word
@@ -153,7 +153,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset df begin-selection forward-jump kill-selection end-selection
     bind -s --preset dt begin-selection forward-jump backward-char kill-selection end-selection
     bind -s --preset dF begin-selection backward-jump kill-selection end-selection
-    bind -s --preset dT begin-selection backward-jump forward-char kill-selection end-selection
+    bind -s --preset dT begin-selection backward-jump forward-single-char kill-selection end-selection
     bind -s --preset dh backward-char delete-char
     bind -s --preset dl delete-char
     bind -s --preset di backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
@@ -168,10 +168,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert c0 backward-kill-line repaint-mode
     bind -s --preset -m insert cw kill-word repaint-mode
     bind -s --preset -m insert cW kill-bigword repaint-mode
-    bind -s --preset -m insert ciw forward-char forward-char backward-word kill-word repaint-mode
-    bind -s --preset -m insert ciW forward-char forward-char backward-bigword kill-bigword repaint-mode
-    bind -s --preset -m insert caw forward-char forward-char backward-word kill-word repaint-mode
-    bind -s --preset -m insert caW forward-char forward-char backward-bigword kill-bigword repaint-mode
+    bind -s --preset -m insert ciw forward-single-char forward-single-char backward-word kill-word repaint-mode
+    bind -s --preset -m insert ciW forward-single-char forward-single-char backward-bigword kill-bigword repaint-mode
+    bind -s --preset -m insert caw forward-single-char forward-single-char backward-word kill-word repaint-mode
+    bind -s --preset -m insert caW forward-single-char forward-single-char backward-bigword kill-bigword repaint-mode
     bind -s --preset -m insert ce kill-word repaint-mode
     bind -s --preset -m insert cE kill-bigword repaint-mode
     bind -s --preset -m insert cb backward-kill-word repaint-mode
@@ -181,13 +181,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert cf begin-selection forward-jump kill-selection end-selection repaint-mode
     bind -s --preset -m insert ct begin-selection forward-jump backward-char kill-selection end-selection repaint-mode
     bind -s --preset -m insert cF begin-selection backward-jump kill-selection end-selection repaint-mode
-    bind -s --preset -m insert cT begin-selection backward-jump forward-char kill-selection end-selection repaint-mode
+    bind -s --preset -m insert cT begin-selection backward-jump forward-single-char kill-selection end-selection repaint-mode
     bind -s --preset -m insert ch backward-char begin-selection kill-selection end-selection repaint-mode
     bind -s --preset -m insert cl begin-selection kill-selection end-selection repaint-mode
     bind -s --preset -m insert ci backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
     bind -s --preset -m insert ca backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
 
-    bind -s --preset '~' togglecase-char forward-char
+    bind -s --preset '~' togglecase-char forward-single-char
     bind -s --preset gu downcase-word
     bind -s --preset gU upcase-word
 
@@ -201,10 +201,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset y0 backward-kill-line yank
     bind -s --preset yw kill-word yank
     bind -s --preset yW kill-bigword yank
-    bind -s --preset yiw forward-char forward-char backward-word kill-word yank
-    bind -s --preset yiW forward-char forward-char backward-bigword kill-bigword yank
-    bind -s --preset yaw forward-char forward-char backward-word kill-word yank
-    bind -s --preset yaW forward-char forward-char backward-bigword kill-bigword yank
+    bind -s --preset yiw forward-single-char forward-single-char backward-word kill-word yank
+    bind -s --preset yiW forward-single-char forward-single-char backward-bigword kill-bigword yank
+    bind -s --preset yaw forward-single-char forward-single-char backward-word kill-word yank
+    bind -s --preset yaW forward-single-char forward-single-char backward-bigword kill-bigword yank
     bind -s --preset ye kill-word yank
     bind -s --preset yE kill-bigword yank
     bind -s --preset yb backward-kill-word yank

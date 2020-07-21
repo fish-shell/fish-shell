@@ -51,7 +51,7 @@ expect_prompt()
 send("exit\r")
 
 # This is cheesy, but on Travis with thread-sanitizer this can be slow enough that the process is still running, so we sleep for a bit.
-time.sleep(0.2)
+time.sleep(0.5)
 proc = subprocess.run(
     ["pgrep", "-l", "-f", "sleep 11"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
 )

@@ -177,6 +177,8 @@ target_sources(fishlib PRIVATE ${FISH_HEADERS})
 target_link_libraries(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
   ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY})
+target_include_directories(fishlib PRIVATE
+  ${CURSES_INCLUDE_DIRS})
 
 # Define fish.
 add_executable(fish src/fish.cpp)

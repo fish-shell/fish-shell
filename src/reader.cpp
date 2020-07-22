@@ -3532,6 +3532,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // Some commands should have been handled internally by inputter_t::readch().
         case rl::self_insert:
         case rl::self_insert_notfirst:
+        case rl::func_or:
         case rl::func_and: {
             DIE("should have been handled by inputter_t::readch");
         }

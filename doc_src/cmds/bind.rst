@@ -162,6 +162,8 @@ The following special input functions are available:
 
 - ``kill-word``, move the next word to the killring
 
+- ``or``, only execute the next function if the previous succeeded (note: only some functions report success)
+
 - ``pager-toggle-search``, toggles the search field if the completions pager is visible.
 
 - ``repaint``, reexecutes the prompt functions and redraws the prompt. Multiple successive repaints are coalesced.

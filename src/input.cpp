@@ -146,6 +146,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::repeat_jump, L"repeat-jump"},
     {readline_cmd_t::reverse_repeat_jump, L"repeat-jump-reverse"},
     {readline_cmd_t::func_and, L"and"},
+    {readline_cmd_t::func_or, L"or"},
     {readline_cmd_t::expand_abbr, L"expand-abbr"},
     {readline_cmd_t::delete_or_exit, L"delete-or-exit"},
     {readline_cmd_t::cancel_commandline, L"cancel-commandline"},
@@ -524,10 +525,18 @@ char_event_t inputter_t::readch(bool allow_commands) {
                                           : char_input_style_t::normal;
                     return res;
                 }
-                case readline_cmd_t::func_and: {
-                    if (function_status_) {
-                        return readch();
+                case readline_cmd_t::func_and:
+                case readline_cmd_t::func_or: {
+                    // If previous function has right status, we keep reading tokens
+                    if (evt.get_readline() == readline_cmd_t::func_and) {
+                        if (function_status_)
+                            return readch();
+                    } else {
+                        assert(evt.get_readline() == readline_cmd_t::func_or);
+                        if (!function_status_)
+                            return readch();
                     }
+                    // Else we flush remaining tokens
                     do {
                         evt = event_queue_.readch();
                     } while (evt.is_readline());

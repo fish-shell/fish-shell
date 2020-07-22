@@ -119,6 +119,7 @@ Completions
 
 -  Added completions for
 
+   -  ``7z``, ``7za`` and ``7zr``
    -  ``apk``
    -  ``asciidoctor``
    -  ``cmark``

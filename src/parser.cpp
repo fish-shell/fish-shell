@@ -252,50 +252,40 @@ block_t *parser_t::block_at_index(size_t idx) {
 block_t *parser_t::current_block() { return block_at_index(0); }
 
 /// Print profiling information to the specified stream.
-static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &items, FILE *out) {
-    for (size_t pos = 0; pos < items.size(); pos++) {
-        const profile_item_t *me, *prev;
-        size_t i;
-        int my_time;
+static void print_profile(const std::deque<profile_item_t> &items, FILE *out) {
+    for (size_t idx = 0; idx < items.size(); idx++) {
+        const profile_item_t &item = items.at(idx);
+        if (item.skipped || item.cmd.empty()) continue;
 
-        me = items.at(pos).get();
-        if (me->skipped) {
-            continue;
+        long long total_time = item.duration;
+
+        // Compute the self time as the total time, minus the total time consumed by subsequent
+        // items exactly one eval level deeper.
+        long long self_time = item.duration;
+        for (size_t i = idx + 1; i < items.size(); i++) {
+            const profile_item_t &nested_item = items.at(i);
+            if (nested_item.skipped) continue;
+
+            // If the eval level is not larger, then we have exhausted nested items.
+            if (nested_item.level <= item.level) break;
+
+            // If the eval level is exactly one more than our level, it is a directly nested item.
+            if (nested_item.level == item.level + 1) self_time -= nested_item.duration;
         }
 
-        my_time = me->parse + me->exec;
-        for (i = pos + 1; i < items.size(); i++) {
-            prev = items.at(i).get();
-            if (prev->skipped) {
-                continue;
-            }
-            if (prev->level <= me->level) {
-                break;
-            }
-            if (prev->level > me->level + 1) {
-                continue;
-            }
-
-            my_time -= prev->parse + prev->exec;
-        }
-
-        if (me->cmd.empty()) {
-            continue;
-        }
-
-        if (std::fwprintf(out, L"%d\t%d\t", my_time, me->parse + me->exec) < 0) {
+        if (std::fwprintf(out, L"%lld\t%lld\t", self_time, total_time) < 0) {
             wperror(L"fwprintf");
             return;
         }
 
-        for (i = 0; i < me->level; i++) {
+        for (size_t i = 0; i < item.level; i++) {
             if (std::fwprintf(out, L"-") < 0) {
                 wperror(L"fwprintf");
                 return;
             }
         }
 
-        if (std::fwprintf(out, L"> %ls\n", me->cmd.c_str()) < 0) {
+        if (std::fwprintf(out, L"> %ls\n", item.cmd.c_str()) < 0) {
             wperror(L"fwprintf");
             return;
         }
@@ -304,7 +294,7 @@ static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &it
 
 void parser_t::emit_profiling(const char *path) const {
     // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is
-    // dying (and hence will not fork).
+    // exiting (and hence will not fork).
     FILE *f = fopen(path, "w");
     if (!f) {
         FLOGF(warning, _(L"Could not write profiling information to file '%s'"), path);
@@ -620,12 +610,11 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
 }
 
 profile_item_t *parser_t::create_profile_item() {
-    profile_item_t *result = nullptr;
     if (g_profiling_active) {
-        profile_items.push_back(make_unique<profile_item_t>());
-        result = profile_items.back().get();
+        profile_items.emplace_back();
+        return &profile_items.back();
     }
-    return result;
+    return nullptr;
 }
 
 eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,

@@ -19,6 +19,7 @@
 #include "parse_execution.h"
 #include "parse_tree.h"
 #include "proc.h"
+#include "util.h"
 
 class io_chain_t;
 
@@ -113,18 +114,23 @@ class block_t {
 };
 
 struct profile_item_t {
-    /// Time spent executing the specified command, including parse time for nested blocks.
-    int exec;
-    /// Time spent parsing the specified command, including execution time for command
-    /// substitutions.
-    int parse;
-    /// The block level of the specified command. nested blocks and command substitutions both
+    using microseconds_t = long long;
+
+    /// Time spent executing the command, including nested blocks.
+    microseconds_t duration{};
+
+    /// The block level of the specified command. Nested blocks and command substitutions both
     /// increase the block level.
-    size_t level;
+    size_t level{};
+
     /// If the execution of this command was skipped.
-    bool skipped;
+    bool skipped{};
+
     /// The command string.
-    wcstring cmd;
+    wcstring cmd{};
+
+    /// \return the current time as a microsecond timestamp since the epoch.
+    static microseconds_t now() { return get_time(); }
 };
 
 class parse_execution_context_t;
@@ -238,11 +244,11 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Miscellaneous library data.
     library_data_t library_data{};
 
-    /// List of profile items
-    /// These are pointers because we return pointers to them to callers,
+    /// List of profile items.
+    /// This must be a deque because we return pointers to them to callers,
     /// who may hold them across blocks (which would cause reallocations internal
-    /// to profile_items)
-    std::vector<std::unique_ptr<profile_item_t>> profile_items;
+    /// to profile_items). deque does not move items on reallocation.
+    std::deque<profile_item_t> profile_items;
 
     // No copying allowed.
     parser_t(const parser_t &);
@@ -371,15 +377,16 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Returns the job with the given pid.
     job_t *job_get_from_pid(pid_t pid) const;
 
-    /// Returns a new profile item if profiling is active. The caller should fill it in. The
-    /// parser_t will clean it up.
+    /// Returns a new profile item if profiling is active. The caller should fill it in.
+    /// The parser_t will deallocate it.
+    /// If profiling is not active, this returns nullptr.
     profile_item_t *create_profile_item();
-
-    void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
-                       wcstring &output) const;
 
     /// Output profiling data to the given filename.
     void emit_profiling(const char *path) const;
+
+    void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
+                       wcstring &output) const;
 
     /// Returns the file currently evaluated by the parser. This can be different than
     /// reader_current_filename, e.g. if we are evaluating a function defined in a different file

@@ -91,7 +91,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const ast::node_t &nod
         } break;
 
         case type_t::if_statement:
-            src_end = node.as<if_statement_t>()->if_clause.condition.source_range().end();
+            src_end = node.as<if_statement_t>()->if_clause.condition.job.source_range().end();
             break;
 
         case type_t::switch_statement:
@@ -1225,11 +1225,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     scoped_push<const ast::job_t *> saved_node(&executing_job_node, &job_node);
 
     // Profiling support.
-    long long start_time = 0, parse_time = 0, exec_time = 0;
     profile_item_t *profile_item = this->parser->create_profile_item();
-    if (profile_item != nullptr) {
-        start_time = get_time();
-    }
+    const auto start_time = profile_item ? profile_item_t::now() : 0;
 
     // When we encounter a block construct (e.g. while loop) in the general case, we create a "block
     // process" containing its node. This allows us to handle block-level redirections.
@@ -1275,12 +1272,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         }
 
         if (profile_item != nullptr) {
-            // Block-types profile a little weird. They have no 'parse' time, and their command is
-            // just the block type.
-            exec_time = get_time();
+            profile_item->duration = profile_item_t::now() - start_time;
             profile_item->level = parser->eval_level;
-            profile_item->parse = 0;
-            profile_item->exec = static_cast<int>(exec_time - start_time);
             profile_item->cmd =
                 profiling_cmd_name_for_redirectable_block(*specific_statement, *this->pstree);
             profile_item->skipped = false;
@@ -1317,11 +1310,6 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         this->populate_job_from_job_node(job.get(), job_node, associated_block);
     caller_id.restore();
 
-    // Store time it took to 'parse' the command.
-    if (profile_item != nullptr) {
-        parse_time = get_time();
-    }
-
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
         // Set the pgroup assignment mode and job group, now that the job is populated.
@@ -1353,10 +1341,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     }
 
     if (profile_item != nullptr) {
-        exec_time = get_time();
+        profile_item->duration = profile_item_t::now() - start_time;
         profile_item->level = parser->eval_level;
-        profile_item->parse = static_cast<int>(parse_time - start_time);
-        profile_item->exec = static_cast<int>(exec_time - parse_time);
         profile_item->cmd = job ? job->command() : wcstring();
         profile_item->skipped = (pop_result != end_execution_reason_t::ok);
     }

@@ -65,6 +65,8 @@ class fish_cmd_opts_t {
     wcstring features;
     // File path for debug output.
     std::string debug_output;
+    // File path for profiling output, or empty for none.
+    std::string profile_output;
     // Commands to be executed in place of interactive shell.
     std::vector<std::string> batch_cmds;
     // Commands to execute after the shell's config has been read.
@@ -80,9 +82,6 @@ class fish_cmd_opts_t {
     /// Whether to enable private mode.
     bool enable_private_mode{false};
 };
-
-/// If we are doing profiling, the filename to output to.
-static const char *s_profiling_output_filename = nullptr;
 
 /// \return a timeval converted to milliseconds.
 long long tv_to_msec(const struct timeval &tv) {
@@ -353,7 +352,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 exit(0);
             }
             case 'p': {
-                s_profiling_output_filename = optarg;
+                opts->profile_output = optarg;
                 g_profiling_active = true;
                 break;
             }
@@ -531,7 +530,7 @@ int main(int argc, char **argv) {
     restore_term_foreground_process_group_for_exit();
 
     if (g_profiling_active) {
-        parser.emit_profiling(s_profiling_output_filename);
+        parser.emit_profiling(opts.profile_output.c_str());
     }
 
     history_save_all();

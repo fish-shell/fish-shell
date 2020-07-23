@@ -356,15 +356,36 @@ These listed jobs can be removed with the :ref:`disown <cmd-disown>` command.
 Functions
 ---------
 
-Functions are programs written in the fish syntax. They group together one or more commands and their arguments using a single name. It can also be used to start a specific command with additional arguments.
+Functions are programs written in the fish syntax. They group together various commands and their arguments using a single name.
 
-For example, the following is a function definition that calls the command ``ls`` with the argument ``-l`` to print a detailed listing of the contents of the current directory::
+For example, here's a simple function to list directories::
 
   function ll
       ls -l $argv
   end
 
-The first line tells fish that a function by the name of ``ll`` is to be defined. To use it, simply write ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. ``$argv`` is a list variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
+The first line tells fish to define a function by the name of ``ll``, so it can be used by simply writing ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. ``$argv`` is a list variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. The ``end`` on the third line ends the definition.
+
+Calling this as ``ll /tmp/`` will end up running ``ls -l /tmp/``, which will list the contents of /tmp.
+
+This is a kind of function known as a :ref:`wrapper <syntax-function-wrappers>` or "alias".
+
+Fish's prompt is also defined in a function, called :ref:`fish_prompt <cmd-fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
+
+  function fish_prompt
+      # A simple prompt. Displays the current directory (which fish stores in the $PWD variable)
+      # and then a user symbol - a '►' for a normal user and a '#' for root.
+      set -l user_char '►'
+      if fish_is_root_user
+          set user_char '#'
+      end
+
+      echo (set_color yellow)$PWD (set_color purple)$user_char
+  end
+
+To edit a function, you can use :ref:`funced <cmd-funced>`, and to save a function :ref:`funcsave <cmd-funcsave>`. This will store it in a function file that fish will :ref:`autoload <syntax-function-autoloading>` when needed.
+
+For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
 
 .. _syntax-function-wrappers:
 

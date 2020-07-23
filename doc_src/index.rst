@@ -385,6 +385,8 @@ Fish's prompt is also defined in a function, called :ref:`fish_prompt <cmd-fish_
 
 To edit a function, you can use :ref:`funced <cmd-funced>`, and to save a function :ref:`funcsave <cmd-funcsave>`. This will store it in a function file that fish will :ref:`autoload <syntax-function-autoloading>` when needed.
 
+The :ref:`functions <cmd-functions>` builtin can show a function's current definition (and :ref:`type <cmd-type>` will also do if given a function).
+
 For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
 
 .. _syntax-function-wrappers:

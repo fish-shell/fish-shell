@@ -30,7 +30,7 @@ complete -c $progname -s Q -f -l query -n "$noopt" -d 'Query the package databas
 complete -c $progname -s R -f -l remove -n "$noopt" -d 'Remove packages from the system'
 complete -c $progname -s S -f -l sync -n "$noopt" -d 'Synchronize packages'
 complete -c $progname -s T -f -l deptest -n "$noopt" -d 'Check dependencies'
-complete -c $progname -s U -f -l upgrade -n "$noopt" -d 'Upgrade or add a local package'
+complete -c $progname -s U -l upgrade -n "$noopt" -d 'Upgrade or add a local package'
 complete -c $progname -s F -f -l files -n "$noopt" -d 'Query the files database'
 complete -c $progname -s V -f -l version -d 'Display version and exit'
 complete -c $progname -s h -f -l help -d 'Display help'

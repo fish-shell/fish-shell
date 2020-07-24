@@ -336,8 +336,9 @@ Example::
   emacs &
 
 
-will start the emacs text editor in the background.
+will start the emacs text editor in the background. :ref:`fg <cmd-fg>` can be used to bring it into the foreground again when needed.
 
+See also :ref:`Running multiple programs <job-control>`.
 
 .. _syntax-job-control:
 

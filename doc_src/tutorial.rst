@@ -440,6 +440,7 @@ As mentioned in :ref:`the section on the semicolon <tut_semicolon>`, this can al
     and echo "Backup successful"
     or echo "Backup failed"
 
+.. _tut-conditionals:
 
 Conditionals (If, Else, Switch)
 -------------------------------

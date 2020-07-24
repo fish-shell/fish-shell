@@ -472,13 +472,26 @@ After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text 
 Conditional execution of code and flow control
 ----------------------------------------------
 
-There are four fish builtins that let you execute commands only if a specific criterion is met. These builtins are :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>`, :ref:`and <cmd-and>` and :ref:`or <cmd-or>`.
+Fish has some builtins that let you execute commands only if a specific criterion is met: :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>`, :ref:`and <cmd-and>` and :ref:`or <cmd-or>`, and also the familiar :ref:`&&/|| <tut-combiners>` syntax.
 
 The :ref:`switch <cmd-switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
 
-The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See their documentation for more information.
+The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed.
 
+Some examples::
 
+  # Just see if the file contains the string "fish" anywhere.
+  if grep -q fish myanimals
+      echo You have fish!
+  else
+      echo You don't have fish!
+  end
+
+  # $XDG_CONFIG_HOME is a standard place to store configuration. If it's not set applications should use ~/.config.
+  set -q XDG_CONFIG_HOME; and set -l configdir $XDG_CONFIG_HOME
+  or set -l configdir ~/.config
+
+For more, see the documentation for the builtins or the :ref:`Conditionals <tut-conditionals>` section of the tutorial.
 
 .. _expand:
 

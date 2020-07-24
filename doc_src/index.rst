@@ -580,7 +580,20 @@ Examples::
     set data (cat data | string split0)
     # Set ``$data`` to the contents of data, splitting on NUL-bytes.
 
+
+Sometimes you want to pass the output of a command to another command that only accepts files. If it's just one file, you can usually just pass it via a pipe, like::
+
+    grep fish myanimallist1 | wc -l
+
+but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells [#]_ allow this via ``foo <(bar) <(baz)``, and fish uses the :ref:`psub <cmd-psub>` command::
+
+    # Compare just the lines containing "fish" in two files:
+    diff -u (grep fish myanimallist1 | psub) (grep fish myanimallist2 | psub)
+
+This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
+
 .. [#] Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :ref:`string split <cmd-string-split>` instead.
+.. [#] Bash and Zsh at least, though it is a POSIX extension
 
 .. _expand-brace:
 

@@ -554,7 +554,7 @@ function __fish_git_config_keys
     # With -z, key and value are separated by space, not "="
     git config -lz | while read -lz key value
         # Print only first line of value(with an ellipsis) if multiline
-        printf '%s\t%s\n' $key (string replace \n …\n $value)[1]
+        printf '%s\t%s\n' $key (string replace \n …\n -- $value)[1]
     end
     # Print all recognized config keys; duplicates are not shown twice by fish
     printf '%s\n' (__fish_git help --config)[1..-2] # Last line is a footer; ignore it

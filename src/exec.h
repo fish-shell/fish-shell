@@ -13,7 +13,11 @@
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
 /// Execute the processes specified by \p j in the parser \p.
-bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j, const io_chain_t &block_io);
+/// On a true return, the job was successfully launched and hte parser will take responsibility for
+/// cleaning it up. On a false return, the job could not be launched and the caller must clean it
+/// up.
+__warn_unused bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j,
+                            const io_chain_t &block_io);
 
 /// Evaluate a command.
 ///

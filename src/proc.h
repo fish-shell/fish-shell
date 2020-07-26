@@ -551,9 +551,9 @@ void hup_jobs(const job_list_t &jobs);
 /// \return 1 if transferred, 0 if no transfer was necessary, -1 on error.
 int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from_stopped);
 
-/// Add a pid to the list of pids we wait on even though they are not associated with any jobs.
-/// Used to avoid zombie processes after disown.
-void add_disowned_pgid(pid_t pgid);
+/// Add a job to the list of PIDs/PGIDs we wait on even though they are not associated with any
+/// jobs. Used to avoid zombie processes after disown.
+void add_disowned_job(job_t *j);
 
 bool have_proc_stat();
 

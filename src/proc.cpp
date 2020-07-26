@@ -896,13 +896,16 @@ maybe_t<pid_t> job_t::get_pgid() const { return group->get_pgid(); }
 
 job_id_t job_t::job_id() const { return group->get_id(); }
 
-void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool send_sigcont) {
+void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp) {
     // Put job first in the job list.
     parser.job_promote(this);
     mut_flags().notified = false;
 
     int pgid = -2;
     if (auto tmp = get_pgid()) pgid = *tmp;
+
+    // We must send_sigcont if the job is stopped.
+    bool send_sigcont = this->is_stopped();
 
     FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
           send_sigcont ? L"Continue" : L"Start", job_id(), pgid, command_wcstr(),

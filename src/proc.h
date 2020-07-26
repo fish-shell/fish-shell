@@ -454,14 +454,12 @@ class job_t {
     /// \return whether this job and its parent chain are fully constructed.
     bool job_chain_is_fully_constructed() const;
 
-    /// Resume a (possibly) stopped job. Puts job in the foreground.  If cont is true, restore the
-    /// saved terminal modes and send the process group a SIGCONT signal to wake it up before we
-    /// block.
+    /// Continues running a job, which may be stopped, or may just have started.
+    /// This will send SIGCONT if the job is stopped.
     ///
     /// \param reclaim_foreground_pgrp whether, when the job finishes or stops, to reclaim the
-    /// foreground pgrp (via tcsetpgrp). \param send_sigcont Whether SIGCONT should be sent to the
-    /// job if it is in the foreground.
-    void continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool send_sigcont);
+    /// foreground pgrp (via tcsetpgrp).
+    void continue_job(parser_t &parser, bool reclaim_foreground_pgrp);
 
     /// Send the specified signal to all processes in this job.
     /// \return true on success, false on failure.

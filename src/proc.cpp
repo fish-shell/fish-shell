@@ -329,18 +329,19 @@ static owning_lock<std::vector<pid_t>> s_disowned_pids;
 void add_disowned_job(job_t *j) {
     if (j == nullptr) return;
 
-    // NEVER add our own (or an invalid) pgid as they are not unique to only
+    // Never add our own (or an invalid) pgid as it is not unique to only
     // one job, and may result in a deadlock if we attempt the wait.
     auto pgid = j->get_pgid();
+    auto disowned_pids = s_disowned_pids.acquire();
     if (pgid && *pgid != getpgrp() && *pgid > 0) {
         // waitpid(2) is signalled to wait on a process group rather than a
         // process id by using the negative of its value.
-        s_disowned_pids.acquire()->push_back(*pgid * -1);
+        disowned_pids->push_back(*pgid * -1);
     } else {
         // Instead, add the PIDs of any external processes
         for (auto &process : j->processes) {
             if (process->pid) {
-                s_disowned_pids.acquire()->push_back(process->pid);
+                disowned_pids->push_back(process->pid);
             }
         }
     }

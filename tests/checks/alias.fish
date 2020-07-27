@@ -24,3 +24,10 @@ alias | grep -Ev '^alias (fish_indent|fish_key_reader) '
 # #4756 - missing "--" argument to string causing issues with "--" options
 alias l. "ls -d .*"
 # No output
+
+alias d "'/mnt/c/Program Files (x86)/devenv.exe' /Edit"
+functions d
+# CHECK: # Defined in - @ line 1
+# CHECK: function d --wraps=\'/mnt/c/Program\ Files\ \(x86\)/devenv.exe\'\ /Edit --description alias\ d\ \'/mnt/c/Program\ Files\ \(x86\)/devenv.exe\'\ /Edit
+# CHECK: '/mnt/c/Program Files (x86)/devenv.exe' /Edit $argv;
+# CHECK: end

@@ -57,6 +57,12 @@ function alias --description 'Creates a function wrapping a command'
         end
     end
     set -l cmd_string (string escape -- "alias $argv")
+
+    # We've tokenized the first word, but we need to reescape them so they won't be split apart by `source`.
+    # E.g. if the first_word is "some command with spaces", that needs to be understood as one argument.
+    # As $body is the rest of the tokenized read, it doesn't need to be escaped.
+    set first_word (string escape -- $first_word)
+
     set wrapped_cmd (string join ' ' -- $first_word $body | string escape)
     echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
     if set -q _flag_save

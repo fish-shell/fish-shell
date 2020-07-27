@@ -456,10 +456,7 @@ class job_t {
 
     /// Continues running a job, which may be stopped, or may just have started.
     /// This will send SIGCONT if the job is stopped.
-    ///
-    /// \param reclaim_foreground_pgrp whether, when the job finishes or stops, to reclaim the
-    /// foreground pgrp (via tcsetpgrp).
-    void continue_job(parser_t &parser, bool reclaim_foreground_pgrp);
+    void continue_job(parser_t &parser);
 
     /// Send the specified signal to all processes in this job.
     /// \return true on success, false on failure.

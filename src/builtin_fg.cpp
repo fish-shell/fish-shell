@@ -107,6 +107,6 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     parser.job_promote(job);
     job->group->set_is_foreground(true);
 
-    job->continue_job(parser, true);
+    job->continue_job(parser);
     return STATUS_CMD_OK;
 }

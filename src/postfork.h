@@ -42,7 +42,7 @@ void report_setpgid_error(int err, pid_t desired_pgid, const job_t *j, const pro
 ///
 /// \return 0 on success, -1 on failure. When this function returns, signals are always unblocked.
 /// On failure, signal handlers, io redirections and process group of the process is undefined.
-int child_setup_process(pid_t new_termowner, const job_t &job, bool is_forked,
+int child_setup_process(pid_t new_termowner, pid_t fish_pgrp, const job_t &job, bool is_forked,
                         const dup2_list_t &dup2s);
 
 /// Call fork(), retrying on failure a few times.

@@ -156,7 +156,7 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
 
     // child_setup_process makes sure signals are properly set up.
     dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
-    if (child_setup_process(INVALID_PID, *j, false, redirs) == 0) {
+    if (child_setup_process(INVALID_PID, INVALID_PID, *j, false, redirs) == 0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -311,6 +311,11 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
                                    const dup2_list_t &dup2s, const char *fork_type,
                                    const std::function<void()> &child_action) {
     assert(!job->group->is_internal() && "Internal groups should never need to fork");
+    // Decide if we want to job to control the tty.
+    // If so we need to get our pgroup; if not we don't need the pgroup.
+    bool claim_tty = job->group->should_claim_terminal();
+    pid_t fish_pgrp = claim_tty ? getpgrp() : INVALID_PID;
+
     pid_t pid = execute_fork();
     if (pid == 0) {
         // This is the child process. Setup redirections, print correct output to
@@ -322,8 +327,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         if (int err = execute_setpgid(p->pid, pgid, false /* not parent */)) {
             report_setpgid_error(err, pgid, job.get(), p);
         }
-        child_setup_process(job->group->should_claim_terminal() ? pgid : INVALID_PID, *job, true,
-                            dup2s);
+        child_setup_process(claim_tty ? pgid : INVALID_PID, fish_pgrp, *job, true, dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }
@@ -902,9 +906,6 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         return true;
     }
 
-    pid_t pgrp = getpgrp();
-    // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
-    const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == pgrp);
     const size_t stdout_read_limit = parser.libdata().read_limit;
 
     // Get the list of all FDs so we can ensure our pipes do not conflict.
@@ -1003,7 +1004,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         return false;
     }
 
-    j->continue_job(parser, reclaim_foreground_pgrp);
+    j->continue_job(parser);
     return true;
 }
 

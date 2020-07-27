@@ -748,9 +748,47 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
     }
 
     // If we are continuing, ensure that stdin is marked as blocking first (issue #176).
+    // Also restore tty modes.
     if (continuing_from_stopped) {
         make_fd_blocking(STDIN_FILENO);
+        if (jg->tmodes.has_value()) {
+            int res = tcsetattr(STDIN_FILENO, TCSADRAIN, &jg->tmodes.value());
+            if (res < 0) wperror(L"tcsetattr");
+        }
     }
+
+    // Ok, we want to transfer to the child.
+    // Note it is important to be very careful about calling tcsetpgrp()!
+    // fish ignores SIGTTOU which means that it has the power to reassign the tty even if it doesn't
+    // own it. This means that other processes may get SIGTTOU and become zombies.
+    // Check who own the tty now. Thre's five cases of interest:
+    //   1. The process's pgrp is the same as fish. In that case there is nothing to do.
+    //   2. There is no tty at all (tcgetpgrp() returns -1). For example running from a pure script.
+    //      Of course do not transfer it in that case.
+    //   3. The tty is owned by the process. This comes about often, as the process will call
+    //      tcsetpgrp() on itself between fork ane exec. This is the essential race inherent in
+    //      tcsetpgrp(). In this case we want to reclaim the tty, but do not need to transfer it
+    //      ourselves since the child won the race.
+    //   4. The tty is owned by a different process. This may come about if fish is running in the
+    //      background with job control enabled. Do not transfer it.
+    //   5. The tty is owned by fish. In that case we want to transfer the pgid.
+    pid_t fish_pgrp = getpgrp();
+    if (fish_pgrp == pgid) {
+        // Case 1.
+        return notneeded;
+    }
+    pid_t current_owner = tcgetpgrp(STDIN_FILENO);
+    if (current_owner < 0) {
+        // Case 2.
+        return notneeded;
+    } else if (current_owner == pgid) {
+        // Case 3.
+        return success;
+    } else if (current_owner != pgid && current_owner != fish_pgrp) {
+        // Case 4.
+        return notneeded;
+    }
+    // Case 5 - we do want to transfer it.
 
     // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
     // is not the process group ID of a process in the same session as the calling process."
@@ -835,13 +873,6 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
         break;
     }
 
-    if (continuing_from_stopped && jg->tmodes.has_value()) {
-        int result = tcsetattr(STDIN_FILENO, TCSADRAIN, &jg->tmodes.value());
-        if (result == -1) {
-            wperror(L"tcsetattr");
-        }
-    }
-
     return success;
 }
 
@@ -896,7 +927,7 @@ maybe_t<pid_t> job_t::get_pgid() const { return group->get_pgid(); }
 
 job_id_t job_t::job_id() const { return group->get_id(); }
 
-void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp) {
+void job_t::continue_job(parser_t &parser) {
     // Put job first in the job list.
     parser.job_promote(this);
     mut_flags().notified = false;
@@ -915,11 +946,15 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp) {
     // Make sure we retake control of the terminal before leaving this function.
     bool term_transferred = false;
     cleanup_t take_term_back([&] {
-        if (term_transferred && reclaim_foreground_pgrp) {
-            // Only restore terminal attrs if we're continuing a job. See:
+        if (term_transferred) {
+            // Should we restore the terminal attributes?
+            // Historically we have done this conditionally only if we sent SIGCONT.
+            // TODO: rationalize what the right behavior here is.
+            bool restore_attrs = send_sigcont;
+            // Issues of interest:
             // https://github.com/fish-shell/fish-shell/issues/121
             // https://github.com/fish-shell/fish-shell/issues/2114
-            terminal_return_from_job_group(this->group.get(), send_sigcont);
+            terminal_return_from_job_group(this->group.get(), restore_attrs);
         }
     });
 

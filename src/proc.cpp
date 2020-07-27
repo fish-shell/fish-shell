@@ -994,7 +994,7 @@ void job_t::continue_job(parser_t &parser) {
 
     if (is_foreground() && is_completed()) {
         // Set $status only if we are in the foreground and the last process in the job has
-        // finished and is not a short-circuited builtin.
+        // finished.
         auto &p = processes.back();
         if (p->status.normal_exited() || p->status.signal_exited()) {
             parser.set_last_statuses(get_statuses());

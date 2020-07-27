@@ -31,7 +31,7 @@ BuildRequires: gcc48 gcc48-c++
 BuildRequires: glibc-langpack-en
 %endif
 %if 0%{?rhel} != 6
-BuildRequires: python3
+BuildRequires: python3 procps
 %endif
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)

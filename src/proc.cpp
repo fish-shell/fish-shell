@@ -927,7 +927,7 @@ maybe_t<pid_t> job_t::get_pgid() const { return group->get_pgid(); }
 
 job_id_t job_t::job_id() const { return group->get_id(); }
 
-void job_t::continue_job(parser_t &parser) {
+void job_t::continue_job(parser_t &parser, bool in_foreground) {
     // Put job first in the job list.
     parser.job_promote(this);
     mut_flags().notified = false;
@@ -984,7 +984,7 @@ void job_t::continue_job(parser_t &parser) {
             }
         }
 
-        if (is_foreground()) {
+        if (in_foreground) {
             // Wait for the status of our own job to change.
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
                 process_mark_finished_children(parser, true);
@@ -992,10 +992,10 @@ void job_t::continue_job(parser_t &parser) {
         }
     }
 
-    if (is_foreground() && is_completed()) {
+    if (in_foreground && is_completed()) {
         // Set $status only if we are in the foreground and the last process in the job has
         // finished.
-        auto &p = processes.back();
+        const auto &p = processes.back();
         if (p->status.normal_exited() || p->status.signal_exited()) {
             parser.set_last_statuses(get_statuses());
         }

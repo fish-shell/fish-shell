@@ -1004,7 +1004,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         return false;
     }
 
-    j->continue_job(parser);
+    j->continue_job(parser, !j->is_initially_background());
     return true;
 }
 

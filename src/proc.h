@@ -456,7 +456,9 @@ class job_t {
 
     /// Continues running a job, which may be stopped, or may just have started.
     /// This will send SIGCONT if the job is stopped.
-    void continue_job(parser_t &parser);
+    /// If \p in_foreground is set, then wait for the job to stop or complete;
+    /// otherwise do not wait for the job.
+    void continue_job(parser_t &parser, bool in_foreground = true);
 
     /// Send the specified signal to all processes in this job.
     /// \return true on success, false on failure.

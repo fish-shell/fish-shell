@@ -710,7 +710,7 @@ static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<j
 static bool exec_process_in_job(parser_t &parser, process_t *p, const std::shared_ptr<job_t> &j,
                                 const io_chain_t &block_io, autoclose_pipes_t pipes,
                                 const fd_set_t &conflicts, const autoclose_pipes_t &deferred_pipes,
-                                size_t stdout_read_limit, bool is_deferred_run = false) {
+                                bool is_deferred_run = false) {
     // The write pipe (destined for stdout) needs to occur before redirections. For example,
     // with a redirection like this:
     //
@@ -818,7 +818,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
         }
 
         case process_type_t::builtin: {
-            io_streams_t builtin_io_streams{stdout_read_limit};
+            io_streams_t builtin_io_streams{parser.libdata().read_limit};
             builtin_io_streams.job_group = j->group;
             if (!exec_internal_builtin_proc(parser, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
@@ -906,8 +906,6 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         return true;
     }
 
-    const size_t stdout_read_limit = parser.libdata().read_limit;
-
     // Get the list of all FDs so we can ensure our pipes do not conflict.
     fd_set_t conflicts = block_io.fd_set();
     for (const auto &p : j->processes) {
@@ -973,7 +971,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
             deferred_pipes = std::move(proc_pipes);
         } else {
             if (!exec_process_in_job(parser, p.get(), j, block_io, std::move(proc_pipes), conflicts,
-                                     deferred_pipes, stdout_read_limit)) {
+                                     deferred_pipes)) {
                 exec_error = true;
                 break;
             }
@@ -985,7 +983,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
     if (!exec_error && deferred_process) {
         assert(deferred_pipes.write.valid() && "Deferred process should always have a write pipe");
         if (!exec_process_in_job(parser, deferred_process, j, block_io, std::move(deferred_pipes),
-                                 conflicts, {}, stdout_read_limit, true)) {
+                                 conflicts, {}, true)) {
             exec_error = true;
         }
     }

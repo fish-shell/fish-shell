@@ -46,6 +46,10 @@ void logger_t::log1(wchar_t c) { std::fputwc(c, file_); }
 
 void logger_t::log1(char c) { std::fwprintf(file_, L"%c", c); }
 
+void logger_t::log1(int64_t v) { std::fwprintf(file_, L"%lld", v); }
+
+void logger_t::log1(uint64_t v) { std::fwprintf(file_, L"%llu", v); }
+
 void logger_t::log_fmt(const category_t &cat, const wchar_t *fmt, ...) {
     va_list va;
     va_start(va, fmt);

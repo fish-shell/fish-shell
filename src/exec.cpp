@@ -48,6 +48,7 @@
 #include "signal.h"
 #include "timer.h"
 #include "trace.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Number of calls to fork() or posix_spawn().

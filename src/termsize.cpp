@@ -4,6 +4,7 @@
 
 #include "maybe.h"
 #include "parser.h"
+#include "wcstringutil.h"
 #include "wutil.h"
 
 // A counter which is incremented every SIGWINCH, or when the tty is otherwise invalidated.

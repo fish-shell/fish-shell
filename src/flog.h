@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "global_safety.h"
-#include "wcstringutil.h"
 
 using wcstring = std::wstring;
 using wcstring_list_t = std::vector<wcstring>;
@@ -115,14 +114,20 @@ class logger_t {
     void log1(const char *);
     void log1(wchar_t);
     void log1(char);
+    void log1(int64_t);
+    void log1(uint64_t);
 
     void log1(const wcstring &s) { log1(s.c_str()); }
     void log1(const std::string &s) { log1(s.c_str()); }
 
     template <typename T,
               typename Enabler = typename std::enable_if<std::is_integral<T>::value>::type>
-    void log1(const T &v) {
-        log1(to_string(v));
+    void log1(T v) {
+        if (std::is_signed<T>::value) {
+            log1(static_cast<int64_t>(v));
+        } else {
+            log1(static_cast<uint64_t>(v));
+        }
     }
 
     template <typename T>

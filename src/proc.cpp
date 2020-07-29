@@ -51,6 +51,7 @@
 #include "reader.h"
 #include "sanity.h"
 #include "signal.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// The signals that signify crashes to us.

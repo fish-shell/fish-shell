@@ -29,6 +29,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 using cstring = std::string;

@@ -344,9 +344,9 @@ class io_buffer_t {
         buffer_.append(ptr, ptr + count);
     }
 
-    /// Appends data from a given output_stream_t.
-    /// Marks the receiver as discarded if the stream was discarded.
-    void append_from_stream(const output_stream_t &stream);
+    /// Appends data from a given separated buffer.
+    /// Marks the receiver as discarded if the buffer was discarded.
+    void append_from_wide_buffer(const separated_buffer_t<wcstring> &input);
 };
 
 using io_data_ref_t = std::shared_ptr<const io_data_t>;
@@ -398,36 +398,36 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset);
 /// cloexec. \returns invalid fd on failure (in which case the given fd is still closed).
 autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset);
 
-/// Class representing the output that a builtin can generate.
+/// Base class representing the output that a builtin can generate.
+/// This has various subclasses depending on the ultimate output destination.
 class output_stream_t {
-   private:
-    /// Storage for our data.
-    separated_buffer_t<wcstring> buffer_;
-
-    // No copying.
-    output_stream_t(const output_stream_t &s) = delete;
-    void operator=(const output_stream_t &s) = delete;
-
    public:
-    output_stream_t(size_t buffer_limit) : buffer_(buffer_limit) {}
+    /// Required override point. The output stream receives a string \p s with \p amt chars.
+    virtual void append(const wchar_t *s, size_t amt) = 0;
 
-    void append(const wcstring &s) { buffer_.append(s.begin(), s.end()); }
+    /// \return the separated buffer if this holds one, otherwise nullptr.
+    virtual const separated_buffer_t<wcstring> *get_separated_buffer() const { return nullptr; }
 
-    separated_buffer_t<wcstring> &buffer() { return buffer_; }
+    /// An optional override point. This is for explicit separation.
+    virtual void append_with_separation(const wchar_t *s, size_t len, separation_type_t type);
 
-    const separated_buffer_t<wcstring> &buffer() const { return buffer_; }
+    /// The following are all convenience overrides.
+    void append_with_separation(const wcstring &s, separation_type_t type) {
+        append_with_separation(s.data(), s.size(), type);
+    }
 
+    /// Append a string.
+    void append(const wcstring &s) { append(s.data(), s.size()); }
     void append(const wchar_t *s) { append(s, std::wcslen(s)); }
 
+    /// Append a char.
     void append(wchar_t s) { append(&s, 1); }
-
-    void append(const wchar_t *s, size_t amt) { buffer_.append(s, s + amt); }
+    void push_back(wchar_t c) { append(c); }
 
     // Append data from a narrow buffer, widening it.
     void append_narrow_buffer(const separated_buffer_t<std::string> &buffer);
 
-    void push_back(wchar_t c) { append(c); }
-
+    /// Append a format string.
     void append_format(const wchar_t *format, ...) {
         va_list va;
         va_start(va, format);
@@ -437,12 +437,61 @@ class output_stream_t {
 
     void append_formatv(const wchar_t *format, va_list va) { append(vformat_string(format, va)); }
 
+    // No copying.
+    output_stream_t(const output_stream_t &s) = delete;
+    void operator=(const output_stream_t &s) = delete;
+
+    output_stream_t() = default;
+    virtual ~output_stream_t() = default;
+};
+
+/// A null output stream which ignores all writes.
+class null_output_stream_t final : public output_stream_t {
+    virtual void append(const wchar_t *s, size_t amt) override;
+};
+
+/// An output stream for builtins which outputs to an fd.
+/// Note the fd may be something like stdout; there is no ownership implied here.
+class fd_output_stream_t final : public output_stream_t {
+   public:
+    /// Construct from a file descriptor, which must be nonegative.
+    explicit fd_output_stream_t(int fd) : fd_(fd) { assert(fd_ >= 0 && "Invalid fd"); }
+
+    void append(const wchar_t *s, size_t amt) override;
+
+   private:
+    /// The file descriptor to write to.
+    const int fd_;
+
+    /// Whether we have received an error.
+    bool errored_{false};
+};
+
+/// An output stream for builtins which buffers into a separated buffer.
+class buffered_output_stream_t final : public output_stream_t {
+   public:
+    explicit buffered_output_stream_t(size_t buffer_limit) : buffer_(buffer_limit) {}
+
+    void append(const wchar_t *s, size_t amt) override;
+    void append_with_separation(const wchar_t *s, size_t len, separation_type_t type) override;
+
     wcstring contents() const { return buffer_.newline_serialized(); }
+
+    /// Access the buffer.
+    separated_buffer_t<wcstring> &buffer() { return buffer_; }
+    const separated_buffer_t<wcstring> &buffer() const { return buffer_; }
+
+    const separated_buffer_t<wcstring> *get_separated_buffer() const override { return &buffer_; }
+
+   private:
+    /// Storage for our data.
+    separated_buffer_t<wcstring> buffer_;
 };
 
 struct io_streams_t {
-    output_stream_t out;
-    output_stream_t err;
+    // Streams for out and err.
+    output_stream_t &out;
+    output_stream_t &err;
 
     // fd representing stdin. This is not closed by the destructor.
     int stdin_fd{-1};
@@ -473,7 +522,7 @@ struct io_streams_t {
     io_streams_t(const io_streams_t &) = delete;
     void operator=(const io_streams_t &) = delete;
 
-    explicit io_streams_t(size_t read_limit) : out(read_limit), err(read_limit), stdin_fd(-1) {}
+    io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
 };
 
 #endif

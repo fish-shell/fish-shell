@@ -2533,7 +2533,8 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
         i++;
     }
     argv[i + 1] = NULL;
-    io_streams_t streams(0);
+    null_output_stream_t null{};
+    io_streams_t streams(null, null);
     int result = builtin_test(parser, streams, argv);
 
     if (expected != result) err(L"expected builtin_test() to return %d, got %d", expected, result);
@@ -2565,7 +2566,8 @@ static bool run_test_test(int expected, const wcstring &str) {
 static void test_test_brackets() {
     // Ensure [ knows it needs a ].
     parser_t &parser = parser_t::principal_parser();
-    io_streams_t streams(0);
+    null_output_stream_t null{};
+    io_streams_t streams(null, null);
 
     null_terminated_array_t<wchar_t> args;
 
@@ -5100,7 +5102,9 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
                                 const wchar_t *expected_out) {
     parser_t &parser = parser_t::principal_parser();
-    io_streams_t streams(0);
+    buffered_output_stream_t outs{0};
+    null_output_stream_t errs{};
+    io_streams_t streams(outs, errs);
     streams.stdin_is_directly_redirected = false;  // read from argv instead of stdin
     int rc = builtin_string(parser, streams, const_cast<wchar_t **>(argv));
     wcstring args;
@@ -5111,10 +5115,10 @@ static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
     if (rc != expected_rc) {
         err(L"Test failed on line %lu: [%ls]: expected return code %d but got %d", __LINE__,
             args.c_str(), expected_rc, rc);
-    } else if (streams.out.contents() != expected_out) {
+    } else if (outs.contents() != expected_out) {
         err(L"Test failed on line %lu: [%ls]: expected [%ls] but got [%ls]", __LINE__, args.c_str(),
             escape_string(expected_out, ESCAPE_ALL).c_str(),
-            escape_string(streams.out.contents(), ESCAPE_ALL).c_str());
+            escape_string(outs.contents(), ESCAPE_ALL).c_str());
     }
 }
 

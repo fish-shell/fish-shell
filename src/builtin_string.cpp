@@ -1185,7 +1185,6 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
                 // Remove the last element if it is empty.
                 if (splits.back().empty()) splits.pop_back();
             }
-            auto &buff = streams.out.buffer();
             if (opts.fields.size() > 0) {
                 // Print nothing and return error if any of the supplied
                 // fields do not exist, unless `--allow-empty` is used.
@@ -1199,12 +1198,13 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
                 }
                 for (const auto &field : opts.fields) {
                     if (field - 1 < (long)splits.size()) {
-                        buff.append(splits.at(field - 1), separation_type_t::explicitly);
+                        streams.out.append_with_separation(splits.at(field - 1),
+                                                           separation_type_t::explicitly);
                     }
                 }
             } else {
                 for (const wcstring &split : splits) {
-                    buff.append(split, separation_type_t::explicitly);
+                    streams.out.append_with_separation(split, separation_type_t::explicitly);
                 }
             }
         }
@@ -1228,20 +1228,21 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wch
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    auto &buff = streams.out.buffer();
     arg_iterator_t aiter(argv, optind, streams, /* don't split */ false);
+    size_t appended = 0;
     while (const wcstring *arg = aiter.nextstr()) {
-        auto begin = arg->cbegin(), end = arg->cend();
+        const wchar_t *s = arg->c_str();
+        size_t len = arg->size();
         if (!opts.no_trim_newlines) {
-            while (end > begin && *(end - 1) == L'\n') {
-                --end;
+            while (len > 0 && s[len - 1] == L'\n') {
+                len -= 1;
             }
         }
-
-        buff.append(begin, end, separation_type_t::explicitly);
+        streams.out.append_with_separation(s, len, separation_type_t::explicitly);
+        appended += len;
     }
 
-    return buff.size() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    return appended > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
 // Helper function to abstract the repeat logic from string_repeat

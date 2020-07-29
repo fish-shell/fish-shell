@@ -480,19 +480,15 @@ wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path) {
 }
 
 wcstring wdirname(const wcstring &path) {
-    char *tmp = wcs2str(path);
-    char *narrow_res = dirname(tmp);
-    wcstring result = format_string(L"%s", narrow_res);
-    free(tmp);
-    return result;
+    std::string tmp = wcs2string(path);
+    const char *narrow_res = dirname(&tmp[0]);
+    return str2wcstring(narrow_res);
 }
 
 wcstring wbasename(const wcstring &path) {
-    char *tmp = wcs2str(path);
-    char *narrow_res = basename(tmp);
-    wcstring result = format_string(L"%s", narrow_res);
-    free(tmp);
-    return result;
+    std::string tmp = wcs2string(path);
+    char *narrow_res = basename(&tmp[0]);
+    return str2wcstring(narrow_res);
 }
 
 // Really init wgettext.

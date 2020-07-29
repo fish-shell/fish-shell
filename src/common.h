@@ -290,8 +290,6 @@ wcstring str2wcstring(const std::string &in, size_t len);
 ///
 /// This function decodes illegal character sequences in a reversible way using the private use
 /// area.
-char *wcs2str(const wchar_t *in);
-char *wcs2str(const wcstring &in);
 std::string wcs2string(const wcstring &input);
 
 enum fuzzy_match_type_t {

@@ -110,12 +110,12 @@ static relaxed_atomic_t<int> s_fork_count{0};
 
     auto export_vars = vars.export_arr();
     const char *const *envv = export_vars->get();
-    char *actual_cmd = wcs2str(p->actual_cmd);
+    std::string actual_cmd = wcs2string(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
     // Bounce to launch_process. This never returns.
-    safe_launch_process(p, actual_cmd, argv_array.get(), envv);
+    safe_launch_process(p, actual_cmd.c_str(), argv_array.get(), envv);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.

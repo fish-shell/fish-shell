@@ -95,7 +95,6 @@ int get_debug_stack_frames() { return debug_stack_frames; }
 /// This is set during startup and not modified after.
 static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
 
-static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(wchar_t msg_level, const wcstring &msg);
 
 #if defined(OS_IS_CYGWIN) || defined(WSL)
@@ -333,33 +332,6 @@ wcstring str2wcstring(const std::string &in, size_t len) {
     return str2wcs_internal(in.data(), len);
 }
 
-char *wcs2str(const wchar_t *in, size_t len) {
-    if (!in) return nullptr;
-    size_t desired_size = MAX_UTF8_BYTES * len + 1;
-    char local_buff[512];
-    if (desired_size <= sizeof local_buff / sizeof *local_buff) {
-        // Convert into local buff, then use strdup() so we don't waste malloc'd space.
-        char *result = wcs2str_internal(in, local_buff);
-        if (result) {
-            // It converted into the local buffer, so copy it.
-            result = strdup(result);
-            assert(result);
-        }
-        return result;
-    }
-
-    // Here we probably allocate a buffer probably much larger than necessary.
-    auto out = static_cast<char *>(malloc(MAX_UTF8_BYTES * len + 1));
-    assert(out);
-    // Instead of returning the return value of wcs2str_internal, return `out` directly.
-    // This eliminates false warnings in coverity about resource leaks.
-    wcs2str_internal(in, out);
-    return out;
-}
-
-char *wcs2str(const wchar_t *in) { return wcs2str(in, std::wcslen(in)); }
-char *wcs2str(const wcstring &in) { return wcs2str(in.c_str(), in.length()); }
-
 /// This function is distinguished from wcs2str_internal in that it allows embedded null bytes.
 std::string wcs2string(const wcstring &input) {
     std::string result;
@@ -393,47 +365,6 @@ std::string wcs2string(const wcstring &input) {
     }
 
     return result;
-}
-
-/// Converts the wide character string \c in into it's narrow equivalent, stored in \c out. \c out
-/// must have enough space to fit the entire string.
-///
-/// This function decodes illegal character sequences in a reversible way using the private use
-/// area.
-static char *wcs2str_internal(const wchar_t *in, char *out) {
-    assert(in && out && "in and out must not be null");
-    size_t in_pos = 0;
-    size_t out_pos = 0;
-    mbstate_t state = {};
-
-    while (in[in_pos]) {
-        if (in[in_pos] == INTERNAL_SEPARATOR) {
-            // do nothing
-        } else if (in[in_pos] >= ENCODE_DIRECT_BASE && in[in_pos] < ENCODE_DIRECT_BASE + 256) {
-            out[out_pos++] = in[in_pos] - ENCODE_DIRECT_BASE;
-        } else if (MB_CUR_MAX == 1)  // single-byte locale (C/POSIX/ISO-8859)
-        {
-            // If `wc` contains a wide character we emit a question-mark.
-            if (in[in_pos] & ~0xFF) {
-                out[out_pos++] = '?';
-            } else {
-                out[out_pos++] = static_cast<unsigned char>(in[in_pos]);
-            }
-        } else {
-            size_t len = std::wcrtomb(&out[out_pos], in[in_pos], &state);
-            if (len == static_cast<size_t>(-1)) {
-                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation",
-                      in[in_pos]);
-                std::memset(&state, 0, sizeof(state));
-            } else {
-                out_pos += len;
-            }
-        }
-        in_pos++;
-    }
-    out[out_pos] = 0;
-
-    return out;
 }
 
 /// Test if the character can be encoded using the current locale.

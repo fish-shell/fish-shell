@@ -537,14 +537,13 @@ autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, w
     int saved_errno;
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
     autoclose_fd_t result;
-    char *narrow_str = nullptr;
+    std::string narrow_str;
     for (size_t attempt = 0; attempt < 10 && !result.valid(); attempt++) {
-        narrow_str = wcs2str(tmp_name_template);
-        result.reset(fish_mkstemp_cloexec(narrow_str));
+        narrow_str = wcs2string(tmp_name_template);
+        result.reset(fish_mkstemp_cloexec(&narrow_str[0]));
         saved_errno = errno;
     }
     *out_path = str2wcstring(narrow_str);
-    free(narrow_str);
 
     if (!result.valid()) {
         const char *error = std::strerror(saved_errno);

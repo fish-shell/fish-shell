@@ -496,42 +496,25 @@ static char *str2hex(const char *input) {
 /// Test wide/narrow conversion by creating random strings and verifying that the original string
 /// comes back through double conversion.
 static void test_convert() {
-    int i;
-    std::vector<char> sb{};
-
     say(L"Testing wide/narrow string conversion");
-
-    for (i = 0; i < ESCAPE_TEST_COUNT; i++) {
-        const char *o, *n;
-        char c;
-
-        sb.clear();
+    for (int i = 0; i < ESCAPE_TEST_COUNT; i++) {
+        std::string orig{};
         while (random() % ESCAPE_TEST_LENGTH) {
-            c = random();
-            sb.push_back(c);
-        }
-        c = 0;
-        sb.push_back(c);
-
-        o = &sb.at(0);
-        const wcstring w = str2wcstring(o);
-        n = wcs2str(w);
-
-        if (!o || !n) {
-            err(L"Line %d - Conversion cycle of string %s produced null pointer on %s", __LINE__, o,
-                L"wcs2str");
+            char c = random();
+            orig.push_back(c);
         }
 
-        if (std::strcmp(o, n)) {
-            char *o2 = str2hex(o);
-            char *n2 = str2hex(n);
+        const wcstring w = str2wcstring(orig);
+        std::string n = wcs2string(w);
+        if (orig != n) {
+            char *o2 = str2hex(orig.c_str());
+            char *n2 = str2hex(n.c_str());
             err(L"Line %d - %d: Conversion cycle of string:\n%4d chars: %s\n"
                 L"produced different string:\n%4d chars: %s",
-                __LINE__, i, std::strlen(o), o2, std::strlen(n), n2);
+                __LINE__, i, orig.size(), o2, n.size(), n2);
             free(o2);
             free(n2);
         }
-        free((void *)n);
     }
 }
 

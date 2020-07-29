@@ -324,18 +324,18 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     if (vars.get(L"HOME").missing_or_empty()) {
         auto user_var = vars.get(L"USER");
         if (!user_var.missing_or_empty()) {
-            char *unam_narrow = wcs2str(user_var->as_string());
+            std::string unam_narrow = wcs2string(user_var->as_string());
             struct passwd userinfo;
             struct passwd *result;
             char buf[8192];
-            int retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
+            int retval = getpwnam_r(unam_narrow.c_str(), &userinfo, buf, sizeof(buf), &result);
             if (retval || !result) {
                 // Maybe USER is set but it's bogus. Reset USER from the db and try again.
                 setup_user(true);
                 user_var = vars.get(L"USER");
                 if (!user_var.missing_or_empty()) {
-                    unam_narrow = wcs2str(user_var->as_string());
-                    retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);
+                    unam_narrow = wcs2string(user_var->as_string());
+                    retval = getpwnam_r(unam_narrow.c_str(), &userinfo, buf, sizeof(buf), &result);
                 }
             }
             if (!retval && result && userinfo.pw_dir) {
@@ -346,7 +346,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
                 // so it isn't necessary to warn here as well.
                 vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
             }
-            free(unam_narrow);
         } else {
             // If $USER is empty as well (which we tried to set above), we can't get $HOME.
             vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);

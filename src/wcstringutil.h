@@ -3,10 +3,12 @@
 #define FISH_WCSTRINGUTIL_H
 
 #include <algorithm>
+#include <cstring>
 #include <string>
 #include <utility>
 
 #include "common.h"
+#include "expand.h"
 
 /// Test if a string prefixes another. Returns true if a is a prefix of b.
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
@@ -135,6 +137,47 @@ wcstring trim(wcstring input, const wchar_t *any_of);
 
 /// Converts a string to lowercase.
 wcstring wcstolower(wcstring input);
+
+// Out-of-line helper for wcs2string_callback.
+void wcs2string_bad_char(wchar_t);
+
+/// Implementation of wcs2string that accepts a callback.
+/// This invokes \p func with (const char*, size_t) pairs.
+/// If \p func returns false, it stops; otherwise it continues.
+/// \return false if the callback returned false, otherwise true.
+template <typename Func>
+bool wcs2string_callback(const wchar_t *input, size_t len, const Func &func) {
+    mbstate_t state = {};
+    char converted[MB_LEN_MAX];
+
+    for (size_t i = 0; i < len; i++) {
+        wchar_t wc = input[i];
+        // TODO: this doesn't seem sound.
+        if (wc == INTERNAL_SEPARATOR) {
+            // do nothing
+        } else if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
+            converted[0] = wc - ENCODE_DIRECT_BASE;
+            if (!func(converted, 1)) return false;
+        } else if (MB_CUR_MAX == 1) {  // single-byte locale (C/POSIX/ISO-8859)
+            // If `wc` contains a wide character we emit a question-mark.
+            if (wc & ~0xFF) {
+                wc = '?';
+            }
+            converted[0] = wc;
+            if (!func(converted, 1)) return false;
+        } else {
+            std::memset(converted, 0, sizeof converted);
+            size_t len = std::wcrtomb(converted, wc, &state);
+            if (len == static_cast<size_t>(-1)) {
+                wcs2string_bad_char(wc);
+                std::memset(&state, 0, sizeof(state));
+            } else {
+                if (!func(converted, len)) return false;
+            }
+        }
+    }
+    return true;
+}
 
 /// Support for iterating over a newline-separated string.
 template <typename Collection>

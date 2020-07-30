@@ -8,6 +8,7 @@
 #include <locale>
 
 #include "common.h"
+#include "flog.h"
 
 wcstring_range wcstring_tok(wcstring &str, const wcstring &needle, wcstring_range last) {
     using size_type = wcstring::size_type;
@@ -195,4 +196,8 @@ wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
         first = false;
     }
     return result;
+}
+
+void wcs2string_bad_char(wchar_t wc) {
+    FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", wc);
 }

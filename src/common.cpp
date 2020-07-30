@@ -332,38 +332,13 @@ wcstring str2wcstring(const std::string &in, size_t len) {
     return str2wcs_internal(in.data(), len);
 }
 
-/// This function is distinguished from wcs2str_internal in that it allows embedded null bytes.
 std::string wcs2string(const wcstring &input) {
     std::string result;
     result.reserve(input.size());
-
-    mbstate_t state = {};
-    char converted[MB_LEN_MAX];
-
-    for (auto wc : input) {
-        if (wc == INTERNAL_SEPARATOR) {
-            // do nothing
-        } else if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
-            result.push_back(wc - ENCODE_DIRECT_BASE);
-        } else if (MB_CUR_MAX == 1) {  // single-byte locale (C/POSIX/ISO-8859)
-            // If `wc` contains a wide character we emit a question-mark.
-            if (wc & ~0xFF) {
-                wc = '?';
-            }
-            converted[0] = wc;
-            result.append(converted, 1);
-        } else {
-            std::memset(converted, 0, sizeof converted);
-            size_t len = std::wcrtomb(converted, wc, &state);
-            if (len == static_cast<size_t>(-1)) {
-                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", wc);
-                std::memset(&state, 0, sizeof(state));
-            } else {
-                result.append(converted, len);
-            }
-        }
-    }
-
+    wcs2string_callback(input.data(), input.size(), [&](const char *buff, size_t bufflen) {
+        result.append(buff, bufflen);
+        return true;
+    });
     return result;
 }
 

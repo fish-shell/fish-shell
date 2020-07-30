@@ -113,6 +113,17 @@ int wmkdir(const wcstring &name, int mode);
 /// Wide character version of rename.
 int wrename(const wcstring &oldName, const wcstring &newv);
 
+/// Write a wide string to a file descriptor. This avoids doing any additional allocation.
+/// This does NOT retry on EINTR or EAGAIN, it simply returns.
+/// \return -1 on error in which case errno will have been set. In this event, the number of bytes
+/// actually written cannot be obtained.
+ssize_t wwrite_to_fd(const wchar_t *s, size_t len, int fd);
+
+/// Variant of above that accepts a wcstring.
+inline ssize_t wwrite_to_fd(const wcstring &s, int fd) {
+    return wwrite_to_fd(s.c_str(), s.size(), fd);
+}
+
 #define PUA1_START 0xE000
 #define PUA1_END 0xF900
 #define PUA2_START 0xF0000

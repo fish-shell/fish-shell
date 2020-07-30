@@ -5025,6 +5025,49 @@ static void test_wcstring_tok() {
     }
 }
 
+static void test_wwrite_to_fd() {
+    say(L"Testing wwrite_to_fd");
+    char t[] = "/tmp/fish_test_wwrite.XXXXXX";
+    if (!mktemp(t)) {
+        err(L"Unable to create temporary file");
+        return;
+    }
+    size_t sizes[] = {0, 1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2};
+    for (size_t size : sizes) {
+        autoclose_fd_t fd{open(t, O_RDWR | O_TRUNC | O_CREAT, 0666)};
+        if (!fd.valid()) {
+            wperror(L"open");
+            err(L"Unable to open temporary file");
+            return;
+        }
+        wcstring input{};
+        for (size_t i = 0; i < size; i++) {
+            input.push_back(wchar_t(random()));
+        }
+
+        ssize_t amt = wwrite_to_fd(input, fd.fd());
+        if (amt < 0) {
+            wperror(L"write");
+            err(L"Unable to write to temporary file");
+            return;
+        }
+        std::string narrow = wcs2string(input);
+        size_t expected_size = narrow.size();
+        do_test(amt == expected_size);
+
+        if (lseek(fd.fd(), 0, SEEK_SET) < 0) {
+            wperror(L"seek");
+            err(L"Unable to seek temporary file");
+            return;
+        }
+
+        std::string contents(expected_size, '\0');
+        ssize_t read_amt = read(fd.fd(), &contents[0], expected_size);
+        do_test(read_amt >= 0 && static_cast<size_t>(read_amt) == expected_size);
+    }
+    (void)remove(t);
+}
+
 static void test_pcre2_escape() {
     say(L"Testing escaping strings as pcre2 literals");
     // plain text should not be needlessly escaped
@@ -5928,6 +5971,7 @@ int main(int argc, char **argv) {
 
     if (should_test_function("utility_functions")) test_utility_functions();
     if (should_test_function("wcstring_tok")) test_wcstring_tok();
+    if (should_test_function("wwrite_to_fd")) test_wwrite_to_fd();
     if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("env")) test_env_snapshot();
     if (should_test_function("str_to_num")) test_str_to_num();

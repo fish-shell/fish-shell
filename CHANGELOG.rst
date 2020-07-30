@@ -1,64 +1,49 @@
-fish next-minor
-===============
+fish 3.2.0 (released ???)
+=========================
 
 Notable improvements and fixes
 ------------------------------
 
--  ``jobs --quiet PID`` will no longer print ‘no suitable job’ if the
-   job for PID does not exist (e.g. because it has finished). #6809
--  A variable ``fish_kill_signal`` will be set to the signal that
-   terminated the last foreground job, or ``0`` if the job exited
-   normally.
--  On BSD systems, with the ``-s`` option, ``fish_md5`` does not use the
-   given string, but ``-s``. From now on the string is used.
+-  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
+-  A new variable, ``fish_kill_signal``, is set to the signal tha terminated the last foreground job, or ``0`` if the job exited normally.
 -  Ctrl-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
--  A new variable, ``$fish_vi_force_cursor``, has been added. This can
-   be set to force ``fish_vi_cursor`` to attempt changing the cursor
-   shape in vi mode, regardless of terminal. Additionally, the
-   ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated; all
-   usages can be replaced by setting ``$fish_vi_force_cursor``.
+-  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
+   shape in vi mode, regardless of terminal. The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
 -  The history file is now created with user-private permissions,
    matching other shells (#6926). The directory containing the history
    file remains private, so there should not have been any private date
    revealed.
--  fish no longer disables flow control after every command.
-   Enterprising users can now enable it for external commands with
-   ``stty``. (#2315)
--  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in config.fish (#6960)
--  The ``_`` helper function to call into fish's gettext catalog has been made a builtin for simplicity and performance (#7036)
--  ``:`` (for doing nothing) and ``.`` (as a less readable name for ``source``) have also been made proper builtins rather than wrapper functions (#6854).
-- ``fish_preexec`` and ``fish_postexec`` events are no longer triggered
-  for empty commands.
+-  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
+   Although flow control remains off by default, enterprising users can now enable it for external commands with
+   ``stty`` (#2315). 
+-  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in ``config.fish`` (#6960).
+- ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands.
 - The ``test`` builtin now better shows where an error occured (#6030).
-- Add a helper function to know if the user is root (#7031).
 
 Syntax changes and new commands
 -------------------------------
+- A new ``fish_is_root_user`` simplifies checking for superuser privilege, largely for use in prompts (#7031).
+-  Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively.
 
 Scripting improvements
 ----------------------
-
--  Range limits in index range expansions like ``$x[$start..$end]`` may
-   be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last
-   item) respectively.
 -  ``string sub`` has a new ``--end`` option to specify the end index of
    a substring (#6765).
 -  ``string split`` has a new ``--fields`` option to specify fields to
    output, similar to ``cut -f`` (#6770).
 -  ``printf`` no longer prints an error if not given an argument (not
    even a format string)
--  The ``true`` and ``false`` builtins ignore any arguments, like other
-   shells (#7030).
--  Computed ("electric") variables are now only global in scope, so ``set -Uq status`` returns false (#7032).
+-  The ``true`` and ``false`` builtins ignore any arguments, like other shells (#7030).
+-  Computed ("electric") variables such as ``status`` are now only global in scope, so ``set -Uq status`` returns false (#7032).
 -  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (#6944).
 -  A new ``fish_posterror`` event fires when attempting to execute a command with syntax errors (#6880).
-- ``fish_indent`` now removes spurious quotes in simple cases (#6722)
+- ``fish_indent`` now removes spurious quotes in simple cases (#6722).
 - ``pushd`` only adds a directory to the stack if changing to it was successful.
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at
-   runtime (especially for functions). #977
--  Added a ``fish_job_summary`` function which is called whenever a
+   runtime (especially for functions) (#977).
+-  Added a ``fish_job_summary`` functionm which is called whenever a
    background job stops or ends, or any job terminates from a signal.
    The default behaviour can now be customized by redefining this
    function.
@@ -75,11 +60,11 @@ Interactive improvements
 -  The prompt is reprinted after a background job exits (#1018).
 -  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with `"> "` (#904).
 -  fish no longer inserts a space after a completion ending in ``.`` or
-   ``,`` was accepted (#6928).
+   ``,`` is accepted (#6928).
 -  When pressing Tab, fish displays ambiguous completions even when they
    have a common prefix, without the user having to press Tab again
    (#6924).
--  Control-z is now available for binding (#7152).
+-  Control-Z is now available for binding (#7152).
 
 
 New or improved bindings
@@ -107,10 +92,10 @@ Improved prompts
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
--  After clearing command history, success message ends in newline.
+-  ``history clear`` output is formatted with appropriate newlines.
 -  Autosuggestions now show up also when the cursor passes the right
    prompt (#6948).
--  The cursor shape in vi-mode is now also changed in Windows Terminal (#6999).
+-  The cursor shape in Vi mode changes properly in  Windows Terminal (#6999).
 -  The spurious warning about terminal size in small terminals has been removed (#6980).
 -  Dynamic titles are now enabled in Alacritty with its new terminfo entry (#7073).
 
@@ -133,6 +118,7 @@ Completions
    -  ``mpc``
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
    -  ``nmap``, ``ncat``
+   -  ``pyenv`` (#6551)
    -  ``rst2html``, ``rst2html4``, ``rst2html5``, ``rst2latex``,
       ``rst2man``, ``rst2odt``, ``rst2pseudoxml``, ``rst2s5``,
       ``rst2xetex``, ``rst2xml`` and ``rstpep2html``
@@ -146,6 +132,8 @@ Completions
    -  ``yadm``
    -  ``zopfli``, and ``zopflipng``
 
+- Lots of improvements to completions.
+
 Deprecations and removed features
 ---------------------------------
 - fish no longer attempts to modify the terminal size via `TIOCSWINSZ`.
@@ -155,17 +143,15 @@ For distributors and developers
 
 -  fish source tarballs are now distributed using the XZ compression
    method (#5460).
--  Allow finishing builds on OS X <10.13.6 (previously builds would fail
-   at the ``codesign`` step)
--  The pkg-config file now uses pkg-config variables
--  The default values for the extra_completionsdir, extra_functionsdir
-   and extra_confdir options now use the installation prefix instead of
-   hardcoding ``/usr/local``
+-  Building on on macOS earlier than 10.13.6 succeeds, instead of failing on code-signing.
+-  The pkg-config file now uses variables to ensure paths used are portable across prefixes.
+-  The default values for the ``extra_completionsdir``, ``extra_functionsdir``
+   and ``extra_confdir`` options now use the installation prefix rather than ``/usr/local``.
 -  A new CMake variable ``FISH_USE_SYSTEM_PCRE2`` controls whether fish
    builds with the system-installed PCRE2, or the version it bundles. By
    default it prefers the system library if available, unless Mac
    codesigning is enabled (#6952).
--  Running the interactive tests now depends on python 3.3+ and the pexpect package (#6825).
+-  Running the full interactive test suit now requires on Python 3.3+ and the pexpect package (#6825).
 
 --------------
 

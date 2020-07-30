@@ -5053,7 +5053,7 @@ static void test_wwrite_to_fd() {
         }
         std::string narrow = wcs2string(input);
         size_t expected_size = narrow.size();
-        do_test(amt == expected_size);
+        do_test(static_cast<size_t>(amt) == expected_size);
 
         if (lseek(fd.fd(), 0, SEEK_SET) < 0) {
             wperror(L"seek");

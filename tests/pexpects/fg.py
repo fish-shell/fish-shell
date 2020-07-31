@@ -18,6 +18,7 @@ expect_prompt()
 sendline("cat | cat")
 sendline("set -l foo bar; echo $foo")
 expect_str("set -l foo bar; echo $foo")
+sleep(0.1)
 
 send("\x1A")
 expect_prompt()

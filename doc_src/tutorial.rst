@@ -417,7 +417,7 @@ There is also a ``$pipestatus`` list variable for the exit statuses [#]_ of proc
 
 .. [#] or "stati" if you prefer, or "statūs" if you've time-travelled from ancient Rome or work as a latin teacher
 
-.. _tut_combiners:
+.. _tut-combiners:
 
 Combiners (And, Or, Not)
 ------------------------
@@ -484,7 +484,7 @@ To compare strings or numbers or check file properties (whether a file exists or
         echo We do not have a hosts file
     end
 
-:ref:`Combiners <tut_combiners>` can also be used to make more complex conditions, like
+:ref:`Combiners <tut-combiners>` can also be used to make more complex conditions, like
 
 
 ::

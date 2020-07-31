@@ -3018,9 +3018,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
             if (command_test_result == 0) {
                 // Finished command, execute it. Don't add items that start with a leading
-                // space.
+                // space, or if in silent mode (#7230).
                 const editable_line_t *el = &command_line;
-                if (history != nullptr && may_add_to_history(el->text())) {
+                if (history != nullptr && !silent && may_add_to_history(el->text())) {
                     history->add_pending_with_file_detection(el->text(), vars.get_pwd_slash());
                 }
                 rls.finished = true;

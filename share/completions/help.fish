@@ -74,28 +74,28 @@ complete -c help -x -a completion-path -d 'Where to put completions'
 
 # Tutorial
 complete -c help -x -a tutorial -d Tutorial
-complete -c help -x -a tut_autoload -d 'Autoloading Functions'
-complete -c help -x -a tut_autosuggestions -d Autosuggestions
-complete -c help -x -a tut_combiners -d 'Combiners (And, Or, Not)'
-complete -c help -x -a tut_command_substitutions -d 'Command Substitutions'
-complete -c help -x -a tut_conditionals -d 'Conditionals (If, Else, Switch)'
-complete -c help -x -a tut_exit_status -d 'Exit Status'
-complete -c help -x -a tut_exports -d 'Exports (Shell Variables)'
-complete -c help -x -a tut_functions -d Functions
-complete -c help -x -a tut_getting_help -d 'Getting Help'
-complete -c help -x -a tut_learning_Fish -d 'Learning fish'
-complete -c help -x -a tut_lists -d Lists
-complete -c help -x -a tut_loops -d Loops
-complete -c help -x -a tut_more -d 'Ready for more?'
-complete -c help -x -a tut_path -d '$PATH'
-complete -c help -x -a tut_pipes_and_redirections -d 'Pipes and Redirections'
-complete -c help -x -a tut_prompt -d Prompt
-complete -c help -x -a tut_running_commands -d 'Running Commands'
-complete -c help -x -a tut_semicolon -d 'Separating Commands (Semicolon)'
-complete -c help -x -a tut_startup -d "Startup (Where's .bashrc?)"
-complete -c help -x -a tut_syntax_highlighting -d 'Syntax Highlighting'
-complete -c help -x -a tut_tab_completions -d 'Tab Completions'
-complete -c help -x -a tut_universal -d 'Universal Variables'
-complete -c help -x -a tut_variables -d Variables
-complete -c help -x -a tut_why_fish -d 'Why fish?'
-complete -c help -x -a tut_wildcards -d Wildcards
+complete -c help -x -a tut-autoload -d 'Autoloading Functions'
+complete -c help -x -a tut-autosuggestions -d Autosuggestions
+complete -c help -x -a tut-combiners -d 'Combiners (And, Or, Not)'
+complete -c help -x -a tut-command_substitutions -d 'Command Substitutions'
+complete -c help -x -a tut-conditionals -d 'Conditionals (If, Else, Switch)'
+complete -c help -x -a tut-exit_status -d 'Exit Status'
+complete -c help -x -a tut-exports -d 'Exports (Shell Variables)'
+complete -c help -x -a tut-functions -d Functions
+complete -c help -x -a tut-getting_help -d 'Getting Help'
+complete -c help -x -a tut-learning_Fish -d 'Learning fish'
+complete -c help -x -a tut-lists -d Lists
+complete -c help -x -a tut-loops -d Loops
+complete -c help -x -a tut-more -d 'Ready for more?'
+complete -c help -x -a tut-path -d '$PATH'
+complete -c help -x -a tut-pipes_and_redirections -d 'Pipes and Redirections'
+complete -c help -x -a tut-prompt -d Prompt
+complete -c help -x -a tut-running_commands -d 'Running Commands'
+complete -c help -x -a tut-semicolon -d 'Separating Commands (Semicolon)'
+complete -c help -x -a tut-startup -d "Startup (Where's .bashrc?)"
+complete -c help -x -a tut-syntax_highlighting -d 'Syntax Highlighting'
+complete -c help -x -a tut-tab_completions -d 'Tab Completions'
+complete -c help -x -a tut-universal -d 'Universal Variables'
+complete -c help -x -a tut-variables -d Variables
+complete -c help -x -a tut-why_fish -d 'Why fish?'
+complete -c help -x -a tut-wildcards -d Wildcards

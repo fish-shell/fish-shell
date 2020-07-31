@@ -215,9 +215,10 @@ int main () {
 check_cxx_source_compiles("
 #include <atomic>
 #include <cstdint>
-std::atomic<uint64_t> x;
+std::atomic<uint64_t> x (0);
 int main() {
-   return x;
+uint64_t i = x.load(std::memory_order_relaxed);
+return std::atomic_is_lock_free(&x);
 }"
 LIBATOMIC_NOT_NEEDED)
 IF (NOT LIBATOMIC_NOT_NEEDED)

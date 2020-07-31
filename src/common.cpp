@@ -474,23 +474,11 @@ void fish_setlocale() {
 }
 
 long read_blocked(int fd, void *buf, size_t count) {
-    long bytes_read = 0;
-
-    while (count) {
-        ssize_t res = read(fd, static_cast<char *>(buf) + bytes_read, count);
-        if (res == 0) {
-            break;
-        } else if (res == -1) {
-            if (errno == EINTR) continue;
-            if (errno == EAGAIN) return bytes_read ? bytes_read : -1;
-            return -1;
-        } else {
-            bytes_read += res;
-            count -= res;
-        }
-    }
-
-    return bytes_read;
+    ssize_t res;
+    do {
+        res = read(fd, buf, count);
+    } while (res < 0 && errno == EINTR);
+    return res;
 }
 
 /// Loop a write request while failure is non-critical. Return -1 and set errno in case of critical

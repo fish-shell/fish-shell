@@ -4,6 +4,7 @@ fish 3.2.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 
+-  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Ctrl+Z, and redo to Alt+/.
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
 -  A new variable, ``fish_kill_signal``, is set to the signal tha terminated the last foreground job, or ``0`` if the job exited normally.
 -  Ctrl-C no longer kills background jobs for which job control is
@@ -21,6 +22,7 @@ Notable improvements and fixes
 - ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands.
 - The ``test`` builtin now better shows where an error occured (#6030).
 - builtins may now output before all data is read. For example, `string replace` no longer has to read all of stdin before it can begin to output.
+- A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
 
 Syntax changes and new commands
 -------------------------------
@@ -44,7 +46,7 @@ Scripting improvements
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions) (#977).
--  Added a ``fish_job_summary`` functionm which is called whenever a
+-  Added a ``fish_job_summary`` function which is called whenever a
    background job stops or ends, or any job terminates from a signal.
    The default behaviour can now be customized by redefining this
    function.
@@ -66,18 +68,20 @@ Interactive improvements
    have a common prefix, without the user having to press Tab again
    (#6924).
 -  Control-Z is now available for binding (#7152).
+-  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (#6964).
+-  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (#6964).
 
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
--  New readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
+-  As mentioned above, new readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
    changes to the command line or the pager search field (#6570).
 -  New function ``__fish_preview_current_file`` (Alt+O) opens the
    current file at the cursor in a pager (#6838).
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position
    to the external editor if the editor is recognized (#6138).
--  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (#7012).
+-  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (#7012) and avoids shifting the cursor (#6542).
 -  ``__fish_prepend_sudo`` (Alt-S) now uses the previous commandline if the current one is empty,
    to simplify rerunning the previous command with ``sudo`` (#7079).
 - ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
@@ -93,7 +97,7 @@ Improved prompts
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
--  ``history clear`` output is formatted with appropriate newlines.
+-  ``history clear`` output is formatted with appropriate newlines (#6976).
 -  Autosuggestions now show up also when the cursor passes the right
    prompt (#6948).
 -  The cursor shape in Vi mode changes properly in  Windows Terminal (#6999).
@@ -152,7 +156,7 @@ For distributors and developers
    builds with the system-installed PCRE2, or the version it bundles. By
    default it prefers the system library if available, unless Mac
    codesigning is enabled (#6952).
--  Running the full interactive test suit now requires on Python 3.3+ and the pexpect package (#6825).
+-  Running the full interactive test suite now requires Python 3.3+ and the pexpect package (#6825).
 
 --------------
 
@@ -533,7 +537,7 @@ New or improved bindings
 -  The ``forward-bigword`` binding now interacts correctly with
    autosuggestions (#5336).
 -  The ``fish_clipboard_*`` functions support Wayland by using
-   ```wl-clipboard`` <https://github.com/bugaevc/wl-clipboard>`__
+   `wl-clipboard <https://github.com/bugaevc/wl-clipboard>`_
    (#5450).
 -  The ``nextd`` and ``prevd`` functions no longer print “Hit end of
    history”, instead using a bell. They correctly store working

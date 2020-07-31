@@ -313,7 +313,7 @@ class io_buffer_t {
     /// Lock for appending.
     std::mutex append_lock_{};
 
-    /// Read a bit, filling the buffer. The append lock must be held.
+    /// Read some, filling the buffer. The append lock must be held.
     /// \return positive on success, 0 if closed, -1 on error (in which case errno will be set).
     ssize_t read_once(int fd);
 

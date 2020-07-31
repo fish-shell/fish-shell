@@ -469,17 +469,18 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     // If we are directing output to a buffer, then we can just transfer it directly without needing
     // to write to the bufferfill pipe. Note this is how we handle explicitly separated stdout
     // output (i.e. string split0) which can't really be sent through a pipe.
-    // TODO: we're sloppy about handling explicitly separated output.
-    // Theoretically we could have explicitly separated output on stdout and also stderr output; in
-    // that case we ought to thread the exp-sep output through to the io buffer. We're getting away
-    // with this because the only thing that can output exp-sep output is `string split0` which
-    // doesn't also produce stderr. Also note that we never send stderr to a buffer, so there's no
-    // need for a similar check for stderr.
     bool stdout_done = false;
     if (output_buffer && stdout_io && stdout_io->io_mode == io_mode_t::bufferfill) {
         auto stdout_buffer = dynamic_cast<const io_bufferfill_t *>(stdout_io.get())->buffer();
         stdout_buffer->append_from_wide_buffer(*output_buffer);
         stdout_done = true;
+    }
+
+    bool stderr_done = false;
+    if (errput_buffer && stderr_io && stderr_io->io_mode == io_mode_t::bufferfill) {
+        auto stderr_buffer = dynamic_cast<const io_bufferfill_t *>(stderr_io.get())->buffer();
+        stderr_buffer->append_from_wide_buffer(*errput_buffer);
+        stderr_done = true;
     }
 
     // Figure out any data remaining to write. We may have none in which case we can short-circuit.
@@ -488,7 +489,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         outbuff = wcs2string(output_buffer->newline_serialized());
     }
     std::string errbuff;
-    if (errput_buffer) {
+    if (errput_buffer && !stderr_done) {
         errbuff = wcs2string(errput_buffer->newline_serialized());
     }
 

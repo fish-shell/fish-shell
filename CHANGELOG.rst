@@ -77,6 +77,7 @@ New or improved bindings
 
 -  As mentioned above, new readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
    changes to the command line or the pager search field (#6570).
+-  New readline command ``forward-single-char`` to move one character to the right, and if an autosuggestion is available, only take a single char from it (#7217).
 -  New function ``__fish_preview_current_file`` (Alt+O) opens the
    current file at the cursor in a pager (#6838).
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position

@@ -60,7 +60,8 @@ function __fish_complete_suffix -d "Complete using files"
 
     # Also do directory completion, since there might be files with the correct
     # suffix in a subdirectory.
-    set all $base*$suff
+    set all $base*
+    set all (string match -r -- ".*"(string escape --style=regex -- $suff) $all)
     if not string match -qr '/$' -- $suff
         set dirs $base*/
 

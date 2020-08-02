@@ -41,6 +41,16 @@ sendline("sleep 1000 &; sleep 2000 &")
 expect_str("pipestatus:0|1, generation:%d, command:sleep 1000 &; sleep 2000 &" % generation)
 expect_prompt()
 
+# valid variable assignment
+sendline("set foo bar")
+expect_str("pipestatus:0|1, generation:%d, command:set foo bar" % generation)
+expect_prompt()
+
+# valid variable assignment with background job
+sendline("set foo bar; sleep 1000 &")
+expect_str("pipestatus:0|1, generation:%d, command:set foo bar; sleep 1000 &" % generation)
+expect_prompt()
+
 # Increments $status_generation if any job was foreground.
 sendline("false|true; sleep 1000 &")
 generation += 1
@@ -76,6 +86,18 @@ generation += 1
 expect_str("pipestatus:0, generation:%d, command:function fail; false; end" % generation)
 expect_prompt()
 
+# or an invalid variable assignment
+sendline("set '!@#$' value")
+generation += 1
+expect_str("pipestatus:2, generation:%d, command:set '!@#$' value" % generation)
+expect_prompt()
+
+# or a variable query
+sendline("set -q fish_pid")
+generation += 1
+expect_str("pipestatus:0, generation:%d, command:set -q fish_pid" % generation)
+expect_prompt()
+
 # This is just to set a memorable pipestatus.
 sendline("true|false|true")
 generation += 1
@@ -95,4 +117,9 @@ expect_prompt()
 # Or a combination of begin/end block and backgrounded job.
 sendline("begin; sleep 200 &; end; sleep 400 &")
 expect_str("pipestatus:0|1|0, generation:%d, command:begin; sleep 200 &; end; sleep 400 &" % generation)
+expect_prompt()
+
+# Or a combination with variable assignments
+sendline("begin; set foo bar; sleep 1000 &; end; set bar baz; sleep 2000 &")
+expect_str("pipestatus:0|1|0, generation:%d, command:begin; set foo bar; sleep 1000 &; end; set bar baz; sleep 2000 &" % generation)
 expect_prompt()

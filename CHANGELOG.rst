@@ -21,8 +21,9 @@ Notable improvements and fixes
 -  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in ``config.fish`` (#6960).
 - ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands.
 - The ``test`` builtin now better shows where an error occured (#6030).
-- builtins may now output before all data is read. For example, `string replace` no longer has to read all of stdin before it can begin to output.
+- builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
 - A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
+- ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
 
 Syntax changes and new commands
 -------------------------------

@@ -393,6 +393,7 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
     buffered_output_stream_t errs(0);
     io_streams_t streams(outs, errs);
     int err = builtin_function(*parser, streams, arguments, pstree, statement);
+    parser->libdata().status_count++;
     parser->set_last_statuses(statuses_t::just(err));
 
     wcstring errtext = errs.contents();

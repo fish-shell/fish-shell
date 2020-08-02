@@ -999,6 +999,7 @@ void job_t::continue_job(parser_t &parser, bool in_foreground) {
         const auto &p = processes.back();
         if (p->status.normal_exited() || p->status.signal_exited()) {
             parser.set_last_statuses(get_statuses());
+            parser.libdata().status_count++;
         }
     }
 }

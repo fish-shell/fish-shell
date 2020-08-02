@@ -1225,6 +1225,8 @@ You can change the settings of ``fish`` by changing the values of certain variab
 
 - ``status``, the `exit status <#variables-status>`_ of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
 
+- ``status_generation``, the "generation" count of ``$status``. This will be incremented only when the previous command produced an explicit status. (For example, background jobs will not increment this).
+
 - ``USER``, the current username. This variable can be changed by the user.
 
 - ``version``, the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).

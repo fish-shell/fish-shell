@@ -649,7 +649,8 @@ eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
         auto status = proc_status_t::from_exit_code(get_last_status());
         bool break_expand = false;
         bool was_empty = true;
-        return eval_res_t{status, break_expand, was_empty};
+        bool no_status = true;
+        return eval_res_t{status, break_expand, was_empty, no_status};
     }
 }
 
@@ -713,8 +714,10 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
 
     // Check the exec count so we know if anything got executed.
     const size_t prev_exec_count = libdata().exec_count;
+    const size_t prev_status_count = libdata().status_count;
     end_execution_reason_t reason = execution_context->eval_node(node, scope_block);
     const size_t new_exec_count = libdata().exec_count;
+    const size_t new_status_count = libdata().status_count;
 
     exc.restore();
     this->pop_block(scope_block);
@@ -728,7 +731,8 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
         auto status = proc_status_t::from_exit_code(this->get_last_status());
         bool break_expand = (reason == end_execution_reason_t::error);
         bool was_empty = !break_expand && prev_exec_count == new_exec_count;
-        return eval_res_t{status, break_expand, was_empty};
+        bool no_status = prev_status_count == new_status_count;
+        return eval_res_t{status, break_expand, was_empty, no_status};
     }
 }
 

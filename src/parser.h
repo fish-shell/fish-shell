@@ -142,6 +142,9 @@ struct library_data_t {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
 
+    /// A counter incremented every time a command produces a $status.
+    uint64_t status_count{0};
+
     /// Last reader run count.
     uint64_t last_exec_run_counter{UINT64_MAX};
 
@@ -219,9 +222,12 @@ struct eval_res_t {
     /// If set, no commands were executed and there we no errors.
     bool was_empty{false};
 
+    /// If set, no commands produced a $status value.
+    bool no_status{false};
+
     /* implicit */ eval_res_t(proc_status_t status, bool break_expand = false,
-                              bool was_empty = false)
-        : status(status), break_expand(break_expand), was_empty(was_empty) {}
+                              bool was_empty = false, bool no_status = false)
+        : status(status), break_expand(break_expand), was_empty(was_empty), no_status(no_status) {}
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

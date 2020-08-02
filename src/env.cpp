@@ -95,6 +95,7 @@ static const std::vector<electric_var_t> electric_variables{
     {L"hostname", electric_var_t::freadonly},
     {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"status", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"status_generation", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"umask", electric_var_t::fcomputed},
     {L"version", electric_var_t::freadonly},
 };
@@ -701,6 +702,9 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
     } else if (key == L"status") {
         const auto &js = perproc_data().statuses;
         return env_var_t(L"status", to_string(js.status));
+    } else if (key == L"status_generation") {
+        auto status_generation = reader_status_count();
+        return env_var_t(L"status_generation", to_string(status_generation));
     } else if (key == L"fish_kill_signal") {
         const auto &js = perproc_data().statuses;
         return env_var_t(L"fish_kill_signal", to_string(js.kill_signal));

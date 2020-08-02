@@ -278,4 +278,8 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
 /// been executed between invocations of code.
 uint64_t reader_run_count();
 
+/// Returns the current "generation" of interactive status. Useful for determining whether the
+/// previous command produced a status.
+uint64_t reader_status_count();
+
 #endif

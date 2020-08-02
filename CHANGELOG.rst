@@ -70,6 +70,7 @@ Interactive improvements
 -  Control-Z is now available for binding (#7152).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (#6964).
 -  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (#6964).
+-  A new variable ``$status_generation`` is incremented only when the previous command produces a status. This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
 
 
 New or improved bindings

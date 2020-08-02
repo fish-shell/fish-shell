@@ -2171,7 +2171,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_sta
     vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, std::to_wstring((secs * 1000) + (usecs / 1000)));
 }
 
-void reader_run_command(parser_t &parser, const wcstring &cmd) {
+eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     struct timeval time_before, time_after;
 
     wcstring ft = tok_command(cmd);
@@ -2185,7 +2185,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     gettimeofday(&time_before, nullptr);
 
-    parser.eval(cmd, io_chain_t{});
+    auto eval_res = parser.eval(cmd, io_chain_t{});
     job_reap(parser, true);
 
     gettimeofday(&time_after, nullptr);
@@ -2202,6 +2202,8 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     if (have_proc_stat()) {
         proc_update_jiffies(parser);
     }
+
+    return eval_res;
 }
 
 static parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) {
@@ -2457,6 +2459,13 @@ static relaxed_atomic_t<uint64_t> run_count{0};
 /// Returns the current interactive loop count
 uint64_t reader_run_count() { return run_count; }
 
+static relaxed_atomic_t<uint64_t> status_count{0};
+
+/// Returns the current "generation" of interactive status.
+/// This is not incremented if the command being run produces no status,
+/// (e.g. background job, or variable assignment).
+uint64_t reader_status_count() { return status_count; }
+
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(parser_t &parser) {
     reader_config_t conf;
@@ -2499,8 +2508,11 @@ static int read_i(parser_t &parser) {
             data->command_line_changed(&data->command_line);
             wcstring_list_t argv(1, command);
             event_fire_generic(parser, L"fish_preexec", &argv);
-            reader_run_command(parser, command);
+            auto eval_res = reader_run_command(parser, command);
             signal_clear_cancel();
+            if (!eval_res.no_status) {
+                status_count++;
+            }
             event_fire_generic(parser, L"fish_postexec", &argv);
             // Allow any pending history items to be returned in the history array.
             if (data->history) {

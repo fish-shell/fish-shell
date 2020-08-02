@@ -848,8 +848,7 @@ class ast_t::populator_t {
             case parse_keyword_t::kw_and:
             case parse_keyword_t::kw_or: {
                 // Check that the argument to and/or is a string that's not help. Otherwise it's
-                // either 'and
-                // --help' or a naked 'and', and not part of this list.
+                // either 'and --help' or a naked 'and', and not part of this list.
                 const auto &nexttok = peek_token(1);
                 return nexttok.type == parse_token_type_t::string && !nexttok.is_help_argument;
             }

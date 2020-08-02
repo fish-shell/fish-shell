@@ -293,6 +293,13 @@ static void run_internal_process_or_short_circuit(parser_t &parser, const std::s
             if (statuses) {
                 parser.set_last_statuses(statuses.value());
                 parser.libdata().status_count++;
+            } else if (j->flags().negate) {
+                // Special handling for `not set var (substitution)`.
+                // If there is no status, but negation was requested,
+                // take the last status and negate it.
+                auto last_statuses = parser.get_last_statuses();
+                last_statuses.status = !last_statuses.status;
+                parser.set_last_statuses(last_statuses);
             }
         }
     } else {

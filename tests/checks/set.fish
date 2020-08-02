@@ -270,6 +270,30 @@ __fish_test_shadow
 env | string match '__fish_test_env17=*'
 # CHECK: __fish_test_env17=UNSHADOWED
 
+# Test that set var (command substitution) works with if/while.
+
+if set fish_test_18 (false)
+    echo Test 18 fail
+else
+    echo Test 18 pass
+end
+# CHECK: Test 18 pass
+
+if not set fish_test_18 (true)
+    echo Test 18 fail
+else
+    echo Test 18 pass
+end
+# CHECK: Test 18 pass
+
+set __fish_test_18_status pass
+while set fish_test_18 (false); or not set fish_test_18 (true)
+    set __fish_test_18_status fail
+    break
+end
+echo Test 18 $__fish_test_18_status
+# CHECK: Test 18 pass
+
 # Test that local exported variables are copied to functions (#1091)
 function __fish_test_local_export
     echo $var

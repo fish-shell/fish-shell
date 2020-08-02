@@ -84,26 +84,32 @@ Syntax Highlighting
 
 .. role:: red
 .. role:: gray
-.. role:: underline
+.. role:: prompt
+.. role:: command
+.. role:: param
+.. role:: param-valid-path
 
-You'll quickly notice that ``fish`` performs syntax highlighting as you type. Invalid commands are colored red by default
+You'll quickly notice that fish performs syntax highlighting as you type. Invalid commands are colored red by default:
 
+.. parsed-literal::
 
-> :red:`/bin/mkd`
+    :prompt:`>` :red:`/bin/mkd`
 
 A command may be invalid because it does not exist, or refers to a file that you cannot execute. When the command becomes valid, it is shown in a different color::
 
     > /bin/mkdir
 
 
-``fish`` will underline valid file paths as you type them
+Valid file paths are underlined as you type them:
 
-> cat :underline:`~/somefi`
+.. parsed-literal::
+
+    :prompt:`>` :command:`cat` :param-valid-path:`~/somefi`
 
 
 This tells you that there exists a file that starts with ``somefi``, which is useful feedback as you type.
 
-These colors, and many more, can be changed by running ``fish_config``, or by modifying variables directly.
+These colors, and many more, can be changed by running ``fish_config``, or by modifying :ref:`color variables <variables-color>` directly.
 
 
 Wildcards
@@ -160,19 +166,25 @@ To redirect stdout and stderr into one file, you need to first redirect stdout, 
 Autosuggestions
 ---------------
 
-``fish`` suggests commands as you type, and shows the suggestion to the right of the cursor, in gray. For example
+As you type fish will suggest commands to the right of the cursor, in gray. For example:
 
-> :red:`/bin/h`:gray:`ostname`
+.. parsed-literal::
 
-
-It knows about paths and options
-
-`> grep --i`:gray:`gnore-case`
+    :prompt:`>` :red:`/bin/h`:gray:`ostname`
 
 
-And history too. Type a command once, and you can re-summon it by just typing a few letters
+It knows about paths and options:
 
-> :red:`r`:gray:`sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo`
+.. parsed-literal::
+
+    :prompt:`>` :command:`grep` :param:`--i`:gray:`gnore-case`
+
+
+And history too. Type a command once, and you can re-summon it by just typing a few letters:
+
+.. parsed-literal::
+
+    :prompt:`>` :red:`r`:gray:`sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo`
 
 
 To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control`\ +\ :kbd:`F`. To accept a single word of the autosuggestion, :kbd:`Alt`\ +\ :kbd:`→` (right arrow). If the autosuggestion is not what you want, just ignore it.
@@ -180,29 +192,35 @@ To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control`\ +\
 Tab Completions
 ---------------
 
-``fish`` comes with a rich set of tab completions, that work "out of the box."
+A rich set of tab completions work "out of the box".
 
-Press :kbd:`Tab`, and ``fish`` will attempt to complete the command, argument, or path
+Press :kbd:`Tab` and fish will attempt to complete the command, argument, or path:
 
-> :red:`/pri` :kbd:`Tab` => /private/
+.. parsed-literal::
+
+    :prompt:`>` :red:`/pri`:kbd:`Tab` => :command:`/private/`
 
 
-If there's more than one possibility, it will list them
+If there's more than one possibility, it will list them:
 
-> :red:`~/stuff/s` :kbd:`Tab`
-~/stuff/script.sh  (Executable, 4.8kB)  ~/stuff/sources/  (Directory)
+.. parsed-literal::
+
+    :prompt:`>` :red:`~/stuff/s`:kbd:`Tab`
+    ~/stuff/script.sh  (Executable, 4.8kB)  ~/stuff/sources/  (Directory)
 
 
 Hit tab again to cycle through the possibilities.
 
-``fish`` can also complete many commands, like git branches::
+fish can also complete many commands, like git branches:
 
-    > git merge pr :kbd:`Tab` => git merge prompt_designer
-    > git checkout b :kbd:`Tab`
+.. parsed-literal::
+
+    :prompt:`>` :command:`git` :param:`merge pr`:kbd:`Tab` => :command:`git` :param:`merge prompt_designer`
+    :prompt:`>` :command:`git` :param:`checkout b`:kbd:`Tab`
     builtin_list_io_merge (Branch) builtin_set_color (Branch) busted_events (Tag)
 
 
-Try hitting tab and see what ``fish`` can do!
+Try hitting tab and see what fish can do!
 
 Variables
 ---------
@@ -574,34 +592,39 @@ Iterating over a list of numbers can be done with ``seq``::
 Prompt
 ------
 
-Unlike other shells, there is no prompt variable like PS1. To display your prompt, ``fish`` executes a function with the name ``fish_prompt``, and its output is used as the prompt.
-
-You can define your own prompt::
-
-    > function fish_prompt
-        echo "New Prompt % "
-    end
-    New Prompt % 
-
-
 .. role:: purple
-.. role:: yellow
 
-Multiple lines are OK. Colors can be set via ``set_color``, passing it named ANSI colors, or hex RGB values::
+Unlike other shells, there is no prompt variable like ``PS1``. To display your prompt, fish executes the :ref:`fish_prompt <cmd-fish_prompt>` function and uses its output as the prompt. And if it exists, fish also executes the :ref:`fish_right_prompt <cmd-fish_right_prompt>` function and uses its output as the right prompt.
 
-    > function fish_prompt
-          set_color purple
-          date "+%m/%d/%y"
-          set_color FF0
-          echo (pwd) '>' (set_color normal)
-      end
+You can define your own prompt from the command line:
 
-will look like
+.. parsed-literal::
 
-| :purple:`02/06/13`
-| :yellow:`/home/tutorial >`
+    > function fish_prompt; echo "New Prompt % "; end
+    New Prompt % _
 
-You can choose among some sample prompts by running ``fish_config prompt``. ``fish`` also supports RPROMPT through ``fish_right_prompt``.
+
+Then, if you are happy with it, you can save it to disk by typing ``funcsave fish_prompt``. This saves the prompt in ``~/.config/fish/functions/fish_prompt.fish``. (Or, if you want, you can create that file manually from the start.)
+
+Multiple lines are OK. Colors can be set via :ref:`set_color <cmd-set_color>`, passing it named ANSI colors, or hex RGB values::
+
+    function fish_prompt
+        set_color purple
+        date "+%m/%d/%y"
+        set_color F00
+        echo (pwd) '>' (set_color normal)
+    end
+
+
+This prompt would look like:
+
+.. parsed-literal::
+
+     :purple:`02/06/13`
+     :red:`/home/tutorial >` _
+
+
+You can choose among some sample prompts by running ``fish_config prompt``.
 
 $PATH
 -----

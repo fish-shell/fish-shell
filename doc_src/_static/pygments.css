@@ -77,8 +77,3 @@
 .highlight .vi { color: #000000 } /* Name.Variable.Instance */
 .highlight .vm { color: #000000 } /* Name.Variable.Magic */
 .highlight .il { color: #0000cf; font-weight: bold } /* Literal.Number.Integer.Long */
-.purple { color: #551a8b }
-.yellow { color: #FFFF00 }
-.red { color: #FF0000 }
-.gray { color: #555555 }
-.underline { text-decoration: underline }

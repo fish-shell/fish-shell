@@ -278,14 +278,6 @@ bool editable_line_t::redo() {
 
 namespace {
 
-/// Test if the given string contains error. Since this is the error detection for general purpose,
-/// there are no invalid strings, so this function always returns false.
-parser_test_error_bits_t default_test(parser_t &parser, const wcstring &b) {
-    UNUSED(parser);
-    UNUSED(b);
-    return 0;
-}
-
 /// Encapsulation of the reader's history search functionality.
 class reader_history_search_t {
    public:
@@ -518,8 +510,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool complete_ok{false};
     /// Whether to perform syntax highlighting.
     bool highlight_ok{false};
-    /// Function for testing if the string can be returned.
-    test_function_t test_func{default_test};
+    /// Whether to perform fish syntax checking.
+    bool syntax_check_ok{false};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
     /// ^D twice.
     bool prev_end_loop{false};
@@ -2220,7 +2212,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     }
 }
 
-parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) {
+static parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) {
     wcstring bstr = b;
 
     // Append a newline, to act as a statement terminator.
@@ -2401,7 +2393,7 @@ void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
 
 void reader_set_highlight_ok(bool flag) { current_data()->highlight_ok = flag; }
 
-void reader_set_test_function(test_function_t f) { current_data()->test_func = f; }
+void reader_set_syntax_check_ok(bool flag) { current_data()->syntax_check_ok = flag; }
 
 void reader_set_exit_on_interrupt(bool i) { current_data()->exit_on_interrupt = i; }
 
@@ -2493,7 +2485,7 @@ static int read_i(parser_t &parser) {
     reader_push(parser, history_session_id(parser.vars()));
     reader_set_complete_ok(true);
     reader_set_highlight_ok(true);
-    reader_set_test_function(&reader_shell_test);
+    reader_set_syntax_check_ok(true);
     reader_set_allow_autosuggesting(true);
     reader_set_expand_abbreviations(true);
     reader_import_history_if_necessary();
@@ -3003,7 +2995,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             // See if this command is valid.
-            int command_test_result = test_func(parser(), el->text());
+            parser_test_error_bits_t command_test_result = 0;
+            if (syntax_check_ok) {
+                command_test_result = reader_shell_test(parser(), el->text());
+            }
             if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
                 // This command is valid, but an abbreviation may make it invalid. If so, we
                 // will have to test again.
@@ -3011,7 +3006,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (abbreviation_expanded) {
                     // It's our reponsibility to rehighlight and repaint. But everything we do
                     // below triggers a repaint.
-                    command_test_result = test_func(parser(), el->text());
+                    if (syntax_check_ok) {
+                        command_test_result = reader_shell_test(parser(), el->text());
+                    }
 
                     // If the command is OK, then we're going to execute it. We still want to do
                     // syntax highlighting, but a synchronous variant that performs no I/O, so

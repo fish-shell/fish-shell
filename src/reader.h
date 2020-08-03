@@ -219,12 +219,8 @@ void reader_set_complete_ok(bool flag);
 /// Mark whether syntax highlighting is enabled.
 void reader_set_highlight_ok(bool flag);
 
-/// Function type for testing if a string is valid for the reader to return.
-using test_function_t = parser_test_error_bits_t (*)(parser_t &, const wcstring &);
-
-/// Specify function for testing if the command buffer contains syntax errors that must be corrected
-/// before returning.
-void reader_set_test_function(test_function_t func);
+/// Mark whether to check syntax.
+void reader_set_syntax_check_ok(bool flag);
 
 /// Specify string of shell commands to be run in order to generate the prompt.
 void reader_set_left_prompt(const wcstring &prompt);
@@ -251,10 +247,6 @@ void reader_handle_sigint();
 
 /// This function returns true if fish is exiting by force, i.e. because stdin died.
 bool reader_exit_forced();
-
-/// Test if the given shell command contains errors. Uses parser_test for testing. Suitable for
-/// reader_set_test_function().
-parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &);
 
 /// Test whether the interactive reader is in search mode.
 bool reader_is_in_search_mode();

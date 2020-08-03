@@ -517,7 +517,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Whether tab completion is allowed.
     bool complete_ok{false};
     /// Function for syntax highlighting.
-    highlight_function_t highlight_func{highlight_universal};
+    highlight_function_t highlight_func{nullptr};
     /// Function for testing if the string can be returned.
     test_function_t test_func{default_test};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
@@ -2280,6 +2280,8 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
 static std::function<highlight_result_t(void)> get_highlight_performer(
     parser_t &parser, const wcstring &text, long match_highlight_pos,
     highlight_function_t highlight_func) {
+    if (!highlight_func) return {};
+
     auto vars = parser.vars().snapshot();
     unsigned generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
@@ -2307,18 +2309,20 @@ void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bo
 
     sanity_check();
 
-    auto highlight_performer = get_highlight_performer(
-        parser(), el->text(), match_highlight_pos, no_io ? highlight_shell_no_io : highlight_func);
-    if (no_io) {
-        // Highlighting without IO, we just do it.
-        highlight_complete(highlight_performer());
-    } else {
-        // Highlighting including I/O proceeds in the background.
-        auto shared_this = this->shared_from_this();
-        debounce_highlighting().perform(highlight_performer,
-                                        [shared_this](highlight_result_t result) {
-                                            shared_this->highlight_complete(std::move(result));
-                                        });
+    if (auto highlight_performer =
+            get_highlight_performer(parser(), el->text(), match_highlight_pos,
+                                    no_io ? highlight_shell_no_io : highlight_func)) {
+        if (no_io) {
+            // Highlighting without IO, we just do it.
+            highlight_complete(highlight_performer());
+        } else {
+            // Highlighting including I/O proceeds in the background.
+            auto shared_this = this->shared_from_this();
+            debounce_highlighting().perform(highlight_performer,
+                                            [shared_this](highlight_result_t result) {
+                                                shared_this->highlight_complete(std::move(result));
+                                            });
+        }
     }
     highlight_search();
 

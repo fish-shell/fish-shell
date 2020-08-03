@@ -53,8 +53,6 @@ static const wchar_t *get_highlight_var_name(highlight_role_t role) {
             return L"fish_color_param";
         case highlight_role_t::comment:
             return L"fish_color_comment";
-        case highlight_role_t::match:
-            return L"fish_color_match";
         case highlight_role_t::search_match:
             return L"fish_color_search_match";
         case highlight_role_t::operat:
@@ -114,8 +112,6 @@ static highlight_role_t get_fallback(highlight_role_t role) {
         case highlight_role_t::param:
             return highlight_role_t::normal;
         case highlight_role_t::comment:
-            return highlight_role_t::normal;
-        case highlight_role_t::match:
             return highlight_role_t::normal;
         case highlight_role_t::search_match:
             return highlight_role_t::normal;
@@ -1359,8 +1355,8 @@ static void highlight_universal_internal(const wcstring &buffstr,
                                 pos1 = lst.back();
                                 pos2 = str - buff;
                                 if (pos1 == pos || pos2 == pos) {
-                                    color.at(pos1).background = highlight_role_t::match;
-                                    color.at(pos2).background = highlight_role_t::match;
+                                    color.at(pos1).background = highlight_role_t::normal;
+                                    color.at(pos2).background = highlight_role_t::normal;
                                     match_found = true;
                                 }
                                 prev_q = *str == L'\"' ? L'\'' : L'\"';
@@ -1397,8 +1393,8 @@ static void highlight_universal_internal(const wcstring &buffstr,
                 if (test_char == dec_char) level--;
                 if (level == 0) {
                     long pos2 = i;
-                    color.at(pos).background = highlight_role_t::match;
-                    color.at(pos2).background = highlight_role_t::match;
+                    color.at(pos).background = highlight_role_t::normal;
+                    color.at(pos2).background = highlight_role_t::normal;
                     match_found = true;
                     break;
                 }

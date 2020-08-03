@@ -143,6 +143,7 @@ Completions
 Deprecations and removed features
 ---------------------------------
 - fish no longer attempts to modify the terminal size via `TIOCSWINSZ`.
+- The `fish_color_match` variable is no longer used. (Previously this controlled the color of matching quotes and parens when using `read`).
 
 For distributors and developers
 -------------------------------

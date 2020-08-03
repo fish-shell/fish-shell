@@ -19,7 +19,6 @@ enum class highlight_role_t : uint8_t {
     statement_terminator,  // process separator
     param,                 // command parameter (argument)
     comment,               // comment
-    match,                 // matching parenthesis, etc.
     search_match,          // search match
     operat,                // operator
     escape,                // escape sequences

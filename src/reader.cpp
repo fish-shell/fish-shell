@@ -605,6 +605,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Called to update the termsize, including $COLUMNS and $LINES, as necessary.
     void update_termsize() { (void)termsize_container_t::shared().updating(parser()); }
+
+    // Import history from older location (config path) if our current history is empty.
+    void import_history_if_necessary();
 };
 
 /// This variable is set to a signal by the signal handler when ^C is pressed.
@@ -2342,17 +2345,25 @@ void reader_change_history(const wcstring &name) {
     }
 }
 
-void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t &&conf) {
+/// Add a new reader to the reader stack.
+/// \return a shared pointer to it.
+static std::shared_ptr<reader_data_t> reader_push_ret(parser_t &parser,
+                                                      const wcstring &history_name,
+                                                      reader_config_t &&conf) {
     history_t *hist = &history_t::history_with_name(history_name);
-    reader_data_stack.push_back(
-        std::make_shared<reader_data_t>(parser.shared(), hist, std::move(conf)));
-    reader_data_t *data = current_data();
+    auto data = std::make_shared<reader_data_t>(parser.shared(), hist, std::move(conf));
+    reader_data_stack.push_back(data);
     data->command_line_changed(&data->command_line);
     if (reader_data_stack.size() == 1) {
         reader_interactive_init(parser);
     }
-
     data->exec_prompt();
+    return data;
+}
+
+/// Public variant which discards the return value.
+void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t &&conf) {
+    (void)reader_push_ret(parser, history_name, std::move(conf));
 }
 
 void reader_pop() {
@@ -2367,26 +2378,25 @@ void reader_pop() {
     }
 }
 
-void reader_import_history_if_necessary() {
+void reader_data_t::import_history_if_necessary() {
     // Import history from older location (config path) if our current history is empty.
-    reader_data_t *data = current_data();
-    if (data->history && data->history->is_empty()) {
-        data->history->populate_from_config_path();
+    if (history && history->is_empty()) {
+        history->populate_from_config_path();
     }
 
     // Import history from bash, etc. if our current history is still empty and is the default
     // history.
-    if (data->history && data->history->is_empty() && data->history->is_default()) {
+    if (history && history->is_empty() && history->is_default()) {
         // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
         // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
         // itself. But this is better than nothing.
-        const auto var = data->vars().get(L"HISTFILE");
+        const auto var = vars().get(L"HISTFILE");
         wcstring path = (var ? var->as_string() : L"~/.bash_history");
-        expand_tilde(path, data->vars());
+        expand_tilde(path, vars());
         int fd = wopen_cloexec(path, O_RDONLY);
         if (fd >= 0) {
             FILE *f = fdopen(fd, "r");
-            data->history->populate_from_bash(f);
+            history->populate_from_bash(f);
             fclose(f);
         }
     }
@@ -2408,7 +2418,8 @@ void reader_bg_job_warning(const job_list_t &jobs) {
 
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
-static void handle_end_loop(parser_t &parser) {
+static void handle_end_loop(reader_data_t *data) {
+    parser_t &parser = data->parser();
     if (!reader_exit_forced()) {
         for (const auto &b : parser.blocks()) {
             if (b.type() == block_type_t::breakpoint) {
@@ -2419,7 +2430,6 @@ static void handle_end_loop(parser_t &parser) {
         }
 
         // Perhaps print a warning before exiting.
-        reader_data_t *data = current_data();
         auto bg_jobs = jobs_requiring_warning_on_exit(parser);
         if (!data->prev_end_loop && !bg_jobs.empty()) {
             print_exit_warning_for_jobs(bg_jobs);
@@ -2433,8 +2443,7 @@ static void handle_end_loop(parser_t &parser) {
     hup_jobs(parser.jobs());
 }
 
-static bool selection_is_at_top() {
-    reader_data_t *data = current_data();
+static bool selection_is_at_top(const reader_data_t *data) {
     const pager_t *pager = &data->pager;
     size_t row = pager->get_selected_row(data->current_page_rendering);
     if (row != 0 && row != PAGER_SELECTION_NONE) return false;
@@ -2469,10 +2478,9 @@ static int read_i(parser_t &parser) {
         conf.right_prompt_cmd = wcstring{};
     }
 
-    reader_push(parser, history_session_id(parser.vars()), std::move(conf));
-    reader_import_history_if_necessary();
-
-    reader_data_t *data = current_data();
+    std::shared_ptr<reader_data_t> data =
+        reader_push_ret(parser, history_session_id(parser.vars()), std::move(conf));
+    data->import_history_if_necessary();
     data->prev_end_loop = false;
 
     while (!shell_is_exiting()) {
@@ -2483,7 +2491,7 @@ static int read_i(parser_t &parser) {
         maybe_t<wcstring> tmp = reader_readline(0);
 
         if (should_exit(&parser)) {
-            handle_end_loop(parser);
+            handle_end_loop(data.get());
         } else if (tmp && !tmp->empty()) {
             const wcstring command = tmp.acquire();
             data->update_buff_pos(&data->command_line, 0);
@@ -2499,7 +2507,7 @@ static int read_i(parser_t &parser) {
                 data->history->resolve_pending();
             }
             if (should_exit(&parser)) {
-                handle_end_loop(parser);
+                handle_end_loop(data.get());
             } else {
                 data->prev_end_loop = false;
             }
@@ -3170,7 +3178,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (c == rl::down_line) {
                     // Down arrow is always south.
                     direction = selection_motion_t::south;
-                } else if (selection_is_at_top()) {
+                } else if (selection_is_at_top(this)) {
                     // Up arrow, but we are in the first column and first row. End navigation.
                     direction = selection_motion_t::deselect;
                 } else {

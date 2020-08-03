@@ -1265,86 +1265,80 @@ If a process exits through a signal, the exit status will be 128 plus the number
 
 .. _variables-color:
 
-Variables for changing highlighting colors
+Syntax highlighting variables
 ------------------------------------------
 
 The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The ``--bold`` or ``-b`` switches accepted by ``set_color`` are also accepted.
 
-The following variables are available to change the highlighting colors in fish:
 
-- ``fish_color_normal``, the default color
-
-- ``fish_color_command``, the color for commands
-
-- ``fish_color_quote``, the color for quoted blocks of text
-
-- ``fish_color_redirection``, the color for IO redirections
-
-- ``fish_color_end``, the color for process separators like ';' and '&'
-
-- ``fish_color_error``, the color used to highlight potential errors
-
-- ``fish_color_param``, the color for regular command parameters
-
-- ``fish_color_comment``, the color used for code comments
-
-- ``fish_color_match``, the color used to highlight matching parenthesis
-
-- ``fish_color_selection``, the color used when selecting text (in vi visual mode)
-
-- ``fish_color_search_match``, used to highlight history search matches and the selected pager item (must be a background)
-
-- ``fish_color_operator``, the color for parameter expansion operators like '*' and '~'
-
-- ``fish_color_escape``, the color used to highlight character escapes like '\\n' and '\\x70'
-
-- ``fish_color_cwd``, the color used for the current working directory in the default prompt
-
-- ``fish_color_autosuggestion``, the color used for autosuggestions
-
-- ``fish_color_user``, the color used to print the current username in some of fish default prompts
-
-- ``fish_color_host``, the color used to print the current host system in some of fish default prompts
-
-- ``fish_color_host_remote``, the color used to print the current host system in some of fish default prompts, if fish is running remotely (via ssh or similar)
-
-- ``fish_color_cancel``, the color for the '^C' indicator on a canceled command
-
-Additionally, the following variables are available to change the highlighting in the completion pager:
-
-- ``fish_pager_color_progress``, the color of the progress bar at the bottom left corner
-
-- ``fish_pager_color_background``, the background color of a line
-
-- ``fish_pager_color_prefix``, the color of the prefix string, i.e. the string that is to be completed
-
-- ``fish_pager_color_completion``, the color of the completion itself
-
-- ``fish_pager_color_description``, the color of the completion description
-
-- ``fish_pager_color_secondary_background``, ``fish_pager_color_background`` of every second unselected completion. Defaults to ``fish_pager_color_background``
-
-- ``fish_pager_color_secondary_prefix``, ``fish_pager_color_prefix`` of every second unselected completion. Defaults to ``fish_pager_color_prefix``
-
-- ``fish_pager_color_secondary_completion``, ``fish_pager_color_completion`` of every second unselected completion. Defaults to ``fish_pager_color_completion``
-
-- ``fish_pager_color_secondary_description``, ``fish_pager_color_description`` of every second unselected completion. Defaults to ``fish_pager_color_description``
-
-- ``fish_pager_color_selected_background``, ``fish_pager_color_background`` of the selected completion. Defaults to ``fish_color_search_match``
-
-- ``fish_pager_color_selected_prefix``, ``fish_pager_color_prefix`` of the selected completion. Defaults to ``fish_pager_color_prefix``
-
-- ``fish_pager_color_selected_completion``, ``fish_pager_color_completion`` of the selected completion. Defaults to ``fish_pager_color_completion``
-
-- ``fish_pager_color_selected_description``, ``fish_pager_color_description`` of the selected completion. Defaults to ``fish_pager_color_description``
-
-Example:
-
-To make errors highlighted and red, use::
-
+Example: to make errors highlighted and red, use::
 
     set fish_color_error red --bold
 
+
+The following variables are available to change the highlighting colors in fish:
+
+==========================================                 =====================================================================
+Variable                                                   Meaning
+==========================================                 =====================================================================
+``fish_color_normal``                                      default color
+``fish_color_command``                                     commands like echo
+``fish_color_quote``                                       quoted text like "abc"
+``fish_color_redirection``                                 IO redirections like >/dev/null
+``fish_color_end``                                         process separators like ';' and '&'
+``fish_color_error``                                       syntax errors
+``fish_color_param``                                       ordinary command parameters
+``fish_color_comment``                                     comments like '# important'
+``fish_color_selection``                                   selected text in vi visual mode
+``fish_color_operator``                                    parameter expansion operators like '*' and '~'
+``fish_color_escape``                                      character escapes like '\\n' and '\\x70'
+``fish_color_autosuggestion``                              autosuggestions (the proposed rest of a command)
+``fish_color_cwd``                                         the current working directory in the default prompt
+``fish_color_user``                                        the username in the default prompt
+``fish_color_host``                                        the hostname in the default prompt
+``fish_color_host_remote``                                 the hostname in the default prompt for remote sessions (like ssh)
+``fish_color_cancel``                                      the '^C' indicator on a canceled command
+``fish_color_search_match``                                history search matches and selected pager items (background only)
+==========================================                 =====================================================================
+
+.. _variables-color-pager:
+
+Pager color variables
+------------------------------------------
+
+fish will sometimes present a list of choices in a table, called the pager.
+
+Example: to set the background of each pager row, use::
+
+    set fish_pager_color_background --background=white
+
+To have black text on alternating white and gray backgrounds::
+
+    set fish_pager_color_prefix black
+    set fish_pager_color_completion black
+    set fish_pager_color_description black
+    set fish_pager_color_background --background=white
+    set fish_pager_color_secondary_background --background=brwhite
+
+Variables affecting the pager colors:
+
+==========================================                 ===========================================================
+Variable                                                   Meaning
+==========================================                 ===========================================================
+``fish_pager_color_progress``                              the progress bar at the bottom left corner
+``fish_pager_color_background``                            the background color of a line
+``fish_pager_color_prefix``                                the prefix string, i.e. the string that is to be completed
+``fish_pager_color_completion``                            the completion itself, i.e. the proposed rest of the string
+``fish_pager_color_description``                           the completion description
+``fish_pager_color_selected_background``                   background of the selected completion
+``fish_pager_color_selected_prefix``                       prefix of the selected completion
+``fish_pager_color_selected_completion``                   suffix of the selected completion
+``fish_pager_color_selected_description``                  description of the selected completion
+``fish_pager_color_secondary_background``                  background of every second unselected completion
+``fish_pager_color_secondary_prefix``                      prefix of every second unselected completion
+``fish_pager_color_secondary_completion``                  suffix of every second unselected completion
+``fish_pager_color_secondary_description``                 description of every second unselected completion
+==========================================                 ===========================================================
 
 .. _variables-locale:
 

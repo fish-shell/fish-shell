@@ -1324,7 +1324,7 @@ Additionally, the following variables are available to change the highlighting i
 
 - ``fish_pager_color_secondary_background``, ``fish_pager_color_background`` of every second unselected completion. Defaults to ``fish_pager_color_background``
 
-- ``fish_pager_color_secondary_ prefix``, ``fish_pager_color_prefix`` of every second unselected completion. Defaults to ``fish_pager_color_prefix``
+- ``fish_pager_color_secondary_prefix``, ``fish_pager_color_prefix`` of every second unselected completion. Defaults to ``fish_pager_color_prefix``
 
 - ``fish_pager_color_secondary_completion``, ``fish_pager_color_completion`` of every second unselected completion. Defaults to ``fish_pager_color_completion``
 

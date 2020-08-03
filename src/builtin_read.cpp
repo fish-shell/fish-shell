@@ -209,7 +209,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     reader_set_right_prompt(right_prompt);
     if (shell) {
         reader_set_complete_ok(true);
-        reader_set_highlight_function(&highlight_shell);
+        reader_set_highlight_ok(true);
         reader_set_test_function(&reader_shell_test);
     }
     // No autosuggestions or abbreviations in builtin_read.

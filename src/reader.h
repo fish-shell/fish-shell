@@ -216,20 +216,11 @@ void reader_pop();
 /// Mark whether tab completion is enabled.
 void reader_set_complete_ok(bool flag);
 
-/// The type of a highlight function.
-using highlight_function_t = void (*)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
-                                      const operation_context_t &ctx);
+/// Mark whether syntax highlighting is enabled.
+void reader_set_highlight_ok(bool flag);
 
 /// Function type for testing if a string is valid for the reader to return.
 using test_function_t = parser_test_error_bits_t (*)(parser_t &, const wcstring &);
-
-/// Specify function for syntax highlighting. The function must take these arguments:
-///
-/// - The command to be highlighted as a null terminated array of wchar_t
-/// - The color code of each character as an array of ints
-/// - The cursor position
-/// - An array_list_t used for storing error messages
-void reader_set_highlight_function(highlight_function_t func);
 
 /// Specify function for testing if the command buffer contains syntax errors that must be corrected
 /// before returning.

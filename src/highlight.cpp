@@ -1308,16 +1308,8 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
 }
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                     const operation_context_t &ctx) {
+                     const operation_context_t &ctx, bool io_ok) {
     const wcstring working_directory = ctx.vars.get_pwd_slash();
-    highlighter_t highlighter(buff, pos, ctx, working_directory, true /* can do IO */);
+    highlighter_t highlighter(buff, pos, ctx, working_directory, io_ok);
     color = highlighter.highlight();
 }
-
-void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                           const operation_context_t &ctx) {
-    const wcstring working_directory = ctx.vars.get_pwd_slash();
-    highlighter_t highlighter(buff, pos, ctx, working_directory, false /* no IO allowed */);
-    color = highlighter.highlight();
-}
-

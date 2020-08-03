@@ -516,8 +516,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     std::vector<int> indents;
     /// Whether tab completion is allowed.
     bool complete_ok{false};
-    /// Function for syntax highlighting.
-    highlight_function_t highlight_func{nullptr};
+    /// Whether to perform syntax highlighting.
+    bool highlight_ok{false};
     /// Function for testing if the string can be returned.
     test_function_t test_func{default_test};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
@@ -2277,18 +2277,17 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
 
 // Given text, bracket matching position, and whether IO is allowed,
 // return a function that performs highlighting. The function may be invoked on a background thread.
-static std::function<highlight_result_t(void)> get_highlight_performer(
-    parser_t &parser, const wcstring &text, long match_highlight_pos,
-    highlight_function_t highlight_func) {
-    if (!highlight_func) return {};
-
+static std::function<highlight_result_t(void)> get_highlight_performer(parser_t &parser,
+                                                                       const wcstring &text,
+                                                                       long match_highlight_pos,
+                                                                       bool io_ok) {
     auto vars = parser.vars().snapshot();
     unsigned generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
         if (text.empty()) return {};
         operation_context_t ctx = get_bg_context(vars, generation_count);
         std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_func(text, colors, match_highlight_pos, ctx);
+        highlight_shell(text, colors, match_highlight_pos, ctx, io_ok);
         return {std::move(colors), text};
     };
 }
@@ -2302,6 +2301,8 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
 /// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
 ///        an asynchronous highlight in the background, which may perform disk I/O.
 void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
+    if (!highlight_ok) return;
+
     const editable_line_t *el = &command_line;
     assert(el != nullptr);
     long match_highlight_pos = static_cast<long>(el->position()) + match_highlight_pos_adjust;
@@ -2309,20 +2310,18 @@ void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bo
 
     sanity_check();
 
-    if (auto highlight_performer =
-            get_highlight_performer(parser(), el->text(), match_highlight_pos,
-                                    no_io ? highlight_shell_no_io : highlight_func)) {
-        if (no_io) {
-            // Highlighting without IO, we just do it.
-            highlight_complete(highlight_performer());
-        } else {
-            // Highlighting including I/O proceeds in the background.
-            auto shared_this = this->shared_from_this();
-            debounce_highlighting().perform(highlight_performer,
-                                            [shared_this](highlight_result_t result) {
-                                                shared_this->highlight_complete(std::move(result));
-                                            });
-        }
+    auto highlight_performer =
+        get_highlight_performer(parser(), el->text(), match_highlight_pos, !no_io);
+    if (no_io) {
+        // Highlighting without IO, we just do it.
+        highlight_complete(highlight_performer());
+    } else {
+        // Highlighting including I/O proceeds in the background.
+        auto shared_this = this->shared_from_this();
+        debounce_highlighting().perform(highlight_performer,
+                                        [shared_this](highlight_result_t result) {
+                                            shared_this->highlight_complete(std::move(result));
+                                        });
     }
     highlight_search();
 
@@ -2400,9 +2399,7 @@ void reader_set_expand_abbreviations(bool flag) { current_data()->expand_abbrevi
 
 void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
 
-void reader_set_highlight_function(highlight_function_t func) {
-    current_data()->highlight_func = func;
-}
+void reader_set_highlight_ok(bool flag) { current_data()->highlight_ok = flag; }
 
 void reader_set_test_function(test_function_t f) { current_data()->test_func = f; }
 
@@ -2495,7 +2492,7 @@ uint64_t reader_run_count() { return run_count; }
 static int read_i(parser_t &parser) {
     reader_push(parser, history_session_id(parser.vars()));
     reader_set_complete_ok(true);
-    reader_set_highlight_function(&highlight_shell);
+    reader_set_highlight_ok(true);
     reader_set_test_function(&reader_shell_test);
     reader_set_allow_autosuggesting(true);
     reader_set_expand_abbreviations(true);

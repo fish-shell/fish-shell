@@ -262,9 +262,8 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
             append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
             if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                 std::vector<highlight_spec_t> colors;
-                highlight_shell_no_io(
-                    comment, colors, comment.size(),
-                    operation_context_t{nullptr, env_stack_t::globals(), no_cancel});
+                highlight_shell(comment, colors, comment.size(),
+                                operation_context_t{nullptr, env_stack_t::globals(), no_cancel});
                 streams.out.append(str2wcstring(colorize(comment, colors)));
             } else {
                 streams.out.append(comment);
@@ -442,7 +441,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
                 if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                     std::vector<highlight_spec_t> colors;
-                    highlight_shell_no_io(def, colors, def.size(), operation_context_t::globals());
+                    highlight_shell(def, colors, def.size(), operation_context_t::globals());
                     streams.out.append(str2wcstring(colorize(def, colors)));
                 } else {
                     streams.out.append(def);

@@ -201,22 +201,25 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
                             const wchar_t *commandline) {
     int exit_res = STATUS_CMD_OK;
 
-    // Don't keep history
-    reader_push(parser, L"");
-    reader_get_history()->resolve_pending();
+    // Construct a configuration.
+    reader_config_t conf;
+    conf.complete_ok = shell;
+    conf.highlight_ok = shell;
+    conf.syntax_check_ok = shell;
 
-    reader_set_left_prompt(prompt);
-    reader_set_right_prompt(right_prompt);
-    if (shell) {
-        reader_set_complete_ok(true);
-        reader_set_highlight_ok(true);
-        reader_set_syntax_check_ok(true);
-    }
     // No autosuggestions or abbreviations in builtin_read.
-    reader_set_allow_autosuggesting(false);
-    reader_set_expand_abbreviations(false);
-    reader_set_exit_on_interrupt(true);
-    reader_set_silent_status(silent);
+    conf.autosuggest_ok = false;
+    conf.expand_abbrev_ok = false;
+
+    conf.exit_on_interrupt = true;
+    conf.in_silent_mode = silent;
+
+    conf.left_prompt_cmd = prompt;
+    conf.right_prompt_cmd = right_prompt;
+
+    // Don't keep history.
+    reader_push(parser, wcstring{}, std::move(conf));
+    reader_get_history()->resolve_pending();
 
     reader_set_buffer(commandline, std::wcslen(commandline));
     scoped_push<bool> interactive{&parser.libdata().is_interactive, true};

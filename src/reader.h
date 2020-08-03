@@ -207,37 +207,42 @@ int reader_reading_interrupted();
 /// commandline.
 maybe_t<wcstring> reader_readline(int nchars);
 
-/// Push a new reader environment.
-void reader_push(parser_t &parser, const wcstring &name);
+/// Configuration that we provide to a reader.
+struct reader_config_t {
+    /// Left prompt command, typically fish_prompt.
+    wcstring left_prompt_cmd{};
+
+    /// Right prompt command, typically fish_right_prompt.
+    wcstring right_prompt_cmd{};
+
+    /// Whether tab completion is OK.
+    bool complete_ok{false};
+
+    /// Whether to perform syntax highlighting.
+    bool highlight_ok{false};
+
+    /// Whether to perform syntax checking before returning.
+    bool syntax_check_ok{false};
+
+    /// Whether to allow autosuggestions.
+    bool autosuggest_ok{false};
+
+    /// Whether to expand abbreviations.
+    bool expand_abbrev_ok{false};
+
+    /// Whether to exit on interrupt (^C).
+    bool exit_on_interrupt{false};
+
+    /// If set, do not show what is typed.
+    bool in_silent_mode{false};
+};
+
+/// Push a new reader environment controlled by \p conf.
+/// If \p history_name is not empty, then use the history with that name.
+void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t &&conf);
 
 /// Return to previous reader environment.
 void reader_pop();
-
-/// Mark whether tab completion is enabled.
-void reader_set_complete_ok(bool flag);
-
-/// Mark whether syntax highlighting is enabled.
-void reader_set_highlight_ok(bool flag);
-
-/// Mark whether to check syntax.
-void reader_set_syntax_check_ok(bool flag);
-
-/// Specify string of shell commands to be run in order to generate the prompt.
-void reader_set_left_prompt(const wcstring &prompt);
-
-/// Specify string of shell commands to be run in order to generate the right prompt.
-void reader_set_right_prompt(const wcstring &prompt);
-
-/// Sets whether autosuggesting is allowed.
-void reader_set_allow_autosuggesting(bool flag);
-
-/// Sets whether abbreviation expansion is performed.
-void reader_set_expand_abbreviations(bool flag);
-
-/// Sets whether the reader should exit on ^C.
-void reader_set_exit_on_interrupt(bool i);
-
-void reader_set_silent_status(bool f);
 
 /// Returns true if the shell is exiting, 0 otherwise.
 bool shell_is_exiting();

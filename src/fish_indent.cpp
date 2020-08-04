@@ -627,7 +627,6 @@ static const char *highlight_role_to_string(highlight_role_t role) {
         TEST_ROLE(statement_terminator)
         TEST_ROLE(param)
         TEST_ROLE(comment)
-        TEST_ROLE(match)
         TEST_ROLE(search_match)
         TEST_ROLE(operat)
         TEST_ROLE(escape)
@@ -663,7 +662,7 @@ static const char *highlight_role_to_string(highlight_role_t role) {
 static std::string make_pygments_csv(const wcstring &src) {
     const size_t len = src.size();
     std::vector<highlight_spec_t> colors;
-    highlight_shell_no_io(src, colors, src.size(), operation_context_t::globals());
+    highlight_shell(src, colors, src.size(), operation_context_t::globals());
     assert(colors.size() == len && "Colors and src should have same size");
 
     struct token_range_t {
@@ -735,9 +734,6 @@ static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
         }
         case highlight_role_t::comment: {
             return P(comment);
-        }
-        case highlight_role_t::match: {
-            return P(match);
         }
         case highlight_role_t::search_match: {
             return P(search_match);
@@ -968,8 +964,8 @@ int main(int argc, char *argv[]) {
         // Maybe colorize.
         std::vector<highlight_spec_t> colors;
         if (output_type != output_type_plain_text) {
-            highlight_shell_no_io(output_wtext, colors, output_wtext.size(),
-                                  operation_context_t::globals());
+            highlight_shell(output_wtext, colors, output_wtext.size(),
+                            operation_context_t::globals());
         }
 
         std::string colored_output;
@@ -991,7 +987,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case output_type_ansi: {
-                colored_output = colorize(output_wtext, colors);
+                colored_output = colorize(output_wtext, colors, env_stack_t::globals());
                 break;
             }
             case output_type_html: {

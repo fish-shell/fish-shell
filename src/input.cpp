@@ -530,12 +530,10 @@ char_event_t inputter_t::readch(bool allow_commands) {
                 case readline_cmd_t::func_or: {
                     // If previous function has right status, we keep reading tokens
                     if (evt.get_readline() == readline_cmd_t::func_and) {
-                        if (function_status_)
-                            return readch();
+                        if (function_status_) return readch();
                     } else {
                         assert(evt.get_readline() == readline_cmd_t::func_or);
-                        if (!function_status_)
-                            return readch();
+                        if (!function_status_) return readch();
                     }
                     // Else we flush remaining tokens
                     do {

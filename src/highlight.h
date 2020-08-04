@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <unordered_map>
 #include <vector>
 
 #include "color.h"
@@ -19,7 +20,6 @@ enum class highlight_role_t : uint8_t {
     statement_terminator,  // process separator
     param,                 // command parameter (argument)
     comment,               // comment
-    match,                 // matching parenthesis, etc.
     search_match,          // search match
     operat,                // operator
     escape,                // escape sequences
@@ -70,10 +70,24 @@ struct highlight_spec_t {
     }
 };
 
+namespace std {
+template <>
+struct hash<highlight_spec_t> {
+    std::size_t operator()(const highlight_spec_t &v) const {
+        size_t vals[4] = {static_cast<uint32_t>(v.foreground), static_cast<uint32_t>(v.background),
+                          v.valid_path, v.force_underline};
+        return (vals[0] << 0) + (vals[1] << 6) + (vals[2] << 12) + (vals[3] << 18);
+    }
+};
+}  // namespace std
+
 class history_item_t;
 class operation_context_t;
 
-std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors);
+/// Given a string and list of colors of the same size, return the string with ANSI escape sequences
+/// representing the colors.
+std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors,
+                     const environment_t &vars);
 
 /// Perform syntax highlighting for the shell commands in buff. The result is stored in the color
 /// array as a color_code from the HIGHLIGHT_ enum for each character in buff.
@@ -83,28 +97,25 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
 /// color, the next 8 bits for bg color.
 /// \param pos the cursor position. Used for quote matching, etc.
 /// \param ctx The variables and cancellation check for this operation.
+/// \param io_ok If set, allow IO which may block. This means that e.g. invalid commands may be
+/// detected.
 void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos,
-                     const operation_context_t &ctx);
+                     const operation_context_t &ctx, bool io_ok = false);
 
-/// Perform a non-blocking shell highlighting. The function will not do any I/O that may block. As a
-/// result, invalid commands may not be detected, etc.
-void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t> &color,
-                           size_t pos, const operation_context_t &ctx);
+/// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
+/// It maintains a cache with no invalidation mechanism. The lifetime of these should typically be
+/// one screen redraw.
+struct highlight_color_resolver_t {
+    /// \return an RGB color for a given highlight spec.
+    rgb_color_t resolve_spec(const highlight_spec_t &highlight, bool is_background,
+                             const environment_t &vars);
 
-/// Perform syntax highlighting for the text in buff. Matching quotes and parenthesis are
-/// highlighted. The result is stored in the color array as a color_code from the HIGHLIGHT_ enum
-/// for each character in buff.
-///
-/// \param buffstr The buffer on which to perform syntax highlighting
-/// \param color The array in which to store the color codes. The first 8 bits are used for fg
-/// color, the next 8 bits for bg color.
-/// \param pos the cursor position. Used for quote matching, etc.
-/// \param ctx The cancellation and other environment for this operation. This is unused.
-void highlight_universal(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos,
-                         const operation_context_t &ctx);
-
-/// \return an RGB color for a given highlight spec.
-rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_background);
+   private:
+    std::unordered_map<highlight_spec_t, rgb_color_t> fg_cache_;
+    std::unordered_map<highlight_spec_t, rgb_color_t> bg_cache_;
+    rgb_color_t resolve_spec_uncached(const highlight_spec_t &highlight, bool is_background,
+                                      const environment_t &vars) const;
+};
 
 /// Given a command 'str' from the history, try to determine whether we ought to suggest it by
 /// specially recognizing the command. Returns true if we validated the command. If so, returns by

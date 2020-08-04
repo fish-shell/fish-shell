@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ --null ] [ -R | --reverse ] [ "search string"... ]
+    history [ search ] [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ --null ] [ -R | --reverse ] [ "search string"... ]
     history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
     history merge
     history save

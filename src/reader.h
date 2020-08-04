@@ -207,50 +207,42 @@ int reader_reading_interrupted();
 /// commandline.
 maybe_t<wcstring> reader_readline(int nchars);
 
-/// Push a new reader environment.
-void reader_push(parser_t &parser, const wcstring &name);
+/// Configuration that we provide to a reader.
+struct reader_config_t {
+    /// Left prompt command, typically fish_prompt.
+    wcstring left_prompt_cmd{};
+
+    /// Right prompt command, typically fish_right_prompt.
+    wcstring right_prompt_cmd{};
+
+    /// Whether tab completion is OK.
+    bool complete_ok{false};
+
+    /// Whether to perform syntax highlighting.
+    bool highlight_ok{false};
+
+    /// Whether to perform syntax checking before returning.
+    bool syntax_check_ok{false};
+
+    /// Whether to allow autosuggestions.
+    bool autosuggest_ok{false};
+
+    /// Whether to expand abbreviations.
+    bool expand_abbrev_ok{false};
+
+    /// Whether to exit on interrupt (^C).
+    bool exit_on_interrupt{false};
+
+    /// If set, do not show what is typed.
+    bool in_silent_mode{false};
+};
+
+/// Push a new reader environment controlled by \p conf.
+/// If \p history_name is not empty, then use the history with that name.
+void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t &&conf);
 
 /// Return to previous reader environment.
 void reader_pop();
-
-/// Mark whether tab completion is enabled.
-void reader_set_complete_ok(bool flag);
-
-/// The type of a highlight function.
-using highlight_function_t = void (*)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
-                                      const operation_context_t &ctx);
-
-/// Function type for testing if a string is valid for the reader to return.
-using test_function_t = parser_test_error_bits_t (*)(parser_t &, const wcstring &);
-
-/// Specify function for syntax highlighting. The function must take these arguments:
-///
-/// - The command to be highlighted as a null terminated array of wchar_t
-/// - The color code of each character as an array of ints
-/// - The cursor position
-/// - An array_list_t used for storing error messages
-void reader_set_highlight_function(highlight_function_t func);
-
-/// Specify function for testing if the command buffer contains syntax errors that must be corrected
-/// before returning.
-void reader_set_test_function(test_function_t func);
-
-/// Specify string of shell commands to be run in order to generate the prompt.
-void reader_set_left_prompt(const wcstring &prompt);
-
-/// Specify string of shell commands to be run in order to generate the right prompt.
-void reader_set_right_prompt(const wcstring &prompt);
-
-/// Sets whether autosuggesting is allowed.
-void reader_set_allow_autosuggesting(bool flag);
-
-/// Sets whether abbreviation expansion is performed.
-void reader_set_expand_abbreviations(bool flag);
-
-/// Sets whether the reader should exit on ^C.
-void reader_set_exit_on_interrupt(bool i);
-
-void reader_set_silent_status(bool f);
 
 /// Returns true if the shell is exiting, 0 otherwise.
 bool shell_is_exiting();
@@ -260,10 +252,6 @@ void reader_handle_sigint();
 
 /// This function returns true if fish is exiting by force, i.e. because stdin died.
 bool reader_exit_forced();
-
-/// Test if the given shell command contains errors. Uses parser_test for testing. Suitable for
-/// reader_set_test_function().
-parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &);
 
 /// Test whether the interactive reader is in search mode.
 bool reader_is_in_search_mode();

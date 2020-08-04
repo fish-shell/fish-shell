@@ -1222,47 +1222,43 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
     // Verify no variable expansions.
     wcstring storage;
 
-        for (const node_t &node : ast) {
-            if (const job_continuation_t *jc = node.try_as<job_continuation_t>()) {
-                // Somewhat clumsy way of checking for a statement without source in a pipeline.
-                // See if our pipe has source but our statement does not.
-                if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
-                    has_unclosed_pipe = true;
-                }
-            } else if (const argument_t *arg = node.try_as<argument_t>()) {
-                const wcstring &arg_src = arg->source(buff_src, &storage);
-                res |= parse_util_detect_errors_in_argument(*arg, arg_src, out_errors);
-            } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
-                // Disallow background in the following cases:
-                //
-                // foo & ; and bar
-                // foo & ; or bar
-                // if foo & ; end
-                // while foo & ; end
-                // If it's not a background job, nothing to do.
-                if (job->bg) {
-                    errored |= detect_errors_in_backgrounded_job(*job, out_errors);
-                }
-            } else if (const ast::decorated_statement_t *stmt =
-                           node.try_as<decorated_statement_t>()) {
-                errored |=
-                    detect_errors_in_decorated_statement(buff_src, *stmt, &storage, out_errors);
-            } else if (const auto *block = node.try_as<block_statement_t>()) {
-                // If our 'end' had no source, we are unsourced.
-                if (block->end.unsourced) has_unclosed_block = true;
-                errored |=
-                    detect_errors_in_block_redirection_list(block->args_or_redirs, out_errors);
-            } else if (const auto *ifs = node.try_as<if_statement_t>()) {
-                // If our 'end' had no source, we are unsourced.
-                if (ifs->end.unsourced) has_unclosed_block = true;
-                errored |= detect_errors_in_block_redirection_list(ifs->args_or_redirs, out_errors);
-            } else if (const auto *switchs = node.try_as<switch_statement_t>()) {
-                // If our 'end' had no source, we are unsourced.
-                if (switchs->end.unsourced) has_unclosed_block = true;
-                errored |=
-                    detect_errors_in_block_redirection_list(switchs->args_or_redirs, out_errors);
+    for (const node_t &node : ast) {
+        if (const job_continuation_t *jc = node.try_as<job_continuation_t>()) {
+            // Somewhat clumsy way of checking for a statement without source in a pipeline.
+            // See if our pipe has source but our statement does not.
+            if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
+                has_unclosed_pipe = true;
             }
+        } else if (const argument_t *arg = node.try_as<argument_t>()) {
+            const wcstring &arg_src = arg->source(buff_src, &storage);
+            res |= parse_util_detect_errors_in_argument(*arg, arg_src, out_errors);
+        } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
+            // Disallow background in the following cases:
+            //
+            // foo & ; and bar
+            // foo & ; or bar
+            // if foo & ; end
+            // while foo & ; end
+            // If it's not a background job, nothing to do.
+            if (job->bg) {
+                errored |= detect_errors_in_backgrounded_job(*job, out_errors);
+            }
+        } else if (const ast::decorated_statement_t *stmt = node.try_as<decorated_statement_t>()) {
+            errored |= detect_errors_in_decorated_statement(buff_src, *stmt, &storage, out_errors);
+        } else if (const auto *block = node.try_as<block_statement_t>()) {
+            // If our 'end' had no source, we are unsourced.
+            if (block->end.unsourced) has_unclosed_block = true;
+            errored |= detect_errors_in_block_redirection_list(block->args_or_redirs, out_errors);
+        } else if (const auto *ifs = node.try_as<if_statement_t>()) {
+            // If our 'end' had no source, we are unsourced.
+            if (ifs->end.unsourced) has_unclosed_block = true;
+            errored |= detect_errors_in_block_redirection_list(ifs->args_or_redirs, out_errors);
+        } else if (const auto *switchs = node.try_as<switch_statement_t>()) {
+            // If our 'end' had no source, we are unsourced.
+            if (switchs->end.unsourced) has_unclosed_block = true;
+            errored |= detect_errors_in_block_redirection_list(switchs->args_or_redirs, out_errors);
         }
+    }
 
     if (errored) res |= PARSER_TEST_ERROR;
 

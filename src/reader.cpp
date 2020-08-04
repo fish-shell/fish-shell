@@ -278,14 +278,6 @@ bool editable_line_t::redo() {
 
 namespace {
 
-/// Test if the given string contains error. Since this is the error detection for general purpose,
-/// there are no invalid strings, so this function always returns false.
-parser_test_error_bits_t default_test(parser_t &parser, const wcstring &b) {
-    UNUSED(parser);
-    UNUSED(b);
-    return 0;
-}
-
 /// Encapsulation of the reader's history search functionality.
 class reader_history_search_t {
    public:
@@ -460,6 +452,8 @@ struct readline_loop_state_t;
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
    public:
+    /// Configuration for the reader.
+    const reader_config_t conf;
     /// The parser being used.
     std::shared_ptr<parser_t> parser_ref;
     /// String containing the whole current commandline.
@@ -474,14 +468,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     pager_t pager;
     /// Current page rendering.
     page_rendering_t current_page_rendering;
-    /// Whether autosuggesting is allowed at all.
-    bool allow_autosuggestion{false};
     /// When backspacing, we temporarily suppress autosuggestions.
     bool suppress_autosuggestion{false};
-    /// Whether abbreviations are expanded.
-    bool expand_abbreviations{false};
-    /// Silent mode used for password input on the read command
-    bool silent{false};
     /// The representation of the current screen contents.
     screen_t screen;
     /// The source of input events.
@@ -498,9 +486,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     size_t sel_start_pos{0};
     /// The stop position of the current selection, if one.
     size_t sel_stop_pos{0};
-    /// The prompt commands.
-    wcstring left_prompt;
-    wcstring right_prompt;
     /// The output of the last evaluation of the prompt command.
     wcstring left_prompt_buff;
     wcstring mode_prompt_buff;
@@ -514,12 +499,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     std::vector<highlight_spec_t> colors;
     /// An array defining the block level at each character.
     std::vector<int> indents;
-    /// Whether tab completion is allowed.
-    bool complete_ok{false};
-    /// Function for syntax highlighting.
-    highlight_function_t highlight_func{highlight_universal};
-    /// Function for testing if the string can be returned.
-    test_function_t test_func{default_test};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
     /// ^D twice.
     bool prev_end_loop{false};
@@ -530,8 +509,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool repaint_needed{false};
     /// Whether a screen reset is needed after a repaint.
     bool screen_reset_needed{false};
-    /// Whether the reader should exit on ^C.
-    bool exit_on_interrupt{false};
     /// The target character of the last jump command.
     wchar_t last_jump_target{0};
     jump_direction_t last_jump_direction{jump_direction_t::forward};
@@ -571,8 +548,11 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Access the parser.
     parser_t &parser() { return *parser_ref; }
 
-    reader_data_t(std::shared_ptr<parser_t> parser, history_t *hist)
-        : parser_ref(std::move(parser)), inputter(*parser_ref), history(hist) {}
+    reader_data_t(std::shared_ptr<parser_t> parser, history_t *hist, reader_config_t &&conf)
+        : conf(std::move(conf)),
+          parser_ref(std::move(parser)),
+          inputter(*parser_ref),
+          history(hist) {}
 
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
     void repaint();
@@ -601,7 +581,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_result_t result);
     void update_autosuggestion();
-    void accept_autosuggestion(bool full, bool single = false, move_word_style_t style = move_word_style_punctuation);
+    void accept_autosuggestion(bool full, bool single = false,
+                               move_word_style_t style = move_word_style_punctuation);
     void super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
     void highlight_search();
@@ -624,6 +605,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Called to update the termsize, including $COLUMNS and $LINES, as necessary.
     void update_termsize() { (void)termsize_container_t::shared().updating(parser()); }
+
+    // Import history from older location (config path) if our current history is empty.
+    void import_history_if_necessary();
 };
 
 /// This variable is set to a signal by the signal handler when ^C is pressed.
@@ -826,7 +810,7 @@ void reader_data_t::repaint() {
     indents = parse_util_compute_indents(cmd_line->text());
 
     wcstring full_line;
-    if (silent) {
+    if (conf.in_silent_mode) {
         full_line = wcstring(cmd_line->text().length(), get_obfuscation_read_char());
     } else {
         // Combine the command and autosuggestion into one string.
@@ -1001,7 +985,7 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
     bool result = false;
     editable_line_t *el = active_edit_line();
 
-    if (expand_abbreviations && el == &command_line) {
+    if (conf.expand_abbrev_ok && el == &command_line) {
         // Try expanding abbreviations.
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
 
@@ -1096,35 +1080,35 @@ void reader_data_t::exec_prompt() {
     // Suppress fish_trace while in the prompt.
     scoped_push<bool> in_prompt(&parser().libdata().suppress_fish_trace, true);
 
-    // Do not allow the exit status of the prompts to leak through.
-    const bool apply_exit_status = false;
-
     // Update the termsize now.
     // This allows prompts to react to $COLUMNS.
     update_termsize();
 
     // If we have any prompts, they must be run non-interactively.
-    if (!left_prompt.empty() || !right_prompt.empty()) {
+    if (!conf.left_prompt_cmd.empty() || !conf.right_prompt_cmd.empty()) {
         scoped_push<bool> noninteractive{&parser().libdata().is_interactive, false};
 
         exec_mode_prompt();
 
-        if (!left_prompt.empty()) {
+        if (!conf.left_prompt_cmd.empty()) {
+            // Status is ignored.
             wcstring_list_t prompt_list;
-            // Ignore return status.
-            exec_subshell(left_prompt, parser(), prompt_list, apply_exit_status);
-            for (size_t i = 0; i < prompt_list.size(); i++) {
-                if (i > 0) left_prompt_buff += L'\n';
-                left_prompt_buff += prompt_list.at(i);
-            }
+            // Historic compatibility hack.
+            // If the left prompt function is deleted, then use a default prompt instead of
+            // producing an error.
+            bool left_prompt_deleted = conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME &&
+                                       !function_exists(conf.left_prompt_cmd, parser());
+            exec_subshell(left_prompt_deleted ? DEFAULT_PROMPT : conf.left_prompt_cmd, parser(),
+                          prompt_list, false);
+            left_prompt_buff = join_strings(prompt_list, L'\n');
         }
 
-        if (!right_prompt.empty()) {
-            wcstring_list_t prompt_list;
+        if (!conf.right_prompt_cmd.empty()) {
             // Status is ignored.
-            exec_subshell(right_prompt, parser(), prompt_list, apply_exit_status);
+            wcstring_list_t prompt_list;
+            exec_subshell(conf.right_prompt_cmd, parser(), prompt_list, false);
+            // Right prompt does not support multiple lines, so just concatenate all of them.
             for (const auto &i : prompt_list) {
-                // Right prompt does not support multiple lines, so just concatenate all of them.
                 right_prompt_buff += i;
             }
         }
@@ -1541,7 +1525,7 @@ bool reader_data_t::can_autosuggest() const {
     // and our command line contains a non-whitespace character.
     const editable_line_t *el = active_edit_line();
     const wchar_t *whitespace = L" \t\r\n\v";
-    return allow_autosuggestion && !suppress_autosuggestion && history_search.is_at_end() &&
+    return conf.autosuggest_ok && !suppress_autosuggestion && history_search.is_at_end() &&
            el == &command_line && el->text().find_first_not_of(whitespace) != wcstring::npos;
 }
 
@@ -2220,7 +2204,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     }
 }
 
-parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) {
+static parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) {
     wcstring bstr = b;
 
     // Append a newline, to act as a statement terminator.
@@ -2277,16 +2261,17 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
 
 // Given text, bracket matching position, and whether IO is allowed,
 // return a function that performs highlighting. The function may be invoked on a background thread.
-static std::function<highlight_result_t(void)> get_highlight_performer(
-    parser_t &parser, const wcstring &text, long match_highlight_pos,
-    highlight_function_t highlight_func) {
+static std::function<highlight_result_t(void)> get_highlight_performer(parser_t &parser,
+                                                                       const wcstring &text,
+                                                                       long match_highlight_pos,
+                                                                       bool io_ok) {
     auto vars = parser.vars().snapshot();
     unsigned generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
         if (text.empty()) return {};
         operation_context_t ctx = get_bg_context(vars, generation_count);
         std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_func(text, colors, match_highlight_pos, ctx);
+        highlight_shell(text, colors, match_highlight_pos, ctx, io_ok);
         return {std::move(colors), text};
     };
 }
@@ -2300,6 +2285,8 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
 /// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
 ///        an asynchronous highlight in the background, which may perform disk I/O.
 void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
+    if (!conf.highlight_ok) return;
+
     const editable_line_t *el = &command_line;
     assert(el != nullptr);
     long match_highlight_pos = static_cast<long>(el->position()) + match_highlight_pos_adjust;
@@ -2307,8 +2294,8 @@ void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bo
 
     sanity_check();
 
-    auto highlight_performer = get_highlight_performer(
-        parser(), el->text(), match_highlight_pos, no_io ? highlight_shell_no_io : highlight_func);
+    auto highlight_performer =
+        get_highlight_performer(parser(), el->text(), match_highlight_pos, !no_io);
     if (no_io) {
         // Highlighting without IO, we just do it.
         highlight_complete(highlight_performer());
@@ -2358,16 +2345,25 @@ void reader_change_history(const wcstring &name) {
     }
 }
 
-void reader_push(parser_t &parser, const wcstring &name) {
-    history_t *hist = &history_t::history_with_name(name);
-    reader_data_stack.push_back(std::make_shared<reader_data_t>(parser.shared(), hist));
-    reader_data_t *data = current_data();
+/// Add a new reader to the reader stack.
+/// \return a shared pointer to it.
+static std::shared_ptr<reader_data_t> reader_push_ret(parser_t &parser,
+                                                      const wcstring &history_name,
+                                                      reader_config_t &&conf) {
+    history_t *hist = &history_t::history_with_name(history_name);
+    auto data = std::make_shared<reader_data_t>(parser.shared(), hist, std::move(conf));
+    reader_data_stack.push_back(data);
     data->command_line_changed(&data->command_line);
     if (reader_data_stack.size() == 1) {
         reader_interactive_init(parser);
     }
-
     data->exec_prompt();
+    return data;
+}
+
+/// Public variant which discards the return value.
+void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t &&conf) {
+    (void)reader_push_ret(parser, history_name, std::move(conf));
 }
 
 void reader_pop() {
@@ -2382,50 +2378,25 @@ void reader_pop() {
     }
 }
 
-void reader_set_left_prompt(const wcstring &new_prompt) {
-    current_data()->left_prompt = new_prompt;
-}
-
-void reader_set_right_prompt(const wcstring &new_prompt) {
-    current_data()->right_prompt = new_prompt;
-}
-
-void reader_set_allow_autosuggesting(bool flag) { current_data()->allow_autosuggestion = flag; }
-
-void reader_set_expand_abbreviations(bool flag) { current_data()->expand_abbreviations = flag; }
-
-void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
-
-void reader_set_highlight_function(highlight_function_t func) {
-    current_data()->highlight_func = func;
-}
-
-void reader_set_test_function(test_function_t f) { current_data()->test_func = f; }
-
-void reader_set_exit_on_interrupt(bool i) { current_data()->exit_on_interrupt = i; }
-
-void reader_set_silent_status(bool flag) { current_data()->silent = flag; }
-
-void reader_import_history_if_necessary() {
+void reader_data_t::import_history_if_necessary() {
     // Import history from older location (config path) if our current history is empty.
-    reader_data_t *data = current_data();
-    if (data->history && data->history->is_empty()) {
-        data->history->populate_from_config_path();
+    if (history && history->is_empty()) {
+        history->populate_from_config_path();
     }
 
     // Import history from bash, etc. if our current history is still empty and is the default
     // history.
-    if (data->history && data->history->is_empty() && data->history->is_default()) {
+    if (history && history->is_empty() && history->is_default()) {
         // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
         // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
         // itself. But this is better than nothing.
-        const auto var = data->vars().get(L"HISTFILE");
+        const auto var = vars().get(L"HISTFILE");
         wcstring path = (var ? var->as_string() : L"~/.bash_history");
-        expand_tilde(path, data->vars());
+        expand_tilde(path, vars());
         int fd = wopen_cloexec(path, O_RDONLY);
         if (fd >= 0) {
             FILE *f = fdopen(fd, "r");
-            data->history->populate_from_bash(f);
+            history->populate_from_bash(f);
             fclose(f);
         }
     }
@@ -2447,7 +2418,8 @@ void reader_bg_job_warning(const job_list_t &jobs) {
 
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
-static void handle_end_loop(parser_t &parser) {
+static void handle_end_loop(reader_data_t *data) {
+    parser_t &parser = data->parser();
     if (!reader_exit_forced()) {
         for (const auto &b : parser.blocks()) {
             if (b.type() == block_type_t::breakpoint) {
@@ -2458,7 +2430,6 @@ static void handle_end_loop(parser_t &parser) {
         }
 
         // Perhaps print a warning before exiting.
-        reader_data_t *data = current_data();
         auto bg_jobs = jobs_requiring_warning_on_exit(parser);
         if (!data->prev_end_loop && !bg_jobs.empty()) {
             print_exit_warning_for_jobs(bg_jobs);
@@ -2472,8 +2443,7 @@ static void handle_end_loop(parser_t &parser) {
     hup_jobs(parser.jobs());
 }
 
-static bool selection_is_at_top() {
-    reader_data_t *data = current_data();
+static bool selection_is_at_top(const reader_data_t *data) {
     const pager_t *pager = &data->pager;
     size_t row = pager->get_selected_row(data->current_page_rendering);
     if (row != 0 && row != PAGER_SELECTION_NONE) return false;
@@ -2489,40 +2459,39 @@ uint64_t reader_run_count() { return run_count; }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(parser_t &parser) {
-    reader_push(parser, history_session_id(parser.vars()));
-    reader_set_complete_ok(true);
-    reader_set_highlight_function(&highlight_shell);
-    reader_set_test_function(&reader_shell_test);
-    reader_set_allow_autosuggesting(true);
-    reader_set_expand_abbreviations(true);
-    reader_import_history_if_necessary();
+    reader_config_t conf;
+    conf.complete_ok = true;
+    conf.highlight_ok = true;
+    conf.syntax_check_ok = true;
+    conf.autosuggest_ok = true;
+    conf.expand_abbrev_ok = true;
 
-    reader_data_t *data = current_data();
+    if (parser.libdata().is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
+        conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME;
+    } else {
+        conf.left_prompt_cmd = LEFT_PROMPT_FUNCTION_NAME;
+    }
+
+    if (function_exists(RIGHT_PROMPT_FUNCTION_NAME, parser)) {
+        conf.right_prompt_cmd = RIGHT_PROMPT_FUNCTION_NAME;
+    } else {
+        conf.right_prompt_cmd = wcstring{};
+    }
+
+    std::shared_ptr<reader_data_t> data =
+        reader_push_ret(parser, history_session_id(parser.vars()), std::move(conf));
+    data->import_history_if_necessary();
     data->prev_end_loop = false;
 
     while (!shell_is_exiting()) {
         run_count++;
-
-        if (parser.libdata().is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
-            reader_set_left_prompt(DEBUG_PROMPT_FUNCTION_NAME);
-        } else if (function_exists(LEFT_PROMPT_FUNCTION_NAME, parser)) {
-            reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);
-        } else {
-            reader_set_left_prompt(DEFAULT_PROMPT);
-        }
-
-        if (function_exists(RIGHT_PROMPT_FUNCTION_NAME, parser)) {
-            reader_set_right_prompt(RIGHT_PROMPT_FUNCTION_NAME);
-        } else {
-            reader_set_right_prompt(L"");
-        }
 
         // Put buff in temporary string and clear buff, so that we can handle a call to
         // reader_set_buffer during evaluation.
         maybe_t<wcstring> tmp = reader_readline(0);
 
         if (should_exit(&parser)) {
-            handle_end_loop(parser);
+            handle_end_loop(data.get());
         } else if (tmp && !tmp->empty()) {
             const wcstring command = tmp.acquire();
             data->update_buff_pos(&data->command_line, 0);
@@ -2538,7 +2507,7 @@ static int read_i(parser_t &parser) {
                 data->history->resolve_pending();
             }
             if (should_exit(&parser)) {
-                handle_end_loop(parser);
+                handle_end_loop(data.get());
             } else {
                 data->prev_end_loop = false;
             }
@@ -2763,7 +2732,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::complete:
         case rl::complete_and_search: {
-            if (!complete_ok) break;
+            if (!conf.complete_ok) break;
 
             // Use the command line only; it doesn't make sense to complete in any other line.
             editable_line_t *el = &command_line;
@@ -3002,7 +2971,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             // See if this command is valid.
-            int command_test_result = test_func(parser(), el->text());
+            parser_test_error_bits_t command_test_result = 0;
+            if (conf.syntax_check_ok) {
+                command_test_result = reader_shell_test(parser(), el->text());
+            }
             if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
                 // This command is valid, but an abbreviation may make it invalid. If so, we
                 // will have to test again.
@@ -3010,7 +2982,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (abbreviation_expanded) {
                     // It's our reponsibility to rehighlight and repaint. But everything we do
                     // below triggers a repaint.
-                    command_test_result = test_func(parser(), el->text());
+                    if (conf.syntax_check_ok) {
+                        command_test_result = reader_shell_test(parser(), el->text());
+                    }
 
                     // If the command is OK, then we're going to execute it. We still want to do
                     // syntax highlighting, but a synchronous variant that performs no I/O, so
@@ -3024,7 +2998,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Finished command, execute it. Don't add items that start with a leading
                 // space, or if in silent mode (#7230).
                 const editable_line_t *el = &command_line;
-                if (history != nullptr && !silent && may_add_to_history(el->text())) {
+                if (history != nullptr && !conf.in_silent_mode && may_add_to_history(el->text())) {
                     history->add_pending_with_file_detection(el->text(), vars.get_pwd_slash());
                 }
                 rls.finished = true;
@@ -3204,7 +3178,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (c == rl::down_line) {
                     // Down arrow is always south.
                     direction = selection_motion_t::south;
-                } else if (selection_is_at_top()) {
+                } else if (selection_is_at_top(this)) {
                     // Up arrow, but we are in the first column and first row. End navigation.
                     direction = selection_motion_t::deselect;
                 } else {
@@ -3781,7 +3755,7 @@ bool reader_has_pager_contents() {
 int reader_reading_interrupted() {
     int res = reader_test_and_clear_interrupted();
     reader_data_t *data = current_data_or_null();
-    if (res && data && data->exit_on_interrupt) {
+    if (res && data && data->conf.exit_on_interrupt) {
         reader_set_end_loop(true);
         // We handled the interrupt ourselves, our caller doesn't need to handle it.
         return 0;

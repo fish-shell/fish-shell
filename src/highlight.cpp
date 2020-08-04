@@ -53,8 +53,6 @@ static const wchar_t *get_highlight_var_name(highlight_role_t role) {
             return L"fish_color_param";
         case highlight_role_t::comment:
             return L"fish_color_comment";
-        case highlight_role_t::match:
-            return L"fish_color_match";
         case highlight_role_t::search_match:
             return L"fish_color_search_match";
         case highlight_role_t::operat:
@@ -114,8 +112,6 @@ static highlight_role_t get_fallback(highlight_role_t role) {
         case highlight_role_t::param:
             return highlight_role_t::normal;
         case highlight_role_t::comment:
-            return highlight_role_t::normal;
-        case highlight_role_t::match:
             return highlight_role_t::normal;
         case highlight_role_t::search_match:
             return highlight_role_t::normal;
@@ -346,9 +342,9 @@ static bool statement_get_expanded_command(const wcstring &src,
     return err == expand_result_t::ok;
 }
 
-rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_background) {
-    // TODO: rationalize this principal_vars.
-    const auto &vars = env_stack_t::principal();
+rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_spec_t &highlight,
+                                                              bool is_background,
+                                                              const environment_t &vars) const {
     rgb_color_t result = rgb_color_t::normal();
     highlight_role_t role = is_background ? highlight.background : highlight.foreground;
 
@@ -379,6 +375,20 @@ rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_backg
     }
 
     return result;
+}
+
+rgb_color_t highlight_color_resolver_t::resolve_spec(const highlight_spec_t &highlight,
+                                                     bool is_background,
+                                                     const environment_t &vars) {
+    auto &cache = is_background ? bg_cache_ : fg_cache_;
+    auto p = cache.insert(std::make_pair(highlight, rgb_color_t{}));
+    auto iter = p.first;
+    bool did_insert = p.second;
+    if (did_insert) {
+        // Insertion happened, meaning the cache needs to be populated.
+        iter->second = resolve_spec_uncached(highlight, is_background, vars);
+    }
+    return iter->second;
 }
 
 static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
@@ -457,9 +467,8 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     }
 
     // Not handled specially so handle it here.
-    bool cmd_ok = builtin_exists(parsed_command)
-        || function_exists_no_autoload(parsed_command)
-        || path_get_path(parsed_command, nullptr, ctx.vars);
+    bool cmd_ok = builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command) ||
+                  path_get_path(parsed_command, nullptr, ctx.vars);
 
     if (cmd_ok) {
         const path_list_t &paths = item.get_required_paths();
@@ -1292,17 +1301,17 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     return std::move(color_array);
 }
 
-/// Given a string and list of colors of the same size, return the string with ANSI escape sequences
-/// representing the colors.
-std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors) {
+std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors,
+                     const environment_t &vars) {
     assert(colors.size() == text.size());
+    highlight_color_resolver_t rv;
     outputter_t outp;
 
     highlight_spec_t last_color = highlight_role_t::normal;
     for (size_t i = 0; i < text.size(); i++) {
         highlight_spec_t color = colors.at(i);
         if (color != last_color) {
-            outp.set_color(highlight_get_color(color, false), rgb_color_t::normal());
+            outp.set_color(rv.resolve_spec(color, false, vars), rgb_color_t::normal());
             last_color = color;
         }
         outp.writech(text.at(i));
@@ -1312,108 +1321,8 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
 }
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                     const operation_context_t &ctx) {
+                     const operation_context_t &ctx, bool io_ok) {
     const wcstring working_directory = ctx.vars.get_pwd_slash();
-    highlighter_t highlighter(buff, pos, ctx, working_directory, true /* can do IO */);
+    highlighter_t highlighter(buff, pos, ctx, working_directory, io_ok);
     color = highlighter.highlight();
-}
-
-void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                           const operation_context_t &ctx) {
-    const wcstring working_directory = ctx.vars.get_pwd_slash();
-    highlighter_t highlighter(buff, pos, ctx, working_directory, false /* no IO allowed */);
-    color = highlighter.highlight();
-}
-
-/// Perform quote and parenthesis highlighting on the specified string.
-static void highlight_universal_internal(const wcstring &buffstr,
-                                         std::vector<highlight_spec_t> &color, size_t pos) {
-    assert(buffstr.size() == color.size());
-    if (pos < buffstr.size()) {
-        // Highlight matching quotes.
-        if ((buffstr.at(pos) == L'\'') || (buffstr.at(pos) == L'\"')) {
-            std::vector<size_t> lst;
-            int level = 0;
-            wchar_t prev_q = 0;
-            const wchar_t *const buff = buffstr.c_str();
-            const wchar_t *str = buff;
-            bool match_found = false;
-
-            while (*str) {
-                switch (*str) {
-                    case L'\\': {
-                        str++;
-                        break;
-                    }
-                    case L'\"':
-                    case L'\'': {
-                        if (level == 0) {
-                            level++;
-                            lst.push_back(str - buff);
-                            prev_q = *str;
-                        } else {
-                            if (prev_q == *str) {
-                                size_t pos1, pos2;
-
-                                level--;
-                                pos1 = lst.back();
-                                pos2 = str - buff;
-                                if (pos1 == pos || pos2 == pos) {
-                                    color.at(pos1).background = highlight_role_t::match;
-                                    color.at(pos2).background = highlight_role_t::match;
-                                    match_found = true;
-                                }
-                                prev_q = *str == L'\"' ? L'\'' : L'\"';
-                            } else {
-                                level++;
-                                lst.push_back(str - buff);
-                                prev_q = *str;
-                            }
-                        }
-                        break;
-                    }
-                    default: {
-                        break;  // we ignore all other characters
-                    }
-                }
-                if ((*str == L'\0')) break;
-                str++;
-            }
-
-            if (!match_found) color.at(pos).background = highlight_role_t::error;
-        }
-
-        // Highlight matching parenthesis.
-        const wchar_t c = buffstr.at(pos);
-        if (std::wcschr(L"()[]{}", c)) {
-            int step = std::wcschr(L"({[", c) ? 1 : -1;
-            wchar_t dec_char = *(std::wcschr(L"()[]{}", c) + step);
-            wchar_t inc_char = c;
-            int level = 0;
-            bool match_found = false;
-            for (long i = pos; i >= 0 && static_cast<size_t>(i) < buffstr.size(); i += step) {
-                const wchar_t test_char = buffstr.at(i);
-                if (test_char == inc_char) level++;
-                if (test_char == dec_char) level--;
-                if (level == 0) {
-                    long pos2 = i;
-                    color.at(pos).background = highlight_role_t::match;
-                    color.at(pos2).background = highlight_role_t::match;
-                    match_found = true;
-                    break;
-                }
-            }
-
-            if (!match_found)
-                color.at(pos) = highlight_spec_t::make_background(highlight_role_t::error);
-        }
-    }
-}
-
-void highlight_universal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                         const operation_context_t &ctx) {
-    UNUSED(ctx);
-    assert(buff.size() == color.size());
-    std::fill(color.begin(), color.end(), highlight_spec_t{});
-    highlight_universal_internal(buff, color, pos);
 }

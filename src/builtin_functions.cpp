@@ -262,10 +262,8 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
             append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
             if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                 std::vector<highlight_spec_t> colors;
-                highlight_shell_no_io(
-                    comment, colors, comment.size(),
-                    operation_context_t{nullptr, env_stack_t::globals(), no_cancel});
-                streams.out.append(str2wcstring(colorize(comment, colors)));
+                highlight_shell(comment, colors, comment.size(), parser.context());
+                streams.out.append(str2wcstring(colorize(comment, colors, parser.vars())));
             } else {
                 streams.out.append(comment);
             }
@@ -343,7 +341,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (opts.handlers) {
-        maybe_t<event_type_t> type_filter;
+        maybe_t<event_type_t> type_filter{};
         if (opts.handlers_type) {
             type_filter = event_type_for_name(opts.handlers_type);
             if (!type_filter) {
@@ -442,8 +440,8 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
                 if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                     std::vector<highlight_spec_t> colors;
-                    highlight_shell_no_io(def, colors, def.size(), operation_context_t::globals());
-                    streams.out.append(str2wcstring(colorize(def, colors)));
+                    highlight_shell(def, colors, def.size(), parser.context());
+                    streams.out.append(str2wcstring(colorize(def, colors, parser.vars())));
                 } else {
                     streams.out.append(def);
                 }

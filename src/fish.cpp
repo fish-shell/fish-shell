@@ -403,6 +403,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
 int main(int argc, char **argv) {
     int res = 1;
     int my_optind = 0;
+    fish_wcwidth(0);
 
     program_name = L"fish";
     set_main_thread();

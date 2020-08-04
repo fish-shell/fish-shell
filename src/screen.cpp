@@ -604,13 +604,6 @@ static void s_move(screen_t *s, int new_x, int new_y) {
     s->actual.cursor.y = new_y;
 }
 
-/// Set the pen color for the terminal.
-static void s_set_color(screen_t *s, const environment_t &vars, highlight_spec_t c) {
-    UNUSED(s);
-    UNUSED(vars);
-    s->outp().set_color(highlight_get_color(c, false), highlight_get_color(c, true));
-}
-
 /// Convert a wide character to a multibyte string and append it to the buffer.
 static void s_write_char(screen_t *s, wchar_t c, size_t width) {
     scoped_buffer_t outp(*s);
@@ -689,8 +682,17 @@ static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = none
 
 /// Update the screen to match the desired output.
 static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring &right_prompt) {
-    layout_cache_t &cached_layouts = layout_cache_t::shared;
+    // TODO: this should be passed in.
     const environment_t &vars = env_stack_t::principal();
+
+    // Helper function to set a resolved color, using the caching resolver.
+    highlight_color_resolver_t color_resolver{};
+    auto set_color = [&](highlight_spec_t c) {
+        scr->outp().set_color(color_resolver.resolve_spec(c, false, vars),
+                              color_resolver.resolve_spec(c, true, vars));
+    };
+
+    layout_cache_t &cached_layouts = layout_cache_t::shared;
     const scoped_buffer_t buffering(*scr);
 
     // Determine size of left and right prompt. Note these have already been truncated.
@@ -761,7 +763,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         if (shared_prefix < o_line.indentation) {
             if (o_line.indentation > s_line.indentation && !has_cleared_screen && clr_eol &&
                 clr_eos) {
-                s_set_color(scr, vars, highlight_spec_t{});
+                set_color(highlight_spec_t{});
                 s_move(scr, 0, static_cast<int>(i));
                 s_write_mbs(scr, should_clear_screen_this_line ? clr_eos : clr_eol);
                 has_cleared_screen = should_clear_screen_this_line;
@@ -821,7 +823,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             // wrapping.
             if (should_clear_screen_this_line && !has_cleared_screen &&
                 (done || j + 1 == static_cast<size_t>(screen_width))) {
-                s_set_color(scr, vars, highlight_spec_t{});
+                set_color(highlight_spec_t{});
                 s_move(scr, current_width, static_cast<int>(i));
                 s_write_mbs(scr, clr_eos);
                 has_cleared_screen = true;
@@ -830,7 +832,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
             perform_any_impending_soft_wrap(scr, current_width, static_cast<int>(i));
             s_move(scr, current_width, static_cast<int>(i));
-            s_set_color(scr, vars, o_line.color_at(j));
+            set_color(o_line.color_at(j));
             auto width = fish_wcwidth_min_0(o_line.char_at(j));
             s_write_char(scr, o_line.char_at(j), width);
             current_width += width;
@@ -857,7 +859,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             }
         }
         if (clear_remainder && clr_eol) {
-            s_set_color(scr, vars, highlight_spec_t{});
+            set_color(highlight_spec_t{});
             s_move(scr, current_width, static_cast<int>(i));
             s_write_mbs(scr, clr_eol);
         }
@@ -865,7 +867,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Output any rprompt if this is the first line.
         if (i == 0 && right_prompt_width > 0) {  //!OCLINT(Use early exit/continue)
             s_move(scr, static_cast<int>(screen_width - right_prompt_width), static_cast<int>(i));
-            s_set_color(scr, vars, highlight_spec_t{});
+            set_color(highlight_spec_t{});
             s_write_str(scr, right_prompt.c_str());
             scr->actual.cursor.x += right_prompt_width;
 
@@ -886,7 +888,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
     // Clear remaining lines (if any) if we haven't cleared the screen.
     if (!has_cleared_screen && need_clear_screen && clr_eol) {
-        s_set_color(scr, vars, highlight_spec_t{});
+        set_color(highlight_spec_t{});
         for (size_t i = scr->desired.line_count(); i < lines_with_stuff; i++) {
             s_move(scr, 0, static_cast<int>(i));
             s_write_mbs(scr, clr_eol);
@@ -894,7 +896,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     }
 
     s_move(scr, scr->desired.cursor.x, scr->desired.cursor.y);
-    s_set_color(scr, vars, highlight_spec_t{});
+    set_color(highlight_spec_t{});
 
     // We have now synced our actual screen against our desired screen. Note that this is a big
     // assignment!

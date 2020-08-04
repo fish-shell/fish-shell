@@ -342,9 +342,9 @@ static bool statement_get_expanded_command(const wcstring &src,
     return err == expand_result_t::ok;
 }
 
-rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_background) {
-    // TODO: rationalize this principal_vars.
-    const auto &vars = env_stack_t::principal();
+rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_spec_t &highlight,
+                                                              bool is_background,
+                                                              const environment_t &vars) const {
     rgb_color_t result = rgb_color_t::normal();
     highlight_role_t role = is_background ? highlight.background : highlight.foreground;
 
@@ -375,6 +375,20 @@ rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_backg
     }
 
     return result;
+}
+
+rgb_color_t highlight_color_resolver_t::resolve_spec(const highlight_spec_t &highlight,
+                                                     bool is_background,
+                                                     const environment_t &vars) {
+    auto &cache = is_background ? bg_cache_ : fg_cache_;
+    auto p = cache.insert(std::make_pair(highlight, rgb_color_t{}));
+    auto iter = p.first;
+    bool did_insert = p.second;
+    if (did_insert) {
+        // Insertion happened, meaning the cache needs to be populated.
+        iter->second = resolve_spec_uncached(highlight, is_background, vars);
+    }
+    return iter->second;
 }
 
 static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
@@ -1288,17 +1302,17 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     return std::move(color_array);
 }
 
-/// Given a string and list of colors of the same size, return the string with ANSI escape sequences
-/// representing the colors.
-std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors) {
+std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors,
+                     const environment_t &vars) {
     assert(colors.size() == text.size());
+    highlight_color_resolver_t rv;
     outputter_t outp;
 
     highlight_spec_t last_color = highlight_role_t::normal;
     for (size_t i = 0; i < text.size(); i++) {
         highlight_spec_t color = colors.at(i);
         if (color != last_color) {
-            outp.set_color(highlight_get_color(color, false), rgb_color_t::normal());
+            outp.set_color(rv.resolve_spec(color, false, vars), rgb_color_t::normal());
             last_color = color;
         }
         outp.writech(text.at(i));

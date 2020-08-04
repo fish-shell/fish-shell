@@ -987,7 +987,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case output_type_ansi: {
-                colored_output = colorize(output_wtext, colors);
+                colored_output = colorize(output_wtext, colors, env_stack_t::globals());
                 break;
             }
             case output_type_html: {

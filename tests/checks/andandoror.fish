@@ -93,6 +93,24 @@ end
 # CHECK: 3
 # CHECK: 4
 
+# Newlines
+true &&
+echo newline after conjunction
+# CHECK: newline after conjunction
+false ||
+echo newline after disjunction
+# CHECK: newline after disjunction
+
+true &&
+
+echo empty lines after conjunction
+# CHECK: empty lines after conjunction
+
+true &&
+# can have comments here!
+echo comment after conjunction
+# CHECK: comment after conjunction
+
 # --help works
 builtin and --help >/dev/null
 echo $status

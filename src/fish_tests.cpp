@@ -1190,6 +1190,18 @@ static void test_parser() {
         err(L"bogus boolean statement error not detected on line %d", __LINE__);
     }
 
+    if (detect_errors(L"true && ") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated conjunction not reported properly");
+    }
+
+    if (detect_errors(L"true && \n true")) {
+        err(L"newline after && reported as error");
+    }
+
+    if (detect_errors(L"true || \n") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated conjunction not reported properly");
+    }
+
     say(L"Testing basic evaluation");
 
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
@@ -4344,7 +4356,7 @@ static void test_new_parser_correctness() {
         {L"true || false; and true", true},
         {L"true || ||", false},
         {L"|| true", false},
-        {L"true || \n\n false", false},
+        {L"true || \n\n false", true},
     };
 
     for (const auto &test : parser_tests) {

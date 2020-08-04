@@ -730,11 +730,12 @@ struct job_conjunction_continuation_t final
     : public branch_t<type_t::job_conjunction_continuation> {
     // The && or || token.
     token_t<parse_token_type_t::andand, parse_token_type_t::oror> conjunction;
+    maybe_newlines_t newlines;
 
     // The job itself.
     job_t job;
 
-    FIELDS(conjunction, job)
+    FIELDS(conjunction, newlines, job)
 };
 
 // An andor_job just wraps a job, but requires that the job have an 'and' or 'or' job_decorator.

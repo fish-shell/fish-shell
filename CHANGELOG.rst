@@ -28,7 +28,8 @@ Notable improvements and fixes
 Syntax changes and new commands
 -------------------------------
 - A new ``fish_is_root_user`` simplifies checking for superuser privilege, largely for use in prompts (#7031).
--  Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively.
+- Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively.
+- Logical operators ``&&`` and ``||`` can be followed by newlines before their right operand, matching POSIX shells.
 
 Scripting improvements
 ----------------------

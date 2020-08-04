@@ -1215,6 +1215,10 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
     // detecting job_continuations that have source for pipes but not the statement.
     bool has_unclosed_pipe = false;
 
+    // Whether we encounter a missing job, i.e. a newline after && or ||. This is found by
+    // detecting job_conjunction_continuations that have source for && or || but not the job.
+    bool has_unclosed_conjunction = false;
+
     // Expand all commands.
     // Verify 'or' and 'and' not used inside pipelines.
     // Verify pipes via parser_is_pipe_forbidden.
@@ -1228,6 +1232,12 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
             // See if our pipe has source but our statement does not.
             if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
                 has_unclosed_pipe = true;
+            }
+        } else if (const auto *jcc = node.try_as<job_conjunction_continuation_t>()) {
+            // Somewhat clumsy way of checking for a job without source in a conjunction.
+            // See if our conjunction operator (&& or ||) has source but our job does not.
+            if (!jcc->conjunction.unsourced && !jcc->job.try_source_range().has_value()) {
+                has_unclosed_conjunction = true;
             }
         } else if (const argument_t *arg = node.try_as<argument_t>()) {
             const wcstring &arg_src = arg->source(buff_src, &storage);
@@ -1262,7 +1272,8 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
 
     if (errored) res |= PARSER_TEST_ERROR;
 
-    if (has_unclosed_block || has_unclosed_pipe) res |= PARSER_TEST_INCOMPLETE;
+    if (has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction)
+        res |= PARSER_TEST_INCOMPLETE;
 
     return res;
 }

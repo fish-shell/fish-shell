@@ -298,9 +298,23 @@ printf '%s\n' "a; and b" | $fish_indent
 printf '%s\n' "a;" "and b" | $fish_indent
 #CHECK: a
 #CHECK: and b
-printf '%s\n' "a" "; and b" | $fish_indent
+printf '%s\n' a "; and b" | $fish_indent
 #CHECK: a
 #CHECK: and b
 printf '%s\n' "a; b" | $fish_indent
 #CHECK: a
 #CHECK: b
+
+echo 'foo &&
+  #
+bar' | $fish_indent
+#CHECK: {{^}}foo &&
+#CHECK: {{^}}#
+#CHECK: {{^}}bar
+
+echo 'command 1 |
+command 1 cont ||
+command 2' | $fish_indent
+#CHECK: {{^}}command 1 |
+#CHECK: {{^    }}command 1 cont ||
+#CHECK: {{^}}command 2

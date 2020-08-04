@@ -341,7 +341,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (opts.handlers) {
-        maybe_t<event_type_t> type_filter;
+        maybe_t<event_type_t> type_filter{};
         if (opts.handlers_type) {
             type_filter = event_type_for_name(opts.handlers_type);
             if (!type_filter) {

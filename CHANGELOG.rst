@@ -26,8 +26,18 @@ Notable improvements and fixes
    will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
    so it can be called again and again from config.fish or just once interactively, and the path will just be there, once.
 - ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands.
-- The ``test`` builtin now better shows where an error occured (#6030).
+- The ``test`` builtin now better shows where an error occured (#6030)::
+
+    > test 1 = 2 and echo true or false
+    test: Expected a combining operator like '-a' at index 4
+    1 = 2 and echo true or echo false
+          ^
+
 - builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
+  This makes it usable also for pipes where the previous command hasn't finished yet, like::
+
+    dmesg -w | string replace foo bar
+
 - A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
 - ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
 

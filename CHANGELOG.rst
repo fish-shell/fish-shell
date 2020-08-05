@@ -126,6 +126,7 @@ Completions
    -  ``mpc``
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
    -  ``nmap``, ``ncat``
+   -  ``prime-run``
    -  ``pyenv`` (#6551)
    -  ``rst2html``, ``rst2html4``, ``rst2html5``, ``rst2latex``,
       ``rst2man``, ``rst2odt``, ``rst2pseudoxml``, ``rst2s5``,

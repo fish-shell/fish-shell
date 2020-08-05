@@ -99,3 +99,9 @@ complete -c help -x -a tut-universal -d 'Universal Variables'
 complete -c help -x -a tut-variables -d Variables
 complete -c help -x -a tut-why_fish -d 'Why fish?'
 complete -c help -x -a tut-wildcards -d Wildcards
+
+# Other pages
+complete -c help -x -a changelog -d "Fish's CHANGELOG"
+complete -c help -x -a completions -d "How to write completions"
+complete -c help -x -a faq -d "Frequently Asked Questions"
+complete -c help -x -a fish-for-bash-users -d "Differences from bash"

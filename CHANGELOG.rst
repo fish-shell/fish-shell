@@ -19,6 +19,12 @@ Notable improvements and fixes
    Although flow control remains off by default, enterprising users can now enable it for external commands with
    ``stty`` (#2315). 
 -  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in ``config.fish`` (#6960).
+   For example::
+
+     fish_add_path /opt/mycoolthing/bin
+
+   will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
+   so it can be called again and again from config.fish or just once interactively, and the path will just be there, once.
 - ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands.
 - The ``test`` builtin now better shows where an error occured (#6030).
 - builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.

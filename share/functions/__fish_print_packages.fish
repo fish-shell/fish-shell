@@ -242,4 +242,25 @@ function __fish_print_packages
         end
     end
 
+    # Caches for 5 minutes
+    if type -q -f xbps-query
+        if not set -q only_installed
+            set -l cache_file $xdg_cache_home/.xbps-cache.$USER
+            if test -f $cache_file
+                cat $cache_file
+                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set -l max_age 300
+                if test $age -lt $max_age
+                    return
+                end
+            end
+            # prints: <package name>	Package
+            xbps-query -Rsl | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' > $cache_file &
+            return
+        else
+            xbps-query -l | sed 's/^.. \([^ ]*\)-.* .*/\1/' # TODO: actually put package versions in tab for locally installed packages
+            return
+        end
+    end
+
 end

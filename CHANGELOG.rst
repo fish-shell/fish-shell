@@ -136,6 +136,7 @@ Completions
    -  ``tig``
    -  ``windscribe``
    -  ``wireshark``, ``tshark``, and ``dumpcap``
+   -  ``xbps-*``
    -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum``
    -  ``yadm``
    -  ``zopfli``, and ``zopflipng``

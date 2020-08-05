@@ -12,7 +12,7 @@ echo Trigger process reaping
 # be gone by the time we get here. Unfortunately, kill from procps on pre-2016 distributions
 # does not print an error for non-existent PIDs, so instead look for zombies in this session
 # (there should be none).
-ps -o state | string match 'Z*'
+ps -o stat | string match 'Z*'
 
 jobs -q
 echo $status

@@ -5,8 +5,8 @@ Notable improvements and fixes
 ------------------------------
 
 -  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Ctrl+Z, and redo to Alt+/.
--  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
--  A new variable, ``fish_kill_signal``, is set to the signal tha terminated the last foreground job, or ``0`` if the job exited normally.
+-  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
+-  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally.
 -  Ctrl-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
 -  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor

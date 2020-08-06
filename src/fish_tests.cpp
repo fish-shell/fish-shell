@@ -5045,7 +5045,7 @@ static void test_wcstring_tok() {
 static void test_wwrite_to_fd() {
     say(L"Testing wwrite_to_fd");
     char t[] = "/tmp/fish_test_wwrite.XXXXXX";
-    if (!mktemp(t)) {
+    if (mkstemp(t) < 0) {
         err(L"Unable to create temporary file");
         return;
     }

@@ -74,6 +74,7 @@ Rationale:
 This design rule is different than the others, since it describes how one should go about designing new features, not what the features should be. The problem with focusing on what can be done, and what is easy to do, is that too much of the implementation is exposed. This means that the user must know a great deal about the underlying system to be able to guess how the shell works, it also means that the language will often be rather low-level.
 
 Examples:
+
 - There should only be one type of input to the shell, lists of commands. Loops, conditionals and variable assignments are all performed through regular commands.
 
 - The differences between built-in commands and shellscript functions should be made as small as possible. Built-ins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any I/O redirection.
@@ -93,6 +94,7 @@ A program whose features are discoverable turns a new user into an expert in a s
 The main benefit of a graphical program over a command-line-based program is discoverability. In a graphical program, one can discover all the common features by simply looking at the user interface and guessing what the different buttons, menus and other widgets do. The traditional way to discover features in command-line programs is through manual pages. This requires both that the user starts to use a different program, and then they remember the new information until the next time they use the same program.
 
 Examples:
+
 - Everything should be tab-completable, and every tab completion should have a description.
 
 - Every syntax error and error in a built-in command should contain an error message describing what went wrong and a relevant help page. Whenever possible, errors should be flagged red by the syntax highlighter.

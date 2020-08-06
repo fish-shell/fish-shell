@@ -1,3 +1,2 @@
 complete -c and -s h -l help -d 'Display help and exit'
-complete -c and -xa '(__fish_complete_subcommand --allow-functions-and-builtins)'
-
+complete -c and -xa '(__fish_complete_subcommand)'

@@ -276,14 +276,19 @@ class process_t {
 
     /// File descriptor that pipe output should bind to.
     int pipe_write_fd{0};
+
     /// True if process has completed.
     bool completed{false};
+
     /// True if process has stopped.
     bool stopped{false};
+
     /// Reported status value.
     proc_status_t status{};
+
     /// Last time of cpu time check.
     struct timeval last_time {};
+
     /// Number of jiffies spent in process at last cpu time check.
     unsigned long last_jiffies{0};
 };

@@ -140,7 +140,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
     function __fish_repaint $varargs -d "Event handler, repaints the prompt when fish_color_cwd* changes"
         if status --is-interactive
-            set -e __fish_prompt_cwd
             commandline -f repaint 2>/dev/null
         end
     end

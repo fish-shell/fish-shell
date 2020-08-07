@@ -216,7 +216,7 @@ Performs a history search when the :kbd:`Page Up` key is pressed.
 ::
 
     set -g fish_key_bindings fish_vi_key_bindings
-    bind -M insert \cc kill-whole-line force-repaint
+    bind -M insert \cc kill-whole-line repaint
 
 Turns on Vi key bindings and rebinds :kbd:`Control`\ +\ :kbd:`C` to clear the input line.
 

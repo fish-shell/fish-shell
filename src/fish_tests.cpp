@@ -5045,10 +5045,13 @@ static void test_wcstring_tok() {
 static void test_wwrite_to_fd() {
     say(L"Testing wwrite_to_fd");
     char t[] = "/tmp/fish_test_wwrite.XXXXXX";
-    if (mkstemp(t) < 0) {
+    autoclose_fd_t tmpfd{mkstemp(t)};
+    if (!tmpfd.valid()) {
         err(L"Unable to create temporary file");
         return;
     }
+    tmpfd.close();
+
     size_t sizes[] = {0, 1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2};
     for (size_t size : sizes) {
         autoclose_fd_t fd{open(t, O_RDWR | O_TRUNC | O_CREAT, 0666)};

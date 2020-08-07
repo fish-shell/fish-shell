@@ -350,26 +350,16 @@ class job_t {
     /// \return whether it is OK to reap a given process. Sometimes we want to defer reaping a
     /// process if it is the group leader and the job is not yet constructed, because then we might
     /// also reap the process group and then we cannot add new processes to the group.
-    bool can_reap(const process_t *p) const {
-        // Internal processes can always be reaped.
-        if (p->internal_proc_) {
-            return true;
-        } else if (p->pid <= 0) {
-            // Can't reap without a pid.
+    bool can_reap(const process_ptr_t &p) const {
+        if (p->completed) {
+            // Can't reap twice.
             return false;
-        } else if (!is_constructed() && this->get_pgid() == maybe_t<pid_t>{p->pid}) {
+        } else if (p->pid && !is_constructed() && this->get_pgid() == maybe_t<pid_t>{p->pid}) {
             // p is the the group leader in an under-construction job.
             return false;
         } else {
             return true;
         }
-    }
-
-    /// \returns the reap topic for a process, which describes the manner in which we are reaped. A
-    /// none returns means don't reap, or perhaps defer reaping.
-    maybe_t<topic_t> reap_topic_for_process(const process_t *p) const {
-        if (p->completed || !can_reap(p)) return none();
-        return p->internal_proc_ ? topic_t::internal_exit : topic_t::sigchld;
     }
 
     /// Returns a truncated version of the job string. Used when a message has already been emitted

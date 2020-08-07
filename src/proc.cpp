@@ -387,12 +387,20 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     // Get the exit and signal generations of all reapable processes.
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
-    // Get the gen count of all reapable processes.
+    // Go through each process and figure out if and how it wants to be reaped.
     generation_list_t reapgens = generation_list_t::invalids();
     for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
-            if (auto mtopic = j->reap_topic_for_process(proc.get())) {
-                reapgens.set_min_from(*mtopic, proc->gens_);
+            if (!j->can_reap(proc)) continue;
+
+            if (proc->pid) {
+                // Reaps with a pid.
+                reapgens.set_min_from(topic_t::sigchld, proc->gens_);
+                reapgens.set_min_from(topic_t::sighupint, proc->gens_);
+            }
+            if (proc->internal_proc_) {
+                // Reaps with an internal process.
+                reapgens.set_min_from(topic_t::internal_exit, proc->gens_);
                 reapgens.set_min_from(topic_t::sighupint, proc->gens_);
             }
         }
@@ -406,55 +414,60 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    for (auto &j : parser.jobs()) {
+    // We structure this as two loops for some simplicity.
+    // First reap all pids.
+    for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
-            if (auto mtopic = j->reap_topic_for_process(proc.get())) {
-                topic_t topic = *mtopic;
+            // Does this proc have a pid that is reapable?
+            if (proc->pid <= 0 || !j->can_reap(proc)) continue;
 
-                // Update the signal hup/int gen.
-                proc->gens_.sighupint = reapgens.sighupint;
+            // Update the signal hup/int gen.
+            proc->gens_.sighupint = reapgens.sighupint;
 
-                if (proc->gens_.at(topic) < reapgens.at(topic)) {
-                    // Potentially reapable. Update its generation and try reaping it.
-                    proc->gens_.at(topic) = reapgens.at(topic);
-                    if (proc->internal_proc_) {
-                        // Try reaping an internal process.
-                        if (proc->internal_proc_->exited()) {
-                            handle_child_status(j, proc.get(), proc->internal_proc_->get_status());
-                            FLOGF(proc_reap_internal,
-                                  "Reaped internal process '%ls' (id %llu, status %d)",
-                                  proc->argv0(), proc->internal_proc_->get_id(),
-                                  proc->status.status_value());
-                        }
-                    } else if (proc->pid > 0) {
-                        // Try reaping an external process.
-                        int status = -1;
-                        auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED | WCONTINUED);
-                        if (pid > 0) {
-                            assert(pid == proc->pid && "Unexpcted waitpid() return");
-                            handle_child_status(j, proc.get(), proc_status_t::from_waitpid(status));
-                            if (proc->status.stopped()) {
-                                j->group->set_is_foreground(false);
-                            }
-                            if (proc->status.continued()) {
-                                j->mut_flags().notified = false;
-                            }
-                            if (proc->status.normal_exited() || proc->status.signal_exited()) {
-                                FLOGF(proc_reap_external,
-                                      "Reaped external process '%ls' (pid %d, status %d)",
-                                      proc->argv0(), pid, proc->status.status_value());
-                            } else {
-                                assert(proc->status.stopped() || proc->status.continued());
-                                FLOGF(proc_reap_external, "External process '%ls' (pid %d, %s)",
-                                      proc->argv0(), pid,
-                                      proc->status.stopped() ? "stopped" : "continued");
-                            }
-                        }
-                    } else {
-                        assert(0 && "Don't know how to reap this process");
-                    }
-                }
+            // Nothing to do if we did not get a new sigchld.
+            if (proc->gens_.sigchld == reapgens.sigchld) continue;
+            proc->gens_.sigchld = reapgens.sigchld;
+
+            // Ok, we are reapable. Run waitpid()!
+            int statusv = -1;
+            pid_t pid = waitpid(proc->pid, &statusv, WNOHANG | WUNTRACED | WCONTINUED);
+            assert(pid <= 0 || pid == proc->pid && "Unexpcted waitpid() return");
+            if (pid <= 0) continue;
+
+            // The process has stopped or exited! Update its status.
+            proc_status_t status = proc_status_t::from_waitpid(statusv);
+            handle_child_status(j, proc.get(), status);
+            if (status.stopped()) {
+                j->group->set_is_foreground(false);
             }
+            if (status.continued()) {
+                j->mut_flags().notified = false;
+            }
+            if (status.normal_exited() || status.signal_exited()) {
+                FLOGF(proc_reap_external, "Reaped external process '%ls' (pid %d, status %d)",
+                      proc->argv0(), pid, proc->status.status_value());
+            } else {
+                assert(status.stopped() || status.continued());
+                FLOGF(proc_reap_external, "External process '%ls' (pid %d, %s)", proc->argv0(),
+                      proc->pid, proc->status.stopped() ? "stopped" : "continued");
+            }
+        }
+    }
+
+    // We are done reaping pids.
+    // Reap internal processes.
+    for (const auto &j : parser.jobs()) {
+        for (const auto &proc : j->processes) {
+            // Does this proc have an internal process that is reapable?
+            if (!proc->internal_proc_ || !j->can_reap(proc)) continue;
+
+            // Has the process exited?
+            if (!proc->internal_proc_->exited()) continue;
+
+            // The process gets the status from its internal proc.
+            handle_child_status(j, proc.get(), proc->internal_proc_->get_status());
+            FLOGF(proc_reap_internal, "Reaped internal process '%ls' (id %llu, status %d)",
+                  proc->argv0(), proc->internal_proc_->get_id(), proc->status.status_value());
         }
     }
 

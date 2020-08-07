@@ -45,7 +45,7 @@ void signal_clear_cancel();
 enum class topic_t : uint8_t;
 /// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
 class sigchecker_t {
-    topic_t topic_;
+    const topic_t topic_;
     uint64_t gen_{0};
 
    public:

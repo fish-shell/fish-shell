@@ -404,8 +404,7 @@ void signal_unblock_all() {
     sigprocmask(SIG_SETMASK, &iset, nullptr);
 }
 
-sigchecker_t::sigchecker_t(topic_t signal) {
-    topic_ = signal;
+sigchecker_t::sigchecker_t(topic_t signal) : topic_(signal) {
     // Call check() to update our generation.
     check();
 }
@@ -420,7 +419,7 @@ bool sigchecker_t::check() {
 
 void sigchecker_t::wait() const {
     auto &tm = topic_monitor_t::principal();
-    generation_list_t gens{};
-    gens[topic_] = this->gen_;
-    tm.check(&gens, {topic_}, true /* wait */);
+    generation_list_t gens = generation_list_t::invalids();
+    gens.at(topic_) = this->gen_;
+    tm.check(&gens, true /* wait */);
 }

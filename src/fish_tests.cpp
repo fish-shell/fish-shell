@@ -5782,22 +5782,23 @@ static void test_topic_monitor() {
     topic_monitor_t monitor;
     generation_list_t gens{};
     constexpr auto t = topic_t::sigchld;
-    do_test(gens[t] == 0);
+    gens.sigchld = 0;
     do_test(monitor.generation_for_topic(t) == 0);
-    auto changed = monitor.check(&gens, topic_set_t{t}, false /* wait */);
-    do_test(changed.none());
-    do_test(gens[t] == 0);
+    auto changed = monitor.check(&gens, false /* wait */);
+    do_test(!changed);
+    do_test(gens.sigchld == 0);
 
     monitor.post(t);
-    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
-    do_test(changed == topic_set_t{t});
-    do_test(gens[t] == 1);
+    changed = monitor.check(&gens, true /* wait */);
+    do_test(changed);
+    do_test(gens.at(t) == 1);
     do_test(monitor.generation_for_topic(t) == 1);
 
     monitor.post(t);
     do_test(monitor.generation_for_topic(t) == 2);
-    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
-    do_test(changed == topic_set_t{t});
+    changed = monitor.check(&gens, true /* wait */);
+    do_test(changed);
+    do_test(gens.sigchld == 2);
 }
 
 static void test_topic_monitor_torture() {
@@ -5807,7 +5808,7 @@ static void test_topic_monitor_torture() {
     constexpr auto t1 = topic_t::sigchld;
     constexpr auto t2 = topic_t::sighupint;
     std::vector<generation_list_t> gens;
-    gens.resize(thread_count, generation_list_t{});
+    gens.resize(thread_count, generation_list_t::invalids());
     std::atomic<uint32_t> post_count{};
     for (auto &gen : gens) {
         gen = monitor.current_generations();
@@ -5822,11 +5823,11 @@ static void test_topic_monitor_torture() {
             [&](size_t i) {
                 for (size_t j = 0; j < (1 << 11); j++) {
                     auto before = gens[i];
-                    auto changed = monitor.check(&gens[i], topic_set_t{t1, t2}, true /* wait */);
+                    auto changed = monitor.check(&gens[i], true /* wait */);
                     (void)changed;
-                    do_test(before[t1] < gens[i][t1]);
-                    do_test(gens[i][t1] <= post_count);
-                    do_test(gens[i][t2] == 0);
+                    do_test(before.at(t1) < gens[i].at(t1));
+                    do_test(gens[i].at(t1) <= post_count);
+                    do_test(gens[i].at(t2) == 0);
                 }
                 auto amt = completed.fetch_add(1, std::memory_order_relaxed);
                 (void)amt;

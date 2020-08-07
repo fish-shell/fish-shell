@@ -7,13 +7,14 @@
 
 #include "flog.h"
 #include "iothread.h"
+#include "wcstringutil.h"
 #include "wutil.h"
 
 // Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point where
 // instrumented code makes certain blocking calls. But tsan cannot interrupt a signal call, so
 // if we're blocked in read() (like the topic monitor wants to be!), we'll never receive SIGCHLD
 // and so deadlock. So if tsan is enabled, we mark our fd as non-blocking (so reads will never
-// block) and use use select() to poll it.
+// block) and use select() to poll it.
 #if defined(__has_feature)
 #if __has_feature(thread_sanitizer)
 #define TOPIC_MONITOR_TSAN_WORKAROUND
@@ -23,15 +24,22 @@
 #define TOPIC_MONITOR_TSAN_WORKAROUND
 #endif
 
+wcstring generation_list_t::describe() const {
+    wcstring result;
+    for (generation_t gen : this->as_array()) {
+        if (!result.empty()) result.push_back(L',');
+        if (gen == invalid_generation) {
+            result.append(L"-1");
+        } else {
+            result.append(to_string(gen));
+        }
+    }
+    return result;
+}
+
 /// Implementation of the principal monitor. This uses new (and leaks) to avoid registering a
 /// pointless at-exit handler for the dtor.
 static topic_monitor_t *const s_principal = new topic_monitor_t();
-
-/// \return the metagen for a topic generation list.
-/// The metagen is simply the sum of topic generations. Note it is monotone.
-static generation_t metagen_for(const generation_list_t &lst) {
-    return std::accumulate(lst.begin(), lst.end(), generation_t{0});
-}
 
 topic_monitor_t &topic_monitor_t::principal() {
     // Do not attempt to move s_principal to a function-level static, it needs to be accessed from a
@@ -59,7 +67,7 @@ topic_monitor_t::~topic_monitor_t() = default;
 void topic_monitor_t::post(topic_t topic) {
     // Beware, we may be in a signal handler!
     // Atomically update the pending topics.
-    auto rawtopics = topic_set_t{topic}.to_raw();
+    auto rawtopics = topic_to_bit(topic);
     auto oldtopics = pending_updates_.fetch_or(rawtopics, std::memory_order_relaxed);
     if ((oldtopics & rawtopics) == rawtopics) {
         // No new bits were set.
@@ -83,26 +91,26 @@ generation_list_t topic_monitor_t::updated_gens_in_data(acquired_lock<data_t> &d
     // If there are no pending updates (likely), just return.
     // Otherwise CAS in 0 and update our topics.
     const auto relaxed = std::memory_order_relaxed;
-    topic_set_raw_t raw;
+    topic_bitmask_t changed_topic_bits;
     bool cas_success;
     do {
-        raw = pending_updates_.load(relaxed);
-        if (raw == 0) return data->current_gens;
-        cas_success = pending_updates_.compare_exchange_weak(raw, 0, relaxed, relaxed);
+        changed_topic_bits = pending_updates_.load(relaxed);
+        if (changed_topic_bits == 0) return data->current;
+        cas_success =
+            pending_updates_.compare_exchange_weak(changed_topic_bits, 0, relaxed, relaxed);
     } while (!cas_success);
 
     // Update the current generation with our topics and return it.
-    auto topics = topic_set_t::from_raw(raw);
-    for (topic_t topic : topic_iter_t{}) {
-        if (topics.get(topic)) {
-            data->current_gens.at(topic) += 1;
+    for (topic_t topic : all_topics()) {
+        if (changed_topic_bits & topic_to_bit(topic)) {
+            data->current.at(topic) += 1;
             FLOG(topic_monitor, "Updating topic", static_cast<int>(topic), "to",
-                 data->current_gens.at(topic));
+                 data->current.at(topic));
         }
     }
     // Report our change.
     data_notifier_.notify_all();
-    return data->current_gens;
+    return data->current;
 }
 
 generation_list_t topic_monitor_t::updated_gens() {
@@ -116,8 +124,8 @@ bool topic_monitor_t::try_update_gens_maybe_becoming_reader(generation_list_t *g
     for (;;) {
         // See if the updated gen list has changed. If so we don't need to become the reader.
         auto current = updated_gens_in_data(data);
-        FLOG(topic_monitor, "TID", thread_id(), "local mgen", metagen_for(*gens), ": current",
-             metagen_for(current));
+        FLOG(topic_monitor, "TID", thread_id(), "local ", gens->describe(), ": current",
+             current.describe());
         if (*gens != current) {
             *gens = current;
             break;
@@ -162,9 +170,9 @@ generation_list_t topic_monitor_t::await_gens(const generation_list_t &input_gen
             // We are finished reading. We must stop being the reader, and post on the condition
             // variable to wake up any other threads waiting for us to finish reading.
             auto data = data_.acquire();
-            gens = data->current_gens;
-            FLOG(topic_monitor, "TID", thread_id(), "local mgen", metagen_for(input_gens),
-                 "read() complete, current mgen is", metagen_for(gens));
+            gens = data->current;
+            FLOG(topic_monitor, "TID", thread_id(), "local", input_gens.describe(),
+                 "read() complete, current is", gens.describe());
             assert(data->has_reader && "We should be the reader");
             data->has_reader = false;
             data_notifier_.notify_all();
@@ -173,26 +181,26 @@ generation_list_t topic_monitor_t::await_gens(const generation_list_t &input_gen
     return gens;
 }
 
-topic_set_t topic_monitor_t::check(generation_list_t *gens, topic_set_t topics, bool wait) {
-    if (topics.none()) return topics;
+bool topic_monitor_t::check(generation_list_t *gens, bool wait) {
+    if (!gens->any_valid()) return false;
 
     generation_list_t current = updated_gens();
-    topic_set_t changed{};
+    bool changed = false;
     for (;;) {
         // Load the topic list and see if anything has changed.
-        for (topic_t topic : topic_iter_t{}) {
-            if (topics.get(topic)) {
+        for (topic_t topic : all_topics()) {
+            if (gens->is_valid(topic)) {
                 assert(gens->at(topic) <= current.at(topic) &&
                        "Incoming gen count exceeded published count");
                 if (gens->at(topic) < current.at(topic)) {
                     gens->at(topic) = current.at(topic);
-                    changed.set(topic);
+                    changed = true;
                 }
             }
         }
 
         // If we're not waiting, or something changed, then we're done.
-        if (!wait || changed.any()) {
+        if (!wait || changed) {
             break;
         }
 

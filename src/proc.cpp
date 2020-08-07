@@ -388,43 +388,35 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
     // Get the gen count of all reapable processes.
-    topic_set_t reaptopics{};
-    generation_list_t gens{};
-    gens.fill(invalid_generation);
+    generation_list_t reapgens = generation_list_t::invalids();
     for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
-                topic_t topic = *mtopic;
-                reaptopics.set(topic);
-                gens[topic] = std::min(gens[topic], proc->gens_[topic]);
-
-                reaptopics.set(topic_t::sighupint);
-                gens[topic_t::sighupint] =
-                    std::min(gens[topic_t::sighupint], proc->gens_[topic_t::sighupint]);
+                reapgens.set_min_from(*mtopic, proc->gens_);
+                reapgens.set_min_from(topic_t::sighupint, proc->gens_);
             }
         }
     }
 
-    if (reaptopics.none()) {
-        // No reapable processes, nothing to wait for.
+    // Now check for changes, optionally waiting.
+    if (!topic_monitor_t::principal().check(&reapgens, block_ok)) {
+        // Nothing changed.
         return;
     }
-
-    // Now check for changes, optionally waiting.
-    auto changed_topics = topic_monitor_t::principal().check(&gens, reaptopics, block_ok);
-    if (changed_topics.none()) return;
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
     for (auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
-                // Update the signal hup/int gen.
-                proc->gens_[topic_t::sighupint] = gens[topic_t::sighupint];
+                topic_t topic = *mtopic;
 
-                if (proc->gens_[*mtopic] < gens[*mtopic]) {
-                    // Potentially reapable. Update its gen count and try reaping it.
-                    proc->gens_[*mtopic] = gens[*mtopic];
+                // Update the signal hup/int gen.
+                proc->gens_.sighupint = reapgens.sighupint;
+
+                if (proc->gens_.at(topic) < reapgens.at(topic)) {
+                    // Potentially reapable. Update its generation and try reaping it.
+                    proc->gens_.at(topic) = reapgens.at(topic);
                     if (proc->internal_proc_) {
                         // Try reaping an internal process.
                         if (proc->internal_proc_->exited()) {

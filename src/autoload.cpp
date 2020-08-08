@@ -100,12 +100,10 @@ bool autoload_file_cache_t::is_fresh(timestamp_t then, timestamp_t now) {
 }
 
 maybe_t<autoloadable_file_t> autoload_file_cache_t::check(const wcstring &cmd, bool allow_stale) {
-    const auto now = current_timestamp();
-
     // Check hits.
     auto iter = known_files_.find(cmd);
     if (iter != known_files_.end()) {
-        if (allow_stale || is_fresh(iter->second.last_checked, now)) {
+        if (allow_stale || is_fresh(iter->second.last_checked, current_timestamp())) {
             // Re-use this cached hit.
             return iter->second.file;
         }
@@ -115,7 +113,7 @@ maybe_t<autoloadable_file_t> autoload_file_cache_t::check(const wcstring &cmd, b
 
     // Check misses.
     if (timestamp_t *miss = misses_cache_.get(cmd)) {
-        if (allow_stale || is_fresh(*miss, now)) {
+        if (allow_stale || is_fresh(*miss, current_timestamp())) {
             // Re-use this cached miss.
             return none();
         }
@@ -124,7 +122,6 @@ maybe_t<autoloadable_file_t> autoload_file_cache_t::check(const wcstring &cmd, b
     }
 
     // We couldn't satisfy this request from the cache. Hit the disk.
-    // Don't re-use 'now', the disk access could have taken a long time.
     maybe_t<autoloadable_file_t> file = locate_file(cmd);
     if (file.has_value()) {
         auto ins = known_files_.emplace(cmd, known_file_t{*file, current_timestamp()});

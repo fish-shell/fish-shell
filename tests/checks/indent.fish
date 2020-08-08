@@ -226,6 +226,28 @@ echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
 ' | $fish_indent
 #CHECK: echo <stdin >>appended yes 2>&1 no >stdout maybe 2>&4 | cat 2>| cat
 
+
+# issue 7252
+echo -n '
+begin
+# comment
+end
+' | $fish_indent
+#CHECK: begin
+#CHECK: {{    }}# comment
+#CHECK: end
+
+echo -n '
+begin
+cmd
+# comment
+end
+' | $fish_indent
+#CHECK: begin
+#CHECK: {{    }}cmd
+#CHECK: {{    }}# comment
+#CHECK: end
+
 echo -n '
 i\
 f true

@@ -470,12 +470,19 @@ struct pretty_printer_t {
     // Emit the gap text before a source range.
     void emit_gap_text_before(source_range_t r, gap_flags_t flags) {
         assert(r.start <= source.size() && "source out of bounds");
-        uint32_t start = r.start;
-        if (start < indents.size()) current_indent = indents.at(start);
-
         // Find the gap text which ends at start.
-        source_range_t range = gap_text_to(start);
+        source_range_t range = gap_text_to(r.start);
         if (range.length > 0) {
+            // Set the indent from the beginning of this gap text.
+            // For example:
+            // begin
+            //    cmd
+            //    # comment
+            // end
+            // Here the comment is the gap text before the end, but we want the indent from the
+            // command.
+            if (range.start < indents.size()) current_indent = indents.at(range.start);
+
             // If this range contained an error, append the gap text without modification.
             // For example in: echo foo "
             // We don't want to mess with the quote.

@@ -107,7 +107,10 @@ class generation_list_t {
         return valid;
     }
 
-    bool operator==(const generation_list_t &rhs) const { return as_array() == rhs.as_array(); }
+    bool operator==(const generation_list_t &rhs) const {
+        return sighupint == rhs.sighupint && sigchld == rhs.sigchld &&
+               internal_exit == rhs.internal_exit;
+    }
 
     bool operator!=(const generation_list_t &rhs) const { return !(*this == rhs); }
 

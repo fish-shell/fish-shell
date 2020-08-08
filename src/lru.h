@@ -48,10 +48,10 @@ class lru_cache_t {
     // used from background threads.
     const size_t max_node_count;
 
-    // All of our nodes
-    // Note that our linked list contains pointers to these nodes in the map
-    // We are dependent on the iterator-noninvalidation guarantees of std::map
-    std::map<wcstring, lru_node_t> node_map;
+    // All of our nodes.
+    // Note that our linked list contains pointers to these nodes in the map.
+    // We are dependent on the iterator-noninvalidation guarantees of std::unordered_map.
+    std::unordered_map<wcstring, lru_node_t> node_map;
 
     // Head of the linked list
     // The list is circular!
@@ -111,10 +111,9 @@ class lru_cache_t {
         UNUSED(value);
     }
 
-    // Implementation of merge step for mergesort
-    // Given two singly linked lists left and right,
-    // and a binary func F implementing less-than, return
-    // the list in sorted order
+    // Implementation of merge step for mergesort.
+    // Given two singly linked lists left and right, and a binary func F implementing less-than,
+    // return the list in sorted order.
     template <typename F>
     static lru_link_t *merge(lru_link_t *left, size_t left_len, lru_link_t *right, size_t right_len,
                              const F &func) {
@@ -149,8 +148,8 @@ class lru_cache_t {
         return head;
     }
 
-    // mergesort the given list of the given length
-    // This only sets the next pointers, not the prev ones
+    // mergesort the given list of the given length.
+    // This only sets the next pointers, not the prev ones.
     template <typename F>
     static lru_link_t *mergesort(lru_link_t *node, size_t length, const F &func) {
         if (length <= 1) {
@@ -251,7 +250,7 @@ class lru_cache_t {
 
         lru_link_t *sorted = mergesort(this->mouth.next, length, func);
         mouth.next = sorted;
-        // Go through and set back back pointers
+        // Go through and set back back pointers.
         lru_link_t *cursor = sorted;
         lru_link_t *prev = &mouth;
         for (size_t i = 0; i < length; i++) {

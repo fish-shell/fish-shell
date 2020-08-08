@@ -89,9 +89,8 @@ function __fish_complete_suffix -d "Complete using files"
             set desc "\t$desc"
         end
         if string match -qr -- . "$prefix"
-            # Ideally, only replace in the beginning of the string, but we have no
-            # way of doing a pcre2 escape so we can use a regex replace instead
-            set files (string replace $prefix "" $files)
+            set prefix (string escape --style=regex -- $prefix)
+            set files (string replace -r -- "^$prefix" "" $files)
         end
         printf "%s$desc\n" $files
     end

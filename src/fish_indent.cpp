@@ -836,12 +836,13 @@ int main(int argc, char *argv[]) {
         output_type_file,
         output_type_ansi,
         output_type_pygments_csv,
+        output_type_check,
         output_type_html
     } output_type = output_type_plain_text;
     const char *output_location = "";
     bool do_indent = true;
 
-    const char *short_opts = "+d:hvwiD:";
+    const char *short_opts = "+d:hvwicD:";
     const struct option long_opts[] = {{"debug-level", required_argument, nullptr, 'd'},
                                        {"debug-stack-frames", required_argument, nullptr, 'D'},
                                        {"dump-parse-tree", no_argument, nullptr, 'P'},
@@ -852,6 +853,7 @@ int main(int argc, char *argv[]) {
                                        {"html", no_argument, nullptr, 1},
                                        {"ansi", no_argument, nullptr, 2},
                                        {"pygments", no_argument, nullptr, 3},
+                                       {"check", no_argument, nullptr, 'c'},
                                        {nullptr, 0, nullptr, 0}};
 
     int opt;
@@ -887,6 +889,10 @@ int main(int argc, char *argv[]) {
             }
             case 3: {
                 output_type = output_type_pygments_csv;
+                break;
+            }
+            case 'c': {
+                output_type = output_type_check;
                 break;
             }
             case 'd': {
@@ -996,6 +1002,12 @@ int main(int argc, char *argv[]) {
             }
             case output_type_pygments_csv: {
                 DIE("pygments_csv should have been handled above");
+            }
+            case output_type_check: {
+                if (output_wtext != src) {
+                    return 1;
+                }
+                break;
             }
         }
 

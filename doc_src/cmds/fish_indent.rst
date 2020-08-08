@@ -22,6 +22,8 @@ The following options are available:
 
 - ``-i`` or ``--no-indent`` do not indent commands; only reformat to one job per line.
 
+- ``-c`` or ``--check`` do not indent, only return 0 if the code is already indented as fish_indent would, 1 otherwise.
+
 - ``-v`` or ``--version`` displays the current fish version and then exits.
 
 - ``--ansi`` colorizes the output using ANSI escape sequences, appropriate for the current $TERM, using the colors defined in the environment (such as ``$fish_color_command``).

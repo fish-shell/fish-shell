@@ -165,8 +165,11 @@ wcstring_list_t autoload_t::get_autoloaded_commands() const {
 }
 
 maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const environment_t &env) {
-    maybe_t<env_var_t> mvar = env.get(env_var_name_);
-    return resolve_command(cmd, mvar ? mvar->as_list() : wcstring_list_t{});
+    if (maybe_t<env_var_t> mvar = env.get(env_var_name_)) {
+        return resolve_command(cmd, mvar->as_list());
+    } else {
+        return resolve_command(cmd, wcstring_list_t{});
+    }
 }
 
 maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const wcstring_list_t &paths) {

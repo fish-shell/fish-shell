@@ -1843,8 +1843,8 @@ complete -f -c git -n '__fish_git_using_command help' -a worktree -d 'Manage mul
 complete -f -c git -n '__fish_git_using_command config' -l global -d 'Get/set global configuration'
 complete -f -c git -n '__fish_git_using_command config' -l system -d 'Get/set system configuration'
 complete -f -c git -n '__fish_git_using_command config' -l local -d 'Get/set local repo configuration'
-complete -f -c git -n '__fish_git_using_command config' -s f -l file -d 'Read config from file'
-complete -f -c git -n '__fish_git_using_command config' -l blob -d 'Read config from blob' -ra '(__fish_complete_suffix '')'
+complete -F -c git -n '__fish_git_using_command config' -s f -l file -d 'Read config from file' -r
+complete -F -c git -n '__fish_git_using_command config' -l blob -d 'Read config from blob' -r
 
 # If no argument is specified, it's as if --get was used
 # Use -k with `__fish_git_config_keys` so that user defined valeus are shown first
@@ -1875,7 +1875,7 @@ complete -f -c git -n '__fish_git_using_command config' -l show-origin -d 'Show 
 complete -f -c git -n '__fish_git_using_command config; and __fish_seen_argument get' -l default -d 'Use default value when missing entry'
 
 complete -c git -n '__fish_prev_arg_in bisect' -xa "help start bad good new old terms skip next reset visualize view replay log run"
-complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --' -xa "(__fish_complete_suffix)"
+complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --' -F
 
 
 ## Custom commands (git-* commands installed in the PATH)

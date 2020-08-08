@@ -1,4 +1,4 @@
-complete -c pine -s f -d "Open folder" -a "(cd ~/.Mail; ls -d *)"
+complete -c pine -s f -d "Open folder" -a "(ls -d ~/.Mail/*)"
 complete -c pine -s F -d "Open file" -r
 complete -c pine -s h -d "Display help and exit"
 complete -c pine -s i -d "Start in folder index"

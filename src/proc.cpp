@@ -431,7 +431,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
             // Ok, we are reapable. Run waitpid()!
             int statusv = -1;
             pid_t pid = waitpid(proc->pid, &statusv, WNOHANG | WUNTRACED | WCONTINUED);
-            assert(pid <= 0 || pid == proc->pid && "Unexpcted waitpid() return");
+            assert((pid <= 0 || pid == proc->pid) && "Unexpcted waitpid() return");
             if (pid <= 0) continue;
 
             // The process has stopped or exited! Update its status.

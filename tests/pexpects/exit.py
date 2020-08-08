@@ -50,12 +50,15 @@ expect_prompt()
 # Verify that asking to exit a second time does so.
 send("exit\r")
 
-# This is cheesy, but on Travis with thread-sanitizer this can be slow enough that the process is still running, so we sleep for a bit.
-time.sleep(0.5)
-proc = subprocess.run(
-    ["pgrep", "-l", "-f", "sleep 11"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-)
-if proc.returncode == 0:
+for t in range(0,3):
+    proc = subprocess.run(
+        ["pgrep", "-l", "-f", "sleep 11"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if proc.returncode != 0:
+        break
+    # This is cheesy, but on Travis with thread-sanitizer this can be slow enough that the process is still running, so we sleep for a bit.
+    time.sleep(1)
+else:
     print("Commands still running")
     print(proc.stdout)
     sys.exit(1)

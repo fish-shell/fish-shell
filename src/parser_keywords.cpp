@@ -76,9 +76,6 @@ bool parser_keywords_is_reserved(const wcstring &word) {
         results.insert(std::begin(reserved_keywords), std::end(reserved_keywords));
         return results;
     })();
-    const static auto max_len = list_max_length(search_list);
-    const static auto not_found = search_list.end();
-
-    // Everything above is executed only at startup, this is the actual optimized search routine:
-    return word.length() <= max_len && search_list.find(word) != not_found;
+    const static size_t max_len = list_max_length(search_list);
+    return word.length() <= max_len && search_list.count(word) > 0;
 }

@@ -7,6 +7,7 @@ sleep 0.2 &
 disown
 sleep 0.2
 echo Trigger process reaping
+sleep 0.1
 #CHECK: Trigger process reaping
 # The initial approach here was to kill the PID of the sleep process, which should
 # be gone by the time we get here. Unfortunately, kill from procps on pre-2016 distributions

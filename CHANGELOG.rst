@@ -1350,8 +1350,7 @@ Other significant changes
 
    -  ``xdg-mime`` (#4333)
 
-   -  .. rubric:: ``zypper`` (#4325)
-         :name: zypper-4325
+   -  ``zypper`` (#4325)
 
 fish 2.6.0 (released June 3, 2017)
 ==================================
@@ -2283,8 +2282,7 @@ Significant Changes
    effectively tests whether ``which`` succeeded, and if so, whether the
    ``set`` also succeeded.
 
--  \**Improvements to
-   :math:`PATH handling.**  * There is a new variable, ``\ fish_user_paths`,
+-  Improvements to PATH handling. There is a new variable, fish_user_paths,
    which can be set universally, and whose contents are appended to
    $PATH #527
 

@@ -48,40 +48,48 @@ function __fish_complete_suffix -d "Complete using files"
             end
     end
 
-    # Strip leading ./ as it confuses the detection of base and suffix
-    # It is conditionally re-added below.
-    set base $prefix(string replace -r '^("\')?\\./' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
-
-    set -l all
-    set -l dirs
-    # If $comp is "./ma" and the file is "main.py", we'll catch that case here,
-    # but complete.cpp will not consider it a match, so we have to output the
-    # correct form.
-
-    # Also do directory completion, since there might be files with the correct
-    # suffix in a subdirectory.
-    set all $base*
-    set all (string match -r -- ".*"(string escape --style=regex -- $suff) $all)
-    if not string match -qr '/$' -- $suff
-        set dirs $base*/
-
-        # The problem is that we now have each directory included twice in the output,
-        # once as `dir` and once as `dir/`. The runtime here is O(n) for n directories
-        # in the output, but hopefully since we have only one level (no nested results)
-        # it should be fast. The alternative is to shell out to `sort` and remove any
-        # duplicate results, but it would have to be a huge `n` to make up for the fork
-        # overhead.
-        for dir in $dirs
-            set all (string match -v (string match -r '(.*)/$' -- $dir)[2] -- $all)
-        end
-    end
-
-    set files $all $dirs
-    if string match -qr '^\\./' -- $comp
-        set files ./$files
+    # Simple and common case: no prefix, just complete normally and filter out unwanted suffixes.
+    if test -z $prefix
+        set -l suffix (string escape --style=regex -- $suff)
+        # Use normal file completions. Any valid command works here as, as long as it has no
+        # user-defined completions. The builtin ":" should work.
+        set files (complete -C ": $comp" | string match -r "^.*(?:$suffix|/)\$")
     else
-        # "Escape" files starting with a literal dash `-` with a `./`
-        set files (string replace -r -- "^-" "./-" $files)
+        # Strip leading ./ as it confuses the detection of base and suffix
+        # It is conditionally re-added below.
+        set base $prefix(string replace -r '^("\')?\\./' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
+
+        set -l all
+        set -l dirs
+        # If $comp is "./ma" and the file is "main.py", we'll catch that case here,
+        # but complete.cpp will not consider it a match, so we have to output the
+        # correct form.
+
+        # Also do directory completion, since there might be files with the correct
+        # suffix in a subdirectory.
+        set all $base*
+        set all (string match -r -- ".*"(string escape --style=regex -- $suff) $all)
+        if not string match -qr '/$' -- $suff
+            set dirs $base*/
+
+            # The problem is that we now have each directory included twice in the output,
+            # once as `dir` and once as `dir/`. The runtime here is O(n) for n directories
+            # in the output, but hopefully since we have only one level (no nested results)
+            # it should be fast. The alternative is to shell out to `sort` and remove any
+            # duplicate results, but it would have to be a huge `n` to make up for the fork
+            # overhead.
+            for dir in $dirs
+                set all (string match -v (string match -r '(.*)/$' -- $dir)[2] -- $all)
+            end
+        end
+
+        set files $all $dirs
+        if string match -qr '^\\./' -- $comp
+            set files ./$files
+        else
+            # "Escape" files starting with a literal dash `-` with a `./`
+            set files (string replace -r -- "^-" "./-" $files)
+        end
     end
 
     if set -q files[1]

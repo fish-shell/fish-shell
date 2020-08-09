@@ -233,9 +233,9 @@ begin
 # comment
 end
 ' | $fish_indent
-#CHECK: begin
-#CHECK: {{    }}# comment
-#CHECK: end
+#CHECK: {{^}}begin
+#CHECK: {{^    }}# comment
+#CHECK: {{^}}end
 
 echo -n '
 begin
@@ -243,17 +243,17 @@ cmd
 # comment
 end
 ' | $fish_indent
-#CHECK: begin
-#CHECK: {{    }}cmd
-#CHECK: {{    }}# comment
-#CHECK: end
+#CHECK: {{^}}begin
+#CHECK: {{^    }}cmd
+#CHECK: {{^    }}# comment
+#CHECK: {{^}}end
 
 echo -n '
 cmd \\
 continuation
 ' | $fish_indent
-#CHECK: cmd \
-#CHECK: {{    }}continuation
+#CHECK: {{^}}cmd \
+#CHECK: {{^    }}continuation
 
 echo -n '
 begin
@@ -261,10 +261,10 @@ cmd \
 continuation
 end
 ' | $fish_indent
-#CHECK: begin
-#CHECK: {{    }}cmd \
-#CHECK: {{    }}{{    }}continuation
-#CHECK: end
+#CHECK: {{^}}begin
+#CHECK: {{^    }}cmd \
+#CHECK: {{^    }}{{    }}continuation
+#CHECK: {{^}}end
 
 
 echo -n '
@@ -350,15 +350,15 @@ echo 'foo &&
   #
 bar' | $fish_indent
 #CHECK: {{^}}foo &&
-#CHECK: {{^}}#
-#CHECK: {{^}}bar
+#CHECK: {{^    }}#
+#CHECK: {{    }}bar
 
 echo 'command 1 |
 command 1 cont ||
 command 2' | $fish_indent
 #CHECK: {{^}}command 1 |
 #CHECK: {{^    }}command 1 cont ||
-#CHECK: {{^}}command 2
+#CHECK: {{^    }}command 2
 
 echo " foo" | fish_indent --check
 echo $status

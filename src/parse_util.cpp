@@ -590,7 +590,8 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
     // visiting its children.
     struct indent_visitor_t {
-        explicit indent_visitor_t(std::vector<int> &indents) : indents(indents) {}
+        indent_visitor_t(const wcstring &src, std::vector<int> &indents)
+            : src(src), indents(indents) {}
 
         void visit(const node_t &node) {
             int inc = 0;
@@ -612,9 +613,25 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
                     }
                     break;
 
-                // Increment indents for piped remainders.
-                case type_t::job_continuation_list:
-                    if (node.as<job_continuation_list_t>()->count() > 0) {
+                // Increment indents for job_continuation_t if it contains a newline.
+                // This is a bit of a hack - it indents cases like:
+                //    cmd1 |
+                //    ....cmd2
+                // but avoids "double indenting" if there's no newline:
+                //   cmd1 | while cmd2
+                //   ....cmd3
+                //   end
+                // See #7252.
+                case type_t::job_continuation:
+                    if (has_newline(node.as<job_continuation_t>()->newlines)) {
+                        inc = 1;
+                        dec = 1;
+                    }
+                    break;
+
+                // Likewise for && and ||.
+                case type_t::job_conjunction_continuation:
+                    if (has_newline(node.as<job_conjunction_continuation_t>()->newlines)) {
                         inc = 1;
                         dec = 1;
                     }
@@ -675,12 +692,20 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             indent -= dec;
         }
 
+        /// \return whether a maybe_newlines node contains at least one newline.
+        bool has_newline(const maybe_newlines_t &nls) const {
+            return nls.source(src).find(L'\n') != wcstring::npos;
+        }
+
         // The one-past-the-last index of the most recently encountered leaf node.
         // We use this to populate the indents even if there's no tokens in the range.
         size_t last_leaf_end{0};
 
         // The last indent which we assigned.
         int last_indent{-1};
+
+        // The source we are indenting.
+        const wcstring &src;
 
         // List of indents, which we populate.
         std::vector<int> &indents;
@@ -690,7 +715,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
         int indent{-1};
     };
 
-    indent_visitor_t iv(indents);
+    indent_visitor_t iv(src, indents);
     node_visitor(iv).accept(ast.top());
 
     // All newlines now get the *next* indent.

@@ -1209,12 +1209,11 @@ static void test_parser() {
     auto parser = parser_t::principal_parser().shared();
     say(L"Testing recursion detection");
     parser->eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t());
-#if 0
-    // This is disabled since it produces a long backtrace. We should find a way to either visually
-    // compress the backtrace, or disable error spewing.
-    parser->.eval(L"function recursive1 ; recursive2 ; end ; "
-            L"function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t());
-#endif
+
+    parser->eval(
+        L"function recursive1 ; recursive2 ; end ; "
+        L"function recursive2 ; recursive1 ; end ; recursive1; ",
+        io_chain_t());
 
     say(L"Testing empty function name");
     parser->eval(L"function '' ; echo fail; exit 42 ; end ; ''", io_chain_t());

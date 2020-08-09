@@ -134,11 +134,9 @@ inline ssize_t wwrite_to_fd(const wcstring &s, int fd) {
 // We need this because there are too many implementations that don't return the proper answer for
 // some code points. See issue #3050.
 #ifndef FISH_NO_ISW_WRAPPERS
-#define iswalpha fish_iswalpha
 #define iswalnum fish_iswalnum
 #define iswgraph fish_iswgraph
 #endif
-int fish_iswalpha(wint_t wc);
 int fish_iswalnum(wint_t wc);
 int fish_iswgraph(wint_t wc);
 

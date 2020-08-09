@@ -602,16 +602,6 @@ int fish_iswalnum(wint_t wc) {
     return iswalnum(wc);
 }
 
-#if 0
-/// We need this because there are too many implementations that don't return the proper answer for
-/// some code points. See issue #3050.
-int fish_iswalpha(wint_t wc) {
-    if (fish_reserved_codepoint(wc)) return 0;
-    if (fish_is_pua(wc)) return 0;
-    return iswalpha(wc);
-}
-#endif
-
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswgraph(wint_t wc) {

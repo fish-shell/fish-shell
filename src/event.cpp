@@ -182,17 +182,6 @@ wcstring event_get_desc(const parser_t &parser, const event_t &evt) {
     }
 }
 
-#if 0
-static void show_all_handlers(void) {
-    std::fwprintf(stdout, L"event handlers:\n");
-    for (const auto& event : events) {
-        auto foo = event;
-        wcstring tmp = event_get_desc(foo);
-        std::fwprintf(stdout, L"    handler now %ls\n", tmp.c_str());
-    }
-}
-#endif
-
 void event_add_handler(std::shared_ptr<event_handler_t> eh) {
     if (eh->desc.type == event_type_t::signal) {
         signal_handle(eh->desc.param1.signal);

@@ -521,13 +521,6 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
     result.set_italics(is_italics);
     result.set_dim(is_dim);
     result.set_reverse(is_reverse);
-
-#if 0
-    wcstring desc = result.description();
-    std::fwprintf(stdout, L"Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
-             is_background ? "background" : "foreground");
-#endif
-
     return result;
 }
 

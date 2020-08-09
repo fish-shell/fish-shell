@@ -221,26 +221,6 @@ const wchar_t *parser_t::get_block_desc(block_type_t block) {
     return _(UNKNOWN_BLOCK);
 }
 
-#if 0
-// TODO: Lint says this isn't used (which is true). Should this be removed?
-wcstring parser_t::block_stack_description() const {
-    wcstring result;
-    size_t idx = this->block_count();
-    size_t spaces = 0;
-    while (idx--) {
-        if (spaces > 0) {
-            result.push_back(L'\n');
-        }
-        for (size_t j = 0; j < spaces; j++) {
-            result.push_back(L' ');
-        }
-        result.append(this->block_at_index(idx)->description());
-        spaces++;
-    }
-    return result;
-}
-#endif
-
 const block_t *parser_t::block_at_index(size_t idx) const {
     return idx < block_list.size() ? &block_list[idx] : nullptr;
 }

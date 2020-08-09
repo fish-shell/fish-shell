@@ -456,12 +456,3 @@ int wgetopter_t::wgetopt_long(int argc, wchar_t **argv, const wchar_t *options,
                               const struct woption *long_options, int *opt_index) {
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 0);
 }
-
-#if 0
-// This function should never be used by fish. We keep the signature just in case we find a
-// need to use it in the future.
-int wgetopter_t::wgetopt_long_only(int argc, wchar_t **argv, const wchar_t *options,
-                                   const struct woption *long_options, int *opt_index) {
-    return _wgetopt_internal(argc, argv, options, long_options, opt_index, 1);
-}
-#endif

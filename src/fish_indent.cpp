@@ -382,9 +382,9 @@ struct pretty_printer_t {
     //   begin | stuff
     //
     //  We do not handle errors here - instead our caller does.
-    void emit_gap_text(const wcstring &gap_text, gap_flags_t flags) {
+    bool emit_gap_text(const wcstring &gap_text, gap_flags_t flags) {
         // Common case: if we are only spaces, do nothing.
-        if (gap_text.find_first_not_of(L' ') == wcstring::npos) return;
+        if (gap_text.find_first_not_of(L' ') == wcstring::npos) return false;
 
         // Look to see if there is an escaped newline.
         // Emit it if either we allow it, or it comes before the first comment.
@@ -445,6 +445,7 @@ struct pretty_printer_t {
             }
         }
         if (needs_nl) emit_newline();
+        return needs_nl;
     }
 
     /// \return the gap text ending at a given index into the string, or empty if none.
@@ -472,8 +473,10 @@ struct pretty_printer_t {
     }
 
     // Emit the gap text before a source range.
-    void emit_gap_text_before(source_range_t r, gap_flags_t flags) {
+    bool emit_gap_text_before(source_range_t r, gap_flags_t flags) {
         assert(r.start <= source.size() && "source out of bounds");
+        bool added_newline = false;
+
         // Find the gap text which ends at start.
         source_range_t range = gap_text_to(r.start);
         if (range.length > 0) {
@@ -493,11 +496,12 @@ struct pretty_printer_t {
             if (range_contained_error(range)) {
                 output.append(substr(range));
             } else {
-                emit_gap_text(substr(range), flags);
+                added_newline = emit_gap_text(substr(range), flags);
             }
         }
         // Always clear gap_text_mask_newline after emitting even empty gap text.
         gap_text_mask_newline = false;
+        return added_newline;
     }
 
     /// Given a string \p input, remove unnecessary quotes, etc.
@@ -605,8 +609,11 @@ struct pretty_printer_t {
         if (node.range.length > 0) {
             auto flags = gap_text_flags_before_node(node);
             current_indent = indents.at(node.range.start);
-            emit_gap_text_before(node.range, flags);
+            bool added_newline = emit_gap_text_before(node.range, flags);
             wcstring text = source.substr(node.range.start, node.range.length);
+            if (added_newline && !text.empty() && text.front() == L'\n') {
+                text = text.substr(strlen("\n"));
+            }
             emit_gap_text(text, flags);
         }
     }

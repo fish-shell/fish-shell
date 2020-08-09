@@ -366,3 +366,8 @@ echo $status
 echo foo | $fish_indent --check
 echo $status
 #CHECK: 0
+
+echo 'thing | # comment
+    thing' | $fish_indent --check
+echo $status
+#CHECK: 0

@@ -5,8 +5,9 @@ Notable improvements and fixes
 ------------------------------
 
 -  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Ctrl+Z, and redo to Alt+/.
--  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
--  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally.
+-  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space, as in fish 2.7.1 and before (#6970).
+-  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
+-  A new variable, ``fish_kill_signal``, is set to the signal tha terminated the last foreground job, or ``0`` if the job exited normally.
 -  Ctrl-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
 -  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
@@ -125,6 +126,7 @@ Improved terminal output
 -  The spurious warning about terminal size in small terminals has been removed (#6980).
 -  Dynamic titles are now enabled in Alacritty with its new terminfo entry (#7073).
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (#7237).
+-  An issue producing strange status output from commands involving ``not`` has been fixed (#6566).
 
 Completions
 ^^^^^^^^^^^

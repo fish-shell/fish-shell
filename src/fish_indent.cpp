@@ -400,6 +400,10 @@ struct pretty_printer_t {
                     output.append(L" ");
                 }
                 output.append(L"\\\n");
+                // Indent the line continuation (#7252).
+                current_indent += 1;
+                emit_space_or_indent();
+                current_indent -= 1;
             }
         }
 

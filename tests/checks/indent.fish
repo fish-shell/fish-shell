@@ -249,6 +249,25 @@ end
 #CHECK: end
 
 echo -n '
+cmd \\
+continuation
+' | $fish_indent
+#CHECK: cmd \
+#CHECK: {{    }}continuation
+
+echo -n '
+begin
+cmd \
+continuation
+end
+' | $fish_indent
+#CHECK: begin
+#CHECK: {{    }}cmd \
+#CHECK: {{    }}{{    }}continuation
+#CHECK: end
+
+
+echo -n '
 i\
 f true
     echo yes

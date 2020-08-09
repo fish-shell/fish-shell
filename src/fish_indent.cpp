@@ -391,6 +391,7 @@ struct pretty_printer_t {
         // Note we do not have to be concerned with escaped backslashes or escaped #s. This is gap
         // text - we already know it has no semantic significance.
         size_t escaped_nl = gap_text.find(L"\\\n");
+        bool have_line_continuation = false;
         if (escaped_nl != wcstring::npos) {
             size_t comment_idx = gap_text.find(L'#');
             if ((flags & allow_escaped_newlines) ||
@@ -400,10 +401,10 @@ struct pretty_printer_t {
                     output.append(L" ");
                 }
                 output.append(L"\\\n");
-                // Indent the line continuation (#7252).
+                // Indent the line continuation and any comment before it (#7252).
+                have_line_continuation = true;
                 current_indent += 1;
                 emit_space_or_indent();
-                current_indent -= 1;
             }
         }
 
@@ -445,6 +446,10 @@ struct pretty_printer_t {
             }
         }
         if (needs_nl) emit_newline();
+        if (have_line_continuation) {
+            emit_space_or_indent();
+            current_indent -= 1;
+        }
         return needs_nl;
     }
 

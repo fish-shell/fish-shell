@@ -371,3 +371,11 @@ echo 'thing | # comment
     thing' | $fish_indent --check
 echo $status
 #CHECK: 0
+
+echo 'echo \
+    # first indented comment
+    # second indented comment
+    indented argument
+echo' | $fish_indent --check
+echo $status
+#CHECK: 0

@@ -83,7 +83,8 @@ help catch mistakes such as using ``wcwidth()`` rather than
 ``fish_wcwidth()``. Please add a new rule if you find similar mistakes
 being made.
 
-Fish also depends on ``diff`` and ``expect`` for its tests.
+Fish also depends on ``diff`` and `pexpect
+<https://pexpect.readthedocs.io/en/stable/>`__ for its tests.
 
 Dealing With Lint Warnings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,10 +152,10 @@ changes.
 Configuring Your Editor for Fish C++ Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ViM
+Vim
 ^^^
 
-As of ViM 7.4 it does not recognize triple-slash comments as used by
+As of Vim 7.4 it does not recognize triple-slash comments as used by
 Doxygen and the OS X Xcode IDE to flag comments that explain the
 following C symbol. This means the ``gq`` key binding to reformat such
 comments doesn’t behave as expected. You can fix that by adding the
@@ -164,11 +165,11 @@ following to your vimrc:
 
    autocmd Filetype c,cpp setlocal comments^=:///
 
-If you use ViM I recommend the `vim-clang-format
+If you use Vim I recommend the `vim-clang-format
 plugin <https://github.com/rhysd/vim-clang-format>`__ by
 [@rhysd](https://github.com/rhysd).
 
-You can also get ViM to provide reasonably correct behavior by
+You can also get Vim to provide reasonably correct behavior by
 installing
 
 http://www.vim.org/scripts/script.php?script_id=2636
@@ -181,7 +182,7 @@ If you use Emacs: TBD
 Configuring Your Editor for Fish Scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you use ViM: Install `vim-fish <https://github.com/dag/vim-fish>`__,
+If you use Vim: Install `vim-fish <https://github.com/dag/vim-fish>`__,
 make sure you have syntax and filetype functionality in ``~/.vimrc``:
 
 ::
@@ -476,14 +477,19 @@ stored in the ``po`` directory, named ``LANG.po``, where ``LANG`` is the
 two letter ISO 639-1 language code of the target language (eg ``de`` for
 German).
 
-To create a new translation, for example for German: \* generate a
-``messages.pot`` file by running ``build_tools/fish_xgettext.fish`` from
-the source tree \* copy ``messages.pot`` to ``po/LANG.po`` ()
+To create a new translation, for example for German:
 
-To update a translation: \* generate a ``messages.pot`` file by running
-``build_tools/fish_xgettext.fish`` from the source tree \* update the
-existing translation by running
-``msgmerge --update --no-fuzzy-matching po/LANG.po messages.pot``
+* generate a ``messages.pot`` file by running ``build_tools/fish_xgettext.fish`` from
+  the source tree
+* copy ``messages.pot`` to ``po/LANG.po``
+
+To update a translation:
+
+* generate a ``messages.pot`` file by running
+  ``build_tools/fish_xgettext.fish`` from the source tree
+
+* update the existing translation by running
+  ``msgmerge --update --no-fuzzy-matching po/LANG.po messages.pot``
 
 Many tools are available for editing translation files, including
 command-line and graphical user interface programs.

@@ -360,9 +360,9 @@ command 2' | $fish_indent
 #CHECK: {{^    }}command 1 cont ||
 #CHECK: {{^    }}command 2
 
-echo " foo" | fish_indent --check
+echo " foo" | $fish_indent --check
 echo $status
 #CHECK: 1
-echo "foo" | fish_indent --check
+echo foo | $fish_indent --check
 echo $status
 #CHECK: 0

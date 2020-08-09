@@ -22,4 +22,3 @@ complete -c $progname -s r -d 'Specifies a full path for the target root directo
 complete -c $progname -s v -d 'Enables verbose messages.'
 complete -c $progname -s y -d 'Assume yes to all questions and avoid interactive questions.'
 complete -c $progname -s V -d 'Show the version information.'
-

@@ -25,4 +25,3 @@ complete -c grub-mkrescue -l xorriso -r -d "Use given file as xorriso"
 complete -c grub-mkrescue -l help -s '?' -d "Show help"
 complete -c grub-mkrescue -l usage -d "Show short usage message"
 complete -c grub-mkrescue -l version -s V -d "Show program version"
-

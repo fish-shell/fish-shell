@@ -17,4 +17,3 @@ complete -c who -l message -d "Print users message status as +, - or ?"
 complete -c who -s u -l users -d "List users logged in"
 complete -c who -l help -d "Display help and exit"
 complete -c who -l version -d "Display version and exit"
-

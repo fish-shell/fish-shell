@@ -33,4 +33,3 @@ complete -c msgfmt -s h -l help -d "Display help and exit"
 complete -c msgfmt -s V -l version -d "Display version and exit"
 complete -c msgfmt -l statistics -d "Print statistics about translations"
 complete -c msgfmt -l verbose -d "Increase verbosity level"
-

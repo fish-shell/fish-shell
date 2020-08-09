@@ -38,4 +38,3 @@ complete -c systemd-nspawn -s h -l help -d 'Print a short help text and exit'
 complete -c systemd-nspawn -l version -d 'Print a short version string and exit'
 # Not quite correct, but otherwise we'd need to get the machine root, and we can't always know that
 complete -c systemd-nspawn -n "__fish_not_contain_opt -s b boot" -a "(__fish_complete_subcommand)" -f
-

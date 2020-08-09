@@ -8,4 +8,3 @@ complete -c arp -s D -l use-device -d "Use hardware address"
 complete -x -c arp -s i -l device -a "(__fish_print_interfaces)" -d "Select interface"
 complete -x -c arp -s s -l set -d "Manually create ARP address" -a "(__fish_print_hostnames)"
 complete -f -c arp -s f -l file -d "Take addr from filename, default /etc/ethers"
-

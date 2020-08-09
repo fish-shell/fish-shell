@@ -35,4 +35,3 @@ complete -c localectl -s H -l host -d 'Execute the operation on a remote host'
 complete -c localectl -s h -l help -d 'Print a short help text and exit'
 complete -c localectl -l version -d 'Print a short version string and exit'
 complete -c localectl -l no-pager -d 'Do not pipe output into a pager'
-

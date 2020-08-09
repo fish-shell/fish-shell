@@ -25,4 +25,3 @@ function __fish_move_last -d "Move the last element of a directory history from 
     # All ok, return success
     return 0
 end
-

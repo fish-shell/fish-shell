@@ -131,4 +131,3 @@ complete -c pandoc -x -l reference-location -a "block section document"
 complete -c pandoc -x -l top-level-division -a "default section chapter part"
 complete -c pandoc -x -l email-obfuscation -a "none javascript references"
 complete -c pandoc -x -l pdf-engine -a "$pdfengines"
-

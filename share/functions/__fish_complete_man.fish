@@ -99,4 +99,3 @@ function __fish_complete_man
     end
     return 0
 end
-

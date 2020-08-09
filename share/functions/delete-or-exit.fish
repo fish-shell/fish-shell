@@ -20,4 +20,3 @@ function delete-or-exit
     end
 
 end
-

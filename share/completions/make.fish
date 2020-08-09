@@ -54,4 +54,3 @@ complete -c make -s t -d "Touch files, don't run commands"
 complete -c make -s v -d "Display version and exit"
 complete -c make -s w -d "Print working directory"
 complete -c make -s W -r -d "Pretend file is modified"
-

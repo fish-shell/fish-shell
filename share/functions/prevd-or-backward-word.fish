@@ -7,4 +7,3 @@ function prevd-or-backward-word
         commandline -f backward-word
     end
 end
-

@@ -10,4 +10,3 @@ complete -c makedepend -s s -r -d "Starting string delimiter"
 complete -c makedepend -s w -r -d "Line width"
 complete -c makedepend -s v -d "Verbose mode"
 complete -c makedepend -s m -d "Warn about multiple inclusion"
-

@@ -11,4 +11,3 @@ complete -c watch -s x -l exec -d 'Pass command to exec instead of "sh -c"'
 complete -c watch -s h -l help -d 'Display this help and exit'
 complete -c watch -s v -l version -d 'Output version information and exit'
 complete -c watch -xa '(__fish_complete_subcommand -- -n --interval)'
-

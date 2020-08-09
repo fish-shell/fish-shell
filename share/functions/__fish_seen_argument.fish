@@ -25,4 +25,3 @@ function __fish_seen_argument
 
     return 1
 end
-

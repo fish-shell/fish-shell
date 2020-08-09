@@ -7,4 +7,3 @@ complete -c gpasswd -s r -l remove-password -d 'Remove the GROUP\'s password'
 complete -c gpasswd -s R -l restrict -d 'Restrict access to GROUP to its members'
 complete -c gpasswd -s M -l members -d 'Set the list of members of GROUP' -xa '(__fish_complete_list , __fish_complete_users)'
 complete -c gpasswd -s A -l administrators -d 'set the list of administrators for GROUP' -xa '(__fish_complete_list , __fish_complete_users)'
-

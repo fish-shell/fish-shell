@@ -15,4 +15,3 @@ complete -c pydf -l bw -d 'do not use colours'
 complete -c pydf -l mounts -r -d 'file to get mount information from. On normal Linux systems only /etc/mtab or /proc/mounts make sense. Some other Unices use /etc/mnttab. Use /proc/mounts when /etc/mtab is corrupted or inaccessible (the output looks a bit weird in this case).'
 complete -c pydf -s B -l show-binds -d 'show \'mount --bind\' mounts'
 complete -c pydf -s i -l inodes -d 'show inode instead of block usage'
-

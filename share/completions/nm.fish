@@ -26,4 +26,3 @@ complete -c nm -l target -d 'Specify the target object format as BFDNAME'
 complete -c nm -s u -l undefined-only -d 'Display only undefined symbols'
 complete -c nm -s h -l help -d 'Display this information'
 complete -c nm -s V -l version -d "Display this program's version number"
-

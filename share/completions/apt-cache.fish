@@ -39,4 +39,3 @@ function __fish_apt-cache_use_package -d 'Test if apt command should have packag
 end
 
 complete -c apt-cache -n __fish_apt-cache_use_package -a '(__fish_print_packages)' -d Package
-

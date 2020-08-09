@@ -30,4 +30,3 @@ complete -c oggenc -s t -l title -x -d "Title of track"
 complete -c oggenc -s l -l album -x -d "Name of album"
 complete -c oggenc -s a -l artist -x -d "Name of artist"
 complete -c oggenc -s G -l genre -x -d "Genre of track"
-

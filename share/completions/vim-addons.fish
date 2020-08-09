@@ -51,4 +51,3 @@ complete -c vim-addons -s t -l target-dir -d "set the addons target directory"
 complete -c vim-addons -s v -l verbose -d "increase verbosity"
 complete -c vim-addons -s y -l system-dir -d "set the system-wide target directory"
 complete -c vim-addons -s w -l system-wide -d "set target directory to the system-wide one"
-

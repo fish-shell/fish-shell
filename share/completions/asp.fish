@@ -23,4 +23,3 @@ complete -c asp -n "not __fish_seen_subcommand_from $commands" -a untrack -d "Re
 complete -c asp -n "__fish_seen_subcommand_from checkout {diff,short,}log export list-{arches,repos} show update" -a "(asp list-all | string replace -r '.*/' '')" -f
 complete -c asp -n "__fish_seen_subcommand_from checkout {diff,short,}log export list-{arches,repos} show update untrack" -a "(asp list-local | string replace -r '.*/' '')" -f \
     -d "Locally tracked package"
-

@@ -11,4 +11,3 @@ complete -r -c apt-show-versions -l status-file -d 'Read package from file'
 complete -r -c apt-show-versions -o stf -d 'Read package from file'
 complete -r -c apt-show-versions -l list-dir -a '(for i in */; echo $i; end) /var/lib/apt/lists /var/state/apt/lists' -d 'Specify APT list dir'
 complete -r -c apt-show-versions -o ld -a '(for i in */; echo $i; end) /var/lib/apt/lists /var/state/apt/lists' -d 'Specify APT list dir'
-

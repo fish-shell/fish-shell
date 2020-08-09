@@ -17,4 +17,3 @@ complete -f -c pkgmk -o kw -l keep-work -d 'Keep working dir'
 complete -f -c pkgmk -o cf -l config-file -r -d 'Use another config'
 complete -f -c pkgmk -o v -l version -d 'Print version'
 complete -f -c pkgmk -o h -l help -d 'Print help'
-

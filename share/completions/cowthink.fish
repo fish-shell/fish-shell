@@ -15,5 +15,3 @@ complete -c cowthink -s s -d "Stoned cow"
 complete -c cowthink -s t -d "Tired cow"
 complete -c cowthink -s w -d "Wired cow"
 complete -c cowthink -s y -d "Young cow"
-
-

@@ -9,4 +9,3 @@ complete -c cut -l output-delimiter -x -d "Select output delimiter"
 complete -c cut -s z -l zero-terminated -d "line delimiter is NUL, not newline"
 complete -c cut -l help -d "Display help and exit"
 complete -c cut -l version -d "Display version and exit"
-

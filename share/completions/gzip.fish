@@ -20,4 +20,3 @@ complete -c gzip -s v -l verbose -d "Display compression ratios"
 complete -c gzip -s V -l version -d "Display version and exit"
 complete -c gzip -s 1 -l fast -d "Use fast setting"
 complete -c gzip -s 9 -l best -d "Use high compression setting"
-

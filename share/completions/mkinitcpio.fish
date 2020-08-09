@@ -23,4 +23,3 @@ complete -c mkinitcpio -s t -l builddir -d 'Use tmpdir as the temporary build di
 complete -c mkinitcpio -s V -l version -d 'Display version information'
 complete -c mkinitcpio -s v -l verbose -d 'Verbose output'
 complete -c mkinitcpio -s z -l compress -d 'Override the compression method with the compress program'
-

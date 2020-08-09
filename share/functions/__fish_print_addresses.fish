@@ -8,4 +8,3 @@ function __fish_print_addresses --description "Print a list of known network add
         ifconfig | awk '/^\tinet/ { print $2 } '
     end
 end
-

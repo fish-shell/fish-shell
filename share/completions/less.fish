@@ -49,4 +49,3 @@ complete -c less -s z -l window -d "Max scroll window" -r -a "1 2 3 4 5 6 7 8 9 
 complete -c less -s \" -l quotes -d "Set quote char" -r
 complete -c less -s \~ -l tilde -d "Lines after EOF are blank"
 complete -c less -s \# -l shift -d "Characters to scroll on left/right arrows" -a "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"
-

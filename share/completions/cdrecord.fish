@@ -88,5 +88,3 @@ complete -c cdrecord -o copy -d "All TOC entries for subsequent audio tracks of 
 complete -c cdrecord -o nocopy -d "All TOC entries for subsequent audio tracks of the resulting CD will indicate that the audio data has permission to be copied only once for personal use"
 complete -c cdrecord -o scms -d "All TOC entries for subsequent audio tracks of the resulting CD will indicate that the audio data has no permission to be copied"
 complete -c cdrecord -a "tsize=" -d "If the master image for the next track has been stored on a raw disk, use this option to specify the valid amount of data on this disk"
-
-

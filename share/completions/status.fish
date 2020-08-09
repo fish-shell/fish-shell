@@ -34,4 +34,3 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a full -d "Set all jobs under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a interactive -d "Set only interactive jobs under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a none -d "Set no jobs under job control"
-

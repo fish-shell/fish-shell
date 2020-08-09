@@ -13,4 +13,3 @@ complete -r -c sylpheed -l send -d 'Send all queued messages'
 complete -r -c sylpheed -l status -d 'Show the total number of messages for folder'
 complete -r -c sylpheed -l status-full -d 'Show the total number of messages for each folder'
 complete -r -c sylpheed -l configdir -d 'Specify directory with configuration files'
-

@@ -28,4 +28,3 @@ complete -x -c unrar -n __fish_use_subcommand -a v -d "Verbosely list archive"
 complete -x -c unrar -n __fish_use_subcommand -a vt -d "Verbosely list archive (technical)"
 complete -x -c unrar -n __fish_use_subcommand -a vb -d "Verbosely list archive (bare)"
 complete -x -c unrar -n __fish_use_subcommand -a x -d "Extract files with full path"
-

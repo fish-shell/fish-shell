@@ -37,4 +37,3 @@ complete -c scanimage -s h -l help -d 'Display this help message and exit'
 complete -c scanimage -s v -l verbose -d 'Give even more status messages'
 complete -c scanimage -s B -l buffer-size -r -d 'Change input buffer size (in kB, default 32)'
 complete -c scanimage -s V -l version -d 'Print version information'
-

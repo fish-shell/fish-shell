@@ -133,4 +133,3 @@ complete -c xterm -s l -d 'Turn on logging'
 complete -c xterm -s s -d 'Turn on asynchronous scrolling'
 complete -c xterm -s t -d 'Tektronix mode'
 complete -c xterm -s C -d 'This window should receive console output'
-

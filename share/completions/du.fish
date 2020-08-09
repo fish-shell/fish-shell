@@ -17,4 +17,3 @@ complete -c du -l exclude -r -d "Exclude files that match pattern"
 complete -c du -l max-depth -r -d "Recursion limit"
 complete -c du -l help -d "Display help and exit"
 complete -c du -l version -d "Display version and exit"
-

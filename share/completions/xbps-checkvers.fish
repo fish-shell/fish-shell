@@ -15,4 +15,3 @@ complete -c $progname -s R -d 'Repository to be added to the top of the list.'
 complete -c $progname -s r -d 'Specifies a full path for the target root directory.' -xa "(__fish_complete_directories)"
 complete -c $progname -s s -d 'List all packages found in the void-packages tree and prints available version.'
 complete -c $progname -s V -d 'Show the version information.'
-

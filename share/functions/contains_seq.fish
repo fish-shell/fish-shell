@@ -43,4 +43,3 @@ function contains_seq --description 'Return true if array contains a sequence'
     end
     set -q printnext[2]
 end
-

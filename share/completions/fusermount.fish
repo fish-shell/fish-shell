@@ -10,4 +10,3 @@ complete -c fusermount -s o -x -d "Mount options"
 complete -c fusermount -s u -d Unmount
 complete -c fusermount -s q -d Quiet
 complete -c fusermount -s z -d "Lazy unmount"
-

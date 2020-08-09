@@ -10,4 +10,3 @@ complete -r -f -c apt-rdepends -l state-follow -d "Comma-separated list of packa
 complete -r -f -c apt-rdepends -l state-show -d "Comma-separated list of package installation states to show"
 complete -f -c apt-rdepends -l man -d "Display man page"
 complete -f -c apt-rdepends -l version -d "Display version and exit"
-

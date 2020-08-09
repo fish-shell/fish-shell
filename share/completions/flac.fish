@@ -79,5 +79,3 @@ complete -c flac -l no-seektable
 complete -c flac -l no-silent -d "Write runtime encode/decode statistics"
 complete -c flac -l no-force -d "Don't force overwriting of output files"
 complete -c flac -l no-verify -d "Don't verify a correct encoding"
-
-

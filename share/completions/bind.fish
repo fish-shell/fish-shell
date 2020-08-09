@@ -56,5 +56,3 @@ complete -c bind -s L -l list-modes -d 'Display a list of defined bind modes'
 
 complete -c bind -n __fish_bind_test1 -a '(bind --key-names)' -d 'Key name' -x
 complete -c bind -n __fish_bind_test2 -a '(bind --function-names)' -d 'Function name' -x
-
-

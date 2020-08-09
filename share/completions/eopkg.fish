@@ -151,4 +151,3 @@ complete -c eopkg -s p -l password -x
 complete -c eopkg -s u -l username -x
 complete -c eopkg -s v -l verbose -d "Detailed output"
 complete -c eopkg -s y -l yes-all -d "Assume yes for all yes/no queries"
-

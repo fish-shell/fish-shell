@@ -12,4 +12,3 @@ function __fish_no_arguments -d "Internal fish function"
     end
     return 0
 end
-

@@ -69,4 +69,3 @@ complete -c latexmk -o view=dvi -d 'viewer is for dvi'
 complete -c latexmk -o view=none -d 'no viewer is used'
 complete -c latexmk -o view=ps -d 'viewer is for ps'
 complete -c latexmk -o view=pdf -d 'viewer is for pdf'
-

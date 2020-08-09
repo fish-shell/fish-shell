@@ -16,5 +16,3 @@ complete -c apt-spy -s w -d "Write top servers to file"
 complete -f -c apt-spy -s n -d "Number of top servers"
 complete -f -c apt-spy -a update -d "Update mirror list"
 complete -f -c apt-spy -s v -d "Version number"
-
-

@@ -13,4 +13,3 @@ function __fish_is_first_token -d 'Test if no non-switch argument has been speci
     end
     return 0
 end
-

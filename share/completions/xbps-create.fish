@@ -33,4 +33,3 @@ complete -c $progname -l shlib-provides -d 'A list of provided shared libraries,
 complete -c $progname -l shlib-requires -d 'A list of required shared libraries, separated by whitespaces.' -x
 complete -c $progname -l alternatives -d 'A list of alternatives provided by this package, separated by whitespaces.' -x
 complete -c $progname -s c -d 'The package changelog string.' -x
-

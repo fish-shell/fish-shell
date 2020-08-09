@@ -65,4 +65,3 @@ complete -c apt-get -l allow-unauthenticated -d 'Ignore non-authenticated packag
 complete -c apt-get -s v -l version -d 'Display version and exit'
 complete -r -c apt-get -s c -l config-file -d 'Specify a config file'
 complete -r -c apt-get -s o -l option -d 'Set a config option'
-

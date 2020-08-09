@@ -80,4 +80,3 @@ function __fish_complete_netcat
             complete -c $nc -s T -x -a "Minimize-Delay Maximize-Throughput Maximize-Reliability Minimize-Cost" -x -d "set TOS flag"
     end
 end
-

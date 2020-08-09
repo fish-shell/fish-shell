@@ -19,4 +19,3 @@ complete -c fuser -s v -l verbose -d 'Verbose mode'
 complete -c fuser -s V -d 'Print version and exit'
 complete -c fuser -s 4 -l ipv4 -d 'Search only for IPv4 sockets'
 complete -c fuser -s 6 -l ip64 -d 'Search only for IPv6 sockets'
-

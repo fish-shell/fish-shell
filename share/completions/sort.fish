@@ -22,4 +22,3 @@ complete -c sort -s u -l unique -d "Output only first of equal lines"
 complete -c sort -s z -l zero-terminated -d "Lines end with 0 byte"
 complete -c sort -l help -d "Display help and exit"
 complete -c sort -l version -d "Display version and exit"
-

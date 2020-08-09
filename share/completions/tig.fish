@@ -25,4 +25,3 @@ complete -c tig -n 'not contains -- -- (commandline -opc) && __fish_seen_subcomm
 
 complete -c tig -f -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
 complete -c tig -n 'contains -- -- (commandline -opc)' -F
-

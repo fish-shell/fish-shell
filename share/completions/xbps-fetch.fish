@@ -10,4 +10,3 @@ complete -c $progname -s h -d 'Show the help message.'
 complete -c $progname -s o -d 'Rename file from specified URL to output.' -F
 complete -c $progname -s v -d 'Enables verbose messages.'
 complete -c $progname -s V -d 'Show the version information.'
-

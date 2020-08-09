@@ -9,4 +9,3 @@ complete -c lp -s s -d 'Do not report the resulting job IDs (silent mode)'
 complete -c lp -s t -d 'Sets the job name' -x
 complete -c lp -s H -d 'Specifies  when the job should be printed' -xa 'hold immediate restart resume HH:MM'
 complete -c lp -s P -d 'Specify the page ranges' -x
-

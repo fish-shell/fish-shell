@@ -13,4 +13,3 @@ complete -c lpstat -s s -d 'Shows a status summary, including the default destin
 complete -c lpstat -s t -d 'Shows all status information'
 complete -c lpstat -s u -d 'Shows a list of print jobs queued by the specified users' -xa '(__fish_complete_users)'
 complete -c lpstat -s v -d 'Shows the printers and what device they are attached to' -xa '(__fish_print_lpr_printers)'
-

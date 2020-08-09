@@ -9,4 +9,3 @@ complete -c scrot -s q -l quality -d 'Image quality [1-100]'
 complete -c scrot -s m -l multidisp -d 'Grab shot from multiple heads'
 complete -c scrot -s s -l select -d 'Select a window or rectangle with the mouse'
 complete -c scrot -s t -l thumb -d 'Generate thumbnail PERCENT of original'
-

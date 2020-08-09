@@ -73,4 +73,3 @@ complete -f -n __fish_climate_has_no_argument -c climate -a disk -d 'Find disk u
 complete -f -n __fish_climate_has_no_argument -c climate -a get-pids -d 'Get all PIDs for a process name'
 complete -f -n __fish_climate_has_no_argument -c climate -a trash-size -d 'Find the trash size'
 complete -f -n __fish_climate_has_no_argument -c climate -a empty -d 'Empty the trash'
-

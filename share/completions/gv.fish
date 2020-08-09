@@ -47,4 +47,3 @@ complete -c gv -l widgetless -d 'Shortcut for --style=gv_widgetless.dat'
 complete -c gv -l fullscreen -d 'Start in fullscreen mode (needs support from WM)'
 complete -c gv -l presentation -d 'Presentation mode '
 complete -c gv -l version -d 'Show gv version and exit'
-

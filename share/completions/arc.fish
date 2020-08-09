@@ -303,4 +303,3 @@ complete -f -c arc -n '__fish_arc_using_command liberate' -l library-name -d 'Se
 
 ### version
 complete -f -c arc -n __fish_arc_needs_command -a version -d 'Shows the current version of arcanist'
-

@@ -38,4 +38,3 @@ else
     complete -c date -s t -d "Set system's minutes west of GMT" -x
     complete -c date -s f -d 'Use format string to parse date' -f
 end
-

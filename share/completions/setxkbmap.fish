@@ -24,4 +24,3 @@ complete -c setxkbmap -o synch -d 'Synchronize request w/X server'
 complete -c setxkbmap -o types -d 'Specifies types component name' -xa "(sed -r $filter /usr/share/X11/xkb/types.dir)"
 complete -c setxkbmap -o v -o verbose -d 'Sets verbosity (1..10).  Higher values yield more messages' -xa '(seq 1 10)'
 complete -c setxkbmap -o variant -d 'Specifies layout variant used to choose component names' -xa "(__fish_complete_setxkbmap variant)"
-

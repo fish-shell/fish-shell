@@ -6,5 +6,3 @@ complete -f -c apt-zip-inst -s a -l aptgetaction -a "dselect-upgrade upgrade dis
 complete -c apt-zip-inst -s p -l packages -d "List of packages to install"
 complete -f -c apt-zip-inst -s f -l fix-broken -d "Fix broken option"
 complete -c apt-zip-inst -l skip-mount -d "Specify a non-mountpoint dir"
-
-

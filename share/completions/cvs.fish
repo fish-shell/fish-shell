@@ -507,6 +507,3 @@ complete -c cvs -n 'contains \'watch\' (commandline -poc)' -s a -x -a 'add remov
 
 complete -c cvs -n 'contains \'watchers\' (commandline -poc)' -s l -d 'Process this directory only (not recursive).'
 complete -c cvs -n 'contains \'watchers\' (commandline -poc)' -s R -d 'Process directories recursively (default).'
-
-
-

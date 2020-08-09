@@ -21,4 +21,3 @@ function fish_print_hg_root
 
     return 1
 end
-

@@ -34,4 +34,3 @@ complete -xc man -s p -d Preprocessors
 complete -c man -s t -d "Format for printing"
 complete -c man -s w -l path -d "Only print locations"
 complete -c man -s W -d "Only print locations"
-

@@ -17,4 +17,3 @@ complete -c $progname -s i -n "__fish_contains_opt -s a" -d 'Ignore PKG when con
 complete -c $progname -s r -d 'Specifies a path for the target root directory.' -xa "(__fish_complete_directories)"
 complete -c $progname -s v -d 'Enables verbose messages.'
 complete -c $progname -s V -d 'Show the version information.'
-

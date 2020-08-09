@@ -22,4 +22,3 @@ complete -f -c apt-listbugs -s y -l force-yes -d "Assume yes to all questions"
 complete -f -c apt-listbugs -s n -l force-no -d "Assume no to all questions"
 complete -c apt-listbugs -a list -d "List bugs from packages"
 complete -c apt-listbugs -a rss -d "List bugs in rss format"
-

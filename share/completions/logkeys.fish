@@ -10,4 +10,3 @@ complete -c logkeys -l no-func-keys -d 'Log only character key presses'
 complete -c logkeys -l no-timestamps -d 'No timestamp to each line of log'
 complete -c logkeys -l post-size -d 'On SIZE, rotate current logfile'
 complete -c logkeys -l post-http -d 'POST the log file to URL'
-

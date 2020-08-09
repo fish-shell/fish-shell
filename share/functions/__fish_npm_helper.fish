@@ -88,5 +88,3 @@ print("\n".join(data["dependencies"])); print("\n".join(data["devDependencies"])
         end
     end
 end
-
-

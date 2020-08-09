@@ -42,4 +42,3 @@ complete -c ps -s m -d 'Show threads after processes'
 complete -c ps -s V -l version -d "Display version and exit"
 complete -c ps -l help -d "Display help and exit"
 complete -c ps -l info -d "Display debug info"
-

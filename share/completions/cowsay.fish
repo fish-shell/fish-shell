@@ -15,5 +15,3 @@ complete -c cowsay -s s -d "Stoned cow"
 complete -c cowsay -s t -d "Tired cow"
 complete -c cowsay -s w -d "Wired cow"
 complete -c cowsay -s y -d "Young cow"
-
-

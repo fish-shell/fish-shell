@@ -65,4 +65,3 @@ complete -r -c aptitude -s t -l target-release -d 'Set the release from which pa
 complete -r -c aptitude -s O -l sort -d 'Specify the order for the output from the search command'
 complete -r -c aptitude -s o -d 'Set a configuration file option directly'
 complete -r -c aptitude -s w -l width -d 'Specify the display width for the output from the search command'
-

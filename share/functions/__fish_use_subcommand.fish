@@ -11,4 +11,3 @@ function __fish_use_subcommand -d "Test if a non-switch argument has been given 
     end
     return 0
 end
-

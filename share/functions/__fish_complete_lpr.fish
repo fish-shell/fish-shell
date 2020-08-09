@@ -35,4 +35,3 @@ function __fish_complete_lpr -d 'Complete lpr common options' --argument-names c
             complete -c $cmd -s o -xa 'page-bottom= page-left= page-right= page-top=' -d 'Set the page margins when printing text files'
     end
 end
-

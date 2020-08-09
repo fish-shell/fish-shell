@@ -28,4 +28,3 @@ complete -c ifdata -o soc -d 'Print # of out carrier loss'
 complete -c ifdata -o som -d 'Print # of out multicast'
 complete -c ifdata -o bips -d 'Print # of incoming bytes per second'
 complete -c ifdata -o bops -d 'Print # of outgoing bytes per second'
-

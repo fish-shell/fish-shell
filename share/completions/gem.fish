@@ -190,4 +190,3 @@ complete $update_opt -s P -l trust-policy -d "Specify gem trust policy" -x
 complete $update_opt -l ignore-dependencies -d "Do not install any required dependent gems"
 complete $update_opt -s y -l include-dependencies -d "Unconditionally install the required dependent gems"
 complete $update_opt -l system -d "Update the RubyGems system software"
-

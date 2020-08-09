@@ -18,4 +18,3 @@ function __fish_whatis
         return 1
     end
 end
-

@@ -6,4 +6,3 @@ complete -c pkg_add -o a -d 'Automated package installation'
 complete -c pkg_add -o h -d 'Print help'
 complete -c pkg_add -o u -d 'Update packages'
 complete -c pkg_add -o z -d 'Fuzzy match'
-

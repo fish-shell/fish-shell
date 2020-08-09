@@ -11,4 +11,3 @@ complete -c top -s p -d "Monitor PID" -x -a "(__fish_complete_pids)"
 complete -c top -s s -d "Secure mode"
 complete -c top -s S -d "Cumulative mode"
 complete -c top -s v -d "Display version and exit"
-

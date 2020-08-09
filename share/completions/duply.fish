@@ -26,4 +26,3 @@ complete --command duply --no-files --long-option preview -d 'Do nothing but pri
 complete --command duply --no-files --long-option dry-run -d 'Calculate what would be done, but don''t perform any actions'
 complete --command duply --no-files --long-option allow-source-mismatch -d 'Don''t abort when backup different dirs to the same backend'
 complete --command duply --no-files --long-option verbosity --arguments '0 2 4 8 9' -d 'Output verbosity level'
-

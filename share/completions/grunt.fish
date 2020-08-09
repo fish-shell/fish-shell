@@ -28,4 +28,3 @@ complete -c grunt -l no-write -d "Disable writing files (dry run)"
 complete -c grunt -s v -l verbose -d "Verbose mode. A lot more information output"
 complete -c grunt -s V -l version -d "Print the grunt version. Combine with --verbose for more info"
 complete -c grunt -l completion -d "Output shell auto-completion rules."
-

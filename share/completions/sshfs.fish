@@ -18,4 +18,3 @@ complete -c sshfs -s f -d "Foreground operation"
 complete -c sshfs -s s -d "Disable multi-threaded operation"
 complete -c sshfs -s r -d "Mount options"
 complete -c sshfs -s h -d "Display help and exit"
-

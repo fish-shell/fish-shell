@@ -30,4 +30,3 @@ complete -c alsactl -s b -l background -d 'Run the task in background'
 complete -c alsactl -s s -l syslog -d 'Use syslog for messages'
 complete -c alsactl -s n -l nice -d 'Set the process priority (see \'man nice\')' -a "(seq -20 19)"
 complete -c alsactl -s c -l sched-idle -d 'Set the process scheduling policy to idle (SCHED_IDLE)'
-

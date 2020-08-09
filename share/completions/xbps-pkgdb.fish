@@ -16,4 +16,3 @@ complete -c $progname -s r -d 'Specifies a full path for the target root directo
 complete -c $progname -s u -d 'Updates the pkgdb format to the latest version making the necessary conversions.'
 complete -c $progname -s v -d 'Enables verbose messages.'
 complete -c $progname -s V -d 'Show the version information.'
-

@@ -130,4 +130,3 @@ complete -c wget -s I -l include-directories -d "Specify a comma-separated list 
 complete -c wget -s X -l exclude-directories -d "Specify a comma-separated list of directories you wish to exclude" -x
 complete -c wget -l no-parent -d "Do not ever ascend to the parent directory"
 complete -c wget -o np -d "Do not ever ascend to the parent directory"
-

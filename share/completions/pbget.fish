@@ -7,4 +7,3 @@ complete -c pbget -l dir -d 'Set the output directory'
 complete -c pbget -l help -d 'Display this message'
 complete -c pbget -l upgradable -d 'Search for upgradable packages'
 complete -c pbget -l testing -d 'Search the ABS testing branches'
-

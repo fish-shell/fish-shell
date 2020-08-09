@@ -8,4 +8,3 @@ complete -f -c yast2 -l ncurses -d 'Use the NCURSES text-mode user interface'
 complete -f -c yast2 -s g -l geometry -d 'Default window size (qt only)'
 complete -f -c yast2 -l noborder -d 'No window manager border for main window'
 complete -f -c yast2 -l fullscreen -d 'Use full screen'
-

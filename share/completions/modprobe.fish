@@ -20,4 +20,3 @@ complete -c modprobe -l set-version -d "Specify kernel version"
 complete -c modprobe -l show-depends -d "List dependencies of module"
 complete -c modprobe -s o -l name -d "Rename module"
 complete -c modprobe -l first-time -d "Fail if inserting already loaded module"
-

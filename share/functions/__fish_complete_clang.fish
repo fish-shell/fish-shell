@@ -13,4 +13,3 @@ function __fish_complete_clang
     # and put it in a format that fish understands
     string replace -r -- '^([^ ]+)\s*(.*)' "$prefix\$1\t\$2"
 end
-

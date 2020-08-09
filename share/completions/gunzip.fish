@@ -16,4 +16,3 @@ complete -c gunzip -s S -l suffix -r -d Suffix
 complete -c gunzip -s t -l test -d "Check integrity"
 complete -c gunzip -s v -l verbose -d "Display compression ratios"
 complete -c gunzip -s V -l version -d "Display version and exit"
-

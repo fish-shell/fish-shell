@@ -17,4 +17,3 @@ complete -c $progname -s v -d 'Enables verbose messages.'
 complete -c $progname -s V -d 'Show the version information.'
 complete -c $progname -s l -n "not __fish_contains_opt -s s" -d 'Lists all current alternative groups or only from PKG, or just a specific group with -g.'
 complete -c $progname -s s -n "not __fish_contains_opt -s l" -d 'Set alternative groups specified by PKG or just a specific group with -g.'
-

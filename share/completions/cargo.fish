@@ -86,4 +86,3 @@ complete -c cargo -x -n '__fish_seen_subcommand_from update' -l precise -d 'Upda
 
 complete -c cargo -x -n '__fish_seen_subcommand_from yank' -l vers -d 'The version to yank or un-yank'
 complete -c cargo -n '__fish_seen_subcommand_from yank' -l undo -d 'Undo a yank, putting a version back into the index'
-

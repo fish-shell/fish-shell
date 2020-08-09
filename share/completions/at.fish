@@ -7,4 +7,3 @@ complete -f -c at -s l -d "Alias for atq"
 complete -f -c at -s d -d "Alias for atrm"
 complete -f -c at -s v -d "Show the time"
 complete -f -c at -s c -d "Print the jobs listed"
-

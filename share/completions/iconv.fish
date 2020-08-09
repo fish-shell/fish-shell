@@ -7,4 +7,3 @@ complete -c iconv -s o -l output -d "Output file" -r
 complete -c iconv -l verbose -d "Print progress information"
 complete -c iconv -l help -d "Display version and exit"
 complete -c iconv -l version -d "Display help and exit"
-

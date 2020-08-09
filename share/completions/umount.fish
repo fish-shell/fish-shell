@@ -19,4 +19,3 @@ complete -c umount -s t -d "Actions should only be taken on file systems of the 
 complete -c umount -s O -d "Actions should only be taken on file systems with the specified options in /etc/fstab" -xa '(cut -d " " -f 4 /etc/mtab)\t"Mount option"'
 complete -c umount -s f -d "Force unmount (in case of an unreachable NFS system)"
 complete -c umount -s l -d "Detach the filesystem from the filesystem hierarchy now, and cleanup all references to the filesystem as soon as it is not busy"
-

@@ -27,4 +27,3 @@ complete -c ping -s v -d "Verbose mode"
 complete -c ping -s V -d "Display version and exit"
 complete -c ping -s w -d "Specify  a timeout, in seconds, before ping exits regardless of how many packets have been sent or received" -x
 complete -c ping -s W -d "Time to wait for a response, in seconds" -x
-

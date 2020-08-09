@@ -5,4 +5,3 @@ complete -c id -s r -l real -d "Print real ID, not effective"
 complete -c id -s u -l user -d "Print effective user ID"
 complete -c id -l help -d "Display help and exit"
 complete -c id -l version -d "Display version and exit"
-

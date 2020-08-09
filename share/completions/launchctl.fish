@@ -42,4 +42,3 @@ complete --command launchctl -n __fish_use_subcommand -xa "error\tPrints a descr
 complete --command launchctl -n __fish_use_subcommand -xa "variant\tPrints the launchd variant"
 complete --command launchctl -n __fish_use_subcommand -xa "version\tPrints the launchd version"
 complete --command launchctl -n __fish_use_subcommand -xa "help\tPrints the usage for a given subcommand"
-

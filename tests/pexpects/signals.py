@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
 
-sp = SpawnedProc()
+sp = SpawnedProc(timeout=10)
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,
     sp.sendline,

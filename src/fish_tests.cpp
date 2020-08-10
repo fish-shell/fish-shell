@@ -4933,7 +4933,9 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
-        {L"HOME=.", highlight_role_t::param},
+        {L"HOME", highlight_role_t::param},
+        {L"=", highlight_role_t::operat, ns},
+        {L".", highlight_role_t::param, ns},
         {L"false", highlight_role_t::command},
         {L"|&", highlight_role_t::error},
         {L"true", highlight_role_t::command},
@@ -4952,7 +4954,8 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
-        {L"a=", highlight_role_t::param},
+        {L"a", highlight_role_t::param},
+        {L"=", highlight_role_t::operat, ns},
     });
 
     auto &vars = parser_t::principal_parser().vars();

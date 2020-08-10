@@ -959,6 +959,8 @@ int main(int argc, char *argv[]) {
     argc -= optind;
     argv += optind;
 
+    int retval = 0;
+
     wcstring src;
     for (int i = 0; i < argc || (argc == 0 && i == 0); i++) {
         if (argc == 0 && i == 0) {
@@ -1028,7 +1030,10 @@ int main(int argc, char *argv[]) {
             }
             case output_type_check: {
                 if (output_wtext != src) {
-                    return 1;
+                    if (argc) {
+                        std::fwprintf(stderr, _(L"%s\n"), argv[i]);
+                    }
+                    retval++;
                 }
                 break;
             }
@@ -1036,5 +1041,5 @@ int main(int argc, char *argv[]) {
 
         std::fputws(str2wcstring(colored_output).c_str(), stdout);
     }
-    return 0;
+    return retval;
 }

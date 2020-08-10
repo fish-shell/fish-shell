@@ -22,7 +22,7 @@ The following options are available:
 
 - ``-i`` or ``--no-indent`` do not indent commands; only reformat to one job per line.
 
-- ``-c`` or ``--check`` do not indent, only return 0 if the code is already indented as fish_indent would, 1 otherwise.
+- ``-c`` or ``--check`` do not indent, only return 0 if the code is already indented as fish_indent would, the number of failed files otherwise. Also print the failed filenames if not reading from stdin.
 
 - ``-v`` or ``--version`` displays the current fish version and then exits.
 

@@ -74,6 +74,17 @@ static void print_fds() {
     fputc('\n', stdout);
 }
 
+static void print_signal(int sig) {
+    // Print a signal description to stderr.
+    if (const char *s = strsignal(sig)) {
+        fprintf(stderr, "%s", s);
+        if (strchr(s, ':') == nullptr) {
+            fprintf(stderr, ": %d", sig);
+        }
+        fprintf(stderr, "\n");
+    }
+}
+
 static void print_blocked_signals() {
     sigset_t sigs;
     sigemptyset(&sigs);
@@ -87,13 +98,17 @@ static void print_blocked_signals() {
     // NetBSD taps out at 63, Linux at 64.
     for (int sig = 1; sig < 33; sig++) {
         if (sigismember(&sigs, sig)) {
-            if (const char *s = strsignal(sig)) {
-                fprintf(stderr, "%s", s);
-                if (strchr(s, ':') == nullptr) {
-                    fprintf(stderr, ": %d", sig);
-                }
-                fprintf(stderr, "\n");
-            }
+            print_signal(sig);
+        }
+    }
+}
+
+static void print_ignored_signals() {
+    for (int sig = 1; sig < 33; sig++) {
+        struct sigaction act = {};
+        sigaction(sig, nullptr, &act);
+        if (act.sa_handler == SIG_IGN) {
+            print_signal(sig);
         }
     }
 }
@@ -125,6 +140,8 @@ static fth_command_t s_commands[] = {
     {"print_fds", print_fds, "Print the list of active FDs to stdout"},
     {"print_blocked_signals", print_blocked_signals,
      "Print to stdout the name(s) of blocked signals"},
+    {"print_ignored_signals", print_ignored_signals,
+     "Print to stdout the name(s) of ignored signals"},
     {"help", show_help, "Print list of fish_test_helper commands"},
 };
 

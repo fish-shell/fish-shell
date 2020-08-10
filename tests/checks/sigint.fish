@@ -1,7 +1,14 @@
 #RUN: %fish -C "set helper %fish_test_helper" %s
 
-# Block some signals if job control is off (#6828).
+# Check that nohup is propagated.
+set fish (status fish-path)
+set output_path (mktemp)
+nohup $fish -c "$helper print_ignored_signals" 2>&1 > $output_path
+cat $output_path
+# CHECK: Hangup: 1
+rm $output_path
 
+# Block some signals if job control is off (#6828).
 status job-control none
 for fish_use_posix_spawn in 0 1
 	$helper print_blocked_signals &

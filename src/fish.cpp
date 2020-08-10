@@ -259,7 +259,7 @@ int run_command_list(parser_t &parser, std::vector<std::string> *cmds, const io_
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
-    static const char *const short_opts = "+hPilnvc:C:p:d:f:D:";
+    static const char *const short_opts = "+hPilnvc:C:p:d:f:D:o:";
     static const struct option long_opts[] = {
         {"command", required_argument, nullptr, 'c'},
         {"init-command", required_argument, nullptr, 'C'},

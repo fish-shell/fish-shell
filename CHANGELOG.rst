@@ -40,6 +40,8 @@ Notable improvements and fixes
     dmesg -w | string replace foo bar
 
 - A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
+- The ``-o`` short option to fish, for ``--debug-output``, works correctly instead of producing an
+  invalid option error (#7254).
 - ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
 
 Syntax changes and new commands

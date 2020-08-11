@@ -1034,8 +1034,10 @@ void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd) {
 
 void highlighter_t::visit(const ast::variable_assignment_t &varas) {
     color_as_argument(varas);
+    // Highlight the '=' in variable assignments as an operator.
     if (auto where = variable_assignment_equals_pos(varas.source(this->buff))) {
-        this->color_array.at(*where) = highlight_role_t::operat;
+        size_t equals_loc = varas.source_range().start + *where;
+        this->color_array.at(equals_loc) = highlight_role_t::operat;
     }
 }
 

@@ -568,8 +568,6 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
 std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // Make a vector the same size as the input string, which contains the indents. Initialize them
     // to 0.
-    static wcstring ssss;
-    ssss = src;
     const size_t src_size = src.size();
     std::vector<int> indents(src_size, 0);
 

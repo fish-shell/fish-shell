@@ -685,7 +685,7 @@ static const char *highlight_role_to_string(highlight_role_t role) {
 static std::string make_pygments_csv(const wcstring &src) {
     const size_t len = src.size();
     std::vector<highlight_spec_t> colors;
-    highlight_shell(src, colors, src.size(), operation_context_t::globals());
+    highlight_shell(src, colors, operation_context_t::globals());
     assert(colors.size() == len && "Colors and src should have same size");
 
     struct token_range_t {
@@ -995,8 +995,7 @@ int main(int argc, char *argv[]) {
         // Maybe colorize.
         std::vector<highlight_spec_t> colors;
         if (output_type != output_type_plain_text) {
-            highlight_shell(output_wtext, colors, output_wtext.size(),
-                            operation_context_t::globals());
+            highlight_shell(output_wtext, colors, operation_context_t::globals());
         }
 
         std::string colored_output;

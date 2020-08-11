@@ -4999,7 +4999,7 @@ static void test_highlighting() {
         do_test(expected_colors.size() == text.size());
 
         std::vector<highlight_spec_t> colors(text.size());
-        highlight_shell(text, colors, 20, operation_context_t{vars}, true /* io_ok */);
+        highlight_shell(text, colors, operation_context_t{vars}, true /* io_ok */);
 
         if (expected_colors.size() != colors.size()) {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(),

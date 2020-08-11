@@ -95,11 +95,10 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
 /// \param buffstr The buffer on which to perform syntax highlighting
 /// \param color The array in which to store the color codes. The first 8 bits are used for fg
 /// color, the next 8 bits for bg color.
-/// \param pos the cursor position. Used for quote matching, etc.
 /// \param ctx The variables and cancellation check for this operation.
 /// \param io_ok If set, allow IO which may block. This means that e.g. invalid commands may be
 /// detected.
-void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos,
+void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color,
                      const operation_context_t &ctx, bool io_ok = false);
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.

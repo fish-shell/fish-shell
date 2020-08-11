@@ -772,8 +772,6 @@ class highlighter_t {
     // The string we're highlighting. Note this is a reference memmber variable (to avoid copying)!
     // We must not outlive this!
     const wcstring &buff;
-    // Cursor position.
-    const size_t cursor_pos;
     // The operation context. Again, a reference member variable!
     const operation_context_t &ctx;
     // Whether it's OK to do I/O.
@@ -831,10 +829,8 @@ class highlighter_t {
     void visit(const ast::node_t &node) { visit_children(node); }
 
     // Constructor
-    highlighter_t(const wcstring &str, size_t pos, const operation_context_t &ctx, wcstring wd,
-                  bool can_do_io)
+    highlighter_t(const wcstring &str, const operation_context_t &ctx, wcstring wd, bool can_do_io)
         : buff(str),
-          cursor_pos(pos),
           ctx(ctx),
           io_ok(can_do_io),
           working_directory(std::move(wd)),
@@ -904,18 +900,9 @@ void highlighter_t::color_as_argument(const ast::node_t &node) {
         if (arg_subcmd_end < this->buff.size())
             this->color_array.at(arg_subcmd_end) = highlight_role_t::operat;
 
-        // Compute the cursor's position within the cmdsub. We must be past the open paren (hence >)
-        // but can be at the end of the string or closed paren (hence <=).
-        size_t cursor_subpos = CURSOR_POSITION_INVALID;
-        if (cursor_pos != CURSOR_POSITION_INVALID && cursor_pos > arg_subcmd_start &&
-            cursor_pos <= arg_subcmd_end) {
-            // The -1 because the cmdsub_contents does not include the open paren.
-            cursor_subpos = cursor_pos - arg_subcmd_start - 1;
-        }
-
         // Highlight it recursively.
-        highlighter_t cmdsub_highlighter(cmdsub_contents, cursor_subpos, this->ctx,
-                                         this->working_directory, this->io_ok);
+        highlighter_t cmdsub_highlighter(cmdsub_contents, this->ctx, this->working_directory,
+                                         this->io_ok);
         const color_array_t &subcolors = cmdsub_highlighter.highlight();
 
         // Copy out the subcolors back into our array.
@@ -1321,9 +1308,9 @@ std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &
     return outp.contents();
 }
 
-void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
+void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
                      const operation_context_t &ctx, bool io_ok) {
     const wcstring working_directory = ctx.vars.get_pwd_slash();
-    highlighter_t highlighter(buff, pos, ctx, working_directory, io_ok);
+    highlighter_t highlighter(buff, ctx, working_directory, io_ok);
     color = highlighter.highlight();
 }

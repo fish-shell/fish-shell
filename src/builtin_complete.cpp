@@ -389,8 +389,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
         // colorize if interactive
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
             std::vector<highlight_spec_t> colors;
-            size_t len = repr.size();
-            highlight_shell(repr, colors, len, parser.context());
+            highlight_shell(repr, colors, parser.context());
             streams.out.append(str2wcstring(colorize(repr, colors, parser.vars())));
         } else {
             streams.out.append(repr);

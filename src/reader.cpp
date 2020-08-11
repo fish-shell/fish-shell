@@ -586,7 +586,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_autosuggestion();
     void accept_autosuggestion(bool full, bool single = false,
                                move_word_style_t style = move_word_style_punctuation);
-    void super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
+    void super_highlight_me_plenty(bool no_io = false);
 
     void highlight_search();
     void highlight_complete(highlight_result_t result);
@@ -1307,7 +1307,7 @@ bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
         // Syntax highlight. Note we must have that buff_pos > 0 because we just added something
         // nonzero to its length.
         assert(el->position() > 0);
-        super_highlight_me_plenty(-1);
+        super_highlight_me_plenty();
     }
 
     repaint();
@@ -2261,11 +2261,10 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
     }
 }
 
-// Given text, bracket matching position, and whether IO is allowed,
-// return a function that performs highlighting. The function may be invoked on a background thread.
+// Given text and  whether IO is allowed, return a function that performs highlighting. The function
+// may be invoked on a background thread.
 static std::function<highlight_result_t(void)> get_highlight_performer(parser_t &parser,
                                                                        const wcstring &text,
-                                                                       long match_highlight_pos,
                                                                        bool io_ok) {
     auto vars = parser.vars().snapshot();
     unsigned generation_count = read_generation_count();
@@ -2273,8 +2272,8 @@ static std::function<highlight_result_t(void)> get_highlight_performer(parser_t 
         if (text.empty()) return {};
         operation_context_t ctx = get_bg_context(vars, generation_count);
         std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_shell(text, colors, match_highlight_pos, ctx, io_ok);
-        return {std::move(colors), text};
+        highlight_shell(text, colors, ctx, io_ok);
+        return highlight_result_t{std::move(colors), text};
     };
 }
 
@@ -2282,22 +2281,15 @@ static std::function<highlight_result_t(void)> get_highlight_performer(parser_t 
 /// background color under the cursor to avoid repaint issues on terminals where e.g. syntax
 /// highlighting maykes characters under the sursor unreadable.
 ///
-/// \param match_highlight_pos_adjust the adjustment to the position to use for bracket matching.
-///        This is added to the current cursor position and may be negative.
 /// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
 ///        an asynchronous highlight in the background, which may perform disk I/O.
-void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
+void reader_data_t::super_highlight_me_plenty(bool no_io) {
     if (!conf.highlight_ok) return;
 
     const editable_line_t *el = &command_line;
-    assert(el != nullptr);
-    long match_highlight_pos = static_cast<long>(el->position()) + match_highlight_pos_adjust;
-    assert(match_highlight_pos >= 0);
-
     sanity_check();
 
-    auto highlight_performer =
-        get_highlight_performer(parser(), el->text(), match_highlight_pos, !no_io);
+    auto highlight_performer = get_highlight_performer(parser(), el->text(), !no_io);
     if (no_io) {
         // Highlighting without IO, we just do it.
         highlight_complete(highlight_performer());
@@ -3002,7 +2994,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     // syntax highlighting, but a synchronous variant that performs no I/O, so
                     // as not to block the user.
                     bool skip_io = (command_test_result == 0);
-                    super_highlight_me_plenty(0, skip_io);
+                    super_highlight_me_plenty(skip_io);
                 }
             }
 

@@ -497,8 +497,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Color is the syntax highlighting for buff.  The format is that color[i] is the
     /// classification (according to the enum in highlight.h) of buff[i].
     std::vector<highlight_spec_t> colors;
-    /// An array defining the block level at each character.
-    std::vector<int> indents;
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
     /// ^D twice.
     bool prev_end_loop{false};
@@ -806,8 +804,6 @@ void reader_data_t::update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos
 /// perform syntax highlighting, write the commandline and move the cursor.
 void reader_data_t::repaint() {
     editable_line_t *cmd_line = &command_line;
-    // Update the indentation.
-    indents = parse_util_compute_indents(cmd_line->text());
 
     wcstring full_line;
     if (conf.in_silent_mode) {
@@ -830,8 +826,10 @@ void reader_data_t::repaint() {
         }
     }
 
-    std::vector<int> indents = this->indents;
-    indents.resize(len);
+    // Compute the indentation, then extend it with 0s for the autosuggestion. The autosuggestion
+    // always conceptually has an indent of 0.
+    std::vector<int> indents = parse_util_compute_indents(cmd_line->text());
+    indents.resize(len, 0);
 
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position();
@@ -881,8 +879,6 @@ void reader_data_t::command_line_changed(const editable_line_t *el) {
         // it will be correct. If it is, it avoids a repaint.
         highlight_spec_t last_color = colors.empty() ? highlight_spec_t() : colors.back();
         colors.resize(len, last_color);
-
-        indents.resize(len);
 
         // Update the gen count.
         s_generation.store(1 + read_generation_count(), std::memory_order_relaxed);
@@ -2020,7 +2016,6 @@ static void reader_interactive_destroy() {
 void reader_data_t::sanity_check() const {
     if (command_line.position() > command_line.size()) sanity_lose();
     if (colors.size() != command_line.size()) sanity_lose();
-    if (indents.size() != command_line.size()) sanity_lose();
 }
 
 /// Set the specified string as the current buffer.
@@ -3218,26 +3213,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 int line_count = parse_util_lineno(el->text().c_str(), el->size()) - 1;
 
                 if (line_new >= 0 && line_new <= line_count) {
-                    size_t base_pos_new;
-                    size_t base_pos_old;
-
-                    int indent_old;
-                    int indent_new;
-                    size_t line_offset_old;
-                    size_t total_offset_new;
-
-                    base_pos_new = parse_util_get_offset_from_line(el->text(), line_new);
-
-                    base_pos_old = parse_util_get_offset_from_line(el->text(), line_old);
+                    auto indents = parse_util_compute_indents(el->text());
+                    size_t base_pos_new = parse_util_get_offset_from_line(el->text(), line_new);
+                    size_t base_pos_old = parse_util_get_offset_from_line(el->text(), line_old);
 
                     assert(base_pos_new != static_cast<size_t>(-1) &&
                            base_pos_old != static_cast<size_t>(-1));
-                    indent_old = indents.at(base_pos_old);
-                    indent_new = indents.at(base_pos_new);
+                    int indent_old = indents.at(base_pos_old);
+                    int indent_new = indents.at(base_pos_new);
 
-                    line_offset_old =
-                        el->position() - parse_util_get_offset_from_line(el->text(), line_old);
-                    total_offset_new = parse_util_get_offset(
+                    size_t line_offset_old = el->position() - base_pos_old;
+                    size_t total_offset_new = parse_util_get_offset(
                         el->text(), line_new, line_offset_old - 4 * (indent_new - indent_old));
                     update_buff_pos(el, total_offset_new);
                     mark_repaint_needed();

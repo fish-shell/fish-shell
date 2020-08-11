@@ -448,6 +448,16 @@ struct highlight_result_t {
 
 struct readline_loop_state_t;
 
+/// Data wrapping up the visual selection.
+struct selection_data_t {
+    /// The position of the cursor when selection was initiated.
+    size_t begin{0};
+
+    /// The start and stop position of the current selection.
+    size_t start{0};
+    size_t stop{0};
+};
+
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
@@ -478,15 +488,10 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     history_t *history{nullptr};
     /// The history search.
     reader_history_search_t history_search{};
-    /// Indicates whether a selection is currently active.
-    bool sel_active{false};
-    /// The position of the cursor, when selection was initiated.
-    size_t sel_begin_pos{0};
-    /// The start position of the current selection, if one.
-    size_t sel_start_pos{0};
-    /// The stop position of the current selection, if one.
-    size_t sel_stop_pos{0};
-    /// The output of the last evaluation of the prompt command.
+
+    /// The selection data. If this is not none, then we have an active selection.
+    maybe_t<selection_data_t> selection{};
+
     wcstring left_prompt_buff;
     wcstring mode_prompt_buff;
     /// The output of the last evaluation of the right prompt command.
@@ -789,13 +794,13 @@ void reader_data_t::update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos
         el->set_position(*new_pos);
     }
     size_t buff_pos = el->position();
-    if (el == &command_line && sel_active) {
-        if (sel_begin_pos <= buff_pos) {
-            sel_start_pos = sel_begin_pos;
-            sel_stop_pos = buff_pos + 1;
+    if (el == &command_line && selection.has_value()) {
+        if (selection->begin <= buff_pos) {
+            selection->start = selection->begin;
+            selection->stop = buff_pos + 1;
         } else {
-            sel_start_pos = buff_pos;
-            sel_stop_pos = sel_begin_pos + 1;
+            selection->start = buff_pos;
+            selection->stop = selection->begin + 1;
         }
     }
 }
@@ -819,9 +824,9 @@ void reader_data_t::repaint() {
     std::vector<highlight_spec_t> colors = this->colors;
     colors.resize(len, highlight_role_t::autosuggestion);
 
-    if (sel_active) {
+    if (selection.has_value()) {
         highlight_spec_t selection_color = {highlight_role_t::normal, highlight_role_t::selection};
-        for (size_t i = sel_start_pos; i < std::min(len, sel_stop_pos); i++) {
+        for (size_t i = selection->start; i < std::min(len, selection->stop); i++) {
             colors[i] = selection_color;
         }
     }
@@ -3406,29 +3411,31 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             mark_repaint_needed();
             break;
         }
-        case rl::begin_selection:
-        case rl::end_selection: {
-            sel_start_pos = command_line.position();
-            if (c == rl::begin_selection) {
-                sel_stop_pos = command_line.position() + 1;
-                sel_active = true;
-                sel_begin_pos = command_line.position();
-            } else {
-                sel_stop_pos = command_line.position();
-                sel_active = false;
-            }
 
+        case rl::begin_selection: {
+            if (!selection) selection = selection_data_t{};
+            size_t pos = command_line.position();
+            selection->begin = pos;
+            selection->start = pos;
+            selection->stop = pos + 1;
             break;
         }
+
+        case rl::end_selection: {
+            selection.reset();
+            break;
+        }
+
         case rl::swap_selection_start_stop: {
-            if (!sel_active) break;
-            size_t tmp = sel_begin_pos;
-            sel_begin_pos = command_line.position();
-            sel_start_pos = command_line.position();
+            if (!selection) break;
+            size_t tmp = selection->begin;
+            selection->begin = command_line.position();
+            selection->start = command_line.position();
             editable_line_t *el = active_edit_line();
             update_buff_pos(el, tmp);
             break;
         }
+
         case rl::kill_selection: {
             bool newv = (rls.last_cmd != rl::kill_selection);
             size_t start, len;
@@ -3827,9 +3834,9 @@ size_t reader_get_cursor_pos() {
 bool reader_get_selection(size_t *start, size_t *len) {
     bool result = false;
     reader_data_t *data = current_data_or_null();
-    if (data != nullptr && data->sel_active) {
-        *start = data->sel_start_pos;
-        *len = std::min(data->sel_stop_pos, data->command_line.size()) - data->sel_start_pos;
+    if (data != nullptr && data->selection.has_value()) {
+        *start = data->selection->start;
+        *len = std::min(data->selection->stop, data->command_line.size()) - data->selection->start;
         result = true;
     }
     return result;

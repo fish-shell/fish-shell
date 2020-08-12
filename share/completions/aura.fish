@@ -5,18 +5,18 @@ set -l listall "(__fish_print_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
 set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
-set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s A -s B -s C -s L -s M -s O database query sync remove upgrade deptest aursync save downgrade viewlog abssync orphans'
+set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s A -s B -s C -s L -s O -s P database query sync remove upgrade deptest aursync save downgrade viewlog orphans analysis'
 set -l database '__fish_contains_opt -s D database'
 set -l query '__fish_contains_opt -s Q query'
 set -l remove '__fish_contains_opt -s R remove'
 set -l sync '__fish_contains_opt -s S sync'
 set -l upgrade '__fish_contains_opt -s U upgrade'
 set -l aur '__fish_contains_opt -s A aursync'
-set -l abs '__fish_contains_opt -s M abssync'
 set -l save '__fish_contains_opt -s B save'
 set -l downgrade '__fish_contains_opt -s C downgrade'
 set -l orphans '__fish_contains_opt -s O orphans'
 set -l logfile '__fish_contains_opt -s L viewlog'
+set -l analysis '__fish_contains_opt -s P analysis'
 set -l search '__fish_contains_opt -s s search'
 
 # By default fish expands the arguments with the option which is not desired
@@ -30,15 +30,13 @@ complete -c aura -s B -f -l save -n $noopt -d 'Save and restore package state'
 complete -c aura -s C -f -l downgrade -n $noopt -d 'Package cache actions'
 complete -c aura -s D -f -l database -n $noopt -d 'Modify the package database'
 complete -c aura -s L -f -l viewlog -n $noopt -d 'Pacman log actions'
-complete -c aura -s M -f -l abssync -n $noopt -d 'Build packages from ABS'
 complete -c aura -s O -f -l orphans -n $noopt -d 'Operate on orphan packages'
+complete -c aura -s P -f -l analysis -n $noopt -d 'Analyse a PKGBUILD for security flaws'
 complete -c aura -s Q -f -l query -n $noopt -d 'Query the package database'
 complete -c aura -s R -f -l remove -n $noopt -d 'Remove packages from the system'
 complete -c aura -s S -f -l sync -n $noopt -d 'Synchronize packages'
 complete -c aura -s T -f -l deptest -n $noopt -d 'Check dependencies'
 complete -c aura -s U -f -l upgrade -n $noopt -d 'Upgrade or add a local package'
-complete -c aura -l auradebug -d 'Show settings while running'
-complete -c aura -l no-pp -d 'Do not use powerpill'
 complete -c aura -l languages -d 'Show available languages'
 complete -c aura -l viewconf -d 'View pacman.conf'
 complete -c aura -s V -f -l version -d 'Display version and exit'
@@ -107,7 +105,6 @@ complete -c aura -n $aur -s w -l downloadonly -d 'Download the source tarball'
 complete -c aura -n $aur -l aurignore -r -d 'Ignore given comma-separated packages'
 complete -c aura -n $aur -l build -r -d 'Specify a build location'
 complete -c aura -n $aur -l builduser -r -d 'User to build as'
-complete -c aura -n $aur -l custom -d 'Run customizepkg before build'
 complete -c aura -n $aur -l devel -d 'Include -git/-svn/etc packages'
 complete -c aura -n $aur -l hotedit -d 'Prompt for PKGBUILD editing'
 complete -c aura -n $aur -l ignorearch -d 'Ignore architecture checking'
@@ -128,14 +125,13 @@ complete -c aura -n $downgrade -s s -l search -r -d 'Search via regex'
 complete -c aura -n $logfile -s i -l info -d 'Show package history'
 complete -c aura -n $logfile -s s -l search -r -d 'Search via regex'
 
-# ABS options
-complete -c aura -n $abs -s s -l search -r -d 'Search ABS by regex'
-complete -c aura -n $abs -s c -l clean -d 'Delete local ABS tree'
-complete -c aura -n $abs -s y -l refresh -d 'Download fresh copy of the package list'
-complete -c aura -n $abs -s t -l treesync -d 'Sync the given to local ABS tree'
-complete -c aura -n $abs -l absdeps -d 'Download fresh copy of the package list'
+# Analysis options
+complete -c aura -n $analysis -s f -l file -d 'Analyse a given PKGBUILD'
+complete -c aura -n $analysis -s d -l dir -d 'Analyse a PKGBUILD within a given directory'
+complete -c aura -n $analysis -s a -l audit -d 'Analyse the PKGBUILDs of all installed AUR packages'
 
 # Orphan options
+complete -c aura -n $orphans -s a -l adopt -d 'Mark a package as being explicitly installed'
 complete -c aura -n $orphans -s j -l abandon -d 'Uninstall orphan packages'
 
 # Query options
@@ -169,3 +165,4 @@ complete -c aura -n "$sync; and $argument" -xa "$listall $listgroups"
 # Upgrade options
 complete -c aura -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.xz)' -d 'Package file'
 complete -c aura -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.gz)' -d 'Package file'
+complete -c aura -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.zst)' -d 'Package file'

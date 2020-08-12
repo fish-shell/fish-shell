@@ -15,6 +15,7 @@ from time import sleep
 import os
 import signal
 import subprocess
+import sys
 
 expect_prompt()
 

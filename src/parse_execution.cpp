@@ -226,11 +226,8 @@ process_type_t parse_execution_context_t::process_type_for_command(
 }
 
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
-    if (ctx.check_cancel() || shell_is_exiting()) {
+    if (this->cancel_signal || ctx.check_cancel() || shell_is_exiting()) {
         return end_execution_reason_t::cancelled;
-    }
-    if (nullptr == parser) {
-        return none();
     }
     const auto &ld = parser->libdata();
     if (ld.returning) {
@@ -1341,6 +1338,14 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         // Actually execute the job.
         if (!exec_job(*this->parser, job, block_io)) {
             remove_job(*this->parser, job.get());
+        }
+
+        // Check if the job's group got a SIGINT or SIGQUIT.
+        // If so we need to mark that ourselves so as to cancel the rest of the execution.
+        // See #7259.
+        int cancel_sig = job->group->get_cancel_signal();
+        if (cancel_sig == SIGINT || cancel_sig == SIGQUIT) {
+            this->cancel_signal = cancel_sig;
         }
 
         // Update universal variables on external conmmands.

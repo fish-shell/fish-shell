@@ -45,6 +45,10 @@ class parse_execution_context_t {
     size_t cached_lineno_offset = 0;
     int cached_lineno_count = 0;
 
+    /// If a process dies due to a SIGINT or SIGQUIT, then store the corresponding signal here.
+    /// Note this latches to SIGINT or SIGQUIT; it is never cleared.
+    int cancel_signal{0};
+
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     io_chain_t block_io{};
@@ -159,6 +163,9 @@ class parse_execution_context_t {
 
     /// Returns the source offset, or -1.
     int get_current_source_offset() const;
+
+    /// \return the signal that triggered cancellation, or 0 if none.
+    int get_cancel_signal() const { return cancel_signal; }
 
     /// Returns the source string.
     const wcstring &get_source() const { return pstree->src; }

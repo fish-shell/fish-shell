@@ -537,6 +537,7 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
     }
 
     end_execution_reason_t result = end_execution_reason_t::ok;
+    if (trace_enabled(*parser)) trace_argv(*parser, L"switch", {switch_value_expanded});
     block_t *sb = parser->push_block(block_t::switch_block());
 
     // Expand case statements.
@@ -577,6 +578,7 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
     }
 
     parser->pop_block(sb);
+    trace_if_enabled(*parser, L"end switch");
     return result;
 }
 

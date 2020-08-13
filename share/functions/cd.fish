@@ -3,10 +3,17 @@
 #
 function cd --description "Change directory"
     set -l MAX_DIR_HIST 25
+    set -l options h/help L/logical P/physical
+    argparse -n cd --exclusive L,P --max-args=1 $options -- $argv
+    or return
 
-    if test (count $argv) -gt (test "$argv[1]" = "--" && echo 2 || echo 1)
-        printf "%s\n" (_ "Too many args for cd command")
-        return 1
+    # The argparse removes the options from argv. When the option -L is uses
+    # it's not necessary to do something as fish always resolves the directory
+    # Like POSIX it's the default option for cd.
+
+    # Drop the argument and use the realpath
+    if set -q _flag_P
+        set argv (realpath $argv)
     end
 
     # Skip history in subshells.

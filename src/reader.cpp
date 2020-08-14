@@ -2398,18 +2398,6 @@ void reader_data_t::import_history_if_necessary() {
 
 bool shell_is_exiting() { return should_exit(); }
 
-void reader_bg_job_warning(const job_list_t &jobs) {
-    std::fputws(_(L"There are still jobs active:\n"), stdout);
-    std::fputws(_(L"\n   PID  Command\n"), stdout);
-
-    for (const auto &j : jobs) {
-        std::fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
-    }
-    fputws(L"\n", stdout);
-    fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
-    fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
-}
-
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop(reader_data_t *data) {

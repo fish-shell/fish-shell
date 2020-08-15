@@ -502,9 +502,11 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Color is the syntax highlighting for buff.  The format is that color[i] is the
     /// classification (according to the enum in highlight.h) of buff[i].
     std::vector<highlight_spec_t> colors;
+    /// If set, a key binding or the 'exit' command has asked us to exit our read loop.
+    bool exit_loop_requested{false};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
     /// ^D twice.
-    bool prev_end_loop{false};
+    bool did_warn_for_bg_jobs{false};
     /// The current contents of the top item in the kill ring.
     wcstring kill_item;
     /// Keep track of whether any internal code has done something which is known to require a
@@ -659,44 +661,27 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_cc[VSTART] = disabling_char;
 }
 
-/// Tracks a currently pending exit. This may be manipulated from a signal handler.
+/// If set, we are committed to exiting. This latches to true.
+static relaxed_atomic_t<bool> s_exit_forced{false};
 
-/// Whether we should exit the current reader loop.
-static relaxed_atomic_bool_t s_end_current_loop{false};
-
-/// Whether we should exit all reader loops. This is set in response to a HUP signal and it
-/// latches (once set it is never cleared). This should never be reset to false.
-static volatile sig_atomic_t s_exit_forced{false};
-static volatile sig_atomic_t s_pending_exit_forced{false};
+/// If set, SIGHUP has been received. This latches to true.
+/// This is set from a signal handler.
+static volatile sig_atomic_t s_sighup_received{false};
 
 void reader_sighup() {
-    // Beware, we are in a signal handler
-    s_pending_exit_forced = true;
+    // Beware, we may be in a signal handler.
+    s_sighup_received = true;
 }
 
-static bool should_exit(parser_t *parser = nullptr) {
+void redirect_tty_after_sighup() {
+    // If we have received SIGHUP, redirect the tty to avoid a user script triggering SIGTTIN or
+    // SIGTTOU.
+    assert(s_sighup_received && "SIGHUP not received");
     static bool s_tty_redirected = false;
-    // To make fish_exit safe to use in the event of SIGHUP, first redirect the tty
-    // to avoid a user script triggering SIGTTIN or SIGTTOU.
-    if (!s_tty_redirected && s_pending_exit_forced) {
-        redirect_tty_output();
+    if (!s_tty_redirected) {
         s_tty_redirected = true;
+        redirect_tty_output();
     }
-
-    // s_exit_forced cannot be unset and prevents all future execution. Since we might
-    // still have to run the fish_exit handlers, we first set s_pending_exit_force and
-    // then translate that into s_exit_forced here, after running whatever we need to
-    // guarantee runs.
-    if (parser && s_pending_exit_forced) {
-        s_pending_exit_forced = false;
-        // If we don't call fish_exit here, it'll be called later but won't be able to
-        // execute anything as our loop will be blocked from running.
-        event_fire_generic(*parser, L"fish_exit");
-        // Only now can the flag be set
-        s_exit_forced = true;
-    }
-
-    return s_exit_forced || s_end_current_loop;
 }
 
 /// Give up control of terminal.
@@ -1159,16 +1144,6 @@ void restore_term_mode() {
     if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == EIO) {
         redirect_tty_output();
     }
-}
-
-/// Exit the current reader loop. This may be invoked from a signal handler.
-void reader_set_end_loop(bool flag) { s_end_current_loop = flag; }
-
-/// Called only when we're not able to read/write to our standard input/output,
-/// namely EOF and SIGHUP.
-void reader_force_exit() {
-    // Beware, we may be in a signal handler.
-    s_pending_exit_forced = true;
 }
 
 /// Indicates if the given command char ends paging.
@@ -2367,7 +2342,6 @@ void reader_pop() {
     if (new_reader == nullptr) {
         reader_interactive_destroy();
     } else {
-        s_end_current_loop = false;
         s_reset_abandoning_line(&new_reader->screen, termsize_last().width);
     }
 }
@@ -2396,33 +2370,38 @@ void reader_data_t::import_history_if_necessary() {
     }
 }
 
-bool shell_is_exiting() { return should_exit(); }
+/// Check if we have background jobs that we have not warned about.
+/// If so, print a warning and return true. Otherwise return false.
+static bool try_warn_on_background_jobs(reader_data_t *data) {
+    ASSERT_IS_MAIN_THREAD();
+    // Have we already warned?
+    if (data->did_warn_for_bg_jobs) return false;
+    // Are we the top-level reader?
+    if (reader_data_stack.size() > 1) return false;
+    // Do we have background jobs?
+    auto bg_jobs = jobs_requiring_warning_on_exit(data->parser());
+    if (bg_jobs.empty()) return false;
+    // Print the warning!
+    print_exit_warning_for_jobs(bg_jobs);
+    data->did_warn_for_bg_jobs = true;
+    return true;
+}
 
-/// This function is called when the main loop notices that end_loop has been set while in
-/// interactive mode. It checks if it is ok to exit.
-static void handle_end_loop(reader_data_t *data) {
-    parser_t &parser = data->parser();
-    if (!reader_exit_forced()) {
-        for (const auto &b : parser.blocks()) {
-            if (b.type() == block_type_t::breakpoint) {
-                // We're executing within a breakpoint so we do not want to terminate the shell and
-                // kill background jobs.
-                return;
-            }
-        }
+/// Check if we should exit the reader loop.
+/// \return true if we should exit.
+static bool check_exit_loop_maybe_warning(reader_data_t *data) {
+    // sighup always forces exit.
+    if (s_sighup_received) return true;
 
-        // Perhaps print a warning before exiting.
-        auto bg_jobs = jobs_requiring_warning_on_exit(parser);
-        if (!data->prev_end_loop && !bg_jobs.empty()) {
-            print_exit_warning_for_jobs(bg_jobs);
-            reader_set_end_loop(false);
-            data->prev_end_loop = true;
-            return;
+    // Check if an exit is requested.
+    if (data->exit_loop_requested) {
+        if (try_warn_on_background_jobs(data)) {
+            data->exit_loop_requested = false;
+            return false;
         }
+        return true;
     }
-
-    // Kill remaining jobs before exiting.
-    hup_jobs(parser.jobs());
+    return false;
 }
 
 static bool selection_is_at_top(const reader_data_t *data) {
@@ -2448,6 +2427,7 @@ uint64_t reader_status_count() { return status_count; }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(parser_t &parser) {
+    ASSERT_IS_MAIN_THREAD();
     reader_config_t conf;
     conf.complete_ok = true;
     conf.highlight_ok = true;
@@ -2470,43 +2450,62 @@ static int read_i(parser_t &parser) {
     std::shared_ptr<reader_data_t> data =
         reader_push_ret(parser, history_session_id(parser.vars()), std::move(conf));
     data->import_history_if_necessary();
-    data->prev_end_loop = false;
 
-    while (!shell_is_exiting()) {
+    while (!check_exit_loop_maybe_warning(data.get())) {
         run_count++;
 
-        // Put buff in temporary string and clear buff, so that we can handle a call to
-        // reader_set_buffer during evaluation.
         maybe_t<wcstring> tmp = reader_readline(0);
-
-        if (should_exit(&parser)) {
-            handle_end_loop(data.get());
-        } else if (tmp && !tmp->empty()) {
+        if (tmp && !tmp->empty()) {
             const wcstring command = tmp.acquire();
             data->update_buff_pos(&data->command_line, 0);
             data->command_line.clear();
             data->command_line_changed(&data->command_line);
-            wcstring_list_t argv(1, command);
+            wcstring_list_t argv{command};
             event_fire_generic(parser, L"fish_preexec", &argv);
             auto eval_res = reader_run_command(parser, command);
             signal_clear_cancel();
             if (!eval_res.no_status) {
                 status_count++;
             }
+
+            // If the command requested an exit, then process it now and clear it.
+            data->exit_loop_requested |= parser.libdata().exit_current_script;
+            parser.libdata().exit_current_script = false;
+
             event_fire_generic(parser, L"fish_postexec", &argv);
             // Allow any pending history items to be returned in the history array.
             if (data->history) {
                 data->history->resolve_pending();
             }
-            if (should_exit(&parser)) {
-                handle_end_loop(data.get());
-            } else {
-                data->prev_end_loop = false;
+
+            bool already_warned = data->did_warn_for_bg_jobs;
+            if (check_exit_loop_maybe_warning(data.get())) {
+                break;
+            }
+            if (already_warned) {
+                // We had previously warned the user and they ran another command.
+                // Reset the warning.
+                data->did_warn_for_bg_jobs = false;
             }
         }
     }
-
     reader_pop();
+
+    // If we got SIGHUP, ensure the tty is redirected.
+    if (s_sighup_received) {
+        // If we are the top-level reader, then we translate SIGHUP into exit_forced.
+        redirect_tty_after_sighup();
+    }
+
+    // If we are the last reader, then kill remaining jobs before exiting.
+    if (reader_data_stack.size() == 0) {
+        // Once s_exit_forced is set, nothing more can be executed,
+        // so send the exit event now.
+        event_fire_generic(parser, L"fish_exit");
+        s_exit_forced = true;
+        hup_jobs(parser.jobs());
+    }
+
     return 0;
 }
 
@@ -2914,7 +2913,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (el->position() < el->size()) {
                 delete_char(false /* backward */);
             } else if (c == rl::delete_or_exit && el->empty()) {
-                reader_set_end_loop(true);
+                exit_loop_requested = true;
+                check_exit_loop_maybe_warning(this);
             }
             break;
         }
@@ -3559,7 +3559,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
     }
 
-    while (!rls.finished && !should_exit(&parser())) {
+    while (!rls.finished && !check_exit_loop_maybe_warning(this)) {
         // Perhaps update the termsize. This is cheap if it has not changed.
         update_termsize();
 
@@ -3585,7 +3585,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             repaint_if_needed();
             continue;
         } else if (event_needing_handling->is_eof()) {
-            reader_force_exit();
+            reader_sighup();
             continue;
         }
         assert((event_needing_handling->is_char() || event_needing_handling->is_readline()) &&
@@ -3741,7 +3741,7 @@ int reader_reading_interrupted() {
     int res = reader_test_and_clear_interrupted();
     reader_data_t *data = current_data_or_null();
     if (res && data && data->conf.exit_on_interrupt) {
-        reader_set_end_loop(true);
+        data->exit_loop_requested = true;
         // We handled the interrupt ourselves, our caller doesn't need to handle it.
         return 0;
     }
@@ -3912,7 +3912,7 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
     res = interactive ? read_i(parser) : read_ni(parser, fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
-    reader_set_end_loop(false);
+    parser.libdata().exit_current_script = false;
 
     return res;
 }

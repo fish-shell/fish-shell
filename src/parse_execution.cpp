@@ -226,10 +226,13 @@ process_type_t parse_execution_context_t::process_type_for_command(
 }
 
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
-    if (this->cancel_signal || ctx.check_cancel() || shell_is_exiting()) {
+    if (this->cancel_signal || ctx.check_cancel() || reader_exit_forced()) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();
+    if (ld.exit_current_script) {
+        return end_execution_reason_t::cancelled;
+    }
     if (ld.returning) {
         return end_execution_reason_t::control_flow;
     }

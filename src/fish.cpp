@@ -490,7 +490,7 @@ int main(int argc, char **argv) {
                                                argv + my_optind);
         }
         res = run_command_list(parser, &opts.batch_cmds, {});
-        reader_set_end_loop(false);
+        parser.libdata().exit_current_script = false;
     } else if (my_optind == argc) {
         // Implicitly interactive mode.
         res = reader_read(parser, STDIN_FILENO, {});

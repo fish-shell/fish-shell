@@ -118,14 +118,8 @@ class editable_line_t {
 /// The fd is not closed.
 int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 
-/// Tell the shell whether it should exit after the currently running command finishes.
-void reader_set_end_loop(bool flag);
-
 /// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
 void reader_sighup();
-
-/// Mark that the reader should forcibly exit. This may be invoked from a signal handler.
-void reader_force_exit();
 
 /// Check that the reader is in a sane state.
 void reader_sanity_check();
@@ -243,9 +237,6 @@ void reader_push(parser_t &parser, const wcstring &history_name, reader_config_t
 
 /// Return to previous reader environment.
 void reader_pop();
-
-/// Returns true if the shell is exiting, 0 otherwise.
-bool shell_is_exiting();
 
 /// The readers interrupt signal handler. Cancels all currently running blocks.
 void reader_handle_sigint();

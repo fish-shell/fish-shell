@@ -393,7 +393,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
         for (const auto &proc : j->processes) {
             if (!j->can_reap(proc)) continue;
 
-            if (proc->pid) {
+            if (proc->pid > 0) {
                 // Reaps with a pid.
                 reapgens.set_min_from(topic_t::sigchld, proc->gens_);
                 reapgens.set_min_from(topic_t::sighupint, proc->gens_);
@@ -421,7 +421,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
             // Does this proc have a pid that is reapable?
             if (proc->pid <= 0 || !j->can_reap(proc)) continue;
 
-            // Update the signal hup/int gen.
+            // Always update the signal hup/int gen.
             proc->gens_.sighupint = reapgens.sighupint;
 
             // Nothing to do if we did not get a new sigchld.
@@ -460,6 +460,13 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
         for (const auto &proc : j->processes) {
             // Does this proc have an internal process that is reapable?
             if (!proc->internal_proc_ || !j->can_reap(proc)) continue;
+
+            // Always update the signal hup/int gen.
+            proc->gens_.sighupint = reapgens.sighupint;
+
+            // Nothing to do if we did not get a new internal exit.
+            if (proc->gens_.internal_exit == reapgens.internal_exit) continue;
+            proc->gens_.internal_exit = reapgens.internal_exit;
 
             // Has the process exited?
             if (!proc->internal_proc_->exited()) continue;

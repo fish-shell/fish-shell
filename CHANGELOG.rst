@@ -62,7 +62,8 @@ Scripting improvements
 -  Computed ("electric") variables such as ``status`` are now only global in scope, so ``set -Uq status`` returns false (#7032).
 -  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (#6944).
 -  A new ``fish_posterror`` event fires when attempting to execute a command with syntax errors (#6880).
-- ``fish_indent`` now removes spurious quotes in simple cases (#6722).
+- ``fish_indent`` now removes spurious quotes in simple cases (#6722)
+   and learned a ``--check`` option to just check if a file is indented correctly (#7251).
 - ``pushd`` only adds a directory to the stack if changing to it was successful.
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at

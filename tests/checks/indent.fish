@@ -379,3 +379,13 @@ echo 'echo \
 echo' | $fish_indent --check
 echo $status
 #CHECK: 0
+
+echo 'if true;
+end' | $fish_indent
+#CHECK: if true{{$}}
+#CHECK: end
+
+echo 'if true; and false; or true
+end' | $fish_indent --check
+echo $status
+#CHECK: 0

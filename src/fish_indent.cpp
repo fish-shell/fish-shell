@@ -285,11 +285,13 @@ struct pretty_printer_t {
     // Return sorted list of semi-preferring semi_nl nodes.
     std::vector<uint32_t> compute_preferred_semi_locations() const {
         std::vector<uint32_t> result;
-        auto mark_as_semi = [&result](const optional_t<semi_nl_t> &n) {
-            if (n && n->has_source()) result.push_back(n->range.start);
+        auto mark_semi_from_input = [&](const optional_t<semi_nl_t> &n) {
+            if (n && n->has_source() && substr(n->range) == L";") {
+                result.push_back(n->range.start);
+            }
         };
 
-        // andor_job_lists get semis if they are short enough.
+        // andor_job_lists get semis if the input uses semis.
         for (const auto &node : ast) {
             // See if we have a condition and an andor_job_list.
             const optional_t<semi_nl_t> *condition = nullptr;
@@ -302,20 +304,12 @@ struct pretty_printer_t {
                 andors = &wc->andor_tail;
             }
 
-            // This describes the heuristic of when to place and_or job lists on separate lines.
-            // That is, do we want:
-            //    if true; and false
-            //  or do we want:
-            //    if true
-            //        and false
-            // Lists with two or fewer get semis.
-            // Note the effective count is then three, because this list does not include the main
-            // condition.
-            if (andors && andors->count() > 0 && andors->count() <= 2) {
-                if (condition) mark_as_semi(*condition);
+            // If there is no and-or tail then we always use a newline.
+            if (andors && andors->count() > 0) {
+                if (condition) mark_semi_from_input(*condition);
                 // Mark all but last of the andor list.
                 for (uint32_t i = 0; i + 1 < andors->count(); i++) {
-                    mark_as_semi(andors->at(i)->job.semi_nl);
+                    mark_semi_from_input(andors->at(i)->job.semi_nl);
                 }
             }
         }

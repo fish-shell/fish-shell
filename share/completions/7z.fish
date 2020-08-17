@@ -1,16 +1,16 @@
 # Completions for p7zip
 
 # Commands
-complete -f -c 7z -n __fish_use_subcommand -a a -d "Add"
-complete -f -c 7z -n __fish_use_subcommand -a b -d "Benchmark"
-complete -f -c 7z -n __fish_use_subcommand -a d -d "Delete"
-complete -f -c 7z -n __fish_use_subcommand -a e -d "Extract"
-complete -f -c 7z -n __fish_use_subcommand -a h -d "Hash"
+complete -f -c 7z -n __fish_use_subcommand -a a -d Add
+complete -f -c 7z -n __fish_use_subcommand -a b -d Benchmark
+complete -f -c 7z -n __fish_use_subcommand -a d -d Delete
+complete -f -c 7z -n __fish_use_subcommand -a e -d Extract
+complete -f -c 7z -n __fish_use_subcommand -a h -d Hash
 complete -f -c 7z -n __fish_use_subcommand -a i -d "Show information about supported formats"
-complete -f -c 7z -n __fish_use_subcommand -a l -d "List"
-complete -f -c 7z -n __fish_use_subcommand -a rn -d "Rename"
-complete -f -c 7z -n __fish_use_subcommand -a t -d "Test"
-complete -f -c 7z -n __fish_use_subcommand -a u -d "Update"
+complete -f -c 7z -n __fish_use_subcommand -a l -d List
+complete -f -c 7z -n __fish_use_subcommand -a rn -d Rename
+complete -f -c 7z -n __fish_use_subcommand -a t -d Test
+complete -f -c 7z -n __fish_use_subcommand -a u -d Update
 complete -f -c 7z -n __fish_use_subcommand -a x -d "Extract with full paths"
 
 # Switches

@@ -88,6 +88,6 @@ complete -c mpc -n "__fish_seen_subcommand_from add insert" -a "(mpc listall)"
 
 complete -c mpc -n "__fish_seen_subcommand_from playlist" -a "(mpc lsplaylists)"
 complete -c mpc -n "__fish_seen_subcommand_from consume random repeat single" -a "on off"
-complete -c mpc -n "__fish_seen_subcommand_from replaygain" -a "off track album" 
+complete -c mpc -n "__fish_seen_subcommand_from replaygain" -a "off track album"
 
 # TODO: sticker subcommand

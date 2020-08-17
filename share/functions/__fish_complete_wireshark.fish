@@ -34,7 +34,7 @@ function __fish_tshark_decode_as
     else if string match -rq -- '(==|,)' $tok
         set -l tok_no_comma (string replace -r -- ',.*$' '' $tok)
         command tshark -d (string replace -r -- '^-d' '' $tok) 2>|
-        string replace -rf -- "^\t(\S+) \(?([^\)]*)\)?\$" "$tok_no_comma,\$1\t\$2"
+            string replace -rf -- "^\t(\S+) \(?([^\)]*)\)?\$" "$tok_no_comma,\$1\t\$2"
     else
         command tshark -d . 2>| string replace -rf -- "^\t(\S+) \(?([^\)]*)\)?\$" '$1==\t$2'
     end

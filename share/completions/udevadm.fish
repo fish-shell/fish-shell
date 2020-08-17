@@ -1,11 +1,11 @@
 set -l commands info trigger settle control monitor test test-builtin
-complete -c udevadm -n '__fish_is_first_token' -xa "$commands"
+complete -c udevadm -n __fish_is_first_token -xa "$commands"
 
 complete -c udevadm -s h -l help -d "Show help"
 complete -c udevadm -s V -l version -d "Show version info"
 
 # udevadm info
-set -l query_type "name\t'Name of device node'" "symlink\t'Pointing to node'" "path\t'sysfs device path'" "property\t'Device properties'" "all"
+set -l query_type "name\t'Name of device node'" "symlink\t'Pointing to node'" "path\t'sysfs device path'" "property\t'Device properties'" all
 complete -c udevadm -n '__fish_seen_subcommand_from info' -s q -l query -d "Query device information" -xa "$query_type"
 complete -c udevadm -n '__fish_seen_subcommand_from info' -s p -l path -d "sysfs device path" -f
 complete -c udevadm -n '__fish_seen_subcommand_from info' -s n -l name -d "Node or symlink name"

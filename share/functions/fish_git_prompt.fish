@@ -663,7 +663,8 @@ function __fish_git_prompt_set_char
     end
 
     if set -q argv[3]
-        and begin set -q __fish_git_prompt_show_informative_status
+        and begin
+            set -q __fish_git_prompt_show_informative_status
             or set -q __fish_git_prompt_use_informative_chars
         end
         set char $argv[3]

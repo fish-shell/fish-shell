@@ -112,20 +112,20 @@ function __fish_print_help --description "Print help message for the specified f
             end
         end
     end | string replace -ra '^       ' '' | ul | # post-process with `ul`, to interpret the old-style grotty escapes
-    begin
-        set -l pager less
-        set -q PAGER
-        and echo $PAGER | read -at pager
-        not isatty stdout
-        and set pager cat # cannot use a builtin here
-        # similar to man, but add -F to quit paging when the help output is brief (#6227)
-        set -xl LESS isrFX
-        # less options:
-        # -i (--ignore-case) search case-insensitively, like man
-        # -s (--squeeze-blank-lines) not strictly necessary since we already do that above
-        # -r (--raw-control-chars) to display bold, underline and colors
-        # -F (--quit-if-one-screen) to maintain the non-paging behavior for small outputs
-        # -X (--no-init) not sure if this is needed but git uses it
-        $pager
-    end
+        begin
+            set -l pager less
+            set -q PAGER
+            and echo $PAGER | read -at pager
+            not isatty stdout
+            and set pager cat # cannot use a builtin here
+            # similar to man, but add -F to quit paging when the help output is brief (#6227)
+            set -xl LESS isrFX
+            # less options:
+            # -i (--ignore-case) search case-insensitively, like man
+            # -s (--squeeze-blank-lines) not strictly necessary since we already do that above
+            # -r (--raw-control-chars) to display bold, underline and colors
+            # -F (--quit-if-one-screen) to maintain the non-paging behavior for small outputs
+            # -X (--no-init) not sure if this is needed but git uses it
+            $pager
+        end
 end

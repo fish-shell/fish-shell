@@ -255,7 +255,7 @@ function __fish_print_packages
                 end
             end
             # prints: <package name>	Package
-            xbps-query -Rsl | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' > $cache_file &
+            xbps-query -Rsl | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' >$cache_file &
             return
         else
             xbps-query -l | sed 's/^.. \([^ ]*\)-.* .*/\1/' # TODO: actually put package versions in tab for locally installed packages

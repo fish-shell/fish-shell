@@ -25,7 +25,7 @@ function fish_prompt --description 'Write out the prompt'
     end
 
     # Write pipestatus
-    set -l bold_flag '--bold'
+    set -l bold_flag --bold
     if test $__fish_prompt_status_generation = $status_generation
         set bold_flag
     end

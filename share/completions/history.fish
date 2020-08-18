@@ -1,6 +1,8 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
 set -l __fish_history_all_commands search delete save merge clear
 
+complete -c history -s h -l help -d "Display help and exit"
+
 # Note that these options are only valid with the "search" and "delete" subcommands.
 complete -c history -n '__fish_seen_subcommand_from search delete' \
     -s p -l prefix -d "Match items beginning with the string"
@@ -12,8 +14,14 @@ complete -c history -n '__fish_seen_subcommand_from search delete' \
     -s t -l show-time -d "Output with timestamps"
 complete -c history -n '__fish_seen_subcommand_from search delete' \
     -s C -l case-sensitive -d "Match items in a case-sensitive manner"
+
+# Note that these options are only valid with the "search" subcommand.
 complete -c history -n '__fish_seen_subcommand_from search' \
     -s n -l max -d "Limit output to the first 'n' matches" -x
+complete -c history -n '__fish_seen_subcommand_from search' \
+    -s z -l null -d "Terminate entries with NUL character"
+complete -c history -n '__fish_seen_subcommand_from search' \
+    -s R -l reverse -d "Output the oldest results first" -x
 
 # We don't include a completion for the "save" subcommand because it should not be used
 # interactively.

@@ -224,7 +224,13 @@ How do I change the greeting message?
 -------------------------------------
 Change the value of the variable ``fish_greeting`` or create a ``fish_greeting`` function. For example, to remove the greeting use::
 
-    set fish_greeting
+    set -U fish_greeting
+
+Or if you prefer not to use a universal variable, use::
+
+    set -g fish_greeting
+
+in config.fish.
 
 Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------

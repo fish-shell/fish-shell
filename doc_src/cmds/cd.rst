@@ -24,6 +24,18 @@ Fish also ships a wrapper function around the builtin ``cd`` that understands ``
 
 As a special case, ``cd .`` is equivalent to ``cd $PWD``, which is useful in cases where a mountpoint has been recycled or a directory has been removed and recreated.
 
+Options
+-------
+
+The following options are available:
+
+- ``-L`` or ``--logical`` Force symoblic links to be followed.
+- ``-P`` or ``--physical`` Use the physical directory structure without following symbolic.
+
+
+The default is to follow symbolic links, as if ``-L`` were specified.
+
+
 Examples
 --------
 
@@ -31,7 +43,7 @@ Examples
 
     cd
     # changes the working directory to your home directory.
-    
+
     cd /usr/src/fish-shell
     # changes the working directory to /usr/src/fish-shell
 

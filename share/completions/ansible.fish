@@ -6,7 +6,7 @@ complete -c ansible -s D -l diff -f -d "Show the differences in files and templa
 complete -c ansible -s e -l extra-vars -r -d "Set additional variables as key=value or YAML/JSON"
 complete -c ansible -s f -l forks -a "(seq 0 100)" -d "Number of parallel processes to use (default=5)"
 complete -c ansible -s h -l help -d "Shows a help message"
-complete -c ansible -s i -l inventory -r -d "Specify inventory host path (default=/etc/ansible/hosts) or comma separated host list."
+complete -c ansible -s i -l inventory -r -d "Specify inventory host path or comma separated host list"
 complete -c ansible -s l -l limit -r -d "Further limit selected hosts to an additional pattern"
 complete -c ansible -l limit-hosts -r -d "List all matching hosts"
 complete -c ansible -s m -l module-name -r -d "Module name to execute (default=command)"

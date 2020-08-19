@@ -25,6 +25,8 @@ The following options are available:
 
 - ``-e``, Enable interpretation of backslash escapes
 
+Unlike other shells, this echo accepts ``--`` to signal the end of the options.
+
 Escape Sequences
 ----------------
 
@@ -59,15 +61,15 @@ Example
 
 ::
 
-    echo 'Hello World'
+   > echo 'Hello World'
+   Hello World
 
-Print hello world to stdout
+   > echo -e 'Top\\nBottom'
+   Top
+   Bottom
 
-::
-
-    echo -e 'Top\\nBottom'
-
-Print Top and Bottom on separate lines, using an escape sequence
+   > echo -- -n
+   -n
 
 See Also
 --------

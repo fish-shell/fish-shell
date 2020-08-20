@@ -37,6 +37,78 @@ wcstring generation_list_t::describe() const {
     return result;
 }
 
+binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
+    // sem_init always fails with ENOSYS on Mac and has an annoying deprecation warning.
+#ifndef __APPLE__
+    sem_ok_ = (0 == sem_init(&sem_, 0, 0));
+#endif
+    if (!sem_ok_) {
+        auto pipes = make_autoclose_pipes({});
+        assert(pipes.has_value() && "Failed to make pubsub pipes");
+        pipes_ = pipes.acquire();
+
+#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
+        DIE_ON_FAILURE(make_fd_nonblocking(pipes_.read.fd()));
+#endif
+    }
+}
+
+binary_semaphore_t::~binary_semaphore_t() {
+#ifndef __APPLE__
+    if (sem_ok_) (void)sem_destroy(&sem_);
+#endif
+}
+
+void binary_semaphore_t::die(const wchar_t *msg) const {
+    wperror(msg);
+    DIE("unexpected failure");
+}
+
+void binary_semaphore_t::post() {
+    if (sem_ok_) {
+        int res = sem_post(&sem_);
+        // sem_post is non-interruptible.
+        if (res < 0) die(L"sem_post");
+    } else {
+        // Write exactly one byte.
+        ssize_t ret;
+        do {
+            const uint8_t v = 0;
+            ret = write(pipes_.write.fd(), &v, sizeof v);
+        } while (ret < 0 && errno == EINTR);
+        if (ret < 0) die(L"write");
+    }
+}
+
+void binary_semaphore_t::wait() {
+    if (sem_ok_) {
+        int res;
+        do {
+            res = sem_wait(&sem_);
+        } while (res < 0 && errno == EINTR);
+        // Other errors here are very unexpected.
+        if (res < 0) die(L"sem_wait");
+    } else {
+        int fd = pipes_.read.fd();
+#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
+        // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read() call
+        // until data is available (that is, fish would use 100% cpu while waiting for processes).
+        // The select prevents that.
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+        (void)select(fd + 1, &fds, nullptr, nullptr, nullptr /* timeout */);
+#endif
+        // We must read exactly one byte.
+        for (;;) {
+            uint8_t ignored;
+            auto amt = read(fd, &ignored, sizeof ignored);
+            if (amt == 1) break;
+            if (amt < 0 && errno != EINTR) die(L"read");
+        }
+    }
+}
+
 /// Implementation of the principal monitor. This uses new (and leaks) to avoid registering a
 /// pointless at-exit handler for the dtor.
 static topic_monitor_t *const s_principal = new topic_monitor_t();
@@ -47,21 +119,7 @@ topic_monitor_t &topic_monitor_t::principal() {
     return *s_principal;
 }
 
-topic_monitor_t::topic_monitor_t() {
-    // Set up our pipes. Assert it succeeds.
-    auto pipes = make_autoclose_pipes({});
-    assert(pipes.has_value() && "Failed to make pubsub pipes");
-    pipes_ = pipes.acquire();
-
-    // Make sure that our write side doesn't block, else we risk hanging in a signal handler.
-    // The read end must block to avoid spinning in await.
-    DIE_ON_FAILURE(make_fd_nonblocking(pipes_.write.fd()));
-
-#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
-    DIE_ON_FAILURE(make_fd_nonblocking(pipes_.read.fd()));
-#endif
-}
-
+topic_monitor_t::topic_monitor_t() = default;
 topic_monitor_t::~topic_monitor_t() = default;
 
 void topic_monitor_t::post(topic_t topic) {
@@ -94,14 +152,7 @@ void topic_monitor_t::post(topic_t topic) {
     // Check if we should wake up a thread because it was waiting.
     if (oldstatus & STATUS_NEEDS_WAKEUP) {
         std::atomic_thread_fence(std::memory_order_release);
-        ssize_t ret;
-        do {
-            // We must write exactly one byte.
-            // write() is async signal safe.
-            const uint8_t v = 0;
-            ret = write(pipes_.write.fd(), &v, sizeof v);
-        } while (ret < 0 && errno == EINTR);
-        // Ignore EAGAIN and other errors (which conceivably could occur during shutdown).
+        sema_.post();
     }
 }
 
@@ -190,28 +241,11 @@ generation_list_t topic_monitor_t::await_gens(const generation_list_t &input_gen
             // Note we no longer hold the lock.
             assert(gens == input_gens &&
                    "Generations should not have changed if we are the reader.");
-            int fd = pipes_.read.fd();
-#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
-            // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
-            // call until data is available (that is, fish would use 100% cpu while waiting for
-            // processes). The select prevents that.
-            fd_set fds;
-            FD_ZERO(&fds);
-            FD_SET(fd, &fds);
-            (void)select(fd + 1, &fds, nullptr, nullptr, nullptr /* timeout */);
-#endif
-            // We must read exactly one byte.
-            for (;;) {
-                uint8_t ignored;
-                auto amt = read(fd, &ignored, sizeof ignored);
-                if (amt == 1) break;
-                if (amt < 0 && errno != EINTR && errno != EINTR) {
-                    wperror(L"read");
-                    DIE("self-pipe read unexpected failure");
-                }
-            }
 
-            // We are finished reading. We must stop being the reader, and post on the condition
+            // Wait to be woken up.
+            sema_.wait();
+
+            // We are finished waiting. We must stop being the reader, and post on the condition
             // variable to wake up any other threads waiting for us to finish reading.
             auto data = data_.acquire();
             gens = data->current;

@@ -1,6 +1,8 @@
 #ifndef FISH_TOPIC_MONITOR_H
 #define FISH_TOPIC_MONITOR_H
 
+#include <semaphore.h>
+
 #include <array>
 #include <atomic>
 #include <bitset>
@@ -127,8 +129,48 @@ class generation_list_t {
         : sighupint(sighupint), sigchld(sigchld), internal_exit(internal_exit) {}
 };
 
+/// A simple binary semaphore.
+/// On systems that do not support unnamed semaphores (macOS in particular) this is built on top of
+/// a self-pipe. Note that post() must be async-signal safe.
+class binary_semaphore_t {
+   public:
+    binary_semaphore_t();
+    ~binary_semaphore_t();
+
+    /// Release a waiting thread.
+    void post();
+
+    /// Wait for a post.
+    /// This loops on EINTR.
+    void wait();
+
+   private:
+    // Print a message and exit.
+    void die(const wchar_t *msg) const;
+
+    // Whether our semaphore was successfully initialized.
+    bool sem_ok_{};
+
+    // The semaphore, if initalized.
+    sem_t sem_{};
+
+    // Pipes used to emulate a semaphore, if not initialized.
+    autoclose_pipes_t pipes_{};
+};
+
 /// The topic monitor class. This permits querying the current generation values for topics,
 /// optionally blocking until they increase.
+/// What we would like to write is that we have a set of topics, and threads wait for changes on a
+/// condition variable which is tickled in post(). But this can't work because post() may be called
+/// from a signal handler and condition variables are not async-signal safe.
+/// So instead the signal handler announces changes via a binary semaphore.
+/// In the wait case, what generally happens is:
+///   A thread fetches the generations, see they have not changed, and then decides to try to wait.
+///   It does so by atomically swapping in STATUS_NEEDS_WAKEUP to the status bits.
+///   If that succeeds, it waits on the binary semaphore. The post() call will then wake the thread
+///   up. If if failed, then either a post() call updated the status values (so perhaps there is a
+///   new topic post) or some other thread won the race and called wait() on the semaphore. Here our
+///   thread will wait on the data_notifier_ queue.
 class topic_monitor_t {
    private:
     using topic_bitmask_t = uint8_t;
@@ -139,6 +181,7 @@ class topic_monitor_t {
         generation_list_t current{};
 
         /// A flag indicating that there is a current reader.
+        /// The 'reader' is responsible for calling sema_.wait().
         bool has_reader{false};
     };
     owning_lock<data_t> data_{};
@@ -160,11 +203,10 @@ class topic_monitor_t {
     /// Note it is an error for this bit to be set and also any topic bit.
     static constexpr uint8_t STATUS_NEEDS_WAKEUP = 128;
 
-    /// Self-pipes used to communicate changes.
-    /// The writer is a signal handler.
-    /// "The reader" refers to a thread that wants to wait for changes. Only one thread can be the
-    /// reader at a given time.
-    autoclose_pipes_t pipes_;
+    /// Binary semaphore used to communicate changes.
+    /// If status_ is STATUS_NEEDS_WAKEUP, then a thread has commited to call wait() on our sema and
+    /// this must be balanced by the next call to post(). Note only one thread may wait at a time.
+    binary_semaphore_t sema_{};
 
     /// Apply any pending updates to the data.
     /// This accepts data because it must be locked.

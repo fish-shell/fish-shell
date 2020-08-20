@@ -138,7 +138,7 @@ class topic_monitor_t {
         /// The current values.
         generation_list_t current{};
 
-        /// Whether there is a thread currently reading from the notifier pipe.
+        /// A flag indicating that there is a current reader.
         bool has_reader{false};
     };
     owning_lock<data_t> data_{};
@@ -147,9 +147,18 @@ class topic_monitor_t {
     /// This is associated with data_'s mutex.
     std::condition_variable data_notifier_{};
 
-    /// The set of topics which have pending increments.
-    /// This is managed via atomics.
-    std::atomic<topic_bitmask_t> pending_updates_{};
+    /// A status value which describes our current state, managed via atomics.
+    /// Three possibilities:
+    ///    0:   no changed topics, no thread is waiting.
+    ///    128: no changed topics, some thread is waiting and needs wakeup.
+    ///    anything else: some changed topic, no thread is waiting.
+    ///  Note that if the msb is set (status == 128) no other bit may be set.
+    using status_bits_t = uint8_t;
+    std::atomic<uint8_t> status_{};
+
+    /// Sentinel status value indicating that a thread is waiting and needs a wakeup.
+    /// Note it is an error for this bit to be set and also any topic bit.
+    static constexpr uint8_t STATUS_NEEDS_WAKEUP = 128;
 
     /// Self-pipes used to communicate changes.
     /// The writer is a signal handler.

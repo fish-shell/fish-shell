@@ -125,10 +125,10 @@ enum class jump_precision_t { till, to };
 
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
 /// background threads to notice it and skip doing work that they would otherwise have to do.
-static std::atomic<unsigned> s_generation;
+static std::atomic<uint32_t> s_generation;
 
 /// Helper to get the generation count
-static inline unsigned read_generation_count() {
+static inline uint32_t read_generation_count() {
     return s_generation.load(std::memory_order_relaxed);
 }
 
@@ -136,7 +136,7 @@ static inline unsigned read_generation_count() {
 /// Crucially the operation context itself does not contain a parser.
 /// It is the caller's responsibility to ensure the environment lives as long as the result.
 operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
-                                   unsigned int generation_count) {
+                                   uint32_t generation_count) {
     cancel_checker_t cancel_checker = [generation_count] {
         // Cancel if the generation count changed.
         return generation_count != read_generation_count();
@@ -1432,7 +1432,7 @@ static bool may_add_to_history(const wcstring &commandline_prefix) {
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
     parser_t &parser, const wcstring &search_string, size_t cursor_pos, history_t *history) {
-    const unsigned int generation_count = read_generation_count();
+    const uint32_t generation_count = read_generation_count();
     auto vars = parser.vars().snapshot();
     const wcstring working_directory = vars->get_pwd_slash();
     // TODO: suspicious use of 'history' here
@@ -2242,7 +2242,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(parser_t 
                                                                        const wcstring &text,
                                                                        bool io_ok) {
     auto vars = parser.vars().snapshot();
-    unsigned generation_count = read_generation_count();
+    uint32_t generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
         if (text.empty()) return {};
         operation_context_t ctx = get_bg_context(vars, generation_count);

@@ -121,9 +121,6 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 /// Mark that we encountered SIGHUP and must (soon) exit. This is invoked from a signal handler.
 void reader_sighup();
 
-/// Check that the reader is in a sane state.
-void reader_sanity_check();
-
 /// Initialize the reader.
 void reader_init();
 

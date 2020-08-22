@@ -600,7 +600,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     bool handle_completions(const completion_list_t &comp, size_t token_begin, size_t token_end);
 
-    void sanity_check() const;
     void set_command_line_and_position(editable_line_t *el, wcstring &&new_str, size_t pos);
     void clear_transient_edit();
     void replace_current_token(wcstring &&new_token);
@@ -1512,7 +1511,6 @@ void reader_data_t::autosuggest_completed(autosuggestion_result_t result) {
         string_prefixes_string_case_insensitive(result.search_string, result.suggestion)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
         autosuggestion = std::move(result.suggestion);
-        sanity_check();
         repaint();
     }
 }
@@ -1993,11 +1991,6 @@ static void reader_interactive_destroy() {
     outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
 }
 
-void reader_data_t::sanity_check() const {
-    if (command_line.position() > command_line.size()) sanity_lose();
-    if (colors.size() != command_line.size()) sanity_lose();
-}
-
 /// Set the specified string as the current buffer.
 void reader_data_t::set_command_line_and_position(editable_line_t *el, wcstring &&new_str,
                                                   size_t pos) {
@@ -2229,7 +2222,6 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
         assert(result.colors.size() == command_line.size());
         if (colors != result.colors) {
             colors = std::move(result.colors);
-            sanity_check();
             highlight_search();
             repaint();
         }
@@ -2262,7 +2254,6 @@ void reader_data_t::super_highlight_me_plenty(bool no_io) {
     if (!conf.highlight_ok) return;
 
     const editable_line_t *el = &command_line;
-    sanity_check();
 
     auto highlight_performer = get_highlight_performer(parser(), el->text(), !no_io);
     if (no_io) {
@@ -3787,12 +3778,6 @@ history_t *reader_get_history() {
     ASSERT_IS_MAIN_THREAD();
     reader_data_t *data = current_data_or_null();
     return data ? data->history : nullptr;
-}
-
-void reader_sanity_check() {
-    if (reader_data_t *data = current_data_or_null()) {
-        data->sanity_check();
-    }
 }
 
 /// Sets the command line contents, clearing the pager.

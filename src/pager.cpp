@@ -856,13 +856,4 @@ size_t pager_t::cursor_position() const {
 }
 
 // Constructor
-page_rendering_t::page_rendering_t()
-    : term_width(-1),
-      term_height(-1),
-      rows(0),
-      cols(0),
-      row_start(0),
-      row_end(0),
-      selected_completion_idx(-1),
-      remaining_to_disclose(0),
-      search_field_shown(false) {}
+page_rendering_t::page_rendering_t() = default;

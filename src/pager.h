@@ -19,19 +19,19 @@
 /// Represents rendering from the pager.
 class page_rendering_t {
    public:
-    size_t term_width;
-    size_t term_height;
-    size_t rows;
-    size_t cols;
-    size_t row_start;
-    size_t row_end;
-    size_t selected_completion_idx;
-    screen_data_t screen_data;
+    size_t term_width{size_t(-1)};
+    size_t term_height{size_t(-1)};
+    size_t rows{0};
+    size_t cols{0};
+    size_t row_start{0};
+    size_t row_end{0};
+    size_t selected_completion_idx{size_t(-1)};
+    screen_data_t screen_data{};
 
-    size_t remaining_to_disclose;
+    size_t remaining_to_disclose{0};
 
-    bool search_field_shown;
-    editable_line_t search_field_line;
+    bool search_field_shown{false};
+    editable_line_t search_field_line{};
 
     // Returns a rendering with invalid data, useful to indicate "no rendering".
     page_rendering_t();

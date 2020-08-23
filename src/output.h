@@ -18,7 +18,7 @@ class outputter_t {
     /// Storage for buffered contents.
     std::string contents_;
 
-    /// Count of how many outstanding beginBuffering() calls there are.
+    /// Count of how many outstanding begin_buffering() calls there are.
     uint32_t bufferCount_{0};
 
     /// fd to output to.
@@ -84,14 +84,14 @@ class outputter_t {
     void flush_to(int fd);
 
     /// Begins buffering. Output will not be automatically flushed until a corresponding
-    /// endBuffering() call.
-    void beginBuffering() {
+    /// end_buffering() call.
+    void begin_buffering() {
         bufferCount_++;
         assert(bufferCount_ > 0 && "bufferCount_ overflow");
     }
 
-    /// Balance a beginBuffering() call.
-    void endBuffering() {
+    /// Balance a begin_buffering() call.
+    void end_buffering() {
         assert(bufferCount_ > 0 && "bufferCount_ underflow");
         bufferCount_--;
         maybe_flush();

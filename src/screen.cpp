@@ -53,9 +53,9 @@ class scoped_buffer_t {
     screen_t &screen_;
 
    public:
-    explicit scoped_buffer_t(screen_t &s) : screen_(s) { screen_.outp().beginBuffering(); }
+    explicit scoped_buffer_t(screen_t &s) : screen_(s) { screen_.outp().begin_buffering(); }
 
-    ~scoped_buffer_t() { screen_.outp().endBuffering(); }
+    ~scoped_buffer_t() { screen_.outp().end_buffering(); }
 };
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.

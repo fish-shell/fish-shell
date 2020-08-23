@@ -456,6 +456,44 @@ struct selection_data_t {
     /// The start and stop position of the current selection.
     size_t start{0};
     size_t stop{0};
+
+    bool operator==(const selection_data_t &rhs) const {
+        return begin == rhs.begin && start == rhs.start && stop == rhs.stop;
+    }
+
+    bool operator!=(const selection_data_t &rhs) const { return !(*this == rhs); }
+};
+
+/// A value-type struct representing a layout from which we can call to s_write().
+/// The intent is that everything we send to the screen is encapsulated in this struct.
+struct layout_data_t {
+    /// Text of the command line.
+    wcstring text{};
+
+    /// The colors. This has the same length as 'text'.
+    std::vector<highlight_spec_t> colors{};
+
+    /// Position of the cursor in the command line.
+    size_t position{};
+
+    /// Whether the cursor is focused on the pager or not.
+    bool focused_on_pager{false};
+
+    /// Visual selection of the command line, or none if none.
+    maybe_t<selection_data_t> selection{};
+
+    /// String containing the autosuggestion.
+    wcstring autosuggestion{};
+
+    /// String containing the history search. If non-empty, then highlight the found range within
+    /// the text.
+    wcstring history_search_text{};
+
+    /// The result of evaluating the left, mode and right prompt commands.
+    /// That is, this the text of the prompts, not the commands to produce them.
+    wcstring left_prompt_buff{};
+    wcstring mode_prompt_buff{};
+    wcstring right_prompt_buff{};
 };
 
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
@@ -472,16 +510,20 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// or a pager selection change. When this is true and another transient change is made, the
     /// old transient change will be removed from the undo history.
     bool command_line_has_transient_edit = false;
+    /// The most recent layout data sent to the screen.
+    layout_data_t rendered_layout;
     /// String containing the autosuggestion.
     wcstring autosuggestion;
     /// Current pager.
     pager_t pager;
-    /// Current page rendering.
+    /// The output of the pager.
     page_rendering_t current_page_rendering;
     /// When backspacing, we temporarily suppress autosuggestions.
     bool suppress_autosuggestion{false};
+
     /// The representation of the current screen contents.
     screen_t screen;
+
     /// The source of input events.
     inputter_t inputter;
     /// The history.
@@ -496,12 +538,12 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     wcstring mode_prompt_buff;
     /// The output of the last evaluation of the right prompt command.
     wcstring right_prompt_buff;
-    /// Completion support.
+
+    /// When navigating the pager, we modify the command line.
+    /// This is the saved command line before modification.
     wcstring cycle_command_line;
     size_t cycle_cursor_pos{0};
-    /// Color is the syntax highlighting for buff.  The format is that color[i] is the
-    /// classification (according to the enum in highlight.h) of buff[i].
-    std::vector<highlight_spec_t> colors;
+
     /// If set, a key binding or the 'exit' command has asked us to exit our read loop.
     bool exit_loop_requested{false};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
@@ -509,15 +551,20 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool did_warn_for_bg_jobs{false};
     /// The current contents of the top item in the kill ring.
     wcstring kill_item;
-    /// Keep track of whether any internal code has done something which is known to require a
-    /// repaint.
-    bool repaint_needed{false};
-    /// Whether a screen reset is needed after a repaint.
-    bool screen_reset_needed{false};
+
+    /// A flag which may be set to force re-execing all prompts and re-rendering.
+    /// This may come about when a color like $fish_color... has changed.
+    bool force_exec_prompt_and_repaint{false};
+
     /// The target character of the last jump command.
     wchar_t last_jump_target{0};
     jump_direction_t last_jump_direction{jump_direction_t::forward};
     jump_precision_t last_jump_precision{jump_precision_t::to};
+
+    /// The text of the most recent asynchronous highlight and autosuggestion requests.
+    /// If these differs from the text of the command line, then we must kick off a new request.
+    wcstring in_flight_highlight_request;
+    wcstring in_flight_autosuggest_request;
 
     bool is_navigating_pager_contents() const { return this->pager.is_navigating_contents(); }
 
@@ -544,7 +591,28 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Expand abbreviations at the current cursor position, minus backtrack_amt.
     bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
 
-    void repaint_if_needed();
+    /// \return the string used for history search, or an empty string if none.
+    wcstring history_search_text_if_active() const;
+
+    /// \return true if the command line has changed and repainting is needed. If \p colors is not
+    /// null, then also return true if the colors have changed.
+    using highlight_list_t = std::vector<highlight_spec_t>;
+    bool is_repaint_needed(const highlight_list_t *mcolors = nullptr) const;
+
+    /// Generate a new layout data from the current state of the world.
+    /// If \p mcolors has a value, then apply it; otherwise extend existing colors.
+    layout_data_t make_layout_data(maybe_t<highlight_list_t> mcolors = none()) const;
+
+    /// Generate a new layout data from the current state of the world, and paint with it.
+    /// If \p mcolors has a value, then apply it; otherwise extend existing colors.
+    void layout_and_repaint(const wchar_t *reason, maybe_t<highlight_list_t> mcolors = none()) {
+        this->rendered_layout = make_layout_data(std::move(mcolors));
+        paint_layout(reason);
+    }
+
+    /// Paint the last rendered layout.
+    /// \p reason is used in FLOG to explain why.
+    void paint_layout(const wchar_t *reason);
 
     /// Return the variable set used for e.g. command duration.
     env_stack_t &vars() { return parser_ref->vars(); }
@@ -560,26 +628,27 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
           history(hist) {}
 
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
-    void repaint();
+
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
-    bool insert_string(editable_line_t *el, const wcstring &str);
+    void insert_string(editable_line_t *el, const wcstring &str);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
     /// highlighting, etc.
-    bool insert_char(editable_line_t *el, wchar_t c) { return insert_string(el, wcstring{c}); }
+    void insert_char(editable_line_t *el, wchar_t c) { insert_string(el, wcstring{c}); }
+
+    /// Read a command to execute, respecting input bindings.
+    /// \return the command, or none if we were asked to cancel (e.g. SIGHUP).
+    maybe_t<wcstring> readline(int nchars);
 
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
 
-    maybe_t<wcstring> readline(int nchars);
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
     void clear_pager();
     void select_completion_in_direction(selection_motion_t dir);
     void flash();
-
-    void mark_repaint_needed() { repaint_needed = true; }
 
     void completion_insert(const wchar_t *val, size_t token_end, complete_flags_t flags);
 
@@ -590,7 +659,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
                                move_word_style_t style = move_word_style_punctuation);
     void super_highlight_me_plenty(bool no_io = false);
 
-    void highlight_search();
     void highlight_complete(highlight_result_t result);
     void exec_mode_prompt();
     void exec_prompt();
@@ -789,10 +857,63 @@ void reader_data_t::update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos
     }
 }
 
-/// Repaint the entire commandline. This means reset and clear the commandline, write the prompt,
-/// perform syntax highlighting, write the commandline and move the cursor.
-void reader_data_t::repaint() {
-    editable_line_t *cmd_line = &command_line;
+bool reader_data_t::is_repaint_needed(const std::vector<highlight_spec_t> *mcolors) const {
+    // Note: this function is responsible for detecting all of the ways that the command line may
+    // change, by comparing it to what is present in rendered_layout.
+    // The pager is the problem child, it has its own update logic.
+    auto check = [](bool val, const wchar_t *reason) {
+        if (val) FLOG(reader_render, L"repaint needed because", reason, L"change");
+        return val;
+    };
+
+    bool focused_on_pager = active_edit_line() == &pager.search_field_line;
+    const layout_data_t &last = this->rendered_layout;
+    return check(force_exec_prompt_and_repaint, L"forced") ||
+           check(command_line.text() != last.text, L"text") ||
+           check(mcolors && *mcolors != last.colors, L"highlight") ||
+           check(selection != last.selection, L"selection") ||
+           check(focused_on_pager != last.focused_on_pager, L"focus") ||
+           check(command_line.position() != last.position, L"position") ||
+           check(history_search_text_if_active() != last.history_search_text, L"history search") ||
+           check(autosuggestion != last.autosuggestion, L"autosuggestion") ||
+           check(left_prompt_buff != last.left_prompt_buff, L"left_prompt") ||
+           check(mode_prompt_buff != last.mode_prompt_buff, L"mode_prompt") ||
+           check(right_prompt_buff != last.right_prompt_buff, L"right_prompt") ||
+           check(pager.rendering_needs_update(current_page_rendering), L"pager");
+}
+
+layout_data_t reader_data_t::make_layout_data(maybe_t<highlight_list_t> mcolors) const {
+    layout_data_t result{};
+    bool focused_on_pager = active_edit_line() == &pager.search_field_line;
+    result.text = command_line.text();
+
+    if (mcolors.has_value()) {
+        result.colors = mcolors.acquire();
+    } else {
+        result.colors = rendered_layout.colors;
+    }
+
+    result.position = focused_on_pager ? pager.cursor_position() : command_line.position();
+    result.selection = selection;
+    result.focused_on_pager = (active_edit_line() == &pager.search_field_line);
+    result.history_search_text = history_search_text_if_active();
+    result.autosuggestion = autosuggestion;
+    result.left_prompt_buff = left_prompt_buff;
+    result.mode_prompt_buff = mode_prompt_buff;
+    result.right_prompt_buff = right_prompt_buff;
+
+    // Ensure our color list has the same length as the command line, by extending it with the last
+    // color. This typically reduces redraws; e.g. if the user continues types into an argument, we
+    // guess it's still an argument, while the highlighting proceeds in the background.
+    highlight_spec_t last_color = result.colors.empty() ? highlight_spec_t{} : result.colors.back();
+    result.colors.resize(result.text.size(), last_color);
+    return result;
+}
+
+void reader_data_t::paint_layout(const wchar_t *reason) {
+    FLOGF(reader_render, L"Repainting from %ls", reason);
+    const layout_data_t &data = this->rendered_layout;
+    const editable_line_t *cmd_line = &command_line;
 
     wcstring full_line;
     if (conf.in_silent_mode) {
@@ -802,33 +923,41 @@ void reader_data_t::repaint() {
         full_line = combine_command_and_autosuggestion(cmd_line->text(), autosuggestion);
     }
 
-    size_t len = full_line.size();
-    if (len < 1) len = 1;
+    // Copy the colors and extend them with autosuggestion color.
+    std::vector<highlight_spec_t> colors = data.colors;
 
-    std::vector<highlight_spec_t> colors = this->colors;
-    colors.resize(len, highlight_role_t::autosuggestion);
-
-    if (selection.has_value()) {
-        highlight_spec_t selection_color = {highlight_role_t::normal, highlight_role_t::selection};
-        for (size_t i = selection->start; i < std::min(len, selection->stop); i++) {
-            colors[i] = selection_color;
+    // Highlight any history search.
+    if (!conf.in_silent_mode && !data.history_search_text.empty()) {
+        const wcstring &needle = data.history_search_text;
+        const wcstring &haystack = cmd_line->text();
+        size_t match_pos = haystack.find(needle);
+        if (match_pos != wcstring::npos) {
+            for (size_t i = 0; i < needle.size(); i++) {
+                colors.at(match_pos + i).background = highlight_role_t::search_match;
+            }
         }
     }
+
+    // Apply any selection.
+    if (data.selection.has_value()) {
+        highlight_spec_t selection_color = {highlight_role_t::normal, highlight_role_t::selection};
+        for (size_t i = data.selection->start; i < std::min(selection->stop, colors.size()); i++) {
+            colors.at(i) = selection_color;
+        }
+    }
+
+    // Extend our colors with the autosuggestion.
+    colors.resize(full_line.size(), highlight_role_t::autosuggestion);
 
     // Compute the indentation, then extend it with 0s for the autosuggestion. The autosuggestion
     // always conceptually has an indent of 0.
     std::vector<int> indents = parse_util_compute_indents(cmd_line->text());
-    indents.resize(len, 0);
-
-    bool focused_on_pager = active_edit_line() == &pager.search_field_line;
-    size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position();
+    indents.resize(full_line.size(), 0);
 
     // Prepend the mode prompt to the left prompt.
     s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
-            cmd_line->size(), colors, indents, cursor_position, pager, current_page_rendering,
-            focused_on_pager);
-
-    repaint_needed = false;
+            cmd_line->size(), colors, indents, data.position, pager, current_page_rendering,
+            data.focused_on_pager);
 }
 
 /// Internal helper function for handling killing parts of text.
@@ -849,10 +978,6 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
         kill_replace(old, kill_item);
     }
     el->erase_substring(begin_idx, length);
-    update_buff_pos(el);
-    command_line_changed(el);
-    super_highlight_me_plenty();
-    repaint();
 }
 
 // This is called from a signal handler!
@@ -862,13 +987,6 @@ void reader_handle_sigint() { interrupted = SIGINT; }
 void reader_data_t::command_line_changed(const editable_line_t *el) {
     ASSERT_IS_MAIN_THREAD();
     if (el == &this->command_line) {
-        size_t len = this->command_line.size();
-
-        // When we grow colors, propagate the last color (if any), under the assumption that usually
-        // it will be correct. If it is, it avoids a repaint.
-        highlight_spec_t last_color = colors.empty() ? highlight_spec_t() : colors.back();
-        colors.resize(len, last_color);
-
         // Update the gen count.
         s_generation.store(1 + read_generation_count(), std::memory_order_relaxed);
     } else if (el == &this->pager.search_field_line) {
@@ -898,9 +1016,6 @@ void reader_data_t::pager_selection_changed() {
     if (new_cmd_line != command_line.text()) {
         set_buffer_maintaining_pager(new_cmd_line, cursor_pos, true /* transient */);
     }
-
-    // Trigger repaint (see issue #765).
-    mark_repaint_needed();
 }
 
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
@@ -963,7 +1078,7 @@ maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, s
     return result;
 }
 
-/// Expand abbreviations at the current cursor position, minus the given  cursor backtrack. This may
+/// Expand abbreviations at the current cursor position, minus the given cursor backtrack. This may
 /// change the command line but does NOT repaint it. This is to allow the caller to coalesce
 /// repaints.
 bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
@@ -978,26 +1093,10 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
             el->push_edit(std::move(*edit));
             update_buff_pos(el);
             el->undo_history.may_coalesce = false;
-            command_line_changed(el);
             result = true;
         }
     }
     return result;
-}
-
-void reader_data_t::repaint_if_needed() {
-    bool needs_reset = screen_reset_needed;
-    bool needs_repaint = needs_reset || repaint_needed;
-
-    if (needs_reset) {
-        exec_prompt();
-        s_reset_line(&screen, true /* repaint prompt */);
-        screen_reset_needed = false;
-    }
-
-    if (needs_repaint) {
-        repaint();  // reader_repaint clears repaint_needed
-    }
 }
 
 void reader_reset_interrupted() { interrupted = 0; }
@@ -1258,34 +1357,17 @@ void reader_data_t::delete_char(bool backward) {
     } while (width == 0 && pos > 0);
     el->erase_substring(pos, pos_end - pos);
     update_buff_pos(el);
-    command_line_changed(el);
     suppress_autosuggestion = true;
-
-    super_highlight_me_plenty();
-    mark_repaint_needed();
 }
 
 /// Insert the characters of the string into the command line buffer and print them to the screen
 /// using syntax highlighting, etc.
 /// Returns true if the string changed.
-bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
-    if (str.empty()) return false;
-
-    el->insert_string(str, 0, str.size());
-    update_buff_pos(el);
-    command_line_changed(el);
-
-    if (el == &command_line) {
-        suppress_autosuggestion = false;
-
-        // Syntax highlight. Note we must have that buff_pos > 0 because we just added something
-        // nonzero to its length.
-        assert(el->position() > 0);
-        super_highlight_me_plenty();
+void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
+    if (!str.empty()) {
+        el->insert_string(str, 0, str.size());
+        if (el == &command_line) suppress_autosuggestion = false;
     }
-
-    repaint();
-    return true;
 }
 
 /// Insert the string in the given command line at the given cursor position. The function checks if
@@ -1413,9 +1495,7 @@ void reader_data_t::completion_insert(const wchar_t *val, size_t token_end,
     editable_line_t *el = active_edit_line();
 
     // Move the cursor to the end of the token.
-    if (el->position() != token_end) {
-        update_buff_pos(el, token_end);  // repaint() is done later
-    }
+    if (el->position() != token_end) update_buff_pos(el, token_end);
 
     size_t cursor = el->position();
     wcstring new_command_line = completion_apply_to_command_line(val, flags, el->text(), &cursor,
@@ -1504,31 +1584,53 @@ bool reader_data_t::can_autosuggest() const {
            el == &command_line && el->text().find_first_not_of(whitespace) != wcstring::npos;
 }
 
-// Called after an autosuggestion has been computed on a background thread
+// Called after an autosuggestion has been computed on a background thread.
 void reader_data_t::autosuggest_completed(autosuggestion_result_t result) {
+    ASSERT_IS_MAIN_THREAD();
+    if (result.search_string == in_flight_autosuggest_request)
+        in_flight_autosuggest_request.clear();
     if (!result.suggestion.empty() && can_autosuggest() &&
         result.search_string == command_line.text() &&
         string_prefixes_string_case_insensitive(result.search_string, result.suggestion)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
         autosuggestion = std::move(result.suggestion);
-        repaint();
+        if (this->is_repaint_needed()) {
+            this->layout_and_repaint(L"autosuggest");
+        }
     }
 }
 
 void reader_data_t::update_autosuggestion() {
-    // Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if
-    // we're not doing a history search.
-    autosuggestion.clear();
-    if (can_autosuggest()) {
-        const editable_line_t *el = active_edit_line();
-        auto performer =
-            get_autosuggestion_performer(parser(), el->text(), el->position(), history);
-        auto shared_this = this->shared_from_this();
-        debounce_autosuggestions().perform(
-            performer, [shared_this](autosuggestion_result_t result) {
-                shared_this->autosuggest_completed(std::move(result));
-            });
+    // If we can't autosuggest, just clear it.
+    if (!can_autosuggest()) {
+        in_flight_autosuggest_request.clear();
+        autosuggestion.clear();
+        return;
     }
+
+    // Check to see if our autosuggestion still applies; if so, don't recompute it.
+    // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
+    // the autosuggestion.
+    // This is also the main mechanism by which readline commands that don't change the command line
+    // text avoid recomputing the autosuggestion.
+    const editable_line_t &el = command_line;
+    if (!autosuggestion.empty() &&
+        string_prefixes_string_case_insensitive(el.text(), autosuggestion)) {
+        return;
+    }
+
+    // Do nothing if we've already kicked off this autosuggest request.
+    if (el.text() == in_flight_autosuggest_request) return;
+    in_flight_autosuggest_request = el.text();
+
+    // Clear the autosuggestion and kick it off in the background.
+    FLOG(reader_render, L"Autosuggesting");
+    autosuggestion.clear();
+    auto performer = get_autosuggestion_performer(parser(), el.text(), el.position(), history);
+    auto shared_this = this->shared_from_this();
+    debounce_autosuggestions().perform(performer, [shared_this](autosuggestion_result_t result) {
+        shared_this->autosuggest_completed(std::move(result));
+    });
 }
 
 // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
@@ -1557,10 +1659,6 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
             command_line.replace_substring(command_line.size(), 0,
                                            autosuggestion.substr(have, want - have));
         }
-        update_buff_pos(&command_line);
-        command_line_changed(&command_line);
-        super_highlight_me_plenty();
-        repaint();
     }
 }
 
@@ -1568,7 +1666,6 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
 void reader_data_t::clear_pager() {
     pager.clear();
     current_page_rendering = page_rendering_t();
-    mark_repaint_needed();
 }
 
 void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
@@ -1583,11 +1680,18 @@ void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
 void reader_data_t::flash() {
     struct timespec pollint;
     editable_line_t *el = &command_line;
-    for (size_t i = 0; i < el->position(); i++) {
-        colors.at(i) = highlight_spec_t::make_background(highlight_role_t::search_match);
-    }
+    layout_data_t data = make_layout_data();
 
-    repaint();
+    // Save off the colors and set the background.
+    highlight_list_t saved_colors = data.colors;
+    for (size_t i = 0; i < el->position(); i++) {
+        data.colors.at(i) = highlight_spec_t::make_background(highlight_role_t::search_match);
+    }
+    this->rendered_layout = data;  // need to copy the data since we will use it again.
+    paint_layout(L"flash");
+
+    layout_data_t old_data = std::move(rendered_layout);
+
     ignore_result(write(STDOUT_FILENO, "\a", 1));
     // The write above changed the timestamp of stdout; ensure we don't therefore reset our screen.
     // See #3693.
@@ -1597,8 +1701,10 @@ void reader_data_t::flash() {
     pollint.tv_nsec = 100 * 1000000;
     nanosleep(&pollint, nullptr);
 
-    super_highlight_me_plenty();
-    repaint();
+    // Re-render with our saved data.
+    data.colors = std::move(saved_colors);
+    this->rendered_layout = std::move(data);
+    paint_layout(L"unflash");
 }
 
 /// Characters that may not be part of a token that is to be replaced by a case insensitive
@@ -1800,7 +1906,6 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     current_page_rendering = page_rendering_t();
     // Modify the command line to reflect the new pager.
     pager_selection_changed();
-    mark_repaint_needed();
     return false;
 }
 
@@ -1998,9 +2103,6 @@ void reader_data_t::set_command_line_and_position(editable_line_t *el, wcstring 
     el->set_position(pos);
     el->undo_history.may_coalesce = false;
     update_buff_pos(el, pos);
-    command_line_changed(el);
-    super_highlight_me_plenty();
-    mark_repaint_needed();
 }
 
 /// Undo the transient edit und update commandline accordingly.
@@ -2010,9 +2112,6 @@ void reader_data_t::clear_transient_edit() {
     }
     command_line.undo();
     update_buff_pos(&command_line);
-    command_line_changed(&command_line);
-    super_highlight_me_plenty();
-    mark_repaint_needed();
     command_line_has_transient_edit = false;
 }
 
@@ -2048,9 +2147,6 @@ void reader_data_t::update_command_line_from_history_search() {
     command_line_has_transient_edit = true;
     assert(el == &command_line);
     update_buff_pos(el);
-    command_line_changed(el);
-    super_highlight_me_plenty();
-    mark_repaint_needed();
 }
 
 enum move_word_dir_t { MOVE_DIR_LEFT, MOVE_DIR_RIGHT };
@@ -2098,7 +2194,6 @@ void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
         }
     } else {
         update_buff_pos(el, buff_pos);
-        repaint();
     }
 }
 
@@ -2118,13 +2213,10 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
 
     // Don't set a position past the command line length.
     if (pos > command_line_len) pos = command_line_len;  //!OCLINT(parameter reassignment)
-
     update_buff_pos(&command_line, pos);
 
     // Clear history search and pager contents.
     history_search.reset();
-    super_highlight_me_plenty();
-    mark_repaint_needed();
 }
 
 void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
@@ -2198,32 +2290,20 @@ static parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstri
     return res;
 }
 
-/// Called to set the highlight flag for search results.
-void reader_data_t::highlight_search() {
-    if (history_search.is_at_end()) {
-        return;
+wcstring reader_data_t::history_search_text_if_active() const {
+    if (!history_search.active() || history_search.is_at_end()) {
+        return wcstring{};
     }
-    const wcstring &needle = history_search.search_string();
-    const editable_line_t *el = &command_line;
-    size_t match_pos = el->text().find(needle);
-    if (match_pos != wcstring::npos) {
-        size_t end = match_pos + needle.size();
-        for (size_t i = match_pos; i < end; i++) {
-            colors.at(i).background = highlight_role_t::search_match;
-        }
-    }
+    return history_search.search_string();
 }
 
 void reader_data_t::highlight_complete(highlight_result_t result) {
     ASSERT_IS_MAIN_THREAD();
+    in_flight_highlight_request.clear();
     if (result.text == command_line.text()) {
-        // The data hasn't changed, so swap in our colors. The colors may not have changed, so do
-        // nothing if they have not.
         assert(result.colors.size() == command_line.size());
-        if (colors != result.colors) {
-            colors = std::move(result.colors);
-            highlight_search();
-            repaint();
+        if (this->is_repaint_needed(&result.colors)) {
+            this->layout_and_repaint(L"highlight", std::move(result.colors));
         }
     }
 }
@@ -2244,10 +2324,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(parser_t 
     };
 }
 
-/// Call specified external highlighting function and then do search highlighting. Lastly, clear the
-/// background color under the cursor to avoid repaint issues on terminals where e.g. syntax
-/// highlighting maykes characters under the sursor unreadable.
-///
+/// Highlight the command line in a super, plentiful way.
 /// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
 ///        an asynchronous highlight in the background, which may perform disk I/O.
 void reader_data_t::super_highlight_me_plenty(bool no_io) {
@@ -2255,6 +2332,11 @@ void reader_data_t::super_highlight_me_plenty(bool no_io) {
 
     const editable_line_t *el = &command_line;
 
+    // Do nothing if this text is already in flight.
+    if (el->text() == in_flight_highlight_request) return;
+    in_flight_highlight_request = el->text();
+
+    FLOG(reader_render, L"Highlighting");
     auto highlight_performer = get_highlight_performer(parser(), el->text(), !no_io);
     if (no_io) {
         // Highlighting without IO, we just do it.
@@ -2266,18 +2348,6 @@ void reader_data_t::super_highlight_me_plenty(bool no_io) {
                                         [shared_this](highlight_result_t result) {
                                             shared_this->highlight_complete(std::move(result));
                                         });
-    }
-    highlight_search();
-
-    // Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it.
-    // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
-    // the autosuggestion.
-    const wcstring &cmd = el->text(), &suggest = autosuggestion;
-    if (can_autosuggest() && !suggest.empty() &&
-        string_prefixes_string_case_insensitive(cmd, suggest)) {
-        // the autosuggestion is still reasonable, so do nothing
-    } else {
-        update_autosuggestion();
     }
 }
 
@@ -2445,7 +2515,7 @@ static int read_i(parser_t &parser) {
     while (!check_exit_loop_maybe_warning(data.get())) {
         run_count++;
 
-        maybe_t<wcstring> tmp = reader_readline(0);
+        maybe_t<wcstring> tmp = data->readline(0);
         if (tmp && !tmp->empty()) {
             const wcstring command = tmp.acquire();
             data->update_buff_pos(&data->command_line, 0);
@@ -2569,15 +2639,15 @@ struct readline_loop_state_t {
     /// List of completions.
     completion_list_t comp;
 
-    /// Whether we are skipping redundant repaints.
-    bool coalescing_repaints = false;
-
     /// Whether the loop has finished, due to reaching the character limit or through executing a
     /// command.
     bool finished{false};
 
     /// Maximum number of characters to read.
     size_t nchars{std::numeric_limits<size_t>::max()};
+
+    /// \return whether the last readline command was a repaint.
+    bool last_was_repaint() const { return last_cmd && *last_cmd == readline_cmd_t::repaint; }
 };
 
 /// Read normal characters, inserting them into the command line.
@@ -2627,7 +2697,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             while (el->position() > 0 && el->text().at(el->position() - 1) != L'\n') {
                 update_buff_pos(el, el->position() - 1);
             }
-            mark_repaint_needed();
             break;
         }
         case rl::end_of_line: {
@@ -2640,18 +2709,14 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             } else {
                 accept_autosuggestion(true);
             }
-
-            mark_repaint_needed();
             break;
         }
         case rl::beginning_of_buffer: {
             update_buff_pos(&command_line, 0);
-            mark_repaint_needed();
             break;
         }
         case rl::end_of_buffer: {
             update_buff_pos(&command_line, command_line.size());
-            mark_repaint_needed();
             break;
         }
         case rl::cancel_commandline: {
@@ -2661,7 +2726,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 update_buff_pos(&command_line, command_line.size());
                 autosuggestion.clear();
                 // Repaint also changes the actual cursor position
-                repaint();
+                if (this->is_repaint_needed()) this->layout_and_repaint(L"cancel");
 
                 auto fish_color_cancel = vars.get(L"fish_color_cancel");
                 if (fish_color_cancel) {
@@ -2694,8 +2759,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
                 s_reset_line(&screen, true /* redraw prompt */);
-                screen_reset_needed = false;
-                repaint();
+                if (this->is_repaint_needed()) this->layout_and_repaint(L"mode");
                 break;
             }
             // Else we repaint as normal.
@@ -2703,12 +2767,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::force_repaint:
         case rl::repaint: {
-            if (!rls.coalescing_repaints) {
-                rls.coalescing_repaints = true;
+            if (force_exec_prompt_and_repaint || !rls.last_was_repaint()) {
                 exec_prompt();
                 s_reset_line(&screen, true /* redraw prompt */);
-                screen_reset_needed = false;
-                repaint();
+                this->layout_and_repaint(L"readline");
+                force_exec_prompt_and_repaint = false;
             }
             break;
         }
@@ -2724,7 +2787,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // disclosed, then become so; otherwise cycle through our available completions.
                 if (current_page_rendering.remaining_to_disclose > 0) {
                     pager.set_fully_disclosed(true);
-                    mark_repaint_needed();
                 } else {
                     select_completion_in_direction(c == rl::complete ? selection_motion_t::next
                                                                      : selection_motion_t::prev);
@@ -2784,7 +2846,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (c == rl::complete_and_search && !rls.complete_did_insert && !pager.empty()) {
                     pager.set_search_field_shown(true);
                     select_completion_in_direction(selection_motion_t::next);
-                    mark_repaint_needed();
                 }
             }
             break;
@@ -2798,7 +2859,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (pager.is_search_field_shown() && !is_navigating_pager_contents()) {
                     select_completion_in_direction(selection_motion_t::south);
                 }
-                mark_repaint_needed();
             }
             break;
         }
@@ -2885,10 +2945,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                                       std::move(yank_str));
                 update_buff_pos(el);
                 rls.yank_len = new_yank_len;
-                command_line_changed(el);
                 suppress_autosuggestion = true;
-                super_highlight_me_plenty();
-                mark_repaint_needed();
             }
             break;
         }
@@ -2962,19 +3019,13 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // This command is valid, but an abbreviation may make it invalid. If so, we
                 // will have to test again.
                 bool abbreviation_expanded = expand_abbreviation_as_necessary(1);
-                if (abbreviation_expanded) {
-                    // It's our reponsibility to rehighlight and repaint. But everything we do
-                    // below triggers a repaint.
-                    if (conf.syntax_check_ok) {
-                        command_test_result = reader_shell_test(parser(), el->text());
-                    }
-
-                    // If the command is OK, then we're going to execute it. We still want to do
-                    // syntax highlighting, but a synchronous variant that performs no I/O, so
-                    // as not to block the user.
-                    bool skip_io = (command_test_result == 0);
-                    super_highlight_me_plenty(skip_io);
+                if (abbreviation_expanded && conf.syntax_check_ok) {
+                    command_test_result = reader_shell_test(parser(), el->text());
                 }
+                // If the command is OK, then we're going to execute it. We still want to do
+                // syntax highlighting, but a synchronous variant that performs no I/O, so
+                // as not to block the user.
+                if (command_test_result == 0) super_highlight_me_plenty(true);
             }
 
             if (command_test_result == 0) {
@@ -2986,7 +3037,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 }
                 rls.finished = true;
                 update_buff_pos(&command_line, command_line.size());
-                repaint();
             } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
                 // We are incomplete, continue editing.
                 insert_char(el, L'\n');
@@ -2996,9 +3046,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 wcstring_list_t argv(1, el->text());
                 event_fire_generic(parser(), L"fish_posterror", &argv);
                 s_reset_abandoning_line(&screen, termsize_last().width);
-                mark_repaint_needed();
             }
-
             break;
         }
 
@@ -3062,7 +3110,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(selection_motion_t::west);
             } else if (el->position() > 0) {
                 update_buff_pos(el, el->position() - 1);
-                mark_repaint_needed();
             }
             break;
         }
@@ -3072,7 +3119,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(selection_motion_t::east);
             } else if (el->position() < el->size()) {
                 update_buff_pos(el, el->position() + 1);
-                mark_repaint_needed();
             } else {
                 accept_autosuggestion(true);
             }
@@ -3084,7 +3130,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 select_completion_in_direction(selection_motion_t::east);
             } else if (el->position() < el->size()) {
                 update_buff_pos(el, el->position() + 1);
-                mark_repaint_needed();
             } else {
                 accept_autosuggestion(false, true);
             }
@@ -3202,7 +3247,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     size_t total_offset_new = parse_util_get_offset(
                         el->text(), line_new, line_offset_old - 4 * (indent_new - indent_old));
                     update_buff_pos(el, total_offset_new);
-                    mark_repaint_needed();
                 }
             }
             break;
@@ -3210,7 +3254,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::suppress_autosuggestion: {
             suppress_autosuggestion = true;
             autosuggestion.clear();
-            mark_repaint_needed();
             break;
         }
         case rl::accept_autosuggestion: {
@@ -3300,10 +3343,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Restore the buffer position since replace_substring moves
                 // the buffer position ahead of the replaced text.
                 update_buff_pos(el, buff_pos);
-
-                command_line_changed(el);
-                super_highlight_me_plenty();
-                mark_repaint_needed();
             }
             break;
         }
@@ -3336,10 +3375,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Restore the buffer position since replace_substring moves
                 // the buffer position ahead of the replaced text.
                 update_buff_pos(el, buff_pos);
-
-                command_line_changed(el);
-                super_highlight_me_plenty();
-                mark_repaint_needed();
             }
             break;
         }
@@ -3377,9 +3412,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             el->replace_substring(init_pos, pos - init_pos, std::move(replacement));
             update_buff_pos(el);
-            command_line_changed(el);
-            super_highlight_me_plenty();
-            mark_repaint_needed();
             break;
         }
 
@@ -3430,7 +3462,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             bool success = jump(direction, precision, el, target);
 
             inputter.function_set_status(success);
-            mark_repaint_needed();
             break;
         }
         case rl::repeat_jump: {
@@ -3442,7 +3473,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             inputter.function_set_status(success);
-            mark_repaint_needed();
             break;
         }
         case rl::reverse_repeat_jump: {
@@ -3464,14 +3494,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             last_jump_direction = original_dir;
 
             inputter.function_set_status(success);
-            mark_repaint_needed();
             break;
         }
 
         case rl::expand_abbr: {
             if (expand_abbreviation_as_necessary(1)) {
-                super_highlight_me_plenty();
-                mark_repaint_needed();
                 inputter.function_set_status(true);
             } else {
                 inputter.function_set_status(false);
@@ -3487,9 +3514,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     clear_pager();
                 }
                 update_buff_pos(el);
-                command_line_changed(el);
-                super_highlight_me_plenty();
-                mark_repaint_needed();
             } else {
                 flash();
             }
@@ -3530,8 +3554,16 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     event_fire_generic(parser(), L"fish_prompt");
     exec_prompt();
 
-    super_highlight_me_plenty();
-    repaint();
+    /// A helper that kicks off syntax highlighting, autosuggestion computing, and repaints.
+    auto color_suggest_repaint_now = [this] {
+        this->update_autosuggestion();
+        this->super_highlight_me_plenty();
+        if (this->is_repaint_needed()) this->layout_and_repaint(L"toplevel");
+        this->force_exec_prompt_and_repaint = false;
+    };
+
+    // Start out as initially dirty.
+    force_exec_prompt_and_repaint = true;
 
     // Get the current terminal modes. These will be restored when the function returns.
     if (tcgetattr(STDIN_FILENO, &old_modes) == -1 && errno == EIO) redirect_tty_output();
@@ -3554,6 +3586,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         // Perhaps update the termsize. This is cheap if it has not changed.
         update_termsize();
 
+        // Repaint as needed.
+        color_suggest_repaint_now();
+
         if (rls.nchars <= command_line.size()) {
             // We've already hit the specified character limit.
             rls.finished = true;
@@ -3572,8 +3607,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
 
         if (!event_needing_handling || event_needing_handling->is_check_exit()) {
-            rls.coalescing_repaints = false;
-            repaint_if_needed();
             continue;
         } else if (event_needing_handling->is_eof()) {
             reader_sighup();
@@ -3588,9 +3621,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
         if (event_needing_handling->is_readline()) {
             readline_cmd_t readline_cmd = event_needing_handling->get_readline();
-            // If we get something other than a repaint, then stop coalescing them.
-            if (readline_cmd != rl::repaint) rls.coalescing_repaints = false;
-
             if (readline_cmd == rl::cancel && is_navigating_pager_contents()) {
                 clear_transient_edit();
             }
@@ -3642,8 +3672,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             }
             rls.last_cmd = none();
         }
-
-        repaint_if_needed();
     }
 
     // Emit a newline so that the output is on the line after the command.
@@ -3739,32 +3767,18 @@ int reader_reading_interrupted() {
     return res;
 }
 
-void reader_repaint_needed() {
-    if (reader_data_t *data = current_data_or_null()) {
-        data->mark_repaint_needed();
-    }
-}
-
-void reader_repaint_if_needed() {
-    if (reader_data_t *data = current_data_or_null()) {
-        data->repaint_if_needed();
+void reader_schedule_prompt_repaint() {
+    ASSERT_IS_MAIN_THREAD();
+    reader_data_t *data = current_data_or_null();
+    if (data && !data->force_exec_prompt_and_repaint) {
+        data->force_exec_prompt_and_repaint = true;
+        data->inputter.queue_ch(readline_cmd_t::repaint);
     }
 }
 
 void reader_queue_ch(const char_event_t &ch) {
     if (reader_data_t *data = current_data_or_null()) {
         data->inputter.queue_ch(ch);
-    }
-}
-
-void reader_react_to_color_change() {
-    reader_data_t *data = current_data_or_null();
-    if (!data) return;
-
-    if (!data->repaint_needed || !data->screen_reset_needed) {
-        data->repaint_needed = true;
-        data->screen_reset_needed = true;
-        data->inputter.queue_ch(readline_cmd_t::repaint);
     }
 }
 

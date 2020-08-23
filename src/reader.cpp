@@ -3674,6 +3674,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
     }
 
+    // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
+    // user presses enter.
+    if (this->is_repaint_needed()) this->layout_and_repaint(L"prepare to execute");
+
     // Emit a newline so that the output is on the line after the command.
     // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
     if (!screen.cursor_is_wrapped_to_own_line()) {

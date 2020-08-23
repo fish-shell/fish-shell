@@ -14,7 +14,6 @@
 #include "common.h"
 #include "complete.h"
 #include "fallback.h"
-#include "flog.h"
 #include "highlight.h"
 #include "pager.h"
 #include "reader.h"
@@ -576,28 +575,26 @@ page_rendering_t pager_t::render() const {
     return rendering;
 }
 
-bool pager_t::rendering_needs_update(const page_rendering_t &rendering) const {
-    // Common case is no pager.
-    if (this->empty() && rendering.screen_data.empty()) return false;
-
-    return rendering.term_width != this->available_term_width ||    //
-           rendering.term_height != this->available_term_height ||  //
-           rendering.selected_completion_idx !=
-               this->visual_selected_completion_index(rendering.rows, rendering.cols) ||    //
-           rendering.search_field_shown != this->search_field_shown ||                      //
-           rendering.search_field_line.text() != this->search_field_line.text() ||          //
-           rendering.search_field_line.position() != this->search_field_line.position() ||  //
-           (rendering.remaining_to_disclose > 0 && this->fully_disclosed);
-}
-
 void pager_t::update_rendering(page_rendering_t *rendering) const {
-    if (rendering_needs_update(*rendering)) {
+    if (rendering->term_width != this->available_term_width ||
+        rendering->term_height != this->available_term_height ||
+        rendering->selected_completion_idx !=
+            this->visual_selected_completion_index(rendering->rows, rendering->cols) ||
+        rendering->search_field_shown != this->search_field_shown ||
+        rendering->search_field_line.text() != this->search_field_line.text() ||
+        rendering->search_field_line.position() != this->search_field_line.position() ||
+        (rendering->remaining_to_disclose > 0 && this->fully_disclosed)) {
         *rendering = this->render();
     }
 }
 
-pager_t::pager_t() = default;
-pager_t::~pager_t() = default;
+pager_t::pager_t()
+    : available_term_width(0),
+      available_term_height(0),
+      selected_completion_idx(PAGER_SELECTION_NONE),
+      suggested_row_start(0),
+      fully_disclosed(false),
+      search_field_shown(false) {}
 
 bool pager_t::empty() const { return unfiltered_completion_infos.empty(); }
 
@@ -858,4 +855,5 @@ size_t pager_t::cursor_position() const {
     return result;
 }
 
+// Constructor
 page_rendering_t::page_rendering_t() = default;

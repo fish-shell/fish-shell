@@ -271,7 +271,7 @@ static maybe_t<char_event_t> interrupt_handler() {
     event_fire_delayed(parser);
     // Reap stray processes, including printing exit status messages.
     // TODO: shouldn't need this parser here.
-    if (job_reap(parser, true)) reader_schedule_prompt_repaint();
+    if (job_reap(parser, true)) reader_repaint_needed();
     // Tell the reader an event occurred.
     if (reader_reading_interrupted()) {
         auto vintr = shell_modes.c_cc[VINTR];

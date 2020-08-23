@@ -62,17 +62,17 @@ enum class selection_motion_t {
 #define PAGER_UNDISCLOSED_MAX_ROWS 4
 
 class pager_t {
-    size_t available_term_width{0};
-    size_t available_term_height{0};
+    size_t available_term_width;
+    size_t available_term_height;
 
-    size_t selected_completion_idx{PAGER_SELECTION_NONE};
-    size_t suggested_row_start{0};
+    size_t selected_completion_idx;
+    size_t suggested_row_start;
 
     // Fully disclosed means that we show all completions.
-    bool fully_disclosed{false};
+    bool fully_disclosed;
 
     // Whether we show the search field.
-    bool search_field_shown{false};
+    bool search_field_shown;
 
     // Returns the index of the completion that should draw selected, using the given number of
     // columns.
@@ -82,15 +82,19 @@ class pager_t {
     /// Data structure describing one or a group of related completions.
     struct comp_t {
         /// The list of all completion strings this entry applies to.
-        wcstring_list_t comp{};
+        wcstring_list_t comp;
         /// The description.
-        wcstring desc{};
+        wcstring desc;
         /// The representative completion.
-        completion_t representative{L""};
+        completion_t representative;
         /// On-screen width of the completion string.
-        size_t comp_width{0};
+        size_t comp_width;
         /// On-screen width of the description information.
-        size_t desc_width{0};
+        size_t desc_width;
+        /// Minimum acceptable width.
+        // size_t min_width;
+
+        comp_t() : comp(), desc(), representative(L""), comp_width(0), desc_width(0) {}
 
         // Our text looks like this:
         // completion  (description)
@@ -108,7 +112,7 @@ class pager_t {
     };
 
    private:
-    using comp_info_list_t = std::vector<comp_t>;
+    typedef std::vector<comp_t> comp_info_list_t;
 
     // The filtered list of completion infos.
     comp_info_list_t completion_infos;
@@ -161,10 +165,7 @@ class pager_t {
     // Produces a rendering of the completions, at the given term size.
     page_rendering_t render() const;
 
-    // \return true if the given rendering needs to be updated.
-    bool rendering_needs_update(const page_rendering_t &rendering) const;
-
-    // Updates the rendering.
+    // Updates the rendering if it's stale.
     void update_rendering(page_rendering_t *rendering) const;
 
     // Indicates if there are no completions, and therefore nothing to render.
@@ -191,8 +192,8 @@ class pager_t {
     // Position of the cursor.
     size_t cursor_position() const;
 
+    // Constructor
     pager_t();
-    ~pager_t();
 };
 
 #endif

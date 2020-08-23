@@ -138,9 +138,15 @@ void reader_change_history(const wcstring &name);
 /// \param reset_cursor_position If set, issue a \r so the line driver knows where we are
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position = true);
 
-/// Tell the reader that it needs to re-exec the prompt and repaint.
-/// This may be called in response to e.g. a color variable change.
-void reader_schedule_prompt_repaint();
+/// Call this function to tell the reader that a repaint is needed, and should be performed when
+/// possible.
+void reader_repaint_needed();
+
+/// Call this function to tell the reader that some color has changed.
+void reader_react_to_color_change();
+
+/// Repaint immediately if needed.
+void reader_repaint_if_needed();
 
 /// Enqueue an event to the back of the reader's input queue.
 class char_event_t;

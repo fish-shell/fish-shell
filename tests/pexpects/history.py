@@ -15,7 +15,6 @@ from pexpect_helper import SpawnedProc
 import os
 
 os.environ["PAGER"] = "cat"
-os.environ["TERM"] = "xterm"
 
 sp = SpawnedProc(env=os.environ.copy())
 

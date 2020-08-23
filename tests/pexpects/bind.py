@@ -259,7 +259,7 @@ expect_prompt("git@", unmatched="ctrl-w does not stop at @")
 
 # Ensure that nul can be bound properly (#3189).
 send("bind -k nul 'echo nul seen'\r")
-expect_prompt
+expect_prompt()
 send("\0" * 3)
 send("\r")
 expect_prompt("nul seen\r\nnul seen\r\nnul seen", unmatched="nul not seen")

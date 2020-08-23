@@ -3021,11 +3021,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 bool abbreviation_expanded = expand_abbreviation_as_necessary(1);
                 if (abbreviation_expanded && conf.syntax_check_ok) {
                     command_test_result = reader_shell_test(parser(), el->text());
+                    // If the command is OK, then we're going to execute it. We still want to do
+                    // syntax highlighting on this newly changed command, but a synchronous variant
+                    // that performs no I/O, so as not to block the user.
+                    if (command_test_result == 0) super_highlight_me_plenty(true);
                 }
-                // If the command is OK, then we're going to execute it. We still want to do
-                // syntax highlighting, but a synchronous variant that performs no I/O, so
-                // as not to block the user.
-                if (command_test_result == 0) super_highlight_me_plenty(true);
             }
 
             if (command_test_result == 0) {

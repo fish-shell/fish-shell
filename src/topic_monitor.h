@@ -217,10 +217,9 @@ class topic_monitor_t {
     /// If \p gens is older, then just return those by reference, and directly return false (not
     /// becoming the reader).
     /// If \p gens is current and there is not a reader, then do not update \p gens and return true,
-    /// indicating we should become the reader. Now it is our responsibility to read from the pipes
-    /// and notify on a change via the condition variable.
-    /// If \p gens is current, and there is already a reader, then wait until the reader notifies us
-    /// and try again.
+    /// indicating we should become the reader. Now it is our responsibility to wait on the
+    /// semaphore and notify on a change via the condition variable. If \p gens is current, and
+    /// there is already a reader, then wait until the reader notifies us and try again.
     bool try_update_gens_maybe_becoming_reader(generation_list_t *gens);
 
     /// Wait for some entry in the list of generations to change.

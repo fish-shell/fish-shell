@@ -879,21 +879,6 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, &path, &cmd, ctx.vars);
 
-    // mqudsi: run_on_main_thread() already just runs `func` if we're on the main thread,
-    // but it makes a kcall to get the current thread id to ascertain that. Perhaps even
-    // that single kcall proved to be a source of slowdown so this test on a local variable
-    // is used to make that determination instead? I don't know.
-    auto run_on_main_thread = [&](std::function<void(void)> &&func) {
-        if (this->type() == COMPLETE_DEFAULT) {
-            ASSERT_IS_MAIN_THREAD();
-            func();
-        } else if (this->type() == COMPLETE_AUTOSUGGEST) {
-            iothread_perform_on_main([&]() { func(); });
-        } else {
-            assert(false && "this->type() is unknown!");
-        }
-    };
-
     // FLOGF(error, L"\nThinking about looking up completions for %ls\n", cmd.c_str());
     bool head_exists = builtin_exists(cmd);
     // Only reload environment variables if builtin_exists returned false, as an optimization
@@ -913,7 +898,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         // and automatic completions ("gi" autosuggestion provider -> git)
         FLOG(complete, "Skipping completions for non-existent head");
     } else {
-        run_on_main_thread([&]() { complete_load(cmd); });
+        iothread_perform_on_main([&]() { complete_load(cmd); });
     }
 
     // Make a list of lists of all options that we care about.

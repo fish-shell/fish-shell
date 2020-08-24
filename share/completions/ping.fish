@@ -16,7 +16,7 @@ complete -c ping -s p -d "Pad packet with empty bytes" -x
 complete -c ping -s Q -d "Set Quality of Service -related bits in ICMP datagrams" -x
 complete -c ping -s q -d "Quiet mode"
 complete -c ping -s R -d "Record route"
-complete -c ping -s r -d "Bypass the normal routing tables and send directly to a host on an attached interface"
+complete -c ping -s r -d "Bypass the normal routing tables"
 complete -c ping -s s -d "Specifies the number of data bytes to be sent" -x
 complete -c ping -s S -d "Set socket buffer size" -x
 complete -c ping -s t -d "Set the IP Time to Live" -x
@@ -25,6 +25,5 @@ complete -c ping -s M -d "Select Path MTU Discovery strategy" -x -a "do want don
 complete -c ping -s U -d "Print full user-to-user latency"
 complete -c ping -s v -d "Verbose mode"
 complete -c ping -s V -d "Display version and exit"
-complete -c ping -s w -d "Specify  a timeout, in seconds, before ping exits regardless of how many packets have been sent or received" -x
+complete -c ping -s w -d "Specify a timeout, in seconds, before ping exits" -x
 complete -c ping -s W -d "Time to wait for a response, in seconds" -x
-

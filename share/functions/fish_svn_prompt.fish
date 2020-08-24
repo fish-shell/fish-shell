@@ -70,7 +70,7 @@ set -g __fish_svn_prompt_char_token_broken_color --bold magenta
 function __fish_svn_prompt_parse_status --argument flag_status_string --description "helper function that does pretty formatting on svn status"
     # SVN status symbols
     # Do not change these! These are the expected characters that are output from `svn status`, they are taken from `svn help status`
-    set -l __fish_svn_prompt_chars A C D I M R X \\\? ! \~ L + S K O T B
+    set -l __fish_svn_prompt_chars A C D I M R X '\?' ! '~' L '\+' S K O T B
     # this sets up an array of all the types of status codes that could be returned.
     set -l __fish_svn_prompt_flag_names added conflicted deleted ignored modified replaced unversioned_external unversioned missing versioned_obstructed locked scheduled switched token_present token_other token_stolen token_broken
     # iterate over the different status types
@@ -78,7 +78,7 @@ function __fish_svn_prompt_parse_status --argument flag_status_string --descript
         # resolve the name of the variable for the character representing the current status type
         set -l flag_index (contains -i $flag_type $__fish_svn_prompt_flag_names)
         # check to see if the status string for this column contains the character representing the current status type
-        if test (count (string match -e $__fish_svn_prompt_chars[$flag_index] -- $flag_status_string)) -eq 1
+        if string match -q -r $__fish_svn_prompt_chars[$flag_index] -- $flag_status_string
             # if it does, then get the names of the variables for the display character and colour to format it with
             set -l flag_var_display __fish_svn_prompt_char_{$flag_type}_display
             set -l flag_var_color __fish_svn_prompt_char_{$flag_type}_color

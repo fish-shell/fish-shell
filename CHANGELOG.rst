@@ -78,6 +78,7 @@ Scripting improvements
 -  ``status`` gained new ``dirname`` and ``basename`` convenience commands
    to get just the directory to the running script or the name of it,
    to simplify a common ``(dirname (status filename))`` idiom (#7076).
+-  The ``_`` gettext function is now implemented as a builtin for performance purposes (#7036).
 
 Interactive improvements
 ------------------------
@@ -119,6 +120,8 @@ Improved prompts
 
 -  The default and example prompts print the correct exit status for
    commands prefixed with ``not`` (#6566).
+-  git prompts include all untracked files in the repository, not just those in the current
+   directory (#6086).
 
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -148,10 +151,12 @@ Completions
       ``pg_dumpall``
    -  ``gh``
    -  ``gitk``
+   -  ``imv`` (#6675)
    -  ``mpc``
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
    -  ``nmap``, ``ncat``
    -  ``prime-run``
+   -  ``ps2pdf{12,13,14,wr}`` (#6673)
    -  ``pyenv`` (#6551)
    -  ``rst2html``, ``rst2html4``, ``rst2html5``, ``rst2latex``,
       ``rst2man``, ``rst2odt``, ``rst2pseudoxml``, ``rst2s5``,

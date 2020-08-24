@@ -2645,9 +2645,6 @@ struct readline_loop_state_t {
 
     /// Maximum number of characters to read.
     size_t nchars{std::numeric_limits<size_t>::max()};
-
-    /// \return whether the last readline command was a repaint.
-    bool last_was_repaint() const { return last_cmd && *last_cmd == readline_cmd_t::repaint; }
 };
 
 /// Read normal characters, inserting them into the command line.
@@ -2767,12 +2764,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::force_repaint:
         case rl::repaint: {
-            if (force_exec_prompt_and_repaint || !rls.last_was_repaint()) {
-                exec_prompt();
-                s_reset_line(&screen, true /* redraw prompt */);
-                this->layout_and_repaint(L"readline");
-                force_exec_prompt_and_repaint = false;
-            }
+            exec_prompt();
+            s_reset_line(&screen, true /* redraw prompt */);
+            this->layout_and_repaint(L"readline");
+            force_exec_prompt_and_repaint = false;
             break;
         }
         case rl::complete:

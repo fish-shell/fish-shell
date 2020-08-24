@@ -3,7 +3,13 @@ from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt = sp.send, sp.sendline, sp.sleep, sp.expect_prompt
-expect_prompt()
+expect_prompt(increment=False)
+
+# Clear twice (regression test for #7280).
+send("\f")
+expect_prompt(increment=False)
+send("\f")
+expect_prompt(increment=False)
 
 # Fish should start in default-mode (i.e., emacs) bindings. The default escape
 # timeout is 30ms.

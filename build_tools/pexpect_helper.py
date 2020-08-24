@@ -197,10 +197,10 @@ class SpawnedProc(object):
         """ Cover over expect_re() which accepts a literal string. """
         return self.expect_re(re.escape(s), **kwargs)
 
-    def expect_prompt(self, *args, **kwargs):
+    def expect_prompt(self, increment=True, *args, **kwargs):
         """ Convenience function which matches some text and then a prompt.
             Match the given positional arguments as expect_re, and then look
-            for a prompt, bumping the prompt counter.
+            for a prompt, bumping the prompt counter if increment is true.
             Returns None on success, and exits on failure.
             Example:
                sp.sendline("echo hello world")
@@ -212,7 +212,8 @@ class SpawnedProc(object):
             get_prompt_re(self.prompt_counter),
             pat_desc="prompt %d" % self.prompt_counter,
         )
-        self.prompt_counter += 1
+        if increment:
+            self.prompt_counter += 1
 
     def report_exception_and_exit(self, pat, unmatched, err):
         """ Things have gone badly.

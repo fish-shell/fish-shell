@@ -314,4 +314,4 @@ In contrast to ``grep``, ``string``\ s `match` defaults to glob-mode, while `rep
 
 Like ``sed``\ s `s/` command, ``string replace`` still prints strings that don't match. ``sed``\ s `-n` in combination with a `/p` modifier or command is like ``string replace -f``.
 
-``string split somedelimiter`` is a replacement for ``tr somedelimiter \\n``.
+``string split somedelimiter`` is a replacement for ``tr somedelimiter \n``.

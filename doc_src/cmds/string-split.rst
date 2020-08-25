@@ -66,9 +66,9 @@ NUL Delimited Examples
     42
 
     >_ # Sort a list of elements which may contain newlines
-    >_ set foo beta alpha\\ngamma
+    >_ set foo beta alpha\ngamma
     >_ set foo (string join0 $foo | sort -z | string split0)
     >_ string escape $foo[1]
-    alpha\\ngamma
+    alpha\ngamma
 
 .. END EXAMPLES

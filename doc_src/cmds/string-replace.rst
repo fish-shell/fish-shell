@@ -59,7 +59,7 @@ Replace Regex Examples
     >_ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
     right left $
 
-    >_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
+    >_ string replace -r '\\s*newline\\s*' '\n' 'put a newline here'
     put a
     here
 

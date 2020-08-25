@@ -53,7 +53,7 @@ Replace Regex Examples
 
 ::
 
-    >_ string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
+    >_ string replace -r -a '[^\d.]+' ' ' '0 one two 3.14 four 5x'
     0 3.14 5
 
     >_ string replace -r '(\w+)\s+(\w+)' '$2 $1 $$' 'left right'

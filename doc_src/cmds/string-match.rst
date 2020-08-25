@@ -102,7 +102,7 @@ Match Regex Examples
     4 2
     6 2
 
-    >_ string match -r -i '0x[0-9a-f]{{1,8}}' 'int magic = 0xBadC0de;'
+    >_ string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
     0xBadC0de
 
 .. END EXAMPLES

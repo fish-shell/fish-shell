@@ -140,3 +140,17 @@ math "42 >= 1337"
 # CHECKERR: math: Error: Logical operations are not supported, use `test` instead
 # CHECKERR: '42 >= 1337'
 # CHECKERR:     ^
+
+math "bitand(0xFE, 1)"
+# CHECK: 0
+math "bitor(0xFE, 1)"
+# CHECK: 255
+math "bitxor(5, 1)"
+# CHECK: 4
+math "bitand(5.5, 2)"
+# CHECK: 0
+math "bitand(5.5, 1)"
+# CHECK: 1
+
+math "bitor(37 ^ 5, 255)"
+# CHECK: 69343999

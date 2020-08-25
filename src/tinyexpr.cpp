@@ -167,6 +167,19 @@ static double ncr(double n, double r) {
 
 static double npr(double n, double r) { return ncr(n, r) * fac(r); }
 
+
+static constexpr double bit_and(double a, double b) {
+    return static_cast<double>(static_cast<long long>(a) & static_cast<long long>(b));
+}
+
+static constexpr double bit_or(double a, double b) {
+    return static_cast<double>(static_cast<long long>(a) | static_cast<long long>(b));
+}
+
+static constexpr double bit_xor(double a, double b) {
+    return static_cast<double>(static_cast<long long>(a) ^ static_cast<long long>(b));
+}
+
 static const te_builtin functions[] = {
     /* must be in alphabetical order */
     {"abs", reinterpret_cast<const void *>(static_cast<te_fun1>(fabs)), TE_FUNCTION1},
@@ -174,6 +187,9 @@ static const te_builtin functions[] = {
     {"asin", reinterpret_cast<const void *>(static_cast<te_fun1>(asin)), TE_FUNCTION1},
     {"atan", reinterpret_cast<const void *>(static_cast<te_fun1>(atan)), TE_FUNCTION1},
     {"atan2", reinterpret_cast<const void *>(static_cast<te_fun2>(atan2)), TE_FUNCTION2},
+    {"bitand", reinterpret_cast<const void *>(static_cast<te_fun2>(bit_and)), TE_FUNCTION2},
+    {"bitor", reinterpret_cast<const void *>(static_cast<te_fun2>(bit_or)), TE_FUNCTION2},
+    {"bitxor", reinterpret_cast<const void *>(static_cast<te_fun2>(bit_xor)), TE_FUNCTION2},
     {"ceil", reinterpret_cast<const void *>(static_cast<te_fun1>(ceil)), TE_FUNCTION1},
     {"cos", reinterpret_cast<const void *>(static_cast<te_fun1>(cos)), TE_FUNCTION1},
     {"cosh", reinterpret_cast<const void *>(static_cast<te_fun1>(cosh)), TE_FUNCTION1},

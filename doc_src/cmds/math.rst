@@ -75,6 +75,7 @@ Functions
 - ``asin``
 - ``atan``
 - ``atan2``
+- ``bitand``, ``bitor`` and ``bitxor`` to perform bitwise operations. These will throw away any non-integer parts and interpret the rest as an int.
 - ``ceil``
 - ``cos``
 - ``cosh``
@@ -113,6 +114,10 @@ Examples
 ``math 5 \* 2`` or ``math "5 * 2"`` or ``math 5 "*" 2`` all output ``10``.
 
 ``math 0xFF`` outputs 255, ``math 0 x 3`` outputs 0 (because it computes 0 multiplied by 3).
+
+``math "bitand(0xFE, 0x2e)"`` outputs 46.
+
+``math "bitor(9,2)"`` outputs 11.
 
 Compatibility notes
 -------------------

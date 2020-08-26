@@ -1665,7 +1665,6 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
 // Ensure we have no pager contents.
 void reader_data_t::clear_pager() {
     pager.clear();
-    current_page_rendering = page_rendering_t();
 }
 
 void reader_data_t::select_completion_in_direction(selection_motion_t dir) {

@@ -646,7 +646,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
-    void clear_pager();
     void select_completion_in_direction(selection_motion_t dir);
     void flash();
 
@@ -1638,7 +1637,7 @@ void reader_data_t::update_autosuggestion() {
 void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_style_t style) {
     if (!autosuggestion.empty()) {
         // Accepting an autosuggestion clears the pager.
-        clear_pager();
+        pager.clear();
 
         // Accept the autosuggestion.
         if (full) {
@@ -1660,11 +1659,6 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
                                            autosuggestion.substr(have, want - have));
         }
     }
-}
-
-// Ensure we have no pager contents.
-void reader_data_t::clear_pager() {
-    pager.clear();
 }
 
 void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
@@ -2673,7 +2667,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 
         // End paging upon inserting into the normal command line.
         if (el == &command_line) {
-            clear_pager();
+            pager.clear();
         }
 
         // Since we handled a normal character, we don't have a last command.
@@ -2965,7 +2959,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::execute: {
             // If the user hits return while navigating the pager, it only clears the pager.
             if (is_navigating_pager_contents()) {
-                clear_pager();
+                pager.clear();
                 break;
             }
 
@@ -2974,7 +2968,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
             // The user may have hit return with pager contents, but while not navigating them.
             // Clear the pager in that event.
-            clear_pager();
+            pager.clear();
 
             // We only execute the command line.
             editable_line_t *el = &command_line;
@@ -3505,7 +3499,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             bool ok = (c == rl::undo) ? el->undo() : el->redo();
             if (ok) {
                 if (el == &command_line) {
-                    clear_pager();
+                    pager.clear();
                 }
                 update_buff_pos(el);
             } else {
@@ -3622,7 +3616,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             // Clear the pager if necessary.
             bool focused_on_search_field = (active_edit_line() == &pager.search_field_line);
             if (command_ends_paging(readline_cmd, focused_on_search_field)) {
-                clear_pager();
+                pager.clear();
             }
 
             handle_readline_command(readline_cmd, rls);
@@ -3656,7 +3650,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
                 // End paging upon inserting into the normal command line.
                 if (el == &command_line) {
-                    clear_pager();
+                    pager.clear();
                     command_line_has_transient_edit = false;
                 }
             } else {
@@ -3797,7 +3791,7 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
     reader_data_t *data = current_data_or_null();
     if (!data) return;
 
-    data->clear_pager();
+    data->pager.clear();
     data->set_buffer_maintaining_pager(b, pos);
 }
 

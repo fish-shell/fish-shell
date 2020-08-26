@@ -61,7 +61,7 @@ Constants
 ``math`` knows the following constants:
 
 - ``e`` - Euler's number.
-- ``pi`` - You know that one. Half of Tau. (Tau is not implemented)
+- ``pi`` - You know that one. Half of Tau. (``tau`` is also implemented)
 
 Use them without a leading ``$`` - ``pi - 3`` should be about 0.
 

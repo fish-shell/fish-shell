@@ -137,6 +137,7 @@ void te_free(te_expr *n) {
 }
 
 static constexpr double pi() { return M_PI; }
+static constexpr double tau() { return 2 * M_PI; }
 static constexpr double e() { return M_E; }
 
 static double fac(double a) { /* simplest version of fac */
@@ -209,7 +210,9 @@ static const te_builtin functions[] = {
     {"sinh", reinterpret_cast<const void *>(static_cast<te_fun1>(sinh)), TE_FUNCTION1},
     {"sqrt", reinterpret_cast<const void *>(static_cast<te_fun1>(sqrt)), TE_FUNCTION1},
     {"tan", reinterpret_cast<const void *>(static_cast<te_fun1>(tan)), TE_FUNCTION1},
-    {"tanh", reinterpret_cast<const void *>(static_cast<te_fun1>(tanh)), TE_FUNCTION1}};
+    {"tanh", reinterpret_cast<const void *>(static_cast<te_fun1>(tanh)), TE_FUNCTION1},
+    {"tau", reinterpret_cast<const void *>(static_cast<te_fun0>(tau)), TE_FUNCTION0},
+};
 
 static const te_builtin *find_builtin(const char *name, int len) {
     const auto end = std::end(functions);

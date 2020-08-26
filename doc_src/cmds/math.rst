@@ -36,7 +36,7 @@ Syntax
 
 ``math`` knows some operators, constants, functions and can (obviously) read numbers.
 
-For numbers, ``.`` is always the radix character regardless of locale - ``2.5``, not ``2,5``. Scientific notation (``10e5``) is also available.
+For numbers, ``.`` is always the radix character regardless of locale - ``2.5``, not ``2,5``. Scientific notation (``10e5``) and hexadecimal (``0xFF``) are also available.
 
 Operators
 ---------

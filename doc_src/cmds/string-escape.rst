@@ -37,11 +37,11 @@ Examples
 
 ::
 
-    >_ echo \\x07 | string escape
-    cg
+    >_ echo \x07 | string escape
+    \cg
 
-    >_ string escape --style=var 'a1 b2'\\u6161
-    a1_20b2__c_E6_85_A1
+    >_ string escape --style=var 'a1 b2'\u6161
+    a1_20_b2_E6_85_A1_
 
 
 .. END EXAMPLES

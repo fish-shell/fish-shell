@@ -77,7 +77,7 @@ Example
 
 ::
 
-    printf '%s\\t%s\\n' flounder fish
+    printf '%s\t%s\n' flounder fish
 
 Will print "flounder	fish" (separated with a tab character), followed by a newline character. This is useful for writing completions, as fish expects completion scripts to output the option followed by the description, separated with a tab character.
 

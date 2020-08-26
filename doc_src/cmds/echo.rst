@@ -64,7 +64,7 @@ Example
    > echo 'Hello World'
    Hello World
 
-   > echo -e 'Top\\nBottom'
+   > echo -e 'Top\nBottom'
    Top
    Bottom
 

@@ -1293,7 +1293,7 @@ Variable                                                   Meaning
 ``fish_color_comment``                                     comments like '# important'
 ``fish_color_selection``                                   selected text in vi visual mode
 ``fish_color_operator``                                    parameter expansion operators like '*' and '~'
-``fish_color_escape``                                      character escapes like '\\n' and '\\x70'
+``fish_color_escape``                                      character escapes like '\n' and '\x70'
 ``fish_color_autosuggestion``                              autosuggestions (the proposed rest of a command)
 ``fish_color_cwd``                                         the current working directory in the default prompt
 ``fish_color_user``                                        the username in the default prompt

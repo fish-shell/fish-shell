@@ -52,7 +52,7 @@ Match Glob Examples
     >_ string match -i 'a??B' Axxb
     Axxb
 
-    >_ echo 'ok?' | string match '*\\?'
+    >_ echo 'ok?' | string match '*\?'
     ok?
 
     # Note that only the second STRING will match here.

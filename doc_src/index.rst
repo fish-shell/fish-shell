@@ -1165,7 +1165,7 @@ You can change the settings of ``fish`` by changing the values of certain variab
 
 - ``PATH``, a list of directories in which to search for commands
 
-- ``CDPATH``, a list of directories in which to search for the new directory for the :ref:`cd <cmd-cd>` builtin.
+- ``CDPATH``, a list of directories in which the :ref:`cd <cmd-cd>` builtin looks for a new directory.
 
 - ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
 
@@ -1175,9 +1175,9 @@ You can change the settings of ``fish`` by changing the values of certain variab
 
 - ``fish_emoji_width`` controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
 
-- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. This is explained in the documentation for the :ref:`bind <cmd-bind-escape>` builtin command. This delay facilitates using escape as a meta key.
+- ``fish_escape_delay_ms`` sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
 
-- ``fish_greeting``, the greeting message printed on startup.
+- ``fish_greeting``, the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :ref:`funced <cmd-funced>`
 
 - ``fish_history``, the current history session name. If set, all subsequent commands within an
   interactive fish session will be logged to a separate file identified by the value of the

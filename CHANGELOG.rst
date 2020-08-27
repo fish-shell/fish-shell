@@ -457,7 +457,7 @@ Scripting improvements
    parentheses (#6063), and warns when unsupported logical operations
    are used (#6096).
 - ``math`` learned bitwise functions ``bitand``, ``bitor`` and ``bitxor``, used like ``math "bitand(0xFE, 5)"`` (#7281).
-- ``math`` learned tau for those wishing to cut down on typing "2 *".
+- ``math`` learned tau for those wishing to cut down on typing "2 * pi".
 -  ``functions --erase`` now also prevents fish from autoloading a
    function for the first time (#5951).
 -  ``jobs --last`` returns 0 to indicate success when a job is found

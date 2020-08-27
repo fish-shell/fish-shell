@@ -125,7 +125,7 @@ class token_stream_t {
         if (count_ == 0) {
             return next_from_tok();
         }
-        parse_token_t result = std::move(lookahead_[start_]);
+        parse_token_t result = lookahead_[start_];
         start_ = mask(start_ + 1);
         count_ -= 1;
         return result;
@@ -471,7 +471,7 @@ class ast_t::populator_t {
 
     /// \return whether the status is unwinding.
     /// This is more efficient than checking the status directly.
-    bool is_unwinding() { return unwinding_; }
+    bool is_unwinding() const { return unwinding_; }
 
     /// \return whether any leaf nodes we visit should be marked as unsourced.
     bool unsource_leaves() {
@@ -933,7 +933,7 @@ class ast_t::populator_t {
 
             // We're going to heap-allocate our array.
             using contents_ptr_t = typename list_t<ListType, ContentsNode>::contents_ptr_t;
-            contents_ptr_t *array = new contents_ptr_t[contents.size()];
+            auto *array = new contents_ptr_t[contents.size()];
             std::move(contents.begin(), contents.end(), array);
 
             list.length = static_cast<uint32_t>(contents.size());

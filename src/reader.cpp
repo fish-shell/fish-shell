@@ -1043,7 +1043,7 @@ maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, s
     // Look for plain statements where the cursor is at the end of the command.
     const ast::string_t *matching_cmd_node = nullptr;
     for (const node_t &n : ast) {
-        const decorated_statement_t *stmt = n.try_as<decorated_statement_t>();
+        const auto *stmt = n.try_as<decorated_statement_t>();
         if (!stmt) continue;
 
         // Skip if we have a decoration.

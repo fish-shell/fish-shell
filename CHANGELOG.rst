@@ -5,17 +5,9 @@ Notable improvements and fixes
 ------------------------------
 
 -  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Ctrl+Z, and redo to Alt+/.
--  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space, as in fish 2.7.1 and before (#6970).
--  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
 -  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally.
 -  Ctrl-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
--  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
-   shape in vi mode, regardless of terminal. The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
--  The history file is now created with user-private permissions,
-   matching other shells (#6926). The directory containing the history
-   file remains private, so there should not have been any private date
-   revealed.
 -  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
    Although flow control remains off by default, enterprising users can now enable it for external commands with
    ``stty`` (#2315). 
@@ -39,9 +31,6 @@ Notable improvements and fixes
 
     dmesg -w | string replace foo bar
 
-- A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
-- The ``-o`` short option to fish, for ``--debug-output``, works correctly instead of producing an
-  invalid option error (#7254).
 - ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
 
 Syntax changes and new commands
@@ -83,6 +72,7 @@ Scripting improvements
    results in the job continuing to run but with the broken file descriptor replaced with a closed
    file descriptor. This allows better error recovery and is more in line with other shells'
    behaviour (#7038).
+-  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
 
 Interactive improvements
 ------------------------
@@ -100,7 +90,14 @@ Interactive improvements
 -  A new variable ``$status_generation`` is incremented only when the previous command produces a status. This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
 -  ``fish_greeting`` is now a function that reads a variable of the same name, and defaults to setting it globally. This removes a universal variable by default and helps with updating the greeting. However, to disable the greeting it is now necessary to explicitly specify universal scope (``set -U fish_greeting``) or to disable it in config.fish (#7265).
 -  Events are properly emitted after a job is cancelled (#2356).
-
+- A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
+- The ``-o`` short option to fish, for ``--debug-output``, works correctly instead of producing an
+  invalid option error (#7254).
+-  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space, as in fish 2.7.1 and before (#6970).
+-  The history file is now created with user-private permissions,
+   matching other shells (#6926). The directory containing the history
+   file remains private, so there should not have been any private date
+   revealed.
 
 
 New or improved bindings
@@ -121,6 +118,8 @@ New or improved bindings
 - ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
   from history if the commandline is empty (#7137).
 - ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (#7191)
+-  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
+   shape in vi mode, regardless of terminal. The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

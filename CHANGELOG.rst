@@ -26,7 +26,7 @@ Notable improvements and fixes
 
    will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
    so it can be called again and again from config.fish or just once interactively, and the path will just be there, once.
-- ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands.
+- ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (#4829).
 - The ``test`` builtin now better shows where an error occured (#6030)::
 
     > test 1 = 2 and echo true or false
@@ -75,10 +75,14 @@ Scripting improvements
 -  The ``fish_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
    use the new ``fish_read`` event instead.
--  ``status`` gained new ``dirname`` and ``basename`` convenience commands
+-  ``status`` gained new ``dirname`` and ``basename`` convenience subcommands
    to get just the directory to the running script or the name of it,
-   to simplify a common ``(dirname (status filename))`` idiom (#7076).
+   to simplify common tasks such as running ``(dirname (status filename))`` (#7076).
 -  The ``_`` gettext function is now implemented as a builtin for performance purposes (#7036).
+-  Broken pipelines are now handled more smoothly; in particular, bad redirection mid-pipeline
+   results in the job continuing to run but with the broken file descriptor replaced with a closed
+   file descriptor. This allows better error recovery and is more in line with other shells'
+   behaviour (#7038).
 
 Interactive improvements
 ------------------------
@@ -95,6 +99,8 @@ Interactive improvements
 -  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (#6964).
 -  A new variable ``$status_generation`` is incremented only when the previous command produces a status. This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
 -  ``fish_greeting`` is now a function that reads a variable of the same name, and defaults to setting it globally. This removes a universal variable by default and helps with updating the greeting. However, to disable the greeting it is now necessary to explicitly specify universal scope (``set -U fish_greeting``) or to disable it in config.fish (#7265).
+-  Events are properly emitted after a job is cancelled (#2356).
+
 
 
 New or improved bindings
@@ -102,6 +108,7 @@ New or improved bindings
 
 -  As mentioned above, new readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
    changes to the command line or the pager search field (#6570).
+-  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, and ``y0`` (#6648).
 - The readline command ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
 -  New readline command ``forward-single-char`` to move one character to the right, and if an autosuggestion is available, only take a single char from it (#7217).
 -  New function ``__fish_preview_current_file`` (Alt+O) opens the
@@ -147,10 +154,11 @@ Completions
    -  ``create_ap``
    -  ``deno``
    -  ``dhclient``
-   -  ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
-      ``pg_dumpall``
+   -  Postgres-related commands ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
+      ``pg_dumpall`` (#6620).
    -  ``gh``
    -  ``gitk``
+   -  ``hikari`` (#7083)
    -  ``imv`` (#6675)
    -  ``mpc``
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
@@ -163,6 +171,7 @@ Completions
       ``rst2xetex``, ``rst2xml`` and ``rstpep2html``
    -  ``sphinx-apidoc``, ``sphinx-autogen``, ``sphinx-build`` and
       ``sphinx-quickstart``
+   -  ``strace`` (#6656)
    -  ``tcpdump``
    -  ``tig``
    -  ``windscribe``
@@ -173,6 +182,7 @@ Completions
    -  ``zopfli``, and ``zopflipng``
 
 - Lots of improvements to completions.
+- Improvements to the manpage completion generator (#7086).
 
 Deprecations and removed features
 ---------------------------------

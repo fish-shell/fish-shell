@@ -230,6 +230,7 @@ void print_exit_warning_for_jobs(const job_list_t &jobs) {
     fputws(L"\n", stdout);
     fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
     fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
+    reader_schedule_prompt_repaint();
 }
 
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {

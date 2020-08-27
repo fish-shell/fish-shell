@@ -2279,6 +2279,7 @@ static parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstri
             error_desc.push_back(L'\n');
         }
         std::fwprintf(stderr, L"\n%ls", error_desc.c_str());
+        reader_schedule_prompt_repaint();
     }
     return res;
 }

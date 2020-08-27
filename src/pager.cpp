@@ -580,7 +580,7 @@ bool pager_t::rendering_needs_update(const page_rendering_t &rendering) const {
     // Common case is no pager.
     if (this->empty() && rendering.screen_data.empty()) return false;
 
-    return this->empty() && !rendering.screen_data.empty() ||       // Do update after clear().
+    return (this->empty() && !rendering.screen_data.empty()) ||     // Do update after clear().
            rendering.term_width != this->available_term_width ||    //
            rendering.term_height != this->available_term_height ||  //
            rendering.selected_completion_idx !=

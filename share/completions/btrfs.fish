@@ -333,7 +333,7 @@ complete -f -c btrfs -n $inspect_internal -a inode-resolve -d 'Get file system p
 complete -f -c btrfs -n $inspect_internal -a logical-resolve -d 'Get file system paths for the given logical address'
 complete -f -c btrfs -n $inspect_internal -a subvolid-resolve -d 'Get file system paths for the given subvolume ID.'
 complete -f -c btrfs -n $inspect_internal -a rootid -d 'Get tree ID of the containing subvolume of path.'
-complete -f -c btrfs -n $inspect_internal -a min-dev-size -d 'Get the minimum size the device can be shrunk to. The device id 1 is used by default.'
+complete -f -c btrfs -n $inspect_internal -a min-dev-size -d 'Get the minimum size the device can be shrunk to. (Default: 1)'
 complete -f -c btrfs -n $inspect_internal -a dump-tree -d 'Dump tree structures from a given device'
 complete -f -c btrfs -n $inspect_internal -a dump-super -d 'Dump superblock from a device in a textual form'
 complete -f -c btrfs -n $inspect_internal -a tree-stats -d 'Print various stats for trees'

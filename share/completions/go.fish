@@ -7,16 +7,25 @@ complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -s a -d 
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -s n -d 'print the commands but do not run them'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -s p -r -d 'number parallel builds (default=#cpus)'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o race -d 'enable data race detection'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o msan -d 'enable interoperation with memory sanitizer'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -s v -d 'print packages being built'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o work -d 'print and preserve work directory'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -s x -d 'print the commands'
-complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o ccflags -r -d 'c compiler flags'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o asmflags -d 'arguments to pass on each go tool asm invocation'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o buildmode -x -d 'build mode to use' -a 'archive c-archive c-shared default shared exe pie plugin'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o compiler -x -d 'name of compiler to use, as in runtime' -a 'gccgo gc'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o gccgoflags -r -d 'gccgo compiler/linker flags'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o gcflags -r -d 'go compiler flags'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o installsuffix -r -d 'suffix for installation directory'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o ldflags -r -d 'linker flags'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o linkshared -r -d 'link against shared libraries previously created with -buildmode=shared'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o mod -x -d 'module download mode to use' -a 'readonly vendor mod'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o modcacherw -d 'leave newly-created directories in the module cache writable'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o modfile -r -d 'read (and possibly write) an alternate go.mod'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o pkgdir -r -d 'install and load all packages from dir instead of the usual locations'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o tags -r -d 'build tags'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o trimpath -d 'remove all file system paths from the resulting executable'
+complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o toolexec -r -d 'a program to use to invoke toolchain programs'
 complete -c go -n "__fish_seen_subcommand_from $__go_cmds_w_buildflags" -o mod -x -d 'module download mode to use' -a 'readonly vendor'
 
 
@@ -36,18 +45,28 @@ complete -c go -n __fish_use_subcommand -a build -d 'compile packages and depend
 
 # clean
 complete -c go -n __fish_use_subcommand -a clean -d 'remove object files'
-complete -c go -n '__fish_seen_subcommand_from clean' -s i -d "remove the corresponding installed archive or binary (what 'go install' would create)"
-complete -c go -n '__fish_seen_subcommand_from clean' -s n -d "print the remove commands it would execute, but not run them"
-complete -c go -n '__fish_seen_subcommand_from clean' -s r -d "clean to be applied recursively to all the dependencies of the packages named by the import paths"
+complete -c go -n '__fish_seen_subcommand_from clean' -s i -d "remove the corresponding installed archive or binary"
+complete -c go -n '__fish_seen_subcommand_from clean' -s n -d "print the command that would be executed without running"
+complete -c go -n '__fish_seen_subcommand_from clean' -s r -d "recursively clean all the dependencies of package named by the import paths"
 complete -c go -n '__fish_seen_subcommand_from clean' -s x -d "clean to print remove commands as it executes them"
+complete -c go -n '__fish_seen_subcommand_from clean' -o cache -d 'remove the entire go build cache'
+complete -c go -n '__fish_seen_subcommand_from clean' -o testcache -d 'expire all test results in the go build cache'
+complete -c go -n '__fish_seen_subcommand_from clean' -o modcache -d 'remove the entire module download cache'
 
 # doc
 complete -c go -n __fish_use_subcommand -a doc -d 'run godoc on package sources'
-complete -c go -n '__fish_seen_subcommand_from doc' -s n -d "prints commands that would be executed"
-complete -c go -n '__fish_seen_subcommand_from doc' -s x -d "prints commands as they are executed"
+complete -c go -n '__fish_seen_subcommand_from doc' -o all -d "show all the documentation for the package"
+complete -c go -n '__fish_seen_subcommand_from doc' -s c -d 'respect case when matching symbols'
+complete -c go -n '__fish_seen_subcommand_from doc' -o cmd -d 'treat a command (package main) like a regular package'
+complete -c go -n '__fish_seen_subcommand_from doc' -o short -d 'one-line representation for each symbol'
+complete -c go -n '__fish_seen_subcommand_from doc' -o src -d 'show the full source code for the symbol'
+complete -c go -n '__fish_seen_subcommand_from doc' -s u -d 'show documentation for unexported as well as exported symbols'
 
 # env
 complete -c go -n __fish_use_subcommand -a env -d 'print Go environment information'
+complete -c go -n '__fish_seen_subcommand_from env' -o json -d 'print the environment in JSON format'
+complete -c go -n '__fish_seen_subcommand_from env' -s u -r -d 'set NAME to default values'
+complete -c go -n '__fish_seen_subcommand_from env' -s w -r -d 'set default values for config variables'
 
 # fix
 complete -c go -n __fish_use_subcommand -a fix -d 'run go tool fix on packages'

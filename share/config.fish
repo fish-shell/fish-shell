@@ -25,24 +25,7 @@ function __fish_default_command_not_found_handler
     printf "fish: Unknown command: %s\n" (string escape -- $argv[1]) >&2
 end
 
-if status --is-interactive
-    # Enable truecolor/24-bit support for select terminals
-    # Ignore Screen and emacs' ansi-term as they swallow the sequences, rendering the text white.
-    if not set -q STY
-        and not string match -q -- 'eterm*' $TERM
-        and begin
-            set -q KONSOLE_PROFILE_NAME # KDE's konsole
-            or test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge 200400 # konsole, but new.
-            or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
-            or string match -q -- "st-*" $TERM # suckless' st
-            or test -n "$VTE_VERSION" -a "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
-            or test "$COLORTERM" = truecolor -o "$COLORTERM" = 24bit # slang expects this
-        end
-        # Only set it if it isn't to allow override by setting to 0
-        set -q fish_term24bit
-        or set -g fish_term24bit 1
-    end
-else
+if not status --is-interactive
     # Hook up the default as the principal command_not_found handler
     # in case we are not interactive
     function __fish_command_not_found_handler --on-event fish_command_not_found

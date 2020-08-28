@@ -366,6 +366,8 @@ static void update_fish_color_support(const environment_t &vars) {
         FLOGF(term_support, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
               term.c_str());
     }
+        FLOGF(term_support, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
+              term.c_str());
 
     // Handle $fish_term24bit
     if (auto fish_term24bit = vars.get(L"fish_term24bit")) {
@@ -373,9 +375,48 @@ static void update_fish_color_support(const environment_t &vars) {
         FLOGF(term_support, L"'fish_term24bit' preference: 24-bit color %ls",
               support_term24bit ? L"enabled" : L"disabled");
     } else {
-        // We don't attempt to infer term24 bit support yet.
-        // XXX: actually, we do, in config.fish.
-        // So we actually change the color mode shortly after startup
+        if (vars.get(L"STY") || string_prefixes_string(L"eterm", term)) {
+            // Screen and emacs' ansi-term swallow truecolor sequences,
+            // so we ignore them unless force-enabled.
+            FLOGF(term_support, L"Truecolor support: disabling for eterm/screen");
+            support_term24bit = false;
+        } else if (cur_term != nullptr && max_colors >= 32767) {
+            // $TERM wins, xterm-direct reports 32767 colors, we assume that's the minimum
+            // as xterm is weird when it comes to color.
+            FLOGF(term_support, L"Truecolor support: Enabling per terminfo for %ls with %d colors", term.c_str(), max_colors);
+            support_term24bit = true;
+        } else {
+            if (auto ct = vars.get(L"COLORTERM")) {
+                // If someone set $COLORTERM, that's the sort of color they want.
+                if (ct->as_string() == L"truecolor"
+                    || ct->as_string() == L"24bit") {
+                    FLOGF(term_support, L"Truecolor support: Enabling per $COLORTERM='%ls'", ct->as_string().c_str());
+                    support_term24bit = true;
+                }
+            } else if (vars.get(L"KONSOLE_VERSION")
+                || vars.get(L"KONSOLE_PROFILE_NAME")) {
+                // All konsole versions that use $KONSOLE_VERSION are new enough to support this,
+                // so no check is necessary.
+                FLOGF(term_support, L"Truecolor support: Enabling for Konsole");
+                support_term24bit = true;
+            } else if (auto it = vars.get(L"ITERM_SESSION_ID")) {
+                // Supporting versions of iTerm include a colon here.
+                // We assume that if this is iTerm, it can't also be st, so having this check
+                // inside is okay.
+                if (it->as_string().find(L":") != wcstring::npos) {
+                    FLOGF(term_support, L"Truecolor support: Enabling for ITERM");
+                    support_term24bit = true;
+                }
+            } else if (string_prefixes_string(L"st-", term)) {
+                FLOGF(term_support, L"Truecolor support: Enabling for st");
+                support_term24bit = true;
+            } else if (auto vte = vars.get(L"VTE_VERSION")) {
+                if (fish_wcstod(vte->as_string().c_str(), nullptr) > 3600) {
+                    FLOGF(term_support, L"Truecolor support: Enabling for VTE version %ls", vte->as_string().c_str());
+                    support_term24bit = true;
+                }
+            }
+        }
     }
     color_support_t support = (support_term256 ? color_support_term256 : 0) |
                               (support_term24bit ? color_support_term24bit : 0);

@@ -1012,7 +1012,7 @@ void job_t::continue_job(parser_t &parser, bool in_foreground) {
 
         if (in_foreground) {
             // Wait for the status of our own job to change.
-            while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
+            while (!check_cancel_from_fish_signal() && !is_stopped() && !is_completed()) {
                 process_mark_finished_children(parser, true);
             }
         }

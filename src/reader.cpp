@@ -727,8 +727,13 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_cc[VSTART] = disabling_char;
 }
 
-/// If set, we are committed to exiting. This latches to true.
-static relaxed_atomic_t<bool> s_exit_forced{false};
+/// A description of where fish is in the process of exiting.
+enum class exit_state_t {
+    none,               /// fish is not exiting.
+    running_handlers,   /// fish intends to exit, and is running handlers like 'fish_exit'.
+    finished_handlers,  /// fish is finished running handlers and no more fish script may be run.
+};
+static relaxed_atomic_t<exit_state_t> s_exit_state{exit_state_t::none};
 
 /// If set, SIGHUP has been received. This latches to true.
 /// This is set from a signal handler.
@@ -798,7 +803,20 @@ static void term_steal() {
     termsize_container_t::shared().invalidate_tty();
 }
 
-bool reader_exit_forced() { return s_exit_forced; }
+bool check_cancel_from_fish_signal() {
+    switch (s_exit_state) {
+        case exit_state_t::none:
+            // No reason to exit now.
+            return false;
+        case exit_state_t::running_handlers:
+            // We intend to exit but we want to allow these handlers to run.
+            return false;
+        case exit_state_t::finished_handlers:
+            // Done running exit handlers, time to exit.
+            return true;
+    }
+    DIE("Unreachable");
+}
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
@@ -2554,10 +2572,10 @@ static int read_i(parser_t &parser) {
 
     // If we are the last reader, then kill remaining jobs before exiting.
     if (reader_data_stack.size() == 0) {
-        // Once s_exit_forced is set, nothing more can be executed,
-        // so send the exit event now.
+        // Send the exit event and then commit to not executing any more fish script.
+        s_exit_state = exit_state_t::running_handlers;
         event_fire_generic(parser, L"fish_exit");
-        s_exit_forced = true;
+        s_exit_state = exit_state_t::finished_handlers;
         hup_jobs(parser.jobs());
     }
 
@@ -3688,7 +3706,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         pager.clear();
     }
 
-    if (!reader_exit_forced()) {
+    if (s_exit_state != exit_state_t::finished_handlers) {
         // The order of the two conditions below is important. Try to restore the mode
         // in all cases, but only complain if interactive.
         if (tcsetattr(0, TCSANOW, &old_modes) == -1 &&

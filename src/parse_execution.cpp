@@ -226,7 +226,7 @@ process_type_t parse_execution_context_t::process_type_for_command(
 }
 
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
-    if (this->cancel_signal || ctx.check_cancel() || reader_exit_forced()) {
+    if (this->cancel_signal || ctx.check_cancel() || check_cancel_from_fish_signal()) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();

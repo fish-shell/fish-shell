@@ -232,8 +232,9 @@ void reader_pop();
 /// The readers interrupt signal handler. Cancels all currently running blocks.
 void reader_handle_sigint();
 
-/// This function returns true if fish is exiting by force, i.e. because stdin died.
-bool reader_exit_forced();
+/// \return whether we should cancel fish script due to fish itself receiving a signal.
+/// TODO: this doesn't belong in reader.
+bool check_cancel_from_fish_signal();
 
 /// Test whether the interactive reader is in search mode.
 bool reader_is_in_search_mode();

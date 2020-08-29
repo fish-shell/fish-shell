@@ -3053,6 +3053,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                           ? reader_history_search_t::prefix
                           : reader_history_search_t::line;
 
+            bool was_active_before = history_search.active();
+
             if (history_search.is_at_end()) {
                 const editable_line_t *el = &command_line;
                 if (mode == reader_history_search_t::token) {
@@ -3086,7 +3088,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                      c == rl::history_prefix_search_backward)
                         ? history_search_direction_t::backward
                         : history_search_direction_t::forward;
-                if (history_search.move_in_direction(dir) ||
+                bool found = history_search.move_in_direction(dir);
+                if (!found && !was_active_before) {
+                    history_search.reset();
+                    break;
+                }
+                if (found ||
                     (dir == history_search_direction_t::forward && history_search.is_at_end())) {
                     update_command_line_from_history_search();
                 }

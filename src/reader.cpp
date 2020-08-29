@@ -806,8 +806,8 @@ static void term_steal() {
 bool check_cancel_from_fish_signal() {
     switch (s_exit_state) {
         case exit_state_t::none:
-            // No reason to exit now.
-            return false;
+            // Cancel if we got SIGHUP.
+            return s_sighup_received;
         case exit_state_t::running_handlers:
             // We intend to exit but we want to allow these handlers to run.
             return false;

@@ -62,7 +62,8 @@ send("sleep 130 &\r")
 expect_prompt()
 send("sleep 131 &\r")
 expect_prompt()
-send("sleep 132\r")
+send("sleep 9999999\r")
+sleep(0.100)  # ensure fish kicks off the above sleep before it gets HUP - see #7288
 os.kill(sp.spawn.pid, signal.SIGHUP)
 
 # Verify the spawned fish shell has exited.

@@ -83,7 +83,7 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
         if (buff[i] == L'\n') {
             count++;
             if (count == line) {
-                return (i + 1) < str.size() ? i + 1 : i;
+                return i + 1;
             }
         }
     }

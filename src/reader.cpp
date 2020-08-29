@@ -3236,8 +3236,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                     assert(base_pos_new != static_cast<size_t>(-1) &&
                            base_pos_old != static_cast<size_t>(-1));
-                    int indent_old = indents.at(base_pos_old);
-                    int indent_new = indents.at(base_pos_new);
+                    int indent_old = indents.at(std::min(indents.size() - 1, base_pos_old));
+                    int indent_new = indents.at(std::min(indents.size() - 1, base_pos_new));
 
                     size_t line_offset_old = el->position() - base_pos_old;
                     size_t total_offset_new = parse_util_get_offset(

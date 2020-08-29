@@ -106,6 +106,7 @@ New or improved bindings
 -  As mentioned above, new readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
    changes to the command line or the pager search field (#6570).
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, and ``y0`` (#6648).
+-  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.
 - The readline command ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
 -  New readline command ``forward-single-char`` to move one character to the right, and if an autosuggestion is available, only take a single char from it (#7217).
 -  New function ``__fish_preview_current_file`` (Alt+O) opens the

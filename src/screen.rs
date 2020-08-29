@@ -29,11 +29,11 @@ use crate::flog::FLOGF;
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::HighlightColorResolver;
+use crate::highlight::HighlightSpec;
 use crate::output::Outputter;
 use crate::termsize::{termsize_last, Termsize};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string;
-use crate::{highlight::HighlightSpec, wcstringutil::fish_wcwidth_visible};
 
 #[derive(Clone, Default)]
 pub struct HighlightedChar {
@@ -64,7 +64,7 @@ impl Line {
     pub fn append(&mut self, character: char, highlight: HighlightSpec) {
         self.text.push(HighlightedChar {
             highlight,
-            character,
+            character: rendered_character(character),
         })
     }
 
@@ -101,11 +101,7 @@ impl Line {
     pub fn wcswidth_min_0(&self, max: usize /* = usize::MAX */) -> usize {
         let mut result: usize = 0;
         for c in &self.text[..max.min(self.text.len())] {
-            let w = fish_wcwidth_visible(c.character);
-            // A backspace at the start of the line does nothing.
-            if w > 0 || result > 0 {
-                result = result.checked_add_signed(w).unwrap();
-            }
+            result += wcwidth_rendered(c.character);
         }
         result
     }
@@ -329,10 +325,7 @@ impl Screen {
                 colors[i],
                 usize::try_from(indent[i]).unwrap(),
                 first_line_prompt_space,
-                usize::try_from(fish_wcwidth_visible(
-                    effective_commandline.as_char_slice()[i],
-                ))
-                .unwrap(),
+                wcwidth_rendered(effective_commandline.as_char_slice()[i]),
             );
             i += 1;
         }
@@ -933,8 +926,7 @@ impl Screen {
             // Skip over skip_remaining width worth of characters.
             let mut j = 0;
             while j < o_line(&zelf, i).len() {
-                let width =
-                    usize::try_from(fish_wcwidth_visible(o_line(&zelf, i).char_at(j))).unwrap();
+                let width = wcwidth_rendered(o_line(&zelf, i).char_at(j));
                 if skip_remaining < width {
                     break;
                 }
@@ -945,7 +937,7 @@ impl Screen {
 
             // Skip over zero-width characters (e.g. combining marks at the end of the prompt).
             while j < o_line(&zelf, i).len() {
-                let width = fish_wcwidth_visible(o_line(&zelf, i).char_at(j));
+                let width = wcwidth_rendered(o_line(&zelf, i).char_at(j));
                 if width > 0 {
                     break;
                 }
@@ -978,7 +970,7 @@ impl Screen {
                 let color = o_line(&zelf, i).color_at(j);
                 set_color(&mut zelf, color);
                 let ch = o_line(&zelf, i).char_at(j);
-                let width = usize::try_from(fish_wcwidth_visible(ch)).unwrap();
+                let width = wcwidth_rendered(ch);
                 zelf.write_char(ch, isize::try_from(width).unwrap());
                 current_width += width;
                 j += 1;
@@ -1525,11 +1517,7 @@ fn measure_run_from(
             width = next_tab_stop(width);
         } else {
             // Ordinary char. Add its width with care to ignore control chars which have width -1.
-            let w = fish_wcwidth_visible(input.char_at(idx));
-            // A backspace at the start of the line does nothing.
-            if w != -1 || width > 0 {
-                width = width.checked_add_signed(w).unwrap();
-            }
+            width += wcwidth_rendered(input.char_at(idx));
         }
         idx += 1;
     }
@@ -1575,7 +1563,7 @@ fn truncate_run(
             curr_width = measure_run_from(run, 0, None, cache);
             idx = 0;
         } else {
-            let char_width = fish_wcwidth_visible(c) as usize;
+            let char_width = wcwidth_rendered(c);
             curr_width -= std::cmp::min(curr_width, char_width);
             run.remove(idx);
         }
@@ -1724,7 +1712,7 @@ fn compute_layout(
             multiline = true;
             break;
         } else {
-            first_line_width += usize::try_from(fish_wcwidth_visible(c)).unwrap();
+            first_line_width += wcwidth_rendered(c);
         }
     }
     let first_command_line_width = first_line_width;
@@ -1739,7 +1727,7 @@ fn compute_layout(
         autosuggest_truncated_widths.reserve(1 + autosuggestion_str.len());
         for c in autosuggestion.chars() {
             autosuggest_truncated_widths.push(autosuggest_total_width);
-            autosuggest_total_width += usize::try_from(fish_wcwidth_visible(c)).unwrap();
+            autosuggest_total_width += wcwidth_rendered(c);
         }
     }
 
@@ -1829,4 +1817,21 @@ fn compute_layout(
     result.left_prompt_space = left_prompt_width;
     result.autosuggestion = autosuggestion.to_owned();
     result
+}
+
+// Display non-printable control characters as a graphic symbol.
+// This is to prevent control characters like \t and \v from moving the
+// cursor in a way we don't handle.  The ones we do handle are \r and
+// \n.
+// See https://unicode-table.com/en/blocks/control-pictures/
+fn rendered_character(c: char) -> char {
+    if c <= '\x1F' {
+        char::from_u32(u32::from(c) + 0x2400).unwrap()
+    } else {
+        c
+    }
+}
+
+fn wcwidth_rendered(c: char) -> usize {
+    usize::try_from(fish_wcwidth(rendered_character(c))).unwrap_or_default()
 }

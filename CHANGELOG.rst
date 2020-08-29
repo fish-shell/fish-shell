@@ -49,6 +49,7 @@ Interactive improvements
 - When the cursor is on a command that resolves to a script, :kbd:`Alt-O` will now open that script in your editor.
 - :kbd:`Alt-E` now passes the cursor position to the external editor also if the editor aliases a supported editor (via ``complete --wraps``).
 - Option completion now uses fuzzy subsequence filtering as well. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
+- ASCII control characters are now rendered using symbols from Unicode's Control Pictures block.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

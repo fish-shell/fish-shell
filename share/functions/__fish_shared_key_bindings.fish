@@ -153,6 +153,11 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset -M paste \e\[201~ __fish_stop_bracketed_paste
     # In paste-mode, everything self-inserts except for the sequence to get out of it
     bind --preset -M paste "" self-insert
+    # Pass through formatting control characters else they may be dropped
+    # on some terminals.
+    bind --preset -M paste \b 'commandline -i \b'
+    bind --preset -M paste \t 'commandline -i \t'
+    bind --preset -M paste \v 'commandline -i \v'
     # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
     bind --preset -M paste \r "commandline -i \n"
 

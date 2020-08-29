@@ -249,7 +249,7 @@ struct node_t {
     }
 
     /// Try casting to a concrete node type, except returns nullptr on failure.
-    /// Example ussage:
+    /// Example usage:
     ///     if (const auto *job_list = node->try_as<job_list_t>()) job_list->...
     template <typename To>
     To *try_as() {

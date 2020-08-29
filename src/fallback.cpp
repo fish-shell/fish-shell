@@ -239,6 +239,8 @@ int fish_get_emoji_width(wchar_t c) {
 #include "widecharwidth/widechar_width.h"
 
 int fish_wcwidth(wchar_t wc) {
+    wc = character_to_render(wc);
+
     // The system version of wcwidth should accurately reflect the ability to represent characters
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.
@@ -260,6 +262,7 @@ int fish_wcwidth(wchar_t wc) {
     // or standalone with a 1 width. Since that's literally not expressible with wcwidth(),
     // we take the position that the typical way for them to show up is composed.
     if (wc >= L'\u1160' && wc <= L'\u11FF') return 0;
+
     int width = widechar_wcwidth(wc);
 
     switch (width) {

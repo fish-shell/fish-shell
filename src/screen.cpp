@@ -608,6 +608,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 static void s_write_char(screen_t *s, wchar_t c, size_t width) {
     scoped_buffer_t outp(*s);
     s->actual.cursor.x += width;
+    c = character_to_render(c);
     s->outp().writech(c);
     if (s->actual.cursor.x == s->actual.screen_width && allow_soft_wrap()) {
         s->soft_wrap_location = screen_data_t::cursor_t{0, s->actual.cursor.y + 1};

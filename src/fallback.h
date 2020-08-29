@@ -29,6 +29,19 @@ extern int g_guessed_fish_emoji_width;
 int fish_wcwidth(wchar_t wc);
 int fish_wcswidth(const wchar_t *str, size_t n);
 
+constexpr int character_to_render(wchar_t c) {
+    // Display non-printable control characters as a graphic symbol.
+    // This is to prevent control characters like \t and \v from moving the
+    // cursor in a way we don't handle.  The ones we do handle are \r and
+    // \n. They are never rendered directly by s_write_char; check for them
+    // anyway to compute the correct width of the commandline (not sure if
+    // it matters).
+    // See https://unicode-table.com/en/blocks/control-pictures/
+    return (c >= L'\u0000' && c <= L'\u001F' && c != L'\n' && c != L'\r')  //
+               ? c + L'\u2400'                                             //
+               : c;
+}
+
 // Replacement for mkostemp(str, O_CLOEXEC)
 // This uses mkostemp if available,
 // otherwise it uses mkstemp followed by fcntl

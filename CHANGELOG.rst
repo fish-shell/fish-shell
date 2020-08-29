@@ -137,6 +137,7 @@ Improved terminal output
 -  Autosuggestions now show up also when the cursor passes the right
    prompt (#6948).
 -  The cursor shape in Vi mode changes properly in  Windows Terminal (#6999).
+-  Non-printable ASCII control characters in the commandline are display using graphic Unicode symbols.
 -  The spurious warning about terminal size in small terminals has been removed (#6980).
 -  Dynamic titles are now enabled in Alacritty with its new terminfo entry (#7073).
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (#7237).

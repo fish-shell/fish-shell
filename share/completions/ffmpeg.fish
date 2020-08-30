@@ -1,3 +1,7 @@
+function __fish_ffmpeg_last_arg
+    echo (commandline -co)[-1]
+end
+
 function __fish_ffmpeg_help_type
     printf '%s\t%s\n' long "Print more options"
     printf '%s\t%s\n' full "Print all options"
@@ -11,7 +15,8 @@ function __fish_ffmpeg_help_type
             set regex '\S+\s+(\S+)\s+(\S+)'
         end
 
-        printf '%s\n' $help_type=(ffmpeg -loglevel quiet -"$help_type"s | string trim | string match -rv '=|:$|^-' | string replace -rf "$regex" '$1\t$2')
+        printf '%s\n' $help_type=(ffmpeg -loglevel quiet -"$help_type"s | string trim \
+            | string match -rv '=|:$|^-' | string replace -rf "$regex" '$1\t$2')
     end
 end
 
@@ -27,11 +32,14 @@ function __fish_ffmpeg_codec_list
             set identifier '^A.*'
         case subtitle
             set identifier '^S.*'
+        case all
+            set identifier '.*'
         case '*'
             return 1
     end
 
-    printf '%s\n' (ffmpeg -loglevel quiet -decoders | string trim | string match -rv '=|:$|^-' | string match -r "$identifier" | string replace -rf '\S+\s+(\S+)\s+(\S+)' '$1\t$2')
+    printf '%s\n' (ffmpeg -loglevel quiet -decoders | string trim | string match -rv '=|:$|^-' \
+        | string match -r "$identifier" | string replace -rf '\S+\s+(\S+)\s+(\S+)' '$1\t$2')
 end
 
 complete -c ffmpeg -s i -d "Specify input file"
@@ -60,7 +68,8 @@ complete -c ffmpeg -o sinks -d "List sinks of the output device"
 complete -c ffmpeg -o hwaccels -d "Show available HW acceleration methods"
 
 # Global options
-complete -x -c ffmpeg -o loglevel -s v -a "quiet panic fatal error warning info verbose debug trace" -d "Set logging level"
+complete -x -c ffmpeg -o loglevel -s v \
+    -a "quiet panic fatal error warning info verbose debug trace" -d "Set logging level"
 complete -c ffmpeg -o report -d "Generate a report"
 complete -c ffmpeg -o max_alloc -d "Set maximum size of a single allocated block"
 complete -c ffmpeg -s y -d "Overwrite output files"
@@ -86,7 +95,9 @@ complete -c ffmpeg -o seek_timestamp -d "Enable/disable seeking by timestamp wit
 complete -c ffmpeg -o timestamp -d "Set the recording timestamp"
 complete -c ffmpeg -o metadata -d "Add metadata"
 complete -c ffmpeg -o program -d "Add program with specified streams"
-complete -x -c ffmpeg -o target -a '(for target in vcd svcd dvd dv dv50 ; echo "$target" ; echo pal-"$target" ; echo ntsc-"$target" ; echo film-"$target" ; end)' -d "Specify target file type"
+complete -x -c ffmpeg -o target -a '(for target in vcd svcd dvd dv dv50 ; echo "$target" ; \
+    echo pal-"$target" ; echo ntsc-"$target" ; echo film-"$target" ; end)' \
+    -d "Specify target file type"
 complete -c ffmpeg -o apad -d "Audio pad"
 complete -c ffmpeg -o frames -d "Set the number of frames to output"
 complete -c ffmpeg -o filter -d "Set stream filtergraph"
@@ -102,7 +113,10 @@ complete -c ffmpeg -s s -d "Set frame size"
 complete -c ffmpeg -o aspect -d "Set aspect ratio"
 complete -c ffmpeg -o bits_per_raw_sample -d "Set the number of bits per raw sample"
 complete -c ffmpeg -o vn -d "Disable video"
-complete -x -c ffmpeg -o vcodec -o "codec:v" -o "c:v" -a "(__fish_ffmpeg_codec_list video)" -d "Set video codec"
+complete -c ffmpeg -o vcodec -o "codec:v" -o "c:v"
+# Also list codecs when a particular stream is selected, e.g. -c:v:0
+complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(vcodec|c(odec)?:v)(:\d+)?'" \
+    -a "(__fish_ffmpeg_codec_list video)" -d "Set video codec"
 complete -c ffmpeg -o timecode -d "Set initial TimeCode value"
 complete -x -c ffmpeg -o pass -a "1 2 3" -d "Select the pass number"
 complete -c ffmpeg -o vf -d "Set video filters"
@@ -116,15 +130,25 @@ complete -c ffmpeg -o aq -d "Set audio quality"
 complete -c ffmpeg -o ar -d "Set audio sampling rate"
 complete -c ffmpeg -o ac -d "Set number of audio channels"
 complete -c ffmpeg -o an -d "Disable audio"
-complete -x -c ffmpeg -o acodec -o "codec:a" -o "c:a" -a "(__fish_ffmpeg_codec_list audio)" -d "Set audio codec"
+complete -c ffmpeg -o acodec -o "codec:a" -o "c:a"
+# Also list codecs when a particular stream is selected, e.g. -c:a:0
+complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(acodec|c(odec)?:a)(:\d+)?'" \
+    -a "(__fish_ffmpeg_codec_list audio)" -d "Set audio codec"
 complete -c ffmpeg -o vol -d "Change audio volume"
 complete -c ffmpeg -o af -d "Set audio filters"
 
 # Subtitle options
 complete -c ffmpeg -s s -d "Set frame size"
 complete -c ffmpeg -o sn -d "Disable subtitle"
-complete -x -c ffmpeg -o scodec -o "codec:s" -o "c:s" -a "(__fish_ffmpeg_codec_list subtitle)" -d "Set subtitle codec"
+complete -c ffmpeg -o scodec -o "codec:s" -o "c:s"
+# Also list codecs when a particular stream is selected, e.g. -c:s:0
+complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(scodec|c(odec)?:s)(:\d+)?'" \
+    -a "(__fish_ffmpeg_codec_list subtitle)" -d "Set subtitle codec"
 complete -c ffmpeg -o stag -d "Force subtitle tag/fourcc"
 complete -c ffmpeg -o fix_sub_duration -d "Fix subtitles duration"
 complete -c ffmpeg -o canvas_size -d "Set canvas size"
 complete -c ffmpeg -o spre -d "Set the subtitle options to the indicated preset"
+
+# Indeterminate options, may be used e.g. when only one stream exists
+complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(codec|c(odec)?)(:\d+)?'" \
+    -a "(__fish_ffmpeg_codec_list all)" -d "Set codec"

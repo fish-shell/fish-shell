@@ -42,6 +42,21 @@ function __fish_ffmpeg_codec_list
         | string match -r "$identifier" | string replace -rf '\S+\s+(\S+)\s+(\S+)' '$1\t$2')
 end
 
+function __fish_ffmpeg_pix_fmts
+    # We can't know in advance if the intention is to specify an output pix_fmt because the intent
+    # could be to instead provide a second input, but we can rule out an output if no input has
+    # been specified
+    set -l regex_filter '.'
+    if contains -- -i (commandline -co)
+        set regex_filter '^I'
+    end
+    ffmpeg -hide_banner -loglevel quiet -pix_fmts |
+        # tail -n +9 | # skip past header
+        string match -rv '[:=-]|FLAGS' | # skip past header
+        string match -er $regex_filter |
+        string replace -rf '^[IOHPB.]{5} (\S+) .*' '$1'
+end
+
 complete -c ffmpeg -s i -d "Specify input file"
 
 # Print help / information / capabilities
@@ -123,6 +138,10 @@ complete -c ffmpeg -o vf -d "Set video filters"
 complete -c ffmpeg -o ab -o "b:a" -d "Audio bitrate"
 complete -c ffmpeg -s b -o "b:v" -d "Video bitrate"
 complete -c ffmpeg -o dn -d "Disable data"
+# Advanced video options
+complete -c ffmpeg -o pix_fmt
+complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -rq -- '^-pix_fmt(\$|:)'" \
+    -a "(__fish_ffmpeg_pix_fmts)"
 
 # Audio options
 complete -c ffmpeg -o aframes -d "Set the number of audio frames to output"

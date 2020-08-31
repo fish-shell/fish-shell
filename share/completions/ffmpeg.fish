@@ -2,6 +2,15 @@ function __fish_ffmpeg_last_arg
     echo (commandline -co)[-1]
 end
 
+# Allow completions to match against an argument that includes a stream specifier, e.g. -c:v:2
+function __fish_ffmpeg_complete_regex
+    set -l regex $argv[1]
+    set -l completions $argv[2..-1]
+
+    complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -rq -- '^'$prefix'(\$|:)'" \
+        -a "$completions"
+end
+
 function __fish_ffmpeg_help_type
     printf '%s\t%s\n' long "Print more options"
     printf '%s\t%s\n' full "Print all options"
@@ -55,6 +64,28 @@ function __fish_ffmpeg_pix_fmts
         string match -rv '[:=-]|FLAGS' | # skip past header
         string match -er $regex_filter |
         string replace -rf '^[IOHPB.]{5} (\S+) .*' '$1'
+end
+
+function __fish_ffmpeg_filters
+    # TODO: Figure out how to distinguish {audio,video} source and destination, because some filters
+    # can go cross those lines (e.g. showvolume, which generates a video representation of the input
+    # audio).
+
+    set -l filter '.'
+    switch $argv[1]
+        case video
+            set filter '[V]\S*->|->\S*[V]'
+        case audio
+            set filter '[A]\S*->|->\S*[A]'
+        case all
+        case '*'
+            set filter '.'
+    end
+
+    ffmpeg -hide_banner -loglevel quiet -filters |
+        string match -e -- '->' |  # skip past the header
+        string match -er $filter |
+        string replace -rf '^ [TSC.]{3} +(\S+) +\S+->\S+ +(.*)' '$1\t$2'
 end
 
 complete -c ffmpeg -s i -d "Specify input file"
@@ -130,8 +161,7 @@ complete -c ffmpeg -o bits_per_raw_sample -d "Set the number of bits per raw sam
 complete -c ffmpeg -o vn -d "Disable video"
 complete -c ffmpeg -o vcodec -o "codec:v" -o "c:v"
 # Also list codecs when a particular stream is selected, e.g. -c:v:0
-complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(vcodec|c(odec)?:v)(:\d+)?'" \
-    -a "(__fish_ffmpeg_codec_list video)" -d "Set video codec"
+__fish_ffmpeg_complete_regex "-(vcodec|c(odec)?:v)" "(__fish_ffmpeg_codec_list video)"
 complete -c ffmpeg -o timecode -d "Set initial TimeCode value"
 complete -x -c ffmpeg -o pass -a "1 2 3" -d "Select the pass number"
 complete -c ffmpeg -o vf -d "Set video filters"
@@ -140,8 +170,7 @@ complete -c ffmpeg -s b -o "b:v" -d "Video bitrate"
 complete -c ffmpeg -o dn -d "Disable data"
 # Advanced video options
 complete -c ffmpeg -o pix_fmt
-complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -rq -- '^-pix_fmt(\$|:)'" \
-    -a "(__fish_ffmpeg_pix_fmts)"
+__fish_ffmpeg_complete_regex "-pix_fmt" "(__fish_ffmpeg_pix_fmts)"
 
 # Audio options
 complete -c ffmpeg -o aframes -d "Set the number of audio frames to output"
@@ -150,9 +179,7 @@ complete -c ffmpeg -o ar -d "Set audio sampling rate"
 complete -c ffmpeg -o ac -d "Set number of audio channels"
 complete -c ffmpeg -o an -d "Disable audio"
 complete -c ffmpeg -o acodec -o "codec:a" -o "c:a"
-# Also list codecs when a particular stream is selected, e.g. -c:a:0
-complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(acodec|c(odec)?:a)(:\d+)?'" \
-    -a "(__fish_ffmpeg_codec_list audio)" -d "Set audio codec"
+__fish_ffmpeg_complete_regex '-(acodec|c(odec)?:a)' "(__fish_ffmpeg_codec_list audio)"
 complete -c ffmpeg -o vol -d "Change audio volume"
 complete -c ffmpeg -o af -d "Set audio filters"
 
@@ -160,14 +187,94 @@ complete -c ffmpeg -o af -d "Set audio filters"
 complete -c ffmpeg -s s -d "Set frame size"
 complete -c ffmpeg -o sn -d "Disable subtitle"
 complete -c ffmpeg -o scodec -o "codec:s" -o "c:s"
-# Also list codecs when a particular stream is selected, e.g. -c:s:0
-complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(scodec|c(odec)?:s)(:\d+)?'" \
-    -a "(__fish_ffmpeg_codec_list subtitle)" -d "Set subtitle codec"
+__fish_ffmpeg_complete_regex '^-(scodec|c(odec)?:s)(:\d+)?' "(__fish_ffmpeg_codec_list subtitle)"
 complete -c ffmpeg -o stag -d "Force subtitle tag/fourcc"
 complete -c ffmpeg -o fix_sub_duration -d "Fix subtitles duration"
 complete -c ffmpeg -o canvas_size -d "Set canvas size"
 complete -c ffmpeg -o spre -d "Set the subtitle options to the indicated preset"
 
 # Indeterminate options, may be used e.g. when only one stream exists
-complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -r '^-(codec|c(odec)?)(:\d+)?'" \
-    -a "(__fish_ffmpeg_codec_list all)" -d "Set codec"
+__fish_ffmpeg_complete_regex '^-(codec|c(odec)?)(:\d+)?' "(__fish_ffmpeg_codec_list all)"
+
+# Filters
+#
+# fish completions are not designed to take the current argument being completed as an input,
+# and if introspected it is normally used to filter/constrain the completions generated. ffmpeg's
+# command line syntax is extremely nasty and in addition to using stringification for all arguments,
+# relies on special characters to delimit separate subarguments (rather than, e.g., concatenating
+# repeated invocations of the same switch), meaning the typical way of generating fish completions
+# would only allow us to generate the very first subargument in a complex argument payload.
+#
+# We hack around this in a ridiculously ugly fashion by always generating completions that are
+# prepended with a prefix of the current value of the payload in question.
+#
+# Top-level ffmpeg filters are comma separated, but take optional arguments that might themselves
+# take optional subarguments. While = is a key=value delimiter, it is also a prefix for the first
+# argument to a filter, e.g. filter_name=opt1 and filter_name=opt1=opt_value, and in the case that
+# a filter takes more than one argument, filter arguments are delimited with :
+#
+# A complete example:
+#
+# ffmpeg .... -filter:v filter1,filter2=f2_arg1=f2_arg1_val:f2_arg2
+
+function __fish_ffmpeg_split_filter_graph
+    set -l filters (string split , $argv[1])
+    printf "%s\n" $filters
+end
+
+# Given a single filter expression, emits the filter name on the first line and then each key=value
+# pair of arguments to the filter on each subsequent line.
+function __fish_ffmpeg_decompose_filter
+    set -l parts (string split -m 1 = "$argv")
+    echo $parts[1] # the filter name
+    set -l arguments (string split : $parts[2])
+    printf "%s\n" $arguments
+end
+
+function __fish_ffmpeg_concat_filters
+    string join -- , $argv
+end
+
+function __fish_ffmpeg_concat_filter_args
+    string join -- : $argv
+end
+
+function __fish_ffmpeg_complete_filter
+    set -l filter_type "all"
+    if string match -rq -- '^-(vf(ilter)?|f(ilter)?:v)' (__fish_ffmpeg_last_arg)
+        set filter_type "video"
+    else if string match -rq -- '^-(af(ilter)?|f(ilter)?:a' (__fish_ffmpeg_last_arg)
+        set filter_type "audio"
+    end
+
+    # echo -e "\n **** $filter_type **** \n" > /dev/tty
+
+    set -l filters_arg (commandline -o)[-1]
+    if string match -rq -- '^-' $filters_arg
+        # No filter name started
+        __fish_ffmpeg_filters $filter_type
+        return
+    end
+
+    set -l filters (__fish_ffmpeg_split_filter_graph $filters_arg)
+    # We are completing only the last filter (in case there are multiple)
+    set -l filter $filters[-1]
+    # Remove it from the list of passed-through filters
+    set -e filters[-1]
+    # `ffmpeg -h filter=FILTER` exposes information that can be used to dynamically complete not
+    # only the name of the filter but also the name of its individual options. We currently only
+    # support completing the name of the filter.
+    set -l decomposed (__fish_ffmpeg_decompose_filter $filter)
+    set -l filter_name $decomposed[1]
+    set -l filter_args (__fish_ffmpeg_concat_filter_args $decomposed[2..-1])
+
+    # Emit the mutated filter graph, with permutations of the final filter name offered as
+    # completions.
+    for known_filter in (__fish_ffmpeg_filters $filter_type)
+        set -l modified_filter (string join = $known_filter $filter_args)
+        __fish_ffmpeg_concat_filters $filters $modified_filter
+    end
+end
+
+complete -x -c ffmpeg -o filter -o filter:v -o filter:s -o filter:a -o vf -o af \
+    -a "(__fish_ffmpeg_complete_filter)"

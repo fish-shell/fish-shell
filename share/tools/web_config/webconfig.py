@@ -1159,19 +1159,24 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return None
 
     def do_get_sample_prompts_list(self):
-        pool = multiprocessing.pool.ThreadPool(processes=8)
-
-        # Kick off the "Current" meta-sample
-        current_metasample_async = pool.apply_async(self.do_get_current_prompt)
-
-        # Read all of the prompts in sample_prompts
         paths = glob.iglob("sample_prompts/*.fish")
-        sample_results = pool.map(self.read_one_sample_prompt, paths, 1)
-
-        # Finish up
         result = []
-        result.append(current_metasample_async.get())
-        result.extend([r for r in sample_results if r])
+        try:
+            pool = multiprocessing.pool.ThreadPool(processes=8)
+
+            # Kick off the "Current" meta-sample
+            current_metasample_async = pool.apply_async(self.do_get_current_prompt)
+
+            # Read all of the prompts in sample_prompts
+            sample_results = pool.map(self.read_one_sample_prompt, paths, 1)
+            result.append(current_metasample_async.get())
+            result.extend([r for r in sample_results if r])
+        except ImportError:
+            # If the platform doesn't support multiprocessing, we just do it one at a time.
+            # This happens e.g. on Termux.
+            print("Platform doesn't support multiprocessing, running one at a time. This may take a while.")
+            result.append(self.do_get_current_prompt())
+            result.extend([self.read_one_sample_prompt(path) for path in paths])
         return result
 
     def do_get_abbreviations(self):

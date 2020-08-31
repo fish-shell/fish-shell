@@ -88,6 +88,36 @@ function __fish_ffmpeg_filters
         string replace -rf '^ [TSC.]{3} +(\S+) +\S+->\S+ +(.*)' '$1\t$2'
 end
 
+function __fish_ffmpeg_presets
+    set -l cmdline (commandline)
+    if string match -ireq '[hx]26[45]'
+        printf "%s\n" ultrafast superfast veryfast faster fast medium slow slower veryslow placebo
+    end
+end
+
+function __fish_ffmpeg_tunes
+    set -l cmdline (commandline)
+    if string match -req '264'
+        printf "%s\n" film animation grain stillimage fastdecode zerolatency psnr ssim
+    end
+    if string match -req '265|hevc'
+        printf "%s\n" psnr ssim grain zerolatency fastdecode
+    end
+end
+
+function __fish_ffmpeg_crfs
+    seq 1 30
+end
+
+function __fish_ffmpeg_profile
+    if string match -req '264'
+        printf "%s\n" baseline main high
+    end
+    if string match -req '265|hevc'
+        printf "%s\n" main high
+    end
+end
+
 complete -c ffmpeg -s i -d "Specify input file"
 
 # Print help / information / capabilities
@@ -131,7 +161,6 @@ complete -c ffmpeg -o vol -d "Change audio volume"
 # Per-file main options
 complete -c ffmpeg -s f -d "Force format"
 complete -c ffmpeg -s c -o codec -d "Codec name"
-complete -c ffmpeg -o pre -d "Preset name"
 complete -c ffmpeg -o map_metadata -d "Set metadata information of outfile from infile"
 complete -c ffmpeg -s t -d "Record or transcode \"duration\" seconds of audio/video"
 complete -c ffmpeg -o to -d "Record or transcode stop time"
@@ -195,6 +224,16 @@ complete -c ffmpeg -o spre -d "Set the subtitle options to the indicated preset"
 
 # Indeterminate options, may be used e.g. when only one stream exists
 __fish_ffmpeg_complete_regex '^-(codec|c(odec)?)(:\d+)?' "(__fish_ffmpeg_codec_list all)"
+
+# Codec-specific options
+complete -c ffmpeg -o pre -o preset -d "Preset name"
+__fish_ffmpeg_complete_regex 'pre(set)?' "(__fish_ffmpeg_presets)"
+complete -c ffmpeg -o tune
+__fish_ffmpeg_complete_regex 'tune' "(__fish_ffmpeg_tunes)"
+complete -c ffmpeg -o crf -o q
+__fish_ffmpeg_complete_regex 'crf|q' "(__fish_ffmpeg_crfs)"
+complete -c ffmpeg -o profile
+__fish_ffmpeg_complete_regex 'profile' "(__fish_ffmpeg_profiles)"
 
 # Filters
 #

@@ -74,9 +74,11 @@ class job_group_t {
     void mark_root_constructed() { root_constructed_ = true; };
     bool is_root_constructed() const { return root_constructed_; }
 
-    /// Given a job and a proposed job group (possibly null), populate the job's group field.
+    /// Given a job and a proposed job group (possibly null), return a group for the job.
     /// The proposed group is the group from the parent job, or null if this is a root.
-    static void populate_group_for_job(job_t *job, const job_group_ref_t &proposed_tree);
+    /// This never returns null.
+    static job_group_ref_t resolve_group_for_job(const job_t &job,
+                                                 const job_group_ref_t &proposed_group);
 
     ~job_group_t();
 

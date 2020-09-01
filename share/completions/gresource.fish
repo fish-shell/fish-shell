@@ -1,7 +1,7 @@
 # Completions for gresource (a part of GLib)
 
 # Global options
-complete -f -c gresource -l section -d "Select which section to operate"
+complete -f -c gresource -l section -d "Select which section to operate on"
 
 # Commands
 complete -f -c gresource -n __fish_use_subcommand -a list -d "List resource sections"

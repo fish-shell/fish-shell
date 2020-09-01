@@ -66,10 +66,10 @@ complete -f -c gio -n "__fish_seen_subcommand_from list" -s u -l print-uris -d "
 complete -f -c gio -n "__fish_seen_subcommand_from mkdir" -s p -l parent -d "Create parent directories"
 
 # Options of monitor command
-complete -x -c gio -n "__fish_seen_subcommand_from monitor" -s d -l dir -d "Monitor a directory"
-complete -x -c gio -n "__fish_seen_subcommand_from monitor" -s f -l file -d "Monitor a file"
-complete -x -c gio -n "__fish_seen_subcommand_from monitor" -s D -l direct -d "Monitor a file directly"
-complete -x -c gio -n "__fish_seen_subcommand_from monitor" -s s -l silent -d "Monitors a file directly without reporting changes"
+complete -r -c gio -n "__fish_seen_subcommand_from monitor" -s d -l dir -d "Monitor a directory"
+complete -r -c gio -n "__fish_seen_subcommand_from monitor" -s f -l file -d "Monitor a file"
+complete -r -c gio -n "__fish_seen_subcommand_from monitor" -s D -l direct -d "Monitor a file directly"
+complete -r -c gio -n "__fish_seen_subcommand_from monitor" -s s -l silent -d "Monitors a file directly without reporting changes"
 complete -f -c gio -n "__fish_seen_subcommand_from monitor" -s n -l no-moves -d "Don't report move events"
 complete -f -c gio -n "__fish_seen_subcommand_from monitor" -s m -l mounts -d "Watch for mount events"
 

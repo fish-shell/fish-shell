@@ -156,6 +156,7 @@ Completions
    -  ``dhclient``
    -  Postgres-related commands ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
       ``pg_dumpall`` (#6620).
+   -  ``gapplication``, ``gdbus``, ``gio`` and ``gresource`` (#7300)
    -  ``gh``
    -  ``gitk``
    -  ``hikari`` (#7083)

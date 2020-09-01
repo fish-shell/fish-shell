@@ -318,6 +318,9 @@ class job_t {
         /// initial state should be.
         bool initial_background{};
 
+        /// Whether the job has the 'time' prefix and so we should print timing for this job.
+        bool wants_timing{};
+
         /// Whether this job was created as part of an event handler.
         bool from_event_handler{};
 
@@ -409,9 +412,6 @@ class job_t {
         /// This job is disowned, and should be removed from the active jobs list.
         bool disown_requested{false};
 
-        /// Whether to print timing for this job.
-        bool has_time_prefix{false};
-
         // Indicates that we are the "group root." Any other jobs using this tree are nested.
         bool is_group_root{false};
 
@@ -422,6 +422,9 @@ class job_t {
 
     /// Access mutable job flags.
     flags_t &mut_flags() { return job_flags; }
+
+    // \return whether we should print timing information.
+    bool wants_timing() const { return properties.wants_timing; }
 
     /// \return if we want job control.
     bool wants_job_control() const { return properties.job_control; }

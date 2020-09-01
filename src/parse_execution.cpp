@@ -998,12 +998,6 @@ end_execution_reason_t parse_execution_context_t::populate_not_process(
     job_t *job, process_t *proc, const ast::not_statement_t &not_statement) {
     auto &flags = job->mut_flags();
     flags.negate = !flags.negate;
-    if (not_statement.time) {
-        flags.has_time_prefix = true;
-        if (job->is_initially_background()) {
-            return this->report_error(STATUS_INVALID_ARGS, not_statement, ERROR_TIME_BACKGROUND);
-        }
-    }
     return this->populate_job_process(job, proc, not_statement.contents, not_statement.variables);
 }
 
@@ -1151,12 +1145,6 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
     // Create processes. Each one may fail.
     process_list_t processes;
     processes.emplace_back(new process_t());
-    if (job_node.time) {
-        j->mut_flags().has_time_prefix = true;
-        if (job_node.bg) {
-            return this->report_error(STATUS_INVALID_ARGS, job_node, ERROR_TIME_BACKGROUND);
-        }
-    }
     end_execution_reason_t result = this->populate_job_process(
         j, processes.back().get(), job_node.statement, job_node.variables);
 
@@ -1206,6 +1194,32 @@ static bool remove_job(parser_t &parser, job_t *job) {
             parser.jobs().erase(j);
             return true;
         }
+    }
+    return false;
+}
+
+/// Decide if a job node should be 'time'd.
+/// For historical reasons the 'not' and 'time' prefix are "inside out". That is, it's
+/// 'not time cmd'. Note that a time appearing anywhere in the pipeline affects the whole job.
+/// `sleep 1 | not time true` will time the whole job!
+static bool job_node_wants_timing(const ast::job_t &job_node) {
+    // Does our job have the job-level time prefix?
+    if (job_node.time) return true;
+
+    // Helper to return true if a node is 'not time ...' or 'not not time...' or...
+    auto is_timed_not_statement = [](const ast::statement_t &stat) {
+        const auto *ns = stat.contents->try_as<ast::not_statement_t>();
+        while (ns) {
+            if (ns->time) return true;
+            ns = ns->contents.try_as<ast::not_statement_t>();
+        }
+        return false;
+    };
+
+    // Do we have a 'not time ...' anywhere in our pipeline?
+    if (is_timed_not_statement(job_node.statement)) return true;
+    for (const ast::job_continuation_t &jc : job_node.continuation) {
+        if (is_timed_not_statement(jc.statement)) return true;
     }
     return false;
 }
@@ -1306,6 +1320,12 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
     props.job_control = wants_job_control;
+    props.wants_timing = job_node_wants_timing(job_node);
+
+    // It's an error to have 'time' in a background job.
+    if (props.wants_timing && props.initial_background) {
+        return this->report_error(STATUS_INVALID_ARGS, job_node, ERROR_TIME_BACKGROUND);
+    }
 
     shared_ptr<job_t> job = std::make_shared<job_t>(props, get_source(job_node));
 

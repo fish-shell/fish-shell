@@ -85,7 +85,7 @@ complete -f -c gio -n "__fish_seen_subcommand_from mount" -s a -l anonymous -d "
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s l -l list -d "List"
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s o -l monitor -d "Monitor events"
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s i -l detail -d "Show extra information"
-complete -f -c gio -n "__fish_seen_subcommand_from mount" -l tcrypt-pim -d "The numeric PIM when unlocking a VeraCrypt volume"
+complete -x -c gio -n "__fish_seen_subcommand_from mount" -l tcrypt-pim -d "The numeric PIM when unlocking a VeraCrypt volume"
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -l tcrypt-hidden -d "Mount a TCRYPT hidden volume"
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -l tcrypt-system -d "Mount a TCRYPT system volume"
 

@@ -11,7 +11,7 @@ complete -f -c gdbus -n __fish_use_subcommand -a help -d "Prints help"
 # Common options
 complete -f -c gdbus -n "__fish_seen_subcommand_from introspect monitor call emit wait" -s y -l system -d "Connect to the system bus"
 complete -f -c gdbus -n "__fish_seen_subcommand_from introspect monitor call emit wait" -s e -l session -d "Connect to the session bus"
-complete -f -c gdbus -n "__fish_seen_subcommand_from introspect monitor call emit wait" -s a -l address -d "Connect to given D-Bus address"
+complete -x -c gdbus -n "__fish_seen_subcommand_from introspect monitor call emit wait" -s a -l address -d "Connect to given D-Bus address"
 complete -x -c gdbus -n "__fish_seen_subcommand_from introspect monitor call emit" -s d -l dest -d "Destination name"
 complete -x -c gdbus -n "__fish_seen_subcommand_from introspect monitor call emit" -s o -l object-path -d "Object path"
 complete -f -c gdbus -n "__fish_seen_subcommand_from introspect monitor call emit wait" -s h -l help -d "Prints help"

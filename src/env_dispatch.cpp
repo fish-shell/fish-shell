@@ -366,8 +366,6 @@ static void update_fish_color_support(const environment_t &vars) {
         FLOGF(term_support, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
               term.c_str());
     }
-        FLOGF(term_support, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
-              term.c_str());
 
     // Handle $fish_term24bit
     if (auto fish_term24bit = vars.get(L"fish_term24bit")) {

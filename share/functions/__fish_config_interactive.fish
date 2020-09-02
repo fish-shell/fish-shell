@@ -51,9 +51,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_cwd green
         __init_uvar fish_color_cwd_root red
 
-        # Background color for matching quotes and parenthesis
-        __init_uvar fish_color_match --background=brblue
-
         # Background color for search matches
         __init_uvar fish_color_search_match bryellow --background=brblack
 

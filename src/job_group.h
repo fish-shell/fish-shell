@@ -13,6 +13,42 @@
 /// 1 is the first valid job ID.
 using job_id_t = int;
 
+/// A cancellation group is "a set of jobs that should cancel together." It's effectively just a
+/// shared pointer to a bool which latches to true on cancel.
+/// For example, in `begin ; true ; end | false`, we have two jobs: the outer pipline and the inner
+/// 'true'. These share a cancellation group.
+/// Note this is almost but not quite a job group. A job group is a "a set of jobs which share a
+/// pgid" but cancellation groups may be bigger. For example in `begin ; sleep 1; sleep 2; end` we
+/// have that 'begin' is an internal group (a simple function/block execution) without a pgid,
+/// while each 'sleep' will be a different job, with its own pgid, and so be in a different job
+/// group. But all share a cancellation group.
+/// Note that a background job will always get a new cancellation group.
+/// Cancellation groups must be thread safe.
+class cancellation_group_t {
+   public:
+    /// \return true if we should cancel.
+    bool should_cancel() const { return get_cancel_signal() != 0; }
+
+    /// \return the signal indicating cancellation, or 0 if none.
+    int get_cancel_signal() const { return signal_; }
+
+    /// If we have not already cancelled, then trigger cancellation with the given signal.
+    void cancel_with_signal(int signal) {
+        assert(signal > 0 && "Invalid cancel signal");
+        signal_.compare_exchange(0, signal);
+    }
+
+    /// Helper to return a new group.
+    static std::shared_ptr<cancellation_group_t> create() {
+        return std::make_shared<cancellation_group_t>();
+    }
+
+   private:
+    /// If we cancelled from a signal, return that signal, else 0.
+    relaxed_atomic_t<int> signal_{0};
+};
+using cancellation_group_ref_t = std::shared_ptr<cancellation_group_t>;
+
 /// job_group_t is conceptually similar to the idea of a process group. It represents data which
 /// is shared among all of the "subjobs" that may be spawned by a single job.
 /// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
@@ -60,13 +96,13 @@ class job_group_t {
     job_id_t get_id() const { return props_.job_id; }
 
     /// Get the cancel signal, or 0 if none.
-    int get_cancel_signal() const { return cancel_signal_; }
+    int get_cancel_signal() const { return cancel_group->get_cancel_signal(); }
 
     /// \return the command which produced this job tree.
     const wcstring &get_command() const { return command_; }
 
     /// Mark that a process in this group got a signal, and so should cancel.
-    void set_cancel_signal(int sig) { cancel_signal_ = sig; }
+    void cancel_with_signal(int sig) { cancel_group->cancel_with_signal(sig); }
 
     /// Mark the root as constructed.
     /// This is used to avoid reaping a process group leader while there are still procs that may
@@ -78,6 +114,7 @@ class job_group_t {
     /// The proposed group is the group from the parent job, or null if this is a root.
     /// This never returns null.
     static job_group_ref_t resolve_group_for_job(const job_t &job,
+                                                 const cancellation_group_ref_t &cancel_group,
                                                  const job_group_ref_t &proposed_group);
 
     ~job_group_t();
@@ -86,6 +123,9 @@ class job_group_t {
     /// the terminal to the same state after temporarily taking control over the terminal when a job
     /// stops.
     maybe_t<struct termios> tmodes{};
+
+    /// The cancellation group. This is never null.
+    const cancellation_group_ref_t cancel_group{};
 
    private:
     // The pgid to assign to jobs, or none if not yet set.
@@ -117,11 +157,10 @@ class job_group_t {
     // Whether the root job is constructed. If not, we cannot reap it yet.
     relaxed_atomic_bool_t root_constructed_{};
 
-    // If not zero, a signal indicating cancellation.
-    int cancel_signal_{};
-
-    job_group_t(const properties_t &props, wcstring command)
-        : props_(props), command_(std::move(command)) {}
+    job_group_t(const properties_t &props, cancellation_group_ref_t cg, wcstring command)
+        : cancel_group(std::move(cg)), props_(props), command_(std::move(command)) {
+        assert(cancel_group && "Null cancel group");
+    }
 };
 
 #endif

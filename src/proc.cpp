@@ -263,7 +263,7 @@ static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
         if (sig == SIGINT || sig == SIGQUIT) {
             if (session_interactivity() != session_interactivity_t::not_interactive) {
                 // Mark the job group as cancelled.
-                job->group->set_cancel_signal(sig);
+                job->group->cancel_with_signal(sig);
             } else {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
                 struct sigaction act;

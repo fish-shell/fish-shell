@@ -119,10 +119,12 @@ static redirection_spec_t get_stderr_merge() {
 
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree,
                                                      const operation_context_t &ctx,
+                                                     cancellation_group_ref_t cancel_group,
                                                      io_chain_t block_io)
     : pstree(std::move(pstree)),
       parser(ctx.parser.get()),
       ctx(ctx),
+      cancel_group(std::move(cancel_group)),
       block_io(std::move(block_io)) {}
 
 // Utilities
@@ -226,7 +228,7 @@ process_type_t parse_execution_context_t::process_type_for_command(
 }
 
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
-    if (this->cancel_signal || ctx.check_cancel() || check_cancel_from_fish_signal()) {
+    if (ctx.check_cancel() || check_cancel_from_fish_signal()) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();
@@ -1343,7 +1345,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
         // Resolve the job's group and mark if this job is the first to get it.
-        job->group = job_group_t::resolve_group_for_job(*job, ctx.job_group);
+        job->group = job_group_t::resolve_group_for_job(*job, cancel_group, ctx.job_group);
         assert(job->group && "Should not have a null group");
         job->mut_flags().is_group_root = (job->group != ctx.job_group);
 
@@ -1362,14 +1364,6 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         // Actually execute the job.
         if (!exec_job(*this->parser, job, block_io)) {
             remove_job(*this->parser, job.get());
-        }
-
-        // Check if the job's group got a SIGINT or SIGQUIT.
-        // If so we need to mark that ourselves so as to cancel the rest of the execution.
-        // See #7259.
-        int cancel_sig = job->group->get_cancel_signal();
-        if (cancel_sig == SIGINT || cancel_sig == SIGQUIT) {
-            this->cancel_signal = cancel_sig;
         }
 
         // Update universal variables on external conmmands.

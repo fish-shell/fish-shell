@@ -97,6 +97,11 @@ class relaxed_atomic_t {
 
     void operator=(T v) { return value_.store(v, std::memory_order_relaxed); }
 
+    // Perform a CAS operation, returning whether it succeeded.
+    bool compare_exchange(T expected, T desired) {
+        return value_.compare_exchange_strong(expected, desired, std::memory_order_relaxed);
+    }
+
     // postincrement
     T operator++(int) { return value_.fetch_add(1, std::memory_order_relaxed); }
 

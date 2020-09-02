@@ -12,6 +12,7 @@
 #include "proc.h"
 
 class block_t;
+class cancellation_group_t;
 class operation_context_t;
 class parser_t;
 
@@ -37,6 +38,7 @@ class parse_execution_context_t {
     parsed_source_ref_t pstree;
     parser_t *const parser;
     const operation_context_t &ctx;
+    const std::shared_ptr<cancellation_group_t> cancel_group;
 
     // The currently executing job node, used to indicate the line number.
     const ast::job_t *executing_job_node{};
@@ -44,10 +46,6 @@ class parse_execution_context_t {
     // Cached line number information.
     size_t cached_lineno_offset = 0;
     int cached_lineno_count = 0;
-
-    /// If a process dies due to a SIGINT or SIGQUIT, then store the corresponding signal here.
-    /// Note this latches to SIGINT or SIGQUIT; it is never cleared.
-    int cancel_signal{0};
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
@@ -153,8 +151,10 @@ class parse_execution_context_t {
 
    public:
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
-    /// The execution context may access the parser and group through ctx.
+    /// The cancel group is never null and should be provided when resolving job groups.
+    /// The execution context may access the parser and parent job group (if any) through ctx.
     parse_execution_context_t(parsed_source_ref_t pstree, const operation_context_t &ctx,
+                              std::shared_ptr<cancellation_group_t> cancel_group,
                               io_chain_t block_io);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
@@ -163,9 +163,6 @@ class parse_execution_context_t {
 
     /// Returns the source offset, or -1.
     int get_current_source_offset() const;
-
-    /// \return the signal that triggered cancellation, or 0 if none.
-    int get_cancel_signal() const { return cancel_signal; }
 
     /// Returns the source string.
     const wcstring &get_source() const { return pstree->src; }

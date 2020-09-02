@@ -13,10 +13,10 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 expect_prompt()
 
 # one background job
-sendline("sleep 1 &")
+sendline("sleep .3 &")
 expect_prompt()
 sendline("wait")
-expect_prompt("Job 1, 'sleep 1 &' has ended")
+expect_prompt("Job 1, 'sleep .3 &' has ended")
 sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 

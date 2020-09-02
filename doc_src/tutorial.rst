@@ -92,6 +92,7 @@ Syntax Highlighting
 You'll quickly notice that fish performs syntax highlighting as you type. Invalid commands are colored red by default:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :red:`/bin/mkd`
 
@@ -103,6 +104,7 @@ A command may be invalid because it does not exist, or refers to a file that you
 Valid file paths are underlined as you type them:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :command:`cat` :param-valid-path:`~/somefi`
 
@@ -169,6 +171,7 @@ Autosuggestions
 As you type fish will suggest commands to the right of the cursor, in gray. For example:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :red:`/bin/h`:gray:`ostname`
 
@@ -176,6 +179,7 @@ As you type fish will suggest commands to the right of the cursor, in gray. For 
 It knows about paths and options:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :command:`grep` :param:`--i`:gray:`gnore-case`
 
@@ -183,6 +187,7 @@ It knows about paths and options:
 And history too. Type a command once, and you can re-summon it by just typing a few letters:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :red:`r`:gray:`sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo`
 
@@ -197,6 +202,7 @@ A rich set of tab completions work "out of the box".
 Press :kbd:`Tab` and fish will attempt to complete the command, argument, or path:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :red:`/pri`:kbd:`Tab` => :command:`/private/`
 
@@ -204,6 +210,7 @@ Press :kbd:`Tab` and fish will attempt to complete the command, argument, or pat
 If there's more than one possibility, it will list them:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :red:`~/stuff/s`:kbd:`Tab`
     ~/stuff/script.sh  (Executable, 4.8kB)  ~/stuff/sources/  (Directory)
@@ -214,6 +221,7 @@ Hit tab again to cycle through the possibilities.
 fish can also complete many commands, like git branches:
 
 .. parsed-literal::
+    :class: highlight
 
     :prompt:`>` :command:`git` :param:`merge pr`:kbd:`Tab` => :command:`git` :param:`merge prompt_designer`
     :prompt:`>` :command:`git` :param:`checkout b`:kbd:`Tab`
@@ -599,6 +607,7 @@ Unlike other shells, there is no prompt variable like ``PS1``. To display your p
 You can define your own prompt from the command line:
 
 .. parsed-literal::
+    :class: highlight
 
     > function fish_prompt; echo "New Prompt % "; end
     New Prompt % _
@@ -619,9 +628,10 @@ Multiple lines are OK. Colors can be set via :ref:`set_color <cmd-set_color>`, p
 This prompt would look like:
 
 .. parsed-literal::
+    :class: highlight
 
-     :purple:`02/06/13`
-     :red:`/home/tutorial >` _
+    :purple:`02/06/13`
+    :red:`/home/tutorial >` _
 
 
 You can choose among some sample prompts by running ``fish_config prompt``.

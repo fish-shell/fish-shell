@@ -1205,12 +1205,14 @@ void reader_data_t::exec_prompt() {
         }
 
         if (!conf.right_prompt_cmd.empty()) {
-            // Status is ignored.
-            wcstring_list_t prompt_list;
-            exec_subshell(conf.right_prompt_cmd, parser(), prompt_list, false);
-            // Right prompt does not support multiple lines, so just concatenate all of them.
-            for (const auto &i : prompt_list) {
-                right_prompt_buff += i;
+            if (function_exists(conf.right_prompt_cmd, parser())) {
+                // Status is ignored.
+                wcstring_list_t prompt_list;
+                exec_subshell(conf.right_prompt_cmd, parser(), prompt_list, false);
+                // Right prompt does not support multiple lines, so just concatenate all of them.
+                for (const auto &i : prompt_list) {
+                    right_prompt_buff += i;
+                }
             }
         }
     }
@@ -2510,15 +2512,12 @@ static int read_i(parser_t &parser) {
 
     if (parser.libdata().is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
         conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME;
+        conf.right_prompt_cmd = wcstring{};
     } else {
         conf.left_prompt_cmd = LEFT_PROMPT_FUNCTION_NAME;
+        conf.right_prompt_cmd = RIGHT_PROMPT_FUNCTION_NAME;
     }
 
-    if (function_exists(RIGHT_PROMPT_FUNCTION_NAME, parser)) {
-        conf.right_prompt_cmd = RIGHT_PROMPT_FUNCTION_NAME;
-    } else {
-        conf.right_prompt_cmd = wcstring{};
-    }
 
     std::shared_ptr<reader_data_t> data =
         reader_push_ret(parser, history_session_id(parser.vars()), std::move(conf));

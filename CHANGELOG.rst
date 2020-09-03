@@ -103,6 +103,7 @@ Interactive improvements
    revealed.
 -  The output of ``time`` is now properly aligned in all cases (#6726).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (#6787).
+-  ``diff`` will now colourise output, if supported (#7308).
 
 
 New or improved bindings

@@ -94,3 +94,9 @@ complete -c cargo -x -n '__fish_seen_subcommand_from update' -l precise -d 'Upda
 
 complete -c cargo -x -n '__fish_seen_subcommand_from yank' -l vers -d 'The version to yank or un-yank'
 complete -c cargo -n '__fish_seen_subcommand_from yank' -l undo -d 'Undo a yank, putting a version back into the index'
+
+function __fish_cargo_packages
+    find . -name Cargo.toml | string replace -rf '.*/([^/]+)/?Cargo.toml' '$1'
+end
+complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l package \
+    -xa "(__fish_cargo_packages)"

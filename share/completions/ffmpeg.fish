@@ -165,7 +165,7 @@ complete -c ffmpeg -o vol -d "Change audio volume"
 
 # Per-file main options
 complete -c ffmpeg -s f -d "Force format" -xa "(__fish_ffmpeg_formats)"
-complete -c ffmpeg -s c -o codec -d "Codec name"
+complete -c ffmpeg -s c -o codec -d "Codec name" -xa "(__fish_ffmpeg_codec_list all)"
 complete -c ffmpeg -o map_metadata -d "Set metadata information of outfile from infile"
 complete -c ffmpeg -s t -d "Record or transcode \"duration\" seconds of audio/video"
 complete -c ffmpeg -o to -d "Record or transcode stop time"
@@ -221,14 +221,11 @@ complete -c ffmpeg -o af -d "Set audio filters"
 complete -c ffmpeg -s s -d "Set frame size"
 complete -c ffmpeg -o sn -d "Disable subtitle"
 complete -c ffmpeg -o scodec -o "codec:s" -o "c:s"
-__fish_ffmpeg_complete_regex '^-(scodec|c(odec)?:s)(:\d+)?' "(__fish_ffmpeg_codec_list subtitle)"
+__fish_ffmpeg_complete_regex '-(scodec|c(odec)?:s)(:\d+)?' "(__fish_ffmpeg_codec_list subtitle)"
 complete -c ffmpeg -o stag -d "Force subtitle tag/fourcc"
 complete -c ffmpeg -o fix_sub_duration -d "Fix subtitles duration"
 complete -c ffmpeg -o canvas_size -d "Set canvas size"
 complete -c ffmpeg -o spre -d "Set the subtitle options to the indicated preset"
-
-# Indeterminate options, may be used e.g. when only one stream exists
-__fish_ffmpeg_complete_regex '^-(codec|c(odec)?)(:\d+)?' "(__fish_ffmpeg_codec_list all)"
 
 # Codec-specific options
 complete -c ffmpeg -o pre -o preset -d "Preset name"

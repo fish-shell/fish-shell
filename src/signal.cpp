@@ -201,7 +201,7 @@ static bool reraise_if_forked_child(int sig) {
 
 /// The cancellation signal we have received.
 /// Of course this is modified from a signal handler.
-static volatile sig_atomic_t s_cancellation_signal = 0;
+static volatile relaxed_atomic_t<sig_atomic_t> s_cancellation_signal{0};
 
 void signal_clear_cancel() { s_cancellation_signal = 0; }
 

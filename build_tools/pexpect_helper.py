@@ -182,12 +182,15 @@ class SpawnedProc(object):
             On failure, this prints an error and exits.
         """
         try:
-            res = self.spawn.expect(pat, **kwargs)
+            self.spawn.expect(pat, **kwargs)
             when = self.time_since_first_message()
             self.messages.append(
                 Message.received_output(self.spawn.match.group(), when)
             )
-            return res
+            # When a match is found,
+            # spawn.match is the MatchObject that produced it.
+            # This can be used to check what exactly was matched.
+            return self.spawn.match
         except pexpect.ExceptionPexpect as err:
             if not pat_desc:
                 pat_desc = str(pat)

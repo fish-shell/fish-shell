@@ -446,3 +446,32 @@ echo not#a#comment
 #CHECK: not#a#comment
 echo is # a # comment
 #CHECK: is
+
+# Test that our builtins can all do --query
+command --query cp
+echo $status
+#CHECK: 0
+
+type --query cp
+echo $status
+#CHECK: 0
+
+jobs --query 0
+echo $status
+#CHECK: 1
+
+abbr --query thisshouldnotbeanabbreviationohmygoshitssolongwhywouldanyoneeverusethis
+echo $status
+#CHECK: 1
+
+functions --query alias
+echo $status
+#CHECK: 0
+
+set --query status
+echo $status
+#CHECK: 0
+
+builtin --query echo
+echo $status
+#CHECK: 0

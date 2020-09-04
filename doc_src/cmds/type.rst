@@ -30,7 +30,7 @@ The following options are available:
 
 - ``-P`` or ``--force-path`` returns the path to the executable file ``NAME``, presuming ``NAME`` is found in ``$PATH``, or nothing otherwise. ``--force-path`` explicitly resolves only the path to executable files in ``$PATH``, regardless of whether ``$NAME`` is shadowed by a function or builtin with the same name.
 
-- ``-q`` or ``--quiet`` suppresses all output; this is useful when testing the exit status.
+- ``-q`` or ``--query`` suppresses all output; this is useful when testing the exit status. For compatibility with old fish versions this is also ``--quiet``.
 
 The ``-q``, ``-p``, ``-t`` and ``-P`` flags (and their long flag aliases) are mutually exclusive. Only one can be specified at a time.
 

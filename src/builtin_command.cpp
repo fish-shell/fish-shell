@@ -26,6 +26,7 @@ static const wchar_t *const short_options = L":ahqsv";
 static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
                                               {L"all", no_argument, nullptr, 'a'},
                                               {L"quiet", no_argument, nullptr, 'q'},
+                                              {L"query", no_argument, nullptr, 'q'},
                                               {L"search", no_argument, nullptr, 's'},
                                               {nullptr, 0, nullptr, 0}};
 

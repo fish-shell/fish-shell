@@ -19,7 +19,7 @@ The following options are available:
 
 - ``-a`` or ``--all`` returns all the external COMMANDNAMEs that are found in ``$PATH`` in the order they are found.
 
-- ``-q`` or ``--quiet``, silences the output and prints nothing, setting only the exit status. Implies ``--search``.
+- ``-q`` or ``--query``, silences the output and prints nothing, setting only the exit status. Implies ``--search``. For compatibility with old fish versions this is also ``--quiet`` (but this is deprecated).
 
 - ``-s`` or ``--search`` returns the name of the external command that would be executed, or nothing if no file with the specified name could be found in the ``$PATH``.
 

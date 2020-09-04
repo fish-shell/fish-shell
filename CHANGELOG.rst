@@ -73,6 +73,7 @@ Scripting improvements
    file descriptor. This allows better error recovery and is more in line with other shells'
    behaviour (#7038).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
+-  All builtins that query if something exists now take ``--query`` as the long form for ``-q``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (#7276).
 
 Interactive improvements
 ------------------------

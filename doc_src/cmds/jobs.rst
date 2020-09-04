@@ -26,7 +26,7 @@ jobs accepts the following switches:
 
 - ``-p`` or ``--pid`` prints the process ID for each process in all jobs.
 
-- ``-q`` or ``--quiet`` prints no output for evaluation of jobs by exit status only.
+- ``-q`` or ``--query`` prints no output for evaluation of jobs by exit status only. For compatibility with old fish versions this is also ``--quiet`` (but this is deprecated).
 
 On systems that supports this feature, jobs will print the CPU usage of each job since the last command was executed. The CPU usage is expressed as a percentage of full CPU activity. Note that on multiprocessor systems, the total activity may be more than 100\%.
 

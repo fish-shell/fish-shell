@@ -3,7 +3,8 @@ function type --description 'Print the type of a command'
     set -q argv[1]
     or return 1
 
-    set -l options h/help a/all s/short f/no-functions t/type p/path P/force-path q/quiet
+    # --query is the same thing as --quiet
+    set -l options h/help a/all s/short f/no-functions t/type p/path P/force-path q/quiet Q-query
     argparse -n type -x t,p,P $options -- $argv
     or return
 
@@ -21,7 +22,7 @@ function type --description 'Print the type of a command'
     # Technically all four of these flags are mutually exclusive. However, we allow -q to be used
     # with the other three because old versions of this function explicitly allowed it by making
     # --quiet have precedence.
-    if set -q _flag_quiet
+    if set -q _flag_quiet; or set -q _flag_query
         set mode quiet
     else if set -q _flag_type
         set mode type

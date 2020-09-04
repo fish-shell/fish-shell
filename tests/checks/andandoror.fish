@@ -119,13 +119,6 @@ echo $status
 # CHECK: 0
 # CHECK: 0
 
-builtin and --help >/dev/null
-echo $status
-and --help >/dev/null
-echo $status
-# CHECK: 0
-# CHECK: 0
-
 builtin or --help >/dev/null
 echo $status
 or --help >/dev/null

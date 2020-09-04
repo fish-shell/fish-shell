@@ -74,6 +74,7 @@ Scripting improvements
    behaviour (#7038).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
 -  All builtins that query if something exists now take ``--query`` as the long form for ``-q``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (#7276).
+-  ``argparse`` no longer prints a stack backtrace with invalid options (#6703).
 
 Interactive improvements
 ------------------------
@@ -86,6 +87,7 @@ Interactive improvements
    have a common prefix, without the user having to press Tab again
    (#6924).
 -  Control-Z is now available for binding (#7152).
+- ``help string match/replace/<subcommand>`` will show the help information for string subcommands (#6786).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (#6964).
 -  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (#6964).
 -  A new variable ``$status_generation`` is incremented only when the previous command produces a status. This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
@@ -94,11 +96,13 @@ Interactive improvements
 - A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
 - The ``-o`` short option to fish, for ``--debug-output``, works correctly instead of producing an
   invalid option error (#7254).
--  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space, as in fish 2.7.1 and before (#6970).
+-  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space, as in fish 2.7.1 and before (#6970), and after closing a command substitution (#6658).
 -  The history file is now created with user-private permissions,
    matching other shells (#6926). The directory containing the history
    file remains private, so there should not have been any private date
    revealed.
+-  The output of ``time`` is now properly aligned in all cases (#6726).
+-  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (#6787).
 
 
 New or improved bindings
@@ -106,7 +110,7 @@ New or improved bindings
 
 -  As mentioned above, new readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
    changes to the command line or the pager search field (#6570).
--  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, and ``y0`` (#6648).
+-  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, and Ctrl+left/right keys to navigate by word (#6648, #6755, #6769).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.
 - The readline command ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
 -  New readline command ``forward-single-char`` to move one character to the right, and if an autosuggestion is available, only take a single char from it (#7217).
@@ -130,6 +134,7 @@ Improved prompts
    commands prefixed with ``not`` (#6566).
 -  git prompts include all untracked files in the repository, not just those in the current
    directory (#6086).
+-  The informative git prompt correctly shows stash states (#7136).
 
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -149,14 +154,15 @@ Completions
 -  Added completions for
 
    -  ``7z``, ``7za`` and ``7zr``
-   -  ``apk``
+   -  ``apk`` (#7108)
    -  ``asciidoctor``
    -  ``cmark``
    -  ``create_ap``
-   -  ``deno``
+   -  ``deno`` (#7138)
    -  ``dhclient``
    -  Postgres-related commands ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
-      ``pg_dumpall`` (#6620).
+      ``pg_dumpall`` (#6620)
+   - ``downgrade`` (#6751)
    -  ``gapplication``, ``gdbus``, ``gio`` and ``gresource`` (#7300)
    -  ``gh``
    -  ``gitk``
@@ -179,7 +185,7 @@ Completions
    -  ``windscribe``
    -  ``wireshark``, ``tshark``, and ``dumpcap``
    -  ``xbps-*``
-   -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum``
+   -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (#7103
    -  ``yadm``
    -  ``zopfli``, and ``zopflipng``
 
@@ -196,6 +202,7 @@ For distributors and developers
 
 -  fish source tarballs are now distributed using the XZ compression
    method (#5460).
+-  The CMake variable ``MAC_CODESIGN_ID`` can now be set to "off" to disable code-signing (#6952).
 -  Building on on macOS earlier than 10.13.6 succeeds, instead of failing on code-signing.
 -  The pkg-config file now uses variables to ensure paths used are portable across prefixes.
 -  The default values for the ``extra_completionsdir``, ``extra_functionsdir``

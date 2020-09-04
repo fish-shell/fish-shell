@@ -7,7 +7,7 @@ function __fish_ffmpeg_complete_regex
     set -l regex $argv[1]
     set -l completions $argv[2..-1]
 
-    complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -rq -- '^'$prefix'(\$|:)'" \
+    complete -x -c ffmpeg -n "__fish_ffmpeg_last_arg | string match -rq -- '^'\"$regex\"'(\$|:)'" \
         -a "$completions"
 end
 

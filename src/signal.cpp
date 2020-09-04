@@ -213,8 +213,12 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
 
+    // Ensure we preserve errno.
+    const int saved_errno = errno;
+
     // Check if we are a forked child.
     if (reraise_if_forked_child(sig)) {
+        errno = saved_errno;
         return;
     }
 
@@ -267,6 +271,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             // test, to verify that we behave correctly when receiving lots of irrelevant signals.
             break;
     }
+    errno = saved_errno;
 }
 
 void signal_reset_handlers() {

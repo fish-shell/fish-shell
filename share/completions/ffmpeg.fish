@@ -118,6 +118,11 @@ function __fish_ffmpeg_profile
     end
 end
 
+function __fish_ffmpeg_formats
+    # TODO: Use heuristic to determine input vs output format and filter accordingly
+    ffmpeg -hide_banner -loglevel quiet -formats | string replace -rf '^ [DE.]{2} ([a-z0-9_]+) +(\S.+)$' '$1\t$2'
+end
+
 complete -c ffmpeg -s i -d "Specify input file"
 
 # Print help / information / capabilities
@@ -159,7 +164,7 @@ complete -c ffmpeg -o bits_per_raw_sample -d "Set the number of bits per raw sam
 complete -c ffmpeg -o vol -d "Change audio volume"
 
 # Per-file main options
-complete -c ffmpeg -s f -d "Force format"
+complete -c ffmpeg -s f -d "Force format" -xa "(__fish_ffmpeg_formats)"
 complete -c ffmpeg -s c -o codec -d "Codec name"
 complete -c ffmpeg -o map_metadata -d "Set metadata information of outfile from infile"
 complete -c ffmpeg -s t -d "Record or transcode \"duration\" seconds of audio/video"

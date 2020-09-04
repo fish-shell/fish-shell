@@ -23,6 +23,8 @@ complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_pri
 complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)' -d Package
 complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -a '(__fish_complete_suffix .deb)'
 
+complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-recommends
+
 # Support flags
 complete -f -c apt -s h -l help -d 'Display help'
 complete -f -c apt -s v -l version -d 'Display version and exit'

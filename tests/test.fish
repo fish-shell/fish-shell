@@ -22,7 +22,7 @@ end
 # These env vars should not be inherited from the user environment because they can affect the
 # behavior of the tests. So either remove them or set them to a known value.
 # See also tests/interactive.fish.
-set TERM xterm
+set -gx TERM xterm
 set -e COLORTERM
 set -e INSIDE_EMACS
 set -e ITERM_PROFILE

@@ -23,7 +23,7 @@ if functions -q __fish_command_not_found_handler
     # but the same name and path as Ubuntu's.
 else if contains -- suse $os || contains -- sles $os && type -q command-not-found
     function fish_command_not_found
-        /usr/bin/command-not-found $argv[1]
+        command-not-found $argv[1]
     end
     # Check for Fedora's handler
 else if test -f /usr/libexec/pk-command-not-found

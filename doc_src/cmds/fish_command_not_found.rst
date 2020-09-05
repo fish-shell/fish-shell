@@ -40,7 +40,7 @@ A simple handler:
     end
 
     > flounder
-    echo Did not find command flounder
+    Did not find command flounder
 
 Or the handler for OpenSUSE's command-not-found::
 

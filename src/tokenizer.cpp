@@ -316,10 +316,10 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
         cmd >? file      noclobber redirection
         cmd >>? file     appending noclobber redirection
         cmd 2> file      file redirection with explicit fd
-        cmd 2> file >&2  fd redirection with no explicit src fd (stdout is used)
-        cmd 2> file 1>&2 fd redirection with an explicit src fd
-        cmd 2< file <&2  fd redirection with no explicit src fd (stdin is used)
-        cmd 2< file 0<&2 fd redirection with an explicit src fd
+        cmd >&2 file     fd redirection with no explicit src fd (stdout is used)
+        cmd 1>&2 file    fd redirection with an explicit src fd
+        cmd <&2 file     fd redirection with no explicit src fd (stdin is used)
+        cmd 3<&0 file    fd redirection with an explicit src fd
         cmd &> file      redirection with stderr merge
         cmd ^ file       caret (stderr) redirection, perhaps disabled via feature flags
         cmd ^^ file      caret (stderr) redirection, perhaps disabled via feature flags

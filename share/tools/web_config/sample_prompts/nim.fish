@@ -54,7 +54,7 @@ function fish_prompt
     set_color -o green
     echo -n [
 
-    if fish_is_root_user
+    if functions -q fish_is_root_user; and fish_is_root_user
         set_color -o red
     else
         set_color -o yellow

@@ -21,7 +21,7 @@ function fish_prompt --description 'Write out the prompt, prepending the Debian 
         echo -n -s (set_color yellow) "$__fish_debian_chroot_prompt" (set_color normal) ' '
     end
 
-    if fish_is_root_user
+    if functions -q fish_is_root_user; and fish_is_root_user
         echo -n -s "$USER" @ (prompt_hostname) ' ' (set -q fish_color_cwd_root
                                                     and set_color $fish_color_cwd_root
                                                     or set_color $fish_color_cwd) (prompt_pwd) \

@@ -39,7 +39,9 @@ wcstring generation_list_t::describe() const {
 
 binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
     // sem_init always fails with ENOSYS on Mac and has an annoying deprecation warning.
-#ifndef __APPLE__
+    // On BSD sem_init uses a file descriptor under the hood which doesn't get CLOEXEC (see #7304).
+    // So use fast semaphores on Linux only.
+#ifdef __linux__
     sem_ok_ = (0 == sem_init(&sem_, 0, 0));
 #endif
     if (!sem_ok_) {

@@ -15,7 +15,7 @@ Description
 
 ``isatty`` tests if a file descriptor is a terminal (as opposed to a file). The name is derived from the system call of the same name, which for historical reasons refers to a teletypewriter (TTY).
 
-``FILE DESCRIPTOR`` may be either the number of a file descriptor, or one of the strings ``stdin``, ``stdout``, or ``stderr``.
+``FILE DESCRIPTOR`` may be either the number of a file descriptor, or one of the strings ``stdin``, ``stdout``, or ``stderr``. If not specified, zero is assumed.
 
 If the specified file descriptor is a terminal device, the exit status of the command is zero. Otherwise, the exit status is non-zero. No messages are printed to standard error.
 

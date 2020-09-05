@@ -1,8 +1,7 @@
 function __fish_print_pipestatus --description "Print pipestatus for prompt"
-    # take $status as optional argument to maintain compatibility
     set -l last_status
-    if set last_status (string match -r -- '^\d+$' $argv[1])
-        set -e argv[1]
+    if set -q __fish_last_status
+        set last_status $__fish_last_status
     else
         set last_status $argv[-1] # default to $pipestatus[-1]
     end

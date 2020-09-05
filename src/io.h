@@ -39,6 +39,8 @@ struct fd_set_t {
         assert(fd >= 0 && "Invalid fd");
         return static_cast<size_t>(fd) < fds.size() && fds[fd];
     }
+
+    bool empty() const { return fds.empty(); }
 };
 
 /// separated_buffer_t is composed of a sequence of elements, some of which may be explicitly

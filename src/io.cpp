@@ -327,13 +327,18 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset) {
     set_cloexec(pipes[0]);
     set_cloexec(pipes[1]);
 
-    auto read = move_fd_to_unused(autoclose_fd_t{pipes[0]}, fdset);
-    if (!read.valid()) return none();
+    autoclose_fd_t read_end{pipes[0]};
+    autoclose_fd_t write_end{pipes[1]};
 
-    auto write = move_fd_to_unused(autoclose_fd_t{pipes[1]}, fdset);
-    if (!write.valid()) return none();
+    // Ensure we have no conflicts.
+    if (!fdset.empty()) {
+        read_end = move_fd_to_unused(std::move(read_end), fdset);
+        if (!read_end.valid()) return none();
 
-    return autoclose_pipes_t(std::move(read), std::move(write));
+        write_end = move_fd_to_unused(std::move(write_end), fdset);
+        if (!write_end.valid()) return none();
+    }
+    return autoclose_pipes_t(std::move(read_end), std::move(write_end));
 }
 
 shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {

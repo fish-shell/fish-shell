@@ -765,7 +765,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         } else {
             // If we have no handler, just print it as a normal error.
             error = _(L"Unknown command:");
-            if (event_args.size()) {
+            if (!event_args.empty()) {
                 error.push_back(L' ');
                 error.append(escape_string(event_args[0], ESCAPE_ALL));
             }

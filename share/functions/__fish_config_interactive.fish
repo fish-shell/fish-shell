@@ -258,11 +258,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
 
-    # For backwards-compatibility - the event doesn't exist anymore so it's harmless.
-    function __fish_command_not_found_handler --on-event fish_command_not_found
-        fish_command_not_found $argv
-    end
-
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.
     set __fish_initialized 3100

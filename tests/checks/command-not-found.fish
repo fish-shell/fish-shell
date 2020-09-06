@@ -16,4 +16,9 @@ $fish -C 'function fish_command_not_found; echo command-not-found $argv; end' -c
 #CHECKERR: nonexistent-command-abcd foo bar baz
 #CHECKERR: ^
 
+$fish -C 'functions --erase fish_command_not_found' -c 'nonexistent-command apple friday'
+#CHECKERR: fish: Unknown command: nonexistent-command
+#CHECKERR: nonexistent-command apple friday
+#CHECKERR: ^
+
 exit 0

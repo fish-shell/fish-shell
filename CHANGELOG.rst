@@ -104,6 +104,7 @@ Interactive improvements
 -  The output of ``time`` is now properly aligned in all cases (#6726).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (#6787).
 -  ``diff`` will now colourise output, if supported (#7308).
+-  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (#7293).
 
 
 New or improved bindings

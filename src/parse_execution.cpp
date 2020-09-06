@@ -754,7 +754,7 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
         // Redirect to stderr
         auto io = io_chain_t{};
-        io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}}, L"/");
+        io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}}, L"");
 
         if (function_exists(L"fish_command_not_found", *parser)) {
             buffer = L"fish_command_not_found";

@@ -266,10 +266,13 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         size_t ret = 0;
         wchar_t wc = 0;
 
-        if ((in[in_pos] & 0xF8) == 0xF8) {
+        if (false) {
+#if defined(HAVE_BROKEN_MBRTOWC_UTF8)
+        } else if ((in[in_pos] & 0xF8) == 0xF8) {
             // Protect against broken std::mbrtowc() implementations which attempt to encode UTF-8
             // sequences longer than four bytes (e.g., OS X Snow Leopard).
             use_encode_direct = true;
+#endif
         } else if (sizeof(wchar_t) == 2 &&  //!OCLINT(constant if expression)
                    (in[in_pos] & 0xF8) == 0xF0) {
             // Assume we are in a UTF-16 environment (e.g., Cygwin) using a UTF-8 encoding.

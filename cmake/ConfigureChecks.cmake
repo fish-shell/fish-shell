@@ -224,3 +224,11 @@ LIBATOMIC_NOT_NEEDED)
 IF (NOT LIBATOMIC_NOT_NEEDED)
     set(ATOMIC_LIBRARY "atomic")
 endif()
+
+# Check if mbrtowc implementation attempts to encode invalid UTF-8 sequences
+# Known culprits: at least some versions of macOS (confirmed Snow Leopard and Yosemite)
+try_run(mbrtowc_invalid_utf8_exit, mbrtowc_invalid_utf8_compiles, ${CMAKE_CURRENT_BINARY_DIR},
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/checks/mbrtowc_invalid_utf8.cpp")
+IF ("${mbrtowc_invalid_utf8_compiles}" AND ("${mbrtowc_invalid_utf8_exit}" EQUAL 1))
+    SET(HAVE_BROKEN_MBRTOWC_UTF8 1)
+ENDIF()

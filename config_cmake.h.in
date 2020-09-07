@@ -167,6 +167,9 @@
 # define _DARWIN_USE_64_BIT_INODE 1
 #endif
 
+/* Define to 1 if mbrtowc attempts to convert invalid UTF-8 sequences */
+#cmakedefine HAVE_BROKEN_MBRTOWC_UTF8 1
+
 #if __GNUC__ >= 3
 #ifndef __warn_unused
 #define __warn_unused __attribute__ ((warn_unused_result))

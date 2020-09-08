@@ -915,7 +915,11 @@ class ast_t::populator_t {
 
             // Now try parsing a node.
             if (auto node = this->try_parse<ContentsNode>()) {
-                contents.push_back(std::move(node));
+                // #7201: Minimize reallocations of contents vector
+                if (contents.empty()) {
+                    contents.reserve(64);
+                }
+                contents.emplace_back(std::move(node));
             } else if (exhaust_stream && peek_type() != parse_token_type_t::terminate) {
                 // We aren't allowed to stop. Produce an error and keep going.
                 consume_excess_token_generating_error();

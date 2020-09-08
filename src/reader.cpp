@@ -1377,6 +1377,10 @@ void reader_data_t::delete_char(bool backward) {
     el->erase_substring(pos, pos_end - pos);
     update_buff_pos(el);
     suppress_autosuggestion = true;
+    // The pager needs to be refiltered.
+    if (el == &this->pager.search_field_line) {
+        command_line_changed(el);
+    }
 }
 
 /// Insert the characters of the string into the command line buffer and print them to the screen
@@ -1386,6 +1390,10 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     if (!str.empty()) {
         el->insert_string(str, 0, str.size());
         if (el == &command_line) suppress_autosuggestion = false;
+        // The pager needs to be refiltered.
+        if (el == &this->pager.search_field_line) {
+            command_line_changed(el);
+        }
     }
 }
 

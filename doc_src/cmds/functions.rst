@@ -49,7 +49,7 @@ You should not assume that only five lines will be written since we may add addi
 
 - ``-t`` or ``--handlers-type TYPE`` will show all event handlers matching the given type
 
-The default behavior of ``functions``, when called with no arguments, is to print the names of all defined functions. Unless the ``-a`` option is given, no functions starting with underscores are not included in the output.
+The default behavior of ``functions``, when called with no arguments, is to print the names of all defined functions. Unless the ``-a`` option is given, no functions starting with underscores are included in the output.
 
 If any non-option parameters are given, the definition of the specified functions are printed.
 

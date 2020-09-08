@@ -527,7 +527,7 @@ event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int 
 
 /// Remove all disowned jobs whose job chain is fully constructed (that is, do not erase disowned
 /// jobs that still have an in-flight parent job). Note we never print statuses for such jobs.
-void remove_disowned_jobs(job_list_t &jobs) {
+static void remove_disowned_jobs(job_list_t &jobs) {
     auto iter = jobs.begin();
     while (iter != jobs.end()) {
         const auto &j = *iter;

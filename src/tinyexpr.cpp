@@ -58,7 +58,7 @@ enum {
     TOK_INFIX
 };
 
-int get_arity(const int type) {
+static int get_arity(const int type) {
     if (type == TE_FUNCTION3) return 3;
     if (type == TE_FUNCTION2) return 2;
     if (type == TE_FUNCTION1) return 1;
@@ -120,7 +120,7 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
     return ret;
 }
 
-void te_free_parameters(te_expr *n) {
+static void te_free_parameters(te_expr *n) {
     if (!n) return;
     int arity = get_arity(n->type);
     // Free all parameters from the back to the front.
@@ -167,7 +167,6 @@ static double ncr(double n, double r) {
 }
 
 static double npr(double n, double r) { return ncr(n, r) * fac(r); }
-
 
 static constexpr double bit_and(double a, double b) {
     return static_cast<double>(static_cast<long long>(a) & static_cast<long long>(b));
@@ -239,7 +238,7 @@ static constexpr double divide(double a, double b) {
 
 static constexpr double negate(double a) { return -a; }
 
-void next_token(state *s) {
+static void next_token(state *s) {
     s->type = TOK_NULL;
 
     do {

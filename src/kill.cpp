@@ -4,6 +4,8 @@
 // previous cuts.
 #include "config.h"  // IWYU pragma: keep
 
+#include "kill.h"
+
 #include <stddef.h>
 
 #include <algorithm>

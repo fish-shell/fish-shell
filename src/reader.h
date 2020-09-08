@@ -144,10 +144,6 @@ void reader_schedule_prompt_repaint();
 class char_event_t;
 void reader_queue_ch(const char_event_t &ch);
 
-/// Run the specified command with the correct terminal modes, and while taking care to perform job
-/// notification, set the title, etc.
-void reader_run_command(const wcstring &buff);
-
 /// Get the string of character currently entered into the command buffer, or 0 if interactive mode
 /// is uninitialized.
 const wchar_t *reader_get_buffer();

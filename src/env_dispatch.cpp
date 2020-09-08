@@ -37,6 +37,7 @@
 #include "common.h"
 #include "complete.h"
 #include "env.h"
+#include "env_dispatch.h"
 #include "env_universal_common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -381,18 +382,18 @@ static void update_fish_color_support(const environment_t &vars) {
         } else if (cur_term != nullptr && max_colors >= 32767) {
             // $TERM wins, xterm-direct reports 32767 colors, we assume that's the minimum
             // as xterm is weird when it comes to color.
-            FLOGF(term_support, L"Truecolor support: Enabling per terminfo for %ls with %d colors", term.c_str(), max_colors);
+            FLOGF(term_support, L"Truecolor support: Enabling per terminfo for %ls with %d colors",
+                  term.c_str(), max_colors);
             support_term24bit = true;
         } else {
             if (auto ct = vars.get(L"COLORTERM")) {
                 // If someone set $COLORTERM, that's the sort of color they want.
-                if (ct->as_string() == L"truecolor"
-                    || ct->as_string() == L"24bit") {
-                    FLOGF(term_support, L"Truecolor support: Enabling per $COLORTERM='%ls'", ct->as_string().c_str());
+                if (ct->as_string() == L"truecolor" || ct->as_string() == L"24bit") {
+                    FLOGF(term_support, L"Truecolor support: Enabling per $COLORTERM='%ls'",
+                          ct->as_string().c_str());
                     support_term24bit = true;
                 }
-            } else if (vars.get(L"KONSOLE_VERSION")
-                || vars.get(L"KONSOLE_PROFILE_NAME")) {
+            } else if (vars.get(L"KONSOLE_VERSION") || vars.get(L"KONSOLE_PROFILE_NAME")) {
                 // All konsole versions that use $KONSOLE_VERSION are new enough to support this,
                 // so no check is necessary.
                 FLOGF(term_support, L"Truecolor support: Enabling for Konsole");
@@ -410,7 +411,8 @@ static void update_fish_color_support(const environment_t &vars) {
                 support_term24bit = true;
             } else if (auto vte = vars.get(L"VTE_VERSION")) {
                 if (fish_wcstod(vte->as_string().c_str(), nullptr) > 3600) {
-                    FLOGF(term_support, L"Truecolor support: Enabling for VTE version %ls", vte->as_string().c_str());
+                    FLOGF(term_support, L"Truecolor support: Enabling for VTE version %ls",
+                          vte->as_string().c_str());
                     support_term24bit = true;
                 }
             }

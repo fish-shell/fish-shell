@@ -773,7 +773,7 @@ bool parse_util_argument_is_help(const wchar_t *s) {
 
 // \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
 // there are no arguments.
-const ast::argument_t *get_first_arg(const ast::argument_or_redirection_list_t &list) {
+static const ast::argument_t *get_first_arg(const ast::argument_or_redirection_list_t &list) {
     for (const ast::argument_or_redirection_t &v : list) {
         if (v.is_argument()) return &v.argument();
     }

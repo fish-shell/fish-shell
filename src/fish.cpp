@@ -84,7 +84,7 @@ class fish_cmd_opts_t {
 };
 
 /// \return a timeval converted to milliseconds.
-long long tv_to_msec(const struct timeval &tv) {
+static long long tv_to_msec(const struct timeval &tv) {
     long long msec = static_cast<long long>(tv.tv_sec) * 1000;  // milliseconds per second
     msec += tv.tv_usec / 1000;                                  // microseconds per millisecond
     return msec;
@@ -248,7 +248,8 @@ static void read_init(parser_t &parser, const struct config_paths_t &paths) {
     }
 }
 
-int run_command_list(parser_t &parser, std::vector<std::string> *cmds, const io_chain_t &io) {
+static int run_command_list(parser_t &parser, std::vector<std::string> *cmds,
+                            const io_chain_t &io) {
     for (const auto &cmd : *cmds) {
         wcstring cmd_wcs = str2wcstring(cmd);
         parser.eval(cmd_wcs, io);

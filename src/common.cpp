@@ -130,7 +130,7 @@ long convert_digit(wchar_t d, int base) {
 static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != nullptr; }
 
 /// This is a specialization of `convert_digit()` that only handles base 16 and only uppercase.
-long convert_hex_digit(wchar_t d) {
+static long convert_hex_digit(wchar_t d) {
     if ((d <= L'9') && (d >= L'0')) {
         return d - L'0';
     } else if ((d <= L'Z') && (d >= L'A')) {
@@ -238,23 +238,22 @@ bool is_windows_subsystem_for_linux() {
 #endif  // HAVE_BACKTRACE_SYMBOLS
 
 template <typename T>
-inline __attribute__((always_inline))
-constexpr uintptr_t aligned_start(const T *in, size_t count, uint8_t alignment) {
-    return std::min((uintptr_t) (in + count),
-            (uintptr_t(in) + (uintptr_t)(alignment-1)) & ~((uintptr_t) (alignment -1)));
+inline __attribute__((always_inline)) constexpr uintptr_t aligned_start(const T *in, size_t count,
+                                                                        uint8_t alignment) {
+    return std::min((uintptr_t)(in + count),
+                    (uintptr_t(in) + (uintptr_t)(alignment - 1)) & ~((uintptr_t)(alignment - 1)));
 }
 
 template <typename T>
-inline __attribute__((always_inline))
-constexpr uintptr_t aligned_end(const T *in, size_t count, uint8_t alignment) {
-    return std::max((uintptr_t)in, (uintptr_t)(in + count) & ~((uintptr_t)(alignment-1)));
+inline __attribute__((always_inline)) constexpr uintptr_t aligned_end(const T *in, size_t count,
+                                                                      uint8_t alignment) {
+    return std::max((uintptr_t)in, (uintptr_t)(in + count) & ~((uintptr_t)(alignment - 1)));
 }
 
-inline __attribute__((always_inline))
-bool is_ascii (const char *in, size_t len) {
+inline __attribute__((always_inline)) bool is_ascii(const char *in, size_t len) {
     uintptr_t aligned = aligned_start(in, len, 64);
     char bitmask1 = 0;
-    for (auto ptr = in; (uintptr_t) ptr < aligned; ++ptr) {
+    for (auto ptr = in; (uintptr_t)ptr < aligned; ++ptr) {
         bitmask1 |= *ptr;
     }
     uint64_t bitmask2 = 0;
@@ -266,8 +265,8 @@ bool is_ascii (const char *in, size_t len) {
         bitmask3 |= *ptr;
     }
 
-    return (uint64_t(bitmask1 & 0x80) | uint64_t(bitmask3 & 0x80)
-            | (bitmask2 & 0x8080808080808080ULL)) == 0ULL;
+    return (uint64_t(bitmask1 & 0x80) | uint64_t(bitmask3 & 0x80) |
+            (bitmask2 & 0x8080808080808080ULL)) == 0ULL;
 }
 
 /// Converts the narrow character string \c in into its wide equivalent, and return it.
@@ -1805,13 +1804,13 @@ static char extract_most_significant_digit(unsigned long long *xp) {
     return x + '0';
 }
 
-void append_ull(char *buff, unsigned long long val, size_t *inout_idx, size_t max_len) {
+static void append_ull(char *buff, unsigned long long val, size_t *inout_idx, size_t max_len) {
     size_t idx = *inout_idx;
     while (val > 0 && idx < max_len) buff[idx++] = extract_most_significant_digit(&val);
     *inout_idx = idx;
 }
 
-void append_str(char *buff, const char *str, size_t *inout_idx, size_t max_len) {
+static void append_str(char *buff, const char *str, size_t *inout_idx, size_t max_len) {
     size_t idx = *inout_idx;
     while (*str && idx < max_len) buff[idx++] = *str++;
     *inout_idx = idx;

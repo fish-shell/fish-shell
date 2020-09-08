@@ -587,7 +587,7 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
 }
 
 /// Return one if the code point is in a Unicode private use area.
-int fish_is_pua(wint_t wc) {
+static int fish_is_pua(wint_t wc) {
     if (PUA1_START <= wc && wc < PUA1_END) return 1;
     if (PUA2_START <= wc && wc < PUA2_END) return 1;
     if (PUA3_START <= wc && wc < PUA3_END) return 1;

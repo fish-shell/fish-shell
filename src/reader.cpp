@@ -135,8 +135,8 @@ static inline uint32_t read_generation_count() {
 /// \return an operation context for a background operation..
 /// Crucially the operation context itself does not contain a parser.
 /// It is the caller's responsibility to ensure the environment lives as long as the result.
-operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
-                                   uint32_t generation_count) {
+static operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
+                                          uint32_t generation_count) {
     cancel_checker_t cancel_checker = [generation_count] {
         // Cancel if the generation count changed.
         return generation_count != read_generation_count();
@@ -732,7 +732,7 @@ void reader_sighup() {
     s_sighup_received = true;
 }
 
-void redirect_tty_after_sighup() {
+static void redirect_tty_after_sighup() {
     // If we have received SIGHUP, redirect the tty to avoid a user script triggering SIGTTIN or
     // SIGTTOU.
     assert(s_sighup_received && "SIGHUP not received");
@@ -2248,7 +2248,7 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
     history_search.reset();
 }
 
-void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
+static void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
     time_t secs = after->tv_sec - before->tv_sec;
     suseconds_t usecs = after->tv_usec - before->tv_usec;
 
@@ -2260,7 +2260,9 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_sta
     vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, std::to_wstring((secs * 1000) + (usecs / 1000)));
 }
 
-eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
+/// Run the specified command with the correct terminal modes, and while taking care to perform job
+/// notification, set the title, etc.
+static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     struct timeval time_before, time_after;
 
     wcstring ft = tok_command(cmd);

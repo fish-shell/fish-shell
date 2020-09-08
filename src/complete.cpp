@@ -819,7 +819,7 @@ static const wchar_t *param_match2(const complete_entry_opt_t *e, const wchar_t 
 /// Returns the position of the last option character (e.g. the position of z which is 2).
 /// Everything after that is assumed to be part of the parameter.
 /// Returns wcstring::npos if there is no valid short option.
-size_t short_option_pos(const wcstring &arg, const option_list_t &options) {
+static size_t short_option_pos(const wcstring &arg, const option_list_t &options) {
     if (arg.size() <= 1 || leading_dash_count(arg.c_str()) != 1) {
         return wcstring::npos;
     }

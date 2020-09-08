@@ -13,7 +13,9 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 
-bool string_less_than_string(const wchar_t *a, const wchar_t *b) { return std::wcscmp(a, b) < 0; }
+static bool string_less_than_string(const wchar_t *a, const wchar_t *b) {
+    return std::wcscmp(a, b) < 0;
+}
 
 /// The table of intern'd strings.
 owning_lock<std::vector<const wchar_t *>> string_table;

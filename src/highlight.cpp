@@ -164,8 +164,8 @@ static highlight_role_t get_fallback(highlight_role_t role) {
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
 using case_sensitivity_cache_t = std::unordered_map<wcstring, bool>;
-bool fs_is_case_insensitive(const wcstring &path, int fd,
-                            case_sensitivity_cache_t &case_sensitivity_cache) {
+static bool fs_is_case_insensitive(const wcstring &path, int fd,
+                                   case_sensitivity_cache_t &case_sensitivity_cache) {
     bool result = false;
 #ifdef _PC_CASE_SENSITIVE
     // Try the cache first.

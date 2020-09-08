@@ -1,6 +1,5 @@
 language: cpp
 dist: bionic
-sudo: required
 
 matrix:
   include:

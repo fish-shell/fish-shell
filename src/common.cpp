@@ -237,6 +237,33 @@ bool is_windows_subsystem_for_linux() {
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
 
+template <typename T>
+inline __attribute__((always_inline))
+constexpr const T * aligned_start(const T *in, uint8_t alignment) {
+    return (const T *) (((uintptr_t)in + (uintptr_t)(alignment-1)) & ~((uintptr_t) (alignment -1)));
+}
+
+inline __attribute__((always_inline))
+bool is_ascii (const char *in, int len) {
+    const char *aligned = aligned_start(in, 64);
+    char bitmask1 = 0;
+    for (auto ptr = in; ptr < aligned && ptr < (in + len); ++ptr) {
+        bitmask1 |= *ptr;
+    }
+    uint64_t bitmask2 = 0;
+    for (auto ptr = (const uint64_t *)aligned; (uintptr_t) ptr < (uintptr_t) (in + len); ++ptr) {
+        bitmask2 |= *ptr;
+    }
+    char bitmask3 = 0;
+    for (auto ptr = std::max(in, (const char *) ((uintptr_t)(in + len) & ~((uintptr_t)(64-1))));
+            ptr < (in + len); ++ptr) {
+        bitmask3 |= *ptr;
+    }
+
+    return (uint64_t(bitmask1 & 0x80) | uint64_t(bitmask3 & 0x80)
+            | (bitmask2 & 0x8080808080808080ULL)) == 0ULL;
+}
+
 /// Converts the narrow character string \c in into its wide equivalent, and return it.
 ///
 /// The string may contain embedded nulls.
@@ -251,7 +278,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     result.reserve(in_len);
     size_t in_pos = 0;
 
-    if (MB_CUR_MAX == 1) {
+    if (MB_CUR_MAX == 1 || is_ascii(in, in_len)) {
         // Single-byte locale, all values are legal.
         while (in_pos < in_len) {
             result.push_back(static_cast<unsigned char>(in[in_pos]));

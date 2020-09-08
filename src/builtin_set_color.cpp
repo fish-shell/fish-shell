@@ -179,6 +179,7 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t 
     outputter_t outp;
 
     if (bold && enter_bold_mode) {
+        // These casts are needed to work with different curses implementations.
         writembs_nofail(outp, tparm(const_cast<char *>(enter_bold_mode)));
     }
 

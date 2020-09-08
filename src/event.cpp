@@ -387,7 +387,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
 
         if (!last_type || *last_type != evt->desc.type) {
             if (last_type) streams.out.append(L"\n");
-            last_type = static_cast<event_type_t>(evt->desc.type);
+            last_type = evt->desc.type;
             streams.out.append_format(L"Event %ls\n", event_name_for_type(*last_type));
         }
         switch (evt->desc.type) {

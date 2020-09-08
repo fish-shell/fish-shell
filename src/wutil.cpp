@@ -84,7 +84,7 @@ bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, 
         if (stat(fullpath.c_str(), &buf) != 0) {
             is_dir = false;
         } else {
-            is_dir = static_cast<bool>(S_ISDIR(buf.st_mode));
+            is_dir = S_ISDIR(buf.st_mode);
         }
     }
     *out_is_dir = is_dir;

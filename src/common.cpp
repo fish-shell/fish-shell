@@ -239,24 +239,30 @@ bool is_windows_subsystem_for_linux() {
 
 template <typename T>
 inline __attribute__((always_inline))
-constexpr const T * aligned_start(const T *in, uint8_t alignment) {
-    return (const T *) (((uintptr_t)in + (uintptr_t)(alignment-1)) & ~((uintptr_t) (alignment -1)));
+constexpr uintptr_t aligned_start(const T *in, size_t count, uint8_t alignment) {
+    return std::min((uintptr_t) (in + count),
+            (uintptr_t(in) + (uintptr_t)(alignment-1)) & ~((uintptr_t) (alignment -1)));
+}
+
+template <typename T>
+inline __attribute__((always_inline))
+constexpr uintptr_t aligned_end(const T *in, size_t count, uint8_t alignment) {
+    return std::max((uintptr_t)in, (uintptr_t)(in + count) & ~((uintptr_t)(alignment-1)));
 }
 
 inline __attribute__((always_inline))
-bool is_ascii (const char *in, int len) {
-    const char *aligned = aligned_start(in, 64);
+bool is_ascii (const char *in, size_t len) {
+    uintptr_t aligned = aligned_start(in, len, 64);
     char bitmask1 = 0;
-    for (auto ptr = in; ptr < aligned && ptr < (in + len); ++ptr) {
+    for (auto ptr = in; (uintptr_t) ptr < aligned; ++ptr) {
         bitmask1 |= *ptr;
     }
     uint64_t bitmask2 = 0;
-    for (auto ptr = (const uint64_t *)aligned; (uintptr_t) ptr < (uintptr_t) (in + len); ++ptr) {
+    for (auto ptr = (const uint64_t *)aligned; uintptr_t(ptr) < aligned_end(in, len, 64); ++ptr) {
         bitmask2 |= *ptr;
     }
     char bitmask3 = 0;
-    for (auto ptr = std::max(in, (const char *) ((uintptr_t)(in + len) & ~((uintptr_t)(64-1))));
-            ptr < (in + len); ++ptr) {
+    for (auto ptr = (const char *)aligned_end(in, len, 64); ptr < (in + len); ++ptr) {
         bitmask3 |= *ptr;
     }
 

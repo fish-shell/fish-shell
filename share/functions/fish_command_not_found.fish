@@ -57,5 +57,14 @@ else if type -p -q pkgfile
             __fish_default_command_not_found_handler $argv[1]
         end
     end
+else if type -q pacman
+    function fish_command_not_found
+       set -l paths $argv[1]
+       # If we've not been given an absolute path, try $PATH as the starting point,
+       # otherwise pacman will try *every path*, and e.g. bash-completion
+       # isn't helpful.
+       string match -q '/*' -- $argv[1]; or set paths $PATH/$argv[1]
+       pacman -F $paths
+    end
 end
 # Use standard fish command not found handler otherwise

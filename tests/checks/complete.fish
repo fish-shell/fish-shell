@@ -358,3 +358,13 @@ end
 complete -c banana -a '1 2 3'
 complete -c banana
 #CHECK: complete -c banana -a '1 2 3'
+
+# "-c" is optional
+complete banana -a bar
+complete banana
+#CHECK: complete -c banana -a bar
+#CHECK: complete -c banana -a '1 2 3'
+
+# "-a" ain't
+complete banana bar
+#CHECKERR: complete: Too many arguments

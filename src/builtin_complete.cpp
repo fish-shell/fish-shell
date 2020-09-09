@@ -108,6 +108,19 @@ static void builtin_complete_remove(const wcstring_list_t &cmds, const wcstring_
     }
 }
 
+static void builtin_complete_print(const wcstring cmd, io_streams_t &streams, parser_t &parser) {
+    const wcstring repr = complete_print(cmd);
+
+    // colorize if interactive
+    if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
+        std::vector<highlight_spec_t> colors;
+        highlight_shell(repr, colors, parser.context());
+        streams.out.append(str2wcstring(colorize(repr, colors, parser.vars())));
+    } else {
+        streams.out.append(repr);
+    }
+}
+
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 // complete.cpp for any heavy lifting.
 maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
@@ -118,7 +131,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
     completion_mode_t result_mode{};
     int remove = 0;
     wcstring short_opt;
-    wcstring_list_t gnu_opt, old_opt;
+    wcstring_list_t gnu_opt, old_opt, subcommand;
     const wchar_t *comp = L"", *desc = L"", *condition = L"";
     bool do_complete = false;
     bool have_do_complete_param = false;
@@ -139,6 +152,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
         {L"short-option", required_argument, nullptr, 's'},
         {L"long-option", required_argument, nullptr, 'l'},
         {L"old-option", required_argument, nullptr, 'o'},
+        {L"subcommand", required_argument, nullptr, 'S'},
         {L"description", required_argument, nullptr, 'd'},
         {L"arguments", required_argument, nullptr, 'a'},
         {L"erase", no_argument, nullptr, 'e'},
@@ -221,6 +235,14 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
                 old_opt.push_back(w.woptarg);
                 if (w.woptarg[0] == '\0') {
                     streams.err.append_format(_(L"%ls: -o requires a non-empty string\n"), cmd);
+                    return STATUS_INVALID_ARGS;
+                }
+                break;
+            }
+            case 'S': {
+                subcommand.push_back(w.woptarg);
+                if (w.woptarg[0] == '\0') {
+                    streams.err.append_format(_(L"%ls: -S requires a non-empty string\n"), cmd);
                     return STATUS_INVALID_ARGS;
                 }
                 break;
@@ -381,18 +403,18 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
             parser.libdata().builtin_complete_recursion_level--;
             parser.libdata().builtin_complete_current_commandline = false;
         }
-    } else if (cmd_to_complete.empty() && path.empty()) {
-        // No arguments specified, meaning we print the definitions of all specified completions
-        // to stdout.
-        const wcstring repr = complete_print();
-
-        // colorize if interactive
-        if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
-            std::vector<highlight_spec_t> colors;
-            highlight_shell(repr, colors, parser.context());
-            streams.out.append(str2wcstring(colorize(repr, colors, parser.vars())));
+    } else if (path.empty() && gnu_opt.empty()
+               && short_opt.empty() && old_opt.empty()
+               && !remove && !*comp && !*desc && !*condition
+               && wrap_targets.empty() && !result_mode.no_files
+               && !result_mode.force_files && !result_mode.requires_param) {
+        // No arguments that would add or remove anything specified, so we print the definitions of all matching completions.
+        if (cmd_to_complete.empty()) {
+            builtin_complete_print(L"", streams, parser);
         } else {
-            streams.out.append(repr);
+            for (auto& cmd : cmd_to_complete) {
+                builtin_complete_print(cmd, streams, parser);
+            }
         }
     } else {
         int flags = COMPLETE_AUTO_SPACE;

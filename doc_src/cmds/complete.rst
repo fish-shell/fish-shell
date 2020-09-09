@@ -98,9 +98,10 @@ The ``-w`` or ``--wraps`` options causes the specified command to inherit comple
 
 When erasing completions, it is possible to either erase all completions for a specific command by specifying ``complete -c COMMAND -e``, or by specifying a specific completion option to delete by specifying either a long, short or old style option.
 
+When ``complete`` is called without anything that would define or erase completions, it shows matching completions instead. So ``complete`` without any arguments shows all loaded completions, ``complete -c foo`` shows all loaded completions for ``foo``. Since completions are :ref:`autoloaded <syntax-function-autoloading>`, you will have to trigger them first.
 
-Example
--------
+Examples
+--------
 
 The short style option ``-o`` for the ``gcc`` command requires that a file follows it.  This can be done using writing:
 
@@ -151,5 +152,9 @@ To implement an alias, use the ``-w`` or ``--wraps`` option:
     complete -c hub -w git
 
 
-Now hub inherits all of the completions from git. Note this can also be specified in a function declaration.
+Now hub inherits all of the completions from git. Note this can also be specified in a function declaration (``function thing -w otherthing``).
 
+::
+   complete -c git
+
+Show all completions for ``git``.

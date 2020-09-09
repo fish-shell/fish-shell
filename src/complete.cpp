@@ -1666,8 +1666,48 @@ static void append_switch(wcstring &out, const wcstring &opt) {
     append_format(out, L" --%ls", opt.c_str());
 }
 
+wcstring completion2string(const complete_entry_opt_t &o, wcstring cmd, bool is_path) {
+    wcstring out;
+    out.append(L"complete");
+
+    if (o.flags & COMPLETE_DONT_SORT) append_switch(out, L'k');
+
+    if (o.result_mode.no_files && o.result_mode.requires_param) {
+        append_switch(out, L"exclusive");
+    } else if (o.result_mode.no_files) {
+        append_switch(out, L"no-files");
+    } else if (o.result_mode.force_files) {
+        append_switch(out, L"force-files");
+    } else if (o.result_mode.requires_param) {
+        append_switch(out, L"requires-param");
+    }
+
+    append_switch(out, is_path ? L'p' : L'c', cmd);
+
+    switch (o.type) {
+    case option_type_args_only: {
+        break;
+    }
+    case option_type_short: {
+        append_switch(out, L's', wcstring(1, o.option.at(0)));
+        break;
+    }
+    case option_type_single_long:
+    case option_type_double_long: {
+        append_switch(out, o.type == option_type_single_long ? L'o' : L'l', o.option);
+        break;
+    }
+    }
+
+    append_switch(out, L'd', C_(o.desc));
+    append_switch(out, L'a', o.comp);
+    append_switch(out, L'n', o.condition);
+    out.append(L"\n");
+    return out;
+}
+
 /// Use by the bare `complete`, loaded completions are printed out as commands
-wcstring complete_print() {
+wcstring complete_print(wcstring cmd) {
     wcstring out;
     out.reserve(40);  // just a guess
     auto completion_set = s_completion_set.acquire();
@@ -1679,43 +1719,10 @@ wcstring complete_print() {
     sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
 
     for (const completion_entry_t &e : all_completions) {
+        if (!cmd.empty() && e.cmd != cmd) continue;
         const option_list_t &options = e.get_options();
         for (const complete_entry_opt_t &o : options) {
-            out.append(L"complete");
-
-            if (o.flags & COMPLETE_DONT_SORT) append_switch(out, L'k');
-
-            if (o.result_mode.no_files && o.result_mode.requires_param) {
-                append_switch(out, L"exclusive");
-            } else if (o.result_mode.no_files) {
-                append_switch(out, L"no-files");
-            } else if (o.result_mode.force_files) {
-                append_switch(out, L"force-files");
-            } else if (o.result_mode.requires_param) {
-                append_switch(out, L"requires-param");
-            }
-
-            append_switch(out, e.cmd_is_path ? L'p' : L'c', e.cmd);
-
-            switch (o.type) {
-                case option_type_args_only: {
-                    break;
-                }
-                case option_type_short: {
-                    append_switch(out, L's', wcstring(1, o.option.at(0)));
-                    break;
-                }
-                case option_type_single_long:
-                case option_type_double_long: {
-                    append_switch(out, o.type == option_type_single_long ? L'o' : L'l', o.option);
-                    break;
-                }
-            }
-
-            append_switch(out, L'd', C_(o.desc));
-            append_switch(out, L'a', o.comp);
-            append_switch(out, L'n', o.condition);
-            out.append(L"\n");
+            out.append(completion2string(o, e.cmd, e.cmd_is_path));
         }
     }
 
@@ -1723,6 +1730,7 @@ wcstring complete_print() {
     auto locked_wrappers = wrapper_map.acquire();
     for (const auto &entry : *locked_wrappers) {
         const wcstring &src = entry.first;
+        if (!cmd.empty() && src != cmd) continue;
         for (const wcstring &target : entry.second) {
             out.append(L"complete");
             append_switch(out, L'c', src);

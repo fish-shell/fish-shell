@@ -353,3 +353,8 @@ begin
 
     rm -rf $parened_path
 end
+
+# This should only list the completions for `banana`
+complete -c banana -a '1 2 3'
+complete -c banana
+#CHECK: complete -c banana -a '1 2 3'

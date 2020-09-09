@@ -299,6 +299,9 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
         if (do_complete && !have_do_complete_param && argc == w.woptind + 1) {
             do_complete_param = argv[argc - 1];
             have_do_complete_param = true;
+        } else if (!do_complete && cmd_to_complete.empty() && argc == w.woptind + 1) {
+            // Or use one left-over arg as the command to complete
+            cmd_to_complete.push_back(argv[argc - 1]);
         } else {
             streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
             builtin_print_error_trailer(parser, streams.err, cmd);

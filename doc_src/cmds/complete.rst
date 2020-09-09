@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-  complete ( -c | --command | -p | --path ) COMMAND
+  complete [( -c | --command | -p | --path )] COMMAND
           [( -c | --command | -p | --path ) COMMAND]...
           [( -e | --erase )]
           [( -s | --short-option ) SHORT_OPTION]...

@@ -64,6 +64,8 @@ else if type -q pacman
        # otherwise pacman will try *every path*, and e.g. bash-completion
        # isn't helpful.
        string match -q '/*' -- $argv[1]; or set paths $PATH/$argv[1]
+       # Pacman only prints the path, so we still need to print the error.
+       __fish_default_command_not_found_handler $argv[1]
        pacman -F $paths
     end
 end

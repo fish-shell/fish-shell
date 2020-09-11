@@ -215,6 +215,7 @@ For distributors and developers
    default it prefers the system library if available, unless Mac
    codesigning is enabled (#6952).
 -  Running the full interactive test suite now requires Python 3.3+ and the pexpect package (#6825).
+-  For fish's tools written in python, like fish_config and the manpage completion generator, support for python 2 has been dropped. Please use Python 3.5 or later (#6537).
 
 --------------
 

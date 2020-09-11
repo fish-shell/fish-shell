@@ -102,11 +102,8 @@ The following optional features also have specific requirements:
 -  builtin commands that have the ``--help`` option or print usage
    messages require ``ul`` and either ``nroff`` or ``mandoc`` for
    display
--  automated completion generation from manual pages requires Python
-   (2.7+ or 3.3+) and possibly the ``backports.lzma`` module for Python
-   2.7
--  the ``fish_config`` web configuration tool requires Python (2.7+ or
-   3.3 +) and a web browser
+-  automated completion generation from manual pages requires Python 3.3+
+-  the ``fish_config`` web configuration tool requires Python 3.3+ and a web browser
 -  system clipboard integration (with the default Ctrl-V and Ctrl-X
    bindings) require either the ``xsel``, ``xclip``,
    ``wl-copy``/``wl-paste`` or ``pbcopy``/``pbpaste`` utilities

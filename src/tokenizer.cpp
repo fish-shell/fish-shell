@@ -807,6 +807,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
 }
 
 bool move_word_state_machine_t::consume_char_whitespace(wchar_t c) {
+    // Consume a "word" of printable characters plus any leading whitespace.
     enum { s_always_one = 0, s_blank, s_graph, s_end };
 
     bool consumed = false;
@@ -814,7 +815,13 @@ bool move_word_state_machine_t::consume_char_whitespace(wchar_t c) {
         switch (state) {
             case s_always_one: {
                 consumed = true;  // always consume the first character
-                state = s_blank;
+                // If it's a graphical char, only consume those from here.
+                if (iswgraph(c)) {
+                    state = s_graph;
+                } else {
+                    // If it's whitespace, keep consuming whitespace until the graphs.
+                    state = s_blank;
+                }
                 break;
             }
             case s_blank: {

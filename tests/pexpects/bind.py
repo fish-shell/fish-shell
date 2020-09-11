@@ -276,3 +276,16 @@ sendline("bind q self-insert-notfirst")
 expect_prompt()
 sendline("qqqecho qqq")
 expect_prompt("qqq", unmatched="Leading qs not stripped")
+
+# Test bigword with single-character words.
+sendline("bind \cg kill-bigword")
+expect_prompt()
+send("a b c d\x01") # ctrl-a, move back to the beginning of the line
+send("\x07") # ctrl-g, kill bigword
+sendline("echo")
+expect_prompt("^b c d")
+
+send("    a b c d\x01") # ctrl-a, move back to the beginning of the line
+send("\x07") # ctrl-g, kill bigword
+sendline("echo")
+expect_prompt("^b c d")

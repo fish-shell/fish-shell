@@ -294,8 +294,14 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
             return STATUS_INVALID_ARGS;
         }
 
+        using rl = readline_cmd_t;
         for (i = w.woptind; i < argc; i++) {
             if (auto mc = input_function_get_code(argv[i])) {
+                // Don't enqueue a repaint if we're currently in the middle of one,
+                // because that's an infinite loop.
+                if (mc == rl::repaint_mode || mc == rl::force_repaint || mc == rl::repaint) {
+                    if (ld.is_repaint) continue;
+                }
                 // Inserts the readline function at the back of the queue.
                 reader_queue_ch(*mc);
             } else {

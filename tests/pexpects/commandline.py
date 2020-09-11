@@ -23,3 +23,10 @@ sendline(
 expect_prompt()
 sendline("echo one \"two three\" four'five six'{7} 'eight~")
 expect_prompt("\r\n@GUARD:2@\r\n(.*)\r\n@/GUARD:2@\r\n")
+
+# Check that we don't infinitely loop here.
+sendline("function fish_mode_prompt; commandline -f repaint; end")
+expect_prompt()
+
+sendline("echo foo")
+expect_prompt("foo")

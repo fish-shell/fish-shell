@@ -151,6 +151,10 @@ struct library_data_t {
     /// Number of recursive calls to builtin_complete().
     uint32_t builtin_complete_recursion_level{0};
 
+    /// If we're currently repainting the commandline.
+    /// Useful to stop infinite loops.
+    bool is_repaint{false};
+
     /// Whether we called builtin_complete -C without parameter.
     bool builtin_complete_current_commandline{false};
 

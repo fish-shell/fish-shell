@@ -2781,10 +2781,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             //
             // Because some users set `fish_mode_prompt` to an empty function and display the mode
             // elsewhere, we detect if the mode output is empty.
+
+            // Don't go into an infinite loop of repainting.
+            // This can happen e.g. if a variable triggers a repaint,
+            // and the variable is set inside the prompt (#7324).
+            // builtin commandline will refuse to enqueue these.
+            parser().libdata().is_repaint = true;
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
                 s_reset_line(&screen, true /* redraw prompt */);
                 if (this->is_repaint_needed()) this->layout_and_repaint(L"mode");
+                parser().libdata().is_repaint = false;
                 break;
             }
             // Else we repaint as normal.
@@ -2792,10 +2799,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::force_repaint:
         case rl::repaint: {
+            parser().libdata().is_repaint = true;
             exec_prompt();
             s_reset_line(&screen, true /* redraw prompt */);
             this->layout_and_repaint(L"readline");
             force_exec_prompt_and_repaint = false;
+            parser().libdata().is_repaint = false;
             break;
         }
         case rl::complete:

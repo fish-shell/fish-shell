@@ -1093,6 +1093,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
             prompt_percent_width > 33) {
             result.prompts_get_own_line = true;
         }
+        result.autosuggestion = autosuggestion;
     }
 
     return result;

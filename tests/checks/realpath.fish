@@ -62,6 +62,19 @@ else
     echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
 end
 
+# With "-s" the symlink is not resolved.
+set -l real_path (builtin realpath -s $XDG_DATA_HOME/fish-symlink)
+set -l expected_real_path "$XDG_DATA_HOME/fish-symlink"
+if test "$real_path" = "$expected_real_path"
+    echo "fish-symlink handled correctly"
+    # CHECK: fish-symlink handled correctly
+else
+    echo "fish-symlink not handled correctly: $real_path != $expected_real_path" >&2
+end
+
+test (builtin realpath -s /usr/bin/../) = "/usr"
+or echo builtin realpath -s does not resolve .. or resolves symlink wrong
+
 # A nonexistent file relative to a valid symlink to a directory gets converted.
 # This depends on the symlink created by the previous test.
 set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/nonexistent-file-relative-to-a-symlink)

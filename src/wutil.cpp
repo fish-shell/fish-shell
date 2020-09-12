@@ -403,7 +403,7 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     return str2wcstring(real_path);
 }
 
-wcstring normalize_path(const wcstring &path) {
+wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes) {
     // Count the leading slashes.
     const wchar_t sep = L'/';
     size_t leading_slashes = 0;
@@ -430,7 +430,7 @@ wcstring normalize_path(const wcstring &path) {
     wcstring result = join_strings(new_comps, sep);
     // Prepend one or two leading slashes.
     // Two slashes are preserved. Three+ slashes are collapsed to one. (!)
-    result.insert(0, leading_slashes > 2 ? 1 : leading_slashes, sep);
+    result.insert(0, allow_leading_double_slashes && leading_slashes > 2 ? 1 : leading_slashes, sep);
     // Ensure ./ normalizes to . and not empty.
     if (result.empty()) result.push_back(L'.');
     return result;

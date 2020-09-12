@@ -76,7 +76,7 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname);
 /// 1. Collapse multiple /s into a single /, except maybe at the beginning.
 /// 2. .. goes up a level.
 /// 3. Remove /./ in the middle.
-wcstring normalize_path(const wcstring &path);
+wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes = true);
 
 /// Given an input path \p path and a working directory \p wd, do a "normalizing join" in a way
 /// appropriate for cd. That is, return effectively wd + path while resolving leading ../s from

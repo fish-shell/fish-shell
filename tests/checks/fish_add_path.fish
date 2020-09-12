@@ -30,19 +30,20 @@ echo $status
 # CHECK: 1
 functions --erase checkpath
 
-# Not adding a link either
+# Add a link to the same path.
 fish_add_path -v $tmpdir/link
+# CHECK: set fish_user_paths {{.*}}/link {{.*}}/bin
 echo $status
-# CHECK: 1
+# CHECK: 0
 
 fish_add_path -a $tmpdir/sbin
 # Not printing anything because it's not verbose, the /sbin should be added at the end.
 string replace -- $tmpdir '' $fish_user_paths | string join ' '
-# CHECK: /bin /sbin
+# CHECK: /link /bin /sbin
 
 fish_add_path -m $tmpdir/sbin
 string replace -- $tmpdir '' $fish_user_paths | string join ' '
-# CHECK: /sbin /bin
+# CHECK: /sbin /link /bin
 
 set -l oldpath "$PATH"
 fish_add_path -nP $tmpdir/etc | string replace -- $tmpdir ''

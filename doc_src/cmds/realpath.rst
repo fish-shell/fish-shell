@@ -21,4 +21,4 @@ If a ``realpath`` command exists, it will be preferred, so if you want to use th
 
 The following options are available:
 
-- ``-s`` or ``--no-symlink``: Don't resolve symlinks, only make paths absolute, squash multiple slashes and remove trailing slashes.
+- ``-s`` or ``--no-symlinks``: Don't resolve symlinks, only make paths absolute, squash multiple slashes and remove trailing slashes.

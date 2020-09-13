@@ -50,17 +50,21 @@ read -l pgrp2 < $tmpfile2
 and echo "eval pgroups agreed"
 or echo "eval pgroups disagreed, meaning eval does not retain pgroups: $pgrp1 $pgrp2"
 # CHECK: eval pgroups agreed
-rm $tmpfile1 $tmpfile2
+echo -n > $tmpfile1
+echo -n > $tmpfile2
 
 # Ensure that if a background job launches another background job, that they have different pgroups.
-# The pipeline here will arrange for the two pgroups to be printed on the same line, like:
-#   123 124
 # Our regex will capture the first pgroup and use a negative lookahead on the second.
 status job-control full
-$fth print_pgrp | begin
-    tr \n ' '
-    $fth print_pgrp | tr \n ' ' &
+$fth print_pgrp > $tmpfile1 | begin
+    $fth print_pgrp > $tmpfile2 &
+    wait
 end &
 wait
-echo
-# CHECK: {{(\d+) (?!\1)\d+}}
+read -l pgrp1 < $tmpfile1
+read -l pgrp2 < $tmpfile2
+[ "$pgrp1" -ne "$pgrp2" ]
+and echo "background job correctly got new pgroup"
+or echo "background job did not get new pgroup: $pgrp1 $pgrp2"
+# CHECK: background job correctly got new pgroup
+rm $tmpfile1 $tmpfile2

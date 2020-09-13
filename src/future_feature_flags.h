@@ -64,19 +64,24 @@ class features_t {
     /// Return the metadata for a particular name, or nullptr if not found.
     static const struct metadata_t *metadata_for(const wchar_t *name);
 
+    /// The singleton shared feature set.
+    static features_t global_features;
+
    private:
+    features_t();
+
     /// Values for the flags.
     bool values[flag_count] = {};
 };
 
 /// Return the global set of features for fish. This is const to prevent accidental mutation.
-const features_t &fish_features();
+inline const features_t &fish_features() { return features_t::global_features; }
 
 /// Perform a feature test on the global set of features.
 inline bool feature_test(features_t::flag_t f) { return fish_features().test(f); }
 
 /// Return the global set of features for fish, but mutable. In general fish features should be set
 /// at startup only.
-features_t &mutable_fish_features();
+inline features_t &mutable_fish_features() { return features_t::global_features; }
 
 #endif

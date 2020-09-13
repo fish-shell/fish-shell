@@ -40,11 +40,17 @@ and echo "All pgroups agreed"
 or echo "Pgroups disagreed. Found $a0 $a1 $a2, and $b0 $b1 $b2"
 # CHECK: All pgroups agreed
 
-### DISABLED - this fails a lot on Travis
 # Ensure that eval retains pgroups - #6806.
-# Our regex will capture the first pgroup and use a positive lookahead on the second.
-# $fth print_pgrp | tr \n ' ' 1>&2 | eval '$fth print_pgrp' 1>&2
-## CHECKERR: {{(\d+) (?=\1)\d+}}
+set -l tmpfile1 (mktemp)
+set -l tmpfile2 (mktemp)
+$fth print_pgrp > $tmpfile1 | eval '$fth print_pgrp > $tmpfile2'
+read -l pgrp1 < $tmpfile1
+read -l pgrp2 < $tmpfile2
+[ "$pgrp1" -eq "$pgrp2" ]
+and echo "eval pgroups agreed"
+or echo "eval pgroups disagreed, meaning eval does not retain pgroups: $pgrp1 $pgrp2"
+# CHECK: eval pgroups agreed
+rm $tmpfile1 $tmpfile2
 
 # Ensure that if a background job launches another background job, that they have different pgroups.
 # The pipeline here will arrange for the two pgroups to be printed on the same line, like:

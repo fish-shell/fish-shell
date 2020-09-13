@@ -67,9 +67,9 @@ class features_t {
     /// The singleton shared feature set.
     static features_t global_features;
 
-   private:
     features_t();
 
+   private:
     /// Values for the flags.
     bool values[flag_count] = {};
 };

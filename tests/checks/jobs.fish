@@ -1,5 +1,15 @@
 #RUN: %fish %s
 
+# Ensure there's no zombies before we start, otherwise the tests will mysteriously fail.
+set zombies_among_us (ps -o stat | string match 'Z*' | count)
+[ "$zombies_among_us" -eq "0" ]
+or begin
+	echo "Found existing zombie processes. Clean up zombies before running this test."
+	exit 1
+end
+echo "All clear of zombies."
+# CHECK: All clear of zombies.
+
 # Verify zombies are not left by disown (#7183, #5342)
 # Do this first to avoid colliding with the other disowned processes below, which may
 # still be running at the end of the script

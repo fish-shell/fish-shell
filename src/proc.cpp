@@ -1070,7 +1070,6 @@ void proc_sanity_check(const parser_t &parser) {
 }
 
 void proc_wait_any(parser_t &parser) {
-    ASSERT_IS_MAIN_THREAD();
     process_mark_finished_children(parser, true /* block_ok */);
     process_clean_after_marking(parser, parser.libdata().is_interactive);
 }

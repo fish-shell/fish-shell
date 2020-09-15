@@ -262,6 +262,9 @@ end
 complete -c zfs -x -n '__fish_zfs_using_command create' -s V -d 'Volume size'
 complete -c zfs -f -n '__fish_zfs_using_command create; and __fish_contains_opt -s V' -s s -d 'Create a sparse volume'
 complete -c zfs -x -n '__fish_zfs_using_command create; and __fish_contains_opt -s V' -s b -d Blocksize
+# new dataset completions, applicable for both regular datasets and volumes; must start with pool and may optionally
+# be a child of a pre-existing dataset.
+complete -c zfs -x -n '__fish_zfs_using_command create' -a '(printf "%s/\n" (__fish_print_zfs_filesystems))'
 
 # destroy completions; as the dataset is the last item, we can't know yet if it's a snapshot, a bookmark or something else, so we can't separate snapshot-specific options from others
 complete -c zfs -f -n '__fish_zfs_using_command destroy' -s r -d 'Recursively destroy children'

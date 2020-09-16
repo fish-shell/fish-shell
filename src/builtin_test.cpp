@@ -78,6 +78,10 @@ enum token_t {
     test_paren_close,  // ")", close paren
 };
 
+static int stdin_fd{-1};
+static bool out_is_redirected;
+static bool err_is_redirected;
+
 /// Our number type. We support both doubles and long longs. We have to support these separately
 /// because some integers are not representable as doubles; these may come up in practice (e.g.
 /// inodes).
@@ -104,7 +108,11 @@ class number_t {
     // Return true if the number is a tty()/
     bool isatty() const {
         if (delta != 0.0 || base > INT_MAX || base < INT_MIN) return false;
-        return ::isatty(static_cast<int>(base));
+        int bint = static_cast<int>(base);
+        if (bint == 0) return ::isatty(stdin_fd);
+        if (bint == 1) return !out_is_redirected && ::isatty(STDOUT_FILENO);
+        if (bint == 2) return !err_is_redirected && ::isatty(STDERR_FILENO);
+        return ::isatty(bint);
     }
 };
 
@@ -881,6 +889,13 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **arg
         // Per 1003.1, exit true if the arg is non-empty.
         return args.at(0).empty() ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }
+
+    // HACK: We have static variables describing the stream state.
+    // This is supremely cheesy, but the alternative is threading them through
+    // *every single evaluation function*, even the ones that would never use them.
+    stdin_fd = streams.stdin_fd;
+    out_is_redirected = streams.out_is_redirected;
+    out_is_redirected = streams.out_is_redirected;
 
     // Try parsing
     wcstring err;

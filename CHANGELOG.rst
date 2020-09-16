@@ -218,8 +218,8 @@ For distributors and developers
    builds with the system-installed PCRE2, or the version it bundles. By
    default it prefers the system library if available, unless Mac
    codesigning is enabled (#6952).
--  Running the full interactive test suite now requires Python 3.3+ and the pexpect package (#6825).
--  For fish's tools written in python, like fish_config and the manpage completion generator, support for python 2 has been dropped. Please use Python 3.5 or later (#6537).
+-  Running the full interactive test suite now requires Python 3.5+ and the pexpect package (#6825); the expect package is no longer required.
+-  Support for Python 2 in fish's tools (``fish_config`` and the manual page completion generator) is no longer guaranteed. Please use Python 3.5 or later (#6537).
 
 --------------
 

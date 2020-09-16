@@ -102,8 +102,8 @@ The following optional features also have specific requirements:
 -  builtin commands that have the ``--help`` option or print usage
    messages require ``ul`` and either ``nroff`` or ``mandoc`` for
    display
--  automated completion generation from manual pages requires Python 3.3+
--  the ``fish_config`` web configuration tool requires Python 3.3+ and a web browser
+-  automated completion generation from manual pages requires Python 3.5+
+-  the ``fish_config`` web configuration tool requires Python 3.5+ and a web browser
 -  system clipboard integration (with the default Ctrl-V and Ctrl-X
    bindings) require either the ``xsel``, ``xclip``,
    ``wl-copy``/``wl-paste`` or ``pbcopy``/``pbpaste`` utilities
@@ -155,7 +155,7 @@ Compiling fish requires:
 Sphinx is also optionally required to build the documentation from a
 cloned git repository.
 
-Additionally, running the test suite requires python 3.3+ and the pexpect package.
+Additionally, running the test suite requires Python 3.5+ and the pexpect package.
 
 Building from source (all platforms) - Makefile generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

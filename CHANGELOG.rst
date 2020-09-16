@@ -5,7 +5,7 @@ Notable improvements and fixes
 ------------------------------
 
 -  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Ctrl+Z, and redo to Alt+/.
--  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally.
+-  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (#6824).
 -  Ctrl-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
 -  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
@@ -32,12 +32,13 @@ Notable improvements and fixes
     dmesg -w | string replace foo bar
 
 - ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
+- Significant performance improvements to completions (#7153).
 
 Syntax changes and new commands
 -------------------------------
-- A new ``fish_is_root_user`` simplifies checking for superuser privilege, largely for use in prompts (#7031).
 - Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively.
 - Logical operators ``&&`` and ``||`` can be followed by newlines before their right operand, matching POSIX shells.
+- A new ``fish_is_root_user`` simplifies checking for superuser privilege, largely for use in prompts (#7031).
 
 Scripting improvements
 ----------------------
@@ -76,6 +77,8 @@ Scripting improvements
 -  All builtins that query if something exists now take ``--query`` as the long form for ``-q``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (#7276).
 -  ``argparse`` no longer prints a stack backtrace with invalid options (#6703).
 -  ``complete`` can now show the loaded completions for only specific commands, and do without ``-c`` (``complete git`` is now valid) (#7321).
+-  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (#7154).
+-  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (#7014).
 
 Interactive improvements
 ------------------------
@@ -106,6 +109,7 @@ Interactive improvements
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (#6787).
 -  ``diff`` will now colourise output, if supported (#7308).
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (#7293).
+-  Control-C no longer occasionally prints an "unknown command" error (#7145).
 
 
 New or improved bindings
@@ -171,7 +175,7 @@ Completions
    -  ``gitk``
    -  ``hikari`` (#7083)
    -  ``imv`` (#6675)
-   -  ``mpc``
+   -  ``mpc`` (#7169)
    -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
    -  ``nmap``, ``ncat``
    -  ``prime-run``
@@ -183,13 +187,13 @@ Completions
    -  ``sphinx-apidoc``, ``sphinx-autogen``, ``sphinx-build`` and
       ``sphinx-quickstart``
    -  ``strace`` (#6656)
-   -  ``tcpdump``
+   -  ``tcpdump`` (#6690)
    -  ``tig``
    -  ``windscribe``
    -  ``wireshark``, ``tshark``, and ``dumpcap``
    -  ``xbps-*``
    -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (#7103
-   -  ``yadm``
+   -  ``yadm`` (#7100)
    -  ``zopfli``, and ``zopflipng``
 
 - Lots of improvements to completions.
@@ -206,7 +210,7 @@ For distributors and developers
 -  fish source tarballs are now distributed using the XZ compression
    method (#5460).
 -  The CMake variable ``MAC_CODESIGN_ID`` can now be set to "off" to disable code-signing (#6952).
--  Building on on macOS earlier than 10.13.6 succeeds, instead of failing on code-signing.
+-  Building on on macOS earlier than 10.13.6 succeeds, instead of failing on code-signing (#6791).
 -  The pkg-config file now uses variables to ensure paths used are portable across prefixes.
 -  The default values for the ``extra_completionsdir``, ``extra_functionsdir``
    and ``extra_confdir`` options now use the installation prefix rather than ``/usr/local``.

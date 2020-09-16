@@ -2993,6 +2993,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (el->position() < el->size()) {
                 delete_char(false /* backward */);
             } else if (c == rl::delete_or_exit && el->empty()) {
+                // This is by definition a successful exit, override the status
+                parser().set_last_statuses(statuses_t::just(STATUS_CMD_OK));
                 exit_loop_requested = true;
                 check_exit_loop_maybe_warning(this);
             }

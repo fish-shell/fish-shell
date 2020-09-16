@@ -57,3 +57,11 @@ sendline("t </dev/null")
 expect_str("stdout")
 expect_str("stderr")
 expect_prompt()
+
+sendline("isatty stdin && echo yes")
+expect_str("yes")
+expect_prompt()
+
+sendline("cat </dev/null | isatty stdin || echo no")
+expect_str("no")
+expect_prompt()

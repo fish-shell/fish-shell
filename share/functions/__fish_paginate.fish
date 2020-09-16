@@ -6,11 +6,10 @@ function __fish_paginate -d "Paginate the current command using the users defaul
     end
 
     if test -z (commandline -j | string join '')
-        commandline -a $history[1]
+        commandline -i $history[1]
     end
 
-    if commandline -j | string match -q -r -v "$cmd *\$"
-
+    if commandline -j | not string match -q -r "$cmd *\$"
         commandline -aj " &| $cmd;"
     end
 

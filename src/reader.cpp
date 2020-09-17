@@ -2814,7 +2814,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // Use the command line only; it doesn't make sense to complete in any other line.
             editable_line_t *el = &command_line;
             if (is_navigating_pager_contents() ||
-                (!rls.complete_did_insert && rls.last_cmd == rl::complete)) {
+                (!rls.comp.empty() && !rls.complete_did_insert && rls.last_cmd == rl::complete)) {
                 // The user typed complete more than once in a row. If we are not yet fully
                 // disclosed, then become so; otherwise cycle through our available completions.
                 if (current_page_rendering.remaining_to_disclose > 0) {

@@ -1661,13 +1661,26 @@ Put ``bind`` statements into :ref:`config.fish <initialization>` or a function c
 
 The key sequence (the ``\cc``) here depends on your setup, in particular the terminal. To find out what the terminal sends use :ref:`fish_key_reader <cmd-fish_key_reader>`::
 
-  > fish_key_reader
+  > fish_key_reader # pressing control-c
   Press a key:
               hex:    3  char: \cC
   Press [ctrl-C] again to exit
   bind \cC 'do something'
 
+  > fish_key_reader # pressing the right-arrow
+  Press a key:
+              hex:   1B  char: \c[  (or \e)
+  (  0.077 ms)  hex:   5B  char: [
+  (  0.037 ms)  hex:   43  char: C
+  bind \e\[C 'do something'
+
 Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about.
+
+Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the ``fish_escape_delay_ms`` variable.
+
+If you want to be able to press :kbd:`Escape` and then a character and have it count as :kbd:`Alt`\ +\ that character, set it to a higher value, e.g.::
+
+  set -g fish_escape_delay_ms 100
 
 .. _killring:
 

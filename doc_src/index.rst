@@ -1356,9 +1356,20 @@ The most common way to set the locale to use a command like 'set -x LANG en_GB.u
 Builtin commands
 ----------------
 
-Many other shells have a large library of builtin commands. Most of these commands are also available as standalone commands, but have been implemented in the shell anyway. To avoid code duplication, and to avoid the confusion of subtly differing versions of the same command, fish generally only implements builtins for actions which cannot be performed by a regular command.
+Fish includes a number of commands in the shell directly. We call these "builtins". These include:
 
-For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch of the command.
+- Builtins that manipulate the shell state - :ref:`cd <cmd-cd>` changes directory, :ref:`set <cmd-set>` sets variables
+- Builtins for dealing with data, like :ref:`string <cmd-string>` for strings and :ref:`math <cmd-math>` for numbers, :ref:`count <cmd-count>` for counting lines or arguments
+- :ref:`status <cmd-status>` for asking about the shell's status
+- :ref:`printf <cmd-printf>` and :ref:`echo <cmd-echo>` for creating output
+- :ref:`test <cmd-test>` for checking conditions
+- :ref:`argparse <cmd-argparse>` for parsing function arguments
+- :ref:`source <cmd-source>` to read a script in the current shell (so changes to variables stay) and :ref:`eval <cmd-eval>` to execute a string as script
+- :ref:`random <cmd-random>` to get random numbers or pick a random element from a list
+
+For a list of all builtins, use ``builtin -n``.
+
+For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch.
 
 .. _identifiers:
 

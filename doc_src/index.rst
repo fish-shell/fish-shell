@@ -915,7 +915,7 @@ Variable scope
 There are three kinds of variables in fish: universal, global and local variables.
 
 - Universal variables are shared between all fish sessions a user is running on one computer.
-- Global variables are specific to the current fish session, and will never be erased unless the user explicitly requests it using ``set -e``.
+- Global variables are specific to the current fish session, and will never be erased unless explicitly requested by using ``set -e``.
 - Local variables are specific to the current fish session, and associated with a specific block of commands, and automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``.
 
 Variables can be explicitly set to be universal with the ``-U`` or ``--universal`` switch, global with the ``-g`` or ``--global`` switch, or local with the ``-l`` or ``--local`` switch.  The scoping rules when creating or updating a variable are:
@@ -1193,11 +1193,11 @@ You can change the settings of fish by changing the values of certain variables.
 
 - ``BROWSER``, your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
-Fish also sends additional information to the user through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
+Fish also provides additional information through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
 
 - ``_``, the name of the currently running command (though this is deprecated, and the use of ``status current-command`` is preferred).
 
-- ``argv``, a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed by the user.
+- ``argv``, a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed.
 
 - ``CMD_DURATION``, the runtime of the last command in milliseconds.
 
@@ -1209,11 +1209,11 @@ Fish also sends additional information to the user through the values of certain
 
 - ``history``, a list containing the last commands that were entered.
 
-- ``HOME``, the user's home directory. This variable can be changed by the user.
+- ``HOME``, the user's home directory. This variable can be changed.
 
 - ``hostname``, the machine's hostname.
 
-- ``IFS``, the internal field separator that is used for word splitting with the :ref:`read <cmd-read>` builtin. Setting this to the empty string will also disable line splitting in `command substitution <#expand-command-substitution>`_. This variable can be changed by the user.
+- ``IFS``, the internal field separator that is used for word splitting with the :ref:`read <cmd-read>` builtin. Setting this to the empty string will also disable line splitting in `command substitution <#expand-command-substitution>`_. This variable can be changed.
 
 - ``last_pid``, the process ID (PID) of the last background process.
 
@@ -1227,7 +1227,7 @@ Fish also sends additional information to the user through the values of certain
 
 - ``status_generation``, the "generation" count of ``$status``. This will be incremented only when the previous command produced an explicit status. (For example, background jobs will not increment this).
 
-- ``USER``, the current username. This variable can be changed by the user.
+- ``USER``, the current username. This variable can be changed.
 
 - ``version``, the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
 
@@ -1690,7 +1690,7 @@ The fish commandline editor works exactly the same in single line mode and in mu
 Searchable command history
 --------------------------
 
-After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
+After a command has been executed, it is remembered in the history list. Any duplicate history items are automatically removed. By pressing the up and down keys, you can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
 By pressing :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
@@ -1746,13 +1746,13 @@ Another set of commands, usually also available in other shells like bash, deal 
 Running multiple programs
 =========================
 
-Normally when fish starts a program, this program will be put in the foreground, meaning it will take control of the terminal and fish will be stopped until the program finishes. Sometimes this is not desirable. For example, you may wish to start an application with a graphical user interface from the terminal, and then be able to continue using the shell. In such cases, there are several ways in which the user can change fish's behavior.
+Normally when fish starts a program, this program will be put in the foreground, meaning it will take control of the terminal and fish will be stopped until the program finishes. Sometimes this is not desirable. For example, you may wish to start an application with a graphical user interface from the terminal, and then be able to continue using the shell. There are several ways to do this:
 
-- By ending a command with the ``&`` (ampersand) symbol, the user tells fish to put the specified command into the background. A background process will be run simultaneous with fish. Fish will keep control of the terminal, so the program will not be able to read from the keyboard.
+- Fish puts commands ending with the ``&`` (ampersand) symbol into the background. A background process will be run simultaneous with fish. Fish will keep control of the terminal, so the program will not be able to read from the keyboard.
 
-- By pressing :kbd:`Control`\ +\ :kbd:`Z`, the user stops a currently running foreground  program and returns control to fish. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control`\ +\ :kbd:`X` :kbd:`Z` to stop running.
+- By pressing :kbd:`Control`\ +\ :kbd:`Z`, you can stop a currently running foreground  program and returns control to fish. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control`\ +\ :kbd:`X` :kbd:`Z` to stop running.
 
-- By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, the user can send any currently running job into the foreground or background.
+- By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, you can send any currently running job into the foreground or background.
 
 Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
 
@@ -1851,7 +1851,7 @@ Other features
 Syntax highlighting
 -------------------
 
-Fish interprets the command line as it is typed and uses syntax highlighting to provide feedback to the user. The most important feedback is the detection of potential errors. By default, errors are marked red.
+Fish interprets the command line as it is typed and uses syntax highlighting to provide feedback. The most important feedback is the detection of potential errors. By default, errors are marked red.
 
 Detected errors include:
 

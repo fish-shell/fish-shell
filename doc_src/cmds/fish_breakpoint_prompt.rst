@@ -16,7 +16,7 @@ Synopsis
 Description
 -----------
 
-By defining the ``fish_breakpoint_prompt`` function, the user can choose a custom prompt when asking for input in response to a :ref:`breakpoint <cmd-breakpoint>` command. The ``fish_breakpoint_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
+``fish_breakpoint_prompt`` is the prompt function when asking for input in response to a :ref:`breakpoint <cmd-breakpoint>` command.
 
 The exit status of commands within ``fish_breakpoint_prompt`` will not modify the value of :ref:`$status <variables-status>` outside of the ``fish_breakpoint_prompt`` function.
 

@@ -16,7 +16,7 @@ Synopsis
 Description
 -----------
 
-By defining the ``fish_prompt`` function, the user can choose a custom prompt. The ``fish_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
+The ``fish_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
 
 The exit status of commands within ``fish_prompt`` will not modify the value of :ref:`$status <variables-status>` outside of the ``fish_prompt`` function.
 

@@ -19,9 +19,9 @@ The ``fish_git_prompt`` function displays information about the current git repo
 
 `Git <https://git-scm.com>`_ must be installed.
 
-There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the `git config` command, while fish variables can be set as usual with the :ref:`set <cmd-set>` command.
+There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the ``git config`` command, while fish variables can be set as usual with the :ref:`set <cmd-set>` command.
 
-- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of untracked files, dirty files, unpushed/unpulled commits, and more. In large repositories, this can take a lot of time, so it you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``.
+- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of untracked files, dirty files, unpushed/unpulled commits, and more. In large repositories, this can take a lot of time, so it you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
 
 - ``$__fish_git_prompt_showdirtystate`` or the git option ``bash.showDirtyState`` can be set to show if the repository is "dirty", i.e. has uncommitted changes.
 
@@ -57,29 +57,31 @@ There are numerous customization options, which can be controlled with git optio
      ``describe``
          relative to older annotated tag, such as ``(v1.6.3.1-13-gdd42c2f)``
      ``default``
-         exactly matching tag
+         an exactly matching tag (``(develop)``)
+
+     If none of these apply, the commit SHA shortened to 8 characters is used.
 
 - ``$__fish_git_prompt_showcolorhints`` can be set to enable coloring for the branch name and status symbols.
 
 A number of variables set characters and color used as indicators. Many of these have a different default if used with informative status enabled, or ``$__fish_git_prompt_use_informative_chars`` set. The usual default is given first, then the informative default (if it is different). If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
 
-- ``$__fish_git_prompt_char_stateseparator`` (' ', `|`)
-- ``$__fish_git_prompt_color`` ('')
-- ``$__fish_git_prompt_color_prefix``
-- ``$__fish_git_prompt_color_suffix``
-- ``$__fish_git_prompt_color_bare``
-- ``$__fish_git_prompt_color_merging``
+- ``$__fish_git_prompt_char_stateseparator`` (' ', `|`) - the character to be used between the state characters
+- ``$__fish_git_prompt_color`` (no default)
+- ``$__fish_git_prompt_color_prefix`` - the color of the ``(`` prefix
+- ``$__fish_git_prompt_color_suffix`` - the color of the ``)`` suffix
+- ``$__fish_git_prompt_color_bare`` - the color to use for a bare repository - one without a working tree
+- ``$__fish_git_prompt_color_merging`` - the color when a merge/rebase/revert/bisect or cherry-pick is in progress
 
 Some variables are only used in some modes, like when informative status is enabled:
 
-- ``$__fish_git_prompt_char_cleanstate`` (✔)
+- ``$__fish_git_prompt_char_cleanstate`` (✔) - the character to be used when nothing else applies
 - ``$__fish_git_prompt_color_cleanstate``
 
 Variables used with ``showdirtystate``:
 
-- ``$__fish_git_prompt_char_dirtystate`` (`*`, ✚)
-- ``$__fish_git_prompt_char_invalidstate`` (#, ✖)
-- ``$__fish_git_prompt_char_stagedstate`` (+, ●)
+- ``$__fish_git_prompt_char_dirtystate`` (`*`, ✚) - the number of "dirty" changes, i.e. unstaged files with changes
+- ``$__fish_git_prompt_char_invalidstate`` (#, ✖) - the number of "unmerged" changes, e.g. additional changes to already added files
+- ``$__fish_git_prompt_char_stagedstate`` (+, ●) - the number of staged files without additional changes
 - ``$__fish_git_prompt_color_dirtystate`` (red with showcolorhints, same as color_flags otherwise)
 - ``$__fish_git_prompt_color_invalidstate``
 - ``$__fish_git_prompt_color_stagedstate`` (green with showcolorhints, color_flags otherwise)
@@ -91,23 +93,23 @@ Variables used with ``showstashstate``:
 
 Variables used with ``showuntrackedfiles``:
 
-- ``$__fish_git_prompt_char_untrackedfiles`` (%, …)
+- ``$__fish_git_prompt_char_untrackedfiles`` (%, …) - the symbol for untracked files
 - ``$__fish_git_prompt_color_untrackedfiles`` (same as color_flags)
 
 Variables used with ``showupstream`` (also implied by informative status):
 
-- ``$__fish_git_prompt_char_upstream_ahead`` (>, ↑)
-- ``$__fish_git_prompt_char_upstream_behind`` (<, ↓)
-- ``$__fish_git_prompt_char_upstream_diverged`` (<>)
-- ``$__fish_git_prompt_char_upstream_equal`` (=)
+- ``$__fish_git_prompt_char_upstream_ahead`` (>, ↑) - the character for the commits this repository is ahead of upstream
+- ``$__fish_git_prompt_char_upstream_behind`` (<, ↓) - the character for the commits this repository is behind upstream
+- ``$__fish_git_prompt_char_upstream_diverged`` (<>) - the symbol if this repository is both ahead and behind upstream
+- ``$__fish_git_prompt_char_upstream_equal`` (=) - the symbol if this repo is equal to upstream
 - ``$__fish_git_prompt_char_upstream_prefix`` ('')
 - ``$__fish_git_prompt_color_upstream``
 
 Colors used with ``showcolorhints``:
 
-- ``$__fish_git_prompt_color_branch`` (green)
-- ``$__fish_git_prompt_color_branch_detached`` (red)
-- ``$__fish_git_prompt_color_flags`` (--bold blue)
+- ``$__fish_git_prompt_color_branch`` (green) - the color of the branch
+- ``$__fish_git_prompt_color_branch_detached`` (red) the color of the branch if it's detached (e.g. a commit is checked out)
+- ``$__fish_git_prompt_color_flags`` (--bold blue) - the default color for dirty/staged/stashed/untracked state
 
 Note that all colors can also have a corresponding ``_done`` color. For example, the contents of ``$__fish_git_prompt_color_upstream_done`` is printed right _after_ the upstream.
 

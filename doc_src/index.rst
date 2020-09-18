@@ -1382,7 +1382,7 @@ The names given to variables and functions (so called "identifiers") have to fol
 
 - A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
 
-- A bind mode name (e.g., ``bind -m abc ...``) is restricted to the rules for valid variable names.
+- A bind mode name (e.g., ``bind -m abc ...``) must be a valid variable name.
 
 Other things have other restrictions. For instance what is allowed for file names depends on your system, but at the very least they cannot contain a "/" (because that is the path separator) or NULL byte (because that is how UNIX ends strings).
 

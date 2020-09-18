@@ -1403,20 +1403,21 @@ Autosuggestions are a powerful way to quickly summon frequently entered commands
 Tab Completion
 --------------
 
-Tab completion is one of the most time saving features of any modern shell. By tapping :kbd:`Tab`, the user asks fish to guess the rest of the command or parameter that the user is currently typing. If fish can only find one possible completion, fish will write it out. If there is more than one completion, fish will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Space`.
+Tab completion is a time saving feature of any modern shell. When you type :kbd:`Tab`, fish tries to guess the rest of the word under the cursor. If it finds just one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
 
-If the list is visible, pressing :kbd:`Control`\ +\ :kbd:`S` (or the ``pager-toggle-search`` binding) will allow filtering the list. :kbd:`Shift`\ +\ :kbd:`Tab` (or the ``complete-and-search`` binding) will trigger completion with the search field immediately visible.
-These are the general purpose tab completions that fish provides:
+The pager can be navigated with the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Shift`\ +\ :kbd:`Tab`. Pressing :kbd:`Control`\ +\ :kbd:`S` (the ``pager-toggle-search`` binding - :kbd:`/` in vi-mode) opens up a search menu that you can use to filter the list.
 
-- Completion of commands (builtins, functions and regular programs).
+Fish provides some general purpose completions:
 
-- Completion of shell variable names.
+- Commands (builtins, functions and regular programs).
 
-- Completion of usernames for tilde expansion.
+- Shell variable names.
 
-- Completion of filenames, even on strings with wildcards such as ``*`` and ``**``.
+- Usernames for tilde expansion.
 
-Fish provides a large number of program specific completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but some are more advanced. The latter include:
+- Filenames, even on strings with wildcards such as ``*`` and ``**``.
+
+It also provides a large number of program specific scripted completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but some are more advanced. For example:
 
 - The programs ``man`` and ``whatis`` show all installed manual pages as completions.
 
@@ -1426,9 +1427,9 @@ Fish provides a large number of program specific completions. Most of these comp
 
 - The ``ssh`` command uses all hosts that are stored in the known_hosts file as completions. (See the ssh documentation for more information)
 
-- The ``su`` command uses all users on the system as completions.
+- The ``su`` command shows the users on the system
 
-- The ``apt-get``, ``rpm`` and ``yum`` commands use all installed packages as completions.
+- The ``apt-get``, ``rpm`` and ``yum`` commands show installed or installable packages
 
 You can also write your own completions or install some you got from someone else. For that, see :ref:`Writing your own completions <completion-own>`.
 

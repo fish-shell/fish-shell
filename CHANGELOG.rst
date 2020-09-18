@@ -75,7 +75,7 @@ Scripting improvements
    behaviour (#7038).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
 -  All builtins that query if something exists now take ``--query`` as the long form for ``-q``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (#7276).
--  ``argparse`` no longer prints a stack backtrace with invalid options (#6703).
+-  ``argparse`` now only prints a backtrace with invalid options to argparse itself (#6703).
 -  ``complete`` can now show the loaded completions for only specific commands, and do without ``-c`` (``complete git`` is now valid) (#7321).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (#7154).
 -  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (#7014).
@@ -91,7 +91,7 @@ Interactive improvements
    have a common prefix, without the user having to press Tab again
    (#6924).
 -  Control-Z is now available for binding (#7152).
-- ``help string match/replace/<subcommand>`` will show the help information for string subcommands (#6786).
+- ``help string match/replace/<subcommand>`` will show the help for string subcommands (#6786).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (#6964).
 -  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (#6964).
 -  A new variable ``$status_generation`` is incremented only when the previous command produces a status. This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
@@ -103,7 +103,7 @@ Interactive improvements
 -  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space, as in fish 2.7.1 and before (#6970), and after closing a command substitution (#6658).
 -  The history file is now created with user-private permissions,
    matching other shells (#6926). The directory containing the history
-   file remains private, so there should not have been any private date
+   file was already private, so there should not have been any private data
    revealed.
 -  The output of ``time`` is now properly aligned in all cases (#6726).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (#6787).

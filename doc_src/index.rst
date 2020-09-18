@@ -111,7 +111,7 @@ This line is only needed when scripts are executed without specifying the interp
 Syntax overview
 ===============
 
-Shells like fish are used by giving them commands. Every ``fish`` command follows the same basic syntax.
+Shells like fish are used by giving them commands. Every fish command follows the same basic syntax.
 
 A command is executed by writing the name of the command followed by any arguments.
 
@@ -125,7 +125,7 @@ If you want to find out more about the echo command used above, read the manual 
 
 ``man`` is a command for displaying a manual page on a given topic. The man command takes the name of the manual page to display as an argument. There are manual pages for almost every command on most computers. There are also manual pages for many other things, such as system libraries and important files.
 
-Every program on your computer can be used as a command in ``fish``. If the program file is located in one of the directories in the PATH_, you can just use the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) has to be used.
+Every program on your computer can be used as a command in fish. If the program file is located in one of the directories in the PATH_, you can just use the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) has to be used.
 
 Here is a list of some useful commands:
 
@@ -329,7 +329,7 @@ As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same p
 Background jobs
 ---------------
 
-When you start a job in ``fish``, ``fish`` itself will pause, and give control of the terminal to the program just started. Sometimes, you want to continue using the commandline, and have the job run in the background. To create a background job, append an \& (ampersand) to your command. This will tell fish to run the job in the background. Background jobs are very useful when running programs that have a graphical user interface.
+When you start a job in fish, fish itself will pause, and give control of the terminal to the program just started. Sometimes, you want to continue using the commandline, and have the job run in the background. To create a background job, append an \& (ampersand) to your command. This will tell fish to run the job in the background. Background jobs are very useful when running programs that have a graphical user interface.
 
 Example::
 
@@ -345,7 +345,7 @@ See also :ref:`Running multiple programs <job-control>`.
 Job control
 -----------
 
-Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :ref:`fg <cmd-fg>` (foreground) command.
+Most programs allow you to suspend the program's execution and return control to fish by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the fish commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :ref:`fg <cmd-fg>` (foreground) command.
 
 If you instead want to put a suspended job into the background, use the :ref:`bg <cmd-bg>` command.
 
@@ -1076,11 +1076,11 @@ It typically makes sense to make exported variables global as well, but local-ex
 Lists
 -------
 
-``fish`` can store a list (or an "array" if you wish) of multiple strings inside of a variable. To access one element of a list, use the index of the element inside of square brackets, like this:
+Fish can store a list (or an "array" if you wish) of multiple strings inside of a variable. To access one element of a list, use the index of the element inside of square brackets, like this:
 
 ``echo $PATH[3]``
 
-Note that list indices start at 1 in ``fish``, not 0, as is more common in other languages. This is because many common Unix tools like ``seq`` are more suited to such use. An invalid index is silently ignored resulting in no value being substituted (not an empty string).
+Note that list indices start at 1 in fish, not 0, as is more common in other languages. This is because many common Unix tools like ``seq`` are more suited to such use. An invalid index is silently ignored resulting in no value being substituted (not an empty string).
 
 If you do not use any brackets, all the elements of the list will be written as separate items. This means you can easily iterate over a list using this syntax::
 
@@ -1122,7 +1122,7 @@ When a list is exported as an environment variable, it is either space or colon 
 
 
 
-``fish`` automatically creates lists from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
+Fish automatically creates lists from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
 
 Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
 
@@ -1161,7 +1161,7 @@ Variables can be marked or unmarked as PATH variables via the ``--path`` and ``-
 Special variables
 -----------------
 
-You can change the settings of ``fish`` by changing the values of certain variables.
+You can change the settings of fish by changing the values of certain variables.
 
 - ``PATH``, a list of directories in which to search for commands
 
@@ -1193,7 +1193,7 @@ You can change the settings of ``fish`` by changing the values of certain variab
 
 - ``BROWSER``, your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
-``fish`` also sends additional information to the user through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
+Fish also sends additional information to the user through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
 
 - ``_``, the name of the currently running command (though this is deprecated, and the use of ``status current-command`` is preferred).
 
@@ -1233,7 +1233,7 @@ You can change the settings of ``fish`` by changing the values of certain variab
 
 As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables.
 
-``fish`` also uses some variables internally, their name usually starting with ``__fish``. These are internal and should not typically be modified directly.
+Fish also uses some variables internally, their name usually starting with ``__fish``. These are internal and should not typically be modified directly.
 
 .. _variables-status:
 
@@ -1244,7 +1244,7 @@ Whenever a process exits, an exit status is returned to the program that started
 
 Fish stores the exit status of the last process in the last job to exit in the ``status`` variable.
 
-If ``fish`` encounters a problem while executing a command, the status variable may also be set to a specific value:
+If fish encounters a problem while executing a command, the status variable may also be set to a specific value:
 
 - 0 is generally the exit status of fish commands if they successfully performed the requested operation.
 
@@ -1356,7 +1356,7 @@ The most common way to set the locale to use a command like 'set -x LANG en_GB.u
 Builtin commands
 ----------------
 
-Many other shells have a large library of builtin commands. Most of these commands are also available as standalone commands, but have been implemented in the shell anyway. To avoid code duplication, and to avoid the confusion of subtly differing versions of the same command, ``fish`` generally only implements builtins for actions which cannot be performed by a regular command.
+Many other shells have a large library of builtin commands. Most of these commands are also available as standalone commands, but have been implemented in the shell anyway. To avoid code duplication, and to avoid the confusion of subtly differing versions of the same command, fish generally only implements builtins for actions which cannot be performed by a regular command.
 
 For a list of all builtins, functions and commands shipped with fish, see the :ref:`list of commands <Commands>`. The documentation is also available by using the ``--help`` switch of the command.
 
@@ -1384,9 +1384,9 @@ Fish prides itself on being really nice to use interactively. That's down to a f
 Help
 ----
 
-``fish`` has an extensive help system. Use the :ref:`help <cmd-help>` command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the `syntax section <#syntax>`_ of this documentation.
+Fish has an extensive help system. Use the :ref:`help <cmd-help>` command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the `syntax section <#syntax>`_ of this documentation.
 
-``fish`` also has man pages for its commands. For example, ``man set`` will show the documentation for ``set`` as a man page.
+Fish also has man pages for its commands. For example, ``man set`` will show the documentation for ``set`` as a man page.
 
 Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the :ref:`fg <cmd-fg>` builtin, either type ``fg -h`` or ``help fg``.
 
@@ -1403,10 +1403,10 @@ Autosuggestions are a powerful way to quickly summon frequently entered commands
 Tab Completion
 --------------
 
-Tab completion is one of the most time saving features of any modern shell. By tapping :kbd:`Tab`, the user asks ``fish`` to guess the rest of the command or parameter that the user is currently typing. If ``fish`` can only find one possible completion, ``fish`` will write it out. If there is more than one completion, ``fish`` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Space`.
+Tab completion is one of the most time saving features of any modern shell. By tapping :kbd:`Tab`, the user asks fish to guess the rest of the command or parameter that the user is currently typing. If fish can only find one possible completion, fish will write it out. If there is more than one completion, fish will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Space`.
 
 If the list is visible, pressing :kbd:`Control`\ +\ :kbd:`S` (or the ``pager-toggle-search`` binding) will allow filtering the list. :kbd:`Shift`\ +\ :kbd:`Tab` (or the ``complete-and-search`` binding) will trigger completion with the search field immediately visible.
-These are the general purpose tab completions that ``fish`` provides:
+These are the general purpose tab completions that fish provides:
 
 - Completion of commands (builtins, functions and regular programs).
 
@@ -1416,7 +1416,7 @@ These are the general purpose tab completions that ``fish`` provides:
 
 - Completion of filenames, even on strings with wildcards such as ``*`` and ``**``.
 
-``fish`` provides a large number of program specific completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but some are more advanced. The latter include:
+Fish provides a large number of program specific completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but some are more advanced. The latter include:
 
 - The programs ``man`` and ``whatis`` show all installed manual pages as completions.
 
@@ -1437,7 +1437,7 @@ You can also write your own completions or install some you got from someone els
 Command line editor
 ===================
 
-The ``fish`` editor features copy and paste, a `searchable history <#history-search>`_ and many editor functions that can be bound to special keyboard shortcuts.
+The fish editor features copy and paste, a `searchable history <#history-search>`_ and many editor functions that can be bound to special keyboard shortcuts.
 
 Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example::
 
@@ -1662,7 +1662,7 @@ Note that some key combinations are indistinguishable or unbindable. For instanc
 Copy and paste (Kill Ring)
 --------------------------
 
-``fish`` uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control`\ +\ :kbd:`K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control`\ +\ :kbd:`Y` (the `yank` input function). After pasting, use :kbd:`Alt`\ +\ :kbd:`Y` (`yank-pop`) to rotate to the previous kill.
+Fish uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control`\ +\ :kbd:`K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control`\ +\ :kbd:`Y` (the `yank` input function). After pasting, use :kbd:`Alt`\ +\ :kbd:`Y` (`yank-pop`) to rotate to the previous kill.
 
 Copy and paste from outside are also supported, both via the :kbd:`Control`\ +\ :kbd:`X` / :kbd:`Control`\ +\ :kbd:`V` bindings (the `fish_clipboard_copy` and `fish_clipboard_paste` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
 In addition, when pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
@@ -1745,11 +1745,11 @@ Another set of commands, usually also available in other shells like bash, deal 
 Running multiple programs
 =========================
 
-Normally when ``fish`` starts a program, this program will be put in the foreground, meaning it will take control of the terminal and ``fish`` will be stopped until the program finishes. Sometimes this is not desirable. For example, you may wish to start an application with a graphical user interface from the terminal, and then be able to continue using the shell. In such cases, there are several ways in which the user can change fish's behavior.
+Normally when fish starts a program, this program will be put in the foreground, meaning it will take control of the terminal and fish will be stopped until the program finishes. Sometimes this is not desirable. For example, you may wish to start an application with a graphical user interface from the terminal, and then be able to continue using the shell. In such cases, there are several ways in which the user can change fish's behavior.
 
-- By ending a command with the ``&`` (ampersand) symbol, the user tells ``fish`` to put the specified command into the background. A background process will be run simultaneous with ``fish``. ``fish`` will retain control of the terminal, so the program will not be able to read from the keyboard.
+- By ending a command with the ``&`` (ampersand) symbol, the user tells fish to put the specified command into the background. A background process will be run simultaneous with fish. Fish will keep control of the terminal, so the program will not be able to read from the keyboard.
 
-- By pressing :kbd:`Control`\ +\ :kbd:`Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control`\ +\ :kbd:`X` :kbd:`Z` to stop running.
+- By pressing :kbd:`Control`\ +\ :kbd:`Z`, the user stops a currently running foreground  program and returns control to fish. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control`\ +\ :kbd:`X` :kbd:`Z` to stop running.
 
 - By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, the user can send any currently running job into the foreground or background.
 
@@ -1850,7 +1850,7 @@ Other features
 Syntax highlighting
 -------------------
 
-``fish`` interprets the command line as it is typed and uses syntax highlighting to provide feedback to the user. The most important feedback is the detection of potential errors. By default, errors are marked red.
+Fish interprets the command line as it is typed and uses syntax highlighting to provide feedback to the user. The most important feedback is the detection of potential errors. By default, errors are marked red.
 
 Detected errors include:
 
@@ -1860,7 +1860,7 @@ Detected errors include:
 - Mismatched parenthesis
 
 
-When the cursor is over a parenthesis or a quote, ``fish`` also highlights its matching quote or parenthesis.
+When the cursor is over a parenthesis or a quote, fish also highlights its matching quote or parenthesis.
 
 To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <#variables-color>`__ section.
 
@@ -1872,7 +1872,7 @@ Programmable title
 When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the ``fish_title`` function. The ``fish_title`` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The `status current-command` builtin will always return the name of the job to be put into the foreground (or 'fish' if control is returning to the shell) when the ``fish_prompt`` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
 
 Examples:
-The default ``fish`` title is::
+The default fish title is::
 
 
     function fish_title

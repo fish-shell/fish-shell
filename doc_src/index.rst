@@ -318,7 +318,7 @@ It is possible to use a different output file descriptor by prepending its FD nu
   make fish 2>| less
 
 
-will attempt to build `fish`, and any errors will be shown using the `less` pager. [#]_
+will attempt to build ``fish``, and any errors will be shown using the ``less`` pager. [#]_
 
 As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. (Note this is different from bash, which uses ``|&``).
 
@@ -477,7 +477,7 @@ Fish has some builtins that let you execute commands only if a specific criterio
 
 The :ref:`switch <cmd-switch>` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
 
-The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed.
+The other conditionals use the :ref:`exit status <variables-status>` of a command to decide if a command or a block of commands should be executed.
 
 Some examples::
 
@@ -505,7 +505,7 @@ When fish is given a commandline, it expands the parameters before sending them 
 - :ref:`Variable expansion <expand-variable>`, to use the value of a variable
 - :ref:`Command substitution <expand-command-substitution>`, to use the output of another command
 - :ref:`Brace expansion <expand-brace>`, to write lists with common pre- or suffixes in a shorter way
-- :ref:`Tilde expansion <expand-home>`, to turn the `~` at the beginning of paths into the path to the home directory
+- :ref:`Tilde expansion <expand-home>`, to turn the ``~`` at the beginning of paths into the path to the home directory
 
 
 .. _expand-wildcard:
@@ -519,7 +519,7 @@ When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk")
 
 - ``**`` matches any string of characters. This includes matching an empty string. The matched string can include the ``/`` character; that is, it goes into subdirectories. If a wildcard string with ``**`` contains a ``/``, that ``/`` still needs to be matched. For example, ``**\/*.fish`` won't match ``.fish`` files directly in the PWD, only in subdirectories. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories. [#]_
 
-- ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the `qmark-noglob` :ref:`feature flag<featureflags>`, so `?` will just be an ordinary character.
+- ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the ``qmark-noglob`` :ref:`feature flag<featureflags>`, so ``?`` will just be an ordinary character.
 
 Other shells, such as zsh, have a much richer glob syntax, like ``**(.)`` to only match regular files. Fish does not. Instead of reinventing the whell, use programs like ``find`` to look for files. For example::
 
@@ -559,7 +559,7 @@ Examples::
     # Lists the .foo files, if any.
 
 .. [#] Unlike other shells, notably zsh.
-.. [#] Technically, unix allows filenames with newlines, and this splits the `find` output on newlines. If you want to avoid that, use `find`s `-print0` option and :ref:`string split0<cmd-string-split0>`.
+.. [#] Technically, unix allows filenames with newlines, and this splits the ``find`` output on newlines. If you want to avoid that, use find's ``-print0`` option and :ref:`string split0<cmd-string-split0>`.
 
 .. _expand-command-substitution:
 
@@ -1740,7 +1740,7 @@ Navigating directories
 
 .. _directory-history:
 
-The current working directory can be displayed with the :ref:`pwd <cmd-pwd>` command.
+The current working directory can be displayed with the :ref:`pwd <cmd-pwd>` command, or the ``$PWD`` :ref:`special variable <variables-special>`.
 
 Directory history
 -----------------
@@ -1916,7 +1916,7 @@ To show the last command in the title::
 Programmable prompt
 -------------------
 
-When fish waits for input, it will display a prompt by evaluating the ``fish_prompt`` and `fish_right_prompt` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of ``fish_mode_prompt`` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
+When fish waits for input, it will display a prompt by evaluating the ``fish_prompt`` and ``fish_right_prompt`` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of ``fish_mode_prompt`` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
 
 .. _greeting:
 
@@ -1930,7 +1930,7 @@ If a function named ``fish_greeting`` exists, it will be run when entering inter
 Private mode
 -------------
 
-fish supports launching in private mode via ``fish --private`` (or ``fish -P`` for short). In private mode, old history is not available and any interactive commands you execute will not be appended to the global history file, making it useful both for avoiding inadvertently leaking personal information (e.g. for screencasts) and when dealing with sensitive information to prevent it being persisted to disk. You can query the global variable `fish_private_mode`` (``if set -q fish_private_mode ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
+fish supports launching in private mode via ``fish --private`` (or ``fish -P`` for short). In private mode, old history is not available and any interactive commands you execute will not be appended to the global history file, making it useful both for avoiding inadvertently leaking personal information (e.g. for screencasts) and when dealing with sensitive information to prevent it being persisted to disk. You can query the global variable ``fish_private_mode`` (``if set -q fish_private_mode ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 .. _event:
 
@@ -1940,10 +1940,9 @@ Event handlers
 When defining a new function in fish, it is possible to make it into an event handler, i.e. a function that is automatically run when a specific event takes place. Events that can trigger a handler currently are:
 
 - When a signal is delivered
-- When a process or job exits
+- When a job exits
 - When the value of a variable is updated
 - When the prompt is about to be shown
-- When a command lookup fails
 
 Example:
 
@@ -1974,14 +1973,15 @@ Further help and development
 
 If you have a question not answered by this documentation, there are several avenues for help:
 
+- The `GitHub page <https://github.com/fish-shell/fish-shell/>`_
+
+- The official `Gitter channel <https://gitter.im/fish-shell/fish-shell>`_
+
 - The official mailing list at `fish-users@lists.sourceforge.net <https://lists.sourceforge.net/lists/listinfo/fish-users>`_
 
-- The Internet Relay Chat channel, \#fish on ``irc.oftc.net``
+- The IRC channel, \#fish on ``irc.oftc.net``
 
-- The `project GitHub page <https://github.com/fish-shell/fish-shell/>`_
-
-
-If you have an improvement for fish, you can submit it via the mailing list or the GitHub page.
+If you have an improvement for fish, you can submit it via the GitHub page.
 
 .. _other_pages:
 

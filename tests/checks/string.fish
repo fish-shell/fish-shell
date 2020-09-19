@@ -42,26 +42,20 @@ string length "hello, world"
 string length -q ""; and echo not zero length; or echo zero length
 # CHECK: zero length
 
-string pad -l foo
+string pad foo
 # CHECK: foo
 
-string pad -l -n 2 foo
-# CHECK:   foo
+string pad -r -w 4 foo
+# CHECK:  foo
 
-string pad -r -n 4 -c '-' foo
+string pad -r -w 7 -c '-' foo
 # CHECK: foo----
 
-string pad --left --right -n 2 -c '=' foo
-# CHECK: ==foo==
+string pad --width 7 -c '=' foo
+# CHECK: ====foo
 
-string pad --left -m 4 -c '=' foo
-# CHECK: =foo
-
-string pad --left --right -m 6 --chars '=' foo
-# CHECK: ==foo=
-
-string pad --left --right -m 7 --chars '-' bar
-# CHECK: --bar--
+string pad --width 10 --right foo
+# CHECK: foo
 
 string sub --length 2 abcde
 # CHECK: ab
@@ -213,7 +207,7 @@ string unescape --style=url (string escape --style=url 'a b#c"\'d')
 # CHECK: a b#c"'d
 
 string unescape --style=url (string escape --style=url \na\nb%c~d\n)
-# CHECK: 
+# CHECK:
 # CHECK: a
 # CHECK: b%c~d
 
@@ -281,7 +275,7 @@ string replace -a " " _ "spaces to underscores"
 # CHECK: spaces_to_underscores
 
 string replace -r -a "[^\d.]+" " " "0 one two 3.14 four 5x"
-# CHECK: 0 3.14 5 
+# CHECK: 0 3.14 5
 
 string replace -r "(\w+)\s+(\w+)" "\$2 \$1 \$\$" "left right"
 # CHECK: right left $
@@ -316,7 +310,7 @@ and echo Unexpected exit status at line (status --current-line-number)
 # 'string match -r with empty capture groups'
 string match -r '^([ugoa]*)([=+-]?)([rwx]*)$' '=r'
 #CHECK: =r
-#CHECK: 
+#CHECK:
 #CHECK: =
 #CHECK: r
 
@@ -596,13 +590,13 @@ printf '[%s]\n' (string collect one\n\n two\n)
 # CHECK: [two]
 printf '[%s]\n' (string collect -N one\n\n two\n)
 # CHECK: [one
-# CHECK: 
+# CHECK:
 # CHECK: ]
 # CHECK: [two
 # CHECK: ]
 printf '[%s]\n' (string collect --no-trim-newlines one\n\n two\n)
 # CHECK: [one
-# CHECK: 
+# CHECK:
 # CHECK: ]
 # CHECK: [two
 # CHECK: ]

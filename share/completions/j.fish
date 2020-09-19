@@ -1,4 +1,4 @@
-function __history_completions --argument limit
+function __history_completions --argument-names limit
     if string match -q "" -- "$limit"
         set limit 25
     end

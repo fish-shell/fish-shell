@@ -1,4 +1,4 @@
-function __fish_complete_list --argument div cmd prefix iprefix
+function __fish_complete_list --argument-names div cmd prefix iprefix
     if not set -q cmd[1]
         echo "Usage:
     __fish_complete_list <separator> <function> <prefix> <itemprefix>

@@ -1,4 +1,4 @@
-function __fish_complete_convert_options --description 'Complete Convert options' --argument what
+function __fish_complete_convert_options --description 'Complete Convert options' --argument-names what
     switch $what
         case format Format
             convert -list Format | sed '1,/----/d; /^$/,$d; /^$/d; s/^\s*\([a-zA-Z0-9-]\+\)\**\s*\S\+\s\+\\(\S\+\)\s\+\(.\+\S\)\s*$/\1\t\2 \3/'

@@ -1,4 +1,4 @@
-function __fish_complete_ssh -d "common completions for ssh commands" --argument command
+function __fish_complete_ssh -d "common completions for ssh commands" --argument-names command
     complete -c $command -s 1 -d "Protocol version 1 only"
     complete -c $command -s 2 -d "Protocol version 2 only"
     complete -c $command -s 4 -d "IPv4 addresses only"

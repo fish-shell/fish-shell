@@ -17,7 +17,7 @@ complete -xc valgrind -l $skin -d Skin -a "
 	massif\tHeap\ profiler
 "
 
-function __fish_valgrind_skin --argument tool -V skin
+function __fish_valgrind_skin --argument-names tool -V skin
     set -l cmd (commandline -cpo)
     # Quote $cmd so the tokens are separated with a space
     if string match -qr -- "--$skin(=| )$tool" "$cmd"

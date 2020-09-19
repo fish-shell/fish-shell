@@ -9,7 +9,7 @@ function __fish_phpunit_list_groups
 end
 
 # Lists PHPUnit objects corresponding to the given option
-function __fish_phpunit_list --argument option
+function __fish_phpunit_list --argument-names option
     # Use the same PHPUnit binary as in the command being completed
     set -l phpunit (commandline -opc)[1]
     test -x $phpunit

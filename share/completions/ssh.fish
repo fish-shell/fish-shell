@@ -54,7 +54,7 @@ complete -c ssh -s D -d "Dynamic port forwarding"
 complete -c ssh -s c -d "Encryption cipher" -xa "(ssh -Q cipher)"
 
 # Also retrieve `user@host` entries from history
-function __ssh_history_completions --argument limit
+function __ssh_history_completions --argument-names limit
     if string match -q ""
         set limit 100
     end

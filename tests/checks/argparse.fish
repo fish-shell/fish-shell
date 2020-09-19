@@ -160,7 +160,7 @@ end
 
 # Required, optional, and multiple flags
 begin
-    argparse h/help 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 --d -g g3
+    argparse h/help 'a/abc=' 'd/def=?' 'g/ghk=+' -- help --help me --ghk=g1 --abc=ABC --ghk g2 -d -g g3
     set -l
     # CHECK: _flag_a ABC
     # CHECK: _flag_abc ABC

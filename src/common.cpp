@@ -237,42 +237,65 @@ bool is_windows_subsystem_for_linux() {
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
 
-template <typename T>
-inline __attribute__((always_inline)) constexpr uintptr_t aligned_start(const T *in, size_t count,
-                                                                        uint8_t alignment) {
-    return std::min((uintptr_t)(in + count),
-                    (uintptr_t(in) + (uintptr_t)(alignment - 1)) & ~((uintptr_t)(alignment - 1)));
+/// \return the smallest pointer in the range [start, start + len] which is aligned to Align.
+/// If there is no such pointer, return \p start + len.
+/// alignment must be a power of 2 and in range [1, 64].
+/// This is intended to return the end point of the "unaligned prefix" of a vectorized loop.
+template <size_t Align>
+inline const char *align_start(const char *start, size_t len) {
+    static_assert(Align >= 1 && Align <= 64, "Alignment must be in range [1, 64]");
+    static_assert((Align & (Align - 1)) == 0, "Alignment must be power of 2");
+    uintptr_t startu = reinterpret_cast<uintptr_t>(start);
+    // How much do we have to add to start to make it 0 mod Align?
+    // To compute 17 up-aligned by 8, compute its skew 17 % 8, yielding 1,
+    // and then we will add 8 - 1. Of course if we align 16 with the same idea, we will
+    // add 8 instead of 0, so then mod the summand by Align again.
+    // Note all of these mods are optimized to masks.
+    uintptr_t add_which_aligns = Align - (startu % Align);
+    add_which_aligns %= Align;
+    // Add that much but not more than len. If we add 'add_which_aligns' we may overflow the
+    // pointer.
+    return start + std::min(static_cast<size_t>(add_which_aligns), len);
 }
 
-template <typename T>
-inline __attribute__((always_inline)) constexpr uintptr_t aligned_end(const T *in, size_t count,
-                                                                      uint8_t alignment) {
-    return std::max((uintptr_t)in, (uintptr_t)(in + count) & ~((uintptr_t)(alignment - 1)));
+/// \return the largest pointer in the range [start, start + len] which is aligned to Align.
+/// If there is no such pointer, return \p start.
+/// This is intended to be the start point of the "unaligned suffix" of a vectorized loop.
+template <size_t Align>
+inline const char *align_end(const char *start, size_t len) {
+    static_assert(Align >= 1 && Align <= 64, "Alignment must be in range [1, 64]");
+    static_assert((Align & (Align - 1)) == 0, "Alignment must be power of 2");
+    // How much do we have to subtract to align it? Its value, mod Align.
+    uintptr_t endu = reinterpret_cast<uintptr_t>(start + len);
+    uintptr_t sub_which_aligns = endu % Align;
+    return start + len - std::min(static_cast<size_t>(sub_which_aligns), len);
 }
 
-inline __attribute__((always_inline)) bool is_ascii(const char *in, size_t len) {
-    uintptr_t aligned = aligned_start(in, len, 64);
-    char bitmask1 = 0;
-    for (auto ptr = in; (uintptr_t)ptr < aligned; ++ptr) {
-        bitmask1 |= *ptr;
-    }
-    uint64_t bitmask2 = 0;
-    for (auto ptr = (const uint64_t *)aligned; uintptr_t(ptr) < aligned_end(in, len, 64); ++ptr) {
-        bitmask2 |= *ptr;
-    }
-    char bitmask3 = 0;
-    for (auto ptr = (const char *)aligned_end(in, len, 64); ptr < (in + len); ++ptr) {
-        bitmask3 |= *ptr;
-    }
-
-    return (uint64_t(bitmask1 & 0x80) | uint64_t(bitmask3 & 0x80) |
-            (bitmask2 & 0x8080808080808080ULL)) == 0ULL;
-}
-
-/// \return the count of initial characters in \p in, which are ASCII.
+/// \return the count of initial characters in \p in which are ASCII.
 static size_t count_ascii_prefix(const char *in, size_t in_len) {
-    for (size_t i = 0; i < in_len; i++) {
-        if (in[i] & 0x80) return i;
+    // We'll use aligned reads of this type.
+    using WordType = uint32_t;
+    const char *aligned_start = align_start<alignof(WordType)>(in, in_len);
+    const char *aligned_end = align_end<alignof(WordType)>(in, in_len);
+
+    // Consume the unaligned prefix.
+    for (const char *cursor = in; cursor < aligned_start; cursor++) {
+        if (cursor[0] & 0x80) return &cursor[0] - in;
+    }
+
+    // Consume the aligned middle.
+    for (const char *cursor = aligned_start; cursor < aligned_end; cursor += sizeof(WordType)) {
+        if (*reinterpret_cast<const WordType *>(cursor) & 0x80808080) {
+            if (cursor[0] & 0x80) return &cursor[0] - in;
+            if (cursor[1] & 0x80) return &cursor[1] - in;
+            if (cursor[2] & 0x80) return &cursor[2] - in;
+            return &cursor[3] - in;
+        }
+    }
+
+    // Consume the unaligned suffix.
+    for (const char *cursor = aligned_end; cursor < in + in_len; cursor++) {
+        if (cursor[0] & 0x80) return &cursor[0] - in;
     }
     return in_len;
 }
@@ -299,8 +322,8 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     size_t in_pos = 0;
     mbstate_t state = {};
     while (in_pos < in_len) {
-        // Note we do not support character sets which are not supersets of ASCII.
         // Append any initial sequence of ascii characters.
+        // Note we do not support character sets which are not supersets of ASCII.
         size_t ascii_prefix_length = count_ascii_prefix(&in[in_pos], in_len - in_pos);
         result.insert(result.end(), &in[in_pos], &in[in_pos + ascii_prefix_length]);
         in_pos += ascii_prefix_length;

@@ -94,11 +94,12 @@ static int s_test_run_count = 0;
 
 // Indicate if we should test the given function. Either we test everything (all arguments) or we
 // run only tests that have a prefix in s_arguments.
-static bool should_test_function(const char *func_name) {
-    // No args, test everything.
+// If \p default_on is set, then allow no args to run this test by default.
+static bool should_test_function(const char *func_name, bool default_on = true) {
     bool result = false;
     if (!s_arguments || !s_arguments[0]) {
-        result = true;
+        // No args, test if defaulted on.
+        result = default_on;
     } else {
         for (size_t i = 0; s_arguments[i] != NULL; i++) {
             if (!std::strncmp(func_name, s_arguments[i], std::strlen(s_arguments[i]))) {
@@ -516,6 +517,50 @@ static void test_convert() {
             free(n2);
         }
     }
+}
+
+/// Verify that ASCII narrow->wide conversions are correct.
+static void test_convert_ascii() {
+    std::string s(4096, '\0');
+    for (size_t i = 0; i < s.size(); i++) {
+        s[i] = (i % 10) + '0';
+    }
+
+    // Test a variety of alignments.
+    for (size_t left = 0; left < 16; left++) {
+        for (size_t right = 0; right < 16; right++) {
+            const char *start = s.data() + left;
+            size_t len = s.size() - left - right;
+            wcstring wide = str2wcstring(start, len);
+            std::string narrow = wcs2string(wide);
+            do_test(narrow == std::string(start, len));
+        }
+    }
+
+    // Put some non-ASCII bytes in and ensure it all still works.
+    for (char &c : s) {
+        char saved = c;
+        c = 0xF7;
+        do_test(wcs2string(str2wcstring(s)) == s);
+        c = saved;
+    }
+}
+
+static void perf_convert_ascii() {
+    std::string s(128 * 1024, '\0');
+    for (size_t i = 0; i < s.size(); i++) {
+        s[i] = (i % 10) + '0';
+    }
+    (void)str2wcstring(s);
+
+    double start = timef();
+    const int iters = 1024;
+    for (int i=0; i < iters; i++) {
+        (void)str2wcstring(s);
+    }
+    double end = timef();
+    auto usec = static_cast<unsigned long long>(((end - start) * 1E6) / iters);
+    say(L"ASCII string conversion perf: %lu bytes in %llu usec", s.size(), usec);
 }
 
 /// Verify correct behavior with embedded nulls.
@@ -6021,6 +6066,8 @@ int main(int argc, char **argv) {
     if (should_test_function("escape")) test_escape_quotes();
     if (should_test_function("format")) test_format();
     if (should_test_function("convert")) test_convert();
+    if (should_test_function("convert_ascii")) test_convert_ascii();
+    if (should_test_function("perf_convert_ascii", false)) perf_convert_ascii();
     if (should_test_function("convert_nulls")) test_convert_nulls();
     if (should_test_function("tokenizer")) test_tokenizer();
     if (should_test_function("fd_monitor")) test_fd_monitor();

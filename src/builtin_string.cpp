@@ -158,6 +158,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool no_trim_newlines_valid = false;
     bool fields_valid = false;
     bool allow_empty_valid = false;
+    bool width_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -180,6 +181,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     long max = 0;
     long start = 0;
     long end = 0;
+    size_t width = 0;
 
     wchar_t char_to_pad = ' ';
 
@@ -461,6 +463,25 @@ static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_w(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    long width = 0;
+    if (opts->width_valid) {
+        width = fish_wcstol(w.woptarg);
+        if (width < 0) {
+            string_error(streams, _(L"%ls: Invalid width value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        opts->width = static_cast<size_t>(width);
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 /// This constructs the wgetopt() short options string based on which arguments are valid for the
 /// subcommand. We have to do this because many short flags have multiple meanings and may or may
 /// not require an argument depending on the meaning.
@@ -489,6 +510,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->no_trim_newlines_valid) short_opts.append(L"N");
     if (opts->fields_valid) short_opts.append(L"f:");
     if (opts->allow_empty_valid) short_opts.append(L"a");
+    if (opts->width_valid) short_opts.append(L"w:");
     return short_opts;
 }
 
@@ -518,13 +540,14 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"no-trim-newlines", no_argument, nullptr, 'N'},
                                               {L"fields", required_argument, nullptr, 'f'},
                                               {L"allow-empty", no_argument, nullptr, 'a'},
+                                              {L"width", required_argument, nullptr, 'w'},
                                               {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}, {1, handle_flag_1}};
+    {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -949,74 +972,38 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
 }
 
 static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
-
     options_t opts;
     opts.char_to_pad_valid = true;
-    opts.count_valid = true;
-    opts.max_valid = true;
-    opts.left_valid = true;
     opts.right_valid = true;
+    opts.width_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    // If neither left or right is specified, we pad only on the left.
-    if (!opts.left && !opts.right) {
+    // Pad left by default
+    if (!opts.right) {
         opts.left = true;
-        opts.right = false;
     }
-
-    // If both count and max is specified, we raise an error.
-    if (opts.count && opts.max) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
-                                  _(L"--count and --max are mutually exclusive"));
-        return STATUS_INVALID_ARGS;
-    }
-
-    size_t npad = 0;
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         wcstring padded = *arg;
-        size_t pad_left = 0;
-        size_t pad_right = 0;
-
-        if (opts.count && opts.right) {
-            pad_right = opts.count;
-        }
-
-        if (opts.count && opts.left) {
-            pad_left = opts.count;
-        }
-
-        if (opts.max >= padded.size()) {
-            if (opts.left && opts.right) {
-                // pad_left will get one more character
-                pad_left = (opts.max - padded.size() + 1) / 2;
-                pad_right = (opts.max - padded.size()) / 2;
+        if (opts.width >= padded.size()) {
+            size_t pad = opts.width - padded.size();
+            if (opts.left) {
+                padded.insert(0, pad, opts.char_to_pad);
             }
-
-            if (!opts.left && opts.right) {
-                pad_right = opts.max - padded.size();
-            }
-
-            if (opts.left && !opts.right) {
-                pad_left = opts.max - padded.size();
+            if (opts.right) {
+                padded.append(pad, opts.char_to_pad);
             }
         }
-
-        padded.insert(0, pad_left, opts.char_to_pad);
-        padded.append(pad_right, opts.char_to_pad);
-
-        npad += padded.size();
         if (!opts.quiet) {
             streams.out.append(padded);
             streams.out.append(L'\n');
         }
     }
 
-    return npad > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    return STATUS_CMD_OK;
 }
 
 class string_replacer_t {

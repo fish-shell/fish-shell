@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    string pad [(-l | --left)] [(-r | --right)] [(-c | --char) CHAR] [(-n | --count) INTEGER] [(-m | --max) INTEGER] [STRING...]
+    string pad [(-r | --right)] [(-c | --char) CHAR] [(-w | --width) INTEGER] [STRING...]
 
 .. END SYNOPSIS
 
@@ -17,23 +17,17 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string pad`` pads before and after the string specified character for each STRING.
+``string pad`` pads specified character before and after the string for each STRING.
 
-The default behaviour is left padding with spaces and default count or max is zero.
+The default behaviour is left padding with spaces and default width is the length of string (hence, no padding).
 
-If ``-l`` or ``--left`` is given, only padded before string.
+If ``-r`` or ``--right`` is given, only pad after string.
 
-If ``-r`` or ``--right`` is given, only padded after string.
+The ``-c`` or ``--char`` switch causes the characters in CHAR to be padded instead of default whitespace character.
 
-The ``-c`` or ``--char`` switch causes the characters in CHAR to be padded instead of default whitespace  character.
+If ``-w`` or ``--width`` is given, pad the string to given length. Width less than the string length will result in an unchanged string.
 
-The ``-n`` or ``--count`` integer specifies the amount of characters to be padded.
-
-The ``-m`` or ``--max`` integer specifies the resulting length of the after after adding pad characters.
-
-Note, that the ``-n`` and ``-m`` flags are mutually exclusive, you can only use one of them.
-
-Exit status: 0 if string was padded, or 1 otherwise.
+Exit status: 0 if string was padded or haven't changed, or 1 otherwise.
 
 .. END DESCRIPTION
 
@@ -44,15 +38,15 @@ Examples
 
 ::
 
-    >_ string pad -l -n 10 -c ' ' 'abc'
-              abc
+    >_ string pad -w 10 -c ' ' 'abc'
+           abc
 
-    >_ string pad --right --count 5 --char=z foo bar
-    foozzzzz
-    barzzzzz
+    >_ string pad --right --width 12 --char=z foo barbaz
+    foozzzzzzzzz
+    barbazzzzzzz
 
-    >_ string pad --left --right -n 5 --char=- foo
-    -----foo-----
+    >_ string pad -w 6 --char=- foo | string pad --right -w 9 --char=-
+    ---foo---
 
 
 .. END EXAMPLES

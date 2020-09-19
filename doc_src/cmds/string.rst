@@ -15,7 +15,7 @@ Synopsis
     string length [(-q | --quiet)] [STRING...]
     string lower [(-q | --quiet)] [STRING...]
     string match [(-a | --all)] [(-e | --entire)] [(-i | --ignore-case)] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
-    string pad [(-l | --left)] [(-r | --right)] [(-c | --char) CHAR] [(-n | --count) INTEGER] [(-m | --max) INTEGER] [STRING...]
+    string pad [(-r | --right)] [(-c | --char) CHAR] [(-w | --width) INTEGER] [STRING...]
     string repeat [(-n | --count) COUNT] [(-m | --max) MAX] [(-N | --no-newline)] [(-q | --quiet)] [STRING...]
     string replace [(-a | --all)] [(-f | --filter)] [(-i | --ignore-case)] [(-r | --regex)] [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
     string split [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] SEP [STRING...]

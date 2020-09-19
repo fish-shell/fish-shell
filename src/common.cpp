@@ -269,6 +269,14 @@ inline __attribute__((always_inline)) bool is_ascii(const char *in, size_t len) 
             (bitmask2 & 0x8080808080808080ULL)) == 0ULL;
 }
 
+/// \return the count of initial characters in \p in, which are ASCII.
+static size_t count_ascii_prefix(const char *in, size_t in_len) {
+    for (size_t i = 0; i < in_len; i++) {
+        if (in[i] & 0x80) return i;
+    }
+    return in_len;
+}
+
 /// Converts the narrow character string \c in into its wide equivalent, and return it.
 ///
 /// The string may contain embedded nulls.
@@ -281,19 +289,25 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
 
     wcstring result;
     result.reserve(in_len);
-    size_t in_pos = 0;
 
-    if (MB_CUR_MAX == 1 || is_ascii(in, in_len)) {
-        // Single-byte locale, all values are legal.
-        while (in_pos < in_len) {
-            result.push_back(static_cast<unsigned char>(in[in_pos]));
-            in_pos++;
-        }
+    // In the unlikely event that MB_CUR_MAX is 1, then we are just going to append.
+    if (MB_CUR_MAX == 1) {
+        result.insert(result.end(), in, in + in_len);
         return result;
     }
 
+    size_t in_pos = 0;
     mbstate_t state = {};
     while (in_pos < in_len) {
+        // Note we do not support character sets which are not supersets of ASCII.
+        // Append any initial sequence of ascii characters.
+        size_t ascii_prefix_length = count_ascii_prefix(&in[in_pos], in_len - in_pos);
+        result.insert(result.end(), &in[in_pos], &in[in_pos + ascii_prefix_length]);
+        in_pos += ascii_prefix_length;
+        assert(in_pos <= in_len && "Position overflowed length");
+        if (in_pos == in_len) break;
+
+        // We have found a non-ASCII character.
         bool use_encode_direct = false;
         size_t ret = 0;
         wchar_t wc = 0;

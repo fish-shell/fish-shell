@@ -988,8 +988,9 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         wcstring padded = *arg;
-        if (opts.width >= padded.size()) {
-            size_t pad = opts.width - padded.size();
+        size_t padded_size = fish_wcswidth(padded);
+        if (opts.width >= padded_size) {
+            size_t pad = opts.width - padded_size;
             if (opts.left) {
                 padded.insert(0, pad, opts.char_to_pad);
             }

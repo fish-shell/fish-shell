@@ -25,7 +25,7 @@ If ``-r`` or ``--right`` is given, only pad after string.
 
 The ``-c`` or ``--char`` switch causes the characters in CHAR to be padded instead of default whitespace character.
 
-If ``-w`` or ``--width`` is given, pad the string to given length. Width less than the string length will result in an unchanged string.
+If ``-w`` or ``--width`` is given, pad the string to given width. Width less than the string width will result in an unchanged string.
 
 Exit status: 0 if string was padded or haven't changed, or 1 otherwise.
 

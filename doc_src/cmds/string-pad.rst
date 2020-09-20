@@ -17,7 +17,7 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string pad`` pads specified character before and after the string for each STRING.
+``string pad`` pads each STRING with CHAR to the given width.
 
 The default behaviour is left padding with spaces and default width is the length of string (hence, no padding).
 

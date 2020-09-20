@@ -985,12 +985,25 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         opts.left = true;
     }
 
+    // Find max width of string from input
+    size_t max_width = 0;
+    arg_iterator_t aiter_width(argv, optind, streams);
+    while (const wcstring *arg = aiter_width.nextstr()) {
+        wcstring padded = *arg;
+        size_t width = fish_wcswidth(padded);
+        if (width > max_width) {
+            max_width = width;
+        }
+    }
+
+    size_t pad_width = max_width > opts.width ? max_width : opts.width;
+
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         wcstring padded = *arg;
-        size_t padded_size = fish_wcswidth(padded);
-        if (opts.width >= padded_size) {
-            size_t pad = opts.width - padded_size;
+        size_t padded_width = fish_wcswidth(padded);
+        if (pad_width >= padded_width) {
+            size_t pad = pad_width - padded_width;
             if (opts.left) {
                 padded.insert(0, pad, opts.char_to_pad);
             }

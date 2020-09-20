@@ -23,7 +23,7 @@ The default behaviour is left padding with spaces and default width is the lengt
 
 If ``-r`` or ``--right`` is given, only pad after string.
 
-The ``-c`` or ``--char`` switch causes the characters in CHAR to be padded instead of default whitespace character.
+The ``-c`` or ``--char`` switch causes padding with the character CHAR instead of default whitespace character.
 
 If ``-w`` or ``--width`` is given, pad the string to given width. Width less than the string width will result in an unchanged string.
 

@@ -315,7 +315,11 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
 
     // In the unlikely event that MB_CUR_MAX is 1, then we are just going to append.
     if (MB_CUR_MAX == 1) {
-        result.insert(result.end(), in, in + in_len);
+        size_t in_pos = 0;
+        while (in_pos < in_len) {
+            result.push_back(static_cast<unsigned char>(in[in_pos]));
+            in_pos++;
+        }
         return result;
     }
 

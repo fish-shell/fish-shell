@@ -997,10 +997,8 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
                 padded.append(pad, opts.char_to_pad);
             }
         }
-        if (!opts.quiet) {
-            streams.out.append(padded);
-            streams.out.append(L'\n');
-        }
+        streams.out.append(padded);
+        streams.out.append(L'\n');
     }
 
     return STATUS_CMD_OK;

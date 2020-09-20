@@ -619,3 +619,7 @@ echo $status
 string match -eq asd asd
 echo $status
 # CHECK: 0
+
+# Unmatched capturing groups are treated as empty
+echo 'az'   | string replace -r -- 'a(b.+)?z' 'a:$1z'
+# CHECK: a:z

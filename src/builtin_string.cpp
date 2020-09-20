@@ -1051,8 +1051,13 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
     if (!regex.code) return false;   // pcre2_compile() failed
     if (!replacement) return false;  // replacement was an invalid string
 
+    // SUBSTITUTE_OVERFLOW_LENGTH causes pcre to return the needed buffer length if the passed one is to small
+    // SUBSTITUTE_EXTENDED changes how substitution expressions are interpreted (`$` as the special character)
+    // SUBSTITUTE_UNSET_EMPTY treats unmatched capturing groups as empty instead of erroring.
+    // SUBSTITUTE_GLOBAL means more than one substitution happens.
     uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
-                       (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
+        PCRE2_SUBSTITUTE_UNSET_EMPTY |
+        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
     size_t arglen = arg.length();
     PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
     auto output = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * bufsize));

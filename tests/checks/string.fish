@@ -54,8 +54,16 @@ string pad -r -w 7 -c '-' foo
 string pad --width 7 -c '=' foo
 # CHECK: ====foo
 
-string pad --width 10 --right foo
-# CHECK: foo
+echo \|(string pad --width 10 --right foo)\|
+# CHECK: |foo       |
+
+string pad -w 4 -c . 🐟
+# CHECK: ..🐟
+
+string pad -c . long longer longest
+# CHECK: ...long
+# CHECK: .longer
+# CHECK: longest
 
 string sub --length 2 abcde
 # CHECK: ab

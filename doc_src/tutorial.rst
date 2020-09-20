@@ -8,9 +8,9 @@ Tutorial
 Why fish?
 ---------
 
-``fish`` is a fully-equipped command line shell (like bash or zsh) that is smart and user-friendly. ``fish`` supports powerful features like syntax highlighting, autosuggestions, and tab completions that just work, with nothing to learn or configure.
+Fish is a fully-equipped command line shell (like bash or zsh) that is smart and user-friendly. Fish supports powerful features like syntax highlighting, autosuggestions, and tab completions that just work, with nothing to learn or configure.
 
-If you want to make your command line more productive, more useful, and more fun, without learning a bunch of arcane syntax and configuration options, then ``fish`` might be just what you're looking for!
+If you want to make your command line more productive, more useful, and more fun, without learning a bunch of arcane syntax and configuration options, then fish might be just what you're looking for!
 
 
 Getting started
@@ -27,7 +27,7 @@ which means you are all set up and can start using fish::
     you@hostname ~>
 
 
-This prompt that you see above is the ``fish`` default prompt: it shows your username, hostname, and working directory.
+This prompt that you see above is the fish default prompt: it shows your username, hostname, and working directory.
 - to change this prompt see `how to change your prompt <#prompt>`_
 - to switch to fish permanently see `switch your default shell to fish <#switching-to-fish>`_.
 
@@ -37,15 +37,15 @@ From now on, we'll pretend your prompt is just a ``>`` to save space.
 Learning fish
 -------------
 
-This tutorial assumes a basic understanding of command line shells and Unix commands, and that you have a working copy of ``fish``.
+This tutorial assumes a basic understanding of command line shells and Unix commands, and that you have a working copy of fish.
 
-If you have a strong understanding of other shells, and want to know what ``fish`` does differently, search for the magic phrase *unlike other shells*, which is used to call out important differences.
+If you have a strong understanding of other shells, and want to know what fish does differently, search for the magic phrase *unlike other shells*, which is used to call out important differences.
 
 
 Running Commands
 ----------------
 
-``fish`` runs commands like other shells: you type a command, followed by its arguments. Spaces are separators::
+Fish runs commands like other shells: you type a command, followed by its arguments. Spaces are separators::
 
     > echo hello world
     hello world
@@ -67,7 +67,7 @@ Commands can be chained with semicolons.
 Getting Help
 ------------
 
-``fish`` has excellent help and man pages. Run ``help`` to open help in a web browser, and ``man`` to open it in a man page. You can also ask for help with a specific command, for example, ``help set`` to open in a web browser, or ``man set`` to see it in the terminal.
+Fish has excellent help and man pages. Run ``help`` to open help in a web browser, and ``man`` to open it in a man page. You can also ask for help with a specific command, for example, ``help set`` to open in a web browser, or ``man set`` to see it in the terminal.
 
 
 
@@ -117,7 +117,7 @@ These colors, and many more, can be changed by running ``fish_config``, or by mo
 Wildcards
 ---------
 
-``fish`` supports the familiar wildcard ``*``. To list all JPEG files::
+Fish supports the familiar wildcard ``*``. To list all JPEG files::
 
     > ls *.jpg
     lena.jpg
@@ -247,7 +247,7 @@ Variable substitution also happens in double quotes, but not single quotes::
     My current directory is $PWD
 
 
-Unlike other shells, ``fish`` has no dedicated `VARIABLE=VALUE` syntax for setting variables. Instead it has an ordinary command: ``set``, which takes a variable name, and then its value.
+Unlike other shells, fish has no dedicated `VARIABLE=VALUE` syntax for setting variables. Instead it has an ordinary command: ``set``, which takes a variable name, and then its value.
 
 ::
 
@@ -265,7 +265,7 @@ Unlike other shells, variables are not further split after substitution::
     Mister Noodle
 
 
-In bash, this would have created two directories "Mister" and "Noodle". In ``fish``, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to ``mkdir``, spaces and all. Other shells use the term "arrays", rather than lists.
+In bash, this would have created two directories "Mister" and "Noodle". In fish, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to ``mkdir``, spaces and all. Other shells use the term "arrays", rather than lists.
 
 You can erase (or "delete") a variable with ``-e`` or ``--erase``
 
@@ -280,7 +280,7 @@ Exports (Shell Variables)
 
 Sometimes you need to have a variable available to an external command, often as a setting. For example many programs like `git` or `man` read the `$PAGER` variable to figure out your preferred pager (the program that lets you scroll text). Other variables used like this include `$BROWSER`, `$LANG` (to configure your language) and `$PATH`. You'll note these are written in ALLCAPS, but that's just a convention.
 
-To give a variable to an external command, it needs to be "exported". Unlike other shells, ``fish`` does not have an export command. Instead, a variable is exported via an option to ``set``, either ``--export`` or just ``-x``.
+To give a variable to an external command, it needs to be "exported". Unlike other shells, fish does not have an export command. Instead, a variable is exported via an option to ``set``, either ``--export`` or just ``-x``.
 
 ::
 
@@ -296,7 +296,7 @@ It can also be unexported with ``--unexport`` or ``-u``.
 Lists
 -----
 
-The ``set`` command above used quotes to ensure that ``Mister Noodle`` was one argument. If it had been two arguments, then ``name`` would have been a list of length 2.  In fact, all variables in ``fish`` are really lists, that can contain any number of values, or none at all.
+The ``set`` command above used quotes to ensure that ``Mister Noodle`` was one argument. If it had been two arguments, then ``name`` would have been a list of length 2.  In fact, all variables in fish are really lists, that can contain any number of values, or none at all.
 
 Some variables, like ``$PWD``, only have one value. By convention, we talk about that variable's value, but we really mean its first (and only) value.
 
@@ -373,7 +373,7 @@ This is similar to `Brace expansion <index#expand-brace>`__.
 Command Substitutions
 ---------------------
 
-Command substitutions use the output of one command as an argument to another. Unlike other shells, ``fish`` does not use backticks `` for command substitutions. Instead, it uses parentheses::
+Command substitutions use the output of one command as an argument to another. Unlike other shells, fish does not use backticks `` for command substitutions. Instead, it uses parentheses::
 
     > echo In (pwd), running (uname)
     In /home/tutorial, running FreeBSD
@@ -427,7 +427,7 @@ Exit Status
 
 When a command exits, it returns a status code as a non-negative integer.
 
-Unlike other shells, ``fish`` stores the exit status of the last command in ``$status`` instead of ``$?``.
+Unlike other shells, fish stores the exit status of the last command in ``$status`` instead of ``$?``.
 
 
 ::
@@ -639,7 +639,7 @@ You can choose among some sample prompts by running ``fish_config prompt``.
 $PATH
 -----
 
-``$PATH`` is an environment variable containing the directories that ``fish`` searches for commands. Unlike other shells, $PATH is a :ref:`list <tut-lists>`, not a colon-delimited string.
+``$PATH`` is an environment variable containing the directories that fish searches for commands. Unlike other shells, $PATH is a :ref:`list <tut-lists>`, not a colon-delimited string.
 
 To prepend /usr/local/bin and /usr/sbin to ``$PATH``, you can write::
 
@@ -673,7 +673,7 @@ Or you can modify $fish_user_paths yourself, but you should be careful *not* to 
 Startup (Where's .bashrc?)
 --------------------------
 
-``fish`` starts by executing commands in ``~/.config/fish/config.fish``. You can create it if it does not exist.
+Fish starts by executing commands in ``~/.config/fish/config.fish``. You can create it if it does not exist.
 
 It is possible to directly create functions and variables in ``config.fish`` file, using the commands shown above. For example:
 
@@ -697,7 +697,7 @@ If you want to organize your configuration, fish also reads commands in .fish fi
 Autoloading Functions
 ---------------------
 
-When ``fish`` encounters a command, it attempts to autoload a function for that command, by looking for a file with the name of that command in ``~/.config/fish/functions/``.
+When fish encounters a command, it attempts to autoload a function for that command, by looking for a file with the name of that command in ``~/.config/fish/functions/``.
 
 For example, if you wanted to have a function ``ll``, you would add a text file ``ll.fish`` to ``~/.config/fish/functions``::
 
@@ -722,7 +722,7 @@ See the documentation for :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-fun
 Universal Variables
 -------------------
 
-A universal variable is a variable whose value is shared across all instances of ``fish``, now and in the future – even after a reboot. You can make a variable universal with ``set -U``::
+A universal variable is a variable whose value is shared across all instances of fish, now and in the future – even after a reboot. You can make a variable universal with ``set -U``::
 
     > set -U EDITOR vim
 

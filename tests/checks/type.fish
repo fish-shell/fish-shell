@@ -40,3 +40,15 @@ type realpath | grep -v "^  *"
 type -t realpath foobar
 # CHECK: function
 # CHECKERR: type: Could not find {{.}}foobar{{.}}
+
+type -P test
+# CHECK: test is {{.*}}/test
+type -P ls
+# CHECK: ls is {{.*}}/ls
+
+type
+echo $status
+# CHECK: 1
+type -q
+echo $status
+# CHECK: 1

@@ -1666,7 +1666,7 @@ static void append_switch(wcstring &out, const wcstring &opt) {
     append_format(out, L" --%ls", opt.c_str());
 }
 
-wcstring completion2string(const complete_entry_opt_t &o, wcstring cmd, bool is_path) {
+static wcstring completion2string(const complete_entry_opt_t &o, wcstring cmd, bool is_path) {
     wcstring out;
     out.append(L"complete");
 
@@ -1685,18 +1685,18 @@ wcstring completion2string(const complete_entry_opt_t &o, wcstring cmd, bool is_
     append_switch(out, is_path ? L'p' : L'c', cmd);
 
     switch (o.type) {
-    case option_type_args_only: {
-        break;
-    }
-    case option_type_short: {
-        append_switch(out, L's', wcstring(1, o.option.at(0)));
-        break;
-    }
-    case option_type_single_long:
-    case option_type_double_long: {
-        append_switch(out, o.type == option_type_single_long ? L'o' : L'l', o.option);
-        break;
-    }
+        case option_type_args_only: {
+            break;
+        }
+        case option_type_short: {
+            append_switch(out, L's', wcstring(1, o.option.at(0)));
+            break;
+        }
+        case option_type_single_long:
+        case option_type_double_long: {
+            append_switch(out, o.type == option_type_single_long ? L'o' : L'l', o.option);
+            break;
+        }
     }
 
     append_switch(out, L'd', C_(o.desc));

@@ -26,3 +26,7 @@ complete -c testcommand2 --wraps "testcommand2 from_wraps "
 complete -C'testcommand2 explicit '
 # CHECKERR: explicit
 # CHECKERR: from_wraps explicit
+
+
+complete -c recvar --wraps 'A=B recvar'
+complete -C 'recvar '

@@ -1600,8 +1600,14 @@ void completer_t::perform() {
                     ctx.parser->libdata().transient_commandlines.push_back(unaliased_cmd);
                     cleanup_t remove_transient(
                         [&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
-                    vec_append(this->completions,
-                               complete(unaliased_cmd, completion_request_t::fuzzy_match, ctx));
+                    // Prevent infinite recursion when the completion for x wraps "A=B x" (#7344).
+                    // Don't report an error since this could be a legitimate alias.
+                    static uint32_t complete_assignment_recursion_count;
+                    if (complete_assignment_recursion_count++ < 24) {
+                        vec_append(this->completions,
+                                   complete(unaliased_cmd, completion_request_t::fuzzy_match, ctx));
+                    }
+                    complete_assignment_recursion_count--;
                     do_file = false;
                 } else if (!complete_param(
                                cmd, previous_argument_unescape, current_argument_unescape,

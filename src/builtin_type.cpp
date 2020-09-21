@@ -43,6 +43,7 @@ static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h
 
 static int parse_cmd_opts(type_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
+    UNUSED(parser);
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;

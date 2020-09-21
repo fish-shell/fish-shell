@@ -79,6 +79,8 @@ Scripting improvements
 -  ``complete`` can now show the loaded completions for only specific commands, and do without ``-c`` (``complete git`` is now valid) (#7321).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (#7154).
 -  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (#7014).
+-  ``type`` is now a builtin and therefore much faster (#7342).
+-  ``string replace`` no longer errors if a capturing group wasn't matched, instead treating it as empty (#7343).
 
 Interactive improvements
 ------------------------

@@ -985,22 +985,21 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         opts.left = true;
     }
 
-    // Find max width of string from input
+    // Find max width of strings and keep the inputs
     size_t max_width = 0;
+    std::vector<wcstring> all_inputs;
+
     arg_iterator_t aiter_width(argv, optind, streams);
     while (const wcstring *arg = aiter_width.nextstr()) {
-        wcstring padded = *arg;
-        size_t width = fish_wcswidth(padded);
-        if (width > max_width) {
-            max_width = width;
-        }
+        wcstring input_string = *arg;
+        size_t width = fish_wcswidth(input_string);
+        if (width > max_width) max_width = width;
+        all_inputs.push_back(input_string);
     }
 
     size_t pad_width = max_width > opts.width ? max_width : opts.width;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wcstring *arg = aiter.nextstr()) {
-        wcstring padded = *arg;
+    for (auto &input : all_inputs) {
+        wcstring padded = input;
         size_t padded_width = fish_wcswidth(padded);
         if (pad_width >= padded_width) {
             size_t pad = pad_width - padded_width;

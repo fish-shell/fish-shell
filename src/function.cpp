@@ -29,6 +29,8 @@
 #include "parser.h"
 #include "parser_keywords.h"
 #include "reader.h"
+#include "signal.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class function_info_t {
@@ -333,4 +335,109 @@ void function_invalidate_path() {
         funcset->remove(name);
     }
     funcset->autoloader.clear();
+}
+
+/// Return a definition of the specified function. Used by the functions builtin.
+wcstring functions_def(const wcstring &name) {
+    assert(!name.empty() && "Empty name");
+    wcstring out;
+    wcstring desc, def;
+    function_get_desc(name, desc);
+    function_get_definition(name, def);
+    std::vector<std::shared_ptr<event_handler_t>> ev = event_get_function_handlers(name);
+
+    out.append(L"function ");
+
+    // Typically we prefer to specify the function name first, e.g. "function foo --description bar"
+    // But if the function name starts with a -, we'll need to output it after all the options.
+    bool defer_function_name = (name.at(0) == L'-');
+    if (!defer_function_name) {
+        out.append(escape_string(name, ESCAPE_ALL));
+    }
+
+    // Output wrap targets.
+    for (const wcstring &wrap : complete_get_wrap_targets(name)) {
+        out.append(L" --wraps=");
+        out.append(escape_string(wrap, ESCAPE_ALL));
+    }
+
+    if (!desc.empty()) {
+        wcstring esc_desc = escape_string(desc, ESCAPE_ALL);
+        out.append(L" --description ");
+        out.append(esc_desc);
+    }
+
+    auto props = function_get_properties(name);
+    assert(props && "Should have function properties");
+    if (!props->shadow_scope) {
+        out.append(L" --no-scope-shadowing");
+    }
+
+    for (const auto &next : ev) {
+        const event_description_t &d = next->desc;
+        switch (d.type) {
+            case event_type_t::signal: {
+                append_format(out, L" --on-signal %ls", sig2wcs(d.param1.signal));
+                break;
+            }
+            case event_type_t::variable: {
+                append_format(out, L" --on-variable %ls", d.str_param1.c_str());
+                break;
+            }
+            case event_type_t::exit: {
+                if (d.param1.pid > 0)
+                    append_format(out, L" --on-process-exit %d", d.param1.pid);
+                else
+                    append_format(out, L" --on-job-exit %d", -d.param1.pid);
+                break;
+            }
+            case event_type_t::caller_exit: {
+                append_format(out, L" --on-job-exit caller");
+                break;
+            }
+            case event_type_t::generic: {
+                append_format(out, L" --on-event %ls", d.str_param1.c_str());
+                break;
+            }
+            case event_type_t::any:
+            default: {
+                DIE("unexpected next->type");
+            }
+        }
+    }
+
+    const wcstring_list_t &named = props->named_arguments;
+    if (!named.empty()) {
+        append_format(out, L" --argument");
+        for (const auto &name : named) {
+            append_format(out, L" %ls", name.c_str());
+        }
+    }
+
+    // Output the function name if we deferred it.
+    if (defer_function_name) {
+        out.append(L" -- ");
+        out.append(escape_string(name, ESCAPE_ALL));
+    }
+
+    // Output any inherited variables as `set -l` lines.
+    for (const auto &kv : props->inherit_vars) {
+        // We don't know what indentation style the function uses,
+        // so we do what fish_indent would.
+        append_format(out, L"\n    set -l %ls", kv.first.c_str());
+        for (const auto &arg : kv.second) {
+            wcstring earg = escape_string(arg, ESCAPE_ALL);
+            out.push_back(L' ');
+            out.append(earg);
+        }
+    }
+    out.push_back('\n');
+    out.append(def);
+
+    // Append a newline before the 'end', unless there already is one there.
+    if (!string_suffixes_string(L"\n", def)) {
+        out.push_back(L'\n');
+    }
+    out.append(L"end\n");
+    return out;
 }

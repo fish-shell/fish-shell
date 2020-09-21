@@ -102,4 +102,5 @@ bool function_copy(const wcstring &name, const wcstring &new_name);
 /// Observes that fish_function_path has changed.
 void function_invalidate_path();
 
+wcstring functions_def(const wcstring &name);
 #endif

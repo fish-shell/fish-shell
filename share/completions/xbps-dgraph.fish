@@ -4,8 +4,8 @@
 set -l progname xbps-dgraph
 
 complete -c $progname -f
-complete -c $progname -a "(__fish_print_packages -i)"
-complete -c $progname -n "__fish_contains_opt -s R" -a "(__fish_print_packages)"
+complete -c $progname -a "(__fish_print_xbps_packages -i)"
+complete -c $progname -n "__fish_contains_opt -s R" -a "(__fish_print_xbps_packages)"
 
 complete -c $progname -s C -d 'Specifies a path to the XBPS configuration directory.' -xa "(__fish_complete_directories)"
 complete -c $progname -s c -d 'Specifies a path to the graph configuration file.' -F

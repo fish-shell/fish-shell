@@ -110,9 +110,6 @@ function __fish_snap_filters -d 'List assertion filters'
     snap known $argv[1] | string match -v 'type:*' | string match '*: *' | string replace -r '(.*): (.*)' '$1=$2'
 end
 
-# Enable when __fish_print_packages supports snaps
-#complete -c snap -n '__fish_snap_use_package' -a '(__fish_print_packages)' -d 'Package'
-
 # Enable file completions where appropriate
 complete -c snap -n __fish_snap_use_file -a '(__fish_complete_path)'
 

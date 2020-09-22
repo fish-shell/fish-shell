@@ -1,6 +1,6 @@
 # Completions for the `dpkg-reconfigure` command
 
-complete -f -c dpkg-reconfigure -a '(__fish_print_packages)' -d Package
+complete -f -c dpkg-reconfigure -a '(__fish_print_apt_packages)' -d Package
 
 # Support flags
 complete -x -f -c dpkg-reconfigure -s h -l help -d 'Display help'

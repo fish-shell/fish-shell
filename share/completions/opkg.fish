@@ -27,9 +27,9 @@ function __fish_opkg_use_package_installed -d 'Test if opkg command should have 
     return 1
 end
 
-complete -c opkg -n __fish_opkg_use_package -a '(__fish_print_packages)' -d Package
+complete -c opkg -n __fish_opkg_use_package -a '(__fish_print_opkg_packages)' -d Package
 
-complete -c opkg -n __fish_opkg_use_package_installed -a '(__fish_print_packages --installed)' -d Package
+complete -c opkg -n __fish_opkg_use_package_installed -a '(__fish_print_opkg_packages --installed)' -d Package
 
 complete -f -n __fish_opkg_no_subcommand -c opkg -a update -d 'Update list of available packages'
 complete -f -n __fish_opkg_no_subcommand -c opkg -a upgrade -d 'Upgrade packages'

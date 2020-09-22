@@ -18,7 +18,7 @@ function __fish_apt_use_package -d 'Test if apt command should have packages as 
     return 1
 end
 
-complete -c apt-mark -n __fish_apt_use_package -a '(__fish_print_packages)' -d Package
+complete -c apt-mark -n __fish_apt_use_package -a '(__fish_print_apt_packages)' -d Package
 
 complete -c apt-mark -s h -l help -d 'Display help and exit'
 complete -f -n __fish_apt_no_subcommand -c apt-mark -a auto -d 'Mark a package as automatically installed'

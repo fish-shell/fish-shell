@@ -1,7 +1,7 @@
 # This can't currently be wrapped as the pacman completions rely on variables whose value this needs to change
 # complete -c aura -w pacman
 set -l listinstalled "(pacman -Q | tr ' ' \t)"
-set -l listall "(__fish_print_packages)"
+set -l listall "(__fish_print_pacman_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
 set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 

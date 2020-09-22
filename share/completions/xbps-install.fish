@@ -3,7 +3,7 @@
 
 set -l progname xbps-install
 
-set -l listall "(__fish_print_packages)"
+set -l listall "(__fish_print_xbps_packages)"
 
 complete -c $progname -f
 complete -c $progname -a "$listall"

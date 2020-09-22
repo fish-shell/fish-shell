@@ -35,7 +35,7 @@ function __fish_wajig_use_package -d 'Test if wajig command should have packages
     return 1
 end
 
-complete -c wajig -n __fish_wajig_use_package -a '(__fish_print_packages)' -d Packageh
+complete -c wajig -n __fish_wajig_use_package -a '(__fish_print_apt_packages)' -d Packages
 complete -c wajig -s q -l quiet -d 'Do system commands everything quietly.'
 complete -c wajig -s n -l noauth -d 'Allow packages from unathenticated archives.'
 complete -c wajig -s s -l simulate -d 'Trace but don\'t execute the sequence of underlying commands.'

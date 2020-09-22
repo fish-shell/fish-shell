@@ -2,18 +2,13 @@ function __fish_print_apt_packages
     argparse --name=__fish_print_packages i/installed -- $argv
     or return
 
-    set -l only_installed 1
-    if not set -q _flag_installed
-        set -e only_installed
-    end
-
     switch (commandline -ct)
         case '-**'
             return
     end
 
     type -q -f apt-cache || return 1
-    if not set -q only_installed
+    if not set -q _flag_installed
         # Do not generate the cache as apparently sometimes this is slow.
         # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
         # (It is safe to use `sed -r` here as we are guaranteed to be on a GNU platform

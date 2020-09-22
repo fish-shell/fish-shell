@@ -1,11 +1,8 @@
 function __fish_print_zypper_packages
     type -q -f zypper || return 1
 
-    set -l xdg_cache_home $XDG_CACHE_HOME
-    if test -z "$xdg_cache_home"
-        set xdg_cache_home $HOME/.cache
-    end
-    mkdir -m 700 -p $xdg_cache_home
+    set -l xdg_cache_home (__fish_make_cache_dir)
+    or return
 
     # Use libzypp cache file if available
     if test -f /var/cache/zypp/solv/@System/solv.idx

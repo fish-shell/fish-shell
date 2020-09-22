@@ -13,116 +13,6 @@ Since fish 3.1 you can set an environment variable for just one command using th
     key=value echo $key
     begin; set -lx key value; echo $key; end
 
-How do I run a command every login? What's fish's equivalent to .bashrc or .profile?
-------------------------------------------------------------------------------------
-Edit the file ``~/.config/fish/config.fish`` [#]_, creating it if it does not exist (Note the leading period).
-
-
-.. [#] The "~/.config" part of this can be set via $XDG_CONFIG_HOME, that's just the default.
-
-How do I set my prompt?
------------------------
-The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/fish/functions/fish_prompt.fish``. For example, a simple prompt is::
-
-    function fish_prompt
-        set_color $fish_color_cwd
-        echo -n (prompt_pwd)
-        set_color normal
-        echo -n ' > '
-    end
-
-
-You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
-
-If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` like::
-
-  >_ funced fish_prompt
-  # this opens up your editor (set in $EDITOR), modify the function, save the file, repeat to your liking
-  # once you are happy with it:
-  >_ funcsave fish_prompt
-
-This also applies to :ref:`fish_right_prompt <cmd-fish_right_prompt>` and :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`.
-
-Why does my prompt show a `[I]`?
---------------------------------
-
-That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
-
-If you haven't activated vi mode on purpose, you might have installed a third-party theme that does it.
-
-If you want to change or disable this display, modify the `fish_mode_prompt` function, for instance via :ref:`funced <cmd-funced>`.
-
-How do I run a command from history?
-------------------------------------
-Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control`\ +\ :kbd:`P` (up) and :kbd:`Control`\ +\ :kbd:`N` (down).
-
-
-How do I run a subcommand? The backtick doesn't work!
------------------------------------------------------
-``fish`` uses parentheses for subcommands. For example::
-
-    for i in (ls)
-        echo $i
-    end
-
-
-My command (pkg-config) gives its output as a single long string?
------------------------------------------------------------------
-Unlike other shells, fish splits command substitutions only on newlines, not spaces or tabs or the characters in $IFS.
-
-That means if you run
-
-::
-
-    echo x(printf '%s ' a b c)x
-
-
-It will print ``xa b c x``, because the "a b c " is used in one piece. But if you do
-
-::
-
-    echo x(printf '%s\n' a b c)x
-
-
-it will print ``xax xbx xcx``.
-
-In the overwhelming majority of cases, splitting on spaces is unwanted, so this is an improvement.
-
-However sometimes, especially with ``pkg-config`` and related tools, splitting on spaces is needed.
-
-In these cases use ``string split " "`` like::
-
-    g++ example_01.cpp (pkg-config --cflags --libs gtk+-2.0 | string split " ")
-
-
-How do I get the exit status of a command?
-------------------------------------------
-Use the ``$status`` variable. This replaces the ``$?`` variable used in some other shells.
-
-::
-
-    somecommand
-    if test $status -eq 7
-        echo "That's my lucky number!"
-    end
-
-
-If you are just interested in success or failure, you can run the command directly as the if-condition::
-
-    if somecommand
-        echo "Command succeeded"
-    else
-        echo "Command failed"
-    end
-
-
-Or if you just want to do one command in case the first succeeded or failed, use ``and`` or ``or``::
-
-    somecommand
-    or someothercommand
-
-See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
-
 How do I check whether a variable is defined?
 ---------------------------------------------
 
@@ -172,36 +62,60 @@ add a statement to your :ref:`user initialization file <initialization>` (usuall
 
     set -gx EDITOR vim
 
+How do I run a command every login? What's fish's equivalent to .bashrc or .profile?
+------------------------------------------------------------------------------------
+Edit the file ``~/.config/fish/config.fish`` [#]_, creating it if it does not exist (Note the leading period).
+
+
+.. [#] The "~/.config" part of this can be set via $XDG_CONFIG_HOME, that's just the default.
+
+How do I set my prompt?
+-----------------------
+The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/fish/functions/fish_prompt.fish``. For example, a simple prompt is::
+
+    function fish_prompt
+        set_color $fish_color_cwd
+        echo -n (prompt_pwd)
+        set_color normal
+        echo -n ' > '
+    end
+
+
+You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
+
+If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` like::
+
+  >_ funced fish_prompt
+  # this opens up your editor (set in $EDITOR), modify the function, save the file, repeat to your liking
+  # once you are happy with it:
+  >_ funcsave fish_prompt
+
+This also applies to :ref:`fish_right_prompt <cmd-fish_right_prompt>` and :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`.
+
+Why does my prompt show a `[I]`?
+--------------------------------
+
+That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
+
+If you haven't activated vi mode on purpose, you might have installed a third-party theme that does it.
+
+If you want to change or disable this display, modify the `fish_mode_prompt` function, for instance via :ref:`funced <cmd-funced>`.
+
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
 Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
 
-I accidentally entered a directory path and fish changed directory. What happened?
-----------------------------------------------------------------------------------
-If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
+How do I change the greeting message?
+-------------------------------------
+Change the value of the variable ``fish_greeting`` or create a ``fish_greeting`` function. For example, to remove the greeting use::
 
-The open command doesn't work.
-------------------------------
-The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider :ref:`asking for more help <more-help>`.
+    set -U fish_greeting
 
-How do I make fish my default shell?
-------------------------------------
-If you installed fish manually (e.g. by compiling it, not by using a package manager), you first need to add fish to the list of shells by executing the following command (assuming you installed fish in /usr/local)::
+Or if you prefer not to use a universal variable, use::
 
-    echo /usr/local/bin/fish | sudo tee -a /etc/shells
+    set -g fish_greeting
 
-
-If you installed a prepackaged version of fish, the package manager should have already done this for you.
-
-In order to change your default shell, type::
-
-    chsh -s /usr/local/bin/fish
-
-
-You may need to adjust the above path to e.g. ``/usr/bin/fish``. Use the command ``which fish`` if you are unsure of where fish is installed.
-
-Unfortunately, there is no way to make the changes take effect at once. You will need to log out and back in again.
-
+in config.fish.
 
 I'm seeing weird output before each prompt when using screen. What's wrong?
 ---------------------------------------------------------------------------
@@ -220,17 +134,9 @@ Fish is trying to set the titlebar message of your terminal. While screen itself
 
 Note that fish has a default titlebar message, which will be used if the fish_title function is undefined. So simply unsetting the fish_title function will not work.
 
-How do I change the greeting message?
--------------------------------------
-Change the value of the variable ``fish_greeting`` or create a ``fish_greeting`` function. For example, to remove the greeting use::
-
-    set -U fish_greeting
-
-Or if you prefer not to use a universal variable, use::
-
-    set -g fish_greeting
-
-in config.fish.
+How do I run a command from history?
+------------------------------------
+Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control`\ +\ :kbd:`P` (up) and :kbd:`Control`\ +\ :kbd:`N` (down).
 
 Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
@@ -252,11 +158,70 @@ In general, fish's history recall works like this:
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
 
-How can I use ``-`` as a shortcut for ``cd -``?
------------------------------------------------
-In fish versions prior to 2.5.0 it was possible to create a function named ``-`` that would do ``cd -``. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation::
+How do I run a subcommand? The backtick doesn't work!
+-----------------------------------------------------
+``fish`` uses parentheses for subcommands. For example::
 
-    abbr -a -- - 'cd -'
+    for i in (ls)
+        echo $i
+    end
+
+
+My command (pkg-config) gives its output as a single long string?
+-----------------------------------------------------------------
+Unlike other shells, fish splits command substitutions only on newlines, not spaces or tabs or the characters in $IFS.
+
+That means if you run
+
+::
+
+    echo x(printf '%s ' a b c)x
+
+
+It will print ``xa b c x``, because the "a b c " is used in one piece. But if you do
+
+::
+
+    echo x(printf '%s\n' a b c)x
+
+
+it will print ``xax xbx xcx``.
+
+In the overwhelming majority of cases, splitting on spaces is unwanted, so this is an improvement.
+
+However sometimes, especially with ``pkg-config`` and related tools, splitting on spaces is needed.
+
+In these cases use ``string split " "`` like::
+
+    g++ example_01.cpp (pkg-config --cflags --libs gtk+-2.0 | string split " ")
+
+How do I get the exit status of a command?
+------------------------------------------
+Use the ``$status`` variable. This replaces the ``$?`` variable used in some other shells.
+
+::
+
+    somecommand
+    if test $status -eq 7
+        echo "That's my lucky number!"
+    end
+
+
+If you are just interested in success or failure, you can run the command directly as the if-condition::
+
+    if somecommand
+        echo "Command succeeded"
+    else
+        echo "Command failed"
+    end
+
+
+Or if you just want to do one command in case the first succeeded or failed, use ``and`` or ``or``::
+
+    somecommand
+    or someothercommand
+
+See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
 
 My command prints "No matches for wildcard" but works in bash
 -------------------------------------------------------------
@@ -306,6 +271,19 @@ For these reasons, fish does not do this, and instead expects asterisks to be qu
 
 This is similar to bash's "failglob" option.
 
+I accidentally entered a directory path and fish changed directory. What happened?
+----------------------------------------------------------------------------------
+If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
+
+How can I use ``-`` as a shortcut for ``cd -``?
+-----------------------------------------------
+In fish versions prior to 2.5.0 it was possible to create a function named ``-`` that would do ``cd -``. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation::
+
+    abbr -a -- - 'cd -'
+
+The open command doesn't work.
+------------------------------
+The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider :ref:`asking for more help <more-help>`.
 .. _faq-ssh-interactive:
 
 Why won't SSH/SCP/rsync connect properly when fish is my login shell?
@@ -344,6 +322,24 @@ This also means that a few things are unsupportable:
 
 - Non-monospace fonts - there is *no way* for fish to figure out what width a specific character has as it has no influence on the terminal's font rendering.
 - Different widths for multiple ambiguous width characters - there is no way for fish to know which width you assign to each character.
+
+How do I make fish my default shell?
+------------------------------------
+If you installed fish manually (e.g. by compiling it, not by using a package manager), you first need to add fish to the list of shells by executing the following command (assuming you installed fish in /usr/local)::
+
+    echo /usr/local/bin/fish | sudo tee -a /etc/shells
+
+
+If you installed a prepackaged version of fish, the package manager should have already done this for you.
+
+In order to change your default shell, type::
+
+    chsh -s /usr/local/bin/fish
+
+
+You may need to adjust the above path to e.g. ``/usr/bin/fish``. Use the command ``which fish`` if you are unsure of where fish is installed.
+
+Unfortunately, there is no way to make the changes take effect at once. You will need to log out and back in again.
 
 .. _faq-uninstalling:
 

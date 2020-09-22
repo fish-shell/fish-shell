@@ -112,6 +112,7 @@ Interactive improvements
 -  ``diff`` will now colourise output, if supported (#7308).
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (#7293).
 -  Control-C no longer occasionally prints an "unknown command" error (#7145).
+-  History search is now case-insensitive unless the search string contains an uppercase character (#7273).
 
 
 New or improved bindings

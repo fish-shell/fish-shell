@@ -132,3 +132,13 @@ expect_re("count again 1\r\n")
 # Verify that the $history var has the expected content.
 sendline("echo history2=$history\[2\]")
 expect_re("history2=echo count AGAIN .*\r\n")
+
+# Verify that history search is case-insensitive by default
+sendline("echo term")
+expect_str("term")
+sendline("echo TERM")
+expect_str("TERM")
+sendline("echo banana")
+expect_str("banana")
+send("ter\x1b[A")  # up-arrow
+expect_re("echo TERM")

@@ -398,11 +398,15 @@ class reader_history_search_t {
         matches_ = {text};
         match_index_ = 0;
         mode_ = mode;
+        history_search_flags_t flags = history_search_no_dedup;
+        // Make the search case-insensitive unless we have an uppercase character.
+        wcstring low = wcstolower(text);
+        if (low == text) flags |= history_search_ignore_case;
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
             *hist, text,
             by_prefix() ? history_search_type_t::prefix : history_search_type_t::contains,
-            history_search_no_dedup);
+            flags);
     }
 
     /// Reset to inactive search.
@@ -935,7 +939,7 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
     if (!conf.in_silent_mode && !data.history_search_text.empty()) {
         const wcstring &needle = data.history_search_text;
         const wcstring &haystack = cmd_line->text();
-        size_t match_pos = haystack.find(needle);
+        size_t match_pos = ifind(haystack,needle);
         if (match_pos != wcstring::npos) {
             for (size_t i = 0; i < needle.size(); i++) {
                 colors.at(match_pos + i).background = highlight_role_t::search_match;

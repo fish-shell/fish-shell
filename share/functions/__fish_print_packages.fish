@@ -1,5 +1,6 @@
 # Use --installed to limit to installed packages only
 function __fish_print_packages
+    set -l args $argv
     argparse --name=__fish_print_packages i/installed -- $argv
     or return
 
@@ -8,55 +9,27 @@ function __fish_print_packages
         set -e only_installed
     end
 
-    # apt-cache is much, much faster than rpm, and can do this in real
-    # time. We use it if available.
-
     switch (commandline -ct)
         case '-**'
             return
     end
 
-    if type -q -f apt-cache
-        if not set -q only_installed
-            # Do not generate the cache as apparently sometimes this is slow.
-            # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
-            # (It is safe to use `sed -r` here as we are guaranteed to be on a GNU platform
-            # if apt-cache was found. Using unicode reserved range in `fish/tr` and the
-            # little-endian bytecode equivalent in `sed`. Supports localization.)
-            #
-            # Note: This can include "Description:" fields which we need to include,
-            # "Description-en_GB" (or another locale code) fields which we need to include
-            # as well as "Description-md5" fields which we absolutely do *not* want to include
-            # The regex doesn't allow numbers, so unless someone makes a hash algorithm without a number in the name,
-            # we're safe. (yes, this should absolutely have a better format).
-            apt-cache --no-generate show '.*'(commandline -ct)'.*' 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\xee\x80\x80\x0a/g' | tr -d \n | tr -s \uE000 \n | uniq
-            return
-        else
-            set -l packages (dpkg --get-selections | string replace -fr '(\S+)\s+install' "\$1" | string match -e (commandline -ct))
-            apt-cache --no-generate show $packages 2>/dev/null | sed -r '/^(Package|Description-?[a-zA-Z_]*):/!d;s/Package: (.*)/\1\t/g;s/Description-?[^:]*: (.*)/\1\xee\x80\x80\x0a/g' | tr -d \n | tr -s \uE000 \n | uniq
+    __fish_print_apt_packages $args
+    and return
 
-            return
-        end
-    end
+    __fish_print_pkg_packages $args
+    and return
 
-    # Pkg is fast on FreeBSD and provides versioning info which we want for
-    # installed packages
-    if type -q -f pkg
-        pkg query "%n-%v"
-        return
-    end
-
-    # pkg_info on OpenBSD provides versioning info which we want for
-    # installed packages but, calling it directly can cause delays in
-    # returning information if another pkg_* tool have a lock.
-    # Listing /var/db/pkg is a clean alternative.
-    if type -q -f pkg_add
-        set -l files /var/db/pkg/*
-        string replace /var/db/pkg/ '' -- $files
-        return
-    end
+    __fish_print_pkg_add_packages $args
+    and return
 
     ### BEGIN CACHED RESULTS ###
+
+    __fish_print_pacman_packages $args
+    and return
+
+    __fish_print_zypper_packages
+    and return
 
     # Set up cache directory
     set -l xdg_cache_home $XDG_CACHE_HOME
@@ -64,52 +37,6 @@ function __fish_print_packages
         set xdg_cache_home $HOME/.cache
     end
     mkdir -m 700 -p $xdg_cache_home
-
-    # Caches for 5 minutes
-    if type -q -f pacman
-        if not set -q only_installed
-            set -l cache_file $xdg_cache_home/.pac-cache.$USER
-            if test -f $cache_file
-                cat $cache_file
-                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set -l max_age 250
-                if test $age -lt $max_age
-                    return
-                end
-            end
-            # prints: <package name>	Package
-            pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
-            return
-        else
-            pacman -Q | string replace ' ' \t
-            return
-        end
-    end
-
-    # Zypper needs caching as it is slow
-    if type -q -f zypper
-        # Use libzypp cache file if available
-        if test -f /var/cache/zypp/solv/@System/solv.idx
-            awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\tPackage'}' /var/cache/zypp/solv/*/solv.idx
-            return
-        end
-
-        # If the cache is less than five minutes old, we do not recalculate it
-
-        set -l cache_file $xdg_cache_home/.zypper-cache.$USER
-        if test -f $cache_file
-            cat $cache_file
-            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set -l max_age 300
-            if test $age -lt $max_age
-                return
-            end
-        end
-
-        # Remove package version information from output and pipe into cache file
-        zypper --quiet --non-interactive search --type=package | tail -n +4 | sed -r 's/^. \| ((\w|[-_.])+).*/\1\t'Package'/g' >$cache_file &
-        return
-    end
 
     # yum is slow, just like rpm, so go to the background
     if type -q -f /usr/share/yum-cli/completion-helper.py

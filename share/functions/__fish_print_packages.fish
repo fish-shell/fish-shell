@@ -1,196 +1,32 @@
-# Use --installed to limit to installed packages only
 function __fish_print_packages
-    set -l args $argv
-    argparse --name=__fish_print_packages i/installed -- $argv
-    or return
-
-    set -l only_installed 1
-    if not set -q _flag_installed
-        set -e only_installed
-    end
-
-    switch (commandline -ct)
-        case '-**'
-            return
-    end
-
-    __fish_print_apt_packages $args
+    # This is `__fish_print_packages`. It prints packages,
+    # from the first package manager it finds.
+    # That's a pretty bad idea, which is why this is broken up,
+    # and only available for legacy reasons.
+    __fish_print_apt_packages $argv
     and return
 
-    __fish_print_pkg_packages $args
+    __fish_print_pkg_packages $argv
     and return
 
-    __fish_print_pkg_add_packages $args
+    __fish_print_pkg_add_packages $argv
     and return
 
-    ### BEGIN CACHED RESULTS ###
-
-    __fish_print_pacman_packages $args
+    __fish_print_pacman_packages $argv
     and return
 
-    __fish_print_zypper_packages
+    __fish_print_rpm_packages $argv
     and return
 
-    # Set up cache directory
-    set -l xdg_cache_home (__fish_make_cache_dir)
-    or return
+    __fish_print_eopkg_packages $argv
+    and return
 
-    # yum is slow, just like rpm, so go to the background
-    if type -q -f /usr/share/yum-cli/completion-helper.py
+    __fish_print_portage_packages $argv
+    and return
 
-        # If the cache is less than six hours old, we do not recalculate it
+    __fish_print_port_packages $argv
+    and return
 
-        set -l cache_file $xdg_cache_home/.yum-cache.$USER
-        if test -f $cache_file
-            cat $cache_file
-            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set -l max_age 21600
-            if test $age -lt $max_age
-                return
-            end
-        end
-
-        # Remove package version information from output and pipe into cache file
-        /usr/share/yum-cli/completion-helper.py list all -d 0 -C | sed "s/\..*/\tPackage/" >$cache_file &
-        return
-    end
-
-    # Rpm is too slow for this job, so we set it up to do completions
-    # as a background job and cache the results.
-
-    if type -q -f rpm
-
-        # If the cache is less than five minutes old, we do not recalculate it
-
-        set -l cache_file $xdg_cache_home/.rpm-cache.$USER
-        if test -f $cache_file
-            cat $cache_file
-            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set -l max_age 250
-            if test $age -lt $max_age
-                return
-            end
-        end
-
-        # Remove package version information from output and pipe into cache file
-        rpm -qa | sed -e 's/-[^-]*-[^-]*$/\t'Package'/' >$cache_file &
-        return
-    end
-
-    # Eopkg is slow in showing list of available packages
-
-    if type -q -f eopkg
-
-        # If the cache is less than max_age, we do not recalculate it
-        # Determine whether to print installed/available packages
-
-        if set -q only_installed
-            set -l cache_file $xdg_cache_home/.eopkg-installed-cache.$USER
-            if test -f $cache_file
-                cat $cache_file
-                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set -l max_age 500
-                if test $age -lt $max_age
-                    return
-                end
-            end
-
-            # Remove package version information from output and pipe into cache file
-            eopkg list-installed -N | cut -d ' ' -f 1 >$cache_file &
-            return
-        else
-            set -l cache_file $xdg_cache_home/.eopkg-available-cache.$USER
-            if test -f $cache_file
-                cat $cache_file
-                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set -l max_age 500
-                if test $age -lt $max_age
-                    return
-                end
-            end
-
-            # Remove package version information from output and pipe into cache file
-            eopkg list-available -N | cut -d ' ' -f 1 >$cache_file &
-            return
-        end
-    end
-
-    # This completes the package name from the portage tree.
-    # True for installing new packages. Function for printing
-    # installed on the system packages is in completions/emerge.fish
-
-    # eix is MUCH faster than emerge so use it if it is available
-    if type -q -f eix
-        eix --only-names "^"(commandline -ct) | cut -d/ -f2
-        return
-    else
-        # FIXME?  Seems to be broken
-        if type -q -f emerge
-            emerge -s \^(commandline -ct) | string match -r "^\*.*" | cut -d' ' -f3 | cut -d/ -f2
-            return
-        end
-    end
-
-    # port needs caching, as it tends to be slow
-    # BSD find is used for determining file age because HFS+ and APFS
-    # don't save unix time, but the actual date. Also BSD stat is vastly
-    # different from linux stat and converting its time format is tedious
-    if type -q -f port
-        set -l cache_file $xdg_cache_home/.port-cache.$USER
-        if test -e $cache_file
-            # Delete if cache is older than 15 minutes
-            find "$cache_file" -ctime +15m | awk '{$1=$1;print}' | xargs rm
-            if test -f $cache_file
-                cat $cache_file
-                return
-            end
-        end
-        # Remove trailing whitespace and pipe into cache file
-        printf "all\ncurrent\nactive\ninactive\ninstalled\nuninstalled\noutdated" >$cache_file
-        port echo all | awk '{$1=$1};1' >>$cache_file &
-        cat $cache_file
-        return
-    end
-
-    if type -q -f opkg
-        if set -q only_installed
-            opkg list-installed 2>/dev/null | sed -r 's/^([a-zA-Z0-9\-]+) - ([a-zA-Z0-9\-]+)/\1\t\2/g'
-            return
-        else
-            opkg list 2>/dev/null | sed -r 's/^([a-zA-Z0-9\-]+) - ([a-zA-Z0-9\-]+)/\1\t\2/g'
-            return
-        end
-    end
-
-    if type -q -f apk
-        if set -q only_installed
-            apk info -q
-            return
-        else
-            apk search -q
-            return
-        end
-    end
-
-    # Caches for 5 minutes
-    if type -q -f xbps-query
-        if not set -q only_installed
-            set -l cache_file $xdg_cache_home/.xbps-cache.$USER
-            if test -f $cache_file
-                set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-                set -l max_age 300
-                if test $age -lt $max_age
-                    cat $cache_file
-                    return
-                end
-            end
-            # prints: <package name>	Package
-            xbps-query -Rsl | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' | tee $cache_file
-            return
-        else
-            xbps-query -l | sed 's/^.. \([^ ]*\)-.* .*/\1/' # TODO: actually put package versions in tab for locally installed packages
-            return
-        end
-    end
-
+    __fish_print_xbps_packages $argv
+    and return
 end

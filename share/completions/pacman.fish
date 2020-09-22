@@ -4,9 +4,9 @@
 
 set -l progname pacman
 
-set -l listinstalled "(__fish_print_packages --installed)"
+set -l listinstalled "(__fish_print_pacman_packages --installed)"
 # This might be an issue if another package manager is also installed (e.g. for containers)
-set -l listall "(__fish_print_packages)"
+set -l listall "(__fish_print_pacman_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
 set -l listgroups "(pacman -Sg)\t'Package Group'"
 

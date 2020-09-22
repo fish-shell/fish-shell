@@ -1,6 +1,6 @@
-function __fish_print_pacman_packages
+function __fish_print_xbps_packages
     # Caches for 5 minutes
-    type -q -f pacman || return 1
+    type -q -f xbps-query || return 1
 
     argparse i/installed -- $argv
     or return 1
@@ -9,20 +9,20 @@ function __fish_print_pacman_packages
     or return
 
     if not set -q _flag_installed
-        set -l cache_file $xdg_cache_home/.pac-cache.$USER
+        set -l cache_file $xdg_cache_home/.xbps-cache.$USER
         if test -f $cache_file
-            cat $cache_file
             set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set -l max_age 250
+            set -l max_age 300
             if test $age -lt $max_age
+                cat $cache_file
                 return
             end
         end
         # prints: <package name>	Package
-        pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
+        xbps-query -Rsl | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' | tee $cache_file
         return 0
     else
-        pacman -Q | string replace ' ' \t
+        xbps-query -l | sed 's/^.. \([^ ]*\)-.* .*/\1/' # TODO: actually put package versions in tab for locally installed packages
         return 0
     end
 end

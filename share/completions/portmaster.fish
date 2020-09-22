@@ -51,4 +51,4 @@ complete -c portmaster -f -d 'Ports Directory' -a "
 	string match -r '(?<=/usr/ports/)[^/]*(?:/[^/]*)?' (__fish_complete_directories /usr/ports/(commandline -ct))
 )"
 
-complete -c portmaster -f -d 'Installed package' -a "(__fish_print_packages)"
+complete -c portmaster -f -d 'Installed package' -a "(__fish_print_port_packages)"

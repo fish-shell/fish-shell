@@ -71,7 +71,7 @@ complete $rpm_query -l triggers -d 'Display the trigger scripts contained in the
 complete $rpm_query -l triggerscripts -d 'Display the trigger scripts contained in the package'
 
 set -l rpm_select -c rpm -n "__fish_contains_opt -s q -s V query verify"
-complete $rpm_select -a "(__fish_print_packages)"
+complete $rpm_select -a "(__fish_print_rpm_packages)"
 complete $rpm_select -s a -l all -d 'Query all installed packages'
 complete $rpm_select -s f -l file -d 'Query package owning specified file' -rF
 complete $rpm_select -l fileid -d 'Query package that contains a given file identifier, i.e. the MD5 digest of the file contents' -x
@@ -81,7 +81,7 @@ complete $rpm_select -s p -l package -d 'Query an (uninstalled) package in speci
 complete $rpm_select -l pkgid -d 'Query package that contains a given package identifier, i.e. the MD5 digest of the combined header and payload contents' -x
 complete $rpm_select -l specfile -d 'Parse and query specified spec-file as if it were a package' -xa "(__fish_complete_suffix .spec)"
 complete $rpm_select -l tid -d 'Query package(s) that have the specified TID (transaction identifier)' -x
-complete $rpm_select -l triggeredby -d 'Query packages that are triggered by the specified packages' -x -a "(__fish_print_packages)"
+complete $rpm_select -l triggeredby -d 'Query packages that are triggered by the specified packages' -x -a "(__fish_print_rpm_packages)"
 complete $rpm_select -l whatprovides -d 'Query all packages that provide the specified capability' -x
 complete $rpm_select -l whatrequires -d 'Query all packages that requires the specified capability for functioning' -x
 
@@ -101,7 +101,7 @@ complete $rpm_verify -l nomode -d "Don't verify mode attribute"
 complete $rpm_verify -l nordev -d "Don't verify dev attribute"
 
 set -l rpm_erase -c rpm -n "__fish_contains_opt -s e erase"
-complete $rpm_erase -a "(__fish_print_packages)"
+complete $rpm_erase -a "(__fish_print_rpm_packages)"
 complete $rpm_erase -l allmatches -d 'Remove all versions of the package which match specified string'
 complete $rpm_erase -l nodeps -d "Don't check dependencies before uninstalling the packages"
 complete $rpm_erase -l noscripts -d "Don't execute scriplets"

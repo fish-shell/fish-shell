@@ -8,7 +8,7 @@ set -l subcommands activate archive build cat cd checksum clean configure \
     selfupdate setrequested setunrequested sync test unarchive uninstall \
     unload unsetrequested upgrade url usage variants version work
 
-complete -c port -n "__fish_seen_subcommand_from $subcommands" -a '(__fish_print_packages)' -d Package
+complete -c port -n "__fish_seen_subcommand_from $subcommands" -a '(__fish_print_port_packages)' -d Package
 
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a activate -d 'Set  version of a port to active'
 complete -f -n "__fish_use_subcommand $subcommands" -c port -a archive -d "Create image for port without installing"

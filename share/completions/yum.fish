@@ -25,7 +25,7 @@ complete -c yum -n __fish_use_subcommand -xa search -d "find packages matching d
 complete -c yum -n __fish_use_subcommand -xa clean -d "Clean up cache directory"
 complete -c yum -n __fish_use_subcommand -xa generate-rss -d "Generate rss changelog"
 
-complete -c yum -n __fish_yum_package_ok -a "(__fish_print_packages)"
+complete -c yum -n __fish_yum_package_ok -a "(__fish_print_rpm_packages)"
 
 complete -c yum -s h -l help -d "Display help and exit"
 complete -c yum -s y -d "Assume yes to all questions"
@@ -41,7 +41,7 @@ complete -c yum -l enablerepo -d "Enable repository" -r
 complete -c yum -l disablerepo -d "Disable repository" -r
 complete -c yum -l obsoletes -d "Enables obsolets processing logic"
 complete -c yum -l rss-filename -d "Output rss-data to file" -r
-complete -c yum -l exclude -d "Exclude specified package from updates" -a "(__fish_print_packages)"
+complete -c yum -l exclude -d "Exclude specified package from updates" -a "(__fish_print_rpm_packages)"
 
 complete -c yum -n 'contains list (commandline -poc)' -a all -d 'List all packages'
 complete -c yum -n 'contains list (commandline -poc)' -a available -d 'List packages available for installation'

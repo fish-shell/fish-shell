@@ -18,7 +18,7 @@ function __fish_apt_use_package -d 'Test if aptitude command should have package
     return 1
 end
 
-complete -c aptitude -n __fish_apt_use_package -a '(__fish_print_packages)' -d Package
+complete -c aptitude -n __fish_apt_use_package -a '(__fish_print_apt_packages)' -d Package
 
 complete -c aptitude -s h -l help -d 'Display a brief help message. Identical to the help action'
 complete -f -n __fish_apt_no_subcommand -c aptitude -a autoclean -d 'Remove any cached packages which can no longer be downloaded'

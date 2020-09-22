@@ -3,7 +3,7 @@
 
 set -l progname xbps-alternatives
 
-set -l listinstalled "(__fish_print_packages -i)"
+set -l listinstalled "(__fish_print_xbps_packages -i)"
 
 complete -c $progname -f
 complete -c $progname -a "$listinstalled"

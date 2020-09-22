@@ -32,11 +32,8 @@ function __fish_print_packages
     and return
 
     # Set up cache directory
-    set -l xdg_cache_home $XDG_CACHE_HOME
-    if test -z "$xdg_cache_home"
-        set xdg_cache_home $HOME/.cache
-    end
-    mkdir -m 700 -p $xdg_cache_home
+    set -l xdg_cache_home (__fish_make_cache_dir)
+    or return
 
     # yum is slow, just like rpm, so go to the background
     if type -q -f /usr/share/yum-cli/completion-helper.py

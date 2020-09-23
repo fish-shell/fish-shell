@@ -1454,13 +1454,13 @@ The fish editor features copy and paste, a `searchable history <#history-search>
 Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example::
 
 
-    function hybrid_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"
+    function fish_hybrid_key_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"
         for mode in default insert visual
             fish_default_key_bindings -M $mode
         end
         fish_vi_key_bindings --no-erase
     end
-    set -g fish_key_bindings hybrid_bindings
+    set -g fish_key_bindings fish_hybrid_key_bindings
 
 
 .. _shared-binds:

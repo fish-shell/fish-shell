@@ -365,7 +365,7 @@ For example, here's a simple function to list directories::
       ls -l $argv
   end
 
-The first line tells fish to define a function by the name of ``ll``, so it can be used by simply writing ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. ``$argv`` is a list variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. The ``end`` on the third line ends the definition.
+The first line tells fish to define a function by the name of ``ll``, so it can be used by simply writing ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. :ref:`$argv <variables-argv>` is a :ref:`list variable <variables-lists>`, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. The ``end`` on the third line ends the definition.
 
 Calling this as ``ll /tmp/`` will end up running ``ls -l /tmp/``, which will list the contents of /tmp.
 
@@ -403,7 +403,7 @@ One of the most common uses for functions is to slightly alter the behavior of a
 
 There are a few important things that need to be noted about aliases:
 
-- Always take care to add the ``$argv`` variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
+- Always take care to add the :ref:`$argv <variables-argv>` variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
 
 - If the alias has the same name as the aliased command, you need to prefix the call to the program with ``command`` to tell fish that the function should not call itself, but rather a command with the same name. If you forget to do so, the function would call itself until the end of time. Usually fish is smart enough to figure this out and will refrain from doing so (which is hopefully in your interest).
 
@@ -1076,15 +1076,27 @@ It typically makes sense to make exported variables global as well, but local-ex
 Lists
 -------
 
-Fish can store a list (or an "array" if you wish) of multiple strings inside of a variable. To access one element of a list, use the index of the element inside of square brackets, like this:
+Fish can store a list (or an "array" if you wish) of multiple strings inside of a variable::
 
-``echo $PATH[3]``
+   > set mylist first second third
+   > printf '%s\n' $mylist # prints each element on its own line
+   first
+   second
+   third
 
-Note that list indices start at 1 in fish, not 0, as is more common in other languages. This is because many common Unix tools like ``seq`` are more suited to such use. An invalid index is silently ignored resulting in no value being substituted (not an empty string).
+To access one element of a list, use the index of the element inside of square brackets, like this::
 
-If you do not use any brackets, all the elements of the list will be written as separate items. This means you can easily iterate over a list using this syntax::
+   echo $PATH[3]
 
-    for i in $PATH; echo $i is in the path; end
+Note that list indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
+
+If you don't use any brackets, all the elements of the list will be passed to the command as separate items. This means you can iterate over a list with ``for``::
+
+    for i in $PATH
+        echo $i is in the path
+    end
+
+This goes over every directory in $PATH separately and prints a line saying it is in the path.
 
 To create a variable ``smurf``, containing the items ``blue`` and ``small``, simply write::
 
@@ -1105,24 +1117,34 @@ It is also possible to set or erase individual elements of a list::
     echo $smurf
 
 
-If you specify a negative index when expanding or assigning to a list variable, the index will be calculated from the end of the list. For example, the index -1 means the last index of a list.
+If you specify a negative index when expanding or assigning to a list variable, the index will be taken from the *end* of the list. For example, the index -1 is the last element of the list::
 
-A range of indices can be specified, see `index range expansion <#expand-index-range>`_ for details.
+    > set fruit apple orange banana
+    > echo $fruit[-1]
+    banana
 
-All lists are one-dimensional and cannot contain other lists, although it is possible to fake nested lists using the dereferencing rules of `variable expansion <#expand-variable>`_.
+    > echo $fruit[-2..-1]
+    orange
+    banana
 
-When a list is exported as an environment variable, it is either space or colon delimited, depending on whether it is a path variable::
+    > echo $fruit[-1..1] # reverses the list
+    banana
+    orange
+    apple
 
-    set -x smurf blue small
-    set -x smurf_PATH forest mushroom
-    env | grep smurf
+As you see, you can use a range of indices, see :ref:`index range expansion <expand-index-range>` for details.
 
-    # smurf=blue small
-    # smurf_PATH=forest:mushroom
+All lists are one-dimensional and can't contain other lists, although it is possible to fake nested lists using dereferencing - see :ref:`variable expansion <expand-variable>`.
 
+When a list is exported as an environment variable, it is either space or colon delimited, depending on whether it is a :ref:`path variable <variables-path>`::
 
+    > set -x smurf blue small
+    > set -x smurf_PATH forest mushroom
+    > env | grep smurf
+    smurf=blue small
+    smurf_PATH=forest:mushroom
 
-Fish automatically creates lists from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
+Fish automatically creates lists from all environment variables whose name ends in PATH (like $PATH, $CDPATH or $MANPATH), by splitting them on colons. Other variables are not automatically split.
 
 Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
 
@@ -1132,6 +1154,65 @@ Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <
     contains blue $smurf
     # key found, exits with status 0
 
+    > contains -i blue $smurf
+    1
+
+A nice thing about lists is that they are passed to commands one element as one argument, so once you've set your list, you can just pass it::
+
+  set -l grep_args -r "my string"
+  grep $grep_args . # will run the same as `grep -r "my string"` .
+
+Unlike other shells, fish does not do "word splitting" - elements in a list stay as they are, even if they contain spaces or tabs.
+
+.. _variables-argv:
+
+Argument Handling
+-----------------
+
+An important list is ``$argv``, which contains the arguments to a function or script. For example::
+
+  function myfunction
+      echo $argv[1]
+      echo $argv[3]
+  end
+
+This function takes whatever arguments it gets and prints the first and third::
+
+  > myfunction first second third
+  first
+  third
+
+  > myfunction apple cucumber banana
+  apple
+  banana
+
+Commandline tools often get various options and flags and positional arguments, and $argv would contain all of these.
+
+A more robust approach to argument handling is :ref:`argparse <cmd-argparse>`, which checks the defined options and puts them into various variables, leaving only the positional arguments in $argv. Here's a simple example::
+
+  function mybetterfunction
+      argparse h/help s/second -- $argv
+      or return # exit if argparse failed because it found an option it didn't recognize - it will print an error
+
+      # If -h or --help is given, we print a little help text and return
+      if set -q _flag_help
+          echo "mybetterfunction [-h|-help] [-s-|-second] [ARGUMENTS...]"
+          return 0
+      end
+
+      # If -s or --second is given, we print the second argument, not the first and third.
+      if set -q _flag_second
+          echo $argv[2]
+      else
+          echo $argv[1]
+          echo $argv[3]
+      end
+  end
+
+The options will be *removed* from $argv, so $argv[2] is the second *positional* argument now::
+
+  > mybetterfunction first -s second third
+  second
 
 .. _variables-path:
 

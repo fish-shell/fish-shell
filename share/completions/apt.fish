@@ -24,6 +24,8 @@ complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__f
 complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -a '(__fish_complete_suffix .deb)'
 
 complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-recommends
+# This advanced flag is the safest way to upgrade packages that otherwise would have been kept back
+complete -c apt -n "__fish_seen_subcommand_from upgrade" -l with-new-pkgs
 
 # Support flags
 complete -f -c apt -s h -l help -d 'Display help'

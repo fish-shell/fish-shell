@@ -187,7 +187,11 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **arg
             ++found;
             res = true;
             if (!opts.query && !opts.type) {
-                streams.out.append_format(L"%ls is %ls\n", name, path.c_str());
+                if (opts.path || opts.force_path) {
+                    streams.out.append_format(L"%ls\n", path.c_str());
+                } else {
+                    streams.out.append_format(L"%ls is %ls\n", name, path.c_str());
+                }
             } else if (opts.type) {
                 streams.out.append(_(L"file\n"));
                 break;

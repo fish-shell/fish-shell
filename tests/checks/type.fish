@@ -42,9 +42,9 @@ type -t realpath foobar
 # CHECKERR: type: Could not find {{.}}foobar{{.}}
 
 type -P test
-# CHECK: test is {{.*}}/test
+# CHECK: {{/.*}}test
 type -P ls
-# CHECK: ls is {{.*}}/ls
+# CHECK: {{/.*}}ls
 
 type
 echo $status

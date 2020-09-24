@@ -520,9 +520,17 @@ function __fish_git_ranges
         return 0
     end
 
+    set -l from_refs
+    if commandline -ct | string match -q '*..*'
+        # If the cursor is right of a .. range operator, only complete the right part.
+        set from_refs $from
+    else
+        set from_refs (__fish_git_refs | string match -e "$from" | string replace -r \t'.*$' '')
+    end
+
     set -l to $both[2]
     # Remove description from the from-ref, not the to-ref.
-    for from_ref in (__fish_git_refs | string match -e "$from" | string replace -r \t'.*$' '')
+    for from_ref in $from_refs
         for to_ref in (__fish_git_refs | string match "*$to*") # if $to is empty, this correctly matches everything
             printf "%s..%s\n" $from_ref $to_ref
         end

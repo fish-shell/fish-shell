@@ -110,7 +110,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     // open_type is typically ( or [, and close type is the corresponding value.
     wchar_t *pos;
     wchar_t prev = 0;
-    int syntax_error = 0;
+    bool syntax_error = false;
     int paran_count = 0;
 
     wchar_t *paran_begin = nullptr, *paran_end = nullptr;
@@ -142,7 +142,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                     }
 
                     if (paran_count < 0) {
-                        syntax_error = 1;
+                        syntax_error = true;
                         break;
                     }
                 }

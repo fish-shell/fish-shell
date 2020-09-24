@@ -131,20 +131,20 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
 
     wchar_t *cmd = argv[0];
     int buffer_part = 0;
-    int cut_at_cursor = 0;
+    bool cut_at_cursor = false;
 
     int argc = builtin_count_args(argv);
     int append_mode = 0;
 
-    int function_mode = 0;
-    int selection_mode = 0;
+    bool function_mode = false;
+    bool selection_mode = false;
 
-    int tokenize = 0;
+    bool tokenize = false;
 
-    int cursor_mode = 0;
-    int line_mode = 0;
-    int search_mode = 0;
-    int paging_mode = 0;
+    bool cursor_mode = false;
+    bool line_mode = false;
+    bool search_mode = false;
+    bool paging_mode = false;
     const wchar_t *begin = nullptr, *end = nullptr;
 
     const auto &ld = parser.libdata();
@@ -212,7 +212,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
                 break;
             }
             case 'c': {
-                cut_at_cursor = 1;
+                cut_at_cursor = true;
                 break;
             }
             case 't': {
@@ -228,11 +228,11 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
                 break;
             }
             case 'f': {
-                function_mode = 1;
+                function_mode = true;
                 break;
             }
             case 'o': {
-                tokenize = 1;
+                tokenize = true;
                 break;
             }
             case 'I': {
@@ -241,23 +241,23 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
                 break;
             }
             case 'C': {
-                cursor_mode = 1;
+                cursor_mode = true;
                 break;
             }
             case 'L': {
-                line_mode = 1;
+                line_mode = true;
                 break;
             }
             case 'S': {
-                search_mode = 1;
+                search_mode = true;
                 break;
             }
             case 's': {
-                selection_mode = 1;
+                selection_mode = true;
                 break;
             }
             case 'P': {
-                paging_mode = 1;
+                paging_mode = true;
                 break;
             }
             case 'h': {

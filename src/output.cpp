@@ -466,11 +466,11 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
 /// Return the internal color code representing the specified color.
 /// TODO: This code should be refactored to enable sharing with builtin_set_color.
 rgb_color_t parse_color(const env_var_t &var, bool is_background) {
-    int is_bold = 0;
-    int is_underline = 0;
-    int is_italics = 0;
-    int is_dim = 0;
-    int is_reverse = 0;
+    bool is_bold = false;
+    bool is_underline = false;
+    bool is_italics = false;
+    bool is_dim = false;
+    bool is_reverse = false;
 
     std::vector<rgb_color_t> candidates;
 

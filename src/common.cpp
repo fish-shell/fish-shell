@@ -930,8 +930,8 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     const bool no_caret = feature_test(features_t::stderr_nocaret);
     const bool no_qmark = feature_test(features_t::qmark_noglob);
 
-    int need_escape = 0;
-    int need_complex_escape = 0;
+    bool need_escape = false;
+    bool need_complex_escape = false;
 
     if (!no_quoted && in_len == 0) {
         out.assign(L"''");
@@ -951,7 +951,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
 
             tmp = val % 16;
             out += tmp > 9 ? L'a' + (tmp - 10) : L'0' + tmp;
-            need_escape = need_complex_escape = 1;
+            need_escape = need_complex_escape = true;
 
         } else {
             wchar_t c = *in;
@@ -959,36 +959,36 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L'\t': {
                     out += L'\\';
                     out += L't';
-                    need_escape = need_complex_escape = 1;
+                    need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\n': {
                     out += L'\\';
                     out += L'n';
-                    need_escape = need_complex_escape = 1;
+                    need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\b': {
                     out += L'\\';
                     out += L'b';
-                    need_escape = need_complex_escape = 1;
+                    need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\r': {
                     out += L'\\';
                     out += L'r';
-                    need_escape = need_complex_escape = 1;
+                    need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\x1B': {
                     out += L'\\';
                     out += L'e';
-                    need_escape = need_complex_escape = 1;
+                    need_escape = need_complex_escape = true;
                     break;
                 }
                 case L'\\':
                 case L'\'': {
-                    need_escape = need_complex_escape = 1;
+                    need_escape = need_complex_escape = true;
                     out += L'\\';
                     out += *in;
                     break;
@@ -1030,7 +1030,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                     bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret) ||
                                           (c == L'?' && no_qmark);
                     if (!char_is_normal) {
-                        need_escape = 1;
+                        need_escape = true;
                         if (escape_all) out += L'\\';
                     }
                     out += *in;
@@ -1044,7 +1044,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                             out += L'c';
                             out += L'a' + *in - 1;
 
-                            need_escape = need_complex_escape = 1;
+                            need_escape = need_complex_escape = true;
                             break;
                         }
 
@@ -1053,7 +1053,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                         out += L'x';
                         out += ((*in > 15) ? L'1' : L'0');
                         out += tmp > 9 ? L'a' + (tmp - 10) : L'0' + tmp;
-                        need_escape = need_complex_escape = 1;
+                        need_escape = need_complex_escape = true;
                     } else {
                         out += *in;
                     }

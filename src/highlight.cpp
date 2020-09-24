@@ -205,7 +205,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 
     const bool require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
     wcstring clean_potential_path_fragment;
-    int has_magic = 0;
+    bool has_magic = false;
 
     wcstring path_with_magic(potential_path_fragment);
     if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic, ctx.vars);
@@ -221,7 +221,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
             case ANY_CHAR:
             case ANY_STRING:
             case ANY_STRING_RECURSIVE: {
-                has_magic = 1;
+                has_magic = true;
                 break;
             }
             case INTERNAL_SEPARATOR: {

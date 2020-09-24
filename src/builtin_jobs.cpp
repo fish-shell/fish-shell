@@ -126,7 +126,7 @@ maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **arg
     int argc = builtin_count_args(argv);
     bool found = false;
     int mode = JOBS_DEFAULT;
-    int print_last = 0;
+    bool print_last = false;
 
     static const wchar_t *const short_options = L":cghlpq";
     static const struct woption long_options[] = {{L"command", no_argument, nullptr, 'c'},
@@ -159,7 +159,7 @@ maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 break;
             }
             case 'l': {
-                print_last = 1;
+                print_last = true;
                 break;
             }
             case 'h': {

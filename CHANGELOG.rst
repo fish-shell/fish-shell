@@ -18,21 +18,21 @@ Notable improvements and fixes
 
    will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
    so it can be called again and again from config.fish or just once interactively, and the path will just be there, once.
-- ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (#4829).
-- The ``test`` builtin now better shows where an error occured (#6030)::
+-  ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (#4829).
+-  The ``test`` builtin now better shows where an error occured (#6030)::
 
     > test 1 = 2 and echo true or false
     test: Expected a combining operator like '-a' at index 4
     1 = 2 and echo true or echo false
           ^
 
-- builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
+-  builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
   This makes it usable also for pipes where the previous command hasn't finished yet, like::
 
     dmesg -w | string replace foo bar
 
-- ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
-- Significant performance improvements to completions (#7153).
+-  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
+-  Significant performance improvements to completions (#7153).
 
 Syntax changes and new commands
 -------------------------------
@@ -81,6 +81,7 @@ Scripting improvements
 -  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (#7014).
 -  ``type`` is now a builtin and therefore much faster (#7342).
 -  ``string replace`` no longer errors if a capturing group wasn't matched, instead treating it as empty (#7343).
+-  ``exec`` no longer produces a syntax error when the command cannot be found (#6098).
 
 Interactive improvements
 ------------------------
@@ -113,6 +114,8 @@ Interactive improvements
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (#7293).
 -  Control-C no longer occasionally prints an "unknown command" error (#7145).
 -  History search is now case-insensitive unless the search string contains an uppercase character (#7273).
+-  ``fish_update_completions`` has a new ``-keep` option, which improves speed by skipping completions that already exist (#6775).
+-  Aliases containing an embedded backslash appear properly in the output of ``alias`` (#6910).
 
 
 New or improved bindings
@@ -121,6 +124,7 @@ New or improved bindings
 -  As mentioned above, new readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
    changes to the command line or the pager search field (#6570).
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, and Ctrl+left/right keys to navigate by word (#6648, #6755, #6769).
+-  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (#6908).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.
 - The readline command ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
 -  New readline command ``forward-single-char`` to move one character to the right, and if an autosuggestion is available, only take a single char from it (#7217).
@@ -144,7 +148,8 @@ Improved prompts
    commands prefixed with ``not`` (#6566).
 -  git prompts include all untracked files in the repository, not just those in the current
    directory (#6086).
--  The informative git prompt correctly shows stash states (#7136).
+-  The git prompts correctly show stash states (#6876, #7136).
+-  The Mercurial prompt correctly shows untracked status (#6906).
 
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -178,9 +183,11 @@ Completions
    -  ``gitk``
    -  ``hikari`` (#7083)
    -  ``imv`` (#6675)
+   -  ``k3d`` (#7202)
+   -  ``micro`` (#7339)
    -  ``mpc`` (#7169)
-   -  ``nc``, ``netcat``, ``nc.openbsd``, ``nc.traditional``
-   -  ``nmap``, ``ncat``
+   -  ``ncat``, ``nc.openbsd`` and ``nc.traditional`` (#6873)
+   -  ``nmap`` (#6873)
    -  ``prime-run``
    -  ``ps2pdf{12,13,14,wr}`` (#6673)
    -  ``pyenv`` (#6551)

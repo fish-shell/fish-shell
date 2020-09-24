@@ -27,7 +27,7 @@ Notable improvements and fixes
           ^
 
 -  builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
-  This makes it usable also for pipes where the previous command hasn't finished yet, like::
+   This makes it usable also for pipes where the previous command hasn't finished yet, like::
 
     dmesg -w | string replace foo bar
 
@@ -114,7 +114,7 @@ Interactive improvements
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (#7293).
 -  Control-C no longer occasionally prints an "unknown command" error (#7145).
 -  History search is now case-insensitive unless the search string contains an uppercase character (#7273).
--  ``fish_update_completions`` has a new ``-keep` option, which improves speed by skipping completions that already exist (#6775).
+-  ``fish_update_completions`` has a new ``-keep`` option, which improves speed by skipping completions that already exist (#6775).
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (#6910).
 
 

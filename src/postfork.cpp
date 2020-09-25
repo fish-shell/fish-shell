@@ -360,10 +360,17 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             const char *interpreter =
                 get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
             if (interpreter && 0 != access(interpreter, X_OK)) {
-                debug_safe(0,
-                           "The file '%s' specified the interpreter '%s', which is not an "
-                           "executable command.",
-                           actual_cmd, interpreter);
+                // Detect windows line endings and complain specifically about them.
+                auto len = strlen(interpreter);
+                if (len && interpreter[len - 1] == '\r') {
+                    debug_safe(0,
+                               "The file uses windows line endings (\\r\\n). Run dos2unix or similar to fix it.");
+                } else {
+                    debug_safe(0,
+                               "The file '%s' specified the interpreter '%s', which is not an "
+                               "executable command.",
+                               actual_cmd, interpreter);
+                }
             } else {
                 debug_safe(0, "The file '%s' does not exist or could not be executed.", actual_cmd);
             }

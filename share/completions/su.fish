@@ -5,7 +5,7 @@ end
 complete -c su -x -a "(__fish_complete_users)"
 
 complete -c su -s l -l login -d "Make login shell"
-complete -c su -s c -l command -d "Pass command to shell" -xa "(__fish_complete_external_command)"
+complete -c su -s c -l command -d "Pass command to shell" -xa "(complete -C '')"
 complete -c su -s f -l fast -d "Pass -f to the shell"
 complete -c su -s g -l group -x -a "(__fish_complete_groups)" -d "Specify the primary group"
 complete -c su -s G -l supp-group -x -a "(__fish_complete_groups)" -d "Specify a supplemental group"

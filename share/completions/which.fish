@@ -16,4 +16,4 @@ else # OSX
     complete -c which -s s -d "Print no output, only return 0 if found"
 end
 
-complete -c which -a "(__fish_complete_external_command)" -x
+complete -c which -a "(complete -C (printf %s\n (commandline -ot)))" -x

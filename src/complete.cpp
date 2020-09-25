@@ -311,9 +311,6 @@ class completer_t {
     /// The operation context for this completion.
     const operation_context_t &ctx;
 
-    /// The command to complete.
-    const wcstring cmd;
-
     /// Flags associated with the completion request.
     const completion_request_flags_t flags;
 
@@ -396,14 +393,14 @@ class completer_t {
 
     void escape_opening_brackets(const wcstring &argument);
 
-    void mark_completions_duplicating_arguments(const wcstring &prefix,
+    void mark_completions_duplicating_arguments(const wcstring &cmd, const wcstring &prefix,
                                                 const std::vector<tok_t> &args);
 
    public:
-    completer_t(const operation_context_t &ctx, wcstring c, completion_request_flags_t f)
-        : ctx(ctx), cmd(std::move(c)), flags(f) {}
+    completer_t(const operation_context_t &ctx, completion_request_flags_t f)
+        : ctx(ctx), flags(f) {}
 
-    void perform();
+    void perform_for_command(wcstring cmd);
 
     completion_list_t acquire_completions() { return std::move(completions); }
 };
@@ -1386,8 +1383,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
         // Don't report an error since this could be a legitimate alias.
         static uint32_t complete_assignment_recursion_count;
         if (complete_assignment_recursion_count++ < 24) {
-            vec_append(this->completions,
-                       complete(unaliased_cmd, completion_request_t::fuzzy_match, ctx));
+            run_on_command(std::move(unaliased_cmd));
         }
         complete_assignment_recursion_count--;
         *do_file = false;
@@ -1488,7 +1484,8 @@ void completer_t::escape_opening_brackets(const wcstring &argument) {
 }
 
 /// Set the DUPLICATES_ARG flag in any completion that duplicates an argument.
-void completer_t::mark_completions_duplicating_arguments(const wcstring &prefix,
+void completer_t::mark_completions_duplicating_arguments(const wcstring &cmd,
+                                                         const wcstring &prefix,
                                                          const std::vector<tok_t> &args) {
     // Get all the arguments, unescaped, into an array that we're going to bsearch.
     wcstring_list_t arg_strs;
@@ -1513,7 +1510,7 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &prefix,
     }
 }
 
-void completer_t::perform() {
+void completer_t::perform_for_command(wcstring cmd) {
     const size_t cursor_pos = cmd.size();
 
     // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack
@@ -1643,7 +1640,7 @@ void completer_t::perform() {
     escape_opening_brackets(current_argument);
 
     // Lastly mark any completions that appear to already be present in arguments.
-    mark_completions_duplicating_arguments(current_token, tokens);
+    mark_completions_duplicating_arguments(cmd, current_token, tokens);
 }
 
 completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_flags_t flags,
@@ -1654,8 +1651,8 @@ completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_
                                &cmdsubst_end);
     assert(cmdsubst_begin != nullptr && cmdsubst_end != nullptr && cmdsubst_end >= cmdsubst_begin);
     wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
-    completer_t completer(ctx, std::move(cmd), flags);
-    completer.perform();
+    completer_t completer(ctx, flags);
+    completer.perform_for_command(std::move(cmd));
     return completer.acquire_completions();
 }
 

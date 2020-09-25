@@ -380,6 +380,18 @@ class completer_t {
         return result;
     }
 
+    // A set tracking which (command, wrap) pairs we have seen.
+    using wrap_chain_visited_set_t = std::set<std::pair<wcstring, wcstring>>;
+
+    void complete_custom(const wcstring &cmd, const wcstring &cmdline,
+                         const wcstring &previous_argument, const wcstring &current_argument,
+                         bool had_ddash, size_t depth, bool *do_file);
+
+    void walk_wrap_chain(const wcstring &command_line, source_range_t command_range,
+                         const wcstring &previous_argument_unescape,
+                         const wcstring &current_argument, bool had_ddash,
+                         wrap_chain_visited_set_t *visited, size_t depth, bool *do_file);
+
     bool empty() const { return completions.empty(); }
 
     void escape_opening_brackets(const wcstring &argument);
@@ -1319,24 +1331,91 @@ bool completer_t::try_complete_user(const wcstring &str) {
 #endif
 }
 
-// The callback type for walk_wrap_chain.
-using wrap_chain_visitor_t = std::function<void(const wcstring &, const wcstring &, size_t depth)>;
+void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
+                                  const wcstring &previous_argument,
+                                  const wcstring &current_argument, bool had_ddash, size_t depth,
+                                  bool *do_file) {
+    bool is_autosuggest = this->type() == COMPLETE_AUTOSUGGEST;
+    // Perhaps set a transient commandline so that custom completions
+    // buitin_commandline will refer to the wrapped command. But not if
+    // we're doing autosuggestions.
+    bool wants_transient = depth > 0 && !is_autosuggest;
+    if (wants_transient) {
+        ctx.parser->libdata().transient_commandlines.push_back(cmdline);
+    }
+    maybe_t<size_t> equals_pos = variable_assignment_equals_pos(cmd);
+    bool is_variable_assignment = bool(equals_pos);
+    if (is_variable_assignment && !is_autosuggest) {
+        assert(ctx.parser);
+        // clone of parse_execution_context_t::apply_variable_assignments
+        // but this is not smart enough to report correct error locations, so we ignore
+        // errors and this create one scope for each assignment instead of just one;
+        // that should hardly matter
+        const block_t *block = ctx.parser->push_block(block_t::variable_assignment_block());
+        const wcstring variable_name = cmd.substr(0, *equals_pos);
+        const wcstring expression = cmd.substr(*equals_pos + 1);
+        completion_list_t expression_expanded;
+        auto expand_ret =
+            expand_string(expression, &expression_expanded, expand_flag::no_descriptions, ctx);
+        wcstring_list_t vals;
+        if (expand_ret == expand_result_t::ok) {
+            for (auto &completion : expression_expanded)
+                vals.emplace_back(std::move(completion.completion));
+            ctx.parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
+        }
+        cleanup_t scope([&] {
+            if (block) ctx.parser->pop_block(block);
+        });
+        // To avoid issues like #2705 we complete commands starting with variable
+        // assignments by recursively calling complete for the command suffix
+        // without the first variable assignment token.
+        wcstring unaliased_cmd;
+        if (ctx.parser->libdata().transient_commandlines.empty()) {
+            unaliased_cmd = cmdline;
+        } else {
+            unaliased_cmd = ctx.parser->libdata().transient_commandlines.back();
+        }
+        tokenizer_t tok(unaliased_cmd.c_str(), TOK_ACCEPT_UNFINISHED);
+        maybe_t<tok_t> cmd_tok = tok.next();
+        assert(cmd_tok);
+        unaliased_cmd = unaliased_cmd.replace(0, cmd_tok->offset + cmd_tok->length, L"");
+        ctx.parser->libdata().transient_commandlines.push_back(unaliased_cmd);
+        cleanup_t remove_transient(
+            [&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
+        // Prevent infinite recursion when the completion for x wraps "A=B x" (#7344).
+        // Don't report an error since this could be a legitimate alias.
+        static uint32_t complete_assignment_recursion_count;
+        if (complete_assignment_recursion_count++ < 24) {
+            vec_append(this->completions,
+                       complete(unaliased_cmd, completion_request_t::fuzzy_match, ctx));
+        }
+        complete_assignment_recursion_count--;
+        *do_file = false;
+    } else if (!complete_param(cmd, previous_argument, current_argument,
+                               !had_ddash)) {  // Invoke any custom completions for this command.
+        *do_file = false;
+    }
+    if (wants_transient) {
+        ctx.parser->libdata().transient_commandlines.pop_back();
+    }
+}
 
-// A set tracking which (command, wrap) pairs we have seen.
-using wrap_chain_visited_set_t = std::set<std::pair<wcstring, wcstring>>;
-
-// Recursive implementation of walk_wrap_chain().
-static void walk_wrap_chain_recursive(const wcstring &command_line, source_range_t command_range,
-                                      const wrap_chain_visitor_t &visitor,
-                                      const cancel_checker_t &cancel_checker,
-                                      wrap_chain_visited_set_t *visited, size_t depth) {
+// Given a command line \p command_line and the range of the command itself within the
+// command line as \p command_range, invoke command-specific completions.
+// Then, for each target wrapped by the given command, update the command
+// line with that target and invoke this recursively.
+void completer_t::walk_wrap_chain(const wcstring &command_line, source_range_t command_range,
+                                  const wcstring &previous_argument,
+                                  const wcstring &current_argument, bool had_ddash,
+                                  wrap_chain_visited_set_t *visited, size_t depth, bool *do_file) {
     // Limit our recursion depth. This prevents cycles in the wrap chain graph from overflowing.
     if (depth > 24) return;
-    if (cancel_checker()) return;
+    if (ctx.cancel_checker()) return;
 
     // Extract command from the command line and invoke the receiver with it.
-    wcstring command(command_line, command_range.start, command_range.length);
-    visitor(command, command_line, depth);
+    wcstring command{command_line, command_range.start, command_range.length};
+    complete_custom(command, command_line, previous_argument, current_argument, had_ddash, depth,
+                    do_file);
 
     wcstring_list_t targets = complete_get_wrap_targets(command);
     for (const wcstring &wt : targets) {
@@ -1357,24 +1436,12 @@ static void walk_wrap_chain_recursive(const wcstring &command_line, source_range
                     // Recurse with our new command and command line.
                     source_range_t faux_source_range{uint32_t(where),
                                                      uint32_t(wrapped_command.size())};
-                    walk_wrap_chain_recursive(faux_commandline, faux_source_range, visitor,
-                                              cancel_checker, visited, depth + 1);
+                    walk_wrap_chain(faux_commandline, faux_source_range, previous_argument,
+                                    current_argument, had_ddash, visited, depth + 1, do_file);
                 }
             }
         }
     }
-}
-
-// Helper to complete a parameter for a command and its transitive wrap chain.
-// Given a command line \p command_line and the range of the command itself within the command line
-// as \p command_range, invoke the \p receiver with the command and the command line. Then, for each
-// target wrapped by the given command, update the command line with that target and invoke this
-// recursively.
-static void walk_wrap_chain(const wcstring &command_line, source_range_t command_range,
-                            const wrap_chain_visitor_t &visitor,
-                            const cancel_checker_t &cancel_checker) {
-    wrap_chain_visited_set_t visited;
-    walk_wrap_chain_recursive(command_line, command_range, visitor, cancel_checker, &visited, 0);
 }
 
 /// If the argument contains a '[' typed by the user, completion by appending to the argument might
@@ -1551,78 +1618,13 @@ void completer_t::perform() {
             // Have to walk over the command and its entire wrap chain. If any command
             // disables do_file, then they all do.
             do_file = true;
-            auto receiver = [&](const wcstring &cmd, const wcstring &cmdline, size_t depth) {
-                // Perhaps set a transient commandline so that custom completions
-                // buitin_commandline will refer to the wrapped command. But not if
-                // we're doing autosuggestions.
-                bool wants_transient = depth > 0 && !(flags & completion_request_t::autosuggestion);
-                if (wants_transient) {
-                    ctx.parser->libdata().transient_commandlines.push_back(cmdline);
-                }
-                maybe_t<size_t> equals_pos = variable_assignment_equals_pos(cmd);
-                bool is_variable_assignment = bool(equals_pos);
-                if (is_variable_assignment && ctx.parser) {
-                    // clone of parse_execution_context_t::apply_variable_assignments
-                    // but this is not smart enough to report correct error locations, so we ignore
-                    // errors and this create one scope for each assignment instead of just one;
-                    // that should hardly matter
-                    const block_t *block =
-                        ctx.parser->push_block(block_t::variable_assignment_block());
-                    const wcstring variable_name = cmd.substr(0, *equals_pos);
-                    const wcstring expression = cmd.substr(*equals_pos + 1);
-                    completion_list_t expression_expanded;
-                    auto expand_ret = expand_string(expression, &expression_expanded,
-                                                    expand_flag::no_descriptions, ctx);
-                    wcstring_list_t vals;
-                    if (expand_ret == expand_result_t::ok) {
-                        for (auto &completion : expression_expanded)
-                            vals.emplace_back(std::move(completion.completion));
-                        ctx.parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT,
-                                               std::move(vals));
-                    }
-                    cleanup_t scope([&] {
-                        if (block) ctx.parser->pop_block(block);
-                    });
-                    // To avoid issues like #2705 we complete commands starting with variable
-                    // assignments by recursively calling complete for the command suffix
-                    // without the first variable assignment token.
-                    wcstring unaliased_cmd;
-                    if (ctx.parser->libdata().transient_commandlines.empty()) {
-                        unaliased_cmd = cmdline;
-                    } else {
-                        unaliased_cmd = ctx.parser->libdata().transient_commandlines.back();
-                    }
-                    tokenizer_t tok(unaliased_cmd.c_str(), TOK_ACCEPT_UNFINISHED);
-                    maybe_t<tok_t> cmd_tok = tok.next();
-                    assert(cmd_tok);
-                    unaliased_cmd =
-                        unaliased_cmd.replace(0, cmd_tok->offset + cmd_tok->length, L"");
-                    ctx.parser->libdata().transient_commandlines.push_back(unaliased_cmd);
-                    cleanup_t remove_transient(
-                        [&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
-                    // Prevent infinite recursion when the completion for x wraps "A=B x" (#7344).
-                    // Don't report an error since this could be a legitimate alias.
-                    static uint32_t complete_assignment_recursion_count;
-                    if (complete_assignment_recursion_count++ < 24) {
-                        vec_append(this->completions,
-                                   complete(unaliased_cmd, completion_request_t::fuzzy_match, ctx));
-                    }
-                    complete_assignment_recursion_count--;
-                    do_file = false;
-                } else if (!complete_param(
-                               cmd, previous_argument_unescape, current_argument_unescape,
-                               !had_ddash)) {  // Invoke any custom completions for this command.
-                    do_file = false;
-                }
-                if (wants_transient) {
-                    ctx.parser->libdata().transient_commandlines.pop_back();
-                }
-            };
             assert(cmd_tok.offset < std::numeric_limits<uint32_t>::max());
             assert(cmd_tok.length < std::numeric_limits<uint32_t>::max());
             source_range_t range = {static_cast<uint32_t>(cmd_tok.offset),
                                     static_cast<uint32_t>(cmd_tok.length)};
-            walk_wrap_chain(cmd, range, receiver, ctx.cancel_checker);
+            wrap_chain_visited_set_t visited;
+            walk_wrap_chain(cmd, range, previous_argument_unescape, current_argument_unescape,
+                            had_ddash, &visited, 0, &do_file);
         }
 
         // Hack. If we're cd, handle it specially (issue #1059, others).

@@ -51,10 +51,10 @@ Scripting improvements
 -  The ``true`` and ``false`` builtins ignore any arguments, like other shells (#7030).
 -  Computed ("electric") variables such as ``status`` are now only global in scope, so ``set -Uq status`` returns false (#7032).
 -  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (#6944).
--  A new ``fish_posterror`` event fires when attempting to execute a command with syntax errors (#6880).
+-  A new ``fish_posterror`` event is emitted when attempting to execute a command with syntax errors (#6880).
 - ``fish_indent`` now removes spurious quotes in simple cases (#6722)
    and learned a ``--check`` option to just check if a file is indented correctly (#7251).
-- ``pushd`` only adds a directory to the stack if changing to it was successful.
+- ``pushd`` only adds a directory to the stack if changing to it was successful (#6947).
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions) (#977).
@@ -82,6 +82,8 @@ Scripting improvements
 -  ``type`` is now a builtin and therefore much faster (#7342).
 -  ``string replace`` no longer errors if a capturing group wasn't matched, instead treating it as empty (#7343).
 -  ``exec`` no longer produces a syntax error when the command cannot be found (#6098).
+-  ``disown`` should no longer create zombie processes when job control is off, such as in ``config.fish`` (#7183).
+-  Using ``read --silent`` while fish is in private mode was adding these potentially-sensitive entries to the history; this has been fixed (#7230).
 
 Interactive improvements
 ------------------------
@@ -113,10 +115,12 @@ Interactive improvements
 -  ``diff`` will now colourise output, if supported (#7308).
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (#7293).
 -  Control-C no longer occasionally prints an "unknown command" error (#7145).
+-  Autocompletions work properly after Control-C to cancel the commmand line (#6937).
 -  History search is now case-insensitive unless the search string contains an uppercase character (#7273).
 -  ``fish_update_completions`` has a new ``-keep`` option, which improves speed by skipping completions that already exist (#6775).
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (#6910).
-
+-  ``open`` no longer hangs indefinitely as a bug in ``xdg-open`` has been worked around (#7215).
+-  Long command lines no longer add a blank line after execution (#6826) and behave better with backspace (#6951).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -131,7 +135,7 @@ New or improved bindings
 -  New function ``__fish_preview_current_file`` (Alt+O) opens the
    current file at the cursor in a pager (#6838).
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position
-   to the external editor if the editor is recognized (#6138).
+   to the external editor if the editor is recognized (#6138, #6954).
 -  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (#7012) and avoids shifting the cursor (#6542).
 -  ``__fish_prepend_sudo`` (Alt-S) now uses the previous commandline if the current one is empty,
    to simplify rerunning the previous command with ``sudo`` (#7079).
@@ -186,6 +190,7 @@ Completions
    -  ``k3d`` (#7202)
    -  ``micro`` (#7339)
    -  ``mpc`` (#7169)
+   -  Metasploit's ``msfconsole``, ``msfdb`` and ``msfvenom`` (#6930)
    -  ``ncat``, ``nc.openbsd`` and ``nc.traditional`` (#6873)
    -  ``nmap`` (#6873)
    -  ``prime-run``
@@ -199,7 +204,7 @@ Completions
    -  ``strace`` (#6656)
    -  ``tcpdump`` (#6690)
    -  ``tig``
-   -  ``windscribe``
+   -  ``windscribe`` (#6788)
    -  ``wireshark``, ``tshark``, and ``dumpcap``
    -  ``xbps-*``
    -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (#7103

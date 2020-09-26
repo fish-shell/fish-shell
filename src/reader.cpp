@@ -3298,7 +3298,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::suppress_autosuggestion: {
             suppress_autosuggestion = true;
+            bool success = !autosuggestion.empty();
             autosuggestion.clear();
+            // Return true if we had a suggestion to clear.
+            inputter.function_set_status(success);
             break;
         }
         case rl::accept_autosuggestion: {

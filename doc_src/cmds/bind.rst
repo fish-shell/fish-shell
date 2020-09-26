@@ -174,7 +174,7 @@ The following special input functions are available:
 
 - ``self-insert-notfirst``, inserts the matching sequence into the command line, unless the cursor is at the beginning
 
-- ``suppress-autosuggestion``, remove the current autosuggestion
+- ``suppress-autosuggestion``, remove the current autosuggestion. Returns true if there was a suggestion to remove.
 
 - ``swap-selection-start-stop``, go to the other end of the highlighted text without changing the selection
 

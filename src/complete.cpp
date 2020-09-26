@@ -417,7 +417,7 @@ class completer_t {
     completer_t(const operation_context_t &ctx, completion_request_flags_t f)
         : ctx(ctx), flags(f) {}
 
-    void perform_for_command(wcstring cmd);
+    void perform_for_commandline(wcstring cmdline);
 
     completion_list_t acquire_completions() { return std::move(completions); }
 };
@@ -1398,7 +1398,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
         ctx.parser->libdata().transient_commandlines.push_back(unaliased_cmd);
         cleanup_t remove_transient(
             [&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
-        perform_for_command(std::move(unaliased_cmd));
+        perform_for_commandline(std::move(unaliased_cmd));
         ad->do_file = false;
     } else if (!complete_param(
                    cmd, ad->previous_argument, ad->current_argument,
@@ -1519,14 +1519,14 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &cmd,
     }
 }
 
-void completer_t::perform_for_command(wcstring cmd) {
+void completer_t::perform_for_commandline(wcstring cmdline) {
     // Limit recursion, in case a user-defined completion has cycles, or the completion for "x"
     // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
     // for autosuggestions where we don't evaluate command substitutions or variable assignments.
     if (ctx.parser) {
         if (ctx.parser->libdata().complete_recursion_level >= 24) {
             debug(0, _(L"completion reached maximum recursion depth, possible cycle?"),
-                  cmd.c_str());
+                  cmdline.c_str());
             return;
         }
         ++ctx.parser->libdata().complete_recursion_level;
@@ -1535,24 +1535,24 @@ void completer_t::perform_for_command(wcstring cmd) {
         if (ctx.parser) --ctx.parser->libdata().complete_recursion_level;
     }};
 
-    const size_t cursor_pos = cmd.size();
+    const size_t cursor_pos = cmdline.size();
     const bool is_autosuggest = (flags & completion_request_t::autosuggestion);
 
     // Find the process to operate on. The cursor may be past it (#1261), so backtrack
     // until we know we're no longer in a space. But the space may actually be part of the
     // argument (#2477).
     size_t position_in_statement = cursor_pos;
-    while (position_in_statement > 0 && cmd.at(position_in_statement - 1) == L' ') {
+    while (position_in_statement > 0 && cmdline.at(position_in_statement - 1) == L' ') {
         position_in_statement--;
     }
 
     // Get all the arguments.
     std::vector<tok_t> tokens;
-    parse_util_process_extent(cmd.c_str(), position_in_statement, nullptr, nullptr, &tokens);
+    parse_util_process_extent(cmdline.c_str(), position_in_statement, nullptr, nullptr, &tokens);
 
     // Hack: fix autosuggestion by removing prefixing "and"s #6249.
     if (is_autosuggest) {
-        while (!tokens.empty() && parser_keywords_is_subcommand(tokens.front().get_source(cmd)))
+        while (!tokens.empty() && parser_keywords_is_subcommand(tokens.front().get_source(cmdline)))
             tokens.erase(tokens.begin());
     }
 
@@ -1576,7 +1576,7 @@ void completer_t::perform_for_command(wcstring cmd) {
     }
     // If we are completing a variable name or a tilde expansion user name, we do that and
     // return. No need for any other completions.
-    const wcstring current_token = cur_tok.get_source(cmd);
+    const wcstring current_token = cur_tok.get_source(cmdline);
     if (cur_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
         if (try_complete_variable(current_token) || try_complete_user(current_token)) {
             return;
@@ -1614,14 +1614,14 @@ void completer_t::perform_for_command(wcstring cmd) {
             if (tokens.size() >= 2) {
                 tok_t prev_tok = tokens.at(tokens.size() - 2);
                 if (prev_tok.type == token_type_t::string)
-                    previous_argument = prev_tok.get_source(cmd);
+                    previous_argument = prev_tok.get_source(cmdline);
                 in_redirection = prev_tok.type == token_type_t::redirect;
             }
         }
 
         // Check to see if we have a preceding double-dash.
         for (size_t i = 0; i < tokens.size() - 1; i++) {
-            if (tokens.at(i).get_source(cmd) == L"--") {
+            if (tokens.at(i).get_source(cmdline) == L"--") {
                 had_ddash = true;
                 break;
             }
@@ -1643,13 +1643,13 @@ void completer_t::perform_for_command(wcstring cmd) {
 
         wcstring unesc_command;
         bool unescaped =
-            unescape_string(cmd_tok.get_source(cmd), &unesc_command, UNESCAPE_DEFAULT) &&
+            unescape_string(cmd_tok.get_source(cmdline), &unesc_command, UNESCAPE_DEFAULT) &&
             unescape_string(previous_argument, &arg_data.previous_argument, UNESCAPE_DEFAULT) &&
             unescape_string(current_argument, &arg_data.current_argument, UNESCAPE_INCOMPLETE);
         if (unescaped) {
             // Have to walk over the command and its entire wrap chain. If any command
             // disables do_file, then they all do.
-            walk_wrap_chain(unesc_command, cmd, command_range, &arg_data);
+            walk_wrap_chain(unesc_command, cmdline, command_range, &arg_data);
             do_file = arg_data.do_file;
 
             // If we're autosuggesting, and the token is empty, don't do file suggestions.
@@ -1669,7 +1669,7 @@ void completer_t::perform_for_command(wcstring cmd) {
     escape_opening_brackets(current_argument);
 
     // Lastly mark any completions that appear to already be present in arguments.
-    mark_completions_duplicating_arguments(cmd, current_token, tokens);
+    mark_completions_duplicating_arguments(cmdline, current_token, tokens);
 }
 
 completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_flags_t flags,
@@ -1681,7 +1681,7 @@ completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_
     assert(cmdsubst_begin != nullptr && cmdsubst_end != nullptr && cmdsubst_end >= cmdsubst_begin);
     wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
     completer_t completer(ctx, flags);
-    completer.perform_for_command(std::move(cmd));
+    completer.perform_for_commandline(std::move(cmd));
     return completer.acquire_completions();
 }
 

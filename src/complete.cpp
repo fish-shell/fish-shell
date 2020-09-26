@@ -1336,10 +1336,13 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     // Perhaps set a transient commandline so that custom completions
     // buitin_commandline will refer to the wrapped command. But not if
     // we're doing autosuggestions.
+    maybe_t<cleanup_t> remove_transient{};
     bool wants_transient = depth > 0 && !is_autosuggest;
     if (wants_transient) {
         ctx.parser->libdata().transient_commandlines.push_back(cmdline);
+        remove_transient.emplace([&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
     }
+
     maybe_t<size_t> equals_pos = variable_assignment_equals_pos(cmd);
     bool is_variable_assignment = bool(equals_pos);
     if (is_variable_assignment && !is_autosuggest) {
@@ -1384,9 +1387,6 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     } else if (!complete_param(cmd, previous_argument, current_argument,
                                !had_ddash)) {  // Invoke any custom completions for this command.
         *do_file = false;
-    }
-    if (wants_transient) {
-        ctx.parser->libdata().transient_commandlines.pop_back();
     }
 }
 

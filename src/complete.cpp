@@ -377,17 +377,34 @@ class completer_t {
         return result;
     }
 
-    // A set tracking the wrapped commands which we have seen.
-    using wrap_chain_visited_set_t = std::set<wcstring>;
+    // Bag of data to support expanding a command's arguments using custom completions, including
+    // the wrap chain.
+    struct custom_arg_data_t {
+        // The unescaped argument before the argument which is being completed, or empty if none.
+        wcstring previous_argument{};
 
-    void complete_custom(const wcstring &cmd, const wcstring &cmdline,
-                         const wcstring &previous_argument, const wcstring &current_argument,
-                         bool had_ddash, size_t depth, bool *do_file);
+        // The unescaped argument which is being completed, or empty if none.
+        wcstring current_argument{};
 
-    void walk_wrap_chain(const wcstring &command_line, source_range_t command_range,
-                         const wcstring &previous_argument_unescape,
-                         const wcstring &current_argument, bool had_ddash,
-                         wrap_chain_visited_set_t *visited, size_t depth, bool *do_file);
+        // Whether a -- has been encountered, which suppresses options.
+        bool had_ddash{false};
+
+        // Whether to perform file completions.
+        // This is an "out" parameter of the wrap chain walk: if any wrapped command suppresses file
+        // completions this gets set to false.
+        bool do_file{true};
+
+        // Depth in the wrap chain.
+        size_t wrap_depth{0};
+
+        // The set of wrapped commands which we have visited, and so should not be explored again.
+        std::set<wcstring> visited_wrapped_commands{};
+    };
+
+    void complete_custom(const wcstring &cmd, const wcstring &cmdline, custom_arg_data_t *arg_data);
+
+    void walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline, source_range_t cmd_range,
+                         custom_arg_data_t *arg_data);
 
     bool empty() const { return completions.empty(); }
 
@@ -1328,16 +1345,15 @@ bool completer_t::try_complete_user(const wcstring &str) {
 #endif
 }
 
+// Complete a command by invoking user-specified completions.
 void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
-                                  const wcstring &previous_argument,
-                                  const wcstring &current_argument, bool had_ddash, size_t depth,
-                                  bool *do_file) {
+                                  custom_arg_data_t *ad) {
     bool is_autosuggest = this->type() == COMPLETE_AUTOSUGGEST;
     // Perhaps set a transient commandline so that custom completions
     // buitin_commandline will refer to the wrapped command. But not if
     // we're doing autosuggestions.
     maybe_t<cleanup_t> remove_transient{};
-    bool wants_transient = depth > 0 && !is_autosuggest;
+    bool wants_transient = ad->wrap_depth > 0 && !is_autosuggest;
     if (wants_transient) {
         ctx.parser->libdata().transient_commandlines.push_back(cmdline);
         remove_transient.emplace([&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
@@ -1383,35 +1399,36 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
         cleanup_t remove_transient(
             [&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
         perform_for_command(std::move(unaliased_cmd));
-        *do_file = false;
-    } else if (!complete_param(cmd, previous_argument, current_argument,
-                               !had_ddash)) {  // Invoke any custom completions for this command.
-        *do_file = false;
+        ad->do_file = false;
+    } else if (!complete_param(
+                   cmd, ad->previous_argument, ad->current_argument,
+                   !ad->had_ddash)) {  // Invoke any custom completions for this command.
+        ad->do_file = false;
     }
 }
 
-// Given a command line \p command_line and the range of the command itself within the
-// command line as \p command_range, invoke command-specific completions.
+// Invoke command-specific completions given by \p arg_data.
 // Then, for each target wrapped by the given command, update the command
 // line with that target and invoke this recursively.
-void completer_t::walk_wrap_chain(const wcstring &command_line, source_range_t command_range,
-                                  const wcstring &previous_argument,
-                                  const wcstring &current_argument, bool had_ddash,
-                                  wrap_chain_visited_set_t *visited, size_t depth, bool *do_file) {
+// The command whose completions to use is given by \p cmd. The full command line is given by \p
+// cmdline and the command's range in it is given by \p cmdrange. Note: the command range
+// may have a different length than the command itself, because the command is unescaped (i.e.
+// quotes removed).
+void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
+                                  source_range_t cmdrange, custom_arg_data_t *ad) {
     // Limit our recursion depth. This prevents cycles in the wrap chain graph from overflowing.
-    if (depth > 24) return;
+    if (ad->wrap_depth > 24) return;
     if (ctx.cancel_checker()) return;
 
     // Extract command from the command line and invoke the receiver with it.
-    wcstring command{command_line, command_range.start, command_range.length};
-    complete_custom(command, command_line, previous_argument, current_argument, had_ddash, depth,
-                    do_file);
+    complete_custom(cmd, cmdline, ad);
 
-    wcstring_list_t targets = complete_get_wrap_targets(command);
+    wcstring_list_t targets = complete_get_wrap_targets(cmd);
+    scoped_push<size_t> saved_depth(&ad->wrap_depth, ad->wrap_depth + 1);
     for (const wcstring &wt : targets) {
         // Construct a fake command line containing the wrap target.
-        wcstring faux_commandline = command_line;
-        faux_commandline.replace(command_range.start, command_range.length, wt);
+        wcstring faux_commandline = cmdline;
+        faux_commandline.replace(cmdrange.start, cmdrange.length, wt);
 
         // Try to extract the command from the faux commandline.
         // We do this by simply getting the first token. This is a hack; for example one might
@@ -1420,15 +1437,14 @@ void completer_t::walk_wrap_chain(const wcstring &command_line, source_range_t c
         wcstring wrapped_command = tok_first(wt);
         if (wrapped_command.empty()) continue;
 
-        size_t where = faux_commandline.find(wrapped_command, command_range.start);
+        size_t where = faux_commandline.find(wrapped_command, cmdrange.start);
         assert(where != wcstring::npos &&
                "Should have found the wrapped command since we inserted it");
 
         // Recurse with our new command and command line, if we have not seen this wrap before.
-        if (visited->insert(wrapped_command).second) {
+        if (ad->visited_wrapped_commands.insert(wrapped_command).second) {
             source_range_t faux_source_range{uint32_t(where), uint32_t(wrapped_command.size())};
-            walk_wrap_chain(faux_commandline, faux_source_range, previous_argument,
-                            current_argument, had_ddash, visited, depth + 1, do_file);
+            walk_wrap_chain(wrapped_command, faux_commandline, faux_source_range, ad);
         }
     }
 }
@@ -1520,8 +1536,9 @@ void completer_t::perform_for_command(wcstring cmd) {
     }};
 
     const size_t cursor_pos = cmd.size();
+    const bool is_autosuggest = (flags & completion_request_t::autosuggestion);
 
-    // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack
+    // Find the process to operate on. The cursor may be past it (#1261), so backtrack
     // until we know we're no longer in a space. But the space may actually be part of the
     // argument (#2477).
     size_t position_in_statement = cursor_pos;
@@ -1534,14 +1551,15 @@ void completer_t::perform_for_command(wcstring cmd) {
     parse_util_process_extent(cmd.c_str(), position_in_statement, nullptr, nullptr, &tokens);
 
     // Hack: fix autosuggestion by removing prefixing "and"s #6249.
-    if (flags & completion_request_t::autosuggestion) {
+    if (is_autosuggest) {
         while (!tokens.empty() && parser_keywords_is_subcommand(tokens.front().get_source(cmd)))
             tokens.erase(tokens.begin());
     }
+
     // Empty process (cursor is after one of ;, &, |, \n, &&, || modulo whitespace).
     if (tokens.empty()) {
         // Don't autosuggest anything based on the empty string (generalizes #1631).
-        if (flags & completion_request_t::autosuggestion) return;
+        if (is_autosuggest) return;
 
         complete_cmd(L"");
         complete_abbr(L"");
@@ -1615,30 +1633,33 @@ void completer_t::perform_for_command(wcstring cmd) {
         do_file = true;
     } else {
         // Try completing as an argument.
-        wcstring current_command = cmd_tok.get_source(cmd), current_command_unescape,
-                 previous_argument_unescape, current_argument_unescape;
-        if (unescape_string(current_command, &current_command_unescape, UNESCAPE_DEFAULT) &&
-            unescape_string(previous_argument, &previous_argument_unescape, UNESCAPE_DEFAULT) &&
-            unescape_string(current_argument, &current_argument_unescape, UNESCAPE_INCOMPLETE)) {
+        custom_arg_data_t arg_data{};
+        arg_data.had_ddash = had_ddash;
+
+        assert(cmd_tok.offset < std::numeric_limits<uint32_t>::max());
+        assert(cmd_tok.length < std::numeric_limits<uint32_t>::max());
+        source_range_t command_range = {static_cast<uint32_t>(cmd_tok.offset),
+                                        static_cast<uint32_t>(cmd_tok.length)};
+
+        wcstring unesc_command;
+        bool unescaped =
+            unescape_string(cmd_tok.get_source(cmd), &unesc_command, UNESCAPE_DEFAULT) &&
+            unescape_string(previous_argument, &arg_data.previous_argument, UNESCAPE_DEFAULT) &&
+            unescape_string(current_argument, &arg_data.current_argument, UNESCAPE_INCOMPLETE);
+        if (unescaped) {
             // Have to walk over the command and its entire wrap chain. If any command
             // disables do_file, then they all do.
-            do_file = true;
-            assert(cmd_tok.offset < std::numeric_limits<uint32_t>::max());
-            assert(cmd_tok.length < std::numeric_limits<uint32_t>::max());
-            source_range_t range = {static_cast<uint32_t>(cmd_tok.offset),
-                                    static_cast<uint32_t>(cmd_tok.length)};
-            wrap_chain_visited_set_t visited;
-            walk_wrap_chain(cmd, range, previous_argument_unescape, current_argument_unescape,
-                            had_ddash, &visited, 0, &do_file);
+            walk_wrap_chain(unesc_command, cmd, command_range, &arg_data);
+            do_file = arg_data.do_file;
+
+            // If we're autosuggesting, and the token is empty, don't do file suggestions.
+            if (is_autosuggest && arg_data.current_argument.empty()) {
+                do_file = false;
+            }
         }
 
         // Hack. If we're cd, handle it specially (issue #1059, others).
-        handle_as_special_cd = (current_command_unescape == L"cd");
-
-        // And if we're autosuggesting, and the token is empty, don't do file suggestions.
-        if ((flags & completion_request_t::autosuggestion) && current_argument_unescape.empty()) {
-            do_file = false;
-        }
+        handle_as_special_cd = (unesc_command == L"cd");
     }
 
     // This function wants the unescaped string.

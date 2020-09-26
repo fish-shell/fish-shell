@@ -1557,8 +1557,8 @@ void completer_t::perform_for_command(wcstring cmd) {
     for (const auto &tok : tokens) {  // If there was an error, it was in the last token.
         assert(tok.type == token_type_t::string || tok.type == token_type_t::redirect);
     }
-    // If we are completing a variable name or a tilde expansion user name, we do that and return.
-    // No need for any other completions.
+    // If we are completing a variable name or a tilde expansion user name, we do that and
+    // return. No need for any other completions.
     const wcstring current_token = cur_tok.get_source(cmd);
     if (cur_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
         if (try_complete_variable(current_token) || try_complete_user(current_token)) {
@@ -1680,7 +1680,8 @@ static void append_switch(wcstring &out, const wcstring &opt) {
     append_format(out, L" --%ls", opt.c_str());
 }
 
-static wcstring completion2string(const complete_entry_opt_t &o, wcstring cmd, bool is_path) {
+static wcstring completion2string(const complete_entry_opt_t &o, const wcstring &cmd,
+                                  bool is_path) {
     wcstring out;
     out.append(L"complete");
 
@@ -1721,7 +1722,7 @@ static wcstring completion2string(const complete_entry_opt_t &o, wcstring cmd, b
 }
 
 /// Use by the bare `complete`, loaded completions are printed out as commands
-wcstring complete_print(wcstring cmd) {
+wcstring complete_print(const wcstring &cmd) {
     wcstring out;
     out.reserve(40);  // just a guess
     auto completion_set = s_completion_set.acquire();

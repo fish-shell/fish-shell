@@ -180,7 +180,7 @@ completion_list_t complete(const wcstring &cmd, completion_request_flags_t flags
                            const operation_context_t &ctx);
 
 /// Return a list of all current completions.
-wcstring complete_print(wcstring cmd=L"");
+wcstring complete_print(const wcstring &cmd = L"");
 
 /// Tests if the specified option is defined for the specified command.
 int complete_is_valid_option(const wcstring &str, const wcstring &opt,

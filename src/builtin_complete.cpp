@@ -399,16 +399,15 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
 
             parser.libdata().builtin_complete_current_commandline = false;
         }
-    } else if (path.empty() && gnu_opt.empty()
-               && short_opt.empty() && old_opt.empty()
-               && !remove && !*comp && !*desc && !*condition
-               && wrap_targets.empty() && !result_mode.no_files
-               && !result_mode.force_files && !result_mode.requires_param) {
-        // No arguments that would add or remove anything specified, so we print the definitions of all matching completions.
+    } else if (path.empty() && gnu_opt.empty() && short_opt.empty() && old_opt.empty() && !remove &&
+               !*comp && !*desc && !*condition && wrap_targets.empty() && !result_mode.no_files &&
+               !result_mode.force_files && !result_mode.requires_param) {
+        // No arguments that would add or remove anything specified, so we print the definitions of
+        // all matching completions.
         if (cmd_to_complete.empty()) {
             builtin_complete_print(L"", streams, parser);
         } else {
-            for (auto& cmd : cmd_to_complete) {
+            for (auto &cmd : cmd_to_complete) {
                 builtin_complete_print(cmd, streams, parser);
             }
         }

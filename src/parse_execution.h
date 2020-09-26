@@ -74,7 +74,7 @@ class parse_execution_context_t {
     // Utilities
     wcstring get_source(const ast::node_t &node) const;
     const ast::decorated_statement_t *infinite_recursive_statement_in_job_list(
-        const ast::job_list_t &job_list, wcstring *out_func_name) const;
+        const ast::job_list_t &jobs, wcstring *out_func_name) const;
 
     // Expand a command which may contain variables, producing an expand command and possibly
     // arguments. Prints an error message on error.

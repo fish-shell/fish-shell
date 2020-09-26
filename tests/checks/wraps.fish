@@ -14,6 +14,12 @@ complete -C'testcommand '
 # We get the same completion twice. TODO: fix this.
 # CHECK: normal
 
+# Test double wraps.
+complete -c testcommand0 -x -a crosswalk
+complete -c testcommand1 -x --wraps testcommand0
+complete -c testcommand2 -x --wraps testcommand1
+complete -C 'testcommand 0'
+# CHECK: crosswalk
 
 # This tests that a call to complete from within a completion doesn't trigger
 # wrap chain explosion - #5638 again.

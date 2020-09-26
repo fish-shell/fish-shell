@@ -377,8 +377,8 @@ class completer_t {
         return result;
     }
 
-    // A set tracking which (command, wrap) pairs we have seen.
-    using wrap_chain_visited_set_t = std::set<std::pair<wcstring, wcstring>>;
+    // A set tracking the wrapped commands which we have seen.
+    using wrap_chain_visited_set_t = std::set<wcstring>;
 
     void complete_custom(const wcstring &cmd, const wcstring &cmdline,
                          const wcstring &previous_argument, const wcstring &current_argument,
@@ -1418,18 +1418,17 @@ void completer_t::walk_wrap_chain(const wcstring &command_line, source_range_t c
         // imagine the first token being 'builtin' or similar. Nevertheless that is simpler than
         // re-parsing everything.
         wcstring wrapped_command = tok_first(wt);
-        if (!wrapped_command.empty()) {
-            size_t where = faux_commandline.find(wrapped_command, command_range.start);
-            if (where != wcstring::npos) {
-                // Do not recurse if we have already seen this.
-                if (visited->insert({command, wrapped_command}).second) {
-                    // Recurse with our new command and command line.
-                    source_range_t faux_source_range{uint32_t(where),
-                                                     uint32_t(wrapped_command.size())};
-                    walk_wrap_chain(faux_commandline, faux_source_range, previous_argument,
-                                    current_argument, had_ddash, visited, depth + 1, do_file);
-                }
-            }
+        if (wrapped_command.empty()) continue;
+
+        size_t where = faux_commandline.find(wrapped_command, command_range.start);
+        assert(where != wcstring::npos &&
+               "Should have found the wrapped command since we inserted it");
+
+        // Recurse with our new command and command line, if we have not seen this wrap before.
+        if (visited->insert(wrapped_command).second) {
+            source_range_t faux_source_range{uint32_t(where), uint32_t(wrapped_command.size())};
+            walk_wrap_chain(faux_commandline, faux_source_range, previous_argument,
+                            current_argument, had_ddash, visited, depth + 1, do_file);
         }
     }
 }

@@ -39,7 +39,17 @@ $fish -c 'if status --is-login ; echo login shell ; else ; echo not login shell 
 # CHECK: login shell
 # CHECK: not interactive
 
+# Arguments for -c
 $fish -c 'string escape $argv' 1 2 3
 # CHECK: 1
 # CHECK: 2
 # CHECK: 3
+
+# Two -cs
+$fish -c 'string escape y$argv' -c 'string escape x$argv' 1 2 3
+# CHECK: y1
+# CHECK: y2
+# CHECK: y3
+# CHECK: x1
+# CHECK: x2
+# CHECK: x3

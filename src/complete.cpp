@@ -1379,13 +1379,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
         ctx.parser->libdata().transient_commandlines.push_back(unaliased_cmd);
         cleanup_t remove_transient(
             [&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
-        // Prevent infinite recursion when the completion for x wraps "A=B x" (#7344).
-        // Don't report an error since this could be a legitimate alias.
-        static uint32_t complete_assignment_recursion_count;
-        if (complete_assignment_recursion_count++ < 24) {
-            run_on_command(std::move(unaliased_cmd));
-        }
-        complete_assignment_recursion_count--;
+        perform_for_command(std::move(unaliased_cmd));
         *do_file = false;
     } else if (!complete_param(cmd, previous_argument, current_argument,
                                !had_ddash)) {  // Invoke any custom completions for this command.
@@ -1511,6 +1505,21 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &cmd,
 }
 
 void completer_t::perform_for_command(wcstring cmd) {
+    // Limit recursion, in case a user-defined completion has cycles, or the completion for "x"
+    // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
+    // for autosuggestions where we don't evaluate command substitutions or variable assignments.
+    if (ctx.parser) {
+        if (ctx.parser->libdata().complete_recursion_level >= 24) {
+            debug(0, _(L"completion reached maximum recursion depth, possible cycle?"),
+                  cmd.c_str());
+            return;
+        }
+        ++ctx.parser->libdata().complete_recursion_level;
+    };
+    cleanup_t decrement{[this]() {
+        if (ctx.parser) --ctx.parser->libdata().complete_recursion_level;
+    }};
+
     const size_t cursor_pos = cmd.size();
 
     // Find the plain statement to operate on. The cursor may be past it (#1261), so backtrack

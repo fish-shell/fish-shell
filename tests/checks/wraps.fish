@@ -1,6 +1,8 @@
 #RUN: %fish %s
 # Validate some things about command wrapping.
 
+set -g LANG C # For predictable error messages.
+
 # This tests that we do not trigger a combinatorial explosion - see #5638.
 # Ensure it completes successfully.
 complete -c testcommand --wraps "testcommand x "
@@ -30,3 +32,4 @@ complete -C'testcommand2 explicit '
 
 complete -c recvar --wraps 'A=B recvar'
 complete -C 'recvar '
+# CHECKERR: <E> fish: completion reached maximum recursion depth, possible cycle?

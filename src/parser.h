@@ -148,8 +148,8 @@ struct library_data_t {
     /// Last reader run count.
     uint64_t last_exec_run_counter{UINT64_MAX};
 
-    /// Number of recursive calls to builtin_complete().
-    uint32_t builtin_complete_recursion_level{0};
+    /// Number of recursive calls to the internal completion function.
+    uint32_t complete_recursion_level{0};
 
     /// If we're currently repainting the commandline.
     /// Useful to stop infinite loops.

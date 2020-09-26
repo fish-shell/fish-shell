@@ -65,7 +65,7 @@ complete
 
 # Recursive calls to complete (see #3474)
 complete -c complete_test_recurse1 -xa '(echo recursing 1>&2; complete -C"complete_test_recurse1 ")'
-complete -C'complete_test_recurse1 '
+LANG=C complete -C'complete_test_recurse1 '
 # CHECKERR: recursing
 # CHECKERR: recursing
 # CHECKERR: recursing
@@ -90,7 +90,7 @@ complete -C'complete_test_recurse1 '
 # CHECKERR: recursing
 # CHECKERR: recursing
 # CHECKERR: recursing
-# CHECKERR: complete: maximum recursion depth reached
+# CHECKERR: <E> fish: completion reached maximum recursion depth, possible cycle?
 
 # short options
 complete -c foo -f -a non-option-argument

@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    fish [OPTIONS] [-c command] [FILE [ARGUMENTS...]]
+    fish [OPTIONS] [-c command] [FILE] [ARGUMENTS...]
 
 Description
 -----------
@@ -17,7 +17,7 @@ fish is a command-line shell written mainly with interactive use in mind. This p
 
 The following options are available:
 
-- ``-c`` or ``--command=COMMANDS`` evaluate the specified commands instead of reading from the commandline
+- ``-c`` or ``--command=COMMANDS`` evaluate the specified commands instead of reading from the commandline, passing any additional positional arguments via :ref:`$argv <variables-argv>`. Note that, unlike other shells, the first argument is *not* the name of the program (``$0``), but simply the first normal argument.
 
 - ``-C`` or ``--init-command=COMMANDS`` evaluate the specified commands after reading the configuration, before running the command specified by ``-c`` or reading interactive input
 

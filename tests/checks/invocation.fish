@@ -38,3 +38,8 @@ $fish -c 'if status --is-login ; echo login shell ; else ; echo not login shell 
 $fish -c 'if status --is-login ; echo login shell ; else ; echo not login shell ; end; if status --is-interactive ; echo interactive ; else ; echo not interactive ; end' -l
 # CHECK: login shell
 # CHECK: not interactive
+
+$fish -c 'string escape $argv' 1 2 3
+# CHECK: 1
+# CHECK: 2
+# CHECK: 3

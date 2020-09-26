@@ -489,6 +489,14 @@ int main(int argc, char **argv) {
             fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
                                                argv + my_optind);
         }
+
+        // Pass additional args as $argv.
+        // Note that we *don't* support setting argv[0]/$0, unlike e.g. bash.
+        wcstring_list_t list;
+        for (char **ptr = argv + my_optind; *ptr; ptr++) {
+            list.push_back(str2wcstring(*ptr));
+        }
+        parser.vars().set(L"argv", ENV_DEFAULT, std::move(list));
         res = run_command_list(parser, &opts.batch_cmds, {});
         parser.libdata().exit_current_script = false;
     } else if (my_optind == argc) {

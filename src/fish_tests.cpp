@@ -399,9 +399,11 @@ static void test_escape_crazy() {
 
         if (!unescaped_success) {
             err(L"Failed to unescape string <%ls>", escaped_string.c_str());
+            break;
         } else if (unescaped_string != random_string) {
             err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'",
                 random_string.c_str(), unescaped_string.c_str());
+            break;
         }
     }
 

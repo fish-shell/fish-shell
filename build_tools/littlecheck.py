@@ -14,14 +14,17 @@ import shlex
 import subprocess
 import sys
 
+# Directives can occur at the beginning of a line, or anywhere in a line that does not start with #.
+COMMENT_RE = r'^(?:[^#].*)?#\s*'
+
 # A regex showing how to run the file.
-RUN_RE = re.compile(r"\s*#\s*RUN:\s+(.*)\n")
+RUN_RE = re.compile(COMMENT_RE + r"RUN:\s+(.*)\n")
 
 # A regex capturing lines that should be checked against stdout.
-CHECK_STDOUT_RE = re.compile(r"\s*#\s*CHECK:\s+(.*)\n")
+CHECK_STDOUT_RE = re.compile(COMMENT_RE + r"CHECK:\s+(.*)\n")
 
 # A regex capturing lines that should be checked against stderr.
-CHECK_STDERR_RE = re.compile(r"\s*#\s*CHECKERR:\s+(.*)\n")
+CHECK_STDERR_RE = re.compile(COMMENT_RE + r"CHECKERR:\s+(.*)\n")
 
 
 class Config(object):

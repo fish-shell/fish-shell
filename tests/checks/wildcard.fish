@@ -10,8 +10,7 @@ mkdir b
 touch ./b/file.txt
 
 set dirs ./a ./b
-echo $dirs/*.txt
-# CHECK: ./b/file.txt
+echo $dirs/*.txt # CHECK: ./b/file.txt
 
 cd $oldpwd
 rm -Rf $dir

@@ -10,15 +10,6 @@ not exec cat <nosuchfile
 echo "neg failed: $status"
 #CHECK: neg failed: 0
 
-set -l f (mktemp)
-echo "#!/bin/sh"\r\n"echo foo" > $f
-chmod +x $f
-# Cheesy sleep to avoid "text file is busy"
-sleep 0.2
-$f
-#CHECKERR: Failed to execute process '{{.*}}'. Reason:
-#CHECKERR: The file uses windows line endings (\r\n). Run dos2unix or similar to fix it.
-
 # This needs to be last, because it actually runs exec.
 exec cat </dev/null
 echo "not reached"

@@ -2479,12 +2479,13 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
 
     size_t idx, end;
     if (motion == word_motion_left) {
-        idx = command.size();
+        idx = *std::max_element(stops.begin(), stops.end());
         end = 0;
     } else {
-        idx = 0;
+        idx = *std::min_element(stops.begin(), stops.end());
         end = command.size();
     }
+    stops.erase(idx);
 
     move_word_state_machine_t sm(style);
     while (idx != end) {
@@ -2521,22 +2522,22 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
 /// Test word motion (forward-word, etc.). Carets represent cursor stops.
 static void test_word_motion() {
     say(L"Testing word motion");
-    test_1_word_motion(word_motion_left, move_word_style_punctuation, L"^echo ^hello_^world.^txt");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"echo^ hello^_world^.txt^");
+    test_1_word_motion(word_motion_left, move_word_style_punctuation, L"^echo ^hello_^world.^txt^");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^echo^ hello^_world^.txt^");
 
     test_1_word_motion(word_motion_left, move_word_style_punctuation,
-                       L"echo ^foo_^foo_^foo/^/^/^/^/^    ");
+                       L"echo ^foo_^foo_^foo/^/^/^/^/^    ^");
     test_1_word_motion(word_motion_right, move_word_style_punctuation,
-                       L"echo^ foo^_foo^_foo^/^/^/^/^/    ^");
+                       L"^echo^ foo^_foo^_foo^/^/^/^/^/    ^");
 
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^/^foo/^bar/^baz/");
-    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^--foo ^--bar");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^/^foo/^bar/^baz/^");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^--foo ^--bar^");
     test_1_word_motion(word_motion_left, move_word_style_path_components,
-                       L"^echo ^hi ^> /^dev/^null");
+                       L"^echo ^hi ^> /^dev/^null^");
 
     test_1_word_motion(word_motion_left, move_word_style_path_components,
-                       L"^echo /^foo/^bar{^aaa,^bbb,^ccc}^bak/");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"a ^bcd^");
+                       L"^echo /^foo/^bar{^aaa,^bbb,^ccc}^bak/^");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^a ^bcd^");
 }
 
 /// Test is_potential_path.

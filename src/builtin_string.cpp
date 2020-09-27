@@ -1131,13 +1131,14 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
     if (!regex.code) return false;   // pcre2_compile() failed
     if (!replacement) return false;  // replacement was an invalid string
 
+    // clang-format off
     // SUBSTITUTE_OVERFLOW_LENGTH causes pcre to return the needed buffer length if the passed one is to small
     // SUBSTITUTE_EXTENDED changes how substitution expressions are interpreted (`$` as the special character)
     // SUBSTITUTE_UNSET_EMPTY treats unmatched capturing groups as empty instead of erroring.
     // SUBSTITUTE_GLOBAL means more than one substitution happens.
+    // clang-format on
     uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
-        PCRE2_SUBSTITUTE_UNSET_EMPTY |
-        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
+                       PCRE2_SUBSTITUTE_UNSET_EMPTY | (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
     size_t arglen = arg.length();
     PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
     auto output = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * bufsize));
@@ -1521,20 +1522,19 @@ static int string_upper(parser_t &parser, io_streams_t &streams, int argc, wchar
     return string_transform(parser, streams, argc, argv, std::towupper);
 }
 
+// Keep sorted alphabetically
 static const struct string_subcommand {
     const wchar_t *name;
     int (*handler)(parser_t &, io_streams_t &, int argc,  //!OCLINT(unused param)
                    wchar_t **argv);                       //!OCLINT(unused param)
-}
-
-string_subcommands[] = {
-    {L"escape", &string_escape}, {L"join", &string_join},         {L"join0", &string_join0},
-    {L"length", &string_length}, {L"match", &string_match},       {L"replace", &string_replace},
-    {L"split", &string_split},   {L"split0", &string_split0},     {L"sub", &string_sub},
-    {L"trim", &string_trim},     {L"lower", &string_lower},       {L"upper", &string_upper},
-    {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {L"collect", &string_collect},
-    {L"pad", &string_pad},
-    {nullptr, nullptr}};
+} string_subcommands[] = {
+    {L"collect", &string_collect}, {L"escape", &string_escape}, {L"join", &string_join},
+    {L"join0", &string_join0},     {L"length", &string_length}, {L"lower", &string_lower},
+    {L"match", &string_match},     {L"pad", &string_pad},       {L"repeat", &string_repeat},
+    {L"replace", &string_replace}, {L"split", &string_split},   {L"split0", &string_split0},
+    {L"sub", &string_sub},         {L"trim", &string_trim},     {L"unescape", &string_unescape},
+    {L"upper", &string_upper},
+};
 
 /// The string builtin, for manipulating strings.
 maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
@@ -1551,18 +1551,26 @@ maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **a
         return STATUS_CMD_OK;
     }
 
-    const string_subcommand *subcmd = &string_subcommands[0];
-    while (subcmd->name != nullptr && std::wcscmp(subcmd->name, argv[1]) != 0) {
-        subcmd++;
-    }
-    if (!subcmd->handler) {
-        streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, argv[1]);
+    const wchar_t *subcmd_name = argv[1];
+
+    static auto begin = std::begin(string_subcommands);
+    static auto end = std::end(string_subcommands);
+    string_subcommand search{subcmd_name, 0};
+    auto binsearch = std::lower_bound(
+        begin, end, search, [&](const string_subcommand &cmd1, const string_subcommand &cmd2) {
+            return wcscmp(cmd1.name, cmd2.name) < 0;
+        });
+    const string_subcommand *subcmd = nullptr;
+    if (binsearch != end && wcscmp(subcmd_name, binsearch->name) == 0) subcmd = &*binsearch;
+
+    if (subcmd == nullptr) {
+        streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name);
         builtin_print_error_trailer(parser, streams.err, L"string");
         return STATUS_INVALID_ARGS;
     }
 
     if (argc >= 3 && (std::wcscmp(argv[2], L"-h") == 0 || std::wcscmp(argv[2], L"--help") == 0)) {
-        wcstring string_dash_subcommand = wcstring(argv[0]) + L"-" + argv[1];
+        wcstring string_dash_subcommand = wcstring(argv[0]) + L"-" + subcmd_name;
         builtin_print_help(parser, streams, string_dash_subcommand.c_str());
         return STATUS_CMD_OK;
     }

@@ -35,7 +35,10 @@ complete -C'testcommand2 explicit '
 # CHECKERR: explicit
 # CHECKERR: from_wraps explicit
 
-
+# Test that prefixing with a variable assignment works - see #7344.
+complete -c recvar --exclusive -a recvar_comp
 complete -c recvar --wraps 'A=B recvar'
 complete -C 'recvar '
-# CHECKERR: <E> fish: completion reached maximum recursion depth, possible cycle?
+# CHECK: recvar_comp
+# We get the same completion twice. TODO: fix this.
+# CHECK: recvar_comp

@@ -83,7 +83,7 @@ struct tok_t {
         return offset <= loc && loc - offset <= length;
     }
     /// Gets source for the token, or the empty string if it has no source.
-    wcstring get_source(const wcstring &str) const { return {str, offset, length}; }
+    wcstring get_source(const wcstring &str) const { return wcstring(str, offset, length); }
 };
 
 /// The tokenizer struct.

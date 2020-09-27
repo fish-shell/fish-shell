@@ -397,6 +397,11 @@ class completer_t {
         // Depth in the wrap chain.
         size_t wrap_depth{0};
 
+        // The list of variable assignments: escaped strings of the form VAR=VAL.
+        // This may be temporarily appended to as we explore the wrap chain.
+        // When completing, variable assignments are really set in a local scope.
+        wcstring_list_t var_assignments{};
+
         // The set of wrapped commands which we have visited, and so should not be explored again.
         std::set<wcstring> visited_wrapped_commands{};
     };
@@ -1425,27 +1430,45 @@ void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
 
     wcstring_list_t targets = complete_get_wrap_targets(cmd);
     scoped_push<size_t> saved_depth(&ad->wrap_depth, ad->wrap_depth + 1);
+
     for (const wcstring &wt : targets) {
+        // We may append to the variable assignment list; ensure we restore it.
+        const size_t saved_var_count = ad->var_assignments.size();
+        cleanup_t restore_vars([=] {
+            assert(ad->var_assignments.size() >= saved_var_count &&
+                   "Should not delete var assignments");
+            ad->var_assignments.resize(saved_var_count);
+        });
+
+        // Separate the wrap target into any variable assignments VAR=... and the command itself.
+        wcstring wrapped_command;
+        tokenizer_t tokenizer(wt.c_str(), 0);
+        size_t wrapped_command_offset_in_wt = wcstring::npos;
+        while (auto tok = tokenizer.next()) {
+            wcstring tok_src = tok->get_source(wt);
+            if (variable_assignment_equals_pos(tok_src)) {
+                ad->var_assignments.push_back(std::move(tok_src));
+            } else {
+                wrapped_command_offset_in_wt = tok->offset;
+                wrapped_command = std::move(tok_src);
+                break;
+            }
+        }
+
+        // Skip this wrapped command if empty, or if we've seen it before.
+        if (wrapped_command.empty() ||
+            !ad->visited_wrapped_commands.insert(wrapped_command).second) {
+            continue;
+        }
+
         // Construct a fake command line containing the wrap target.
         wcstring faux_commandline = cmdline;
         faux_commandline.replace(cmdrange.start, cmdrange.length, wt);
 
-        // Try to extract the command from the faux commandline.
-        // We do this by simply getting the first token. This is a hack; for example one might
-        // imagine the first token being 'builtin' or similar. Nevertheless that is simpler than
-        // re-parsing everything.
-        wcstring wrapped_command = tok_first(wt);
-        if (wrapped_command.empty()) continue;
-
-        size_t where = faux_commandline.find(wrapped_command, cmdrange.start);
-        assert(where != wcstring::npos &&
-               "Should have found the wrapped command since we inserted it");
-
-        // Recurse with our new command and command line, if we have not seen this wrap before.
-        if (ad->visited_wrapped_commands.insert(wrapped_command).second) {
-            source_range_t faux_source_range{uint32_t(where), uint32_t(wrapped_command.size())};
-            walk_wrap_chain(wrapped_command, faux_commandline, faux_source_range, ad);
-        }
+        // Recurse with our new command and command line.
+        source_range_t faux_source_range{uint32_t(cmdrange.start + wrapped_command_offset_in_wt),
+                                         uint32_t(wrapped_command.size())};
+        walk_wrap_chain(wrapped_command, faux_commandline, faux_source_range, ad);
     }
 }
 
@@ -1556,6 +1579,17 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
             tokens.erase(tokens.begin());
     }
 
+    // Consume variable assignments in tokens strictly before the cursor.
+    // This is a list of (escaped) strings of the form VAR=VAL.
+    wcstring_list_t var_assignments;
+    for (const tok_t &tok : tokens) {
+        if (tok.location_in_or_at_end_of_source_range(cursor_pos)) break;
+        wcstring tok_src = tok.get_source(cmdline);
+        if (!variable_assignment_equals_pos(tok_src)) break;
+        var_assignments.push_back(std::move(tok_src));
+    }
+    tokens.erase(tokens.begin(), tokens.begin() + var_assignments.size());
+
     // Empty process (cursor is after one of ;, &, |, \n, &&, || modulo whitespace).
     if (tokens.empty()) {
         // Don't autosuggest anything based on the empty string (generalizes #1631).
@@ -1568,6 +1602,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
 
     const tok_t &cmd_tok = tokens.front();
     const tok_t &cur_tok = tokens.back();
+
     // Since fish does not currently support redirect in command position, we return here.
     if (cmd_tok.type != token_type_t::string) return;
     if (cur_tok.type == token_type_t::error) return;
@@ -1634,6 +1669,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     } else {
         // Try completing as an argument.
         custom_arg_data_t arg_data{};
+        arg_data.var_assignments = std::move(var_assignments);
         arg_data.had_ddash = had_ddash;
 
         assert(cmd_tok.offset < std::numeric_limits<uint32_t>::max());

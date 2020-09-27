@@ -38,8 +38,8 @@ enum class expand_flag {
     executables_only,
     /// Only match directories.
     directories_only,
-    /// Don't generate descriptions.
-    no_descriptions,
+    /// Generate descriptions, stored in the description field of completions.
+    gen_descriptions,
     /// Don't expand jobs (but still expand processes).
     skip_jobs,
     /// Don't expand home directories.

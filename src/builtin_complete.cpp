@@ -365,7 +365,9 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
                 parser.libdata().builtin_complete_current_commandline = true;
 
             completion_list_t comp =
-                complete(do_complete_param, completion_request_t::fuzzy_match, parser.context());
+                complete(do_complete_param,
+                         {completion_request_t::fuzzy_match, completion_request_t::descriptions},
+                         parser.context());
 
             for (const auto &next : comp) {
                 // Make a fake commandline, and then apply the completion to it.

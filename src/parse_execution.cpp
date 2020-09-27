@@ -507,8 +507,8 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
     // Expand it. We need to offset any errors by the position of the string.
     completion_list_t switch_values_expanded;
     parse_error_list_t errors;
-    auto expand_ret = expand_string(switch_value, &switch_values_expanded,
-                                    expand_flag::no_descriptions, ctx, &errors);
+    auto expand_ret =
+        expand_string(switch_value, &switch_values_expanded, expand_flags_t{}, ctx, &errors);
     parse_error_offset_source_start(&errors, statement.argument.range.start);
 
     switch (expand_ret.result) {
@@ -935,8 +935,7 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
         // Expand this string.
         parse_error_list_t errors;
         arg_expanded.clear();
-        auto expand_ret =
-            expand_string(arg_str, &arg_expanded, expand_flag::no_descriptions, ctx, &errors);
+        auto expand_ret = expand_string(arg_str, &arg_expanded, expand_flags_t{}, ctx, &errors);
         parse_error_offset_source_start(&errors, arg_node->range.start);
         switch (expand_ret.result) {
             case expand_result_t::error: {
@@ -1091,8 +1090,8 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
         completion_list_t expression_expanded;
         parse_error_list_t errors;
         // TODO this is mostly copied from expand_arguments_from_nodes, maybe extract to function
-        auto expand_ret = expand_string(expression, &expression_expanded,
-                                        expand_flag::no_descriptions, ctx, &errors);
+        auto expand_ret =
+            expand_string(expression, &expression_expanded, expand_flags_t{}, ctx, &errors);
         parse_error_offset_source_start(&errors, variable_assignment.range.start + *equals_pos + 1);
         switch (expand_ret.result) {
             case expand_result_t::error:

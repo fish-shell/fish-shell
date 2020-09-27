@@ -172,8 +172,10 @@ static wcstring resolve_description(const wcstring &full_completion, wcstring *c
         completion->resize(complete_sep_loc);
         return description;
     }
-    if (expand_flags & expand_flag::no_descriptions) return {};
-    return desc_func ? desc_func(full_completion) : wcstring{};
+    if (desc_func && (expand_flags & expand_flag::gen_descriptions)) {
+        return desc_func(full_completion);
+    }
+    return wcstring{};
 }
 
 // A transient parameter pack needed by wildcard_complete.
@@ -513,7 +515,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
 
     // Compute the description.
     wcstring desc;
-    if (!(expand_flags & expand_flag::no_descriptions)) {
+    if (expand_flags & expand_flag::gen_descriptions) {
         desc = file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
 
         if (file_size >= 0) {
@@ -988,11 +990,11 @@ wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
     assert(flags.get(expand_flag::for_completions) || !flags.get(expand_flag::fuzzy_match));
 
     // expand_flag::special_for_cd requires expand_flag::directories_only and
-    // expand_flag::for_completions and expand_flag::no_descriptions.
+    // expand_flag::for_completions and !expand_flag::gen_descriptions.
     assert(!(flags.get(expand_flag::special_for_cd)) ||
            ((flags.get(expand_flag::directories_only)) &&
             (flags.get(expand_flag::for_completions)) &&
-            (flags.get(expand_flag::no_descriptions))));
+            (!flags.get(expand_flag::gen_descriptions))));
 
     // Hackish fix for issue #1631. We are about to call c_str(), which will produce a string
     // truncated at any embedded nulls. We could fix this by passing around the size, etc. However

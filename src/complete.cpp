@@ -366,14 +366,10 @@ class completer_t {
                           const completion_list_t &possible_comp, complete_flags_t flags);
 
     expand_flags_t expand_flags() const {
-        // Never do command substitution in autosuggestions. Sadly, we also can't yet do job
-        // expansion because it's not thread safe.
         expand_flags_t result{};
         if (this->type() == COMPLETE_AUTOSUGGEST) result |= expand_flag::skip_cmdsubst;
-
-        // Allow fuzzy matching.
         if (this->fuzzy()) result |= expand_flag::fuzzy_match;
-
+        if (this->wants_descriptions()) result |= expand_flag::gen_descriptions;
         return result;
     }
 
@@ -786,7 +782,6 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
 
     expand_flags_t eflags{};
     if (is_autosuggest) {
-        eflags |= expand_flag::no_descriptions;
         eflags |= expand_flag::skip_cmdsubst;
     }
 
@@ -1128,12 +1123,12 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         if (this->type() == COMPLETE_AUTOSUGGEST) {
             flags |= expand_flag::special_for_cd_autosuggestion;
         }
-        flags |= expand_flags_t{expand_flag::directories_only, expand_flag::special_for_cd,
-                                expand_flag::no_descriptions};
+        flags |= expand_flag::directories_only;
+        flags |= expand_flag::special_for_cd;
     }
 
     // Squelch file descriptions per issue #254.
-    if (this->type() == COMPLETE_AUTOSUGGEST || do_file) flags |= expand_flag::no_descriptions;
+    if (this->type() == COMPLETE_AUTOSUGGEST || do_file) flags.clear(expand_flag::gen_descriptions);
 
     // We have the following cases:
     //
@@ -1367,7 +1362,7 @@ const block_t *completer_t::apply_var_assignments(const custom_arg_data_t *ad) {
     //   VAR=(launch_missiles) cmd<tab>
     // should not launch missiles.
     // Note we also do NOT send --on-variable events.
-    const expand_flags_t expand_flags{expand_flag::no_descriptions, expand_flag::skip_cmdsubst};
+    const expand_flags_t expand_flags = expand_flag::skip_cmdsubst;
     const block_t *block = ctx.parser->push_block(block_t::variable_assignment_block());
     for (const wcstring &var_assign : ad->var_assignments) {
         maybe_t<size_t> equals_pos = variable_assignment_equals_pos(var_assign);

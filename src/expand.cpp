@@ -1121,8 +1121,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_
         return true;
     }
 
-    if (expand_string(std::move(string), &completions, flags | expand_flag::no_descriptions, ctx,
-                      errors) == expand_result_t::ok &&
+    if (expand_string(std::move(string), &completions, flags, ctx, errors) == expand_result_t::ok &&
         completions.size() == 1) {
         string = std::move(completions.at(0).completion);
         return true;
@@ -1141,9 +1140,7 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const operatio
 
     completion_list_t completions;
     expand_result_t expand_err = expand_string(
-        instr, &completions,
-        {expand_flag::skip_cmdsubst, expand_flag::no_descriptions, expand_flag::skip_jobs}, ctx,
-        errors);
+        instr, &completions, {expand_flag::skip_cmdsubst, expand_flag::skip_jobs}, ctx, errors);
     if (expand_err == expand_result_t::ok) {
         // The first completion is the command, any remaning are arguments.
         bool first = true;

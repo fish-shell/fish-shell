@@ -34,6 +34,6 @@ Examples
     >_ set str foo
     >_ string length -q $str; echo $status
     0
-    # Equivalent to test -n $str
+    # Equivalent to test -n "$str"
 
 .. END EXAMPLES

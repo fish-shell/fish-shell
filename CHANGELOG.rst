@@ -4,9 +4,9 @@ fish 3.2.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 
--  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Ctrl+Z, and redo to Alt+/.
+-  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Control+Z, and redo to Alt+/.
 -  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (#6824).
--  Ctrl-C no longer kills background jobs for which job control is
+-  Control-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
 -  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
    Although flow control remains off by default, enterprising users can now enable it for external commands with
@@ -31,7 +31,7 @@ Notable improvements and fixes
 
     dmesg -w | string replace foo bar
 
--  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus``.
+-  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (#6820), improving its use in command substitutions (#6998).
 -  Significant performance improvements to completions (#7153).
 
 Syntax changes and new commands
@@ -99,7 +99,7 @@ Interactive improvements
 - ``help string match/replace/<subcommand>`` will show the help for string subcommands (#6786).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (#6964).
 -  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (#6964).
--  A new variable ``$status_generation`` is incremented only when the previous command produces a status. This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
+-  A new variable ``$status_generation`` is incremented only when the previous command produces a status (#6815). This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
 -  ``fish_greeting`` is now a function that reads a variable of the same name, and defaults to setting it globally. This removes a universal variable by default and helps with updating the greeting. However, to disable the greeting it is now necessary to explicitly specify universal scope (``set -U fish_greeting``) or to disable it in config.fish (#7265).
 -  Events are properly emitted after a job is cancelled (#2356).
 - A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
@@ -121,18 +121,19 @@ Interactive improvements
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (#6910).
 -  ``open`` no longer hangs indefinitely as a bug in ``xdg-open`` has been worked around (#7215).
 -  Long command lines no longer add a blank line after execution (#6826) and behave better with backspace (#6951).
+-  ``functions -t`` works as documented (#6985).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
--  As mentioned above, new readline commands ``undo`` (Ctrl+_ or Ctrl+Z) and ``redo`` (Alt-/) can be used to revert
-   changes to the command line or the pager search field (#6570).
--  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, and Ctrl+left/right keys to navigate by word (#6648, #6755, #6769).
+-  As mentioned above, new readline commands ``undo`` (Control+\_ or Control+Z) and ``redo`` (Alt-/) can be used to revert changes to the command line or the pager search field (#6570).
+-  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, and Control+left/right keys to navigate by word (#6648, #6755, #6769).
 -  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (#6908).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.
 - The readline command ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
--  New readline command ``forward-single-char`` to move one character to the right, and if an autosuggestion is available, only take a single char from it (#7217).
--  New function ``__fish_preview_current_file`` (Alt+O) opens the
+-  A new readline command ``forward-single-char`` moves one character to the right, and if an autosuggestion is available, only take a single character from it (#7217).
+-  Readline commands can now be joined with ``or`` as a modifier (adding to ``and``), though only some commands report success or failure (#7217).
+-  A new function ``__fish_preview_current_file``, bound to Alt+O, opens the
    current file at the cursor in a pager (#6838).
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position
    to the external editor if the editor is recognized (#6138, #6954).
@@ -172,7 +173,7 @@ Completions
 
 -  Added completions for
 
-   -  ``7z``, ``7za`` and ``7zr``
+   -  ``7z``, ``7za`` and ``7zr`` (#7220)
    -  ``apk`` (#7108)
    -  ``asciidoctor``
    -  ``cmark``
@@ -206,7 +207,7 @@ Completions
    -  ``tig``
    -  ``windscribe`` (#6788)
    -  ``wireshark``, ``tshark``, and ``dumpcap``
-   -  ``xbps-*``
+   -  ``xbps-*`` (#7239)
    -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (#7103
    -  ``yadm`` (#7100)
    -  ``zopfli``, and ``zopflipng``

@@ -135,7 +135,8 @@ class arg_iterator_t {
 // valid and get the result of parsing the command for flags.
 using options_t = struct options_t {  //!OCLINT(too many fields)
     bool all_valid = false;
-    bool chars_valid = false;
+    bool char_to_pad_valid = false;
+    bool chars_to_trim_valid = false;
     bool count_valid = false;
     bool entire_valid = false;
     bool filter_valid = false;
@@ -157,6 +158,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool no_trim_newlines_valid = false;
     bool fields_valid = false;
     bool allow_empty_valid = false;
+    bool width_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -179,6 +181,9 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     long max = 0;
     long start = 0;
     long end = 0;
+    size_t width = 0;
+
+    wchar_t char_to_pad = ' ';
 
     std::vector<int> fields;
 
@@ -242,8 +247,15 @@ static int handle_flag_a(wchar_t **argv, parser_t &parser, io_streams_t &streams
 
 static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
-    if (opts->chars_valid) {
+    if (opts->chars_to_trim_valid) {
         opts->chars_to_trim = w.woptarg;
+        return STATUS_CMD_OK;
+    } else if (opts->char_to_pad_valid) {
+        if (wcslen(w.woptarg) != 1) {
+            string_error(streams, _(L"%ls: Padding should be a character '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        opts->char_to_pad = w.woptarg[0];
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -451,13 +463,33 @@ static int handle_flag_v(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_w(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    long width = 0;
+    if (opts->width_valid) {
+        width = fish_wcstol(w.woptarg);
+        if (width < 0) {
+            string_error(streams, _(L"%ls: Invalid width value '%ls'\n"), argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        } else if (errno) {
+            string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
+            return STATUS_INVALID_ARGS;
+        }
+        opts->width = static_cast<size_t>(width);
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 /// This constructs the wgetopt() short options string based on which arguments are valid for the
 /// subcommand. We have to do this because many short flags have multiple meanings and may or may
 /// not require an argument depending on the meaning.
 static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath complexity)
     wcstring short_opts(L":");
     if (opts->all_valid) short_opts.append(L"a");
-    if (opts->chars_valid) short_opts.append(L"c:");
+    if (opts->char_to_pad_valid) short_opts.append(L"c:");
+    if (opts->chars_to_trim_valid) short_opts.append(L"c:");
     if (opts->count_valid) short_opts.append(L"n:");
     if (opts->entire_valid) short_opts.append(L"e");
     if (opts->filter_valid) short_opts.append(L"f");
@@ -478,6 +510,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->no_trim_newlines_valid) short_opts.append(L"N");
     if (opts->fields_valid) short_opts.append(L"f:");
     if (opts->allow_empty_valid) short_opts.append(L"a");
+    if (opts->width_valid) short_opts.append(L"w:");
     return short_opts;
 }
 
@@ -507,13 +540,14 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"no-trim-newlines", no_argument, nullptr, 'N'},
                                               {L"fields", required_argument, nullptr, 'f'},
                                               {L"allow-empty", no_argument, nullptr, 'a'},
+                                              {L"width", required_argument, nullptr, 'w'},
                                               {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}, {1, handle_flag_1}};
+    {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -935,6 +969,52 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     return matcher->match_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.char_to_pad_valid = true;
+    opts.right_valid = true;
+    opts.width_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    // Pad left by default
+    if (!opts.right) {
+        opts.left = true;
+    }
+
+    // Find max width of strings and keep the inputs
+    size_t max_width = 0;
+    std::vector<wcstring> all_inputs;
+
+    arg_iterator_t aiter_width(argv, optind, streams);
+    while (const wcstring *arg = aiter_width.nextstr()) {
+        wcstring input_string = *arg;
+        size_t width = fish_wcswidth(input_string);
+        if (width > max_width) max_width = width;
+        all_inputs.push_back(input_string);
+    }
+
+    size_t pad_width = max_width > opts.width ? max_width : opts.width;
+    for (auto &input : all_inputs) {
+        wcstring padded = input;
+        size_t padded_width = fish_wcswidth(padded);
+        if (pad_width >= padded_width) {
+            size_t pad = pad_width - padded_width;
+            if (opts.left) {
+                padded.insert(0, pad, opts.char_to_pad);
+            }
+            if (opts.right) {
+                padded.append(pad, opts.char_to_pad);
+            }
+        }
+        streams.out.append(padded);
+        streams.out.append(L'\n');
+    }
+
+    return STATUS_CMD_OK;
 }
 
 class string_replacer_t {
@@ -1368,7 +1448,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
 static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     options_t opts;
-    opts.chars_valid = true;
+    opts.chars_to_trim_valid = true;
     opts.left_valid = true;
     opts.right_valid = true;
     opts.quiet_valid = true;
@@ -1453,6 +1533,7 @@ string_subcommands[] = {
     {L"split", &string_split},   {L"split0", &string_split0},     {L"sub", &string_sub},
     {L"trim", &string_trim},     {L"lower", &string_lower},       {L"upper", &string_upper},
     {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {L"collect", &string_collect},
+    {L"pad", &string_pad},
     {nullptr, nullptr}};
 
 /// The string builtin, for manipulating strings.

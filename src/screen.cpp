@@ -919,8 +919,6 @@ struct screen_layout_t {
     wcstring right_prompt;
     // The autosuggestion.
     wcstring autosuggestion;
-    // Whether the prompts get their own line or not.
-    bool prompts_get_own_line;
 };
 
 // Given a vector whose indexes are offsets and whose values are the widths of the string if
@@ -1085,14 +1083,6 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     if (!done) {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
-        // See remark about for why we can't use the right prompt here result.right_prompt =
-        // right_prompt. If the command wraps, and the prompt is not short, place the command on its
-        // own line. A short prompt is 33% or less of the terminal's width.
-        const size_t prompt_percent_width = (100 * left_prompt_width) / screen_width;
-        if (left_prompt_width + first_command_line_width + 1 > screen_width &&
-            prompt_percent_width > 33) {
-            result.prompts_get_own_line = true;
-        }
         result.autosuggestion = autosuggestion;
     }
 
@@ -1154,10 +1144,6 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
 
     // If overflowing, give the prompt its own line to improve the situation.
     size_t first_line_prompt_space = layout.left_prompt_space;
-    if (layout.prompts_get_own_line) {
-        s_desired_append_char(s, L'\n', highlight_spec_t{}, 0, 0, 0);
-        first_line_prompt_space = 0;
-    }
 
     // Reconstruct the command line.
     wcstring effective_commandline = explicit_command_line + layout.autosuggestion;

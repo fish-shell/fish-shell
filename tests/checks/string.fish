@@ -45,10 +45,7 @@ string length -q ""; and echo not zero length; or echo zero length
 string pad foo
 # CHECK: foo
 
-string pad -r -w 4 foo
-# CHECK:  foo
-
-string pad -r -w 7 -c '-' foo
+string pad -r -w 7 -c - foo
 # CHECK: foo----
 
 string pad --width 7 -c '=' foo
@@ -57,13 +54,35 @@ string pad --width 7 -c '=' foo
 echo \|(string pad --width 10 --right foo)\|
 # CHECK: |foo       |
 
+# Pad string with multi-width emoji.
 string pad -w 4 -c . 🐟
 # CHECK: ..🐟
 
+# Pad with multi-width character.
+string pad -w 3 -c 🐟 .
+# CHECK: 🐟.
+
+# Multi-width pad with remainder, complemented with a space.
+string pad -w 4 -c 🐟 k kk
+# CHECK: 🐟 k
+# CHECK: 🐟kk
+
+# Pad to the maximum length.
 string pad -c . long longer longest
 # CHECK: ...long
 # CHECK: .longer
 # CHECK: longest
+
+# This tests current behavior where the max width of an argument overrules
+# the width parameter. This could be changed if needed.
+string pad -c_ --width 5 longer-than-width-param x
+# CHECK: longer-than-width-param
+# CHECK: ______________________x
+
+# Current behavior is that only a single padding character is supported.
+# We can support longer strings in future without breaking compatibilty.
+string pad -c ab -w4 .
+# CHECKERR: string pad: Padding should be a character 'ab'
 
 string sub --length 2 abcde
 # CHECK: ab
@@ -644,5 +663,5 @@ echo $status
 # CHECK: 0
 
 # Unmatched capturing groups are treated as empty
-echo 'az'   | string replace -r -- 'a(b.+)?z' 'a:$1z'
+echo az | string replace -r -- 'a(b.+)?z' 'a:$1z'
 # CHECK: a:z

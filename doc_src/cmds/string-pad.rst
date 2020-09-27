@@ -1,5 +1,5 @@
-string-pad - pad characters before and after string
-===================================================
+string-pad - pad strings to a fixed width
+=========================================
 
 Synopsis
 --------
@@ -17,15 +17,13 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string pad`` pads each STRING with CHAR to the given width.
+``string pad`` extends each STRING to the given width by adding CHAR to the left.
 
-The default behavior is left padding with spaces and default width is the length of string (hence, no padding).
+If ``-r`` or ``--right`` is given, add the padding after a string.
 
-If ``-r`` or ``--right`` is given, only pad after string.
+If ``-c`` or ``--char`` is given, pad with CHAR instead of whitespace.
 
-The ``-c`` or ``--char`` switch causes padding with the character CHAR instead of default whitespace character.
-
-If ``-w`` or ``--width`` is given, pad the string to given width. Width less than the string width will result in an unchanged string.
+The output is padded to the maximum width of all input strings. If ``-w`` or ``--width`` is given, use at least that.
 
 .. END DESCRIPTION
 
@@ -36,15 +34,17 @@ Examples
 
 ::
 
-    >_ string pad -w 10 -c ' ' 'abc'
+    >_ string pad -w 10 abc
            abc
 
-    >_ string pad --right --width 12 --char=z foo barbaz
-    foozzzzzzzzz
-    barbazzzzzzz
+    >_ string pad --right --char=🐟 "fish are pretty" "rich. "
+    fish are pretty
+    rich.  🐟🐟🐟🐟
 
-    >_ string pad -w 6 --char=- foo | string pad --right -w 9 --char=-
-    ---foo---
+    >_ string pad -w 6 -c- " | " "|||" " | " | string pad -r -w 9 -c-
+    --- | ---
+    ---|||---
+    --- | ---
 
 
 .. END EXAMPLES

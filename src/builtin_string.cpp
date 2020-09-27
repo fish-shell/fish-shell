@@ -183,7 +183,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     long end = 0;
     size_t width = 0;
 
-    wchar_t char_to_pad = ' ';
+    wchar_t char_to_pad = L' ';
 
     std::vector<int> fields;
 
@@ -252,7 +252,8 @@ static int handle_flag_c(wchar_t **argv, parser_t &parser, io_streams_t &streams
         return STATUS_CMD_OK;
     } else if (opts->char_to_pad_valid) {
         if (wcslen(w.woptarg) != 1) {
-            string_error(streams, _(L"%ls: Padding should be a character '%ls'\n"), argv[0], w.woptarg);
+            string_error(streams, _(L"%ls: Padding should be a character '%ls'\n"), argv[0],
+                         w.woptarg);
             return STATUS_INVALID_ARGS;
         }
         opts->char_to_pad = w.woptarg[0];
@@ -980,6 +981,12 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
+    size_t pad_char_width = fish_wcwidth(opts.char_to_pad);
+    if (pad_char_width == 0) {
+        string_error(streams, _(L"%ls: Invalid padding character of width zero\n"), argv[0]);
+        return STATUS_INVALID_ARGS;
+    }
+
     // Pad left by default
     if (!opts.right) {
         opts.left = true;
@@ -987,31 +994,36 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
     // Find max width of strings and keep the inputs
     size_t max_width = 0;
-    std::vector<wcstring> all_inputs;
+    std::vector<wcstring> inputs;
 
     arg_iterator_t aiter_width(argv, optind, streams);
     while (const wcstring *arg = aiter_width.nextstr()) {
         wcstring input_string = *arg;
         size_t width = fish_wcswidth(input_string);
         if (width > max_width) max_width = width;
-        all_inputs.push_back(input_string);
+        inputs.push_back(std::move(input_string));
     }
 
     size_t pad_width = max_width > opts.width ? max_width : opts.width;
-    for (auto &input : all_inputs) {
-        wcstring padded = input;
-        size_t padded_width = fish_wcswidth(padded);
+    for (auto &input : inputs) {
+        wcstring padded;
+        size_t padded_width = fish_wcswidth(input);
         if (pad_width >= padded_width) {
-            size_t pad = pad_width - padded_width;
+            size_t pad = (pad_width - padded_width) / pad_char_width;
+            size_t remaining_width = (pad_width - padded_width) % pad_char_width;
             if (opts.left) {
-                padded.insert(0, pad, opts.char_to_pad);
+                padded.append(pad, opts.char_to_pad);
+                padded.append(remaining_width, L' ');
+                padded.append(input);
             }
             if (opts.right) {
+                padded.append(input);
+                padded.append(remaining_width, L' ');
                 padded.append(pad, opts.char_to_pad);
             }
         }
+        padded.push_back(L'\n');
         streams.out.append(padded);
-        streams.out.append(L'\n');
     }
 
     return STATUS_CMD_OK;

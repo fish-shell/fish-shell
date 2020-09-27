@@ -42,6 +42,7 @@ Syntax changes and new commands
 
 Scripting improvements
 ----------------------
+-  New command ``string pad`` allows to extend text to a fixed width (#7340).
 -  ``string sub`` has a new ``--end`` option to specify the end index of
    a substring (#6765).
 -  ``string split`` has a new ``--fields`` option to specify fields to

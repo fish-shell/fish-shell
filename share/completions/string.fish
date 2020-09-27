@@ -2,7 +2,7 @@
 # This follows a strict command-then-options approach, so we can just test the number of tokens
 complete -f -c string
 complete -f -c string -n "test (count (commandline -opc)) -le 2" -s h -l help -d "Display help and exit"
-complete -f -c string -n "test (count (commandline -opc)) -ge 2; and not contains -- (commandline -opc)[2] escape collect" -s q -l quiet -d "Do not print output"
+complete -f -c string -n "test (count (commandline -opc)) -ge 2; and not contains -- (commandline -opc)[2] escape collect pad" -s q -l quiet -d "Do not print output"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a lower
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a upper
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a length
@@ -48,3 +48,7 @@ complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a repeat
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] repeat" -s n -l count -xa "(seq 1 10)" -d "Repetition count"
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] repeat" -s m -l max -xa "(seq 1 10)" -d "Maximum number of printed chars"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] repeat" -s N -l no-newline -d "Remove newline"
+complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a pad
+complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] pad" -s r -l right -d "Pad right instead of left"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] pad" -s c -l char -x -d "Character to use for padding"
+complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] pad" -s w -l width -x -d "Integer width of the result, default is maximum width of inputs"

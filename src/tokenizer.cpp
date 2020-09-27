@@ -819,7 +819,7 @@ bool move_word_state_machine_t::consume_char_whitespace(wchar_t c) {
             case s_always_one: {
                 consumed = true;  // always consume the first character
                 // If it's not whitespace, only consume those from here.
-                if (!iswblank(c)) {
+                if (!iswspace(c)) {
                     state = s_graph;
                 } else {
                     // If it's whitespace, keep consuming whitespace until the graphs.
@@ -828,7 +828,7 @@ bool move_word_state_machine_t::consume_char_whitespace(wchar_t c) {
                 break;
             }
             case s_blank: {
-                if (iswblank(c)) {
+                if (iswspace(c)) {
                     consumed = true;  // consumed whitespace
                 } else {
                     state = s_graph;
@@ -836,7 +836,7 @@ bool move_word_state_machine_t::consume_char_whitespace(wchar_t c) {
                 break;
             }
             case s_graph: {
-                if (!iswblank(c)) {
+                if (!iswspace(c)) {
                     consumed = true;  // consumed printable non-space
                 } else {
                     state = s_end;

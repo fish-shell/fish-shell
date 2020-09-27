@@ -557,7 +557,7 @@ static void perf_convert_ascii() {
 
     double start = timef();
     const int iters = 1024;
-    for (int i=0; i < iters; i++) {
+    for (int i = 0; i < iters; i++) {
         (void)str2wcstring(s);
     }
     double end = timef();
@@ -2523,7 +2523,8 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
 static void test_word_motion() {
     say(L"Testing word motion");
     test_1_word_motion(word_motion_left, move_word_style_punctuation, L"^echo ^hello_^world.^txt^");
-    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^echo^ hello^_world^.txt^");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation,
+                       L"^echo^ hello^_world^.txt^");
 
     test_1_word_motion(word_motion_left, move_word_style_punctuation,
                        L"echo ^foo_^foo_^foo/^/^/^/^/^    ^");
@@ -2541,6 +2542,10 @@ static void test_word_motion() {
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^a^ bcd^");
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"a^b^ cde^");
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^ab^ cde^");
+
+    test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^^a-b-c^ d-e-f");
+    test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^a-b-c^\n d-e-f^ ");
+    test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^a-b-c^\n\nd-e-f^ ");
 }
 
 /// Test is_potential_path.

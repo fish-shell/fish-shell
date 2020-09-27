@@ -411,6 +411,8 @@ class completer_t {
     void walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline, source_range_t cmd_range,
                          custom_arg_data_t *arg_data);
 
+    const block_t *apply_var_assignments(const custom_arg_data_t *ad);
+
     bool empty() const { return completions.empty(); }
 
     void escape_opening_brackets(const wcstring &argument);
@@ -1350,9 +1352,49 @@ bool completer_t::try_complete_user(const wcstring &str) {
 #endif
 }
 
+// If we have variable assignments, attempt to apply them in our parser, returning a variable
+// assignment block. The caller MUST clean this up by calling ctx.parser->pop_block(). If we do not
+// have variable assignments, then return nullptr.
+const block_t *completer_t::apply_var_assignments(const custom_arg_data_t *ad) {
+    if (!ctx.parser || ad->var_assignments.empty()) return nullptr;
+    env_stack_t &vars = ctx.parser->vars();
+    assert(&vars == &ctx.vars &&
+           "Don't know how to tab complete with a parser but a different variable set");
+
+    // clone of parse_execution_context_t::apply_variable_assignments.
+    // Crucially do NOT expand subcommands:
+    //   VAR=(launch_missiles) cmd<tab>
+    // should not launch missiles.
+    // Note we also do NOT send --on-variable events.
+    const expand_flags_t expand_flags{expand_flag::no_descriptions, expand_flag::skip_cmdsubst};
+    const block_t *block = ctx.parser->push_block(block_t::variable_assignment_block());
+    for (const wcstring &var_assign : ad->var_assignments) {
+        maybe_t<size_t> equals_pos = variable_assignment_equals_pos(var_assign);
+        assert(equals_pos && "All variable assignments should have equals position");
+        const wcstring variable_name = var_assign.substr(0, *equals_pos);
+        const wcstring expression = var_assign.substr(*equals_pos + 1);
+
+        completion_list_t expression_expanded;
+        auto expand_ret = expand_string(expression, &expression_expanded, expand_flags, ctx);
+        // If expansion succeeds, set the value; if it fails (e.g. it has a cmdsub) set an empty
+        // value anyways.
+        wcstring_list_t vals;
+        if (expand_ret == expand_result_t::ok) {
+            for (auto &completion : expression_expanded) {
+                vals.emplace_back(std::move(completion.completion));
+            }
+        }
+        ctx.parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
+        if (ctx.check_cancel()) break;
+    }
+    return block;
+}
+
 // Complete a command by invoking user-specified completions.
 void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
                                   custom_arg_data_t *ad) {
+    if (ctx.check_cancel()) return;
+
     bool is_autosuggest = this->type() == COMPLETE_AUTOSUGGEST;
     // Perhaps set a transient commandline so that custom completions
     // buitin_commandline will refer to the wrapped command. But not if
@@ -1361,53 +1403,18 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     bool wants_transient = ad->wrap_depth > 0 && !is_autosuggest;
     if (wants_transient) {
         ctx.parser->libdata().transient_commandlines.push_back(cmdline);
-        remove_transient.emplace([&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
+        remove_transient.emplace([=] { ctx.parser->libdata().transient_commandlines.pop_back(); });
     }
 
-    maybe_t<size_t> equals_pos = variable_assignment_equals_pos(cmd);
-    bool is_variable_assignment = bool(equals_pos);
-    if (is_variable_assignment && !is_autosuggest) {
-        assert(ctx.parser);
-        // clone of parse_execution_context_t::apply_variable_assignments
-        // but this is not smart enough to report correct error locations, so we ignore
-        // errors and this create one scope for each assignment instead of just one;
-        // that should hardly matter
-        const block_t *block = ctx.parser->push_block(block_t::variable_assignment_block());
-        const wcstring variable_name = cmd.substr(0, *equals_pos);
-        const wcstring expression = cmd.substr(*equals_pos + 1);
-        completion_list_t expression_expanded;
-        auto expand_ret =
-            expand_string(expression, &expression_expanded, expand_flag::no_descriptions, ctx);
-        wcstring_list_t vals;
-        if (expand_ret == expand_result_t::ok) {
-            for (auto &completion : expression_expanded)
-                vals.emplace_back(std::move(completion.completion));
-            ctx.parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
-        }
-        cleanup_t scope([&] {
-            if (block) ctx.parser->pop_block(block);
-        });
-        // To avoid issues like #2705 we complete commands starting with variable
-        // assignments by recursively calling complete for the command suffix
-        // without the first variable assignment token.
-        wcstring unaliased_cmd;
-        if (ctx.parser->libdata().transient_commandlines.empty()) {
-            unaliased_cmd = cmdline;
-        } else {
-            unaliased_cmd = ctx.parser->libdata().transient_commandlines.back();
-        }
-        tokenizer_t tok(unaliased_cmd.c_str(), TOK_ACCEPT_UNFINISHED);
-        maybe_t<tok_t> cmd_tok = tok.next();
-        assert(cmd_tok);
-        unaliased_cmd = unaliased_cmd.replace(0, cmd_tok->offset + cmd_tok->length, L"");
-        ctx.parser->libdata().transient_commandlines.push_back(unaliased_cmd);
-        cleanup_t remove_transient(
-            [&] { ctx.parser->libdata().transient_commandlines.pop_back(); });
-        perform_for_commandline(std::move(unaliased_cmd));
-        ad->do_file = false;
-    } else if (!complete_param(
-                   cmd, ad->previous_argument, ad->current_argument,
-                   !ad->had_ddash)) {  // Invoke any custom completions for this command.
+    // Maybe apply variable assignments.
+    const block_t *var_assignment_block = apply_var_assignments(ad);
+    cleanup_t restore_variable_scope([=] {
+        if (var_assignment_block) ctx.parser->pop_block(var_assignment_block);
+    });
+    if (ctx.check_cancel()) return;
+
+    if (!complete_param(cmd, ad->previous_argument, ad->current_argument,
+                        !ad->had_ddash)) {  // Invoke any custom completions for this command.
         ad->do_file = false;
     }
 }

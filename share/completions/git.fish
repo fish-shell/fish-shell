@@ -1463,9 +1463,7 @@ complete -f -c git -n '__fish_git_using_command pull' -l no-autostash -d 'Do not
 
 ### range-diff
 complete -f -c git -n __fish_git_needs_command -a range-diff -d 'Compare two commit ranges (e.g. two versions of a branch)'
-complete -f -c git -n '__fish_git_using_command range-diff' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command range-diff' -a '(__fish_git_heads)' -d Head
-complete -f -c git -n '__fish_git_using_command range-diff' -a '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command range-diff' -ka '(__fish_git_ranges)'
 complete -f -c git -n '__fish_git_using_command range-diff' -l creation-factor -d 'Percentage by which creation is weighted'
 complete -f -c git -n '__fish_git_using_command range-diff' -l no-dual-color -d 'Use simple diff colors'
 

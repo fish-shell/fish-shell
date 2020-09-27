@@ -687,8 +687,11 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
                 consumed = true;
                 if (iswspace(c)) {
                     state = s_whitespace;
+                } else if (iswalnum(c)) {
+                    state = s_alphanumeric;
                 } else {
-                    // Don't allow switching type (ws->nonws) after non-whitespace.
+                    // Don't allow switching type (ws->nonws) after non-whitespace and
+                    // non-alphanumeric.
                     state = s_rest;
                 }
                 break;

@@ -1103,7 +1103,8 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                 // functions.
                 wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
                 // Append a long-style option with a mandatory trailing equal sign
-                append_completion(&this->completions, std::move(completion), C_(o.desc), flags);
+                append_completion(&this->completions, std::move(completion), C_(o.desc),
+                                  flags | COMPLETE_NO_SPACE);
             }
 
             // Append a long-style option

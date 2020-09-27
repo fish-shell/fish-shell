@@ -719,6 +719,17 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_cc[VSTART] = disabling_char;
 }
 
+static void term_fix_external_modes(struct termios *modes) {
+    // Turning off OPOST breaks output (staircase effect), we don't allow it.
+    // See #7133.
+    modes->c_oflag |= OPOST;
+    // These cause other ridiculous behaviors like input not being shown.
+    modes->c_lflag |= ICANON;
+    modes->c_lflag |= IEXTEN;
+    modes->c_lflag |= ECHO;
+    modes->c_iflag |= ICRNL;
+    modes->c_iflag &= ~INLCR;
+}
 /// A description of where fish is in the process of exiting.
 enum class exit_state_t {
     none,               /// fish is not exiting.
@@ -770,15 +781,7 @@ static void term_steal() {
     struct termios modes;
     tcgetattr(STDIN_FILENO, &modes);
     std::memcpy(&tty_modes_for_external_cmds, &modes, sizeof tty_modes_for_external_cmds);
-    // Turning off OPOST breaks output (staircase effect), we don't allow it.
-    // See #7133.
-    tty_modes_for_external_cmds.c_oflag |= OPOST;
-    // These cause other ridiculous behaviors like input not being shown.
-    tty_modes_for_external_cmds.c_lflag |= ICANON;
-    tty_modes_for_external_cmds.c_lflag |= IEXTEN;
-    tty_modes_for_external_cmds.c_lflag |= ECHO;
-    tty_modes_for_external_cmds.c_iflag |= ICRNL;
-    tty_modes_for_external_cmds.c_iflag |= INLCR;
+    term_fix_external_modes(&tty_modes_for_external_cmds);
 
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
@@ -1232,7 +1235,7 @@ void reader_init() {
     // Disable flow control for external commands by default.
     tty_modes_for_external_cmds.c_iflag &= ~IXON;
     tty_modes_for_external_cmds.c_iflag &= ~IXOFF;
-    tty_modes_for_external_cmds.c_oflag |= OPOST;
+    term_fix_external_modes(&tty_modes_for_external_cmds);
 
     // Set the mode used for the terminal, initialized to the current mode.
     std::memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);

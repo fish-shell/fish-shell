@@ -66,7 +66,6 @@ Match Glob Examples
 
     >_ string match 'foo?' 'foo1' 'foo' 'foo2'
     foo1
-    foo
     foo2
 
 Match Regex Examples

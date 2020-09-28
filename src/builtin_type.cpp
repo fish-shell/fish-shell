@@ -147,7 +147,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **arg
                         int line_number = function_get_definition_lineno(name);
                         wcstring comment;
                         append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
-                        def = comment + def;
+                        def = comment.append(def);
                     }
                     if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                         std::vector<highlight_spec_t> colors;

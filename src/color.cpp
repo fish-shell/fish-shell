@@ -207,7 +207,7 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
     static auto named_colors_end = named_colors.end();
     std::memset(&data, 0, sizeof data);
 
-    if (str.size() == 0) {
+    if (str.empty()) {
         return false;
     }
 

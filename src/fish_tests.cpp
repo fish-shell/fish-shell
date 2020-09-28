@@ -2279,7 +2279,7 @@ static void test_path() {
     do_test(path_apply_working_directory(L"abc/", L"/def/") == L"/def/abc/");
     do_test(path_apply_working_directory(L"/abc/", L"/def/") == L"/abc/");
     do_test(path_apply_working_directory(L"/abc", L"/def/") == L"/abc");
-    do_test(path_apply_working_directory(L"", L"/def/") == L"");
+    do_test(path_apply_working_directory(L"", L"/def/").empty());
     do_test(path_apply_working_directory(L"abc", L"") == L"abc");
 }
 
@@ -3013,15 +3013,15 @@ static void test_complete() {
 
     // But not with the command prefix.
     completions = do_complete(L"echo (command scuttlebut", {});
-    do_test(completions.size() == 0);
+    do_test(completions.empty());
 
     // Not with the builtin prefix.
     completions = do_complete(L"echo (builtin scuttlebut", {});
-    do_test(completions.size() == 0);
+    do_test(completions.empty());
 
     // Not after a redirection.
     completions = do_complete(L"echo hi > scuttlebut", {});
-    do_test(completions.size() == 0);
+    do_test(completions.empty());
 
     // Trailing spaces (#1261).
     completion_mode_t no_files{};
@@ -3074,7 +3074,7 @@ static void test_complete() {
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions = do_complete(L"something abc=stfile", {});
-    do_test(completions.size() == 0);
+    do_test(completions.empty());
     completions = do_complete(L"something abc=stfile", completion_request_t::fuzzy_match);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"abc=testfile");
@@ -3489,7 +3489,7 @@ static void test_undo() {
 
     editable_line_t line;
     do_test(!line.undo());  // nothing to undo
-    do_test(line.text() == L"");
+    do_test(line.text().empty());
     do_test(line.position() == 0);
     line.push_edit(edit_t(0, 0, L"a b c"));
     do_test(line.text() == L"a b c");

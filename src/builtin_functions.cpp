@@ -265,7 +265,7 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t 
                 buff.append(name);
                 buff.append(L", ");
             }
-            if (names.size() > 0) {
+            if (!names.empty()) {
                 // Trim trailing ", "
                 buff.resize(buff.size() - 2, '\0');
             }

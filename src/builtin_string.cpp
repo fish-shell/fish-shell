@@ -1606,7 +1606,7 @@ maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **a
 
     static auto begin = std::begin(string_subcommands);
     static auto end = std::end(string_subcommands);
-    string_subcommand search{subcmd_name, 0};
+    string_subcommand search{subcmd_name, nullptr};
     auto binsearch = std::lower_bound(
         begin, end, search, [&](const string_subcommand &cmd1, const string_subcommand &cmd2) {
             return wcscmp(cmd1.name, cmd2.name) < 0;

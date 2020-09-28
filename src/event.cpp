@@ -38,10 +38,13 @@ class pending_signals_t {
 
    public:
     pending_signals_t() = default;
+    ~pending_signals_t() = default;
 
-    /// No copying.
-    pending_signals_t(const pending_signals_t &);
-    void operator=(const pending_signals_t &);
+    /// No copying or moving.
+    pending_signals_t(const pending_signals_t &) = delete;
+    void operator=(const pending_signals_t &) = delete;
+    pending_signals_t(pending_signals_t &&) = delete;
+    void operator=(pending_signals_t &&) = delete;
 
     /// Mark a signal as pending. This may be called from a signal handler.
     /// We expect only one signal handler to execute at once.

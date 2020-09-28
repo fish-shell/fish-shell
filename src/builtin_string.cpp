@@ -726,6 +726,13 @@ class string_matcher_t {
         : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
 
     virtual ~string_matcher_t() = default;
+
+    /// No copying or moving.
+    string_matcher_t(const string_matcher_t &) = delete;
+    string_matcher_t(string_matcher_t &&) = delete;
+    void operator=(const string_matcher_t &) = delete;
+    void operator=(string_matcher_t &&) = delete;
+
     virtual bool report_matches(const wcstring &arg) = 0;
     int match_count() const { return total_matched; }
 };
@@ -753,6 +760,12 @@ class wildcard_matcher_t : public string_matcher_t {
     }
 
     ~wildcard_matcher_t() override = default;
+
+    /// No copying or moving.
+    wildcard_matcher_t(const wildcard_matcher_t &) = delete;
+    wildcard_matcher_t(wildcard_matcher_t &&) = delete;
+    void operator=(const wildcard_matcher_t &) = delete;
+    void operator=(wildcard_matcher_t &&) = delete;
 
     bool report_matches(const wcstring &arg) override {
         // Note: --all is a no-op for glob matching since the pattern is always matched
@@ -822,6 +835,12 @@ struct compiled_regex_t {
         pcre2_match_data_free(match);
         pcre2_code_free(code);
     }
+
+    /// No copying or moving.
+    compiled_regex_t(const compiled_regex_t &) = delete;
+    compiled_regex_t(compiled_regex_t &&) = delete;
+    void operator=(const compiled_regex_t &) = delete;
+    void operator=(compiled_regex_t &&) = delete;
 };
 
 class pcre2_matcher_t : public string_matcher_t {
@@ -885,6 +904,12 @@ class pcre2_matcher_t : public string_matcher_t {
           regex(argv0_, pattern, opts.ignore_case, streams) {}
 
     ~pcre2_matcher_t() override = default;
+
+    /// No copying or moving.
+    pcre2_matcher_t(const pcre2_matcher_t &) = delete;
+    pcre2_matcher_t(pcre2_matcher_t &&) = delete;
+    void operator=(const pcre2_matcher_t &) = delete;
+    void operator=(pcre2_matcher_t &&) = delete;
 
     bool report_matches(const wcstring &arg) override {
         // A return value of true means all is well (even if no matches were found), false indicates
@@ -1041,6 +1066,13 @@ class string_replacer_t {
         : argv0(argv0_), opts(std::move(opts_)), total_replaced(0), streams(streams_) {}
 
     virtual ~string_replacer_t() = default;
+
+    /// No copying or moving.
+    string_replacer_t(const string_replacer_t &) = delete;
+    string_replacer_t(string_replacer_t &&) = delete;
+    void operator=(const string_replacer_t &) = delete;
+    void operator=(string_replacer_t &&) = delete;
+
     int replace_count() const { return total_replaced; }
     virtual bool replace_matches(const wcstring &arg) = 0;
 };
@@ -1059,6 +1091,13 @@ class literal_replacer_t : public string_replacer_t {
           patlen(pattern.length()) {}
 
     ~literal_replacer_t() override = default;
+
+    /// No copying or moving.
+    literal_replacer_t(const literal_replacer_t &) = delete;
+    literal_replacer_t(literal_replacer_t &&) = delete;
+    void operator=(const literal_replacer_t &) = delete;
+    void operator=(literal_replacer_t &&) = delete;
+
     bool replace_matches(const wcstring &arg) override;
 };
 

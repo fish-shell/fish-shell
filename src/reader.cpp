@@ -353,6 +353,12 @@ class reader_history_search_t {
     reader_history_search_t() = default;
     ~reader_history_search_t() = default;
 
+    /// No copying or moving.
+    reader_history_search_t(const reader_history_search_t &) = delete;
+    reader_history_search_t(reader_history_search_t &&) = delete;
+    void operator=(const reader_history_search_t &) = delete;
+    void operator=(reader_history_search_t &&) = delete;
+
     bool active() const { return mode_ != inactive; }
 
     bool by_token() const { return mode_ == token; }

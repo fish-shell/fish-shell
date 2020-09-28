@@ -813,7 +813,13 @@ static void test_fd_monitor() {
             item = fd_monitor_item_t(std::move(pipes.read), std::move(callback), timeout_usec);
         }
 
+        ~item_maker_t() = default;
+
+        /// No copying or moving.
         item_maker_t(const item_maker_t &) = delete;
+        item_maker_t(item_maker_t &&) = delete;
+        void operator=(const item_maker_t &) = delete;
+        void operator=(item_maker_t &&) = delete;
 
         // Write 42 bytes to our write end.
         void write42() const {

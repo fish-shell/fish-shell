@@ -47,6 +47,7 @@ struct work_request_t {
 
     work_request_t(void_function_t &&f, void_function_t &&comp)
         : handler(std::move(f)), completion(std::move(comp)) {}
+    ~work_request_t() = default;
 
     // Move-only
     work_request_t &operator=(const work_request_t &) = delete;
@@ -60,10 +61,12 @@ struct main_thread_request_t {
     void_function_t func;
 
     explicit main_thread_request_t(void_function_t &&f) : func(f) {}
+    ~main_thread_request_t() = default;
 
     // No moving OR copying
     // main_thread_requests are always stack allocated, and we deal in pointers to them
     void operator=(const main_thread_request_t &) = delete;
+    void operator=(main_thread_request_t &&) = delete;
     main_thread_request_t(const main_thread_request_t &) = delete;
     main_thread_request_t(main_thread_request_t &&) = delete;
 };
@@ -99,6 +102,8 @@ struct thread_pool_t {
     /// Construct with a soft minimum and maximum thread count.
     thread_pool_t(size_t soft_min_threads, size_t max_threads)
         : soft_min_threads(soft_min_threads), max_threads(max_threads) {}
+
+    ~thread_pool_t() = default;
 
     /// Enqueue a new work item onto the thread pool.
     /// The function \p func will execute in one of the pool's threads.

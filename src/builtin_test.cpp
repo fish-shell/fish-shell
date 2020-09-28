@@ -234,6 +234,12 @@ class expression {
 
     virtual ~expression() = default;
 
+    /// No copying or moving.
+    expression(const expression &) = delete;
+    expression(expression &&) = delete;
+    void operator=(const expression &) = delete;
+    void operator=(expression &&) = delete;
+
     /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
     virtual bool evaluate(wcstring_list_t &errors) = 0;
 };
@@ -282,6 +288,12 @@ class combining_expression : public expression {
     }
 
     ~combining_expression() override = default;
+
+    /// No copying or moving.
+    combining_expression(const combining_expression &) = delete;
+    combining_expression(combining_expression &&) = delete;
+    void operator=(const combining_expression &) = delete;
+    void operator=(combining_expression &&) = delete;
 
     bool evaluate(wcstring_list_t &errors) override;
 };

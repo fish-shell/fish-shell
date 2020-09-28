@@ -56,6 +56,12 @@ class scoped_buffer_t {
     explicit scoped_buffer_t(screen_t &s) : screen_(s) { screen_.outp().begin_buffering(); }
 
     ~scoped_buffer_t() { screen_.outp().end_buffering(); }
+
+    /// No copying or moving.
+    scoped_buffer_t(const scoped_buffer_t &) = delete;
+    scoped_buffer_t(scoped_buffer_t &&) = delete;
+    void operator=(const scoped_buffer_t &) = delete;
+    void operator=(scoped_buffer_t &&) = delete;
 };
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.

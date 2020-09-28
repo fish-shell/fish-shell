@@ -1450,6 +1450,12 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 
     ~universal_notifier_named_pipe_t() override = default;
 
+    /// No copying or moving.
+    universal_notifier_named_pipe_t(const universal_notifier_named_pipe_t &) = delete;
+    universal_notifier_named_pipe_t(universal_notifier_named_pipe_t &&) = delete;
+    void operator=(const universal_notifier_named_pipe_t &) = delete;
+    void operator=(universal_notifier_named_pipe_t &&) = delete;
+
     int notification_fd() const override {
         if (polling_due_to_readable_fd) {
             // We are in polling mode because we think our fd is readable. This means that, if we

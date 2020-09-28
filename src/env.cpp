@@ -878,6 +878,12 @@ class env_stack_impl_t final : public env_scoped_impl_t {
 
     ~env_stack_impl_t() override = default;
 
+    /// No copying or moving.
+    env_stack_impl_t(const env_stack_impl_t &) = delete;
+    env_stack_impl_t(env_stack_impl_t &&) = delete;
+    void operator=(const env_stack_impl_t &) = delete;
+    void operator=(env_stack_impl_t &&) = delete;
+
    private:
     /// The scopes of caller functions, which are currently shadowed.
     std::vector<env_node_ref_t> shadowed_locals_;

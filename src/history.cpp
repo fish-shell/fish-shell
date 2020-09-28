@@ -105,6 +105,12 @@ class time_profiler_t {
         double end = timef();
         FLOGF(profile_history, "%s: %.0f ms", what, (end - start) * 1000);
     }
+
+    /// No copying or moving.
+    time_profiler_t(const time_profiler_t &) = delete;
+    time_profiler_t(time_profiler_t &&) = delete;
+    void operator=(const time_profiler_t &) = delete;
+    void operator=(time_profiler_t &&) = delete;
 };
 
 /// \return the path for the history file for the given \p session_id, or none() if it could not be
@@ -305,6 +311,11 @@ struct history_impl_t {
     explicit history_impl_t(wcstring name) : name(std::move(name)) {}
     history_impl_t(history_impl_t &&) = default;
     ~history_impl_t() = default;
+
+    /// No copying or moving.
+    history_impl_t(const history_impl_t &) = delete;
+    void operator=(const history_impl_t &) = delete;
+    void operator=(history_impl_t &&) = delete;
 
     /// Returns whether this is using the default name.
     bool is_default() const;

@@ -107,6 +107,12 @@ struct thread_pool_t {
     /// want to wait for new threads.
     int perform(void_function_t &&func, void_function_t &&completion, bool cant_wait);
 
+    /// No copying or moving.
+    thread_pool_t(const thread_pool_t &) = delete;
+    thread_pool_t(thread_pool_t &&) = delete;
+    void operator=(const thread_pool_t &) = delete;
+    void operator=(thread_pool_t &&) = delete;
+
    private:
     /// The worker loop for this thread.
     void *run();
@@ -121,12 +127,6 @@ struct thread_pool_t {
 
     /// Attempt to spawn a new pthread.
     bool spawn() const;
-
-    /// No copying or moving.
-    thread_pool_t(const thread_pool_t &) = delete;
-    thread_pool_t(thread_pool_t &&) = delete;
-    void operator=(const thread_pool_t &) = delete;
-    void operator=(thread_pool_t &&) = delete;
 };
 
 /// The thread pool for "iothreads" which are used to lift I/O off of the main thread.

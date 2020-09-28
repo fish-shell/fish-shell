@@ -63,3 +63,7 @@ Available categories are listed by ``fish --print-debug-categories``. The ``--de
 Debug messages output to stderr by default. Note that if ``fish_trace`` is set, execution tracing also outputs to stderr by default. You can output to a file using the ``--debug-output`` option::
 
     > fish --debug='complete,*history*' --debug-output=/tmp/fish.log --init-command='set fish_trace on'
+
+These options can also be changed via the $FISH_DEBUG and $FISH_DEBUG_OUTPUT variables. The categories enabled via ``--debug`` are *added* to the ones enabled by $FISH_DEBUG, so they can be disabled by prefixing them with ``-`` (``reader-*,-ast*`` enables reader debugging and disables ast debugging).
+
+The file given in ``--debug-output`` takes precedence over the file in $FISH_DEBUG_OUTPUT.

@@ -419,10 +419,23 @@ int main(int argc, char **argv) {
         argv = const_cast<char **>(dummy_argv);  //!OCLINT(parameter reassignment)
         argc = 1;                                //!OCLINT(parameter reassignment)
     }
+
+    // Enable debug categories set in FISH_DEBUG.
+    // This is in *addition* to the ones given via --debug.
+    if (const char *debug_categories = getenv("FISH_DEBUG")) {
+        activate_flog_categories_by_pattern(str2wcstring(debug_categories));
+    }
+
     fish_cmd_opts_t opts{};
     my_optind = fish_parse_opt(argc, argv, &opts);
 
     // Direct any debug output right away.
+    // --debug-output takes precedence, otherwise $FISH_DEBUG_OUTPUT is used.
+    if (opts.debug_output.empty()) {
+        const char *var = getenv("FISH_DEBUG_OUTPUT");
+        if (var) opts.debug_output = var;
+    }
+
     FILE *debug_output = nullptr;
     if (!opts.debug_output.empty()) {
         debug_output = fopen(opts.debug_output.c_str(), "w");

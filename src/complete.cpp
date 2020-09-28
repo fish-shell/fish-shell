@@ -211,9 +211,9 @@ completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t ma
       flags(resolve_auto_space(completion, flags_val)) {}
 
 completion_t::completion_t(const completion_t &) = default;
-completion_t::completion_t(completion_t &&) = default;
+completion_t::completion_t(completion_t &&) noexcept = default;
 completion_t &completion_t::operator=(const completion_t &) = default;
-completion_t &completion_t::operator=(completion_t &&) = default;
+completion_t &completion_t::operator=(completion_t &&) noexcept = default;
 completion_t::~completion_t() = default;
 
 __attribute__((always_inline)) static inline bool natural_compare_completions(
@@ -404,10 +404,10 @@ class completer_t {
         std::set<wcstring> visited_wrapped_commands{};
     };
 
-    void complete_custom(const wcstring &cmd, const wcstring &cmdline, custom_arg_data_t *arg_data);
+    void complete_custom(const wcstring &cmd, const wcstring &cmdline, custom_arg_data_t *ad);
 
-    void walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline, source_range_t cmd_range,
-                         custom_arg_data_t *arg_data);
+    void walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline, source_range_t cmdrange,
+                         custom_arg_data_t *ad);
 
     cleanup_t apply_var_assignments(const wcstring_list_t &var_assignments);
 
@@ -432,7 +432,7 @@ static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_
 
 /// Create a new completion entry.
 void append_completion(completion_list_t *completions, wcstring comp, wcstring desc,
-                       complete_flags_t flags, string_fuzzy_match_t &&match) {
+                       complete_flags_t flags, string_fuzzy_match_t match) {
     completions->emplace_back(std::move(comp), std::move(desc), match, flags);
 }
 
@@ -1224,8 +1224,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         // Append matching environment variables
-        append_completion(&this->completions, std::move(comp), std::move(desc), flags,
-                          std::move(match));
+        append_completion(&this->completions, std::move(comp), std::move(desc), flags, match);
 
         res = true;
     }

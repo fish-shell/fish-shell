@@ -1118,7 +1118,7 @@ static bool should_import_bash_history_line(const wcstring &line) {
     if (line.find(L"))") != std::string::npos) return false;
     // Skip lines with literal tabs since we don't handle them well and we don't know what they mean.
     // It could just be whitespace or it's actually passed somewhere (like e.g. `sed`).
-    if (line.find(L"\t") != std::string::npos) return false;
+    if (line.find(L'\t') != std::string::npos) return false;
 
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
     if (line.back() == L'\\') return false;
@@ -1281,13 +1281,13 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
 
     path_list_t potential_paths;
     for (const node_t &node : ast) {
-        if (const argument_t *arg = node.try_as<argument_t>()) {
+        if (const auto arg = node.try_as<argument_t>()) {
             wcstring potential_path = arg->source(str);
             bool unescaped = unescape_string_in_place(&potential_path, UNESCAPE_DEFAULT);
             if (unescaped && string_could_be_path(potential_path)) {
                 potential_paths.push_back(potential_path);
             }
-        } else if (const decorated_statement_t *stmt = node.try_as<decorated_statement_t>()) {
+        } else if (const auto stmt = node.try_as<decorated_statement_t>()) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.

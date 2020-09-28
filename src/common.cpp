@@ -245,7 +245,7 @@ template <size_t Align>
 inline const char *align_start(const char *start, size_t len) {
     static_assert(Align >= 1 && Align <= 64, "Alignment must be in range [1, 64]");
     static_assert((Align & (Align - 1)) == 0, "Alignment must be power of 2");
-    uintptr_t startu = reinterpret_cast<uintptr_t>(start);
+    auto startu = reinterpret_cast<uintptr_t>(start);
     // How much do we have to add to start to make it 0 mod Align?
     // To compute 17 up-aligned by 8, compute its skew 17 % 8, yielding 1,
     // and then we will add 8 - 1. Of course if we align 16 with the same idea, we will
@@ -266,7 +266,7 @@ inline const char *align_end(const char *start, size_t len) {
     static_assert(Align >= 1 && Align <= 64, "Alignment must be in range [1, 64]");
     static_assert((Align & (Align - 1)) == 0, "Alignment must be power of 2");
     // How much do we have to subtract to align it? Its value, mod Align.
-    uintptr_t endu = reinterpret_cast<uintptr_t>(start + len);
+    auto endu = reinterpret_cast<uintptr_t>(start + len);
     uintptr_t sub_which_aligns = endu % Align;
     return start + len - std::min(static_cast<size_t>(sub_which_aligns), len);
 }

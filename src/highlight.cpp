@@ -1270,7 +1270,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     // Underline every valid path.
     if (io_ok) {
         for (const ast::node_t &node : ast) {
-            const ast::argument_t *arg = node.try_as<ast::argument_t>();
+            const auto arg = node.try_as<ast::argument_t>();
             if (!arg || arg->unsourced) continue;
             if (ctx.check_cancel()) break;
             if (range_is_potential_path(buff, arg->range, ctx, working_directory)) {

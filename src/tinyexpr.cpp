@@ -65,14 +65,14 @@ static int get_arity(const int type) {
     return 0;
 }
 
-typedef struct te_expr {
+using te_expr = struct te_expr {
     int type;
     union {
         double value;
         const void *function;
     };
     te_expr *parameters[];
-} te_expr;
+};
 
 using te_builtin = struct {
     const char *name;

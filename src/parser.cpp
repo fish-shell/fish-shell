@@ -303,8 +303,7 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
 
     // Get the root argument list and extract arguments from it.
     completion_list_t result;
-    const ast::freestanding_argument_list_t *list =
-        ast.top()->as<ast::freestanding_argument_list_t>();
+    const auto list = ast.top()->as<ast::freestanding_argument_list_t>();
     for (const ast::argument_t &arg : list->arguments) {
         wcstring arg_src = arg.source(arg_list_src);
         if (expand_string(arg_src, &result, eflags, ctx) == expand_result_t::error) {

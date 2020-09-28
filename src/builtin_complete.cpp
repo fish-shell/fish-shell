@@ -108,7 +108,7 @@ static void builtin_complete_remove(const wcstring_list_t &cmds, const wcstring_
     }
 }
 
-static void builtin_complete_print(const wcstring cmd, io_streams_t &streams, parser_t &parser) {
+static void builtin_complete_print(const wcstring &cmd, io_streams_t &streams, parser_t &parser) {
     const wcstring repr = complete_print(cmd);
 
     // colorize if interactive

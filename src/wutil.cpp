@@ -550,7 +550,7 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
             ssize_t samt = write(fd, cursor, remaining);
             if (samt < 0) return false;
             total_written += samt;
-            size_t amt = static_cast<size_t>(samt);
+            auto amt = static_cast<size_t>(samt);
             assert(amt <= remaining && "Wrote more than requested");
             remaining -= amt;
             cursor += amt;

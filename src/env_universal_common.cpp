@@ -444,9 +444,8 @@ std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
     contents.append("# VERSION: " UVARS_VERSION_3_0 "\n");
 
     // Preserve legacy behavior by sorting the values first
-    typedef std::pair<std::reference_wrapper<const wcstring>,
-                      std::reference_wrapper<const env_var_t>>
-        env_pair_t;
+    using env_pair_t =
+        std::pair<std::reference_wrapper<const wcstring>, std::reference_wrapper<const env_var_t>>;
     std::vector<env_pair_t> cloned(vars.begin(), vars.end());
     std::sort(cloned.begin(), cloned.end(), [](const env_pair_t &p1, const env_pair_t &p2) {
         return p1.first.get() < p2.first.get();

@@ -1040,7 +1040,7 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    const job_conjunction_t *job_conj = job.parent->try_as<job_conjunction_t>();
+    const auto job_conj = job.parent->try_as<job_conjunction_t>();
     if (!job_conj) return false;
 
     if (job_conj->parent->try_as<if_clause_t>()) {
@@ -1049,7 +1049,7 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
     } else if (job_conj->parent->try_as<while_header_t>()) {
         errored = append_syntax_error(parse_errors, source_range->start,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
-    } else if (const ast::job_list_t *jlist = job_conj->parent->try_as<ast::job_list_t>()) {
+    } else if (const auto jlist = job_conj->parent->try_as<ast::job_list_t>()) {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
         // Find the index of ourselves in the job list.
         size_t index;
@@ -1092,7 +1092,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     }
 
     // Get the statement we are part of.
-    const statement_t *st = dst.parent->as<statement_t>();
+    const auto st = dst.parent->as<statement_t>();
 
     // Walk up to the job.
     const ast::job_t *job = nullptr;
@@ -1250,7 +1250,7 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
     wcstring storage;
 
     for (const node_t &node : ast) {
-        if (const job_continuation_t *jc = node.try_as<job_continuation_t>()) {
+        if (const auto jc = node.try_as<job_continuation_t>()) {
             // Somewhat clumsy way of checking for a statement without source in a pipeline.
             // See if our pipe has source but our statement does not.
             if (!jc->pipe.unsourced && !jc->statement.try_source_range().has_value()) {
@@ -1262,10 +1262,10 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
             if (!jcc->conjunction.unsourced && !jcc->job.try_source_range().has_value()) {
                 has_unclosed_conjunction = true;
             }
-        } else if (const argument_t *arg = node.try_as<argument_t>()) {
+        } else if (const auto arg = node.try_as<argument_t>()) {
             const wcstring &arg_src = arg->source(buff_src, &storage);
             res |= parse_util_detect_errors_in_argument(*arg, arg_src, out_errors);
-        } else if (const ast::job_t *job = node.try_as<ast::job_t>()) {
+        } else if (const auto job = node.try_as<ast::job_t>()) {
             // Disallow background in the following cases:
             //
             // foo & ; and bar
@@ -1276,7 +1276,7 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
             if (job->bg) {
                 errored |= detect_errors_in_backgrounded_job(*job, out_errors);
             }
-        } else if (const ast::decorated_statement_t *stmt = node.try_as<decorated_statement_t>()) {
+        } else if (const auto stmt = node.try_as<decorated_statement_t>()) {
             errored |= detect_errors_in_decorated_statement(buff_src, *stmt, &storage, out_errors);
         } else if (const auto *block = node.try_as<block_statement_t>()) {
             // If our 'end' had no source, we are unsourced.

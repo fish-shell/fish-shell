@@ -486,7 +486,7 @@ static void test_format() {
 
 /// Helper to convert a narrow string to a sequence of hex digits.
 static char *str2hex(const char *input) {
-    char *output = (char *)malloc(5 * std::strlen(input) + 1);
+    auto output = (char *)malloc(5 * std::strlen(input) + 1);
     char *p = output;
     for (; *input; input++) {
         sprintf(p, "0x%02X ", (int)*input & 0xFF);
@@ -816,7 +816,7 @@ static void test_fd_monitor() {
         item_maker_t(const item_maker_t &) = delete;
 
         // Write 42 bytes to our write end.
-        void write42() {
+        void write42() const {
             char buff[42] = {0};
             (void)write_loop(writer.fd(), buff, sizeof buff);
         }
@@ -826,7 +826,7 @@ static void test_fd_monitor() {
 
     // Items which will never receive data or be called back.
     item_maker_t item_never(fd_monitor_item_t::kNoTimeout);
-    item_maker_t item_hugetimeout(100000000llu * usec_per_msec);
+    item_maker_t item_hugetimeout(100000000LLU * usec_per_msec);
 
     // Item which should get no data, and time out.
     item_maker_t item0_timeout(16 * usec_per_msec);
@@ -1599,7 +1599,7 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
 // Annoying variant to handle uchar to avoid narrowing conversion warnings.
 static void test_utf82wchar(const unsigned char *usrc, size_t slen, const wchar_t *dst, size_t dlen,
                             int flags, size_t res, const char *descr) {
-    const char *src = reinterpret_cast<const char *>(usrc);
+    const auto src = reinterpret_cast<const char *>(usrc);
     return test_utf82wchar(src, slen, dst, dlen, flags, res, descr);
 }
 
@@ -1644,7 +1644,7 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
 // Annoying variant to handle uchar to avoid narrowing conversion warnings.
 static void test_wchar2utf8(const wchar_t *src, size_t slen, const unsigned char *udst, size_t dlen,
                             int flags, size_t res, const char *descr) {
-    const char *dst = reinterpret_cast<const char *>(udst);
+    const auto dst = reinterpret_cast<const char *>(udst);
     return test_wchar2utf8(src, slen, dst, dlen, flags, res, descr);
 }
 
@@ -1815,7 +1815,7 @@ static void test_escape_sequences() {
 class test_lru_t : public lru_cache_t<test_lru_t, int> {
    public:
     static constexpr size_t test_capacity = 16;
-    typedef std::pair<wcstring, int> value_type;
+    using value_type = std::pair<wcstring, int>;
 
     test_lru_t() : lru_cache_t<test_lru_t, int>(test_capacity) {}
 
@@ -2590,7 +2590,7 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **arg
 static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) {
     parser_t &parser = parser_t::principal_parser();
     size_t i, count = lst.size();
-    wchar_t **argv = new wchar_t *[count + 3];
+    auto argv = new wchar_t *[count + 3];
     argv[0] = (wchar_t *)(bracket ? L"[" : L"test");
     for (i = 0; i < count; i++) {
         argv[i + 1] = (wchar_t *)lst.at(i).c_str();
@@ -4061,7 +4061,7 @@ void history_tests_t::test_history_races() {
     history_t(L"race_test").clear();
 
     pid_t children[RACE_COUNT];
-    for (size_t i = 0; i < RACE_COUNT; i++) {
+    for (auto &child : children) {
         pid_t pid = fork();
         if (!pid) {
             // Child process.
@@ -4070,7 +4070,7 @@ void history_tests_t::test_history_races() {
             exit_without_destructors(0);
         } else {
             // Parent process.
-            children[i] = pid;
+            child = pid;
         }
     }
 
@@ -5677,7 +5677,7 @@ void test_maybe() {
     maybe_t<std::string> m3("hi");
     maybe_t<std::string> m4 = m3;
     do_test(m4 && *m4 == "hi");
-    maybe_t<std::string> m5 = m0;
+    const maybe_t<std::string> &m5 = m0;
     do_test(!m5);
 
     maybe_t<std::string> acquire_test("def");

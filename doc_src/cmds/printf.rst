@@ -44,6 +44,8 @@ Valid format specifiers are taken from the C library function ``printf(3)``:
 
 Conversion can fail, e.g. "102.234" can't losslessly convert to an integer, causing printf to print an error. If you are okay with losing information, silence errors with `2>/dev/null`.
 
+A number between the ``%`` and the format letter specifies the width. The result will be left-padded with spaces.
+
 Backslash Escapes
 -----------------
 printf also knows a number of backslash escapes:

@@ -34,17 +34,22 @@ Examples
 
 ::
 
-    >_ string pad -w 10 abc
+    >_ string pad -w 10 abc abcdef
            abc
+        abcdef
 
     >_ string pad --right --char=🐟 "fish are pretty" "rich. "
     fish are pretty
     rich.  🐟🐟🐟🐟
 
-    >_ string pad -w 6 -c- " | " "|||" " | " | string pad -r -w 9 -c-
-    --- | ---
-    ---|||---
-    --- | ---
+    >_ string pad -w$COLUMNS (date)
+    # Prints the current time on the right edge of the screen.
 
+
+
+See Also
+--------
+
+- The :ref:`printf <cmd-printf>` command can do simple padding, for example ``printf %10s\n`` works like ``string pad -w10``.
 
 .. END EXAMPLES

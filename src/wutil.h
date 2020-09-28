@@ -117,7 +117,7 @@ int wrename(const wcstring &oldName, const wcstring &newv);
 /// This does NOT retry on EINTR or EAGAIN, it simply returns.
 /// \return -1 on error in which case errno will have been set. In this event, the number of bytes
 /// actually written cannot be obtained.
-ssize_t wwrite_to_fd(const wchar_t *s, size_t len, int fd);
+ssize_t wwrite_to_fd(const wchar_t *input, size_t len, int fd);
 
 /// Variant of above that accepts a wcstring.
 inline ssize_t wwrite_to_fd(const wcstring &s, int fd) {

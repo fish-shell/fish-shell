@@ -402,7 +402,7 @@ static void update_fish_color_support(const environment_t &vars) {
                 // Supporting versions of iTerm include a colon here.
                 // We assume that if this is iTerm, it can't also be st, so having this check
                 // inside is okay.
-                if (it->as_string().find(L":") != wcstring::npos) {
+                if (it->as_string().find(L':') != wcstring::npos) {
                     FLOGF(term_support, L"Truecolor support: Enabling for ITERM");
                     support_term24bit = true;
                 }

@@ -268,7 +268,7 @@ static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.
         complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
-        append_completion(out, out_completion, out_desc, local_flags, std::move(match));
+        append_completion(out, out_completion, out_desc, local_flags, match);
         return match_acceptable;
     } else if (next_wc_char_pos > 0) {
         // The literal portion of a wildcard cannot be longer than the string itself,

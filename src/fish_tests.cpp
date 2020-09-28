@@ -1815,7 +1815,7 @@ static void test_escape_sequences() {
 class test_lru_t : public lru_cache_t<test_lru_t, int> {
    public:
     static constexpr size_t test_capacity = 16;
-    typedef std::pair<wcstring, int> value_type;
+    using value_type = std::pair<wcstring, int>;
 
     test_lru_t() : lru_cache_t<test_lru_t, int>(test_capacity) {}
 

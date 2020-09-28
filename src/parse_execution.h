@@ -87,7 +87,7 @@ class parse_execution_context_t {
     enum process_type_t process_type_for_command(const ast::decorated_statement_t &statement,
                                                  const wcstring &cmd) const;
     end_execution_reason_t apply_variable_assignments(
-        process_t *proc, const ast::variable_assignment_list_t &variable_assignments,
+        process_t *proc, const ast::variable_assignment_list_t &variable_assignment_list,
         const block_t **block);
 
     // These create process_t structures from statements.

@@ -60,7 +60,7 @@ Scripting improvements
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions) (#977).
 -  Added a ``fish_job_summary`` function which is called whenever a
-   background job stops or ends, or any job terminates from a signal.
+   background job stops or ends, or any job terminates from a signal (#6959).
    The default behaviour can now be customized by redefining this
    function.
 -  The ``fish_prompt`` event no longer fires when ``read`` is used. If
@@ -103,7 +103,8 @@ Interactive improvements
 -  A new variable ``$status_generation`` is incremented only when the previous command produces a status (#6815). This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
 -  ``fish_greeting`` is now a function that reads a variable of the same name, and defaults to setting it globally. This removes a universal variable by default and helps with updating the greeting. However, to disable the greeting it is now necessary to explicitly specify universal scope (``set -U fish_greeting``) or to disable it in config.fish (#7265).
 -  Events are properly emitted after a job is cancelled (#2356).
-- A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
+-  A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (#6511). See the output of ``fish --print-debug-categories`` for the full list.
+-  The enabled debug categories are now printed on shell startup (#7007).
 - The ``-o`` short option to fish, for ``--debug-output``, works correctly instead of producing an
   invalid option error (#7254).
 -  Abbreviations are now expanded after all command terminators (eg ``;`` or ``|``), not just space, as in fish 2.7.1 and before (#6970), and after closing a command substitution (#6658).
@@ -143,9 +144,8 @@ New or improved bindings
    to simplify rerunning the previous command with ``sudo`` (#7079).
 - ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
   from history if the commandline is empty (#7137).
-- ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (#7191)
--  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
-   shape in vi mode, regardless of terminal. The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
+- ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (#7191),
+
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -160,6 +160,8 @@ Improved prompts
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+-  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
+   shape in vi mode, regardless of terminal (#6968). The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
 -  ``history clear`` output is formatted with appropriate newlines (#6976).
 -  Autosuggestions now show up also when the cursor passes the right
    prompt (#6948).
@@ -176,8 +178,8 @@ Completions
 
    -  ``7z``, ``7za`` and ``7zr`` (#7220)
    -  ``apk`` (#7108)
-   -  ``asciidoctor``
-   -  ``cmark``
+   -  ``asciidoctor`` (#7000)
+   -  ``cmark`` (#7000)
    -  ``create_ap``
    -  ``deno`` (#7138)
    -  ``dhclient``
@@ -195,14 +197,14 @@ Completions
    -  Metasploit's ``msfconsole``, ``msfdb`` and ``msfvenom`` (#6930)
    -  ``ncat``, ``nc.openbsd`` and ``nc.traditional`` (#6873)
    -  ``nmap`` (#6873)
-   -  ``prime-run``
+   -  ``prime-run`` (#7241)
    -  ``ps2pdf{12,13,14,wr}`` (#6673)
    -  ``pyenv`` (#6551)
    -  ``rst2html``, ``rst2html4``, ``rst2html5``, ``rst2latex``,
       ``rst2man``, ``rst2odt``, ``rst2pseudoxml``, ``rst2s5``,
-      ``rst2xetex``, ``rst2xml`` and ``rstpep2html``
+      ``rst2xetex``, ``rst2xml`` and ``rstpep2html`` (#7019)
    -  ``sphinx-apidoc``, ``sphinx-autogen``, ``sphinx-build`` and
-      ``sphinx-quickstart``
+      ``sphinx-quickstart`` (#7000)
    -  ``strace`` (#6656)
    -  ``tcpdump`` (#6690)
    -  ``tig``
@@ -211,7 +213,7 @@ Completions
    -  ``xbps-*`` (#7239)
    -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (#7103
    -  ``yadm`` (#7100)
-   -  ``zopfli``, and ``zopflipng``
+   -  ``zopfli`` and ``zopflipng``
 
 - Lots of improvements to completions.
 - Improvements to the manpage completion generator (#7086).

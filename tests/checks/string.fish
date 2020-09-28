@@ -56,16 +56,17 @@ echo \|(string pad --width 10 --right foo)\|
 
 # Pad string with multi-width emoji.
 string pad -w 4 -c . 🐟
-# CHECK: ..🐟
+# NOTE: These are regex'd because the testing system might have an older/newer wcwidth.
+# CHECK: .{{.*}}🐟
 
 # Pad with multi-width character.
 string pad -w 3 -c 🐟 .
-# CHECK: 🐟.
+# CHECK: {{🐟+}}.
 
 # Multi-width pad with remainder, complemented with a space.
 string pad -w 4 -c 🐟 k kk
-# CHECK: 🐟 k
-# CHECK: 🐟kk
+# CHECK: {{🐟+}} k
+# CHECK: {{🐟+}}kk
 
 # Pad to the maximum length.
 string pad -c . long longer longest

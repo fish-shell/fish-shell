@@ -10,8 +10,6 @@
 #include "parse_tree.h"
 #include "wutil.h"
 
-namespace {
-
 /// \return tokenizer flags corresponding to parse tree flags.
 static tok_flags_t tokenizer_flags_from_parse_flags(parse_tree_flags_t flags) {
     tok_flags_t tok_flags = 0;
@@ -100,6 +98,8 @@ static parse_token_type_t parse_token_type_from_tokenizer_token(
     DIE("bad token type");
     return parse_token_type_t::invalid;
 }
+
+namespace {
 
 /// A token stream generates a sequence of parser tokens, permitting arbitrary lookahead.
 class token_stream_t {

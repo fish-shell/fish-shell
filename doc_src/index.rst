@@ -1575,6 +1575,8 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Control`\ +\ :kbd:`L` clears and repaints the screen.
 
+- :kbd:`Control`\ +\ :kbd:`R` searches the history if there is something in the commandline. This is mainly to ease the transition from other shells, where ctrl+r initiates the history search.
+
 - :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the `killring <#killring>`__.
 
 - :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents.

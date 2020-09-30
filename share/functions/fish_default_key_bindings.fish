@@ -98,6 +98,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 
     bind --preset $argv \ed kill-word
 
+    # Let ctrl+r search history if there is something in the commandline.
+    bind --preset $argv \cr 'commandline | string length -q; and commandline -f history-search-backward'
+
     # term-specific special bindings
     switch "$TERM"
         case 'rxvt*'

@@ -124,6 +124,7 @@ Interactive improvements
 -  ``open`` no longer hangs indefinitely as a bug in ``xdg-open`` has been worked around (#7215).
 -  Long command lines no longer add a blank line after execution (#6826) and behave better with backspace (#6951).
 -  ``functions -t`` works as documented (#6985).
+-  History search now flashes when it found no more results (#7362)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

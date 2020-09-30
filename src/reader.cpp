@@ -3141,6 +3141,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                         ? history_search_direction_t::backward
                         : history_search_direction_t::forward;
                 bool found = history_search.move_in_direction(dir);
+
+                // Signal that we've found nothing
+                if (!found) flash();
+
                 if (!found && !was_active_before) {
                     history_search.reset();
                     break;

@@ -47,7 +47,7 @@ else if type -q command-not-found
     end
     # pkgfile is an optional, but official, package on Arch Linux
     # it ships with example handlers for bash and zsh, so we'll follow that format
-else if type -p -q pkgfile
+else if type -q pkgfile
     function fish_command_not_found
         set -l __packages (pkgfile --binaries --verbose -- $argv[1] 2>/dev/null)
         if test $status -eq 0

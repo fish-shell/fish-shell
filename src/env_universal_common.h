@@ -162,8 +162,10 @@ class universal_notifier_t {
         // Use a value in shared memory. Simple, but requires polling and therefore semi-frequent
         // wakeups.
         strategy_shmem_polling,
+
         // Strategy that uses notify(3). Simple and efficient, but OS X/macOS only.
         strategy_notifyd,
+
         // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require
         // polling most of the time.
         strategy_named_pipe,

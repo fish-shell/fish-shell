@@ -30,6 +30,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
+#include "termios.h"
 #include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -198,7 +199,7 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
 /// we weren't asked to split on null characters.
 static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool shell, bool silent,
                             const wchar_t *prompt, const wchar_t *right_prompt,
-                            const wchar_t *commandline) {
+                            const wchar_t *commandline, int stdin) {
     int exit_res = STATUS_CMD_OK;
 
     // Construct a configuration.
@@ -216,6 +217,8 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
 
     conf.left_prompt_cmd = prompt;
     conf.right_prompt_cmd = right_prompt;
+
+    conf.stdin = stdin;
 
     // Don't keep history.
     reader_push(parser, wcstring{}, std::move(conf));
@@ -487,7 +490,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **arg
         if (stream_stdin_is_a_tty && !opts.split_null) {
             // Read interactively using reader_readline(). This does not support splitting on null.
             exit_res = read_interactive(parser, buff, opts.nchars, opts.shell, opts.silent,
-                                        opts.prompt, opts.right_prompt, opts.commandline);
+                                        opts.prompt, opts.right_prompt, opts.commandline, streams.stdin_fd);
         } else if (!opts.nchars && !stream_stdin_is_a_tty &&
                    lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
             exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);

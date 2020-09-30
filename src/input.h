@@ -23,7 +23,7 @@ void init_input();
 
 struct input_mapping_t;
 class inputter_t {
-    input_event_queue_t event_queue_{};
+    input_event_queue_t event_queue_;
     std::vector<wchar_t> input_function_args_{};
     bool function_status_{false};
 
@@ -37,11 +37,12 @@ class inputter_t {
     bool mapping_is_match(const input_mapping_t &m);
     maybe_t<input_mapping_t> find_mapping();
     char_event_t read_characters_no_readline();
+    int stdin{0};
 
    public:
-    inputter_t(parser_t &parser);
+    inputter_t(parser_t &parser, int stdin = 0);
 
-    /// Read a character from fd 0. Try to convert some escape sequences into character constants,
+    /// Read a character from stdin. Try to convert some escape sequences into character constants,
     /// but do not permanently block the escape character.
     ///
     /// This is performed in the same way vim does it, i.e. if an escape character is read, wait for

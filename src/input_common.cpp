@@ -46,12 +46,12 @@ void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
 char_event_t input_event_queue_t::readb() {
     for (;;) {
         fd_set fdset;
-        int fd_max = 0;
+        int fd_max = stdin;
         int ioport = iothread_port();
         int res;
 
         FD_ZERO(&fdset);
-        FD_SET(0, &fdset);
+        FD_SET(stdin, &fdset);
         if (ioport > 0) {
             FD_SET(ioport, &fdset);
             fd_max = std::max(fd_max, ioport);
@@ -106,9 +106,9 @@ char_event_t input_event_queue_t::readb() {
                 }
             }
 
-            if (FD_ISSET(STDIN_FILENO, &fdset)) {
+            if (FD_ISSET(stdin, &fdset)) {
                 unsigned char arr[1];
-                if (read_blocked(0, arr, 1) != 1) {
+                if (read_blocked(stdin, arr, 1) != 1) {
                     // The teminal has been closed.
                     return char_event_type_t::eof;
                 }
@@ -212,7 +212,7 @@ char_event_t input_event_queue_t::readch_timed(bool dequeue_timeouts) {
     } else {
         fd_set fds;
         FD_ZERO(&fds);
-        FD_SET(STDIN_FILENO, &fds);
+        FD_SET(stdin, &fds);
         struct timeval tm = {wait_on_escape_ms / 1000, 1000 * (wait_on_escape_ms % 1000)};
         if (select(1, &fds, nullptr, nullptr, &tm) > 0) {
             result = readch();

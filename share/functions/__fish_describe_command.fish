@@ -29,7 +29,7 @@ function __fish_apropos
         if test $age -ge $max_age
             echo "making cache $age $max_age"
             mkdir -m 700 -p $cache
-            man --path | string split : | xargs /usr/libexec/makewhatis -o $db >/dev/null 2>&1
+            /usr/libexec/makewhatis -o $db (man --path | string split :) >/dev/null 2>&1
         end
         MANPATH="$cache" apropos $argv
     else

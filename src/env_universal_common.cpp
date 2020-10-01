@@ -25,6 +25,7 @@
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>  // IWYU pragma: keep
 #endif
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/time.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
@@ -43,6 +44,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "path.h"
+#include "signal.h"
 #include "utf8.h"
 #include "util.h"  // IWYU pragma: keep
 #include "wcstringutil.h"
@@ -1298,6 +1300,119 @@ static autoclose_fd_t make_fifo(const wchar_t *test_path, const wchar_t *suffix)
     return res;
 }
 
+// A universal notifier which uses SIGIO with a named pipe. This relies on the following behavior
+// which appears to work on Linux: if data becomes available on the pipe then all processes get
+// SIGIO even if the data is read (i.e. there is no race between SIGIO and another proc reading).
+//
+// A key difference between Linux and Mac is that on Linux SIGIO is only delivered if the pipe was
+// previously empty. That is, two successive writes with no reads will produce two SIGIOs on Mac but
+// only one on Linux.
+//
+// So, to post a notification, write anything to the pipe; if that would block drain the pipe and
+// try again.
+//
+// To receive a notification, watch for SIGIO on the read end, then read out the data to enable
+// SIGIO to be delivered again.
+class universal_notifier_sigio_t final : public universal_notifier_t {
+#ifdef SIGIO
+   public:
+    // Note we use a different suffix from universal_notifier_named_pipe_t to produce different
+    // FIFOs. This is because universal_notifier_named_pipe_t is level triggered while we are edge
+    // triggered. If they shared the same FIFO, then the named_pipe variant would keep firing
+    // forever.
+    explicit universal_notifier_sigio_t(const wchar_t *test_path)
+        : pipe_(try_make_pipe(test_path, L".notify")) {}
+
+    ~universal_notifier_sigio_t() = default;
+
+    void post_notification() override {
+        if (!pipe_.valid()) return;
+
+        // Write a byte to send SIGIO. If the pipe is full, read some and try again.
+        while (!write_1_byte()) {
+            if (errno == EINTR) {
+                continue;
+            } else if (errno == EAGAIN) {
+                // The pipe is full. Try once more.
+                drain_some();
+                write_1_byte();
+                break;
+            } else {
+                break;
+            }
+        }
+    }
+
+    bool poll() override {
+        uint32_t count = signal_get_sigio_pollin_count();
+        if (count != sigio_pollin_count_) {
+            // On Mac, SIGIO is generated on every write to the pipe.
+            // On Linux, it is generated only when the pipe goes from empty to non-empty.
+            // Read from the pipe so that SIGIO may be delivered again.
+            drain_some();
+            sigio_pollin_count_ = count;
+            return true;
+        }
+        return false;
+    }
+
+   private:
+    // Construct a pipe for a given fifo path, arranging for SIGIO to be delivered.
+    // \return an invalid fd on failure.
+    static autoclose_fd_t try_make_pipe(const wchar_t *test_path, const wchar_t *suffix) {
+        autoclose_fd_t pipe = make_fifo(test_path, suffix);
+        if (!pipe.valid()) {
+            return autoclose_fd_t{};
+        }
+        // Note that O_ASYNC cannot be passed to open() (see Linux kernel bug #5993).
+        // We have to set it afterwards like so.
+        // Also Linux got support for O_ASYNC on fifos in 2.6 (released 2003).
+        // Do not be noisy if this fails.
+        if (fcntl(pipe.fd(), F_SETFL, O_NONBLOCK | O_ASYNC) == -1) {
+            FLOG(uvar_file, "fcntl(F_SETFL) failed, universal variable notifications disabled");
+            return autoclose_fd_t{};
+        }
+        if (fcntl(pipe.fd(), F_SETOWN, getpid()) == -1) {
+            wperror(L"fcntl(F_SETOWN)");
+            return autoclose_fd_t{};
+        }
+#ifdef F_SETSIG
+        // Linux requires an (apparently redundant) setting of SIGIO, in order for the si_code to be
+        // set properly in the signal handler's context.
+        if (fcntl(pipe.fd(), F_SETSIG, SIGIO) == -1) {
+            wperror(L"fcntl(F_SETSIG)");
+            return autoclose_fd_t{};
+        }
+#endif
+        return pipe;
+    }
+
+    // Try writing a single byte to our pipe.
+    // \return true on success, false on error, in which case errno will be set.
+    bool write_1_byte() const {
+        assert(pipe_.valid() && "Invalid pipe");
+        char c = 0x42;
+        ssize_t amt = write(pipe_.fd(), &c, sizeof c);
+        return amt > 0;
+    }
+
+    // Read some data off of the pipe, discarding it.
+    void drain_some() const {
+        if (!pipe_.valid()) return;
+        char buff[256];
+        ignore_result(read(pipe_.fd(), buff, sizeof buff));
+    }
+
+    autoclose_fd_t pipe_{};
+    uint32_t sigio_pollin_count_{0};
+#else
+   public:
+    [[noreturn]] universal_notifier_sigio_t() {
+        DIE("universal_notifier_sigio_t cannot be used on this system");
+    }
+#endif
+};
+
 // Named-pipe based notifier. All clients open the same named pipe for reading and writing. The
 // pipe's readability status is a trigger to enter polling mode.
 //
@@ -1459,6 +1574,8 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
 #ifdef FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
+#elif defined(SIGIO)
+    return strategy_sigio;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;
 #else
@@ -1480,6 +1597,9 @@ std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_str
         }
         case strategy_shmem_polling: {
             return make_unique<universal_notifier_shmem_poller_t>();
+        }
+        case strategy_sigio: {
+            return make_unique<universal_notifier_sigio_t>(test_path);
         }
         case strategy_named_pipe: {
             return make_unique<universal_notifier_named_pipe_t>(test_path);

@@ -3776,13 +3776,11 @@ static void test_universal_ok_to_save() {
 }
 
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
-    bool result = false;
-    if (note->usec_delay_between_polls() > 0) {
-        result = note->poll();
-    }
+    if (note->poll()) return true;
 
+    bool result = false;
     int fd = note->notification_fd();
-    if (!result && fd >= 0) {
+    if (fd >= 0) {
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(fd, &fds);
@@ -3805,7 +3803,8 @@ static void trigger_or_wait_for_notification(universal_notifier_t::notifier_stra
             usleep(40000);
             break;
         }
-        case universal_notifier_t::strategy_named_pipe: {
+        case universal_notifier_t::strategy_named_pipe:
+        case universal_notifier_t::strategy_sigio: {
             break;  // nothing required
         }
     }
@@ -3815,6 +3814,9 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     say(L"Testing universal notifiers with strategy %d", (int)strategy);
     std::unique_ptr<universal_notifier_t> notifiers[16];
     size_t notifier_count = sizeof notifiers / sizeof *notifiers;
+
+    // Set up SIGIO handler as needed.
+    signal_set_handlers(false);
 
     // Populate array of notifiers.
     for (size_t i = 0; i < notifier_count; i++) {

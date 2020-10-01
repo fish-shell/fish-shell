@@ -207,6 +207,11 @@ void signal_clear_cancel() { s_cancellation_signal = 0; }
 
 int signal_check_cancel() { return s_cancellation_signal; }
 
+/// Number of POLL_IN SIGIO events.
+static volatile relaxed_atomic_t<uint32_t> s_signal_pollin_count{0};
+
+uint32_t signal_get_sigio_pollin_count() { return s_signal_pollin_count; }
+
 /// The single signal handler. By centralizing signal handling we ensure that we can never install
 /// the "wrong" signal handler (see #5969).
 static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
@@ -269,6 +274,14 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
         case SIGALRM:
             // We have a sigalarm handler that does nothing. This is used in the signal torture
             // test, to verify that we behave correctly when receiving lots of irrelevant signals.
+            break;
+
+        case SIGIO:
+            // An async FD became readable/writable/etc.
+            if (info->si_code == POLL_IN) {
+                // Don't use ++ to avoid a CAS.
+                s_signal_pollin_count = s_signal_pollin_count + 1;
+            }
             break;
     }
     errno = saved_errno;
@@ -351,6 +364,11 @@ void signal_set_handlers(bool interactive) {
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGINT, &act, nullptr);
+
+    // Apply our SIGIO handler.
+    act.sa_sigaction = &fish_signal_handler;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGIO, &act, nullptr);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
     act.sa_flags = SA_SIGINFO;

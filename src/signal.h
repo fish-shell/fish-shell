@@ -42,6 +42,12 @@ int signal_check_cancel();
 /// In generaly this should only be done in interactive sessions.
 void signal_clear_cancel();
 
+/// \return a count of POLL_IN SIGIO events.
+/// This corresponds to the number of times we have received SIGIO with POLL_IN set as the code.
+/// This is used by the universal variable machinery. It is a simple unsigned counter which wraps to
+/// 0.
+uint32_t signal_get_sigio_pollin_count();
+
 enum class topic_t : uint8_t;
 /// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
 class sigchecker_t {

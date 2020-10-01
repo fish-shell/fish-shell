@@ -159,12 +159,14 @@ class env_universal_t {
 class universal_notifier_t {
    public:
     enum notifier_strategy_t {
-        // Use a value in shared memory. Simple, but requires polling and therefore semi-frequent
-        // wakeups.
+        // Poll on shared memory.
         strategy_shmem_polling,
 
-        // Strategy that uses notify(3). Simple and efficient, but OS X/macOS only.
+        // Mac-specific notify(3) implementation.
         strategy_notifyd,
+
+        // Set up a fifo and then waits for SIGIO to be delivered on it.
+        strategy_sigio,
 
         // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require
         // polling most of the time.

@@ -1,13 +1,3 @@
-# macOS 10.15 "Catalina" has some major issues.
-# The whatis database is non-existent, so apropos tries (and fails) to create it every time,
-# which takes about half a second.
-#
-# Instead, we build a whatis database in the user cache directory
-# and override the MANPATH using that directory before we run `apropos`
-#
-# the cache is rebuilt one a day
-#
-
 if not type -q apropos
     function __fish_apropos
     end
@@ -15,6 +5,14 @@ if not type -q apropos
 end
 
 function __fish_apropos
+    # macOS 10.15 "Catalina" has some major issues.
+    # The whatis database is non-existent, so apropos tries (and fails) to create it every time,
+    # which takes about half a second.
+    #
+    # Instead, we build a whatis database in the user cache directory
+    # and override the MANPATH using that directory before we run `apropos`
+    #
+    # the cache is rebuilt once a day
     if test (uname) = Darwin
         set -l cache $HOME/.cache/fish/
         if test -n "$XDG_CACHE_HOME"

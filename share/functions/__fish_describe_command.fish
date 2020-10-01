@@ -6,23 +6,32 @@
 # The whatis database is non-existent, so apropos tries (and fails) to create it every time,
 # which takes about half a second.
 #
-# Instead, we build a whatis database in the user home directory
-# and use grep to query it
+# Instead, we build a whatis database in the user cache directory
+# and override the MANPATH using that directory before we run `apropos`
 #
-# A function `__fish_apropos_update` is provided for updating
+# the cache is rebuilt one a day
 #
-function __fish_apropos -d "Internal command to query the apopos database"
+function __fish_apropos
     if test (uname) = Darwin
-        set db ~/.whatis.db
-
-        function __fish_apropos_update -d "Updates the apropos database $db on Macos"
-            echo "updating apropos / whatis database at $db"
-            man --path | tr ":" " " | xargs /usr/libexec/makewhatis -o $db
+        set -l cache $HOME/.cache/fish/
+        if test -n "$XDG_CACHE_HOME"
+            set cache $XDG_CACHE_HOME/fish
         end
 
-        [ -f $db ] || __fish_apropos_update
+        set -l db $cache/whatis
+        set -l max_age 86400 # one day
+        set -l age $max_age
 
-        /usr/bin/grep -i "$argv" $db
+        if test -f $db
+            set age (math (date +%s) - (stat -f %m $db))
+        end
+
+        if test $age -ge $max_age
+            echo "making cache $age $max_age"
+            mkdir -m 700 -p $cache
+            man --path | string split : | xargs /usr/libexec/makewhatis -o $db >/dev/null 2>&1
+        end
+        MANPATH="$cache" apropos $argv
     else
         apropos $argv
     end

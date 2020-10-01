@@ -6,15 +6,25 @@
 # The whatis database is non-existent, so apropos tries (and fails) to create it every time,
 # which takes about half a second.
 #
-# So we disable this entirely in that case.
-if test (uname) = Darwin
-    set -l darwin_version (uname -r | string split .)
-    # macOS 15 is Darwin 19, this is an issue up to and including 10.15.3.
-    if test "$darwin_version[1]" = 19 -a "$darwin_version[2]" -le 3
-        function __fish_describe_command
+# Instead, we build a whatis database in the user home directory
+# and use grep to query it
+#
+# A function `__fish_apropos_update` is provided for updating
+#
+function __fish_apropos -d "Internal command to query the apopos database"
+    if test (uname) = Darwin
+        set db ~/.whatis.db
+
+        function __fish_apropos_update -d "Updates the apropos database $db on Macos"
+            echo "updating apropos / whatis database at $db"
+            man --path | tr ":" " " | xargs /usr/libexec/makewhatis -o $db
         end
-        # (remember: exit when `source`ing only exits the file, not the shell)
-        exit
+
+        [ -f $db ] || __fish_apropos_update
+
+        /usr/bin/grep -i "$argv" $db
+    else
+        apropos $argv
     end
 end
 
@@ -28,7 +38,7 @@ end
 function __fish_describe_command -d "Command used to find descriptions for commands"
     # $argv will be inserted directly into the awk regex, so it must be escaped
     set -l argv_regex (string escape --style=regex "$argv")
-    apropos $argv 2>/dev/null | awk -v FS=" +- +" '{
+    __fish_apropos $argv 2>/dev/null | awk -v FS=" +- +" '{
 		split($1, names, ", ");
 		for (name in names)
 			if (names[name] ~ /^'"$argv_regex"'.* *\([18]\)/ ) {

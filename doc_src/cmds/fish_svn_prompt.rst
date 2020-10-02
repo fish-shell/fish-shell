@@ -9,7 +9,7 @@ Synopsis
 ::
 
      function fish_prompt
-          echo -n (pwd)(fish_svn_prompt) '$ '
+          printf '%s' $PWD (fish_svn_prompt) ' $ '
      end
 
 Description

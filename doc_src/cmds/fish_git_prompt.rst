@@ -9,7 +9,7 @@ Synopsis
 ::
 
      function fish_prompt
-          echo -n (pwd)(fish_git_prompt) '$ '
+          printf '%s' $PWD (fish_git_prompt) ' $ '
      end
 
 Description

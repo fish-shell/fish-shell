@@ -51,9 +51,8 @@ function __fish_complete_suffix -d "Complete using files"
     # Simple and common case: no prefix, just complete normally and filter out unwanted suffixes.
     if test -z $prefix
         set -l suffix (string escape --style=regex -- $suff)
-        # Use normal file completions. Any valid command works here as, as long as it has no
-        # user-defined completions. The builtin ":" should work.
-        set files (complete -C ": $comp" | string match -r "^.*(?:$suffix|/)\$")
+        # Use normal file completions.
+        set files (complete -C "__fish_command_without_completions $comp" | string match -r "^.*(?:$suffix|/)\$")
     else
         # Strip leading ./ as it confuses the detection of base and suffix
         # It is conditionally re-added below.

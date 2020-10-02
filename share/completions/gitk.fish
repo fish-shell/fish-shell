@@ -20,7 +20,7 @@ complete -c gitk -n 'not contains -- -- (commandline -opc)' -xa -L1 -d '-L<start
 complete -c gitk -n 'not contains -- -- (commandline -opc)' -xa -L. -d '-L<funcname>:<file> trace the evolution of a function name regex'
 complete -c gitk -n 'not contains -- -- (commandline -opc) && string match -rq -- "^-L[^:]*": (commandline -ct)' -xa '(
     set -l tok (string split -m 1 -- : (commandline -ct))
-    printf -- "$tok[1]:%s\n" (complete -C": $tok[2]")
+    printf -- "$tok[1]:%s\n" (complete -C"__fish_command_without_completions $tok[2]")
 )'
 complete -c gitk -f -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
 complete -c gitk -F -n 'contains -- -- (commandline -opc)'

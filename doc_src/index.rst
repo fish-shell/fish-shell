@@ -1534,7 +1534,7 @@ Command line editor
 
 The fish editor features copy and paste, a `searchable history <#history-search>`_ and many editor functions that can be bound to special keyboard shortcuts.
 
-Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example::
+Similar to bash, fish has Emacs and Vi editing modes. These support only a limited subset of the full editor commands. For full editor functionality, use :kbd:`Alt`\ +\ :kbd:`E`. The default editing mode is Emacs. You can switch to Vi mode with ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example::
 
 
     function fish_hybrid_key_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"

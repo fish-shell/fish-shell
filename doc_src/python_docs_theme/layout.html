@@ -46,7 +46,7 @@
 
 {% block footer %}
     <div class="footer">
-    &copy; <a href="{{ pathto('copyright') }}">{% trans %}Copyright{% endtrans %}</a> {{ copyright|e }}.
+    &copy; {% trans %}Copyright{% endtrans %} {{ copyright|e }}.
     <br />
     {%- if last_updated %}
       {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}

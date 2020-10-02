@@ -29,8 +29,6 @@ def setup(app):
         os.path.join(this_dir, "fish_indent_lexer.py"), lexername="FishIndentLexer"
     )
     lexers["fish-docs-samples"] = fish_indent_lexer
-    app.add_html_theme(
-    'python_docs_theme', this_dir + '/python_docs_theme/')
     # add_css_file only appears in Sphinx 1.8.0
     if hasattr(app, "add_css_file"):
         app.add_css_file("custom.css")
@@ -114,6 +112,7 @@ pygments_style = None
 # a list of builtin themes.
 # !!! If you change this you also need to update the @import at the top
 # of _static/pygments.css
+html_theme_path = ["."]
 html_theme = "python_docs_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme

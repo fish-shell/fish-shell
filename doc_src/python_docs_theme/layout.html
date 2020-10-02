@@ -1,0 +1,58 @@
+{% extends "classic/layout.html" %}
+
+{% block rootrellink %}
+    <li><img src="{{ pathto('_static/' + theme_root_icon, 1) }}" alt=""
+             style="vertical-align: middle; margin-top: -1px"/></li>
+    <li><a href="{{theme_root_url}}">{{theme_root_name}}</a>{{ reldelim1 }}</li>
+    {% if theme_root_include_title %}
+    <a href="{{ pathto('index') }}">{{ shorttitle }}</a>{{ reldelim1 }}
+    {% endif %}
+{% endblock %}
+
+{%- macro searchbox() %}
+{# modified from sphinx/themes/basic/searchbox.html #}
+    {%- if builder != "htmlhelp" %}
+    <div class="inline-search" style="display: none" role="search">
+        <form class="inline-search" action="{{ pathto('search') }}" method="get">
+          <input placeholder="{{ _('Quick search') }}" type="text" name="q" />
+          <input type="submit" value="{{ _('Go') }}" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+    <script type="text/javascript">$('.inline-search').show(0);</script>
+    {%- endif %}
+{%- endmacro %}
+
+{% block relbar1 %} {% if builder != 'qthelp' %} {{ relbar() }} {% endif %} {% endblock %}
+{% block relbar2 %} {% if builder != 'qthelp' %} {{ relbar() }} {% endif %} {% endblock %}
+{% block relbaritems %}
+    {%- if pagename != "search" and builder != "singlehtml" and builder != "htmlhelp" %}
+    <li class="right">
+        {{ searchbox() }}
+        {{ reldelim2 }}
+    </li>
+    {%- endif %}
+{% endblock %}
+
+{% block extrahead %}
+    <link rel="shortcut icon" type="image/png" href="{{ pathto('_static/' + theme_root_icon, 1) }}" />
+    {% if builder != "htmlhelp" %}
+    {% if not embedded %}<script type="text/javascript" src="{{ pathto('_static/copybutton.js', 1) }}"></script>{% endif %}
+    {% endif %}
+    {{ super() }}
+{% endblock %}
+
+{% block footer %}
+    <div class="footer">
+    &copy; <a href="{{ pathto('copyright') }}">{% trans %}Copyright{% endtrans %}</a> {{ copyright|e }}.
+    <br />
+    {%- if last_updated %}
+      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
+    {%- endif %}
+    {% if theme_issues_url %}{% trans pathto_bugs=theme_issues_url %}<a href="{{ theme_issues_url }}">Found a bug</a>?{% endtrans %}{% endif %}
+    <br />
+
+    {% trans sphinx_version=sphinx_version|e %}Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
+    </div>
+{% endblock %}

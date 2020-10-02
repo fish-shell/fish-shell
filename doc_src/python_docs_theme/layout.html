@@ -1,4 +1,6 @@
 {% extends "classic/layout.html" %}
+{# Remove broken "genindex" link - unfortunately this takes with it the acceptable "next" and "previous" links, but they're not super necessary. #}
+{% set rellinks = [] %}
 
 {% block rootrellink %}
     <li><img src="{{ pathto('_static/' + theme_root_icon, 1) }}" alt=""
@@ -30,7 +32,6 @@
     {%- if pagename != "search" and builder != "singlehtml" and builder != "htmlhelp" %}
     <li class="right">
         {{ searchbox() }}
-        {{ reldelim2 }}
     </li>
     {%- endif %}
 {% endblock %}

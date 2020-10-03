@@ -1373,7 +1373,7 @@ class universal_notifier_sigio_t final : public universal_notifier_t {
             return autoclose_fd_t{};
         }
         if (fcntl(pipe.fd(), F_SETOWN, getpid()) == -1) {
-            wperror(L"fcntl(F_SETOWN)");
+            FLOG(uvar_file, "fcntl(F_SETOWN) failed, universal variable notifications disabled");
             return autoclose_fd_t{};
         }
 #ifdef F_SETSIG

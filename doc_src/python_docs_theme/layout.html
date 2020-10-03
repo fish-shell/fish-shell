@@ -26,6 +26,7 @@
     {%- endif %}
 {%- endmacro %}
 
+{% block header %}<div id="fmain">{% endblock %}
 {% block relbar1 %} {% if builder != 'qthelp' %} {{ relbar() }} {% endif %} {% endblock %}
 {% block relbar2 %} {% if builder != 'qthelp' %} {{ relbar() }} {% endif %} {% endblock %}
 {% block relbaritems %}
@@ -56,4 +57,5 @@
 
     {% trans sphinx_version=sphinx_version|e %}Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
     </div>
+</div>
 {% endblock %}

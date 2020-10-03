@@ -114,6 +114,8 @@ pygments_style = None
 # of _static/pygments.css
 html_theme_path = ["."]
 html_theme = "python_docs_theme"
+#html_theme_path = ["./cloud_sptheme/themes"]
+#html_theme = "cloud"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

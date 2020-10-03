@@ -1,16 +1,31 @@
 @import url("default.css");
 
+html {
+    background: none;
+}
+
 body {
-    background-color: white;
-    margin-left: 1em;
-    margin-right: 1em;
+    background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
+}
+
+div#fmain {
+    color: #222;
+    padding: 10px 50px 30px;
+    background-color: #EEEEFA;
+    border-radius: 14px;
+    position: relative;
+    margin: 25px auto 0;
+    -moz-box-shadow: 0 0 1px 1px #333;
+    -webkit-box-shadow: 0 0 1px 1px #333;
+    box-shadow: 0 0 5px 1px #333;
+    width: 80%;
 }
 
 div.related {
-    margin-bottom: 1.2em;
+    margin-bottom: 0;
     padding: 0.5em 0;
     border-top: 1px solid #ccc;
-    margin-top: 0.5em;
+    margin-top: 0;
 }
 
 div.related a:hover {
@@ -33,10 +48,13 @@ form.inline-search input[type="submit"] {
 }
 
 div.sphinxsidebar {
-    background-color: #eeeeee;
+    background-color: #eeeefa;
+    border: 1px solid;
     border-radius: 5px;
     line-height: 130%;
     font-size: smaller;
+    float: left;
+    postion: fixed;
 }
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
@@ -57,7 +75,7 @@ div.sphinxsidebar a:hover {
 
 form.inline-search input,
 div.sphinxsidebar input {
-    font-family: 'Lucida Grande',Arial,sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     border: 1px solid #999999;
     font-size: smaller;
     border-radius: 3px;
@@ -185,7 +203,7 @@ div.footer a:hover {
 }
 
 .highlight {
-    background: none !important;
+    background: #FFF !important;
 }
 
 dl > dt span ~ em {

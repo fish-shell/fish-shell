@@ -89,3 +89,9 @@ abbr -r __abbr11 __abbr12
 abbr __abbr-with-dashes omega
 complete -C__abbr-with
 # CHECK: __abbr-with-dashes	Abbreviation: omega
+
+abbr --add --global __abbr13 aaaaaaaaaaaaa
+abbr --add --global __abbr14 bbbbbbbbbbbbb
+abbr --erase __abbr13 __abbr14
+abbr | grep __abbr13
+abbr | grep __abbr14

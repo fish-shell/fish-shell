@@ -96,28 +96,26 @@ function __fish_abbr_add --no-scope-shadowing
 end
 
 function __fish_abbr_erase --no-scope-shadowing
-    if set -q argv[2]
-        printf ( _ "%s %s: Expected one argument\n" ) abbr --erase >&2
-        return 1
+    set -l ret 0
+    for abbr_name in $argv
+        # Because of the way abbreviations are expanded there can't be any spaces in the key.
+        set -l escaped_name (string escape -- $abbr_name)
+        if string match -q "* *" -- $abbr_old_name
+            set -l msg ( _ "%s %s: Abbreviation %s cannot have spaces in the word\n" )
+            printf $msg abbr --erase $escaped_name >&2
+            return 1
+        end
+
+        set -l abbr_var_name _fish_abbr_(string escape --style=var -- $abbr_name)
+
+        if not set -q $abbr_var_name
+            printf ( _ "%s %s: No abbreviation named %s\n" ) abbr --erase $escaped_name >&2
+            set ret 4 # like `set -e doesnt_exist`
+        end
+
+        set -e $abbr_var_name
     end
-
-    # Because of the way abbreviations are expanded there can't be any spaces in the key.
-    set -l abbr_name $argv[1]
-    set -l escaped_name (string escape -- $abbr_name)
-    if string match -q "* *" -- $abbr_old_name
-        set -l msg ( _ "%s %s: Abbreviation %s cannot have spaces in the word\n" )
-        printf $msg abbr --erase $escaped_name >&2
-        return 1
-    end
-
-    set -l abbr_var_name _fish_abbr_(string escape --style=var -- $abbr_name)
-
-    if not set -q $abbr_var_name
-        printf ( _ "%s %s: No abbreviation named %s\n" ) abbr --erase $escaped_name >&2
-        return 4 # like `set -e doesnt_exist`
-    end
-
-    set -e $abbr_var_name
+    return $ret
 end
 
 function __fish_abbr_rename --no-scope-shadowing

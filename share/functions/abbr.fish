@@ -97,6 +97,7 @@ end
 
 function __fish_abbr_erase --no-scope-shadowing
     set -l ret 0
+    set -l abbr_var_names
     for abbr_name in $argv
         # Because of the way abbreviations are expanded there can't be any spaces in the key.
         set -l escaped_name (string escape -- $abbr_name)
@@ -108,13 +109,11 @@ function __fish_abbr_erase --no-scope-shadowing
 
         set -l abbr_var_name _fish_abbr_(string escape --style=var -- $abbr_name)
 
-        if not set -q $abbr_var_name
-            set ret 4 # like `set -e doesnt_exist`
-        end
-
-        set -e $abbr_var_name
+        set -a abbr_var_names $abbr_var_name
     end
-    return $ret
+    # And then erase them all in one go.
+    # Our return value is that of `set -e`.
+    set -e $abbr_var_names
 end
 
 function __fish_abbr_rename --no-scope-shadowing

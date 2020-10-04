@@ -27,12 +27,12 @@ function __fish_apropos
             set age (math (date +%s) - (stat -f %m $db))
         end
 
-        if test $age -ge $max_age
-            echo "making cache $age $max_age"
-            mkdir -m 700 -p $cache
-            /usr/libexec/makewhatis -o $db (man --path | string split :) >/dev/null 2>&1
-        end
         MANPATH="$cache" apropos $argv
+
+        if test $age -ge $max_age
+            mkdir -m 700 -p $cache
+            /usr/libexec/makewhatis -o $db (man --path | string split :) >/dev/null 2>&1 </dev/null &
+        end
     else
         apropos $argv
     end

@@ -9,7 +9,7 @@ Synopsis
 ::
 
     abbr --add [SCOPE] WORD EXPANSION
-    abbr --erase WORD
+    abbr --erase WORD...
     abbr --rename [SCOPE] OLD_WORD NEW_WORD
     abbr --show
     abbr --list
@@ -35,7 +35,7 @@ The following options are available:
 
 - ``-l`` or ``--list`` Lists all abbreviated words.
 
-- ``-e WORD`` or ``--erase WORD`` Erase the abbreviation WORD.
+- ``-e WORD`` or ``--erase WORD...`` Erase the given abbreviations.
 
 - ``-q`` or ``--query`` Return 0 (true) if one of the WORDs is an abbreviation.
 

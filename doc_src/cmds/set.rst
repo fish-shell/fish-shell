@@ -12,7 +12,7 @@ Synopsis
     set [OPTIONS] VARIABLE_NAME VALUES...
     set [OPTIONS] VARIABLE_NAME[INDICES]... VALUES...
     set ( -q | --query ) [SCOPE_OPTIONS] VARIABLE_NAMES...
-    set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME
+    set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME...
     set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
     set ( -S | --show ) [VARIABLE_NAME]...
 
@@ -47,7 +47,7 @@ The following options control variable scope:
 
 The following options are available:
 
-- ``-e`` or ``--erase`` causes the specified shell variable to be erased
+- ``-e`` or ``--erase`` causes the specified shell variables to be erased
 
 - ``-q`` or ``--query`` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 
@@ -86,7 +86,7 @@ In erase mode, if variable indices are specified, only the specified slices of t
 
 ``set`` requires all options to come before any other arguments. For example, ``set flags -l`` will have the effect of setting the value of the variable ``flags`` to '-l', not making the variable local.
 
-In assignment mode, ``set`` does not modify the exit status. This allows simultaneous capture of the output and exit status of a subcommand, e.g. ``if set output (command)``. In query mode, the exit status is the number of variables that were not found. In erase mode, ``set`` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if the variable was write-protected or if the variable did not exist.
+In assignment mode, ``set`` does not modify the exit status. This allows simultaneous capture of the output and exit status of a subcommand, e.g. ``if set output (command)``. In query mode, the exit status is the number of variables that were not found. In erase mode, ``set`` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if any of the variable was write-protected or if any of the variable did not exist.
 
 
 Examples

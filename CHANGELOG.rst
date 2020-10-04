@@ -29,11 +29,12 @@ Notable improvements and fixes
 -  builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
    This makes it usable also for pipes where the previous command hasn't finished yet, like::
 
-    dmesg -w | string replace foo bar
+    # Show all dmesg lines related to "usb"
+    dmesg -w | string match '*usb*'
 
 -  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (#6820), improving its use in command substitutions (#6998).
 -  Significant performance improvements to completions (#7153).
--  The documentation are now presented in a new theme (#6500, #7371).
+-  The documentation is now presented in a new theme (#6500, #7371).
 
 Syntax changes and new commands
 -------------------------------

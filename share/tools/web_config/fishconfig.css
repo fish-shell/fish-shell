@@ -1,7 +1,8 @@
 body {
-    background-color: #292929;
+    background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
     font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
-    color: white;
+    color: #222;
+    min-height: 100vh; /* at least 1 screen high - to prevent the gradient from running out on a short tab */
 }
 
 code {
@@ -9,10 +10,11 @@ code {
 }
 
 #ancestor {
-    width: 80%;
+    width: 90%;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 25px;
+    /* HACK: Instead of allowing tabs to overflow, hide them */
+    overflow: hidden;
 }
 
 #parent {
@@ -29,16 +31,15 @@ code {
 
 .tab {
 	display: table-cell;
-    border: 1px solid #111;
+    border: 1px solid #CCC;
     border-right: none;
     padding-bottom: 15px;
     padding-top: 15px;
-	padding-left: 8px;
-	padding-right: 8px;
-    font-size: 17pt;
+    padding-left: 3px;
+    padding-right: 3px;
+    font-size: 14pt;
     text-align: center;
-    width: 15%;
-    background-color: #292929;
+    background-color: white;
     cursor: pointer;
 }
 
@@ -47,7 +48,6 @@ code {
 }
 
 #tab_parent :last-child {
-	border-right: 1px solid #111;
 	border-top-right-radius: 8px;
 }
 
@@ -62,14 +62,15 @@ code {
 }
 
 .selected_tab {
-    background-color: black;
-    border-color: black;
+    background-color: #eeeefa;
+    border-bottom: none;
 }
 
 #tab_contents {
-	padding-top: 35px;
+	padding-top: 20px;
+	padding-bottom: 20px;
 	width: 100%;
-	background-color: black;
+	background-color: #eeeefa;
 	border-bottom-left-radius: 8px;
 	border-bottom-right-radius: 8px;
 	margin-bottom: 20px;
@@ -100,7 +101,7 @@ code {
 .detail {
     display: table-cell;
   	border: 1px solid #555;
-  	background-color: #181818;
+  	background-color: #ffffff;
   	padding-top: 30px;
   	padding-bottom: 20px;
   	padding-left: 30px;
@@ -113,7 +114,6 @@ code {
 	white-space: pre-wrap !important;
 	width: 100%;
 	font-size: 11pt;
-	color: #BBB;
 }
 
 /* The colours used for function highlighting are taken from the fish
@@ -149,7 +149,7 @@ code {
 .selected_master_elem {
 	border: 1px solid #555;
 	border-right: none;
-	background-color: #181818;
+	background-color: #FFFFFF;
 
 	border-top-left-radius: 5;
 	border-bottom-left-radius: 5;
@@ -199,7 +199,7 @@ code {
 	display:inline-block;
 	margin-left: auto;
 	margin-right: auto;
-	color: #AAA;
+	color: #000;
 	font-size: smaller;
 }
 
@@ -215,14 +215,12 @@ code {
 }
 
 .modifier_cell_selected {
-	color: #CCC;
-	border-color: #AAA;
+	border-color: #000;
 	background-color: #444;
 }
 
 .data_table {
 	table-layout:fixed;
-	color: #CCC;
 	width: 100%;
 	padding-left: 10px;
 	padding-right: 10px;
@@ -266,10 +264,7 @@ code {
 }
 
 .abbreviation_input {
-	background-color: #111;
-	border: solid 1px #777;
 	height: 1.5em;
-	color: white;
 	font: inherit;
 	padding: 3px;
 	margin: 0;
@@ -399,14 +394,12 @@ code {
 	cursor: pointer;
 	font-size: 12pt;
 	white-space: normal;
-	color: #AAA;
 }
 
 .color_scheme_choices_scrollview, .prompt_choices_scrollview {
-	 border-top: 1px solid #333;
 	 padding-top: 5px;
-	 overflow: scroll;
-	 max-height: 30em; /* about two and a half boxes */
+	 overflow-y: scroll;
+	 max-height: 70vh; /* fill out roughly the rest of the screen once scrolled to the preview */
 }
 
 .color_scheme_choices_list, .prompt_choices_list {
@@ -451,21 +444,15 @@ img.delete_icon {
 .filter_text_box {
 	width: 250px;
 	padding: 5 10 5 10;
-	background-color: #888;
-	border: #222 solid 3px;
 	border-radius: 15px;
 	font-size: 12pt;
-	color: white;
 	font-weight: bold;
 }
 
-.text_box_transient {
-	color: #C8C8C8;
-}
-
 .prompt_demo, .current_prompt {
+	background-color: #000;
 	font-size: 12pt;
-	padding: 10px;
+	padding: 25px;
 	margin: 5px 5px 25px 5px; /* top right bottom left */
 	cursor: pointer;
 	line-height: 1.8em;
@@ -478,6 +465,7 @@ img.delete_icon {
 }
 
 .prompt_demo {
+    color: #AAA;
     white-space: pre;
 }
 
@@ -494,7 +482,7 @@ img.delete_icon {
 	font-size: 13pt;
 	display: inline-block;
 	margin-top: 12px;
-	background-color: rgba(128,128,128,0.2);
+	background-color: rgba(128,128,128,0.4);
 	color: #FFF;
 	cursor: pointer;
 }
@@ -575,12 +563,7 @@ img.delete_icon {
 }
 
 .paginator .disabled a {
-    color: #999999;
+    color: #BBB;
     background-color: transparent;
     cursor: default;
-}
-
-.paginator .desc {
-	background: #222;
-	color: #BBB;
 }

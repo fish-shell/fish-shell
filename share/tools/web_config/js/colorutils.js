@@ -117,7 +117,7 @@ function border_color_for_color(color_str) {
 
 /* Use this function to make a color that contrasts well with the given color */
 function text_color_for_color(color_str) {
-    var adjust = .5
+    var adjust = .7
     function compute_constrast(lightness){
         var new_lightness = lightness + adjust
         if (new_lightness > 1.0 || new_lightness < 0.0) {

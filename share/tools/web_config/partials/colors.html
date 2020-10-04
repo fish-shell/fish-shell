@@ -3,9 +3,9 @@
 fish cannot change the background color of your terminal and it will not be saved. Refer to your terminal documentation to set its background color.">
     <!-- ko with: color_picker -->
     <div class="colorpicker_text_sample" ng-style="{'background-color': terminalBackgroundColor}">
-        <span style="position: absolute; left: 10px; top: 3px;" data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'white')}">{{ selectedColorScheme.name }}</span><br>
+        <span style="position: absolute; left: 10px; top: 3px;" data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'black')}">{{ selectedColorScheme.name }}</span><br>
         <div class="color_picker_background_cells">
-	        <span style="display: block; text-align: right; line-height: 110%" data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'white')}">Background Color:<br />(demo only)&nbsp;</span>
+	        <span style="display: block; text-align: right; line-height: 110%" data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'black')}">Background Color:<br />(demo only)&nbsp;</span>
             <div ng-style="{'background-color': color}" ng-repeat="color in sampleTerminalBackgroundColors" ng-click="changeTerminalBackgroundColor(color)"  title="Preview with this background color.
 
 fish cannot change the background color of your terminal. Refer to your terminal settings to set its background color."></div>
@@ -94,11 +94,11 @@ fish cannot change the background color of your terminal. Refer to your terminal
 
 			<span class="customize_theme_button"
 				  ng-class="{button_highlight: customizationActive}"
-				  data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'white')}"
+				  data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'black')}"
 				  ng-click="toggleCustomizationActive();">Customize</span>
 
 			<span class="save_button"
-				  data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'white')}"
+				  data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'black')}"
 				  ng-show="showSaveButton"
 				  ng-click="setTheme()">{{saveThemeButtonTitle}}</span>
 		</div>

@@ -87,6 +87,7 @@ div.sphinxsidebar input[type=text] {
 
 div.body {
     padding: 0 0 0 1.2em;
+    min-width: 150px;
 }
 
 div.body p {

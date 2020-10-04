@@ -641,54 +641,58 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
 /// Erase a variable.
 static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
                              parser_t &parser, io_streams_t &streams) {
-    if (argc != 1) {
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, L"--erase", 1, argc);
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_CMD_ERROR;
-    }
+    int ret = STATUS_CMD_OK;
+    for (int i = 0; i < argc; i++) {
+        int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
+        wchar_t *dest = argv[i];
 
-    int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
-    wchar_t *dest = argv[0];
-
-    std::vector<long> indexes;
-    int idx_count = parse_index(indexes, dest, scope, streams, parser.vars());
-    if (idx_count == -1) {
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_CMD_ERROR;
-    }
-
-    int retval;
-    if (!valid_var_name(dest)) {
-        streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
-    }
-
-    std::vector<event_t> evts;
-    if (idx_count == 0) {  // unset the var
-        retval = parser.vars().remove(dest, scope, &evts);
-        // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
-        // but do not emit any errors at the console as a compromise between user
-        // friendliness and correctness.
-        if (retval != ENV_NOT_FOUND) {
-            handle_env_return(retval, cmd, dest, streams);
+        std::vector<long> indexes;
+        int idx_count = parse_index(indexes, dest, scope, streams, parser.vars());
+        if (idx_count == -1) {
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_CMD_ERROR;
         }
-    } else {  // remove just the specified indexes of the var
-        const auto dest_var = parser.vars().get(dest, scope);
-        if (!dest_var) return STATUS_CMD_ERROR;
-        wcstring_list_t result;
-        dest_var->to_list(result);
-        erase_values(result, indexes);
-        retval = env_set_reporting_errors(cmd, dest, scope, result, streams, parser.vars(), &evts);
-    }
 
-    // Fire any events.
-    for (const auto &evt : evts) {
-        event_fire(parser, evt);
-    }
+        int retval;
+        if (!valid_var_name(dest)) {
+            streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
 
-    if (retval != STATUS_CMD_OK) return retval;
-    return check_global_scope_exists(cmd, opts, dest, streams, parser);
+        std::vector<event_t> evts;
+        if (idx_count == 0) {  // unset the var
+            retval = parser.vars().remove(dest, scope, &evts);
+            // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
+            // but do not emit any errors at the console as a compromise between user
+            // friendliness and correctness.
+            if (retval != ENV_NOT_FOUND) {
+                handle_env_return(retval, cmd, dest, streams);
+            }
+        } else {  // remove just the specified indexes of the var
+            const auto dest_var = parser.vars().get(dest, scope);
+            if (!dest_var) return STATUS_CMD_ERROR;
+            wcstring_list_t result;
+            dest_var->to_list(result);
+            erase_values(result, indexes);
+            retval = env_set_reporting_errors(cmd, dest, scope, result, streams, parser.vars(), &evts);
+        }
+
+        // Fire any events.
+        for (const auto &evt : evts) {
+            event_fire(parser, evt);
+        }
+
+        // Set $status to the last error value.
+        // This is cheesy, but I don't expect this to be checked often.
+        if (retval != STATUS_CMD_OK) {
+            ret = retval;
+        } else {
+            retval = check_global_scope_exists(cmd, opts, dest, streams, parser);
+            if (retval != STATUS_CMD_OK) ret = retval;
+        }
+    }
+    return ret;
 }
 
 /// This handles the common case of setting the entire var to a set of values.

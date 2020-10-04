@@ -664,4 +664,22 @@ set -S newvariable
 #CHECK: $newvariable: set in global scope, unexported, a path variable with 1 elements
 #CHECK: $newvariable[1]: |foo|
 
+set foo foo
+set bar bar
+set -e baz
+
+set -e foo baz bar
+echo $status
+#CHECK: 4
+set -S foo baz bar
+
+set foo 1 2 3
+set bar 1 2 3
+
+set -e foo[1] bar[2]
+echo $foo
+#CHECK: 2 3
+echo $bar
+#CHECK: 1 3
+
 true

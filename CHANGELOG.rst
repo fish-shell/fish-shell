@@ -33,6 +33,7 @@ Notable improvements and fixes
 
 -  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (#6820), improving its use in command substitutions (#6998).
 -  Significant performance improvements to completions (#7153).
+-  The documentation are now presented in a new theme (#6500, #7371).
 
 Syntax changes and new commands
 -------------------------------

@@ -87,6 +87,8 @@ Scripting improvements
 -  ``exec`` no longer produces a syntax error when the command cannot be found (#6098).
 -  ``disown`` should no longer create zombie processes when job control is off, such as in ``config.fish`` (#7183).
 -  Using ``read --silent`` while fish is in private mode was adding these potentially-sensitive entries to the history; this has been fixed (#7230).
+-  ``set --erase`` and ``abbr --erase`` can now erase multiple things in one go, matching ``functions --erase`` (#7377).
+-  ``abbr --erase`` no longer errors on an unset abbreviation (#7376).
 
 Interactive improvements
 ------------------------
@@ -127,6 +129,9 @@ Interactive improvements
 -  Long command lines no longer add a blank line after execution (#6826) and behave better with backspace (#6951).
 -  ``functions -t`` works as documented (#6985).
 -  History search now flashes when it found no more results (#7362)
+-  Fish's debugging can now also be enabled via $FISH_DEBUG and $FISH_DEBUG_OUTPUT from the outside. This helps with debugging when no commandline options can be passed, like when fish is called in a shebang (#7359).
+-  Fish now creates $XDG_RUNTIME_DIR if it does not exist (#7335).
+-  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (#7314).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -147,7 +152,8 @@ New or improved bindings
    to simplify rerunning the previous command with ``sudo`` (#7079).
 - ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
   from history if the commandline is empty (#7137).
-- ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (#7191),
+- ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (#7191).
+- The definition of "word" and "bigword" for movements was refined, fixing e.g. vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (#7353, #7354, #4025, #7328, #7325)
 
 
 Improved prompts
@@ -173,6 +179,7 @@ Improved terminal output
 -  Dynamic titles are now enabled in Alacritty with its new terminfo entry (#7073).
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (#7237).
 -  An issue producing strange status output from commands involving ``not`` has been fixed (#6566).
+-  The commandline is no longer put on the next line when it would wrap and the prompt is longer than 33% of the terminal width (#5118).
 
 Completions
 ^^^^^^^^^^^

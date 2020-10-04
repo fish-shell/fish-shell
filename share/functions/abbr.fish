@@ -100,7 +100,7 @@ function __fish_abbr_erase --no-scope-shadowing
     for abbr_name in $argv
         # Because of the way abbreviations are expanded there can't be any spaces in the key.
         set -l escaped_name (string escape -- $abbr_name)
-        if string match -q "* *" -- $abbr_old_name
+        if string match -q "* *" -- $abbr_name
             set -l msg ( _ "%s %s: Abbreviation %s cannot have spaces in the word\n" )
             printf $msg abbr --erase $escaped_name >&2
             return 1

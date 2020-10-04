@@ -8,7 +8,6 @@ abbr | grep __abbr1
 abbr --erase NOT_AN_ABBR
 abbr | grep __abbr1
 # CHECK: abbr -a -U -- __abbr1 'alpha beta gamma'
-# CHECKERR: abbr --erase: No abbreviation named NOT_AN_ABBR
 
 # Adding existing __abbr1 should be idempotent
 abbr __abbr1 alpha beta gamma

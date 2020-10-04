@@ -109,7 +109,6 @@ function __fish_abbr_erase --no-scope-shadowing
         set -l abbr_var_name _fish_abbr_(string escape --style=var -- $abbr_name)
 
         if not set -q $abbr_var_name
-            printf ( _ "%s %s: No abbreviation named %s\n" ) abbr --erase $escaped_name >&2
             set ret 4 # like `set -e doesnt_exist`
         end
 

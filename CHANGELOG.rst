@@ -232,6 +232,7 @@ Deprecations and removed features
 ---------------------------------
 - fish no longer attempts to modify the terminal size via `TIOCSWINSZ`.
 - The `fish_color_match` variable is no longer used. (Previously this controlled the color of matching quotes and parens when using `read`).
+- fish 3.2.0 will be the last release in which the redirection to standard error with the ``^`` character is enabled. The ``stderr-nocaret`` feature flag will be changed to "on" in future releases. 
 
 For distributors and developers
 -------------------------------

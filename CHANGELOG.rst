@@ -67,7 +67,7 @@ Scripting improvements
    function.
 -  The ``fish_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
-   use the new ``fish_read`` event instead.
+   use the new ``fish_read`` event instead (#7039).
 -  ``status`` gained new ``dirname`` and ``basename`` convenience subcommands
    to get just the directory to the running script or the name of it,
    to simplify common tasks such as running ``(dirname (status filename))`` (#7076).
@@ -79,7 +79,7 @@ Scripting improvements
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (#6809).
 -  All builtins that query if something exists now take ``--query`` as the long form for ``-q``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (#7276).
 -  ``argparse`` now only prints a backtrace with invalid options to argparse itself (#6703).
--  ``complete`` can now show the loaded completions for only specific commands, and do without ``-c`` (``complete git`` is now valid) (#7321).
+-  ``complete`` takes the first argument as the name of the command if the ``--command``/``-c`` option is not used (``complete git`` is treated like ``complete --command git``), and can show the loaded completions for specific commands with ``complete COMMANDNAME`` (#7321).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (#7154).
 -  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (#7014).
 -  ``type`` is now a builtin and therefore much faster (#7342).
@@ -118,7 +118,6 @@ Interactive improvements
    revealed.
 -  The output of ``time`` is now properly aligned in all cases (#6726).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (#6787).
--  ``diff`` will now colourise output, if supported (#7308).
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (#7293).
 -  Control-C no longer occasionally prints an "unknown command" error (#7145).
 -  Autocompletions work properly after Control-C to cancel the commmand line (#6937).
@@ -132,6 +131,8 @@ Interactive improvements
 -  Fish's debugging can now also be enabled via $FISH_DEBUG and $FISH_DEBUG_OUTPUT from the outside. This helps with debugging when no commandline options can be passed, like when fish is called in a shebang (#7359).
 -  Fish now creates $XDG_RUNTIME_DIR if it does not exist (#7335).
 -  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (#7314).
+-  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (#7298) and detects Windows Services for Linux 2 properly (#7027).
+-  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (#7041). 
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -165,18 +166,21 @@ Improved prompts
    directory (#6086).
 -  The git prompts correctly show stash states (#6876, #7136).
 -  The Mercurial prompt correctly shows untracked status (#6906).
+-  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (#7033).
+-  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (#7278).
 
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
    shape in vi mode, regardless of terminal (#6968). The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
--  ``history clear`` output is formatted with appropriate newlines (#6976).
+-  ``diff`` will now colourise output, if supported (#7308).
 -  Autosuggestions now show up also when the cursor passes the right
    prompt (#6948).
--  The cursor shape in Vi mode changes properly in  Windows Terminal (#6999).
+-  The cursor shape in Vi mode changes properly in Windows Terminal (#6999).
 -  The spurious warning about terminal size in small terminals has been removed (#6980).
--  Dynamic titles are now enabled in Alacritty with its new terminfo entry (#7073).
+-  Dynamic titles are now enabled in Alacritty (#7073).
+-  Current working directory updates are enabled in foot (#7099).
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (#7237).
 -  An issue producing strange status output from commands involving ``not`` has been fixed (#6566).
 -  The commandline is no longer put on the next line when it would wrap and the prompt is longer than 33% of the terminal width (#5118).
@@ -187,15 +191,16 @@ Completions
 -  Added completions for
 
    -  ``7z``, ``7za`` and ``7zr`` (#7220)
+   -  ``alias`` (#7035)
    -  ``apk`` (#7108)
    -  ``asciidoctor`` (#7000)
    -  ``cmark`` (#7000)
-   -  ``create_ap``
+   -  ``create_ap`` (#7096)
    -  ``deno`` (#7138)
    -  ``dhclient``
    -  Postgres-related commands ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
       ``pg_dumpall`` (#6620)
-   - ``downgrade`` (#6751)
+   -  ``downgrade`` (#6751)
    -  ``gapplication``, ``gdbus``, ``gio`` and ``gresource`` (#7300)
    -  ``gh``
    -  ``gitk``
@@ -230,7 +235,7 @@ Completions
 
 Deprecations and removed features
 ---------------------------------
-- fish no longer attempts to modify the terminal size via `TIOCSWINSZ`.
+- fish no longer attempts to modify the terminal size via `TIOCSWINSZ` (#6994).
 - The `fish_color_match` variable is no longer used. (Previously this controlled the color of matching quotes and parens when using `read`).
 - fish 3.2.0 will be the last release in which the redirection to standard error with the ``^`` character is enabled. The ``stderr-nocaret`` feature flag will be changed to "on" in future releases. 
 

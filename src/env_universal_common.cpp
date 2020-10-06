@@ -1574,7 +1574,8 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
 #ifdef FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
-#elif defined(SIGIO)
+    // Note: We use POLL_IN to query SIGIO information, without it it is useless.
+#elif defined(SIGIO) && defined(POLL_IN)
     return strategy_sigio;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;

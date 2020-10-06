@@ -276,6 +276,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             // test, to verify that we behave correctly when receiving lots of irrelevant signals.
             break;
 
+#if defined(SIGIO) && defined(POLL_IN)
         case SIGIO:
             // An async FD became readable/writable/etc.
             if (info->si_code == POLL_IN) {
@@ -283,6 +284,7 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
                 s_signal_pollin_count = s_signal_pollin_count + 1;
             }
             break;
+#endif
     }
     errno = saved_errno;
 }

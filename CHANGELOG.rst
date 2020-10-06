@@ -44,7 +44,7 @@ Syntax changes and new commands
 
 Scripting improvements
 ----------------------
--  New command ``string pad`` allows to extend text to a fixed width (#7340).
+-  A new subcommand, ``string pad``, allows extending strings to a given width (#7340).
 -  ``string sub`` has a new ``--end`` option to specify the end index of
    a substring (#6765).
 -  ``string split`` has a new ``--fields`` option to specify fields to
@@ -89,6 +89,7 @@ Scripting improvements
 -  Using ``read --silent`` while fish is in private mode was adding these potentially-sensitive entries to the history; this has been fixed (#7230).
 -  ``set --erase`` and ``abbr --erase`` can now erase multiple things in one go, matching ``functions --erase`` (#7377).
 -  ``abbr --erase`` no longer errors on an unset abbreviation (#7376).
+-  ``test -t``, for testing whether file descriptors are connected to a terminal, works for file descriptors 0, 1, and 2 (#4766). It can still return incorrect results in other cases (#1228).
 
 Interactive improvements
 ------------------------
@@ -176,7 +177,7 @@ Improved terminal output
    shape in vi mode, regardless of terminal (#6968). The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
 -  ``diff`` will now colourise output, if supported (#7308).
 -  Autosuggestions now show up also when the cursor passes the right
-   prompt (#6948).
+   prompt (#6948) or wraps to the next line (#7213).
 -  The cursor shape in Vi mode changes properly in Windows Terminal (#6999).
 -  The spurious warning about terminal size in small terminals has been removed (#6980).
 -  Dynamic titles are now enabled in Alacritty (#7073).
@@ -202,7 +203,7 @@ Completions
       ``pg_dumpall`` (#6620)
    -  ``downgrade`` (#6751)
    -  ``gapplication``, ``gdbus``, ``gio`` and ``gresource`` (#7300)
-   -  ``gh``
+   -  ``gh`` (#7112)
    -  ``gitk``
    -  ``hikari`` (#7083)
    -  ``imv`` (#6675)
@@ -226,7 +227,7 @@ Completions
    -  ``windscribe`` (#6788)
    -  ``wireshark``, ``tshark``, and ``dumpcap``
    -  ``xbps-*`` (#7239)
-   -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (#7103
+   -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (#7103)
    -  ``yadm`` (#7100)
    -  ``zopfli`` and ``zopflipng``
 

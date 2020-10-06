@@ -22,7 +22,7 @@ end
 
 
 function __fish_spago_pkgnames
-    for line in (spago ls packages)
+    for line in (spago ls packages 2> /dev/null)
         set pkgname (echo $line | string match -r '[^\s]+')
         echo $pkgname
     end

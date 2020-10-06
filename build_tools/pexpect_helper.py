@@ -145,7 +145,7 @@ class SpawnedProc(object):
         self.start_time = None
         self.spawn = pexpect.spawn(exe_path, env=env, encoding="utf-8", timeout=timeout)
         self.spawn.delaybeforesend = None
-        self.prompt_counter = 1
+        self.prompt_counter = 0
 
     def time_since_first_message(self):
         """ Return a delta in seconds since the first message, or 0 if this is the first. """
@@ -203,7 +203,9 @@ class SpawnedProc(object):
     def expect_prompt(self, increment=True, *args, **kwargs):
         """ Convenience function which matches some text and then a prompt.
             Match the given positional arguments as expect_re, and then look
-            for a prompt, bumping the prompt counter if increment is true.
+            for a prompt.
+            If increment is set, then this should be a new prompt and the prompt counter
+            should be bumped; otherwise this is not a new prompt.
             Returns None on success, and exits on failure.
             Example:
                sp.sendline("echo hello world")
@@ -211,12 +213,12 @@ class SpawnedProc(object):
         """
         if args:
             self.expect_re(*args, **kwargs)
+        if increment:
+            self.prompt_counter += 1
         self.expect_re(
             get_prompt_re(self.prompt_counter),
             pat_desc="prompt %d" % self.prompt_counter,
         )
-        if increment:
-            self.prompt_counter += 1
 
     def report_exception_and_exit(self, pat, unmatched, err):
         """ Things have gone badly.

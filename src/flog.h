@@ -56,6 +56,8 @@ class category_list_t {
 
     category_t config{L"config", L"Finding and reading configuration"};
 
+    category_t event{L"event", L"Firing events"};
+
     category_t exec_job_status{L"exec-job-status", L"Jobs changing status"};
 
     category_t exec_job_exec{L"exec-job-exec", L"Jobs being executed"};

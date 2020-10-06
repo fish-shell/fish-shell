@@ -1,4 +1,4 @@
-#RUN: %fish -C "set helper %fish_test_helper" %s
+#RUN: %fish -C "set -g helper %fish_test_helper; set -g fish %fish" %s
 
 # Check that nohup is propagated.
 set fish (status fish-path)

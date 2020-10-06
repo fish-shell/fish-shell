@@ -1,4 +1,4 @@
-#RUN: env fth=%fish_test_helper %fish %s
+#RUN: env fth=%fish_test_helper fish=%fish %fish %s
 
 # Ensure job control works in non-interactive environments.
 

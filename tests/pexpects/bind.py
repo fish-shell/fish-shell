@@ -283,9 +283,9 @@ expect_prompt()
 send("a b c d\x01")  # ctrl-a, move back to the beginning of the line
 send("\x07")  # ctrl-g, kill bigword
 sendline("echo")
-expect_prompt("^b c d")
+expect_prompt("\nb c d")
 
 send("    a b c d\x01")  # ctrl-a, move back to the beginning of the line
 send("\x07")  # ctrl-g, kill bigword
 sendline("echo")
-expect_prompt("^b c d")
+expect_prompt("\nb c d")

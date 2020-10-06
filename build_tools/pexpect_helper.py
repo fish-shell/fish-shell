@@ -200,7 +200,7 @@ class SpawnedProc(object):
         """ Cover over expect_re() which accepts a literal string. """
         return self.expect_re(re.escape(s), **kwargs)
 
-    def expect_prompt(self, increment=True, *args, **kwargs):
+    def expect_prompt(self, *args, increment=True, **kwargs):
         """ Convenience function which matches some text and then a prompt.
             Match the given positional arguments as expect_re, and then look
             for a prompt.

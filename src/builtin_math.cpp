@@ -29,13 +29,16 @@ static constexpr double kMaximumContiguousInteger =
 
 struct math_cmd_opts_t {
     bool print_help = false;
+    bool have_scale = false;
     int scale = kDefaultScale;
+    int base = 10;
 };
 
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
 // This is needed because of the minus, `-`, operator in math expressions.
-static const wchar_t *const short_options = L"+:hs:";
+static const wchar_t *const short_options = L"+:hs:b:";
 static const struct woption long_options[] = {{L"scale", required_argument, nullptr, 's'},
+                                              {L"base", required_argument, nullptr, 'b'},
                                               {L"help", no_argument, nullptr, 'h'},
                                               {nullptr, 0, nullptr, 0}};
 
@@ -47,6 +50,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 's': {
+                opts.have_scale = true;
                 // "max" is the special value that tells us to pick the maximum scale.
                 if (std::wcscmp(w.woptarg, L"max") == 0) {
                     opts.scale = 15;
@@ -54,6 +58,21 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                     opts.scale = fish_wcstoi(w.woptarg);
                     if (errno || opts.scale < 0 || opts.scale > 15) {
                         streams.err.append_format(_(L"%ls: '%ls' is not a valid scale value\n"),
+                                                  cmd, w.woptarg);
+                        return STATUS_INVALID_ARGS;
+                    }
+                }
+                break;
+            }
+            case 'b': {
+                if (std::wcscmp(w.woptarg, L"hex") == 0) {
+                    opts.base = 16;
+                } else if (std::wcscmp(w.woptarg, L"octal") == 0) {
+                    opts.base = 8;
+                } else {
+                    opts.base = fish_wcstoi(w.woptarg);
+                    if (errno || (opts.base != 8 && opts.base != 16)) {
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid base value\n"),
                                                   cmd, w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
@@ -78,6 +97,11 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 DIE("unexpected retval from wgetopt_long");
             }
         }
+    }
+    if (opts.have_scale && opts.scale != 0 && opts.base != 10) {
+        streams.err.append_format(_(L"%ls: Bases other than 10 can only do scale=0 output currently\n"),
+                                  cmd, w.woptarg);
+        return STATUS_INVALID_ARGS;
     }
 
     *optind = w.woptind;
@@ -158,12 +182,21 @@ static const wchar_t *math_describe_error(const te_error_t &error) {
 
 /// Return a formatted version of the value \p v respecting the given \p opts.
 static wcstring format_double(double v, const math_cmd_opts_t &opts) {
+    if (opts.base == 16) {
+        v = trunc(v);
+        return format_string(L"0x%x", (long)v);
+    } else if (opts.base == 8) {
+        v = trunc(v);
+        return format_string(L"0%o", (long)v);
+    }
+
     // As a special-case, a scale of 0 means to truncate to an integer
     // instead of rounding.
     if (opts.scale == 0) {
         v = trunc(v);
         return format_string(L"%.*f", opts.scale, v);
     }
+
 
     wcstring ret = format_string(L"%.*f", opts.scale, v);
     // If we contain a decimal separator, trim trailing zeros after it, and then the separator

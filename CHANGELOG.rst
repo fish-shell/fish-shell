@@ -90,6 +90,7 @@ Scripting improvements
 -  ``set --erase`` and ``abbr --erase`` can now erase multiple things in one go, matching ``functions --erase`` (#7377).
 -  ``abbr --erase`` no longer errors on an unset abbreviation (#7376).
 -  ``test -t``, for testing whether file descriptors are connected to a terminal, works for file descriptors 0, 1, and 2 (#4766). It can still return incorrect results in other cases (#1228).
+-  Trying to run fish scripts with Windows line endings (CRLF) produces a sensible error (#2783).
 
 Interactive improvements
 ------------------------
@@ -101,6 +102,7 @@ Interactive improvements
 -  When pressing Tab, fish displays ambiguous completions even when they
    have a common prefix, without the user having to press Tab again
    (#6924).
+-  If a filename is invalid when first pressing Tab, but becomes valid, it will be completed properly on the next attempt (#6863).
 -  Control-Z is now available for binding (#7152).
 - ``help string match/replace/<subcommand>`` will show the help for string subcommands (#6786).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (#6964).
@@ -127,13 +129,15 @@ Interactive improvements
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (#6910).
 -  ``open`` no longer hangs indefinitely as a bug in ``xdg-open`` has been worked around (#7215).
 -  Long command lines no longer add a blank line after execution (#6826) and behave better with backspace (#6951).
--  ``functions -t`` works as documented (#6985).
+-  ``functions -t`` works like the long option ``--handlers-type``, as documented, instead of producing an error (#6985).
 -  History search now flashes when it found no more results (#7362)
 -  Fish's debugging can now also be enabled via $FISH_DEBUG and $FISH_DEBUG_OUTPUT from the outside. This helps with debugging when no commandline options can be passed, like when fish is called in a shebang (#7359).
 -  Fish now creates $XDG_RUNTIME_DIR if it does not exist (#7335).
 -  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (#7314).
 -  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (#7298) and detects Windows Services for Linux 2 properly (#7027).
 -  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (#7041). 
+-  ``help`` works properly on MSYS2 (#7113).
+
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -184,7 +188,8 @@ Improved terminal output
 -  Current working directory updates are enabled in foot (#7099).
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (#7237).
 -  An issue producing strange status output from commands involving ``not`` has been fixed (#6566).
--  The commandline is no longer put on the next line when it would wrap and the prompt is longer than 33% of the terminal width (#5118).
+-  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (#5118).
+-  The pager is properly rendered with long command lines selected (#2557).
 
 Completions
 ^^^^^^^^^^^

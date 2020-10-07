@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    math [-sN | --scale=N] [--] EXPRESSION
+    math [-sN | --scale=N] [-bBASE | --base=BASE] [--] EXPRESSION
 
 
 Description
@@ -25,6 +25,8 @@ Keep in mind that parameter expansion happens before expressions are evaluated. 
 The following options are available:
 
 - ``-sN`` or ``--scale=N`` sets the scale of the result. ``N`` must be an integer or the word "max" for the maximum scale. A scale of zero causes results to be rounded down to the nearest integer. So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to. This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0. Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
+
+- ``-b BASE`` or ``--base BASE`` sets the numeric base used for output (``math`` always understands hexadecimal numbers as input). It currently understands "hex" or "16" for hexadecimal and "octal" or "8" for octal and implies a scale of 0 (other scales cause an error), so it will truncate the result down to an integer. This might change in the future. Hex numbers will be printed with a ``0x`` prefix. Octal numbers will have a prefix of ``0`` and aren't understood by ``math`` as input.
 
 Return Values
 -------------
@@ -118,6 +120,8 @@ Examples
 ``math "bitand(0xFE, 0x2e)"`` outputs 46.
 
 ``math "bitor(9,2)"`` outputs 11.
+
+``math --base=hex 192`` prints ``0xc0``.
 
 Compatibility notes
 -------------------

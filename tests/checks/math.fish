@@ -173,3 +173,16 @@ math 'log(16'
 # CHECKERR: math: Error: Missing closing parenthesis
 # CHECKERR: 'log(16'
 # CHECKERR:       ^
+
+math --base=16 255 / 15
+# CHECK: 0x11
+math -bhex 16 x 2
+# CHECK: 0x20
+math --base hex 12 + 0x50
+# CHECK: 0x5c
+math --base octal --scale=0 55
+# CHECK: 067
+math --base notabase
+# CHECKERR: math: 'notabase' is not a valid base value
+echo $status
+# CHECK: 2

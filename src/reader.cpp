@@ -2773,6 +2773,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 set_command_line_and_position(&command_line, L"", 0);
                 s_reset_abandoning_line(&screen, termsize_last().width - command_line.size());
+
+                // Post fish_cancel, allowing it to fire.
+                signal_clear_cancel();
+                event_fire_generic(parser(), L"fish_cancel");
             }
             break;
         }

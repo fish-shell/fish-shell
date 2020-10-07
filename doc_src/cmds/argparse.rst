@@ -44,9 +44,9 @@ The following ``argparse`` options are available. They must appear before all OP
 Usage
 -----
 
-Using this command requires first passing option specifications (``OPTION_SPEC`` below), then a mandatory ``--``, and then the arguments you want to have parsed. More about this below but here is a simple example that might be used in a function named ``my_function``:
+To use this command, pass the option specifications (``OPTION_SPEC``), then a mandatory ``--``, and then the arguments you want to have parsed.
 
-
+A simple example::
 
 ::
 
@@ -54,11 +54,11 @@ Using this command requires first passing option specifications (``OPTION_SPEC``
     or return
 
 
-If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns zero to indicate success. If ``$argv`` is not empty then it is checked for flags ``-h``, ``--help``, ``-n`` and ``--name``. If they are found they are removed from the arguments and local variables are set so the script can determine which options were seen. Assuming ``$argv`` doesn't have any errors, such as a missing mandatory value for an option, then ``argparse`` exits with status zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
+If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns zero to indicate success. If ``$argv`` is not empty then it is checked for flags ``-h``, ``--help``, ``-n`` and ``--name``. If they are found they are removed from the arguments and local variables called ``_flag_OPTION`` are set so the script can determine which options were seen. If ``$argv`` doesn't have any errors, like a missing mandatory value for an option, then ``argparse`` exits with a status of zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
+
+The ``or return`` means that the function returns ``argparse``'s status if it failed, so if it goes on ``argparse`` succeeded.
 
 The ``--`` argument is required. You do not have to include any arguments after the ``--`` but you must include the ``--``. For example, this is acceptable:
-
-
 
 ::
 
@@ -68,20 +68,17 @@ The ``--`` argument is required. You do not have to include any arguments after 
 
 But this is not:
 
-
-
 ::
 
     set -l argv
     argparse 'h/help' 'n/name' $argv
 
-
-The first ``--`` seen is what allows the ``argparse`` command to reliably separate the option specifications from the command arguments.
+The first ``--`` seen is what allows the ``argparse`` command to reliably separate the option specifications and options to ``argparse`` itself (like ``--ignore-unknown``) from the command arguments, so it is required.
 
 Option Specifications
 ---------------------
 
-Each option specification is a string composed of
+Each option specification consists of:
 
 - A short flag letter (which is mandatory). It must be an alphanumeric or "#". The "#" character is special and means that a flag of the form ``-123`` is valid. The short flag "#" must be followed by "-" (since the short name isn't otherwise valid since ``_flag_#`` is not a valid var name) and must be followed by a long flag name with no modifiers.
 
@@ -89,19 +86,19 @@ Each option specification is a string composed of
 
 - A long flag name which is optional. If not present then only the short flag letter can be used.
 
-- Nothing if the flag is a boolean that takes no argument or is an implicit int flag, else
+- Nothing if the flag is a boolean that takes no argument or is an implicit int flag, or
 
-- ``=`` if it requires a value and only the last instance of the flag is saved, else
+- ``=`` if it requires a value and only the last instance of the flag is saved, or
 
-- ``=?`` it takes an optional value and only the last instance of the flag is saved, else
+- ``=?`` it takes an optional value and only the last instance of the flag is saved, or
 
 - ``=+`` if it requires a value and each instance of the flag is saved.
 
-- Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on `Flag Value Validation <#flag-value-validation>`__ for more information.
+- Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
 
 See the :ref:`fish_opt <cmd-fish_opt>` command for a friendlier but more verbose way to create option specifications.
 
-In the following examples if a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
+If a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
 
 Note: Optional arguments
 ------------------------
@@ -125,6 +122,8 @@ For example::
 
   grep --color auto
   # Here "auto" will be used as the search string, "color" will not have an argument and will fall back to the default, which also *happens to be* auto.
+  grep --color always
+  # Here grep will still only use color "auto"matically and search for the string "always"
 
 This isn't specific to argparse but common to all things using ``getopt(3)`` (if they have optional arguments at all). That ``grep`` example is how GNU grep actually behaves.
 

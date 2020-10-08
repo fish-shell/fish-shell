@@ -14,11 +14,11 @@ div#fmain {
     background-color: #EEEEFA;
     border-radius: 14px;
     position: relative;
-    margin: 25px auto 0;
+    margin: 15px auto 0;
     -moz-box-shadow: 0 0 1px 1px #333;
     -webkit-box-shadow: 0 0 1px 1px #333;
     box-shadow: 0 0 5px 1px #333;
-    width: 80%;
+    width: 85%;
 }
 
 div.related {

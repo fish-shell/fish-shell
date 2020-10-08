@@ -196,6 +196,7 @@ man_pages = [
     ("tutorial", "fish-tutorial", "fish-shell tutorial", [author], 1),
     ("CHANGELOG", "fish-changelog", "fish-shell changelog", [author], 1),
     ("completions", "fish-completions", "Writing fish completions", [author], 1),
+    ("fish_for_bash_users", "fish-for-bash-users", "A quick fish primer for those coming from bash", [author], 1),
     ("faq", "fish-faq", "fish-shell faq", [author], 1),
 ]
 for path in sorted(glob.glob("cmds/*")):

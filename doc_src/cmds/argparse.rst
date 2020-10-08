@@ -127,6 +127,8 @@ For example::
 
 This isn't specific to argparse but common to all things using ``getopt(3)`` (if they have optional arguments at all). That ``grep`` example is how GNU grep actually behaves.
 
+.. _flag-value-validation:
+
 Flag Value Validation
 ---------------------
 

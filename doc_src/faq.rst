@@ -1,6 +1,11 @@
 Frequently asked questions
 ==========================
 
+What is the equivalent to this thing from bash (or other shells)?
+-----------------------------------------------------------------
+
+See :ref:`Fish for bash users <fish_for_bash_users>`
+
 How do I set or clear an environment variable?
 ----------------------------------------------
 Use the :ref:`set <cmd-set>` command::

@@ -23,8 +23,11 @@ function __fish_apropos
         set -l max_age 86400 # one day
         set -l age $max_age
 
-        if test -f $db
-            set age (math (date +%s) - (stat -f %m $db))
+        if test -f "$db"
+            # Some people use GNU tools on macOS, and GNU stat works differently.
+            # However it's currently guaranteed that the macOS stat is in /usr/bin,
+            # so we use that explicitly.
+            set age (math (date +%s) - (/usr/bin/stat -f %m $db))
         end
 
         MANPATH="$cache" apropos $argv

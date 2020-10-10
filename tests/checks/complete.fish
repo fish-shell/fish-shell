@@ -380,3 +380,10 @@ complete -c kapstachelbeere -c physalis -a arg
 complete -c kapstachelbeere -c physalis
 # CHECK: complete kapstachelbeere -a arg
 # CHECK: complete physalis -a arg
+
+set -l dir (mktemp -d)
+echo >$dir/target
+complete -C ': $dir/'
+# CHECK: $dir/target
+rm $dir/target
+rmdir $dir

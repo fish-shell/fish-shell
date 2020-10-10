@@ -376,6 +376,8 @@ class completer_t {
     // Bag of data to support expanding a command's arguments using custom completions, including
     // the wrap chain.
     struct custom_arg_data_t {
+        explicit custom_arg_data_t(wcstring_list_t *vars) : var_assignments(vars) { assert(vars); }
+
         // The unescaped argument before the argument which is being completed, or empty if none.
         wcstring previous_argument{};
 
@@ -396,7 +398,7 @@ class completer_t {
         // The list of variable assignments: escaped strings of the form VAR=VAL.
         // This may be temporarily appended to as we explore the wrap chain.
         // When completing, variable assignments are really set in a local scope.
-        wcstring_list_t var_assignments{};
+        wcstring_list_t *var_assignments;
 
         // The set of wrapped commands which we have visited, and so should not be explored again.
         std::set<wcstring> visited_wrapped_commands{};
@@ -407,7 +409,7 @@ class completer_t {
     void walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline, source_range_t cmd_range,
                          custom_arg_data_t *arg_data);
 
-    const block_t *apply_var_assignments(const custom_arg_data_t *ad);
+    const block_t *apply_var_assignments(const wcstring_list_t &var_assignments);
 
     bool empty() const { return completions.empty(); }
 
@@ -1351,8 +1353,8 @@ bool completer_t::try_complete_user(const wcstring &str) {
 // If we have variable assignments, attempt to apply them in our parser, returning a variable
 // assignment block. The caller MUST clean this up by calling ctx.parser->pop_block(). If we do not
 // have variable assignments, then return nullptr.
-const block_t *completer_t::apply_var_assignments(const custom_arg_data_t *ad) {
-    if (!ctx.parser || ad->var_assignments.empty()) return nullptr;
+const block_t *completer_t::apply_var_assignments(const wcstring_list_t &var_assignments) {
+    if (!ctx.parser || var_assignments.empty()) return nullptr;
     env_stack_t &vars = ctx.parser->vars();
     assert(&vars == &ctx.vars &&
            "Don't know how to tab complete with a parser but a different variable set");
@@ -1364,7 +1366,7 @@ const block_t *completer_t::apply_var_assignments(const custom_arg_data_t *ad) {
     // Note we also do NOT send --on-variable events.
     const expand_flags_t expand_flags = expand_flag::skip_cmdsubst;
     const block_t *block = ctx.parser->push_block(block_t::variable_assignment_block());
-    for (const wcstring &var_assign : ad->var_assignments) {
+    for (const wcstring &var_assign : var_assignments) {
         maybe_t<size_t> equals_pos = variable_assignment_equals_pos(var_assign);
         assert(equals_pos && "All variable assignments should have equals position");
         const wcstring variable_name = var_assign.substr(0, *equals_pos);
@@ -1403,7 +1405,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     }
 
     // Maybe apply variable assignments.
-    const block_t *var_assignment_block = apply_var_assignments(ad);
+    const block_t *var_assignment_block = apply_var_assignments(*ad->var_assignments);
     cleanup_t restore_variable_scope([=] {
         if (var_assignment_block) ctx.parser->pop_block(var_assignment_block);
     });
@@ -1436,11 +1438,11 @@ void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
 
     for (const wcstring &wt : targets) {
         // We may append to the variable assignment list; ensure we restore it.
-        const size_t saved_var_count = ad->var_assignments.size();
+        const size_t saved_var_count = ad->var_assignments->size();
         cleanup_t restore_vars([=] {
-            assert(ad->var_assignments.size() >= saved_var_count &&
+            assert(ad->var_assignments->size() >= saved_var_count &&
                    "Should not delete var assignments");
-            ad->var_assignments.resize(saved_var_count);
+            ad->var_assignments->resize(saved_var_count);
         });
 
         // Separate the wrap target into any variable assignments VAR=... and the command itself.
@@ -1450,7 +1452,7 @@ void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
         while (auto tok = tokenizer.next()) {
             wcstring tok_src = tok->get_source(wt);
             if (variable_assignment_equals_pos(tok_src)) {
-                ad->var_assignments.push_back(std::move(tok_src));
+                ad->var_assignments->push_back(std::move(tok_src));
             } else {
                 wrapped_command_offset_in_wt = tok->offset;
                 wrapped_command = std::move(tok_src);
@@ -1671,8 +1673,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         do_file = true;
     } else {
         // Try completing as an argument.
-        custom_arg_data_t arg_data{};
-        arg_data.var_assignments = std::move(var_assignments);
+        custom_arg_data_t arg_data{&var_assignments};
         arg_data.had_ddash = had_ddash;
 
         assert(cmd_tok.offset < std::numeric_limits<uint32_t>::max());
@@ -1700,6 +1701,13 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         // Hack. If we're cd, handle it specially (issue #1059, others).
         handle_as_special_cd = (unesc_command == L"cd");
     }
+
+    // Maybe apply variable assignments.
+    const block_t *var_assignment_block = apply_var_assignments(var_assignments);
+    cleanup_t restore_variable_scope([=] {
+        if (var_assignment_block) ctx.parser->pop_block(var_assignment_block);
+    });
+    if (ctx.check_cancel()) return;
 
     // This function wants the unescaped string.
     complete_param_expand(current_argument, do_file, handle_as_special_cd);

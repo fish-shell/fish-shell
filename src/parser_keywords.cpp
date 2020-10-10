@@ -45,7 +45,7 @@ bool parser_keywords_skip_arguments(const wcstring &cmd) {
 }
 
 bool parser_keywords_is_subcommand(const wcstring &cmd) {
-    const static string_set_t search_list = ([]() {
+    const static string_set_t search_list = ([] {
         string_set_t results;
         results.insert(std::begin(subcommand_keywords), std::end(subcommand_keywords));
         results.insert(std::begin(skip_keywords), std::end(skip_keywords));
@@ -68,7 +68,7 @@ bool parser_keywords_is_block(const wcstring &word) {
 }
 
 bool parser_keywords_is_reserved(const wcstring &word) {
-    const static string_set_t search_list = ([]() {
+    const static string_set_t search_list = ([] {
         string_set_t results;
         results.insert(std::begin(subcommand_keywords), std::end(subcommand_keywords));
         results.insert(std::begin(skip_keywords), std::end(skip_keywords));

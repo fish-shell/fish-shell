@@ -151,7 +151,7 @@ bool is_windows_subsystem_for_linux() {
     // routine simultaneously the first time around, we just end up needlessly querying uname(2) one
     // more time.
 
-    static bool wsl_state = []() {
+    static bool wsl_state = [] {
         utsname info;
         uname(&info);
 
@@ -2130,7 +2130,7 @@ std::string get_path_to_tmp_dir() {
 // session. We err on the side of assuming it's not a console session. This approach isn't
 // bullet-proof and that's OK.
 bool is_console_session() {
-    static const bool console_session = []() {
+    static const bool console_session = [] {
         ASSERT_IS_MAIN_THREAD();
 
         const char *tty_name = ttyname(0);

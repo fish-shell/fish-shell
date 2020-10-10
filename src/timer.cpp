@@ -212,7 +212,7 @@ static void pop_timer() {
 }
 
 cleanup_t push_timer(bool enabled) {
-    if (!enabled) return {[]() {}};
+    if (!enabled) return {[] {}};
     active_timers.emplace_back(timer_snapshot_t::take());
-    return {[]() { pop_timer(); }};
+    return {[] { pop_timer(); }};
 }

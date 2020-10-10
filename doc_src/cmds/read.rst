@@ -58,9 +58,9 @@ If no option to determine how to split like ``--delimiter``, ``--line`` or ``--t
 
 With the ``--line`` option, ``read`` reads a line of input from standard input into each provided variable, stopping when each variable has been filled. The line is not tokenized.
 
-If no variable names are provided, ``read`` enters a special case that simply provides redirection from standard input to standard output, useful for command substitution. For instance, the fish shell command below can be used to read data that should be provided via a command line argument from the console instead of hardcoding it in the command itself, allowing the command to both be reused as-is in various contexts with different input values and preventing possibly sensitive text from being included in the shell history:
+If no variable names are provided, ``read`` enters a special case that simply provides redirection from standard input to standard output, useful for command substitution. For instance, the fish shell command below can be used to read data that should be provided via a command line argument from the console instead of hardcoding it in the command itself, allowing the command to both be reused as-is in various contexts with different input values and preventing possibly sensitive text from being included in the shell history::
 
-``mysql -uuser -p(read)``
+    mysql -uuser -p(read)
 
 When running in this mode, ``read`` does not split the input in any way and text is redirected to standard output without any further processing or manipulation.
 

@@ -195,33 +195,22 @@ The following special input functions are available:
 Examples
 --------
 
-::
+Exit the shell when :kbd:`Control`\ +\ :kbd:`D` is pressed::
 
     bind \cd 'exit'
 
-Causes ``fish`` to exit when :kbd:`Control`\ +\ :kbd:`D` is pressed.
-
-
-
-::
+Perform a history search when :kbd:`Page Up` is pressed::
 
     bind -k ppage history-search-backward
 
-Performs a history search when the :kbd:`Page Up` key is pressed.
-
-
-
-::
+Turn on Vi key bindings and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
 
     set -g fish_key_bindings fish_vi_key_bindings
     bind -M insert \cc kill-whole-line repaint
 
-Turns on Vi key bindings and rebinds :kbd:`Control`\ +\ :kbd:`C` to clear the input line.
+Launch ``git diff`` and repaint the commandline afterwards when :kbd:`Control`\ +\ :kbd:`G` is pressed::
 
-::
    bind \cg 'git diff; commandline -f repaint'
-
-Causes :kbd:`Control`\ +\ :kbd:`G` to launch ``git diff`` and repaint the commandline afterwards.
 
 .. _cmd-bind-termlimits:
 

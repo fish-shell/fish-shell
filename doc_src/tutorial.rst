@@ -332,7 +332,7 @@ You can access individual elements with square brackets. Indexing starts at 1 fr
     /usr/local/bin
 
 
-You can also access ranges of elements, known as "slices:"
+You can also access ranges of elements, known as "slices":
 
 
 
@@ -650,7 +650,7 @@ To remove /usr/local/bin from ``$PATH``, you can write::
 
     > set PATH (string match -v /usr/local/bin $PATH)
 
-For compatibility with other shells and external commands, $PATH is a :ref:`path variable<variables-path>`, and so will be joined with colons (not spaces) when you quote it:
+For compatibility with other shells and external commands, $PATH is a :ref:`path variable<variables-path>`, and so will be joined with colons (not spaces) when you quote it::
 
     > echo "$PATH"
     /usr/local/sbin:/usr/local/bin:/usr/bin

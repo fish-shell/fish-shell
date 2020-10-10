@@ -48,8 +48,6 @@ To use this command, pass the option specifications (``OPTION_SPEC``), then a ma
 
 A simple example::
 
-::
-
     argparse --name=my_function 'h/help' 'n/name=' -- $argv
     or return
 
@@ -58,17 +56,13 @@ If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns ze
 
 The ``or return`` means that the function returns ``argparse``'s status if it failed, so if it goes on ``argparse`` succeeded.
 
-The ``--`` argument is required. You do not have to include any arguments after the ``--`` but you must include the ``--``. For example, this is acceptable:
-
-::
+The ``--`` argument is required. You do not have to include any arguments after the ``--`` but you must include the ``--``. For example, this is acceptable::
 
     set -l argv
     argparse 'h/help' 'n/name' -- $argv
 
 
-But this is not:
-
-::
+But this is not::
 
     set -l argv
     argparse 'h/help' 'n/name' $argv

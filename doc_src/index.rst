@@ -924,7 +924,7 @@ Variables can be explicitly set to be universal with the ``-U`` or ``--universal
 
 - When no scope is given, but a variable of that name exists, the variable of the smallest scope will be modified. The scope will not be changed.
 
-- As a special case, when no scope is given and no variable has been defined the variable will belong to the scope of the currently executing *function*. Note that this is different from the ``--local`` flag``, which would make the variable local to the current *block*.
+- As a special case, when no scope is given and no variable has been defined the variable will belong to the scope of the currently executing *function*. Note that this is different from the ``--local`` flag, which would make the variable local to the current *block*.
 
 There can be many variables with the same name, but different scopes. When you :ref:`use a variable <expand-variable>`, the smallest scoped variable of that name will be used. If a local variable exists, it will be used instead of the global or universal variable of the same name.
 
@@ -1052,7 +1052,7 @@ Variables can be explicitly set to be exported with the ``-x`` or ``--export`` s
 
 - Otherwise, by default, the variable will not be exported.
 
-- If a variable has local scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
+- If a variable has local scope and is exported, any function called receives a *copy* of it, so any changes it makes to the variable disappear once the function returns.
 
 - Global variables are accessible to functions whether they are exported or not.
 
@@ -1219,7 +1219,7 @@ The options will be *removed* from $argv, so $argv[2] is the second *positional*
 PATH variables
 --------------
 
-Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in ``PATH`` (case-sensitive) become PATH variables.
+Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in "PATH" (case-sensitive) become PATH variables.
 
 PATH variables act as normal lists, except they are are implicitly joined and split on colons.
 

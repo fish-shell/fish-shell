@@ -133,6 +133,7 @@ To implement an alias, use the ``-w`` or ``--wraps`` option:
 Now hub inherits all of the completions from git. Note this can also be specified in a function declaration (``function thing -w otherthing``).
 
 ::
+
    complete -c git
 
 Show all completions for ``git``.

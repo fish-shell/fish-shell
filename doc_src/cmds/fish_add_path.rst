@@ -50,20 +50,20 @@ Example
 ::
 
    # I just installed mycoolthing and need to add it to the path to use it.
-   fish_add_path /opt/mycoolthing/bin
+   > fish_add_path /opt/mycoolthing/bin
 
    # I want my ~/.local/bin to be checked first.
-   fish_add_path -m ~/.local/bin
+   > fish_add_path -m ~/.local/bin
 
    # I prefer using a global fish_user_paths
-   fish_add_path -g ~/.local/bin ~/.otherbin /usr/local/sbin
+   > fish_add_path -g ~/.local/bin ~/.otherbin /usr/local/sbin
 
    # I want to append to the entire $PATH because this directory contains fallbacks
-   fish_add_path -aP /opt/fallback/bin
+   > fish_add_path -aP /opt/fallback/bin
 
    # I want to add the bin/ directory of my current $PWD (say /home/nemo/)
    > fish_add_path -v bin/
    set fish_user_paths /home/nemo/bin /usr/bin /home/nemo/.local/bin
 
    # I have installed ruby via homebrew
-   fish_add_path /usr/local/opt/ruby/bin
+   > fish_add_path /usr/local/opt/ruby/bin

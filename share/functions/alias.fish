@@ -11,8 +11,6 @@ function alias --description 'Creates a function wrapping a command'
     set -l name
     set -l body
     set -l prefix
-    set -l first_word
-    set -l wrapped_cmd
 
     if not set -q argv[1]
         # Print the known aliases.
@@ -46,7 +44,8 @@ function alias --description 'Creates a function wrapping a command'
 
     # Extract the first command from the body.
     printf '%s\n' $body | read -l --list words
-    set first_word $words[1]
+    set -l first_word $words[1]
+    set -l last_word $words[-1]
 
     # Prevent the alias from immediately running into an infinite recursion if
     # $body starts with the same command as $name.
@@ -59,8 +58,16 @@ function alias --description 'Creates a function wrapping a command'
     end
     set -l cmd_string (string escape -- "alias $argv")
 
-    set wrapped_cmd (string escape -- $body)
-    echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $body \$argv; end" | source
+    # Do not define wrapper completion if we have "alias foo 'foo xyz'" or "alias foo 'sudo foo'"
+    # This is to prevent completions from recursively calling themselves (#7389).
+    # The latter will have rare false positives but it's more important to
+    # prevent recursion for this high-level command.
+    set -l wraps
+    if test $first_word != $name; and test $last_word != $name
+        set wraps --wraps (string escape -- $body)
+    end
+
+    echo "function $name $wraps --description $cmd_string; $prefix $body \$argv; end" | source
     if set -q _flag_save
         funcsave $name
     end

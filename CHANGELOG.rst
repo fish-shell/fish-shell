@@ -91,6 +91,7 @@ Scripting improvements
 -  ``abbr --erase`` no longer errors on an unset abbreviation (#7376).
 -  ``test -t``, for testing whether file descriptors are connected to a terminal, works for file descriptors 0, 1, and 2 (#4766). It can still return incorrect results in other cases (#1228).
 -  Trying to run fish scripts with Windows line endings (CRLF) produces a sensible error (#2783).
+-  An ``alias`` that delegates to a command with the same name no longer triggers an error about recursive completion (#7389).
 
 Interactive improvements
 ------------------------

@@ -409,7 +409,7 @@ class completer_t {
     void walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline, source_range_t cmd_range,
                          custom_arg_data_t *arg_data);
 
-    const block_t *apply_var_assignments(const wcstring_list_t &var_assignments);
+    cleanup_t apply_var_assignments(const wcstring_list_t &var_assignments);
 
     bool empty() const { return completions.empty(); }
 
@@ -1350,11 +1350,10 @@ bool completer_t::try_complete_user(const wcstring &str) {
 #endif
 }
 
-// If we have variable assignments, attempt to apply them in our parser, returning a variable
-// assignment block. The caller MUST clean this up by calling ctx.parser->pop_block(). If we do not
-// have variable assignments, then return nullptr.
-const block_t *completer_t::apply_var_assignments(const wcstring_list_t &var_assignments) {
-    if (!ctx.parser || var_assignments.empty()) return nullptr;
+// If we have variable assignments, attempt to apply them in our parser. As soon as the return
+// value goes out of scope, the variables will be removed from the parser.
+cleanup_t completer_t::apply_var_assignments(const wcstring_list_t &var_assignments) {
+    if (!ctx.parser || var_assignments.empty()) return cleanup_t{[] {}};
     env_stack_t &vars = ctx.parser->vars();
     assert(&vars == &ctx.vars &&
            "Don't know how to tab complete with a parser but a different variable set");
@@ -1385,7 +1384,7 @@ const block_t *completer_t::apply_var_assignments(const wcstring_list_t &var_ass
         ctx.parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
         if (ctx.check_cancel()) break;
     }
-    return block;
+    return cleanup_t([=] { ctx.parser->pop_block(block); });
 }
 
 // Complete a command by invoking user-specified completions.
@@ -1405,10 +1404,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     }
 
     // Maybe apply variable assignments.
-    const block_t *var_assignment_block = apply_var_assignments(*ad->var_assignments);
-    cleanup_t restore_variable_scope([=] {
-        if (var_assignment_block) ctx.parser->pop_block(var_assignment_block);
-    });
+    cleanup_t restore_vars{apply_var_assignments(*ad->var_assignments)};
     if (ctx.check_cancel()) return;
 
     if (!complete_param(cmd, ad->previous_argument, ad->current_argument,
@@ -1703,10 +1699,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     }
 
     // Maybe apply variable assignments.
-    const block_t *var_assignment_block = apply_var_assignments(var_assignments);
-    cleanup_t restore_variable_scope([=] {
-        if (var_assignment_block) ctx.parser->pop_block(var_assignment_block);
-    });
+    cleanup_t restore_vars{apply_var_assignments(var_assignments)};
     if (ctx.check_cancel()) return;
 
     // This function wants the unescaped string.

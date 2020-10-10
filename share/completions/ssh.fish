@@ -59,7 +59,7 @@ function __ssh_history_completions --argument-names limit
         set limit 100
     end
 
-    history --prefix ssh | string replace -rf '.* ([A-Za-z0-9._:-]+@[A-Za-z0-9._:-]+).*' '$1' | head -n $limit
+    history --prefix ssh --max=$limit | string replace -rf '.* ([A-Za-z0-9._:-]+@[A-Za-z0-9._:-]+).*' '$1'
 end
 
 complete -k -c ssh -a '(__ssh_history_completions 100)' -f -d Remote

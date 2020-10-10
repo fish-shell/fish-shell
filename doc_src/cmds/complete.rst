@@ -32,7 +32,7 @@ Description
 For an introduction to writing your own completions, see :ref:`Writing your own completions <completion-own>` in
 the fish manual.
 
-- ``-c COMMAND`` or ``--command COMMAND`` specifies that ``COMMAND`` is the name of the command. If there is no ``-c``, one non-option argument will be used as the command.
+- ``-c COMMAND`` or ``--command COMMAND`` specifies that ``COMMAND`` is the name of the command. If there is no ``-c`` or ``-p``, one non-option argument will be used as the command.
 
 - ``-p COMMAND`` or ``--path COMMAND`` specifies that ``COMMAND`` is the absolute path of the command (optionally containing wildcards).
 

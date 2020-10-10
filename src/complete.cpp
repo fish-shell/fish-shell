@@ -1756,7 +1756,12 @@ static wcstring completion2string(const complete_entry_opt_t &o, const wcstring 
         append_switch(out, L"requires-param");
     }
 
-    append_switch(out, is_path ? L'p' : L'c', cmd);
+    if (is_path)
+        append_switch(out, L'p', cmd);
+    else {
+        out.append(L" ");
+        out.append(escape_string(cmd, ESCAPE_ALL));
+    }
 
     switch (o.type) {
         case option_type_args_only: {
@@ -1806,8 +1811,8 @@ wcstring complete_print(const wcstring &cmd) {
         const wcstring &src = entry.first;
         if (!cmd.empty() && src != cmd) continue;
         for (const wcstring &target : entry.second) {
-            out.append(L"complete");
-            append_switch(out, L'c', src);
+            out.append(L"complete ");
+            out.append(escape_string(src, ESCAPE_ALL));
             append_switch(out, L"wraps", target);
             out.append(L"\n");
         }

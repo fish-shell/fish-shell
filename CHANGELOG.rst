@@ -225,6 +225,7 @@ Completions
    -  ``rst2html``, ``rst2html4``, ``rst2html5``, ``rst2latex``,
       ``rst2man``, ``rst2odt``, ``rst2pseudoxml``, ``rst2s5``,
       ``rst2xetex``, ``rst2xml`` and ``rstpep2html`` (#7019)
+   -  ``spago`` (#7381)
    -  ``sphinx-apidoc``, ``sphinx-autogen``, ``sphinx-build`` and
       ``sphinx-quickstart`` (#7000)
    -  ``strace`` (#6656)

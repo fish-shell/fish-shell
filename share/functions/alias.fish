@@ -45,7 +45,8 @@ function alias --description 'Creates a function wrapping a command'
     end
 
     # Extract the first command from the body.
-    printf '%s\n' $body | read -lt first_word body
+    printf '%s\n' $body | read -l --list words
+    set first_word $words[1]
 
     # Prevent the alias from immediately running into an infinite recursion if
     # $body starts with the same command as $name.
@@ -58,15 +59,9 @@ function alias --description 'Creates a function wrapping a command'
     end
     set -l cmd_string (string escape -- "alias $argv")
 
-    # We've tokenized the first word, but we need to reescape them so they won't be split apart by `source`.
-    # E.g. if the first_word is "some command with spaces", that needs to be understood as one argument.
-    # As $body is the rest of the tokenized read, it doesn't need to be escaped.
-    set first_word (string escape -- $first_word)
-
-    set wrapped_cmd (string join ' ' -- $first_word $body | string escape)
-    echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end" | source
+    set wrapped_cmd (string escape -- $body)
+    echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $body \$argv; end" | source
     if set -q _flag_save
         funcsave $name
     end
-    #echo "function $name --wraps $wrapped_cmd --description $cmd_string; $prefix $first_word $body \$argv; end"
 end

@@ -20,7 +20,6 @@ The law of orthogonality
 The shell language should have a small set of orthogonal features. Any situation where two features are related but not identical, one of them should be removed, and the other should be made powerful and general enough to handle all common use cases of either feature.
 
 Rationale:
-
 Related features make the language larger, which makes it harder to learn. It also increases the size of the source code, making the program harder to maintain and update.
 
 Examples:
@@ -70,7 +69,6 @@ The law of user focus
 When designing a program, one should first think about how to make an intuitive and powerful program. Implementation issues should only be considered once a user interface has been designed.
 
 Rationale:
-
 This design rule is different than the others, since it describes how one should go about designing new features, not what the features should be. The problem with focusing on what can be done, and what is easy to do, is that too much of the implementation is exposed. This means that the user must know a great deal about the underlying system to be able to guess how the shell works, it also means that the language will often be rather low-level.
 
 Examples:

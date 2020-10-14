@@ -2,7 +2,14 @@
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
-send, sendline, sleep, expect_prompt = sp.send, sp.sendline, sp.sleep, sp.expect_prompt
+send, sendline, sleep, expect_prompt, expect_re, expect_str = (
+    sp.send,
+    sp.sendline,
+    sp.sleep,
+    sp.expect_prompt,
+    sp.expect_re,
+    sp.expect_str,
+)
 expect_prompt()
 
 # Clear twice (regression test for #7280).
@@ -289,3 +296,9 @@ send("    a b c d\x01")  # ctrl-a, move back to the beginning of the line
 send("\x07")  # ctrl-g, kill bigword
 sendline("echo")
 expect_prompt("\nb c d")
+
+# Check that ctrl-z can be bound
+sendline('bind \cz "echo bound ctrl-z"')
+expect_prompt()
+send('\x1A')
+expect_str("bound ctrl-z")

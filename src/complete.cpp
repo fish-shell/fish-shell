@@ -1622,7 +1622,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     if (cmd_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
         maybe_t<size_t> equal_sign_pos = variable_assignment_equals_pos(current_token);
         if (equal_sign_pos) {
-            complete_param_expand(current_token.substr(*equal_sign_pos + 1), true /* do_file */);
+            complete_param_expand(current_token, true /* do_file */);
             return;
         }
         // Complete command filename.

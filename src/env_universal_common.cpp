@@ -1575,7 +1575,7 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
 #ifdef FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
     // Note: We use POLL_IN to query SIGIO information, without it it is useless.
-#elif defined(SIGIO) && defined(POLL_IN)
+#elif defined(SIGIO) && defined(POLL_IN) && !defined(__FreeBSD__)
     return strategy_sigio;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;

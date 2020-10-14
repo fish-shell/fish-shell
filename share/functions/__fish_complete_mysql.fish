@@ -1,6 +1,7 @@
 function __fish_complete_mysql
     set -l command $argv[1]
-    function __fish_get_mysql_cmd
+
+    function __fish_mysql_query -a query
         argparse -i 'u/user=' 'P/port=' 'h/host=' 'p/password=?' 'S/socket=' -- (commandline -po)
         set -l mysql_cmd mysql
         for flag in u P h S
@@ -12,11 +13,11 @@ function __fish_complete_mysql
         if [ -n "$_flag_p" ]
             set -a mysql_cmd -p$_flag_p
         end
-        echo $mysql_cmd
+        echo $query | $mysql_cmd 2>/dev/null
     end
 
     function __fish_complete_mysql_databases
-        echo 'show databases' | eval (__fish_get_mysql_cmd) 2>/dev/null
+        __fish_mysql_query 'show databases'
     end
 
     complete -c $command -s D -l database -x -d 'The database to use' -a '(__fish_complete_mysql_databases)'

@@ -254,6 +254,11 @@ function __fish_git_files
                         set file "$line[9..-1]"
                         set desc $modified_desc
                     end
+                case '1 .A*'
+                    # Files added with git add --intent-to-add.
+                    set -ql added
+                    and set file "$line[9..-1]"
+                    and set desc $added_desc
                 case '1 .M*'
                     # Modified
                     # From the docs: "Ordinary changed entries have the following format:"

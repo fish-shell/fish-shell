@@ -256,9 +256,9 @@ function __fish_git_files
                     end
                 case '1 .A*'
                     # Files added with git add --intent-to-add.
-                    set -ql added
+                    set -ql untracked
                     and set file "$line[9..-1]"
-                    and set desc $added_desc
+                    and set desc $untracked_desc
                 case '1 .M*'
                     # Modified
                     # From the docs: "Ordinary changed entries have the following format:"

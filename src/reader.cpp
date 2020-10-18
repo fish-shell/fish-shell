@@ -2000,7 +2000,16 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
     // Check if we are in control of the terminal, so that we don't do semi-expensive things like
     // reset signal handlers unless we really have to, which we often don't.
     // Common case.
-    if (tcgetpgrp(STDIN_FILENO) == shell_pgid) {
+    pid_t owner = tcgetpgrp(STDIN_FILENO);
+    if (owner == shell_pgid) {
+        return;
+    }
+
+    // In some strange cases the tty may be come preassigned to fish's pid, but not its pgroup.
+    // In that case we simply attempt to claim our own pgroup.
+    // See #7388.
+    if (owner == getpid()) {
+        (void)setpgid(owner, owner);
         return;
     }
 
@@ -2023,7 +2032,7 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
     // harder, because it may succeed or block. So we loop for a while, trying those strategies.
     // Eventually we just give up and assume we're orphaend.
     for (unsigned loop_count = 0;; loop_count++) {
-        pid_t owner = tcgetpgrp(STDIN_FILENO);
+        owner = tcgetpgrp(STDIN_FILENO);
         // 0 is a valid return code from `tcgetpgrp()` under at least FreeBSD and testing
         // indicates that a subsequent call to `tcsetpgrp()` will succeed. 0 is the
         // pid of the top-level kernel process, so I'm not sure if this means ownership

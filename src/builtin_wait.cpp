@@ -33,14 +33,12 @@ static job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
 }
 
 static bool all_jobs_finished(const parser_t &parser) {
-    for (const auto &j : parser.jobs()) {
-        // If any job is not completed, return false.
-        // If there are stopped jobs, they are ignored.
-        if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
-            return false;
-        }
-    }
-    return true;
+    // If any job is not completed, return false.
+    // If there are stopped jobs, they are ignored.
+    return std::none_of(parser.jobs().begin(), parser.jobs().end(),
+                        [](const std::shared_ptr<job_t> &j) {
+                            return j->is_constructed() && !j->is_completed() && !j->is_stopped();
+                        });
 }
 
 static bool any_jobs_finished(size_t jobs_len, const parser_t &parser) {
@@ -90,18 +88,13 @@ static bool all_specified_jobs_finished(const parser_t &parser, const std::vecto
 }
 
 static bool any_specified_jobs_finished(const parser_t &parser, const std::vector<job_id_t> &ids) {
-    for (auto id : ids) {
-        if (const job_t *j = parser.job_get(id)) {
-            // If any specified job is completed, return true.
-            if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
-                return true;
-            }
-        } else {
-            // If any specified job is removed from list, return true.
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(ids.begin(), ids.end(), [&](int id) {
+        auto j = parser.job_get(id);
+        // If any specified job is removed from list, return true.
+        if (!j) return true;
+        // If any specified job is completed, return true.
+        return j->is_constructed() && (j->is_completed() || j->is_stopped());
+    });
 }
 
 static int wait_for_backgrounds_specified(parser_t &parser, const std::vector<job_id_t> &ids,

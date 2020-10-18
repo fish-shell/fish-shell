@@ -1231,12 +1231,9 @@ path_list_t valid_paths(const path_list_t &paths, const wcstring &working_direct
 
 bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory) {
     ASSERT_IS_BACKGROUND_THREAD();
-    for (const wcstring &path : paths) {
-        if (!path_is_valid(path, working_directory)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(paths.begin(), paths.end(), [&](const wcstring &path) {
+        return path_is_valid(path, working_directory);
+    });
 }
 
 static bool string_could_be_path(const wcstring &potential_path) {

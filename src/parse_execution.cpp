@@ -1248,10 +1248,10 @@ static bool job_node_wants_timing(const ast::job_t &job_node) {
 
     // Do we have a 'not time ...' anywhere in our pipeline?
     if (is_timed_not_statement(job_node.statement)) return true;
-    for (const ast::job_continuation_t &jc : job_node.continuation) {
-        if (is_timed_not_statement(jc.statement)) return true;
-    }
-    return false;
+
+    return std::any_of(
+        job_node.continuation.begin(), job_node.continuation.end(),
+        [=](const ast::job_continuation_t &jc) { return is_timed_not_statement(jc.statement); });
 }
 
 end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &job_node,

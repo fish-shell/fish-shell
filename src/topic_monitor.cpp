@@ -37,12 +37,14 @@ wcstring generation_list_t::describe() const {
     return result;
 }
 
-binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
+#ifdef __linux__
+binary_semaphore_t::binary_semaphore_t() {
     // sem_init always fails with ENOSYS on Mac and has an annoying deprecation warning.
     // On BSD sem_init uses a file descriptor under the hood which doesn't get CLOEXEC (see #7304).
     // So use fast semaphores on Linux only.
-#ifdef __linux__
     sem_ok_ = (0 == sem_init(&sem_, 0, 0));
+#else
+binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
 #endif
     if (!sem_ok_) {
         auto pipes = make_autoclose_pipes({});

@@ -138,6 +138,7 @@ Interactive improvements
 -  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (#7298) and detects Windows Services for Linux 2 properly (#7027).
 -  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (#7041). 
 -  ``help`` works properly on MSYS2 (#7113).
+-  Resuming a piped job by its number, like ``fg %1`` has been fixed (#7406).
 
 
 New or improved bindings

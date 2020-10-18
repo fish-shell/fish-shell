@@ -226,10 +226,13 @@ function __fish_expand_pid_args
     end
 end
 
-for jobbltn in bg fg wait disown
+for jobbltn in bg wait disown
     function $jobbltn -V jobbltn
         builtin $jobbltn (__fish_expand_pid_args $argv)
     end
+end
+function fg
+    builtin fg (__fish_expand_pid_args $argv)[-1]
 end
 
 function kill

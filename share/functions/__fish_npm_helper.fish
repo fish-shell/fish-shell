@@ -32,7 +32,7 @@ function __yarn_filtered_list_packages
     # Do not provide any completions if nothing has been entered yet to avoid long hang.
     if string match -r . (commandline -ct)
         # Filter the results here rather than in the C++ code due to #5267
-        all-the-package-names | string match -er -- "(?:\\b|_)"(commandline -ct |
+        all-the-package-names | string match -er -- '(?:\b|_|^)'(commandline -ct |
             string escape --style=regex) | head -n1000
     end
 end

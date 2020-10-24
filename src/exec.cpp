@@ -1045,9 +1045,11 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
           j->command_wcstr(), j->get_pgid() ? *j->get_pgid() : -2);
 
     j->mark_constructed();
-    if (!j->is_foreground()) {
-        auto pgid = j->get_pgid();
-        assert(pgid.has_value() && "Background jobs should always have a pgroup");
+
+    // If exec_error then a backgrounded job would have been terminated before it was ever assigned
+    // a pgroup, so error out before setting last_pid.
+    auto pgid = j->get_pgid();
+    if (j->is_foreground() && pgid.has_value()) {
         parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(*pgid));
     }
 

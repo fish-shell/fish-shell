@@ -1344,13 +1344,15 @@ class universal_notifier_sigio_t final : public universal_notifier_t {
     }
 
     bool poll() override {
-        uint32_t count = signal_get_sigio_pollin_count();
-        if (count != sigio_pollin_count_) {
+        if (sigio_count_ != signal_get_sigio_count()) {
             // On Mac, SIGIO is generated on every write to the pipe.
             // On Linux, it is generated only when the pipe goes from empty to non-empty.
             // Read from the pipe so that SIGIO may be delivered again.
             drain_some();
-            sigio_pollin_count_ = count;
+            // We may have gotten another SIGIO because the pipe just became writable again.
+            // In particular BSD sends SIGIO on read even if there is no data to be read.
+            // Re-fetch the sigio count.
+            sigio_count_ = signal_get_sigio_count();
             return true;
         }
         return false;
@@ -1369,21 +1371,15 @@ class universal_notifier_sigio_t final : public universal_notifier_t {
         // Also Linux got support for O_ASYNC on fifos in 2.6 (released 2003).
         // Do not be noisy if this fails.
         if (fcntl(pipe.fd(), F_SETFL, O_NONBLOCK | O_ASYNC) == -1) {
-            FLOG(uvar_file, "fcntl(F_SETFL) failed, universal variable notifications disabled");
+            FLOGF(uvar_file,
+                  _(L"fcntl(F_SETFL) failed, universal variable notifications disabled"));
             return autoclose_fd_t{};
         }
         if (fcntl(pipe.fd(), F_SETOWN, getpid()) == -1) {
-            FLOG(uvar_file, "fcntl(F_SETOWN) failed, universal variable notifications disabled");
+            FLOGF(uvar_file,
+                  _(L"fcntl(F_SETOWN) failed, universal variable notifications disabled"));
             return autoclose_fd_t{};
         }
-#ifdef F_SETSIG
-        // Linux requires an (apparently redundant) setting of SIGIO, in order for the si_code to be
-        // set properly in the signal handler's context.
-        if (fcntl(pipe.fd(), F_SETSIG, SIGIO) == -1) {
-            wperror(L"fcntl(F_SETSIG)");
-            return autoclose_fd_t{};
-        }
-#endif
         return pipe;
     }
 
@@ -1404,7 +1400,7 @@ class universal_notifier_sigio_t final : public universal_notifier_t {
     }
 
     autoclose_fd_t pipe_{};
-    uint32_t sigio_pollin_count_{0};
+    uint32_t sigio_count_{0};
 #else
    public:
     [[noreturn]] universal_notifier_sigio_t() {
@@ -1574,11 +1570,10 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
 #ifdef FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
-    // Note: We use POLL_IN to query SIGIO information, without it it is useless.
-#elif defined(SIGIO) && defined(POLL_IN) && !defined(__FreeBSD__)
-    return strategy_sigio;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;
+#elif defined(SIGIO) && !defined(__FreeBSD__)
+    return strategy_sigio;
 #else
     return strategy_named_pipe;
 #endif

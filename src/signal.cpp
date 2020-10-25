@@ -207,10 +207,10 @@ void signal_clear_cancel() { s_cancellation_signal = 0; }
 
 int signal_check_cancel() { return s_cancellation_signal; }
 
-/// Number of POLL_IN SIGIO events.
-static volatile relaxed_atomic_t<uint32_t> s_signal_pollin_count{0};
+/// Number of SIGIO events.
+static volatile relaxed_atomic_t<uint32_t> s_sigio_count{0};
 
-uint32_t signal_get_sigio_pollin_count() { return s_signal_pollin_count; }
+uint32_t signal_get_sigio_count() { return s_sigio_count; }
 
 /// The single signal handler. By centralizing signal handling we ensure that we can never install
 /// the "wrong" signal handler (see #5969).
@@ -276,13 +276,12 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             // test, to verify that we behave correctly when receiving lots of irrelevant signals.
             break;
 
-#if defined(SIGIO) && defined(POLL_IN)
+#if defined(SIGIO)
         case SIGIO:
             // An async FD became readable/writable/etc.
-            if (info->si_code == POLL_IN) {
-                // Don't use ++ to avoid a CAS.
-                s_signal_pollin_count = s_signal_pollin_count + 1;
-            }
+            // Don't try to look at si_code, it is not set under BSD.
+            // Don't use ++ to avoid a CAS.
+            s_sigio_count = s_sigio_count + 1;
             break;
 #endif
     }

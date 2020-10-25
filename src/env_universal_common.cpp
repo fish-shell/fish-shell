@@ -1572,7 +1572,7 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
     return strategy_notifyd;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;
-#elif defined(SIGIO) && !defined(__FreeBSD__)
+#elif defined(SIGIO)
     return strategy_sigio;
 #else
     return strategy_named_pipe;

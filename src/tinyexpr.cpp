@@ -395,8 +395,15 @@ static te_expr *base(state *s) {
                 if (s->type == TOK_CLOSE && i == arity - 1) {
                     next_token(s);
                 } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNEXPECTED_TOKEN) {
+                    // If we had the right number of arguments, we're missing a closing paren.
+                    if (i == arity - 1 && s->type != TOK_ERROR) {
+                        s->error = TE_ERROR_MISSING_CLOSING_PAREN;
+                    } else {
+                        // Otherwise we complain about the number of arguments *first*,
+                        // a closing parenthesis should be more obvious.
+                        s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
+                    }
                     s->type = TOK_ERROR;
-                    s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 }
             } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
                 s->type = TOK_ERROR;

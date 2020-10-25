@@ -154,3 +154,13 @@ math "bitand(5.5, 1)"
 
 math "bitor(37 ^ 5, 255)"
 # CHECK: 69343999
+
+math 'log 16'
+# CHECKERR: math: Error: Missing opening parenthesis
+# CHECKERR: 'log 16'
+# CHECKERR:       ^
+
+math 'log(16'
+# CHECKERR: math: Error: Missing closing parenthesis
+# CHECKERR: 'log(16'
+# CHECKERR:       ^

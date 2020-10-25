@@ -213,9 +213,9 @@ void screen_force_clear_to_end();
 
 // Information about the layout of a prompt.
 struct prompt_layout_t {
-    size_t line_count;       // how many lines the prompt consumes
-    size_t max_line_width;   // width of the longest line
-    size_t last_line_width;  // width of the last line
+    std::vector<size_t> line_breaks;  // line breaks when rendering the prompt
+    size_t max_line_width;            // width of the longest line
+    size_t last_line_width;           // width of the last line
 };
 
 // Maintain a mapping of escape sequences to their widths for fast lookup.

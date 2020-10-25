@@ -368,7 +368,7 @@ prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
     size_t prompt_len = prompt_str.size();
     const wchar_t *prompt = prompt_str.c_str();
 
-    prompt_layout_t layout = {1, 0, 0};
+    prompt_layout_t layout = {{}, 0, 0};
     wcstring trunc_prompt;
 
     size_t run_start = 0;
@@ -389,7 +389,9 @@ prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
 
         wchar_t endc = prompt[run_end];
         if (endc) {
-            layout.line_count += (endc == L'\n' || endc == L'\f');
+            if (endc == L'\n' || endc == L'\f') {
+                layout.line_breaks.push_back(trunc_prompt.size());
+            }
             trunc_prompt.push_back(endc);
             run_start = run_end + 1;
         } else {
@@ -409,7 +411,7 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
     // calc_prompt_width_and_lines.
     size_t result = 1;
     if (prompt.find_first_of(L"\n\f") != wcstring::npos) {
-        result = layout_cache_t::shared.calc_prompt_layout(prompt).line_count;
+        result = layout_cache_t::shared.calc_prompt_layout(prompt).line_breaks.size() + 1;
     }
     return result;
 }
@@ -696,7 +698,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     const scoped_buffer_t buffering(*scr);
 
     // Determine size of left and right prompt. Note these have already been truncated.
-    const size_t left_prompt_width = cached_layouts.calc_prompt_layout(left_prompt).last_line_width;
+    const prompt_layout_t left_prompt_layout = cached_layouts.calc_prompt_layout(left_prompt);
+    const size_t left_prompt_width = left_prompt_layout.last_line_width;
     const size_t right_prompt_width =
         cached_layouts.calc_prompt_layout(right_prompt).last_line_width;
 
@@ -734,7 +737,15 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     // Output the left prompt if it has changed.
     if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, 0, 0);
-        s_write_str(scr, left_prompt.c_str());
+        size_t start = 0;
+        for (const size_t line_break : left_prompt_layout.line_breaks) {
+            s_write_str(scr, left_prompt.substr(start, line_break - start).c_str());
+            if (clr_eol) {
+                s_write_mbs(scr, clr_eol);
+            }
+            start = line_break;
+        }
+        s_write_str(scr, left_prompt.c_str() + start);
         scr->actual_left_prompt = left_prompt;
         scr->actual.cursor.x = static_cast<int>(left_prompt_width);
     }

@@ -168,7 +168,34 @@ It can handle floating point numbers::
 Prompts
 -------
 
-Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the ``fish_prompt`` function, plus the ``fish_mode_prompt`` function if vi-mode is enabled and the ``fish_right_prompt`` function for the right prompt.
+Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the :ref:`fish_prompt <cmd-fish_prompt>` function, plus the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` function if vi-mode is enabled and the :ref:`fish_right_prompt <cmd-fish_right_prompt>` function for the right prompt.
+
+As an example, here's a relatively simple bash prompt:
+
+.. code-block:: sh
+
+    # <$HOSTNAME> <$PWD in blue> <Prompt Sign in Yellow> <Rest in default light white>
+    export PS1='\h\[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] '
+
+and a rough fish equivalent::
+
+  function fish_prompt
+      set -l prompt_symbol '$'
+      fish_is_root_user; and set prompt_symbol '#'
+
+      echo -s $hostname (set_color blue) (prompt_pwd) \
+      (set_color yellow) $prompt_symbol (set_color normal)
+  end
+
+This shows a few differences:
+
+- Fish provides :ref:`set_color <cmd-set_color>` to color text. It can use the 16 named colors and also RGB sequences (so you could also use ``set_color 5555FF``)
+- Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is simply a function, so you can use variables like ``$hostname``.
+- Fish offers helper functions for adding things to the prompt, like :ref:`fish_vcs_prompt <cmd-fish_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn) and :ref:`prompt_pwd <cmd-prompt_pwd>` for showing a shortened $PWD (the user's home directory becomes ``~`` and any path component is shortened). 
+
+The default prompt is reasonably full-featured and its code can be read via ``type fish_prompt``.
+
+Fish does not have ``$PS2`` for continuation lines, instead it leaves the lines indented to show that the commandline isn't complete yet.
 
 Blocks and loops
 ----------------

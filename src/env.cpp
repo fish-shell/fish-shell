@@ -257,7 +257,12 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             key.assign(key_and_val, 0, eql);
             val.assign(key_and_val, eql + 1, wcstring::npos);
             if (!electric_var_t::for_name(key)) {
-                vars.set(key, ENV_EXPORT | ENV_GLOBAL, {val});
+                // fish_user_paths should not be exported; attempting to re-import it from
+                // a value we previously (due to user error) exported will cause impossibly
+                // difficult to debug PATH problems.
+                if (key != L"fish_user_paths") {
+                    vars.set(key, ENV_EXPORT | ENV_GLOBAL, {val});
+                }
             }
         }
     }

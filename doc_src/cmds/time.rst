@@ -39,3 +39,12 @@ Example
    Executed in    3,01 secs   fish           external
       usr time    9,16 millis    2,94 millis    6,23 millis
       sys time    0,23 millis    0,00 millis    0,23 millis
+
+Inline variable assignments need to follow the ``time`` keyword::
+
+   >_ time a_moment=1.5m sleep $a_moment
+
+   ________________________________________________________
+   Executed in   90.00 secs      fish           external
+      usr time    4.62 millis    4.62 millis    0.00 millis
+      sys time    2.35 millis    0.41 millis    1.95 millis

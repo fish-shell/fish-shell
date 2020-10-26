@@ -217,7 +217,7 @@ static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, wch
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
-    if (argc == 1) {
+    if (argc == 1 || wcscmp(cmd, L"time") == 0) {
         builtin_print_help(parser, streams, cmd);
         return STATUS_INVALID_ARGS;
     }

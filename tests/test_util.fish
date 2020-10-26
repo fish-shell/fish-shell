@@ -40,11 +40,11 @@ if not set -q __fish_is_running_tests
         or die
     end
 
-    set -lx XDG_DATA_HOME ../test/data
+    set -lx XDG_DATA_HOME ../test/xdg_data_home
     rm -rf $XDG_DATA_HOME/fish
     mkdir -p $XDG_DATA_HOME/fish; or die
 
-    set -lx XDG_CONFIG_HOME ../test/home
+    set -lx XDG_CONFIG_HOME ../test/xdg_config_home
     rm -rf $XDG_CONFIG_HOME/fish
     mkdir -p $XDG_CONFIG_HOME/fish; or die
     ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions; or die

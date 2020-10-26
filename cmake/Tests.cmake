@@ -60,13 +60,22 @@ endif()
 
 # Prep the environment for running the unit tests.
 add_custom_target(test_prep
-                  COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/data
-                  COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/home
-                  COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/temp
-                  COMMAND ${CMAKE_COMMAND} -E make_directory
-                          ${TEST_DIR}/data ${TEST_DIR}/home ${TEST_DIR}/temp
-                  DEPENDS tests_buildroot_target tests_dir
-                  USES_TERMINAL)
+    # Add directories hard-coded into the tests
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/data
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/data
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/temp
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/temp
+
+    # Add the XDG_* directories
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_data
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_data
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_config
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_config
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_runtime
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_runtime
+
+    DEPENDS tests_buildroot_target tests_dir
+    USES_TERMINAL)
 
 # Define our individual tests.
 # Each test is conceptually independent.
@@ -74,18 +83,30 @@ add_custom_target(test_prep
 # So define both a normal target, and a serial variant which enforces ordering.
 foreach(TESTTYPE test serial_test)
   add_custom_target(${TESTTYPE}_low_level
-    COMMAND env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
+    COMMAND env XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_data
+                XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_config
+                XDG_RUNTIME_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_runtime
+                ./fish_tests
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS fish_tests
     USES_TERMINAL)
 
   add_custom_target(${TESTTYPE}_fishscript
-                    COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish test.fish
+                    COMMAND
+                        cd tests &&
+                        env XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_data
+                            XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_config
+                            XDG_RUNTIME_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_runtime
+                        ${TEST_ROOT_DIR}/bin/fish test.fish
                     DEPENDS test_prep
                     USES_TERMINAL)
 
   add_custom_target(${TESTTYPE}_interactive
-      COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish interactive.fish
+      COMMAND cd tests &&
+                env XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_data
+                    XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_config
+                    XDG_RUNTIME_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_runtime
+                ${TEST_ROOT_DIR}/bin/fish interactive.fish
       DEPENDS test_prep
       USES_TERMINAL)
 endforeach(TESTTYPE)

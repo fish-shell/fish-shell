@@ -205,8 +205,8 @@ if test $OS = Linux
     complete -c zpool -f -n '__fish_zpool_using_command add' -s P -d 'Display device full path'
     complete -c zpool -x -n '__fish_zpool_using_command add' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
-complete -c zpool -x -n '__fish_zpool_using_command add' -d 'Pool to add virtual devices to' -a '(__fish_complete_zfs_pools)'
-complete -c zpool -x -n '__fish_zpool_using_command add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
+complete -c zpool -x -n '__fish_zpool_using_command add; and __fish_prev_arg_in add' -d 'Pool to add virtual devices to' -a '(__fish_complete_zfs_pools)'
+complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
 
 # attach completions
 complete -c zpool -f -n '__fish_zpool_using_command attach' -s f -d 'Force use of virtual device'

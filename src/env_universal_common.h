@@ -171,6 +171,9 @@ class universal_notifier_t {
         // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require
         // polling most of the time.
         strategy_named_pipe,
+
+        // Strategy that uses a posix conditional variable in a shared memory section.
+        strategy_posix_shmem,
     };
 
    protected:

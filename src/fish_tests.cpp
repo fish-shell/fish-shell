@@ -3803,6 +3803,7 @@ static void trigger_or_wait_for_notification(universal_notifier_t::notifier_stra
             usleep(40000);
             break;
         }
+        case universal_notifier_t::strategy_posix_shmem:
         case universal_notifier_t::strategy_named_pipe:
         case universal_notifier_t::strategy_sigio: {
             break;  // nothing required

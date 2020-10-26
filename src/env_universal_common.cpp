@@ -5,12 +5,16 @@
 #include <errno.h>
 #include <fcntl.h>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
+#include <pthread.h>
 #include <sys/file.h>  // IWYU pragma: keep
 // We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
 // on a Linux system.
 #include <limits.h>
 #include <netinet/in.h>  // IWYU pragma: keep
 #include <sys/ioctl.h>   // IWYU pragma: keep
+#include <sys/mman.h>
+#include <memory>
+#include <sstream>
 #if !defined(__APPLE__) && !defined(__CYGWIN__)
 #include <pwd.h>
 #endif
@@ -36,6 +40,7 @@
 #include <map>
 #include <string>
 #include <type_traits>
+#include <thread>
 #include <utility>
 
 #include "common.h"
@@ -1299,6 +1304,165 @@ static autoclose_fd_t make_fifo(const wchar_t *test_path, const wchar_t *suffix)
     return res;
 }
 
+// A universal notifier which uses POSIX conditional variables in a shared memory page
+class universal_notifier_posix_shmem_t final : public universal_notifier_t {
+    constexpr static const char *uuid = "a4fca850-147a-4f55-a2dd-3bcae6573ef8";
+
+    struct _shmem_t final {
+       // We will be created as a zeroed-out page. Do not use any static initializers.
+       pthread_mutex_t mutex{};
+       pthread_cond_t cond_var{};
+
+       uint32_t init_count{};
+       // This is only used to detect spurious wakes
+       uint32_t post_count{};
+       bool init_complete{};
+
+       void initialize() {
+           pthread_mutex_init(&mutex, nullptr);
+           pthread_cond_init(&cond_var, nullptr);
+           __atomic_store_n(&init_complete, true, __ATOMIC_RELEASE);
+        }
+
+        void disconnect() {
+            // Destroy synchronization primitives if we're the last ones here.
+            // Make a copy of them in case another instance starts after we've started our
+            // teardown procedure.
+            auto local_mutex = mutex;
+            auto local_cond_var = cond_var;
+            // FLOGF(warning, "init_count prior to exit: %d", init_count);
+            if (__atomic_add_fetch(&init_count, -1, __ATOMIC_SEQ_CST) == 0) {
+                pthread_mutex_destroy(&local_mutex);
+                pthread_cond_destroy(&local_cond_var);
+            }
+        }
+
+        // This object will never be created manually
+        _shmem_t() = delete;
+        // Disallow all moving or copying
+        _shmem_t(_shmem_t&&) = delete;
+        _shmem_t(const _shmem_t&) = delete;
+    } *shm_;
+
+    uint32_t last_post_count = 0;
+    autoclose_fd_t notification_pipe_;
+    std::string shm_path_;
+
+    public:
+    explicit universal_notifier_posix_shmem_t(const wchar_t *test_path) {
+        std::string name = uuid;
+        name.push_back('-');
+        if (test_path) {
+            std::string temp;
+            wchar_to_utf8_string(test_path, &temp);
+            name.append(temp);
+        } else {
+            std::string config_path;
+            wcstring w_config_path;
+            // path_get_config returns false if there's a problem with the pat (e.g. path component does
+            // not exist), but we don't actually care about the file, just the path to it.
+            path_get_config(w_config_path);
+            wchar_to_utf8_string(w_config_path, &config_path);
+            name.append(config_path);
+        }
+
+        // No file is actually going to be created at this path, but we should use an actual,
+        // absolute path to guarantee the same SHM segment is shared between processes, at least per
+        // shm_open(2) on FreeBSD. Also, protect against too-long paths by hashing the passed-in
+        // identifier. Linux suggests (but in reality, requires) that after the initial / there be
+        // no other slashes. macOS limits the length to PSHMNAMLEN, which is a measley 31 bytes.
+        {
+            std::stringstream shm_path;
+            shm_path << "/fish-";
+            shm_path << std::hash<std::string>{}(name);
+            shm_path_ = shm_path.str();
+        }
+
+        autoclose_fd_t shm_fd;
+        shm_fd.reset(shm_open(shm_path_.c_str(), O_CREAT | O_RDWR, 0660));
+        if (shm_fd.fd() <= 0) {
+            wperror(L"shm_open");
+            DIE("Could not open/create shared memory");
+        }
+
+        // Resize shared memory section to the desired length, as the default is zero
+        // macOS only allows calling ftruncate on a newly minted shared memory segment, so we have
+        // to see if it's been resized before.
+        struct stat map_stat;
+        if (fstat(shm_fd.fd(), &map_stat) != 0) {
+            wperror(L"fstat");
+            DIE("Could not obtain shm size via fstat");
+        }
+        if (map_stat.st_size == 0) {
+            if (ftruncate(shm_fd.fd(), sizeof(_shmem_t)) != 0) {
+                wperror(L"ftruncate");
+                DIE("Could not truncate shm");
+            }
+        }
+
+        void *map = mmap(nullptr, sizeof(_shmem_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd.fd(), 0);
+        if (map == nullptr || map == MAP_FAILED) {
+            wperror(L"mmap");
+            DIE("Could not map shared memory section into memory!");
+        }
+
+        shm_fd.close();
+        shm_ = static_cast<_shmem_t*>(map);
+
+        // POSIX doesn't provide any info on whether it was newly created, so we need to cover all
+        // the bases (atomically).
+        if (__atomic_add_fetch(&shm_->init_count, 1, __ATOMIC_SEQ_CST) == 1) {
+            // We're the first to open the memory section. Initialize the object.
+            shm_->initialize();
+        } else {
+            // Wait for object state to become valid in the case of contention (basically never)
+            while (__atomic_load_n(&shm_->init_complete, __ATOMIC_ACQUIRE) != true) {
+                // pthread_yield() is non-portable
+                std::this_thread::yield();
+            }
+        }
+
+        last_post_count = __atomic_load_n(&shm_->post_count, __ATOMIC_ACQUIRE);
+    }
+
+    void post_notification() override {
+        __atomic_fetch_add(&shm_->post_count, 1, __ATOMIC_SEQ_CST);
+        pthread_cond_broadcast(&shm_->cond_var);
+    }
+
+    unsigned long usec_delay_between_polls() const override {
+        return 0;
+    }
+
+    /// Checks if a universal variable has been modified. Does not block.
+    bool poll() override {
+        auto result = last_post_count != __atomic_load_n(&shm_->post_count, __ATOMIC_ACQUIRE);
+        last_post_count = __atomic_load_n(&shm_->post_count, __ATOMIC_ACQUIRE);
+        return result;
+    }
+
+    /// Waits for a universal variable to be modified.
+    void block() {
+        uint32_t post_count = __atomic_load_n(&shm_->post_count, __ATOMIC_ACQUIRE);
+        do {
+            pthread_mutex_lock(&shm_->mutex);
+            pthread_cond_wait(&shm_->cond_var, &shm_->mutex);
+            // The mutex protects nothing but the conditional variable's internal state
+            pthread_mutex_unlock(&shm_->mutex);
+        } while (post_count == __atomic_load_n(&shm_->post_count, __ATOMIC_ACQUIRE));
+    }
+
+    ~universal_notifier_posix_shmem_t() override {
+        if (shm_) {
+            shm_->disconnect();
+            munmap(shm_, sizeof(_shmem_t));
+            shm_unlink(shm_path_.c_str());
+            shm_path_.clear();
+            shm_ = nullptr;
+        }
+    }
+};
+
 // A universal notifier which uses SIGIO with a named pipe. This relies on the following behavior
 // which appears to work on Linux: if data becomes available on the pipe then all processes get
 // SIGIO even if the data is read (i.e. there is no race between SIGIO and another proc reading).
@@ -1567,6 +1731,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 };
 
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
+    return strategy_posix_shmem;
 #ifdef FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
 #elif defined(__CYGWIN__)
@@ -1599,6 +1764,10 @@ std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_str
         case strategy_named_pipe: {
             return make_unique<universal_notifier_named_pipe_t>(test_path);
         }
+        case strategy_posix_shmem: {
+            return make_unique<universal_notifier_posix_shmem_t>(test_path);
+        }
+
     }
     DIE("should never reach this statement");
     return nullptr;

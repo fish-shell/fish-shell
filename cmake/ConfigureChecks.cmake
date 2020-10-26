@@ -225,6 +225,18 @@ IF (NOT LIBATOMIC_NOT_NEEDED)
     set(ATOMIC_LIBRARY "atomic")
 endif()
 
+check_cxx_source_compiles("
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+int main() {
+shm_open(\"cmake-shm-test-foo\", O_CREAT|O_RDWR, 0666);
+}"
+LIBRT_NOT_NEEDED)
+IF (NOT LIBRT_NOT_NEEDED)
+    set(RT_LIBRARY "rt")
+endif()
+
 # Check if mbrtowc implementation attempts to encode invalid UTF-8 sequences
 # Known culprits: at least some versions of macOS (confirmed Snow Leopard and Yosemite)
 try_run(mbrtowc_invalid_utf8_exit mbrtowc_invalid_utf8_compiles ${CMAKE_CURRENT_BINARY_DIR}

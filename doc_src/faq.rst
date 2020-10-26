@@ -97,14 +97,14 @@ If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced
 
 This also applies to :ref:`fish_right_prompt <cmd-fish_right_prompt>` and :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`.
 
-Why does my prompt show a `[I]`?
---------------------------------
+Why does my prompt show a ``[I]``?
+----------------------------------
 
 That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
 
 If you haven't activated vi mode on purpose, you might have installed a third-party theme that does it.
 
-If you want to change or disable this display, modify the `fish_mode_prompt` function, for instance via :ref:`funced <cmd-funced>`.
+If you want to change or disable this display, modify the ``fish_mode_prompt`` function, for instance via :ref:`funced <cmd-funced>`.
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
@@ -147,7 +147,7 @@ Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
 Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.
 
-As a special case, most of the time history substitution is used as ``sudo !!``. In that case just press :kbd:`Alt`\ +\ :kbd:`S`, and it will recall your last commandline with `sudo` prefixed (or toggle a `sudo` prefix on the current commandline if there is anything).
+As a special case, most of the time history substitution is used as ``sudo !!``. In that case just press :kbd:`Alt`\ +\ :kbd:`S`, and it will recall your last commandline with ``sudo`` prefixed (or toggle a ``sudo`` prefix on the current commandline if there is anything).
 
 In general, fish's history recall works like this:
 

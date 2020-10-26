@@ -17,7 +17,7 @@ Description
 
 For checking timing after a command has completed, check :ref:`$CMD_DURATION <variables-special>`.
 
-Your system most likely also has a `time` command. To use that use something like `command time`, as in `command time sleep 10`. Because it's not inside fish, it won't have access to fish functions and won't be able to time blocks and such.
+Your system most likely also has a ``time`` command. To use that use something like ``command time``, as in ``command time sleep 10``. Because it's not inside fish, it won't have access to fish functions and won't be able to time blocks and such.
 
 Example
 -------

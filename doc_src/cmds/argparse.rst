@@ -27,7 +27,7 @@ Options
 
 The following ``argparse`` options are available. They must appear before all OPTION_SPECs:
 
-- ``-n`` or ``--name`` is the command name for use in error messages. By default the current function name will be used, or `argparse` if run outside of a function.
+- ``-n`` or ``--name`` is the command name for use in error messages. By default the current function name will be used, or ``argparse`` if run outside of a function.
 
 - ``-x`` or ``--exclusive`` should be followed by a comma separated list of short or long options that are mutually exclusive. You can use this more than once to define multiple sets of mutually exclusive options.
 

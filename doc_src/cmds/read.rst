@@ -30,9 +30,9 @@ The following options are available:
 - ``-n NCHARS`` or ``--nchars=NCHARS`` makes ``read`` return after reading NCHARS characters or the end of
   the line, whichever comes first.
 
-- ``-p PROMPT_CMD`` or ``--prompt=PROMPT_CMD`` uses the output of the shell command ``PROMPT_CMD`` as the prompt for the interactive mode. The default prompt command is `set_color green; echo read; set_color normal; echo "> "`
+- ``-p PROMPT_CMD`` or ``--prompt=PROMPT_CMD`` uses the output of the shell command ``PROMPT_CMD`` as the prompt for the interactive mode. The default prompt command is ``set_color green; echo read; set_color normal; echo "> "``
 
-- ``-P PROMPT_STR`` or ``--prompt-str=PROMPT_STR`` uses the string as the prompt for the interactive mode. It is equivalent to `echo PROMPT_STR` and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the :ref:`echo <cmd-echo>` command.
+- ``-P PROMPT_STR`` or ``--prompt-str=PROMPT_STR`` uses the string as the prompt for the interactive mode. It is equivalent to ``echo PROMPT_STR`` and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the :ref:`echo <cmd-echo>` command.
 
 - ``-R RIGHT_PROMPT_CMD`` or ``--right-prompt=RIGHT_PROMPT_CMD`` uses the output of the shell command ``RIGHT_PROMPT_CMD`` as the right prompt for the interactive mode. There is no default right prompt command.
 

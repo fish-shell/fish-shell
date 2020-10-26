@@ -65,7 +65,7 @@ There are numerous customization options, which can be controlled with git optio
 
 A number of variables set characters and color used as indicators. Many of these have a different default if used with informative status enabled, or ``$__fish_git_prompt_use_informative_chars`` set. The usual default is given first, then the informative default (if it is different). If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
 
-- ``$__fish_git_prompt_char_stateseparator`` (' ', `|`) - the character to be used between the state characters
+- ``$__fish_git_prompt_char_stateseparator`` (' ', ``|``) - the character to be used between the state characters
 - ``$__fish_git_prompt_color`` (no default)
 - ``$__fish_git_prompt_color_prefix`` - the color of the ``(`` prefix
 - ``$__fish_git_prompt_color_suffix`` - the color of the ``)`` suffix

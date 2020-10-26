@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-``fish_indent`` is used to indent a piece of fish code. ``fish_indent`` reads commands from standard input or the given filenames and outputs them to standard output or a specified file (if `-w` is given).
+``fish_indent`` is used to indent a piece of fish code. ``fish_indent`` reads commands from standard input or the given filenames and outputs them to standard output or a specified file (if ``-w`` is given).
 
 The following options are available:
 

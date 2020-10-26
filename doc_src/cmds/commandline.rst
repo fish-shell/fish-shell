@@ -37,7 +37,7 @@ The following options change what part of the commandline is printed or updated:
 
 - ``-b`` or ``--current-buffer`` select the entire buffer, including any displayed autosuggestion (default)
 
-- ``-j`` or ``--current-job`` select the current job - a `job` here is one pipeline. It stops at logical operators or terminators (`;`, `&` or newlines).
+- ``-j`` or ``--current-job`` select the current job - a `job` here is one pipeline. It stops at logical operators or terminators (``;``, ``&`` or newlines).
 
 - ``-p`` or ``--current-process`` select the current process - a `process` here is one simple command. It stops at logical operators, terminators or pipes.
 
@@ -77,11 +77,11 @@ If the commandline contains
 
 (with the cursor on the "o" of "flounder")
 
-The `echo $flounder >&` is the first process, `less` the second and `and echo $catfish` the third.
+The ``echo $flounder >&`` is the first process, ``less`` the second and ``and echo $catfish`` the third.
 
-`echo $flounder >&2 | less` is the first job, `and echo $catfish` the second.
+``echo $flounder >&2 | less`` is the first job, ``and echo $catfish`` the second.
 
-`$flounder` is the current token.
+``$flounder`` is the current token.
 
 More examples:
 

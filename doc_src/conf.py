@@ -11,6 +11,7 @@ import os.path
 import pygments
 import subprocess
 from sphinx.errors import SphinxError, SphinxWarning
+from docutils import nodes, utils
 
 # -- Helper functions --------------------------------------------------------
 
@@ -20,8 +21,29 @@ def strip_ext(path):
     return os.path.splitext(path)[0]
 
 
-# -- Load our Pygments lexer -------------------------------------------------
+# A :issue: role to link to github issues.
+# Used like :issue:`2364`
+def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None):
+    options = options or {}
+    config = inliner.document.settings.env.app.config
+    try:
+        issue_num = int(text.strip())
+        if issue_num <= 0:
+            raise ValueError
+    except ValueError:
+        msg = inliner.reporter.error(
+            'Invalid issue number: "%s"' % text, line=lineno)
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+    template=issue_url + "/{n}"
+    ref = template.format(n=issue_num)
+    issue_text = "#{issue_no}".format(issue_no=issue_num)
+    link = nodes.reference(text=issue_text, refuri=ref, **options)
+    return [link], []
+
+# -- Load our extensions -------------------------------------------------
 def setup(app):
+    # Our own pygments lexer
     from sphinx.highlighting import lexers
 
     this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -29,11 +51,15 @@ def setup(app):
         os.path.join(this_dir, "fish_indent_lexer.py"), lexername="FishIndentLexer"
     )
     lexers["fish-docs-samples"] = fish_indent_lexer
+
     # add_css_file only appears in Sphinx 1.8.0
     if hasattr(app, "add_css_file"):
         app.add_css_file("custom.css")
     else:
         app.add_stylesheet("custom.css")
+
+    app.add_config_value("issue_url", default=None, rebuild="html")
+    app.add_role("issue", issue_role)
 
 
 # The default language to assume
@@ -55,6 +81,7 @@ highlight_language = "fish-docs-samples"
 project = "fish-shell"
 copyright = "2020, fish-shell developers"
 author = "fish-shell developers"
+issue_url = "https://github.com/fish-shell/fish-shell/issues"
 
 # Parsing FISH-BUILD-VERSION-FILE is possible but hard to ensure that it is in the right place
 # fish_indent is guaranteed to be on PATH for the Pygments highlighter anyway

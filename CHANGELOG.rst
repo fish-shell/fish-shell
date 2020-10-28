@@ -5,6 +5,12 @@ Notable improvements and fixes
 ------------------------------
 
 -  Undo and redo support for the command-line editor and pager search (#1367). By default, undo is bound to Control+Z, and redo to Alt+/.
+-  builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
+   This makes it usable also for pipes where the previous command hasn't finished yet, like::
+
+    # Show all dmesg lines related to "usb"
+    dmesg -w | string match '*usb*'
+
 -  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (#6824).
 -  Control-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (#6828).
@@ -26,21 +32,17 @@ Notable improvements and fixes
     1 = 2 and echo true or echo false
           ^
 
--  builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
-   This makes it usable also for pipes where the previous command hasn't finished yet, like::
-
-    # Show all dmesg lines related to "usb"
-    dmesg -w | string match '*usb*'
-
 -  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (#6820), improving its use in command substitutions (#6998).
--  Significant performance improvements to completions (#7153).
 -  The documentation is now presented in a new theme (#6500, #7371).
+-  ``fish --no-execute`` will no longer complain about unknown commands
+   or non-matching wildcards, as these could be defined differently at
+   runtime (especially for functions). This makes it usable as a static syntax checker (#977).
+-  ``type`` is now a builtin and therefore much faster (#7342).
 
 Syntax changes and new commands
 -------------------------------
-- Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively.
-- Logical operators ``&&`` and ``||`` can be followed by newlines before their right operand, matching POSIX shells.
-- A new ``fish_is_root_user`` simplifies checking for superuser privilege, largely for use in prompts (#7031).
+-  Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively.
+-  Logical operators ``&&`` and ``||`` can be followed by newlines before their right operand, matching POSIX shells.
 
 Scripting improvements
 ----------------------
@@ -58,9 +60,6 @@ Scripting improvements
 - ``fish_indent`` now removes spurious quotes in simple cases (#6722)
    and learned a ``--check`` option to just check if a file is indented correctly (#7251).
 - ``pushd`` only adds a directory to the stack if changing to it was successful (#6947).
--  ``fish --no-execute`` will no longer complain about unknown commands
-   or non-matching wildcards, as these could be defined differently at
-   runtime (especially for functions) (#977).
 -  Added a ``fish_job_summary`` function which is called whenever a
    background job stops or ends, or any job terminates from a signal (#6959).
    The default behaviour can now be customized by redefining this
@@ -82,7 +81,6 @@ Scripting improvements
 -  ``complete`` takes the first argument as the name of the command if the ``--command``/``-c`` option is not used (``complete git`` is treated like ``complete --command git``), and can show the loaded completions for specific commands with ``complete COMMANDNAME`` (#7321).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (#7154).
 -  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (#7014).
--  ``type`` is now a builtin and therefore much faster (#7342).
 -  ``string replace`` no longer errors if a capturing group wasn't matched, instead treating it as empty (#7343).
 -  ``exec`` no longer produces a syntax error when the command cannot be found (#6098).
 -  ``disown`` should no longer create zombie processes when job control is off, such as in ``config.fish`` (#7183).
@@ -90,7 +88,7 @@ Scripting improvements
 -  ``set --erase`` and ``abbr --erase`` can now erase multiple things in one go, matching ``functions --erase`` (#7377).
 -  ``abbr --erase`` no longer errors on an unset abbreviation (#7376).
 -  ``test -t``, for testing whether file descriptors are connected to a terminal, works for file descriptors 0, 1, and 2 (#4766). It can still return incorrect results in other cases (#1228).
--  Trying to run fish scripts with Windows line endings (CRLF) produces a sensible error (#2783).
+-  Trying to run scripts with Windows line endings (CRLF) via the shebang produces a sensible error (#2783).
 -  An ``alias`` that delegates to a command with the same name no longer triggers an error about recursive completion (#7389).
 
 Interactive improvements
@@ -175,6 +173,7 @@ Improved prompts
 -  The Mercurial prompt correctly shows untracked status (#6906).
 -  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (#7033).
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (#7278).
+-  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (#7031).
 
 Improved terminal output
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -241,6 +240,7 @@ Completions
 
 - Lots of improvements to completions.
 - Improvements to the manpage completion generator (#7086).
+- Significant performance improvements to completion of the available commands (#7153).
 
 Deprecations and removed features
 ---------------------------------

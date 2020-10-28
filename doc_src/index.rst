@@ -129,12 +129,12 @@ Every program on your computer can be used as a command in fish. If the program 
 
 Here is a list of some useful commands:
 
-- ``cd``, change the current directory
+- :ref:`cd <cmd-cd>`, change the current directory
 - ``ls``, list files and directories
 - ``man``, display a manual page on the screen
 - ``mv``, move (rename) files
 - ``cp``, copy files
-- ``open``, open files with the default application associated with each filetype
+- :ref:`open <cmd-open>`, open files with the default application associated with each filetype
 - ``less``, list the contents of files
 
 Commands and parameters are separated by the space character ``' '``. Every command ends with either a newline (i.e. by pressing the return key) or a semicolon ``;``. More than one command can be written on the same line by separating them with semicolons.
@@ -1979,7 +1979,7 @@ To customize the syntax highlighting, you can set the environment variables list
 Programmable title
 ------------------
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the ``fish_title`` function. The ``fish_title`` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The ``status current-command`` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the ``fish_prompt`` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :ref:`fish_title <cmd-fish_title>` function. The :ref:`fish_title <cmd-fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :ref:`status current-command <cmd-status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the `fish_prompt <cmd-fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
 
 Examples:
 The default fish title is::
@@ -2001,14 +2001,14 @@ To show the last command in the title::
 Programmable prompt
 -------------------
 
-When fish waits for input, it will display a prompt by evaluating the ``fish_prompt`` and ``fish_right_prompt`` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of ``fish_mode_prompt`` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
+When fish waits for input, it will display a prompt by evaluating the :ref:`fish_prompt <cmd-fish_prompt>` and :ref:`fish_right_prompt <cmd-fish_right_prompt>` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
 
 .. _greeting:
 
 Configurable greeting
 ---------------------
 
-If a function named ``fish_greeting`` exists, it will be run when entering interactive mode. Otherwise, if an environment variable named ``fish_greeting`` exists, it will be printed.
+If a function named :ref:`fish_greeting <cmd-fish_greeting>` exists, it will be run when entering interactive mode. Otherwise, if an environment variable named :ref:`fish_greeting <cmd-fish_greeting>` exists, it will be printed.
 
 .. _private-mode:
 
@@ -2047,9 +2047,9 @@ For more information on how to define new event handlers, see the documentation 
 Debugging fish scripts
 -----------------------
 
-Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using ``printf`` and ``set``. As another example, you can run ``status print-stack-trace`` to see how this breakpoint was reached. To resume normal execution of the script, simply type ``exit`` or :kbd:`Control`\ +\ :kbd:`D`.
+Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using :ref:`printf <cmd-printf>` and :ref:`set <cmd-set>`. As another example, you can run :ref:`status print-stack-trace <cmd-status>` to see how this breakpoint was reached. To resume normal execution of the script, simply type :ref:`exit <cmd-exit>` or :kbd:`Control`\ +\ :kbd:`D`.
 
-To start a debug session simply run the builtin command ``breakpoint`` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
+To start a debug session simply run the builtin command :ref:`breakpoint <cmd-breakpoint>` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
 
 .. _more-help:
 

@@ -11,13 +11,20 @@ function __fish_cdh_args
         end
     end
 
+    # Only shorten $HOME to "~" if the token starts with a "~",
+    # otherwise fish will escape it.
+    set -l shorten_tilde 0
+    string match -q '~*' -- (commandline -ct); and set shorten_tilde 1
+
     for dir in $uniq_dirs
-        set -l home_dir (string match -r "$HOME(/.*|\$)" "$dir")
-        if set -q home_dir[2]
-            set dir "~$home_dir[2]"
+        if test $shorten_tilde -eq 1
+            set -l home_dir (string match -r "$HOME(/.*|\$)" "$dir")
+            if set -q home_dir[2]
+                set dir "~$home_dir[2]"
+            end
         end
         echo $dir
     end
 end
 
-complete -c cdh -xa '(__fish_cdh_args)'
+complete -c cdh -kxa '(__fish_cdh_args)'

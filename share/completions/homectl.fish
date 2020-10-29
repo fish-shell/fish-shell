@@ -67,7 +67,7 @@ for condition in '__fish_seen_subcommand_from create update'
     complete -c homectl -n $condition -l fido2-device -d 'Path to FIDO2 hidraw device' -r
 
     # Account Management User Record Properties
-    complete -c homectl -n $condition -l locked -d 'Set locked account state' -xa 'true false'
+    complete -c homectl -n $condition -l locked -d 'Set locked account state' -xa 'yes no'
     complete -c homectl -n $condition -l not-before -d 'Do not allow logins before'
     complete -c homectl -n $condition -l not-after -d 'Do not allow logins after'
     complete -c homectl -n $condition -l rate-limit-interval -d 'Login rate-limit interval in seconds'
@@ -75,9 +75,9 @@ for condition in '__fish_seen_subcommand_from create update'
 
     # Password Policy User Record Properties:
     complete -c homectl -n $condition -l password-hint -d 'Set Password hint'
-    complete -c homectl -n $condition -l enforce-password-policy -d "Control enforce password policy" -xa 'true false'
+    complete -c homectl -n $condition -l enforce-password-policy -d "Control enforce password policy" -xa 'yes no'
     complete -c homectl -n $condition -s P -d' Equivalent to --enforce-password-password=no'
-    complete -c homectl -n $condition -l password-change-now -d 'Require the password to be changed on next login' -xa 'true false'
+    complete -c homectl -n $condition -l password-change-now -d 'Require the password to be changed on next login' -xa 'yes no'
     complete -c homectl -n $condition -l password-change-min -d 'Require minimum time between password changes'
     complete -c homectl -n $condition -l password-change-max -d 'Require maximum time between password changes'
     complete -c homectl -n $condition -l password-change-warn -d 'How much time to warn before password expiry'
@@ -101,8 +101,8 @@ for condition in '__fish_seen_subcommand_from create update'
 
     # LUKS Storage User Record Properties:
     complete -c homectl -n $condition -l fs-type -d 'File system type to use in case of luks storage' -xa 'ext4 xfs btrfs'
-    complete -c homectl -n $condition -l luks-discard -d 'Whether to use discard feature' -xa 'true false'
-    complete -c homectl -n $condition -l luks-offline-discard -d 'Whether to trim file on logout' -xa 'true false'
+    complete -c homectl -n $condition -l luks-discard -d 'Whether to use discard feature' -xa 'yes no'
+    complete -c homectl -n $condition -l luks-offline-discard -d 'Whether to trim file on logout' -xa 'yes no'
     complete -c homectl -n $condition -l luks-cipher -d 'Cipher to use for LUKS encryption'
     complete -c homectl -n $condition -l luks-cipher-mode -d 'Cipher mode to use for LUKS encryption'
     complete -c homectl -n $condition -l luks-volume-key-size -d 'Volume key size to use for LUKS encryption'
@@ -113,9 +113,9 @@ for condition in '__fish_seen_subcommand_from create update'
     complete -c homectl -n $condition -l luks-pbkdf-parallel-threads -d 'Number of parallel threads for PKBDF'
 
     # Mounting User Record Properties:
-    complete -c homectl -n $condition -l nosuid -d 'Control the nosuid flag of the home mount' -xa 'true false'
-    complete -c homectl -n $condition -l nodev -d 'Control the nodev flag of the home mount' -xa 'true false'
-    complete -c homectl -n $condition -l noexec -d ' Control the noexec flag of the home mount' -xa 'true false'
+    complete -c homectl -n $condition -l nosuid -d 'Control the nosuid flag of the home mount' -xa 'yes no'
+    complete -c homectl -n $condition -l nodev -d 'Control the nodev flag of the home mount' -xa 'yes no'
+    complete -c homectl -n $condition -l noexec -d ' Control the noexec flag of the home mount' -xa 'yes no'
 
     # CIFS User Record Properties:
     complete -c homectl -n $condition -l cifs-domain -d ' CIFS (Windows) domain'
@@ -124,6 +124,6 @@ for condition in '__fish_seen_subcommand_from create update'
 
     # Login Behaviour User Record Properties:
     complete -c homectl -n $condition -l stop-delay -d 'How long to leave user services running after logout'
-    complete -c homectl -n $condition -l kill-processes -d 'Whether to kill user processes when sessions terminate' -xa 'true false'
-    complete -c homectl -n $condition -l auto-login -d 'Try to log this user in automatically' -xa 'true false'
+    complete -c homectl -n $condition -l kill-processes -d 'Whether to kill user processes when sessions terminate' -xa 'yes no'
+    complete -c homectl -n $condition -l auto-login -d 'Try to log this user in automatically' -xa 'yes no'
 end

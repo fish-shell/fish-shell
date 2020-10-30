@@ -1,3 +1,5 @@
+__fish_complete_mysql mysql
+
 complete -c mysql -f
 
 complete -c mysql -s I -s \? -l help -d 'Display a help message'
@@ -13,8 +15,7 @@ complete -c mysql -s c -l comments -d 'Preserve comments in statements'
 complete -c mysql -l skip-comments -d 'Discard comments in statements'
 complete -c mysql -s C -l compress -d 'Compress all information'
 complete -c mysql -l connect-timeout -x -d 'Set the number of seconds before connection timeout'
-complete -c mysql -s D -l database -x -d 'The database to use' -a '(mysqlshow 2>/dev/null | tail -n +3 | string replace -rf \'\| *(\S*) *\|\' \'$1\')'
-complete -c mysql -a '(mysqlshow 2>/dev/null | tail -n +3 | string replace -rf \'\| *(\S*) *\|\' \'$1\')'
+
 complete -c mysql -s \# -l debug -d 'Write a debugging log'
 complete -c mysql -l debug-check -d 'Print some debugging information'
 complete -c mysql -s T -l debug-info -d 'Prints debugging information and memory and CPU usage'

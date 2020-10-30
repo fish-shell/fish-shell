@@ -143,6 +143,7 @@ New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  As mentioned above, new readline commands ``undo`` (Control+\_ or Control+Z) and ``redo`` (Alt-/) can be used to revert changes to the command line or the pager search field (#6570).
+-  Additionally, using the ``cancel`` readline command (bound to escape by default) right after fish picked an unambiguous completion will undo that (#7433).
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, and Control+left/right keys to navigate by word (#6648, #6755, #6769).
 -  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (#6908).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.

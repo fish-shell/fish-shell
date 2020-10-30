@@ -2790,7 +2790,19 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::cancel: {
-            // The only thing we can cancel right now is paging, which we handled up above.
+            // If we last inserted a completion, undo it.
+            // This doesn't apply if the completion was selected via the pager
+            // (in which case the last command is "execute" or similar,
+            // but never complete{,_and_search})
+            //
+            // Also paging is already cancelled above.
+            if (rls.complete_did_insert &&
+                (rls.last_cmd == rl::complete
+                 || rls.last_cmd == rl::complete_and_search)) {
+                editable_line_t *el = active_edit_line();
+                el->undo();
+                update_buff_pos(el);
+            }
             break;
         }
         case rl::repaint_mode: {

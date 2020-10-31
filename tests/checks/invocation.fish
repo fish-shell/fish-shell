@@ -19,7 +19,7 @@ if not set -q GITHUB_WORKFLOW
     # CHECK: login shell
     # CHECK: interactive
 else
-    # Github Action doesn't start this in a terminal, so fish would complain.
+    # GitHub Action doesn't start this in a terminal, so fish would complain.
     # Instead, we just fake the result, since we have no way to indicate a skipped test.
     echo not login shell
     echo interactive

@@ -318,7 +318,7 @@ void init_input() {
     }
 }
 
-inputter_t::inputter_t(parser_t &parser, int stdin) : event_queue_(stdin), parser_(parser.shared()) {}
+inputter_t::inputter_t(parser_t &parser, int in) : event_queue_(in), parser_(parser.shared()) {}
 
 void inputter_t::function_push_arg(wchar_t arg) { input_function_args_.push_back(arg); }
 

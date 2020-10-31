@@ -193,9 +193,9 @@ class input_event_queue_t {
 
     char_event_t readb();
 
-    int stdin{0};
+    int in_{0};
    public:
-    input_event_queue_t(int in = 0) : stdin(in) {};
+    input_event_queue_t(int in = 0) : in_(in) {};
 
     /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
     /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously

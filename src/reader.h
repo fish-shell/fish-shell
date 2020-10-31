@@ -216,7 +216,7 @@ struct reader_config_t {
     bool in_silent_mode{false};
 
     /// The fd for stdin, default to actual stdin.
-    int stdin{0};
+    int in{0};
 };
 
 /// Push a new reader environment controlled by \p conf.

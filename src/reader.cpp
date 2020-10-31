@@ -609,7 +609,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     reader_data_t(std::shared_ptr<parser_t> parser, history_t *hist, reader_config_t &&conf)
         : conf(std::move(conf)),
           parser_ref(std::move(parser)),
-          inputter(*parser_ref, conf.stdin),
+          inputter(*parser_ref, conf.in),
           history(hist) {}
 
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
@@ -2700,7 +2700,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
         auto evt = inputter.readch(allow_commands);
-        if (!event_is_normal_char(evt) || !can_read(conf.stdin)) {
+        if (!event_is_normal_char(evt) || !can_read(conf.in)) {
             event_needing_handling = std::move(evt);
             break;
         } else if (evt.input_style == char_input_style_t::notfirst && accumulated_chars.empty() &&
@@ -3636,7 +3636,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     /// A helper that kicks off syntax highlighting, autosuggestion computing, and repaints.
     auto color_suggest_repaint_now = [this] {
-        if (conf.stdin == STDIN_FILENO) {
+        if (conf.in == STDIN_FILENO) {
             this->update_autosuggestion();
             this->super_highlight_me_plenty();
         }
@@ -3648,10 +3648,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     force_exec_prompt_and_repaint = true;
 
     // Get the current terminal modes. These will be restored when the function returns.
-    if (tcgetattr(conf.stdin, &old_modes) == -1 && errno == EIO) redirect_tty_output();
+    if (tcgetattr(conf.in, &old_modes) == -1 && errno == EIO) redirect_tty_output();
 
     // Set the new modes.
-    if (tcsetattr(conf.stdin, TCSANOW, &shell_modes) == -1) {
+    if (tcsetattr(conf.in, TCSANOW, &shell_modes) == -1) {
         int err = errno;
         if (err == EIO) {
             redirect_tty_output();
@@ -3758,7 +3758,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
     // user presses enter.
-    if (this->is_repaint_needed() || conf.stdin != STDIN_FILENO) this->layout_and_repaint(L"prepare to execute");
+    if (this->is_repaint_needed() || conf.in != STDIN_FILENO) this->layout_and_repaint(L"prepare to execute");
 
     // Emit a newline so that the output is on the line after the command.
     // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
@@ -3768,7 +3768,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
     // For now, just reset it to the beginning of the line.
-    if (conf.stdin != STDIN_FILENO) {
+    if (conf.in != STDIN_FILENO) {
         ignore_result(write(STDOUT_FILENO, "\r", 1));
     }
 
@@ -3783,7 +3783,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     if (s_exit_state != exit_state_t::finished_handlers) {
         // The order of the two conditions below is important. Try to restore the mode
         // in all cases, but only complain if interactive.
-        if (tcsetattr(conf.stdin, TCSANOW, &old_modes) == -1 &&
+        if (tcsetattr(conf.in, TCSANOW, &old_modes) == -1 &&
             session_interactivity() != session_interactivity_t::not_interactive) {
             if (errno == EIO) redirect_tty_output();
             wperror(L"tcsetattr");  // return to previous mode

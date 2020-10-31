@@ -199,7 +199,7 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
 /// we weren't asked to split on null characters.
 static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool shell, bool silent,
                             const wchar_t *prompt, const wchar_t *right_prompt,
-                            const wchar_t *commandline, int stdin) {
+                            const wchar_t *commandline, int in) {
     int exit_res = STATUS_CMD_OK;
 
     // Construct a configuration.
@@ -218,7 +218,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     conf.left_prompt_cmd = prompt;
     conf.right_prompt_cmd = right_prompt;
 
-    conf.stdin = stdin;
+    conf.in = in;
 
     // Don't keep history.
     reader_push(parser, wcstring{}, std::move(conf));

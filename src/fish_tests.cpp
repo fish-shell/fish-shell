@@ -885,24 +885,16 @@ static void test_iothread() {
     say(L"Testing iothreads");
     std::unique_ptr<std::atomic<int>> int_ptr = make_unique<std::atomic<int>>(0);
     int iterations = 64;
-    int max_achieved_thread_count = 0;
-    double start = timef();
     for (int i = 0; i < iterations; i++) {
-        int thread_count = iothread_perform([&]() { test_iothread_thread_call(int_ptr.get()); });
-        max_achieved_thread_count = std::max(max_achieved_thread_count, thread_count);
+        iothread_perform([&]() { test_iothread_thread_call(int_ptr.get()); });
     }
-
-    // Now wait until we're done.
     iothread_drain_all();
-    double end = timef();
 
     // Should have incremented it once per thread.
+    do_test(*int_ptr == iterations);
     if (*int_ptr != iterations) {
         say(L"Expected int to be %d, but instead it was %d", iterations, int_ptr->load());
     }
-
-    say(L"    (%.02f msec, with max of %d threads)", (end - start) * 1000.0,
-        max_achieved_thread_count);
 }
 
 static void test_pthread() {

@@ -278,10 +278,10 @@ int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion,
     return local_thread_count;
 }
 
-int iothread_perform_impl(void_function_t &&func, void_function_t &&completion, bool cant_wait) {
+void iothread_perform_impl(void_function_t &&func, void_function_t &&completion, bool cant_wait) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
-    return s_io_thread_pool.perform(std::move(func), std::move(completion), cant_wait);
+    s_io_thread_pool.perform(std::move(func), std::move(completion), cant_wait);
 }
 
 int iothread_port() { return get_notify_pipes().read; }

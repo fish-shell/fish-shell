@@ -26,25 +26,25 @@ jobs:
         make
     - name: make test
       run: |
+
+
+  macos:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: |
+        brew install python3
+        sudo pip3 install pexpect
+    - name: cmake
+      run: |
+        mkdir build && cd build
+        cmake -DWITH_GETTEXT=NO ..
+    - name: make
+      run: |
+        make
+    - name: make test
+      run: |
         make test
-
-  # macos:
-
-  #   runs-on: macos-latest
-
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Install deps
-  #     run: |
-  #       brew install python3
-  #       sudo pip3 install pexpect
-  #   - name: cmake
-  #     run: |
-  #       mkdir build && cd build
-  #       cmake -DWITH_GETTEXT=NO ..
-  #   - name: make
-  #     run: |
-  #       make
-  #   - name: make test
-  #     run: |
-  #       make test

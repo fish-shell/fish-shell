@@ -14,8 +14,11 @@
 /// \return the fd on which to listen for completion callbacks.
 int iothread_port();
 
-/// Services one iothread completion callback.
+/// Services iothread completion callbacks.
 void iothread_service_completion();
+
+/// Services completions, except does not wait more than \p timeout_usec.
+void iothread_service_completion_with_timeout(long timeout_usec);
 
 /// Waits for all iothreads to terminate.
 /// \return the number of threads that were running.

@@ -313,6 +313,12 @@ static bool iothread_wait_for_pending_completions(long timeout_usec) {
     return ret > 0;
 }
 
+void iothread_service_completion_with_timeout(long timeout_usec) {
+    if (iothread_wait_for_pending_completions(timeout_usec)) {
+        iothread_service_completion();
+    }
+}
+
 /// At the moment, this function is only used in the test suite and in a
 /// drain-all-threads-before-fork compatibility mode that no architecture requires, so it's OK that
 /// it's terrible.

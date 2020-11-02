@@ -144,6 +144,12 @@ static operation_context_t get_bg_context(const std::shared_ptr<environment_t> &
     return operation_context_t{nullptr, *env, std::move(cancel_checker)};
 }
 
+/// We try to ensure that syntax highlighting completes appropriately before executing what the user typed.
+/// But we do not want it to block forever - e.g. it may hang on determining if an arbitrary argument
+/// is a path. This is how long we'll wait (in milliseconds) before giving up and performing a
+/// no-io syntax highlighting. See #7418, #5912.
+static constexpr long kHighlightTimeoutForExecutionMs = 250;
+
 /// Get the debouncer for autosuggestions and background highlighting.
 /// These are deliberately leaked to avoid shutdown dtor registration.
 static debounce_t &debounce_autosuggestions() {
@@ -648,7 +654,11 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_autosuggestion();
     void accept_autosuggestion(bool full, bool single = false,
                                move_word_style_t style = move_word_style_punctuation);
-    void super_highlight_me_plenty(bool no_io = false);
+    void super_highlight_me_plenty();
+
+    /// Finish up any outstanding syntax highlighting, before execution.
+    /// This plays some tricks to not block on I/O for too long.
+    void finish_highlighting_before_exec();
 
     void highlight_complete(highlight_result_t result);
     void exec_mode_prompt();
@@ -2373,29 +2383,47 @@ static std::function<highlight_result_t(void)> get_highlight_performer(parser_t 
 }
 
 /// Highlight the command line in a super, plentiful way.
-/// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
-///        an asynchronous highlight in the background, which may perform disk I/O.
-void reader_data_t::super_highlight_me_plenty(bool no_io) {
+void reader_data_t::super_highlight_me_plenty() {
     if (!conf.highlight_ok) return;
 
-    const editable_line_t *el = &command_line;
-
     // Do nothing if this text is already in flight.
+    const editable_line_t *el = &command_line;
     if (el->text() == in_flight_highlight_request) return;
     in_flight_highlight_request = el->text();
 
     FLOG(reader_render, L"Highlighting");
-    auto highlight_performer = get_highlight_performer(parser(), el->text(), !no_io);
-    if (no_io) {
-        // Highlighting without IO, we just do it.
-        highlight_complete(highlight_performer());
-    } else {
-        // Highlighting including I/O proceeds in the background.
-        auto shared_this = this->shared_from_this();
-        debounce_highlighting().perform(highlight_performer,
-                                        [shared_this](highlight_result_t result) {
-                                            shared_this->highlight_complete(std::move(result));
-                                        });
+    auto highlight_performer = get_highlight_performer(parser(), el->text(), true /* io_ok */);
+    auto shared_this = this->shared_from_this();
+    debounce_highlighting().perform(highlight_performer, [shared_this](highlight_result_t result) {
+        shared_this->highlight_complete(std::move(result));
+    });
+}
+
+void reader_data_t::finish_highlighting_before_exec() {
+    if (!conf.highlight_ok) return;
+    if (in_flight_highlight_request.empty()) return;
+
+    // We have an in-flight highlight request scheduled.
+    // Wait for its completion to run, but not forever.
+    namespace sc = std::chrono;
+    auto now = sc::steady_clock::now();
+    auto deadline = now + sc::milliseconds(kHighlightTimeoutForExecutionMs);
+    while (now < deadline) {
+        long timeout_usec = sc::duration_cast<sc::microseconds>(deadline - now).count();
+        iothread_service_completion_with_timeout(timeout_usec);
+
+        // Note iothread_service_completion_with_timeout will reentrantly modify us,
+        // by invoking a completion.
+        if (in_flight_highlight_request.empty()) break;
+        now = sc::steady_clock::now();
+    }
+
+    if (!in_flight_highlight_request.empty()) {
+        // We did not complete before the deadline.
+        // Give up and highlight without I/O.
+        const editable_line_t *el = &command_line;
+        auto highlight_no_io = get_highlight_performer(parser(), el->text(), false /* io not ok */);
+        this->highlight_complete(highlight_no_io());
     }
 }
 
@@ -3084,13 +3112,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
                 // This command is valid, but an abbreviation may make it invalid. If so, we
                 // will have to test again.
-                bool abbreviation_expanded = expand_abbreviation_as_necessary(1);
-                if (abbreviation_expanded && conf.syntax_check_ok) {
-                    command_test_result = reader_shell_test(parser(), el->text());
-                    // If the command is OK, then we're going to execute it. We still want to do
-                    // syntax highlighting on this newly changed command, but a synchronous variant
-                    // that performs no I/O, so as not to block the user.
-                    if (command_test_result == 0) super_highlight_me_plenty(true);
+                if (expand_abbreviation_as_necessary(1)) {
+                    // Trigger syntax highlighting as we are likely about to execute this command.
+                    this->super_highlight_me_plenty();
+                    if (conf.syntax_check_ok) {
+                        command_test_result = reader_shell_test(parser(), el->text());
+                    }
                 }
             }
 
@@ -3759,6 +3786,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
     // user presses enter.
     if (this->is_repaint_needed() || conf.in != STDIN_FILENO) this->layout_and_repaint(L"prepare to execute");
+
+    // Finish any outstanding syntax highlighting (but do not wait forever).
+    finish_highlighting_before_exec();
 
     // Emit a newline so that the output is on the line after the command.
     // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.

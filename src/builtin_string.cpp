@@ -23,17 +23,17 @@
 
 #include "builtin.h"
 #include "common.h"
+#include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
 #include "io.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "pcre2.h"
 #include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-class parser_t;
 
 // How many bytes we read() at once.
 // Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
@@ -141,6 +141,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool entire_valid = false;
     bool filter_valid = false;
     bool ignore_case_valid = false;
+    bool import_vars_valid = false;
     bool index_valid = false;
     bool invert_valid = false;
     bool left_valid = false;
@@ -164,6 +165,7 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool entire = false;
     bool filter = false;
     bool ignore_case = false;
+    bool import_vars = false;
     bool index = false;
     bool invert_match = false;
     bool left = false;
@@ -351,6 +353,16 @@ static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_I(wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->import_vars_valid) {
+        opts->import_vars = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->length_valid) {
@@ -495,6 +507,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->entire_valid) short_opts.append(L"e");
     if (opts->filter_valid) short_opts.append(L"f");
     if (opts->ignore_case_valid) short_opts.append(L"i");
+    if (opts->import_vars_valid) short_opts.append(L"I");
     if (opts->index_valid) short_opts.append(L"n");
     if (opts->invert_valid) short_opts.append(L"v");
     if (opts->left_valid) short_opts.append(L"l");
@@ -518,37 +531,26 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust share/completions/string.fish when `string` options change
-static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'},
-                                              {L"chars", required_argument, nullptr, 'c'},
-                                              {L"count", required_argument, nullptr, 'n'},
-                                              {L"entire", no_argument, nullptr, 'e'},
-                                              {L"end", required_argument, nullptr, 'e'},
-                                              {L"filter", no_argument, nullptr, 'f'},
-                                              {L"ignore-case", no_argument, nullptr, 'i'},
-                                              {L"index", no_argument, nullptr, 'n'},
-                                              {L"invert", no_argument, nullptr, 'v'},
-                                              {L"left", no_argument, nullptr, 'l'},
-                                              {L"length", required_argument, nullptr, 'l'},
-                                              {L"max", required_argument, nullptr, 'm'},
-                                              {L"no-empty", no_argument, nullptr, 'n'},
-                                              {L"no-newline", no_argument, nullptr, 'N'},
-                                              {L"no-quoted", no_argument, nullptr, 'n'},
-                                              {L"quiet", no_argument, nullptr, 'q'},
-                                              {L"regex", no_argument, nullptr, 'r'},
-                                              {L"right", no_argument, nullptr, 'r'},
-                                              {L"start", required_argument, nullptr, 's'},
-                                              {L"style", required_argument, nullptr, 1},
-                                              {L"no-trim-newlines", no_argument, nullptr, 'N'},
-                                              {L"fields", required_argument, nullptr, 'f'},
-                                              {L"allow-empty", no_argument, nullptr, 'a'},
-                                              {L"width", required_argument, nullptr, 'w'},
-                                              {nullptr, 0, nullptr, 0}};
+static const struct woption long_options[] = {
+    {L"all", no_argument, nullptr, 'a'},          {L"chars", required_argument, nullptr, 'c'},
+    {L"count", required_argument, nullptr, 'n'},  {L"entire", no_argument, nullptr, 'e'},
+    {L"end", required_argument, nullptr, 'e'},    {L"filter", no_argument, nullptr, 'f'},
+    {L"ignore-case", no_argument, nullptr, 'i'},  {L"import", no_argument, nullptr, 'I'},
+    {L"index", no_argument, nullptr, 'n'},        {L"invert", no_argument, nullptr, 'v'},
+    {L"left", no_argument, nullptr, 'l'},         {L"length", required_argument, nullptr, 'l'},
+    {L"max", required_argument, nullptr, 'm'},    {L"no-empty", no_argument, nullptr, 'n'},
+    {L"no-newline", no_argument, nullptr, 'N'},   {L"no-quoted", no_argument, nullptr, 'n'},
+    {L"quiet", no_argument, nullptr, 'q'},        {L"regex", no_argument, nullptr, 'r'},
+    {L"right", no_argument, nullptr, 'r'},        {L"start", required_argument, nullptr, 's'},
+    {L"style", required_argument, nullptr, 1},    {L"no-trim-newlines", no_argument, nullptr, 'N'},
+    {L"fields", required_argument, nullptr, 'f'}, {L"allow-empty", no_argument, nullptr, 'a'},
+    {L"width", required_argument, nullptr, 'w'},  {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
-    {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
-    {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
+    {'f', handle_flag_f}, {'i', handle_flag_i}, {'I', handle_flag_I}, {'l', handle_flag_l},
+    {'m', handle_flag_m}, {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r},
+    {'s', handle_flag_s}, {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -827,6 +829,7 @@ struct compiled_regex_t {
 class pcre2_matcher_t : public string_matcher_t {
     const wchar_t *argv0;
     compiled_regex_t regex;
+    parser_t &parser;
 
     enum class match_result_t {
         pcre2_error = -1,
@@ -882,12 +885,101 @@ class pcre2_matcher_t : public string_matcher_t {
         return opts.invert_match ? match_result_t::no_match : match_result_t::match;
     }
 
+    void import_vars(const wcstring &haystack, bool match_found, bool first_time) {
+        PCRE2_SPTR name_table;
+        uint32_t name_entry_size;
+        uint32_t name_count;
+
+        pcre2_pattern_info(regex.code, PCRE2_INFO_NAMETABLE, &name_table);
+        pcre2_pattern_info(regex.code, PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size);
+        pcre2_pattern_info(regex.code, PCRE2_INFO_NAMECOUNT, &name_count);
+
+        struct name_table_entry_t {
+#if PCRE2_CODE_UNIT_WIDTH == 8
+            uint8_t match_index_msb;
+            uint8_t match_index_lsb;
+            char name[];
+#elif PCRE2_CODE_UNIT_WIDTH == 16
+            uint16_t match_index;
+            char16_t name[];
+#else
+            uint32_t match_index;
+#if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH
+            wchar_t name[];
+#else
+            char32_t name[];
+#endif  // WCHAR_T_BITS
+#endif  // PCRE2_CODE_UNIT_WIDTH
+        };
+
+        auto &vars = this->parser.vars();
+        PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
+        auto *names = static_cast<name_table_entry_t *>((void *)(name_table));
+        for (uint32_t i = 0; i < name_count; ++i) {
+            auto &name_entry = names[i * name_entry_size];
+
+            if (first_time) {
+                // Make sure we clear out any existing values matching the named groups, because
+                // we'll be appending instead of overwriting from here on out.
+                vars.set_empty(name_entry.name, ENV_DEFAULT);
+            }
+
+            // A named group may actually correspond to multiple group numbers, each of which
+            // might have to be enumerated.
+            PCRE2_SPTR first = nullptr;
+            PCRE2_SPTR last = nullptr;
+            int entry_size = pcre2_substring_nametable_scan(
+                regex.code, (PCRE2_SPTR)(name_entry.name), &first, &last);
+            if (entry_size <= 0) {
+                FLOGF(warning, L"PCRE2 failure retrieving named matches");
+                continue;
+            }
+
+            auto append_value = [&](wcstring &&value) {
+                wcstring_list_t values{};
+                vars.get(name_entry.name, ENV_DEFAULT)->to_list(values);
+                values.emplace_back(value);
+                vars.set(name_entry.name, ENV_DEFAULT, values);
+            };
+
+            if (!match_found) {
+                if (!opts.all) {
+                    append_value(L"");
+                }
+                continue;
+            }
+
+            bool value_found = false;
+            for (auto group_ptr = first; group_ptr <= last; group_ptr += entry_size) {
+                int group_num = group_ptr[0];
+
+                PCRE2_SIZE *capture = ovector + (2 * group_num);
+                PCRE2_SIZE begin = capture[0];
+                PCRE2_SIZE end = capture[1];
+
+                if (begin != PCRE2_UNSET && end != PCRE2_UNSET && end >= begin) {
+                    append_value(haystack.substr(begin, end - begin));
+                    value_found = true;
+                    break;
+                }
+            }
+
+            // We don't have a way of having empty values in the middle of a multi-entry fish array,
+            // so we compromise by leaving the value unset in the case of !opts.all but assign an
+            // empty value otherwise. (opts.all is always true if !first_time)
+            if (!value_found && opts.all) {
+                append_value(wcstring{});
+            }
+        }
+    }
+
    public:
     pcre2_matcher_t(const wchar_t *argv0_, const wcstring &pattern, const options_t &opts,
-                    io_streams_t &streams)
+                    io_streams_t &streams, parser_t &parser_)
         : string_matcher_t(opts, streams),
           argv0(argv0_),
-          regex(argv0_, pattern, opts.ignore_case, streams) {}
+          regex(argv0_, pattern, opts.ignore_case, streams),
+          parser(parser_) {}
 
     ~pcre2_matcher_t() override = default;
 
@@ -903,6 +995,12 @@ class pcre2_matcher_t : public string_matcher_t {
         PCRE2_SIZE arglen = arg.length();
         auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                regex.match, nullptr));
+
+        if (rc != match_result_t::pcre2_error && opts.import_vars) {
+            // Must call even if no matches were found to make sure no previous values are
+            // erroneously kept.
+            import_vars(arg, rc == match_result_t::match, true /* first time */);
+        }
 
         switch (rc) {
             case match_result_t::pcre2_error:
@@ -933,12 +1031,17 @@ class pcre2_matcher_t : public string_matcher_t {
                 return false;
             }
 
+            // Call import_vars() before modifying the ovector
+            if (rc == match_result_t::match && opts.import_vars) {
+                import_vars(arg, true /* match found */, false /* !first_time */);
+            }
+
             if (rc == match_result_t::no_match) {
                 if (options == 0 /* all matches found now */) break;
                 ovector[1] = offset + 1;
-                continue;
             }
         }
+
         return true;
     }
 };
@@ -950,6 +1053,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     opts.all_valid = true;
     opts.entire_valid = true;
     opts.ignore_case_valid = true;
+    opts.import_vars_valid = true;
     opts.invert_valid = true;
     opts.quiet_valid = true;
     opts.regex_valid = true;
@@ -965,9 +1069,14 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         return STATUS_INVALID_ARGS;
     }
 
+    if (opts.import_vars && !opts.regex) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, _(L"--import requires --regex"));
+        return STATUS_INVALID_ARGS;
+    }
+
     std::unique_ptr<string_matcher_t> matcher;
     if (opts.regex) {
-        matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams);
+        matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams, parser);
     } else {
         matcher = make_unique<wildcard_matcher_t>(cmd, pattern, opts, streams);
     }

@@ -8,6 +8,8 @@ function fish_clipboard_paste
         set data (xsel --clipboard 2>/dev/null)
     else if type -q xclip
         set data (xclip -selection clipboard -o 2>/dev/null)
+    else if type -q powershell.exe
+        set data (powershell.exe Get-Clipboard | string trim -r -c \r)
     end
 
     # Issue 6254: Handle zero-length clipboard content

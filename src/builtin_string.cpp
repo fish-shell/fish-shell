@@ -1,6 +1,8 @@
 // Implementation of the string builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include <functional>
+
 #define PCRE2_CODE_UNIT_WIDTH WCHAR_T_BITS
 #ifdef _WIN32
 #define PCRE2_STATIC
@@ -23,17 +25,17 @@
 
 #include "builtin.h"
 #include "common.h"
+#include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
 #include "io.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "pcre2.h"
 #include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-class parser_t;
 
 // How many bytes we read() at once.
 // Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
@@ -827,6 +829,7 @@ struct compiled_regex_t {
 class pcre2_matcher_t : public string_matcher_t {
     const wchar_t *argv0;
     compiled_regex_t regex;
+    parser_t &parser;
 
     enum class match_result_t {
         pcre2_error = -1,
@@ -882,12 +885,151 @@ class pcre2_matcher_t : public string_matcher_t {
         return opts.invert_match ? match_result_t::no_match : match_result_t::match;
     }
 
+    class regex_importer_t {
+       private:
+        std::map<wcstring, std::vector<wcstring>> matches_;
+        parser_t &parser_;
+        const wcstring &haystack_;
+        const compiled_regex_t &regex_;
+        /// fish variables may be empty, but there's no such thing as a fish array that contains
+        /// an empty value/index. Since a match may evaluate to a literal empty string, we can't
+        /// use that as a sentinel value in place of null/none to indicate that no matches were
+        /// found, which is required to determine whether, in the case of a single
+        /// `string match -r` invocation without `--all` we export a variable set to "" or an
+        /// empty variable.
+        bool match_found_ = false;
+        bool skip_import_ = true;
+
+       public:
+        regex_importer_t(parser_t &parser, const wcstring &haystack, const compiled_regex_t &regex)
+            : parser_(parser), haystack_(haystack), regex_(regex) {}
+
+        /// Enumerates the named groups in the compiled PCRE2 expression, validates the names of
+        /// the groups as variable names, and initializes their value (overriding any previous
+        /// contents).
+        bool init(io_streams_t &streams) {
+            PCRE2_SPTR name_table;
+            uint32_t name_entry_size;
+            uint32_t name_count;
+
+            pcre2_pattern_info(regex_.code, PCRE2_INFO_NAMETABLE, &name_table);
+            pcre2_pattern_info(regex_.code, PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size);
+            pcre2_pattern_info(regex_.code, PCRE2_INFO_NAMECOUNT, &name_count);
+
+            struct name_table_entry_t {
+#if PCRE2_CODE_UNIT_WIDTH == 8
+                uint8_t match_index_msb;
+                uint8_t match_index_lsb;
+                char name[];
+#elif PCRE2_CODE_UNIT_WIDTH == 16
+                uint16_t match_index;
+                char16_t name[];
+#else
+                uint32_t match_index;
+#if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH
+                wchar_t name[];
+#else
+                char32_t name[];
+#endif  // WCHAR_T_BITS
+#endif  // PCRE2_CODE_UNIT_WIDTH
+            };
+
+            auto *names = static_cast<name_table_entry_t *>((void *)(name_table));
+            for (uint32_t i = 0; i < name_count; ++i) {
+                auto &name_entry = names[i * name_entry_size];
+
+                if (env_var_t::flags_for(name_entry.name) & env_var_t::flag_read_only) {
+                    // Modification of read-only variables is not allowed
+                    streams.err.append_format(
+                        L"Modification of read-only variable \"%S\" is not allowed\n",
+                        name_entry.name);
+                    return false;
+                }
+                matches_.emplace(name_entry.name, std::vector<wcstring>{});
+            }
+
+            skip_import_ = false;
+            return true;
+        }
+
+        /// This member function should be called each time a match is found
+        void import_vars(bool match_found) {
+            match_found_ |= match_found;
+            if (!match_found) {
+                return;
+            }
+
+            PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex_.match);
+            for (const auto &kv : matches_) {
+                const auto &name = kv.first;
+                // A named group may actually correspond to multiple group numbers, each of which
+                // might have to be enumerated.
+                PCRE2_SPTR first = nullptr;
+                PCRE2_SPTR last = nullptr;
+                int entry_size = pcre2_substring_nametable_scan(
+                    regex_.code, (PCRE2_SPTR)(name.c_str()), &first, &last);
+                if (entry_size <= 0) {
+                    FLOGF(warning, L"PCRE2 failure retrieving named matches");
+                    continue;
+                }
+
+                if (!match_found) {
+                    matches_[name].emplace_back(L"");
+                    continue;
+                }
+
+                bool value_found = false;
+                for (auto group_ptr = first; group_ptr <= last; group_ptr += entry_size) {
+                    int group_num = group_ptr[0];
+
+                    PCRE2_SIZE *capture = ovector + (2 * group_num);
+                    PCRE2_SIZE begin = capture[0];
+                    PCRE2_SIZE end = capture[1];
+
+                    if (begin != PCRE2_UNSET && end != PCRE2_UNSET && end >= begin) {
+                        matches_[name].emplace_back(haystack_.substr(begin, end - begin));
+                        value_found = true;
+                        break;
+                    }
+                }
+
+                // If there are multiple named groups and --all was used, we need to ensure that the
+                // indexes are always in sync between the variables. If an optional named group
+                // didn't match but its brethren did, we need to make sure to put *something* in the
+                // resulting array, and unfortunately fish doesn't support empty/null members so
+                // we're going to have to use an empty string as the sentinel value.
+                if (!value_found) {
+                    matches_[name].emplace_back(wcstring{});
+                }
+            }
+        }
+
+        ~regex_importer_t() {
+            if (skip_import_) {
+                return;
+            }
+
+            auto &vars = parser_.vars();
+            for (const auto &kv : matches_) {
+                const auto &name = kv.first;
+                const auto &value = kv.second;
+
+                if (!match_found_) {
+                    vars.set_empty(name, ENV_DEFAULT);
+                } else {
+                    vars.set(name, ENV_DEFAULT, value);
+                }
+            }
+        }
+    };
+
    public:
     pcre2_matcher_t(const wchar_t *argv0_, const wcstring &pattern, const options_t &opts,
-                    io_streams_t &streams)
+                    io_streams_t &streams, parser_t &parser_)
         : string_matcher_t(opts, streams),
           argv0(argv0_),
-          regex(argv0_, pattern, opts.ignore_case, streams) {}
+          regex(argv0_, pattern, opts.ignore_case, streams),
+          parser(parser_) {}
 
     ~pcre2_matcher_t() override = default;
 
@@ -899,10 +1041,21 @@ class pcre2_matcher_t : public string_matcher_t {
             return false;
         }
 
+        regex_importer_t var_importer(this->parser, arg, this->regex);
+
+        // We must manually init the importer rather than relegating this to the constructor
+        // because it will validate the names it is importing to make sure they're all legal and
+        // writeable.
+        if (!var_importer.init(streams)) {
+            // init() directly reports errors itself so it can specify the problem variable
+            return false;
+        }
+
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
         auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                regex.match, nullptr));
+        var_importer.import_vars(rc == match_result_t::match);
 
         switch (rc) {
             case match_result_t::pcre2_error:
@@ -933,12 +1086,17 @@ class pcre2_matcher_t : public string_matcher_t {
                 return false;
             }
 
+            // Call import_vars() before modifying the ovector
+            if (rc == match_result_t::match) {
+                var_importer.import_vars(true /* match found */);
+            }
+
             if (rc == match_result_t::no_match) {
                 if (options == 0 /* all matches found now */) break;
                 ovector[1] = offset + 1;
-                continue;
             }
         }
+
         return true;
     }
 };
@@ -967,7 +1125,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     std::unique_ptr<string_matcher_t> matcher;
     if (opts.regex) {
-        matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams);
+        matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams, parser);
     } else {
         matcher = make_unique<wildcard_matcher_t>(cmd, pattern, opts, streams);
     }

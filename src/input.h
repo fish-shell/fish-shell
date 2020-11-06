@@ -37,7 +37,6 @@ class inputter_t {
     bool mapping_is_match(const input_mapping_t &m);
     maybe_t<input_mapping_t> find_mapping();
     char_event_t read_characters_no_readline();
-    int in_{0};
 
    public:
     inputter_t(parser_t &parser, int in = 0);

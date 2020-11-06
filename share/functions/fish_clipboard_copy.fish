@@ -12,5 +12,7 @@ function fish_clipboard_copy
         printf '%s' $cmdline | xsel --clipboard 2>/dev/null
     else if type -q xclip
         printf '%s' $cmdline | xclip -selection clipboard 2>/dev/null
+    else if type -q clip.exe
+        printf '%s' $cmdline | clip.exe
     end
 end

@@ -1572,6 +1572,10 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;
 #elif defined(SIGIO)
+    // The SIGIO notifier does not yet work on WSL. See #7429
+    if (is_windows_subsystem_for_linux()) {
+        return strategy_named_pipe;
+    }
     return strategy_sigio;
 #else
     return strategy_named_pipe;

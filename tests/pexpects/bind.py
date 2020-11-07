@@ -20,6 +20,11 @@ expect_prompt(increment=False)
 
 # Fish should start in default-mode (i.e., emacs) bindings. The default escape
 # timeout is 30ms.
+#
+# Because common CI systems are awful, we have to increase this:
+
+sendline("set -g fish_escape_delay_ms 80")
+expect_prompt("")
 
 # Verify the emacs transpose word (\et) behavior using various delays,
 # including none, after the escape character.
@@ -42,7 +47,7 @@ expect_prompt("\r\njkl ghi\r\n")
 # occur and the "t" should become part of the text that is echoed.
 send("echo mno pqr")
 send("\033")
-sleep(0.200)
+sleep(0.100)
 send("t\r")
 # emacs transpose words, default timeout: long delay
 expect_prompt("\r\nmno pqrt\r\n")

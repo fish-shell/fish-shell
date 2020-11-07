@@ -90,7 +90,7 @@ LANG=C complete -C'complete_test_recurse1 '
 # CHECKERR: recursing
 # CHECKERR: recursing
 # CHECKERR: recursing
-# CHECKERR: <E> fish: completion reached maximum recursion depth, possible cycle?
+# CHECKERR: error: completion reached maximum recursion depth, possible cycle?
 
 # short options
 complete -c foo -f -a non-option-argument

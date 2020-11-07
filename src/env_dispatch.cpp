@@ -359,7 +359,7 @@ static void update_fish_color_support(const environment_t &vars) {
             }
         } else {
             support_term256 = true;
-            debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
+            FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
         }
     } else if (cur_term != nullptr) {
         // See if terminfo happens to identify 256 colors

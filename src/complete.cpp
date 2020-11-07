@@ -1548,7 +1548,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     // for autosuggestions where we don't evaluate command substitutions or variable assignments.
     if (ctx.parser) {
         if (ctx.parser->libdata().complete_recursion_level >= 24) {
-            debug(0, _(L"completion reached maximum recursion depth, possible cycle?"),
+            FLOGF(error, _(L"completion reached maximum recursion depth, possible cycle?"),
                   cmdline.c_str());
             return;
         }

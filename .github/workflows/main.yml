@@ -26,6 +26,7 @@ jobs:
         make
     - name: make test
       run: |
+        make test
 
 
   macos:

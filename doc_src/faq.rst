@@ -196,9 +196,11 @@ In the overwhelming majority of cases, splitting on spaces is unwanted, so this 
 
 However sometimes, especially with ``pkg-config`` and related tools, splitting on spaces is needed.
 
-In these cases use ``string split " "`` like::
+In these cases use ``string split -n " "`` like::
 
-    g++ example_01.cpp (pkg-config --cflags --libs gtk+-2.0 | string split " ")
+    g++ example_01.cpp (pkg-config --cflags --libs gtk+-2.0 | string split -n " ")
+
+The ``-n`` is so empty elements are removed like POSIX shells would do.
 
 How do I get the exit status of a command?
 ------------------------------------------

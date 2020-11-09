@@ -13,6 +13,8 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 
 from time import sleep
 from subprocess import call
+import os
+import signal
 
 # Test job summary for interactive shells.
 expect_prompt()
@@ -29,16 +31,19 @@ expect_prompt()
 
 # fish_job_summary is called when background job is signalled.
 # cmd_line correctly prints only the actually backgrounded job.
-sendline("false; sleep 10 &; true")
+sendline("false; sleep 20 &; true")
 expect_prompt()
+sendline("set -l my_pid $last_pid")
+expect_prompt("")
 sendline("jobs")
 expect_re("Job.*Group.*(CPU)?.*State.*Command")
-expect_re(".*running.*sleep 10 &")
+expect_re(".*running.*sleep 20 &")
 expect_prompt()
-sendline("echo $last_pid")
+sendline("echo $my_pid")
+m = expect_re('\d+\r\n')
 expect_prompt()
-sendline("kill -TERM $last_pid")
-expect_re("[0-9]+:0:sleep 10 &:SIGTERM:Polite quit request", timeout=20)
+os.kill(int(m.group()), signal.SIGTERM)
+expect_re("[0-9]+:0:sleep 20 &:SIGTERM:Polite quit request", timeout=20)
 sendline("")
 expect_prompt()
 

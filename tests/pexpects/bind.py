@@ -47,7 +47,7 @@ expect_prompt("\r\njkl ghi\r\n")
 # occur and the "t" should become part of the text that is echoed.
 send("echo mno pqr")
 send("\033")
-sleep(0.150)
+sleep(0.180)
 send("t\r")
 # emacs transpose words, default timeout: long delay
 expect_prompt("\r\nmno pqrt\r\n")
@@ -73,7 +73,7 @@ send("\033")
 # Delay needed to allow fish to transition to vi "normal" mode. The delay is
 # longer than strictly necessary to let fish catch up as it may be slow due to
 # ASAN.
-sleep(0.150)
+sleep(0.250)
 send("ddi")
 sendline("echo success: default escape timeout")
 expect_prompt(
@@ -85,7 +85,7 @@ expect_prompt(
 send("echo TEXT")
 send("\033")
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep(0.150)
+sleep(0.200)
 send("hhrAi\r")
 expect_prompt(
     "\r\nTAXT\r\n", unmatched="vi mode replace char, default timeout: long delay"

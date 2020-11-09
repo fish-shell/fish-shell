@@ -403,7 +403,10 @@ function fish_git_prompt --description "Prompt function for Git"
                 and test "$dirty" != false
                 and test "$untracked" != false
             end
-            set informative_status "$space"(__fish_git_prompt_informative_status $git_dir)
+            set informative_status (__fish_git_prompt_informative_status $git_dir)
+            if test -n "$informative_status"
+                set informative_status "$space$informative_status"
+            end
         else
             # This has to be set explicitly.
             if test "$dirty" = true
@@ -533,7 +536,9 @@ function __fish_git_prompt_informative_status
     set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles + $stashstate 2>/dev/null)
     if test -z "$state"
         or test "$state" = 0
-        set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
+        if test -n "$___fish_git_prompt_char_cleanstate"
+            set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
+        end
     else
         for i in $___fish_git_prompt_status_order
             if [ $$i != 0 ]

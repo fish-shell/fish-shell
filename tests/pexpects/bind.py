@@ -153,7 +153,7 @@ expect_prompt(
 )
 
 # Verify that changing the escape timeout has an effect.
-send("set -g fish_escape_delay_ms 200\r")
+send("set -g fish_escape_delay_ms 150\r")
 expect_prompt()
 
 send("echo fail: lengthened escape timeout")
@@ -161,10 +161,9 @@ send("\033")
 sleep(0.350)
 send("ddi")
 send("echo success: lengthened escape timeout\r")
-# vi replace line, 200ms timeout: long delay
 expect_prompt(
     "\r\nsuccess: lengthened escape timeout\r\n",
-    unmatched="vi replace line, 200ms timeout: long delay",
+    unmatched="vi replace line, 150ms timeout: long delay",
 )
 
 # Verify that we don't switch to vi normal mode if we don't wait long enough
@@ -174,10 +173,9 @@ send("\033")
 sleep(0.050)
 send("ddi")
 send("inserted\r")
-# vi replace line, 200ms timeout: short delay
 expect_prompt(
     "\r\nfail: no normal modediinserted\r\n",
-    unmatched="vi replace line, 200ms timeout: short delay",
+    unmatched="vi replace line, 150ms timeout: short delay",
 )
 
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
@@ -208,10 +206,10 @@ expect_prompt(
 sendline("set -g fish_key_bindings fish_default_key_bindings")
 expect_prompt()
 
-# Verify the custom escape timeout of 200ms set earlier is still in effect.
+# Verify the custom escape timeout of 150ms set earlier is still in effect.
 sendline("echo fish_escape_delay_ms=$fish_escape_delay_ms")
 expect_prompt(
-    "\r\nfish_escape_delay_ms=200\r\n",
+    "\r\nfish_escape_delay_ms=150\r\n",
     unmatched="default-mode custom timeout not set correctly",
 )
 
@@ -234,7 +232,7 @@ expect_prompt(
 # Same test as above but with a slight delay less than the escape timeout.
 send("echo ghi jkl")
 send("\033")
-sleep(0.080)
+sleep(0.020)
 send("t\r")
 # emacs transpose words, 100ms timeout: short delay
 expect_prompt(

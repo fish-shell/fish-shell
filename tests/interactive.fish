@@ -68,7 +68,10 @@ if not python3 -c 'import pexpect'
 end
 for i in $pexpect_files_to_test
     if not test_pexpect_file $i
-        set failed $failed $i
+        say yellow "Trying $i for a second time"
+        if not test_pexpect_file $i
+            set failed $failed $i
+        end
     end
 end
 

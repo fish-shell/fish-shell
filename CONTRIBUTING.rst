@@ -3,10 +3,7 @@ Guidelines For Developers
 
 This document provides guidelines for making changes to the fish-shell
 project. This includes rules for how to format the code, naming
-conventions, et cetera. Generally known as the style of the code. It
-also includes recommended best practices such as creating a Travis CI
-account so you can verify that your changes pass all the tests before
-making a pull request.
+conventions, et cetera. Generally known as the style of the code.
 
 See the bottom of this document for help on installing the linting and
 style reformatting tools discussed in the following sections.
@@ -295,8 +292,7 @@ The source code for fish includes a large collection of tests. If you
 are making any changes to fish, running these tests is mandatory to make
 sure the behaviour remains consistent and regressions are not
 introduced. Even if you don’t run the tests on your machine, they will
-still be run via the `Travis
-CI <https://travis-ci.org/fish-shell/fish-shell>`__ service.
+still be run via Github Actions.
 
 You are strongly encouraged to add tests when changing the functionality
 of fish, especially if you are fixing a bug to help ensure there are no
@@ -311,32 +307,6 @@ The tests can be run on your local computer on all operating systems.
 
    cmake path/to/fish-shell
    make test
-
-Travis CI Build and Test
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-The Travis Continuous Integration services can be used to test your
-changes using multiple configurations. This is the same service that the
-fish-shell project uses to ensure new changes haven’t broken anything.
-Thus it is a really good idea that you leverage Travis CI before making
-a pull request to avoid potential embarrassment at breaking the build.
-
-You will need to `fork the fish-shell repository on
-GitHub <https://help.github.com/articles/fork-a-repo/>`__, then setup
-Travis to test your changes before making a pull request.
-
-1. `Sign in to Travis CI <https://travis-ci.org/auth>`__ with your
-   GitHub account, accepting the GitHub access permissions confirmation.
-2. Once you’re signed in and your repositories are synchronized, go to
-   your `profile page <https://travis-ci.org/profile>`__ and enable the
-   fish-shell repository.
-3. Push your changes to GitHub.
-
-You’ll receive an email when the tests are complete telling you whether
-or not any tests failed.
-
-You’ll find the configuration used to control Travis in the
-``.travis.yml`` file.
 
 Git hooks
 ~~~~~~~~~

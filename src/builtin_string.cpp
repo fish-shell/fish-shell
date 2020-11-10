@@ -828,8 +828,13 @@ class pcre2_matcher_t : public string_matcher_t {
     const wchar_t *argv0;
     compiled_regex_t regex;
 
-    int report_match(const wcstring &arg, int pcre2_rc) {
-        // Return values: -1 = error, 0 = no match, 1 = match.
+    enum class match_result_t {
+        pcre2_error = -1,
+        no_match = 0,
+        match = 1,
+    };
+
+    match_result_t report_match(const wcstring &arg, int pcre2_rc) {
         if (pcre2_rc == PCRE2_ERROR_NOMATCH) {
             if (opts.invert_match && !opts.quiet) {
                 if (opts.index) {
@@ -840,17 +845,17 @@ class pcre2_matcher_t : public string_matcher_t {
                 }
             }
 
-            return opts.invert_match ? 1 : 0;
+            return opts.invert_match ? match_result_t::match : match_result_t::no_match;
         } else if (pcre2_rc < 0) {
             string_error(streams, _(L"%ls: Regular expression match error: %ls\n"), argv0,
                          pcre2_strerror(pcre2_rc).c_str());
-            return -1;
+            return match_result_t::pcre2_error;
         } else if (pcre2_rc == 0) {
             // The output vector wasn't big enough. Should not happen.
             string_error(streams, _(L"%ls: Regular expression internal error\n"), argv0);
-            return -1;
+            return match_result_t::pcre2_error;
         } else if (opts.invert_match) {
-            return 0;
+            return match_result_t::no_match;
         }
 
         if (opts.entire && !opts.quiet) {
@@ -874,7 +879,7 @@ class pcre2_matcher_t : public string_matcher_t {
             }
         }
 
-        return opts.invert_match ? 0 : 1;
+        return opts.invert_match ? match_result_t::no_match : match_result_t::match;
     }
 
    public:
@@ -896,15 +901,17 @@ class pcre2_matcher_t : public string_matcher_t {
 
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
-        int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
+        auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                regex.match, nullptr));
 
-        if (rc < 0 /* pcre2 error */)
-            return false;
-        else if (rc == 0 /* no match */)
-            return true;
-        else
-            total_matched++;
+        switch (rc) {
+            case match_result_t::pcre2_error:
+                return false;
+            case match_result_t::no_match:
+                return true;
+            case match_result_t::match:
+                total_matched++;
+        }
 
         if (opts.invert_match) return true;
 
@@ -921,9 +928,12 @@ class pcre2_matcher_t : public string_matcher_t {
             rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, offset,
                                                options, regex.match, nullptr));
 
-            if (rc < 0 /* pcre2 error */)
+            if (rc == match_result_t::pcre2_error) {
+                // This shouldn't happen as we've already validated the regex above
                 return false;
-            else if (rc == 0 /* no matches */) {
+            }
+
+            if (rc == match_result_t::no_match) {
                 if (options == 0 /* all matches found now */) break;
                 ovector[1] = offset + 1;
                 continue;

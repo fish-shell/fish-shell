@@ -55,6 +55,57 @@ jobs:
       run: |
         make test
 
+  ubuntu-asan:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: |
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip
+        sudo pip3 install pexpect
+    - name: cmake
+      env:
+          CC: clang
+          CXX: clang++
+          CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address"
+          ASAN_OPTIONS: check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+          UBSAN_OPTIONS: print_stacktrace=1:report_error_type=1:suppressions=$TRAVIS_BUILD_DIR/build_tools/ubsan.blacklist
+      run: |
+        mkdir build && cd build
+        cmake ..
+    - name: make
+      run: |
+        make
+    - name: make test
+      run: |
+        make test
+
+  ubuntu-threadsan:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: |
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip
+        sudo pip3 install pexpect
+    - name: cmake
+      env:
+          CC: clang
+          CXX: clang++
+          CXXFLAGS: "-fsanitize=thread"
+      run: |
+        mkdir build && cd build
+        cmake ..
+    - name: make
+      run: |
+        make
+    - name: make test
+      run: |
+        make test
 
   macos:
 

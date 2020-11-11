@@ -31,6 +31,30 @@ jobs:
       run: |
         make test
 
+  ubuntu-32bit-vendored-pcre2:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: |
+        sudo apt install gettext lib32ncurses5-dev python3-pip g++-multilib
+        sudo pip3 install pexpect
+    - name: cmake
+      env:
+          CXXFLAGS: "-m32 -Werror=address -Werror=return-type"
+          CFLAGS: "-m32"
+      run: |
+        mkdir build && cd build
+        cmake ..
+    - name: make
+      run: |
+        make
+    - name: make test
+      run: |
+        make test
+
 
   macos:
 

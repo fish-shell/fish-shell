@@ -45,6 +45,7 @@ send("\x04")
 expect_str("char: \\cD\r\n")
 
 # Now send a second [ctrl-D]. Does that terminate the process like it should?
-send("\x04")
+sleep(0.050)
+send("\x04\x04")
 expect_str("char: \\cD\r\n")
 expect_str("Exiting at your request.\r\n")

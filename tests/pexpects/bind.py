@@ -47,7 +47,7 @@ expect_prompt("\r\njkl ghi\r\n")
 # occur and the "t" should become part of the text that is echoed.
 send("echo mno pqr")
 send("\033")
-sleep(0.180)
+sleep(0.220)
 send("t\r")
 # emacs transpose words, default timeout: long delay
 expect_prompt("\r\nmno pqrt\r\n")
@@ -85,7 +85,7 @@ expect_prompt(
 send("echo TEXT")
 send("\033")
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep(0.200)
+sleep(0.250)
 send("hhrAi\r")
 expect_prompt(
     "\r\nTAXT\r\n", unmatched="vi mode replace char, default timeout: long delay"
@@ -153,7 +153,7 @@ expect_prompt(
 )
 
 # Verify that changing the escape timeout has an effect.
-send("set -g fish_escape_delay_ms 150\r")
+send("set -g fish_escape_delay_ms 200\r")
 expect_prompt()
 
 send("echo fail: lengthened escape timeout")
@@ -163,19 +163,19 @@ send("ddi")
 send("echo success: lengthened escape timeout\r")
 expect_prompt(
     "\r\nsuccess: lengthened escape timeout\r\n",
-    unmatched="vi replace line, 150ms timeout: long delay",
+    unmatched="vi replace line, 200ms timeout: long delay",
 )
 
 # Verify that we don't switch to vi normal mode if we don't wait long enough
 # after sending escape.
 send("echo fail: no normal mode")
 send("\033")
-sleep(0.050)
+sleep(0.010)
 send("ddi")
 send("inserted\r")
 expect_prompt(
     "\r\nfail: no normal modediinserted\r\n",
-    unmatched="vi replace line, 150ms timeout: short delay",
+    unmatched="vi replace line, 200ms timeout: short delay",
 )
 
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
@@ -190,7 +190,9 @@ expect_prompt("\r\nTENT\r\n", unmatched="Couldn't find expected output 'TENT'")
 # Test '~' (togglecase-char)
 send("\033")
 sleep(0.300)
-send("ccecho some TExT\033")
+send("cc")
+sleep(0.01)
+send("echo some TExT\033")
 sleep(0.300)
 send("hh~~bbve~\r")
 expect_prompt("\r\nSOME TeXT\r\n", unmatched="Couldn't find expected output 'SOME TeXT")
@@ -209,7 +211,7 @@ expect_prompt()
 # Verify the custom escape timeout of 150ms set earlier is still in effect.
 sendline("echo fish_escape_delay_ms=$fish_escape_delay_ms")
 expect_prompt(
-    "\r\nfish_escape_delay_ms=150\r\n",
+    "\r\nfish_escape_delay_ms=200\r\n",
     unmatched="default-mode custom timeout not set correctly",
 )
 

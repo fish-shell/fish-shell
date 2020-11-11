@@ -18,6 +18,9 @@ jobs:
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip
         sudo pip3 install pexpect
     - name: cmake
+      env:
+          # Some warnings upgraded to errors to match Open Build Service platforms
+          CXXFLAGS: "-Werror=address -Werror=return-type"
       run: |
         mkdir build && cd build
         cmake ..

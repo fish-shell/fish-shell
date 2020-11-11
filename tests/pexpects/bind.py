@@ -178,22 +178,26 @@ expect_prompt(
     unmatched="vi replace line, 200ms timeout: short delay",
 )
 
+# Now set it back to speed up the tests - these don't use any escape+thing bindings!
+send("set -g fish_escape_delay_ms 50\r")
+expect_prompt()
+
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
 # by another function (and) https://github.com/fish-shell/fish-shell/issues/2357
 send("\033")
-sleep(0.300)
+sleep(0.200)
 send("ddiecho TEXT\033")
-sleep(0.300)
+sleep(0.200)
 send("hhtTrN\r")
 expect_prompt("\r\nTENT\r\n", unmatched="Couldn't find expected output 'TENT'")
 
 # Test '~' (togglecase-char)
 send("\033")
-sleep(0.300)
+sleep(0.200)
 send("cc")
 sleep(0.01)
 send("echo some TExT\033")
-sleep(0.300)
+sleep(0.200)
 send("hh~~bbve~\r")
 expect_prompt("\r\nSOME TeXT\r\n", unmatched="Couldn't find expected output 'SOME TeXT")
 
@@ -208,10 +212,10 @@ expect_prompt(
 sendline("set -g fish_key_bindings fish_default_key_bindings")
 expect_prompt()
 
-# Verify the custom escape timeout of 150ms set earlier is still in effect.
+# Verify the custom escape timeout set earlier is still in effect.
 sendline("echo fish_escape_delay_ms=$fish_escape_delay_ms")
 expect_prompt(
-    "\r\nfish_escape_delay_ms=200\r\n",
+    "\r\nfish_escape_delay_ms=50\r\n",
     unmatched="default-mode custom timeout not set correctly",
 )
 

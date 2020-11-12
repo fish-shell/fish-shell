@@ -5732,19 +5732,19 @@ void test_layout_cache() {
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         wcstring input = std::to_wstring(i);
         do_test(!seqs.find_prompt_layout(input));
-        seqs.add_prompt_layout({input, huge, input, {i, 0, 0}});
-        do_test(seqs.find_prompt_layout(input)->layout.line_count == i);
+        seqs.add_prompt_layout({input, huge, input, {{}, i, 0}});
+        do_test(seqs.find_prompt_layout(input)->layout.max_line_width == i);
     }
 
     size_t expected_evictee = 3;
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         if (i != expected_evictee)
-            do_test(seqs.find_prompt_layout(std::to_wstring(i))->layout.line_count == i);
+            do_test(seqs.find_prompt_layout(std::to_wstring(i))->layout.max_line_width == i);
     }
 
-    seqs.add_prompt_layout({L"whatever", huge, L"whatever", {100, 0, 0}});
+    seqs.add_prompt_layout({L"whatever", huge, L"whatever", {{}, 100, 0}});
     do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
-    do_test(seqs.find_prompt_layout(L"whatever", huge)->layout.line_count == 100);
+    do_test(seqs.find_prompt_layout(L"whatever", huge)->layout.max_line_width == 100);
 }
 
 void test_prompt_truncation() {
@@ -5754,7 +5754,16 @@ void test_prompt_truncation() {
 
     /// Helper to return 'layout' formatted as a string for easy comparison.
     auto format_layout = [&] {
-        return format_string(L"%lu,%lu,%lu", (unsigned long)layout.line_count,
+        wcstring line_breaks = L"";
+        bool first = true;
+        for (const size_t line_break : layout.line_breaks) {
+            if (!first) {
+                line_breaks.push_back(L',');
+            }
+            line_breaks.append(format_string(L"%lu", (unsigned long)line_break));
+            first = false;
+        }
+        return format_string(L"[%ls],%lu,%lu", line_breaks.c_str(),
                              (unsigned long)layout.max_line_width,
                              (unsigned long)layout.last_line_width);
     };
@@ -5766,12 +5775,22 @@ void test_prompt_truncation() {
 
     // No truncation.
     layout = cache.calc_prompt_layout(L"abcd", &trunc);
-    do_test(format_layout() == L"1,4,4");
+    do_test(format_layout() == L"[],4,4");
     do_test(trunc == L"abcd");
+
+    // Line break calculation.
+    layout = cache.calc_prompt_layout(join({
+                                          L"0123456789ABCDEF",  //
+                                          L"012345",            //
+                                          L"0123456789abcdef",  //
+                                          L"xyz"                //
+                                      }),
+                                      &trunc, 80);
+    do_test(format_layout() == L"[16,23,40],16,3");
 
     // Basic truncation.
     layout = cache.calc_prompt_layout(L"0123456789ABCDEF", &trunc, 8);
-    do_test(format_layout() == L"1,8,8");
+    do_test(format_layout() == L"[],8,8");
     do_test(trunc == ellipsis + L"9ABCDEF");
 
     // Multiline truncation.
@@ -5782,24 +5801,24 @@ void test_prompt_truncation() {
                                           L"xyz"                //
                                       }),
                                       &trunc, 8);
-    do_test(format_layout() == L"4,8,3");
+    do_test(format_layout() == L"[8,15,24],8,3");
     do_test(trunc == join({ellipsis + L"9ABCDEF", L"012345", ellipsis + L"9abcdef", L"xyz"}));
 
     // Escape sequences are not truncated.
     layout =
         cache.calc_prompt_layout(L"\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE", &trunc, 4);
-    do_test(format_layout() == L"1,4,4");
+    do_test(format_layout() == L"[],4,4");
     do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=test/foo\x07NCE");
 
     // Newlines in escape sequences are skipped.
     layout = cache.calc_prompt_layout(L"\x1B]50;CurrentDir=\ntest/foo\x07NOT_PART_OF_SEQUENCE",
                                       &trunc, 4);
-    do_test(format_layout() == L"1,4,4");
+    do_test(format_layout() == L"[],4,4");
     do_test(trunc == ellipsis + L"\x1B]50;CurrentDir=\ntest/foo\x07NCE");
 
     // We will truncate down to one character if we have to.
     layout = cache.calc_prompt_layout(L"Yay", &trunc, 1);
-    do_test(format_layout() == L"1,1,1");
+    do_test(format_layout() == L"[],1,1");
     do_test(trunc == ellipsis);
 }
 

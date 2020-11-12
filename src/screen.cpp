@@ -368,7 +368,7 @@ prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
     size_t prompt_len = prompt_str.size();
     const wchar_t *prompt = prompt_str.c_str();
 
-    prompt_layout_t layout{1, 0, 0};
+    prompt_layout_t layout = {{}, 0, 0};
     wcstring trunc_prompt;
 
     size_t run_start = 0;
@@ -390,7 +390,7 @@ prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
         wchar_t endc = prompt[run_end];
         if (endc) {
             if (endc == L'\n' || endc == L'\f') {
-                layout.line_count += 1;
+                layout.line_breaks.push_back(trunc_prompt.size());
             }
             trunc_prompt.push_back(endc);
             run_start = run_end + 1;
@@ -408,10 +408,10 @@ prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
 static size_t calc_prompt_lines(const wcstring &prompt) {
     // Hack for the common case where there's no newline at all. I don't know if a newline can
     // appear in an escape sequence, so if we detect a newline we have to defer to
-    // calc_prompt_layout.
+    // calc_prompt_width_and_lines.
     size_t result = 1;
     if (prompt.find_first_of(L"\n\f") != wcstring::npos) {
-        result = layout_cache_t::shared.calc_prompt_layout(prompt).line_count;
+        result = layout_cache_t::shared.calc_prompt_layout(prompt).line_breaks.size() + 1;
     }
     return result;
 }
@@ -737,19 +737,15 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     // Output the left prompt if it has changed.
     if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, 0, 0);
-        wcstring::const_iterator line_start = left_prompt.begin();
-        while (line_start < left_prompt.end()) {
-            auto line_end = std::find_if(line_start, left_prompt.end(), is_run_terminator);
-            s_write_str(scr, wcstring(line_start, line_end).c_str());
-            if (line_end != left_prompt.end()) {
-                // Embedded run terminator. Emit clr_eol before the line break.
-                // TODO: we should be skipping line terminators inside escape sequences.
-                if (clr_eol) s_write_mbs(scr, clr_eol);
-                scr->outp().push_back(*line_end);
-                ++line_end;
+        size_t start = 0;
+        for (const size_t line_break : left_prompt_layout.line_breaks) {
+            s_write_str(scr, left_prompt.substr(start, line_break - start).c_str());
+            if (clr_eol) {
+                s_write_mbs(scr, clr_eol);
             }
-            line_start = line_end;
+            start = line_break;
         }
+        s_write_str(scr, left_prompt.c_str() + start);
         scr->actual_left_prompt = left_prompt;
         scr->actual.cursor.x = static_cast<int>(left_prompt_width);
     }

@@ -74,7 +74,7 @@ EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir}"
 %else
 %cmake $EXTRA_CMAKE_FLAGS
 %endif
-$if 0%{?%cmake_build:1}
+$if 0%{?cmake_build:1}
 %cmake_build
 %else
 make %{?_smp_mflags}

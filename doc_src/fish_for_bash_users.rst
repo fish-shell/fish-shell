@@ -271,4 +271,4 @@ By now it has become apparent that fish puts much more of a focus on its builtin
 - :ref:`count <cmd-count>` can be used to count things and therefore replaces ``$#`` and can be used instead of ``wc``.
 - :ref:`status <cmd-status>` provides information about the shell status, e.g. if it's interactive or what the current linenumber is. This replaces ``$-`` and ``$BASH_LINENO`` and other variables.
 
-- ``seq(1)`` can be used as a replacement for ``{1..10}`` range expansion. If your OS doesn't ship a `seq` fish includes a replacement function.
+- ``seq(1)`` can be used as a replacement for ``{1..10}`` range expansion. If your OS doesn't ship a ``seq`` fish includes a replacement function.

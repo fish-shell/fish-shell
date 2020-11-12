@@ -306,7 +306,7 @@ Other variables, like ``$PATH``, really do have multiple values. During variable
     /usr/bin /bin /usr/sbin /sbin /usr/local/bin
 
 
-Variables whose name ends in "PATH" are automatically split on colons to become lists. They are joined using colons when exported to subcommands. This is for compatibility with other tools, which expect $PATH to use colons. You can also explicitly add this quirk to a variable with `set --path`, or remove it with `set --unpath`.
+Variables whose name ends in "PATH" are automatically split on colons to become lists. They are joined using colons when exported to subcommands. This is for compatibility with other tools, which expect $PATH to use colons. You can also explicitly add this quirk to a variable with ``set --path``, or remove it with ``set --unpath``.
 
 Lists cannot contain other lists: there is no recursion.  A variable is a list of strings, full stop.
 

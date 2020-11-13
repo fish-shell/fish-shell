@@ -80,6 +80,7 @@ function funced --description 'Edit function definition'
     set -q TMPDIR
     or set -l TMPDIR /tmp
     set -l tmpdir (mktemp -d $TMPDIR/fish.XXXXXX)
+    or return 1
     set -l tmpname $tmpdir/$funcname.fish
 
     if functions -q -- $funcname

@@ -40,7 +40,7 @@ if ls --version >/dev/null 2>/dev/null
     complete -c ls -l group-directories-first -d "Group directories before files" -r
     complete -c ls -l hide -d "Do not list implied entries matching specified shell pattern" -r
     complete -c ls -l lcontext -d "Display security context"
-    complete -c ls -l context -s Z -d "Display security  context  so  it fits on most displays"
+    complete -c ls -l context -s Z -d "Display security context so it fits on most displays"
     complete -c ls -l scontext -d "Display only security context and file name"
     complete -c ls -l author -d "Print author"
     complete -c ls -l block-size -x -d "Set block size"

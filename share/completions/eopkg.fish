@@ -40,7 +40,7 @@ end
 # Setup additional completion
 complete -f -c eopkg -n '__fish_seen_subcommand_from remove-repo rr enable-repo er disable-repo dr list-available la' -a "(__fish_eopkg_print_repos)" -d Repository
 complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up install it info' -a "(__fish_print_packages)" -d "Available Package"
-complete -f -c eopkg -n '__fish_seen_subcommand_from remove rm autoremove rmf check' -a "(__fish_print_packages --installed)" -d "Installed Package"
+complete -f -c eopkg -n '__fish_seen_subcommand_from remove rm autoremove rmf check' -a "(__fish_print_packages --installed)" -d "Installed package"
 complete -f -c eopkg -n '__fish_seen_subcommand_from upgrade up remove rm install it info check list-available la list-installed li list-upgrades lu' -s c -l component -a "(__fish_eopkg_print_components)" -d Component
 
 # Setup eopkg subcommand with shortcut

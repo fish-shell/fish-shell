@@ -4,11 +4,6 @@
 # should be running it via `make test` to ensure the environment is properly
 # setup.
 
-if test "$TRAVIS_OS_NAME" = osx
-    echo "Skipping interactive tests on macOS on Travis"
-    exit 0
-end
-
 # Set this var to modify behavior of the code being tests. Such as avoiding running
 # `fish_update_completions` when running tests.
 set -gx FISH_UNIT_TESTS_RUNNING 1

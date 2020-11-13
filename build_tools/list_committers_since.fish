@@ -13,7 +13,9 @@ if not contains -- $TAG (git tag)
 end
 
 set -l committers_to_tag (mktemp)
+or exit 1
 set -l committers_from_tag (mktemp)
+or exit 1
 
 # You might think it would be better to case-insensitively sort/compare the names
 # to produce a more natural-looking list.

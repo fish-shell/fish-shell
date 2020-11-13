@@ -208,8 +208,7 @@ enum class pipeline_position_t {
 
 /// Error message on reaching maximum call stack depth.
 #define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG                                                     \
-    _(L"The function call stack limit has been exceeded. Do you have an accidental infinite " \
-      L"loop?")
+    _(L"The function call stack limit has been exceeded. Do you have an accidental infinite loop?")
 
 /// Error message when encountering an illegal command name.
 #define ILLEGAL_CMD_ERR_MSG _(L"Illegal command name '%ls'")

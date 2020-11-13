@@ -2072,8 +2072,7 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
             if (check_for_orphaned_process(loop_count, shell_pgid)) {
                 // We're orphaned, so we just die. Another sad statistic.
                 const wchar_t *fmt =
-                    _(L"I appear to be an orphaned process, so I am quitting politely. "
-                      L"My pid is %d.");
+                    _(L"I appear to be an orphaned process, so I am quitting politely. My pid is %d.");
                 FLOGF(warning, fmt, static_cast<int>(getpid()));
                 exit_without_destructors(1);
             }

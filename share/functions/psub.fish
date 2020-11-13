@@ -26,7 +26,7 @@ function psub --description "Read from stdin into a file and output the filename
         # that the command substitution exits without needing to wait for
         # all the commands to exit.
         set dirname (mktemp -d $tmpdir/.psub.XXXXXXXXXX)
-        or return
+        or return 1
         set filename $dirname/psub.fifo"$_flag_suffix"
         command mkfifo $filename
         # Note that if we were to do the obvious `cat >$filename &`, we would deadlock
@@ -35,9 +35,11 @@ function psub --description "Read from stdin into a file and output the filename
         command tee $filename >/dev/null &
     else if test -z "$_flag_suffix"
         set filename (mktemp $tmpdir/.psub.XXXXXXXXXX)
+        or return 1
         command cat >$filename
     else
         set dirname (mktemp -d $tmpdir/.psub.XXXXXXXXXX)
+        or return 1
         set filename "$dirname/psub$_flag_suffix"
         command cat >$filename
     end

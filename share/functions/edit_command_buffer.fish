@@ -1,5 +1,6 @@
 function edit_command_buffer --description 'Edit the command buffer in an external editor'
     set -l f (mktemp)
+    or return 1
     if set -q f[1]
         mv $f $f.fish
         set f $f.fish

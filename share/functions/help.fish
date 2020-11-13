@@ -169,6 +169,7 @@ function help --description 'Show help for the fish shell'
             set -q TMPDIR
             or set -l TMPDIR /tmp
             set -l tmpdir (mktemp -d $TMPDIR/help.XXXXXX)
+            or return 1
             set -l tmpname $tmpdir/help.html
             echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' >$tmpname
             set page_url file://$tmpname

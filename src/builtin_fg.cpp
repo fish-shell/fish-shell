@@ -79,8 +79,7 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
                 job = nullptr;
             } else if (!job->wants_job_control()) {
-                streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
-                                            L"it is not under job control\n"),
+                streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n"),
                                           cmd, pid, job->command_wcstr());
                 job = nullptr;
             }

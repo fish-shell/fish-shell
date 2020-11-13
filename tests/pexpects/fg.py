@@ -15,11 +15,12 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
-sendline("cat | cat")
+sendline("sleep 500")
 sendline("set -l foo bar; echo $foo")
-expect_str("set -l foo bar; echo $foo")
+expect_str("")
 sleep(0.2)
 
+# ctrl-z - send job to background
 send("\x1A")
 sleep(0.2)
 expect_prompt()
@@ -28,10 +29,12 @@ expect_str("bar")
 
 expect_prompt()
 sendline("fg")
-expect_str("Send job 1, 'cat | cat' to foreground")
+expect_str("Send job 1, 'sleep 500' to foreground")
+sleep(0.2)
 sendline("set -l foo bar; echo $foo")
-expect_str("set -l foo bar; echo $foo")
-send("\x04")
+expect_str("")
+# ctrl-c - cancel
+send("\x03")
 
 expect_prompt()
 sendline("set -l foo bar; echo $foo")

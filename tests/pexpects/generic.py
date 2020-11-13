@@ -32,7 +32,7 @@ expect_prompt("echo stuff")
 
 # last history command should be the one that printed the history
 sendline("echo $history[1]")
-expect_prompt("echo .history.*")
+expect_prompt("echo \$history\[1\]")
 
 # Backslashes at end of comments (#1255)
 # This backslash should NOT cause the line to continue

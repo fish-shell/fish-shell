@@ -26,19 +26,9 @@ end
 if not set -q __fish_is_running_tests
     # Set up our test environment and re-run the original script.
     set -l script $argv[1]
-    switch $script
-        case '/*'
-            # path is absolute
-        case '*'
-            # path is relative, make it absolute
-            set script $PWD/$script
-    end
 
-    begin
-        dirname $script | read -l dir
-        cd $dir
-        or die
-    end
+    cd (builtin realpath (dirname $script))
+    or die
 
     set -lx XDG_DATA_HOME ../test/xdg_data_home
     rm -rf $XDG_DATA_HOME/fish
@@ -49,8 +39,8 @@ if not set -q __fish_is_running_tests
     mkdir -p $XDG_CONFIG_HOME/fish; or die
     ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions; or die
 
-    set -l escaped_parent (dirname $PWD | sed -e 's/[\'\\\\]/\\\\&/g'); or die
-    set -l escaped_config (printf '%s/fish' $XDG_CONFIG_HOME | sed -e 's/[\'\\\\]/\\\\&/g'); or die
+    set -l escaped_parent (builtin realpath $PWD/.. | string escape); or die
+    set -l escaped_config (string escape -- $XDG_CONFIG_HOME/fish)
     printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent >$XDG_CONFIG_HOME/fish/config.fish; or die
     set -xl __fish_is_running_tests $XDG_CONFIG_HOME
 
@@ -68,6 +58,22 @@ if not set -q __fish_is_running_tests
         and set -e $var
     end
     set -x LC_CTYPE en_US.UTF-8
+
+    # These env vars should not be inherited from the user environment because they can affect the
+    # behavior of the tests. So either remove them or set them to a known value.
+    # See also tests/interactive.fish.
+    set -gx TERM xterm
+    set -e COLORTERM
+    set -e INSIDE_EMACS
+    set -e ITERM_PROFILE
+    set -e KONSOLE_PROFILE_NAME
+    set -e KONSOLE_VERSION
+    set -e PANTHEON_TERMINAL_ID
+    set -e TERM_PROGRAM
+    set -e TERM_PROGRAM_VERSION
+    set -e VTE_VERSION
+    set -e WT_PROFILE_ID
+    set -e XTERM_VERSION
 
     exec ../test/root/bin/fish $script $args_for_test_script
     die 'exec failed'

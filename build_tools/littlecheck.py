@@ -156,7 +156,7 @@ class TestFailure(object):
         self.line = line
         self.check = check
         self.testrun = testrun
-        self.error_annotation_line = None
+        self.error_annotation_lines = None
         # The output that comes *after* the failure.
         self.after = after
         self.before = before
@@ -209,28 +209,29 @@ class TestFailure(object):
                 "    {BOLD}{output_line}{RESET}",
                 "",
             ]
-        if self.error_annotation_line:
-            fields["error_annotation"] = self.error_annotation_line.text
-            fields["error_annotation_lineno"] = self.error_annotation_line.number
+        if self.error_annotation_lines:
+            fields["error_annotation"] = "    ".join([x.text for x in self.error_annotation_lines])
+            fields["error_annotation_lineno"] = str(self.error_annotation_lines[0].number)
+            if len(self.error_annotation_lines) > 1:
+                fields["error_annotation_lineno"] += ":" + str(self.error_annotation_lines[-1].number)
             fmtstrs += [
                 "  additional output on stderr:{error_annotation_lineno}:",
                 "    {BOLD}{error_annotation}{RESET}",
             ]
-        if self.before:
-            fields["before_output"] = "    ".join(self.before)
-            fields["additional_output"] = "    ".join(self.after[:afterlines])
+        if self.before or self.after:
+            fmtstrs += ["  Context:"]
+
+            if self.before:
+                fields["before_output"] = "    ".join(self.before)[:-1]
+                fmtstrs += ["    {BOLD}{before_output}"]
+
             fmtstrs += [
-                "  Context:",
-                "    {BOLD}{before_output}    {RED}{output_line}{RESET} <= does not match '{LIGHTBLUE}{input_line}{RESET}'",
-                "    {BOLD}{additional_output}{RESET}",
-            ]
-        elif self.after:
-            fields["additional_output"] = "    ".join(self.after[:afterlines])
-            fmtstrs += [
-                "  Context:",
                 "    {RED}{output_line}{RESET} <= does not match '{LIGHTBLUE}{input_line}{RESET}'",
-                "    {BOLD}{additional_output}{RESET}"
             ]
+
+            if self.after is not None:
+                fields["additional_output"] = "    ".join(self.after[:afterlines])
+                fmtstrs += ["    {BOLD}{additional_output}{RESET}"]
         fmtstrs += ["  when running command:", "    {subbed_command}"]
         return "\n".join(fmtstrs).format(**fields)
 
@@ -358,7 +359,10 @@ class TestRun(object):
         # non-matching or unmatched stderr text, then annotate the outfail
         # with it.
         if outfail and errfail and errfail.line:
-            outfail.error_annotation_line = errfail.line
+            outfail.error_annotation_lines = errlines[errfail.line.number - 1:]
+            # Trim a trailing newline
+            if outfail.error_annotation_lines[-1].text == "\n":
+                del outfail.error_annotation_lines[-1]
         return outfail if outfail else errfail
 
 

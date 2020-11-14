@@ -930,13 +930,13 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
     completion_list_t arg_expanded;
     for (const ast::argument_t *arg_node : argument_nodes) {
         // Expect all arguments to have source.
-        assert(arg_node->has_source());
-        const wcstring arg_str = get_source(*arg_node);
+        assert(arg_node->has_source() && "Argument should have source");
 
         // Expand this string.
         parse_error_list_t errors;
         arg_expanded.clear();
-        auto expand_ret = expand_string(arg_str, &arg_expanded, expand_flags_t{}, ctx, &errors);
+        auto expand_ret =
+            expand_string(get_source(*arg_node), &arg_expanded, expand_flags_t{}, ctx, &errors);
         parse_error_offset_source_start(&errors, arg_node->range.start);
         switch (expand_ret.result) {
             case expand_result_t::error: {

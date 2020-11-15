@@ -2322,7 +2322,7 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     return eval_res;
 }
 
-static parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) {
+static parser_test_error_bits_t reader_shell_test(const parser_t &parser, const wcstring &b) {
     wcstring bstr = b;
 
     // Append a newline, to act as a statement terminator.

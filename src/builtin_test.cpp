@@ -671,6 +671,7 @@ bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
 static bool parse_double(const wchar_t *arg, double *out_res) {
     // Consume leading spaces.
     while (arg && *arg != L'\0' && iswspace(*arg)) arg++;
+    if (!arg) return false;
     errno = 0;
     wchar_t *end = nullptr;
     *out_res = fish_wcstod(arg, &end);

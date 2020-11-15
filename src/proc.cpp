@@ -1032,43 +1032,6 @@ void job_t::continue_job(parser_t &parser, bool in_foreground) {
     }
 }
 
-void proc_sanity_check(const parser_t &parser) {
-    const job_t *fg_job = nullptr;
-
-    for (const auto &j : parser.jobs()) {
-        if (!j->is_constructed()) continue;
-
-        // More than one foreground job?
-        if (j->is_foreground() && !(j->is_stopped() || j->is_completed())) {
-            if (fg_job) {
-                FLOGF(error, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
-                      fg_job->command_wcstr(), j->command_wcstr());
-                sanity_lose();
-            }
-            fg_job = j.get();
-        }
-
-        for (const process_ptr_t &p : j->processes) {
-            // Internal block nodes do not have argv - see issue #1545.
-            bool null_ok = (p->type == process_type_t::block_node);
-            validate_pointer(p->get_argv(), _(L"Process argument list"), null_ok);
-            validate_pointer(p->argv0(), _(L"Process name"), null_ok);
-
-            if ((p->stopped & (~0x00000001)) != 0) {
-                FLOGF(error, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
-                      j->command_wcstr(), p->argv0(), p->stopped);
-                sanity_lose();
-            }
-
-            if ((p->completed & (~0x00000001)) != 0) {
-                FLOGF(error, _(L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d"),
-                      j->command_wcstr(), p->argv0(), p->completed);
-                sanity_lose();
-            }
-        }
-    }
-}
-
 void proc_wait_any(parser_t &parser) {
     process_mark_finished_children(parser, true /* block_ok */);
     process_clean_after_marking(parser, parser.libdata().is_interactive);

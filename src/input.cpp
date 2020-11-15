@@ -356,16 +356,18 @@ void inputter_t::function_push_args(readline_cmd_t code) {
 
 /// Perform the action of the specified binding. allow_commands controls whether fish commands
 /// should be executed, or should be deferred until later.
-void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) {
+void inputter_t::mapping_execute(const input_mapping_t &m,
+                                 const command_handler_t &command_handler) {
     // has_functions: there are functions that need to be put on the input queue
     // has_commands: there are shell commands that need to be evaluated
     bool has_commands = false, has_functions = false;
 
     for (const wcstring &cmd : m.commands) {
-        if (input_function_get_code(cmd))
+        if (input_function_get_code(cmd)) {
             has_functions = true;
-        else
+        } else {
             has_commands = true;
+        }
     }
 
     // !has_functions && !has_commands: only set bind mode
@@ -374,7 +376,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
         return;
     }
 
-    if (has_commands && !allow_commands) {
+    if (has_commands && !command_handler) {
         // We don't want to run commands yet. Put the characters back and return check_exit.
         for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end;
              ++it) {
@@ -394,11 +396,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
         //
         // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
         // see that until all other commands have also been run.
-        auto last_statuses = parser_->get_last_statuses();
-        for (const wcstring &cmd : m.commands) {
-            parser_->eval(cmd, io_chain_t{});
-        }
-        parser_->set_last_statuses(std::move(last_statuses));
+        command_handler(m.commands);
         event_queue_.push_front(char_event_type_t::check_exit);
     } else {
         // Invalid binding, mixed commands and functions.  We would need to execute these one by
@@ -467,9 +465,9 @@ maybe_t<input_mapping_t> inputter_t::find_mapping() {
     return generic ? maybe_t<input_mapping_t>(*generic) : none();
 }
 
-void inputter_t::mapping_execute_matching_or_generic(bool allow_commands) {
+void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &command_handler) {
     if (auto mapping = find_mapping()) {
-        mapping_execute(*mapping, allow_commands);
+        mapping_execute(*mapping, command_handler);
     } else {
         FLOGF(reader, L"no generic found, ignoring char...");
         auto evt = event_queue_.readch();
@@ -500,7 +498,7 @@ char_event_t inputter_t::read_characters_no_readline() {
     return evt_to_return;
 }
 
-char_event_t inputter_t::readch(bool allow_commands) {
+char_event_t inputter_t::readch(const command_handler_t &command_handler) {
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.
@@ -552,7 +550,7 @@ char_event_t inputter_t::readch(bool allow_commands) {
             return evt;
         } else {
             event_queue_.push_front(evt);
-            mapping_execute_matching_or_generic(allow_commands);
+            mapping_execute_matching_or_generic(command_handler);
             // Regarding allow_commands, we're in a loop, but if a fish command is executed,
             // check_exit is unread, so the next pass through the loop we'll break out and return
             // it.

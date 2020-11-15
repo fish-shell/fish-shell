@@ -640,6 +640,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
 
+    void run_input_command_scripts(const wcstring_list_t &cmds);
     maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
@@ -2717,15 +2718,31 @@ struct readline_loop_state_t {
     size_t nchars{std::numeric_limits<size_t>::max()};
 };
 
+/// Run a sequence of commands from an input binding.
+void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
+    auto last_statuses = parser().get_last_statuses();
+    for (const wcstring &cmd : cmds) {
+        parser().eval(cmd, io_chain_t{});
+    }
+    parser().set_last_statuses(std::move(last_statuses));
+}
+
 /// Read normal characters, inserting them into the command line.
 /// \return the next unhandled event.
 maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rls) {
     maybe_t<char_event_t> event_needing_handling{};
     wcstring accumulated_chars;
     size_t limit = std::min(rls.nchars - command_line.size(), READAHEAD_MAX);
+
+    using command_handler_t = inputter_t::command_handler_t;
+    command_handler_t normal_handler = [this](const wcstring_list_t &cmds) {
+        this->run_input_command_scripts(cmds);
+    };
+    command_handler_t empty_handler = {};
+
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
-        auto evt = inputter.readch(allow_commands);
+        auto evt = inputter.readch(allow_commands ? normal_handler : empty_handler);
         if (!event_is_normal_char(evt) || !can_read(conf.in)) {
             event_needing_handling = std::move(evt);
             break;

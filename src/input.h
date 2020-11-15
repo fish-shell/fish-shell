@@ -36,10 +36,11 @@ class inputter_t {
     /// to parse it. If no more input follows after the escape key, it is assumed to be an actual
     /// escape key press, and is returned as such.
     ///
-    /// The argument determines whether fish commands are allowed to be run as bindings. If false,
-    /// when a character is encountered that would invoke a fish command, it is unread and
-    /// char_event_type_t::check_exit is returned.
-    char_event_t readch(bool allow_commands = true);
+    /// \p command_handler is used to run commands. If empty (in the std::function sense), when a
+    /// character is encountered that would invoke a fish command, it is unread and
+    /// char_event_type_t::check_exit is returned. Note the handler is not stored.
+    using command_handler_t = std::function<void(const wcstring_list_t &)>;
+    char_event_t readch(const command_handler_t &command_handler = {});
 
     /// Enqueue a char event to the queue of unread characters that input_readch will return before
     /// actually reading from fd 0.
@@ -64,8 +65,8 @@ class inputter_t {
 
     void function_push_arg(wchar_t arg);
     void function_push_args(readline_cmd_t code);
-    void mapping_execute(const input_mapping_t &m, bool allow_commands);
-    void mapping_execute_matching_or_generic(bool allow_commands);
+    void mapping_execute(const input_mapping_t &m, const command_handler_t &command_handler);
+    void mapping_execute_matching_or_generic(const command_handler_t &command_handler);
     bool mapping_is_match(const input_mapping_t &m);
     maybe_t<input_mapping_t> find_mapping();
     char_event_t read_characters_no_readline();

@@ -39,7 +39,8 @@ class inputter_t {
     char_event_t read_characters_no_readline();
 
    public:
-    inputter_t(parser_t &parser, int in = 0);
+    /// Construct from a parser, and the fd from which to read.
+    explicit inputter_t(parser_t &parser, int in = STDIN_FILENO);
 
     /// Read a character from stdin. Try to convert some escape sequences into character constants,
     /// but do not permanently block the escape character.

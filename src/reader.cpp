@@ -647,7 +647,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void select_completion_in_direction(selection_motion_t dir);
     void flash();
 
-    void completion_insert(const wchar_t *val, size_t token_end, complete_flags_t flags);
+    void completion_insert(const wcstring &val, size_t token_end, complete_flags_t flags);
 
     bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_result_t result);
@@ -1543,7 +1543,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
 /// \param token_end the position after the token to complete
 /// \param flags A union of all flags describing the completion to insert. See the completion_t
 /// struct for more information on possible values.
-void reader_data_t::completion_insert(const wchar_t *val, size_t token_end,
+void reader_data_t::completion_insert(const wcstring &val, size_t token_end,
                                       complete_flags_t flags) {
     editable_line_t *el = active_edit_line();
 
@@ -1830,7 +1830,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
         if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags)) {
-            completion_insert(c.completion.c_str(), token_end, c.flags);
+            completion_insert(c.completion, token_end, c.flags);
         }
         done = true;
         success = true;
@@ -1919,7 +1919,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
             // We got something. If more than one completion contributed, then it means we have
             // a prefix; don't insert a space after it.
             if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
-            completion_insert(common_prefix.c_str(), token_end, flags);
+            completion_insert(common_prefix, token_end, flags);
             cycle_command_line = command_line.text();
             cycle_cursor_pos = command_line.position();
         }

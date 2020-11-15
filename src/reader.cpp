@@ -1928,8 +1928,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     if (use_prefix) {
         for (completion_t &c : surviving_completions) {
             c.flags &= ~COMPLETE_REPLACES_TOKEN;
-            wcstring &comp = c.completion;
-            comp.erase(comp.begin(), comp.begin() + common_prefix.size());
+            c.completion.erase(0, common_prefix.size());
         }
     }
 

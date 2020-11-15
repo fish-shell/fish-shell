@@ -187,10 +187,6 @@ int get_omitted_newline_width();
 /// Character used for the silent mode of the read command
 wchar_t get_obfuscation_read_char();
 
-/// How many stack frames to show when a debug() call is made.
-int get_debug_stack_frames();
-void set_debug_stack_frames(int);
-
 /// Profiling flag. True if commands should be profiled.
 extern bool g_profiling_active;
 

@@ -928,19 +928,8 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'D': {
-                char *end;
-                long tmp;
-
-                errno = 0;
-                tmp = strtol(optarg, &end, 10);
-
-                if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-                    set_debug_stack_frames(static_cast<int>(tmp));
-                } else {
-                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"),
-                                  optarg);
-                    exit(1);
-                }
+                // TODO: Option is currently useless.
+                // Either remove it or make it work with FLOG.
                 break;
             }
             default: {

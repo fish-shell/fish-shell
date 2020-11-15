@@ -87,10 +87,6 @@ bool g_profiling_active = false;
 const wchar_t *program_name;
 std::atomic<int> debug_level{1};  // default maximum debug output level (errors and warnings)
 
-static relaxed_atomic_t<int> debug_stack_frames{0};
-void set_debug_stack_frames(int v) { debug_stack_frames = v; }
-int get_debug_stack_frames() { return debug_stack_frames; }
-
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
 static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};

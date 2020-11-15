@@ -41,8 +41,6 @@ The following options are available:
 
 - ``-v`` or ``--version`` display version and exit
 
-- ``-D`` or ``--debug-stack-frames=DEBUG_LEVEL`` specify how many stack frames to display when debug messages are written. The default is zero. A value of 3 or 4 is usually sufficient to gain insight into how a given debug call was reached but you can specify a value up to 128.
-
 - ``-f`` or ``--features=FEATURES`` enables one or more :ref:`feature flags <featureflags>` (separated by a comma). These are how fish stages changes that might break scripts.
 
 The fish exit status is generally the :ref:`exit status of the last foreground command <variables-status>`.

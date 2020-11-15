@@ -32,6 +32,4 @@ The following options are available:
 
 - ``-d`` or ``--debug-level=DEBUG_LEVEL`` enables debug output and specifies a verbosity level. Defaults to 0.
 
-- ``-D`` or ``--debug-stack-frames=DEBUG_LEVEL`` specify how many stack frames to display when debug messages are written. The default is zero. A value of 3 or 4 is usually sufficient to gain insight into how a given debug call was reached but you can specify a value up to 128.
-
 - ``--dump-parse-tree`` dumps information about the parsed statements to stderr. This is likely to be of interest only to people working on the fish source code.

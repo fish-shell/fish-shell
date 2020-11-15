@@ -289,7 +289,7 @@ Testing
 -------
 
 The source code for fish includes a large collection of tests. If you
-are making any changes to fish, running these tests is mandatory to make
+are making any changes to fish, running these tests is a good way to make
 sure the behaviour remains consistent and regressions are not
 introduced. Even if you don’t run the tests on your machine, they will
 still be run via Github Actions.
@@ -297,6 +297,19 @@ still be run via Github Actions.
 You are strongly encouraged to add tests when changing the functionality
 of fish, especially if you are fixing a bug to help ensure there are no
 regressions in the future (i.e., we don’t reintroduce the bug).
+
+The tests can be found in three places:
+
+- src/fish_tests.cpp for tests to the core C++ code
+- tests/checks for script tests
+- tests/pexpects for interactive tests using pexpect
+
+When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests. The syntax is fairly self-explanatory. It's a fish script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
+
+fish_tests.cpp is mostly useful for unit tests - if you wish to test that a function does the correct thing for given input, use it.
+
+The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity.
+
 
 Local testing
 ~~~~~~~~~~~~~

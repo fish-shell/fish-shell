@@ -1129,43 +1129,6 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_s
     return result;
 }
 
-wcstring debug_escape(const wcstring &in) {
-    wcstring result;
-    result.reserve(in.size());
-    for (wchar_t wc : in) {
-        auto c = static_cast<uint32_t>(wc);
-        if (c <= 127 && isprint(c)) {
-            result.push_back(wc);
-            continue;
-        }
-
-#define TEST(x)                             \
-    case x:                                 \
-        append_format(result, L"<%s>", #x); \
-        break;
-        switch (wc) {
-            TEST(HOME_DIRECTORY)
-            TEST(VARIABLE_EXPAND)
-            TEST(VARIABLE_EXPAND_SINGLE)
-            TEST(BRACE_BEGIN)
-            TEST(BRACE_END)
-            TEST(BRACE_SEP)
-            TEST(BRACE_SPACE)
-            TEST(INTERNAL_SEPARATOR)
-            TEST(VARIABLE_EXPAND_EMPTY)
-            TEST(EXPAND_SENTINEL)
-            TEST(ANY_CHAR)
-            TEST(ANY_STRING)
-            TEST(ANY_STRING_RECURSIVE)
-            TEST(ANY_SENTINEL)
-            default:
-                append_format(result, L"<\\x%02x>", c);
-                break;
-        }
-    }
-    return result;
-}
-
 /// Helper to return the last character in a string, or none.
 static maybe_t<wchar_t> string_last_char(const wcstring &str) {
     if (str.empty()) return none();

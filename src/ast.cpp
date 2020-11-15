@@ -1135,7 +1135,6 @@ class ast_t::populator_t {
             const auto &peek = peek_token();
 
             // Special error reporting for keyword_t<kw_end>.
-            bool specially_handled = false;
             std::array<parse_keyword_t, sizeof...(KWs)> allowed = {{KWs...}};
             if (allowed.size() == 1 && allowed[0] == parse_keyword_t::kw_end) {
                 assert(!visit_stack_.empty() && "Visit stack should not be empty");
@@ -1147,11 +1146,9 @@ class ast_t::populator_t {
                                       L"Missing end to balance this %ls", kw_name);
                 }
             }
-            if (!specially_handled) {
-                parse_error(peek, parse_error_generic, L"Expected %ls, but found %ls",
-                            keywords_user_presentable_description({KWs...}).c_str(),
-                            peek.user_presentable_description().c_str());
-            }
+            parse_error(peek, parse_error_generic, L"Expected %ls, but found %ls",
+                        keywords_user_presentable_description({KWs...}).c_str(),
+                        peek.user_presentable_description().c_str());
             return;
         }
         parse_token_t tok = consume_any_token();

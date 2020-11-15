@@ -166,11 +166,6 @@ extern std::atomic<int> debug_level;
 
 inline bool should_debug(int level) { return level <= debug_level.load(std::memory_order_relaxed); }
 
-#define debug(level, ...)                                            \
-    do {                                                             \
-        if (should_debug((level))) debug_impl((level), __VA_ARGS__); \
-    } while (0)
-
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 [[noreturn]] void exit_without_destructors(int code);
 

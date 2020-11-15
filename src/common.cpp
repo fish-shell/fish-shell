@@ -601,37 +601,6 @@ static void debug_shared(const wchar_t level, const wcstring &msg) {
     }
 }
 
-static const wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
-[[gnu::noinline]] void debug_impl(int level, const wchar_t *msg, ...) {
-    int errno_old = errno;
-    va_list va;
-    va_start(va, msg);
-    wcstring local_msg = vformat_string(msg, va);
-    va_end(va);
-    const wchar_t msg_level = level <= 5 ? level_char[level] : L'9';
-    debug_shared(msg_level, local_msg);
-    if (debug_stack_frames > 0) {
-        show_stackframe(msg_level, debug_stack_frames, 1);
-    }
-    errno = errno_old;
-}
-
-[[gnu::noinline]] void debug_impl(int level, const char *msg, ...) {
-    if (!should_debug(level)) return;
-    int errno_old = errno;
-    char local_msg[512];
-    va_list va;
-    va_start(va, msg);
-    vsnprintf(local_msg, sizeof local_msg, msg, va);
-    va_end(va);
-    const wchar_t msg_level = level <= 5 ? level_char[level] : L'9';
-    debug_shared(msg_level, str2wcstring(local_msg));
-    if (debug_stack_frames > 0) {
-        show_stackframe(msg_level, debug_stack_frames, 1);
-    }
-    errno = errno_old;
-}
-
 void debug_safe(int level, const char *msg, const char *param1, const char *param2,
                 const char *param3, const char *param4, const char *param5, const char *param6,
                 const char *param7, const char *param8, const char *param9, const char *param10,

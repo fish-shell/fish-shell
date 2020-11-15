@@ -2584,7 +2584,7 @@ static int read_i(parser_t &parser) {
     data->import_history_if_necessary();
 
     while (!check_exit_loop_maybe_warning(data.get())) {
-        run_count++;
+        ++run_count;
 
         maybe_t<wcstring> tmp = data->readline(0);
         if (tmp && !tmp->empty()) {
@@ -2597,7 +2597,7 @@ static int read_i(parser_t &parser) {
             auto eval_res = reader_run_command(parser, command);
             signal_clear_cancel();
             if (!eval_res.no_status) {
-                status_count++;
+                ++status_count;
             }
 
             // If the command requested an exit, then process it now and clear it.

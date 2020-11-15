@@ -10,3 +10,6 @@ varFuncNullUB
 unmatchedSuppression
 // Suppress this one because it reports assert(condition && "message"), which we use all over the place
 incorrectStringBooleanError
+
+// This is of very little use and pops up *everywhere*.
+useStlAlgorithm

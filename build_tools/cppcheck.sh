@@ -1,3 +1,3 @@
-#!/usr/local/bin/fish
+#!/bin/sh
 
 cppcheck --enable=all --std=posix --quiet ./src/

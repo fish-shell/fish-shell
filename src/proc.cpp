@@ -931,19 +931,6 @@ static bool terminal_return_from_job_group(job_group_t *jg, bool restore_attrs) 
         return false;
     }
     jg->tmodes = tmodes;
-
-    // Need to restore the terminal's attributes or `bind \cF fg` will put the
-    // terminal into a broken state (until "enter" is pressed).
-    // See: https://github.com/fish-shell/fish-shell/issues/2114
-    if (restore_attrs) {
-        if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
-            if (errno == EIO) redirect_tty_output();
-            FLOGF(warning, _(L"Could not return shell to foreground"));
-            wperror(L"tcsetattr");
-            return false;
-        }
-    }
-
     return true;
 }
 

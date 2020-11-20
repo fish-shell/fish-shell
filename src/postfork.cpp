@@ -94,6 +94,20 @@ int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent) {
             debug_safe(2, "setpgid(2) returned EPERM. Retrying");
             continue;
         }
+#ifdef __BSD__
+        // POSIX.1 doesn't specify that zombie processes are required to be considered extant and/or
+        // children of the parent for purposes of setpgid(2). In particular, FreeBSD (at least up to
+        // 12.2) does not consider a child that has already forked, exec'd, and exited to "exist"
+        // and returns ESRCH (process not found) instead of EACCES (child has called exec).
+        // See https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=251227
+        else if (err == ESRCH && is_parent) {
+            // Handle this just like we would EACCES above, as we're virtually certain that
+            // setpgid(2) was called against a process that was at least at one point in time a
+            // valid child.
+            return 0;
+        }
+#endif
+
         return err;
     }
 }

@@ -22,6 +22,11 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "maybe.h"
 
+// Create a generic define for all BSD platforms
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#define __BSD__
+#endif
+
 // PATH_MAX may not exist.
 #ifndef PATH_MAX
 #define PATH_MAX 4096

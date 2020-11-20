@@ -905,7 +905,7 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
 
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job
 /// group, so that we can restore the terminal ownership to the job at a later time.
-static bool terminal_return_from_job_group(job_group_t *jg, bool restore_attrs) {
+static bool terminal_return_from_job_group(job_group_t *jg) {
     errno = 0;
     auto pgid = jg->get_pgid();
     if (!pgid.has_value()) {
@@ -960,14 +960,8 @@ void job_t::continue_job(parser_t &parser, bool in_foreground) {
     bool term_transferred = false;
     cleanup_t take_term_back([&] {
         if (term_transferred) {
-            // Should we restore the terminal attributes?
-            // Historically we have done this conditionally only if we sent SIGCONT.
-            // TODO: rationalize what the right behavior here is.
-            bool restore_attrs = send_sigcont;
-            // Issues of interest:
-            // https://github.com/fish-shell/fish-shell/issues/121
-            // https://github.com/fish-shell/fish-shell/issues/2114
-            terminal_return_from_job_group(this->group.get(), restore_attrs);
+            // Issues of interest include #121 and #2114.
+            terminal_return_from_job_group(this->group.get());
         }
     });
 

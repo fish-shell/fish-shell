@@ -42,7 +42,8 @@
 static char *get_interpreter(const char *command, char *buffer, size_t buff_size);
 
 /// Report the error code \p err for a failed setpgid call.
-void report_setpgid_error(int err, pid_t desired_pgid, const job_t *j, const process_t *p) {
+void report_setpgid_error(int err, bool is_parent, pid_t desired_pgid, const job_t *j,
+                          const process_t *p) {
     char pid_buff[128];
     char job_id_buff[128];
     char getpgid_buff[128];
@@ -57,8 +58,9 @@ void report_setpgid_error(int err, pid_t desired_pgid, const job_t *j, const pro
     narrow_string_safe(argv0, p->argv0());
     narrow_string_safe(command, j->command_wcstr());
 
-    debug_safe(1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
-               pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
+    debug_safe(1, "Could not send %s %s, '%s' in job %s, '%s' from group %s to group %s",
+               is_parent ? "child" : "self", pid_buff, argv0, job_id_buff, command, getpgid_buff,
+               job_pgid_buff);
 
     if (is_windows_subsystem_for_linux() && errno == EPERM) {
         debug_safe(1,

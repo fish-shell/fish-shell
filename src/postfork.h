@@ -30,7 +30,8 @@ int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent);
 /// Report the error code \p err for a failed setpgid call.
 /// Note not all errors should be reported; in particular EACCESS is expected and benign in the
 /// parent only.
-void report_setpgid_error(int err, pid_t desired_pgid, const job_t *j, const process_t *p);
+void report_setpgid_error(int err, bool is_parent, pid_t desired_pgid, const job_t *j,
+                          const process_t *p);
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the

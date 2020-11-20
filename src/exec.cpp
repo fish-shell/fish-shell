@@ -337,7 +337,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
 
         // The child attempts to join the pgroup.
         if (int err = execute_setpgid(p->pid, pgid, false /* not parent */)) {
-            report_setpgid_error(err, pgid, job.get(), p);
+            report_setpgid_error(err, false /* is_parent */, pgid, job.get(), p);
         }
         child_setup_process(claim_tty ? pgid : INVALID_PID, fish_pgrp, *job, true, dup2s);
         child_action();
@@ -362,7 +362,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
     // The parent attempts to send the child to its pgroup.
     // EACCESS is an expected benign error as the child may have called exec().
     if (int err = execute_setpgid(p->pid, pgid, true /* is parent */)) {
-        if (err != EACCES) report_setpgid_error(err, pgid, job.get(), p);
+        if (err != EACCES) report_setpgid_error(err, true /* is_parent */, pgid, job.get(), p);
     }
     terminal_maybe_give_to_job_group(job->group.get(), false);
     return true;

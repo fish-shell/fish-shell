@@ -93,7 +93,7 @@ In assignment mode, ``set`` does not modify the exit status, but passes along wh
 
 In query mode, the exit status is the number of variables that were not found.
 
-In erase mode, ``set`` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if any of the variable was write-protected or if any of the variable did not exist.
+In erase mode, ``set`` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if any of the variables did not exist or was a :ref:`special read-only variable <variables-special>`.
 
 
 Examples

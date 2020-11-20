@@ -86,7 +86,14 @@ In erase mode, if variable indices are specified, only the specified slices of t
 
 ``set`` requires all options to come before any other arguments. For example, ``set flags -l`` will have the effect of setting the value of the variable ``flags`` to '-l', not making the variable local.
 
-In assignment mode, ``set`` does not modify the exit status. This allows simultaneous capture of the output and exit status of a subcommand, e.g. ``if set output (command)``. In query mode, the exit status is the number of variables that were not found. In erase mode, ``set`` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if any of the variable was write-protected or if any of the variable did not exist.
+Exit status
+-----------
+
+In assignment mode, ``set`` does not modify the exit status, but passes along whatever $status was set, including by command substitutions. This allows capturing the output and exit status of a subcommand, like in ``if set output (command)``.
+
+In query mode, the exit status is the number of variables that were not found.
+
+In erase mode, ``set`` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if any of the variable was write-protected or if any of the variable did not exist.
 
 
 Examples
@@ -119,6 +126,15 @@ Examples
         echo "Python is at $python_path"
     end
 
+    # Setting a variable doesn't modify $status!
+    false
+    set foo bar
+    echo $status # prints 1, because of the "false" above.
+
+    true
+    set foo banana (false)
+    echo $status # prints 1, because of the "(false)" above.
+    
     # Like other shells, fish 3.1 supports this syntax for passing a variable to just one command:
     # Run fish with a temporary home directory.
     HOME=(mktemp -d) fish

@@ -2720,11 +2720,14 @@ struct readline_loop_state_t {
 
 /// Run a sequence of commands from an input binding.
 void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
+    // Need to donate/steal the tty - see #2214.
+    term_donate(outputter_t::stdoutput());
     auto last_statuses = parser().get_last_statuses();
     for (const wcstring &cmd : cmds) {
         parser().eval(cmd, io_chain_t{});
     }
     parser().set_last_statuses(std::move(last_statuses));
+    term_steal();
 }
 
 /// Read normal characters, inserting them into the command line.

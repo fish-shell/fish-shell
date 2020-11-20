@@ -113,6 +113,23 @@ static void print_ignored_signals() {
     }
 }
 
+static void print_stop_cont() {
+    signal(SIGTSTP, [](int) {
+        write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
+        kill(getpid(), SIGSTOP);
+    });
+    signal(SIGCONT, [](int) {
+        write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
+    });
+    char buff[1];
+    for (;;) {
+        if (read(STDIN_FILENO, buff, sizeof buff) >= 0) {
+            exit(0);
+        }
+    }
+
+}
+
 static void show_help();
 
 /// A thing that fish_test_helper can do.
@@ -142,6 +159,7 @@ static fth_command_t s_commands[] = {
      "Print to stdout the name(s) of blocked signals"},
     {"print_ignored_signals", print_ignored_signals,
      "Print to stdout the name(s) of ignored signals"},
+    {"print_stop_cont", print_stop_cont, "Print when we get SIGTSTP and SIGCONT, exiting on input"},
     {"help", show_help, "Print list of fish_test_helper commands"},
 };
 

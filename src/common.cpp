@@ -34,12 +34,6 @@
 #include <sys/utsname.h>
 #endif
 
-#ifdef __BSD__
-#include <sys/sysctl.h>
-#elif defined(__APPLE__)
-#include <mach-o/dyld.h>
-#endif
-
 #include <algorithm>
 #include <atomic>
 #include <memory>  // IWYU pragma: keep
@@ -60,6 +54,13 @@
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
+
+// Keep after "common.h"
+#ifdef __BSD__
+#include <sys/sysctl.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
+#endif
 
 struct termios shell_modes;
 

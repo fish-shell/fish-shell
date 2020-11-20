@@ -1,8 +1,8 @@
-set -l commands_need_user activate deactivate inspect authenticate create remove update passwd resize lock unlock with
-set -l commands list lock-all $commands_need_user
+set -l commands_need_user activate deactivate inspect authenticate remove update passwd resize lock unlock with
+set -l commands list create lock-all $commands_need_user
 
 function __homectl_users
-    homectl list | string match -r -- '\S+\s+\d+\s+\d+' | string match -r -- '\S+' | string split0
+    homectl list | string match -r -- '\S+\s+\d+\s+\d+' | string match -r -- '\S+'
 end
 
 function __homectl_subcommand_is
@@ -26,7 +26,7 @@ complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a lock -d 'T
 complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a unlock -d 'Unlock a temporarily locked home area'
 complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a lock-all -d 'Lock all suitable home areas'
 complete -c homectl -n "not __fish_seen_subcommand_from $commands" -a with -d 'Run shell or command with access to a home area'
-complete -c homectl -n "__homectl_subcommand_is $commands_need_user" -xa ("__homectl_users")
+complete -c homectl -n "__homectl_subcommand_is $commands_need_user" -xa '(__homectl_users)'
 
 # Options
 complete -c homectl -s h -l help -d 'Show this help'
@@ -73,8 +73,8 @@ complete -c homectl -n $condition -l rate-limit-burst -d 'Login rate-limit attem
 
 # Password Policy User Record Properties:
 complete -c homectl -n $condition -l password-hint -d 'Set Password hint'
-complete -c homectl -n $condition -l enforce-password-policy -d "Control enforce password policy" -xa 'yes no'
-complete -c homectl -n $condition -s P -d' Equivalent to --enforce-password-password=no'
+complete -c homectl -n $condition -l enforce-password-policy -d 'Control enforce password policy' -xa 'yes no'
+complete -c homectl -n $condition -s P -d 'Equivalent to --enforce-password-password=no'
 complete -c homectl -n $condition -l password-change-now -d 'Require the password to be changed on next login' -xa 'yes no'
 complete -c homectl -n $condition -l password-change-min -d 'Require minimum time between password changes'
 complete -c homectl -n $condition -l password-change-max -d 'Require maximum time between password changes'

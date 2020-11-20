@@ -283,6 +283,11 @@ expect_prompt("git@", unmatched="ctrl-w does not stop at @")
 send("bind -k nul 'echo nul seen'\r")
 expect_prompt()
 send("\0" * 3)
+# We need to sleep briefly before emitting a newline, because when we execute the
+# key bindings above we place the tty in external-proc mode (see #7483) and restoring
+# the mode to shell-mode races with the newline emitted below (i.e. sometimes it may
+# be echoed).
+sleep(0.1)
 send("\r")
 expect_prompt("nul seen\r\nnul seen\r\nnul seen", unmatched="nul not seen")
 

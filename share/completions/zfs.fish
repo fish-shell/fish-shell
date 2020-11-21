@@ -90,6 +90,19 @@ function __fish_zfs_list_groupspace_types
     echo -e "all\tBoth types"
 end
 
+# Generate a list of possible values from the man page.
+# NB: This includes "hints" like "size" or "opts" which may be useful or unwanted. *shrug*
+if type -q man && type -q col
+    function __fish_zfs_property_options
+        set -l property (string escape --style=regex -- $argv[1])
+        set -l values (command man zfs | col -b | string replace -rf -- '^\s*'$property'=(.*\|.*)' '$1' | string split ' | ')
+        printf '%s\n' $property=$values
+    end
+else
+    function __fish_zfs_property_options
+    end
+end
+
 function __fish_zfs_list_permissions -V OS
     echo -e "allow\tAlso needs the permission to be allowed"
     echo -e "clone\tAlso needs the 'create' and 'mount' permissions in the origin filesystem"
@@ -328,6 +341,8 @@ complete -c zfs -x -n '__fish_zfs_using_command list' -d 'Dataset whose properti
 # set completions
 complete -c zfs -x -n '__fish_zfs_using_command set' -d 'Property to set' -a '(__fish_complete_zfs_rw_properties)'
 complete -c zfs -x -n '__fish_zfs_using_command set; and string match -q -r "zfs set \S+ " (commandline -c)' -d 'Dataset whose property to set' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
+# set property value completions
+complete -c zfs -x -n '__fish_zfs_using_command set; and string match -qe = -- (commandline -t)' -a '(__fish_zfs_property_options (commandline -t | string match -r "[^=]+"))'
 
 # get completions
 complete -c zfs -f -n '__fish_zfs_using_command get' -s r -d 'Operate recursively on datasets'

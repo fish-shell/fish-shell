@@ -668,3 +668,17 @@ echo $status
 # Unmatched capturing groups are treated as empty
 echo az | string replace -r -- 'a(b.+)?z' 'a:$1z'
 # CHECK: a:z
+
+# match --max
+string match -r -a -m 3 .at aatxatyatzat bat cat dat
+# CHECK: aat
+# CHECK: xat
+# CHECK: yat
+# CHECK: zat
+# CHECK: bat
+# CHECK: cat
+
+seq 1 100 | string match -m 3 '*0'
+# CHECK: 10
+# CHECK: 20
+# CHECK: 30

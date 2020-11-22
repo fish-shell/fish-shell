@@ -940,10 +940,12 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     opts.all_valid = true;
     opts.entire_valid = true;
     opts.ignore_case_valid = true;
+    opts.index_valid = true;
     opts.invert_valid = true;
+    opts.max_valid = true;
+    opts.max = LONG_MAX;
     opts.quiet_valid = true;
     opts.regex_valid = true;
-    opts.index_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -963,9 +965,19 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     arg_iterator_t aiter(argv, optind, streams);
+    int matching = 0;
+    int old_matchcount = 0;
     while (const wcstring *arg = aiter.nextstr()) {
         if (!matcher->report_matches(*arg)) {
             return STATUS_INVALID_ARGS;
+        }
+        if (opts.max != LONG_MAX || opts.quiet) {
+            auto mc = matcher->match_count();
+            if (mc > old_matchcount) {
+                matching++;
+                old_matchcount = mc;
+                if (matching >= opts.max || (matching == 1 && opts.quiet)) break;
+            }
         }
     }
 

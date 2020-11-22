@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    string match [(-a | --all)] [(-e | --entire)] [(-i | --ignore-case)] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
+    string match [(-a | --all)] [(-e | --entire)] [(-i | --ignore-case)] [(-m | --max) MAX] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
 
 .. END SYNOPSIS
 
@@ -28,6 +28,10 @@ If ``--index`` or ``-n`` is given, each match is reported as a 1-based start pos
 If ``--regex`` or ``-r`` is given, PATTERN is interpreted as a Perl-compatible regular expression, which does not have to match the entire STRING. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. With this, only the matching part of the STRING will be reported, unless ``--entire`` is given.
 
 If ``--invert`` or ``-v`` is used the selected lines will be only those which do not match the given glob pattern or regular expression.
+
+If ``--max`` or ``-m`` is used ``string match`` will stop after MAX matching STRINGs - together with ``--all`` it will still print all the matches for those strings.
+
+If ``-q`` or ``--quiet`` is used ``string match`` will only return the exit status without output. It will also stop processing after the first match.
 
 Exit status: 0 if at least one match was found, or 1 otherwise.
 

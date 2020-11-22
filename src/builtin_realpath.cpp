@@ -91,7 +91,8 @@ maybe_t<int> builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t *
                                           std::strerror(errno));
             } else {
                 // Who knows. Probably a bug in our wrealpath() implementation.
-                streams.err.append_format(_(L"builtin %ls: Invalid path: %ls\n"), cmd, argv[optind]);
+                streams.err.append_format(_(L"builtin %ls: Invalid path: %ls\n"), cmd,
+                                          argv[optind]);
             }
 
             return STATUS_CMD_ERROR;

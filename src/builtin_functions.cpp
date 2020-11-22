@@ -286,7 +286,8 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t 
         wcstring new_func;
 
         if (argc - optind != 2) {
-            streams.err.append_format(_(L"%ls: Expected exactly two names (current function name, and new function name)\n"),
+            streams.err.append_format(_(L"%ls: Expected exactly two names (current function name, "
+                                        L"and new function name)\n"),
                                       cmd);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;

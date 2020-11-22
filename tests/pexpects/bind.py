@@ -309,5 +309,5 @@ expect_prompt("\nb c d")
 # Check that ctrl-z can be bound
 sendline('bind \cz "echo bound ctrl-z"')
 expect_prompt()
-send('\x1A')
+send("\x1A")
 expect_str("bound ctrl-z")

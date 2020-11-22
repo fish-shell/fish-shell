@@ -62,9 +62,9 @@ ROLE_TO_TOKEN = {
 
 
 def token_for_text_and_role(text, role):
-    """ Return the pygments token for some input text and a fish role
-    
-        This applies any special cases of ROLE_TO_TOKEN.
+    """Return the pygments token for some input text and a fish role
+
+    This applies any special cases of ROLE_TO_TOKEN.
     """
     if text.isspace():
         # Here fish will return 'normal' or 'statement_terminator' for newline.
@@ -77,13 +77,13 @@ def token_for_text_and_role(text, role):
 
 
 def tokenize_fish_command(code, offset):
-    """ Tokenize some fish code, offset in a parent string, by shelling
-        out to fish_indent.
-        
-        fish_indent will output a list of csv lines: start,end,type.
+    """Tokenize some fish code, offset in a parent string, by shelling
+    out to fish_indent.
 
-        This function returns a list of (start, tok, value) tuples, as
-        Pygments expects.
+    fish_indent will output a list of csv lines: start,end,type.
+
+    This function returns a list of (start, tok, value) tuples, as
+    Pygments expects.
     """
     proc = subprocess.Popen(
         ["fish_indent", "--pygments"],
@@ -108,11 +108,11 @@ class FishIndentLexer(Lexer):
     filenames = ["*.fish"]
 
     def get_tokens_unprocessed(self, input_text):
-        """ Return a list of (start, tok, value) tuples.
+        """Return a list of (start, tok, value) tuples.
 
-            start is the index into the string
-            tok is the token type (as above)
-            value is the string contents of the token
+        start is the index into the string
+        tok is the token type (as above)
+        value is the string contents of the token
         """
         result = []
         if not any(s.startswith(">") for s in input_text.splitlines()):

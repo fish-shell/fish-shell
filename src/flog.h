@@ -139,7 +139,7 @@ class logger_t {
     }
 
     template <typename T, typename... Ts>
-    void log_args_impl(const T &arg, const Ts &... rest) {
+    void log_args_impl(const T &arg, const Ts &...rest) {
         log1(arg);
         log1(' ');
         log_args_impl<Ts...>(rest...);
@@ -151,7 +151,7 @@ class logger_t {
     logger_t();
 
     template <typename... Args>
-    void log_args(const category_t &cat, const Args &... args) {
+    void log_args(const category_t &cat, const Args &...args) {
         log1(cat.name);
         log1(": ");
         log_args_impl(args...);

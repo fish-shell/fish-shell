@@ -165,8 +165,7 @@ def better_color(c1, c2):
 
 
 def parse_color(color_str):
-    """ A basic function to parse a color string, for example, 'red' '--bold'.
-    """
+    """A basic function to parse a color string, for example, 'red' '--bold'."""
     comps = color_str.split(" ")
     color = "normal"
     background_color = ""
@@ -1174,7 +1173,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         except ImportError:
             # If the platform doesn't support multiprocessing, we just do it one at a time.
             # This happens e.g. on Termux.
-            print("Platform doesn't support multiprocessing, running one at a time. This may take a while.")
+            print(
+                "Platform doesn't support multiprocessing, running one at a time. This may take a while."
+            )
             result.append(self.do_get_current_prompt())
             result.extend([self.read_one_sample_prompt(path) for path in paths])
         return result
@@ -1499,6 +1500,7 @@ print(
 )
 print("%sHit ENTER to stop.%s" % (esc["bold"], esc["exit_attribute_mode"]))
 
+
 def runThing():
     if isMacOS10_12_5_OrLater():
         subprocess.check_call(["open", fileurl])
@@ -1508,6 +1510,7 @@ def runThing():
         subprocess.call(["termux-open-url", url])
     else:
         webbrowser.open(fileurl)
+
 
 # Some browsers still block webbrowser.open if they haven't been opened before,
 # so we just spawn it in a thread.

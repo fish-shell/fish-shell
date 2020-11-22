@@ -11,4 +11,4 @@ complete -f -c gresource -n "__fish_not_contain_opt section && __fish_use_subcom
 complete -f -c gresource -n "__fish_not_contain_opt section && __fish_use_subcommand" -a help -d "Prints help"
 
 # Arguments of help command
-complete -f -c gresource -n "__fish_seen_subcommand_from help" -a "list details extract sections help" -d "Command"
+complete -f -c gresource -n "__fish_seen_subcommand_from help" -a "list details extract sections help" -d Command

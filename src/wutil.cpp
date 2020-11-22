@@ -430,7 +430,8 @@ wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes)
     wcstring result = join_strings(new_comps, sep);
     // Prepend one or two leading slashes.
     // Two slashes are preserved. Three+ slashes are collapsed to one. (!)
-    result.insert(0, allow_leading_double_slashes && leading_slashes > 2 ? 1 : leading_slashes, sep);
+    result.insert(0, allow_leading_double_slashes && leading_slashes > 2 ? 1 : leading_slashes,
+                  sep);
     // Ensure ./ normalizes to . and not empty.
     if (result.empty()) result.push_back(L'.');
     return result;

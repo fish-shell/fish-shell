@@ -380,7 +380,8 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                 auto len = strlen(interpreter);
                 if (len && interpreter[len - 1] == '\r') {
                     debug_safe(0,
-                               "The file uses windows line endings (\\r\\n). Run dos2unix or similar to fix it.");
+                               "The file uses windows line endings (\\r\\n). Run dos2unix or "
+                               "similar to fix it.");
                 } else {
                     debug_safe(0,
                                "The file '%s' specified the interpreter '%s', which is not an "

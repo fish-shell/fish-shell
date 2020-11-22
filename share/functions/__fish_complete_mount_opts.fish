@@ -135,7 +135,6 @@ function __fish_complete_mount_opts
     barrier={0,1}\
     user_xattr\
     acl\
-
     set -l token (commandline -tc | string replace -r '^-o' -- '')
     set -l args (string split , -- $token)
 

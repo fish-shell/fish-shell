@@ -1116,8 +1116,8 @@ static bool should_import_bash_history_line(const wcstring &line) {
     if (line.find(L"]]") != std::string::npos) return false;
     if (line.find(L"((") != std::string::npos) return false;
     if (line.find(L"))") != std::string::npos) return false;
-    // Skip lines with literal tabs since we don't handle them well and we don't know what they mean.
-    // It could just be whitespace or it's actually passed somewhere (like e.g. `sed`).
+    // Skip lines with literal tabs since we don't handle them well and we don't know what they
+    // mean. It could just be whitespace or it's actually passed somewhere (like e.g. `sed`).
     if (line.find(L'\t') != std::string::npos) return false;
 
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.

@@ -79,7 +79,7 @@ class latch_t : detail::fixed_t {
     void operator=(T &&value) { *this = make_unique<T>(std::move(value)); }
 
     template <typename... Args>
-    void emplace(Args &&... args) {
+    void emplace(Args &&...args) {
         *this = make_unique<T>(std::forward<Args>(args)...);
     }
 };

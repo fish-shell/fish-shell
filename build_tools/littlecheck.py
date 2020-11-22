@@ -13,6 +13,7 @@ import re
 import shlex
 import subprocess
 import sys
+
 try:
     from itertools import zip_longest
 except ImportError:
@@ -20,7 +21,7 @@ except ImportError:
 from difflib import SequenceMatcher
 
 # Directives can occur at the beginning of a line, or anywhere in a line that does not start with #.
-COMMENT_RE = r'^(?:[^#].*)?#\s*'
+COMMENT_RE = r"^(?:[^#].*)?#\s*"
 
 # A regex showing how to run the file.
 RUN_RE = re.compile(COMMENT_RE + r"RUN:\s+(.*)\n")
@@ -139,9 +140,10 @@ class Line(object):
             ret = ret.replace("{", "{{").replace("}", "}}")
         return ret
 
+
 class RunCmd(object):
-    """ A command to run on a given Checker.
-    
+    """A command to run on a given Checker.
+
     Attributes:
         args: Unexpanded shell command as a string.
     """
@@ -215,10 +217,16 @@ class TestFailure(object):
                 "",
             ]
         if self.error_annotation_lines:
-            fields["error_annotation"] = "    ".join([x.text for x in self.error_annotation_lines])
-            fields["error_annotation_lineno"] = str(self.error_annotation_lines[0].number)
+            fields["error_annotation"] = "    ".join(
+                [x.text for x in self.error_annotation_lines]
+            )
+            fields["error_annotation_lineno"] = str(
+                self.error_annotation_lines[0].number
+            )
             if len(self.error_annotation_lines) > 1:
-                fields["error_annotation_lineno"] += ":" + str(self.error_annotation_lines[-1].number)
+                fields["error_annotation_lineno"] += ":" + str(
+                    self.error_annotation_lines[-1].number
+                )
             fmtstrs += [
                 "  additional output on stderr:{error_annotation_lineno}:",
                 "    {BOLD}{error_annotation}{RESET}",
@@ -229,14 +237,19 @@ class TestFailure(object):
             lastcheckline = None
             for d in self.diff.get_grouped_opcodes():
                 for op, alo, ahi, blo, bhi in d:
-                    color="{BOLD}"
-                    if op == 'replace' or op == 'delete':
-                        color="{RED}"
+                    color = "{BOLD}"
+                    if op == "replace" or op == "delete":
+                        color = "{RED}"
                     # We got a new chunk, so we print a marker.
                     if alo > lasthi:
                         fmtstrs += [
-                            "    [...] from line " + str(self.checks[blo].line.number)
-                            + " (" + self.lines[alo].file + ":" + str(self.lines[alo].number) + "):"
+                            "    [...] from line "
+                            + str(self.checks[blo].line.number)
+                            + " ("
+                            + self.lines[alo].file
+                            + ":"
+                            + str(self.lines[alo].number)
+                            + "):"
                         ]
                     lasthi = ahi
 
@@ -244,17 +257,41 @@ class TestFailure(object):
                     lastcheck = False
                     for a, b in zip_longest(self.lines[alo:ahi], self.checks[blo:bhi]):
                         # Clean up strings for use in a format string - double up the curlies.
-                        astr = color + a.escaped_text(for_formatting=True) + "{RESET}" if a else ""
+                        astr = (
+                            color + a.escaped_text(for_formatting=True) + "{RESET}"
+                            if a
+                            else ""
+                        )
                         if b:
-                            bstr = "'{BLUE}" + b.line.escaped_text(for_formatting=True) + "{RESET}'" + " on line " + str(b.line.number)
+                            bstr = (
+                                "'{BLUE}"
+                                + b.line.escaped_text(for_formatting=True)
+                                + "{RESET}'"
+                                + " on line "
+                                + str(b.line.number)
+                            )
                             lastcheckline = b.line.number
 
-                        if op == 'equal':
+                        if op == "equal":
                             fmtstrs += ["    " + astr]
                         elif b and a:
-                            fmtstrs += ["    " + astr + " <= does not match " + b.type + " " + bstr]
+                            fmtstrs += [
+                                "    "
+                                + astr
+                                + " <= does not match "
+                                + b.type
+                                + " "
+                                + bstr
+                            ]
                         elif b:
-                            fmtstrs += ["    " + astr + " <= nothing to match " + b.type + " " + bstr]
+                            fmtstrs += [
+                                "    "
+                                + astr
+                                + " <= nothing to match "
+                                + b.type
+                                + " "
+                                + bstr
+                            ]
                         elif not b:
                             string = "    " + astr
                             if bhi == len(self.checks):
@@ -262,7 +299,10 @@ class TestFailure(object):
                                     string += " <= no more checks"
                                     lastcheck = True
                             elif lastcheckline is not None:
-                                string += " <= no check matches this, previous check on line " + str(lastcheckline)
+                                string += (
+                                    " <= no check matches this, previous check on line "
+                                    + str(lastcheckline)
+                                )
                             else:
                                 string += " <= no check matches"
                             fmtstrs.append(string)
@@ -276,8 +316,8 @@ class TestFailure(object):
 
 
 def perform_substitution(input_str, subs):
-    """ Perform the substitutions described by subs to str
-        Return the substituted string.
+    """Perform the substitutions described by subs to str
+    Return the substituted string.
     """
     # Sort our substitutions into a list of tuples (key, value), descending by length.
     # It needs to be descending because we need to try longer substitutions first.
@@ -368,11 +408,22 @@ class TestRun(object):
         # If there's a mismatch or still lines or checkers, we have a failure.
         # Otherwise it's success.
         if mismatches:
-            return TestFailure(mismatches[0][0], mismatches[0][1], self, diff=diff, lines=usedlines, checks=usedchecks)
+            return TestFailure(
+                mismatches[0][0],
+                mismatches[0][1],
+                self,
+                diff=diff,
+                lines=usedlines,
+                checks=usedchecks,
+            )
         elif lineq:
-            return TestFailure(lineq[-1], None, self, diff=diff, lines=usedlines, checks=usedchecks)
+            return TestFailure(
+                lineq[-1], None, self, diff=diff, lines=usedlines, checks=usedchecks
+            )
         elif checkq:
-            return TestFailure(None, checkq[-1], self, diff=diff, lines=usedlines, checks=usedchecks)
+            return TestFailure(
+                None, checkq[-1], self, diff=diff, lines=usedlines, checks=usedchecks
+            )
         else:
             # Success!
             return None
@@ -381,8 +432,8 @@ class TestRun(object):
         """ Run the command. Return a TestFailure, or None. """
 
         def split_by_newlines(s):
-            """ Decode a string and split it by newlines only,
-                retaining the newlines.
+            """Decode a string and split it by newlines only,
+            retaining the newlines.
             """
             return [s + "\n" for s in s.decode("utf-8").split("\n")]
 
@@ -420,7 +471,7 @@ class TestRun(object):
         # non-matching or unmatched stderr text, then annotate the outfail
         # with it.
         if outfail and errfail and errfail.line:
-            outfail.error_annotation_lines = errlines[errfail.line.number - 1:]
+            outfail.error_annotation_lines = errlines[errfail.line.number - 1 :]
             # Trim a trailing newline
             if outfail.error_annotation_lines[-1].text == "\n":
                 del outfail.error_annotation_lines[-1]
@@ -528,8 +579,8 @@ def check_path(path, subs, config, failure_handler):
 
 
 def parse_subs(subs):
-    """ Given a list of input substitutions like 'foo=bar',
-       return a dictionary like {foo:bar}, or exit if invalid.
+    """Given a list of input substitutions like 'foo=bar',
+    return a dictionary like {foo:bar}, or exit if invalid.
     """
     result = {}
     for sub in subs:

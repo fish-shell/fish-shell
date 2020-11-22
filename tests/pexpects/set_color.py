@@ -41,7 +41,7 @@ expect_str("\x1b[33myellow")
 expect_str("normal")
 expect_prompt()
 
-sendline ("set_color --background blue --print-colors")
+sendline("set_color --background blue --print-colors")
 expect_str("black")
 expect_str("blue")
 expect_str("brblack")
@@ -60,4 +60,3 @@ expect_str("white")
 expect_str("yellow")
 expect_str("normal")
 expect_prompt()
-

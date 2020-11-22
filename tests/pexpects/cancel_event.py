@@ -4,7 +4,13 @@ from pexpect_helper import SpawnedProc
 import signal
 
 sp = SpawnedProc()
-send, sendline, sleep, expect_str, expect_prompt = sp.send, sp.sendline, sp.sleep, sp.expect_str, sp.expect_prompt
+send, sendline, sleep, expect_str, expect_prompt = (
+    sp.send,
+    sp.sendline,
+    sp.sleep,
+    sp.expect_str,
+    sp.expect_prompt,
+)
 expect_prompt()
 
 # Verify that cancel-commandline does what we expect - see #7384.

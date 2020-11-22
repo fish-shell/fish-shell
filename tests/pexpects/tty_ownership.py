@@ -8,7 +8,9 @@ expect_prompt()
 sendline("status job-control full")
 expect_prompt()
 
-sendline("$fish -c 'status job-control full ; $fish_test_helper report_foreground' &; wait")
+sendline(
+    "$fish -c 'status job-control full ; $fish_test_helper report_foreground' &; wait"
+)
 expect_prompt()
 
 sendline("echo it worked")

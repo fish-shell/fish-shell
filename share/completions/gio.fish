@@ -4,7 +4,7 @@
 set -l supported_schemes admin afc afp archive burn cdda computer dav dav+sd davs davs+sd dns-sd file ftp ftpis ftps google-drive gphoto2 http https localtest mtp network nfs recent sftp smb ssh test trash
 
 for scheme in $supported_schemes
-    complete -c gio -n "__fish_seen_subcommand_from cat copy info list mkdir monitor mount move open rename remove save set trash tree" -a "$scheme": -d "Scheme"
+    complete -c gio -n "__fish_seen_subcommand_from cat copy info list mkdir monitor mount move open rename remove save set trash tree" -a "$scheme": -d Scheme
 end
 
 # Commands
@@ -28,7 +28,7 @@ complete -f -c gio -n __fish_use_subcommand -a trash -d "Move files to the trash
 complete -f -c gio -n __fish_use_subcommand -a tree -d "Lists the contents of locations in a tree"
 
 # Arguments of help command
-complete -f -c gio -n "__fish_seen_subcommand_from help" -a "version cat copy info list mime mkdir monitor mount move open rename remove save set trash tree" -d "Command"
+complete -f -c gio -n "__fish_seen_subcommand_from help" -a "version cat copy info list mime mkdir monitor mount move open rename remove save set trash tree" -d Command
 
 # Arguments of mime command
 function __fish_gio_list_mimetypes
@@ -76,13 +76,13 @@ complete -f -c gio -n "__fish_seen_subcommand_from monitor" -s m -l mounts -d "W
 # Options of mount command
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s m -l mountable -d "Mount as mountable"
 complete -x -c gio -n "__fish_seen_subcommand_from mount" -s d -l device -d "Mount volume"
-complete -f -c gio -n "__fish_seen_subcommand_from mount" -s u -l unmount -d "Unmount"
-complete -f -c gio -n "__fish_seen_subcommand_from mount" -s e -l eject -d "Eject"
+complete -f -c gio -n "__fish_seen_subcommand_from mount" -s u -l unmount -d Unmount
+complete -f -c gio -n "__fish_seen_subcommand_from mount" -s e -l eject -d Eject
 complete -x -c gio -n "__fish_seen_subcommand_from mount" -s t -l stop -d "Stop drive"
 complete -x -c gio -n "__fish_seen_subcommand_from mount" -s s -l unmount-scheme -a "$supported_schemes" -d "Unmount all mounts with the given scheme"
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s f -l force -d "Ignore outstanding file operations"
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s a -l anonymous -d "Use an anonymous user"
-complete -f -c gio -n "__fish_seen_subcommand_from mount" -s l -l list -d "List"
+complete -f -c gio -n "__fish_seen_subcommand_from mount" -s l -l list -d List
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s o -l monitor -d "Monitor events"
 complete -f -c gio -n "__fish_seen_subcommand_from mount" -s i -l detail -d "Show extra information"
 complete -x -c gio -n "__fish_seen_subcommand_from mount" -l tcrypt-pim -d "The numeric PIM when unlocking a VeraCrypt volume"

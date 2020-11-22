@@ -6,14 +6,14 @@ function __fish_list_bluetoothctl_devices
     # Output of `bluetoothctl devices`:
     # Device 01:23:34:56:89:AB Name1
     # Device 01:23:34:56:89:AC Name2
-    bluetoothctl devices 2> /dev/null | string replace -r "^Device " "" | string replace " " \t
+    bluetoothctl devices 2>/dev/null | string replace -r "^Device " "" | string replace " " \t
 end
 
 function __fish_list_bluetoothctl_controllers
     # Output of `bluetoothctl list`:
     # Controller 01:23:34:56:89:AB Name1 [default]
     # Controller 01:23:34:56:89:AC Name2
-    bluetoothctl list 2> /dev/null | string replace -r "^Controller " "" | string replace " " \t
+    bluetoothctl list 2>/dev/null | string replace -r "^Controller " "" | string replace " " \t
 end
 
 complete -f -c bluetoothctl -n "not __fish_seen_subcommand_from $cmds" -a list -d "List available controllers"

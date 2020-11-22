@@ -643,7 +643,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                              parser_t &parser, io_streams_t &streams) {
     int ret = STATUS_CMD_OK;
     for (int i = 0; i < argc; i++) {
-        int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
+        int scope =
+            compute_scope(opts);  // calculate the variable scope based on the provided options
         wchar_t *dest = argv[i];
 
         std::vector<long> indexes;
@@ -675,7 +676,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             wcstring_list_t result;
             dest_var->to_list(result);
             erase_values(result, indexes);
-            retval = env_set_reporting_errors(cmd, dest, scope, result, streams, parser.vars(), &evts);
+            retval =
+                env_set_reporting_errors(cmd, dest, scope, result, streams, parser.vars(), &evts);
         }
 
         // Fire any events.

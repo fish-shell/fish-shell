@@ -114,8 +114,8 @@ pygments_style = None
 # of _static/pygments.css
 html_theme_path = ["."]
 html_theme = "python_docs_theme"
-#html_theme_path = ["./cloud_sptheme/themes"]
-#html_theme = "cloud"
+# html_theme_path = ["./cloud_sptheme/themes"]
+# html_theme = "cloud"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -196,7 +196,13 @@ man_pages = [
     ("tutorial", "fish-tutorial", "fish-shell tutorial", [author], 1),
     ("CHANGELOG", "fish-changelog", "fish-shell changelog", [author], 1),
     ("completions", "fish-completions", "Writing fish completions", [author], 1),
-    ("fish_for_bash_users", "fish-for-bash-users", "A quick fish primer for those coming from bash", [author], 1),
+    (
+        "fish_for_bash_users",
+        "fish-for-bash-users",
+        "A quick fish primer for those coming from bash",
+        [author],
+        1,
+    ),
     ("faq", "fish-faq", "fish-shell faq", [author], 1),
 ]
 for path in sorted(glob.glob("cmds/*")):

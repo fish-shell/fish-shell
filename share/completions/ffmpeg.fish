@@ -83,7 +83,7 @@ function __fish_ffmpeg_filters
     end
 
     ffmpeg -hide_banner -loglevel quiet -filters |
-        string match -e -- '->' |  # skip past the header
+        string match -e -- '->' | # skip past the header
         string match -er $filter |
         string replace -rf '^ [TSC.]{3} +(\S+) +\S+->\S+ +(.*)' '$1\t$2'
 end
@@ -97,7 +97,7 @@ end
 
 function __fish_ffmpeg_tunes
     set -l cmdline (commandline)
-    if string match -req '264'
+    if string match -req 264
         printf "%s\n" film animation grain stillimage fastdecode zerolatency psnr ssim
     end
     if string match -req '265|hevc'
@@ -110,7 +110,7 @@ function __fish_ffmpeg_crfs
 end
 
 function __fish_ffmpeg_profile
-    if string match -req '264'
+    if string match -req 264
         printf "%s\n" baseline main high
     end
     if string match -req '265|hevc'
@@ -204,7 +204,7 @@ complete -c ffmpeg -s b -o "b:v" -d "Video bitrate"
 complete -c ffmpeg -o dn -d "Disable data"
 # Advanced video options
 complete -c ffmpeg -o pix_fmt
-__fish_ffmpeg_complete_regex "-pix_fmt" "(__fish_ffmpeg_pix_fmts)"
+__fish_ffmpeg_complete_regex -pix_fmt "(__fish_ffmpeg_pix_fmts)"
 
 # Audio options
 complete -c ffmpeg -o aframes -d "Set the number of audio frames to output"
@@ -231,11 +231,11 @@ complete -c ffmpeg -o spre -d "Set the subtitle options to the indicated preset"
 complete -c ffmpeg -o pre -o preset -d "Preset name"
 __fish_ffmpeg_complete_regex 'pre(set)?' "(__fish_ffmpeg_presets)"
 complete -c ffmpeg -o tune
-__fish_ffmpeg_complete_regex 'tune' "(__fish_ffmpeg_tunes)"
+__fish_ffmpeg_complete_regex tune "(__fish_ffmpeg_tunes)"
 complete -c ffmpeg -o crf -o q
 __fish_ffmpeg_complete_regex 'crf|q' "(__fish_ffmpeg_crfs)"
 complete -c ffmpeg -o profile
-__fish_ffmpeg_complete_regex 'profile' "(__fish_ffmpeg_profiles)"
+__fish_ffmpeg_complete_regex profile "(__fish_ffmpeg_profiles)"
 
 # Filters
 #
@@ -281,11 +281,11 @@ function __fish_ffmpeg_concat_filter_args
 end
 
 function __fish_ffmpeg_complete_filter
-    set -l filter_type "all"
+    set -l filter_type all
     if string match -rq -- '^-(vf(ilter)?|f(ilter)?:v)' (__fish_ffmpeg_last_arg)
-        set filter_type "video"
+        set filter_type video
     else if string match -rq -- '^-(af(ilter)?|f(ilter)?:a' (__fish_ffmpeg_last_arg)
-        set filter_type "audio"
+        set filter_type audio
     end
 
     # echo -e "\n **** $filter_type **** \n" > /dev/tty

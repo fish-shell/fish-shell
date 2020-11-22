@@ -144,10 +144,10 @@ static operation_context_t get_bg_context(const std::shared_ptr<environment_t> &
     return operation_context_t{nullptr, *env, std::move(cancel_checker)};
 }
 
-/// We try to ensure that syntax highlighting completes appropriately before executing what the user typed.
-/// But we do not want it to block forever - e.g. it may hang on determining if an arbitrary argument
-/// is a path. This is how long we'll wait (in milliseconds) before giving up and performing a
-/// no-io syntax highlighting. See #7418, #5912.
+/// We try to ensure that syntax highlighting completes appropriately before executing what the user
+/// typed. But we do not want it to block forever - e.g. it may hang on determining if an arbitrary
+/// argument is a path. This is how long we'll wait (in milliseconds) before giving up and
+/// performing a no-io syntax highlighting. See #7418, #5912.
 static constexpr long kHighlightTimeoutForExecutionMs = 250;
 
 /// Get the debouncer for autosuggestions and background highlighting.
@@ -411,8 +411,7 @@ class reader_history_search_t {
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
             *hist, text,
-            by_prefix() ? history_search_type_t::prefix : history_search_type_t::contains,
-            flags);
+            by_prefix() ? history_search_type_t::prefix : history_search_type_t::contains, flags);
     }
 
     /// Reset to inactive search.
@@ -952,7 +951,7 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
     if (!conf.in_silent_mode && !data.history_search_text.empty()) {
         const wcstring &needle = data.history_search_text;
         const wcstring &haystack = cmd_line->text();
-        size_t match_pos = ifind(haystack,needle);
+        size_t match_pos = ifind(haystack, needle);
         if (match_pos != wcstring::npos) {
             for (size_t i = 0; i < needle.size(); i++) {
                 colors.at(match_pos + i).background = highlight_role_t::search_match;
@@ -2071,7 +2070,8 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
             if (check_for_orphaned_process(loop_count, shell_pgid)) {
                 // We're orphaned, so we just die. Another sad statistic.
                 const wchar_t *fmt =
-                    _(L"I appear to be an orphaned process, so I am quitting politely. My pid is %d.");
+                    _(L"I appear to be an orphaned process, so I am quitting politely. My pid is "
+                      L"%d.");
                 FLOGF(warning, fmt, static_cast<int>(getpid()));
                 exit_without_destructors(1);
             }
@@ -2823,8 +2823,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             //
             // Also paging is already cancelled above.
             if (rls.complete_did_insert &&
-                (rls.last_cmd == rl::complete
-                 || rls.last_cmd == rl::complete_and_search)) {
+                (rls.last_cmd == rl::complete || rls.last_cmd == rl::complete_and_search)) {
                 editable_line_t *el = active_edit_line();
                 el->undo();
                 update_buff_pos(el);
@@ -3150,10 +3149,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             reader_history_search_t::mode_t mode =
                 (c == rl::history_token_search_backward || c == rl::history_token_search_forward)
                     ? reader_history_search_t::token
-                    : (c == rl::history_prefix_search_backward ||
-                       c == rl::history_prefix_search_forward)
-                          ? reader_history_search_t::prefix
-                          : reader_history_search_t::line;
+                : (c == rl::history_prefix_search_backward ||
+                   c == rl::history_prefix_search_forward)
+                    ? reader_history_search_t::prefix
+                    : reader_history_search_t::line;
 
             bool was_active_before = history_search.active();
 
@@ -3241,10 +3240,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword: {
             move_word_style_t style =
-                (c == rl::backward_kill_bigword
-                     ? move_word_style_whitespace
-                     : c == rl::backward_kill_path_component ? move_word_style_path_components
-                                                             : move_word_style_punctuation);
+                (c == rl::backward_kill_bigword          ? move_word_style_whitespace
+                 : c == rl::backward_kill_path_component ? move_word_style_path_components
+                                                         : move_word_style_punctuation);
             // Is this the same killring item as the last kill?
             bool newv = (rls.last_cmd != rl::backward_kill_word &&
                          rls.last_cmd != rl::backward_kill_path_component &&
@@ -3783,7 +3781,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
     // user presses enter.
-    if (this->is_repaint_needed() || conf.in != STDIN_FILENO) this->layout_and_repaint(L"prepare to execute");
+    if (this->is_repaint_needed() || conf.in != STDIN_FILENO)
+        this->layout_and_repaint(L"prepare to execute");
 
     // Finish any outstanding syntax highlighting (but do not wait forever).
     finish_highlighting_before_exec();

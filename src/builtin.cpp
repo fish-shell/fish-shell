@@ -4,7 +4,8 @@
 //
 // 1). Create a function in builtin.c with the following signature:
 //
-//     <tt>static maybe_t<int> builtin_NAME(parser_t &parser, io_streams_t &streams, wchar_t **argv)</tt>
+//     <tt>static maybe_t<int> builtin_NAME(parser_t &parser, io_streams_t &streams, wchar_t
+//     **argv)</tt>
 //
 // where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
 //
@@ -257,7 +258,8 @@ static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, wchar
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
-static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &streams,
+                                           wchar_t **argv) {
     int is_break = (std::wcscmp(argv[0], L"break") == 0);
     int argc = builtin_count_args(argv);
 

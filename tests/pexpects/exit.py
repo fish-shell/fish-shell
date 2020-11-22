@@ -50,9 +50,11 @@ expect_prompt()
 # Verify that asking to exit a second time does so.
 send("exit\r")
 
-for t in range(0,3):
+for t in range(0, 3):
     proc = subprocess.run(
-        ["pgrep", "-l", "-f", "sleep 11"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        ["pgrep", "-l", "-f", "sleep 11"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
         break

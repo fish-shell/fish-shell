@@ -206,10 +206,11 @@ bool is_windows_subsystem_for_linux() {
             int status = -1;
             if (info.dli_sname[0] == '_')
                 demangled = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
-            swprintf(
-                text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
-                status == 0 ? demangled : info.dli_sname == nullptr ? symbols[i] : info.dli_sname,
-                static_cast<char *>(callstack[i]) - static_cast<char *>(info.dli_saddr));
+            swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
+                     status == 0                 ? demangled
+                     : info.dli_sname == nullptr ? symbols[i]
+                                                 : info.dli_sname,
+                     static_cast<char *>(callstack[i]) - static_cast<char *>(info.dli_saddr));
             free(demangled);
         } else {
             swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s", i - skip_levels, symbols[i]);
@@ -227,7 +228,7 @@ bool is_windows_subsystem_for_linux() {
     debug_shared(msg_level, L"Backtrace:\n" + join_strings(bt, L'\n') + L'\n');
 }
 
-#else   // HAVE_BACKTRACE_SYMBOLS
+#else  // HAVE_BACKTRACE_SYMBOLS
 
 [[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int, int) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");

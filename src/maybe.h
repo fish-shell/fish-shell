@@ -156,7 +156,7 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
 
     // Construct a value in-place.
     template <class... Args>
-    void emplace(Args &&... args) {
+    void emplace(Args &&...args) {
         reset();
         impl_.filled = true;
         new (impl_.storage) T(std::forward<Args>(args)...);

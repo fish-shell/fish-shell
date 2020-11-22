@@ -79,7 +79,7 @@ def pexpect_error_type(err):
 
 
 class Message(object):
-    """ Some text either sent-to or received-from the spawned proc.
+    """Some text either sent-to or received-from the spawned proc.
 
     Attributes:
         dir: the message direction, either DIR_INPUT or DIR_OUTPUT
@@ -115,7 +115,7 @@ class Message(object):
 
 
 class SpawnedProc(object):
-    """ A process, talking to our ptty. This wraps pexpect.spawn.
+    """A process, talking to our ptty. This wraps pexpect.spawn.
 
     Attributes:
         colorize: whether error messages should have ANSI color escapes
@@ -127,15 +127,15 @@ class SpawnedProc(object):
     """
 
     def __init__(self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy()):
-        """ Construct from a name, timeout, and environment.
+        """Construct from a name, timeout, and environment.
 
-            Args:
-                name: the name of the executable to launch, as a key into the
-                      environment dictionary. By default this is 'fish' but may be
-                      other executables.
-                timeout: A timeout to pass to pexpect. This indicates how long to wait
-                         before giving up on some expected output.
-                env: a string->string dictionary, describing the environment variables.
+        Args:
+            name: the name of the executable to launch, as a key into the
+                  environment dictionary. By default this is 'fish' but may be
+                  other executables.
+            timeout: A timeout to pass to pexpect. This indicates how long to wait
+                     before giving up on some expected output.
+            env: a string->string dictionary, describing the environment variables.
         """
         if name not in env:
             raise ValueError("'name' variable not found in environment" % name)
@@ -155,8 +155,8 @@ class SpawnedProc(object):
         return now - self.start_time
 
     def send(self, s):
-        """ Cover over pexpect.spawn.send().
-            Send the given string to the tty, returning the number of bytes written.
+        """Cover over pexpect.spawn.send().
+        Send the given string to the tty, returning the number of bytes written.
         """
         res = self.spawn.send(s)
         when = self.time_since_first_message()
@@ -164,22 +164,22 @@ class SpawnedProc(object):
         return res
 
     def sendline(self, s):
-        """ Cover over pexpect.spawn.sendline().
-            Send the given string + linesep to the tty, returning the number of bytes written.
+        """Cover over pexpect.spawn.sendline().
+        Send the given string + linesep to the tty, returning the number of bytes written.
         """
         return self.send(s + os.linesep)
 
     def expect_re(self, pat, pat_desc=None, unmatched=None, **kwargs):
-        """ Cover over pexpect.spawn.expect().
-            Consume all "new" output of self.spawn until the given pattern is matched, or
-            the timeout is reached.
-            Note that output between the current position and the location of the match is
-            consumed as well.
-            The pattern is typically a regular expression in string form, but may also be
-            any of the types accepted by pexpect.spawn.expect().
-            If the 'unmatched' parameter is given, it is printed as part of the error message
-            of any failure.
-            On failure, this prints an error and exits.
+        """Cover over pexpect.spawn.expect().
+        Consume all "new" output of self.spawn until the given pattern is matched, or
+        the timeout is reached.
+        Note that output between the current position and the location of the match is
+        consumed as well.
+        The pattern is typically a regular expression in string form, but may also be
+        any of the types accepted by pexpect.spawn.expect().
+        If the 'unmatched' parameter is given, it is printed as part of the error message
+        of any failure.
+        On failure, this prints an error and exits.
         """
         try:
             self.spawn.expect(pat, **kwargs)
@@ -201,15 +201,15 @@ class SpawnedProc(object):
         return self.expect_re(re.escape(s), **kwargs)
 
     def expect_prompt(self, *args, increment=True, **kwargs):
-        """ Convenience function which matches some text and then a prompt.
-            Match the given positional arguments as expect_re, and then look
-            for a prompt.
-            If increment is set, then this should be a new prompt and the prompt counter
-            should be bumped; otherwise this is not a new prompt.
-            Returns None on success, and exits on failure.
-            Example:
-               sp.sendline("echo hello world")
-               sp.expect_prompt("hello world")
+        """Convenience function which matches some text and then a prompt.
+        Match the given positional arguments as expect_re, and then look
+        for a prompt.
+        If increment is set, then this should be a new prompt and the prompt counter
+        should be bumped; otherwise this is not a new prompt.
+        Returns None on success, and exits on failure.
+        Example:
+           sp.sendline("echo hello world")
+           sp.expect_prompt("hello world")
         """
         if args:
             self.expect_re(*args, **kwargs)
@@ -221,10 +221,10 @@ class SpawnedProc(object):
         )
 
     def report_exception_and_exit(self, pat, unmatched, err):
-        """ Things have gone badly.
-            We have an exception 'err', some pexpect.ExceptionPexpect.
-            Report it to stdout, along with the offending call site.
-            If 'unmatched' is set, print it to stdout.
+        """Things have gone badly.
+        We have an exception 'err', some pexpect.ExceptionPexpect.
+        Report it to stdout, along with the offending call site.
+        If 'unmatched' is set, print it to stdout.
         """
         colors = self.colors()
         failtype = pexpect_error_type(err)

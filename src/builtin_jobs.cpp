@@ -129,14 +129,11 @@ maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **arg
     bool print_last = false;
 
     static const wchar_t *const short_options = L":cghlpq";
-    static const struct woption long_options[] = {{L"command", no_argument, nullptr, 'c'},
-                                                  {L"group", no_argument, nullptr, 'g'},
-                                                  {L"help", no_argument, nullptr, 'h'},
-                                                  {L"last", no_argument, nullptr, 'l'},
-                                                  {L"pid", no_argument, nullptr, 'p'},
-                                                  {L"quiet", no_argument, nullptr, 'q'},
-                                                  {L"query", no_argument, nullptr, 'q'},
-                                                  {nullptr, 0, nullptr, 0}};
+    static const struct woption long_options[] = {
+        {L"command", no_argument, nullptr, 'c'}, {L"group", no_argument, nullptr, 'g'},
+        {L"help", no_argument, nullptr, 'h'},    {L"last", no_argument, nullptr, 'l'},
+        {L"pid", no_argument, nullptr, 'p'},     {L"quiet", no_argument, nullptr, 'q'},
+        {L"query", no_argument, nullptr, 'q'},   {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;

@@ -199,8 +199,9 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
 
 /// Define a function. Calls into `function.cpp` to perform the heavy lifting of defining a
 /// function.
-maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
-                     const parsed_source_ref_t &source, const ast::block_statement_t &func_node) {
+maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
+                              const wcstring_list_t &c_args, const parsed_source_ref_t &source,
+                              const ast::block_statement_t &func_node) {
     assert(source && "Missing source in builtin_function");
     // The wgetopt function expects 'function' as the first argument. Make a new wcstring_list with
     // that property. This is needed because this builtin has a different signature than the other

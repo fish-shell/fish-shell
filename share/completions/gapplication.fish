@@ -9,4 +9,4 @@ complete -f -c gapplication -n __fish_use_subcommand -a list-actions -d "List av
 complete -f -c gapplication -n __fish_use_subcommand -a action -d "Activate an action"
 
 # Arguments of help command
-complete -f -c gapplication -n "__fish_seen_subcommand_from help" -a "help version list-apps launch list-actions action" -d "Command"
+complete -f -c gapplication -n "__fish_seen_subcommand_from help" -a "help version list-apps launch list-actions action" -d Command

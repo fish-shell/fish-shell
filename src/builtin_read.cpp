@@ -489,8 +489,9 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **arg
         int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
         if (stream_stdin_is_a_tty && !opts.split_null) {
             // Read interactively using reader_readline(). This does not support splitting on null.
-            exit_res = read_interactive(parser, buff, opts.nchars, opts.shell, opts.silent,
-                                        opts.prompt, opts.right_prompt, opts.commandline, streams.stdin_fd);
+            exit_res =
+                read_interactive(parser, buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
+                                 opts.right_prompt, opts.commandline, streams.stdin_fd);
         } else if (!opts.nchars && !stream_stdin_is_a_tty &&
                    lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
             exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);

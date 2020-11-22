@@ -29,7 +29,7 @@ function __fish_print_pipestatus --description "Print pipestatus for prompt"
             set last_status_string " "$status_color$last_status
         end
         printf "%s" $brace_sep_color $left_brace \
-            $status_color $last_pipestatus_string  \
+            $status_color $last_pipestatus_string \
             $brace_sep_color $right_brace $last_status_string (set_color normal)
     end
 end

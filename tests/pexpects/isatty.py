@@ -18,11 +18,13 @@ expect_prompt()
 sendline("test -t 0; echo $status")
 expect_prompt("0")
 
-sendline("""function t
+sendline(
+    """function t
 test -t 0 && echo stdin
 test -t 1 && echo stdout
 test -t 2 && echo stderr
-end""")
+end"""
+)
 expect_prompt()
 
 sendline("t")

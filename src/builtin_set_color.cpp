@@ -33,7 +33,8 @@
 
 class parser_t;
 
-static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool italics, bool dim, bool reverse, rgb_color_t bg) {
+static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool italics, bool dim,
+                            bool reverse, rgb_color_t bg) {
     if (bold && enter_bold_mode) {
         // These casts are needed to work with different curses implementations.
         writembs_nofail(outp, tparm(const_cast<char *>(enter_bold_mode)));
@@ -59,11 +60,10 @@ static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool i
     if (!bg.is_none() && bg.is_normal()) {
         writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
     }
-
 }
 
-
-static void print_colors(io_streams_t &streams, bool bold, bool underline, bool italics, bool dim, bool reverse, rgb_color_t bg) {
+static void print_colors(io_streams_t &streams, bool bold, bool underline, bool italics, bool dim,
+                         bool reverse, rgb_color_t bg) {
     outputter_t outp;
     for (const auto &color_name : rgb_color_t::named_color_names()) {
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
@@ -134,7 +134,8 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t 
     }
 
     const wchar_t *bgcolor = nullptr;
-    bool bold = false, underline = false, italics = false, dim = false, reverse = false, print = false;
+    bool bold = false, underline = false, italics = false, dim = false, reverse = false,
+         print = false;
 
     // Parse options to obtain the requested operation and the modifiers.
     int opt;

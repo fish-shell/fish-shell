@@ -197,7 +197,7 @@ void accept_field_visitor(FieldVisitor &v, bool /*reverse*/, Field &field) {
 
 // Call visit_field on visitor \p v, for the field \p field and also \p rest.
 template <typename FieldVisitor, typename Field, typename... Rest>
-void accept_field_visitor(FieldVisitor &v, bool reverse, Field &field, Rest &... rest) {
+void accept_field_visitor(FieldVisitor &v, bool reverse, Field &field, Rest &...rest) {
     if (!reverse) visit_1_field(v, field);
     accept_field_visitor<FieldVisitor, Rest...>(v, reverse, rest...);
     if (reverse) visit_1_field(v, field);

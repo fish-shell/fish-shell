@@ -7,7 +7,9 @@ sendline, expect_prompt, expect_str = sp.sendline, sp.expect_prompt, sp.expect_s
 # Test fish_postexec and $status_generation for interactive shells.
 expect_prompt()
 
-sendline("function test_fish_postexec --on-event fish_postexec; printf 'pipestatus:%s, generation:%d, command:%s\\n' (string join '|' $pipestatus) $status_generation $argv; end")
+sendline(
+    "function test_fish_postexec --on-event fish_postexec; printf 'pipestatus:%s, generation:%d, command:%s\\n' (string join '|' $pipestatus) $status_generation $argv; end"
+)
 expect_prompt()
 
 generation = 1
@@ -38,7 +40,9 @@ expect_prompt()
 
 # multiple backgrounded jobs
 sendline("sleep 1000 &; sleep 2000 &")
-expect_str("pipestatus:0|1, generation:%d, command:sleep 1000 &; sleep 2000 &" % generation)
+expect_str(
+    "pipestatus:0|1, generation:%d, command:sleep 1000 &; sleep 2000 &" % generation
+)
 expect_prompt()
 
 # valid variable assignment
@@ -48,18 +52,25 @@ expect_prompt()
 
 # valid variable assignment with background job
 sendline("set foo bar; sleep 1000 &")
-expect_str("pipestatus:0|1, generation:%d, command:set foo bar; sleep 1000 &" % generation)
+expect_str(
+    "pipestatus:0|1, generation:%d, command:set foo bar; sleep 1000 &" % generation
+)
 expect_prompt()
 
 # Increments $status_generation if any job was foreground.
 sendline("false|true; sleep 1000 &")
 generation += 1
-expect_str("pipestatus:1|0, generation:%d, command:false|true; sleep 1000 &" % generation)
+expect_str(
+    "pipestatus:1|0, generation:%d, command:false|true; sleep 1000 &" % generation
+)
 expect_prompt()
 
 sendline("sleep 1000 &; true|false|true")
 generation += 1
-expect_str("pipestatus:0|1|0, generation:%d, command:sleep 1000 &; true|false|true" % generation)
+expect_str(
+    "pipestatus:0|1|0, generation:%d, command:sleep 1000 &; true|false|true"
+    % generation
+)
 expect_prompt()
 
 # Increments $status_generation for empty if/while blocks.
@@ -83,7 +94,9 @@ expect_prompt()
 # This is an implementation detail, but the test case should prevent regressions.
 sendline("function fail; false; end")
 generation += 1
-expect_str("pipestatus:0, generation:%d, command:function fail; false; end" % generation)
+expect_str(
+    "pipestatus:0, generation:%d, command:function fail; false; end" % generation
+)
 expect_prompt()
 
 # or an invalid variable assignment
@@ -111,15 +124,24 @@ expect_prompt()
 
 # Or begin/end block with only backgrounded jobs.
 sendline("begin; sleep 200 &; sleep 400 &; end")
-expect_str("pipestatus:0|1|0, generation:%d, command:begin; sleep 200 &; sleep 400 &; end" % generation)
+expect_str(
+    "pipestatus:0|1|0, generation:%d, command:begin; sleep 200 &; sleep 400 &; end"
+    % generation
+)
 expect_prompt()
 
 # Or a combination of begin/end block and backgrounded job.
 sendline("begin; sleep 200 &; end; sleep 400 &")
-expect_str("pipestatus:0|1|0, generation:%d, command:begin; sleep 200 &; end; sleep 400 &" % generation)
+expect_str(
+    "pipestatus:0|1|0, generation:%d, command:begin; sleep 200 &; end; sleep 400 &"
+    % generation
+)
 expect_prompt()
 
 # Or a combination with variable assignments
 sendline("begin; set foo bar; sleep 1000 &; end; set bar baz; sleep 2000 &")
-expect_str("pipestatus:0|1|0, generation:%d, command:begin; set foo bar; sleep 1000 &; end; set bar baz; sleep 2000 &" % generation)
+expect_str(
+    "pipestatus:0|1|0, generation:%d, command:begin; set foo bar; sleep 1000 &; end; set bar baz; sleep 2000 &"
+    % generation
+)
 expect_prompt()

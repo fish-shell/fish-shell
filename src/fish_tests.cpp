@@ -1327,7 +1327,7 @@ using test_list_t = std::vector<test_t>;
 
 // Add a new test to a test list based on a series of ints and texts.
 template <typename... Types>
-void add_test(test_list_t *v, const Types &... types) {
+void add_test(test_list_t *v, const Types &...types) {
     segment_t segments[] = {types...};
     v->emplace_back(std::begin(segments), std::end(segments));
 }

@@ -3,60 +3,29 @@ Guidelines For Developers
 
 This document provides guidelines for making changes to the fish-shell
 project. This includes rules for how to format the code, naming
-conventions, et cetera. Generally known as the style of the code.
+conventions, et cetera.
 
-See the bottom of this document for help on installing the linting and
-style reformatting tools discussed in the following sections.
+In short:
 
-Fish source should limit the C++ features it uses to those available in
-C++11. It should not use exceptions.
+- Be conservative in what you need (``C++11``, few dependencies)
+- Use automated tools to help you (including ``make test``, ``build_tools/style.fish`` and ``make lint``)
 
-Before introducing a new dependency, please make it optional with
-graceful failure if possible. Add any new dependencies to the README.rst
-under the *Running* and/or *Building* sections.
+General
+-------
 
-Versioning
-----------
+Fish uses C++11. Newer C++ features should not be used to make it possible to use on older systems.
 
-The fish version is constructed by the *build_tools/git_version_gen.sh*
-script. For developers the version is the branch name plus the output of
-``git describe --always --dirty``. Normally the main part of the version
-will be the closest annotated tag. Which itself is usually the most
-recent release number (e.g., ``2.6.0``).
+It does not use exceptions, they are disabled at build time with ``-fno-exceptions``.
 
-Include What You Use
---------------------
+Don't introduce new dependencies unless absolutely necessary, and if you do,
+please make it optional with graceful failure if possible.
+Add any new dependencies to the README.rst under the *Running* and/or *Building* sections.
 
-You should not depend on symbols being visible to a ``*.cpp`` module
-from ``#include`` statements inside another header file. In other words
-if your module does ``#include "common.h"`` and that header does
-``#include "signal.h"`` your module should not assume the sub-include is
-present. It should instead directly ``#include "signal.h"`` if it needs
-any symbol from that header. That makes the actual dependencies much
-clearer. It also makes it easy to modify the headers included by a
-specific header file without having to worry that will break any module
-(or header) that includes a particular header.
+This also goes for completion scripts and functions - if at all possible, they should only use
+POSIX-compatible invocations of any tools, and no superfluous dependencies.
 
-To help enforce this rule the ``make lint`` (and ``make lint-all``)
-command will run the
-`include-what-you-use <https://include-what-you-use.org/>`__ tool. You
-can find the IWYU project on
-`github <https://github.com/include-what-you-use/include-what-you-use>`__.
-
-To install the tool on OS X you’ll need to add a
-`formula <https://github.com/jasonmp85/homebrew-iwyu>`__ then install
-it:
-
-::
-
-   brew tap jasonmp85/iwyu
-   brew install iwyu
-
-On Ubuntu you can install it via ``apt-get``:
-
-::
-
-   sudo apt-get install iwyu
+E.g. some completions deal with JSON data. In those it's preferable to use python to handle it,
+as opposed to ``jq``, because fish already optionally uses python elsewhere. (It also happens to be quite a bit *faster*)
 
 Lint Free Code
 --------------
@@ -65,10 +34,6 @@ Automated analysis tools like cppcheck and oclint can point out
 potential bugs or code that is extremely hard to understand. They also
 help ensure the code has a consistent style and that it avoids patterns
 that tend to confuse people.
-
-Ultimately we want lint free code. However, at the moment a lot of
-cleanup is required to reach that goal. For now simply try to avoid
-introducing new lint.
 
 To make linting the code easy there are two make targets: ``lint`` and
 ``lint-all``. The latter does exactly what the name implies. The former
@@ -79,9 +44,6 @@ Fish has custom cppcheck rules in the file ``.cppcheck.rule``. These
 help catch mistakes such as using ``wcwidth()`` rather than
 ``fish_wcwidth()``. Please add a new rule if you find similar mistakes
 being made.
-
-Fish also depends on ``diff`` and `pexpect
-<https://pexpect.readthedocs.io/en/stable/>`__ for its tests.
 
 Dealing With Lint Warnings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -310,6 +272,8 @@ fish_tests.cpp is mostly useful for unit tests - if you wish to test that a func
 
 The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity.
 
+Fish also depends on ``diff`` and `pexpect
+<https://pexpect.readthedocs.io/en/stable/>`__ for its tests.
 
 Local testing
 ~~~~~~~~~~~~~
@@ -486,3 +450,46 @@ recommended deletions.
 Read the `translations
 wiki <https://github.com/fish-shell/fish-shell/wiki/Translations>`__ for
 more information.
+
+Versioning
+----------
+
+The fish version is constructed by the *build_tools/git_version_gen.sh*
+script. For developers the version is the branch name plus the output of
+``git describe --always --dirty``. Normally the main part of the version
+will be the closest annotated tag. Which itself is usually the most
+recent release number (e.g., ``2.6.0``).
+
+Include What You Use
+--------------------
+
+You should not depend on symbols being visible to a ``*.cpp`` module
+from ``#include`` statements inside another header file. In other words
+if your module does ``#include "common.h"`` and that header does
+``#include "signal.h"`` your module should not assume the sub-include is
+present. It should instead directly ``#include "signal.h"`` if it needs
+any symbol from that header. That makes the actual dependencies much
+clearer. It also makes it easy to modify the headers included by a
+specific header file without having to worry that will break any module
+(or header) that includes a particular header.
+
+To help enforce this rule the ``make lint`` (and ``make lint-all``)
+command will run the
+`include-what-you-use <https://include-what-you-use.org/>`__ tool. You
+can find the IWYU project on
+`github <https://github.com/include-what-you-use/include-what-you-use>`__.
+
+To install the tool on OS X you’ll need to add a
+`formula <https://github.com/jasonmp85/homebrew-iwyu>`__ then install
+it:
+
+::
+
+   brew tap jasonmp85/iwyu
+   brew install iwyu
+
+On Ubuntu you can install it via ``apt-get``:
+
+::
+
+   sudo apt-get install iwyu

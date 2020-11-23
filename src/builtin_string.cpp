@@ -143,7 +143,6 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool entire_valid = false;
     bool filter_valid = false;
     bool ignore_case_valid = false;
-    bool import_vars_valid = false;
     bool index_valid = false;
     bool invert_valid = false;
     bool left_valid = false;
@@ -167,7 +166,6 @@ using options_t = struct options_t {  //!OCLINT(too many fields)
     bool entire = false;
     bool filter = false;
     bool ignore_case = false;
-    bool import_vars = false;
     bool index = false;
     bool invert_match = false;
     bool left = false;
@@ -355,16 +353,6 @@ static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_I(wchar_t **argv, parser_t &parser, io_streams_t &streams,
-                         const wgetopter_t &w, options_t *opts) {
-    if (opts->import_vars_valid) {
-        opts->import_vars = true;
-        return STATUS_CMD_OK;
-    }
-    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
-    return STATUS_INVALID_ARGS;
-}
-
 static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->length_valid) {
@@ -509,7 +497,6 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->entire_valid) short_opts.append(L"e");
     if (opts->filter_valid) short_opts.append(L"f");
     if (opts->ignore_case_valid) short_opts.append(L"i");
-    if (opts->import_vars_valid) short_opts.append(L"I");
     if (opts->index_valid) short_opts.append(L"n");
     if (opts->invert_valid) short_opts.append(L"v");
     if (opts->left_valid) short_opts.append(L"l");
@@ -533,26 +520,37 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust share/completions/string.fish when `string` options change
-static const struct woption long_options[] = {
-    {L"all", no_argument, nullptr, 'a'},          {L"chars", required_argument, nullptr, 'c'},
-    {L"count", required_argument, nullptr, 'n'},  {L"entire", no_argument, nullptr, 'e'},
-    {L"end", required_argument, nullptr, 'e'},    {L"filter", no_argument, nullptr, 'f'},
-    {L"ignore-case", no_argument, nullptr, 'i'},  {L"import", no_argument, nullptr, 'I'},
-    {L"index", no_argument, nullptr, 'n'},        {L"invert", no_argument, nullptr, 'v'},
-    {L"left", no_argument, nullptr, 'l'},         {L"length", required_argument, nullptr, 'l'},
-    {L"max", required_argument, nullptr, 'm'},    {L"no-empty", no_argument, nullptr, 'n'},
-    {L"no-newline", no_argument, nullptr, 'N'},   {L"no-quoted", no_argument, nullptr, 'n'},
-    {L"quiet", no_argument, nullptr, 'q'},        {L"regex", no_argument, nullptr, 'r'},
-    {L"right", no_argument, nullptr, 'r'},        {L"start", required_argument, nullptr, 's'},
-    {L"style", required_argument, nullptr, 1},    {L"no-trim-newlines", no_argument, nullptr, 'N'},
-    {L"fields", required_argument, nullptr, 'f'}, {L"allow-empty", no_argument, nullptr, 'a'},
-    {L"width", required_argument, nullptr, 'w'},  {nullptr, 0, nullptr, 0}};
+static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'},
+                                              {L"chars", required_argument, nullptr, 'c'},
+                                              {L"count", required_argument, nullptr, 'n'},
+                                              {L"entire", no_argument, nullptr, 'e'},
+                                              {L"end", required_argument, nullptr, 'e'},
+                                              {L"filter", no_argument, nullptr, 'f'},
+                                              {L"ignore-case", no_argument, nullptr, 'i'},
+                                              {L"index", no_argument, nullptr, 'n'},
+                                              {L"invert", no_argument, nullptr, 'v'},
+                                              {L"left", no_argument, nullptr, 'l'},
+                                              {L"length", required_argument, nullptr, 'l'},
+                                              {L"max", required_argument, nullptr, 'm'},
+                                              {L"no-empty", no_argument, nullptr, 'n'},
+                                              {L"no-newline", no_argument, nullptr, 'N'},
+                                              {L"no-quoted", no_argument, nullptr, 'n'},
+                                              {L"quiet", no_argument, nullptr, 'q'},
+                                              {L"regex", no_argument, nullptr, 'r'},
+                                              {L"right", no_argument, nullptr, 'r'},
+                                              {L"start", required_argument, nullptr, 's'},
+                                              {L"style", required_argument, nullptr, 1},
+                                              {L"no-trim-newlines", no_argument, nullptr, 'N'},
+                                              {L"fields", required_argument, nullptr, 'f'},
+                                              {L"allow-empty", no_argument, nullptr, 'a'},
+                                              {L"width", required_argument, nullptr, 'w'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
-    {'f', handle_flag_f}, {'i', handle_flag_i}, {'I', handle_flag_I}, {'l', handle_flag_l},
-    {'m', handle_flag_m}, {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r},
-    {'s', handle_flag_s}, {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
+    {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
+    {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
+    {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wchar_t **argv,
@@ -1039,27 +1037,21 @@ class pcre2_matcher_t : public string_matcher_t {
             return false;
         }
 
-        maybe_t<regex_importer_t> var_importer;
-        if (opts.import_vars) {
-            var_importer.emplace(this->parser, arg, this->regex);
+        regex_importer_t var_importer(this->parser, arg, this->regex);
 
-            // We must manually init the importer rather than relegating this to the constructor
-            // because it will validate the names it is importing to make sure they're all legal and
-            // writeable.
-            if (!var_importer->init()) {
-                // TODO: Report error
-                return false;
-            }
+        // We must manually init the importer rather than relegating this to the constructor
+        // because it will validate the names it is importing to make sure they're all legal and
+        // writeable.
+        if (!var_importer.init()) {
+            // TODO: Report error
+            return false;
         }
 
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
         auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                regex.match, nullptr));
-
-        if (opts.import_vars) {
-            var_importer->import_vars(rc == match_result_t::match);
-        }
+        var_importer.import_vars(rc == match_result_t::match);
 
         switch (rc) {
             case match_result_t::pcre2_error:
@@ -1091,8 +1083,8 @@ class pcre2_matcher_t : public string_matcher_t {
             }
 
             // Call import_vars() before modifying the ovector
-            if (rc == match_result_t::match && opts.import_vars) {
-                var_importer->import_vars(true /* match found */);
+            if (rc == match_result_t::match) {
+                var_importer.import_vars(true /* match found */);
             }
 
             if (rc == match_result_t::no_match) {
@@ -1112,7 +1104,6 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     opts.all_valid = true;
     opts.entire_valid = true;
     opts.ignore_case_valid = true;
-    opts.import_vars_valid = true;
     opts.invert_valid = true;
     opts.quiet_valid = true;
     opts.regex_valid = true;
@@ -1125,11 +1116,6 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     if (opts.entire && opts.index) {
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
                                   _(L"--entire and --index are mutually exclusive"));
-        return STATUS_INVALID_ARGS;
-    }
-
-    if (opts.import_vars && !opts.regex) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, _(L"--import requires --regex"));
         return STATUS_INVALID_ARGS;
     }
 

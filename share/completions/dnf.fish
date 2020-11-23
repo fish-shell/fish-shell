@@ -261,6 +261,30 @@ complete -c dnf -n "__fish_seen_subcommand_from upgrade" -xa "(__dnf_list_instal
 complete -c dnf -n __fish_use_subcommand -xa upgrade-minimal -d "Updates packages"
 complete -c dnf -n "__fish_seen_subcommand_from upgrade-minimal" -xa "(__dnf_list_installed_packages)"
 
+# Versionlock
+if test -f /etc/dnf/plugins/versionlock.conf
+    function __dnf_current_versionlock_list
+        dnf versionlock list | grep -v metadata
+    end
+
+    complete -c dnf -n __fish_use_subcommand -xa versionlock -d "DNF versionlock plugin"
+    # - add
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa add -d "Add  a versionlock for all available packages matching the spec"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from add" -xa "(__dnf_list_installed_packages)"
+    # - exclude
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa exclude -d "Add an exclude (within  versionlock) for the available packages matching the spec"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from exclude" -xa "(__dnf_list_installed_packages)"
+    # - delete
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa delete -d "Remove any matching versionlock entries"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from delete" -xa "(__dnf_current_versionlock_list)"
+    # - list
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa list -d "List the current versionlock entries"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from list" -xa "(false)"
+    # - clear
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa clear -d "Remove all versionlock entries"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from clear" -xa "(false)"
+end
+
 # Options:
 # Using __fish_no_arguments here so that users are not completely overloaded with
 #   available options when using subcommands (e.g. repoquery) (40 vs 100ish)

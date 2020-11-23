@@ -219,6 +219,15 @@ include(cmake/Install.cmake)
 # Mac app.
 include(cmake/MacApp.cmake)
 
+# ThreadSanitizer likes to muck with signal handlers, which interferes
+# with fish_test_helper printing the ignored signal mask.
+# Ensure fish_test_helper does not use TSan.
+# Note the environment var is CXXFLAGS, but the CMake var is CMAKE_CXX_FLAGS.
+if (CMAKE_CXX_FLAGS MATCHES ".*-fsanitize=thread.*")
+  target_compile_options(fish_test_helper PRIVATE "-fno-sanitize=all")
+  target_link_libraries(fish_test_helper "-fno-sanitize=all")
+endif()
+
 # Lint targets
 # This could be implemented as target properties, but the script has the useful feature of only
 # checking the currently-staged commands

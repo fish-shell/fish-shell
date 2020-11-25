@@ -907,7 +907,7 @@ class pcre2_matcher_t : public string_matcher_t {
         /// Enumerates the named groups in the compiled PCRE2 expression, validates the names of
         /// the groups as variable names, and initializes their value (overriding any previous
         /// contents).
-        bool init() {
+        bool init(io_streams_t &streams) {
             PCRE2_SPTR name_table;
             uint32_t name_entry_size;
             uint32_t name_count;
@@ -938,9 +938,13 @@ class pcre2_matcher_t : public string_matcher_t {
             for (uint32_t i = 0; i < name_count; ++i) {
                 auto &name_entry = names[i * name_entry_size];
 
-                // TODO: Validate names to ensure compliance with fish variable requirements, make
-                // sure no special read-only variables are being set. Return false in case of
-                // validation failure.
+                if (env_var_t::flags_for(name_entry.name) & env_var_t::flag_read_only) {
+                    // Modification of read-only variables is not allowed
+                    streams.err.append_format(
+                        L"Modification of read-only variable \"%S\" is not allowed\n",
+                        name_entry.name);
+                    return false;
+                }
                 matches_.emplace(name_entry.name, std::vector<wcstring>{});
             }
 
@@ -1042,8 +1046,8 @@ class pcre2_matcher_t : public string_matcher_t {
         // We must manually init the importer rather than relegating this to the constructor
         // because it will validate the names it is importing to make sure they're all legal and
         // writeable.
-        if (!var_importer.init()) {
-            // TODO: Report error
+        if (!var_importer.init(streams)) {
+            // init() directly reports errors itself so it can specify the problem variable
             return false;
         }
 

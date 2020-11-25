@@ -34,3 +34,7 @@ printf "%s\n" $punctuation
 # CHECK:
 # CHECK: ,
 # CHECK: !
+
+# Verify read-only variables may not be imported
+echo hello | string match -rq "(?<version>.*)"
+# CHECKERR: Modification of read-only variable "version" is not allowed

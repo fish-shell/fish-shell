@@ -123,6 +123,23 @@ class Line(object):
         self.number = number
         self.file = file
 
+    def __hash__(self):
+        # Chosen by fair diceroll
+        # No, just kidding.
+        # HACK: We pass this to the Sequencematcher, which puts the Checks into a dict.
+        # To force it to match the regexes, we return a hash collision intentionally,
+        # so it falls back on __eq__().
+        #
+        # CheckCmd has the same thing.
+        return 0
+
+    def __eq__(self, other):
+        if isinstance(other, CheckCmd):
+            return other.regex.match(self.text)
+        if isinstance(other, Line):
+            return self.text == other.text and self.number == other.number and self.file == other.file
+        raise NotImplementedError
+
     def subline(self, text):
         """ Return a substring of our line with the given text, preserving number and file. """
         return Line(text, self.number, self.file)
@@ -352,17 +369,13 @@ class TestRun(object):
         checkq = checks[::-1]
         usedlines = []
         usedchecks = []
-        text1 = []
-        text2 = []
         mismatches = []
         while lineq and checkq:
             line = lineq[-1]
             check = checkq[-1]
-            if check.regex.match(line.text):
+            if check == line:
                 # This line matched this checker, continue on.
-                text1.append(line.escaped_text())
                 usedlines.append(line)
-                text2.append(line.escaped_text())
                 usedchecks.append(check)
                 lineq.pop()
                 checkq.pop()
@@ -370,19 +383,7 @@ class TestRun(object):
                 # Skip all whitespace input lines.
                 lineq.pop()
             else:
-                text1.append(line.escaped_text())
                 usedlines.append(line)
-                # HACK: Theoretically it's possible that
-                # the line is the same as the CHECK regex but doesn't match
-                # (e.g. both are `\s+` or something).
-                # Since we only need this for the SequenceMatcher to *compare*,
-                # we give it a fake non-matching check in those cases.
-                etext = check.line.escaped_text()
-                if etext != line.escaped_text():
-                    text2.append(etext)
-                else:
-                    text2.append(" " + etext)
-
                 usedchecks.append(check)
                 mismatches.append((line, check))
                 # Failed to match.
@@ -396,15 +397,13 @@ class TestRun(object):
         # Store the remaining lines for the diff
         for i in lineq[::-1]:
             if not i.is_empty_space():
-                text1.append(i.escaped_text())
                 usedlines.append(i)
         # Store remaining checks for the diff
         for i in checkq[::-1]:
-            text2.append(i.line.escaped_text())
             usedchecks.append(i)
 
         # Do a SequenceMatch! This gives us a diff-like thing.
-        diff = SequenceMatcher(a=text1, b=text2)
+        diff = SequenceMatcher(a=usedlines, b=usedchecks, autojunk=False)
         # If there's a mismatch or still lines or checkers, we have a failure.
         # Otherwise it's success.
         if mismatches:
@@ -483,6 +482,26 @@ class CheckCmd(object):
         self.line = line
         self.type = checktype
         self.regex = regex
+
+    def __hash__(self):
+        # HACK: We pass this to the Sequencematcher, which puts the Checks into a dict.
+        # To force it to match the regexes, we return a hash collision intentionally,
+        # so it falls back on __eq__().
+        #
+        # Line has the same thing.
+        return 0
+
+    def __eq__(self, other):
+        # "Magical" comparison with lines and strings.
+        # Typically I wouldn't use this, but it allows us to check if a line matches any check in a dict or list via
+        # the `in` operator.
+        if isinstance(other, CheckCmd):
+            return self.line == other.line and self.type == other.type and self.regex == other.regex
+        if isinstance(other, Line):
+            return self.regex.match(other.text)
+        if isinstance(other, str):
+            return self.regex.match(other)
+        raise NotImplementedError
 
     @staticmethod
     def parse(line, checktype):

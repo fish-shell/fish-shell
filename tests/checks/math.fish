@@ -99,10 +99,19 @@ not math 'ncr(1)'
 # CHECKERR: math: Error: Too few arguments
 # CHECKERR: 'ncr(1)'
 # CHECKERR:       ^
+
+# There is no "max" function.
 not math 'max()'
-# CHECKERR: math: Error: Unexpected token
+# CHECKERR: math: Error: Unknown function
 # CHECKERR: 'max()'
 # CHECKERR:    ^
+
+math n + 4
+# CHECKERR: math: Error: Unknown function
+# CHECKERR: 'n + 4'
+# CHECKERR:  ^
+
+
 not math 'sin()'
 # CHECKERR: math: Error: Too few arguments
 # CHECKERR: 'sin()'

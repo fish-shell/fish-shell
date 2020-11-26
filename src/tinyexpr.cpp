@@ -436,8 +436,10 @@ static te_expr *base(state *s) {
             break;
         default:
             ret = new_expr(0, nullptr);
-            s->type = TOK_ERROR;
-            s->error = TE_ERROR_UNEXPECTED_TOKEN;
+            if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
+                s->type = TOK_ERROR;
+                s->error = TE_ERROR_UNEXPECTED_TOKEN;
+            }
             ret->value = NAN;
             break;
     }

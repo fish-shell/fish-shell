@@ -222,7 +222,7 @@ static const te_builtin *find_builtin(const char *name, int len) {
                                                    return std::strncmp(lhs.name, rhs, len) < 0;
                                                });
     // We need to compare again because we might have gotten the first "larger" element.
-    if (found != end && std::strncmp(found->name, name, len) == 0) return found;
+    if (found != end && std::strncmp(found->name, name, len) == 0 && found->name[len] == 0) return found;
     return nullptr;
 }
 

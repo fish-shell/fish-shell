@@ -38,6 +38,7 @@ Notable improvements and fixes
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
 -  ``type`` is now a builtin and therefore much faster (:issue:`7342`).
+-  ``string match --regex`` now imports named PCRE2 capture groups as fish variables (:issue:`7459`).
 
 Syntax changes and new commands
 -------------------------------

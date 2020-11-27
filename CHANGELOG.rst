@@ -138,7 +138,7 @@ Interactive improvements
 -  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (:issue:`7041`). 
 -  ``help`` works properly on MSYS2 (:issue:`7113`).
 -  Resuming a piped job by its number, like ``fg %1`` has been fixed (:issue:`7406`).
--  Commands run from key bindings now use the same tty modes as normal commands (#7483).
+-  Commands run from key bindings now use the same tty modes as normal commands (:issue:`7483`).
 
 
 New or improved bindings

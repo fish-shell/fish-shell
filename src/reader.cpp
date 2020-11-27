@@ -2462,7 +2462,6 @@ static std::shared_ptr<reader_data_t> reader_push_ret(parser_t &parser,
     if (reader_data_stack.size() == 1) {
         reader_interactive_init(parser);
     }
-    data->exec_prompt();
     return data;
 }
 

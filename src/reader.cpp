@@ -424,10 +424,14 @@ class reader_history_search_t {
 /// The result of an autosuggestion computation.
 struct autosuggestion_t {
     // The text to use, as an extension of the command line.
-    wcstring text;
+    wcstring text{};
 
     // The string which was searched for.
-    wcstring search_string;
+    wcstring search_string{};
+
+    // Whether the autosuggestion should be case insensitive.
+    // This is true for file-generated autosuggestions, but not for history.
+    bool icase{false};
 
     // Clear our contents.
     void clear() {
@@ -437,6 +441,10 @@ struct autosuggestion_t {
 
     // \return whether we have empty text.
     bool empty() const { return text.empty(); }
+
+    autosuggestion_t() = default;
+    autosuggestion_t(wcstring text, wcstring search_string, bool icase)
+        : text(std::move(text)), search_string(std::move(search_string)), icase(icase) {}
 };
 
 struct highlight_result_t {
@@ -1607,7 +1615,9 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
 
                 if (autosuggest_validate_from_history(item, working_directory, ctx)) {
                     // The command autosuggestion was handled specially, so we're done.
-                    return {searcher.current_string(), search_string};
+                    // History items are case-sensitive, see #3978.
+                    return autosuggestion_t{searcher.current_string(), search_string,
+                                            false /* icase */};
                 }
             }
         }
@@ -1634,7 +1644,8 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
             size_t cursor = cursor_pos;
             wcstring suggestion = completion_apply_to_command_line(
                 comp.completion, comp.flags, search_string, &cursor, true /* append only */);
-            return {std::move(suggestion), search_string};
+            // Normal completions are case-insensitive.
+            return autosuggestion_t{std::move(suggestion), search_string, true /* icase */};
         }
 
         return nothing;
@@ -1680,7 +1691,9 @@ void reader_data_t::update_autosuggestion() {
     // text avoid recomputing the autosuggestion.
     const editable_line_t &el = command_line;
     if (!autosuggestion.empty() &&
-        string_prefixes_string_case_insensitive(el.text(), autosuggestion.text)) {
+        (autosuggestion.icase
+             ? string_prefixes_string_case_insensitive(el.text(), autosuggestion.text)
+             : string_prefixes_string(el.text(), autosuggestion.text))) {
         return;
     }
 

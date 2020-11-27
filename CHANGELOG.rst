@@ -140,6 +140,7 @@ Interactive improvements
 -  ``help`` works properly on MSYS2 (:issue:`7113`).
 -  Resuming a piped job by its number, like ``fg %1`` has been fixed (:issue:`7406`).
 -  Commands run from key bindings now use the same tty modes as normal commands (:issue:`7483`).
+-  Autosuggestions from history are now case-sensitive (:issue:`3978`).
 
 
 New or improved bindings

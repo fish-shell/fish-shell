@@ -3654,7 +3654,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     using rl = readline_cmd_t;
     readline_loop_state_t rls{};
-    struct termios old_modes;
 
     // Suppress fish_trace during executing key bindings.
     // This is simply to reduce noise.
@@ -3672,6 +3671,23 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     history_search.reset();
 
+    // Get the current terminal modes. These will be restored when the function returns.
+    struct termios old_modes{};
+    if (tcgetattr(conf.in, &old_modes) == -1 && errno == EIO) redirect_tty_output();
+
+    // Set the new modes.
+    if (tcsetattr(conf.in, TCSANOW, &shell_modes) == -1) {
+        int err = errno;
+        if (err == EIO) redirect_tty_output();
+
+        // This check is required to work around certain issues with fish's approach to
+        // terminal control when launching interactive processes while in non-interactive
+        // mode. See #4178 for one such example.
+        if (err != ENOTTY || session_interactivity() != session_interactivity_t::not_interactive) {
+            wperror(L"tcsetattr");
+        }
+    }
+
     s_reset_abandoning_line(&screen, termsize_last().width);
     event_fire_generic(parser(), L"fish_prompt");
     exec_prompt();
@@ -3688,23 +3704,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     // Start out as initially dirty.
     force_exec_prompt_and_repaint = true;
-
-    // Get the current terminal modes. These will be restored when the function returns.
-    if (tcgetattr(conf.in, &old_modes) == -1 && errno == EIO) redirect_tty_output();
-
-    // Set the new modes.
-    if (tcsetattr(conf.in, TCSANOW, &shell_modes) == -1) {
-        int err = errno;
-        if (err == EIO) {
-            redirect_tty_output();
-        }
-        // This check is required to work around certain issues with fish's approach to
-        // terminal control when launching interactive processes while in non-interactive
-        // mode. See #4178 for one such example.
-        if (err != ENOTTY || session_interactivity() != session_interactivity_t::not_interactive) {
-            wperror(L"tcsetattr");
-        }
-    }
 
     while (!rls.finished && !check_exit_loop_maybe_warning(this)) {
         // Perhaps update the termsize. This is cheap if it has not changed.

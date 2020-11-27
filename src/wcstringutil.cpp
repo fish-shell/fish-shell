@@ -130,6 +130,97 @@ bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
                                                       proposed_suffix.c_str(), suffix_size) == 0;
 }
 
+/// Returns true if needle, represented as a subsequence, is contained within haystack.
+/// Note subsequence is not substring: "foo" is a subsequence of "follow" for example.
+static bool subsequence_in_string(const wcstring &needle, const wcstring &haystack) {
+    // Impossible if haystack is larger than string.
+    if (haystack.size() > haystack.size()) {
+        return false;
+    }
+
+    // Empty strings are considered to be subsequences of everything.
+    if (needle.empty()) {
+        return true;
+    }
+
+    auto ni = needle.begin();
+    for (auto hi = haystack.begin(); ni != needle.end() && hi != haystack.end(); ++hi) {
+        if (*ni == *hi) {
+            ++ni;
+        }
+    }
+    // We succeeded if we exhausted our sequence.
+    assert(ni <= needle.end());
+    return ni == needle.end();
+}
+
+string_fuzzy_match_t::string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first,
+                                           size_t distance_second)
+    : type(t), match_distance_first(distance_first), match_distance_second(distance_second) {}
+
+string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
+                                               const wcstring &match_against,
+                                               fuzzy_match_type_t limit_type) {
+    // Distances are generally the amount of text not matched.
+    string_fuzzy_match_t result(fuzzy_match_none, 0, 0);
+    size_t location;
+    if (limit_type >= fuzzy_match_exact && string == match_against) {
+        result.type = fuzzy_match_exact;
+    } else if (limit_type >= fuzzy_match_prefix && string_prefixes_string(string, match_against)) {
+        result.type = fuzzy_match_prefix;
+        assert(match_against.size() >= string.size());
+        result.match_distance_first = match_against.size() - string.size();
+    } else if (limit_type >= fuzzy_match_case_insensitive &&
+               wcscasecmp(string.c_str(), match_against.c_str()) == 0) {
+        result.type = fuzzy_match_case_insensitive;
+    } else if (limit_type >= fuzzy_match_prefix_case_insensitive &&
+               string_prefixes_string_case_insensitive(string, match_against)) {
+        result.type = fuzzy_match_prefix_case_insensitive;
+        assert(match_against.size() >= string.size());
+        result.match_distance_first = match_against.size() - string.size();
+    } else if (limit_type >= fuzzy_match_substring &&
+               (location = match_against.find(string)) != wcstring::npos) {
+        // String is contained within match against.
+        result.type = fuzzy_match_substring;
+        assert(match_against.size() >= string.size());
+        result.match_distance_first = match_against.size() - string.size();
+        result.match_distance_second = location;  // prefer earlier matches
+    } else if (limit_type >= fuzzy_match_substring_case_insensitive &&
+               (location = ifind(match_against, string, true)) != wcstring::npos) {
+        // A case-insensitive version of the string is in the match against.
+        result.type = fuzzy_match_substring_case_insensitive;
+        assert(match_against.size() >= string.size());
+        result.match_distance_first = match_against.size() - string.size();
+        result.match_distance_second = location;  // prefer earlier matches
+    } else if (limit_type >= fuzzy_match_subsequence_insertions_only &&
+               subsequence_in_string(string, match_against)) {
+        result.type = fuzzy_match_subsequence_insertions_only;
+        assert(match_against.size() >= string.size());
+        result.match_distance_first = match_against.size() - string.size();
+        // It would be nice to prefer matches with greater matching runs here.
+    }
+    return result;
+}
+
+template <typename T>
+static inline int compare_ints(T a, T b) {
+    if (a < b) return -1;
+    if (a == b) return 0;
+    return 1;
+}
+
+/// Compare types; if the types match, compare distances.
+int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
+    if (this->type != rhs.type) {
+        return compare_ints(this->type, rhs.type);
+    } else if (this->match_distance_first != rhs.match_distance_first) {
+        return compare_ints(this->match_distance_first, rhs.match_distance_first);
+    } else if (this->match_distance_second != rhs.match_distance_second) {
+        return compare_ints(this->match_distance_second, rhs.match_distance_second);
+    }
+    return 0;  // equal
+}
+
 template <bool Fuzzy, typename T>
 size_t ifind_impl(const T &haystack, const T &needle) {
     using char_t = typename T::value_type;

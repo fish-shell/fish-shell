@@ -12,6 +12,7 @@
 
 #include "common.h"
 #include "enum_set.h"
+#include "wcstringutil.h"
 
 struct completion_mode_t {
     /// If set, skip file completions.

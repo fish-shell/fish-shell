@@ -421,9 +421,22 @@ class reader_history_search_t {
     }
 };
 
-struct autosuggestion_result_t {
-    wcstring suggestion;
+/// The result of an autosuggestion computation.
+struct autosuggestion_t {
+    // The text to use, as an extension of the command line.
+    wcstring text;
+
+    // The string which was searched for.
     wcstring search_string;
+
+    // Clear our contents.
+    void clear() {
+        text.clear();
+        search_string.clear();
+    }
+
+    // \return whether we have empty text.
+    bool empty() const { return text.empty(); }
 };
 
 struct highlight_result_t {
@@ -499,8 +512,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool command_line_has_transient_edit = false;
     /// The most recent layout data sent to the screen.
     layout_data_t rendered_layout;
-    /// String containing the autosuggestion.
-    wcstring autosuggestion;
+    /// The current autosuggestion.
+    autosuggestion_t autosuggestion;
     /// Current pager.
     pager_t pager;
     /// The output of the pager.
@@ -623,7 +636,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void erase_substring(editable_line_t *el, size_t offset, size_t length);
     /// Replace the text of length @length at @offset by @replacement.
     void replace_substring(editable_line_t *el, size_t offset, size_t length,
-                           wcstring &&replacement);
+                           const wcstring &replacement);
     void push_edit(editable_line_t *el, edit_t &&edit);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
@@ -647,7 +660,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void completion_insert(const wcstring &val, size_t token_end, complete_flags_t flags);
 
     bool can_autosuggest() const;
-    void autosuggest_completed(autosuggestion_result_t result);
+    void autosuggest_completed(autosuggestion_t result);
     void update_autosuggestion();
     void accept_autosuggestion(bool full, bool single = false,
                                move_word_style_t style = move_word_style_punctuation);
@@ -894,7 +907,7 @@ bool reader_data_t::is_repaint_needed(const std::vector<highlight_spec_t> *mcolo
            check(focused_on_pager != last.focused_on_pager, L"focus") ||
            check(command_line.position() != last.position, L"position") ||
            check(history_search_text_if_active() != last.history_search_text, L"history search") ||
-           check(autosuggestion != last.autosuggestion, L"autosuggestion") ||
+           check(autosuggestion.text != last.autosuggestion, L"autosuggestion") ||
            check(left_prompt_buff != last.left_prompt_buff, L"left_prompt") ||
            check(mode_prompt_buff != last.mode_prompt_buff, L"mode_prompt") ||
            check(right_prompt_buff != last.right_prompt_buff, L"right_prompt") ||
@@ -916,7 +929,7 @@ layout_data_t reader_data_t::make_layout_data(maybe_t<highlight_list_t> mcolors)
     result.selection = selection;
     result.focused_on_pager = (active_edit_line() == &pager.search_field_line);
     result.history_search_text = history_search_text_if_active();
-    result.autosuggestion = autosuggestion;
+    result.autosuggestion = autosuggestion.text;
     result.left_prompt_buff = left_prompt_buff;
     result.mode_prompt_buff = mode_prompt_buff;
     result.right_prompt_buff = right_prompt_buff;
@@ -939,7 +952,7 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
         full_line = wcstring(cmd_line->text().length(), get_obfuscation_read_char());
     } else {
         // Combine the command and autosuggestion into one string.
-        full_line = combine_command_and_autosuggestion(cmd_line->text(), autosuggestion);
+        full_line = combine_command_and_autosuggestion(cmd_line->text(), autosuggestion.text);
     }
 
     // Copy the colors and extend them with autosuggestion color.
@@ -1419,7 +1432,7 @@ void reader_data_t::erase_substring(editable_line_t *el, size_t offset, size_t l
 }
 
 void reader_data_t::replace_substring(editable_line_t *el, size_t offset, size_t length,
-                                      wcstring &&replacement) {
+                                      const wcstring &replacement) {
     push_edit(el, edit_t(offset, length, replacement));
 }
 
@@ -1562,7 +1575,7 @@ static bool may_add_to_history(const wcstring &commandline_prefix) {
 
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
-static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
+static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
     parser_t &parser, const wcstring &search_string, size_t cursor_pos, history_t *history) {
     const uint32_t generation_count = read_generation_count();
     auto vars = parser.vars().snapshot();
@@ -1570,9 +1583,9 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     // TODO: suspicious use of 'history' here
     // This is safe because histories are immortal, but perhaps
     // this should use shared_ptr
-    return [=]() -> autosuggestion_result_t {
+    return [=]() -> autosuggestion_t {
         ASSERT_IS_BACKGROUND_THREAD();
-        autosuggestion_result_t nothing = {};
+        autosuggestion_t nothing = {};
         operation_context_t ctx = get_bg_context(vars, generation_count);
         if (ctx.check_cancel()) {
             return nothing;
@@ -1638,15 +1651,14 @@ bool reader_data_t::can_autosuggest() const {
 }
 
 // Called after an autosuggestion has been computed on a background thread.
-void reader_data_t::autosuggest_completed(autosuggestion_result_t result) {
+void reader_data_t::autosuggest_completed(autosuggestion_t result) {
     ASSERT_IS_MAIN_THREAD();
     if (result.search_string == in_flight_autosuggest_request)
         in_flight_autosuggest_request.clear();
-    if (!result.suggestion.empty() && can_autosuggest() &&
-        result.search_string == command_line.text() &&
-        string_prefixes_string_case_insensitive(result.search_string, result.suggestion)) {
+    if (!result.empty() && can_autosuggest() && result.search_string == command_line.text() &&
+        string_prefixes_string_case_insensitive(result.search_string, result.text)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
-        autosuggestion = std::move(result.suggestion);
+        autosuggestion = std::move(result);
         if (this->is_repaint_needed()) {
             this->layout_and_repaint(L"autosuggest");
         }
@@ -1668,7 +1680,7 @@ void reader_data_t::update_autosuggestion() {
     // text avoid recomputing the autosuggestion.
     const editable_line_t &el = command_line;
     if (!autosuggestion.empty() &&
-        string_prefixes_string_case_insensitive(el.text(), autosuggestion)) {
+        string_prefixes_string_case_insensitive(el.text(), autosuggestion.text)) {
         return;
     }
 
@@ -1681,7 +1693,7 @@ void reader_data_t::update_autosuggestion() {
     autosuggestion.clear();
     auto performer = get_autosuggestion_performer(parser(), el.text(), el.position(), history);
     auto shared_this = this->shared_from_this();
-    debounce_autosuggestions().perform(performer, [shared_this](autosuggestion_result_t result) {
+    debounce_autosuggestions().perform(performer, [shared_this](autosuggestion_t result) {
         shared_this->autosuggest_completed(std::move(result));
     });
 }
@@ -1696,21 +1708,21 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
         // Accept the autosuggestion.
         if (full) {
             // Just take the whole thing.
-            replace_substring(&command_line, 0, command_line.size(), std::move(autosuggestion));
+            replace_substring(&command_line, 0, command_line.size(), autosuggestion.text);
         } else if (single) {
             replace_substring(&command_line, command_line.size(), 0,
-                              autosuggestion.substr(command_line.size(), 1));
+                              autosuggestion.text.substr(command_line.size(), 1));
         } else {
             // Accept characters according to the specified style.
             move_word_state_machine_t state(style);
             size_t want;
-            for (want = command_line.size(); want < autosuggestion.size(); want++) {
-                wchar_t wc = autosuggestion.at(want);
+            for (want = command_line.size(); want < autosuggestion.text.size(); want++) {
+                wchar_t wc = autosuggestion.text.at(want);
                 if (!state.consume_char(wc)) break;
             }
             size_t have = command_line.size();
             replace_substring(&command_line, command_line.size(), 0,
-                              autosuggestion.substr(have, want - have));
+                              autosuggestion.text.substr(have, want - have));
         }
     }
 }
@@ -3195,7 +3207,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     history_search.reset_to_mode(el->text(), history, mode);
 
                     // Skip the autosuggestion in the history unless it was truncated.
-                    const wcstring &suggest = autosuggestion;
+                    const wcstring &suggest = autosuggestion.text;
                     if (!suggest.empty() && !screen.autosuggestion_is_truncated &&
                         mode != reader_history_search_t::prefix) {
                         history_search.add_skip(suggest);

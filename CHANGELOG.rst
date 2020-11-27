@@ -91,6 +91,7 @@ Scripting improvements
 -  ``test -t``, for testing whether file descriptors are connected to a terminal, works for file descriptors 0, 1, and 2 (:issue:`4766`). It can still return incorrect results in other cases (:issue:`1228`).
 -  Trying to run scripts with Windows line endings (CRLF) via the shebang produces a sensible error (:issue:`2783`).
 -  An ``alias`` that delegates to a command with the same name no longer triggers an error about recursive completion (:issue:`7389`).
+- ``math`` now has a ``--base`` option to output the result in hexadecimal or octal (:issue:`7496`).
 
 Interactive improvements
 ------------------------

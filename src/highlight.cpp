@@ -434,9 +434,6 @@ bool autosuggest_validate_from_history(const history_item_t &item,
                                        const operation_context_t &ctx) {
     ASSERT_IS_BACKGROUND_THREAD();
 
-    bool handled = false;
-    bool suggestion_ok = false;
-
     // Parse the string.
     wcstring parsed_command;
     wcstring cd_dir;
@@ -447,35 +444,35 @@ bool autosuggest_validate_from_history(const history_item_t &item,
         return true;
     }
 
+    // We handle cd specially.
     if (parsed_command == L"cd" && !cd_dir.empty()) {
-        // We can possibly handle this specially.
         if (expand_one(cd_dir, expand_flag::skip_cmdsubst, ctx)) {
-            handled = true;
-            bool is_help =
-                string_prefixes_string(cd_dir, L"--help") || string_prefixes_string(cd_dir, L"-h");
-            if (!is_help) {
+            if (string_prefixes_string(cd_dir, L"--help") ||
+                string_prefixes_string(cd_dir, L"-h")) {
+                // cd --help is always valid.
+                return true;
+            } else {
+                // Check the directory target, respecting CDPATH.
+                // Permit the autosuggestion if the path is valid and not our directory.
                 auto path = path_get_cdpath(cd_dir, working_directory, ctx.vars);
-                if (path && !paths_are_same_file(working_directory, *path)) {
-                    suggestion_ok = true;
-                }
+                return path && !paths_are_same_file(working_directory, *path);
             }
         }
     }
 
-    if (handled) {
-        return suggestion_ok;
-    }
-
-    // Not handled specially so handle it here.
+    // Not handled specially. Is the command valid?
     bool cmd_ok = builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command) ||
                   path_get_path(parsed_command, nullptr, ctx.vars);
-
-    if (cmd_ok) {
-        const path_list_t &paths = item.get_required_paths();
-        suggestion_ok = all_paths_are_valid(paths, working_directory);
+    if (!cmd_ok) {
+        return false;
     }
 
-    return suggestion_ok;
+    // Did the historical command have arguments that look like paths, which aren't paths now?
+    if (!all_paths_are_valid(item.get_required_paths(), working_directory)) {
+        return false;
+    }
+
+    return true;
 }
 
 // Highlights the variable starting with 'in', setting colors within the 'colors' array. Returns the

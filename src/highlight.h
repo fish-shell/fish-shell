@@ -116,9 +116,9 @@ struct highlight_color_resolver_t {
                                       const environment_t &vars) const;
 };
 
-/// Given a command 'str' from the history, try to determine whether we ought to suggest it by
-/// specially recognizing the command. Returns true if we validated the command. If so, returns by
-/// reference whether the suggestion is valid or not.
+/// Given an item \p item from the history which is a proposed autosuggestion, return whether the
+/// autosuggestion is valid. It may not be valid if e.g. it is attempting to cd into a directory
+/// which does not exist.
 bool autosuggest_validate_from_history(const history_item_t &item,
                                        const wcstring &working_directory,
                                        const operation_context_t &ctx);

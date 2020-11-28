@@ -1,8 +1,6 @@
 // Implementation of the string builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <functional>
-
 #define PCRE2_CODE_UNIT_WIDTH WCHAR_T_BITS
 #ifdef _WIN32
 #define PCRE2_STATIC
@@ -16,6 +14,7 @@
 #include <cstdlib>
 #include <cwchar>
 #include <cwctype>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <string>

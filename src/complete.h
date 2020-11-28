@@ -78,7 +78,7 @@ class completion_t {
 
     // Construction.
     explicit completion_t(wcstring comp, wcstring desc = wcstring(),
-                          string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact),
+                          string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_type_t::exact),
                           complete_flags_t flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
@@ -198,7 +198,7 @@ bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const 
 /// \param flags completion flags
 void append_completion(completion_list_t *completions, wcstring comp, wcstring desc = wcstring(),
                        int flags = 0,
-                       string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
+                       string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_type_t::exact));
 
 /// Support for "wrap targets." A wrap target is a command that completes like another command.
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target);

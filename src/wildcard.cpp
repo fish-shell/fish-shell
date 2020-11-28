@@ -98,14 +98,14 @@ bool wildcard_has(const wcstring &str, bool internal) {
 /// \param wc The wildcard.
 /// \param leading_dots_fail_to_match Whether files beginning with dots should not be matched
 /// against wildcards.
-static enum fuzzy_match_type_t wildcard_match_internal(const wcstring &str, const wcstring &wc,
-                                                       bool leading_dots_fail_to_match) {
+static enum fuzzy_type_t wildcard_match_internal(const wcstring &str, const wcstring &wc,
+                                                 bool leading_dots_fail_to_match) {
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
     if (leading_dots_fail_to_match && str[0] == L'.' &&
         (str[1] == L'\0' || (str[1] == L'.' && str[2] == L'\0'))) {
         // The string is '.' or '..' so the only possible match is an exact match.
-        return str == wc ? fuzzy_match_exact : fuzzy_match_none;
+        return str == wc ? fuzzy_type_t::exact : fuzzy_type_t::none;
     }
 
     // Near Linear implementation as proposed here https://research.swtch.com/glob.
@@ -121,13 +121,13 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wcstring &str, cons
             if (*wc_x == ANY_STRING || *wc_x == ANY_STRING_RECURSIVE) {
                 // Ignore hidden file
                 if (leading_dots_fail_to_match && is_first && str[0] == L'.') {
-                    return fuzzy_match_none;
+                    return fuzzy_type_t::none;
                 }
 
                 // Common case of * at the end. In that case we can early out since we know it will
                 // match.
                 if (wc_x[1] == L'\0') {
-                    return fuzzy_match_exact;
+                    return fuzzy_type_t::exact;
                 }
                 // Try to match at str_x.
                 // If that doesn't work out, restart at str_x+1 next.
@@ -138,7 +138,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wcstring &str, cons
                 continue;
             } else if (*wc_x == ANY_CHAR && *str_x != 0) {
                 if (is_first && *str_x == L'.') {
-                    return fuzzy_match_none;
+                    return fuzzy_type_t::none;
                 }
                 wc_x++;
                 str_x++;
@@ -155,10 +155,10 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wcstring &str, cons
             str_x = restart_str_x;
             continue;
         }
-        return fuzzy_match_none;
+        return fuzzy_type_t::none;
     }
     // Matched all of pattern to all of name. Success.
-    return fuzzy_match_exact;
+    return fuzzy_type_t::exact;
 }
 
 // This does something horrible refactored from an even more horrible function.
@@ -192,7 +192,7 @@ static bool has_prefix_match(const completion_list_t *comps, size_t first) {
     if (comps != nullptr) {
         const size_t after_count = comps->size();
         for (size_t j = first; j < after_count; j++) {
-            if (comps->at(j).match.type <= fuzzy_match_prefix) {
+            if (comps->at(j).match.type <= fuzzy_type_t::prefix) {
                 return true;
             }
         }
@@ -245,7 +245,7 @@ static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
         // If we're allowing fuzzy match, any match is OK. Otherwise we require a prefix match.
         bool match_acceptable;
         if (params.expand_flags & expand_flag::fuzzy_match) {
-            match_acceptable = match.type != fuzzy_match_none;
+            match_acceptable = match.type != fuzzy_type_t::none;
         } else {
             match_acceptable = match_type_shares_prefix(match.type);
         }
@@ -356,8 +356,8 @@ bool wildcard_complete(const wcstring &str, const wchar_t *wc,
 }
 
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match) {
-    enum fuzzy_match_type_t match = wildcard_match_internal(str, wc, leading_dots_fail_to_match);
-    return match != fuzzy_match_none;
+    enum fuzzy_type_t match = wildcard_match_internal(str, wc, leading_dots_fail_to_match);
+    return match != fuzzy_type_t::none;
 }
 
 static int fast_waccess(const struct stat &stat_buf, uint8_t mode) {
@@ -817,7 +817,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
         // Skip cases that don't match or match exactly. The match-exactly case was handled directly
         // in expand().
         const string_fuzzy_match_t match = string_fuzzy_match_string(wc_segment, name_str);
-        if (match.type == fuzzy_match_none || match.type == fuzzy_match_exact) {
+        if (match.type == fuzzy_type_t::none || match.type == fuzzy_type_t::exact) {
             continue;
         }
 

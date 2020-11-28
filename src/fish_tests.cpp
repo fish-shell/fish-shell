@@ -2121,23 +2121,23 @@ static void test_expand() {
 static void test_fuzzy_match() {
     say(L"Testing fuzzy string matching");
 
-    if (string_fuzzy_match_string(L"", L"").type != fuzzy_match_exact)
+    if (string_fuzzy_match_string(L"", L"").type != fuzzy_type_t::exact)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"alpha", L"alpha").type != fuzzy_match_exact)
+    if (string_fuzzy_match_string(L"alpha", L"alpha").type != fuzzy_type_t::exact)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"alp", L"alpha").type != fuzzy_match_prefix)
+    if (string_fuzzy_match_string(L"alp", L"alpha").type != fuzzy_type_t::prefix)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"ALPHA!", L"alPhA!").type != fuzzy_match_case_insensitive)
+    if (string_fuzzy_match_string(L"ALPHA!", L"alPhA!").type != fuzzy_type_t::exact_icase)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"alPh", L"ALPHA!").type != fuzzy_match_prefix_case_insensitive)
+    if (string_fuzzy_match_string(L"alPh", L"ALPHA!").type != fuzzy_type_t::prefix_icase)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"LPH", L"ALPHA!").type != fuzzy_match_substring)
+    if (string_fuzzy_match_string(L"LPH", L"ALPHA!").type != fuzzy_type_t::substr)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"lPh", L"ALPHA!").type != fuzzy_match_substring_case_insensitive)
+    if (string_fuzzy_match_string(L"lPh", L"ALPHA!").type != fuzzy_type_t::substr_icase)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"AA", L"ALPHA!").type != fuzzy_match_subsequence_insertions_only)
+    if (string_fuzzy_match_string(L"AA", L"ALPHA!").type != fuzzy_type_t::subseq)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_match_none)
+    if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_type_t::none)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
 }
 

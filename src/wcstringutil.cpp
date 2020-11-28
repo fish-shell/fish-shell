@@ -154,47 +154,47 @@ static bool subsequence_in_string(const wcstring &needle, const wcstring &haysta
     return ni == needle.end();
 }
 
-string_fuzzy_match_t::string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first,
+string_fuzzy_match_t::string_fuzzy_match_t(enum fuzzy_type_t t, size_t distance_first,
                                            size_t distance_second)
     : type(t), match_distance_first(distance_first), match_distance_second(distance_second) {}
 
 string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
                                                const wcstring &match_against,
-                                               fuzzy_match_type_t limit_type) {
+                                               fuzzy_type_t limit_type) {
     // Distances are generally the amount of text not matched.
-    string_fuzzy_match_t result(fuzzy_match_none, 0, 0);
+    string_fuzzy_match_t result(fuzzy_type_t::none, 0, 0);
     size_t location;
-    if (limit_type >= fuzzy_match_exact && string == match_against) {
-        result.type = fuzzy_match_exact;
-    } else if (limit_type >= fuzzy_match_prefix && string_prefixes_string(string, match_against)) {
-        result.type = fuzzy_match_prefix;
+    if (limit_type >= fuzzy_type_t::exact && string == match_against) {
+        result.type = fuzzy_type_t::exact;
+    } else if (limit_type >= fuzzy_type_t::prefix &&
+               string_prefixes_string(string, match_against)) {
+        result.type = fuzzy_type_t::prefix;
         assert(match_against.size() >= string.size());
         result.match_distance_first = match_against.size() - string.size();
-    } else if (limit_type >= fuzzy_match_case_insensitive &&
+    } else if (limit_type >= fuzzy_type_t::exact_icase &&
                wcscasecmp(string.c_str(), match_against.c_str()) == 0) {
-        result.type = fuzzy_match_case_insensitive;
-    } else if (limit_type >= fuzzy_match_prefix_case_insensitive &&
+        result.type = fuzzy_type_t::exact_icase;
+    } else if (limit_type >= fuzzy_type_t::prefix_icase &&
                string_prefixes_string_case_insensitive(string, match_against)) {
-        result.type = fuzzy_match_prefix_case_insensitive;
+        result.type = fuzzy_type_t::prefix_icase;
         assert(match_against.size() >= string.size());
         result.match_distance_first = match_against.size() - string.size();
-    } else if (limit_type >= fuzzy_match_substring &&
+    } else if (limit_type >= fuzzy_type_t::substr &&
                (location = match_against.find(string)) != wcstring::npos) {
         // String is contained within match against.
-        result.type = fuzzy_match_substring;
+        result.type = fuzzy_type_t::substr;
         assert(match_against.size() >= string.size());
         result.match_distance_first = match_against.size() - string.size();
         result.match_distance_second = location;  // prefer earlier matches
-    } else if (limit_type >= fuzzy_match_substring_case_insensitive &&
+    } else if (limit_type >= fuzzy_type_t::substr_icase &&
                (location = ifind(match_against, string, true)) != wcstring::npos) {
         // A case-insensitive version of the string is in the match against.
-        result.type = fuzzy_match_substring_case_insensitive;
+        result.type = fuzzy_type_t::substr_icase;
         assert(match_against.size() >= string.size());
         result.match_distance_first = match_against.size() - string.size();
         result.match_distance_second = location;  // prefer earlier matches
-    } else if (limit_type >= fuzzy_match_subsequence_insertions_only &&
-               subsequence_in_string(string, match_against)) {
-        result.type = fuzzy_match_subsequence_insertions_only;
+    } else if (limit_type >= fuzzy_type_t::subseq && subsequence_in_string(string, match_against)) {
+        result.type = fuzzy_type_t::subseq;
         assert(match_against.size() >= string.size());
         result.match_distance_first = match_against.size() - string.size();
         // It would be nice to prefer matches with greater matching runs here.

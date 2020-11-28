@@ -1806,15 +1806,15 @@ static bool reader_can_replace(const wcstring &in, int flags) {
 }
 
 /// Determine the best match type for a set of completions.
-static fuzzy_match_type_t get_best_match_type(const completion_list_t &comp) {
-    fuzzy_match_type_t best_type = fuzzy_match_none;
+static fuzzy_type_t get_best_match_type(const completion_list_t &comp) {
+    fuzzy_type_t best_type = fuzzy_type_t::none;
     for (const auto &i : comp) {
         best_type = std::min(best_type, i.match.type);
     }
     // If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion
     // will only show one match if it matches a file exactly. (see issue #959).
-    if (best_type == fuzzy_match_exact) {
-        best_type = fuzzy_match_prefix;
+    if (best_type == fuzzy_type_t::exact) {
+        best_type = fuzzy_type_t::prefix;
     }
     return best_type;
 }
@@ -1865,7 +1865,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
         return success;
     }
 
-    fuzzy_match_type_t best_match_type = get_best_match_type(comp);
+    fuzzy_type_t best_match_type = get_best_match_type(comp);
 
     // Determine whether we are going to replace the token or not. If any commands of the best
     // type do not require replacement, then ignore all those that want to use replacement.

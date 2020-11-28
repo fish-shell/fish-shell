@@ -267,18 +267,18 @@ static void unique_completions_retaining_order(completion_list_t *comps) {
 
 void completions_sort_and_prioritize(completion_list_t *comps, completion_request_flags_t flags) {
     // Find the best match type.
-    fuzzy_match_type_t best_type = fuzzy_match_none;
+    fuzzy_type_t best_type = fuzzy_type_t::none;
     for (const auto &comp : *comps) {
         best_type = std::min(best_type, comp.match.type);
-        if (best_type <= fuzzy_match_prefix) {
+        if (best_type <= fuzzy_type_t::prefix) {
             // We can't get better than this (see below)
             break;
         }
     }
     // If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion
     // will only show one match if it matches a file exactly. (see issue #959).
-    if (best_type == fuzzy_match_exact) {
-        best_type = fuzzy_match_prefix;
+    if (best_type == fuzzy_type_t::exact) {
+        best_type = fuzzy_type_t::prefix;
     }
 
     // Throw out completions whose match types are less suitable than the best.
@@ -333,10 +333,10 @@ class completer_t {
 
     bool fuzzy() const { return flags & completion_request_t::fuzzy_match; }
 
-    fuzzy_match_type_t max_fuzzy_match_type() const {
+    fuzzy_type_t max_fuzzy_match_type() const {
         // If we are doing fuzzy matching, request all types; if not request only prefix matching.
-        if (fuzzy()) return fuzzy_match_none;
-        return fuzzy_match_prefix_case_insensitive;
+        if (fuzzy()) return fuzzy_type_t::none;
+        return fuzzy_type_t::prefix_icase;
     }
 
     bool try_complete_variable(const wcstring &str);
@@ -1184,7 +1184,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
     for (const wcstring &env_name : ctx.vars.get_names(0)) {
         string_fuzzy_match_t match =
             string_fuzzy_match_string(var, env_name, this->max_fuzzy_match_type());
-        if (match.type == fuzzy_match_none) {
+        if (match.type == fuzzy_type_t::none) {
             continue;  // no match
         }
 

@@ -36,97 +36,91 @@ size_t ifind(const wcstring &haystack, const wcstring &needle, bool fuzzy = fals
 size_t ifind(const std::string &haystack, const std::string &needle, bool fuzzy = false);
 
 // Ways that a string may fuzzily match another.
-enum fuzzy_match_type_t {
+enum class fuzzy_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.
-    fuzzy_match_exact = 0,
+    exact,
 
     // We match a prefix of the string: FO matches FOOBAR.
-    fuzzy_match_prefix,
+    prefix,
 
     // We match the string exactly, but in a case insensitive way: foobar matches FOOBAR.
-    fuzzy_match_case_insensitive,
+    exact_icase,
 
     // We match a prefix of the string, in a case insensitive way: foo matches FOOBAR.
-    fuzzy_match_prefix_case_insensitive,
+    prefix_icase,
 
     // We match a substring of the string: OOBA matches FOOBAR.
-    fuzzy_match_substring,
+    substr,
 
     // We match a substring of the string: ooBA matches FOOBAR.
-    fuzzy_match_substring_case_insensitive,
+    substr_icase,
 
     // A subsequence match with insertions only: FBR matches FOOBAR.
-    fuzzy_match_subsequence_insertions_only,
+    subseq,
 
     // We don't match the string.
-    fuzzy_match_none
+    none,
 };
 
 /// Indicates where a match type requires replacing the entire token.
-static inline bool match_type_requires_full_replacement(fuzzy_match_type_t t) {
+static inline bool match_type_requires_full_replacement(fuzzy_type_t t) {
     switch (t) {
-        case fuzzy_match_exact:
-        case fuzzy_match_prefix: {
+        case fuzzy_type_t::exact:
+        case fuzzy_type_t::prefix:
             return false;
-        }
-        case fuzzy_match_case_insensitive:
-        case fuzzy_match_prefix_case_insensitive:
-        case fuzzy_match_substring:
-        case fuzzy_match_substring_case_insensitive:
-        case fuzzy_match_subsequence_insertions_only:
-        case fuzzy_match_none: {
+
+        case fuzzy_type_t::exact_icase:
+        case fuzzy_type_t::prefix_icase:
+        case fuzzy_type_t::substr:
+        case fuzzy_type_t::substr_icase:
+        case fuzzy_type_t::subseq:
+        case fuzzy_type_t::none:
             return true;
-        }
-        default: {
-            DIE("Unreachable");
-            return false;
-        }
     }
+    DIE("Unreachable");
+    return false;
 }
 
 /// Indicates where a match shares a prefix with the string it matches.
-static inline bool match_type_shares_prefix(fuzzy_match_type_t t) {
+static inline bool match_type_shares_prefix(fuzzy_type_t t) {
     switch (t) {
-        case fuzzy_match_exact:
-        case fuzzy_match_prefix:
-        case fuzzy_match_case_insensitive:
-        case fuzzy_match_prefix_case_insensitive: {
+        case fuzzy_type_t::exact:
+        case fuzzy_type_t::prefix:
+        case fuzzy_type_t::exact_icase:
+        case fuzzy_type_t::prefix_icase:
             return true;
-        }
-        case fuzzy_match_substring:
-        case fuzzy_match_substring_case_insensitive:
-        case fuzzy_match_subsequence_insertions_only:
-        case fuzzy_match_none: {
+
+        case fuzzy_type_t::substr:
+        case fuzzy_type_t::substr_icase:
+        case fuzzy_type_t::subseq:
+        case fuzzy_type_t::none:
             return false;
-        }
-        default: {
-            DIE("Unreachable");
-            return false;
-        }
     }
+    DIE("Unreachable");
+    return false;
 }
 
 /// Test if string is a fuzzy match to another.
 struct string_fuzzy_match_t {
-    enum fuzzy_match_type_t type;
+    enum fuzzy_type_t type;
 
     // Strength of the match. The value depends on the type. Lower is stronger.
     size_t match_distance_first;
     size_t match_distance_second;
 
     // Constructor.
-    explicit string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first = 0,
+    explicit string_fuzzy_match_t(enum fuzzy_type_t t, size_t distance_first = 0,
                                   size_t distance_second = 0);
 
     // Return -1, 0, 1 if this match is (respectively) better than, equal to, or worse than rhs.
     int compare(const string_fuzzy_match_t &rhs) const;
 };
 
-/// Compute a fuzzy match for a string. If maximum_match is not fuzzy_match_none, limit the type to
-/// matches at or below that type.
+/// Compute a fuzzy match for a string. If maximum_match is not fuzzy_match_t::none, limit the type
+/// to matches at or below that type.
 string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
                                                const wcstring &match_against,
-                                               fuzzy_match_type_t limit_type = fuzzy_match_none);
+                                               fuzzy_type_t limit_type = fuzzy_type_t::none);
 
 /// Split a string by a separator character.
 wcstring_list_t split_string(const wcstring &val, wchar_t sep);

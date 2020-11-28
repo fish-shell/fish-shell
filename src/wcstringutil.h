@@ -35,89 +35,86 @@ bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
 size_t ifind(const wcstring &haystack, const wcstring &needle, bool fuzzy = false);
 size_t ifind(const std::string &haystack, const std::string &needle, bool fuzzy = false);
 
-// Ways that a string may fuzzily match another.
-enum class fuzzy_type_t {
-    // We match the string exactly: FOOBAR matches FOOBAR.
-    exact,
-
-    // We match a prefix of the string: FO matches FOOBAR.
-    prefix,
-
-    // We match the string exactly, but in a case insensitive way: foobar matches FOOBAR.
-    exact_icase,
-
-    // We match a prefix of the string, in a case insensitive way: foo matches FOOBAR.
-    prefix_icase,
-
-    // We match a substring of the string: OOBA matches FOOBAR.
-    substr,
-
-    // We match a substring of the string: ooBA matches FOOBAR.
-    substr_icase,
-
-    // A subsequence match with insertions only: FBR matches FOOBAR.
-    subseq,
-
-    // We don't match the string.
-    none,
-};
-
-/// Indicates where a match type requires replacing the entire token.
-static inline bool match_type_requires_full_replacement(fuzzy_type_t t) {
-    switch (t) {
-        case fuzzy_type_t::exact:
-        case fuzzy_type_t::prefix:
-            return false;
-
-        case fuzzy_type_t::exact_icase:
-        case fuzzy_type_t::prefix_icase:
-        case fuzzy_type_t::substr:
-        case fuzzy_type_t::substr_icase:
-        case fuzzy_type_t::subseq:
-        case fuzzy_type_t::none:
-            return true;
-    }
-    DIE("Unreachable");
-    return false;
-}
-
-/// Indicates where a match shares a prefix with the string it matches.
-static inline bool match_type_shares_prefix(fuzzy_type_t t) {
-    switch (t) {
-        case fuzzy_type_t::exact:
-        case fuzzy_type_t::prefix:
-        case fuzzy_type_t::exact_icase:
-        case fuzzy_type_t::prefix_icase:
-            return true;
-
-        case fuzzy_type_t::substr:
-        case fuzzy_type_t::substr_icase:
-        case fuzzy_type_t::subseq:
-        case fuzzy_type_t::none:
-            return false;
-    }
-    DIE("Unreachable");
-    return false;
-}
-
-/// Test if string is a fuzzy match to another.
+/// A lightweight value-type describing how closely a string fuzzy-matches another string.
 struct string_fuzzy_match_t {
-    enum fuzzy_type_t type;
+    // The ways one string can contain another.
+    enum class contain_type_t : uint8_t {
+        exact,   // exact match: foobar matches foo
+        prefix,  // prefix match: foo matches foobar
+        substr,  // substring match: ooba matches foobar
+        subseq,  // subsequence match: fbr matches foobar
+    };
+    contain_type_t type;
 
-    // Strength of the match. The value depends on the type. Lower is stronger.
-    size_t match_distance_first;
-    size_t match_distance_second;
+    // The case-folding required for the match.
+    enum class case_fold_t : uint8_t {
+        samecase,  // exact match: foobar matches foobar
+        icase,     // case insensitive: FoBaR matches foobar
+    };
+    case_fold_t case_fold;
 
     // Constructor.
-    explicit string_fuzzy_match_t(enum fuzzy_type_t t, size_t distance_first = 0,
-                                  size_t distance_second = 0);
+    constexpr string_fuzzy_match_t(contain_type_t type, case_fold_t case_fold)
+        : type(type), case_fold(case_fold) {}
+
+    // Helper to return an exact match.
+    static constexpr string_fuzzy_match_t exact_match() {
+        return string_fuzzy_match_t(contain_type_t::exact, case_fold_t::samecase);
+    }
+
+    /// \return whether this is a samecase exact match.
+    bool is_samecase_exact() const {
+        return type == contain_type_t::exact && case_fold == case_fold_t::samecase;
+    }
+
+    /// \return if we are exact or prefix match.
+    bool is_exact_or_prefix() const {
+        switch (type) {
+            case contain_type_t::exact:
+            case contain_type_t::prefix:
+                return true;
+            case contain_type_t::substr:
+            case contain_type_t::subseq:
+                return false;
+        }
+        DIE("Unreachable");
+        return false;
+    }
+
+    // \return if our match requires a full replacement, i.e. is not a strict extension of our
+    // existing string. This is false only if our case matches, and our type is prefix or exact.
+    bool requires_full_replacement() const {
+        if (case_fold != case_fold_t::samecase) return true;
+        switch (type) {
+            case contain_type_t::exact:
+            case contain_type_t::prefix:
+                return false;
+            case contain_type_t::substr:
+            case contain_type_t::subseq:
+                return true;
+        }
+        DIE("Unreachable");
+        return false;
+    }
+
+    /// Try creating a fuzzy match for \p string against \p match_against.
+    /// \p string is something like "foo" and \p match_against is like "FooBar".
+    /// If \p anchor_start is set, then only exact and prefix matches are permitted.
+    static maybe_t<string_fuzzy_match_t> try_create(const wcstring &string,
+                                                    const wcstring &match_against,
+                                                    bool anchor_start);
+
+    /// \return a rank for filtering matches.
+    /// Earlier (smaller) ranks are better matches.
+    uint32_t rank() const;
 };
 
-/// Compute a fuzzy match for a string. If maximum_match is not fuzzy_match_t::none, limit the type
-/// to matches at or below that type.
-string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
-                                               const wcstring &match_against,
-                                               fuzzy_type_t limit_type = fuzzy_type_t::none);
+/// Cover over string_fuzzy_match_t::try_create().
+inline maybe_t<string_fuzzy_match_t> string_fuzzy_match_string(const wcstring &string,
+                                                               const wcstring &match_against,
+                                                               bool anchor_start = false) {
+    return string_fuzzy_match_t::try_create(string, match_against, anchor_start);
+}
 
 /// Split a string by a separator character.
 wcstring_list_t split_string(const wcstring &val, wchar_t sep);

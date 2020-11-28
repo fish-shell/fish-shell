@@ -154,52 +154,68 @@ static bool subsequence_in_string(const wcstring &needle, const wcstring &haysta
     return ni == needle.end();
 }
 
-string_fuzzy_match_t::string_fuzzy_match_t(enum fuzzy_type_t t, size_t distance_first,
-                                           size_t distance_second)
-    : type(t), match_distance_first(distance_first), match_distance_second(distance_second) {}
-
-string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
-                                               const wcstring &match_against,
-                                               fuzzy_type_t limit_type) {
-    // Distances are generally the amount of text not matched.
-    string_fuzzy_match_t result(fuzzy_type_t::none, 0, 0);
-    size_t location;
-    if (limit_type >= fuzzy_type_t::exact && string == match_against) {
-        result.type = fuzzy_type_t::exact;
-    } else if (limit_type >= fuzzy_type_t::prefix &&
-               string_prefixes_string(string, match_against)) {
-        result.type = fuzzy_type_t::prefix;
-        assert(match_against.size() >= string.size());
-        result.match_distance_first = match_against.size() - string.size();
-    } else if (limit_type >= fuzzy_type_t::exact_icase &&
-               wcscasecmp(string.c_str(), match_against.c_str()) == 0) {
-        result.type = fuzzy_type_t::exact_icase;
-    } else if (limit_type >= fuzzy_type_t::prefix_icase &&
-               string_prefixes_string_case_insensitive(string, match_against)) {
-        result.type = fuzzy_type_t::prefix_icase;
-        assert(match_against.size() >= string.size());
-        result.match_distance_first = match_against.size() - string.size();
-    } else if (limit_type >= fuzzy_type_t::substr &&
-               (location = match_against.find(string)) != wcstring::npos) {
-        // String is contained within match against.
-        result.type = fuzzy_type_t::substr;
-        assert(match_against.size() >= string.size());
-        result.match_distance_first = match_against.size() - string.size();
-        result.match_distance_second = location;  // prefer earlier matches
-    } else if (limit_type >= fuzzy_type_t::substr_icase &&
-               (location = ifind(match_against, string, true)) != wcstring::npos) {
-        // A case-insensitive version of the string is in the match against.
-        result.type = fuzzy_type_t::substr_icase;
-        assert(match_against.size() >= string.size());
-        result.match_distance_first = match_against.size() - string.size();
-        result.match_distance_second = location;  // prefer earlier matches
-    } else if (limit_type >= fuzzy_type_t::subseq && subsequence_in_string(string, match_against)) {
-        result.type = fuzzy_type_t::subseq;
-        assert(match_against.size() >= string.size());
-        result.match_distance_first = match_against.size() - string.size();
-        // It would be nice to prefer matches with greater matching runs here.
+// static
+maybe_t<string_fuzzy_match_t> string_fuzzy_match_t::try_create(const wcstring &string,
+                                                               const wcstring &match_against,
+                                                               bool anchor_start) {
+    // A string cannot fuzzy match against a shorter string.
+    if (string.size() > match_against.size()) {
+        return none();
     }
-    return result;
+
+    // exact samecase
+    if (string == match_against) {
+        return string_fuzzy_match_t{contain_type_t::exact, case_fold_t::samecase};
+    }
+
+    // prefix samecase
+    if (string_prefixes_string(string, match_against)) {
+        return string_fuzzy_match_t{contain_type_t::prefix, case_fold_t::samecase};
+    }
+
+    // exact icase
+    if (wcscasecmp(string.c_str(), match_against.c_str()) == 0) {
+        return string_fuzzy_match_t{contain_type_t::exact, case_fold_t::icase};
+    }
+
+    // prefix icase
+    if (string_prefixes_string_case_insensitive(string, match_against)) {
+        return string_fuzzy_match_t{contain_type_t::prefix, case_fold_t::icase};
+    }
+
+    // If anchor_start is set, this is as far as we go.
+    if (anchor_start) {
+        return none();
+    }
+
+    // substr samecase
+    size_t location;
+    if ((location = match_against.find(string)) != wcstring::npos) {
+        return string_fuzzy_match_t{contain_type_t::substr, case_fold_t::samecase};
+    }
+
+    // substr icase
+    if ((location = ifind(match_against, string, true /* fuzzy */)) != wcstring::npos) {
+        return string_fuzzy_match_t{contain_type_t::substr, case_fold_t::icase};
+    }
+
+    // subseq samecase
+    if (subsequence_in_string(string, match_against)) {
+        return string_fuzzy_match_t{contain_type_t::subseq, case_fold_t::samecase};
+    }
+
+    // We do not currently test subseq icase.
+    return none();
+}
+
+uint32_t string_fuzzy_match_t::rank() const {
+    // Combine our type and our case fold into a single number, such that better matches are
+    // smaller. Treat 'exact' types the same as 'prefix' types; this is because we do not
+    // prefer exact matches to prefix matches when presenting completions to the user.
+    auto effective_type = (type == contain_type_t::exact ? contain_type_t::prefix : type);
+
+    // Type dominates fold.
+    return static_cast<uint32_t>(effective_type) * 8 + static_cast<uint32_t>(case_fold);
 }
 
 template <bool Fuzzy, typename T>

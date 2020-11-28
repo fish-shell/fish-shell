@@ -78,7 +78,7 @@ class completion_t {
 
     // Construction.
     explicit completion_t(wcstring comp, wcstring desc = wcstring(),
-                          string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_type_t::exact),
+                          string_fuzzy_match_t match = string_fuzzy_match_t::exact_match(),
                           complete_flags_t flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
@@ -94,9 +94,8 @@ class completion_t {
     // example, foo10 is naturally greater than foo2 (but alphabetically less than it).
     static bool is_naturally_less_than(const completion_t &a, const completion_t &b);
 
-    // Deduplicate a potentially-unsorted vector, preserving the order
-    template <class Iterator, class HashFunction>
-    static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash);
+    /// \return the completion's match rank. Lower ranks are better completions.
+    uint32_t rank() const { return match.rank(); }
 
     // If this completion replaces the entire token, prepend a prefix. Otherwise do nothing.
     void prepend_token_prefix(const wcstring &prefix);
@@ -198,7 +197,7 @@ bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const 
 /// \param flags completion flags
 void append_completion(completion_list_t *completions, wcstring comp, wcstring desc = wcstring(),
                        int flags = 0,
-                       string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_type_t::exact));
+                       string_fuzzy_match_t match = string_fuzzy_match_t::exact_match());
 
 /// Support for "wrap targets." A wrap target is a command that completes like another command.
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target);

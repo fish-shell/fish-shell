@@ -1805,18 +1805,13 @@ static bool reader_can_replace(const wcstring &in, int flags) {
     return true;
 }
 
-/// Determine the best match type for a set of completions.
-static fuzzy_type_t get_best_match_type(const completion_list_t &comp) {
-    fuzzy_type_t best_type = fuzzy_type_t::none;
-    for (const auto &i : comp) {
-        best_type = std::min(best_type, i.match.type);
+/// Determine the best (lowest) match rank for a set of completions.
+static uint32_t get_best_rank(const completion_list_t &comp) {
+    uint32_t best_rank = UINT32_MAX;
+    for (const auto &c : comp) {
+        best_rank = std::min(best_rank, c.rank());
     }
-    // If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion
-    // will only show one match if it matches a file exactly. (see issue #959).
-    if (best_type == fuzzy_type_t::exact) {
-        best_type = fuzzy_type_t::prefix;
-    }
-    return best_type;
+    return best_rank;
 }
 
 /// Handle the list of completions. This means the following:
@@ -1865,13 +1860,13 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
         return success;
     }
 
-    fuzzy_type_t best_match_type = get_best_match_type(comp);
+    auto best_rank = get_best_rank(comp);
 
     // Determine whether we are going to replace the token or not. If any commands of the best
-    // type do not require replacement, then ignore all those that want to use replacement.
+    // rank do not require replacement, then ignore all those that want to use replacement.
     bool will_replace_token = true;
     for (const completion_t &el : comp) {
-        if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
+        if (el.rank() <= best_rank && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
             will_replace_token = false;
             break;
         }
@@ -1880,9 +1875,10 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.
     completion_list_t surviving_completions;
+    bool all_matches_exact_or_prefix = true;
     for (const completion_t &el : comp) {
-        // Ignore completions with a less suitable match type than the best.
-        if (el.match.type > best_match_type) continue;
+        // Ignore completions with a less suitable match rank than the best.
+        if (el.rank() > best_rank) continue;
 
         // Only use completions that match replace_token.
         bool completion_replace_token = static_cast<bool>(el.flags & COMPLETE_REPLACES_TOKEN);
@@ -1893,11 +1889,12 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
 
         // This completion survived.
         surviving_completions.push_back(el);
+        all_matches_exact_or_prefix = all_matches_exact_or_prefix && el.match.is_exact_or_prefix();
     }
 
     bool use_prefix = false;
     wcstring common_prefix;
-    if (match_type_shares_prefix(best_match_type)) {
+    if (all_matches_exact_or_prefix) {
         // Try to find a common prefix to insert among the surviving completions.
         complete_flags_t flags = 0;
         bool prefix_is_partial_completion = false;
@@ -1959,7 +1956,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
 
     // Print the completion list.
     wcstring prefix;
-    if (will_replace_token || match_type_requires_full_replacement(best_match_type)) {
+    if (will_replace_token || !all_matches_exact_or_prefix) {
         if (use_prefix) prefix = std::move(common_prefix);
     } else if (tok.size() + common_prefix.size() <= PREFIX_MAX_LEN) {
         prefix = tok + common_prefix;

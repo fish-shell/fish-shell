@@ -266,33 +266,26 @@ static void unique_completions_retaining_order(completion_list_t *comps) {
 }
 
 void completions_sort_and_prioritize(completion_list_t *comps, completion_request_flags_t flags) {
-    // Find the best match type.
-    fuzzy_type_t best_type = fuzzy_type_t::none;
+    if (comps->empty()) return;
+
+    // Find the best rank.
+    uint32_t best_rank = UINT32_MAX;
     for (const auto &comp : *comps) {
-        best_type = std::min(best_type, comp.match.type);
-        if (best_type <= fuzzy_type_t::prefix) {
-            // We can't get better than this (see below)
-            break;
-        }
-    }
-    // If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion
-    // will only show one match if it matches a file exactly. (see issue #959).
-    if (best_type == fuzzy_type_t::exact) {
-        best_type = fuzzy_type_t::prefix;
+        best_rank = std::min(best_rank, comp.rank());
     }
 
-    // Throw out completions whose match types are less suitable than the best.
-    comps->erase(
-        std::remove_if(comps->begin(), comps->end(),
-                       [&](const completion_t &comp) { return comp.match.type > best_type; }),
-        comps->end());
+    // Throw out completions of worse ranks.
+    comps->erase(std::remove_if(comps->begin(), comps->end(),
+                                [=](const completion_t &comp) { return comp.rank() > best_rank; }),
+                 comps->end());
 
     // Deduplicate both sorted and unsorted results.
     unique_completions_retaining_order(comps);
 
     // Sort, provided COMPLETE_DONT_SORT isn't set.
-    stable_sort(comps->begin(), comps->end(), [](const completion_t &a, const completion_t &b) {
-        return a.match.type < b.match.type || natural_compare_completions(a, b);
+    // Here we do not pass suppress_exact, so that exact matches appear first.
+    stable_sort(comps->begin(), comps->end(), [&](const completion_t &a, const completion_t &b) {
+        return a.rank() < b.rank() || natural_compare_completions(a, b);
     });
 
     // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
@@ -332,12 +325,6 @@ class completer_t {
     bool wants_descriptions() const { return flags & completion_request_t::descriptions; }
 
     bool fuzzy() const { return flags & completion_request_t::fuzzy_match; }
-
-    fuzzy_type_t max_fuzzy_match_type() const {
-        // If we are doing fuzzy matching, request all types; if not request only prefix matching.
-        if (fuzzy()) return fuzzy_type_t::none;
-        return fuzzy_type_t::prefix_icase;
-    }
 
     bool try_complete_variable(const wcstring &str);
     bool try_complete_user(const wcstring &str);
@@ -1182,16 +1169,15 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
     bool res = false;
 
     for (const wcstring &env_name : ctx.vars.get_names(0)) {
-        string_fuzzy_match_t match =
-            string_fuzzy_match_string(var, env_name, this->max_fuzzy_match_type());
-        if (match.type == fuzzy_type_t::none) {
-            continue;  // no match
-        }
+        bool anchor_start = !fuzzy();
+        maybe_t<string_fuzzy_match_t> match =
+            string_fuzzy_match_string(var, env_name, anchor_start);
+        if (!match) continue;
 
         wcstring comp;
-        int flags = 0;
+        complete_flags_t flags = 0;
 
-        if (!match_type_requires_full_replacement(match.type)) {
+        if (!match->requires_full_replacement()) {
             // Take only the suffix.
             comp.append(env_name.c_str() + varlen);
         } else {
@@ -1224,7 +1210,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         // Append matching environment variables
-        append_completion(&this->completions, std::move(comp), std::move(desc), flags, match);
+        append_completion(&this->completions, std::move(comp), std::move(desc), flags, *match);
 
         res = true;
     }

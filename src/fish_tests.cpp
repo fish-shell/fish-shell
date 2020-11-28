@@ -2120,25 +2120,25 @@ static void test_expand() {
 
 static void test_fuzzy_match() {
     say(L"Testing fuzzy string matching");
+    // Check that a string fuzzy match has the expected type and case folding.
+    using type_t = string_fuzzy_match_t::contain_type_t;
+    using case_fold_t = string_fuzzy_match_t::case_fold_t;
+    auto test_fuzzy = [](const wchar_t *inp, const wchar_t *exp, type_t type,
+                         case_fold_t fold) -> bool {
+        auto m = string_fuzzy_match_string(inp, exp);
+        return m && m->type == type && m->case_fold == fold;
+    };
 
-    if (string_fuzzy_match_string(L"", L"").type != fuzzy_type_t::exact)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"alpha", L"alpha").type != fuzzy_type_t::exact)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"alp", L"alpha").type != fuzzy_type_t::prefix)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"ALPHA!", L"alPhA!").type != fuzzy_type_t::exact_icase)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"alPh", L"ALPHA!").type != fuzzy_type_t::prefix_icase)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"LPH", L"ALPHA!").type != fuzzy_type_t::substr)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"lPh", L"ALPHA!").type != fuzzy_type_t::substr_icase)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"AA", L"ALPHA!").type != fuzzy_type_t::subseq)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
-    if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_type_t::none)
-        err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    do_test(test_fuzzy(L"", L"", type_t::exact, case_fold_t::samecase));
+    do_test(test_fuzzy(L"alpha", L"alpha", type_t::exact, case_fold_t::samecase));
+    do_test(test_fuzzy(L"alp", L"alpha", type_t::prefix, case_fold_t::samecase));
+    do_test(test_fuzzy(L"ALPHA!", L"alPhA!", type_t::exact, case_fold_t::icase));
+    do_test(test_fuzzy(L"alPh", L"ALPHA!", type_t::prefix, case_fold_t::icase));
+    do_test(test_fuzzy(L"LPH", L"ALPHA!", type_t::substr, case_fold_t::samecase));
+    do_test(test_fuzzy(L"lPh", L"ALPHA!", type_t::substr, case_fold_t::icase));
+    do_test(test_fuzzy(L"AA", L"ALPHA!", type_t::subseq, case_fold_t::samecase));
+    do_test(!string_fuzzy_match_string(L"lh", L"ALPHA!").has_value());  // no subseq icase
+    do_test(!string_fuzzy_match_string(L"BB", L"ALPHA!").has_value());
 }
 
 static void test_ifind() {

@@ -7,7 +7,6 @@ try:
     from html import escape as escape_html
 except ImportError:
     from cgi import escape as escape_html
-from distutils.version import LooseVersion
 import glob
 import multiprocessing.pool
 import operator
@@ -44,8 +43,10 @@ def find_executable(exe):
 
 def isMacOS10_12_5_OrLater():
     """ Return whether this system is macOS 10.12.5 or a later version. """
-    version = platform.mac_ver()[0]
-    return version and LooseVersion(version) >= LooseVersion("10.12.5")
+    try:
+        return [int(x) for x in platform.mac_ver()[0].split(".")] >= [10, 12, 5]
+    except:
+        return False
 
 
 def is_wsl():

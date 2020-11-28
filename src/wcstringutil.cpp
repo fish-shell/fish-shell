@@ -202,25 +202,6 @@ string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
     return result;
 }
 
-template <typename T>
-static inline int compare_ints(T a, T b) {
-    if (a < b) return -1;
-    if (a == b) return 0;
-    return 1;
-}
-
-/// Compare types; if the types match, compare distances.
-int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
-    if (this->type != rhs.type) {
-        return compare_ints(this->type, rhs.type);
-    } else if (this->match_distance_first != rhs.match_distance_first) {
-        return compare_ints(this->match_distance_first, rhs.match_distance_first);
-    } else if (this->match_distance_second != rhs.match_distance_second) {
-        return compare_ints(this->match_distance_second, rhs.match_distance_second);
-    }
-    return 0;  // equal
-}
-
 template <bool Fuzzy, typename T>
 size_t ifind_impl(const T &haystack, const T &needle) {
     using char_t = typename T::value_type;

@@ -111,9 +111,6 @@ struct string_fuzzy_match_t {
     // Constructor.
     explicit string_fuzzy_match_t(enum fuzzy_type_t t, size_t distance_first = 0,
                                   size_t distance_second = 0);
-
-    // Return -1, 0, 1 if this match is (respectively) better than, equal to, or worse than rhs.
-    int compare(const string_fuzzy_match_t &rhs) const;
 };
 
 /// Compute a fuzzy match for a string. If maximum_match is not fuzzy_match_t::none, limit the type

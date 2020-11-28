@@ -851,7 +851,8 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
                 c->prepend_token_prefix(child_prefix);
             }
             // And every match must be made at least as fuzzy as ours.
-            if (match.compare(c->match) > 0) {
+            // TODO: justify this, tests do not exercise it yet.
+            if (match.type > c->match.type) {
                 // Our match is fuzzier.
                 c->match = match;
             }

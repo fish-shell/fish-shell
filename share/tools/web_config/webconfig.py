@@ -8,7 +8,6 @@ try:
 except ImportError:
     from cgi import escape as escape_html
 from distutils.version import LooseVersion
-from distutils.spawn import find_executable
 import glob
 import multiprocessing.pool
 import operator
@@ -34,6 +33,13 @@ else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
+
+
+def find_executable(exe):
+    for p in os.environ["PATH"].split(os.pathsep):
+        proposed_path = os.path.join(p, exe)
+        if os.access(proposed_path, os.X_OK):
+            return proposed_path
 
 
 def isMacOS10_12_5_OrLater():
@@ -1404,13 +1410,7 @@ fish_bin_dir = os.environ.get("__fish_bin_dir")
 fish_bin_path = None
 if not fish_bin_dir:
     print("The $__fish_bin_dir environment variable is not set. " "Looking in $PATH...")
-    # distutils.spawn is terribly broken, because it looks in wd before PATH,
-    # and doesn't actually validate that the file is even executable
-    for p in os.environ["PATH"].split(os.pathsep):
-        proposed_path = os.path.join(p, "fish")
-        if os.access(proposed_path, os.X_OK):
-            fish_bin_path = proposed_path
-            break
+    fish_bin_path = find_executable("fish")
     if not fish_bin_path:
         print("fish could not be found. Is fish installed correctly?")
         sys.exit(-1)

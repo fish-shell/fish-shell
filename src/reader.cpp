@@ -103,7 +103,6 @@
 #define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
 /// The default title for the reader. This is used by reader_readline.
-#define DEFAULT_TITLE L"echo (status current-command) \" \" $PWD"
 
 /// The maximum number of characters to read from the keyboard without repainting. Note that this
 /// readahead will only occur if new characters are available for reading, fish will never block for
@@ -1136,15 +1135,18 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     scoped_push<bool> noninteractive{&parser.libdata().is_interactive, false};
     scoped_push<bool> in_title(&parser.libdata().suppress_fish_trace, true);
 
-    wcstring fish_title_command = DEFAULT_TITLE;
+    wcstring fish_title_command = L"echo ";
     if (function_exists(L"fish_title", parser)) {
         fish_title_command = L"fish_title";
-        if (!cmd.empty()) {
-            fish_title_command.append(L" ");
-            fish_title_command.append(
-                escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
-        }
     }
+    if (!cmd.empty()) {
+        fish_title_command.append(L" ");
+        fish_title_command.append(
+            escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
+    } else {
+        fish_title_command.append(L" (status current-command)");
+    }
+    fish_title_command.append(L" $PWD");
 
     wcstring_list_t lst;
     (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);

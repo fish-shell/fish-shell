@@ -794,10 +794,6 @@ class highlighter_t {
     void color_command(const ast::string_t &node);
     // Color a node as if it were an argument.
     void color_as_argument(const ast::node_t &node);
-    // Color a redirection.
-    void color_redirection(const ast::redirection_t &node);
-    // Color all the children of the command with the given type.
-    void color_children(const ast::node_t &parent, ast::type_t type, highlight_spec_t color);
     // Colors the source range of a node with a given color.
     void color_node(const ast::node_t &node, highlight_spec_t color);
     // Colors a range with a given color.

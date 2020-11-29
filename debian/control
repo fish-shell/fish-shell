@@ -25,7 +25,7 @@ Package: fish-common
 Architecture: all
 Multi-Arch: foreign
 Depends: ${misc:Depends}
-Recommends: fish, python3 (>= 3.5), python3-distutils
+Recommends: fish, python3 (>= 3.5)
 Suggests: xdg-utils
 Replaces: fish (<= 2.1.1.dfsg-2)
 Description: friendly interactive shell (architecture-independent files)

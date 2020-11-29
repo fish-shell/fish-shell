@@ -675,6 +675,8 @@ static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc,
                 streams.out.append(sep);
             }
             streams.out.append(*arg);
+        } else if (nargs > 1) {
+            return STATUS_CMD_OK;
         }
         nargs++;
     }
@@ -710,6 +712,8 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
         if (!opts.quiet) {
             streams.out.append(to_string(n));
             streams.out.append(L'\n');
+        } else if (nnonempty > 0) {
+            return STATUS_CMD_OK;
         }
     }
 
@@ -1134,6 +1138,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         if (!matcher->report_matches(*arg)) {
             return STATUS_INVALID_ARGS;
         }
+        if (opts.quiet && matcher->match_count() > 0) return STATUS_CMD_OK;
     }
 
     return matcher->match_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
@@ -1387,6 +1392,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         if (!replacer->replace_matches(*arg)) return STATUS_INVALID_ARGS;
+        if (opts.quiet && replacer->replace_count() > 0) return STATUS_CMD_OK;
     }
 
     return replacer->replace_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
@@ -1429,6 +1435,8 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
                         opts.no_empty);
         }
         all_splits.push_back(splits);
+        // If we're quiet, we return early if we've found something to split.
+        if (opts.quiet && splits.size() > 1) return STATUS_CMD_OK;
         split_count += splits.size();
         arg_count++;
     }
@@ -1557,6 +1565,8 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
         if (!opts.quiet && !is_empty) {
             streams.out.append(repeated);
             if (!opts.no_newline) streams.out.append(L"\n");
+        } else if (opts.quiet && !is_empty) {
+            return STATUS_CMD_OK;
         }
     }
 
@@ -1621,6 +1631,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
             streams.out.append(L'\n');
         }
         nsub++;
+        if (opts.quiet) return STATUS_CMD_OK;
     }
 
     return nsub > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
@@ -1661,6 +1672,8 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         if (!opts.quiet) {
             streams.out.append(wcstring(*arg, begin, end - begin));
             streams.out.append(L'\n');
+        } else if (ntrim > 0) {
+            return STATUS_CMD_OK;
         }
     }
 
@@ -1685,6 +1698,8 @@ static int string_transform(parser_t &parser, io_streams_t &streams, int argc, w
         if (!opts.quiet) {
             streams.out.append(transformed);
             streams.out.append(L'\n');
+        } else if (n_transformed > 0) {
+            return STATUS_CMD_OK;
         }
     }
 

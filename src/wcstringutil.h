@@ -48,8 +48,9 @@ struct string_fuzzy_match_t {
 
     // The case-folding required for the match.
     enum class case_fold_t : uint8_t {
-        samecase,  // exact match: foobar matches foobar
-        icase,     // case insensitive: FoBaR matches foobar
+        samecase,   // exact match: foobar matches foobar
+        smartcase,  // case insensitive match with lowercase input. foobar matches FoBar.
+        icase,      // case insensitive: FoBaR matches foobAr
     };
     case_fold_t case_fold;
 

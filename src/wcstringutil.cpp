@@ -158,6 +158,15 @@ static bool subsequence_in_string(const wcstring &needle, const wcstring &haysta
 maybe_t<string_fuzzy_match_t> string_fuzzy_match_t::try_create(const wcstring &string,
                                                                const wcstring &match_against,
                                                                bool anchor_start) {
+    // Helper to lazily compute if case insensitive matches should use icase or smartcase.
+    // Use icase if the input contains any uppercase characters, smartcase otherwise.
+    auto get_case_fold = [&] {
+        for (wchar_t c : string) {
+            if (towlower(c) != c) return case_fold_t::icase;
+        }
+        return case_fold_t::smartcase;
+    };
+
     // A string cannot fuzzy match against a shorter string.
     if (string.size() > match_against.size()) {
         return none();
@@ -175,12 +184,12 @@ maybe_t<string_fuzzy_match_t> string_fuzzy_match_t::try_create(const wcstring &s
 
     // exact icase
     if (wcscasecmp(string.c_str(), match_against.c_str()) == 0) {
-        return string_fuzzy_match_t{contain_type_t::exact, case_fold_t::icase};
+        return string_fuzzy_match_t{contain_type_t::exact, get_case_fold()};
     }
 
     // prefix icase
     if (string_prefixes_string_case_insensitive(string, match_against)) {
-        return string_fuzzy_match_t{contain_type_t::prefix, case_fold_t::icase};
+        return string_fuzzy_match_t{contain_type_t::prefix, get_case_fold()};
     }
 
     // If anchor_start is set, this is as far as we go.
@@ -196,7 +205,7 @@ maybe_t<string_fuzzy_match_t> string_fuzzy_match_t::try_create(const wcstring &s
 
     // substr icase
     if ((location = ifind(match_against, string, true /* fuzzy */)) != wcstring::npos) {
-        return string_fuzzy_match_t{contain_type_t::substr, case_fold_t::icase};
+        return string_fuzzy_match_t{contain_type_t::substr, get_case_fold()};
     }
 
     // subseq samecase
@@ -212,10 +221,12 @@ uint32_t string_fuzzy_match_t::rank() const {
     // Combine our type and our case fold into a single number, such that better matches are
     // smaller. Treat 'exact' types the same as 'prefix' types; this is because we do not
     // prefer exact matches to prefix matches when presenting completions to the user.
+    // Treat smartcase the same as samecase; see #3978.
     auto effective_type = (type == contain_type_t::exact ? contain_type_t::prefix : type);
+    auto effective_case = (case_fold == case_fold_t::smartcase ? case_fold_t::samecase : case_fold);
 
     // Type dominates fold.
-    return static_cast<uint32_t>(effective_type) * 8 + static_cast<uint32_t>(case_fold);
+    return static_cast<uint32_t>(effective_type) * 8 + static_cast<uint32_t>(effective_case);
 }
 
 template <bool Fuzzy, typename T>

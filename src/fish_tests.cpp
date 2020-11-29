@@ -2132,9 +2132,13 @@ static void test_fuzzy_match() {
     do_test(test_fuzzy(L"", L"", type_t::exact, case_fold_t::samecase));
     do_test(test_fuzzy(L"alpha", L"alpha", type_t::exact, case_fold_t::samecase));
     do_test(test_fuzzy(L"alp", L"alpha", type_t::prefix, case_fold_t::samecase));
+    do_test(test_fuzzy(L"alpha", L"AlPhA", type_t::exact, case_fold_t::smartcase));
+    do_test(test_fuzzy(L"alpha", L"AlPhA!", type_t::prefix, case_fold_t::smartcase));
+    do_test(test_fuzzy(L"ALPHA", L"alpha!", type_t::prefix, case_fold_t::icase));
     do_test(test_fuzzy(L"ALPHA!", L"alPhA!", type_t::exact, case_fold_t::icase));
     do_test(test_fuzzy(L"alPh", L"ALPHA!", type_t::prefix, case_fold_t::icase));
     do_test(test_fuzzy(L"LPH", L"ALPHA!", type_t::substr, case_fold_t::samecase));
+    do_test(test_fuzzy(L"lph", L"AlPhA!", type_t::substr, case_fold_t::smartcase));
     do_test(test_fuzzy(L"lPh", L"ALPHA!", type_t::substr, case_fold_t::icase));
     do_test(test_fuzzy(L"AA", L"ALPHA!", type_t::subseq, case_fold_t::samecase));
     do_test(!string_fuzzy_match_string(L"lh", L"ALPHA!").has_value());  // no subseq icase
@@ -2897,7 +2901,8 @@ static void test_complete() {
     struct test_complete_vars_t : environment_t {
         wcstring_list_t get_names(int flags) const override {
             UNUSED(flags);
-            return {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
+            return {L"Foo1", L"Foo2",  L"Foo3",   L"Bar1",   L"Bar2",
+                    L"Bar3", L"alpha", L"ALPHA!", L"gamma1", L"GAMMA2"};
         }
 
         maybe_t<env_var_t> get(const wcstring &key,
@@ -2921,13 +2926,24 @@ static void test_complete() {
 
     completions = do_complete(L"$", {});
     completions_sort_and_prioritize(&completions);
-    do_test(completions.size() == 6);
-    do_test(completions.at(0).completion == L"Bar1");
-    do_test(completions.at(1).completion == L"Bar2");
-    do_test(completions.at(2).completion == L"Bar3");
-    do_test(completions.at(3).completion == L"Foo1");
-    do_test(completions.at(4).completion == L"Foo2");
-    do_test(completions.at(5).completion == L"Foo3");
+    do_test(completions.size() == 10);
+    do_test(completions.at(0).completion == L"alpha");
+    do_test(completions.at(1).completion == L"ALPHA!");
+    do_test(completions.at(2).completion == L"Bar1");
+    do_test(completions.at(3).completion == L"Bar2");
+    do_test(completions.at(4).completion == L"Bar3");
+    do_test(completions.at(5).completion == L"Foo1");
+    do_test(completions.at(6).completion == L"Foo2");
+    do_test(completions.at(7).completion == L"Foo3");
+    do_test(completions.at(8).completion == L"gamma1");
+    do_test(completions.at(9).completion == L"GAMMA2");
+
+    // Smartcase test. Lowercase inputs match both lowercase and uppercase.
+    completions = do_complete(L"$a", {});
+    completions_sort_and_prioritize(&completions);
+    do_test(completions.size() == 2);
+    do_test(completions.at(0).completion == L"$ALPHA!");
+    do_test(completions.at(1).completion == L"lpha");
 
     completions = do_complete(L"$F", {});
     completions_sort_and_prioritize(&completions);
@@ -2942,9 +2958,10 @@ static void test_complete() {
 
     completions = do_complete(L"$1", completion_request_t::fuzzy_match);
     completions_sort_and_prioritize(&completions);
-    do_test(completions.size() == 2);
+    do_test(completions.size() == 3);
     do_test(completions.at(0).completion == L"$Bar1");
     do_test(completions.at(1).completion == L"$Foo1");
+    do_test(completions.at(2).completion == L"$gamma1");
 
     if (system("mkdir -p 'test/complete_test'")) err(L"mkdir failed");
     if (system("touch 'test/complete_test/has space'")) err(L"touch failed");

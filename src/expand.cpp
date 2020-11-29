@@ -1139,8 +1139,8 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const operatio
     }
 
     completion_list_t completions;
-    expand_result_t expand_err = expand_string(
-        instr, &completions, {expand_flag::skip_cmdsubst, expand_flag::skip_jobs}, ctx, errors);
+    expand_result_t expand_err =
+        expand_string(instr, &completions, {expand_flag::skip_cmdsubst}, ctx, errors);
     if (expand_err == expand_result_t::ok) {
         // The first completion is the command, any remaning are arguments.
         bool first = true;

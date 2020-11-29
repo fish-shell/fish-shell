@@ -162,7 +162,7 @@ maybe_t<string_fuzzy_match_t> string_fuzzy_match_t::try_create(const wcstring &s
     // Use icase if the input contains any uppercase characters, smartcase otherwise.
     auto get_case_fold = [&] {
         for (wchar_t c : string) {
-            if (towlower(c) != c) return case_fold_t::icase;
+            if (towlower(c) != static_cast<wint_t>(c)) return case_fold_t::icase;
         }
         return case_fold_t::smartcase;
     };

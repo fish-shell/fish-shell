@@ -73,6 +73,16 @@ functions -d description2 test_func_desc
 functions test_func_desc | string match --quiet '*description2*'
 or echo "Failed to find description 2" >&2
 
+# ==========
+# Verify that the functions are printed in order.
+functions f1 test_func_desc
+# CHECK: # Defined in {{.*}}
+# CHECK: function f1
+# CHECK: end
+# CHECK: # Defined in {{.*}}
+# CHECK: function test_func_desc --description description2
+# CHECK: end
+
 # Note: This test isn't ideal - if ls was loaded before,
 # or doesn't exist, it'll succeed anyway.
 #

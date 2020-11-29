@@ -329,7 +329,7 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t 
         } else {
             if (!opts.query) {
                 if (i != optind) streams.out.append(L"\n");
-                const wchar_t *funcname = argv[optind];
+                const wchar_t *funcname = argv[i];
                 report_function_metadata(funcname, opts.verbose, streams, parser, true);
                 wcstring def = functions_def(funcname);
 

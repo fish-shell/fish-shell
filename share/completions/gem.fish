@@ -22,10 +22,10 @@ complete -c gem -n __fish_use_subcommand -xa "list\tDisplay all gems whose name 
 complete -c gem -n __fish_use_subcommand -xa "query\tQuery gem information in local or remote repositories"
 complete -c gem -n __fish_use_subcommand -xa "rdoc\tGenerates RDoc for pre-installed gems"
 complete -c gem -n __fish_use_subcommand -xa "search\tDisplay all gems whose name contains STRING"
-complete -c gem -n __fish_use_subcommand -xa "specification\tDisplay gem specification (in yaml)"
+complete -c gem -n __fish_use_subcommand -xa "specification\t'Display gem specification (in YAML)'"
 complete -c gem -n __fish_use_subcommand -xa "uninstall\tUninstall a gem from the local repository"
 complete -c gem -n __fish_use_subcommand -xa "unpack\tUnpack an installed gem to the current directory"
-complete -c gem -n __fish_use_subcommand -xa "update\tUpdate the named gem (or all installed gems) in the local repository"
+complete -c gem -n __fish_use_subcommand -xa "update\tUpdate the named gem or all installed gems in the local repository"
 
 #####
 # Subcommand switches

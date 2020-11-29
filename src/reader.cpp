@@ -82,10 +82,6 @@
 // interactive command to complete.
 #define ENV_CMD_DURATION L"CMD_DURATION"
 
-/// Maximum length of prefix string when printing completion list. Longer prefixes will be
-/// ellipsized.
-#define PREFIX_MAX_LEN 9
-
 /// A simple prompt for reading shell commands that does not rely on fish specific commands, meaning
 /// it will work even if fish is not installed. This is used by read_i.
 #define DEFAULT_PROMPT L"echo -n \"$USER@$hostname $PWD \"'> '"
@@ -1814,6 +1810,45 @@ static uint32_t get_best_rank(const completion_list_t &comp) {
     return best_rank;
 }
 
+/// \return the common string prefix of a list of completions.
+static wcstring extract_common_prefix(const completion_list_t &completions) {
+    bool has_seed = false;
+    wcstring result;
+    // Seed it with the first samecase completion (if any), so that the prefix has the same case as
+    // the command line.
+    for (const completion_t &c : completions) {
+        if (c.match.is_samecase()) {
+            result = c.completion;
+            has_seed = true;
+            break;
+        }
+    }
+
+    for (const completion_t &c : completions) {
+        if (!has_seed) {
+            result = c.completion;
+            has_seed = true;
+            continue;
+        }
+
+        // Allow case insensitive common prefix if our completion was not samecase.
+        bool icase = !c.match.is_samecase();
+        size_t i = 0;
+        size_t max = std::min(c.completion.size(), result.size());
+        for (; i < max; i++) {
+            wchar_t c1 = c.completion[i];
+            wchar_t c2 = result[i];
+            bool chars_match = (c1 == c2 || (icase && towlower(c1) == towlower(c2)));
+            if (!chars_match) {
+                break;
+            }
+        }
+        assert(i <= result.size() && "Shared prefix should not make string longer");
+        result.resize(i);
+    }
+    return result;
+}
+
 /// Handle the list of completions. This means the following:
 ///
 /// - If the list is empty, flash the terminal.
@@ -1835,7 +1870,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     bool success = false;
     const editable_line_t *el = &command_line;
 
-    const wcstring tok(el->text().c_str() + token_begin, token_end - token_begin);
+    const wcstring tok(el->text(), token_begin, token_end - token_begin);
 
     // Check trivial cases.
     size_t size = comp.size();
@@ -1860,118 +1895,51 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
         return success;
     }
 
-    auto best_rank = get_best_rank(comp);
-
-    // Determine whether we are going to replace the token or not. If any commands of the best
-    // rank do not require replacement, then ignore all those that want to use replacement.
-    bool will_replace_token = true;
-    for (const completion_t &el : comp) {
-        if (el.rank() <= best_rank && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
-            will_replace_token = false;
-            break;
-        }
-    }
-
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.
+    auto best_rank = get_best_rank(comp);
     completion_list_t surviving_completions;
     bool all_matches_exact_or_prefix = true;
-    for (const completion_t &el : comp) {
+    for (const completion_t &c : comp) {
         // Ignore completions with a less suitable match rank than the best.
-        if (el.rank() > best_rank) continue;
-
-        // Only use completions that match replace_token.
-        bool completion_replace_token = static_cast<bool>(el.flags & COMPLETE_REPLACES_TOKEN);
-        if (completion_replace_token != will_replace_token) continue;
+        if (c.rank() > best_rank) continue;
 
         // Don't use completions that want to replace, if we cannot replace them.
-        if (completion_replace_token && !reader_can_replace(tok, el.flags)) continue;
+        bool completion_replace_token = (c.flags & COMPLETE_REPLACES_TOKEN);
+        if (completion_replace_token && !reader_can_replace(tok, c.flags)) continue;
 
         // This completion survived.
-        surviving_completions.push_back(el);
-        all_matches_exact_or_prefix = all_matches_exact_or_prefix && el.match.is_exact_or_prefix();
+        surviving_completions.push_back(c);
+        all_matches_exact_or_prefix = all_matches_exact_or_prefix && c.match.is_exact_or_prefix();
     }
 
-    bool use_prefix = false;
-    wcstring common_prefix;
-    if (all_matches_exact_or_prefix) {
-        // Try to find a common prefix to insert among the surviving completions.
-        complete_flags_t flags = 0;
-        bool prefix_is_partial_completion = false;
-        bool first = true;
-        for (const completion_t &el : surviving_completions) {
-            if (first) {
-                // First entry, use the whole string.
-                common_prefix = el.completion;
-                flags = el.flags;
-                first = false;
-            } else {
-                // Determine the shared prefix length.
-                size_t idx, max = std::min(common_prefix.size(), el.completion.size());
-
-                for (idx = 0; idx < max; idx++) {
-                    wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
-                    bool matches = (ac == bc);
-                    // If we are replacing the token, allow case to vary.
-                    if (will_replace_token && !matches) {
-                        // Hackish way to compare two strings in a case insensitive way,
-                        // hopefully better than towlower().
-                        matches = (wcsncasecmp(&ac, &bc, 1) == 0);
-                    }
-                    if (!matches) break;
-                }
-
-                // idx is now the length of the new common prefix.
-                common_prefix.resize(idx);
-                prefix_is_partial_completion = true;
-
-                // Early out if we decide there's no common prefix.
-                if (idx == 0) break;
-            }
-        }
-
-        // Determine if we use the prefix. We use it if it's non-empty and it will actually make
-        // the command line longer. It may make the command line longer by virtue of not using
-        // REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing
-        // the token but being longer than it.
-        use_prefix = common_prefix.size() > (will_replace_token ? tok.size() : 0);
-        assert(!use_prefix || !common_prefix.empty());
-
-        if (use_prefix) {
-            // We got something. If more than one completion contributed, then it means we have
-            // a prefix; don't insert a space after it.
-            if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
-            completion_insert(common_prefix, token_end, flags);
-            cycle_command_line = command_line.text();
-            cycle_cursor_pos = command_line.position();
+    // Ensure that all surviving completions replace their token, so we can handle them uniformly.
+    for (completion_t &c : surviving_completions) {
+        if (!(c.flags & COMPLETE_REPLACES_TOKEN)) {
+            c.flags |= COMPLETE_REPLACES_TOKEN;
+            c.completion.insert(0, tok);
         }
     }
 
-    if (use_prefix) {
-        for (completion_t &c : surviving_completions) {
-            c.flags &= ~COMPLETE_REPLACES_TOKEN;
-            c.completion.erase(0, common_prefix.size());
-        }
-    }
+    // Compute the common prefix (perhaps empty) of all surviving completions, and replace our token
+    // with it if it would make the token longer.
+    wcstring common_prefix = extract_common_prefix(surviving_completions);
+    if (common_prefix.size() > tok.size()) {
+        complete_flags_t flags = COMPLETE_REPLACES_TOKEN;
 
-    // Print the completion list.
-    wcstring prefix;
-    if (will_replace_token || !all_matches_exact_or_prefix) {
-        if (use_prefix) prefix = std::move(common_prefix);
-    } else if (tok.size() + common_prefix.size() <= PREFIX_MAX_LEN) {
-        prefix = tok + common_prefix;
-    } else {
-        // Append just the end of the string.
-        prefix = wcstring{get_ellipsis_char()};
-        prefix.append(tok + common_prefix, tok.size() + common_prefix.size() - PREFIX_MAX_LEN,
-                      PREFIX_MAX_LEN);
+        // Replace the token! Note this invalidates token_begin and token_end.
+        // Do not insert a space if more than one completion contributed.
+        if (surviving_completions.size() > 1) flags |= COMPLETE_NO_SPACE;
+        completion_insert(common_prefix, token_end, flags);
+
+        cycle_command_line = command_line.text();
+        cycle_cursor_pos = command_line.position();
     }
 
     // Update the pager data.
-    pager.set_prefix(prefix);
-    pager.set_completions(surviving_completions);
+    pager.set_completions(surviving_completions, common_prefix);
     // Invalidate our rendering.
-    current_page_rendering = page_rendering_t();
+    current_page_rendering = page_rendering_t{};
     // Modify the command line to reflect the new pager.
     pager_selection_changed();
     return false;

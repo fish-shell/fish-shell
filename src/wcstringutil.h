@@ -67,6 +67,9 @@ struct string_fuzzy_match_t {
         return type == contain_type_t::exact && case_fold == case_fold_t::samecase;
     }
 
+    /// \return if this is a samecase completion.
+    bool is_samecase() const { return case_fold == case_fold_t::samecase; }
+
     /// \return if we are exact or prefix match.
     bool is_exact_or_prefix() const {
         switch (type) {

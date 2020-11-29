@@ -166,6 +166,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset dl delete-char
     bind -s --preset di backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
     bind -s --preset da backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
+    bind -s --preset 'd;' begin-selection repeat-jump kill-selection end-selection
+    bind -s --preset 'd,' begin-selection repeat-jump-reverse kill-selection end-selection
 
     bind -s --preset -m insert s delete-char repaint-mode
     bind -s --preset -m insert S kill-whole-line repaint-mode

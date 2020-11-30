@@ -134,10 +134,13 @@ class Line(object):
         return 0
 
     def __eq__(self, other):
+        if other is None:
+            return False
         if isinstance(other, CheckCmd):
             return other.regex.match(self.text)
         if isinstance(other, Line):
-            return self.text == other.text and self.number == other.number and self.file == other.file
+            # We only compare the text here so SequenceMatcher can reshuffle these
+            return self.text == other.text
         raise NotImplementedError
 
     def subline(self, text):
@@ -495,8 +498,10 @@ class CheckCmd(object):
         # "Magical" comparison with lines and strings.
         # Typically I wouldn't use this, but it allows us to check if a line matches any check in a dict or list via
         # the `in` operator.
+        if other is None:
+            return False
         if isinstance(other, CheckCmd):
-            return self.line == other.line and self.type == other.type and self.regex == other.regex
+            return self.regex == other.regex
         if isinstance(other, Line):
             return self.regex.match(other.text)
         if isinstance(other, str):

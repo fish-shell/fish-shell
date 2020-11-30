@@ -115,11 +115,11 @@ static void print_ignored_signals() {
 
 static void print_stop_cont() {
     signal(SIGTSTP, [](int) {
-        write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
+        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
         kill(getpid(), SIGSTOP);
     });
     signal(SIGCONT, [](int) {
-        write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
+        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
     });
     char buff[1];
     for (;;) {

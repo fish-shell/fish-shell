@@ -242,6 +242,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
+        # VTE and iTerm reflow the text themselves, so us doing it inevitably races against them.
+        # Guidance from the VTE developers is to let them repaint.
+        if set -q VTE_VERSION; or test "$TERM_PROGRAM" = "iTerm.app"
+            return
+        end
         commandline -f repaint >/dev/null 2>/dev/null
     end
 

@@ -236,6 +236,32 @@ void completion_t::prepend_token_prefix(const wcstring &prefix) {
     }
 }
 
+void completion_receiver_t::add(completion_t &&comp) {
+    this->completions_.push_back(std::move(comp));
+}
+
+void completion_receiver_t::add(wcstring &&comp) { this->add(std::move(comp), wcstring{}); }
+
+void completion_receiver_t::add(wcstring &&comp, wcstring &&desc, complete_flags_t flags,
+                                string_fuzzy_match_t match) {
+    this->completions_.emplace_back(std::move(comp), std::move(desc), match, flags);
+}
+
+void completion_receiver_t::add_list(completion_list_t &&lst) {
+    if (completions_.empty()) {
+        completions_ = std::move(lst);
+    } else {
+        completions_.reserve(completions_.size() + lst.size());
+        std::move(lst.begin(), lst.end(), std::back_inserter(completions_));
+    }
+}
+
+completion_list_t completion_receiver_t::take() {
+    completion_list_t res{};
+    std::swap(res, this->completions_);
+    return res;
+}
+
 // If these functions aren't force inlined, it is actually faster to call
 // stable_sort twice rather than to iterate once performing all comparisons in one go!
 __attribute__((always_inline)) static inline bool compare_completions_by_duplicate_arguments(

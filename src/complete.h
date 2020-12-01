@@ -120,6 +120,37 @@ using completion_request_flags_t = enum_set_t<completion_request_t>;
 class completion_t;
 using completion_list_t = std::vector<completion_t>;
 
+/// A completion receiver accepts completions. It is essentially a wrapper around std::vector with
+/// some conveniences.
+class completion_receiver_t {
+   public:
+    /// Add a completion.
+    void add(completion_t &&comp);
+
+    /// Add a completion with the given string, and default other properties.
+    void add(wcstring &&comp);
+
+    /// Add a completion with the given string, description, flags, and fuzzy match.
+    void add(wcstring &&comp, wcstring &&desc, complete_flags_t flags = 0,
+             string_fuzzy_match_t match = string_fuzzy_match_t::exact_match());
+
+    /// Add a list of completions.
+    void add_list(completion_list_t &&lst);
+
+    /// Swap our completions with a new list.
+    void swap(completion_list_t &lst) { std::swap(completions_, lst); }
+
+    /// Clear the list of completions. This retains the storage inside completions_ which can be
+    /// useful to prevent allocations.
+    void clear() { completions_.clear(); }
+
+    /// \return the list of completions, clearing them.
+    completion_list_t take();
+
+   private:
+    completion_list_t completions_;
+};
+
 enum complete_option_type_t {
     option_type_args_only,    // no option
     option_type_short,        // -x

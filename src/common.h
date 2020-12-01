@@ -255,8 +255,12 @@ bool contains(const Col &col, const T2 &val) {
 /// Append a vector \p donator to the vector \p receiver.
 template <typename T>
 void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
-    receiver.insert(receiver.end(), std::make_move_iterator(donator.begin()),
-                    std::make_move_iterator(donator.end()));
+    if (receiver.empty()) {
+        receiver = std::move(donator);
+    } else {
+        receiver.insert(receiver.end(), std::make_move_iterator(donator.begin()),
+                        std::make_move_iterator(donator.end()));
+    }
 }
 
 /// Move an object into a shared_ptr.

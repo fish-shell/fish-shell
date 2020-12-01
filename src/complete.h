@@ -124,6 +124,10 @@ using completion_list_t = std::vector<completion_t>;
 /// some conveniences.
 class completion_receiver_t {
    public:
+    /// Construct, perhaps acquiring a list if necessary.
+    completion_receiver_t() = default;
+    explicit completion_receiver_t(completion_list_t &&v) : completions_(std::move(v)) {}
+
     /// Add a completion.
     void add(completion_t &&comp);
 
@@ -143,6 +147,21 @@ class completion_receiver_t {
     /// Clear the list of completions. This retains the storage inside completions_ which can be
     /// useful to prevent allocations.
     void clear() { completions_.clear(); }
+
+    /// \return whether our completion list is empty.
+    bool empty() const { return completions_.empty(); }
+
+    /// \return how many completions we have stored.
+    size_t size() const { return completions_.size(); }
+
+    /// \return a completion at an index.
+    completion_t &at(size_t idx) { return completions_.at(idx); }
+    const completion_t &at(size_t idx) const { return completions_.at(idx); }
+
+    /// \return the list of completions. Do not modify the size of the list via this function, as it
+    /// may exceed our completion limit.
+    const completion_list_t &get_list() const { return completions_; }
+    completion_list_t &get_list() { return completions_; }
 
     /// \return the list of completions, clearing them.
     completion_list_t take();

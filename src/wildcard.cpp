@@ -187,7 +187,7 @@ struct wc_complete_pack_t {
 };
 
 // Weirdly specific and non-reusable helper function that makes its one call site much clearer.
-static bool has_prefix_match(const completion_list_t *comps, size_t first) {
+static bool has_prefix_match(const completion_receiver_t *comps, size_t first) {
     if (comps != nullptr) {
         const size_t after_count = comps->size();
         for (size_t j = first; j < after_count; j++) {
@@ -209,7 +209,7 @@ static bool has_prefix_match(const completion_list_t *comps, size_t first) {
 static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
                                        const wchar_t *const wc, size_t wc_len,
                                        const wc_complete_pack_t &params, complete_flags_t flags,
-                                       completion_list_t *out, bool is_first_call = false) {
+                                       completion_receiver_t *out, bool is_first_call = false) {
     assert(str != nullptr);
     assert(wc != nullptr);
 
@@ -253,7 +253,7 @@ static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.
         complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
-        append_completion(out, out_completion, out_desc, local_flags, *match);
+        out->add(std::move(out_completion), std::move(out_desc), local_flags, *match);
         return true;
     } else if (next_wc_char_pos > 0) {
         // The literal portion of a wildcard cannot be longer than the string itself,
@@ -331,7 +331,7 @@ static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
 
 bool wildcard_complete(const wcstring &str, const wchar_t *wc,
                        const std::function<wcstring(const wcstring &)> &desc_func,
-                       completion_list_t *out, expand_flags_t expand_flags,
+                       completion_receiver_t *out, expand_flags_t expand_flags,
                        complete_flags_t flags) {
     // Note out may be NULL.
     assert(wc != nullptr);
@@ -449,7 +449,7 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
 /// up. Note that the filename came from a readdir() call, so we know it exists.
 static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wcstring &filename,
                                               const wchar_t *wc, expand_flags_t expand_flags,
-                                              completion_list_t *out) {
+                                              completion_receiver_t *out) {
     // Check if it will match before stat().
     if (!wildcard_complete(filename, wc, {}, nullptr, expand_flags, 0)) {
         return false;
@@ -526,7 +526,7 @@ class wildcard_expander_t {
     // Flags controlling expansion.
     const expand_flags_t flags;
     // Resolved items get inserted into here. This is transient of course.
-    completion_list_t *resolved_completions;
+    completion_receiver_t *resolved_completions;
     // Whether we have been interrupted.
     bool did_interrupt{false};
     // Whether we have successfully added any completions.
@@ -567,11 +567,11 @@ class wildcard_expander_t {
         return did_interrupt;
     }
 
-    void add_expansion_result(const wcstring &result) {
+    void add_expansion_result(wcstring &&result) {
         // This function is only for the non-completions case.
         assert(!(this->flags & expand_flag::for_completions));
         if (this->completion_set.insert(result).second) {
-            append_completion(this->resolved_completions, result);
+            this->resolved_completions->add(std::move(result));
             this->did_add = true;
         }
     }
@@ -691,7 +691,7 @@ class wildcard_expander_t {
 
    public:
     wildcard_expander_t(wcstring wd, expand_flags_t f, cancel_checker_t cancel_checker,
-                        completion_list_t *r)
+                        completion_receiver_t *r)
         : cancel_checker(std::move(cancel_checker)),
           working_directory(std::move(wd)),
           flags(f),
@@ -699,7 +699,7 @@ class wildcard_expander_t {
         assert(resolved_completions != nullptr);
 
         // Insert initial completions into our set to avoid duplicates.
-        for (const auto &resolved_completion : *resolved_completions) {
+        for (const auto &resolved_completion : resolved_completions->get_list()) {
             this->completion_set.insert(resolved_completion.completion);
         }
     }
@@ -724,7 +724,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
         // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file if it
         // exists.
         if (waccess(base_dir, F_OK) == 0) {
-            this->add_expansion_result(base_dir);
+            this->add_expansion_result(wcstring{base_dir});
         }
     } else {
         // Trailing slashes and accepting incomplete, e.g. `echo /xyz/<tab>`. Everything is added.
@@ -961,7 +961,7 @@ wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
                                                 const wcstring &working_directory,
                                                 expand_flags_t flags,
                                                 const cancel_checker_t &cancel_checker,
-                                                completion_list_t *output) {
+                                                completion_receiver_t *output) {
     assert(output != nullptr);
     // Fuzzy matching only if we're doing completions.
     assert(flags.get(expand_flag::for_completions) || !flags.get(expand_flag::fuzzy_match));

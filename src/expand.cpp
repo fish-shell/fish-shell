@@ -883,7 +883,7 @@ class expander_t {
         : ctx(ctx), flags(flags), errors(errors) {}
 
    public:
-    static expand_result_t expand_string(wcstring input, completion_list_t *out_completions,
+    static expand_result_t expand_string(wcstring input, completion_receiver_t *out_completions,
                                          expand_flags_t flags, const operation_context_t &ctx,
                                          parse_error_list_t *errors);
 };
@@ -1007,10 +1007,10 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
         }
 
         result = expand_result_t::wildcard_no_match;
-        completion_list_t expanded;
+        completion_receiver_t expanded_recv;
         for (const auto &effective_working_dir : effective_working_dirs) {
             wildcard_expand_result_t expand_res = wildcard_expand_string(
-                path_to_expand, effective_working_dir, flags, ctx.cancel_checker, &expanded);
+                path_to_expand, effective_working_dir, flags, ctx.cancel_checker, &expanded_recv);
             switch (expand_res) {
                 case wildcard_expand_result_t::match:
                     result = expand_result_t::ok;
@@ -1023,6 +1023,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
             }
         }
 
+        completion_list_t expanded = expanded_recv.take();
         std::sort(expanded.begin(), expanded.end(),
                   [&](const completion_t &a, const completion_t &b) {
                       return wcsfilecmp_glob(a.completion.c_str(), b.completion.c_str()) < 0;
@@ -1039,14 +1040,14 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
     return result;
 }
 
-expand_result_t expander_t::expand_string(wcstring input, completion_list_t *out_completions,
+expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t *out_completions,
                                           expand_flags_t flags, const operation_context_t &ctx,
                                           parse_error_list_t *errors) {
     assert(((flags & expand_flag::skip_cmdsubst) || ctx.parser) &&
            "Must have a parser if not skipping command substitutions");
     // Early out. If we're not completing, and there's no magic in the input, we're done.
     if (!(flags & expand_flag::for_completions) && expand_is_clean(input)) {
-        append_completion(out_completions, std::move(input));
+        out_completions->add(std::move(input));
         return expand_result_t::ok;
     }
 
@@ -1100,13 +1101,22 @@ expand_result_t expander_t::expand_string(wcstring input, completion_list_t *out
         if (!(flags & expand_flag::skip_home_directories)) {
             unexpand_tildes(input, ctx.vars, &completions);
         }
-        vec_append(*out_completions, std::move(completions));
+        out_completions->add_list(std::move(completions));
     }
     return total_result;
 }
 }  // namespace
 
 expand_result_t expand_string(wcstring input, completion_list_t *out_completions,
+                              expand_flags_t flags, const operation_context_t &ctx,
+                              parse_error_list_t *errors) {
+    completion_receiver_t recv(std::move(*out_completions));
+    auto res = expand_string(std::move(input), &recv, flags, ctx, errors);
+    *out_completions = recv.take();
+    return res;
+}
+
+expand_result_t expand_string(wcstring input, completion_receiver_t *out_completions,
                               expand_flags_t flags, const operation_context_t &ctx,
                               parse_error_list_t *errors) {
     return expander_t::expand_string(std::move(input), out_completions, flags, ctx, errors);

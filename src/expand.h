@@ -69,6 +69,7 @@ using expand_flags_t = enum_set_t<expand_flag>;
 
 class completion_t;
 using completion_list_t = std::vector<completion_t>;
+class completion_receiver_t;
 
 enum : wchar_t {
     /// Character representing a home directory.
@@ -155,6 +156,11 @@ struct expand_result_t {
 /// wildcard_no_match and wildcard_match are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
 __warn_unused expand_result_t expand_string(wcstring input, completion_list_t *output,
+                                            expand_flags_t flags, const operation_context_t &ctx,
+                                            parse_error_list_t *errors = nullptr);
+
+/// Variant of string that inserts its results into a completion_receiver_t.
+__warn_unused expand_result_t expand_string(wcstring input, completion_receiver_t *output,
                                             expand_flags_t flags, const operation_context_t &ctx,
                                             parse_error_list_t *errors = nullptr);
 

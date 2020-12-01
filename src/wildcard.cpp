@@ -209,17 +209,6 @@ static bool has_prefix_match(const completion_list_t *comps, size_t first) {
 static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
                                        const wchar_t *const wc, size_t wc_len,
                                        const wc_complete_pack_t &params, complete_flags_t flags,
-                                       completion_list_t *out, bool is_first_call);
-__attribute__((unused)) static bool wildcard_complete_internal(
-    const wchar_t *const str, const wchar_t *const wc, const wc_complete_pack_t &params,
-    complete_flags_t flags, completion_list_t *out, bool is_first_call = false) {
-    return wildcard_complete_internal(str, std::wcslen(str), wc, std::wcslen(wc), params, flags,
-                                      out, is_first_call);
-}
-
-static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
-                                       const wchar_t *const wc, size_t wc_len,
-                                       const wc_complete_pack_t &params, complete_flags_t flags,
                                        completion_list_t *out, bool is_first_call = false) {
     assert(str != nullptr);
     assert(wc != nullptr);

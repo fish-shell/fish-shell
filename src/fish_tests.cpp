@@ -2293,7 +2293,7 @@ static void test_pager_navigation() {
     }
 
     pager_t pager;
-    pager.set_completions(completions, wcstring{});
+    pager.set_completions(completions);
     pager.set_term_size(termsize_t::defaults());
     page_rendering_t render = pager.render();
 
@@ -2414,7 +2414,7 @@ static void test_pager_layout() {
 
     // These test cases have equal completions and descriptions
     const completion_t c1(L"abcdefghij", L"1234567890");
-    pager.set_completions(completion_list_t{c1}, wcstring{});
+    pager.set_completions(completion_list_t(1, c1));
     const pager_layout_testcase_t testcases1[] = {
         {26, L"abcdefghij  (1234567890)"}, {25, L"abcdefghij  (1234567890)"},
         {24, L"abcdefghij  (1234567890)"}, {23, L"abcdefghij  (12345678…)"},
@@ -2429,7 +2429,7 @@ static void test_pager_layout() {
 
     // These test cases have heavyweight completions
     const completion_t c2(L"abcdefghijklmnopqrs", L"1");
-    pager.set_completions(completion_list_t{c2}, wcstring{});
+    pager.set_completions(completion_list_t(1, c2));
     const pager_layout_testcase_t testcases2[] = {
         {26, L"abcdefghijklmnopqrs  (1)"}, {25, L"abcdefghijklmnopqrs  (1)"},
         {24, L"abcdefghijklmnopqrs  (1)"}, {23, L"abcdefghijklmnopq…  (1)"},
@@ -2444,7 +2444,7 @@ static void test_pager_layout() {
 
     // These test cases have no descriptions
     const completion_t c3(L"abcdefghijklmnopqrst", L"");
-    pager.set_completions(completion_list_t{c3}, wcstring{});
+    pager.set_completions(completion_list_t(1, c3));
     const pager_layout_testcase_t testcases3[] = {
         {26, L"abcdefghijklmnopqrst"}, {25, L"abcdefghijklmnopqrst"},
         {24, L"abcdefghijklmnopqrst"}, {23, L"abcdefghijklmnopqrst"},

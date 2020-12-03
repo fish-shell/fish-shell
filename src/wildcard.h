@@ -45,6 +45,7 @@ enum class wildcard_expand_result_t {
     no_match,  /// The wildcard did not match.
     match,     /// The wildcard did match.
     cancel,    /// Expansion was cancelled (e.g. control-C).
+    overflow,  /// Expansion produced too many results.
 };
 wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
                                                 const wcstring &working_directory,

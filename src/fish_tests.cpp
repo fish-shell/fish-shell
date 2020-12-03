@@ -2118,6 +2118,37 @@ static void test_expand() {
     popd();
 }
 
+static void test_expand_overflow() {
+    say(L"Testing overflowing expansions");
+    // Ensure that we have sane limits on number of expansions - see #7497.
+
+    // Make a list of 64 elements, then expand it cartesian-style 64 times.
+    // This is far too large to expand.
+    wcstring_list_t vals;
+    wcstring expansion;
+    for (int i = 1; i <= 64; i++) {
+        vals.push_back(to_string(i));
+        expansion.append(L"$bigvar");
+    }
+
+    auto parser = parser_t::principal_parser().shared();
+    parser->vars().push(true);
+    int set = parser->vars().set(L"bigvar", ENV_LOCAL, std::move(vals));
+    do_test(set == ENV_OK);
+
+    parse_error_list_t errors;
+    operation_context_t ctx{parser, parser->vars(), no_cancel};
+
+    // We accept only 1024 completions.
+    completion_receiver_t output{1024};
+
+    auto res = expand_string(expansion, &output, expand_flags_t{}, ctx, &errors);
+    do_test(!errors.empty());
+    do_test(res == expand_result_t::error);
+
+    parser->vars().pop();
+}
+
 static void test_fuzzy_match() {
     say(L"Testing fuzzy string matching");
     // Check that a string fuzzy match has the expected type and case folding.
@@ -6131,6 +6162,7 @@ int main(int argc, char **argv) {
     if (should_test_function("pcre2_escape")) test_pcre2_escape();
     if (should_test_function("lru")) test_lru();
     if (should_test_function("expand")) test_expand();
+    if (should_test_function("expand")) test_expand_overflow();
     if (should_test_function("fuzzy_match")) test_fuzzy_match();
     if (should_test_function("ifind")) test_ifind();
     if (should_test_function("ifind_fuzzy")) test_ifind_fuzzy();

@@ -253,7 +253,9 @@ static bool wildcard_complete_internal(const wchar_t *const str, size_t str_len,
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.
         complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
-        out->add(std::move(out_completion), std::move(out_desc), local_flags, *match);
+        if (!out->add(std::move(out_completion), std::move(out_desc), local_flags, *match)) {
+            return false;
+        }
         return true;
     } else if (next_wc_char_pos > 0) {
         // The literal portion of a wildcard cannot be longer than the string itself,
@@ -529,6 +531,8 @@ class wildcard_expander_t {
     completion_receiver_t *resolved_completions;
     // Whether we have been interrupted.
     bool did_interrupt{false};
+    // Whether we have overflowed.
+    bool did_overflow{false};
     // Whether we have successfully added any completions.
     bool did_add{false};
     // Whether some parent expansion is fuzzy, and therefore completions always prepend their prefix
@@ -562,17 +566,18 @@ class wildcard_expander_t {
                              const wcstring &prefix);
 
     /// Indicate whether we should cancel wildcard expansion. This latches 'interrupt'.
-    bool interrupted() {
+    bool interrupted_or_overflowed() {
         did_interrupt = did_interrupt || cancel_checker();
-        return did_interrupt;
+        return did_interrupt || did_overflow;
     }
 
     void add_expansion_result(wcstring &&result) {
         // This function is only for the non-completions case.
         assert(!(this->flags & expand_flag::for_completions));
         if (this->completion_set.insert(result).second) {
-            this->resolved_completions->add(std::move(result));
-            this->did_add = true;
+            if (!this->resolved_completions->add(std::move(result))) {
+                this->did_overflow = true;
+            }
         }
     }
 
@@ -610,7 +615,7 @@ class wildcard_expander_t {
             }
 
             // We stop if we got two or more entries; also stop if we got zero or were interrupted
-            if (unique_entry.empty() || interrupted()) {
+            if (unique_entry.empty() || interrupted_or_overflowed()) {
                 stop_descent = true;
             }
 
@@ -716,7 +721,7 @@ class wildcard_expander_t {
 };
 
 void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const wcstring &prefix) {
-    if (interrupted()) {
+    if (interrupted_or_overflowed()) {
         return;
     }
 
@@ -731,7 +736,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
         DIR *dir = open_dir(base_dir);
         if (dir) {
             wcstring next;
-            while (wreaddir(dir, next) && !interrupted()) {
+            while (wreaddir(dir, next) && !interrupted_or_overflowed()) {
                 if (!next.empty() && next.at(0) != L'.') {
                     this->try_add_completion_result(base_dir + next, next, L"", prefix);
                 }
@@ -746,7 +751,7 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
                                                       const wchar_t *wc_remainder,
                                                       const wcstring &prefix) {
     wcstring name_str;
-    while (!interrupted() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
+    while (!interrupted_or_overflowed() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
         // Note that it's critical we ignore leading dots here, else we may descend into . and ..
         if (!wildcard_match(name_str, wc_segment, true)) {
             // Doesn't match the wildcard for this segment, skip it.
@@ -788,7 +793,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
     // Mark that we are fuzzy for the duration of this function
     const scoped_push<bool> scoped_fuzzy(&this->has_fuzzy_ancestor, true);
 
-    while (!interrupted() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
+    while (!interrupted_or_overflowed() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
         // Don't bother with . and ..
         if (name_str == L"." || name_str == L"..") {
             continue;
@@ -873,7 +878,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                                  const wcstring &effective_prefix) {
     assert(wc != nullptr);
 
-    if (interrupted()) {
+    if (interrupted_or_overflowed()) {
         return;
     }
 

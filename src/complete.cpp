@@ -236,30 +236,47 @@ void completion_t::prepend_token_prefix(const wcstring &prefix) {
     }
 }
 
-void completion_receiver_t::add(completion_t &&comp) {
+bool completion_receiver_t::add(completion_t &&comp) {
+    if (this->completions_.size() >= limit_) {
+        return false;
+    }
     this->completions_.push_back(std::move(comp));
+    return true;
 }
 
-void completion_receiver_t::add(wcstring &&comp) { this->add(std::move(comp), wcstring{}); }
+bool completion_receiver_t::add(wcstring &&comp) {
+    return this->add(std::move(comp), wcstring{});
+}
 
-void completion_receiver_t::add(wcstring &&comp, wcstring &&desc, complete_flags_t flags,
+bool completion_receiver_t::add(wcstring &&comp, wcstring &&desc, complete_flags_t flags,
                                 string_fuzzy_match_t match) {
-    this->completions_.emplace_back(std::move(comp), std::move(desc), match, flags);
+    return this->add(completion_t(std::move(comp), std::move(desc), match, flags));
 }
 
-void completion_receiver_t::add_list(completion_list_t &&lst) {
+bool completion_receiver_t::add_list(completion_list_t &&lst) {
+    size_t total_size = lst.size() + this->size();
+    if (total_size < this->size() || total_size > limit_) {
+        return false;
+    }
+
     if (completions_.empty()) {
         completions_ = std::move(lst);
     } else {
         completions_.reserve(completions_.size() + lst.size());
         std::move(lst.begin(), lst.end(), std::back_inserter(completions_));
     }
+    return true;
 }
 
 completion_list_t completion_receiver_t::take() {
     completion_list_t res{};
     std::swap(res, this->completions_);
     return res;
+}
+
+completion_receiver_t completion_receiver_t::subreceiver() const {
+    size_t remaining_capacity = limit_ < size() ? 0 : limit_ - size();
+    return completion_receiver_t(remaining_capacity);
 }
 
 // If these functions aren't force inlined, it is actually faster to call
@@ -358,8 +375,8 @@ class completer_t {
     bool try_complete_variable(const wcstring &str);
     bool try_complete_user(const wcstring &str);
 
-    bool complete_param(const wcstring &cmd_orig, const wcstring &popt, const wcstring &str,
-                        bool use_switches);
+    bool complete_param_for_command(const wcstring &cmd_orig, const wcstring &popt,
+                                    const wcstring &str, bool use_switches, bool *out_do_file);
 
     void complete_param_expand(const wcstring &str, bool do_file,
                                bool handle_as_special_cd = false);
@@ -910,16 +927,18 @@ static void complete_load(const wcstring &name) {
 }
 
 /// complete_param: Given a command, find completions for the argument str of command cmd_orig with
-/// previous option popt.
+/// previous option popt. If file completions should be disabled, then mark *out_do_file as false.
+///
+/// \return true if successful, false if there's an error.
 ///
 /// Examples in format (cmd, popt, str):
 ///
 ///   echo hello world <tab> -> ("echo", "world", "")
 ///   echo hello world<tab> -> ("echo", "hello", "world")
 ///
-/// Insert results into comp_out. Return true to perform file completion, false to disable it.
-bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
-                                 const wcstring &str, bool use_switches) {
+bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcstring &popt,
+                                             const wcstring &str, bool use_switches,
+                                             bool *out_do_file) {
     bool use_common = true, use_files = true, has_force = false;
 
     wcstring cmd, path;
@@ -1073,7 +1092,9 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                 // It's a match.
                 wcstring desc = o.localized_desc();
                 // Append a short-style option
-                this->completions.add(wcstring{o.option}, std::move(desc), 0);
+                if (!this->completions.add(wcstring{o.option}, std::move(desc), 0)) {
+                    return false;
+                }
             }
 
             // Check if the long style option matches.
@@ -1116,15 +1137,23 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                 // functions.
                 wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
                 // Append a long-style option with a mandatory trailing equal sign
-                this->completions.add(std::move(completion), C_(o.desc), flags | COMPLETE_NO_SPACE);
+                if (!this->completions.add(std::move(completion), C_(o.desc),
+                                           flags | COMPLETE_NO_SPACE)) {
+                    return false;
+                }
             }
 
             // Append a long-style option
-            this->completions.add(whole_opt.substr(offset), C_(o.desc), flags);
+            if (!this->completions.add(whole_opt.substr(offset), C_(o.desc), flags)) {
+                return false;
+            }
         }
     }
 
-    return has_force || use_files;
+    if (!(has_force || use_files)) {
+        *out_do_file = false;
+    }
+    return true;
 }
 
 /// Perform generic (not command-specific) expansions on the specified string.
@@ -1174,7 +1203,9 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         for (completion_t &comp : local_completions) {
             comp.prepend_token_prefix(prefix_with_sep);
         }
-        this->completions.add_list(std::move(local_completions));
+        if (!this->completions.add_list(std::move(local_completions))) {
+            return;
+        }
     }
 
     if (complete_from_start) {
@@ -1189,6 +1220,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
 }
 
 /// Complete the specified string as an environment variable.
+/// \return true if this was a variable, so we should stop completion.
 bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
     const wchar_t *const whole_var = str.c_str();
     const wchar_t *var = &whole_var[start_offset];
@@ -1237,7 +1269,8 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         // Append matching environment variables
-        this->completions.add(std::move(comp), std::move(desc), flags, *match);
+        // TODO: need to propagate overflow here.
+        (void)this->completions.add(std::move(comp), std::move(desc), flags, *match);
 
         res = true;
     }
@@ -1340,14 +1373,15 @@ bool completer_t::try_complete_user(const wcstring &str) {
         const wchar_t *pw_name = pw_name_str.c_str();
         if (std::wcsncmp(user_name, pw_name, name_len) == 0) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
-            // Append a user name
-            this->completions.add(&pw_name[name_len], std::move(desc), COMPLETE_NO_SPACE);
+            // Append a user name.
+            // TODO: propagate overflow?
+            (void)this->completions.add(&pw_name[name_len], std::move(desc), COMPLETE_NO_SPACE);
             result = true;
         } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name
-            this->completions.add(
+            (void)this->completions.add(
                 std::move(name), std::move(desc),
                 COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
             result = true;
@@ -1419,9 +1453,9 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     cleanup_t restore_vars{apply_var_assignments(*ad->var_assignments)};
     if (ctx.check_cancel()) return;
 
-    if (!complete_param(cmd, ad->previous_argument, ad->current_argument,
-                        !ad->had_ddash)) {  // Invoke any custom completions for this command.
-        ad->do_file = false;
+    if (!complete_param_for_command(
+            cmd, ad->previous_argument, ad->current_argument, !ad->had_ddash,
+            &ad->do_file)) {  // Invoke any custom completions for this command.
     }
 }
 

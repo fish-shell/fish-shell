@@ -119,6 +119,20 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
     errors->push_back(error);
 }
 
+/// Append an overflow error, when expansion produces too much data.
+static expand_result_t append_overflow_error(parse_error_list_t *errors,
+                                             size_t source_start = SOURCE_LOCATION_UNKNOWN) {
+    if (errors) {
+        parse_error_t error;
+        error.source_start = source_start;
+        error.source_length = 0;
+        error.code = parse_error_generic;
+        error.text = _(L"Expansion produced too many results");
+        errors->push_back(std::move(error));
+    }
+    return expand_result_t::make_error(STATUS_EXPAND_ERROR);
+}
+
 /// Test if the specified string does not contain character which can not be used inside a quoted
 /// string.
 static bool is_quotable(const wcstring &str) {
@@ -273,27 +287,26 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
 /// Expand all environment variables in the string *ptr.
 ///
 /// This function is slow, fragile and complicated. There are lots of little corner cases, like
-/// $$foo should do a double expansion, $foo$bar should not double expand bar, etc. Also, it's easy
-/// to accidentally leak memory on array out of bounds errors an various other situations. All in
-/// all, this function should be rewritten, split out into multiple logical units and carefully
-/// tested. After that, it can probably be optimized to do fewer memory allocations, fewer string
-/// scans and overall just less work. But until that happens, don't edit it unless you know exactly
-/// what you are doing, and do proper testing afterwards.
+/// $$foo should do a double expansion, $foo$bar should not double expand bar, etc.
 ///
 /// This function operates on strings backwards, starting at last_idx.
 ///
 /// Note: last_idx is considered to be where it previously finished procesisng. This means it
 /// actually starts operating on last_idx-1. As such, to process a string fully, pass string.size()
 /// as last_idx instead of string.size()-1.
-static bool expand_variables(wcstring instr, completion_receiver_t *out, size_t last_idx,
-                             const environment_t &vars, parse_error_list_t *errors) {
+///
+/// \return the result of expansion.
+static expand_result_t expand_variables(wcstring instr, completion_receiver_t *out, size_t last_idx,
+                                        const environment_t &vars, parse_error_list_t *errors) {
     const size_t insize = instr.size();
 
     // last_idx may be 1 past the end of the string, but no further.
     assert(last_idx <= insize && "Invalid last_idx");
     if (last_idx == 0) {
-        out->add(std::move(instr));
-        return true;
+        if (!out->add(std::move(instr))) {
+            return append_overflow_error(errors);
+        }
+        return expand_result_t::ok;
     }
 
     // Locate the last VARIABLE_EXPAND or VARIABLE_EXPAND_SINGLE
@@ -308,8 +321,10 @@ static bool expand_variables(wcstring instr, completion_receiver_t *out, size_t 
     }
     if (varexp_char_idx >= instr.size()) {
         // No variable expand char, we're done.
-        out->add(std::move(instr));
-        return true;
+        if (!out->add(std::move(instr))) {
+            return append_overflow_error(errors);
+        }
+        return expand_result_t::ok;
     }
 
     // Get the variable name.
@@ -333,7 +348,7 @@ static bool expand_variables(wcstring instr, completion_receiver_t *out, size_t 
             parse_util_expand_variable_error(instr, 0 /* global_token_pos */, varexp_char_idx,
                                              errors);
         }
-        return false;
+        return expand_result_t::make_error(STATUS_EXPAND_ERROR);
     }
 
     // Get the variable name as a string, then try to get the variable from env.
@@ -380,7 +395,7 @@ static bool expand_variables(wcstring instr, completion_receiver_t *out, size_t 
             } else {
                 append_syntax_error(errors, slice_start + bad_pos, L"Invalid index value");
             }
-            return false;
+            return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
         var_name_and_slice_stop = (slice_end - in);
     }
@@ -389,7 +404,7 @@ static bool expand_variables(wcstring instr, completion_receiver_t *out, size_t 
         // Expanding a non-existent variable.
         if (!is_single) {
             // Normal expansions of missing variables successfully expand to nothing.
-            return true;
+            return expand_result_t::ok;
         } else {
             // Expansion to single argument.
             // Replace the variable name and slice with VARIABLE_EXPAND_EMPTY.
@@ -460,7 +475,9 @@ static bool expand_variables(wcstring instr, completion_receiver_t *out, size_t 
         // Normal cartesian-product expansion.
         for (wcstring &item : var_item_list) {
             if (varexp_char_idx == 0 && var_name_and_slice_stop == insize) {
-                out->add(std::move(item));
+                if (!out->add(std::move(item))) {
+                    return append_overflow_error(errors);
+                }
             } else {
                 wcstring new_in(instr, 0, varexp_char_idx);
                 if (!new_in.empty()) {
@@ -472,13 +489,14 @@ static bool expand_variables(wcstring instr, completion_receiver_t *out, size_t 
                 }
                 new_in.append(item);
                 new_in.append(instr, var_name_and_slice_stop, wcstring::npos);
-                if (!expand_variables(std::move(new_in), out, varexp_char_idx, vars, errors)) {
-                    return false;
+                auto res = expand_variables(std::move(new_in), out, varexp_char_idx, vars, errors);
+                if (res.result != expand_result_t::ok) {
+                    return res;
                 }
             }
         }
     }
-    return true;
+    return expand_result_t::ok;
 }
 
 /// Perform brace expansion, placing the expanded strings into \p out.
@@ -549,7 +567,9 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
     }
 
     if (brace_begin == nullptr) {
-        out->add(std::move(instr));
+        if (!out->add(std::move(instr))) {
+            return expand_result_t::error;
+        }
         return expand_result_t::ok;
     }
 
@@ -608,7 +628,9 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
         case 0: {
-            out->add(std::move(input));
+            if (!out->add(std::move(input))) {
+                return append_overflow_error(errors);
+            }
             return expand_result_t::ok;
         }
         case 1: {
@@ -671,7 +693,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
 
     // Recursively call ourselves to expand any remaining command substitutions. The result of this
     // recursive call using the tail of the string is inserted into the tail_expand array list
-    completion_receiver_t tail_expand_recv;
+    completion_receiver_t tail_expand_recv = out->subreceiver();
     expand_cmdsubst(input.substr(tail_begin), ctx, &tail_expand_recv,
                     errors);  // TODO: offset error locations
     completion_list_t tail_expand = tail_expand_recv.take();
@@ -689,7 +711,9 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             whole_item.append(sub_item2);
             whole_item.push_back(INTERNAL_SEPARATOR);
             whole_item.append(tail_item.completion);
-            out->add(std::move(whole_item));
+            if (!out->add(std::move(whole_item))) {
+                return append_overflow_error(errors);
+            }
         }
     }
 
@@ -893,7 +917,9 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t
         size_t cur = 0, start = 0, end;
         switch (parse_util_locate_cmdsubst_range(input, &cur, nullptr, &start, &end, true)) {
             case 0:
-                out->add(std::move(input));
+                if (!out->add(std::move(input))) {
+                    return append_overflow_error(errors);
+                }
                 return expand_result_t::ok;
             case 1:
                 append_cmdsub_error(errors, start, L"Command substitutions not allowed");
@@ -920,14 +946,14 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_
                 i = L'$';
             }
         }
-        out->add(std::move(next));
+        if (!out->add(std::move(next))) {
+            return append_overflow_error(errors);
+        }
+        return expand_result_t::ok;
     } else {
         size_t size = next.size();
-        if (!expand_variables(std::move(next), out, size, ctx.vars, errors)) {
-            return expand_result_t::make_error(STATUS_EXPAND_ERROR);
-        }
+        return expand_variables(std::move(next), out, size, ctx.vars, errors);
     }
-    return expand_result_t::ok;
 }
 
 expand_result_t expander_t::stage_braces(wcstring input, completion_receiver_t *out) {
@@ -939,7 +965,9 @@ expand_result_t expander_t::stage_home_and_self(wcstring input, completion_recei
         expand_home_directory(input, ctx.vars);
     }
     expand_percent_self(input);
-    out->add(std::move(input));
+    if (!out->add(std::move(input))) {
+        return append_overflow_error(errors);
+    }
     return expand_result_t::ok;
 }
 
@@ -1007,7 +1035,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
         }
 
         result = expand_result_t::wildcard_no_match;
-        completion_receiver_t expanded_recv;
+        completion_receiver_t expanded_recv = out->subreceiver();
         for (const auto &effective_working_dir : effective_working_dirs) {
             wildcard_expand_result_t expand_res = wildcard_expand_string(
                 path_to_expand, effective_working_dir, flags, ctx.cancel_checker, &expanded_recv);
@@ -1016,6 +1044,9 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
                     result = expand_result_t::ok;
                     break;
                 case wildcard_expand_result_t::no_match:
+                    break;
+                case wildcard_expand_result_t::overflow:
+                    result = expand_result_t::error;
                     break;
                 case wildcard_expand_result_t::cancel:
                     result = expand_result_t::cancel;
@@ -1028,13 +1059,17 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
                   [&](const completion_t &a, const completion_t &b) {
                       return wcsfilecmp_glob(a.completion.c_str(), b.completion.c_str()) < 0;
                   });
-        out->add_list(std::move(expanded));
+        if (!out->add_list(std::move(expanded))) {
+            result = expand_result_t::error;
+        }
     } else {
         // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing
         // to mean don't do file expansions, so if we're not doing file expansions, just drop this
         // completion on the floor.
         if (!(flags & expand_flag::for_completions)) {
-            out->add(std::move(path_to_expand));
+            if (!out->add(std::move(path_to_expand))) {
+                return append_overflow_error(errors);
+            }
         }
     }
     return result;
@@ -1047,7 +1082,9 @@ expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t 
            "Must have a parser if not skipping command substitutions");
     // Early out. If we're not completing, and there's no magic in the input, we're done.
     if (!(flags & expand_flag::for_completions) && expand_is_clean(input)) {
-        out_completions->add(std::move(input));
+        if (!out_completions->add(std::move(input))) {
+            return append_overflow_error(errors);
+        }
         return expand_result_t::ok;
     }
 
@@ -1062,7 +1099,7 @@ expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t 
     completion_list_t completions;
     append_completion(&completions, input);
 
-    completion_receiver_t output_storage;
+    completion_receiver_t output_storage = out_completions->subreceiver();
     expand_result_t total_result = expand_result_t::ok;
     for (stage_t stage : stages) {
         for (completion_t &comp : completions) {
@@ -1101,7 +1138,9 @@ expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t 
         if (!(flags & expand_flag::skip_home_directories)) {
             unexpand_tildes(input, ctx.vars, &completions);
         }
-        out_completions->add_list(std::move(completions));
+        if (!out_completions->add_list(std::move(completions))) {
+            total_result = append_overflow_error(errors);
+        }
     }
     return total_result;
 }

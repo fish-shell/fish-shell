@@ -124,22 +124,31 @@ using completion_list_t = std::vector<completion_t>;
 /// some conveniences.
 class completion_receiver_t {
    public:
-    /// Construct, perhaps acquiring a list if necessary.
-    completion_receiver_t() = default;
-    explicit completion_receiver_t(completion_list_t &&v) : completions_(std::move(v)) {}
+    /// The default limit on expansions.
+    static constexpr size_t k_default_expansion_limit = 512 * 1024;
+
+    /// Construct with a limit.
+    explicit completion_receiver_t(size_t limit = k_default_expansion_limit) : limit_(limit) {}
+
+    explicit completion_receiver_t(completion_list_t &&v, size_t limit = k_default_expansion_limit)
+        : completions_(std::move(v)), limit_(limit) {}
 
     /// Add a completion.
-    void add(completion_t &&comp);
+    /// \return true on success, false if this would overflow the limit.
+    __warn_unused bool add(completion_t &&comp);
 
     /// Add a completion with the given string, and default other properties.
-    void add(wcstring &&comp);
+    /// \return true on success, false if this would overflow the limit.
+    __warn_unused bool add(wcstring &&comp);
 
     /// Add a completion with the given string, description, flags, and fuzzy match.
-    void add(wcstring &&comp, wcstring &&desc, complete_flags_t flags = 0,
+    /// \return true on success, false if this would overflow the limit.
+    __warn_unused bool add(wcstring &&comp, wcstring &&desc, complete_flags_t flags = 0,
              string_fuzzy_match_t match = string_fuzzy_match_t::exact_match());
 
     /// Add a list of completions.
-    void add_list(completion_list_t &&lst);
+    /// \return true on success, false if this would overflow the limit.
+    __warn_unused bool add_list(completion_list_t &&lst);
 
     /// Swap our completions with a new list.
     void swap(completion_list_t &lst) { std::swap(completions_, lst); }
@@ -163,11 +172,21 @@ class completion_receiver_t {
     const completion_list_t &get_list() const { return completions_; }
     completion_list_t &get_list() { return completions_; }
 
-    /// \return the list of completions, clearing them.
+    /// \return the list of completions, clearing it.
     completion_list_t take();
 
+    /// \return a new, empty receiver whose limit is our remaining capacity.
+    /// This is useful for e.g. recursive calls when you want to act on the result before adding it.
+    completion_receiver_t subreceiver() const;
+
    private:
+    // Our list of completions.
     completion_list_t completions_;
+
+    // The maximum number of completions to add. If our list length exceeds this, then new
+    // completions are not added. Note 0 has no special significance here - use
+    // numeric_limits<size_t>::max() instead.
+    const size_t limit_;
 };
 
 enum complete_option_type_t {

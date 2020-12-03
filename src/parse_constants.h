@@ -226,6 +226,9 @@ enum class pipeline_position_t {
 /// Error message for wildcards with no matches.
 #define WILDCARD_ERR_MSG _(L"No matches for wildcard '%ls'. See `help expand`.")
 
+/// Error message when an expansion produces too many results, e.g. `echo /**`.
+#define EXPAND_OVERFLOW_ERR_MSG _(L"Too many items produced by '%ls'.")
+
 /// Error when using break outside of loop.
 #define INVALID_BREAK_ERR_MSG _(L"'break' while not inside of loop")
 

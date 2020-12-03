@@ -34,7 +34,7 @@ STRING arguments are taken from the command line unless standard input is connec
 
 Arguments beginning with ``-`` are normally interpreted as switches; ``--`` causes the following arguments not to be treated as switches even if they begin with ``-``. Switches and required arguments are recognized only on the command line.
 
-Most subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status.
+Most subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
 
 The following subcommands are available.
 

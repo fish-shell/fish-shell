@@ -263,8 +263,8 @@ regressions in the future (i.e., we don’t reintroduce the bug).
 The tests can be found in three places:
 
 - src/fish_tests.cpp for tests to the core C++ code
-- tests/checks for script tests, run by [littlecheck](https://github.com/ridiculousfish/littlecheck)
-- tests/pexpects for interactive tests using [pexpect](https://pexpect.readthedocs.io/en/stable/)
+- tests/checks for script tests, run by `littlecheck <https://github.com/ridiculousfish/littlecheck>`__
+- tests/pexpects for interactive tests using `pexpect <https://pexpect.readthedocs.io/en/stable/>`__
 
 When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests. The syntax is fairly self-explanatory. It's a fish script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
 

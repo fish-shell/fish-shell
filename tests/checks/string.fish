@@ -668,3 +668,16 @@ echo $status
 # Unmatched capturing groups are treated as empty
 echo az | string replace -r -- 'a(b.+)?z' 'a:$1z'
 # CHECK: a:z
+
+# --quiet should quit early
+echo "Checking that --quiet quits early - if this is broken it hangs"
+# CHECK: Checking that --quiet quits early - if this is broken it hangs
+yes | string match -q y
+echo $status
+# CHECK: 0
+yes | string length -q
+echo $status
+# CHECK: 0
+yes | string replace -q y n
+echo $status
+# CHECK: 0

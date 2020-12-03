@@ -17,6 +17,14 @@ code {
     overflow: hidden;
 }
 
+@media screen and (max-width: 700px) {
+    /* On small screens remove the margins to leave more for the actual content */
+    #ancestor {
+        width: 100%;
+        margin-left: none;
+        margin-right: none;
+    }
+}
 #parent {
     width: 100%;
     min-height: 480px;
@@ -27,6 +35,7 @@ code {
     display: table;
     width: 100%;
     height: 50px;
+    overflow-wrap: anywhere;
 }
 
 .tab {
@@ -70,6 +79,7 @@ code {
 	padding-top: 20px;
 	padding-bottom: 20px;
 	width: 100%;
+    min-height: 80vh;
 	background-color: #eeeefa;
 	border-bottom-left-radius: 8px;
 	border-bottom-right-radius: 8px;

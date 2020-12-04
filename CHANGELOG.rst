@@ -92,6 +92,7 @@ Scripting improvements
 -  Trying to run scripts with Windows line endings (CRLF) via the shebang produces a sensible error (:issue:`2783`).
 -  An ``alias`` that delegates to a command with the same name no longer triggers an error about recursive completion (:issue:`7389`).
 - ``math`` now has a ``--base`` option to output the result in hexadecimal or octal (:issue:`7496`).
+- ``string`` subcommands now quit early when used with ``--quiet`` (:issue:`7495`).
 
 Interactive improvements
 ------------------------
@@ -141,6 +142,7 @@ Interactive improvements
 -  Resuming a piped job by its number, like ``fg %1`` has been fixed (:issue:`7406`).
 -  Commands run from key bindings now use the same tty modes as normal commands (:issue:`7483`).
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
+-  Fish no longer performs its own resizing in VTE-based terminals, as they perform their own reflowing, which clashes especially with right prompts (:issue:`7491`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -269,6 +271,7 @@ For distributors and developers
    codesigning is enabled (:issue:`6952`).
 -  Running the full interactive test suite now requires Python 3.5+ and the pexpect package (:issue:`6825`); the expect package is no longer required.
 -  Support for Python 2 in fish's tools (``fish_config`` and the manual page completion generator) is no longer guaranteed. Please use Python 3.5 or later (:issue:`6537`).
+-  The webconfig tool no longer requires python's distutils (:issue:`7514`)
 
 --------------
 

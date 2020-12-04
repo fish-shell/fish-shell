@@ -33,7 +33,7 @@ Notable improvements and fixes
           ^
 
 -  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (:issue:`6820`), improving its use in command substitutions (:issue:`6998`).
--  The documentation is now presented in a new theme (:issue:`6500`, :issue:`7371`).
+-  The documentation (:issue:`6500`, :issue:`7371`) and ``fish_config`` (:issue:`7523`) received a new theme, matching the design on fishshell.com.
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).

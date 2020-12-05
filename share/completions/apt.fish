@@ -17,6 +17,14 @@ function __fish_apt_option
     complete -f -c apt -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
+function __fish_apt_list_repos
+    # A single `string` invocation can't read from multiple files and so we use `cat`
+    # but /etc/apt/sources.list.d/ may or may not contain any files so using a fish
+    # wildcard glob may complain loudly if no files match the pattern so we use `find`.
+    # The trailing `sort -u` is largely decorative.
+    cat (find /etc/apt/sources.list /etc/apt/sources.list.d/ -name "*.list") | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1' | sort -u
+end
+
 complete -c apt -f
 
 complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 250 | sort)'
@@ -34,7 +42,7 @@ complete -f -c apt -s v -l version -d 'Display version and exit'
 # General options
 complete -x -c apt -s o -l option -d 'Set a configuration option'
 complete -r -c apt -s c -l config-file -d 'Configuration file'
-complete -x -c apt -s t -d 'Target release'
+complete -x -c apt -s t -d 'Install from specific repository' -x -a '(__fish_apt_list_repos)'
 
 # List
 __fish_apt_subcommand list -d 'List packages'

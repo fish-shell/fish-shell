@@ -144,8 +144,10 @@ class completion_receiver_t {
 
     /// Add a completion with the given string, description, flags, and fuzzy match.
     /// \return true on success, false if this would overflow the limit.
-    __warn_unused bool add(wcstring &&comp, wcstring &&desc, complete_flags_t flags = 0,
-             string_fuzzy_match_t match = string_fuzzy_match_t::exact_match());
+    /// The 'desc' parameter is not && because if gettext is not enabled, then we end
+    /// up passing a 'const wcstring &' here.
+    __warn_unused bool add(wcstring &&comp, wcstring desc, complete_flags_t flags = 0,
+                           string_fuzzy_match_t match = string_fuzzy_match_t::exact_match());
 
     /// Add a list of completions.
     /// \return true on success, false if this would overflow the limit.

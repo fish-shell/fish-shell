@@ -695,11 +695,6 @@ class wildcard_expander_t {
             // cd operates on logical paths.
             // for example, cd ../<tab> should complete "without resolving symlinks".
             path = normalize_path(path);
-        } else {
-            // Other commands operate on physical paths.
-            if (auto tmp = wrealpath(path)) {
-                path = tmp.acquire();
-            }
         }
         return wopendir(path);
     }

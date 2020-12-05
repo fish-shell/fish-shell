@@ -1,6 +1,6 @@
 <!-- The first 'sample' prompt is the current one; the remainders are samples. This ought to be cleaned up. -->
-<div class="current_prompt" style="min-height: 7.5em">
-	<div class="prompt_demo_choice_label">{{ selectedPrompt.name }}</div>
+<div class="current_prompt" style="min-height: 7.5em;" ng-style="{'background-color': terminalBackgroundColor}">
+    <div class="prompt_demo_choice_label" style="color: #FFF;">{{ selectedPrompt.name }}</div>
 	<div ng-bind-html='selectedPrompt.demo | to_trusted' class="prompt_demo unbordered"></div>
 	<div style="position: absolute; right: 5px; bottom: 5px; color:">
 		<span class="save_button"

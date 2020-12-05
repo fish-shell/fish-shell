@@ -91,9 +91,6 @@ class pager_t {
         size_t comp_width{0};
         /// On-screen width of the description information.
         size_t desc_width{0};
-        /// Length of the shared prefix for each completion.
-        /// These characters are colored using pager_prefix highlight role.
-        size_t prefix_len{0};
 
         // Our text looks like this:
         // completion  (description)
@@ -119,26 +116,32 @@ class pager_t {
     // The unfiltered list. Note there's a lot of duplication here.
     comp_info_list_t unfiltered_completion_infos;
 
-    bool completion_try_print(size_t cols, const comp_info_list_t &lst, page_rendering_t *rendering,
-                              size_t suggested_start_row) const;
+    wcstring prefix;
+
+    bool completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst,
+                              page_rendering_t *rendering, size_t suggested_start_row) const;
 
     void recalc_min_widths(comp_info_list_t *lst) const;
-    void measure_completion_infos(std::vector<comp_t> *infos) const;
+    void measure_completion_infos(std::vector<comp_t> *infos, const wcstring &prefix) const;
 
     bool completion_info_passes_filter(const comp_t &info) const;
 
     void completion_print(size_t cols, const size_t *width_by_column, size_t row_start,
-                          size_t row_stop, const comp_info_list_t &lst,
+                          size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
-    line_t completion_print_item(const comp_t *c, size_t row, size_t column, size_t width,
-                                 bool secondary, bool selected, page_rendering_t *rendering) const;
+    line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,
+                                 size_t width, bool secondary, bool selected,
+                                 page_rendering_t *rendering) const;
 
    public:
     // The text of the search field.
     editable_line_t search_field_line;
 
-    // Sets the set of completions, and their shared prefix.
-    void set_completions(const completion_list_t &raw_completions, const wcstring &prefix);
+    // Sets the set of completions.
+    void set_completions(const completion_list_t &raw_completions);
+
+    // Sets the prefix.
+    void set_prefix(const wcstring &pref);
 
     // Sets the terminal size.
     void set_term_size(termsize_t ts);

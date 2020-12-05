@@ -833,6 +833,7 @@ class pcre2_matcher_t : public string_matcher_t {
     const wchar_t *argv0;
     compiled_regex_t regex;
     parser_t &parser;
+    bool imported_vars = false;
 
     enum class match_result_t {
         pcre2_error = -1,
@@ -1058,7 +1059,12 @@ class pcre2_matcher_t : public string_matcher_t {
         PCRE2_SIZE arglen = arg.length();
         auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                regex.match, nullptr));
-        var_importer.import_vars(rc == match_result_t::match);
+        // We only import variables for the *first matching argument*
+        bool had_match = false;
+        if (rc == match_result_t::match && !imported_vars) {
+            var_importer.import_vars(rc == match_result_t::match);
+            had_match = true;
+        }
 
         switch (rc) {
             case match_result_t::pcre2_error:
@@ -1100,6 +1106,7 @@ class pcre2_matcher_t : public string_matcher_t {
             }
         }
 
+        imported_vars |= had_match;
         return true;
     }
 };

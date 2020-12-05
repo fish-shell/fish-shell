@@ -13,7 +13,7 @@ printf "%s\n" $words
 # CHECK: world
 
 # Capture multiple variables
-echo "hello world" | string match -rq -- '^(?<word1>[^ ]+) (?<word2>.*)$'
+echo "hello world"\n"snello snorld" | string match -rq -- '^(?<word1>[^ ]+) (?<word2>.*)$'
 printf "%s\n" $word1 $word2
 # CHECK: hello
 # CHECK: world
@@ -35,6 +35,22 @@ printf "%s\n" $punctuation
 # CHECK: ,
 # CHECK: !
 
+# Same thing with multiple arguments
+set word
+set punctuation
+printf '%s\n' "hello world, boy!" "shello shorld, shoy!" | string match -a -qr -- '(?<word>[^ .,!;]+)(?<punctuation>[.,!;])?'
+echo $word
+# CHECK: hello world boy
+printf "%s\n" $punctuation
+# CHECK:
+# CHECK: ,
+# CHECK: !
+
 # Verify read-only variables may not be imported
 echo hello | string match -rq "(?<version>.*)"
 # CHECKERR: Modification of read-only variable "version" is not allowed
+
+# Verify that the *first matching argument* is used.
+string match -rq '(?<bee>b.*)' -- aaa ba ccc be
+echo $bee
+# CHECK: ba

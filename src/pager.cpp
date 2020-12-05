@@ -39,10 +39,6 @@ using comp_info_list_t = std::vector<comp_t>;
 /// Text we use for the search field.
 #define SEARCH_FIELD_PROMPT _(L"search: ")
 
-/// Maximum length of prefix string when printing completion list. Longer prefixes will be
-/// ellipsized.
-#define PREFIX_MAX_LEN 9
-
 inline bool selection_direction_is_cardinal(selection_motion_t dir) {
     switch (dir) {
         case selection_motion_t::north:
@@ -79,10 +75,8 @@ static size_t divide_round_up(size_t numer, size_t denom) {
 /// \param max the maximum space that may be used for printing
 /// \param has_more if this flag is true, this is not the entire string, and the string should be
 /// ellipsized even if the string fits but takes up the whole space.
-/// \param prefix_len Hack: if nonzero, then color the first prefix_len chars with the prefix color.
-/// \param prefix_color the color to use for the first prefix_len characters.
 static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max, bool has_more,
-                        line_t *line, size_t prefix_len = 0, highlight_spec_t prefix_color = {}) {
+                        line_t *line) {
     size_t remaining = max;
     for (size_t i = 0; i < str.size(); i++) {
         wchar_t c = str.at(i);
@@ -103,7 +97,7 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
             break;
         }
 
-        line->append(c, i < prefix_len ? prefix_color : color);
+        line->append(c, color);
         assert(remaining >= width_c);
         remaining -= width_c;
     }
@@ -114,8 +108,8 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
 }
 
 /// Print the specified item using at the specified amount of space.
-line_t pager_t::completion_print_item(const comp_t *c, size_t row, size_t column, size_t width,
-                                      bool secondary, bool selected,
+line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row,
+                                      size_t column, size_t width, bool secondary, bool selected,
                                       page_rendering_t *rendering) const {
     UNUSED(column);
     UNUSED(row);
@@ -163,16 +157,19 @@ line_t pager_t::completion_print_item(const comp_t *c, size_t row, size_t column
     highlight_spec_t comp_col = {modify_role(highlight_role_t::pager_completion), bg_role};
     highlight_spec_t desc_col = {modify_role(highlight_role_t::pager_description), bg_role};
 
-    // Print the completion part.
+    // Print the completion part
     size_t comp_remaining = comp_width;
     for (size_t i = 0; i < c->comp.size(); i++) {
         const wcstring &comp = c->comp.at(i);
+
         if (i > 0) {
             comp_remaining -=
                 print_max(PAGER_SPACER_STRING, bg, comp_remaining, true /* has_more */, &line_data);
         }
-        comp_remaining -= print_max(comp, comp_col, comp_remaining, i + 1 < c->comp.size(),
-                                    &line_data, c->prefix_len, prefix_col);
+
+        comp_remaining -= print_max(prefix, prefix_col, comp_remaining, !comp.empty(), &line_data);
+        comp_remaining -=
+            print_max(comp, comp_col, comp_remaining, i + 1 < c->comp.size(), &line_data);
     }
 
     size_t desc_remaining = width - comp_width + comp_remaining;
@@ -206,9 +203,10 @@ line_t pager_t::completion_print_item(const comp_t *c, size_t row, size_t column
 /// \param width_by_column An array specifying the width of each column
 /// \param row_start The first row to print
 /// \param row_stop the row after the last row to print
+/// \param prefix The string to print before each completion
 /// \param lst The list of completions to print
 void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_t row_start,
-                               size_t row_stop, const comp_info_list_t &lst,
+                               size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                                page_rendering_t *rendering) const {
     // Teach the rendering about the rows it printed.
     assert(row_stop >= row_start);
@@ -228,7 +226,7 @@ void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_
             bool is_selected = (idx == effective_selected_idx);
 
             // Print this completion on its own "line".
-            line_t line = completion_print_item(el, row, col, width_by_column[col], row % 2,
+            line_t line = completion_print_item(prefix, el, row, col, width_by_column[col], row % 2,
                                                 is_selected, rendering);
 
             // If there's more to come, append two spaces.
@@ -302,8 +300,7 @@ static void join_completions(comp_info_list_t *comps) {
 }
 
 /// Generate a list of comp_t structures from a list of completions.
-static comp_info_list_t process_completions_into_infos(const completion_list_t &lst,
-                                                       size_t prefix_len) {
+static comp_info_list_t process_completions_into_infos(const completion_list_t &lst) {
     const size_t lst_size = lst.size();
 
     // Make the list of the correct size up-front.
@@ -311,22 +308,9 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
     for (size_t i = 0; i < lst_size; i++) {
         const completion_t &comp = lst.at(i);
         comp_t *comp_info = &result.at(i);
-        comp_info->prefix_len = prefix_len;
-
-        // Perhaps ellipsize the prefix.
-        // FIXME: The escaping mucks with the length here; we may color the wrong number of
-        // characters. Prefix should be based on width not length anyways.
-        wcstring comp_str = escape_string(comp.completion, ESCAPE_NO_QUOTED);
-        if (prefix_len > PREFIX_MAX_LEN && comp_str.size() > PREFIX_MAX_LEN) {
-            // Discard the prefix, except for the last PREFIX_MAX_LEN.
-            // Then ellipsize the first char.
-            comp_str.erase(0, prefix_len - PREFIX_MAX_LEN);
-            comp_str.at(0) = get_ellipsis_char();
-            comp_info->prefix_len = PREFIX_MAX_LEN;
-        }
 
         // Append the single completion string. We may later merge these into multiple.
-        comp_info->comp.push_back(std::move(comp_str));
+        comp_info->comp.push_back(escape_string(comp.completion, ESCAPE_NO_QUOTED));
 
         // Append the mangled description.
         comp_info->desc = comp.description;
@@ -338,7 +322,8 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
     return result;
 }
 
-void pager_t::measure_completion_infos(comp_info_list_t *infos) const {
+void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &prefix) const {
+    size_t prefix_len = fish_wcswidth(prefix);
     for (auto &info : *infos) {
         comp_t *comp = &info;
         const wcstring_list_t &comp_strings = comp->comp;
@@ -349,7 +334,7 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos) const {
 
             // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
             int comp_width = fish_wcswidth(comp_strings.at(j));
-            if (comp_width >= 0) comp->comp_width += comp_width;
+            if (comp_width >= 0) comp->comp_width += prefix_len + comp_width;
         }
 
         // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
@@ -372,7 +357,7 @@ bool pager_t::completion_info_passes_filter(const comp_t &info) const {
 
     // Match against the completion strings.
     for (const auto &i : info.comp) {
-        if (string_fuzzy_match_string(needle, i)) {
+        if (string_fuzzy_match_string(needle, prefix + i)) {
             return true;
         }
     }
@@ -390,31 +375,31 @@ void pager_t::refilter_completions() {
     }
 }
 
-void pager_t::set_completions(const completion_list_t &raw_completions,
-                              const wcstring &shared_prefix) {
+void pager_t::set_completions(const completion_list_t &raw_completions) {
     // Get completion infos out of it.
-    unfiltered_completion_infos =
-        process_completions_into_infos(raw_completions, shared_prefix.size());
+    unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
     // Maybe join them.
-    if (shared_prefix == L"-") join_completions(&unfiltered_completion_infos);
+    if (prefix == L"-") join_completions(&unfiltered_completion_infos);
 
     // Compute their various widths.
-    measure_completion_infos(&unfiltered_completion_infos);
+    measure_completion_infos(&unfiltered_completion_infos, prefix);
 
     // Refilter them.
     this->refilter_completions();
 }
+
+void pager_t::set_prefix(const wcstring &pref) { prefix = pref; }
 
 void pager_t::set_term_size(termsize_t ts) {
     available_term_width = ts.width > 0 ? ts.width : 0;
     available_term_height = ts.height > 0 ? ts.height : 0;
 }
 
-/// Try to print the list of completions \p lst using \p cols as the number of
+/// Try to print the list of completions lst with the prefix prefix using cols as the number of
 /// columns. Return true if the completion list was printed, false if the terminal is too narrow for
 /// the specified number of columns. Always succeeds if cols is 1.
-bool pager_t::completion_try_print(size_t cols, const comp_info_list_t &lst,
+bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst,
                                    page_rendering_t *rendering, size_t suggested_start_row) const {
     assert(cols > 0);
     // The calculated preferred width of each column.
@@ -495,7 +480,7 @@ bool pager_t::completion_try_print(size_t cols, const comp_info_list_t &lst,
     assert(stop_row >= start_row);
     assert(stop_row <= row_count);
     assert(stop_row - start_row <= term_height);
-    completion_print(cols, width_by_column, start_row, stop_row, lst, rendering);
+    completion_print(cols, width_by_column, start_row, stop_row, prefix, lst, rendering);
 
     // Add the progress line. It's a "more to disclose" line if necessary, or a row listing if
     // it's scrollable; otherwise ignore it.
@@ -581,7 +566,7 @@ page_rendering_t pager_t::render() const {
         rendering.selected_completion_idx =
             this->visual_selected_completion_index(rendering.rows, rendering.cols);
 
-        if (completion_try_print(cols, completion_infos, &rendering, suggested_row_start)) {
+        if (completion_try_print(cols, prefix, completion_infos, &rendering, suggested_row_start)) {
             break;
         }
     }
@@ -851,6 +836,7 @@ size_t pager_t::get_selected_column(const page_rendering_t &rendering) const {
 void pager_t::clear() {
     unfiltered_completion_infos.clear();
     completion_infos.clear();
+    prefix.clear();
     selected_completion_idx = PAGER_SELECTION_NONE;
     fully_disclosed = false;
     search_field_shown = false;

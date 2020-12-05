@@ -86,7 +86,7 @@ controllers.controller("colorsController", function($scope, $http) {
 
     $scope.getCurrentTheme = function() {
         $http.get("colors/").then(function(arg) {
-            var currentScheme = { "name": "Current", "colors":[], "preferred_background": "" };
+            var currentScheme = { "name": "Current", "colors":[], "preferred_background": "black" };
             var data = arg.data
             for (var i in data) {
                 currentScheme[data[i].name] = data[i].color;

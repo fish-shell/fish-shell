@@ -3,23 +3,21 @@ body {
     font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
     color: #222;
     min-height: 100vh; /* at least 1 screen high - to prevent the gradient from running out on a short tab */
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    -moz-box-shadow: 0 0 1px 1px #333;
+    -webkit-box-shadow: 0 0 1px 1px #333;
+    box-shadow: 0 0 5px 1px #333;
 }
 
 code {
     font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
 }
 
-#ancestor {
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-    /* HACK: Instead of allowing tabs to overflow, hide them */
-    overflow: hidden;
-}
-
 @media screen and (max-width: 700px) {
     /* On small screens remove the margins to leave more for the actual content */
-    #ancestor {
+    body {
         width: 100%;
         margin-left: none;
         margin-right: none;

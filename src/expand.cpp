@@ -1037,20 +1037,18 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
         result = expand_result_t::wildcard_no_match;
         completion_receiver_t expanded_recv = out->subreceiver();
         for (const auto &effective_working_dir : effective_working_dirs) {
-            wildcard_expand_result_t expand_res = wildcard_expand_string(
+            wildcard_result_t expand_res = wildcard_expand_string(
                 path_to_expand, effective_working_dir, flags, ctx.cancel_checker, &expanded_recv);
             switch (expand_res) {
-                case wildcard_expand_result_t::match:
+                case wildcard_result_t::match:
                     result = expand_result_t::ok;
                     break;
-                case wildcard_expand_result_t::no_match:
+                case wildcard_result_t::no_match:
                     break;
-                case wildcard_expand_result_t::overflow:
-                    result = expand_result_t::error;
-                    break;
-                case wildcard_expand_result_t::cancel:
-                    result = expand_result_t::cancel;
-                    break;
+                case wildcard_result_t::overflow:
+                    return append_overflow_error(errors);
+                case wildcard_result_t::cancel:
+                    return expand_result_t::cancel;
             }
         }
 

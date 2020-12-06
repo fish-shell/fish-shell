@@ -5,13 +5,17 @@
 # TODO: Moar commands
 # set-port-latency-offset set-sink-formats
 
-
-# HACK: This is the list of commands from pacmd - used so we can use complete -w there
-set -l commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
 # These are the actual commands for pactl - we complete only these, and then the cmd commands in that completion
 set -l ctlcommands stat info list exit {upload,play,remove}-sample {load,unload}-module \
     move-{sink-input,source-output} suspend-{sink,source} set-{card-profile,default-sink,sink-port,source-port,port-latency-offset} \
     set-{sink,source,sink-input,source-output}-{volume,mute} set-sink-formats subscribe
+
+# HACK: This is the list of commands from pacmd - used so we can use complete -w there
+if command -sq pacmd
+    set commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
+else
+    set commands $ctlcommands
+end
 
 function __fish_pa_complete_type
     pactl list short $argv
@@ -36,13 +40,15 @@ end
 
 # This is needed to filter out loaded modules
 function __fish_pa_complete_unloaded_modules
-    # We need to get just the module names
-    set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
-    pulseaudio --dump-modules | while read -l name description
-        # This is a potential source of slowness, but on my system it's instantaneous
-        # with 73 modules
-        if not contains -- $name $loaded
-            printf "%s\t%s\n" $name $description
+    if command -sq pulseaudio
+        # We need to get just the module names
+        set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
+            pulseaudio --dump-modules | while read -l name description
+                # This is a potential source of slowness, but on my system it's instantaneous
+                # with 73 modules
+                if not contains -- $name $loaded
+                    printf "%s\t%s\n" $name $description
+                end
         end
     end
 end

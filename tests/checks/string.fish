@@ -681,3 +681,11 @@ echo $status
 yes | string replace -q y n
 echo $status
 # CHECK: 0
+
+# `string` can't be wrapped properly anymore, since `string match` creates variables:
+function string
+    builtin string $argv
+end
+# CHECKERR: checks/string.fish (line {{\d+}}): function: The name 'string' is reserved, and cannot be used as a function name
+# CHECKERR: function string
+# CHECKERR: ^

@@ -22,9 +22,9 @@ static const wcstring subcommand_keywords[]{L"command", L"builtin", L"while", L"
 static const string_set_t block_keywords = {L"for",      L"while",  L"if",
                                             L"function", L"switch", L"begin"};
 
-static const wcstring reserved_keywords[] = {L"end",      L"case",   L"else",     L"return",
-                                             L"continue", L"break",  L"argparse", L"read",
-                                             L"set",      L"status", L"test",     L"["};
+static const wcstring reserved_keywords[] = {
+    L"end",  L"case",   L"else", L"return", L"continue", L"break", L"argparse",
+    L"read", L"string", L"set",  L"status", L"test",     L"["};
 
 // The lists above are purposely implemented separately from the logic below, so that future
 // maintainers may assume the contents of the list based off their names, and not off what the

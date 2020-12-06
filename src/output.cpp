@@ -362,9 +362,12 @@ int outputter_t::term_puts(const char *str, int affcnt) {
     // scoped_push will restore it.
     scoped_lock locker{s_tputs_receiver_lock};
     scoped_push<outputter_t *> push(&s_tputs_receiver, this);
+    s_tputs_receiver->begin_buffering();
     // On some systems, tputs takes a char*, on others a const char*.
     // Like tparm, we just cast it to unconst, that should work everywhere.
-    return tputs(const_cast<char *>(str), affcnt, tputs_writer);
+    int res = tputs(const_cast<char *>(str), affcnt, tputs_writer);
+    s_tputs_receiver->end_buffering();
+    return res;
 }
 
 /// Write a wide character to the outputter. This should only be used when writing characters from

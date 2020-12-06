@@ -397,7 +397,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **a
         }
         case STATUS_IS_INTERACTIVE: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = session_interactivity() == session_interactivity_t::not_interactive ? 1 : 0;
+            retval = is_interactive_session() ? 0 : 1;
             break;
         }
         case STATUS_IS_COMMAND_SUB: {

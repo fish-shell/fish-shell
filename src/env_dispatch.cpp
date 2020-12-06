@@ -437,12 +437,11 @@ static bool initialize_curses_using_fallback(const char *term) {
     auto term_env = wcs2string(term_var->as_string());
     if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) return false;
 
-    if (session_interactivity() != session_interactivity_t::not_interactive)
-        FLOGF(warning, _(L"Using fallback terminal type '%s'."), term);
+    if (is_interactive_session()) FLOGF(warning, _(L"Using fallback terminal type '%s'."), term);
 
     int err_ret;
     if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) return true;
-    if (session_interactivity() != session_interactivity_t::not_interactive) {
+    if (is_interactive_session()) {
         FLOGF(warning, _(L"Could not set up terminal using the fallback terminal type '%s'."),
               term);
     }
@@ -503,7 +502,7 @@ static void init_curses(const environment_t &vars) {
     int err_ret;
     if (setupterm(nullptr, STDOUT_FILENO, &err_ret) == ERR) {
         auto term = vars.get(L"TERM");
-        if (session_interactivity() != session_interactivity_t::not_interactive) {
+        if (is_interactive_session()) {
             FLOGF(warning, _(L"Could not set up terminal."));
             if (term.missing_or_empty()) {
                 FLOGF(warning, _(L"TERM environment variable not set."));

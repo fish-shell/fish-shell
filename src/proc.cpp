@@ -57,10 +57,9 @@
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
-static relaxed_atomic_t<session_interactivity_t> s_is_interactive_session{
-    session_interactivity_t::not_interactive};
-session_interactivity_t session_interactivity() { return s_is_interactive_session; }
-void set_interactive_session(session_interactivity_t flag) { s_is_interactive_session = flag; }
+static relaxed_atomic_bool_t s_is_interactive_session{false};
+bool is_interactive_session() { return s_is_interactive_session; }
+void set_interactive_session(bool flag) { s_is_interactive_session = flag; }
 
 static relaxed_atomic_bool_t s_is_login{false};
 bool get_login() { return s_is_login; }
@@ -261,7 +260,7 @@ static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
     if (status.signal_exited()) {
         int sig = status.signal_code();
         if (sig == SIGINT || sig == SIGQUIT) {
-            if (session_interactivity() != session_interactivity_t::not_interactive) {
+            if (is_interactive_session()) {
                 // Mark the job group as cancelled.
                 job->group->cancel_with_signal(sig);
             } else {

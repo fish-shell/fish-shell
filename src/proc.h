@@ -480,10 +480,9 @@ class job_t {
     maybe_t<statuses_t> get_statuses() const;
 };
 
-/// Whether this shell is attached to the keyboard at all.
-enum class session_interactivity_t { not_interactive, implied, explicit_ };
-session_interactivity_t session_interactivity();
-void set_interactive_session(session_interactivity_t flag);
+/// Whether this shell is attached to a tty.
+bool is_interactive_session();
+void set_interactive_session(bool flag);
 
 /// Whether we are a login shell.
 bool get_login();

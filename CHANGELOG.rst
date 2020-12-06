@@ -40,6 +40,7 @@ Notable improvements and fixes
 -  ``type`` is now a builtin and therefore much faster (:issue:`7342`).
 -  ``string match --regex`` now imports named PCRE2 capture groups as fish variables (:issue:`7459`). Note: Because of this, it can no longer be wrapped in a function and the name has been added as a reserved word.
 -  Globs and other expansions are limited to 512k results (:issue:`7226`).
+-  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`).
 
 Syntax changes and new commands
 -------------------------------

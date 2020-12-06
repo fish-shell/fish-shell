@@ -2076,7 +2076,7 @@ static void acquire_tty_or_exit(pid_t shell_pgid) {
             owner = tcgetpgrp(STDIN_FILENO);
         }
         if (owner == -1 && errno == ENOTTY) {
-            if (session_interactivity() == session_interactivity_t::not_interactive) {
+            if (!is_interactive_session()) {
                 // It's OK if we're not able to take control of the terminal. We handle
                 // the fallout from this in a few other places.
                 break;
@@ -2114,6 +2114,7 @@ static void reader_interactive_init(parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
 
     pid_t shell_pgid = getpgrp();
+    pid_t shell_pid = getpid();
 
     // Set up key bindings.
     init_input();
@@ -2124,12 +2125,10 @@ static void reader_interactive_init(parser_t &parser) {
     // Wait until we own the terminal.
     acquire_tty_or_exit(shell_pgid);
 
-    // It shouldn't be necessary to place fish in its own process group and force control
-    // of the terminal, but that works around fish being started with an invalid pgroup,
-    // such as when launched via firejail (#5295)
-    // Also become the process group leader if flag -i/--interactive was given (#5909).
-    if (shell_pgid == 0 || session_interactivity() == session_interactivity_t::explicit_) {
-        shell_pgid = getpid();
+    // If fish has no valid pgroup (possible with firejail, see #5295) or is interactive,
+    // ensure it owns the terminal. Also see #5909, #7060.
+    if (shell_pgid == 0 || (is_interactive_session() && shell_pgid != shell_pid)) {
+        shell_pgid = shell_pid;
         if (setpgid(shell_pgid, shell_pgid) < 0) {
             // If we're session leader setpgid returns EPERM. The other cases where we'd get EPERM
             // don't apply as we passed our own pid.
@@ -3705,7 +3704,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         // This check is required to work around certain issues with fish's approach to
         // terminal control when launching interactive processes while in non-interactive
         // mode. See #4178 for one such example.
-        if (err != ENOTTY || session_interactivity() != session_interactivity_t::not_interactive) {
+        if (err != ENOTTY || is_interactive_session()) {
             wperror(L"tcsetattr");
         }
     }
@@ -3850,8 +3849,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     if (s_exit_state != exit_state_t::finished_handlers) {
         // The order of the two conditions below is important. Try to restore the mode
         // in all cases, but only complain if interactive.
-        if (tcsetattr(conf.in, TCSANOW, &old_modes) == -1 &&
-            session_interactivity() != session_interactivity_t::not_interactive) {
+        if (tcsetattr(conf.in, TCSANOW, &old_modes) == -1 && is_interactive_session()) {
             if (errno == EIO) redirect_tty_output();
             wperror(L"tcsetattr");  // return to previous mode
         }

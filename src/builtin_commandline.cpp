@@ -159,7 +159,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
     }
 
     if (!current_buffer) {
-        if (session_interactivity() != session_interactivity_t::not_interactive) {
+        if (is_interactive_session()) {
             // Prompt change requested while we don't have a prompt, most probably while reading the
             // init files. Just ignore it.
             return STATUS_CMD_ERROR;

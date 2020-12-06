@@ -244,9 +244,7 @@ bool completion_receiver_t::add(completion_t &&comp) {
     return true;
 }
 
-bool completion_receiver_t::add(wcstring &&comp) {
-    return this->add(std::move(comp), wcstring{});
-}
+bool completion_receiver_t::add(wcstring &&comp) { return this->add(std::move(comp), wcstring{}); }
 
 bool completion_receiver_t::add(wcstring &&comp, wcstring desc, complete_flags_t flags,
                                 string_fuzzy_match_t match) {

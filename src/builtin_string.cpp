@@ -1058,7 +1058,7 @@ class pcre2_matcher_t : public string_matcher_t {
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
         auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
-                                               regex.match, nullptr));
+                                                regex.match, nullptr));
         // We only import variables for the *first matching argument*
         bool had_match = false;
         if (rc == match_result_t::match && !imported_vars) {

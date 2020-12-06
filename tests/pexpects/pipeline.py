@@ -2,7 +2,12 @@
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
-send, sendline, expect_prompt, expect_str = sp.send, sp.sendline, sp.expect_prompt, sp.expect_str
+send, sendline, expect_prompt, expect_str = (
+    sp.send,
+    sp.sendline,
+    sp.expect_prompt,
+    sp.expect_str,
+)
 
 expect_prompt()
 sendline("function echo_wrap ; /bin/echo $argv ; sleep 0.1; end")

@@ -532,7 +532,11 @@ def append_html_for_ansi_escape(full_val, result, span_open):
     if match is not None:
         close_span()
         # Just use the rgb values directly
-        html_color = "#%02x%02x%02x" % (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+        html_color = "#%02x%02x%02x" % (
+            int(match.group(1)),
+            int(match.group(2)),
+            int(match.group(3)),
+        )
         result.append('<span style="color: ' + html_color + '">')
         return True  # span now open
 

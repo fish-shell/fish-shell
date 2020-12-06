@@ -72,8 +72,8 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 } else {
                     opts.base = fish_wcstoi(w.woptarg);
                     if (errno || (opts.base != 8 && opts.base != 16)) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid base value\n"),
-                                                  cmd, w.woptarg);
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid base value\n"), cmd,
+                                                  w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
                 }
@@ -99,8 +99,8 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
         }
     }
     if (opts.have_scale && opts.scale != 0 && opts.base != 10) {
-        streams.err.append_format(_(L"%ls: Bases other than 10 can only do scale=0 output currently\n"),
-                                  cmd, w.woptarg);
+        streams.err.append_format(
+            _(L"%ls: Bases other than 10 can only do scale=0 output currently\n"), cmd, w.woptarg);
         return STATUS_INVALID_ARGS;
     }
 
@@ -196,7 +196,6 @@ static wcstring format_double(double v, const math_cmd_opts_t &opts) {
         v = trunc(v);
         return format_string(L"%.*f", opts.scale, v);
     }
-
 
     wcstring ret = format_string(L"%.*f", opts.scale, v);
     // If we contain a decimal separator, trim trailing zeros after it, and then the separator

@@ -127,7 +127,6 @@ static void print_stop_cont() {
             exit(0);
         }
     }
-
 }
 
 static void show_help();

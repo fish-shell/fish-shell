@@ -31,15 +31,15 @@ def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None)
         if issue_num <= 0:
             raise ValueError
     except ValueError:
-        msg = inliner.reporter.error(
-            'Invalid issue number: "%s"' % text, line=lineno)
+        msg = inliner.reporter.error('Invalid issue number: "%s"' % text, line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
-    template=issue_url + "/{n}"
+    template = issue_url + "/{n}"
     ref = template.format(n=issue_num)
     issue_text = "#{issue_no}".format(issue_no=issue_num)
     link = nodes.reference(text=issue_text, refuri=ref, **options)
     return [link], []
+
 
 # -- Load our extensions -------------------------------------------------
 def setup(app):

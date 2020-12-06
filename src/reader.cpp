@@ -3694,7 +3694,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     history_search.reset();
 
     // Get the current terminal modes. These will be restored when the function returns.
-    struct termios old_modes{};
+    struct termios old_modes {};
     if (tcgetattr(conf.in, &old_modes) == -1 && errno == EIO) redirect_tty_output();
 
     // Set the new modes.

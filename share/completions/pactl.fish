@@ -67,7 +67,7 @@ complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a remove-sa
 complete -f -c pactl -n "__fish_seen_subcommand_from play-sample remove-sample" -a '(__fish_pa_complete_type samples)'
 
 complete -f -c pactl -n "__fish_seen_subcommand_from unload-module" -a '(__fish_pa_complete_type modules)'
-complete -f -c pactl -n "__fish_seen_subcommand_from load-module" -a '(__fish_pa_complete_unloaded_modules)'
+complete -f -c pactl -n "__fish_seen_subcommand_from load-module; and command -sq pulseaudio" -a '(__fish_pa_complete_unloaded_modules)'
 
 complete -f -c pactl -n "__fish_seen_subcommand_from move-sink-input; and not __fish_seen_subcommand_from (__fish_pa_print_type sink-inputs)" \
     -a '(__fish_pa_complete_type sink-inputs)'

@@ -7,7 +7,9 @@
 
 
 # HACK: This is the list of commands from pacmd - used so we can use complete -w there
-set -l commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
+if command -sq pacmd
+    set commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
+end
 # These are the actual commands for pactl - we complete only these, and then the cmd commands in that completion
 set -l ctlcommands stat info list exit {upload,play,remove}-sample {load,unload}-module \
     move-{sink-input,source-output} suspend-{sink,source} set-{card-profile,default-sink,sink-port,source-port,port-latency-offset} \

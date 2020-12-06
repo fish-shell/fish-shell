@@ -2,7 +2,7 @@
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
-sendline, expect_prompt = sp.sendline, sp.expect_prompt
+send, sendline, expect_prompt, expect_str = sp.send, sp.sendline, sp.expect_prompt, sp.expect_str
 
 expect_prompt()
 sendline("function echo_wrap ; /bin/echo $argv ; sleep 0.1; end")
@@ -28,3 +28,10 @@ for i in range(5):
 
 sendline("not jobs")
 expect_prompt("jobs: There are no jobs", unmatched="Should be no jobs")
+
+# Check that this weird invalid double-redirection doesn't crash fish.
+sendline("cat | cat </non/existent/file")
+expect_str("warning: An error occurred while redirecting file '/non/existent/file'")
+expect_str("open: No such file or directory")
+send("\x04")
+expect_prompt()

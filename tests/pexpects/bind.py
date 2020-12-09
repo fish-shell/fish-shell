@@ -47,7 +47,7 @@ expect_prompt("\r\njkl ghi\r\n")
 # occur and the "t" should become part of the text that is echoed.
 send("echo mno pqr")
 send("\033")
-sleep(0.220)
+sleep(0.250)
 send("t\r")
 # emacs transpose words, default timeout: long delay
 expect_prompt("\r\nmno pqrt\r\n")
@@ -153,17 +153,17 @@ expect_prompt(
 )
 
 # Verify that changing the escape timeout has an effect.
-send("set -g fish_escape_delay_ms 200\r")
+send("set -g fish_escape_delay_ms 100\r")
 expect_prompt()
 
 send("echo fail: lengthened escape timeout")
 send("\033")
-sleep(0.350)
+sleep(0.250)
 send("ddi")
 send("echo success: lengthened escape timeout\r")
 expect_prompt(
     "\r\nsuccess: lengthened escape timeout\r\n",
-    unmatched="vi replace line, 200ms timeout: long delay",
+    unmatched="vi replace line, 100ms timeout: long delay",
 )
 
 # Verify that we don't switch to vi normal mode if we don't wait long enough
@@ -175,7 +175,7 @@ send("ddi")
 send("inserted\r")
 expect_prompt(
     "\r\nfail: no normal modediinserted\r\n",
-    unmatched="vi replace line, 200ms timeout: short delay",
+    unmatched="vi replace line, 100ms timeout: short delay",
 )
 
 # Now set it back to speed up the tests - these don't use any escape+thing bindings!
@@ -193,11 +193,11 @@ expect_prompt("\r\nTENT\r\n", unmatched="Couldn't find expected output 'TENT'")
 
 # Test '~' (togglecase-char)
 send("\033")
-sleep(0.200)
+sleep(0.100)
 send("cc")
 sleep(0.01)
 send("echo some TExT\033")
-sleep(0.200)
+sleep(0.300)
 send("hh~~bbve~\r")
 expect_prompt("\r\nSOME TeXT\r\n", unmatched="Couldn't find expected output 'SOME TeXT")
 
@@ -219,8 +219,7 @@ expect_prompt(
     unmatched="default-mode custom timeout not set correctly",
 )
 
-# Set it to 100ms.
-sendline("set -g fish_escape_delay_ms 100")
+sendline("set -g fish_escape_delay_ms 200")
 expect_prompt()
 
 # Verify the emacs transpose word (\et) behavior using various delays,
@@ -230,9 +229,8 @@ expect_prompt()
 send("echo abc def")
 send("\033")
 send("t\r")
-# emacs transpose words, 100ms timeout: no delay
 expect_prompt(
-    "\r\ndef abc\r\n", unmatched="emacs transpose words fail, 100ms timeout: no delay"
+    "\r\ndef abc\r\n", unmatched="emacs transpose words fail, 200ms timeout: no delay"
 )
 
 # Same test as above but with a slight delay less than the escape timeout.
@@ -240,10 +238,9 @@ send("echo ghi jkl")
 send("\033")
 sleep(0.020)
 send("t\r")
-# emacs transpose words, 100ms timeout: short delay
 expect_prompt(
     "\r\njkl ghi\r\n",
-    unmatched="emacs transpose words fail, 100ms timeout: short delay",
+    unmatched="emacs transpose words fail, 200ms timeout: short delay",
 )
 
 # Now test with a delay > the escape timeout. The transposition should not
@@ -255,7 +252,7 @@ send("t\r")
 # emacs transpose words, 100ms timeout: long delay
 expect_prompt(
     "\r\nmno pqrt\r\n",
-    unmatched="emacs transpose words fail, 100ms timeout: long delay",
+    unmatched="emacs transpose words fail, 200ms timeout: long delay",
 )
 
 # Verify special characters, such as \cV, are not intercepted by the kernel

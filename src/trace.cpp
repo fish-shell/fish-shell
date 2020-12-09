@@ -19,7 +19,8 @@ bool trace_enabled(const parser_t &parser) {
 void trace_argv(const parser_t &parser, const wchar_t *command, const wcstring_list_t &argv) {
     // Format into a string to prevent interleaving with flog in other threads.
     // Add the + prefix.
-    wcstring trace_text(parser.blocks().size(), '+');
+    wcstring trace_text(parser.blocks().size() - 1, L'-');
+    trace_text.push_back(L'>');
 
     if (command && command[0]) {
         trace_text.push_back(L' ');
@@ -29,7 +30,7 @@ void trace_argv(const parser_t &parser, const wchar_t *command, const wcstring_l
         trace_text.push_back(L' ');
         trace_text.append(escape_string(arg, ESCAPE_ALL));
     }
-    trace_text.push_back('\n');
+    trace_text.push_back(L'\n');
     log_extra_to_flog_file(trace_text);
 }
 

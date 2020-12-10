@@ -111,7 +111,7 @@ fish cannot change the background color of your terminal. Refer to your terminal
 			<tbody>
 				<tr class="colorpicker_term256_row" data-ng-repeat="color_array in colorArraysArray">
 					<td class="colorpicker_term256_cell" data-ng-style="{'background-color': interpret_color(color)}" ng-click="changeSelectedTextColor(color)" ng-repeat="color in color_array">
-						<div class="colorpicker_term256_selection_indicator" ng-show="selectedColorScheme[selectedColorSetting] == color" ng-style="{'border-color': interpret_color(border_color_for_color(color))}"</div>
+						<div class="colorpicker_term256_selection_indicator" ng-show="selectedColorScheme[selectedColorSetting] == color" ng-style="{'border-color': interpret_color(border_color_for_color(color))}"></div>
 					</td>
 				</tr>
 			</tbody>

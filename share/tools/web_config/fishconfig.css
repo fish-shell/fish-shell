@@ -1,6 +1,7 @@
 body {
-    background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
-    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
+    background: linear-gradient(to bottom, #a7cfdf 0%, #23538a 100%);
+    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco,
+        "Lucida Console", monospace, fixed;
     color: #222;
     min-height: 100vh; /* at least 1 screen high - to prevent the gradient from running out on a short tab */
     width: 90%;
@@ -12,7 +13,8 @@ body {
 }
 
 code {
-    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
+    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco,
+        "Lucida Console", monospace, fixed;
 }
 
 @media screen and (max-width: 700px) {
@@ -37,8 +39,8 @@ code {
 }
 
 .tab {
-	display: table-cell;
-    border: 1px solid #CCC;
+    display: table-cell;
+    border: 1px solid #ccc;
     border-right: none;
     padding-bottom: 15px;
     padding-top: 15px;
@@ -51,21 +53,21 @@ code {
 }
 
 #tab_parent :first-child {
-	border-top-left-radius: 8px;
+    border-top-left-radius: 8px;
 }
 
 #tab_parent :last-child {
-	border-top-right-radius: 8px;
+    border-top-right-radius: 8px;
 }
 
 .tab_first {
-	border-top-left-radius: 5px;
-	border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 
 .tab_last {
-	border-top-right-radius: 5px;
-	border-bottom-right-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
 
 .selected_tab {
@@ -74,14 +76,14 @@ code {
 }
 
 #tab_contents {
-	padding-top: 20px;
-	padding-bottom: 20px;
-	width: 100%;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    width: 100%;
     min-height: 80vh;
-	background-color: #eeeefa;
-	border-bottom-left-radius: 8px;
-	border-bottom-right-radius: 8px;
-	margin-bottom: 20px;
+    background-color: #eeeefa;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    margin-bottom: 20px;
 }
 
 .footer {
@@ -90,10 +92,10 @@ code {
 }
 
 .master_detail_table {
-	display: table;
-	margin-top: 10px;
-	margin-left: 12px;
-	margin-right: 12px;
+    display: table;
+    margin-top: 10px;
+    margin-left: 12px;
+    margin-right: 12px;
 }
 
 .master {
@@ -108,20 +110,20 @@ code {
 
 .detail {
     display: table-cell;
-  	border: 1px solid #555;
-  	background-color: #ffffff;
-  	padding-top: 30px;
-  	padding-bottom: 20px;
-  	padding-left: 30px;
-  	padding-right: 30px;
-	border-radius: 5;
-	width: 100%;
+    border: 1px solid #555;
+    background-color: #ffffff;
+    padding-top: 30px;
+    padding-bottom: 20px;
+    padding-left: 30px;
+    padding-right: 30px;
+    border-radius: 5;
+    width: 100%;
 }
 
 .detail_function pre {
-	white-space: pre-wrap !important;
-	width: 100%;
-	font-size: 11pt;
+    white-space: pre-wrap !important;
+    width: 100%;
+    font-size: 11pt;
 }
 
 /* The colours used for function highlighting are taken from the fish
@@ -129,16 +131,36 @@ code {
  * These could be pulled from the current terminal (but the background colour
  * might be different), or dynamically from colorutils.js.
  */
-.detail_function .fish_color_autosuggestion { color: #555; }
-.detail_function .fish_color_command { color: #005fd7; }
-.detail_function .fish_color_param { color: #00afff; }
-.detail_function .fish_color_redirection { color: #00afff; }
-.detail_function .fish_color_comment { color: #990000; }
-.detail_function .fish_color_error { color: #ff0000; }
-.detail_function .fish_color_escape { color: #00a6b2; }
-.detail_function .fish_color_operator { color: #00a6b2; }
-.detail_function .fish_color_quote { color: #999900; }
-.detail_function .fish_color_statement_terminator { color: #009900; }
+.detail_function .fish_color_autosuggestion {
+    color: #555;
+}
+.detail_function .fish_color_command {
+    color: #005fd7;
+}
+.detail_function .fish_color_param {
+    color: #00afff;
+}
+.detail_function .fish_color_redirection {
+    color: #00afff;
+}
+.detail_function .fish_color_comment {
+    color: #990000;
+}
+.detail_function .fish_color_error {
+    color: #ff0000;
+}
+.detail_function .fish_color_escape {
+    color: #00a6b2;
+}
+.detail_function .fish_color_operator {
+    color: #00a6b2;
+}
+.detail_function .fish_color_quote {
+    color: #999900;
+}
+.detail_function .fish_color_statement_terminator {
+    color: #009900;
+}
 
 .master_element {
     cursor: pointer;
@@ -147,22 +169,22 @@ code {
     padding-left: 5px;
     padding-right: 22px;
     font-size: 12pt;
-	/* Make our border overlap the detail, even if we're unselected (so it doesn't jump when selected) */
-	position: relative;
-	left: 1px;
-	border-bottom-style: solid;
-	border-bottom-width: 0px;
+    /* Make our border overlap the detail, even if we're unselected (so it doesn't jump when selected) */
+    position: relative;
+    left: 1px;
+    border-bottom-style: solid;
+    border-bottom-width: 0px;
 }
 
 .selected_master_elem {
-	border: 1px solid #555;
-	border-right: none;
-	background-color: #FFFFFF;
+    border: 1px solid #555;
+    border-right: none;
+    background-color: #ffffff;
 
-	border-top-left-radius: 5;
-	border-bottom-left-radius: 5;
+    border-top-left-radius: 5;
+    border-bottom-left-radius: 5;
 
-	/* Pad one less than .master_element, to accomodate our border. */
+    /* Pad one less than .master_element, to accomodate our border. */
     padding-top: 5px;
     padding-bottom: 10px;
     padding-left: 4px;
@@ -183,395 +205,413 @@ code {
     border-bottom-style: inherit;
     border-bottom-color: inherit;
     border-bottom-width: 1px;
-	display: none;
+    display: none;
 }
 
 .selected_master_elem > .master_element_description {
-	display: inline;
+    display: inline;
 }
 
 /* We have a newline between the label and description; hide it initially, but show it when it's selected */
-.master_element > br { display: none; }
-.selected_master_elem > br { display: inherit; }
+.master_element > br {
+    display: none;
+}
+.selected_master_elem > br {
+    display: inherit;
+}
 
 /* Set this class to suppress the border bottom on master_element_texts with visible descriptions */
-.master_element_no_border { border-bottom-width: 0 }
+.master_element_no_border {
+    border-bottom-width: 0;
+}
 
 .colorpicker_term256 {
-	border: solid #444 1px;
-	border-collapse: collapse;
+    border: solid #444 1px;
+    border-collapse: collapse;
 }
 
 .colorpicker_modifiers {
-	margin-top: 10px;
-	display:inline-block;
-	margin-left: auto;
-	margin-right: auto;
-	color: #000;
-	font-size: smaller;
+    margin-top: 10px;
+    display: inline-block;
+    margin-left: auto;
+    margin-right: auto;
+    color: #000;
+    font-size: smaller;
 }
 
 .colorpicker_modifier_cell {
-	cursor: pointer;
-	display:inline-block;
-	text-align: center;
-	border: groove #333 2px;
-	padding: 5px;
-	margin-top: 5px;
-	margin-left: auto;
-	margin-right: auto;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    border: groove #333 2px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .modifier_cell_selected {
-	border-color: #000;
-	background-color: #444;
+    border-color: #000;
+    background-color: #444;
 }
 
 .data_table {
-	table-layout:fixed;
-	width: 100%;
-	padding-left: 10px;
-	padding-right: 10px;
+    table-layout: fixed;
+    width: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .data_table_row {
 }
 
 .data_table_cell {
-	padding-top: 5px;
-	padding-bottom: 5px;
-	vertical-align: top;
-	overflow:hidden;
-	border-bottom: #444 dotted 1px;
-	word-wrap: break-word;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    vertical-align: top;
+    overflow: hidden;
+    border-bottom: #444 dotted 1px;
+    word-wrap: break-word;
 }
 
 .raw_binding {
-	padding-left: 20px;
-	font-family: monospace;
+    padding-left: 20px;
+    font-family: monospace;
 }
 
 .history_text {
-	padding-top: 5px;
-	padding-bottom: 5px;
-	vertical-align: top;
-	overflow:hidden;
-	border-bottom: #444 dotted 1px;
-	word-wrap: break-word;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    vertical-align: top;
+    overflow: hidden;
+    border-bottom: #444 dotted 1px;
+    word-wrap: break-word;
 }
 
 .history_delete {
-	width: 20px;
-	border-bottom: #444 dotted 1px;
+    width: 20px;
+    border-bottom: #444 dotted 1px;
 }
 
 .abbreviation_actions {
-	width: 8em;
-	text-align: right;
-	border-bottom: #444 dotted 1px;
+    width: 8em;
+    text-align: right;
+    border-bottom: #444 dotted 1px;
 }
 
 .abbreviation_input {
-	height: 1.5em;
-	font: inherit;
-	padding: 3px;
-	margin: 0;
+    height: 1.5em;
+    font: inherit;
+    padding: 3px;
+    margin: 0;
 }
 
 /* The CSS we apply when a table row is filtered */
 .data_table_row_filtered {
-	display: none;
+    display: none;
 }
 
 .no_overflow {
-	text-overflow: ellipsis;
-	white-space: nowrap;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .colorpicker_target {
-	margin: 0 0 -50px 0;
-	position: relative;
-	bottom: 47px;
-	float: left; /* for some reason this makes the cells that it overlaps (before adjusting its bottom) clickable in Safari */
+    margin: 0 0 -50px 0;
+    position: relative;
+    bottom: 47px;
+    float: left; /* for some reason this makes the cells that it overlaps (before adjusting its bottom) clickable in Safari */
 }
 
 .colorpicker_target_tab {
-	cursor: pointer;
-	color: #555;
-	border: solid 1px #555;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	padding-left: 7px;
-	padding-right: 7px;
-	display: inline-block;
-	background-color: black;
-	margin-right: -2px;
-	min-width: 110px;
-	text-align: center;
+    cursor: pointer;
+    color: #555;
+    border: solid 1px #555;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 7px;
+    padding-right: 7px;
+    display: inline-block;
+    background-color: black;
+    margin-right: -2px;
+    min-width: 110px;
+    text-align: center;
 }
 
 .colorpicker_target_selected {
-	background-color: #181818; /* same as #detail */
-	color: white;
+    background-color: #181818; /* same as #detail */
+    color: white;
 }
 
 .colorpicker_term256_row {
-	padding: 0;
+    padding: 0;
 }
 
 .colorpicker_term256_cell {
-	width: 18px;
-	height: 18px;
-	border: solid black 1px;
-	padding: 0;
+    width: 18px;
+    height: 18px;
+    border: solid black 1px;
+    padding: 0;
 }
 
 .colorpicker_term256_selection_indicator {
-	width: 18px;
-	height: 16px;
-	margin: -4px;
-	border: solid white 4px;
-	position: relative;
-	z-index: 2;
+    width: 18px;
+    height: 16px;
+    margin: -4px;
+    border: solid white 4px;
+    position: relative;
+    z-index: 2;
 }
 
 .colorpicker_cell_selected {
-	 width: 12px;
-	 height: 12px;
+    width: 12px;
+    height: 12px;
 }
 
-.colorpicker_text_sample, .colorpicker_text_sample_tight {
-	font-size: 12pt;
-	padding: 25px;
-	margin: 5px 20px 25px 20px; /* top right bottom left */
-	cursor: pointer;
-	line-height: 1.8em;
-	border: solid #777 1px;
-	position: relative; /* so that our absolutely positioned elements work */
+.colorpicker_text_sample,
+.colorpicker_text_sample_tight {
+    font-size: 12pt;
+    padding: 25px;
+    margin: 5px 20px 25px 20px; /* top right bottom left */
+    cursor: pointer;
+    line-height: 1.8em;
+    border: solid #777 1px;
+    position: relative; /* so that our absolutely positioned elements work */
 }
 
 .cs_clickable {
-	border: dotted 1px #777;
-	padding: 4px;
-	margin: -5px;
+    border: dotted 1px #777;
+    padding: 4px;
+    margin: -5px;
 }
 
 .cs_editing {
-	border: solid 3px #3399FF;
-	padding: 4px;
-	margin: -7px;
+    border: solid 3px #3399ff;
+    padding: 4px;
+    margin: -7px;
 }
 
 .colorpicker_text_sample_tight {
-	font-size: 10pt;
-	line-height: 1.2em;
-	margin: 0px 6px;
-	max-width: 220px;
-	padding: 5px;
-	white-space:nowrap;
-	overflow: hidden;
-	text-overflow: clip;
+    font-size: 10pt;
+    line-height: 1.2em;
+    margin: 0px 6px;
+    max-width: 220px;
+    padding: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
 }
 
 .color_picker_background_cells {
-	position: absolute;
-	right: 0px;
-	top: 0px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
 }
 
 .color_picker_background_cells div {
-	width: 24px;
-	height: 24px;
-	border-style: solid;
-	border-color: #777;
-	border-width: 0 0 1px 1px;  /* top right bottom left */
-	float: left;
+    width: 24px;
+    height: 24px;
+    border-style: solid;
+    border-color: #777;
+    border-width: 0 0 1px 1px; /* top right bottom left */
+    float: left;
 }
 
 .color_picker_background_cells span {
-	float: left;
-	font-size: 12pt;
-	padding-top: 2px;
-	padding-right: 8px;
-	cursor: pointer;
+    float: left;
+    font-size: 12pt;
+    padding-top: 2px;
+    padding-right: 8px;
+    cursor: pointer;
 }
 
-.color_scheme_choice_label, .prompt_demo_choice_label {
-	margin-left: 10px;
-	margin-bottom: 3px;
-	cursor: pointer;
-	font-size: 12pt;
-	white-space: normal;
+.color_scheme_choice_label,
+.prompt_demo_choice_label {
+    margin-left: 10px;
+    margin-bottom: 3px;
+    cursor: pointer;
+    font-size: 12pt;
+    white-space: normal;
 }
 
-.color_scheme_choices_scrollview, .prompt_choices_scrollview {
-	 padding-top: 5px;
-	 overflow-y: scroll;
-	 max-height: 70vh; /* fill out roughly the rest of the screen once scrolled to the preview */
+.color_scheme_choices_scrollview,
+.prompt_choices_scrollview {
+    padding-top: 5px;
+    overflow-y: scroll;
+    max-height: 70vh; /* fill out roughly the rest of the screen once scrolled to the preview */
 }
 
-.color_scheme_choices_list, .prompt_choices_list {
-	overflow-y: hidden; /* makes our height account for floats */
-	padding:  0 10px 15px 10px;  /* top right bottom left */
-	bottom: 0px;
+.color_scheme_choices_list,
+.prompt_choices_list {
+    overflow-y: hidden; /* makes our height account for floats */
+    padding: 0 10px 15px 10px; /* top right bottom left */
+    bottom: 0px;
 }
 
 .color_scheme_choice_container {
-	float: left;
-	padding: 5px;
+    float: left;
+    padding: 5px;
 }
 
 .fake_cursor {
-	background-color: #999;
+    background-color: #999;
 }
 
 .error_msg {
-	color: red;
-	font-size: 12pt;
-	margin-left: 24pt;
-	margin-top: 5pt;
-	margin-bottom: 5pt;
+    color: red;
+    font-size: 12pt;
+    margin-left: 24pt;
+    margin-top: 5pt;
+    margin-bottom: 5pt;
 }
 
 img.delete_icon {
-	width: 20px;
-	height: 20px;
-	cursor: pointer;
-	text-decoration: none;
-	border: none;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
 }
 
 #table_filter_container {
-	/* top right bottom left*/
-	padding: 0 10 10 30;
-	text-align: right;
-	position: relative;
-	bottom: 10px;
+    /* top right bottom left*/
+    padding: 0 10 10 30;
+    text-align: right;
+    position: relative;
+    bottom: 10px;
 }
 
 .filter_text_box {
-	width: 250px;
-	padding: 5 10 5 10;
-	border-radius: 15px;
-	font-size: 12pt;
-	font-weight: bold;
+    width: 250px;
+    padding: 5 10 5 10;
+    border-radius: 15px;
+    font-size: 12pt;
+    font-weight: bold;
 }
 
-.prompt_demo, .current_prompt {
-	background-color: #000;
-	font-size: 12pt;
-	padding: 25px;
-	margin: 5px 5px 25px 5px; /* top right bottom left */
-	cursor: pointer;
-	line-height: 1.8em;
-	border: solid #333 1px;
-	position: relative; /* so that our absolutely positioned elements work */
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	color: #c0c0c0; /* set_color normal, assume white (not brwhite) */
+.prompt_demo,
+.current_prompt {
+    background-color: #000;
+    font-size: 12pt;
+    padding: 25px;
+    margin: 5px 5px 25px 5px; /* top right bottom left */
+    cursor: pointer;
+    line-height: 1.8em;
+    border: solid #333 1px;
+    position: relative; /* so that our absolutely positioned elements work */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #c0c0c0; /* set_color normal, assume white (not brwhite) */
 }
 
 .prompt_demo {
-    color: #AAA;
+    color: #aaa;
     white-space: pre;
 }
 
 .unbordered {
-	border: none;
-	padding-top: 0;
-	padding-bottom: 0;
+    border: none;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
-.save_button, .prompt_save_button, .colors_close_button, .customize_theme_button, .generic_button {
-	border-radius: 5px;
-	border: solid rgba(71,71,71,0.5) 1px;
-	padding: 5px 8px;
-	font-size: 13pt;
-	display: inline-block;
-	margin-top: 12px;
-	background-color: rgba(128,128,128,0.4);
-	color: #FFF;
-	cursor: pointer;
+.save_button,
+.prompt_save_button,
+.colors_close_button,
+.customize_theme_button,
+.generic_button {
+    border-radius: 5px;
+    border: solid rgba(71, 71, 71, 0.5) 1px;
+    padding: 5px 8px;
+    font-size: 13pt;
+    display: inline-block;
+    margin-top: 12px;
+    background-color: rgba(128, 128, 128, 0.4);
+    color: #fff;
+    cursor: pointer;
 }
 
-.save_button:hover, .customize_theme_button:hover, .generic_button:hover {
-	border-color: rgba(71,71,71,0.9);
+.save_button:hover,
+.customize_theme_button:hover,
+.generic_button:hover {
+    border-color: rgba(71, 71, 71, 0.9);
 }
 
 .button_highlight {
-	background-color: rgba(128,128,128,0.6)
+    background-color: rgba(128, 128, 128, 0.6);
 }
 
 .prompt_save_button {
-	background-color: #333;
-	border: solid #525252 1px;
+    background-color: #333;
+    border: solid #525252 1px;
     color: #ffffff;
-	margin: 2px 20px 25px; /* top right bottom left */
-	font-size: 12pt;
+    margin: 2px 20px 25px; /* top right bottom left */
+    font-size: 12pt;
 }
 
 .prompt_demo_text {
-	white-space: pre;
-	line-height: 170%;
-	padding: 4px 12px;
-	font-size: 14pt;
-	top: 0px;
-	bottom: 0px;
-	vertical-align: middle;
-	display: table-cell;
-	height: 72px; /* this is really the min height */
+    white-space: pre;
+    line-height: 170%;
+    padding: 4px 12px;
+    font-size: 14pt;
+    top: 0px;
+    bottom: 0px;
+    vertical-align: middle;
+    display: table-cell;
+    height: 72px; /* this is really the min height */
 }
 
 .prompt_function {
     display: block;
-  	border: 1px solid #555;
-  	background-color: #181818;
+    border: 1px solid #555;
+    background-color: #181818;
     margin: 5px 20px 5px;
     border-radius: 5;
 }
 
 .prompt_function_text {
-	white-space: pre-wrap;
-	padding: 15px 3px;
+    white-space: pre-wrap;
+    padding: 15px 3px;
     width: 100%;
     height: 25%;
     overflow: auto;
 }
 
 .external_link_img {
-	width: 16px;
-	height: 16px;
-	vertical-align: text-top;
-	margin-left: 10px;
+    width: 16px;
+    height: 16px;
+    vertical-align: text-top;
+    margin-left: 10px;
 }
 
 .paginator {
-	border-spacing: 0;
-	border-collapse: collapse;
-	display: inline;
-	vertical-align: bottom;
-	margin-right: 15px;
+    border-spacing: 0;
+    border-collapse: collapse;
+    display: inline;
+    vertical-align: bottom;
+    margin-right: 15px;
 }
 
 .paginator td {
-	border: solid 1px #777;
-	padding: 8px;
+    border: solid 1px #777;
+    padding: 8px;
 }
 
-.paginator .prev, .paginator .next {
-	font-size: 11pt;
+.paginator .prev,
+.paginator .next {
+    font-size: 11pt;
 }
 
 .paginator a {
-	text-decoration: none;
-	text-align: center;
-	color: #0080AA;
-	font-size: larger;
+    text-decoration: none;
+    text-align: center;
+    color: #0080aa;
+    font-size: larger;
 }
 
 .paginator .disabled a {
-    color: #BBB;
+    color: #bbb;
     background-color: transparent;
     cursor: default;
 }

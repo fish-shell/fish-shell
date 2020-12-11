@@ -115,7 +115,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # autoloaded.
     #
     set -l varargs --on-variable fish_key_bindings
-    for var in user host cwd{,_root} status
+    for var in user host{,_remote} cwd{,_root} status error
         set -a varargs --on-variable fish_color_$var
     end
     function __fish_repaint $varargs -d "Event handler, repaints the prompt when fish_color_cwd* changes"

@@ -195,11 +195,6 @@ void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
     if (!s_var_dispatch_table) return;
 
     s_var_dispatch_table->dispatch(key, vars);
-
-    // Eww.
-    if (string_prefixes_string(L"fish_color_", key)) {
-        reader_schedule_prompt_repaint();
-    }
 }
 
 /// Universal variable callback function. This function makes sure the proper events are triggered

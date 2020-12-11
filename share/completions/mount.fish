@@ -1,9 +1,9 @@
 # Completions for mount
 
-complete -x -c mount -a '(__fish_complete_blockdevice)'
+complete -c mount -a '(__fish_complete_blockdevice)'
 # In case `mount UUID=` and similar also works
-complete -x -c mount -a "(test -r /etc/fstab; and string replace -r '#.*' '' < /etc/fstab | string match -r '.+' | string replace -r ' (\S*) .*' '\tMount point \$1' | string replace -a '\040' ' ')"
-complete -x -c mount -a "(test -r /etc/fstab; and string replace -r '#.*' '' < /etc/fstab | string match -r '.+' | string replace -r '(\S*) (\S*) .*' '\$2\tDevice \$1' | string replace -a '\040' ' ')"
+complete -c mount -a "(test -r /etc/fstab; and string replace -r '#.*' '' < /etc/fstab | string match -r '.+' | string replace -r ' (\S*) .*' '\tMount point \$1' | string replace -a '\040' ' ')"
+complete -c mount -a "(test -r /etc/fstab; and string replace -r '#.*' '' < /etc/fstab | string match -r '.+' | string replace -r '(\S*) (\S*) .*' '\$2\tDevice \$1' | string replace -a '\040' ' ')"
 # In case it doesn't
 # complete -x -c mount -a "(test -r /etc/fstab; and string match -r '^/.*' < /etc/fstab | string replace -r ' ([^\s]*) .*' '\tMount point \$1')"
 # complete -x -c mount -a "(test -r /etc/fstab; and string match -r '^/.*' < /etc/fstab | string replace -r '(^/[^\s]*) ([^\s]*) .*' '\$2\tDevice \$1')"

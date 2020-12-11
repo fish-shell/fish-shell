@@ -27,7 +27,7 @@ alias l. "ls -d .*"
 
 alias d "'/mnt/c/Program Files (x86)/devenv.exe' /Edit"
 functions d
-# CHECK: # Defined in - @ line 1
+# CHECK: # Defined via `source`
 # CHECK: function d --wraps=\'/mnt/c/Program\ Files\ \(x86\)/devenv.exe\'\ /Edit --description alias\ d\ \'/mnt/c/Program\ Files\ \(x86\)/devenv.exe\'\ /Edit
 # CHECK: '/mnt/c/Program Files (x86)/devenv.exe' /Edit $argv;
 # CHECK: end
@@ -35,7 +35,7 @@ functions d
 # Use "command" to prevent recusion, and don't add --wraps to avoid accidental recursion in completion.
 alias e 'e --option=value'
 functions e
-# CHECK: # Defined in - @ line 1
+# CHECK: # Defined via `source`
 # CHECK: function e --description 'alias e e --option=value'
 # CHECK: command e --option=value $argv;
 # CHECK: end
@@ -43,7 +43,7 @@ functions e
 # Don't add --wraps if it looks like a wrapper command to avoid accidental recursion in completion.
 alias f 'wrapper around f'
 functions f
-# CHECK: # Defined in - @ line 1
+# CHECK: # Defined via `source`
 # CHECK: function f --description 'alias f wrapper around f'
 # CHECK: wrapper around f $argv;
 # CHECK: end

@@ -91,3 +91,11 @@ functions f1 test_func_desc
 functions --erase ls
 type -t ls
 #CHECK: file
+
+echo "function t; echo tttt; end" | source
+functions t
+# CHECK: # Defined via `source`
+# CHECK: function t
+# CHECK: echo tttt;
+# CHECK: end
+

@@ -147,7 +147,15 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **arg
                     if (path) {
                         int line_number = function_get_definition_lineno(name);
                         wcstring comment;
-                        append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
+                        if (std::wcscmp(path, L"-") != 0) {
+                            append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
+                        } else {
+                            append_format(comment, L"# Defined via `source`\n");
+                        }
+                        def = comment.append(def);
+                    } else {
+                        wcstring comment;
+                        append_format(comment, L"# Defined interactively");
                         def = comment.append(def);
                     }
                     if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {

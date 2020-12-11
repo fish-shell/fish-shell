@@ -152,16 +152,23 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     }
 
     if (metadata_as_comments) {
-        if (std::wcscmp(path, L"stdin") != 0) {
-            wcstring comment;
+        // "stdin" means it was defined interactively, "-" means it was defined via `source`.
+        // Neither is useful information.
+        wcstring comment;
+        if (!std::wcscmp(path, L"stdin")) {
+            append_format(comment, L"# Defined interactively\n");
+        } else if (!std::wcscmp(path, L"-")) {
+            append_format(comment, L"# Defined via `source`\n");
+        } else {
             append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
-            if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
-                std::vector<highlight_spec_t> colors;
-                highlight_shell(comment, colors, parser.context());
-                streams.out.append(str2wcstring(colorize(comment, colors, parser.vars())));
-            } else {
-                streams.out.append(comment);
-            }
+        }
+
+        if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
+            std::vector<highlight_spec_t> colors;
+            highlight_shell(comment, colors, parser.context());
+            streams.out.append(str2wcstring(colorize(comment, colors, parser.vars())));
+        } else {
+            streams.out.append(comment);
         }
     } else {
         streams.out.append_format(L"%ls\n", path);

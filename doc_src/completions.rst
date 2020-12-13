@@ -83,7 +83,7 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 
 - ``__fish_complete_pids`` prints a list of all processes IDs with the command name as description.
 
-- ``__fish_complete_suffix SUFFIX`` performs file completion allowing only files ending in SUFFIX, with an optional description.
+- ``__fish_complete_suffix SUFFIX`` performs file completion but sorts files ending in SUFFIX first. This is useful in conjunction with ``complete --keep-order``.
 
 - ``__fish_complete_users`` prints a list of all users with their full name as description.
 

@@ -251,6 +251,7 @@ Completions
 - Lots of improvements to completions.
 - Improvements to the manpage completion generator (:issue:`7086`).
 - Significant performance improvements to completion of the available commands (:issue:`7153`).
+- ``__fish_complete_suffix`` completes any file but sorts files with matching suffix first (:issue:`7040`). Previously, it only completed files with matching suffix.
 
 Deprecations and removed features
 ---------------------------------

@@ -1,4 +1,4 @@
-complete -c zcat -x -a "(
+complete -c zcat -k -x -a "(
 	__fish_complete_suffix .gz
 	__fish_complete_suffix .tgz
 )

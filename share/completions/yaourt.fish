@@ -118,7 +118,7 @@ complete -c $progname -n $query -s u -l upgrades -d 'List only out-of-date packa
 complete -c $progname -n "$query" -d 'Installed package' -xa $listinstalled -f
 # Yaourt only query options
 # Backup file is always saved as pacman-$date.tar.bz2
-complete -c $progname -n $query -r -l backupfile -a '(__fish_complete_suffix tar.bz2)' -d 'Query FILE instead of alpm/aur'
+complete -c $progname -n $query -r -l backupfile -k -a '(__fish_complete_suffix tar.bz2)' -d 'Query FILE instead of alpm/aur'
 complete -c $progname -n $query -l date -d 'List queries result sorted by installation date'
 
 # Remove options
@@ -170,7 +170,7 @@ complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readabl
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports
 # In practice, it's going to be tar.xz, tar.gz or tar.zst
-complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar.zst; __fish_complete_suffix pkg.tar.xz; __fish_complete_suffix pkg.tar.gz)' -d 'Package file'
+complete -c $progname -n "$upgrade" -k -xa '(__fish_complete_suffix pkg.tar.zst; __fish_complete_suffix pkg.tar.xz; __fish_complete_suffix pkg.tar.gz)' -d 'Package file'
 
 ## Yaourt only stuff
 # Clean options

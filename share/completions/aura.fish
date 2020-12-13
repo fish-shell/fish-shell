@@ -163,6 +163,6 @@ complete -c aura -n $sync -s y -l refresh -d 'Download fresh copy of the package
 complete -c aura -n "$sync; and $argument" -xa "$listall $listgroups"
 
 # Upgrade options
-complete -c aura -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.xz)' -d 'Package file'
-complete -c aura -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.gz)' -d 'Package file'
-complete -c aura -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.zst)' -d 'Package file'
+complete -c aura -n "$upgrade; and $argument" -k -xa '(__fish_complete_suffix pkg.tar.xz)' -d 'Package file'
+complete -c aura -n "$upgrade; and $argument" -k -xa '(__fish_complete_suffix pkg.tar.gz)' -d 'Package file'
+complete -c aura -n "$upgrade; and $argument" -k -xa '(__fish_complete_suffix pkg.tar.zst)' -d 'Package file'

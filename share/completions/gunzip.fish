@@ -1,5 +1,5 @@
 complete -c gunzip -s c -l stdout -d "Compress to stdout"
-complete -c gunzip -x -a "(
+complete -c gunzip -k -x -a "(
 	__fish_complete_suffix .gz
 	__fish_complete_suffix .tgz
 )

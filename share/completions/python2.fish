@@ -13,7 +13,7 @@ complete -c python2 -s v -d "Verbose mode"
 complete -c python2 -s V -d "Display version and exit"
 complete -c python2 -s W -x -d "Warning control" -a "ignore default all module once error"
 complete -c python2 -s x -d 'Skip first line of source, allowing use of non-Unix forms of #!cmd'
-complete -c python2 -f -n __fish_is_first_token -a "(__fish_complete_suffix .py)"
+complete -c python2 -f -n __fish_is_first_token -k -a "(__fish_complete_suffix .py)"
 complete -c python2 -f -n __fish_is_first_token -a - -d 'Read program from stdin'
 complete -c python2 -s 3 -d 'Warn about Python 3.x incompatibilities that 2to3 cannot trivially fix'
 complete -c python2 -s t -d "Warn on mixed tabs and spaces"

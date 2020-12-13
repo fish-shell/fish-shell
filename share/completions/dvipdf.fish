@@ -1,3 +1,3 @@
-complete -c dvipdf -x -a "(
+complete -c dvipdf -k -x -a "(
            __fish_complete_suffix .dvi
    )"

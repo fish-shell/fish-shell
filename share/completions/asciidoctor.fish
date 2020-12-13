@@ -1,4 +1,4 @@
-complete -x -c asciidoctor -a "
+complete -x -c asciidoctor -k -a "
 (
     __fish_complete_suffix .asciidoc
     __fish_complete_suffix .adoc

@@ -1,11 +1,11 @@
 complete -c bzip2 -s c -l stdout -d "Compress to stdout"
-complete -c bzip2 -s d -l decompress -x -a "(
+complete -c bzip2 -s d -l decompress -k -x -a "(
 	__fish_complete_suffix .tbz
 	__fish_complete_suffix .tbz2
 )
 "
 
-complete -c bzip2 -s d -l decompress -x -a "(
+complete -c bzip2 -s d -l decompress -k -x -a "(
 	__fish_complete_suffix .bz
 	__fish_complete_suffix .bz2
 )

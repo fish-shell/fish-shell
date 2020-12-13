@@ -77,9 +77,9 @@ complete $rpm_select -s f -l file -d 'Query package owning specified file' -rF
 complete $rpm_select -l fileid -d 'Query package that contains a given file identifier, i.e. the MD5 digest of the file contents' -x
 complete $rpm_select -s g -l group -d 'Query packages with the specified group' -x
 complete $rpm_select -l hdrid -d 'Query package that contains a given header identifier, i.e. the SHA1 digest of the immutable header region' -x
-complete $rpm_select -s p -l package -d 'Query an (uninstalled) package in specified file' -xa "(__fish_complete_suffix .rpm)"
+complete $rpm_select -s p -l package -d 'Query an (uninstalled) package in specified file' -k -xa "(__fish_complete_suffix .rpm)"
 complete $rpm_select -l pkgid -d 'Query package that contains a given package identifier, i.e. the MD5 digest of the combined header and payload contents' -x
-complete $rpm_select -l specfile -d 'Parse and query specified spec-file as if it were a package' -xa "(__fish_complete_suffix .spec)"
+complete $rpm_select -l specfile -d 'Parse and query specified spec-file as if it were a package' -k -xa "(__fish_complete_suffix .spec)"
 complete $rpm_select -l tid -d 'Query package(s) that have the specified TID (transaction identifier)' -x
 complete $rpm_select -l triggeredby -d 'Query packages that are triggered by the specified packages' -x -a "(__fish_print_rpm_packages)"
 complete $rpm_select -l whatprovides -d 'Query all packages that provide the specified capability' -x
@@ -121,4 +121,4 @@ complete $rpm_mode -s q -l query -d 'Query installed packages'
 complete $rpm_mode -s V -l verify -d 'Verify package integrity'
 complete $rpm_mode -s e -l erase -d 'Erase package'
 
-complete -c rpm -xa '(__fish_complete_suffix .rpm)'
+complete -c rpm -k -xa '(__fish_complete_suffix .rpm)'

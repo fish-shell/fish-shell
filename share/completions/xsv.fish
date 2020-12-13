@@ -19,7 +19,7 @@ complete -c xsv -n __fish_is_first_token -xa stats -d 'Compute basic statistics'
 complete -c xsv -n __fish_is_first_token -xa table -d 'Align CSV data into columns'
 
 # with a subcommand
-complete -c xsv -n 'not __fish_is_first_token' -xa '(__fish_complete_suffix .csv)'
+complete -c xsv -n 'not __fish_is_first_token' -k -xa '(__fish_complete_suffix .csv)'
 complete -c xsv -n 'not __fish_is_first_token' -s h -l help -d 'Display help for this xsv command'
 
 # without a subcommand

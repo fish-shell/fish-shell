@@ -37,6 +37,6 @@ complete -x -c optipng -n __fish_should_complete_switches -a '-dir\t"write outpu
 complete -x -c optipng -n __fish_should_complete_switches -a '-log\t"log messages to <file>"'
 
 complete -x -c optipng -n 'not __fish_prev_arg_in -out -dir -log' \
-    -a '(__fish_complete_suffix .png;  __fish_complete_suffix .pnm;  __fish_complete_suffix .tiff;  __fish_complete_suffix .bmp)'
+    -k -a '(__fish_complete_suffix .png;  __fish_complete_suffix .pnm;  __fish_complete_suffix .tiff;  __fish_complete_suffix .bmp)'
 
 complete -x -c optipng -n '__fish_prev_arg_in -dir' -a '(__fish_complete_directories)'

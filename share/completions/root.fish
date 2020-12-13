@@ -7,4 +7,4 @@ complete -c root -s x -d 'Exit on exception'
 complete -c root -s h -s \? -l help -d 'Print help'
 complete -c root -o config -d 'Print ./configure options'
 complete -c root -o memstat -d 'Run with memory usage monitoring'
-complete -c root -a "(__fish_complete_suffix .root)"
+complete -c root -k -a "(__fish_complete_suffix .root)"

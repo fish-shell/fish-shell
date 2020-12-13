@@ -1,7 +1,7 @@
 # Completions for zstd
 
 complete -c zstd -s z -l compress -d "Compress (default)"
-complete -c zstd -s d -l decompress -l uncompress -d Decompress -x -a "
+complete -c zstd -s d -l decompress -l uncompress -d Decompress -k -x -a "
 (
     __fish_complete_suffix .zst
 )

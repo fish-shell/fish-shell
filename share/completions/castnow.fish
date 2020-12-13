@@ -6,7 +6,7 @@ set -l __fish_castnow_keys "space\tToggle\ between\ play\ and\ pause m\tToggle\ 
 complete -c castnow -l tomp4 -d "Convert file to mp4 during playback"
 complete -c castnow -l device -d "Specify name of Chromecast device to be used" -x
 complete -c castnow -l address -d "Specify IP or hostname of Chromecast device" -x
-complete -c castnow -l subtitles -d "Path or URL to SRT or VTT file" -x -a "(
+complete -c castnow -l subtitles -d "Path or URL to SRT or VTT file" -k -x -a "(
     __fish_complete_suffix .srt
     __fish_complete_suffix .vtt
 )"

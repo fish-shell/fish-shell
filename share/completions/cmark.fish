@@ -1,4 +1,4 @@
-complete -x -c cmark -a "
+complete -k -x -c cmark -a "
 (
     __fish_complete_suffix .md
     __fish_complete_suffix .markdown

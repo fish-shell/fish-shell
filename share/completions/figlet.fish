@@ -17,7 +17,7 @@ complete -c figlet -s p -d "Put FIGlet into `paragraph mode`"
 complete -c figlet -s n -d "Put FIGlet back to normal"
 complete -c figlet -s D -d "Switch to German (ISO 646-DE) character set"
 complete -c figlet -s E -d "Turns off German character set processing"
-complete -c figlet -s C -d "Add given control file" -a "(__fish_complete_suffix .flc)" -x
+complete -c figlet -s C -d "Add given control file" -k -a "(__fish_complete_suffix .flc)" -x
 complete -c figlet -s N -d "Clear control file list"
 complete -c figlet -s s -d "Cause `smushing`"
 complete -c figlet -s S -d "Cause `smushing`"

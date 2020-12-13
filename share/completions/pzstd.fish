@@ -1,6 +1,6 @@
 # Completions for pzstd
 
-complete -c pzstd -s d -l decompress -d Decompress -x -a "
+complete -c pzstd -s d -l decompress -d Decompress -k -x -a "
 (
     __fish_complete_suffix .zst
 )

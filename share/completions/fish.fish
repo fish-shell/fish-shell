@@ -20,4 +20,4 @@ complete -c fish -s f -l features -d "Run with comma-separated feature flags ena
 complete -c fish -l print-rusage-self -d "Print stats from getrusage at exit" -f
 complete -c fish -l print-debug-categories -d "Print the debug categories fish knows" -f
 
-complete -c fish -x -a "(__fish_complete_suffix .fish)"
+complete -c fish -k -x -a "(__fish_complete_suffix .fish)"

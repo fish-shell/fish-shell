@@ -28,7 +28,7 @@ complete -c unzip -s M -d "pipe through `more` pager"
 if unzip -v 2>/dev/null | string match -eq Debian
 
     # the first non-switch argument should be the zipfile
-    complete -c unzip -n __fish_is_first_token -xa '(
+    complete -c unzip -n __fish_is_first_token -k -xa '(
         __fish_complete_suffix .zip
         __fish_complete_suffix .jar
         __fish_complete_suffix .aar
@@ -41,7 +41,7 @@ if unzip -v 2>/dev/null | string match -eq Debian
 else
 
     # all tokens should be zip files
-    complete -c unzip -xa '(
+    complete -c unzip -k -xa '(
         __fish_complete_suffix .zip
         __fish_complete_suffix .jar
         __fish_complete_suffix .aar

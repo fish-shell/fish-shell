@@ -1,6 +1,6 @@
 # Completions for unzstd
 
-complete -c unzstd -x -a "
+complete -c unzstd -k -x -a "
 (
     __fish_complete_suffix .zst
 )

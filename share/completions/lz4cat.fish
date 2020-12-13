@@ -1,6 +1,6 @@
 # Completions for lz4cat
 
-complete -c lz4cat -x -a "
+complete -c lz4cat -k -x -a "
 (
     __fish_complete_suffix .lz4
 )

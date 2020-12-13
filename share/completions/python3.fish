@@ -13,7 +13,7 @@ complete -c python3 -s v -d "Verbose mode"
 complete -c python3 -s V -l version -d "Display version and exit"
 complete -c python3 -s W -x -d "Warning control" -a "ignore default all module once error"
 complete -c python3 -s x -d 'Skip first line of source, allowing use of non-Unix forms of #!cmd'
-complete -c python3 -n __fish_is_first_token -fa "(__fish_complete_suffix .py)"
+complete -c python3 -n __fish_is_first_token -k -fa "(__fish_complete_suffix .py)"
 complete -c python3 -f -n __fish_is_first_token -a - -d 'Read program from stdin'
 complete -c python3 -s q -d 'Don\'t print version and copyright messages on interactive startup'
 complete -c python3 -s X -x -d 'Set implementation-specific option' -a 'faulthandler showrefcount tracemalloc showalloccount importtime dev utf8 pycache_prefex=PATH:'

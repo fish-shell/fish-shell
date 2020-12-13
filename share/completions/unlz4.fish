@@ -1,6 +1,6 @@
 # Completions for unlz4
 
-complete -c unlz4 -x -a "
+complete -c unlz4 -k -x -a "
 (
     __fish_complete_suffix .lz4
 )

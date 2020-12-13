@@ -1,6 +1,6 @@
 __fish_complete_lpr lpr
-complete -c lpr -xa "(__fish_complete_suffix .pdf)"
-complete -c lpr -xa "(__fish_complete_suffix .ps)"
+complete -c lpr -k -xa "(__fish_complete_suffix .pdf)"
+complete -c lpr -k -xa "(__fish_complete_suffix .ps)"
 complete -c lpr -s H -x -d 'Specifies an alternate server' -xa '(__fish_print_hostnames)'
 complete -c lpr -s C -s J -s T -x -d 'Sets the job name'
 #complete -c lpr -o '\\#' -d 'Sets the number of copies to print from 1 to 100' -xa

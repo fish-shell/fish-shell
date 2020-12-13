@@ -1,2 +1,2 @@
 
-complete -c djview -x -a "(__fish_complete_suffix .djvu)"
+complete -c djview -x -k -a "(__fish_complete_suffix .djvu)"

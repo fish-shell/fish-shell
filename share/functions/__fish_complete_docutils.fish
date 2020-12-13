@@ -1,5 +1,5 @@
 function __fish_complete_docutils -d "Completions for Docutils common options" -a cmd
-    complete -x -c $cmd -a "
+    complete -x -c $cmd -k -a "
     (
         __fish_complete_suffix .rst
         __fish_complete_suffix .txt

@@ -1,6 +1,6 @@
 complete -c tex -o help -d "Display help and exit"
 complete -c tex -o version -d "Display version and exit"
-complete -c tex -x -a "(
+complete -c tex -k -x -a "(
 __fish_complete_suffix (commandline -ct) .tex '(La)TeX file'
 )"
 

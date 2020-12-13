@@ -1,4 +1,4 @@
-complete -x -c zopflipng -a "(__fish_complete_suffix .png)"
+complete -x -c zopflipng -k -a "(__fish_complete_suffix .png)"
 
 complete -c zopflipng -s m -d "Compress more"
 complete -c zopflipng -l prefix -d "Add prefix"

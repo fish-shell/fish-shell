@@ -157,7 +157,7 @@ complete -n '__fish_seen_subcommand_from forward' -c adb -l remove -d 'Remove a 
 complete -n '__fish_seen_subcommand_from forward' -c adb -l remove-all -d 'Remove all forward socket connections'
 
 # sideload
-complete -n '__fish_seen_subcommand_from sideload' -c adb -xa '(__fish_complete_suffix .zip)'
+complete -n '__fish_seen_subcommand_from sideload' -c adb -k -xa '(__fish_complete_suffix .zip)'
 
 # reconnect
 complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick current connection from device side and make it reconnect.'

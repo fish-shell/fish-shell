@@ -1,6 +1,6 @@
 # Completions for zstdcat
 
-complete -c zstdcat -x -a "
+complete -c zstdcat -k -x -a "
 (
     __fish_complete_suffix .zst
 )

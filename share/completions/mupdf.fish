@@ -1,4 +1,4 @@
-complete -c mupdf -x -a "(__fish_complete_suffix .pdf)"
+complete -c mupdf -k -x -a "(__fish_complete_suffix .pdf)"
 
 complete -c mupdf -s p -d Description
 complete -c mupdf -s r -d Resolution

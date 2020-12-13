@@ -1,7 +1,7 @@
-complete -c gv -xa "(__fish_complete_suffix .ps)"
-complete -c gv -xa "(__fish_complete_suffix .ps.gz)"
-complete -c gv -xa "(__fish_complete_suffix .eps)"
-complete -c gv -xa "(__fish_complete_suffix .pdf)"
+complete -c gv -k -xa "(__fish_complete_suffix .ps)"
+complete -c gv -k -xa "(__fish_complete_suffix .ps.gz)"
+complete -c gv -k -xa "(__fish_complete_suffix .eps)"
+complete -c gv -k -xa "(__fish_complete_suffix .pdf)"
 complete -c gv -l monochrome -d 'Display document using only black and white'
 complete -c gv -l grayscale -d 'Display document without colors'
 complete -c gv -l color -d 'Display document as usual'

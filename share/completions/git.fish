@@ -1708,6 +1708,7 @@ complete -f -c git -n __fish_git_needs_command -a config -d 'Set and read git co
 ### format-patch
 complete -f -c git -n __fish_git_needs_command -a format-patch -d 'Generate patch series to send upstream'
 complete -f -c git -n '__fish_git_using_command format-patch' -a '(__fish_git_branches)'
+complete -c git -n '__fish_git_using_command format-patch' -s o -l output-directory -xa '(__fish_complete_directories)'
 complete -f -c git -n '__fish_git_using_command format-patch' -s p -l no-stat -d "Generate plain patches without diffstat"
 complete -f -c git -n '__fish_git_using_command format-patch' -s s -l no-patch -d "Suppress diff output"
 complete -f -c git -n '__fish_git_using_command format-patch' -l minimal -d "Spend more time to create smaller diffs"

@@ -232,18 +232,6 @@ void print_exit_warning_for_jobs(const job_list_t &jobs) {
     reader_schedule_prompt_repaint();
 }
 
-void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
-    // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
-    // valid pid. Mark it and everything after it as dead.
-    bool found = false;
-    for (process_ptr_t &p : job->processes) {
-        found = found || (p.get() == failed_proc);
-        if (found) {
-            p->completed = true;
-        }
-    }
-}
-
 /// Set the status of \p proc to \p status.
 static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
                                 proc_status_t status) {
@@ -280,6 +268,11 @@ process_t::process_t() = default;
 
 void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_t::principal().current_generations();
+}
+
+void process_t::mark_aborted_before_launch() {
+    completed = true;
+    status = proc_status_t::from_exit_code(EXIT_FAILURE);
 }
 
 bool process_t::is_internal() const {

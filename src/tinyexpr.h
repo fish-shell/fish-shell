@@ -47,6 +47,6 @@ typedef struct te_error_t {
 
 /* Parses the input expression, evaluates it, and frees it. */
 /* Returns NaN on error. */
-double te_interp(const char *expression, te_error_t *error);
+double te_interp(const wchar_t *expression, te_error_t *error);
 
 #endif /*__TINYEXPR_H__*/

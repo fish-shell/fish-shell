@@ -223,13 +223,12 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
 
     int retval = STATUS_CMD_OK;
     te_error_t error;
-    std::string narrow_str = wcs2string(expression);
     // Switch locale while computing stuff.
     // This means that the "." is always the radix character,
     // so numbers work the same across locales.
     char *saved_locale = strdup(setlocale(LC_NUMERIC, nullptr));
     setlocale(LC_NUMERIC, "C");
-    double v = te_interp(narrow_str.c_str(), &error);
+    double v = te_interp(expression.c_str(), &error);
 
     if (error.position == 0) {
         // Check some runtime errors after the fact.

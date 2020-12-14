@@ -858,9 +858,12 @@ int main(int argc, char *argv[]) {
     } output_type = output_type_plain_text;
     const char *output_location = "";
     bool do_indent = true;
+    // File path for debug output.
+    std::string debug_output;
 
     const char *short_opts = "+d:hvwicD:";
-    const struct option long_opts[] = {{"debug-level", required_argument, nullptr, 'd'},
+    const struct option long_opts[] = {{"debug", required_argument, nullptr, 'd'},
+                                       {"debug-output", required_argument, nullptr, 'o'},
                                        {"debug-stack-frames", required_argument, nullptr, 'D'},
                                        {"dump-parse-tree", no_argument, nullptr, 'P'},
                                        {"no-indent", no_argument, nullptr, 'i'},
@@ -922,14 +925,22 @@ int main(int argc, char *argv[]) {
                 if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
                     debug_level = static_cast<int>(tmp);
                 } else {
-                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
-                    exit(1);
+                    activate_flog_categories_by_pattern(str2wcstring(optarg));
+                }
+                for (auto cat : get_flog_categories()) {
+                    if (cat->enabled) {
+                        printf("Debug enabled for category: %ls\n", cat->name);
+                    }
                 }
                 break;
             }
             case 'D': {
                 // TODO: Option is currently useless.
                 // Either remove it or make it work with FLOG.
+                break;
+            }
+            case 'o': {
+                debug_output = optarg;
                 break;
             }
             default: {
@@ -941,6 +952,20 @@ int main(int argc, char *argv[]) {
 
     argc -= optind;
     argv += optind;
+
+    // Direct any debug output right away.
+    FILE *debug_output_file = nullptr;
+    if (!debug_output.empty()) {
+        debug_output_file = fopen(debug_output.c_str(), "w");
+        if (!debug_output_file) {
+            fprintf(stderr, "Could not open file %s\n", debug_output.c_str());
+            perror("fopen");
+            exit(-1);
+        }
+        set_cloexec(fileno(debug_output_file));
+        setlinebuf(debug_output_file);
+        set_flog_output_file(debug_output_file);
+    }
 
     int retval = 0;
 

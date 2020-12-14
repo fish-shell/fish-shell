@@ -23,6 +23,7 @@
  */
 
 // This version has been altered and ported to C++ for inclusion in fish.
+#include "fallback.h"  // IWYU pragma: keep
 #include "tinyexpr.h"
 #include "wutil.h"
 

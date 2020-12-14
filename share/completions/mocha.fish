@@ -25,7 +25,7 @@ complete -c mocha -l debug-brk -d "enable node's debugger breaking on thefirst l
 complete -c mocha -l globals -x -d "allow the given comma-delimited global[names]"
 complete -c mocha -l es_staging -d "enable all staged features"
 complete -c mocha -l harmony -d "all node --harmony* flags are available"
-complete -c mocha -l preserve-symlinks -d "Instructs the module loader to preserve symbolic links when resolving and caching modules"
+complete -c mocha -l preserve-symlinks -d "Preserve symbolic links when loading modules"
 complete -c mocha -l icu-data-dir -d "include ICU data"
 complete -c mocha -l inline-diffs -d "display actual/expected differences inline within each string"
 complete -c mocha -l interfaces -d "display available interfaces"

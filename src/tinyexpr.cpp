@@ -24,6 +24,7 @@
 
 // This version has been altered and ported to C++ for inclusion in fish.
 #include "tinyexpr.h"
+#include "wutil.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -250,7 +251,7 @@ static void next_token(state *s) {
 
         /* Try reading a number. */
         if ((s->next[0] >= '0' && s->next[0] <= '9') || s->next[0] == '.') {
-            s->value = wcstod(s->next, const_cast<wchar_t **>(&s->next));
+            s->value = wcstod_l(s->next, const_cast<wchar_t **>(&s->next), fish_c_locale());
             s->type = TOK_NUMBER;
         } else {
             /* Look for a function call. */

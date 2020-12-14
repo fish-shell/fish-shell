@@ -148,7 +148,7 @@ complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-lockfile -d '
 complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l pure-lockfile -d 'don\'t generate a lockfile'
 complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l frozen-lockfile -d 'don\'t generate a lockfile and fail if an update is needed'
 complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l global-folder
-complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l modules-folder -d 'rather than installing modules into the node_modules folder relative to the cwd, output them here'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l modules-folder -d 'install modules here instead of node_modules'
 complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l cache-folder -d 'specify a custom folder to store the yarn cache'
 
 complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l mutex -d 'use a mutex to ensure only one yarn instance is executing'

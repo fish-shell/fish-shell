@@ -4,7 +4,7 @@
 
 complete -c find -s P -d "Never follow symlinks"
 complete -c find -s L -o follow -d "Follow symlinks"
-complete -c find -s H -d "Do not follow symbolic links, except while processing the command line arguments"
+complete -c find -s H -d "Don't follow symbolic links (except for command line arguments)"
 
 
 # General options
@@ -17,7 +17,7 @@ complete -c find -o maxdepth -d "Maximum recursion depth" -a "1 2 3 4 5 6 7 8 9"
 complete -c find -o mindepth -d "Do not apply any tests or actions at levels less than specified level" -a "1 2 3 4 5 6 7 8 9"
 complete -c find -o mount -o xdev -d "Don't descend directories on other filesystems"
 complete -c find -o noignore_readdir_race -d "Print error messages for files that are deleted while running find"
-complete -c find -o noleaf -d "Do not optimize by assuming that directories contain 2 fewer subdirectories than their hard link count"
+complete -c find -o noleaf -d "Don't assume directories contain 2 fewer subdirs than their hard link count"
 complete -c find -o regextype -d "Specify regular expression type" -a "emacs posix-awk posix-basic posix-egrep posix-extended"
 complete -c find -o version -l version -d "Display version and exit"
 complete -c find -o warn -d "Turn warnings on"
@@ -74,7 +74,7 @@ set -l type_comp 'b\t"Block device" c\t"Character device" d\t"Directory" p\t"Nam
 complete -c find -o type -d "File is of specified type" -x -a $type_comp
 
 complete -c find -o uid -d "File's owner has specified numeric user ID" -x -a "(__fish_complete_user_ids)"
-complete -c find -o used -d "File was last accessed specified number of days after its status was last changed" -x
+complete -c find -o used -d "File was last used X number of days after its status was last changed" -x
 complete -c find -o user -d "File's owner" -x -a "(__fish_complete_users)"
 complete -c find -o xtype -d "Check type of file - in case of symlink, check the file that is not checked by -type" -x -a $type_comp
 complete -c find -o context -d "File's security context matches specified pattern" -x
@@ -91,7 +91,7 @@ complete -c find -o fprint0 -d "Print null separated full file names into specif
 complete -c find -o fprintf -d "Print formated data into specified file" -F
 complete -c find -o ok -d "Execute specified command for each located file after asking user" -r
 complete -c find -o print -d "Print full file names"
-complete -c find -o okdir -d "Execute specified command for each located file, in the files directory, after asking user" -r
+complete -c find -o okdir -d "Execute a command for each located file, in its directory, after asking" -r
 complete -c find -o print0 -d "Print null separated full file names"
 complete -c find -o printf -d "Print formated data" -x
 complete -c find -o prune -d "Do not recurse unless -depth is specified"

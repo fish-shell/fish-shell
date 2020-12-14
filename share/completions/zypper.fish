@@ -156,7 +156,7 @@ complete -f -n __fish_zypper_no_subcommand -c zypper -a licenses -d 'Print repor
 complete -f -n __fish_zypper_no_subcommand -c zypper -a download -d 'Download rpms specified on the commandline to a local directory'
 complete -f -n __fish_zypper_no_subcommand -c zypper -a source-download -d 'Download source rpms for all installed packages to a local directory'
 complete -f -n __fish_zypper_no_subcommand -c zypper -a needs-rebooting -d 'Check if the needs-reboot flag was set'
-complete -f -n __fish_zypper_no_subcommand -c zypper -a ps -d 'List running processes which might still use files and libraries deleted by recent upgrades'
+complete -f -n __fish_zypper_no_subcommand -c zypper -a ps -d 'List running processes still using deleted files'
 
 #  Subcommands:
 
@@ -376,11 +376,11 @@ complete -c zypper -n __fish_zypper_is_subcommand_in -l details -d 'Show the det
 complete -c zypper -n __fish_zypper_is_subcommand_in -l from -rf -a "(__fish_zypper_print_repos -e)" -d 'Select packages from the specified repository'
 complete -c zypper -n __fish_zypper_is_subcommand_in -l oldpackage -d 'Allow to replace a newer item with an older one.'
 complete -c zypper -n __fish_zypper_is_subcommand_in -l allow-unsigned-rpm -d 'Silently install unsigned rpm packages given as commandline parameters'
-complete -c zypper -n __fish_zypper_is_subcommand_in -l force -s f -d 'Install even if the item is already installed (reinstall), downgraded or changes vendor or architecture'
+complete -c zypper -n __fish_zypper_is_subcommand_in -l force -s f -d 'Install even if the item is installed, downgraded or changes vendor/architecture'
 complete -c zypper -n __fish_zypper_is_subcommand_in -l repo -s r -rf -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repository'
 complete -c zypper -n __fish_zypper_is_subcommand_in -l no-confirm -s y -d 'Don\'t require user interaction'
 complete -c zypper -n __fish_zypper_is_subcommand_in -l dry-run -s D -d 'Test the installation, do not actually install'
-complete -c zypper -n __fish_zypper_is_subcommand_in -l replacefiles -d 'Install the packages even if they replace files from other, already installed, packages'
+complete -c zypper -n __fish_zypper_is_subcommand_in -l replacefiles -d 'Install even if it replaces files from other installed packages'
 complete -c zypper -n __fish_zypper_is_subcommand_in -l auto-agree-with-licenses -s l -d "Automatically say 'yes' to third party license confirmation prompt"
 complete -c zypper -n __fish_zypper_is_subcommand_in -l download -rf -a "$__fish_zypper_download_modes" -d 'Set the download-install mode'
 complete -c zypper -n __fish_zypper_is_subcommand_in -l download-only -s d -d 'Only download the packages, do not install'
@@ -441,8 +441,8 @@ end
 
 complete -c zypper -n __fish_zypper_is_subcommand_up -l type -s t -rf -a "$__fish_zypper_package_types" -d 'Type of package'
 complete -c zypper -n __fish_zypper_is_subcommand_up -l details -d 'Show the detailed installation summary'
-complete -c zypper -n __fish_zypper_is_subcommand_up -l best-effort -d "Do a 'best effort' approach to update. Updates to a lower than the latest version are also acceptable"
-complete -c zypper -n __fish_zypper_is_subcommand_up -l replacefiles -d 'Install the packages even if they replace files from other, already installed, packages'
+complete -c zypper -n __fish_zypper_is_subcommand_up -l best-effort -d "Accept updates to a lower than the latest version"
+complete -c zypper -n __fish_zypper_is_subcommand_up -l replacefiles -d 'Install even if it replaces files from other installed packages'
 complete -c zypper -n __fish_zypper_is_subcommand_up -l repo -s r -rf -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repository'
 complete -c zypper -n __fish_zypper_is_subcommand_up -l no-confirm -s y -d 'Don\'t require user interaction'
 complete -c zypper -n __fish_zypper_is_subcommand_up -l with-interactive -d 'Do not skip interactive updates'
@@ -457,8 +457,8 @@ function __fish_zypper_is_subcommand_lu
 end
 
 complete -c zypper -n __fish_zypper_is_subcommand_lu -l type -s t -rf -a "$__fish_zypper_package_types" -d 'Type of package'
-complete -c zypper -n __fish_zypper_is_subcommand_lu -l best-effort -d "Do a 'best effort' approach to update. Updates to a lower than the latest version are also acceptable"
-complete -c zypper -n __fish_zypper_is_subcommand_lu -l all -s a -d 'List all packages for which newer versions are available, regardless whether they are installable or not'
+complete -c zypper -n __fish_zypper_is_subcommand_lu -l best-effort -d "Accept updates to a lower than the latest version"
+complete -c zypper -n __fish_zypper_is_subcommand_lu -l all -s a -d 'List all packages with newer versions, even uninstalled'
 complete -c zypper -n __fish_zypper_is_subcommand_lu -l repo -s r -rf -a "(__fish_zypper_print_repos -e)" -d 'List only updates from the specified repository'
 
 complete -c zypper -n __fish_zypper_is_subcommand_lu -l allow-downgrade -l no-allow-downgrade -d 'Whether to allow downgrading installed resolvables'
@@ -489,7 +489,7 @@ end
 
 complete -c zypper -n __fish_zypper_is_subcommand_dup -l from -rf -a "(__fish_zypper_print_repos -e)" -d 'Restrict upgrade to specified repository'
 complete -c zypper -n __fish_zypper_is_subcommand_dup -l details -d 'Show the detailed installation summary'
-complete -c zypper -n __fish_zypper_is_subcommand_dup -l replacefiles -d 'Install the packages even if they replace files from other, already installed, packages'
+complete -c zypper -n __fish_zypper_is_subcommand_dup -l replacefiles -d 'Install even if it replaces files from other installed packages'
 complete -c zypper -n __fish_zypper_is_subcommand_dup -l repo -s r -rf -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repository'
 complete -c zypper -n __fish_zypper_is_subcommand_dup -l auto-agree-with-licenses -s l -d "Automatically say 'yes' to third party license confirmation prompt"
 complete -c zypper -n __fish_zypper_is_subcommand_dup -l dry-run -s D -d 'Test the upgrade, do not actually upgrade'
@@ -520,7 +520,7 @@ complete -c zypper -n __fish_zypper_is_subcommand_se -l conflicts -d 'Search pac
 complete -c zypper -n __fish_zypper_is_subcommand_se -l obsoletes -d 'Search for packages which obsolete the search strings'
 complete -c zypper -n __fish_zypper_is_subcommand_se -l suggests -d 'Search for packages which suggest the search strings'
 complete -c zypper -n __fish_zypper_is_subcommand_se -l type -s t -rf -a "$__fish_zypper_package_types" -d 'Search only for packages of the specified type'
-complete -c zypper -n __fish_zypper_is_subcommand_se -l name -s n -d 'Useful together with dependency options, otherwise searching in package name is default'
+complete -c zypper -n __fish_zypper_is_subcommand_se -l name -s n -d 'Search package name even with dependency options'
 complete -c zypper -n __fish_zypper_is_subcommand_se -l file-list -s f -d 'Search for a match in the file list of packages'
 complete -c zypper -n __fish_zypper_is_subcommand_se -l search-descriptions -s d -d 'Search also in package summaries and descriptions'
 complete -c zypper -n __fish_zypper_is_subcommand_se -l case-sensitive -s C -d 'Perform case-sensitive search'
@@ -652,7 +652,7 @@ end
 complete -c zypper -n __fish_zypper_is_subcommand_patch -l updatestack-only -d 'Consider only patches which affect the package management itself'
 complete -c zypper -n __fish_zypper_is_subcommand_patch -l with-update -d 'Additionally try to update all packages not covered by patches'
 complete -c zypper -n __fish_zypper_is_subcommand_patch -l details -d 'Show the detailed installation summary'
-complete -c zypper -n __fish_zypper_is_subcommand_patch -l replacefiles -d 'Install the packages even if they replace files from other, already installed, packages'
+complete -c zypper -n __fish_zypper_is_subcommand_patch -l replacefiles -d 'Install even if it replaces files from other installed packages'
 complete -c zypper -n __fish_zypper_is_subcommand_patch -l repo -s r -rf -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repository'
 complete -c zypper -n __fish_zypper_is_subcommand_patch -l category -s g -rf -a "$__fish_zypper_patch_category" -d 'Select patches with the specified category'
 complete -c zypper -n __fish_zypper_is_subcommand_patch -l severity -rf -a "$__fish_zypper_patch_severity" -d 'Select patches with the specified severity'
@@ -675,7 +675,7 @@ end
 complete -c zypper -n __fish_zypper_is_subcommand_sourcedownload -l directory -r -s d -d 'Download all source rpms to this directory'
 complete -c zypper -n __fish_zypper_is_subcommand_sourcedownload -l delete -d 'Delete extraneous source rpms in the local directory'
 complete -c zypper -n __fish_zypper_is_subcommand_sourcedownload -l no-delete -d 'Do not delete extraneous source rpms'
-complete -c zypper -n __fish_zypper_is_subcommand_sourcedownload -l status -d "Don't download any source rpms, but show which source rpms are missing or extraneous"
+complete -c zypper -n __fish_zypper_is_subcommand_sourcedownload -l status -d "Show which source rpms are missing or extraneous"
 
 function __fish_zypper_is_subcommand_download
     __fish_zypper_cmd_in_array download
@@ -691,5 +691,5 @@ function __fish_zypper_is_subcommand_ps
 end
 
 complete -c zypper -n __fish_zypper_is_subcommand_ps -l short -s s -d 'Create a short table not showing the deleted files'
-complete -c zypper -n __fish_zypper_is_subcommand_ps -l print -rf -d 'For each associated system service print <format> on the standard output, followed by a newline'
+complete -c zypper -n __fish_zypper_is_subcommand_ps -l print -rf -d 'For each associated system service print <format>'
 complete -c zypper -n __fish_zypper_is_subcommand_ps -l debugFile -r -s d -d 'Write debug output to file'

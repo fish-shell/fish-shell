@@ -230,16 +230,16 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
         // TODO: Really, this should be done in tinyexpr
         // (e.g. infinite is the result of "x / 0"),
         // but that's much more work.
-        const char *error_message = nullptr;
+        const wchar_t *error_message = nullptr;
         if (std::isinf(v)) {
-            error_message = "Result is infinite";
+            error_message = L"Result is infinite";
         } else if (std::isnan(v)) {
-            error_message = "Result is not a number";
+            error_message = L"Result is not a number";
         } else if (std::abs(v) >= kMaximumContiguousInteger) {
-            error_message = "Result magnitude is too large";
+            error_message = L"Result magnitude is too large";
         }
         if (error_message) {
-            streams.err.append_format(L"%ls: Error: %s\n", cmd, error_message);
+            streams.err.append_format(L"%ls: Error: %ls\n", cmd, error_message);
             streams.err.append_format(L"'%ls'\n", expression.c_str());
             retval = STATUS_CMD_ERROR;
         } else {

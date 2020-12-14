@@ -170,10 +170,22 @@
 /* Define to 1 if mbrtowc attempts to convert invalid UTF-8 sequences */
 #cmakedefine HAVE_BROKEN_MBRTOWC_UTF8 1
 
+/* Support __warn_unused on function return values. */
 #if __GNUC__ >= 3
 #ifndef __warn_unused
 #define __warn_unused __attribute__ ((warn_unused_result))
 #endif
 #else
 #define __warn_unused
+#endif
+
+/* Like __warn_unused, but applies to a type.
+   At the moment only clang supports this as a type attribute.
+*/
+#if defined(__clang__) && __has_attribute(warn_unused_result)
+#ifndef __warn_unused_type
+#define __warn_unused_type __attribute__ ((warn_unused_result))
+#endif
+#else
+#define __warn_unused_type
 #endif

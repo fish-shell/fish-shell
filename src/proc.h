@@ -259,6 +259,10 @@ class process_t {
     /// launch. This helps us avoid spurious waitpid calls.
     void check_generations_before_launch();
 
+    /// Mark that this process was part of a pipeline which was aborted.
+    /// The process was never successfully launched; give it a status of EXIT_FAILURE.
+    void mark_aborted_before_launch();
+
     /// \return whether this process type is internal (block, function, or builtin).
     bool is_internal() const;
 
@@ -516,9 +520,6 @@ job_list_t jobs_requiring_warning_on_exit(const parser_t &parser);
 /// Print the exit warning for the given jobs, which should have been obtained via
 /// jobs_requiring_warning_on_exit().
 void print_exit_warning_for_jobs(const job_list_t &jobs);
-
-/// Mark a process as failed to execute (and therefore completed).
-void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc);
 
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This
 /// function is only available on systems with the procfs file entry 'stat', i.e. Linux.

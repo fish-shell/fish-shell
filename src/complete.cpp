@@ -1268,7 +1268,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
 
         // Append matching environment variables
         // TODO: need to propagate overflow here.
-        (void)this->completions.add(std::move(comp), std::move(desc), flags, *match);
+        ignore_result(this->completions.add(std::move(comp), std::move(desc), flags, *match));
 
         res = true;
     }
@@ -1373,15 +1373,16 @@ bool completer_t::try_complete_user(const wcstring &str) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name.
             // TODO: propagate overflow?
-            (void)this->completions.add(&pw_name[name_len], std::move(desc), COMPLETE_NO_SPACE);
+            ignore_result(
+                this->completions.add(&pw_name[name_len], std::move(desc), COMPLETE_NO_SPACE));
             result = true;
         } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name
-            (void)this->completions.add(
+            ignore_result(this->completions.add(
                 std::move(name), std::move(desc),
-                COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
+                COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE));
             result = true;
         }
 

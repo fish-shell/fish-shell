@@ -247,7 +247,7 @@ expect_prompt(
 # occur and the "t" should become part of the text that is echoed.
 send("echo mno pqr")
 send("\033")
-sleep(0.250)
+sleep(0.350)
 send("t\r")
 # emacs transpose words, 100ms timeout: long delay
 expect_prompt(

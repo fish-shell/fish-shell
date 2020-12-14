@@ -16,8 +16,8 @@ complete -c $progname -s f -d 'Forcefully remove package files even if they have
 complete -c $progname -s h -d 'Show the help message.'
 complete -c $progname -s n -d 'Dry-run mode.  Show what actions would be done but don\'t do anything.'
 complete -c $progname -s O -d 'Cleans cache directory removing obsolete binary packages.'
-complete -c $progname -s o -d 'Removes installed package orphans that were installed automatically (as dependencies)'
-complete -c $progname -s R -d 'Recursively remove packages that were installed by PKGNAME and aren\'t required by any other package'
+complete -c $progname -s o -d 'Remove orphaned packages that were installed as dependencies'
+complete -c $progname -s R -d 'Recursively remove packages installed by PKG not by any other package'
 complete -c $progname -s r -d 'Specifies a full path for the target root directory.' -xa "(__fish_complete_directories)"
 complete -c $progname -s v -d 'Enables verbose messages.'
 complete -c $progname -s y -d 'Assume yes to all questions and avoid interactive questions.'

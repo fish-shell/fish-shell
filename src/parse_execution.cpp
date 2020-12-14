@@ -1391,7 +1391,13 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         }
 
         // Actually execute the job.
-        if (!exec_job(*this->parser, job, block_io)) {
+        if (!exec_job(*parser, job, block_io)) {
+            // No process in the job successfully launched.
+            // Ensure statuses are set (#7540).
+            if (auto statuses = job->get_statuses()) {
+                parser->set_last_statuses(statuses.value());
+                parser->libdata().status_count++;
+            }
             remove_job(*this->parser, job.get());
         }
 

@@ -95,6 +95,7 @@ Scripting improvements
 -  An ``alias`` that delegates to a command with the same name no longer triggers an error about recursive completion (:issue:`7389`).
 - ``math`` now has a ``--base`` option to output the result in hexadecimal or octal (:issue:`7496`).
 - ``string`` subcommands now quit early when used with ``--quiet`` (:issue:`7495`).
+-  Failed redirections will now set ``$status`` (:issue:`7540`).
 
 Interactive improvements
 ------------------------

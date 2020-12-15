@@ -122,6 +122,17 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
     return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
+bool path_is_executable(const std::string &path) {
+    if (access(path.c_str(), X_OK)) return false;
+    struct stat buff;
+    if (stat(path.c_str(), &buff) == -1) {
+        if (errno != EACCES) wperror(L" stat");
+        return false;
+    }
+    if (!S_ISREG(buff.st_mode)) return false;
+    return true;
+}
+
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     FLOGF(path, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
@@ -129,11 +140,8 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for matching commands in the PATH var.
     if (cmd.find(L'/') != wcstring::npos) {
-        struct stat buff;
-        if (wstat(cmd, &buff)) return paths;
-        if (!S_ISREG(buff.st_mode)) return paths;
-        if (waccess(cmd, X_OK)) return paths;
-        paths.push_back(cmd);
+        std::string narrow = wcs2string(cmd);
+        if (path_is_executable(narrow)) paths.push_back(cmd);
         return paths;
     }
 
@@ -144,14 +152,8 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     for (auto path : pathsv) {
         if (path.empty()) continue;
         append_path_component(path, cmd);
-        if (waccess(path, X_OK) == 0) {
-            struct stat buff;
-            if (wstat(path, &buff) == -1) {
-                if (errno != EACCES) wperror(L"stat");
-                continue;
-            }
-            if (S_ISREG(buff.st_mode)) paths.push_back(path);
-        }
+        std::string narrow = wcs2string(path);
+        if (path_is_executable(narrow)) paths.push_back(path);
     }
 
     return paths;

@@ -1,3 +1,3 @@
-for i in (seq 1000)
+for i in (seq 10000)
     echo $i
 end

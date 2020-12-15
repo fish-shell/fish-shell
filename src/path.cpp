@@ -138,8 +138,9 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     }
 
     auto path_var = vars.get(L"PATH");
-    wcstring_list_t pathsv;
-    if (path_var) path_var->to_list(pathsv);
+    if (!path_var) return paths;
+
+    const wcstring_list_t &pathsv = path_var->as_list();
     for (auto path : pathsv) {
         if (path.empty()) continue;
         append_path_component(path, cmd);

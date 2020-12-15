@@ -268,9 +268,8 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
     // where we are temporarily shadowing a variable, we want to compare against the shadowed value,
     // not the (missing) local value. Also don't bother to complain about relative paths, which
     // don't start with /.
-    wcstring_list_t existing_values;
     const auto existing_variable = vars.get(key, ENV_DEFAULT);
-    if (!existing_variable.missing_or_empty()) existing_variable->to_list(existing_values);
+    const wcstring_list_t &existing_values = existing_variable ? existing_variable->as_list() : wcstring_list_t{};
 
     for (const wcstring &dir : list) {
         if (!string_prefixes_string(L"/", dir) || contains(existing_values, dir)) {
@@ -371,8 +370,8 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
     p++;
 
     auto var_str = vars.get(src, scope);
-    wcstring_list_t var;
-    if (var_str) var_str->to_list(var);
+    size_t varsize = 0;
+    if (var_str) varsize = var_str->as_list().size();
 
     int count = 0;
 
@@ -386,7 +385,7 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
         p = const_cast<wchar_t *>(end);
 
         // Convert negative index to a positive index.
-        if (l_ind < 0) l_ind = var.size() + l_ind + 1;
+        if (l_ind < 0) l_ind = varsize + l_ind + 1;
 
         if (*p == L'.' && *(p + 1) == L'.') {
             p += 2;
@@ -397,7 +396,7 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
             p = const_cast<wchar_t *>(end);
 
             // Convert negative index to a positive index.
-            if (l_ind2 < 0) l_ind2 = var.size() + l_ind2 + 1;
+            if (l_ind2 < 0) l_ind2 = varsize + l_ind2 + 1;
 
             int direction = l_ind2 < l_ind ? -1 : 1;
             for (long jjj = l_ind; jjj * direction <= l_ind2 * direction; jjj += direction) {
@@ -536,11 +535,12 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
         if (idx_count) {
             wcstring_list_t result;
+            size_t varsize = 0;
             auto dest_str = parser.vars().get(dest, scope);
-            if (dest_str) dest_str->to_list(result);
+            if (dest_str) varsize = dest_str->as_list().size();
 
             for (auto idx : indexes) {
-                if (idx < 1 || static_cast<size_t>(idx) > result.size()) retval++;
+                if (idx < 1 || static_cast<size_t>(idx) > varsize) retval++;
             }
         } else {
             if (!parser.vars().get(arg, scope)) retval++;
@@ -708,10 +708,12 @@ static int set_var_array(const wchar_t *cmd, const set_cmd_opts_t &opts, const w
         if (opts.prepend) {
             for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
         }
+
         auto var_str = parser.vars().get(varname, ENV_DEFAULT);
-        wcstring_list_t var_array;
-        if (var_str) var_str->to_list(var_array);
-        new_values.insert(new_values.end(), var_array.begin(), var_array.end());
+        if (var_str) {
+            const auto &var_array = var_str->as_list();
+            new_values.insert(new_values.end(), var_array.begin(), var_array.end());
+        }
 
         if (opts.append) {
             for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);

@@ -120,8 +120,7 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     const auto path_var = vars.get(L"fish_function_path");
     if (path_var.missing_or_empty()) return;
 
-    wcstring_list_t path_list;
-    path_var->to_list(path_list);
+    const wcstring_list_t &path_list = path_var->as_list();
 
     for (i = 0; i < path_list.size(); i++) {
         const wcstring &ndir_str = path_list.at(i);

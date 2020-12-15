@@ -141,9 +141,8 @@ static bool is_quotable(const wcstring &str) {
 
 wcstring expand_escape_variable(const env_var_t &var) {
     wcstring buff;
-    wcstring_list_t lst;
+    const wcstring_list_t &lst = var.as_list();
 
-    var.to_list(lst);
     for (size_t j = 0; j < lst.size(); j++) {
         const wcstring &el = lst.at(j);
         if (j) buff.append(L"  ");

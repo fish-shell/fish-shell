@@ -4,7 +4,7 @@
 
 complete -c find -s P -d "Never follow symlinks"
 complete -c find -s L -o follow -d "Follow symlinks"
-complete -c find -s H -d "Don't follow symbolic links (except for command line arguments)"
+complete -c find -s H -d "Don't follow symlinks (except for command line arguments)"
 
 
 # General options

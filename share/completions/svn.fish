@@ -24,7 +24,7 @@ function __fish_complete_svn_diff --description 'Complete "svn diff" arguments'
 
 end
 
-function _svn_cmpl_ -d 'Make a completion for a subcommand' --no-scope-shadowing --argument-names subcommand
+function _svn_cmpl_ -d 'Make a completion for a subcommand' --argument-names subcommand
     set -e argv[1]
     complete -c svn -n "__fish_seen_subcommand_from $subcommand" $argv
 end

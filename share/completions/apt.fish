@@ -5,7 +5,7 @@ set -l pkg_subcmds install upgrade full-upgrade show search purge changelog poli
 set -l installed_pkg_subcmds remove
 set -l handle_file_pkg_subcmds install
 
-function __fish_apt_subcommand --no-scope-shadowing
+function __fish_apt_subcommand -V all_subcmds
     set -l subcommand $argv[1]
     set -e argv[1]
     complete -f -c apt -n "not __fish_seen_subcommand_from $all_subcmds" -a $subcommand $argv

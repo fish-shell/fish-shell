@@ -181,7 +181,13 @@
 
 /* Like __warn_unused, but applies to a type.
    At the moment only clang supports this as a type attribute.
+
+   We need to check for __has_attribute being a thing before or old gcc fails - #7554.
 */
+#ifndef __has_attribute
+  #define __has_attribute(x) 0  // Compatibility with non-clang and old gcc compilers.
+#endif
+
 #if defined(__clang__) && __has_attribute(warn_unused_result)
 #ifndef __warn_unused_type
 #define __warn_unused_type __attribute__ ((warn_unused_result))

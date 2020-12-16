@@ -11,9 +11,10 @@ Notable improvements and fixes
     # Show all dmesg lines related to "usb"
     dmesg -w | string match '*usb*'
 
--  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (:issue:`6824`).
--  Control-C no longer kills background jobs for which job control is
-   disabled, matching POSIX semantics (:issue:`6828`).
+-  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with `"> "` (:issue:`904`).
+-  When pressing Tab, fish displays ambiguous completions even when they
+   have a common prefix, without the user having to press Tab again
+   (:issue:`6924`).
 -  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
    Although flow control remains off by default, enterprising users can now enable it for external commands with
    ``stty`` (:issue:`2315`). 
@@ -24,7 +25,6 @@ Notable improvements and fixes
 
    will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
    so it can be called again and again from config.fish or just once interactively, and the path will just be there, once.
--  ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (:issue:`4829`).
 -  The ``test`` builtin now better shows where an error occured (:issue:`6030`)::
 
     > test 1 = 2 and echo true or false
@@ -32,15 +32,14 @@ Notable improvements and fixes
     1 = 2 and echo true or echo false
           ^
 
--  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (:issue:`6820`), improving its use in command substitutions (:issue:`6998`).
 -  The documentation (:issue:`6500`, :issue:`7371`) and ``fish_config`` (:issue:`7523`) received a new theme, matching the design on fishshell.com.
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
 -  ``type`` is now a builtin and therefore much faster (:issue:`7342`).
 -  ``string match --regex`` now imports named PCRE2 capture groups as fish variables (:issue:`7459`). Note: Because of this, it can no longer be wrapped in a function and the name has been added as a reserved word.
--  Globs and other expansions are limited to 512k results (:issue:`7226`).
--  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`).
+-  Globs and other expansions are limited to 512k results (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
+-  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux' cwd-introspection hack to work (:issue:`5699`).
 
 Syntax changes and new commands
 -------------------------------
@@ -49,6 +48,9 @@ Syntax changes and new commands
 
 Scripting improvements
 ----------------------
+-  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (:issue:`6820`), improving its use in command substitutions (:issue:`6998`).
+-  ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (:issue:`4829`).
+-  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (:issue:`6824`).
 -  A new subcommand, ``string pad``, allows extending strings to a given width (:issue:`7340`).
 -  ``string sub`` has a new ``--end`` option to specify the end index of
    a substring (:issue:`6765`).
@@ -63,10 +65,9 @@ Scripting improvements
 - ``fish_indent`` now removes spurious quotes in simple cases (:issue:`6722`)
    and learned a ``--check`` option to just check if a file is indented correctly (:issue:`7251`).
 - ``pushd`` only adds a directory to the stack if changing to it was successful (:issue:`6947`).
--  Added a ``fish_job_summary`` function which is called whenever a
+-  A new ``fish_job_summary`` function is called whenever a
    background job stops or ends, or any job terminates from a signal (:issue:`6959`).
-   The default behaviour can now be customized by redefining this
-   function.
+   The default behaviour can now be customized by redefining it.
 -  The ``fish_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
    use the new ``fish_read`` event instead (:issue:`7039`).
@@ -100,15 +101,12 @@ Scripting improvements
 Interactive improvements
 ------------------------
 
+-  Control-C no longer kills background jobs for which job control is
+   disabled, matching POSIX semantics (:issue:`6828`).
 -  The prompt is reprinted after a background job exits (:issue:`1018`).
--  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with `"> "` (:issue:`904`).
 -  fish no longer inserts a space after a completion ending in ``.`` or
    ``,`` is accepted (:issue:`6928`).
--  When pressing Tab, fish displays ambiguous completions even when they
-   have a common prefix, without the user having to press Tab again
-   (:issue:`6924`).
 -  If a filename is invalid when first pressing Tab, but becomes valid, it will be completed properly on the next attempt (:issue:`6863`).
--  Control-Z is now available for binding (:issue:`7152`).
 - ``help string match/replace/<subcommand>`` will show the help for string subcommands (:issue:`6786`).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (:issue:`6964`).
 -  ``fish_key_reader`` and ``fish_indent`` send output from ``--version`` to standard output, matching other fish binaries (:issue:`6964`).
@@ -145,12 +143,12 @@ Interactive improvements
 -  Resuming a piped job by its number, like ``fg %1`` has been fixed (:issue:`7406`).
 -  Commands run from key bindings now use the same tty modes as normal commands (:issue:`7483`).
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
--  Fish no longer performs its own resizing in VTE-based terminals, as they perform their own reflowing, which clashes especially with right prompts (:issue:`7491`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  As mentioned above, new readline commands ``undo`` (Control+\_ or Control+Z) and ``redo`` (Alt-/) can be used to revert changes to the command line or the pager search field (:issue:`6570`).
+-  Control-Z is now available for binding (:issue:`7152`).
 -  Additionally, using the ``cancel`` readline command (bound to escape by default) right after fish picked an unambiguous completion will undo that (:issue:`7433`).
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, and Control+left/right keys to navigate by word (:issue:`6648`, :issue:`6755`, :issue:`6769`).
 -  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (:issue:`6908`).
@@ -184,8 +182,8 @@ Improved prompts
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`7278`).
 -  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`).
 
-Improved terminal output
-^^^^^^^^^^^^^^^^^^^^^^^^
+Improved terminal support
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  A new variable, ``$fish_vi_force_cursor``, can be set to force ``fish_vi_cursor`` to attempt changing the cursor
    shape in vi mode, regardless of terminal (:issue:`6968`). The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
@@ -200,6 +198,7 @@ Improved terminal output
 -  An issue producing strange status output from commands involving ``not`` has been fixed (:issue:`6566`).
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
+-  Fish no longer performs its own resizing in VTE-based terminals, as they perform their own reflowing, which clashes especially with right prompts (:issue:`7491`).
 
 Completions
 ^^^^^^^^^^^

@@ -215,6 +215,7 @@ Completions
    -  ``dhclient``
    -  Postgres-related commands ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
       ``pg_dumpall`` (:issue:`6620`)
+   -  ``dotnet`` (:issue:`7558`)
    -  ``downgrade`` (:issue:`6751`)
    -  ``gapplication``, ``gdbus``, ``gio`` and ``gresource`` (:issue:`7300`)
    -  ``gh`` (:issue:`7112`)

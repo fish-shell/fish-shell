@@ -808,9 +808,11 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
     bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);
 
     bool saved_interactive = false;
+    statuses_t status;
     if (ctx.parser) {
         saved_interactive = ctx.parser->libdata().is_interactive;
         ctx.parser->libdata().is_interactive = false;
+        status = ctx.parser->get_last_statuses();
     }
 
     expand_flags_t eflags{};
@@ -822,6 +824,7 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
 
     if (ctx.parser) {
         ctx.parser->libdata().is_interactive = saved_interactive;
+        ctx.parser->set_last_statuses(status);
     }
 
     this->complete_strings(escape_string(str, ESCAPE_ALL), const_desc(desc), possible_comp, flags);

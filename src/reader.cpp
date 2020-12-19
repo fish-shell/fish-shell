@@ -3590,6 +3590,26 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
+        case rl::insert_line_above: {
+            editable_line_t *el = active_edit_line();
+            while (el->position() > 0 && el->text().at(el->position() - 1) != L'\n') {
+                update_buff_pos(el, el->position() - 1);
+            }
+            insert_char(el, L'\n');
+            update_buff_pos(el, el->position() - 1);
+            break;
+        }
+        case rl::insert_line_under: {
+            editable_line_t *el = active_edit_line();
+            if (el->position() < el->size()) {
+                const wchar_t *buff = el->text().c_str();
+                while (buff[el->position()] && buff[el->position()] != L'\n') {
+                    update_buff_pos(el, el->position() + 1);
+                }
+            }
+            insert_char(el, L'\n');
+            break;
+        }
         case rl::forward_jump:
         case rl::backward_jump:
         case rl::forward_jump_till:

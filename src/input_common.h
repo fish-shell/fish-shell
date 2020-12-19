@@ -65,6 +65,8 @@ enum class readline_cmd_t {
     swap_selection_start_stop,
     end_selection,
     kill_selection,
+    insert_line_under,
+    insert_line_above,
     forward_jump,
     backward_jump,
     forward_jump_till,

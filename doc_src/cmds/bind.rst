@@ -182,6 +182,10 @@ The following special input functions are available:
 
 - ``transpose-words``, transpose two words to the left of the cursor
 
+- ``insert-line-under``, add a new line under the current line
+
+- ``insert-line-over``, add a new line over the current line
+
 - ``up-line``, move up one line
 
 - ``undo`` and ``redo``, revert or redo the most recent edits on the command line

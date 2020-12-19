@@ -3590,7 +3590,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
-        case rl::insert_line_above: {
+        case rl::insert_line_over: {
             editable_line_t *el = active_edit_line();
             while (el->position() > 0 && el->text().at(el->position() - 1) != L'\n') {
                 update_buff_pos(el, el->position() - 1);

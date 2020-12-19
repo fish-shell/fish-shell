@@ -141,7 +141,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::end_selection, L"end-selection"},
     {readline_cmd_t::kill_selection, L"kill-selection"},
     {readline_cmd_t::insert_line_under, L"insert-line-under"},
-    {readline_cmd_t::insert_line_above, L"insert-line-above"},
+    {readline_cmd_t::insert_line_over, L"insert-line-over"},
     {readline_cmd_t::forward_jump, L"forward-jump"},
     {readline_cmd_t::backward_jump, L"backward-jump"},
     {readline_cmd_t::forward_jump_till, L"forward-jump-till"},

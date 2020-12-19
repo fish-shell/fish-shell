@@ -66,7 +66,7 @@ enum class readline_cmd_t {
     end_selection,
     kill_selection,
     insert_line_under,
-    insert_line_above,
+    insert_line_over,
     forward_jump,
     backward_jump,
     forward_jump_till,

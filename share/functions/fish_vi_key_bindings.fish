@@ -81,7 +81,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert \n execute
     bind -s --preset -m insert \r execute
     bind -s --preset -m insert o insert-line-under repaint-mode
-    bind -s --preset -m insert O insert-line-above repaint-mode
+    bind -s --preset -m insert O insert-line-over repaint-mode
     bind -s --preset -m insert i repaint-mode
     bind -s --preset -m insert I beginning-of-line repaint-mode
     bind -s --preset -m insert a forward-single-char repaint-mode

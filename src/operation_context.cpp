@@ -8,8 +8,12 @@
 bool no_cancel() { return false; }
 
 operation_context_t::operation_context_t(std::shared_ptr<parser_t> parser,
-                                         const environment_t &vars, cancel_checker_t cancel_checker)
-    : parser(std::move(parser)), vars(vars), cancel_checker(std::move(cancel_checker)) {}
+                                         const environment_t &vars, cancel_checker_t cancel_checker,
+                                         size_t expansion_limit)
+    : parser(std::move(parser)),
+      vars(vars),
+      expansion_limit(expansion_limit),
+      cancel_checker(std::move(cancel_checker)) {}
 
 operation_context_t operation_context_t::empty() {
     static const null_environment_t nullenv{};

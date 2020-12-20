@@ -1146,7 +1146,7 @@ expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t 
 expand_result_t expand_string(wcstring input, completion_list_t *out_completions,
                               expand_flags_t flags, const operation_context_t &ctx,
                               parse_error_list_t *errors) {
-    completion_receiver_t recv(std::move(*out_completions));
+    completion_receiver_t recv(std::move(*out_completions), ctx.expansion_limit);
     auto res = expand_string(std::move(input), &recv, flags, ctx, errors);
     *out_completions = recv.take();
     return res;

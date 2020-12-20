@@ -451,7 +451,7 @@ class completer_t {
 
    public:
     completer_t(const operation_context_t &ctx, completion_request_flags_t f)
-        : ctx(ctx), flags(f) {}
+        : ctx(ctx), flags(f), completions(ctx.expansion_limit) {}
 
     void perform_for_commandline(wcstring cmdline);
 

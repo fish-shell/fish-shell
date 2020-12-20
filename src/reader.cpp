@@ -138,7 +138,7 @@ static operation_context_t get_bg_context(const std::shared_ptr<environment_t> &
         // Cancel if the generation count changed.
         return generation_count != read_generation_count();
     };
-    return operation_context_t{nullptr, *env, std::move(cancel_checker)};
+    return operation_context_t{nullptr, *env, std::move(cancel_checker), kExpansionLimitBackground};
 }
 
 /// We try to ensure that syntax highlighting completes appropriately before executing what the user

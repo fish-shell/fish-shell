@@ -124,14 +124,11 @@ using completion_list_t = std::vector<completion_t>;
 /// some conveniences.
 class completion_receiver_t {
    public:
-    /// The default maximum number of items that something may expand to.
-    static constexpr size_t k_default_expansion_limit = 512 * 1024;
-
     /// Construct as empty, with a limit.
-    explicit completion_receiver_t(size_t limit = k_default_expansion_limit) : limit_(limit) {}
+    explicit completion_receiver_t(size_t limit) : limit_(limit) {}
 
     /// Acquire an existing list, with a limit.
-    explicit completion_receiver_t(completion_list_t &&v, size_t limit = k_default_expansion_limit)
+    explicit completion_receiver_t(completion_list_t &&v, size_t limit)
         : completions_(std::move(v)), limit_(limit) {}
 
     /// Add a completion.

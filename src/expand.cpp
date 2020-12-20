@@ -1176,16 +1176,20 @@ bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_
 
 expand_result_t expand_to_command_and_args(const wcstring &instr, const operation_context_t &ctx,
                                            wcstring *out_cmd, wcstring_list_t *out_args,
-                                           parse_error_list_t *errors) {
+                                           parse_error_list_t *errors, bool skip_wildcards) {
     // Fast path.
     if (expand_is_clean(instr)) {
         *out_cmd = instr;
         return expand_result_t::ok;
     }
 
+    expand_flags_t eflags{expand_flag::skip_cmdsubst};
+    if (skip_wildcards) {
+        eflags.set(expand_flag::skip_wildcards);
+    }
+
     completion_list_t completions;
-    expand_result_t expand_err =
-        expand_string(instr, &completions, {expand_flag::skip_cmdsubst}, ctx, errors);
+    expand_result_t expand_err = expand_string(instr, &completions, eflags, ctx, errors);
     if (expand_err == expand_result_t::ok) {
         // The first completion is the command, any remaning are arguments.
         bool first = true;

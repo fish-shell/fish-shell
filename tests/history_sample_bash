@@ -17,3 +17,4 @@ a && echo valid construct
 (( 1 = 2 )) && echo double parens not allowed
 posix_cmd_sub $(is not supported)
 sleep 123
+/** # see issue 7407

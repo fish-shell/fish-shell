@@ -182,10 +182,12 @@ bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_
 /// If the expansion resulted in no or an empty command, the command will be an empty string. Note
 /// that API does not distinguish between expansion resulting in an empty command (''), and
 /// expansion resulting in no command (e.g. unset variable).
-// \return an expand error.
+/// If \p skip_wildcards is true, then do not do wildcard expansion
+/// \return an expand error.
 expand_result_t expand_to_command_and_args(const wcstring &instr, const operation_context_t &ctx,
                                            wcstring *out_cmd, wcstring_list_t *out_args,
-                                           parse_error_list_t *errors = nullptr);
+                                           parse_error_list_t *errors = nullptr,
+                                           bool skip_wildcards = false);
 
 /// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
 /// Suitable for pretty-printing.

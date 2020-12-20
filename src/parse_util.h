@@ -130,7 +130,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src);
 /// Given a string, detect parse errors in it. If allow_incomplete is set, then if the string is
 /// incomplete (e.g. an unclosed quote), an error is not returned and the PARSER_TEST_INCOMPLETE bit
 /// is set in the return value. If allow_incomplete is not set, then incomplete strings result in an
-/// error. If out_pstree is not NULL, the resulting tree is returned by reference.
+/// error.
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   parse_error_list_t *out_errors = nullptr,
                                                   bool allow_incomplete = false);

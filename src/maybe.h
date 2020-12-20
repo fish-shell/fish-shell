@@ -140,7 +140,7 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     maybe_t() = default;
 
     // Construct a maybe_t from a none_t
-    /* implicit */ maybe_t(none_t n) { (void)n; }
+    /* implicit */ maybe_t(none_t) {}
 
     // Construct a maybe_t from a value T.
     /* implicit */ maybe_t(T &&v) : impl_(std::move(v)) {}
@@ -148,11 +148,9 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     // Construct a maybe_t from a value T.
     /* implicit */ maybe_t(const T &v) : impl_(v) {}
 
-    // Copy constructor.
-    maybe_t(const maybe_t &v) = default;
-
-    // Move constructor.
-    /* implicit */ maybe_t(maybe_t &&v) = default;
+    // Copy and move constructors.
+    maybe_t(const maybe_t &) = default;
+    maybe_t(maybe_t &&) = default;
 
     // Construct a value in-place.
     template <class... Args>

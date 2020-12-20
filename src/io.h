@@ -194,7 +194,7 @@ class io_data_t {
     virtual ~io_data_t() = 0;
 };
 
-class io_close_t : public io_data_t {
+class io_close_t final : public io_data_t {
    public:
     explicit io_close_t(int f) : io_data_t(io_mode_t::close, f, -1) {}
 
@@ -202,7 +202,7 @@ class io_close_t : public io_data_t {
     ~io_close_t() override;
 };
 
-class io_fd_t : public io_data_t {
+class io_fd_t final : public io_data_t {
    public:
     void print() const override;
 
@@ -214,7 +214,7 @@ class io_fd_t : public io_data_t {
 };
 
 /// Represents a redirection to or from an opened file.
-class io_file_t : public io_data_t {
+class io_file_t final : public io_data_t {
    public:
     void print() const override;
 
@@ -233,7 +233,7 @@ class io_file_t : public io_data_t {
 };
 
 /// Represents (one end) of a pipe.
-class io_pipe_t : public io_data_t {
+class io_pipe_t final : public io_data_t {
     // The pipe's fd. Conceptually this is dup2'd to io_data_t::fd.
     autoclose_fd_t pipe_fd_;
 
@@ -257,7 +257,7 @@ class io_buffer_t;
 class io_chain_t;
 
 /// Represents filling an io_buffer_t. Very similar to io_pipe_t.
-class io_bufferfill_t : public io_data_t {
+class io_bufferfill_t final : public io_data_t {
     /// Write end. The other end is connected to an io_buffer_t.
     const autoclose_fd_t write_fd_;
 

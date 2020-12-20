@@ -851,7 +851,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
 void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp,
                                               const wcstring &wc, const wcstring &prefix) {
     wcstring name_str;
-    while (wreaddir(base_dir_fp, name_str)) {
+    while (!interrupted_or_overflowed() && wreaddir(base_dir_fp, name_str)) {
         if (flags & expand_flag::for_completions) {
             this->try_add_completion_result(base_dir + name_str, name_str, wc, prefix);
         } else {
@@ -989,6 +989,13 @@ wildcard_result_t wildcard_expand_string(const wcstring &wc, const wcstring &wor
     // embedded nulls are never allowed in a filename, so we just check for them and return 0 (no
     // matches) if there is an embedded null.
     if (wc.find(L'\0') != wcstring::npos) {
+        return wildcard_result_t::no_match;
+    }
+
+    // We do not support tab-completing recursive (**) wildcards. This is historic behavior.
+    // Do not descend any directories if there is a ** wildcard.
+    if (flags.get(expand_flag::for_completions) &&
+        wc.find(ANY_STRING_RECURSIVE) != wcstring::npos) {
         return wildcard_result_t::no_match;
     }
 

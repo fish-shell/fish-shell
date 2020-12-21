@@ -64,9 +64,9 @@ complete -c tmux -n "__fish_seen_subcommand_from $attach" -s r -d 'attach in rea
 complete -c tmux -n __fish_use_subcommand -a $detach -d 'detach current client'
 complete -c tmux -n "__fish_seen_subcommand_from $detach" -s P -d 'SIGHUP parent process of client, likely causing it to exit'
 
-complete -c tmux -n __fish_use_subcommand -a $has -d 'report error and exit with 1 if the specified session does not exist'
+complete -c tmux -n __fish_use_subcommand -a $has -d 'report error and exit with 1 if the session does not exist'
 complete -c tmux -n __fish_use_subcommand -a $killserver -d 'kill tmux server, clients, and sessions'
-complete -c tmux -n __fish_use_subcommand -a $killsession -d 'destroy session, closing windows linked to it and no other sessions, detach all clients'
+complete -c tmux -n __fish_use_subcommand -a $killsession -d 'destroy session, closing windows linked to it, and detach all clients'
 complete -c tmux -n __fish_use_subcommand -a $lsc -d 'list all attached clients'
 complete -c tmux -n __fish_use_subcommand -a $lscm -d 'list syntax for all tmux commands'
 complete -c tmux -n __fish_use_subcommand -a $ls -d 'list all sessions'
@@ -76,7 +76,7 @@ complete -c tmux -n __fish_use_subcommand -a $locks -d 'lock session'
 complete -c tmux -n __fish_use_subcommand -a $new -d 'create a new session with name session-name'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s d -d "don't attach to current window"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s A -d "attach to existing session if session-name already exists"
-complete -c tmux -n "__fish_seen_subcommand_from $new" -s D -d "if -A is specified, detach other clients attached to the session if it exists"
+complete -c tmux -n "__fish_seen_subcommand_from $new" -s D -d "if -A is specified, detach other clients attached to the session"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s P -d "print information about the new session after creation"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s E -d "don't apply update-environment option"
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs c -d start-directory

@@ -37,7 +37,7 @@ function __list_cargo_examples
     end
 
     find ./examples/ -mindepth 1 -maxdepth 1 -type f -name "*.rs" -or -type d \
-        | string replace -r './examples/(.*)(?:.rs)?$' '$1'
+        | string replace -r './examples/(.*?)(?:.rs)?$' '$1'
 end
 for x in bench build run rustc test
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -a "(cargo run --bin 2>&1 | string replace -rf '^\s+' '')"

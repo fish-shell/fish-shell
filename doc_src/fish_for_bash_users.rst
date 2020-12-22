@@ -23,9 +23,11 @@ Variables
 
 Fish sets and erases variables with :ref:`set <cmd-set>` instead of ``VAR=VAL`` and ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
 
-  set -gx PAGER less # $PAGER is now global and exported, so this is like `export PAGER=less`
+  # Define $PAGER global and exported, so this is like ``export PAGER=less``
+  set -gx PAGER less
 
-  set -l alocalvariable foo # $alocalvariable is now only locally defined.
+  # Define $alocalvariable only locally - like ``local alocalvariable=foo``
+  set -l alocalvariable foo
 
 or to erase variables::
 

@@ -888,7 +888,7 @@ If the current directory contains the files 'foo' and 'bar', the command ``echo 
 Shell variables
 ---------------
 
-Variables are a way to save data and pass it around. They can be used by the shell, or they can be "exported", so that a copy of the variable is available to any external command the shell starts. An exported variable is referred to as an "environment variable".
+Variables are a way to save data and pass it around. They can be used just by the shell, or they can be ":ref:`exported <variables-export>`", so that a copy of the variable is available to any external command the shell starts. An exported variable is referred to as an "environment variable".
 
 To set a variable value, use the :ref:`set <cmd-set>` command. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
@@ -1043,6 +1043,8 @@ Exporting variables
 -------------------
 
 Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like $LESS or $GOPATH, but also for variables that contain general system settings like $PATH or $LANGUAGE. If an external command needs to know a variable, it needs to be exported.
+
+This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :ref:`$PATH <PATH>` and :ref:`locale variables <variables-locale>`.
 
 Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are identical to the scoping rules for variables:
 
@@ -1237,18 +1239,19 @@ PATH variables act as normal lists, except they are are implicitly joined and sp
 Variables can be marked or unmarked as PATH variables via the ``--path`` and ``--unpath`` options to ``set``.
 
 .. _variables-special:
-.. _PATH:
 
 Special variables
 -----------------
 
 You can change the settings of fish by changing the values of certain variables.
 
+.. _PATH:
+
 - ``PATH``, a list of directories in which to search for commands
 
 - ``CDPATH``, a list of directories in which the :ref:`cd <cmd-cd>` builtin looks for a new directory.
 
-- ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
+- The locale variables ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
 
 - A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See `Variables for changing highlighting colors <#variables-color>`__ for more information.
 
@@ -1430,9 +1433,12 @@ Variable                                                   Meaning
 Locale variables
 ----------------
 
-The most common way to set the locale to use a command like 'set -x LANG en_GB.utf8', which sets the current locale to be the English language, as used in Great Britain, using the UTF-8 character set. For a list of available locales, use 'locale -a'.
+The "locale" of a program is its set of language and regional settings. In UNIX, there are a few separate variables to control separate things - ``LC_CTYPE`` defines the text encoding while ``LC_TIME`` defines the time format.
 
-``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``,  ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. These variables work as follows: ``LC_ALL`` forces all the aspects of the locale to the specified value. If ``LC_ALL`` is set, all other locale variables will be ignored. The other ``LC_`` variables set the specified aspect of the locale information. ``LANG`` is a fallback value, it will be used if none of the ``LC_`` variables are specified.
+The locale variables are: ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``,  ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME``. These variables work as follows: ``LC_ALL`` forces all the aspects of the locale to the specified value. If ``LC_ALL`` is set, all other locale variables will be ignored (this is typically not recommended!). The other ``LC_`` variables set the specified aspect of the locale information. ``LANG`` is a fallback value, it will be used if none of the ``LC_`` variables are specified.
+
+The most common way to set the locale to use a command like ``set -gx LANG en_GB.utf8``, which sets the current locale to be the English language, as used in Great Britain, using the UTF-8 character set. That way any program that requires one setting differently can easily override just that and doesn't have to resort to LC_ALL. For a list of available locales on your system, try ``locale -a``.
+
 
 .. _builtin-overview:
 

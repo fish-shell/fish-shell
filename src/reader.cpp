@@ -643,8 +643,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Erase @length characters starting at @offset.
     void erase_substring(editable_line_t *el, size_t offset, size_t length);
     /// Replace the text of length @length at @offset by @replacement.
-    void replace_substring(editable_line_t *el, size_t offset, size_t length,
-                           const wcstring &replacement);
+    void replace_substring(editable_line_t *el, size_t offset, size_t length, wcstring replacement);
     void push_edit(editable_line_t *el, edit_t &&edit);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
@@ -1440,8 +1439,8 @@ void reader_data_t::erase_substring(editable_line_t *el, size_t offset, size_t l
 }
 
 void reader_data_t::replace_substring(editable_line_t *el, size_t offset, size_t length,
-                                      const wcstring &replacement) {
-    push_edit(el, edit_t(offset, length, replacement));
+                                      wcstring replacement) {
+    push_edit(el, edit_t(offset, length, std::move(replacement)));
 }
 
 /// Insert the string in the given command line at the given cursor position. The function checks if

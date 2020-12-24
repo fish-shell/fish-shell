@@ -1016,7 +1016,7 @@ complete -f -c git -n '__fish_git_using_command cherry' -k -a '(__fish_git_refs)
 
 ### cherry-pick
 complete -f -c git -n __fish_git_needs_command -a cherry-pick -d 'Apply the change introduced by an existing commit'
-complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -k -a '(__fish_git_ranges)'
 # TODO: Filter further
 complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'

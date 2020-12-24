@@ -349,7 +349,7 @@ To install the lint checkers on Debian-based Linux distributions:
    sudo apt-get install oclint
    sudo apt-get install cppcheck
 
-Installing the Reformatting Tools
+Installing the Formatting Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mac OS X:
@@ -362,15 +362,7 @@ Debian-based:
 
 ::
 
-   apt-cache search clang-format
-
-Above will list all the versions available. Pick the newest one
-available (3.9 for Ubuntu 16.10 as I write this) and install it:
-
-::
-
-   sudo apt-get install clang-format-3.9
-   sudo ln -s /usr/bin/clang-format-3.9 /usr/bin/clang-format
+   sudo apt-get install clang-format
 
 Message Translations
 --------------------

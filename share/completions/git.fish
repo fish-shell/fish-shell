@@ -937,14 +937,14 @@ complete -f -c git -n '__fish_git_using_command show' -l oneline -d 'Shorthand f
 complete -f -c git -n '__fish_git_using_command show' -l encoding -d 'Re-code the commit log message in the encoding'
 complete -f -c git -n '__fish_git_using_command show' -l expand-tabs -d 'Perform a tab expansion in the log message'
 complete -f -c git -n '__fish_git_using_command show' -l no-expand-tabs -d 'Do not perform a tab expansion in the log message'
-complete -f -c git -n '__fish_git_using_command show' -l notes -a '(__fish_git_refs)' -d 'Show the notes that annotate the commit'
+complete -f -c git -n '__fish_git_using_command show' -l notes -k -a '(__fish_git_refs)' -d 'Show the notes that annotate the commit'
 complete -f -c git -n '__fish_git_using_command show' -l no-notes -d 'Do not show notes'
 complete -f -c git -n '__fish_git_using_command show' -l show-signature -d 'Check the validity of a signed commit object'
 
 
 ### show-branch
 complete -f -c git -n __fish_git_needs_command -a show-branch -d 'Shows the commits on branches'
-complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_refs)' -d Rev
+complete -f -c git -n '__fish_git_using_command show-branch' -k -a '(__fish_git_refs)' -d Rev
 # TODO options
 
 ### add
@@ -1012,7 +1012,7 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 ### cherry
 complete -f -c git -n __fish_git_needs_command -a cherry -d 'Find commits yet to be applied to upstream [upstream [head]]'
 complete -f -c git -n '__fish_git_using_command cherry' -s v -d 'Show the commit subjects next to the SHA1s'
-complete -f -c git -n '__fish_git_using_command cherry' -a '(__fish_git_refs)' -d Upstream
+complete -f -c git -n '__fish_git_using_command cherry' -k -a '(__fish_git_refs)' -d Upstream
 
 ### cherry-pick
 complete -f -c git -n __fish_git_needs_command -a cherry-pick -d 'Apply the change introduced by an existing commit'
@@ -1090,7 +1090,7 @@ complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Fo
 
 ### diff
 complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between commits, commit and working tree, etc'
-complete -c git -n '__fish_git_using_command diff; and not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command diff; and not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l staged -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
@@ -1115,7 +1115,7 @@ end
 
 ### difftool
 complete -c git -n __fish_git_needs_command -a difftool -d 'Open diffs in a visual tool'
-complete -c git -n '__fish_git_using_command difftool' -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command difftool' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command difftool' -l cached -d 'Visually show diff of changes in the index'
 complete -f -c git -n '__fish_git_using_command difftool' -a '(__fish_git_files modified deleted)'
 complete -f -c git -n '__fish_git_using_command difftool' -s g -l gui -d 'Use `diff.guitool` instead of `diff.tool`'
@@ -1150,7 +1150,7 @@ complete -f -c git -n __fish_git_needs_command -a init -d 'Create an empty git r
 ### log
 complete -c git -n __fish_git_needs_command -a shortlog -d 'Show commit shortlog'
 complete -c git -n __fish_git_needs_command -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 
 complete -c git -n '__fish_git_using_command log' -l follow -d 'Continue listing file history beyond renames'
 complete -c git -n '__fish_git_using_command log' -l no-decorate -d 'Don\'t print ref names'
@@ -1555,7 +1555,7 @@ complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (c
 ### restore and switch
 # restore options
 complete -f -c git -n __fish_git_needs_command -a restore -d 'Restore working tree files'
-complete -f -c git -n '__fish_git_using_command restore' -r -s s -l source -d 'Specify the source tree used to restore the working tree' -a '(__fish_git_refs)'
+complete -f -c git -n '__fish_git_using_command restore' -r -s s -l source -d 'Specify the source tree used to restore the working tree' -k -a '(__fish_git_refs)'
 complete -f -c git -n '__fish_git_using_command restore' -s p -l patch -d 'Interactive mode'
 complete -f -c git -n '__fish_git_using_command restore' -s W -l worktree -d 'Restore working tree (default)'
 complete -f -c git -n '__fish_git_using_command restore' -s S -l staged -d 'Restore the index'

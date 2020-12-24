@@ -172,18 +172,14 @@ made to run fish_indent via e.g.
 Suppressing Reformatting of C++ Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have a good reason for doing so you can tell ``clang-format`` to
-not reformat a block of code by enclosing it in comments like this:
+You can tell ``clang-format`` to not reformat a block by enclosing it in
+comments like this:
 
 ::
 
    // clang-format off
    code to ignore
    // clang-format on
-
-However, as I write this there are no places in the code where we use
-this and I can’t think of any legitimate reasons for exempting blocks of
-code from clang-format.
 
 Fish Script Style Guide
 -----------------------

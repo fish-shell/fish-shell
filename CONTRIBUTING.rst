@@ -128,11 +128,6 @@ If you use Vim I recommend the `vim-clang-format
 plugin <https://github.com/rhysd/vim-clang-format>`__ by
 [@rhysd](https://github.com/rhysd).
 
-You can also get Vim to provide reasonably correct behavior by
-installing
-
-http://www.vim.org/scripts/script.php?script_id=2636
-
 Emacs
 ^^^^^
 

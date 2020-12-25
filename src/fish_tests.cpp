@@ -816,7 +816,7 @@ static void test_fd_monitor() {
         item_maker_t(const item_maker_t &) = delete;
 
         // Write 42 bytes to our write end.
-        void write42() {
+        void write42() const {
             char buff[42] = {0};
             (void)write_loop(writer.fd(), buff, sizeof buff);
         }
@@ -826,7 +826,7 @@ static void test_fd_monitor() {
 
     // Items which will never receive data or be called back.
     item_maker_t item_never(fd_monitor_item_t::kNoTimeout);
-    item_maker_t item_hugetimeout(100000000llu * usec_per_msec);
+    item_maker_t item_hugetimeout(100000000LLU * usec_per_msec);
 
     // Item which should get no data, and time out.
     item_maker_t item0_timeout(16 * usec_per_msec);
@@ -1616,7 +1616,8 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
 #endif
 
     if (dst) {
-        mem = (char *)malloc(dlen);
+        // We want to pass a valid pointer to wchar_to_utf8, so allocate at least one byte.
+        mem = (char *)malloc(dlen + 1);
         if (!mem) {
             err(L"w2u: %s: MALLOC FAILED", descr);
             return;
@@ -2424,7 +2425,7 @@ struct pager_layout_testcase_t {
                 text.push_back(p.character);
             }
             if (text != expected) {
-                std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
+                std::fwprintf(stderr, L"width %d got %zu<%ls>, expected %zu<%ls>\n", this->width,
                               text.length(), text.c_str(), expected.length(), expected.c_str());
                 for (size_t i = 0; i < std::max(text.length(), expected.length()); i++) {
                     std::fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,
@@ -4107,7 +4108,7 @@ void history_tests_t::test_history_races() {
     history_t(L"race_test").clear();
 
     pid_t children[RACE_COUNT];
-    for (size_t i = 0; i < RACE_COUNT; i++) {
+    for (pid_t &child : children) {
         pid_t pid = fork();
         if (!pid) {
             // Child process.
@@ -4116,7 +4117,7 @@ void history_tests_t::test_history_races() {
             exit_without_destructors(0);
         } else {
             // Parent process.
-            children[i] = pid;
+            child = pid;
         }
     }
 
@@ -4374,15 +4375,10 @@ void history_tests_t::test_history_formats() {
     } else {
         // The results are in the reverse order that they appear in the bash history file.
         // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
-        const wchar_t *expected[] = {L"/** # see issue 7407",
-                                     L"sleep 123",
-                                     L"a && echo valid construct",
-                                     L"final line",
-                                     L"echo supsup",
-                                     L"export XVAR='exported'",
-                                     L"history --help",
-                                     L"echo foo",
-                                     NULL};
+        const wchar_t *expected[] = {
+            L"/** # see issue 7407", L"sleep 123",   L"a && echo valid construct",
+            L"final line",           L"echo supsup", L"export XVAR='exported'",
+            L"history --help",       L"echo foo",    NULL};
         history_t &test_history = history_t::history_with_name(L"bash_import");
         test_history.populate_from_bash(f);
         if (!history_equals(test_history, expected)) {
@@ -4548,6 +4544,10 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
             }
             statement = tmp;
         }
+    }
+    if (!statement) {
+        say(L"No decorated statement found in '%ls'", src.c_str());
+        return false;
     }
 
     // Return its decoration and command.

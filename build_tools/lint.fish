@@ -18,11 +18,11 @@ argparse a/all p/project= -- $argv
 # We only want -D and -I options to be passed thru to cppcheck.
 for arg in $argv
     if string match -q -- '-D*' $arg
-        set cppcheck_args $cppcheck_args $arg
+        set -a cppcheck_args (string split -- ' ' $arg)
     else if string match -q -- '-I*' $arg
-        set cppcheck_args $cppcheck_args $arg
+        set -a cppcheck_args (string split -- ' ' $arg)
     else if string match -q -- '-iquote*' $arg
-        set cppcheck_args $cppcheck_args $arg
+        set -a cppcheck_args (string split -- ' ' $arg)
     end
 end
 

@@ -22,7 +22,7 @@ if command -sq grealpath
 end
 
 function realpath -d "return an absolute path without symlinks"
-    set -l options h/help q/quiet V-version s/strip N-no-symlinks z/zero
+    set -l options h/help q/quiet V-version s/no-symlinks N-strip z/zero
     set -a options e/canonicalize-existing m/canonicalize-missing L/logical P/physical
     set -a options 'R-relative-to=' 'B-relative-base='
     argparse -n realpath $options -- $argv
@@ -33,9 +33,15 @@ function realpath -d "return an absolute path without symlinks"
         return 0
     end
 
+    set -l supported_flags
+    if set -el _flag_no_symlinks
+        set -el _flag_s
+        set -a supported_flags --no-symlinks
+    end
+
     # We don't implement any of the other flags so if any are set it's an error.
     if string match -q '_flag_*' -- (set -l)
-        set -l flags (set -l | string replace --filter _flag_ '')
+        set -l flags (set -l | string replace --filter --regex '_flag_\w+\s*' '' | sort -u)
         printf (_ "%s: These flags are not allowed by fish realpath: '%s'") realpath "$flags" >&2
         echo >&2
         __fish_print_help realpath
@@ -48,6 +54,6 @@ function realpath -d "return an absolute path without symlinks"
     end
 
     for path in $argv
-        builtin realpath $path
+        builtin realpath $supported_flags $path
     end
 end

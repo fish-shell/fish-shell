@@ -4,84 +4,76 @@
 Introduction
 ============
 
-This is the documentation for *fish*, the **f**\ riendly **i**\ nteractive **sh**\ ell.
+This is the documentation for **fish**, the **f**\ riendly **i**\ nteractive **sh**\ ell.
 
-A shell is a program which helps you operate your computer by starting other programs. fish offers a command-line interface focused on usability and interactive use.
+A shell is a program that helps you operate your computer by starting other programs. fish offers a command-line interface focused on usability and interactive use.
 
 Unlike other shells, fish does not follow the POSIX standard, but still roughly belongs to the same family.
 
 Some of the special features of fish are:
 
-- **Extensive UI**: `syntax highlighting`_, autosuggestions_, `tab completion`_ and selection lists that can be navigated and filtered.
+- **Extensive UI**: `Syntax highlighting`_, autosuggestions_, `tab completion`_ and selection lists that can be navigated and filtered.
 
 - **No configuration needed**: fish is designed to be ready to use immediately, without requiring extensive configuration.
 
-- **Easy scripting**: new functions_ can be added on the fly. The syntax is easy to learn and use.
+- **Easy scripting**: New functions_ can be added on the fly. The syntax is easy to learn and use.
 
-This bit of the documentation is a quick guide on how to get going. If you are new to this, see the :ref:`tutorial <tutorial>`.
+This page gives an overview of fish's features, syntax, and interface. If this is your first time using fish, see the :ref:`tutorial <tutorial>`.
 
 Installation and Start
 ======================
 
-This section is on how to install, uninstall, start and exit a fish shell and on how to make fish the default shell:
+This section describes how to install, uninstall, start, and exit the fish shell. It also explains how to make fish the default shell:
 
 - `Installation`_: How to install fish
 - `Starting and Exiting`_ How to start and exit a fish shell
 - `Executing Bash`_: How to execute bash commands in fish
-- `Default Shell`_: How to switch to fish as the default shell
+- `Default Shell`_: How to make fish the default shell
 - `Uninstalling`_: How to uninstall fish
-
 
 Installation
 ------------
 
 Up-to-date instructions for installing the latest version of fish are on the `fish homepage <https://fishshell.com/>`_.
 
-To install the development version of fish see the instructions at the `project's GitHub page <https://github.com/fish-shell/fish-shell>`_.
-
+To install the development version of fish, see the instructions on the `project's GitHub page <https://github.com/fish-shell/fish-shell>`_.
 
 Starting and Exiting
 --------------------
 
 Once fish has been installed, open a terminal. If fish is not the default shell:
 
-- Enter ``fish`` to start a fish shell::
+- Type ``fish`` to start a fish shell::
 
     > fish
 
-
-- Enter ``exit`` to exit a fish shell::
+- Type ``exit`` to exit a fish shell::
 
     > exit
-
 
 Executing Bash
 --------------
 
-If fish is your default shell and you want to copy commands from the internet that are written in a different shell language, bash for example, you can proceed in the following way:
+If fish is your default shell and you want to copy commands from the internet that are written in bash (the default shell on most systems), you can proceed in one of the following two ways:
 
-Consider that ``bash`` is also a command. With ``man bash`` you can see that there are two ways to do this:
-
-- ``bash`` has a switch ``-c`` to read from a string::
+- Use the ``bash`` command with the ``-c`` switch to read from a string::
 
     > bash -c 'some bash command'
 
-
-- ``bash`` without a switch opens a bash shell that you can use and ``exit`` afterwards::
+- Use ``bash`` without a switch to open a bash shell you can use and ``exit`` afterward::
 
     > bash
     $ some bash command
     $ exit
     > _
 
-
 Default Shell
 -------------
 
-You can make fish your default shell by adding fish's  executable in two places:
+To make fish your default shell:
 
-- add ``/usr/local/bin/fish`` to ``/etc/shells``
-- change your default shell with ``chsh -s`` to ``/usr/local/bin/fish``
+- Add the line ``/usr/local/bin/fish`` to ``/etc/shells``.
+- Change your default shell with ``chsh -s /usr/local/bin/fish``.
 
 For detailed instructions see :ref:`Switching to fish <switching-to-fish>`.
 
@@ -93,87 +85,80 @@ For uninstalling fish: see :ref:`FAQ: Uninstalling fish <faq-uninstalling>`.
 Shebang Line
 ------------
 
-Since scripts for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them. For this they are expected to have a first line, the shebang line, which names an executable for this purpose.
+Because shell scripts are written in many different languages, they need to carry information about which interpreter should be used to execute them. For this, they are expected to have a first line, the shebang line, which names the interpreter executable.
 
 A script written in ``bash`` would need a first line like this::
 
     #!/bin/bash
 
+This tells the shell to execute the file with the interpreter located at ``/bin/bash``.
 
-This line tells the shell to execute the file with the bash interpreter, that is located at the path ``/bin/bash``.
+For a script written in another language, just replace ``/bin/bash`` with the interpreter for that language (for example: ``/bin/python`` for a python script, or ``/usr/local/bin/fish`` for a fish script).
 
-For a script written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example: ``/bin/python`` for a python script, or ``/usr/local/bin/fish`` for a fish script).
-
-This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script`` they aren't required (but don't hurt either!).
+This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
 
 .. _syntax:
 
-Syntax overview
+Syntax Overview
 ===============
 
-Shells like fish are used by giving them commands. Every fish command follows the same basic syntax.
-
-A command is executed by writing the name of the command followed by any arguments.
-
-Example::
+Shells like fish are used by giving them commands. Every fish command follows the same basic syntax. A command is executed by writing the name of the command followed by any arguments. For example::
 
    echo hello world
 
-This calls the :ref:`echo <cmd-echo>` command. ``echo`` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same basic syntax.
+This calls the :ref:`echo <cmd-echo>` command. ``echo`` writes its arguments to the screen. In the example above, the output is 'hello world'. Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
 
-If you want to find out more about the echo command used above, read the manual page for the echo command by writing: ``man echo``
+To learn more about the ``echo`` command, read its manual page by typing ``man echo``. ``man`` is a command for displaying a manual page on a given topic. It takes the name of the manual page to display as an argument. There are manual pages for almost every command. There are also manual pages for many other things, such as system libraries and important files.
 
-``man`` is a command for displaying a manual page on a given topic. The man command takes the name of the manual page to display as an argument. There are manual pages for almost every command on most computers. There are also manual pages for many other things, such as system libraries and important files.
-
-Every program on your computer can be used as a command in fish. If the program file is located in one of the directories in the PATH_, you can just use the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) has to be used.
+Every program on your computer can be used as a command in fish. If the program file is located in one of the PATH_ directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
 
 Here is a list of some useful commands:
 
-- :ref:`cd <cmd-cd>`, change the current directory
-- ``ls``, list files and directories
-- ``man``, display a manual page on the screen
-- ``mv``, move (rename) files
-- ``cp``, copy files
-- :ref:`open <cmd-open>`, open files with the default application associated with each filetype
-- ``less``, list the contents of files
+- :ref:`cd <cmd-cd>`: Change the current directory
+- ``ls``: List files and directories
+- ``man``: Display a manual page
+- ``mv``: Move (rename) files
+- ``cp``: Copy files
+- :ref:`open <cmd-open>`: Open files with the default application associated with each filetype
+- ``less``: Display the contents of files
 
-Commands and parameters are separated by the space character ``' '``. Every command ends with either a newline (i.e. by pressing the return key) or a semicolon ``;``. More than one command can be written on the same line by separating them with semicolons.
+Commands and arguments are separated by the space character ``' '``. Every command ends with either a newline (by pressing the return key) or a semicolon ``;``. Multiple commands can be written on the same line by separating them with semicolons.
 
-A switch is a very common special type of argument. Switches almost always start with one or more hyphens ``-`` and alter the way a command operates. For example, the ``ls`` command usually lists all the files and directories in the current working directory, but by using the ``-l`` switch, the behavior of ``ls`` is changed to not only display the filename, but also the size, permissions, owner and modification time of each file.
+A switch is a very common special type of argument. Switches almost always start with one or more hyphens ``-`` and alter the way a command operates. For example, the ``ls`` command usually lists the names of all files and directories in the current working directory. By using the ``-l`` switch, the behavior of ``ls`` is changed to not only display the filename, but also the size, permissions, owner, and modification time of each file.
 
-Switches differ between commands and are documented in the manual page for each command. Some switches are common to most command though, for example ``--help`` will usually display a help text, ``-i`` will often turn on interactive prompting before taking action, while ``-f`` will turn it off.
+Switches differ between commands and are usually documented on a command's manual page. There are some switches, however, that are common to most commands. For example, ``--help`` will usually display a help text, ``--version`` will usually display the command version, and ``-i`` will often turn on interactive prompting before taking action.
 
-.. _syntax-words:
+.. _terminology:
 
-Some common words
------------------
+Terminology
+-----------
 
-This is a short explanation of some of the commonly used words in fish.
+Here we define some of the terms used on this page and throughout the rest of the fish documentation:
 
-- **argument** a parameter given to a command
+- **Argument**: A parameter given to a command.
 
-- **builtin** a command that is implemented in the shell. Builtins are commands that are so closely tied to the shell that it is impossible to implement them as external commands.
+- **Builtin**: A command that is implemented by the shell. Builtins are so closely tied to the operation of the shell that it is impossible to implement them as external commands.
 
-- **command** a program that the shell can run. In another sense also specifically an external command (i.e. neither a function or builtin).
+- **Command**: A program that the shell can run.
 
-- **function** a block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
+- **Function**: A block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple simple commands into one more advanced command.
 
-- **job** a running pipeline or command
+- **Job**: A running pipeline or command.
 
-- **pipeline** a set of commands stringed together so that the output of one command is the input of the next command
+- **Pipeline**: A set of commands strung together so that the output of one command is the input of the next command.
 
-- **redirection** an operation that changes one of the input/output streams associated with a job
+- **Redirection**: An operation that changes one of the input or output streams associated with a job.
 
-- **switch** a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
+- **Switch**: A special kind of argument that alters the behavior of a command. A switch almost always begins with one or two hyphens.
 
 .. _quotes:
 
 Quotes
 ------
 
-Sometimes features like `parameter expansion <#expand>`_ and `character escapes <#escapes>`_ get in the way. When that happens, you can use quotes, either ``'`` (single quote) or ``"`` (double quote). Between single quotes, fish will perform no expansions, in double quotes it will only do :ref:`variable expansion <expand-variable>`. No other kind of expansion (including :ref:`brace expansion <expand-brace>` and parameter expansion) will take place, the parameter can contain spaces, and escape sequences are ignored.
+Sometimes features like `parameter expansion <#expand>`_ and `character escapes <#escapes>`_ get in the way. When that happens, you can use quotes, either single (``'``) or double (``"``). Between single quotes, fish performs no expansions. Between double quotes, fish only performs :ref:`variable expansion <expand-variable>`. No other kind of expansion (including :ref:`brace expansion <expand-brace>` or parameter expansion) is performed, and escape sequences (for example, ``\n``) are ignored. Within quotes, whitespace is not used to separate arguments, allowing quoted arguments to contain spaces.
 
-The only backslash escapes that mean anything in single quotes are ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only backslash escapes in double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and ``\\``, which escapes the backslash symbol.
+The only meaningful escape sequences in single quotes are ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only meaningful escapes in double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and ``\\``, which escapes the backslash symbol.
 
 Single quotes have no special meaning within double quotes and vice versa.
 
@@ -187,15 +172,13 @@ removes the file ``cumbersome filename.txt``, while
 
   rm cumbersome filename.txt
 
-
 removes two files, ``cumbersome`` and ``filename.txt``.
 
-::
+Another example::
 
    grep 'enabled)$' foo.txt
 
 searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special to ``grep``: it matches the end of the line).
-
 
 .. _escapes:
 

@@ -80,7 +80,7 @@ Scripting improvements
    file descriptor. This allows better error recovery and is more in line with other shells'
    behaviour (:issue:`7038`).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (:issue:`6809`).
--  All builtins that query if something exists now take ` ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (:issue:`7276`).
+-  All builtins that query if something exists now take ``--query``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (:issue:`7276`).
 -  ``argparse`` now only prints a backtrace with invalid options to argparse itself (:issue:`6703`).
 -  ``complete`` takes the first argument as the name of the command if the ``--command``/``-c`` option is not used (``complete git`` is treated like ``complete --command git``), and can show the loaded completions for specific commands with ``complete COMMANDNAME`` (:issue:`7321`).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (:issue:`7154`).

@@ -80,7 +80,7 @@ Scripting improvements
    file descriptor. This allows better error recovery and is more in line with other shells'
    behaviour (:issue:`7038`).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (:issue:`6809`).
--  All builtins that query if something exists now take ``--query`` as the long form for ``-q``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (:issue:`7276`).
+-  All builtins that query if something exists now take ` ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (:issue:`7276`).
 -  ``argparse`` now only prints a backtrace with invalid options to argparse itself (:issue:`6703`).
 -  ``complete`` takes the first argument as the name of the command if the ``--command``/``-c`` option is not used (``complete git`` is treated like ``complete --command git``), and can show the loaded completions for specific commands with ``complete COMMANDNAME`` (:issue:`7321`).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (:issue:`7154`).
@@ -94,9 +94,12 @@ Scripting improvements
 -  ``test -t``, for testing whether file descriptors are connected to a terminal, works for file descriptors 0, 1, and 2 (:issue:`4766`). It can still return incorrect results in other cases (:issue:`1228`).
 -  Trying to run scripts with Windows line endings (CRLF) via the shebang produces a sensible error (:issue:`2783`).
 -  An ``alias`` that delegates to a command with the same name no longer triggers an error about recursive completion (:issue:`7389`).
-- ``math`` now has a ``--base`` option to output the result in hexadecimal or octal (:issue:`7496`).
+- ``math`` now has a ``--base`` option to output the result in hexadecimal or octal (:issue:`7496`) and some more specific errors (:issue:`7508`).
+- ``math`` learned bitwise functions ``bitand``, ``bitor`` and ``bitxor``, used like ``math "bitand(0xFE, 5)"`` (:issue:`7281`).
+- ``math`` learned tau for those wishing to cut down on typing "2 * pi".
 - ``string`` subcommands now quit early when used with ``--quiet`` (:issue:`7495`).
 -  Failed redirections will now set ``$status`` (:issue:`7540`).
+-  ``read`` can now read interactively from other files, so e.g. forcing it to read from the terminal via ``read </dev/tty`` works (:issue:`7358`).
 
 Interactive improvements
 ------------------------
@@ -143,6 +146,8 @@ Interactive improvements
 -  Resuming a piped job by its number, like ``fg %1`` has been fixed (:issue:`7406`).
 -  Commands run from key bindings now use the same tty modes as normal commands (:issue:`7483`).
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
+-  ``$status`` from completion scripts is no longer visible outside, like in the prompt - this prevents status display in the prompt from being overwritten (:issue:`7555`)
+-  A macOS regarding apropos that was fixed in later 10.15 versions was reintroduced in Big Sur. Fish now works around it again, so command completion isn't super slow anymore (:issue:`7365`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -163,10 +168,11 @@ New or improved bindings
 -  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (:issue:`7012`) and avoids shifting the cursor (:issue:`6542`).
 -  ``__fish_prepend_sudo`` (Alt-S) now uses the previous commandline if the current one is empty,
    to simplify rerunning the previous command with ``sudo`` (:issue:`7079`).
-- ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
-  from history if the commandline is empty (:issue:`7137`).
-- ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (:issue:`7191`).
-- The definition of "word" and "bigword" for movements was refined, fixing e.g. vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
+-  ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
+   from history if the commandline is empty (:issue:`7137`).
+-  ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (:issue:`7191`).
+-  The definition of "word" and "bigword" for movements was refined, fixing e.g. vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
+-  Fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`).
 
 
 Improved prompts
@@ -199,6 +205,7 @@ Improved terminal support
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
 -  Fish no longer performs its own resizing in VTE-based terminals, as they perform their own reflowing, which clashes especially with right prompts (:issue:`7491`).
+-  Fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 
 Completions
 ^^^^^^^^^^^
@@ -530,8 +537,6 @@ Scripting improvements
 -  ``math`` reports the right error when incorrect syntax is used inside
    parentheses (:issue:`6063`), and warns when unsupported logical operations
    are used (:issue:`6096`).
-- ``math`` learned bitwise functions ``bitand``, ``bitor`` and ``bitxor``, used like ``math "bitand(0xFE, 5)"`` (:issue:`7281`).
-- ``math`` learned tau for those wishing to cut down on typing "2 * pi".
 -  ``functions --erase`` now also prevents fish from autoloading a
    function for the first time (:issue:`5951`).
 -  ``jobs --last`` returns 0 to indicate success when a job is found

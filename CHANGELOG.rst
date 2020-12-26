@@ -231,6 +231,7 @@ Completions
    -  ``imv`` (:issue:`6675`)
    -  ``julia`` (:issue:`7468`)
    -  ``k3d`` (:issue:`7202`)
+   -  ``ldapsearch`` (:issue:`7578`)
    -  ``micro`` (:issue:`7339`)
    -  ``mpc`` (:issue:`7169`)
    -  Metasploit's ``msfconsole``, ``msfdb`` and ``msfvenom`` (:issue:`6930`)

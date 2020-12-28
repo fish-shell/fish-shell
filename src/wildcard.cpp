@@ -867,20 +867,14 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
 /// wrappers around this one.
 ///
 /// This function traverses the relevant directory tree looking for matches, and recurses when
-/// needed to handle wildcrards spanning multiple components and recursive wildcards.
-///
-/// Because this function calls itself recursively with substrings, it's important that the
-/// parameters be raw pointers instead of wcstring, which would be too expensive to construct for
-/// all substrings.
+/// needed to handle wildcards spanning multiple components and recursive wildcards.
 ///
 /// Args:
 /// base_dir: the "working directory" against which the wildcard is to be resolved
 /// wc: the wildcard string itself, e.g. foo*bar/baz (where * is actually ANY_CHAR)
-/// prefix: the string that should be prepended for completions that replace their token.
-//    This is usually the same thing as the original wildcard, but for fuzzy matching, we
-//    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
-//    Note: this is only used when doing completions (for_completions is true), not
-//    expansions
+/// effective_prefix: the string that should be prepended for completions that replace their token.
+///    This is usually the same thing as the original wildcard, but for fuzzy matching, we
+///    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
 void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                                  const wcstring &effective_prefix) {
     assert(wc != nullptr);
@@ -890,10 +884,9 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     }
 
     // Get the current segment and compute interesting properties about it.
-    const size_t wc_len = std::wcslen(wc);
     const wchar_t *const next_slash = std::wcschr(wc, L'/');
     const bool is_last_segment = (next_slash == nullptr);
-    const size_t wc_segment_len = next_slash ? next_slash - wc : wc_len;
+    const size_t wc_segment_len = next_slash ? next_slash - wc : std::wcslen(wc);
     const wcstring wc_segment = wcstring(wc, wc_segment_len);
     const bool segment_has_wildcards =
         wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
@@ -949,7 +942,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                                                   effective_prefix + wc_segment + L'/');
             }
 
-            // Recursive wildcards require special handling.
+            // If we have a recursive wildcard in this segment, we want to recurse into
+            // subdirectories.
             size_t asr_idx = wc_segment.find(ANY_STRING_RECURSIVE);
             if (asr_idx != wcstring::npos) {
                 // Construct a "head + any" wildcard for matching stuff in this directory, and an

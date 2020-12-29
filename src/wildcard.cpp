@@ -930,6 +930,20 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         }
     } else {
         assert(!wc_segment.empty() && (segment_has_wildcards || is_last_segment));
+
+        if (!is_last_segment && wc_segment == wcstring{ANY_STRING_RECURSIVE}) {
+            // Hack for #7222. This is an intermediate wc segment that is exactly **. The
+            // tail matches in subdirectories as normal, but also the current directory.
+            // That is, '**/bar' may match 'bar' and 'foo/bar'.
+            // Implement this by matching the wildcard tail only, in this directory.
+            // Note if the segment is not exactly ANY_STRING_RECURSIVE then the segment may only
+            // match subdirectories.
+            this->expand(base_dir, wc_remainder, effective_prefix);
+            if (interrupted_or_overflowed()) {
+                return;
+            }
+        }
+
         DIR *dir = open_dir(base_dir);
         if (dir) {
             if (is_last_segment) {
@@ -942,10 +956,9 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                                                   effective_prefix + wc_segment + L'/');
             }
 
-            // If we have a recursive wildcard in this segment, we want to recurse into
-            // subdirectories.
             size_t asr_idx = wc_segment.find(ANY_STRING_RECURSIVE);
             if (asr_idx != wcstring::npos) {
+                // Apply the recursive **.
                 // Construct a "head + any" wildcard for matching stuff in this directory, and an
                 // "any + tail" wildcard for matching stuff in subdirectories. Note that the
                 // ANY_STRING_RECURSIVE character is present in both the head and the tail.

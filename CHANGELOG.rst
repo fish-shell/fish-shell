@@ -45,6 +45,7 @@ Syntax changes and new commands
 -------------------------------
 -  Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively.
 -  Logical operators ``&&`` and ``||`` can be followed by newlines before their right operand, matching POSIX shells.
+-  When globbing, a segment which is exactly ``**`` may now match zero directories. For example ``**/foo`` may match ``foo`` in the current directory (:issue:`7222`).
 
 Scripting improvements
 ----------------------

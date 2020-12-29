@@ -498,9 +498,9 @@ Wildcards ("Globbing")
 
 When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk") or a ``?`` question mark, fish uses it as a wildcard to match files.
 
-- ``*`` can match any string of characters not containing ``/``. This includes matching an empty string.
+- ``*`` matches any number of characters (including zero) in a file name, not including ``/``.
 
-- ``**`` matches any string of characters. This includes matching an empty string. The matched string can include the ``/`` character; that is, it goes into subdirectories. If a wildcard string with ``**`` contains a ``/``, that ``/`` still needs to be matched. For example, ``**\/*.fish`` won't match ``.fish`` files directly in the PWD, only in subdirectories. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories. [#]_
+- ``**`` matches any number of characters (including zero), and also descends into subdirectories. If ``**`` is a segment by itself, that segment may match zero times, for compatibility with other shells.
 
 - ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the ``qmark-noglob`` :ref:`feature flag<featureflags>`, so ``?`` will just be an ordinary character.
 
@@ -541,7 +541,6 @@ Examples::
     end
     # Lists the .foo files, if any.
 
-.. [#] Unlike other shells, notably zsh.
 .. [#] Technically, unix allows filenames with newlines, and this splits the ``find`` output on newlines. If you want to avoid that, use find's ``-print0`` option and :ref:`string split0<cmd-string-split0>`.
 
 .. _expand-command-substitution:

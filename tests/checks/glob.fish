@@ -74,6 +74,16 @@ string join \n **a2/** | sort
 # CHECK: dir_a1/dir_a2/dir_a3
 # CHECK: dir_a1/dir_a2/dir_a3/file_a
 
+rm -Rf *
+
+# Special behavior for #7222.
+# The literal segment ** matches in the same directory.
+mkdir foo
+touch bar foo/bar
+string join \n **/bar | sort
+# CHECK: bar
+# CHECK: foo/bar
+
 # Clean up.
 cd $HOME
 rm -Rf $tmpdir

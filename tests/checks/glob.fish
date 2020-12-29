@@ -1,5 +1,6 @@
 # RUN: %fish %s
 
+set -l oldpwd $PWD
 cd (mktemp -d)
 set tmpdir (pwd -P)
 
@@ -85,5 +86,5 @@ string join \n **/bar | sort
 # CHECK: foo/bar
 
 # Clean up.
-cd $HOME
+cd $oldpwd
 rm -Rf $tmpdir

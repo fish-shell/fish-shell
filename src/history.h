@@ -163,7 +163,7 @@ class history_t {
 
     // Add a new pending history item to the end, and then begin file detection on the items to
     // determine which arguments are paths
-    void add_pending_with_file_detection(const wcstring &str, const wcstring &working_dir_slash);
+    void add_pending_with_file_detection(const wcstring &str, const environment_t &vars);
 
     // Resolves any pending history items, so that they may be returned in history searches.
     void resolve_pending();
@@ -285,12 +285,12 @@ wcstring history_session_id(const environment_t &vars);
 
 /// Given a list of paths and a working directory, return the paths that are valid
 /// This does disk I/O and may only be called in a background thread
-path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory);
+path_list_t valid_paths(const path_list_t &paths, const environment_t &envs);
 
 /// Given a list of paths and a working directory,
 /// return true if all paths in the list are valid
 /// Returns true for if paths is empty
-bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
+bool all_paths_are_valid(const path_list_t &paths, const environment_t &envs);
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
 void start_private_mode(env_stack_t &vars);

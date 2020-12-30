@@ -77,7 +77,7 @@ void path_make_canonical(wcstring &path);
 /// slashes).
 bool paths_are_equivalent(const wcstring &p1, const wcstring &p2);
 
-bool path_is_valid(const wcstring &path, const wcstring &working_directory);
+bool path_is_valid(const wcstring &path, const environment_t &envs);
 
 /// Returns whether the two paths refer to the same file.
 bool paths_are_same_file(const wcstring &path1, const wcstring &path2);

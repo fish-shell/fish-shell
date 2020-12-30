@@ -325,7 +325,7 @@ struct history_impl_t {
 
     // Add a new pending history item to the end, and then begin file detection on the items to
     // determine which arguments are paths
-    void add_pending_with_file_detection(const wcstring &str, const wcstring &working_dir_slash);
+    void add_pending_with_file_detection(const wcstring &str, const environment_t &vars);
 
     // Resolves any pending history items, so that they may be returned in history searches.
     void resolve_pending();
@@ -1207,21 +1207,21 @@ wcstring history_session_id(const environment_t &vars) {
     return result;
 }
 
-path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory) {
+path_list_t valid_paths(const path_list_t &paths, const environment_t &envs) {
     ASSERT_IS_BACKGROUND_THREAD();
     wcstring_list_t result;
     for (const wcstring &path : paths) {
-        if (path_is_valid(path, working_directory)) {
+        if (path_is_valid(path, envs)) {
             result.push_back(path);
         }
     }
     return result;
 }
 
-bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory) {
+bool all_paths_are_valid(const path_list_t &paths, const environment_t &envs) {
     ASSERT_IS_BACKGROUND_THREAD();
     for (const wcstring &path : paths) {
-        if (!path_is_valid(path, working_directory)) {
+        if (!path_is_valid(path, envs)) {
             return false;
         }
     }
@@ -1267,7 +1267,7 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
 void history_t::remove(const wcstring &str) { impl()->remove(str); }
 
 void history_t::add_pending_with_file_detection(const wcstring &str,
-                                                const wcstring &working_dir_slash) {
+                                                const environment_t &vars) {
     // We use empty items as sentinels to indicate the end of history.
     // Do not allow them to be added (#6032).
     if (str.empty()) {
@@ -1322,8 +1322,8 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
         // and unblock the item.
         // Don't hold the lock while we perform this file detection.
         imp->add(str, identifier, true /* pending */);
-        iothread_perform([=]() {
-            auto validated_paths = valid_paths(potential_paths, working_dir_slash);
+        iothread_perform([=, &vars]() {
+            auto validated_paths = valid_paths(potential_paths, vars);
             auto imp = this->impl();
             imp->set_valid_file_paths(validated_paths, identifier);
             imp->enable_automatic_saving();

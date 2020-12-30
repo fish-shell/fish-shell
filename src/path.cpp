@@ -438,7 +438,8 @@ bool paths_are_equivalent(const wcstring &p1, const wcstring &p2) {
     return idx1 == len1 && idx2 == len2;
 }
 
-bool path_is_valid(const wcstring &path, const wcstring &working_directory) {
+bool path_is_valid(const wcstring &path, const environment_t &vars) {
+    auto working_directory = vars.get_pwd_slash();
     bool path_is_valid;
     // Some special paths are always valid.
     if (path.empty()) {
@@ -447,6 +448,10 @@ bool path_is_valid(const wcstring &path, const wcstring &working_directory) {
         path_is_valid = true;
     } else if (path == L".." || path == L"../") {
         path_is_valid = (!working_directory.empty() && working_directory != L"/");
+    } else if (path.at(0) == '~') {
+        wcstring tmp = path;
+        expand_tilde(tmp, vars);
+        path_is_valid = (0 == waccess(tmp, F_OK));
     } else if (path.at(0) != '/') {
         // Prepend the working directory. Note that we know path is not empty here.
         wcstring tmp = working_directory;

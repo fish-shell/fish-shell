@@ -3163,7 +3163,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // space, or if in silent mode (#7230).
                 const editable_line_t *el = &command_line;
                 if (history != nullptr && !conf.in_silent_mode && may_add_to_history(el->text())) {
-                    history->add_pending_with_file_detection(el->text(), vars.get_pwd_slash());
+                    history->add_pending_with_file_detection(el->text(), vars);
                 }
                 rls.finished = true;
                 update_buff_pos(&command_line, command_line.size());

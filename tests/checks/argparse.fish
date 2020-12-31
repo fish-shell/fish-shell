@@ -380,6 +380,20 @@ begin
 end
 
 begin
+    argparse '#num' installed= -- --installed=5 -5
+    set -l
+    # CHECK: _flag_a 'alpha'  'aaaa'
+    # CHECK: _flag_b -b
+    # CHECK: _flag_break -b
+    # CHECK: _flag_installed 5
+    # CHECK: _flag_m 1
+    # CHECK: _flag_max 1
+    # CHECK: _flag_num 5
+    # CHECK: argv
+    # CHECK: saved_status 57
+end
+
+begin
     argparse installed='!_validate_int --max 12' foo -- --foo --installed=error --foo
     # CHECKERR: argparse: Value 'error' for flag 'installed' is not an integer
 end

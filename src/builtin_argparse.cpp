@@ -212,10 +212,10 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_r
     const wchar_t *s = *opt_spec_str;
     if (*(s - 1) == L'#') {
         if (*s != L'-') {
-            streams.err.append_format(
-                _(L"%ls: Short flag '#' must be followed by '-' and a long name\n"),
-                opts.name.c_str());
-            return false;
+            // Long-only!
+            s--;
+            opt_spec->short_flag = counter;
+            counter++;
         }
         if (opts.implicit_int_flag) {
             streams.err.append_format(_(L"%ls: Implicit int flag '%lc' already defined\n"),

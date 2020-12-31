@@ -4332,12 +4332,15 @@ void history_tests_t::test_history_path_detection() {
     vars.vars[L"HOME"] = tmpdir;
 
     history_t &history = history_t::history_with_name(L"path_detection");
-    history.add_pending_with_file_detection(L"cmd0 not/a/valid/path", tmpdir);
-    history.add_pending_with_file_detection(L"cmd1 " + filename, tmpdir);
-    history.add_pending_with_file_detection(L"cmd2 " + tmpdir + L"/" + filename, tmpdir);
+    history.add_pending_with_file_detection(L"cmd0 not/a/valid/path", vars);
+    history.add_pending_with_file_detection(L"cmd1 " + filename, vars);
+    history.add_pending_with_file_detection(L"cmd2 " + tmpdir + L"/" + filename, vars);
+    history.add_pending_with_file_detection(L"cmd2 ~/" + filename, vars);
+    history.add_pending_with_file_detection(L"cmd2 ~", vars);
+    history.add_pending_with_file_detection(L"cmd2 ~/invalid_path", vars);
     history.resolve_pending();
 
-    constexpr size_t hist_size = 3;
+    constexpr size_t hist_size = 6;
     if (history.size() != hist_size) {
         err(L"history has wrong size: %lu but expected %lu", (unsigned long)history.size(), (unsigned long)hist_size);
         history.clear();
@@ -4349,6 +4352,9 @@ void history_tests_t::test_history_path_detection() {
         {},
         {filename},
         {tmpdir + L"/" + filename},
+        {L"~/" + filename},
+        {L"~"},
+        {}
     };
 
     size_t lap;

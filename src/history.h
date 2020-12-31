@@ -24,6 +24,7 @@
 struct io_streams_t;
 class env_stack_t;
 class environment_t;
+class operation_context_t;
 
 // Fish supports multiple shells writing to history at once. Here is its strategy:
 //
@@ -178,9 +179,10 @@ class history_t {
     void remove_ephemeral_items();
 
     // Add a new pending history item to the end, and then begin file detection on the items to
-    // determine which arguments are paths. The item has the given \p persist_mode.
+    // determine which arguments are paths. Arguments may be expanded (e.g. with PWD and variables)
+    // using the given \p vars. The item has the given \p persist_mode
     void add_pending_with_file_detection(
-        const wcstring &str, const wcstring &working_dir_slash,
+        const wcstring &str, const std::shared_ptr<environment_t> &vars,
         history_persistence_mode_t persist_mode = history_persistence_mode_t::disk);
 
     // Resolves any pending history items, so that they may be returned in history searches.
@@ -301,14 +303,18 @@ void history_save_all();
 /// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id(const environment_t &vars);
 
-/// Given a list of paths and a working directory, return the paths that are valid
-/// This does disk I/O and may only be called in a background thread
-path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory);
+/// Given a list of proposed paths and a context, perform variable and home directory expansion,
+/// and detect if the result expands to a value which is also the path to a file.
+/// Wildcard expansions are suppressed - see implementation comments for why.
+/// This is used for autosuggestion hinting. If we add an item to history, and one of its arguments
+/// refers to a file, then we only want to suggest it if there is a valid file there.
+/// This does disk I/O and may only be called in a background thread.
+path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_t &vars);
 
-/// Given a list of paths and a working directory,
-/// return true if all paths in the list are valid
-/// Returns true for if paths is empty
-bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
+/// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
+/// Wildcard expansions are suppressed.
+/// \return true if \p paths is empty or every path is valid.
+bool all_paths_are_valid(const path_list_t &paths, const operation_context_t &ctx);
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
 void start_private_mode(env_stack_t &vars);

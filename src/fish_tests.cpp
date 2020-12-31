@@ -4353,17 +4353,23 @@ void history_tests_t::test_history_path_detection() {
     }
     fclose(f);
 
-    test_environment_t vars;
-    vars.vars[L"PWD"] = tmpdir;
-    vars.vars[L"HOME"] = tmpdir;
+    std::shared_ptr<test_environment_t> vars = std::make_shared<test_environment_t>();
+    vars->vars[L"PWD"] = tmpdir;
+    vars->vars[L"HOME"] = tmpdir;
 
     history_t &history = history_t::history_with_name(L"path_detection");
-    history.add_pending_with_file_detection(L"cmd0 not/a/valid/path", tmpdir);
-    history.add_pending_with_file_detection(L"cmd1 " + filename, tmpdir);
-    history.add_pending_with_file_detection(L"cmd2 " + tmpdir + L"/" + filename, tmpdir);
+    history.add_pending_with_file_detection(L"cmd0 not/a/valid/path", vars);
+    history.add_pending_with_file_detection(L"cmd1 " + filename, vars);
+    history.add_pending_with_file_detection(L"cmd2 " + tmpdir + L"/" + filename, vars);
+    history.add_pending_with_file_detection(L"cmd3  $HOME/" + filename, vars);
+    history.add_pending_with_file_detection(L"cmd4  $HOME/notafile", vars);
+    history.add_pending_with_file_detection(L"cmd5  ~/" + filename, vars);
+    history.add_pending_with_file_detection(L"cmd6  ~/notafile", vars);
+    history.add_pending_with_file_detection(L"cmd7  ~/*f*", vars);
+    history.add_pending_with_file_detection(L"cmd8  ~/*zzz*", vars);
     history.resolve_pending();
 
-    constexpr size_t hist_size = 3;
+    constexpr size_t hist_size = 9;
     if (history.size() != hist_size) {
         err(L"history has wrong size: %lu but expected %lu", (unsigned long)history.size(), (unsigned long)hist_size);
         history.clear();
@@ -4372,9 +4378,9 @@ void history_tests_t::test_history_path_detection() {
 
     // Expected sets of paths.
     wcstring_list_t expected[hist_size] = {
+        {}, {filename}, {tmpdir + L"/" + filename}, {L"$HOME/" + filename}, {}, {L"~/" + filename},
+        {}, {},  // we do not expand globs
         {},
-        {filename},
-        {tmpdir + L"/" + filename},
     };
 
     size_t lap;

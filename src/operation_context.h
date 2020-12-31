@@ -60,8 +60,9 @@ class operation_context_t {
                         size_t expansion_limit = kExpansionLimitDefault);
 
     /// Construct from vars alone.
-    explicit operation_context_t(const environment_t &vars)
-        : operation_context_t(nullptr, vars, no_cancel) {}
+    explicit operation_context_t(const environment_t &vars,
+                                 size_t expansion_limit = kExpansionLimitDefault)
+        : operation_context_t(nullptr, vars, no_cancel, expansion_limit) {}
 
     ~operation_context_t();
 };

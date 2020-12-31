@@ -468,7 +468,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     }
 
     // Did the historical command have arguments that look like paths, which aren't paths now?
-    if (!all_paths_are_valid(item.get_required_paths(), working_directory)) {
+    if (!all_paths_are_valid(item.get_required_paths(), ctx)) {
         return false;
     }
 

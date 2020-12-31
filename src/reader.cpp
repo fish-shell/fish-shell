@@ -3241,7 +3241,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     } else {
                         mode = history_persistence_mode_t::disk;
                     }
-                    history->add_pending_with_file_detection(text, vars.get_pwd_slash(), mode);
+                    history->add_pending_with_file_detection(text, vars.snapshot(), mode);
                 }
 
                 rls.finished = true;

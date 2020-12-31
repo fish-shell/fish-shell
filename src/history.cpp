@@ -369,7 +369,7 @@ struct history_impl_t {
     std::unordered_map<long, wcstring> items_at_indexes(const std::vector<long> &idxs);
 
     // Sets the valid file paths for the history item with the given identifier.
-    void set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident);
+    void set_valid_file_paths(wcstring_list_t &&valid_file_paths, history_identifier_t ident);
 
     // Return the specified history at the specified index. 0 is the index of the current
     // commandline. (So the most recent item is at index 1.)
@@ -459,7 +459,7 @@ void history_impl_t::remove(const wcstring &str_to_remove) {
     assert(first_unwritten_new_item_index <= new_items.size());
 }
 
-void history_impl_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths,
+void history_impl_t::set_valid_file_paths(wcstring_list_t &&valid_file_paths,
                                           history_identifier_t ident) {
     // 0 identifier is used to mean "not necessary".
     if (ident == 0) {
@@ -469,7 +469,7 @@ void history_impl_t::set_valid_file_paths(const wcstring_list_t &valid_file_path
     // Look for an item with the given identifier. It is likely to be at the end of new_items.
     for (auto iter = new_items.rbegin(); iter != new_items.rend(); ++iter) {
         if (iter->identifier == ident) {  // found it
-            iter->required_paths = valid_file_paths;
+            iter->required_paths = std::move(valid_file_paths);
             break;
         }
     }
@@ -1246,21 +1246,42 @@ wcstring history_session_id(const environment_t &vars) {
     return result;
 }
 
-path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory) {
+path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
     wcstring_list_t result;
+    wcstring working_directory = vars.get_pwd_slash();
+    operation_context_t ctx(vars, kExpansionLimitBackground);
     for (const wcstring &path : paths) {
-        if (path_is_valid(path, working_directory)) {
-            result.push_back(path);
+        // Suppress cmdsubs since we are on a background thread and don't want to execute fish
+        // script.
+        // Suppress wildcards because we want to suggest e.g. `rm *` even if the directory
+        // is empty (and so rm will fail); this is nevertheless a useful command because it
+        // confirms the directory is empty.
+        wcstring expanded_path = path;
+        if (expand_one(expanded_path, {expand_flag::skip_cmdsubst, expand_flag::skip_wildcards},
+                       ctx)) {
+            if (path_is_valid(expanded_path, working_directory)) {
+                // Note we return the original (unexpanded) path.
+                result.push_back(path);
+            }
         }
     }
     return result;
 }
 
-bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory) {
+bool all_paths_are_valid(const path_list_t &paths, const operation_context_t &ctx) {
     ASSERT_IS_BACKGROUND_THREAD();
+    wcstring working_directory = ctx.vars.get_pwd_slash();
     for (const wcstring &path : paths) {
-        if (!path_is_valid(path, working_directory)) {
+        if (ctx.cancel_checker()) {
+            return false;
+        }
+        wcstring expanded_path = path;
+        if (!expand_one(expanded_path, {expand_flag::skip_cmdsubst, expand_flag::skip_wildcards},
+                        ctx)) {
+            return false;
+        }
+        if (!path_is_valid(expanded_path, working_directory)) {
             return false;
         }
     }
@@ -1304,7 +1325,7 @@ void history_t::remove(const wcstring &str) { impl()->remove(str); }
 void history_t::remove_ephemeral_items() { impl()->remove_ephemeral_items(); }
 
 void history_t::add_pending_with_file_detection(const wcstring &str,
-                                                const wcstring &working_dir_slash,
+                                                const std::shared_ptr<environment_t> &vars,
                                                 history_persistence_mode_t persist_mode) {
     // We use empty items as sentinels to indicate the end of history.
     // Do not allow them to be added (#6032).
@@ -1321,9 +1342,8 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
     for (const node_t &node : ast) {
         if (const argument_t *arg = node.try_as<argument_t>()) {
             wcstring potential_path = arg->source(str);
-            bool unescaped = unescape_string_in_place(&potential_path, UNESCAPE_DEFAULT);
-            if (unescaped && string_could_be_path(potential_path)) {
-                potential_paths.push_back(potential_path);
+            if (string_could_be_path(potential_path)) {
+                potential_paths.push_back(std::move(potential_path));
             }
         } else if (const decorated_statement_t *stmt = node.try_as<decorated_statement_t>()) {
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
@@ -1362,9 +1382,10 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
         // Don't hold the lock while we perform this file detection.
         imp->add(std::move(item), true /* pending */);
         iothread_perform([=]() {
-            auto validated_paths = valid_paths(potential_paths, working_dir_slash);
+            // Don't hold the lock while we perform this file detection.
+            auto validated_paths = expand_and_detect_paths(potential_paths, *vars);
             auto imp = this->impl();
-            imp->set_valid_file_paths(validated_paths, identifier);
+            imp->set_valid_file_paths(std::move(validated_paths), identifier);
             imp->enable_automatic_saving();
         });
     } else {

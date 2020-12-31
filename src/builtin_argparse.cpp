@@ -207,8 +207,8 @@ static bool parse_flag_modifiers(const argparse_cmd_opts_t &opts, const option_s
 
 /// Parse the text following the short flag letter.
 static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_ref_t &opt_spec,
-                                  const wcstring &option_spec, const wchar_t **opt_spec_str, wchar_t &counter,
-                                  io_streams_t &streams) {
+                                  const wcstring &option_spec, const wchar_t **opt_spec_str,
+                                  wchar_t &counter, io_streams_t &streams) {
     const wchar_t *s = *opt_spec_str;
     if (*(s - 1) == L'#') {
         if (*s != L'-') {
@@ -269,10 +269,12 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_r
 
 /// This parses an option spec string into a struct option_spec.
 static bool parse_option_spec(argparse_cmd_opts_t &opts,  //!OCLINT(high npath complexity)
-                              const wcstring &option_spec, wchar_t &counter, io_streams_t &streams) {
+                              const wcstring &option_spec, wchar_t &counter,
+                              io_streams_t &streams) {
     if (option_spec.empty()) {
-        streams.err.append_format(_(L"%ls: An option spec must have at least a short or a long flag\n"),
-                                  opts.name.c_str());
+        streams.err.append_format(
+            _(L"%ls: An option spec must have at least a short or a long flag\n"),
+            opts.name.c_str());
         return false;
     }
 
@@ -324,7 +326,8 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
     wchar_t *cmd = argv[0];
 
     // A counter to give short chars to long-only options because getopt needs that.
-    // Luckily we have wgetopt so we can use wchars - this is one of the private use areas so we have 6400 options available.
+    // Luckily we have wgetopt so we can use wchars - this is one of the private use areas so we
+    // have 6400 options available.
     wchar_t counter = static_cast<wchar_t>(0xE000);
 
     while (true) {

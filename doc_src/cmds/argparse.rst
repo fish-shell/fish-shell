@@ -76,7 +76,7 @@ Each option specification consists of:
 
 - An optional short flag letter. It must be an alphanumeric or "#". The "#" character is special and means that a flag of the form ``-123`` is valid. The short flag "#" must be followed by "-" (since the short name isn't otherwise valid since ``_flag_#`` is not a valid var name) and must be followed by a long flag name with no modifiers.
 
-- If the short flag letter is given: A ``/`` if the short flag can be used by someone invoking your command or ``-`` if it should not be exposed as a valid short flag and the letter is just for the _flag_X variable. If there is no long flag name these characters should be omitted, and if there is no short flag name both it and these chars can be omitted. You can also specify a '#' to indicate the short and long flag names can be used and the value can be specified as an implicit int; i.e., a flag of the form ``-NNN``.
+- If the short flag letter is given: A ``/`` if the short flag can be used by someone invoking your command or ``-`` if it should not be exposed as a valid short flag and the letter is just for the _flag_X variable. If there is no long flag name these characters should be omitted, and if there is no short flag name both it and these characters can be omitted. You can also specify a '#' to indicate the short and long flag names can be used and the value can be specified as an implicit int; i.e., a flag of the form ``-NNN``.
 
 - An optional long flag name. If not present then only the short flag letter can be used, and if that is not present either it's an error.
 

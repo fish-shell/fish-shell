@@ -74,13 +74,13 @@ Option Specifications
 
 Each option specification consists of:
 
-- An optional short flag letter. It must be an alphanumeric or "#". The "#" character is special and means that a flag of the form ``-123`` is valid. The short flag "#" must be followed by "-" (since the short name isn't otherwise valid since ``_flag_#`` is not a valid var name) and must be followed by a long flag name with no modifiers.
+- An optional short flag letter. It must be an alphanumeric.
 
-- If the short flag letter is given: A ``/`` if the short flag can be used by someone invoking your command or ``-`` if it should not be exposed as a valid short flag and the letter is just for the _flag_X variable. If there is no long flag name these characters should be omitted, and if there is no short flag name both it and these characters can be omitted. You can also specify a '#' to indicate the short and long flag names can be used and the value can be specified as an implicit int; i.e., a flag of the form ``-NNN``.
+- If the short flag letter is given: A ``/`` if the short flag can be used by someone invoking your command or ``-`` if it should not be exposed as a valid short flag and the letter is just for the _flag_X variable. If there is no long flag name these characters should be omitted, and if there is no short flag name both it and these characters can be omitted.
 
 - An optional long flag name. If not present then only the short flag letter can be used, and if that is not present either it's an error.
 
-- Nothing if the flag is a boolean that takes no argument or is an implicit int flag, or
+- Nothing if the flag is a boolean that takes no argument or is an integer flag, or
 
 - ``=`` if it requires a value and only the last instance of the flag is saved, or
 
@@ -93,6 +93,17 @@ Each option specification consists of:
 See the :ref:`fish_opt <cmd-fish_opt>` command for a friendlier but more verbose way to create option specifications.
 
 If a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
+
+Integer flag
+------------
+
+Sometimes commands take numbers directly as options, like ``foo -55``. To allow this one option spec can have the ``#`` modifier so that any integer will be understood as this flag, and the last number will be given as its value (as if ``=`` was used).
+
+The ``#`` must follow the short flag letter (if any), and other modifiers like ``=`` are not allowed, except for ``-``::
+
+  m#maximum
+
+This does not read numbers given as ``+NNN``, only those that look like flags - ``-NNN``.
 
 Note: Optional arguments
 ------------------------

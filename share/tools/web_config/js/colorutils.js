@@ -256,6 +256,120 @@ var color_scheme_fish_default = {
 };
 
 
+var ayuTheme = {
+    ayu_dark: {
+        common: {
+            accent: 'E6B450',
+            bg: '0A0E14',
+            fg: 'B3B1AD',
+            ui: '4D5566'
+          },
+          syntax: {
+            tag: '39BAE6',
+            func: 'FFB454',
+            entity: '59C2FF',
+            string: 'C2D94C',
+            regexp: '95E6CB',
+            markup: 'F07178',
+            keyword: 'FF8F40',
+            special: 'E6B673',
+            comment: '626A73',
+            constant: 'FFEE99',
+            operator: 'F29668',
+            error: 'FF3333'
+          }
+     },
+
+    ayu_light: {
+        common: {
+            accent: 'FF9940',
+            bg: 'FAFAFA',
+            fg: '575F66',
+            ui: '8A9199'
+          },
+          syntax: {
+            tag: '55B4D4',
+            func: 'F2AE49',
+            entity: '399EE6',
+            string: '86B300',
+            regexp: '4CBF99',
+            markup: 'F07171',
+            keyword: 'FA8D3E',
+            special: 'E6BA7E',
+            comment: 'ABB0B6',
+            constant: 'A37ACC',
+            operator: 'ED9366',
+            error: 'F51818'
+          }
+     },
+
+    ayu_mirage: {
+        common: {
+            accent: 'FFCC66',
+            bg: '1F2430',
+            fg: 'CBCCC6',
+            ui: '707A8C'
+          },
+          syntax: {
+            tag: '5CCFE6',
+            func: 'FFD580',
+            entity: '73D0FF',
+            string: 'BAE67E',
+            regexp: '95E6CB',
+            markup: 'F28779',
+            keyword: 'FFA759',
+            special: 'FFE6B3',
+            comment: '5C6773',
+            constant: 'D4BFFF',
+            operator: 'F29E74',
+            error: 'FF3333'
+          }
+     },
+
+    apply: function(theme, receiver) {
+        receiver['preferred_background'] = theme.common.bg
+        receiver['autosuggestion'] = theme.common.ui
+        receiver['command'] = theme.syntax.tag
+        receiver['comment'] = theme.syntax.comment
+        receiver['cwd'] = theme.syntax.entity
+        receiver['end'] = theme.syntax.operator
+        receiver['error'] = theme.syntax.error
+        receiver['escape'] = theme.syntax.regexp
+        receiver['match'] = theme.syntax.markup
+        receiver['normal'] = theme.common.fg
+        receiver['operator'] = theme.syntax.accent
+        receiver['param'] = theme.common.fg
+        receiver['quote'] = theme.syntax.string
+        receiver['redirection'] = theme.syntax.constant
+        receiver['search_match'] = theme.syntax.accent
+        receiver['selection'] = theme.syntax.accent
+
+        receiver['colors'] = []
+        for (var key in theme) receiver['colors'].push(theme[key])
+    },
+}
+// ayu Light
+var color_scheme_ayu_light = {
+    name: 'ayu Light',
+    url: 'https://github.com/edouard-lopez/ayu-theme.fish',
+}
+ayuTheme.apply(ayuTheme.ayu_light, color_scheme_ayu_light)
+
+// ayu Dark
+var color_scheme_ayu_dark = {
+    name: 'ayu Dark',
+    url: 'https://github.com/edouard-lopez/ayu-theme.fish',
+}
+ayuTheme.apply(ayuTheme.ayu_dark, color_scheme_ayu_dark)
+
+// ayu Mirage
+var color_scheme_ayu_mirage = {
+    name: 'ayu Mirage',
+    url: 'https://github.com/edouard-lopez/ayu-theme.fish',
+}
+ayuTheme.apply(ayuTheme.ayu_mirage, color_scheme_ayu_mirage)
+
+
 var TomorrowTheme = {
     tomorrow_night: {'Background': '1d1f21', 'Current Line': '282a2e', 'Selection': '373b41', 'Foreground': 'c5c8c6', 'Comment': '969896', 'Red': 'cc6666', 'Orange': 'de935f',  'Yellow': 'f0c674', 'Green': 'b5bd68', 'Aqua': '8abeb7', 'Blue': '81a2be', 'Purple': 'b294bb'
     },

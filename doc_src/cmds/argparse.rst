@@ -74,9 +74,7 @@ Option Specifications
 
 Each option specification consists of:
 
-- An optional short flag letter. It must be alphanumeric.
-
-- If the short flag letter is given: A ``/`` if the short flag can be used by someone invoking your command or ``-`` if it should not be exposed as a valid short flag and the letter is just for the _flag_X variable. If there is no long flag name these characters should be omitted, and if there is no short flag name both it and these characters can be omitted.
+- An optional alphanumeric short flag letter, followed by a ``/`` if the short flag can be used by someone invoking your command or a ``-`` if it should not be exposed as a valid short flag and the letter is just for the ``_flag_X`` variable.
 
 - An optional long flag name. If not present then only the short flag letter can be used, and if that is not present either it's an error.
 

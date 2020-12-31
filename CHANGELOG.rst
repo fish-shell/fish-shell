@@ -11,7 +11,7 @@ Notable improvements and fixes
     # Show all dmesg lines related to "usb"
     dmesg -w | string match '*usb*'
 
--  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with `"> "` (:issue:`904`).
+-  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with ``"> "`` (:issue:`904`).
 -  When pressing Tab, fish displays ambiguous completions even when they
    have a common prefix, without the user having to press Tab again
    (:issue:`6924`).
@@ -93,7 +93,7 @@ Scripting improvements
 -  ``set --erase`` and ``abbr --erase`` can now erase multiple things in one go, matching ``functions --erase`` (:issue:`7377`).
 -  ``abbr --erase`` no longer errors on an unset abbreviation (:issue:`7376`).
 -  ``test -t``, for testing whether file descriptors are connected to a terminal, works for file descriptors 0, 1, and 2 (:issue:`4766`). It can still return incorrect results in other cases (:issue:`1228`).
--  Trying to run scripts with Windows line endings (CRLF) via the shebang produces a sensible error (:issue:`2783`).
+-  Trying to execute scripts with Windows line endings (CRLF) produces a sensible error (:issue:`2783`).
 -  An ``alias`` that delegates to a command with the same name no longer triggers an error about recursive completion (:issue:`7389`).
 - ``math`` now has a ``--base`` option to output the result in hexadecimal or octal (:issue:`7496`) and some more specific errors (:issue:`7508`).
 - ``math`` learned bitwise functions ``bitand``, ``bitor`` and ``bitxor``, used like ``math "bitand(0xFE, 5)"`` (:issue:`7281`).
@@ -129,7 +129,7 @@ Interactive improvements
 -  The output of ``time`` is now properly aligned in all cases (:issue:`6726`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Shims for backwards-compatibility have been added (:issue:`7293`).
--  Control-C no longer occasionally prints an "unknown command" error (:issue:`7145`).
+-  Control-C no longer occasionally prints an "unknown command" error (:issue:`7145`) or overwrites multiline prompts (:issue:`3537`).
 -  Autocompletions work properly after Control-C to cancel the commmand line (:issue:`6937`).
 -  History search is now case-insensitive unless the search string contains an uppercase character (:issue:`7273`).
 -  ``fish_update_completions`` has a new ``-keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`).
@@ -149,6 +149,7 @@ Interactive improvements
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
 -  ``$status`` from completion scripts is no longer visible outside, like in the prompt - this prevents status display in the prompt from being overwritten (:issue:`7555`)
 -  A macOS regarding apropos that was fixed in later 10.15 versions was reintroduced in Big Sur. Fish now works around it again, so command completion isn't super slow anymore (:issue:`7365`).
+-  Updated localisations for pt_BR (:issue:`#7480`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -175,7 +176,6 @@ New or improved bindings
 -  The definition of "word" and "bigword" for movements was refined, fixing e.g. vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
 -  Fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`).
 
-
 Improved prompts
 ^^^^^^^^^^^^^^^^
 
@@ -183,7 +183,7 @@ Improved prompts
    commands prefixed with ``not`` (:issue:`6566`).
 -  git prompts include all untracked files in the repository, not just those in the current
    directory (:issue:`6086`).
--  The git prompts correctly show stash states (:issue:`6876`, :issue:`7136`).
+-  The git prompts correctly show stash states (:issue:`6876`, :issue:`7136`) and clean states (:issue:`7471`).
 -  The Mercurial prompt correctly shows untracked status (:issue:`6906`).
 -  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`7278`).
@@ -217,7 +217,10 @@ Completions
    -  ``alias`` (:issue:`7035`)
    -  ``apk`` (:issue:`7108`)
    -  ``asciidoctor`` (:issue:`7000`)
+   -  ``bootctl`` (:issue:`7428`)
+   -  ``bluetoothctl`` (:issue:`7438`)
    -  ``cmark`` (:issue:`7000`)
+   -  ``coredumpctl`` (:issue:`7428`) 
    -  ``create_ap`` (:issue:`7096`)
    -  ``deno`` (:issue:`7138`)
    -  ``dhclient``
@@ -229,6 +232,9 @@ Completions
    -  ``gh`` (:issue:`7112`)
    -  ``gitk``
    -  ``hikari`` (:issue:`7083`)
+   -  ``homectl`` (:issue:`7435`)
+   -  ``hostnamectl`` (:issue:`7428`)
+   -  ``icdif`` (:issue:`7503`)
    -  ``imv`` (:issue:`6675`)
    -  ``julia`` (:issue:`7468`)
    -  ``k3d`` (:issue:`7202`)
@@ -285,6 +291,7 @@ For distributors and developers
 -  Running the full interactive test suite now requires Python 3.5+ and the pexpect package (:issue:`6825`); the expect package is no longer required.
 -  Support for Python 2 in fish's tools (``fish_config`` and the manual page completion generator) is no longer guaranteed. Please use Python 3.5 or later (:issue:`6537`).
 -  The webconfig tool no longer requires python's distutils (:issue:`7514`)
+-  fish 3.2 is the last release to support Red Hat Enterprise Linux & CentOS version 7.
 
 --------------
 

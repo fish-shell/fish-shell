@@ -867,20 +867,14 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
 /// wrappers around this one.
 ///
 /// This function traverses the relevant directory tree looking for matches, and recurses when
-/// needed to handle wildcrards spanning multiple components and recursive wildcards.
-///
-/// Because this function calls itself recursively with substrings, it's important that the
-/// parameters be raw pointers instead of wcstring, which would be too expensive to construct for
-/// all substrings.
+/// needed to handle wildcards spanning multiple components and recursive wildcards.
 ///
 /// Args:
 /// base_dir: the "working directory" against which the wildcard is to be resolved
 /// wc: the wildcard string itself, e.g. foo*bar/baz (where * is actually ANY_CHAR)
-/// prefix: the string that should be prepended for completions that replace their token.
-//    This is usually the same thing as the original wildcard, but for fuzzy matching, we
-//    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
-//    Note: this is only used when doing completions (for_completions is true), not
-//    expansions
+/// effective_prefix: the string that should be prepended for completions that replace their token.
+///    This is usually the same thing as the original wildcard, but for fuzzy matching, we
+///    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
 void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                                  const wcstring &effective_prefix) {
     assert(wc != nullptr);
@@ -890,10 +884,9 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     }
 
     // Get the current segment and compute interesting properties about it.
-    const size_t wc_len = std::wcslen(wc);
     const wchar_t *const next_slash = std::wcschr(wc, L'/');
     const bool is_last_segment = (next_slash == nullptr);
-    const size_t wc_segment_len = next_slash ? next_slash - wc : wc_len;
+    const size_t wc_segment_len = next_slash ? next_slash - wc : std::wcslen(wc);
     const wcstring wc_segment = wcstring(wc, wc_segment_len);
     const bool segment_has_wildcards =
         wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
@@ -937,6 +930,20 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         }
     } else {
         assert(!wc_segment.empty() && (segment_has_wildcards || is_last_segment));
+
+        if (!is_last_segment && wc_segment == wcstring{ANY_STRING_RECURSIVE}) {
+            // Hack for #7222. This is an intermediate wc segment that is exactly **. The
+            // tail matches in subdirectories as normal, but also the current directory.
+            // That is, '**/bar' may match 'bar' and 'foo/bar'.
+            // Implement this by matching the wildcard tail only, in this directory.
+            // Note if the segment is not exactly ANY_STRING_RECURSIVE then the segment may only
+            // match subdirectories.
+            this->expand(base_dir, wc_remainder, effective_prefix);
+            if (interrupted_or_overflowed()) {
+                return;
+            }
+        }
+
         DIR *dir = open_dir(base_dir);
         if (dir) {
             if (is_last_segment) {
@@ -949,9 +956,9 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                                                   effective_prefix + wc_segment + L'/');
             }
 
-            // Recursive wildcards require special handling.
             size_t asr_idx = wc_segment.find(ANY_STRING_RECURSIVE);
             if (asr_idx != wcstring::npos) {
+                // Apply the recursive **.
                 // Construct a "head + any" wildcard for matching stuff in this directory, and an
                 // "any + tail" wildcard for matching stuff in subdirectories. Note that the
                 // ANY_STRING_RECURSIVE character is present in both the head and the tail.

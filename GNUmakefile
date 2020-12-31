@@ -43,9 +43,8 @@ build/fish: build/$(BUILDFILE)
 # Use build as an order-only dependency. This prevents the target from always being outdated
 # after a make run, and more importantly, doesn't clobber manually specified CMake options.
 build/$(BUILDFILE): | build
-	cd build; $(CMAKE) .. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "$(GENERATOR)" \
-		-DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-		-DCMAKE_BUILD_TYPE=RelWithDebInfo
+	cd build; $(CMAKE) .. -G "$(GENERATOR)" \
+		-DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
 build:
 	mkdir -p build

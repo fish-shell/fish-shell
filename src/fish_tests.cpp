@@ -816,7 +816,7 @@ static void test_fd_monitor() {
         item_maker_t(const item_maker_t &) = delete;
 
         // Write 42 bytes to our write end.
-        void write42() {
+        void write42() const {
             char buff[42] = {0};
             (void)write_loop(writer.fd(), buff, sizeof buff);
         }
@@ -826,7 +826,7 @@ static void test_fd_monitor() {
 
     // Items which will never receive data or be called back.
     item_maker_t item_never(fd_monitor_item_t::kNoTimeout);
-    item_maker_t item_hugetimeout(100000000llu * usec_per_msec);
+    item_maker_t item_hugetimeout(100000000LLU * usec_per_msec);
 
     // Item which should get no data, and time out.
     item_maker_t item0_timeout(16 * usec_per_msec);
@@ -1616,7 +1616,8 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
 #endif
 
     if (dst) {
-        mem = (char *)malloc(dlen);
+        // We want to pass a valid pointer to wchar_to_utf8, so allocate at least one byte.
+        mem = (char *)malloc(dlen + 1);
         if (!mem) {
             err(L"w2u: %s: MALLOC FAILED", descr);
             return;
@@ -1883,26 +1884,47 @@ static void test_lru() {
     do_test(cache.evicted.size() == size_t(total_nodes));
 }
 
-/// A crappy environment_t that only knows about PWD.
-struct pwd_environment_t : public environment_t {
-    std::map<wcstring, wcstring> extras;
+/// An environment built around an std::map.
+struct test_environment_t : public environment_t {
+    std::map<wcstring, wcstring> vars;
 
     virtual maybe_t<env_var_t> get(const wcstring &key,
                                    env_mode_flags_t mode = ENV_DEFAULT) const override {
         UNUSED(mode);
-        if (key == L"PWD") {
-            return env_var_t{wgetcwd(), 0};
+        auto iter = vars.find(key);
+        if (iter != vars.end()) {
+            return env_var_t(iter->second, ENV_DEFAULT);
         }
-        auto extra = extras.find(key);
-        if (extra != extras.end()) {
-            return env_var_t(extra->second, ENV_DEFAULT);
-        }
-        return {};
+        return none();
     }
 
     wcstring_list_t get_names(int flags) const override {
         UNUSED(flags);
-        return {L"PWD"};
+        wcstring_list_t result;
+        for (const auto &kv : vars) {
+            result.push_back(kv.first);
+        }
+        return result;
+    }
+};
+
+/// A test environment that knows about PWD.
+struct pwd_environment_t : public test_environment_t {
+    virtual maybe_t<env_var_t> get(const wcstring &key,
+                                   env_mode_flags_t mode = ENV_DEFAULT) const override {
+        if (key == L"PWD") {
+            return env_var_t{wgetcwd(), 0};
+        }
+        return test_environment_t::get(key, mode);
+    }
+
+    wcstring_list_t get_names(int flags) const override {
+        auto res = test_environment_t::get_names(flags);
+        res.clear();
+        if (std::count(res.begin(), res.end(), L"PWD") == 0) {
+            res.push_back(L"PWD");
+        }
+        return res;
     }
 };
 
@@ -2424,7 +2446,7 @@ struct pager_layout_testcase_t {
                 text.push_back(p.character);
             }
             if (text != expected) {
-                std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
+                std::fwprintf(stderr, L"width %d got %zu<%ls>, expected %zu<%ls>\n", this->width,
                               text.length(), text.c_str(), expected.length(), expected.c_str());
                 for (size_t i = 0; i < std::max(text.length(), expected.length()); i++) {
                     std::fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,
@@ -3322,7 +3344,7 @@ static void test_autosuggest_suggest_special() {
     const wcstring wd = L"test/autosuggest_test";
 
     pwd_environment_t vars{};
-    vars.extras[L"HOME"] = parser_t::principal_parser().vars().get(L"HOME")->as_string();
+    vars.vars[L"HOME"] = parser_t::principal_parser().vars().get(L"HOME")->as_string();
 
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/0", L"foobar/", vars, __LINE__);
@@ -3351,7 +3373,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", L"foo\"bar/", vars,
                                        __LINE__);
 
-    vars.extras[L"AUTOSUGGEST_TEST_LOC"] = wd;
+    vars.vars[L"AUTOSUGGEST_TEST_LOC"] = wd;
     perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", L"l/", vars,
                                        __LINE__);
@@ -3933,6 +3955,7 @@ class history_tests_t {
    public:
     static void test_history();
     static void test_history_merge();
+    static void test_history_path_detection();
     static void test_history_formats();
     // static void test_history_speed(void);
     static void test_history_races();
@@ -4107,7 +4130,7 @@ void history_tests_t::test_history_races() {
     history_t(L"race_test").clear();
 
     pid_t children[RACE_COUNT];
-    for (size_t i = 0; i < RACE_COUNT; i++) {
+    for (pid_t &child : children) {
         pid_t pid = fork();
         if (!pid) {
             // Child process.
@@ -4116,7 +4139,7 @@ void history_tests_t::test_history_races() {
             exit_without_destructors(0);
         } else {
             // Parent process.
-            children[i] = pid;
+            child = pid;
         }
     }
 
@@ -4285,6 +4308,73 @@ void history_tests_t::test_history_merge() {
     everything->clear();
 }
 
+void history_tests_t::test_history_path_detection() {
+    // Regression test for #7582.
+    say(L"Testing history path detection");
+    char tmpdirbuff[] = "/tmp/fish_test_history.XXXXXX";
+    wcstring tmpdir = str2wcstring(mkdtemp(tmpdirbuff));
+    if (! string_suffixes_string(L"/", tmpdir)) {
+        tmpdir.push_back(L'/');
+    }
+
+    // Place one valid file in the directory.
+    wcstring filename = L"testfile";
+    std::string path = wcs2string(tmpdir + filename);
+    FILE *f = fopen(path.c_str(), "w");
+    if (!f) {
+        err(L"Failed to open test file from history path detection");
+        return;
+    }
+    fclose(f);
+
+    test_environment_t vars;
+    vars.vars[L"PWD"] = tmpdir;
+    vars.vars[L"HOME"] = tmpdir;
+
+    history_t &history = history_t::history_with_name(L"path_detection");
+    history.add_pending_with_file_detection(L"cmd0 not/a/valid/path", tmpdir);
+    history.add_pending_with_file_detection(L"cmd1 " + filename, tmpdir);
+    history.add_pending_with_file_detection(L"cmd2 " + tmpdir + L"/" + filename, tmpdir);
+    history.resolve_pending();
+
+    constexpr size_t hist_size = 3;
+    if (history.size() != hist_size) {
+        err(L"history has wrong size: %lu but expected %lu", (unsigned long)history.size(), (unsigned long)hist_size);
+        history.clear();
+        return;
+    }
+
+    // Expected sets of paths.
+    wcstring_list_t expected[hist_size] = {
+        {},
+        {filename},
+        {tmpdir + L"/" + filename},
+    };
+
+    size_t lap;
+    const size_t maxlap = 128;
+    for (lap = 0; lap < maxlap; lap++) {
+        int failures = 0;
+        bool last = (lap + 1 == maxlap);
+        for (size_t i = 1; i <= hist_size; i++) {
+            if (history.item_at_index(i).required_paths != expected[hist_size - i]) {
+                failures += 1;
+                if (last) {
+                    err(L"Wrong detected paths for item %lu", (unsigned long)i);
+                }
+            }
+        }
+        if (failures == 0) {
+            break;
+        }
+        // The file detection takes a little time since it occurs in the background.
+        // Loop until the test passes.
+        usleep(1E6 / 500);  // 1 msec
+    }
+    //fprintf(stderr, "History saving took %lu laps\n", (unsigned long)lap);
+    history.clear();
+}
+
 static bool install_sample_history(const wchar_t *name) {
     wcstring path;
     if (!path_get_data(path)) {
@@ -4374,15 +4464,10 @@ void history_tests_t::test_history_formats() {
     } else {
         // The results are in the reverse order that they appear in the bash history file.
         // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
-        const wchar_t *expected[] = {L"/** # see issue 7407",
-                                     L"sleep 123",
-                                     L"a && echo valid construct",
-                                     L"final line",
-                                     L"echo supsup",
-                                     L"export XVAR='exported'",
-                                     L"history --help",
-                                     L"echo foo",
-                                     NULL};
+        const wchar_t *expected[] = {
+            L"/** # see issue 7407", L"sleep 123",   L"a && echo valid construct",
+            L"final line",           L"echo supsup", L"export XVAR='exported'",
+            L"history --help",       L"echo foo",    NULL};
         history_t &test_history = history_t::history_with_name(L"bash_import");
         test_history.populate_from_bash(f);
         if (!history_equals(test_history, expected)) {
@@ -4548,6 +4633,10 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
             }
             statement = tmp;
         }
+    }
+    if (!statement) {
+        say(L"No decorated statement found in '%ls'", src.c_str());
+        return false;
     }
 
     // Return its decoration and command.
@@ -6198,6 +6287,7 @@ int main(int argc, char **argv) {
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
     if (should_test_function("history")) history_tests_t::test_history();
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
+    if (should_test_function("history_paths")) history_tests_t::test_history_path_detection();
     if (!is_windows_subsystem_for_linux()) {
         // this test always fails under WSL
         if (should_test_function("history_races")) history_tests_t::test_history_races();

@@ -205,6 +205,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
             }
             case 'd': {
                 desc = w.woptarg;
+                assert(desc);
                 break;
             }
             case 'u': {
@@ -249,6 +250,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
             }
             case 'a': {
                 comp = w.woptarg;
+                assert(comp);
                 break;
             }
             case 'e': {
@@ -257,6 +259,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
             }
             case 'n': {
                 condition = w.woptarg;
+                assert(condition);
                 break;
             }
             case 'w': {

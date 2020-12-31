@@ -160,6 +160,10 @@ Some OPTION_SPEC examples:
 
 - ``h-help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If the long flag is used then ``_flag_h`` and ``_flag_help`` will be set to the count of how many times the long flag was seen.
 
+- ``help`` means that only ``--help`` is valid and only ``_flag_help`` will be set.
+
+- ``longonly=`` is a flag ``--longonly`` that requires an option, there is no short flag or even short flag variable.
+
 - ``n/name=`` means that both ``-n`` and ``--name`` are valid. It requires a value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the single mandatory value associated with the flag.
 
 - ``n/name=?`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the value associated with the flag if one was provided else it will be set with no values.
@@ -176,6 +180,8 @@ Some OPTION_SPEC examples:
 
 - ``n#max`` means that flags matching the regex "^--?\\d+$" are valid. When seen they are assigned to the variables ``_flag_n`` and ``_flag_max``. This allows any valid positive or negative integer to be specified by prefixing it with a single "-". Many commands support this idiom. For example ``head -3 /a/file`` to emit only the first three lines of /a/file. You can also specify the value using either flag: ``-n NNN`` or ``--max NNN`` in this example.
 
-After parsing the arguments the ``argv`` var is set with local scope to any values not already consumed during flag processing. If there are not unbound values the var is set but ``count $argv`` will be zero.
+- ``#longonly`` causes the last integer option to be stored in ``_flag_longonly``.
+
+After parsing the arguments the ``argv`` var is set with local scope to any values not already consumed during flag processing. If there are no unbound values the var is set but ``count $argv`` will be zero.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.

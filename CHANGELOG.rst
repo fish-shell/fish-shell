@@ -118,7 +118,7 @@ Interactive improvements
 -  A new variable ``$status_generation`` is incremented only when the previous command produces a status (:issue:`6815`). This can be used, for example, to check whether a failure status is a holdover due to a background job, or actually produced by the last run command.
 -  ``fish_greeting`` is now a function that reads a variable of the same name, and defaults to setting it globally. This removes a universal variable by default and helps with updating the greeting. However, to disable the greeting it is now necessary to explicitly specify universal scope (``set -U fish_greeting``) or to disable it in config.fish (:issue:`7265`).
 -  Events are properly emitted after a job is cancelled (:issue:`2356`).
--  A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (:issue:`6511`). See the output of ``fish --print-debug-categories`` for the full list.
+-  A number of new debugging categories have been added, including ``config``, ``path``, ``reader`` and ``screen`` (:issue:`6511`). See the output of ``fish --print-debug-categories`` for the full list. The old numbered debugging levels have been removed.
 -  The enabled debug categories are now printed on shell startup (:issue:`7007`).
 - The ``-o`` short option to fish, for ``--debug-output``, works correctly instead of producing an
   invalid option error (:issue:`7254`).

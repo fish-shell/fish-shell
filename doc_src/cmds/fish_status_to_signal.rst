@@ -9,7 +9,7 @@ Synopsis
 ::
 
     function fish_prompt
-        echo -n (fish_status_to_signal $pipestatus) (prompt_pwd) '$ '
+        echo -n (fish_status_to_signal $pipestatus | string join '|') (prompt_pwd) '$ '
     end
 
 Description

@@ -74,7 +74,7 @@ Option Specifications
 
 Each option specification consists of:
 
-- An optional alphanumeric short flag letter, followed by a ``/`` if the short flag can be used by someone invoking your command or a ``-`` if it should not be exposed as a valid short flag and the letter is just for the ``_flag_X`` variable.
+- An optional alphanumeric short flag letter, followed by a ``/`` if the short flag can be used by someone invoking your command or, for backwards compatibility, a ``-`` if it should not be exposed as a valid short flag (in which case it will also not be exposed as a flag variable).
 
 - An optional long flag name. If not present then only the short flag letter can be used, and if that is not present either it's an error.
 
@@ -97,7 +97,7 @@ Integer flag
 
 Sometimes commands take numbers directly as options, like ``foo -55``. To allow this one option spec can have the ``#`` modifier so that any integer will be understood as this flag, and the last number will be given as its value (as if ``=`` was used).
 
-The ``#`` must follow the short flag letter (if any), and other modifiers like ``=`` are not allowed, except for ``-``::
+The ``#`` must follow the short flag letter (if any), and other modifiers like ``=`` are not allowed, except for ``-`` (for backwards compatibility)::
 
   m#maximum
 

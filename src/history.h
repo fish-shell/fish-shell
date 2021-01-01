@@ -63,10 +63,28 @@ enum class history_search_type_t {
 typedef uint64_t history_identifier_t;
 
 class history_item_t {
-    friend class history_t;
-    friend struct history_impl_t;
-    friend class history_lru_cache_t;
-    friend class history_tests_t;
+   public:
+    /// Construct from a text, optional timestamp, and optional identifier.
+    explicit history_item_t(wcstring str = wcstring(), time_t when = 0,
+                            history_identifier_t ident = 0);
+
+    /// \return the text as a string.
+    const wcstring &str() const { return contents; }
+
+    /// \return whether the text is empty.
+    bool empty() const { return contents.empty(); }
+
+    // \return wehther our contents matches a search term.
+    bool matches_search(const wcstring &term, enum history_search_type_t type,
+                        bool case_sensitive) const;
+
+    /// \return the timestamp for creating this history item.
+    time_t timestamp() const { return creation_timestamp; }
+
+    /// Get and set the list of arguments which referred to files.
+    /// This is used for autosuggestion hinting.
+    const path_list_t &get_required_paths() const { return required_paths; }
+    void set_required_paths(path_list_t paths) { required_paths = std::move(paths); }
 
    private:
     // Attempts to merge two compatible history items together.
@@ -84,27 +102,10 @@ class history_item_t {
     // Paths that we require to be valid for this item to be autosuggested.
     path_list_t required_paths;
 
-   public:
-    explicit history_item_t(wcstring str = wcstring(), time_t when = 0,
-                            history_identifier_t ident = 0);
-
-    const wcstring &str() const { return contents; }
-
-    bool empty() const { return contents.empty(); }
-
-    // Whether our contents matches a search term.
-    bool matches_search(const wcstring &term, enum history_search_type_t type,
-                        bool case_sensitive) const;
-
-    time_t timestamp() const { return creation_timestamp; }
-
-    const path_list_t &get_required_paths() const { return required_paths; }
-    void set_required_paths(const path_list_t &paths) { required_paths = paths; }
-
-    bool operator==(const history_item_t &other) const {
-        return contents == other.contents && creation_timestamp == other.creation_timestamp &&
-               required_paths == other.required_paths;
-    }
+    friend class history_t;
+    friend struct history_impl_t;
+    friend class history_lru_cache_t;
+    friend class history_tests_t;
 };
 
 typedef std::deque<history_item_t> history_item_list_t;

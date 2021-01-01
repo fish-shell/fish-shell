@@ -280,7 +280,7 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
 
 done:
     history_item_t result(cmd, when);
-    result.set_required_paths(paths);
+    result.set_required_paths(std::move(paths));
     return result;
 }
 

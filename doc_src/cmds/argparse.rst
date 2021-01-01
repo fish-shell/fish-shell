@@ -18,7 +18,7 @@ This command makes it easy for fish scripts and functions to handle arguments li
 
 Each option specification (``OPTION_SPEC``) is written in the `domain specific language <#option-specifications>`__ described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
-Each option that is seen in the ARG list will result in a var name of the form ``_flag_X``, where ``X`` is the short flag letter and the long flag name. The OPTION_SPEC always requires a short flag even if it can't be used. So there will always be ``_flag_X`` var set using the short flag letter if the corresponding short or long flag is seen. The long flag name var (e.g., ``_flag_help``) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
+Each option that is seen in the ARG list will result in a var name of the form ``_flag_X``, where ``X`` is the short flag letter and the long flag name. The long flag name var (e.g., ``_flag_help``) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
 
 For example ``_flag_h`` and ``_flag_help`` if ``-h`` or ``--help`` is seen. The var will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, it just is passed or not, it doesn't have a value) the values are the short and long flags seen. If the option is not a boolean the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
 
@@ -74,13 +74,11 @@ Option Specifications
 
 Each option specification consists of:
 
-- A short flag letter (which is mandatory). It must be an alphanumeric or "#". The "#" character is special and means that a flag of the form ``-123`` is valid. The short flag "#" must be followed by "-" (since the short name isn't otherwise valid since ``_flag_#`` is not a valid var name) and must be followed by a long flag name with no modifiers.
+- An optional alphanumeric short flag letter, followed by a ``/`` if the short flag can be used by someone invoking your command or a ``-`` if it should not be exposed as a valid short flag and the letter is just for the ``_flag_X`` variable.
 
-- A ``/`` if the short flag can be used by someone invoking your command else ``-`` if it should not be exposed as a valid short flag. If there is no long flag name these characters should be omitted. You can also specify a '#' to indicate the short and long flag names can be used and the value can be specified as an implicit int; i.e., a flag of the form ``-NNN``.
+- An optional long flag name. If not present then only the short flag letter can be used, and if that is not present either it's an error.
 
-- A long flag name which is optional. If not present then only the short flag letter can be used.
-
-- Nothing if the flag is a boolean that takes no argument or is an implicit int flag, or
+- Nothing if the flag is a boolean that takes no argument or is an integer flag, or
 
 - ``=`` if it requires a value and only the last instance of the flag is saved, or
 
@@ -93,6 +91,17 @@ Each option specification consists of:
 See the :ref:`fish_opt <cmd-fish_opt>` command for a friendlier but more verbose way to create option specifications.
 
 If a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
+
+Integer flag
+------------
+
+Sometimes commands take numbers directly as options, like ``foo -55``. To allow this one option spec can have the ``#`` modifier so that any integer will be understood as this flag, and the last number will be given as its value (as if ``=`` was used).
+
+The ``#`` must follow the short flag letter (if any), and other modifiers like ``=`` are not allowed, except for ``-``::
+
+  m#maximum
+
+This does not read numbers given as ``+NNN``, only those that look like flags - ``-NNN``.
 
 Note: Optional arguments
 ------------------------
@@ -149,6 +158,10 @@ Some OPTION_SPEC examples:
 
 - ``h-help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If the long flag is used then ``_flag_h`` and ``_flag_help`` will be set to the count of how many times the long flag was seen.
 
+- ``help`` means that only ``--help`` is valid and only ``_flag_help`` will be set.
+
+- ``longonly=`` is a flag ``--longonly`` that requires an option, there is no short flag or even short flag variable.
+
 - ``n/name=`` means that both ``-n`` and ``--name`` are valid. It requires a value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the single mandatory value associated with the flag.
 
 - ``n/name=?`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the value associated with the flag if one was provided else it will be set with no values.
@@ -165,6 +178,8 @@ Some OPTION_SPEC examples:
 
 - ``n#max`` means that flags matching the regex "^--?\\d+$" are valid. When seen they are assigned to the variables ``_flag_n`` and ``_flag_max``. This allows any valid positive or negative integer to be specified by prefixing it with a single "-". Many commands support this idiom. For example ``head -3 /a/file`` to emit only the first three lines of /a/file. You can also specify the value using either flag: ``-n NNN`` or ``--max NNN`` in this example.
 
-After parsing the arguments the ``argv`` var is set with local scope to any values not already consumed during flag processing. If there are not unbound values the var is set but ``count $argv`` will be zero.
+- ``#longonly`` causes the last integer option to be stored in ``_flag_longonly``.
+
+After parsing the arguments the ``argv`` var is set with local scope to any values not already consumed during flag processing. If there are no unbound values the var is set but ``count $argv`` will be zero.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.

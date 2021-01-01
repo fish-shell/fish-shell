@@ -32,7 +32,7 @@ static const wcstring var_name_prefix = L"_flag_";
 #define BUILTIN_ERR_INVALID_OPT_SPEC _(L"%ls: Invalid option spec '%ls' at char '%lc'\n")
 
 struct option_spec_t {
-    const wchar_t short_flag;
+    wchar_t short_flag;
     wcstring long_flag;
     wcstring validation_command;
     wcstring_list_t vals;
@@ -208,14 +208,14 @@ static bool parse_flag_modifiers(const argparse_cmd_opts_t &opts, const option_s
 /// Parse the text following the short flag letter.
 static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_ref_t &opt_spec,
                                   const wcstring &option_spec, const wchar_t **opt_spec_str,
-                                  io_streams_t &streams) {
+                                  wchar_t &counter, io_streams_t &streams) {
     const wchar_t *s = *opt_spec_str;
     if (*(s - 1) == L'#') {
         if (*s != L'-') {
-            streams.err.append_format(
-                _(L"%ls: Short flag '#' must be followed by '-' and a long name\n"),
-                opts.name.c_str());
-            return false;
+            // Long-only!
+            s--;
+            opt_spec->short_flag = counter;
+            counter++;
         }
         if (opts.implicit_int_flag) {
             streams.err.append_format(_(L"%ls: Implicit int flag '%lc' already defined\n"),
@@ -250,9 +250,17 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_r
         opt_spec->num_allowed = 1;  // mandatory arg and can appear only once
         s++;  // the struct is initialized assuming short_flag_valid should be true
     } else {
-        // Long flag name not allowed if second char isn't '/', '-' or '#' so just check for
-        // behavior modifier chars.
-        if (!parse_flag_modifiers(opts, opt_spec, option_spec, &s, streams)) return false;
+        if (*s != L'!' && *s != L'?' && *s != L'=') {
+            // No short flag separator and no other modifiers, so this is a long only option.
+            // Since getopt needs a wchar, we have a counter that we count up.
+            opt_spec->short_flag_valid = false;
+            s--;
+            opt_spec->short_flag = counter;
+            counter++;
+        } else {
+            // Try to parse any other flag modifiers
+            if (!parse_flag_modifiers(opts, opt_spec, option_spec, &s, streams)) return false;
+        }
     }
 
     *opt_spec_str = s;
@@ -261,10 +269,12 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_r
 
 /// This parses an option spec string into a struct option_spec.
 static bool parse_option_spec(argparse_cmd_opts_t &opts,  //!OCLINT(high npath complexity)
-                              const wcstring &option_spec, io_streams_t &streams) {
+                              const wcstring &option_spec, wchar_t &counter,
+                              io_streams_t &streams) {
     if (option_spec.empty()) {
-        streams.err.append_format(_(L"%ls: An option spec must have a short flag letter\n"),
-                                  opts.name.c_str());
+        streams.err.append_format(
+            _(L"%ls: An option spec must have at least a short or a long flag\n"),
+            opts.name.c_str());
         return false;
     }
 
@@ -278,7 +288,7 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts,  //!OCLINT(high npath c
     std::unique_ptr<option_spec_t> opt_spec(new option_spec_t{*s++});
 
     // Try parsing stuff after the short flag.
-    if (*s && !parse_option_spec_sep(opts, opt_spec, option_spec, &s, streams)) {
+    if (*s && !parse_option_spec_sep(opts, opt_spec, option_spec, &s, counter, streams)) {
         return false;
     }
 
@@ -315,20 +325,30 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
                                 io_streams_t &streams) {
     wchar_t *cmd = argv[0];
 
+    // A counter to give short chars to long-only options because getopt needs that.
+    // Luckily we have wgetopt so we can use wchars - this is one of the private use areas so we
+    // have 6400 options available.
+    wchar_t counter = static_cast<wchar_t>(0xE000);
+
     while (true) {
         if (std::wcscmp(L"--", argv[*optind]) == 0) {
             ++*optind;
             break;
         }
 
-        if (!parse_option_spec(opts, argv[*optind], streams)) {
+        if (!parse_option_spec(opts, argv[*optind], counter, streams)) {
             return STATUS_CMD_ERROR;
         }
-
         if (++*optind == argc) {
             streams.err.append_format(_(L"%ls: Missing -- separator\n"), cmd);
             return STATUS_INVALID_ARGS;
         }
+    }
+
+    // Check for counter overreach once at the end because this is very unlikely to ever be reached.
+    if (counter > static_cast<wchar_t>(0xF8FF)) {
+        streams.err.append_format(_(L"%ls: Too many long-only options\n"), cmd);
+        return STATUS_INVALID_ARGS;
     }
 
     if (opts.options.empty()) {

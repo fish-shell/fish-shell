@@ -350,6 +350,54 @@ begin
     # CHECK: saved_status 57
 end
 
+# long-only flags
+begin
+    argparse installed= foo -- --installed=no --foo
+    set -l
+    # CHECK: _flag_a 'alpha'  'aaaa'
+    # CHECK: _flag_b -b
+    # CHECK: _flag_break -b
+    # CHECK: _flag_foo --foo
+    # CHECK: _flag_installed no
+    # CHECK: _flag_m 1
+    # CHECK: _flag_max 1
+    # CHECK: argv
+    # CHECK: saved_status 57
+end
+
+begin
+    argparse installed='!_validate_int --max 12' foo -- --installed=5 --foo
+    set -l
+    # CHECK: _flag_a 'alpha'  'aaaa'
+    # CHECK: _flag_b -b
+    # CHECK: _flag_break -b
+    # CHECK: _flag_foo --foo
+    # CHECK: _flag_installed 5
+    # CHECK: _flag_m 1
+    # CHECK: _flag_max 1
+    # CHECK: argv
+    # CHECK: saved_status 57
+end
+
+begin
+    argparse '#num' installed= -- --installed=5 -5
+    set -l
+    # CHECK: _flag_a 'alpha'  'aaaa'
+    # CHECK: _flag_b -b
+    # CHECK: _flag_break -b
+    # CHECK: _flag_installed 5
+    # CHECK: _flag_m 1
+    # CHECK: _flag_max 1
+    # CHECK: _flag_num 5
+    # CHECK: argv
+    # CHECK: saved_status 57
+end
+
+begin
+    argparse installed='!_validate_int --max 12' foo -- --foo --installed=error --foo
+    # CHECKERR: argparse: Value 'error' for flag 'installed' is not an integer
+end
+
 # #6483 - error messages for missing arguments
 argparse -n foo q r/required= -- foo -qr
 # CHECKERR: foo: Expected argument for option r
@@ -439,4 +487,13 @@ function wrongargparse
     argparse -foo -- banana
     argparse a-b
     argparse
+end
+
+begin
+    argparse ''
+    #CHECKERR: argparse: An option spec must have at least a short or a long flag
+    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: argparse ''
+    #CHECKERR: ^
+    #CHECKERR: (Type 'help argparse' for related documentation)
 end

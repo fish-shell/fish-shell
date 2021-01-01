@@ -63,8 +63,9 @@ Scripting improvements
 -  Computed ("electric") variables such as ``status`` are now only global in scope, so ``set -Uq status`` returns false (:issue:`7032`).
 -  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (:issue:`6944`).
 -  A new ``fish_posterror`` event is emitted when attempting to execute a command with syntax errors (:issue:`6880`).
-- ``fish_indent`` now removes spurious quotes in simple cases (:issue:`6722`)
+- ``fish_indent`` now removes unnecessary quotes in simple cases (:issue:`6722`)
    and learned a ``--check`` option to just check if a file is indented correctly (:issue:`7251`).
+- ``fish_indent`` indents continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||``.
 - ``pushd`` only adds a directory to the stack if changing to it was successful (:issue:`6947`).
 -  A new ``fish_job_summary`` function is called whenever a
    background job stops or ends, or any job terminates from a signal (:issue:`6959`).
@@ -160,6 +161,7 @@ New or improved bindings
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, ``o``, ``O`` and Control+left/right keys to navigate by word (:issue:`6648`, :issue:`6755`, :issue:`6769`, :issue:`7442`).
 -  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (:issue:`6908`).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.
+-  If history search fails to find a match, the cursor is no longer moved. This is useful when accidentally starting a history search on a multi-line commandline.
 - The readline command ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
 -  A new readline command ``forward-single-char`` moves one character to the right, and if an autosuggestion is available, only take a single character from it (:issue:`7217`).
 -  Readline commands can now be joined with ``or`` as a modifier (adding to ``and``), though only some commands report success or failure (:issue:`7217`).
@@ -267,7 +269,9 @@ Completions
 - Lots of improvements to completions.
 - Improvements to the manpage completion generator (:issue:`7086`).
 - Significant performance improvements to completion of the available commands (:issue:`7153`).
+- ``__fish_complete_suffix`` now uses the same fuzzy matching logic as normal file completion.
 - ``__fish_complete_suffix`` completes any file but sorts files with matching suffix first (:issue:`7040`). Previously, it only completed files with matching suffix.
+- Completions for ``git`` learned to complete the right and left parts of a commit range like ``from..to`` or ``left...right``.
 
 Deprecations and removed features
 ---------------------------------

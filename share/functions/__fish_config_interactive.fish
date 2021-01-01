@@ -247,6 +247,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
         if set -q VTE_VERSION
             return
         end
+        # Same for alacritty
+        if string match -q -- 'alacritty*' $TERM
+            return
+        end
         commandline -f repaint >/dev/null 2>/dev/null
     end
 

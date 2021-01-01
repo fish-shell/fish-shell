@@ -209,7 +209,7 @@ Improved terminal support
 -  An issue producing strange status output from commands involving ``not`` has been fixed (:issue:`6566`).
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
--  Fish no longer performs its own resizing in VTE-based terminals, as they perform their own reflowing, which clashes especially with right prompts (:issue:`7491`).
+-  Fish no longer performs its own resizing in VTE-based terminals and alacritty, as they perform their own reflowing, which clashes especially with right prompts (:issue:`7491`).
 -  Fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 
 Completions

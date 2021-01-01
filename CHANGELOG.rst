@@ -188,7 +188,7 @@ Improved prompts
 -  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`7278`).
 -  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`).
--  A new pair of colorschemes - ``ayu Light`` and ``ayu Dark`` (:issue:`7596`).
+-  New colorschemes - ``ayu Light``, ``ayu Dark`` and ``ayu Mirage`` (:issue:`7596`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

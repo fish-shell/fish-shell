@@ -18,9 +18,9 @@ This command makes it easy for fish scripts and functions to handle arguments li
 
 Each option specification (``OPTION_SPEC``) is written in the `domain specific language <#option-specifications>`__ described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
-Each option that is seen in the ARG list will result in a var name of the form ``_flag_X``, where ``X`` is the short flag letter and the long flag name. The long flag name var (e.g., ``_flag_help``) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
+Each option that is seen in the ARG list will result in variables named ``_flag_X``, where ``X`` is the short flag letter and the long flag name (if they are defined). For example a ``--help`` option could cause argparse to define one variable called ``_flag_h`` and another called ``_flag_help``.
 
-For example ``_flag_h`` and ``_flag_help`` if ``-h`` or ``--help`` is seen. The var will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, it just is passed or not, it doesn't have a value) the values are the short and long flags seen. If the option is not a boolean the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
+The variables will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, it just is passed or not, it doesn't have a value) the values are the short and long flags seen. If the option is not a boolean the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag variable will not be set.
 
 Options
 -------
@@ -180,6 +180,6 @@ Some OPTION_SPEC examples:
 
 - ``#longonly`` causes the last integer option to be stored in ``_flag_longonly``.
 
-After parsing the arguments the ``argv`` var is set with local scope to any values not already consumed during flag processing. If there are no unbound values the var is set but ``count $argv`` will be zero.
+After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.

@@ -53,3 +53,6 @@ $fish -c 'string escape y$argv' -c 'string escape x$argv' 1 2 3
 # CHECK: x1
 # CHECK: x2
 # CHECK: x3
+
+# Should just do nothing.
+$fish --no-execute

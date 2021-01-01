@@ -148,9 +148,10 @@ Interactive improvements
 -  Resuming a piped job by its number, like ``fg %1`` has been fixed (:issue:`7406`).
 -  Commands run from key bindings now use the same tty modes as normal commands (:issue:`7483`).
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
--  ``$status`` from completion scripts is no longer visible outside, like in the prompt - this prevents status display in the prompt from being overwritten (:issue:`7555`)
+-  ``$status`` from completion scripts is no longer visible outside, like in the prompt - this prevents status display in the prompt from being overwritten (:issue:`7555`).
 -  A macOS regarding apropos that was fixed in later 10.15 versions was reintroduced in Big Sur. Fish now works around it again, so command completion isn't super slow anymore (:issue:`7365`).
 -  Updated localisations for pt_BR (:issue:`7480`).
+-  ``fish_trace`` output now starts with ``->`` like ``fish --profile``'s, making the depth more visible (:issue:`7538`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -272,6 +273,9 @@ Completions
 - ``__fish_complete_suffix`` now uses the same fuzzy matching logic as normal file completion.
 - ``__fish_complete_suffix`` completes any file but sorts files with matching suffix first (:issue:`7040`). Previously, it only completed files with matching suffix.
 - Completions for ``git`` learned to complete the right and left parts of a commit range like ``from..to`` or ``left...right``.
+- The ``__fish_print_packages`` function was broken apart into one function per package manager, and any completion now only calls its specific function. This helps if multiple package managers are installed on a system (e.g. to create containers). ``__fish_print_packages`` remains as a stub that calls all functions (:issue:`7542`).
+- Many completions have their descriptions shortened to fit more options on the screen (:issue:`6981`, :issue:`7550`, :issue:`7109`, :issue:`7569`, :issue:`7081`, :issue:`7291`, :issue:`7163`, :issue:`7378`).
+- The ``make`` completions no longer second-guess make's file detection, fixing target completion in some cases (:issue:`7535`)
 
 Deprecations and removed features
 ---------------------------------

@@ -82,7 +82,7 @@ Scripting improvements
    behaviour (:issue:`7038`).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (:issue:`6809`).
 -  All builtins that query if something exists now take ``--query``. ``--quiet`` is deprecated for ``command``, ``jobs`` and ``type`` (:issue:`7276`).
--  ``argparse`` now only prints a backtrace with invalid options to argparse itself (:issue:`6703`).
+-  ``argparse`` no longer requires a short flag letter for long-only options (:issue:`7585`) and only prints a backtrace with invalid options to argparse itself (:issue:`6703`).
 -  ``complete`` takes the first argument as the name of the command if the ``--command``/``-c`` option is not used (``complete git`` is treated like ``complete --command git``), and can show the loaded completions for specific commands with ``complete COMMANDNAME`` (:issue:`7321`).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (:issue:`7154`).
 -  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (:issue:`7014`).
@@ -188,6 +188,7 @@ Improved prompts
 -  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`7278`).
 -  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`).
+-  A new pair of colorschemes - ``ayu Light`` and ``ayu Dark`` (:issue:`7596`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

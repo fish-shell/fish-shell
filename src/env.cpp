@@ -90,7 +90,6 @@ static const std::vector<electric_var_t> electric_variables{
     {L"_", electric_var_t::freadonly},
     {L"fish_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"fish_pid", electric_var_t::freadonly},
-    {L"fish_private_mode", electric_var_t::freadonly},
     {L"history", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"hostname", electric_var_t::freadonly},
     {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
@@ -119,8 +118,7 @@ static bool is_read_only(const wcstring &key) {
     if (auto ev = electric_var_t::for_name(key)) {
         return ev->readonly();
     }
-    // Hack.
-    return in_private_mode() && key == L"fish_history";
+    return false;
 }
 
 /// Return true if a variable should become a path variable by default. See #436.

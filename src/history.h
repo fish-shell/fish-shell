@@ -312,7 +312,8 @@ bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_direc
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
 void start_private_mode(env_stack_t &vars);
+
 /// Queries private mode status.
-bool in_private_mode();
+bool in_private_mode(const environment_t &vars);
 
 #endif

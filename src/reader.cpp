@@ -3166,16 +3166,26 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 while (!text.empty() && text.back() == L' ') {
                     text.pop_back();
                 }
+
                 if (history && !conf.in_silent_mode) {
                     // Remove ephemeral items.
                     // Note we fall into this case if the user just types a space and hits return.
                     history->remove_ephemeral_items();
 
                     // Mark this item as ephemeral if there is a leading space (#615).
-                    auto mode = text.front() == L' ' ? history_persistence_mode_t::ephemeral
-                                                     : history_persistence_mode_t::disk;
+                    history_persistence_mode_t mode;
+                    if (text.front() == L' ') {
+                        // Leading spaces are ephemeral (#615).
+                        mode = history_persistence_mode_t::ephemeral;
+                    } else if (in_private_mode(vars)) {
+                        // Private mode means in-memory only.
+                        mode = history_persistence_mode_t::memory;
+                    } else {
+                        mode = history_persistence_mode_t::disk;
+                    }
                     history->add_pending_with_file_detection(text, vars.get_pwd_slash(), mode);
                 }
+
                 rls.finished = true;
                 update_buff_pos(&command_line, command_line.size());
             } else if (command_test_result == PARSER_TEST_INCOMPLETE) {

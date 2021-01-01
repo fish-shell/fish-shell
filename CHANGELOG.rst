@@ -149,7 +149,7 @@ Interactive improvements
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
 -  ``$status`` from completion scripts is no longer visible outside, like in the prompt - this prevents status display in the prompt from being overwritten (:issue:`7555`)
 -  A macOS regarding apropos that was fixed in later 10.15 versions was reintroduced in Big Sur. Fish now works around it again, so command completion isn't super slow anymore (:issue:`7365`).
--  Updated localisations for pt_BR (:issue:`#7480`).
+-  Updated localisations for pt_BR (:issue:`7480`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

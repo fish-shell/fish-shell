@@ -139,19 +139,20 @@ Interactive improvements
 -  Long command lines no longer add a blank line after execution (:issue:`6826`) and behave better with backspace (:issue:`6951`).
 -  ``functions -t`` works like the long option ``--handlers-type``, as documented, instead of producing an error (:issue:`6985`).
 -  History search now flashes when it found no more results (:issue:`7362`)
--  Fish's debugging can now also be enabled via $FISH_DEBUG and $FISH_DEBUG_OUTPUT from the outside. This helps with debugging when no commandline options can be passed, like when fish is called in a shebang (:issue:`7359`).
--  Fish now creates $XDG_RUNTIME_DIR if it does not exist (:issue:`7335`).
+-  fish's debugging can now also be enabled via $FISH_DEBUG and $FISH_DEBUG_OUTPUT from the outside. This helps with debugging when no commandline options can be passed, like when fish is called in a shebang (:issue:`7359`).
+-  fish now creates $XDG_RUNTIME_DIR if it does not exist (:issue:`7335`).
 -  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (:issue:`7314`).
 -  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`).
 -  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (:issue:`7041`). 
 -  ``help`` works properly on MSYS2 (:issue:`7113`).
--  Resuming a piped job by its number, like ``fg %1`` has been fixed (:issue:`7406`).
--  Commands run from key bindings now use the same tty modes as normal commands (:issue:`7483`).
+-  Resuming a piped job by its number, like ``fg %1``, works correctly (:issue:`7406`). Resumed jobs show the correct title in the terminal emulator (:issue:`7444`).
+-  Commands run from key bindings now use the same TTY modes as normal commands (:issue:`7483`).
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
 -  ``$status`` from completion scripts is no longer visible outside, like in the prompt - this prevents status display in the prompt from being overwritten (:issue:`7555`).
--  A macOS regarding apropos that was fixed in later 10.15 versions was reintroduced in Big Sur. Fish now works around it again, so command completion isn't super slow anymore (:issue:`7365`).
 -  Updated localisations for pt_BR (:issue:`7480`).
 -  ``fish_trace`` output now starts with ``->`` like ``fish --profile``'s, making the depth more visible (:issue:`7538`).
+-  Resizing the terminal window no longer produces a corrupted prompt (:issue:`6532`).
+- ``functions`` produces an error rather than crashing on certain invalid arguments (:issue:`7515`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -159,7 +160,7 @@ New or improved bindings
 -  As mentioned above, new readline commands ``undo`` (Control+\_ or Control+Z) and ``redo`` (Alt-/) can be used to revert changes to the command line or the pager search field (:issue:`6570`).
 -  Control-Z is now available for binding (:issue:`7152`).
 -  Additionally, using the ``cancel`` readline command (bound to escape by default) right after fish picked an unambiguous completion will undo that (:issue:`7433`).
--  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, ``o``, ``O`` and Control+left/right keys to navigate by word (:issue:`6648`, :issue:`6755`, :issue:`6769`, :issue:`7442`).
+-  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, ``d;``, ``d,``, ``o``, ``O`` and Control+left/right keys to navigate by word (:issue:`6648`, :issue:`6755`, :issue:`6769`, :issue:`7442`, :issue:`7516`).
 -  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (:issue:`6908`).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.
 -  If history search fails to find a match, the cursor is no longer moved. This is useful when accidentally starting a history search on a multi-line commandline.
@@ -177,7 +178,7 @@ New or improved bindings
    from history if the commandline is empty (:issue:`7137`).
 -  ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (:issue:`7191`).
 -  The definition of "word" and "bigword" for movements was refined, fixing e.g. vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
--  Fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`).
+-  fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -189,7 +190,7 @@ Improved prompts
 -  The git prompts correctly show stash states (:issue:`6876`, :issue:`7136`) and clean states (:issue:`7471`).
 -  The Mercurial prompt correctly shows untracked status (:issue:`6906`).
 -  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
--  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`7278`).
+-  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`6715`, :issue:`7278`).
 -  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`).
 -  New colorschemes - ``ayu Light``, ``ayu Dark`` and ``ayu Mirage`` (:issue:`7596`).
 
@@ -209,8 +210,8 @@ Improved terminal support
 -  An issue producing strange status output from commands involving ``not`` has been fixed (:issue:`6566`).
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
--  Fish no longer performs its own resizing in VTE-based terminals and alacritty, as they perform their own reflowing, which clashes especially with right prompts (:issue:`7491`).
--  Fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
+-  Sessions with right prompts can be resized correctly in GNOME Terminal (and other VTE-based terminals) and Alacritty (:issue:`7491`).
+-  fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 
 Completions
 ^^^^^^^^^^^
@@ -238,7 +239,7 @@ Completions
    -  ``hikari`` (:issue:`7083`)
    -  ``homectl`` (:issue:`7435`)
    -  ``hostnamectl`` (:issue:`7428`)
-   -  ``icdif`` (:issue:`7503`)
+   -  ``icdiff`` (:issue:`7503`)
    -  ``imv`` (:issue:`6675`)
    -  ``julia`` (:issue:`7468`)
    -  ``k3d`` (:issue:`7202`)
@@ -269,7 +270,7 @@ Completions
 
 - Lots of improvements to completions.
 - Improvements to the manpage completion generator (:issue:`7086`).
-- Significant performance improvements to completion of the available commands (:issue:`7153`).
+- Significant performance improvements to completion of the available commands (:issue:`7153`), especially on macOS Big Sur where there was a significant regression (:issue:`7365`).
 - ``__fish_complete_suffix`` now uses the same fuzzy matching logic as normal file completion.
 - ``__fish_complete_suffix`` completes any file but sorts files with matching suffix first (:issue:`7040`). Previously, it only completed files with matching suffix.
 - Completions for ``git`` learned to complete the right and left parts of a commit range like ``from..to`` or ``left...right``.
@@ -299,7 +300,7 @@ For distributors and developers
    codesigning is enabled (:issue:`6952`).
 -  Running the full interactive test suite now requires Python 3.5+ and the pexpect package (:issue:`6825`); the expect package is no longer required.
 -  Support for Python 2 in fish's tools (``fish_config`` and the manual page completion generator) is no longer guaranteed. Please use Python 3.5 or later (:issue:`6537`).
--  The webconfig tool no longer requires python's distutils (:issue:`7514`)
+-  The web-based configuration tool no longer requires Python's distutils (:issue:`7514`)
 -  fish 3.2 is the last release to support Red Hat Enterprise Linux & CentOS version 7.
 
 --------------

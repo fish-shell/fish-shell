@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 import binascii
-import cgi
 
 try:
     from html import escape as escape_html
@@ -1315,17 +1314,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return self.send_error(403)
         self.path = p
 
-        ctype, pdict = cgi.parse_header(self.headers["content-type"])
+        # This is cheesy, we want just the actual content-type.
+        # In some cases it'll give us the encoding as well,
+        # ("application/json;charset=utf-8")
+        # but we don't currently care.
+        ctype = self.headers["content-type"].split(";")[0]
 
-        if ctype == "multipart/form-data":
-            postvars = cgi.parse_multipart(self.rfile, pdict)
-        elif ctype == "application/x-www-form-urlencoded":
+        if ctype == "application/x-www-form-urlencoded":
             length = int(self.headers["content-length"])
             url_str = self.rfile.read(length).decode("utf-8")
             postvars = parse_qs(url_str, keep_blank_values=1)
         elif ctype == "application/json":
             length = int(self.headers["content-length"])
-            url_str = self.rfile.read(length).decode(pdict["charset"])
+            url_str = self.rfile.read(length).decode("utf-8")
             postvars = json.loads(url_str)
         else:
             postvars = {}

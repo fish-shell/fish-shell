@@ -62,11 +62,20 @@ enum class history_search_type_t {
 
 typedef uint64_t history_identifier_t;
 
+/// Ways that a history item may be written to disk (or omitted).
+enum class history_persistence_mode_t : uint8_t {
+    disk,       // the history item is written to disk normally
+    memory,     // the history item is stored in-memory only, not written to disk
+    ephemeral,  // the history item is stored in-memory and deleted when a new item is added
+};
+
 class history_item_t {
    public:
-    /// Construct from a text, optional timestamp, and optional identifier.
-    explicit history_item_t(wcstring str = wcstring(), time_t when = 0,
-                            history_identifier_t ident = 0);
+    /// Construct from a text, timestamp, and optional identifier.
+    /// If \p no_persist is set, then do not write this item to disk.
+    explicit history_item_t(
+        wcstring str = {}, time_t when = 0, history_identifier_t ident = 0,
+        history_persistence_mode_t persist_mode = history_persistence_mode_t::disk);
 
     /// \return the text as a string.
     const wcstring &str() const { return contents; }
@@ -80,6 +89,9 @@ class history_item_t {
 
     /// \return the timestamp for creating this history item.
     time_t timestamp() const { return creation_timestamp; }
+
+    /// \return whether this item should be persisted (written to disk).
+    bool should_write_to_disk() const { return persist_mode == history_persistence_mode_t::disk; }
 
     /// Get and set the list of arguments which referred to files.
     /// This is used for autosuggestion hinting.
@@ -96,11 +108,14 @@ class history_item_t {
     // Original creation time for the entry.
     time_t creation_timestamp;
 
+    // Paths that we require to be valid for this item to be autosuggested.
+    path_list_t required_paths;
+
     // Sometimes unique identifier used for hinting.
     history_identifier_t identifier;
 
-    // Paths that we require to be valid for this item to be autosuggested.
-    path_list_t required_paths;
+    // If set, do not write this item to disk.
+    history_persistence_mode_t persist_mode;
 
     friend class history_t;
     friend struct history_impl_t;
@@ -129,8 +144,11 @@ class history_t {
     acquired_lock<const history_impl_t> impl() const;
 
     // Privately add an item. If pending, the item will not be returned by history searches until a
-    // call to resolve_pending.
-    void add(const history_item_t &item, bool pending = false);
+    // call to resolve_pending. Any trailing ephemeral items are dropped.
+    void add(history_item_t item, bool pending = false);
+
+    // Add a new history item with text \p str to the end of history.
+    void add(wcstring str);
 
    public:
     explicit history_t(wcstring name);
@@ -153,18 +171,17 @@ class history_t {
     // require populating the history.
     bool is_empty();
 
-    // Add a new history item to the end. If pending is set, the item will not be returned by
-    // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
-    // into the array of new items, so adding a non-pending item has the effect of resolving all
-    // pending items.
-    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false);
-
     // Remove a history item.
     void remove(const wcstring &str);
 
+    /// Remove any trailing ephemeral items.
+    void remove_ephemeral_items();
+
     // Add a new pending history item to the end, and then begin file detection on the items to
-    // determine which arguments are paths
-    void add_pending_with_file_detection(const wcstring &str, const wcstring &working_dir_slash);
+    // determine which arguments are paths. The item has the given \p persist_mode.
+    void add_pending_with_file_detection(
+        const wcstring &str, const wcstring &working_dir_slash,
+        history_persistence_mode_t persist_mode = history_persistence_mode_t::disk);
 
     // Resolves any pending history items, so that they may be returned in history searches.
     void resolve_pending();

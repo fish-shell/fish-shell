@@ -1576,10 +1576,6 @@ void reader_data_t::completion_insert(const wcstring &val, size_t token_end,
     set_buffer_maintaining_pager(new_command_line, cursor);
 }
 
-static bool may_add_to_history(const wcstring &commandline_prefix) {
-    return !commandline_prefix.empty() && commandline_prefix.at(0) != L' ';
-}
-
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
@@ -1603,21 +1599,20 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
             return nothing;
         }
 
-        if (may_add_to_history(search_string)) {
-            history_search_t searcher(*history, search_string, history_search_type_t::prefix,
-                                      history_search_flags_t{});
-            while (!ctx.check_cancel() && searcher.go_backwards()) {
-                const history_item_t &item = searcher.current_item();
+        // Search history for a matching item.
+        history_search_t searcher(*history, search_string, history_search_type_t::prefix,
+                                  history_search_flags_t{});
+        while (!ctx.check_cancel() && searcher.go_backwards()) {
+            const history_item_t &item = searcher.current_item();
 
-                // Skip items with newlines because they make terrible autosuggestions.
-                if (item.str().find(L'\n') != wcstring::npos) continue;
+            // Skip items with newlines because they make terrible autosuggestions.
+            if (item.str().find(L'\n') != wcstring::npos) continue;
 
-                if (autosuggest_validate_from_history(item, working_directory, ctx)) {
-                    // The command autosuggestion was handled specially, so we're done.
-                    // History items are case-sensitive, see #3978.
-                    return autosuggestion_t{searcher.current_string(), search_string,
-                                            false /* icase */};
-                }
+            if (autosuggest_validate_from_history(item, working_directory, ctx)) {
+                // The command autosuggestion was handled specially, so we're done.
+                // History items are case-sensitive, see #3978.
+                return autosuggestion_t{searcher.current_string(), search_string,
+                                        false /* icase */};
             }
         }
 
@@ -3158,11 +3153,28 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             if (command_test_result == 0) {
-                // Finished command, execute it. Don't add items that start with a leading
-                // space, or if in silent mode (#7230).
-                const editable_line_t *el = &command_line;
-                if (history != nullptr && !conf.in_silent_mode && may_add_to_history(el->text())) {
-                    history->add_pending_with_file_detection(el->text(), vars.get_pwd_slash());
+                // Finished command, execute it. Don't add items in silent mode (#7230).
+                wcstring text = command_line.text();
+                if (text.empty()) {
+                    // Here the user just hit return. Make a new prompt, don't remove ephemeral
+                    // items.
+                    rls.finished = true;
+                    break;
+                }
+
+                // Historical behavior is to trim trailing spaces.
+                while (!text.empty() && text.back() == L' ') {
+                    text.pop_back();
+                }
+                if (history && !conf.in_silent_mode) {
+                    // Remove ephemeral items.
+                    // Note we fall into this case if the user just types a space and hits return.
+                    history->remove_ephemeral_items();
+
+                    // Mark this item as ephemeral if there is a leading space (#615).
+                    auto mode = text.front() == L' ' ? history_persistence_mode_t::ephemeral
+                                                     : history_persistence_mode_t::disk;
+                    history->add_pending_with_file_detection(text, vars.get_pwd_slash(), mode);
                 }
                 rls.finished = true;
                 update_buff_pos(&command_line, command_line.size());

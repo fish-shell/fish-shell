@@ -4406,7 +4406,7 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
         history_item_t item = hist.item_at_index(history_idx);
         if (expected == NULL) {
             if (!item.empty()) {
-                err(L"Expected empty item at history index %lu", history_idx);
+                err(L"Expected empty item at history index %lu, instead found: %ls", history_idx, item.str().c_str());
             }
             break;
         } else {

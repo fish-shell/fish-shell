@@ -431,6 +431,7 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
 }
 
 void append_history_item_to_buffer(const history_item_t &item, std::string *buffer) {
+    assert(item.should_write_to_disk() && "Item should not be persisted");
     auto append = [=](const char *a, const char *b = nullptr, const char *c = nullptr) {
         if (a) buffer->append(a);
         if (b) buffer->append(b);

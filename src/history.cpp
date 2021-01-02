@@ -172,22 +172,28 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item
 /// We can merge two items if they are the same command. We use the more recent timestamp, more
 /// recent identifier, and the longer list of required paths.
 bool history_item_t::merge(const history_item_t &item) {
-    bool result = false;
-    if (this->contents == item.contents) {
-        this->creation_timestamp = std::max(this->creation_timestamp, item.creation_timestamp);
-        if (this->required_paths.size() < item.required_paths.size()) {
-            this->required_paths = item.required_paths;
-        }
-        if (this->identifier < item.identifier) {
-            this->identifier = item.identifier;
-        }
-        result = true;
+    // We can only merge items if they agree on their text and persistence mode.
+    if (this->contents != item.contents || this->persist_mode != item.persist_mode) {
+        return false;
     }
-    return result;
+
+    // Ok, merge this item.
+    this->creation_timestamp = std::max(this->creation_timestamp, item.creation_timestamp);
+    if (this->required_paths.size() < item.required_paths.size()) {
+        this->required_paths = item.required_paths;
+    }
+    if (this->identifier < item.identifier) {
+        this->identifier = item.identifier;
+    }
+    return true;
 }
 
-history_item_t::history_item_t(wcstring str, time_t when, history_identifier_t ident)
-    : contents(trim(std::move(str))), creation_timestamp(when), identifier(ident) {}
+history_item_t::history_item_t(wcstring str, time_t when, history_identifier_t ident,
+                               history_persistence_mode_t persist_mode)
+    : contents(std::move(str)),
+      creation_timestamp(when),
+      identifier(ident),
+      persist_mode(persist_mode) {}
 
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,
                                     bool case_sensitive) const {
@@ -228,9 +234,11 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
 }
 
 struct history_impl_t {
-    // Privately add an item. If pending, the item will not be returned by history searches until a
-    // call to resolve_pending.
-    void add(const history_item_t &item, bool pending = false, bool do_save = true);
+    // Add a new history item to the end. If pending is set, the item will not be returned by
+    // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
+    // into the array of new items, so adding a non-pending item has the effect of resolving all
+    // pending items.
+    void add(history_item_t item, bool pending = false, bool do_save = true);
 
     // Internal function.
     void clear_file_state();
@@ -266,7 +274,10 @@ struct history_impl_t {
     // the boundary are considered "old". Items whose timestemps are > the boundary are new, and are
     // ignored by this instance (unless they came from this instance). The timestamp may be adjusted
     // by incorporate_external_changes().
-    time_t boundary_timestamp{time(nullptr)};
+    time_t boundary_timestamp{};
+
+    /// The most recent "unique" identifier for a history item.
+    history_identifier_t last_identifier{0};
 
     // How many items we add until the next vacuum. Initially a random value.
     int countdown_to_vacuum{-1};
@@ -277,6 +288,12 @@ struct history_impl_t {
     // List of old items, as offsets into out mmap data.
     std::deque<size_t> old_item_offsets{};
 
+    /// \return a timestamp for new items - see the implementation for a subtlety.
+    time_t timestamp_now() const;
+
+    /// \return a new item identifier, incrementing our counter.
+    history_identifier_t next_identifier() { return ++last_identifier; }
+
     // Figure out the offsets of our file contents.
     void populate_from_file_contents();
 
@@ -285,6 +302,11 @@ struct history_impl_t {
 
     // Deletes duplicates in new_items.
     void compact_new_items();
+
+    // Removes trailing ephemeral items.
+    // Ephemeral items have leading spaces, and can only be retrieved immediately; adding any item
+    // removes them.
+    void remove_ephemeral_items();
 
     // Attempts to rewrite the existing file to a target temporary file
     // Returns false on error, true on success
@@ -302,7 +324,9 @@ struct history_impl_t {
     // Saves history unless doing so is disabled.
     void save_unless_disabled();
 
-    explicit history_impl_t(wcstring name) : name(std::move(name)) {}
+    explicit history_impl_t(wcstring name)
+        : name(std::move(name)), boundary_timestamp(time(nullptr)) {}
+
     history_impl_t(history_impl_t &&) = default;
     ~history_impl_t() = default;
 
@@ -313,19 +337,8 @@ struct history_impl_t {
     // require populating the history.
     bool is_empty();
 
-    // Add a new history item to the end. If pending is set, the item will not be returned by
-    // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
-    // into the array of new items, so adding a non-pending item has the effect of resolving all
-    // pending items.
-    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false,
-             bool save = true);
-
     // Remove a history item.
     void remove(const wcstring &str);
-
-    // Add a new pending history item to the end, and then begin file detection on the items to
-    // determine which arguments are paths
-    void add_pending_with_file_detection(const wcstring &str, const wcstring &working_dir_slash);
 
     // Resolves any pending history items, so that they may be returned in history searches.
     void resolve_pending();
@@ -366,12 +379,14 @@ struct history_impl_t {
     size_t size();
 };
 
-void history_impl_t::add(const history_item_t &item, bool pending, bool do_save) {
+void history_impl_t::add(history_item_t item, bool pending, bool do_save) {
+    assert(item.timestamp() != 0 && "Should not add an item with a 0 timestamp");
     // We use empty items as sentinels to indicate the end of history.
     // Do not allow them to be added (#6032).
     if (item.contents.empty()) {
         return;
     }
+
     // Try merging with the last item.
     if (!new_items.empty() && new_items.back().merge(item)) {
         // We merged, so we don't have to add anything. Maybe this item was pending, but it just got
@@ -420,20 +435,6 @@ void history_impl_t::save_unless_disabled() {
     // Update our countdown.
     assert(countdown_to_vacuum > 0);
     countdown_to_vacuum--;
-}
-
-void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending,
-                         bool do_save) {
-    time_t when = time(nullptr);
-    // Big hack: do not allow timestamps equal to our boundary date. This is because we include
-    // items whose timestamps are equal to our boundary when reading old history, so we can catch
-    // "just closed" items. But this means that we may interpret our own items, that we just wrote,
-    // as old items, if we wrote them in the same second as our birthdate.
-    if (when == this->boundary_timestamp) {
-        when++;
-    }
-
-    this->add(history_item_t(str, when, ident), pending, do_save);
 }
 
 // Remove matching history entries from our list of new items. This only supports literal,
@@ -557,6 +558,18 @@ std::unordered_map<long, wcstring> history_impl_t::items_at_indexes(const std::v
     return result;
 }
 
+time_t history_impl_t::timestamp_now() const {
+    time_t when = time(nullptr);
+    // Big hack: do not allow timestamps equal to our boundary date. This is because we include
+    // items whose timestamps are equal to our boundary when reading old history, so we can catch
+    // "just closed" items. But this means that we may interpret our own items, that we just wrote,
+    // as old items, if we wrote them in the same second as our birthdate.
+    if (when == this->boundary_timestamp) {
+        when++;
+    }
+    return when;
+}
+
 void history_impl_t::populate_from_file_contents() {
     old_item_offsets.clear();
     if (file_contents) {
@@ -648,12 +661,15 @@ void history_impl_t::clear_file_state() {
 }
 
 void history_impl_t::compact_new_items() {
-    // Keep only the most recent items with the given contents. This algorithm could be made more
-    // efficient, but likely would consume more memory too.
+    // Keep only the most recent items with the given contents.
     std::unordered_set<wcstring> seen;
     size_t idx = new_items.size();
     while (idx--) {
         const history_item_t &item = new_items[idx];
+
+        // Only compact persisted items.
+        if (!item.should_write_to_disk()) continue;
+
         if (!seen.insert(item.contents).second) {
             // This item was not inserted because it was already in the set, so delete the item at
             // this index.
@@ -666,6 +682,14 @@ void history_impl_t::compact_new_items() {
             }
         }
     }
+}
+
+void history_impl_t::remove_ephemeral_items() {
+    while (!new_items.empty() &&
+           new_items.back().persist_mode == history_persistence_mode_t::ephemeral) {
+        new_items.pop_back();
+    }
+    first_unwritten_new_item_index = std::min(first_unwritten_new_item_index, new_items.size());
 }
 
 // Given the fd of an existing history file, or -1 if none, write
@@ -698,7 +722,9 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     // Insert any unwritten new items
     for (auto iter = new_items.cbegin() + this->first_unwritten_new_item_index;
          iter != new_items.cend(); ++iter) {
-        lru.add_item(*iter);
+        if (iter->should_write_to_disk()) {
+            lru.add_item(*iter);
+        }
     }
 
     // Stable-sort our items by timestamp
@@ -920,10 +946,12 @@ bool history_impl_t::save_internal_via_appending() {
         std::string buffer;
         while (first_unwritten_new_item_index < new_items.size()) {
             const history_item_t &item = new_items.at(first_unwritten_new_item_index);
-            append_history_item_to_buffer(item, &buffer);
-            err = flush_to_fd(&buffer, history_fd.fd(), HISTORY_OUTPUT_BUFFER_SIZE);
-            if (err) break;
-            // We wrote this item, hooray.
+            if (item.should_write_to_disk()) {
+                append_history_item_to_buffer(item, &buffer);
+                err = flush_to_fd(&buffer, history_fd.fd(), HISTORY_OUTPUT_BUFFER_SIZE);
+                if (err) break;
+            }
+            // We wrote or skipped this item, hooray.
             first_unwritten_new_item_index++;
         }
 
@@ -1057,6 +1085,12 @@ bool history_impl_t::is_empty() {
     return empty;
 }
 
+void history_t::add(wcstring str) {
+    auto imp = this->impl();
+    time_t when =  imp->timestamp_now();
+    imp->add(history_item_t(std::move(str), when));
+}
+
 /// Populates from older location (in config path, rather than data path) This is accomplished by
 /// clearing ourselves, and copying the contents of the old history file to the new history file.
 /// The new contents will automatically be re-mapped later.
@@ -1132,6 +1166,8 @@ static bool should_import_bash_history_line(const wcstring &line) {
 /// encode multiline commands.
 void history_impl_t::populate_from_bash(FILE *stream) {
     // Process the entire history file until EOF is observed.
+    // Pretend all items were created at this time.
+    const auto when = this->timestamp_now();
     bool eof = false;
     while (!eof) {
         auto line = std::string();
@@ -1151,10 +1187,11 @@ void history_impl_t::populate_from_bash(FILE *stream) {
             if (a_newline) break;
         }
 
-        wcstring wide_line = str2wcstring(line);
+        wcstring wide_line = trim(str2wcstring(line));
         // Add this line if it doesn't contain anything we know we can't handle.
         if (should_import_bash_history_line(wide_line)) {
-            this->add(wide_line, 0, false /* pending */, false /* do_save */);
+            this->add(history_item_t(std::move(wide_line), when), false /* pending */,
+                      false /* do_save */);
         }
     }
     this->save_unless_disabled();
@@ -1163,7 +1200,7 @@ void history_impl_t::populate_from_bash(FILE *stream) {
 void history_impl_t::incorporate_external_changes() {
     // To incorporate new items, we simply update our timestamp to now, so that items from previous
     // instances get added. We then clear the file state so that we remap the file. Note that this
-    // is somehwhat expensive because we will be going back over old items. An optimization would be
+    // is somewhat expensive because we will be going back over old items. An optimization would be
     // to preserve old_item_offsets so that they don't have to be recomputed. (However, then items
     // *deleted* in other instances would not show up here).
     time_t new_timestamp = time(nullptr);
@@ -1174,9 +1211,11 @@ void history_impl_t::incorporate_external_changes() {
         this->boundary_timestamp = new_timestamp;
         this->clear_file_state();
 
-        // We also need to erase new_items, since we go through those first, and that means we
+        // We also need to erase new items, since we go through those first, and that means we
         // will not properly interleave them with items from other instances.
         // We'll pick them up from the file (#2312)
+        // TODO: this will drop items that had no_persist set, how can we avoid that while still
+        // properly interleaving?
         this->save(false);
         this->new_items.clear();
         this->first_unwritten_new_item_index = 0;
@@ -1258,16 +1297,15 @@ bool history_t::is_default() const { return impl()->is_default(); }
 
 bool history_t::is_empty() { return impl()->is_empty(); }
 
-void history_t::add(const history_item_t &item, bool pending) { impl()->add(item, pending); }
-
-void history_t::add(const wcstring &str, history_identifier_t ident, bool pending) {
-    impl()->add(str, ident, pending);
-}
+void history_t::add(history_item_t item, bool pending) { impl()->add(std::move(item), pending); }
 
 void history_t::remove(const wcstring &str) { impl()->remove(str); }
 
+void history_t::remove_ephemeral_items() { impl()->remove_ephemeral_items(); }
+
 void history_t::add_pending_with_file_detection(const wcstring &str,
-                                                const wcstring &working_dir_slash) {
+                                                const wcstring &working_dir_slash,
+                                                history_persistence_mode_t persist_mode) {
     // We use empty items as sentinels to indicate the end of history.
     // Do not allow them to be added (#6032).
     if (str.empty()) {
@@ -1311,17 +1349,18 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
     bool wants_file_detection = !potential_paths.empty() && !needs_sync_write;
     auto imp = this->impl();
 
-    history_identifier_t identifier = 0;
+    // Make our history item.
+    time_t when = imp->timestamp_now();
+    history_identifier_t identifier = imp->next_identifier();
+    history_item_t item{str, when, identifier, persist_mode};
+
     if (wants_file_detection) {
-        // Grab the next identifier.
-        static relaxed_atomic_t<history_identifier_t> s_last_identifier{0};
-        identifier = ++s_last_identifier;
         imp->disable_automatic_saving();
 
         // Add the item. Then check for which paths are valid on a background thread,
         // and unblock the item.
         // Don't hold the lock while we perform this file detection.
-        imp->add(str, identifier, true /* pending */);
+        imp->add(std::move(item), true /* pending */);
         iothread_perform([=]() {
             auto validated_paths = valid_paths(potential_paths, working_dir_slash);
             auto imp = this->impl();
@@ -1332,7 +1371,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
         // Add the item.
         // If we think we're about to exit, save immediately, regardless of any disabling. This may
         // cause us to lose file hinting for some commands, but it beats losing history items.
-        imp->add(str, identifier, true /* pending */);
+        imp->add(std::move(item), true /* pending */);
         if (needs_sync_write) {
             imp->save();
         }

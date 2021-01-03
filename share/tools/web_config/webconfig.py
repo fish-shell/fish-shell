@@ -1328,6 +1328,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             length = int(self.headers["content-length"])
             url_str = self.rfile.read(length).decode("utf-8")
             postvars = json.loads(url_str)
+        elif ctype == "multipart/form-data":
+            # This used to be a thing, as far as I could find there's
+            # no use anymore, but let's keep an error around just in case.
+            return self.send_error(500)
         else:
             postvars = {}
 

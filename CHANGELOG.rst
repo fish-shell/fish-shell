@@ -153,6 +153,8 @@ Interactive improvements
 -  ``fish_trace`` output now starts with ``->`` like ``fish --profile``'s, making the depth more visible (:issue:`7538`).
 -  Resizing the terminal window no longer produces a corrupted prompt (:issue:`6532`).
 - ``functions`` produces an error rather than crashing on certain invalid arguments (:issue:`7515`).
+- ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`).
+- Commands with leading spaces may be retrieved from history with up-arrow until a new command is run, matching zsh's ``HIST_IGNORE_SPACE`` (:issue:`1383`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1326,6 +1326,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             postvars = parse_qs(url_str, keep_blank_values=1)
         elif ctype == "application/json":
             length = int(self.headers["content-length"])
+            # This used to use the provided encoding, but we use utf-8
+            # all around the place and nobody has ever complained.
+            #
+            # If any other encoding is received this will raise a UnicodeError,
+            # which will throw us out of the function and should at most exit webconfig.
+            # If that happens to anyone we expect bug reports.
             url_str = self.rfile.read(length).decode("utf-8")
             postvars = json.loads(url_str)
         elif ctype == "multipart/form-data":

@@ -102,6 +102,7 @@ Scripting improvements
 - ``string`` subcommands now quit early when used with ``--quiet`` (:issue:`7495`).
 -  Failed redirections will now set ``$status`` (:issue:`7540`).
 -  ``read`` can now read interactively from other files, so e.g. forcing it to read from the terminal via ``read </dev/tty`` works (:issue:`7358`).
+-  The previously internal function ``__fish_status_to_signal`` is now ``fish_status_to_signal``, documented, and ready for external use.
 
 Interactive improvements
 ------------------------

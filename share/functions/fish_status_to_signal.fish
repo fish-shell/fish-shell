@@ -1,4 +1,4 @@
-function __fish_status_to_signal --description "Print signal name from argument (\$status), or just argument"
+function fish_status_to_signal --description "Print signal name from argument (\$status), or just argument"
     for arg in $argv
         if test $arg -gt 128
             set -l signals SIGHUP SIGINT SIGQUIT SIGILL SIGTRAP SIGABRT SIGBUS \

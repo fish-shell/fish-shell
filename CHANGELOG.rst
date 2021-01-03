@@ -303,7 +303,7 @@ For distributors and developers
    codesigning is enabled (:issue:`6952`).
 -  Running the full interactive test suite now requires Python 3.5+ and the pexpect package (:issue:`6825`); the expect package is no longer required.
 -  Support for Python 2 in fish's tools (``fish_config`` and the manual page completion generator) is no longer guaranteed. Please use Python 3.5 or later (:issue:`6537`).
--  The web-based configuration tool no longer requires Python's distutils (:issue:`7514`)
+-  The web-based configuration tool no longer requires Python's distutils (:issue:`7514`) or the deprecated cgi module (:issue:`7600`).
 -  fish 3.2 is the last release to support Red Hat Enterprise Linux & CentOS version 7.
 
 --------------

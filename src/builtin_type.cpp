@@ -155,7 +155,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **arg
                         def = comment.append(def);
                     } else {
                         wcstring comment;
-                        append_format(comment, L"# Defined interactively");
+                        append_format(comment, L"# Defined interactively\n");
                         def = comment.append(def);
                     }
                     if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {

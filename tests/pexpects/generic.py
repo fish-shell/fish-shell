@@ -56,3 +56,11 @@ expect_prompt("error: no-execute mode enabled and no script given. Exiting")
 
 sendline("source; or echo failed")
 expect_prompt("failed")
+
+# See that `type` tells us the function was defined interactively.
+sendline("function foo; end; type foo")
+expect_str("foo is a function with definition\r\n")
+expect_str("# Defined interactively\r\n")
+expect_str("function foo")
+expect_str("end")
+expect_prompt()

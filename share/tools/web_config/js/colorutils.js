@@ -339,21 +339,21 @@ var ayuTheme = {
 // ayu Light
 var color_scheme_ayu_light = {
     name: 'ayu Light',
-    url: 'https://github.com/edouard-lopez/ayu-theme.fish',
+    url: 'https://github.com/dempfi/ayu',
 }
 ayuTheme.apply(ayuTheme.ayu_light, color_scheme_ayu_light)
 
 // ayu Dark
 var color_scheme_ayu_dark = {
     name: 'ayu Dark',
-    url: 'https://github.com/edouard-lopez/ayu-theme.fish',
+    url: 'https://github.com/dempfi/ayu',
 }
 ayuTheme.apply(ayuTheme.ayu_dark, color_scheme_ayu_dark)
 
 // ayu Mirage
 var color_scheme_ayu_mirage = {
     name: 'ayu Mirage',
-    url: 'https://github.com/edouard-lopez/ayu-theme.fish',
+    url: 'https://github.com/dempfi/ayu',
 }
 ayuTheme.apply(ayuTheme.ayu_mirage, color_scheme_ayu_mirage)
 

@@ -124,14 +124,14 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     fd_monitor_item_t item;
     item.fd = std::move(fd);
     item.timeout_usec = poll_usec;
-    item.callback = [this, promise](autoclose_fd_t &fd, bool timed_out) {
+    item.callback = [this, promise](autoclose_fd_t &fd, item_wake_reason_t reason) {
         ASSERT_IS_BACKGROUND_THREAD();
-        // Only check the shutdown flag if we timed out.
+        // Only check the shutdown flag if we timed out or were poked.
         // It's important that if select() indicated we were readable, that we call select() again
         // allowing it to time out. Note the typical case is that the fd will be closed, in which
         // case select will return immediately.
         bool done = false;
-        if (!timed_out) {
+        if (reason == item_wake_reason_t::readable) {
             // select() reported us as readable; read a bit.
             scoped_lock locker(append_lock_);
             ssize_t ret = read_once(fd.fd());

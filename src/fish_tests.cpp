@@ -787,7 +787,9 @@ static void test_fd_monitor() {
     struct item_maker_t {
         std::atomic<bool> did_timeout{false};
         std::atomic<size_t> length_read{0};
+        std::atomic<size_t> pokes{0};
         std::atomic<size_t> total_calls{0};
+        fd_monitor_item_id_t item_id{0};
         bool always_exit{false};
         fd_monitor_item_t item;
         autoclose_fd_t writer;
@@ -795,15 +797,21 @@ static void test_fd_monitor() {
         explicit item_maker_t(uint64_t timeout_usec) {
             auto pipes = make_autoclose_pipes({}).acquire();
             writer = std::move(pipes.write);
-            auto callback = [this](autoclose_fd_t &fd, bool timed_out) {
+            auto callback = [this](autoclose_fd_t &fd, item_wake_reason_t reason) {
                 bool was_closed = false;
-                if (timed_out) {
-                    this->did_timeout = true;
-                } else {
-                    char buff[4096];
-                    ssize_t amt = read(fd.fd(), buff, sizeof buff);
-                    length_read += amt;
-                    was_closed = (amt == 0);
+                switch (reason) {
+                    case item_wake_reason_t::timeout:
+                        this->did_timeout = true;
+                        break;
+                    case item_wake_reason_t::poke:
+                        this->pokes += 1;
+                        break;
+                    case item_wake_reason_t::readable:
+                        char buff[4096];
+                        ssize_t amt = read(fd.fd(), buff, sizeof buff);
+                        this->length_read += amt;
+                        was_closed = (amt == 0);
+                        break;
                 }
                 total_calls += 1;
                 if (always_exit || was_closed) {
@@ -840,45 +848,63 @@ static void test_fd_monitor() {
     // Item which should get 42 bytes, then get notified it is closed.
     item_maker_t item42_thenclose(16 * usec_per_msec);
 
+    // Item which gets one poke.
+    item_maker_t item_pokee(fd_monitor_item_t::kNoTimeout);
+
     // Item which should be called back once.
     item_maker_t item_oneshot(16 * usec_per_msec);
     item_oneshot.always_exit = true;
+
     {
         fd_monitor_t monitor;
-        for (auto item : {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout,
-                          &item42_nottimeout, &item42_thenclose, &item_oneshot}) {
-            monitor.add(std::move(item->item));
+        for (item_maker_t *item :
+             {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout, &item42_nottimeout,
+              &item42_thenclose, &item_pokee, &item_oneshot}) {
+            item->item_id = monitor.add(std::move(item->item));
         }
         item42_timeout.write42();
         item42_nottimeout.write42();
         item42_thenclose.write42();
         item42_thenclose.writer.close();
         item_oneshot.write42();
+        monitor.poke_item(item_pokee.item_id);
         std::this_thread::sleep_for(std::chrono::milliseconds(84));
     }
 
     do_test(!item_never.did_timeout);
     do_test(item_never.length_read == 0);
+    do_test(item_never.pokes == 0);
 
     do_test(!item_hugetimeout.did_timeout);
     do_test(item_hugetimeout.length_read == 0);
+    do_test(item_hugetimeout.pokes == 0);
 
     do_test(item0_timeout.length_read == 0);
     do_test(item0_timeout.did_timeout);
+    do_test(item0_timeout.pokes == 0);
 
     do_test(item42_timeout.length_read == 42);
     do_test(item42_timeout.did_timeout);
+    do_test(item42_timeout.pokes == 0);
 
     do_test(item42_nottimeout.length_read == 42);
     do_test(!item42_nottimeout.did_timeout);
+    do_test(item42_nottimeout.pokes == 0);
 
     do_test(item42_thenclose.did_timeout == false);
     do_test(item42_thenclose.length_read == 42);
     do_test(item42_thenclose.total_calls == 2);
+    do_test(item42_thenclose.pokes == 0);
 
     do_test(!item_oneshot.did_timeout);
     do_test(item_oneshot.length_read == 42);
     do_test(item_oneshot.total_calls == 1);
+    do_test(item_oneshot.pokes == 0);
+
+    do_test(!item_pokee.did_timeout);
+    do_test(item_pokee.length_read == 0);
+    do_test(item_pokee.total_calls == 1);
+    do_test(item_pokee.pokes == 1);
 }
 
 static void test_iothread() {

@@ -12,14 +12,24 @@
 
 class fd_monitor_t;
 
+/// Each item added to fd_monitor_t is assigned a unique ID, which is not recycled.
+/// Items may have their callback triggered immediately by passing the ID.
+/// Zero is a sentinel.
+using fd_monitor_item_id_t = uint64_t;
+
+/// Reasons for waking an item.
+enum class item_wake_reason_t {
+    readable,  // the fd became readable
+    timeout,   // the requested timeout was hit
+    poke,      // the item was "poked" (woken up explicitly)
+};
+
 /// An item containing an fd and callback, which can be monitored to watch when it becomes readable,
 /// and invoke the callback.
 struct fd_monitor_item_t {
-    friend class fd_monitor_t;
-
-    /// The callback type for the item.
-    /// It will be invoked when either \p fd is readable, or if the timeout was hit.
-    using callback_t = std::function<void(autoclose_fd_t &fd, bool timed_out)>;
+    /// The callback type for the item. It is passed \p fd, and the reason for waking \p reason.
+    /// The callback may close \p fd, in which case the item is removed.
+    using callback_t = std::function<void(autoclose_fd_t &fd, item_wake_reason_t reason)>;
 
     /// A sentinel value meaning no timeout.
     static constexpr uint64_t kNoTimeout = std::numeric_limits<uint64_t>::max();
@@ -51,6 +61,9 @@ struct fd_monitor_item_t {
     // The last time we were called, or the initialization point.
     maybe_t<time_point_t> last_time{};
 
+    // The ID for this item. This is assigned by the fd monitor.
+    fd_monitor_item_id_t item_id{0};
+
     // \return the number of microseconds until the timeout should trigger, or kNoTimeout for none.
     // A 0 return means we are at or past the timeout.
     uint64_t usec_remaining(const time_point_t &now) const;
@@ -58,6 +71,13 @@ struct fd_monitor_item_t {
     // Invoke this item's callback if its value is set in fd or has timed out.
     // \return true to retain the item, false to remove it.
     bool service_item(const fd_set *fds, const time_point_t &now);
+
+    // Invoke this item's callback with a poke, if its ID is present in the (sorted) pokelist.
+    // \return true to retain the item, false to remove it.
+    using poke_list_t = std::vector<fd_monitor_item_id_t>;
+    bool poke_item(const poke_list_t &pokelist);
+
+    friend class fd_monitor_t;
 };
 
 /// A class which can monitor a set of fds, invoking a callback when any becomes readable, or when
@@ -66,33 +86,46 @@ class fd_monitor_t {
    public:
     using item_list_t = std::vector<fd_monitor_item_t>;
 
+    // A "pokelist" is a sorted list of item IDs which need explicit wakeups.
+    using poke_list_t = std::vector<fd_monitor_item_id_t>;
+
     fd_monitor_t();
     ~fd_monitor_t();
 
-    /// Add an item to monitor.
-    void add(fd_monitor_item_t &&item);
+    /// Add an item to monitor. \return the ID assigned to the item.
+    fd_monitor_item_id_t add(fd_monitor_item_t &&item);
+
+    /// Mark that an item with a given ID needs to be explicitly woken up.
+    void poke_item(fd_monitor_item_id_t item_id);
 
    private:
     // The background thread runner.
     void run_in_background();
 
-    // Add a pending item, marking the thread as running.
-    // \return true if we should start the thread.
-    bool add_pending_get_start_thread(fd_monitor_item_t &&item);
+    // Poke items in the pokelist, removing any items that close their FD.
+    // The pokelist is consumed after this.
+    // This is only called in the background thread.
+    void poke_in_background(const poke_list_t &pokelist);
 
     // The list of items to monitor. This is only accessed on the background thread.
     item_list_t items_{};
 
     // Set to true by the background thread when our self-pipe becomes readable.
-    bool has_pending_{false};
+    bool has_pending_or_pokes_{false};
 
     // Latched to true by the background thread if our self-pipe is closed, which indicates we are
     // in the destructor and so should terminate.
     bool terminate_{false};
 
     struct data_t {
-        /// Pending items.
+        /// Pending items. This is set under the lock, then the background thread grabs them.
         item_list_t pending{};
+
+        /// List of IDs for items that need to be poked (explicitly woken up).
+        poke_list_t pokelist{};
+
+        /// The last ID assigned, or if none.
+        fd_monitor_item_id_t last_id{0};
 
         /// Whether the thread is running.
         bool running{false};

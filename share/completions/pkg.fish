@@ -94,6 +94,26 @@ complete -c pkg -n '__fish_pkg_is add autoremove clean delete remove install upd
 complete -c pkg -n '__fish_pkg_is autoremove clean delete remove install upgrade' -s n -l dry-run -d "Do not make changes"
 complete -c pkg -n '__fish_pkg_is autoremove clean delete remove install' -s y -l yes -d "Assume yes when asked for confirmation"
 
+# check
+set -l has_check_opt '__fish_contains_opt -s B shlibs -s d dependencies -s s checksums -s r recompute'
+set -l has_all_opt '__fish_contains_opt -s a all'
+complete -c pkg -n "__fish_pkg_is check" -f
+complete -c pkg -n "__fish_pkg_is check; and not $has_check_opt" -xa "-B -d -s -r"
+complete -c pkg -n "__fish_pkg_is check; and not $has_check_opt" -s B -l shlibs -d "Regenerate library dependency metadata"
+complete -c pkg -n "__fish_pkg_is check; and not $has_check_opt" -s d -l dependencies -d "Check for and install missing dependencies"
+complete -c pkg -n "__fish_pkg_is check; and not $has_check_opt" -s r -l recompute -d "Recalculate and set the checksums of installed packages"
+complete -c pkg -n "__fish_pkg_is check; and not $has_check_opt" -s s -l checksums -d "Detect installed packages with invalid checksums"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt" -s n -l dry-run -d "Do not make changes"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt" -s q -l quiet -d "Force quiet output"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt" -s v -l verbose -d "Provide verbose output"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt" -s y -l yes -d "Assume yes when asked for confirmation"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt; and not $has_all_opt" -xa '(pkg query "%n")'
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt; and not $has_all_opt" -s a -l all -d "Process all packages"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt; and not $has_all_opt" -s C -l case-sensitive -d "Case sensitive packages"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt; and not $has_all_opt" -s g -l glob -d "Treat the package name as shell glob"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt; and not $has_all_opt" -s i -l case-insensitive -d "Case insensitive packages"
+complete -c pkg -n "__fish_pkg_is check; and $has_check_opt; and not $has_all_opt" -s x -l regex -d "Treat the package name as regular expression"
+
 # clean
 complete -c pkg -n '__fish_pkg_is clean' -s a -l all -d "Delete all cached packages"
 

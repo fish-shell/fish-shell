@@ -1,7 +1,6 @@
 body {
     background: linear-gradient(to bottom, #a7cfdf 0%, #23538a 100%);
-    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco,
-        "Lucida Console", monospace, fixed;
+    font-family: monospace, fixed;
     color: #222;
     min-height: 100vh; /* at least 1 screen high - to prevent the gradient from running out on a short tab */
     width: 90%;

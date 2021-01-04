@@ -126,6 +126,8 @@ The following special input functions are available:
 
 - ``execute``, run the current commandline
 
+- ``exit``, exit the shell
+
 - ``forward-bigword``, move one whitespace-delimited word to the right
 
 - ``forward-char``, move one character to the right

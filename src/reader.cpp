@@ -3076,6 +3076,13 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             delete_char();
             break;
         }
+        case rl::exit: {
+            // This is by definition a successful exit, override the status
+            parser().set_last_statuses(statuses_t::just(STATUS_CMD_OK));
+            exit_loop_requested = true;
+            check_exit_loop_maybe_warning(this);
+            break;
+        }
         case rl::delete_or_exit:
         case rl::delete_char: {
             // Remove the current character in the character buffer and on the screen using

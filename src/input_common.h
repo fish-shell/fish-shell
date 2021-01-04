@@ -75,6 +75,7 @@ enum class readline_cmd_t {
     func_or,
     expand_abbr,
     delete_or_exit,
+    exit,
     cancel_commandline,
     cancel,
     undo,

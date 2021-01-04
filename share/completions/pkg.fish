@@ -1,6 +1,8 @@
 # Completions for pkgng package manager
 
-if uname | not string match -q FreeBSD
+# Solaris has a thing called "pkg", it works quite differently,
+# and spews errors when called like this.
+if uname | string match -q SunOS
     exit
 end
 

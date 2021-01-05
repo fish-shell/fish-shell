@@ -57,10 +57,12 @@ complete -c pkg -n __fish_pkg_subcommand -s 4 -d "Use IPv4"
 complete -c pkg -n __fish_pkg_subcommand -s 6 -d "Use IPv6"
 
 complete -c pkg -n __fish_pkg_subcommand -xa add -d "Install package file"
+complete -c pkg -n __fish_pkg_subcommand -xa alias -d "List the command line aliases"
 complete -c pkg -n __fish_pkg_subcommand -xa annotate -d "Modify annotations on packages"
 complete -c pkg -n __fish_pkg_subcommand -xa audit -d "Audit installed packages"
 complete -c pkg -n __fish_pkg_subcommand -xa autoremove -d "Delete unneeded packages"
 complete -c pkg -n __fish_pkg_subcommand -xa backup -d "Dump package database"
+complete -c pkg -n __fish_pkg_subcommand -xa bootstrap -d "Install pkg(8) from remote repository"
 complete -c pkg -n __fish_pkg_subcommand -xa check -d "Check installed packages"
 complete -c pkg -n __fish_pkg_subcommand -xa clean -d "Clean local cache"
 complete -c pkg -n __fish_pkg_subcommand -xa convert -d "Convert package from pkg_add format"
@@ -93,14 +95,21 @@ complete -c pkg -n __fish_pkg_subcommand -xa which -d "Check which package provi
 
 # add
 complete -c pkg -n '__fish_pkg_is add install' -s A -l automatic -d "Mark packages as automatic"
-complete -c pkg -n '__fish_pkg_is add install' -s f -l force -d "Force installation even when installed"
+complete -c pkg -n '__fish_pkg_is add bootstrap install' -s f -l force -d "Force installation even when installed"
 complete -c pkg -n '__fish_pkg_is add' -s I -l no-scripts -d "Disable installation scripts"
 complete -c pkg -n '__fish_pkg_is add' -s M -l accept-missing -d "Force installation with missing dependencies"
-complete -c pkg -n '__fish_pkg_is add autoremove clean delete remove install update' -s q -l quiet -d "Force quiet output"
+complete -c pkg -n '__fish_pkg_is add alias autoremove clean delete remove install update' -s q -l quiet -d "Force quiet output"
+
+# alias
+complete -c pkg -n '__fish_pkg_is alias' -xa '(pkg alias -lq)'
+complete -c pkg -n '__fish_pkg_is alias' -s l -l list -d "Print all aliases without their pkg(8) arguments"
 
 # autoremove
 complete -c pkg -n '__fish_pkg_is autoremove clean delete remove install upgrade' -s n -l dry-run -d "Do not make changes"
 complete -c pkg -n '__fish_pkg_is autoremove clean delete remove install' -s y -l yes -d "Assume yes when asked for confirmation"
+
+# bootstrap
+complete -c pkg -n '__fish_pkg_is bootstrap' -f
 
 # check
 set -l has_check_opt '__fish_contains_opt -s B shlibs -s d dependencies -s s checksums -s r recompute'

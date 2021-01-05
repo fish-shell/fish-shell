@@ -36,6 +36,9 @@ enum {
     APPEND_MODE        // insert at end of current token/command/buffer
 };
 
+/// Handle a single readline_cmd_t command out-of-band.
+void reader_handle_command(readline_cmd_t cmd);
+
 /// Replace/append/insert the selection with/at/after the specified string.
 ///
 /// \param begin beginning of selection
@@ -302,8 +305,18 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
                 if (mc == rl::repaint_mode || mc == rl::force_repaint || mc == rl::repaint) {
                     if (ld.is_repaint) continue;
                 }
-                // Inserts the readline function at the back of the queue.
-                reader_queue_ch(*mc);
+
+                // HACK: Execute these right here and now so they can affect any insertions/changes
+                // made via bindings. The correct solution is to change all `commandline`
+                // insert/replace operations into readline functions with associated data, so that
+                // all queued `commandline` operations - including buffer modifications - are
+                // executed in order
+                if (mc == rl::begin_undo_group || mc == rl::end_undo_group) {
+                    reader_handle_command(*mc);
+                } else {
+                    // Inserts the readline function at the back of the queue.
+                    reader_queue_ch(*mc);
+                }
             } else {
                 streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]);
                 builtin_print_error_trailer(parser, streams.err, cmd);

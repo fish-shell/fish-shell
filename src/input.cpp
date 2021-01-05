@@ -157,6 +157,8 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::cancel, L"cancel"},
     {readline_cmd_t::undo, L"undo"},
     {readline_cmd_t::redo, L"redo"},
+    {readline_cmd_t::begin_undo_group, L"begin-undo-group"},
+    {readline_cmd_t::end_undo_group, L"end-undo-group"},
 };
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==

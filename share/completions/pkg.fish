@@ -1,8 +1,14 @@
 # Completions for pkgng package manager
 
-# Solaris has a thing called "pkg", it works quite differently,
-# and spews errors when called like this.
-if uname | string match -q SunOS
+# Solaris has a thing called "pkg"; it works quite differently and spews errors when called here.
+# There are multiple SunOS-derived distributions and not all of them have `SunOS` in their name (and
+# some of them also use pkgsrc and have a `pkg`).
+#
+# Additionally, this particular script is intended to complete the pkgng "Next Generation" package
+# manager initially developed for FreeBSD though now available on a few other BSDs. From here on
+# out, maintainers can assume we are specifically talking about the (Free)BSD `pkg` command being
+# executed on a BSD system, rather than just work with "not SunOS".
+if ! uname | string match -irq bsd
     exit
 end
 

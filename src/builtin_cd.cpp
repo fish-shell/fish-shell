@@ -60,7 +60,7 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     errno = 0;
     auto best_errno = errno;
 
-    for (auto &dir: dirs) {
+    for (const auto &dir: dirs) {
         wcstring norm_dir = normalize_path(dir);
 
         // We need to keep around the fd for this directory, in the parser.
@@ -69,8 +69,10 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         bool success = dir_fd.valid() && fchdir(dir_fd.fd()) == 0;
 
         if (!success) {
-            // If the directory doesn't exist, we ignore it and only error if none does.
-            // ENOENT is a low-priority error - if we found something with the name that isn't a directory, we error out.
+            // Some errors we skip and only report if nothing worked.
+            // ENOENT in particular is very low priority
+            // - if in another directory there was a *file* by the correct name
+            // we prefer *that* error because it's more specific
             if (errno == ENOENT) {
                 if (!best_errno) best_errno = errno;
                 continue;
@@ -102,6 +104,7 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     } else if (best_errno == EACCES) {
         streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), cmd, dir_in.c_str());
     } else {
+        errno = best_errno;
         wperror(L"cd");
         streams.err.append_format(_(L"%ls: Unknown error trying to locate directory '%ls'\n"),
                                   cmd, dir_in.c_str());

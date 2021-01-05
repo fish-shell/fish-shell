@@ -25,6 +25,8 @@ By default, only the current branch is shown because ``hg status`` can be slow o
 
 If you enabled the informative status, there are numerous customization options, which can be controlled with fish variables.
 
+- ``$fish_hg_executable`` specifies Mercurial executable used (``hg`` by default, can be set to absolute path like ``set -U fish_hg_executable /usr/bin/hg``)
+
 - ``$fish_color_hg_clean``, ``$fish_color_hg_modified`` and ``$fish_color_hg_dirty`` are colors used when the repository has the respective status.
 
 Some colors for status symbols:

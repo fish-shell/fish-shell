@@ -20,10 +20,12 @@ set -g fish_prompt_hg_status_unmerged !
 
 set -g fish_prompt_hg_status_order added modified copied deleted untracked unmerged
 
+set -g fish_hg_executable 'hg'
+
 function fish_hg_prompt --description 'Write out the hg prompt'
     # If hg isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
-    if not command -sq hg
+    if not command -sq $fish_hg_executable
         return 1
     end
 
@@ -45,7 +47,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     echo -n '|'
 
     # Disabling color and pager is always a good idea.
-    set -l repo_status (hg status | string sub -l 2 | sort -u)
+    set -l repo_status ($fish_hg_executable status | string sub -l 2 | sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"

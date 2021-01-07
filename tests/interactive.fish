@@ -20,6 +20,8 @@ set -e ITERM_PROFILE
 # Test files specified on commandline, or all pexpect files.
 if set -q argv[1]
     set pexpect_files_to_test pexpects/$argv.py
+else if set -q FISH_PEXPECT_FILES
+    set pexpect_files_to_test (string replace -r '^.*/(?=pexpects/)' '' -- $FISH_PEXPECT_FILES)
 else
     set pexpect_files_to_test pexpects/*.py
 end

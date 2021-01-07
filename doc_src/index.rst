@@ -490,6 +490,7 @@ When fish is given a commandline, it expands the parameters before sending them 
 - :ref:`Brace expansion <expand-brace>`, to write lists with common pre- or suffixes in a shorter way
 - :ref:`Tilde expansion <expand-home>`, to turn the ``~`` at the beginning of paths into the path to the home directory
 
+Parameter expansion is limited to 524288 items.
 
 .. _expand-wildcard:
 

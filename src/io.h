@@ -312,6 +312,9 @@ class io_buffer_t {
     /// running. The fillthread fulfills the corresponding promise when it exits.
     std::future<void> fillthread_waiter_{};
 
+    /// The item id of our background fillthread fd monitor item.
+    uint64_t item_id_{0};
+
     /// Lock for appending.
     std::mutex append_lock_{};
 

@@ -151,13 +151,16 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
             promise->set_value();
         }
     };
-    fd_monitor().add(std::move(item));
+    this->item_id_ = fd_monitor().add(std::move(item));
 }
 
 void io_buffer_t::complete_background_fillthread() {
+    // Mark that our fillthread is done, then wake it up.
     ASSERT_IS_MAIN_THREAD();
     assert(fillthread_running() && "Should have a fillthread");
+    assert(this->item_id_ > 0 && "Should have a valid item ID");
     shutdown_fillthread_ = true;
+    fd_monitor().poke_item(this->item_id_);
 
     // Wait for the fillthread to fulfill its promise, and then clear the future so we know we no
     // longer have one.

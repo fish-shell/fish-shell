@@ -56,3 +56,25 @@ $fish -c 'string escape y$argv' -c 'string escape x$argv' 1 2 3
 
 # Should just do nothing.
 $fish --no-execute
+
+set -l tmp (mktemp -d)
+$fish --profile $tmp/normal.prof --profile-startup $tmp/startup.prof -ic exit
+
+# This should be the full file - just the one command we gave explicitly!
+cat $tmp/normal.prof
+# CHECK: Time{{\s+}}Sum{{\s+}}Command
+# CHECK: {{\d+\s+\d+\s+>}} exit
+
+string match -rq "builtin source " < $tmp/startup.prof
+and echo matched
+# CHECK: matched
+
+# See that sending both profiles to the same file works.
+$fish --profile $tmp/full.prof --profile-startup $tmp/full.prof -c 'echo thisshouldneverbeintheconfig'
+# CHECK: thisshouldneverbeintheconfig
+string match -rq "builtin source " < $tmp/full.prof
+and echo matched
+# CHECK: matched
+string match -rq "echo thisshouldneverbeintheconfig" < $tmp/full.prof
+and echo matched
+# CHECK: matched

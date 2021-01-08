@@ -67,6 +67,7 @@ class fish_cmd_opts_t {
     std::string debug_output;
     // File path for profiling output, or empty for none.
     std::string profile_output;
+    std::string profile_startup_output;
     // Commands to be executed in place of interactive shell.
     std::vector<std::string> batch_cmds;
     // Commands to execute after the shell's config has been read.
@@ -274,6 +275,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
         {"print-rusage-self", no_argument, nullptr, 1},
         {"print-debug-categories", no_argument, nullptr, 2},
         {"profile", required_argument, nullptr, 'p'},
+        {"profile-startup", required_argument, nullptr, 3},
         {"private", no_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'v'},
@@ -353,7 +355,14 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 exit(0);
             }
             case 'p': {
+                // "--profile" - this does not activate profiling right away,
+                // rather it's done after startup is finished.
                 opts->profile_output = optarg;
+                break;
+            }
+            case 3: {
+                // With "--profile-startup" we immediately turn profiling on.
+                opts->profile_startup_output = optarg;
                 g_profiling_active = true;
                 break;
             }
@@ -479,6 +488,18 @@ int main(int argc, char **argv) {
     // Stomp the exit status of any initialization commands (issue #635).
     parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 
+    // If we're profiling startup to a separate file, write it now.
+    if (!opts.profile_startup_output.empty()
+        && opts.profile_startup_output != opts.profile_output) {
+        parser.emit_profiling(opts.profile_startup_output.c_str());
+
+        // If we are profiling both, ensure the startup data only
+        // ends up in the startup file.
+        parser.clear_profiling();
+    }
+
+    g_profiling_active = !opts.profile_output.empty();
+
     // Run post-config commands specified as arguments, if any.
     if (!opts.postconfig_cmds.empty()) {
         res = run_command_list(parser, &opts.postconfig_cmds, {});
@@ -544,7 +565,7 @@ int main(int argc, char **argv) {
     restore_term_mode();
     restore_term_foreground_process_group_for_exit();
 
-    if (g_profiling_active) {
+    if (!opts.profile_output.empty()) {
         parser.emit_profiling(opts.profile_output.c_str());
     }
 

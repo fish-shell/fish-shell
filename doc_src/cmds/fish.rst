@@ -31,7 +31,9 @@ The following options are available:
 
 - ``-n`` or ``--no-execute`` do not execute any commands, only perform syntax checking
 
-- ``-p`` or ``--profile=PROFILE_FILE`` when fish exits, output timing information on all executed commands to the specified file
+- ``-p`` or ``--profile=PROFILE_FILE`` when fish exits, output timing information on all executed commands to the specified file. This excludes time spent starting up and reading the configuration.
+
+- ``--profile-startup=PROFILE_FILE`` will write timing information for fish's startup to the specified file. This is useful to profile your configuration.
 
 - ``-P`` or ``--private`` enables :ref:`private mode <private-mode>`, so fish will not access old or store new history.
 

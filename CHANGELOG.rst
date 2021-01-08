@@ -37,7 +37,7 @@ Notable improvements and fixes
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
 -  ``type`` is now a builtin and therefore much faster (:issue:`7342`).
--  ``string match --regex`` now imports named PCRE2 capture groups as fish variables (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
+-  ``string match --regex`` now integrates named PCRE2 capture groups with fish variables, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
 -  Globs and other expansions are limited to 512k results (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
 -  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux's current directory introspection to work (:issue:`5699`).
 

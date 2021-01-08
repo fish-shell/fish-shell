@@ -400,6 +400,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// If profiling is not active, this returns nullptr.
     profile_item_t *create_profile_item();
 
+    /// Remove the profiling items.
+    void clear_profiling();
+
     /// Output profiling data to the given filename.
     void emit_profiling(const char *path) const;
 

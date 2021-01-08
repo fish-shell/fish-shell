@@ -2341,7 +2341,7 @@ Other Notable Fixes
 
 -  Tab completions now work properly within nested subcommands. :issue:`913`
 
--  ``printf`` supports `\e`, the escape character. :issue:`910`
+-  ``printf`` supports ``\e``, the escape character. :issue:`910`
 
 -  ``fish_config history`` no longer shows duplicate items. :issue:`900`
 

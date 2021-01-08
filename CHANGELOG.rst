@@ -32,6 +32,7 @@ Notable improvements and fixes
     1 = 2 and echo true or echo false
           ^
 
+   This includes numbering the index from 1 instead of 0.
 -  The documentation (:issue:`6500`, :issue:`7371`) and Web-based configuration (:issue:`7523`) received a new theme, matching the design on fishshell.com.
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at
@@ -61,6 +62,7 @@ Scripting improvements
 -  The ``true`` and ``false`` builtins ignore any arguments, like other shells (:issue:`7030`).
 -  Computed ("electric") variables such as ``status`` are now only global in scope, so ``set -Uq status`` returns false (:issue:`7032`).
 -  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (:issue:`6944`).
+   In addition it now shows if a variable is a path variable.
 -  A new ``fish_posterror`` event is emitted when attempting to execute a command with syntax errors (:issue:`6880`).
 - ``fish_indent`` now removes unnecessary quotes in simple cases (:issue:`6722`)
    and learned a ``--check`` option to just check if a file is indented correctly (:issue:`7251`).
@@ -83,6 +85,8 @@ Scripting improvements
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (:issue:`6809`).
 -  ``command``, ``jobs`` and ``type`` builtins support ``--query`` as the long form of ``-q``, matching other builtins. The long form ``--quiet`` is deprecated (:issue:`7276`).
 -  ``argparse`` no longer requires a short flag letter for long-only options (:issue:`7585`) and only prints a backtrace with invalid options to argparse itself (:issue:`6703`).
+-  ``argparse`` now passes the validation variables (e.g. ``$_flag_value``) as local-exported variables,
+   avoiding the need for ``--no-scope-shadowing`` in validation functions.
 -  ``complete`` takes the first argument as the name of the command if the ``--command``/``-c`` option is not used (``complete git`` is treated like ``complete --command git``), and can show the loaded completions for specific commands with ``complete COMMANDNAME`` (:issue:`7321`).
 -  ``set_color -b`` (without an argument) no longer prints an error message, matching other invalid invocations of this command (:issue:`7154`).
 -  Functions triggered by the ``fish_exit`` event are correctly run when the terminal is closed or the shell receives SIGHUP (:issue:`7014`).
@@ -100,9 +104,13 @@ Scripting improvements
 - ``math`` learned tau for those wishing to cut down on typing "2 * pi".
 - ``string`` subcommands now quit early when used with ``--quiet`` (:issue:`7495`).
 -  Failed redirections will now set ``$status`` (:issue:`7540`).
+-  More consistent $status after errors, including invalid expansions like ``$foo[``.
 -  ``read`` can now read interactively from other files, so e.g. forcing it to read from the terminal via ``read </dev/tty`` works (:issue:`7358`).
 -  A new ``fish_status_to_signal`` function for transforming exit statuses to signal names (:issue:`7597`).
 -  The fallback ``realpath`` builtin supports the ``-s``/``--no-symlinks`` option, like GNU realpath.
+-  ``.`` and ``:`` are now also builtins instead of functions (:issue:`6854`).
+-  ``functions`` now explains when a function was defined via ``source`` instead of just saying ``Defined in -``.
+-  Significant performance improvements when globbing or in ``math``.
 
 Interactive improvements
 ------------------------
@@ -183,7 +191,8 @@ New or improved bindings
    from history if the commandline is empty (:issue:`7137`).
 -  ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (:issue:`7191`).
 -  The definition of "word" and "bigword" for movements was refined, fixing (eg) vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
--  fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`).
+-  fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`) and will properly copy newlines in multi-line commands.
+-  Using the ``*-jump`` special input functions before typing anything else no longer crashes fish.
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -193,7 +202,8 @@ Improved prompts
 -  git prompts include all untracked files in the repository, not just those in the current
    directory (:issue:`6086`).
 -  The git prompts correctly show stash states (:issue:`6876`, :issue:`7136`) and clean states (:issue:`7471`).
--  The Mercurial prompt correctly shows untracked status (:issue:`6906`).
+-  The Mercurial prompt correctly shows untracked status (:issue:`6906`), and by default only shows the branch for performance reasons.
+   A new variable ``$fish_prompt_hg_show_informative_status`` can be set to enable more information.
 -  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`6715`, :issue:`7278`).
 -  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`).
@@ -216,6 +226,7 @@ Improved terminal support
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
 -  Sessions with right prompts can be resized correctly in GNOME Terminal (and other VTE-based terminals) and Alacritty (:issue:`7491`).
 -  fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
+-  Better detection of new Konsole versions for truecolor support and cursor shape changing.
 
 Completions
 ^^^^^^^^^^^
@@ -273,14 +284,16 @@ Completions
    -  ``zopfli`` and ``zopflipng``
 
 - Lots of improvements to completions.
-- Improvements to the manpage completion generator (:issue:`7086`).
+- Improvements to the manpage completion generator (:issue:`7086`, :issue:`6879`).
 - Significant performance improvements to completion of the available commands (:issue:`7153`), especially on macOS Big Sur where there was a significant regression (:issue:`7365`).
 - ``__fish_complete_suffix`` now uses the same fuzzy matching logic as normal file completion.
 - ``__fish_complete_suffix`` completes any file but sorts files with matching suffix first (:issue:`7040`). Previously, it only completed files with matching suffix.
 - Completions for ``git`` learned to complete the right and left parts of a commit range like ``from..to`` or ``left...right``.
 - The ``__fish_print_packages`` function was broken apart into one function per package manager, and any completion now only calls its specific function. This helps if multiple package managers are installed on a system (e.g. to create containers). ``__fish_print_packages`` remains as a stub that calls all functions (:issue:`7542`).
 - Many completions have their descriptions shortened to fit more options on the screen (:issue:`6981`, :issue:`7550`, :issue:`7109`, :issue:`7569`, :issue:`7081`, :issue:`7291`, :issue:`7163`, :issue:`7378`).
-- The ``make`` completions no longer second-guess make's file detection, fixing target completion in some cases (:issue:`7535`)
+- The ``make`` completions no longer second-guess make's file detection, fixing target completion in some cases (:issue:`7535`).
+- The command completions now correctly print the description even if the command was fully matched (like in ``ls<TAB>``).
+- The ``set`` completions no longer hide variables starting with ``__``, they are sorted last instead.
 
 Deprecations and removed features
 ---------------------------------

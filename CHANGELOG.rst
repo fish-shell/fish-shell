@@ -36,9 +36,8 @@ Notable improvements and fixes
 -  ``fish --no-execute`` will no longer complain about unknown commands
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
--  ``type`` is now a builtin and therefore much faster (:issue:`7342`).
 -  ``string match --regex`` now integrates named PCRE2 capture groups with fish variables, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
--  Globs and other expansions are limited to 512k results (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
+-  Globs and other expansions are limited to 512,288 results (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
 -  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux's current directory introspection to work (:issue:`5699`).
 
 Syntax changes and new commands
@@ -76,7 +75,7 @@ Scripting improvements
 -  ``status`` gained new ``dirname`` and ``basename`` convenience subcommands
    to get just the directory to the running script or the name of it,
    to simplify common tasks such as running ``(dirname (status filename))`` (:issue:`7076`).
--  The ``_`` gettext function is now implemented as a builtin for performance purposes (:issue:`7036`).
+-  The ``type`` and ``_`` gettext functions are now implemented as a builtin for performance purposes (:issue:`7342`, :issue:`7036`).
 -  Broken pipelines are now handled more smoothly; in particular, bad redirection mid-pipeline
    results in the job continuing to run but with the broken file descriptor replaced with a closed
    file descriptor. This allows better error recovery and is more in line with other shells'
@@ -102,7 +101,8 @@ Scripting improvements
 - ``string`` subcommands now quit early when used with ``--quiet`` (:issue:`7495`).
 -  Failed redirections will now set ``$status`` (:issue:`7540`).
 -  ``read`` can now read interactively from other files, so e.g. forcing it to read from the terminal via ``read </dev/tty`` works (:issue:`7358`).
--  The previously internal function ``__fish_status_to_signal`` is now ``fish_status_to_signal``, documented, and ready for external use.
+-  A new ``fish_status_to_signal`` function for transforming exit statuses to signal names (:issue:`7597`).
+-  The fallback ``realpath`` builtin supports the ``-s``/``--no-symlinks`` option, like GNU realpath.
 
 Interactive improvements
 ------------------------
@@ -153,23 +153,25 @@ Interactive improvements
 -  Updated localisations for pt_BR (:issue:`7480`).
 -  ``fish_trace`` output now starts with ``->`` like ``fish --profile``'s, making the depth more visible (:issue:`7538`).
 -  Resizing the terminal window no longer produces a corrupted prompt (:issue:`6532`).
-- ``functions`` produces an error rather than crashing on certain invalid arguments (:issue:`7515`).
-- ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`).
-- Commands with leading spaces may be retrieved from history with up-arrow until a new command is run, matching zsh's ``HIST_IGNORE_SPACE`` (:issue:`1383`).
+-  ``functions`` produces an error rather than crashing on certain invalid arguments (:issue:`7515`).
+-  A crash in using tab completions with inline variable assignment (eg ``A= b``) has been fixed (:issue:`7344`).
+-  ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`).
+-  Commands with leading spaces may be retrieved from history with up-arrow until a new command is run, matching zsh's ``HIST_IGNORE_SPACE`` (:issue:`1383`).
+-  Importing bash history or reporting errors with recursive globs (``**``) no longer hangs (:issue:`7407`, :issue:`7497`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
--  As mentioned above, new readline commands ``undo`` (Control+\_ or Control+Z) and ``redo`` (Alt-/) can be used to revert changes to the command line or the pager search field (:issue:`6570`).
+-  As mentioned above, new special input functions ``undo`` (Control+\_ or Control+Z) and ``redo`` (Alt-/) can be used to revert changes to the command line or the pager search field (:issue:`6570`).
 -  Control-Z is now available for binding (:issue:`7152`).
--  Additionally, using the ``cancel`` readline command (bound to escape by default) right after fish picked an unambiguous completion will undo that (:issue:`7433`).
+-  Additionally, using the ``cancel`` special input function (bound to escape by default) right after fish picked an unambiguous completion will undo that (:issue:`7433`).
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, ``d;``, ``d,``, ``o``, ``O`` and Control+left/right keys to navigate by word (:issue:`6648`, :issue:`6755`, :issue:`6769`, :issue:`7442`, :issue:`7516`).
 -  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (:issue:`6908`).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.
 -  If history search fails to find a match, the cursor is no longer moved. This is useful when accidentally starting a history search on a multi-line commandline.
-- The readline command ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
--  A new readline command ``forward-single-char`` moves one character to the right, and if an autosuggestion is available, only take a single character from it (:issue:`7217`).
--  Readline commands can now be joined with ``or`` as a modifier (adding to ``and``), though only some commands report success or failure (:issue:`7217`).
+- The special input function ``beginning-of-history`` (Page Up) now moves to the oldest search instead of the youngest - that's ``end-of-history`` (Page Down).
+-  A new special input function ``forward-single-char`` moves one character to the right, and if an autosuggestion is available, only take a single character from it (:issue:`7217`).
+-  Special input functions can now be joined with ``or`` as a modifier (adding to ``and``), though only some commands set an exit status (:issue:`7217`). This includes ``suppress-autosuggestion`` to reflect whether an autosuggestion was suppressed (:issue:`1419`)
 -  A new function ``__fish_preview_current_file``, bound to Alt+O, opens the
    current file at the cursor in a pager (:issue:`6838`).
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position
@@ -285,6 +287,9 @@ Deprecations and removed features
 - fish no longer attempts to modify the terminal size via ``TIOCSWINSZ`` (:issue:`6994`).
 - The ``fish_color_match`` variable is no longer used. (Previously this controlled the color of matching quotes and parens when using ``read``).
 - fish 3.2.0 will be the last release in which the redirection to standard error with the ``^`` character is enabled. The ``stderr-nocaret`` feature flag will be changed to "on" in future releases. 
+- ``string`` is now a reserved word and cannot be used for function names (see above).
+- ``fish_vi_cursor``'s option ``--force-iterm`` has been deprecated (see above).
+- ``command``, ``jobs`` and ``type`` long-form option ``--quiet`` is deprecated in favor of ``--query`` (see above).
 
 For distributors and developers
 -------------------------------

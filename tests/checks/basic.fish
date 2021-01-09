@@ -475,3 +475,12 @@ echo $status
 builtin --query echo
 echo $status
 #CHECK: 0
+
+# Check that echo doesn't interpret options *and print them*
+# at the start of quoted args:
+echo '-ne \tart'
+# CHECK: -ne \tart
+echo '-n art'
+echo banana
+# CHECK: -n art
+# CHECK: banana

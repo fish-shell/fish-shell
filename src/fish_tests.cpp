@@ -4378,9 +4378,15 @@ void history_tests_t::test_history_path_detection() {
 
     // Expected sets of paths.
     wcstring_list_t expected[hist_size] = {
-        {}, {filename}, {tmpdir + L"/" + filename}, {L"$HOME/" + filename}, {}, {L"~/" + filename},
-        {}, {},  // we do not expand globs
-        {},
+        {},                          // cmd0
+        {filename},                  // cmd1
+        {tmpdir + L"/" + filename},  // cmd2
+        {L"$HOME/" + filename},      // cmd3
+        {},                          // cmd4
+        {L"~/" + filename},          // cmd5
+        {},                          // cmd6
+        {},                          // cmd7 - we do not expand globs
+        {},                          // cmd8
     };
 
     size_t lap;

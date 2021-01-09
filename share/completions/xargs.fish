@@ -18,3 +18,4 @@ complete -c xargs -s t -l verbose -d "Print the command line on the standard err
 complete -c xargs -l version -d "Display version and exit"
 complete -c xargs -s x -l exit -d "Exit if the size is exceeded"
 complete -c xargs -s P -l max-procs -r -f -d "Run up to max-procs processes at a time"
+complete -c xargs -xa "(__fish_complete_subcommand)"

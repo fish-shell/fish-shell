@@ -111,6 +111,7 @@ Scripting improvements
 -  ``.`` and ``:`` are now also builtins instead of functions (:issue:`6854`).
 -  ``functions`` now explains when a function was defined via ``source`` instead of just saying ``Defined in -``.
 -  Significant performance improvements when globbing or in ``math``.
+-  ``echo`` no longer interprets options at the beginning of an argument (``echo "-n foo"``) (:issue:`7614`).
 
 Interactive improvements
 ------------------------

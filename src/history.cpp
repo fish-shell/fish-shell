@@ -1503,8 +1503,6 @@ history_t &history_t::history_with_name(const wcstring &name) {
     return *hist;
 }
 
-static relaxed_atomic_bool_t private_mode{false};
-
 void start_private_mode(env_stack_t &vars) {
     vars.set_one(L"fish_history", ENV_GLOBAL, L"");
     vars.set_one(L"fish_private_mode", ENV_GLOBAL, L"1");

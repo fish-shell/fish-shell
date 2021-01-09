@@ -40,8 +40,6 @@ function fish_clipboard_paste
     end
 
     if test -n "$data"
-        commandline -f begin-undo-group
         commandline -i -- $data
-        commandline -f end-undo-group
     end
 end

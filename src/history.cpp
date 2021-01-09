@@ -1481,8 +1481,8 @@ history_item_t history_t::item_at_index(size_t idx) { return impl()->item_at_ind
 
 size_t history_t::size() { return impl()->size(); }
 
-/// The set of all histories. These are deliberately leaked to avoid shutdown dtors.
-static owning_lock<std::map<wcstring, history_t *>> s_histories;
+/// The set of all histories.
+static owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> s_histories;
 
 void history_save_all() {
     auto histories = s_histories.acquire();
@@ -1492,13 +1492,13 @@ void history_save_all() {
 }
 
 history_t &history_t::history_with_name(const wcstring &name) {
-    // Return a history for the given name, creating it if necessary.
+    // Return a history for the given name, creating it if necessary
     // Note that histories are currently never deleted, so we can return a reference to them without
-    // using something like shared_ptr.
+    // using something like shared_ptr
     auto hs = s_histories.acquire();
-    history_t *&hist = (*hs)[name];
+    std::unique_ptr<history_t> &hist = (*hs)[name];
     if (!hist) {
-        hist = new history_t(name);
+        hist = make_unique<history_t>(name);
     }
     return *hist;
 }

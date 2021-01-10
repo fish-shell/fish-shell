@@ -3,7 +3,7 @@ complete -c fzf -f
 # Search mode
 complete -c fzf -l no-extended -d no-extended
 complete -c fzf -n 'string match "+*" -- (commandline -ct)' -a +x -d no-extended
-complete -c fzf -s e -l --exact -d 'Enable exact-match'
+complete -c fzf -s e -l exact -d 'Enable exact-match'
 complete -c fzf -n 'string match "+*" -- (commandline -ct)' -a +i -d 'case-sensitive match'
 complete -c fzf -s i -d 'Case-insensitive match'
 complete -c fzf -l literal -d 'Do not normalize latin script letters for matching'

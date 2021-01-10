@@ -5,7 +5,6 @@ complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a status
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a show -d 'Show properties of systemd-timedated'
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a set-time -d 'Set system time'
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a set-timezone -d 'Set system time zone'
-complete -c timedatectl -n "__fish_seen_subcommand_from set-timezone" -a (timedatectl list-timezones)
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a list-timezones -d 'Show known time zones'
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a set-local-rtc -d 'Control whether RTC is in local time'
 complete -c timedatectl -n "__fish_seen_subcommand_from set-local-rtc" -a 'true false'

@@ -3508,7 +3508,7 @@ static bool history_contains(history_t *history, const wcstring &txt) {
     return result;
 }
 
-static bool history_contains(const std::unique_ptr<history_t> &history, const wcstring &txt) {
+static bool history_contains(const std::shared_ptr<history_t> &history, const wcstring &txt) {
     return history_contains(history.get(), txt);
 }
 
@@ -4007,10 +4007,10 @@ void history_tests_t::test_history() {
     const history_search_flags_t nocase = history_search_ignore_case;
 
     // Populate a history.
-    history_t &history = history_t::history_with_name(L"test_history");
-    history.clear();
+    std::shared_ptr<history_t> history = history_t::with_name(L"test_history");
+    history->clear();
     for (const wcstring &s : items) {
-        history.add(s);
+        history->add(s);
     }
 
     // Helper to set expected items to those matching a predicate, in reverse order.
@@ -4062,13 +4062,13 @@ void history_tests_t::test_history() {
     // Test item removal case-sensitive.
     searcher = history_search_t(history, L"Alpha");
     test_history_matches(searcher, {L"Alpha"}, __LINE__);
-    history.remove(L"Alpha");
+    history->remove(L"Alpha");
     searcher = history_search_t(history, L"Alpha");
     test_history_matches(searcher, {}, __LINE__);
 
     // Test history escaping and unescaping, yaml, etc.
     history_item_list_t before, after;
-    history.clear();
+    history->clear();
     size_t i, max = 100;
     for (i = 1; i <= max; i++) {
         // Generate a value.
@@ -4088,17 +4088,17 @@ void history_tests_t::test_history() {
         history_item_t item(value, time(NULL));
         item.required_paths = paths;
         before.push_back(item);
-        history.add(item);
+        history->add(item);
     }
-    history.save();
+    history->save();
 
     // Empty items should just be dropped (#6032).
-    history.add(L"");
-    do_test(!history.item_at_index(1).contents.empty());
+    history->add(L"");
+    do_test(!history->item_at_index(1).contents.empty());
 
     // Read items back in reverse order and ensure they're the same.
     for (i = 100; i >= 1; i--) {
-        history_item_t item = history.item_at_index(i);
+        history_item_t item = history->item_at_index(i);
         do_test(!item.empty());
         after.push_back(item);
     }
@@ -4111,7 +4111,7 @@ void history_tests_t::test_history() {
     }
 
     // Clean up after our tests.
-    history.clear();
+    history->clear();
 }
 
 // Wait until the next second.
@@ -4245,8 +4245,9 @@ void history_tests_t::test_history_merge() {
     say(L"Testing history merge");
     const size_t count = 3;
     const wcstring name = L"merge_test";
-    std::unique_ptr<history_t> hists[count] = {
-        make_unique<history_t>(name), make_unique<history_t>(name), make_unique<history_t>(name)};
+    std::shared_ptr<history_t> hists[count] = {std::make_shared<history_t>(name),
+                                               std::make_shared<history_t>(name),
+                                               std::make_shared<history_t>(name)};
     const wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
     const wcstring alt_texts[count] = {L"History Alt 1", L"History Alt 2", L"History Alt 3"};
 
@@ -4280,7 +4281,7 @@ void history_tests_t::test_history_merge() {
     // Make a new history. It should contain everything. The time_barrier() is so that the timestamp
     // is newer, since we only pick up items whose timestamp is before the birth stamp.
     time_barrier();
-    std::unique_ptr<history_t> everything = make_unique<history_t>(name);
+    std::shared_ptr<history_t> everything = std::make_shared<history_t>(name);
     for (const auto &text : texts) {
         do_test(history_contains(everything, text));
     }
@@ -4357,22 +4358,23 @@ void history_tests_t::test_history_path_detection() {
     vars->vars[L"PWD"] = tmpdir;
     vars->vars[L"HOME"] = tmpdir;
 
-    history_t &history = history_t::history_with_name(L"path_detection");
-    history.add_pending_with_file_detection(L"cmd0 not/a/valid/path", vars);
-    history.add_pending_with_file_detection(L"cmd1 " + filename, vars);
-    history.add_pending_with_file_detection(L"cmd2 " + tmpdir + L"/" + filename, vars);
-    history.add_pending_with_file_detection(L"cmd3  $HOME/" + filename, vars);
-    history.add_pending_with_file_detection(L"cmd4  $HOME/notafile", vars);
-    history.add_pending_with_file_detection(L"cmd5  ~/" + filename, vars);
-    history.add_pending_with_file_detection(L"cmd6  ~/notafile", vars);
-    history.add_pending_with_file_detection(L"cmd7  ~/*f*", vars);
-    history.add_pending_with_file_detection(L"cmd8  ~/*zzz*", vars);
-    history.resolve_pending();
+    std::shared_ptr<history_t> history = history_t::with_name(L"path_detection");
+    history_t::add_pending_with_file_detection(history, L"cmd0 not/a/valid/path", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd1 " + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd2 " + tmpdir + L"/" + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd3  $HOME/" + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd4  $HOME/notafile", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd5  ~/" + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd6  ~/notafile", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd7  ~/*f*", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd8  ~/*zzz*", vars);
+    history->resolve_pending();
 
     constexpr size_t hist_size = 9;
-    if (history.size() != hist_size) {
-        err(L"history has wrong size: %lu but expected %lu", (unsigned long)history.size(), (unsigned long)hist_size);
-        history.clear();
+    if (history->size() != hist_size) {
+        err(L"history has wrong size: %lu but expected %lu", (unsigned long)history->size(),
+            (unsigned long)hist_size);
+        history->clear();
         return;
     }
 
@@ -4395,7 +4397,7 @@ void history_tests_t::test_history_path_detection() {
         int failures = 0;
         bool last = (lap + 1 == maxlap);
         for (size_t i = 1; i <= hist_size; i++) {
-            if (history.item_at_index(i).required_paths != expected[hist_size - i]) {
+            if (history->item_at_index(i).required_paths != expected[hist_size - i]) {
                 failures += 1;
                 if (last) {
                     err(L"Wrong detected paths for item %lu", (unsigned long)i);
@@ -4410,7 +4412,7 @@ void history_tests_t::test_history_path_detection() {
         usleep(1E6 / 500);  // 1 msec
     }
     //fprintf(stderr, "History saving took %lu laps\n", (unsigned long)lap);
-    history.clear();
+    history->clear();
 }
 
 static bool install_sample_history(const wchar_t *name) {
@@ -4429,7 +4431,7 @@ static bool install_sample_history(const wchar_t *name) {
 }
 
 /// Indicates whether the history is equal to the given null-terminated array of strings.
-static bool history_equals(history_t &hist, const wchar_t *const *strings) {
+static bool history_equals(const shared_ptr<history_t> &hist, const wchar_t *const *strings) {
     // Count our expected items.
     size_t expected_count = 0;
     while (strings[expected_count]) {
@@ -4441,7 +4443,7 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
     size_t array_idx = 0;
     for (;;) {
         const wchar_t *expected = strings[array_idx];
-        history_item_t item = hist.item_at_index(history_idx);
+        history_item_t item = hist->item_at_index(history_idx);
         if (expected == NULL) {
             if (!item.empty()) {
                 err(L"Expected empty item at history index %lu, instead found: %ls", history_idx, item.str().c_str());
@@ -4473,11 +4475,11 @@ void history_tests_t::test_history_formats() {
         const wchar_t *const expected[] = {
             L"#def", L"echo #abc", L"function yay\necho hi\nend", L"cd foobar", L"ls /", NULL};
 
-        history_t &test_history = history_t::history_with_name(name);
+        auto test_history = history_t::with_name(name);
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
-        test_history.clear();
+        test_history->clear();
     }
 
     name = L"history_sample_fish_2_0";
@@ -4488,11 +4490,11 @@ void history_tests_t::test_history_formats() {
         const wchar_t *const expected[] = {L"echo this has\\\nbackslashes",
                                            L"function foo\necho bar\nend", L"echo alpha", NULL};
 
-        history_t &test_history = history_t::history_with_name(name);
+        auto test_history = history_t::with_name(name);
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
-        test_history.clear();
+        test_history->clear();
     }
 
     say(L"Testing bash import");
@@ -4506,12 +4508,12 @@ void history_tests_t::test_history_formats() {
             L"/** # see issue 7407", L"sleep 123",   L"a && echo valid construct",
             L"final line",           L"echo supsup", L"export XVAR='exported'",
             L"history --help",       L"echo foo",    NULL};
-        history_t &test_history = history_t::history_with_name(L"bash_import");
-        test_history.populate_from_bash(f);
+        auto test_history = history_t::with_name(L"bash_import");
+        test_history->populate_from_bash(f);
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for bash import\n");
         }
-        test_history.clear();
+        test_history->clear();
         fclose(f);
     }
 
@@ -4521,13 +4523,13 @@ void history_tests_t::test_history_formats() {
         err(L"Couldn't open file tests/%ls", name);
     } else {
         // We simply invoke get_string_representation. If we don't die, the test is a success.
-        history_t &test_history = history_t::history_with_name(name);
+        auto test_history = history_t::with_name(name);
         const wchar_t *expected[] = {L"no_newline_at_end_of_file", L"corrupt_prefix",
                                      L"this_command_is_ok", NULL};
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
-        test_history.clear();
+        test_history->clear();
     }
 }
 

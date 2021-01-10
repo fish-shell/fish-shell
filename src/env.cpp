@@ -687,9 +687,9 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
             return none();
         }
 
-        history_t *history = reader_get_history();
+        std::shared_ptr<history_t> history = reader_get_history();
         if (!history) {
-            history = &history_t::history_with_name(history_session_id(*this));
+            history = history_t::with_name(history_session_id(*this));
         }
         wcstring_list_t result;
         if (history) history->get_history(result);

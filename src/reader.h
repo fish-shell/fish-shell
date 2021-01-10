@@ -169,7 +169,7 @@ void reader_queue_ch(const char_event_t &ch);
 const wchar_t *reader_get_buffer();
 
 /// Returns the current reader's history.
-history_t *reader_get_history();
+std::shared_ptr<history_t> reader_get_history();
 
 /// Set the string of characters in the command buffer, as well as the cursor position.
 ///

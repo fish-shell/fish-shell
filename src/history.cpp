@@ -1324,9 +1324,13 @@ void history_t::remove(const wcstring &str) { impl()->remove(str); }
 
 void history_t::remove_ephemeral_items() { impl()->remove_ephemeral_items(); }
 
-void history_t::add_pending_with_file_detection(const wcstring &str,
+// static
+void history_t::add_pending_with_file_detection(const std::shared_ptr<history_t> &self,
+                                                const wcstring &str,
                                                 const std::shared_ptr<environment_t> &vars,
                                                 history_persistence_mode_t persist_mode) {
+    assert(self && "Null history");
+
     // We use empty items as sentinels to indicate the end of history.
     // Do not allow them to be added (#6032).
     if (str.empty()) {
@@ -1367,7 +1371,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
 
     // If we got a path, we'll perform file detection for autosuggestion hinting.
     bool wants_file_detection = !potential_paths.empty() && !needs_sync_write;
-    auto imp = this->impl();
+    auto imp = self->impl();
 
     // Make our history item.
     time_t when = imp->timestamp_now();
@@ -1384,7 +1388,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
         iothread_perform([=]() {
             // Don't hold the lock while we perform this file detection.
             auto validated_paths = expand_and_detect_paths(potential_paths, *vars);
-            auto imp = this->impl();
+            auto imp = self->impl();
             imp->set_valid_file_paths(std::move(validated_paths), identifier);
             imp->enable_automatic_saving();
         });
@@ -1404,7 +1408,7 @@ void history_t::save() { impl()->save(); }
 
 /// Perform a search of \p hist for \p search_string. Invoke a function \p func for each match. If
 /// \p func returns true, continue the search; else stop it.
-static void do_1_history_search(history_t &hist, history_search_type_t search_type,
+static void do_1_history_search(history_t *hist, history_search_type_t search_type,
                                 const wcstring &search_string, bool case_sensitive,
                                 const std::function<bool(const history_item_t &item)> &func,
                                 const cancel_checker_t &cancel_check) {
@@ -1443,7 +1447,7 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
 
     if (search_args.empty()) {
         // The user had no search terms; just append everything.
-        do_1_history_search(*this, history_search_type_t::match_everything, {}, false, func,
+        do_1_history_search(this, history_search_type_t::match_everything, {}, false, func,
                             cancel_check);
     } else {
         for (const wcstring &search_string : search_args) {
@@ -1451,7 +1455,7 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
                 streams.err.append_format(L"Searching for the empty string isn't allowed");
                 return false;
             }
-            do_1_history_search(*this, search_type, search_string, case_sensitive, func,
+            do_1_history_search(this, search_type, search_string, case_sensitive, func,
                                 cancel_check);
         }
     }
@@ -1482,7 +1486,7 @@ history_item_t history_t::item_at_index(size_t idx) { return impl()->item_at_ind
 size_t history_t::size() { return impl()->size(); }
 
 /// The set of all histories.
-static owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> s_histories;
+static owning_lock<std::map<wcstring, std::shared_ptr<history_t>>> s_histories;
 
 void history_save_all() {
     auto histories = s_histories.acquire();
@@ -1491,16 +1495,13 @@ void history_save_all() {
     }
 }
 
-history_t &history_t::history_with_name(const wcstring &name) {
-    // Return a history for the given name, creating it if necessary
-    // Note that histories are currently never deleted, so we can return a reference to them without
-    // using something like shared_ptr
+std::shared_ptr<history_t> history_t::with_name(const wcstring &name) {
     auto hs = s_histories.acquire();
-    std::unique_ptr<history_t> &hist = (*hs)[name];
+    std::shared_ptr<history_t> &hist = (*hs)[name];
     if (!hist) {
-        hist = make_unique<history_t>(name);
+        hist = std::make_shared<history_t>(name);
     }
-    return *hist;
+    return hist;
 }
 
 void start_private_mode(env_stack_t &vars) {

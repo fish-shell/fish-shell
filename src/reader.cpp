@@ -446,7 +446,7 @@ class reader_history_search_t {
     bool add_skip(const wcstring &str) { return skips_.insert(str).second; }
 
     /// Reset, beginning a new line or token mode search.
-    void reset_to_mode(const wcstring &text, history_t *hist, mode_t mode) {
+    void reset_to_mode(const wcstring &text, const std::shared_ptr<history_t> &hist, mode_t mode) {
         assert(mode != inactive && "mode cannot be inactive in this setter");
         skips_ = {text};
         matches_ = {text};
@@ -458,7 +458,7 @@ class reader_history_search_t {
         if (low == text) flags |= history_search_ignore_case;
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
-            *hist, text,
+            hist, text,
             by_prefix() ? history_search_type_t::prefix : history_search_type_t::contains, flags);
     }
 
@@ -586,7 +586,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// The source of input events.
     inputter_t inputter;
     /// The history.
-    history_t *history{nullptr};
+    std::shared_ptr<history_t> history{};
     /// The history search.
     reader_history_search_t history_search{};
 
@@ -680,11 +680,12 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Access the parser.
     parser_t &parser() { return *parser_ref; }
 
-    reader_data_t(std::shared_ptr<parser_t> parser, history_t *hist, reader_config_t &&conf)
+    reader_data_t(std::shared_ptr<parser_t> parser, std::shared_ptr<history_t> hist,
+                  reader_config_t &&conf)
         : conf(std::move(conf)),
           parser_ref(std::move(parser)),
           inputter(*parser_ref, conf.in),
-          history(hist) {}
+          history(std::move(hist)) {}
 
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
 
@@ -1630,7 +1631,8 @@ void reader_data_t::completion_insert(const wcstring &val, size_t token_end,
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
-    parser_t &parser, const wcstring &search_string, size_t cursor_pos, history_t *history) {
+    parser_t &parser, const wcstring &search_string, size_t cursor_pos,
+    const std::shared_ptr<history_t> &history) {
     const uint32_t generation_count = read_generation_count();
     auto vars = parser.vars().snapshot();
     const wcstring working_directory = vars->get_pwd_slash();
@@ -1651,7 +1653,7 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
         }
 
         // Search history for a matching item.
-        history_search_t searcher(*history, search_string, history_search_type_t::prefix,
+        history_search_t searcher(history.get(), search_string, history_search_type_t::prefix,
                                   history_search_flags_t{});
         while (!ctx.check_cancel() && searcher.go_backwards()) {
             const history_item_t &item = searcher.current_item();
@@ -2512,7 +2514,7 @@ void reader_change_history(const wcstring &name) {
     reader_data_t *data = current_data_or_null();
     if (data && data->history) {
         data->history->save();
-        data->history = &history_t::history_with_name(name);
+        data->history = history_t::with_name(name);
     }
 }
 
@@ -2521,7 +2523,7 @@ void reader_change_history(const wcstring &name) {
 static std::shared_ptr<reader_data_t> reader_push_ret(parser_t &parser,
                                                       const wcstring &history_name,
                                                       reader_config_t &&conf) {
-    history_t *hist = &history_t::history_with_name(history_name);
+    std::shared_ptr<history_t> hist = history_t::with_name(history_name);
     auto data = std::make_shared<reader_data_t>(parser.shared(), hist, std::move(conf));
     reader_data_stack.push_back(data);
     data->command_line_changed(&data->command_line);
@@ -3241,7 +3243,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     } else {
                         mode = history_persistence_mode_t::disk;
                     }
-                    history->add_pending_with_file_detection(text, vars.snapshot(), mode);
+                    history_t::add_pending_with_file_detection(history, text, vars.snapshot(),
+                                                               mode);
                 }
 
                 rls.finished = true;
@@ -4061,7 +4064,7 @@ const wchar_t *reader_get_buffer() {
     return data ? data->command_line.text().c_str() : nullptr;
 }
 
-history_t *reader_get_history() {
+std::shared_ptr<history_t> reader_get_history() {
     ASSERT_IS_MAIN_THREAD();
     reader_data_t *data = current_data_or_null();
     return data ? data->history : nullptr;

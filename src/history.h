@@ -163,7 +163,7 @@ class history_t {
     static bool never_mmap;
 
     // Returns history with the given name, creating it if necessary.
-    static history_t &history_with_name(const wcstring &name);
+    static std::shared_ptr<history_t> with_name(const wcstring &name);
 
     /// Returns whether this is using the default name.
     bool is_default() const;
@@ -180,9 +180,10 @@ class history_t {
 
     // Add a new pending history item to the end, and then begin file detection on the items to
     // determine which arguments are paths. Arguments may be expanded (e.g. with PWD and variables)
-    // using the given \p vars. The item has the given \p persist_mode
-    void add_pending_with_file_detection(
-        const wcstring &str, const std::shared_ptr<environment_t> &vars,
+    // using the given \p vars. The item has the given \p persist_mode.
+    static void add_pending_with_file_detection(
+        const std::shared_ptr<history_t> &self, const wcstring &str,
+        const std::shared_ptr<environment_t> &vars,
         history_persistence_mode_t persist_mode = history_persistence_mode_t::disk);
 
     // Resolves any pending history items, so that they may be returned in history searches.
@@ -241,6 +242,7 @@ using history_search_flags_t = uint32_t;
 class history_search_t {
    private:
     // The history in which we are searching.
+    // TODO: this should be a shared_ptr.
     history_t *history_;
 
     // The original search term.
@@ -283,15 +285,22 @@ class history_search_t {
     // Returns the current search result item contents. asserts if there is no current item.
     const wcstring &current_string() const;
 
-    // Constructor.
-    history_search_t(history_t &hist, const wcstring &str,
+    // Construct from a history pointer; the caller is responsible for ensuring the history stays
+    // alive.
+    history_search_t(history_t *hist, const wcstring &str,
                      enum history_search_type_t type = history_search_type_t::contains,
                      history_search_flags_t flags = 0)
-        : history_(&hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
+        : history_(hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
         if (ignores_case()) {
             std::transform(canon_term_.begin(), canon_term_.end(), canon_term_.begin(), towlower);
         }
     }
+
+    // Construct from a shared_ptr. TODO: this should be the only constructor.
+    history_search_t(const std::shared_ptr<history_t> &hist, const wcstring &str,
+                     enum history_search_type_t type = history_search_type_t::contains,
+                     history_search_flags_t flags = 0)
+        : history_search_t(hist.get(), str, type, flags) {}
 
     // Default constructor.
     history_search_t() = default;

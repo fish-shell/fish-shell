@@ -3985,7 +3985,7 @@ class history_tests_t {
     static void test_history_formats();
     // static void test_history_speed(void);
     static void test_history_races();
-    static void test_history_races_pound_on_history(size_t item_count);
+    static void test_history_races_pound_on_history(size_t item_count, size_t idx);
 };
 
 static wcstring random_string() {
@@ -4113,7 +4113,6 @@ void history_tests_t::test_history() {
     // Clean up after our tests.
     history->clear();
 }
-
 // Wait until the next second.
 static void time_barrier() {
     time_t start = time(NULL);
@@ -4122,20 +4121,19 @@ static void time_barrier() {
     } while (time(NULL) == start);
 }
 
-static wcstring_list_t generate_history_lines(size_t item_count, int pid) {
+static wcstring_list_t generate_history_lines(size_t item_count, size_t idx) {
     wcstring_list_t result;
     result.reserve(item_count);
     for (unsigned long i = 0; i < item_count; i++) {
-        result.push_back(format_string(L"%ld %lu", (long)pid, (unsigned long)i));
+        result.push_back(format_string(L"%ld %lu", (unsigned long)idx, (unsigned long)i));
     }
     return result;
 }
 
-void history_tests_t::test_history_races_pound_on_history(size_t item_count) {
-    // Called in child process to modify history.
+void history_tests_t::test_history_races_pound_on_history(size_t item_count, size_t idx) {
+    // Called in child thread to modify history.
     history_t hist(L"race_test");
-    hist.chaos_mode = !true;
-    const wcstring_list_t hist_lines = generate_history_lines(item_count, getpid());
+    const wcstring_list_t hist_lines = generate_history_lines(item_count, idx);
     for (const wcstring &line : hist_lines) {
         hist.add(line);
         hist.save();
@@ -4144,6 +4142,21 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count) {
 
 void history_tests_t::test_history_races() {
     say(L"Testing history race conditions");
+
+    // It appears TSAN and ASAN's allocators do not release their locks properly in atfork, so
+    // allocating with multiple threads risks deadlock. Drain threads before running under ASAN.
+    // TODO: stop forking with these tests.
+    bool needs_thread_drain = false;
+#if __SANITIZE_ADDRESS__
+    needs_thread_drain |= true;
+#endif
+#if defined(__has_feature)
+    needs_thread_drain |= __has_feature(thread_sanitizer) || __has_feature(address_sanitizer);
+#endif
+
+    if (needs_thread_drain) {
+        iothread_drain_all();
+    }
 
     // Test concurrent history writing.
     // How many concurrent writers we have
@@ -4155,30 +4168,22 @@ void history_tests_t::test_history_races() {
     // Ensure history is clear.
     history_t(L"race_test").clear();
 
-    pid_t children[RACE_COUNT];
-    for (pid_t &child : children) {
-        pid_t pid = fork();
-        if (!pid) {
-            // Child process.
-            setup_fork_guards();
-            test_history_races_pound_on_history(ITEM_COUNT);
-            exit_without_destructors(0);
-        } else {
-            // Parent process.
-            child = pid;
-        }
+    // hist.chaos_mode = true;
+
+    std::thread children[RACE_COUNT];
+    for (size_t i = 0; i < RACE_COUNT; i++) {
+        children[i] = std::thread([=] { test_history_races_pound_on_history(ITEM_COUNT, i); });
     }
 
     // Wait for all children.
-    for (pid_t child : children) {
-        int stat;
-        waitpid(child, &stat, WUNTRACED);
+    for (std::thread &child : children) {
+        child.join();
     }
 
     // Compute the expected lines.
     std::array<wcstring_list_t, RACE_COUNT> expected_lines;
     for (size_t i = 0; i < RACE_COUNT; i++) {
-        expected_lines[i] = generate_history_lines(ITEM_COUNT, children[i]);
+        expected_lines[i] = generate_history_lines(ITEM_COUNT, i);
     }
 
     // Ensure we consider the lines that have been outputted as part of our history.

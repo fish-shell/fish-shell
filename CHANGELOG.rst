@@ -112,6 +112,7 @@ Scripting improvements
 -  ``functions`` now explains when a function was defined via ``source`` instead of just saying ``Defined in -``.
 -  Significant performance improvements when globbing or in ``math``.
 -  ``echo`` no longer interprets options at the beginning of an argument (``echo "-n foo"``) (:issue:`7614`).
+-  Fish now better handles an unset $HOME (:issue:`7620`).
 
 Interactive improvements
 ------------------------

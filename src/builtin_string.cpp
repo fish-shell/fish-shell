@@ -134,7 +134,7 @@ class arg_iterator_t {
 
 // This is used by the string subcommands to communicate with the option parser which flags are
 // valid and get the result of parsing the command for flags.
-using options_t = struct options_t {  //!OCLINT(too many fields)
+struct options_t {  //!OCLINT(too many fields)
     bool all_valid = false;
     bool char_to_pad_valid = false;
     bool chars_to_trim_valid = false;

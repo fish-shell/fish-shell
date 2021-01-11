@@ -1558,7 +1558,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    bool is_empty = true;
+    bool all_empty = true;
 
     arg_iterator_t aiter(argv, optind, streams);
     if (const wcstring *word = aiter.nextstr()) {
@@ -1567,17 +1567,24 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
             !opts.count;
         const wcstring repeated =
             limit_repeat ? wcsrepeat_until(*word, opts.max) : wcsrepeat(*word, opts.count);
-        is_empty = repeated.empty();
-
-        if (!opts.quiet && !is_empty) {
+        if (!repeated.empty()) {
+            all_empty = false;
+            if (opts.quiet) {
+                // Early out if we can - see #7495.
+                return STATUS_CMD_OK;
+            }
+        }
+        if (!opts.quiet) {
             streams.out.append(repeated);
-            if (!opts.no_newline) streams.out.append(L"\n");
-        } else if (opts.quiet && !is_empty) {
-            return STATUS_CMD_OK;
         }
     }
 
-    return !is_empty ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    // Historical behavior is to never append a newline if all strings were empty.
+    if (!opts.quiet && !opts.no_newline && !all_empty) {
+        streams.out.append(L'\n');
+    }
+
+    return all_empty ? STATUS_CMD_ERROR : STATUS_CMD_OK;
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {

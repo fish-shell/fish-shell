@@ -144,23 +144,23 @@ bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
 /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
 /// color pair to what it should be.
 ///
-/// \param c Foreground color.
-/// \param c2 Background color.
-void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
+/// \param fg Foreground color.
+/// \param bg Background color.
+void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
     if (!cur_term || !exit_attribute_mode) return;
 
     const rgb_color_t normal = rgb_color_t::normal();
     bool bg_set = false, last_bg_set = false;
-    bool is_bold = c.is_bold() || c2.is_bold();
-    bool is_underline = c.is_underline() || c2.is_underline();
-    bool is_italics = c.is_italics() || c2.is_italics();
-    bool is_dim = c.is_dim() || c2.is_dim();
-    bool is_reverse = c.is_reverse() || c2.is_reverse();
+    bool is_bold = fg.is_bold() || bg.is_bold();
+    bool is_underline = fg.is_underline() || bg.is_underline();
+    bool is_italics = fg.is_italics() || bg.is_italics();
+    bool is_dim = fg.is_dim() || bg.is_dim();
+    bool is_reverse = fg.is_reverse() || bg.is_reverse();
 
-    if (c.is_reset() || c2.is_reset()) {
-        c = c2 = normal;
+    if (fg.is_reset() || bg.is_reset()) {
+        fg = bg = normal;
         reset_modes();
         // If we exit attibute mode, we must first set a color, or previously colored text might
         // lose it's color. Terminals are weird...
@@ -184,10 +184,10 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         last_bg_set = true;
     }
 
-    if (!c2.is_normal()) {
+    if (!bg.is_normal()) {
         // Background is set.
         bg_set = true;
-        if (c == c2) c = (c2 == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
+        if (fg == bg) fg = (bg == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
     }
 
     if (enter_bold_mode && enter_bold_mode[0] != '\0') {
@@ -207,22 +207,22 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         }
     }
 
-    if (last_color != c) {
-        if (c.is_normal()) {
+    if (last_color != fg) {
+        if (fg.is_normal()) {
             write_foreground_color(*this, 0);
             writembs(*this, exit_attribute_mode);
 
             last_color2 = rgb_color_t::normal();
             reset_modes();
-        } else if (!c.is_special()) {
-            write_color(c, true /* foreground */);
+        } else if (!fg.is_special()) {
+            write_color(fg, true /* foreground */);
         }
     }
 
-    last_color = c;
+    last_color = fg;
 
-    if (last_color2 != c2) {
-        if (c2.is_normal()) {
+    if (last_color2 != bg) {
+        if (bg.is_normal()) {
             write_background_color(*this, 0);
 
             writembs(*this, exit_attribute_mode);
@@ -231,10 +231,10 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
             }
 
             reset_modes();
-            last_color2 = c2;
-        } else if (!c2.is_special()) {
-            write_color(c2, false /* not foreground */);
-            last_color2 = c2;
+            last_color2 = bg;
+        } else if (!bg.is_special()) {
+            write_color(bg, false /* not foreground */);
+            last_color2 = bg;
         }
     }
 

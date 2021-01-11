@@ -32,6 +32,14 @@ class outputter_t {
     bool was_dim = false;
     bool was_reverse = false;
 
+    void reset_modes() {
+        was_bold = false;
+        was_underline = false;
+        was_italics = false;
+        was_dim = false;
+        was_reverse = false;
+    }
+
     /// Construct an outputter which outputs to a given fd.
     explicit outputter_t(int fd) : fd_(fd) {}
 

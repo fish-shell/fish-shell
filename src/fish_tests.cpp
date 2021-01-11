@@ -1295,7 +1295,7 @@ static void test_parser() {
 static void test_1_cancellation(const wchar_t *src) {
     auto filler = io_bufferfill_t::create(fd_set_t{});
     pthread_t thread = pthread_self();
-    double delay = 0.25 /* seconds */;
+    double delay = 0.50 /* seconds */;
     iothread_perform([=]() {
         /// Wait a while and then SIGINT the main thread.
         usleep(delay * 1E6);

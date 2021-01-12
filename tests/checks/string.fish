@@ -411,6 +411,27 @@ string repeat -n3 -m20 foo
 string repeat -m4 foo
 # CHECK: foof
 
+string repeat -n 5 a b c
+# CHECK: aaaaa
+# CHECK: bbbbb
+# CHECK: ccccc
+
+string repeat -n 5 --max 4 123 456 789
+# CHECK: 1231
+# CHECK: 4564
+# CHECK: 7897
+
+string repeat -n 5 --max 4 123 '' 789
+# CHECK: 1231
+# CHECK:
+# CHECK: 7897
+
+# Historical string repeat behavior is no newline if no output.
+echo -n before
+string repeat -n 5 ''
+echo after
+# CHECK: beforeafter
+
 string repeat -n-1 foo; and echo "exit 0"
 # CHECKERR: string repeat: Invalid count value '-1'
 

@@ -1559,9 +1559,14 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     if (retval != STATUS_CMD_OK) return retval;
 
     bool all_empty = true;
+    bool first = true;
 
     arg_iterator_t aiter(argv, optind, streams);
-    if (const wcstring *word = aiter.nextstr()) {
+    while (const wcstring *word = aiter.nextstr()) {
+        if (!first && !opts.quiet) {
+            streams.out.append(L'\n');
+        }
+        first = false;
         const bool limit_repeat =
             (opts.max > 0 && word->length() * opts.count > static_cast<size_t>(opts.max)) ||
             !opts.count;
@@ -1574,6 +1579,8 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
                 return STATUS_CMD_OK;
             }
         }
+
+        // Append if not quiet.
         if (!opts.quiet) {
             streams.out.append(repeated);
         }

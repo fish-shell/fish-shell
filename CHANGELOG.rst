@@ -103,6 +103,7 @@ Scripting improvements
 - ``math`` learned bitwise functions ``bitand``, ``bitor`` and ``bitxor``, used like ``math "bitand(0xFE, 5)"`` (:issue:`7281`).
 - ``math`` learned tau for those wishing to cut down on typing "2 * pi".
 - ``string`` subcommands now quit early when used with ``--quiet`` (:issue:`7495`).
+- ``string repeat`` now handles multiple arguments, repeating each one (:issue:`5988`).
 -  Failed redirections will now set ``$status`` (:issue:`7540`).
 -  More consistent $status after errors, including invalid expansions like ``$foo[``.
 -  ``read`` can now read interactively from other files, so e.g. forcing it to read from the terminal via ``read </dev/tty`` works (:issue:`7358`).

@@ -251,6 +251,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
         if string match -q -- 'alacritty*' $TERM
             return
         end
+        # Konsole since version 21.04(.00)
+        # Note that this is optional, but since we have no way of detecting it
+        # we go with the default, which is true.
+        if set -q KONSOLE_VERSION
+            and test "$KONSOLE_VERSION" -ge 210400 2>/dev/null
+            return
+        end
         commandline -f repaint >/dev/null 2>/dev/null
     end
 

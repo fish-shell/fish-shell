@@ -1249,6 +1249,8 @@ You can change the settings of fish by changing the values of certain variables.
 
 - ``fish_greeting``, the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :ref:`funced <cmd-funced>`
 
+- ``fish_handle_reflow``, determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
+
 - ``fish_history``, the current history session name. If set, all subsequent commands within an
   interactive fish session will be logged to a separate file identified by the value of the
   variable. If unset, or set to ``default``, the default session name "fish" is used. If set to an

@@ -241,24 +241,31 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # __fish_enable_focus
     end
 
-    function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
+    # Detect whether the terminal reflows on its own
+    # If it does we shouldn't do it.
+    # Allow $fish_handle_reflow to override it.
+    if not set -q fish_handle_reflow
         # VTE reflows the text itself, so us doing it inevitably races against it.
         # Guidance from the VTE developers is to let them repaint.
         if set -q VTE_VERSION
-            return
-        end
-        # Same for alacritty
-        if string match -q -- 'alacritty*' $TERM
-            return
-        end
-        # Konsole since version 21.04(.00)
-        # Note that this is optional, but since we have no way of detecting it
-        # we go with the default, which is true.
-        if set -q KONSOLE_VERSION
+            # Same for alacritty
+            or string match -q -- 'alacritty*' $TERM
+            set -g fish_handle_reflow 0
+        else if set -q KONSOLE_VERSION
             and test "$KONSOLE_VERSION" -ge 210400 2>/dev/null
-            return
+            # Konsole since version 21.04(.00)
+            # Note that this is optional, but since we have no way of detecting it
+            # we go with the default, which is true.
+            set -g fish_handle_reflow 0
+        else
+            set -g fish_handle_reflow 1
         end
-        commandline -f repaint >/dev/null 2>/dev/null
+    end
+
+    function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
+        if test "$fish_handle_reflow" = 1 2>/dev/null
+            commandline -f repaint >/dev/null 2>/dev/null
+        end
     end
 
     # Notify terminals when $PWD changes (issue #906).

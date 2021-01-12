@@ -355,13 +355,13 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
     // Do a dirty hack to make sliced history fast (#4650). We expand from either a variable, or a
     // history_t. Note that "history" is read only in env.cpp so it's safe to special-case it in
     // this way (it cannot be shadowed, etc).
-    history_t *history = nullptr;
+    std::shared_ptr<history_t> history{};
     maybe_t<env_var_t> var{};
     if (var_name == L"history") {
         // Note reader_get_history may return null, if we are running non-interactively (e.g. from
         // web_config).
         if (is_main_thread()) {
-            history = &history_t::history_with_name(history_session_id(env_stack_t::principal()));
+            history = history_t::with_name(history_session_id(env_stack_t::principal()));
         }
     } else if (var_name != wcstring{VARIABLE_EXPAND_EMPTY}) {
         var = vars.get(var_name);

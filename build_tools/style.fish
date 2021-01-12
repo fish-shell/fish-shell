@@ -28,8 +28,8 @@ if test $all = yes
         exit 1
     end
     set c_files src/*.h src/*.cpp src/*.c
-    set fish_files (printf '%s\n' share/***.fish)
-    set python_files **.py
+    set fish_files share/**.fish
+    set python_files {doc_src,share,tests}/**.py
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.

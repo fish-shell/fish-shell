@@ -59,7 +59,8 @@ div.sphinxsidebar {
     float: none;
 }
 
-/* On screens that are less than 700px wide remove the sidebar */
+/* On screens that are less than 700px wide remove anything non-essential
+   - the sidebar, the gradient background, ... */
 @media screen and (max-width: 700px) {
   div.sphinxsidebar {
     width: 100%;
@@ -68,6 +69,13 @@ div.sphinxsidebar {
   }
   div.content {margin-left: 0;}
   div.bodywrapper { margin: 0; }
+  div#fmain {
+    border-radius: 0px;
+    margin: 0;
+    -moz-box-shadow: 0;
+    -webkit-box-shadow: 0;
+    box-shadow: 0;
+  }
 }
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {

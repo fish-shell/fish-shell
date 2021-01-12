@@ -479,6 +479,7 @@ When fish is given a commandline, it expands the parameters before sending them 
 - :ref:`Brace expansion <expand-brace>`, to write lists with common pre- or suffixes in a shorter way
 - :ref:`Tilde expansion <expand-home>`, to turn the ``~`` at the beginning of paths into the path to the home directory
 
+Parameter expansion is limited to 524288 items.
 
 .. _expand-wildcard:
 
@@ -487,9 +488,9 @@ Wildcards ("Globbing")
 
 When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk") or a ``?`` question mark, fish uses it as a wildcard to match files.
 
-- ``*`` can match any string of characters not containing ``/``. This includes matching an empty string.
+- ``*`` matches any number of characters (including zero) in a file name, not including ``/``.
 
-- ``**`` matches any string of characters. This includes matching an empty string. The matched string can include the ``/`` character; that is, it goes into subdirectories. If a wildcard string with ``**`` contains a ``/``, that ``/`` still needs to be matched. For example, ``**\/*.fish`` won't match ``.fish`` files directly in the PWD, only in subdirectories. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories. [#]_
+- ``**`` matches any number of characters (including zero), and also descends into subdirectories. If ``**`` is a segment by itself, that segment may match zero times, for compatibility with other shells.
 
 - ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the ``qmark-noglob`` :ref:`feature flag<featureflags>`, so ``?`` will just be an ordinary character.
 
@@ -530,7 +531,6 @@ Examples::
     end
     # Lists the .foo files, if any.
 
-.. [#] Unlike other shells, notably zsh.
 .. [#] Technically, unix allows filenames with newlines, and this splits the ``find`` output on newlines. If you want to avoid that, use find's ``-print0`` option and :ref:`string split0<cmd-string-split0>`.
 
 .. _expand-command-substitution:
@@ -1993,7 +1993,11 @@ If a function named :ref:`fish_greeting <cmd-fish_greeting>` exists, it will be 
 Private mode
 -------------
 
-fish supports launching in private mode via ``fish --private`` (or ``fish -P`` for short). In private mode, old history is not available and any interactive commands you execute will not be appended to the global history file, making it useful both for avoiding inadvertently leaking personal information (e.g. for screencasts) and when dealing with sensitive information to prevent it being persisted to disk. You can query the global variable ``fish_private_mode`` (``if set -q fish_private_mode ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
+If ``$fish_private_mode`` is set to a non-empty value, commands will not be written to the history file on disk.
+
+You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
+
+You can query the variable ``fish_private_mode`` (``if set -q fish_private_mode ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 .. _event:
 

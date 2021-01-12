@@ -152,10 +152,13 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::func_or, L"or"},
     {readline_cmd_t::expand_abbr, L"expand-abbr"},
     {readline_cmd_t::delete_or_exit, L"delete-or-exit"},
+    {readline_cmd_t::exit, L"exit"},
     {readline_cmd_t::cancel_commandline, L"cancel-commandline"},
     {readline_cmd_t::cancel, L"cancel"},
     {readline_cmd_t::undo, L"undo"},
     {readline_cmd_t::redo, L"redo"},
+    {readline_cmd_t::begin_undo_group, L"begin-undo-group"},
+    {readline_cmd_t::end_undo_group, L"end-undo-group"},
 };
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==

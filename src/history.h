@@ -24,6 +24,7 @@
 struct io_streams_t;
 class env_stack_t;
 class environment_t;
+class operation_context_t;
 
 // Fish supports multiple shells writing to history at once. Here is its strategy:
 //
@@ -62,11 +63,41 @@ enum class history_search_type_t {
 
 typedef uint64_t history_identifier_t;
 
+/// Ways that a history item may be written to disk (or omitted).
+enum class history_persistence_mode_t : uint8_t {
+    disk,       // the history item is written to disk normally
+    memory,     // the history item is stored in-memory only, not written to disk
+    ephemeral,  // the history item is stored in-memory and deleted when a new item is added
+};
+
 class history_item_t {
-    friend class history_t;
-    friend struct history_impl_t;
-    friend class history_lru_cache_t;
-    friend class history_tests_t;
+   public:
+    /// Construct from a text, timestamp, and optional identifier.
+    /// If \p no_persist is set, then do not write this item to disk.
+    explicit history_item_t(
+        wcstring str = {}, time_t when = 0, history_identifier_t ident = 0,
+        history_persistence_mode_t persist_mode = history_persistence_mode_t::disk);
+
+    /// \return the text as a string.
+    const wcstring &str() const { return contents; }
+
+    /// \return whether the text is empty.
+    bool empty() const { return contents.empty(); }
+
+    // \return wehther our contents matches a search term.
+    bool matches_search(const wcstring &term, enum history_search_type_t type,
+                        bool case_sensitive) const;
+
+    /// \return the timestamp for creating this history item.
+    time_t timestamp() const { return creation_timestamp; }
+
+    /// \return whether this item should be persisted (written to disk).
+    bool should_write_to_disk() const { return persist_mode == history_persistence_mode_t::disk; }
+
+    /// Get and set the list of arguments which referred to files.
+    /// This is used for autosuggestion hinting.
+    const path_list_t &get_required_paths() const { return required_paths; }
+    void set_required_paths(path_list_t paths) { required_paths = std::move(paths); }
 
    private:
     // Attempts to merge two compatible history items together.
@@ -78,33 +109,19 @@ class history_item_t {
     // Original creation time for the entry.
     time_t creation_timestamp;
 
-    // Sometimes unique identifier used for hinting.
-    history_identifier_t identifier;
-
     // Paths that we require to be valid for this item to be autosuggested.
     path_list_t required_paths;
 
-   public:
-    explicit history_item_t(wcstring str = wcstring(), time_t when = 0,
-                            history_identifier_t ident = 0);
+    // Sometimes unique identifier used for hinting.
+    history_identifier_t identifier;
 
-    const wcstring &str() const { return contents; }
+    // If set, do not write this item to disk.
+    history_persistence_mode_t persist_mode;
 
-    bool empty() const { return contents.empty(); }
-
-    // Whether our contents matches a search term.
-    bool matches_search(const wcstring &term, enum history_search_type_t type,
-                        bool case_sensitive) const;
-
-    time_t timestamp() const { return creation_timestamp; }
-
-    const path_list_t &get_required_paths() const { return required_paths; }
-    void set_required_paths(const path_list_t &paths) { required_paths = paths; }
-
-    bool operator==(const history_item_t &other) const {
-        return contents == other.contents && creation_timestamp == other.creation_timestamp &&
-               required_paths == other.required_paths;
-    }
+    friend class history_t;
+    friend struct history_impl_t;
+    friend class history_lru_cache_t;
+    friend class history_tests_t;
 };
 
 typedef std::deque<history_item_t> history_item_list_t;
@@ -128,8 +145,11 @@ class history_t {
     acquired_lock<const history_impl_t> impl() const;
 
     // Privately add an item. If pending, the item will not be returned by history searches until a
-    // call to resolve_pending.
-    void add(const history_item_t &item, bool pending = false);
+    // call to resolve_pending. Any trailing ephemeral items are dropped.
+    void add(history_item_t item, bool pending = false);
+
+    // Add a new history item with text \p str to the end of history.
+    void add(wcstring str);
 
    public:
     explicit history_t(wcstring name);
@@ -143,7 +163,7 @@ class history_t {
     static bool never_mmap;
 
     // Returns history with the given name, creating it if necessary.
-    static history_t &history_with_name(const wcstring &name);
+    static std::shared_ptr<history_t> with_name(const wcstring &name);
 
     /// Returns whether this is using the default name.
     bool is_default() const;
@@ -152,18 +172,19 @@ class history_t {
     // require populating the history.
     bool is_empty();
 
-    // Add a new history item to the end. If pending is set, the item will not be returned by
-    // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
-    // into the array of new items, so adding a non-pending item has the effect of resolving all
-    // pending items.
-    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false);
-
     // Remove a history item.
     void remove(const wcstring &str);
 
+    /// Remove any trailing ephemeral items.
+    void remove_ephemeral_items();
+
     // Add a new pending history item to the end, and then begin file detection on the items to
-    // determine which arguments are paths
-    void add_pending_with_file_detection(const wcstring &str, const wcstring &working_dir_slash);
+    // determine which arguments are paths. Arguments may be expanded (e.g. with PWD and variables)
+    // using the given \p vars. The item has the given \p persist_mode.
+    static void add_pending_with_file_detection(
+        const std::shared_ptr<history_t> &self, const wcstring &str,
+        const std::shared_ptr<environment_t> &vars,
+        history_persistence_mode_t persist_mode = history_persistence_mode_t::disk);
 
     // Resolves any pending history items, so that they may be returned in history searches.
     void resolve_pending();
@@ -221,6 +242,7 @@ using history_search_flags_t = uint32_t;
 class history_search_t {
    private:
     // The history in which we are searching.
+    // TODO: this should be a shared_ptr.
     history_t *history_;
 
     // The original search term.
@@ -263,15 +285,22 @@ class history_search_t {
     // Returns the current search result item contents. asserts if there is no current item.
     const wcstring &current_string() const;
 
-    // Constructor.
-    history_search_t(history_t &hist, const wcstring &str,
+    // Construct from a history pointer; the caller is responsible for ensuring the history stays
+    // alive.
+    history_search_t(history_t *hist, const wcstring &str,
                      enum history_search_type_t type = history_search_type_t::contains,
                      history_search_flags_t flags = 0)
-        : history_(&hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
+        : history_(hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
         if (ignores_case()) {
             std::transform(canon_term_.begin(), canon_term_.end(), canon_term_.begin(), towlower);
         }
     }
+
+    // Construct from a shared_ptr. TODO: this should be the only constructor.
+    history_search_t(const std::shared_ptr<history_t> &hist, const wcstring &str,
+                     enum history_search_type_t type = history_search_type_t::contains,
+                     history_search_flags_t flags = 0)
+        : history_search_t(hist.get(), str, type, flags) {}
 
     // Default constructor.
     history_search_t() = default;
@@ -283,18 +312,23 @@ void history_save_all();
 /// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id(const environment_t &vars);
 
-/// Given a list of paths and a working directory, return the paths that are valid
-/// This does disk I/O and may only be called in a background thread
-path_list_t valid_paths(const path_list_t &paths, const wcstring &working_directory);
+/// Given a list of proposed paths and a context, perform variable and home directory expansion,
+/// and detect if the result expands to a value which is also the path to a file.
+/// Wildcard expansions are suppressed - see implementation comments for why.
+/// This is used for autosuggestion hinting. If we add an item to history, and one of its arguments
+/// refers to a file, then we only want to suggest it if there is a valid file there.
+/// This does disk I/O and may only be called in a background thread.
+path_list_t expand_and_detect_paths(const path_list_t &paths, const environment_t &vars);
 
-/// Given a list of paths and a working directory,
-/// return true if all paths in the list are valid
-/// Returns true for if paths is empty
-bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
+/// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
+/// Wildcard expansions are suppressed.
+/// \return true if \p paths is empty or every path is valid.
+bool all_paths_are_valid(const path_list_t &paths, const operation_context_t &ctx);
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
 void start_private_mode(env_stack_t &vars);
+
 /// Queries private mode status.
-bool in_private_mode();
+bool in_private_mode(const environment_t &vars);
 
 #endif

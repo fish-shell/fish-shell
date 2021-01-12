@@ -31,6 +31,10 @@ struct edit_t {
     /// The strings that are removed and added by this edit, respectively.
     wcstring old, replacement;
 
+    /// edit_t is only for contiguous changes, so to restore a group of arbitrary changes to the
+    /// command line we need to have a group id as forcibly coalescing changes is not enough.
+    maybe_t<int> group_id;
+
     explicit edit_t(size_t offset, size_t length, wcstring replacement)
         : offset(offset), length(length), replacement(std::move(replacement)) {}
 
@@ -61,6 +65,11 @@ struct undo_history_t {
     /// last one.
     bool may_coalesce = false;
 
+    /// Whether to be more aggressive in coalescing edits. Ideally, it would be "force coalesce"
+    /// with guaranteed atomicity but as `edit_t` is strictly for contiguous changes, that guarantee
+    /// can't be made at this time.
+    bool try_coalesce = false;
+
     /// Empty the history.
     void clear();
 };
@@ -71,6 +80,12 @@ class editable_line_t {
     wcstring text_;
     /// The current position of the cursor in the command line.
     size_t position_ = 0;
+
+    /// The nesting level for atomic edits, so that recursive invocations of start_edit_group()
+    /// are not ended by one end_edit_group() call.
+    int32_t edit_group_level_ = -1;
+    /// Monotonically increasing edit group, ignored when edit_group_level_ is -1. Allowed to wrap.
+    uint32_t edit_group_id_ = -1;
 
    public:
     undo_history_t undo_history;
@@ -110,6 +125,11 @@ class editable_line_t {
 
     /// Redo the most recent undo. Returns true on success.
     bool redo();
+
+    /// Start a logical grouping of command line edits that should be undone/redone together.
+    void begin_edit_group();
+    /// End a logical grouping of command line edits that should be undone/redone together.
+    void end_edit_group();
 };
 
 /// Read commands from \c fd until encountering EOF.
@@ -149,7 +169,7 @@ void reader_queue_ch(const char_event_t &ch);
 const wchar_t *reader_get_buffer();
 
 /// Returns the current reader's history.
-history_t *reader_get_history();
+std::shared_ptr<history_t> reader_get_history();
 
 /// Set the string of characters in the command buffer, as well as the cursor position.
 ///

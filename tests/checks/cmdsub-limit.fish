@@ -1,8 +1,25 @@
 # RUN: %fish %s
 
-# This tests various corner cases involving command substitution. Most
-# importantly the limits on the amount of data we'll substitute.
+# This tests various corner cases involving command substitution.
 
+# Test cmdsubs which spawn background processes - see #7559.
+# If this hangs, it means that fish keeps trying to read from the write
+# end of the cmdsub pipe (which has escaped).
+
+# FIXME: we need to mark full job control for sleep to get its own pgid;
+# otherwise $last_pid will return fish's pgid! It's always been so!
+status job-control full
+
+echo (command sleep 1000000 & ; set -g sleep_pid $last_pid ; echo local)
+# CHECK: local
+echo $sleep_pid
+# CHECK: {{[1-9]\d*}}
+kill $sleep_pid ; echo $status
+# CHECK: 0
+
+status job-control interactive
+
+# Test limiting the amount of data we'll substitute.
 set fish_read_limit 512
 
 function subme
@@ -10,7 +27,7 @@ function subme
     echo $x
 end
 
-# Command sub just under the limit should succeed
+# Command sub just under the limit should succeed.
 set a (subme 511)
 set --show a
 #CHECK: $a: set in global scope, unexported, with 1 elements

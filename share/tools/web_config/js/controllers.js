@@ -79,7 +79,21 @@ controllers.controller("colorsController", function($scope, $http) {
     $scope.sampleTerminalBackgroundColors = ['white', '#' + solarized.base3, '#300', '#003', '#' + solarized.base03, '#232323', '#'+nord.nord0, 'black'];
 
     /* Array of FishColorSchemes */
-    $scope.colorSchemes = [color_scheme_fish_default, color_scheme_solarized_light, color_scheme_solarized_dark, color_scheme_tomorrow, color_scheme_tomorrow_night, color_scheme_tomorrow_night_bright, color_scheme_nord, color_scheme_base16_default_dark, color_scheme_base16_default_light, color_scheme_base16_eighties];
+    $scope.colorSchemes = [
+        color_scheme_fish_default,
+        color_scheme_ayu_light,
+        color_scheme_ayu_dark,
+        color_scheme_ayu_mirage,
+        color_scheme_solarized_light,
+        color_scheme_solarized_dark,
+        color_scheme_tomorrow,
+        color_scheme_tomorrow_night,
+        color_scheme_tomorrow_night_bright,
+        color_scheme_nord,
+        color_scheme_base16_default_dark,
+        color_scheme_base16_default_light,
+        color_scheme_base16_eighties
+    ];
     for (var i=0; i < additional_color_schemes.length; i++)
         $scope.colorSchemes.push(additional_color_schemes[i])
 
@@ -301,7 +315,7 @@ controllers.controller("historyController", function($scope, $http, $timeout) {
     $scope.prevPage = function () {
         $scope.currentPage = Math.max($scope.currentPage - 1, 0);
     };
-    
+
     $scope.nextPage = function () {
         $scope.currentPage = Math.min($scope.currentPage + 1,
                                       $scope.filteredItemPages.length - 1);

@@ -128,11 +128,6 @@ If you use Vim I recommend the `vim-clang-format
 plugin <https://github.com/rhysd/vim-clang-format>`__ by
 [@rhysd](https://github.com/rhysd).
 
-You can also get Vim to provide reasonably correct behavior by
-installing
-
-http://www.vim.org/scripts/script.php?script_id=2636
-
 Emacs
 ^^^^^
 
@@ -177,18 +172,14 @@ made to run fish_indent via e.g.
 Suppressing Reformatting of C++ Code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have a good reason for doing so you can tell ``clang-format`` to
-not reformat a block of code by enclosing it in comments like this:
+You can tell ``clang-format`` to not reformat a block by enclosing it in
+comments like this:
 
 ::
 
    // clang-format off
    code to ignore
    // clang-format on
-
-However, as I write this there are no places in the code where we use
-this and I can’t think of any legitimate reasons for exempting blocks of
-code from clang-format.
 
 Fish Script Style Guide
 -----------------------
@@ -358,7 +349,7 @@ To install the lint checkers on Debian-based Linux distributions:
    sudo apt-get install oclint
    sudo apt-get install cppcheck
 
-Installing the Reformatting Tools
+Installing the Formatting Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mac OS X:
@@ -371,15 +362,7 @@ Debian-based:
 
 ::
 
-   apt-cache search clang-format
-
-Above will list all the versions available. Pick the newest one
-available (3.9 for Ubuntu 16.10 as I write this) and install it:
-
-::
-
-   sudo apt-get install clang-format-3.9
-   sudo ln -s /usr/bin/clang-format-3.9 /usr/bin/clang-format
+   sudo apt-get install clang-format
 
 Message Translations
 --------------------

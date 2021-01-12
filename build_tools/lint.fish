@@ -18,11 +18,11 @@ argparse a/all p/project= -- $argv
 # We only want -D and -I options to be passed thru to cppcheck.
 for arg in $argv
     if string match -q -- '-D*' $arg
-        set cppcheck_args $cppcheck_args $arg
+        set -a cppcheck_args (string split -- ' ' $arg)
     else if string match -q -- '-I*' $arg
-        set cppcheck_args $cppcheck_args $arg
+        set -a cppcheck_args (string split -- ' ' $arg)
     else if string match -q -- '-iquote*' $arg
-        set cppcheck_args $cppcheck_args $arg
+        set -a cppcheck_args (string split -- ' ' $arg)
     end
 end
 
@@ -83,20 +83,7 @@ if set -q c_files[1]
         echo ========================================
         echo Running cppcheck
         echo ========================================
-        # The stderr to stdout redirection is because cppcheck, incorrectly IMHO, writes its
-        # diagnostic messages to stderr. Anyone running this who wants to capture its output will
-        # expect those messages to be written to stdout.
-        set -l cn (set_color normal)
-        set -l cb (set_color --bold)
-        set -l cu (set_color --underline)
-        set -l cm (set_color magenta)
-        set -l cbrm (set_color brmagenta)
-        set -l template "[$cb$cu{file}$cn$cb:{line}$cn] $cbrm{severity}$cm ({id}):$cn\n {message}"
-        set cppcheck_args -q --verbose --std=c++11 --std=posix --language=c++ --template $template \
-            --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks \
-            --rule-file=.cppcheck.rules --suppressions-list=.cppcheck.suppressions $cppcheck_args
-
-        cppcheck $cppcheck_args $c_files 2>&1
+        build_tools/cppcheck.sh --enable=$cppchecks $c_files 2>&1
 
         echo
         echo ========================================

@@ -535,7 +535,7 @@ autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, w
     // This should almost always succeed on the first try.
     assert(!string_suffixes_string(L"/", directory));  //!OCLINT(multiple unary operator)
 
-    int saved_errno;
+    int saved_errno = 0;
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
     autoclose_fd_t result;
     std::string narrow_str;

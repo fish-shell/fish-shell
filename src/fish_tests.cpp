@@ -787,7 +787,9 @@ static void test_fd_monitor() {
     struct item_maker_t {
         std::atomic<bool> did_timeout{false};
         std::atomic<size_t> length_read{0};
+        std::atomic<size_t> pokes{0};
         std::atomic<size_t> total_calls{0};
+        fd_monitor_item_id_t item_id{0};
         bool always_exit{false};
         fd_monitor_item_t item;
         autoclose_fd_t writer;
@@ -795,15 +797,21 @@ static void test_fd_monitor() {
         explicit item_maker_t(uint64_t timeout_usec) {
             auto pipes = make_autoclose_pipes({}).acquire();
             writer = std::move(pipes.write);
-            auto callback = [this](autoclose_fd_t &fd, bool timed_out) {
+            auto callback = [this](autoclose_fd_t &fd, item_wake_reason_t reason) {
                 bool was_closed = false;
-                if (timed_out) {
-                    this->did_timeout = true;
-                } else {
-                    char buff[4096];
-                    ssize_t amt = read(fd.fd(), buff, sizeof buff);
-                    length_read += amt;
-                    was_closed = (amt == 0);
+                switch (reason) {
+                    case item_wake_reason_t::timeout:
+                        this->did_timeout = true;
+                        break;
+                    case item_wake_reason_t::poke:
+                        this->pokes += 1;
+                        break;
+                    case item_wake_reason_t::readable:
+                        char buff[4096];
+                        ssize_t amt = read(fd.fd(), buff, sizeof buff);
+                        this->length_read += amt;
+                        was_closed = (amt == 0);
+                        break;
                 }
                 total_calls += 1;
                 if (always_exit || was_closed) {
@@ -816,7 +824,7 @@ static void test_fd_monitor() {
         item_maker_t(const item_maker_t &) = delete;
 
         // Write 42 bytes to our write end.
-        void write42() {
+        void write42() const {
             char buff[42] = {0};
             (void)write_loop(writer.fd(), buff, sizeof buff);
         }
@@ -826,7 +834,7 @@ static void test_fd_monitor() {
 
     // Items which will never receive data or be called back.
     item_maker_t item_never(fd_monitor_item_t::kNoTimeout);
-    item_maker_t item_hugetimeout(100000000llu * usec_per_msec);
+    item_maker_t item_hugetimeout(100000000LLU * usec_per_msec);
 
     // Item which should get no data, and time out.
     item_maker_t item0_timeout(16 * usec_per_msec);
@@ -840,45 +848,63 @@ static void test_fd_monitor() {
     // Item which should get 42 bytes, then get notified it is closed.
     item_maker_t item42_thenclose(16 * usec_per_msec);
 
+    // Item which gets one poke.
+    item_maker_t item_pokee(fd_monitor_item_t::kNoTimeout);
+
     // Item which should be called back once.
     item_maker_t item_oneshot(16 * usec_per_msec);
     item_oneshot.always_exit = true;
+
     {
         fd_monitor_t monitor;
-        for (auto item : {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout,
-                          &item42_nottimeout, &item42_thenclose, &item_oneshot}) {
-            monitor.add(std::move(item->item));
+        for (item_maker_t *item :
+             {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout, &item42_nottimeout,
+              &item42_thenclose, &item_pokee, &item_oneshot}) {
+            item->item_id = monitor.add(std::move(item->item));
         }
         item42_timeout.write42();
         item42_nottimeout.write42();
         item42_thenclose.write42();
         item42_thenclose.writer.close();
         item_oneshot.write42();
+        monitor.poke_item(item_pokee.item_id);
         std::this_thread::sleep_for(std::chrono::milliseconds(84));
     }
 
     do_test(!item_never.did_timeout);
     do_test(item_never.length_read == 0);
+    do_test(item_never.pokes == 0);
 
     do_test(!item_hugetimeout.did_timeout);
     do_test(item_hugetimeout.length_read == 0);
+    do_test(item_hugetimeout.pokes == 0);
 
     do_test(item0_timeout.length_read == 0);
     do_test(item0_timeout.did_timeout);
+    do_test(item0_timeout.pokes == 0);
 
     do_test(item42_timeout.length_read == 42);
     do_test(item42_timeout.did_timeout);
+    do_test(item42_timeout.pokes == 0);
 
     do_test(item42_nottimeout.length_read == 42);
     do_test(!item42_nottimeout.did_timeout);
+    do_test(item42_nottimeout.pokes == 0);
 
     do_test(item42_thenclose.did_timeout == false);
     do_test(item42_thenclose.length_read == 42);
     do_test(item42_thenclose.total_calls == 2);
+    do_test(item42_thenclose.pokes == 0);
 
     do_test(!item_oneshot.did_timeout);
     do_test(item_oneshot.length_read == 42);
     do_test(item_oneshot.total_calls == 1);
+    do_test(item_oneshot.pokes == 0);
+
+    do_test(!item_pokee.did_timeout);
+    do_test(item_pokee.length_read == 0);
+    do_test(item_pokee.total_calls == 1);
+    do_test(item_pokee.pokes == 1);
 }
 
 static void test_iothread() {
@@ -1269,7 +1295,7 @@ static void test_parser() {
 static void test_1_cancellation(const wchar_t *src) {
     auto filler = io_bufferfill_t::create(fd_set_t{});
     pthread_t thread = pthread_self();
-    double delay = 0.25 /* seconds */;
+    double delay = 0.50 /* seconds */;
     iothread_perform([=]() {
         /// Wait a while and then SIGINT the main thread.
         usleep(delay * 1E6);
@@ -1616,7 +1642,8 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
 #endif
 
     if (dst) {
-        mem = (char *)malloc(dlen);
+        // We want to pass a valid pointer to wchar_to_utf8, so allocate at least one byte.
+        mem = (char *)malloc(dlen + 1);
         if (!mem) {
             err(L"w2u: %s: MALLOC FAILED", descr);
             return;
@@ -1883,26 +1910,47 @@ static void test_lru() {
     do_test(cache.evicted.size() == size_t(total_nodes));
 }
 
-/// A crappy environment_t that only knows about PWD.
-struct pwd_environment_t : public environment_t {
-    std::map<wcstring, wcstring> extras;
+/// An environment built around an std::map.
+struct test_environment_t : public environment_t {
+    std::map<wcstring, wcstring> vars;
 
     virtual maybe_t<env_var_t> get(const wcstring &key,
                                    env_mode_flags_t mode = ENV_DEFAULT) const override {
         UNUSED(mode);
-        if (key == L"PWD") {
-            return env_var_t{wgetcwd(), 0};
+        auto iter = vars.find(key);
+        if (iter != vars.end()) {
+            return env_var_t(iter->second, ENV_DEFAULT);
         }
-        auto extra = extras.find(key);
-        if (extra != extras.end()) {
-            return env_var_t(extra->second, ENV_DEFAULT);
-        }
-        return {};
+        return none();
     }
 
     wcstring_list_t get_names(int flags) const override {
         UNUSED(flags);
-        return {L"PWD"};
+        wcstring_list_t result;
+        for (const auto &kv : vars) {
+            result.push_back(kv.first);
+        }
+        return result;
+    }
+};
+
+/// A test environment that knows about PWD.
+struct pwd_environment_t : public test_environment_t {
+    virtual maybe_t<env_var_t> get(const wcstring &key,
+                                   env_mode_flags_t mode = ENV_DEFAULT) const override {
+        if (key == L"PWD") {
+            return env_var_t{wgetcwd(), 0};
+        }
+        return test_environment_t::get(key, mode);
+    }
+
+    wcstring_list_t get_names(int flags) const override {
+        auto res = test_environment_t::get_names(flags);
+        res.clear();
+        if (std::count(res.begin(), res.end(), L"PWD") == 0) {
+            res.push_back(L"PWD");
+        }
+        return res;
     }
 };
 
@@ -2424,7 +2472,7 @@ struct pager_layout_testcase_t {
                 text.push_back(p.character);
             }
             if (text != expected) {
-                std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
+                std::fwprintf(stderr, L"width %d got %zu<%ls>, expected %zu<%ls>\n", this->width,
                               text.length(), text.c_str(), expected.length(), expected.c_str());
                 for (size_t i = 0; i < std::max(text.length(), expected.length()); i++) {
                     std::fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,
@@ -3322,7 +3370,7 @@ static void test_autosuggest_suggest_special() {
     const wcstring wd = L"test/autosuggest_test";
 
     pwd_environment_t vars{};
-    vars.extras[L"HOME"] = parser_t::principal_parser().vars().get(L"HOME")->as_string();
+    vars.vars[L"HOME"] = parser_t::principal_parser().vars().get(L"HOME")->as_string();
 
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/0", L"foobar/", vars, __LINE__);
@@ -3351,7 +3399,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", L"foo\"bar/", vars,
                                        __LINE__);
 
-    vars.extras[L"AUTOSUGGEST_TEST_LOC"] = wd;
+    vars.vars[L"AUTOSUGGEST_TEST_LOC"] = wd;
     perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", L"l/", vars,
                                        __LINE__);
@@ -3460,7 +3508,7 @@ static bool history_contains(history_t *history, const wcstring &txt) {
     return result;
 }
 
-static bool history_contains(const std::unique_ptr<history_t> &history, const wcstring &txt) {
+static bool history_contains(const std::shared_ptr<history_t> &history, const wcstring &txt) {
     return history_contains(history.get(), txt);
 }
 
@@ -3933,10 +3981,11 @@ class history_tests_t {
    public:
     static void test_history();
     static void test_history_merge();
+    static void test_history_path_detection();
     static void test_history_formats();
     // static void test_history_speed(void);
     static void test_history_races();
-    static void test_history_races_pound_on_history(size_t item_count);
+    static void test_history_races_pound_on_history(size_t item_count, size_t idx);
 };
 
 static wcstring random_string() {
@@ -3958,10 +4007,10 @@ void history_tests_t::test_history() {
     const history_search_flags_t nocase = history_search_ignore_case;
 
     // Populate a history.
-    history_t &history = history_t::history_with_name(L"test_history");
-    history.clear();
+    std::shared_ptr<history_t> history = history_t::with_name(L"test_history");
+    history->clear();
     for (const wcstring &s : items) {
-        history.add(s);
+        history->add(s);
     }
 
     // Helper to set expected items to those matching a predicate, in reverse order.
@@ -4013,13 +4062,13 @@ void history_tests_t::test_history() {
     // Test item removal case-sensitive.
     searcher = history_search_t(history, L"Alpha");
     test_history_matches(searcher, {L"Alpha"}, __LINE__);
-    history.remove(L"Alpha");
+    history->remove(L"Alpha");
     searcher = history_search_t(history, L"Alpha");
     test_history_matches(searcher, {}, __LINE__);
 
     // Test history escaping and unescaping, yaml, etc.
     history_item_list_t before, after;
-    history.clear();
+    history->clear();
     size_t i, max = 100;
     for (i = 1; i <= max; i++) {
         // Generate a value.
@@ -4039,17 +4088,17 @@ void history_tests_t::test_history() {
         history_item_t item(value, time(NULL));
         item.required_paths = paths;
         before.push_back(item);
-        history.add(item);
+        history->add(item);
     }
-    history.save();
+    history->save();
 
     // Empty items should just be dropped (#6032).
-    history.add(L"");
-    do_test(!history.item_at_index(1).contents.empty());
+    history->add(L"");
+    do_test(!history->item_at_index(1).contents.empty());
 
     // Read items back in reverse order and ensure they're the same.
     for (i = 100; i >= 1; i--) {
-        history_item_t item = history.item_at_index(i);
+        history_item_t item = history->item_at_index(i);
         do_test(!item.empty());
         after.push_back(item);
     }
@@ -4062,9 +4111,8 @@ void history_tests_t::test_history() {
     }
 
     // Clean up after our tests.
-    history.clear();
+    history->clear();
 }
-
 // Wait until the next second.
 static void time_barrier() {
     time_t start = time(NULL);
@@ -4073,20 +4121,19 @@ static void time_barrier() {
     } while (time(NULL) == start);
 }
 
-static wcstring_list_t generate_history_lines(size_t item_count, int pid) {
+static wcstring_list_t generate_history_lines(size_t item_count, size_t idx) {
     wcstring_list_t result;
     result.reserve(item_count);
     for (unsigned long i = 0; i < item_count; i++) {
-        result.push_back(format_string(L"%ld %lu", (long)pid, (unsigned long)i));
+        result.push_back(format_string(L"%ld %lu", (unsigned long)idx, (unsigned long)i));
     }
     return result;
 }
 
-void history_tests_t::test_history_races_pound_on_history(size_t item_count) {
-    // Called in child process to modify history.
+void history_tests_t::test_history_races_pound_on_history(size_t item_count, size_t idx) {
+    // Called in child thread to modify history.
     history_t hist(L"race_test");
-    hist.chaos_mode = !true;
-    const wcstring_list_t hist_lines = generate_history_lines(item_count, getpid());
+    const wcstring_list_t hist_lines = generate_history_lines(item_count, idx);
     for (const wcstring &line : hist_lines) {
         hist.add(line);
         hist.save();
@@ -4095,6 +4142,21 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count) {
 
 void history_tests_t::test_history_races() {
     say(L"Testing history race conditions");
+
+    // It appears TSAN and ASAN's allocators do not release their locks properly in atfork, so
+    // allocating with multiple threads risks deadlock. Drain threads before running under ASAN.
+    // TODO: stop forking with these tests.
+    bool needs_thread_drain = false;
+#if __SANITIZE_ADDRESS__
+    needs_thread_drain |= true;
+#endif
+#if defined(__has_feature)
+    needs_thread_drain |= __has_feature(thread_sanitizer) || __has_feature(address_sanitizer);
+#endif
+
+    if (needs_thread_drain) {
+        iothread_drain_all();
+    }
 
     // Test concurrent history writing.
     // How many concurrent writers we have
@@ -4106,30 +4168,22 @@ void history_tests_t::test_history_races() {
     // Ensure history is clear.
     history_t(L"race_test").clear();
 
-    pid_t children[RACE_COUNT];
+    // hist.chaos_mode = true;
+
+    std::thread children[RACE_COUNT];
     for (size_t i = 0; i < RACE_COUNT; i++) {
-        pid_t pid = fork();
-        if (!pid) {
-            // Child process.
-            setup_fork_guards();
-            test_history_races_pound_on_history(ITEM_COUNT);
-            exit_without_destructors(0);
-        } else {
-            // Parent process.
-            children[i] = pid;
-        }
+        children[i] = std::thread([=] { test_history_races_pound_on_history(ITEM_COUNT, i); });
     }
 
     // Wait for all children.
-    for (pid_t child : children) {
-        int stat;
-        waitpid(child, &stat, WUNTRACED);
+    for (std::thread &child : children) {
+        child.join();
     }
 
     // Compute the expected lines.
     std::array<wcstring_list_t, RACE_COUNT> expected_lines;
     for (size_t i = 0; i < RACE_COUNT; i++) {
-        expected_lines[i] = generate_history_lines(ITEM_COUNT, children[i]);
+        expected_lines[i] = generate_history_lines(ITEM_COUNT, i);
     }
 
     // Ensure we consider the lines that have been outputted as part of our history.
@@ -4196,8 +4250,9 @@ void history_tests_t::test_history_merge() {
     say(L"Testing history merge");
     const size_t count = 3;
     const wcstring name = L"merge_test";
-    std::unique_ptr<history_t> hists[count] = {
-        make_unique<history_t>(name), make_unique<history_t>(name), make_unique<history_t>(name)};
+    std::shared_ptr<history_t> hists[count] = {std::make_shared<history_t>(name),
+                                               std::make_shared<history_t>(name),
+                                               std::make_shared<history_t>(name)};
     const wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
     const wcstring alt_texts[count] = {L"History Alt 1", L"History Alt 2", L"History Alt 3"};
 
@@ -4231,7 +4286,7 @@ void history_tests_t::test_history_merge() {
     // Make a new history. It should contain everything. The time_barrier() is so that the timestamp
     // is newer, since we only pick up items whose timestamp is before the birth stamp.
     time_barrier();
-    std::unique_ptr<history_t> everything = make_unique<history_t>(name);
+    std::shared_ptr<history_t> everything = std::make_shared<history_t>(name);
     for (const auto &text : texts) {
         do_test(history_contains(everything, text));
     }
@@ -4285,6 +4340,86 @@ void history_tests_t::test_history_merge() {
     everything->clear();
 }
 
+void history_tests_t::test_history_path_detection() {
+    // Regression test for #7582.
+    say(L"Testing history path detection");
+    char tmpdirbuff[] = "/tmp/fish_test_history.XXXXXX";
+    wcstring tmpdir = str2wcstring(mkdtemp(tmpdirbuff));
+    if (! string_suffixes_string(L"/", tmpdir)) {
+        tmpdir.push_back(L'/');
+    }
+
+    // Place one valid file in the directory.
+    wcstring filename = L"testfile";
+    std::string path = wcs2string(tmpdir + filename);
+    FILE *f = fopen(path.c_str(), "w");
+    if (!f) {
+        err(L"Failed to open test file from history path detection");
+        return;
+    }
+    fclose(f);
+
+    std::shared_ptr<test_environment_t> vars = std::make_shared<test_environment_t>();
+    vars->vars[L"PWD"] = tmpdir;
+    vars->vars[L"HOME"] = tmpdir;
+
+    std::shared_ptr<history_t> history = history_t::with_name(L"path_detection");
+    history_t::add_pending_with_file_detection(history, L"cmd0 not/a/valid/path", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd1 " + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd2 " + tmpdir + L"/" + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd3  $HOME/" + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd4  $HOME/notafile", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd5  ~/" + filename, vars);
+    history_t::add_pending_with_file_detection(history, L"cmd6  ~/notafile", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd7  ~/*f*", vars);
+    history_t::add_pending_with_file_detection(history, L"cmd8  ~/*zzz*", vars);
+    history->resolve_pending();
+
+    constexpr size_t hist_size = 9;
+    if (history->size() != hist_size) {
+        err(L"history has wrong size: %lu but expected %lu", (unsigned long)history->size(),
+            (unsigned long)hist_size);
+        history->clear();
+        return;
+    }
+
+    // Expected sets of paths.
+    wcstring_list_t expected[hist_size] = {
+        {},                          // cmd0
+        {filename},                  // cmd1
+        {tmpdir + L"/" + filename},  // cmd2
+        {L"$HOME/" + filename},      // cmd3
+        {},                          // cmd4
+        {L"~/" + filename},          // cmd5
+        {},                          // cmd6
+        {},                          // cmd7 - we do not expand globs
+        {},                          // cmd8
+    };
+
+    size_t lap;
+    const size_t maxlap = 128;
+    for (lap = 0; lap < maxlap; lap++) {
+        int failures = 0;
+        bool last = (lap + 1 == maxlap);
+        for (size_t i = 1; i <= hist_size; i++) {
+            if (history->item_at_index(i).required_paths != expected[hist_size - i]) {
+                failures += 1;
+                if (last) {
+                    err(L"Wrong detected paths for item %lu", (unsigned long)i);
+                }
+            }
+        }
+        if (failures == 0) {
+            break;
+        }
+        // The file detection takes a little time since it occurs in the background.
+        // Loop until the test passes.
+        usleep(1E6 / 500);  // 1 msec
+    }
+    //fprintf(stderr, "History saving took %lu laps\n", (unsigned long)lap);
+    history->clear();
+}
+
 static bool install_sample_history(const wchar_t *name) {
     wcstring path;
     if (!path_get_data(path)) {
@@ -4301,7 +4436,7 @@ static bool install_sample_history(const wchar_t *name) {
 }
 
 /// Indicates whether the history is equal to the given null-terminated array of strings.
-static bool history_equals(history_t &hist, const wchar_t *const *strings) {
+static bool history_equals(const shared_ptr<history_t> &hist, const wchar_t *const *strings) {
     // Count our expected items.
     size_t expected_count = 0;
     while (strings[expected_count]) {
@@ -4313,10 +4448,10 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
     size_t array_idx = 0;
     for (;;) {
         const wchar_t *expected = strings[array_idx];
-        history_item_t item = hist.item_at_index(history_idx);
+        history_item_t item = hist->item_at_index(history_idx);
         if (expected == NULL) {
             if (!item.empty()) {
-                err(L"Expected empty item at history index %lu", history_idx);
+                err(L"Expected empty item at history index %lu, instead found: %ls", history_idx, item.str().c_str());
             }
             break;
         } else {
@@ -4345,11 +4480,11 @@ void history_tests_t::test_history_formats() {
         const wchar_t *const expected[] = {
             L"#def", L"echo #abc", L"function yay\necho hi\nend", L"cd foobar", L"ls /", NULL};
 
-        history_t &test_history = history_t::history_with_name(name);
+        auto test_history = history_t::with_name(name);
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
-        test_history.clear();
+        test_history->clear();
     }
 
     name = L"history_sample_fish_2_0";
@@ -4360,11 +4495,11 @@ void history_tests_t::test_history_formats() {
         const wchar_t *const expected[] = {L"echo this has\\\nbackslashes",
                                            L"function foo\necho bar\nend", L"echo alpha", NULL};
 
-        history_t &test_history = history_t::history_with_name(name);
+        auto test_history = history_t::with_name(name);
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
-        test_history.clear();
+        test_history->clear();
     }
 
     say(L"Testing bash import");
@@ -4374,21 +4509,16 @@ void history_tests_t::test_history_formats() {
     } else {
         // The results are in the reverse order that they appear in the bash history file.
         // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
-        const wchar_t *expected[] = {L"/** # see issue 7407",
-                                     L"sleep 123",
-                                     L"a && echo valid construct",
-                                     L"final line",
-                                     L"echo supsup",
-                                     L"export XVAR='exported'",
-                                     L"history --help",
-                                     L"echo foo",
-                                     NULL};
-        history_t &test_history = history_t::history_with_name(L"bash_import");
-        test_history.populate_from_bash(f);
+        const wchar_t *expected[] = {
+            L"/** # see issue 7407", L"sleep 123",   L"a && echo valid construct",
+            L"final line",           L"echo supsup", L"export XVAR='exported'",
+            L"history --help",       L"echo foo",    NULL};
+        auto test_history = history_t::with_name(L"bash_import");
+        test_history->populate_from_bash(f);
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for bash import\n");
         }
-        test_history.clear();
+        test_history->clear();
         fclose(f);
     }
 
@@ -4398,13 +4528,13 @@ void history_tests_t::test_history_formats() {
         err(L"Couldn't open file tests/%ls", name);
     } else {
         // We simply invoke get_string_representation. If we don't die, the test is a success.
-        history_t &test_history = history_t::history_with_name(name);
+        auto test_history = history_t::with_name(name);
         const wchar_t *expected[] = {L"no_newline_at_end_of_file", L"corrupt_prefix",
                                      L"this_command_is_ok", NULL};
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
-        test_history.clear();
+        test_history->clear();
     }
 }
 
@@ -4548,6 +4678,10 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
             }
             statement = tmp;
         }
+    }
+    if (!statement) {
+        say(L"No decorated statement found in '%ls'", src.c_str());
+        return false;
     }
 
     // Return its decoration and command.
@@ -6198,6 +6332,7 @@ int main(int argc, char **argv) {
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
     if (should_test_function("history")) history_tests_t::test_history();
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
+    if (should_test_function("history_paths")) history_tests_t::test_history_path_detection();
     if (!is_windows_subsystem_for_linux()) {
         // this test always fails under WSL
         if (should_test_function("history_races")) history_tests_t::test_history_races();

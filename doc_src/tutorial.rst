@@ -275,6 +275,8 @@ You can erase (or "delete") a variable with ``-e`` or ``--erase``
     > env | grep MyVariable
     (no output)
 
+.. _tut-exports:
+
 Exports (Shell Variables)
 -------------------------
 
@@ -290,6 +292,7 @@ To give a variable to an external command, it needs to be "exported". Unlike oth
 
 It can also be unexported with ``--unexport`` or ``-u``.
 
+This works the other way around as well! If fish is started by something else, it inherits that parents exported variables. So if your terminal emulator starts fish, and it exports ``$LANG`` set to ``en_US.UTF-8``, fish will receive that setting. And whatever started your terminal emulator also gave *it* some variables that it will then pass on unless it specifically decides not to. This is how fish usually receives the values for things like ``$LANG``, ``$PATH`` and ``$TERM``, without you having to specify them again.
 
 .. _tut-lists:
 
@@ -640,6 +643,8 @@ $PATH
 -----
 
 ``$PATH`` is an environment variable containing the directories that fish searches for commands. Unlike other shells, $PATH is a :ref:`list <tut-lists>`, not a colon-delimited string.
+
+Fish takes care to set ``$PATH`` to a default, but typically it is just inherited from fish's parent process and is set to a value that makes sense for the system - see :ref:`Exports <tut-exports>`.
 
 To prepend /usr/local/bin and /usr/sbin to ``$PATH``, you can write::
 

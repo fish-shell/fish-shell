@@ -28,6 +28,8 @@ static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t 
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
+    echo_cmd_opts_t oldopts = opts;
+    int oldoptind = 0;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'n': {
@@ -51,12 +53,24 @@ static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t 
                 return STATUS_INVALID_ARGS;
             }
             case '?': {
+                opts = oldopts;
                 *optind = w.woptind - 1;
                 return STATUS_CMD_OK;
             }
             default: {
                 DIE("unexpected retval from wgetopt_long");
             }
+        }
+
+        // Super cheesy: We keep an old copy of the option state around,
+        // so we can revert it in case we get an argument like
+        // "-n foo".
+        // We need to keep it one out-of-date so we can ignore the *last* option.
+        // (this might be an issue in wgetopt, but that's a whole other can of worms
+        //  and really only occurs with our weird "put it back" option parsing)
+        if (w.woptind == oldoptind + 2) {
+            oldopts = opts;
+            oldoptind = w.woptind;
         }
     }
 

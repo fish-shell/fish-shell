@@ -131,7 +131,8 @@ struct thread_pool_t {
 
 /// The thread pool for "iothreads" which are used to lift I/O off of the main thread.
 /// These are used for completions, etc.
-static thread_pool_t s_io_thread_pool(1, IO_MAX_THREADS);
+/// Leaked to avoid shutdown dtor registration (including tsan).
+static thread_pool_t &s_io_thread_pool = *(new thread_pool_t(1, IO_MAX_THREADS));
 
 static owning_lock<std::queue<void_function_t>> s_result_queue;
 

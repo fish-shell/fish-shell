@@ -4,6 +4,7 @@
 
 #include <assert.h>
 
+#include <atomic>
 #include <unordered_map>
 
 #include "common.h"
@@ -28,13 +29,13 @@ class features_t {
     /// Return whether a flag is set.
     bool test(flag_t f) const {
         assert(f >= 0 && f < flag_count && "Invalid flag");
-        return values[f];
+        return values[f].load(std::memory_order_relaxed);
     }
 
     /// Set a flag.
     void set(flag_t f, bool value) {
         assert(f >= 0 && f < flag_count && "Invalid flag");
-        values[f] = value;
+        values[f].store(value, std::memory_order_relaxed);
     }
 
     /// Parses a comma-separated feature-flag string, updating ourselves with the values.
@@ -69,9 +70,20 @@ class features_t {
 
     features_t();
 
+    features_t(const features_t &rhs) { *this = rhs; }
+
+    void operator=(const features_t &rhs) {
+        for (int i = 0; i < flag_count; i++) {
+            flag_t f = static_cast<flag_t>(i);
+            this->set(f, rhs.test(f));
+        }
+    }
+
    private:
-    /// Values for the flags.
-    bool values[flag_count] = {};
+    // Values for the flags.
+    // These are atomic to "fix" a race reported by tsan where tests of feature flags and other
+    // tests which use them conceptually race.
+    std::atomic<bool> values[flag_count]{};
 };
 
 /// Return the global set of features for fish. This is const to prevent accidental mutation.

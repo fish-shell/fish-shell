@@ -134,7 +134,7 @@ class arg_iterator_t {
 
 // This is used by the string subcommands to communicate with the option parser which flags are
 // valid and get the result of parsing the command for flags.
-using options_t = struct options_t {  //!OCLINT(too many fields)
+struct options_t {  //!OCLINT(too many fields)
     bool all_valid = false;
     bool char_to_pad_valid = false;
     bool chars_to_trim_valid = false;
@@ -1558,26 +1558,40 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    bool is_empty = true;
+    bool all_empty = true;
+    bool first = true;
 
     arg_iterator_t aiter(argv, optind, streams);
-    if (const wcstring *word = aiter.nextstr()) {
+    while (const wcstring *word = aiter.nextstr()) {
+        if (!first && !opts.quiet) {
+            streams.out.append(L'\n');
+        }
+        first = false;
         const bool limit_repeat =
             (opts.max > 0 && word->length() * opts.count > static_cast<size_t>(opts.max)) ||
             !opts.count;
         const wcstring repeated =
             limit_repeat ? wcsrepeat_until(*word, opts.max) : wcsrepeat(*word, opts.count);
-        is_empty = repeated.empty();
+        if (!repeated.empty()) {
+            all_empty = false;
+            if (opts.quiet) {
+                // Early out if we can - see #7495.
+                return STATUS_CMD_OK;
+            }
+        }
 
-        if (!opts.quiet && !is_empty) {
+        // Append if not quiet.
+        if (!opts.quiet) {
             streams.out.append(repeated);
-            if (!opts.no_newline) streams.out.append(L"\n");
-        } else if (opts.quiet && !is_empty) {
-            return STATUS_CMD_OK;
         }
     }
 
-    return !is_empty ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    // Historical behavior is to never append a newline if all strings were empty.
+    if (!opts.quiet && !opts.no_newline && !all_empty) {
+        streams.out.append(L'\n');
+    }
+
+    return all_empty ? STATUS_CMD_ERROR : STATUS_CMD_OK;
 }
 
 static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {

@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 import binascii
-import cgi
 
 try:
     from html import escape as escape_html
@@ -1315,18 +1314,30 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return self.send_error(403)
         self.path = p
 
-        ctype, pdict = cgi.parse_header(self.headers["content-type"])
+        # This is cheesy, we want just the actual content-type.
+        # In some cases it'll give us the encoding as well,
+        # ("application/json;charset=utf-8")
+        # but we don't currently care.
+        ctype = self.headers["content-type"].split(";")[0]
 
-        if ctype == "multipart/form-data":
-            postvars = cgi.parse_multipart(self.rfile, pdict)
-        elif ctype == "application/x-www-form-urlencoded":
+        if ctype == "application/x-www-form-urlencoded":
             length = int(self.headers["content-length"])
             url_str = self.rfile.read(length).decode("utf-8")
             postvars = parse_qs(url_str, keep_blank_values=1)
         elif ctype == "application/json":
             length = int(self.headers["content-length"])
-            url_str = self.rfile.read(length).decode(pdict["charset"])
+            # This used to use the provided encoding, but we use utf-8
+            # all around the place and nobody has ever complained.
+            #
+            # If any other encoding is received this will raise a UnicodeError,
+            # which will throw us out of the function and should at most exit webconfig.
+            # If that happens to anyone we expect bug reports.
+            url_str = self.rfile.read(length).decode("utf-8")
             postvars = json.loads(url_str)
+        elif ctype == "multipart/form-data":
+            # This used to be a thing, as far as I could find there's
+            # no use anymore, but let's keep an error around just in case.
+            return self.send_error(500)
         else:
             postvars = {}
 

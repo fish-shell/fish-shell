@@ -90,7 +90,6 @@ static const std::vector<electric_var_t> electric_variables{
     {L"_", electric_var_t::freadonly},
     {L"fish_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"fish_pid", electric_var_t::freadonly},
-    {L"fish_private_mode", electric_var_t::freadonly},
     {L"history", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"hostname", electric_var_t::freadonly},
     {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
@@ -119,8 +118,7 @@ static bool is_read_only(const wcstring &key) {
     if (auto ev = electric_var_t::for_name(key)) {
         return ev->readonly();
     }
-    // Hack.
-    return in_private_mode() && key == L"fish_history";
+    return false;
 }
 
 /// Return true if a variable should become a path variable by default. See #436.
@@ -275,17 +273,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         vars.set_one(FISH_BIN_DIR, ENV_GLOBAL, paths->bin);
     }
 
-    wcstring user_config_dir;
-    path_get_config(user_config_dir);
-    vars.set_one(FISH_CONFIG_DIR, ENV_GLOBAL, user_config_dir);
-
-    wcstring user_data_dir;
-    path_get_data(user_data_dir);
-    vars.set_one(FISH_USER_DATA_DIR, ENV_GLOBAL, user_data_dir);
-
-    // Set up the USER and PATH variables
-    setup_path();
-
     // Some `su`s keep $USER when changing to root.
     // This leads to issues later on (and e.g. in prompts),
     // so we work around it by resetting $USER.
@@ -294,40 +281,13 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     uid_t uid = getuid();
     setup_user(uid == 0);
 
-    // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
-    vars.set_one(L"IFS", ENV_GLOBAL, L"\n \t");
-
-    // Set up the version variable.
-    wcstring version = str2wcstring(get_fish_version());
-    vars.set_one(L"version", ENV_GLOBAL, version);
-    vars.set_one(L"FISH_VERSION", ENV_GLOBAL, version);
-
-    // Set the $fish_pid variable.
-    vars.set_one(L"fish_pid", ENV_GLOBAL, to_string(getpid()));
-
-    // Set the $hostname variable
-    wcstring hostname = L"fish";
-    get_hostname_identifier(hostname);
-    vars.set_one(L"hostname", ENV_GLOBAL, hostname);
-
-    // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore
-    // was not inherited from the environment.
-    wcstring nshlvl_str = L"1";
-    if (const char *shlvl_var = getenv("SHLVL")) {
-        const wchar_t *end;
-        // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
-        long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
-        if (!errno && shlvl_i >= 0) {
-            nshlvl_str = to_string(shlvl_i + 1);
-        }
-    }
-    vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
-
     // Set up the HOME variable.
     // Unlike $USER, it doesn't seem that `su`s pass this along
     // if the target user is root, unless "--preserve-environment" is used.
     // Since that is an explicit choice, we should allow it to enable e.g.
     //     env HOME=(mktemp -d) su --preserve-environment fish
+    //
+    // Note: This needs to be *before* path_get_*, because that uses $HOME!
     if (vars.get(L"HOME").missing_or_empty()) {
         auto user_var = vars.get(L"USER");
         if (!user_var.missing_or_empty()) {
@@ -358,6 +318,46 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         }
     }
+
+    wcstring user_config_dir;
+    path_get_config(user_config_dir);
+    vars.set_one(FISH_CONFIG_DIR, ENV_GLOBAL, user_config_dir);
+
+    wcstring user_data_dir;
+    path_get_data(user_data_dir);
+    vars.set_one(FISH_USER_DATA_DIR, ENV_GLOBAL, user_data_dir);
+
+    // Set up a default PATH
+    setup_path();
+
+    // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
+    vars.set_one(L"IFS", ENV_GLOBAL, L"\n \t");
+
+    // Set up the version variable.
+    wcstring version = str2wcstring(get_fish_version());
+    vars.set_one(L"version", ENV_GLOBAL, version);
+    vars.set_one(L"FISH_VERSION", ENV_GLOBAL, version);
+
+    // Set the $fish_pid variable.
+    vars.set_one(L"fish_pid", ENV_GLOBAL, to_string(getpid()));
+
+    // Set the $hostname variable
+    wcstring hostname = L"fish";
+    get_hostname_identifier(hostname);
+    vars.set_one(L"hostname", ENV_GLOBAL, hostname);
+
+    // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore
+    // was not inherited from the environment.
+    wcstring nshlvl_str = L"1";
+    if (const char *shlvl_var = getenv("SHLVL")) {
+        const wchar_t *end;
+        // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
+        long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
+        if (!errno && shlvl_i >= 0) {
+            nshlvl_str = to_string(shlvl_i + 1);
+        }
+    }
+    vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
 
     // initialize the PWD variable if necessary
     // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that
@@ -689,9 +689,9 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
             return none();
         }
 
-        history_t *history = reader_get_history();
+        std::shared_ptr<history_t> history = reader_get_history();
         if (!history) {
-            history = &history_t::history_with_name(history_session_id(*this));
+            history = history_t::with_name(history_session_id(*this));
         }
         wcstring_list_t result;
         if (history) history->get_history(result);

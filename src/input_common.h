@@ -75,10 +75,13 @@ enum class readline_cmd_t {
     func_or,
     expand_abbr,
     delete_or_exit,
+    exit,
     cancel_commandline,
     cancel,
     undo,
     redo,
+    begin_undo_group,
+    end_undo_group,
     repeat_jump,
     // NOTE: This one has to be last.
     reverse_repeat_jump

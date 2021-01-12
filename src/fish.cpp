@@ -503,6 +503,10 @@ int main(int argc, char **argv) {
         parser.libdata().exit_current_script = false;
     } else if (my_optind == argc) {
         // Implicitly interactive mode.
+        if (opts.no_exec && isatty(STDIN_FILENO)) {
+            FLOGF(error, L"no-execute mode enabled and no script given. Exiting");
+            return EXIT_FAILURE;  // above line should always exit
+        }
         res = reader_read(parser, STDIN_FILENO, {});
     } else {
         const char *file = *(argv + (my_optind++));

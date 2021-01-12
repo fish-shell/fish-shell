@@ -24,11 +24,9 @@ enum {
 
 /// Expand the wildcard by matching against the filesystem.
 ///
-/// New strings are allocated using malloc and should be freed by the caller.
-///
 /// wildcard_expand works by dividing the wildcard into segments at each directory boundary. Each
-/// segment is processed separatly. All except the last segment are handled by matching the wildcard
-/// segment against all subdirectories of matching directories, and recursively calling
+/// segment is processed separately. All except the last segment are handled by matching the
+/// wildcard segment against all subdirectories of matching directories, and recursively calling
 /// wildcard_expand for matches. On the last segment, matching is made to any file, and all matches
 /// are inserted to the list.
 ///

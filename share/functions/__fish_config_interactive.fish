@@ -94,7 +94,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
                 # Run python directly in the background and swallow all output
                 $python $update_args >/dev/null 2>&1 &
                 # Then disown the job so that it continues to run in case of an early exit (#6269)
-                disown >/dev/null 2>&1
+                disown $last_pid >/dev/null 2>&1
             end
         end
     end
@@ -245,6 +245,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # VTE reflows the text itself, so us doing it inevitably races against it.
         # Guidance from the VTE developers is to let them repaint.
         if set -q VTE_VERSION
+            return
+        end
+        # Same for alacritty
+        if string match -q -- 'alacritty*' $TERM
             return
         end
         commandline -f repaint >/dev/null 2>/dev/null

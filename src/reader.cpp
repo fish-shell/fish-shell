@@ -200,7 +200,7 @@ static bool want_to_coalesce_insertion_of(const editable_line_t &el, const wcstr
     // Only consolidate single character inserts.
     if (str.size() != 1) return false;
     // Make an undo group after every space.
-    if (str.at(0) == L' ') return false;
+    if (str.at(0) == L' ' && !el.undo_history.try_coalesce) return false;
     assert(!el.undo_history.edits.empty());
     const edit_t &last_edit = el.undo_history.edits.back();
     // Don't add to the last edit if it deleted something.
@@ -211,19 +211,35 @@ static bool want_to_coalesce_insertion_of(const editable_line_t &el, const wcstr
 }
 
 bool editable_line_t::undo() {
-    if (undo_history.edits_applied == 0) return false;  // nothing to undo
-    const edit_t &edit = undo_history.edits.at(undo_history.edits_applied - 1);
-    undo_history.edits_applied--;
-    edit_t inverse = edit_t(edit.offset, edit.replacement.size(), L"");
-    inverse.replacement = edit.old;
-    size_t old_position = edit.cursor_position_before_edit;
-    apply_edit(&text_, inverse);
-    set_position(old_position);
+    bool did_undo = false;
+    maybe_t<int> last_group_id{-1};
+    while (undo_history.edits_applied != 0) {
+        const edit_t &edit = undo_history.edits.at(undo_history.edits_applied - 1);
+        if (did_undo && (!edit.group_id.has_value() || edit.group_id != last_group_id)) {
+            // We've restored all the edits in this logical undo group
+            break;
+        }
+        last_group_id = edit.group_id;
+        undo_history.edits_applied--;
+        edit_t inverse = edit_t(edit.offset, edit.replacement.size(), L"");
+        inverse.replacement = edit.old;
+        size_t old_position = edit.cursor_position_before_edit;
+        apply_edit(&text_, inverse);
+        set_position(old_position);
+        did_undo = true;
+    }
+
+    end_edit_group();
     undo_history.may_coalesce = false;
-    return true;
+    return did_undo;
 }
 
 void editable_line_t::push_edit(edit_t &&edit) {
+    // Assign a new group id or propagate the old one if we're in a logical grouping of edits
+    if (edit_group_level_ != -1) {
+        edit.group_id = edit_group_id_;
+    }
+
     bool edit_does_nothing = edit.length == 0 && edit.replacement.empty();
     if (edit_does_nothing) return;
     if (undo_history.edits_applied != undo_history.edits.size()) {
@@ -251,13 +267,48 @@ void editable_line_t::insert_coalesce(const wcstring &str) {
 }
 
 bool editable_line_t::redo() {
-    if (undo_history.edits_applied >= undo_history.edits.size()) return false;  // nothing to redo
-    const edit_t &edit = undo_history.edits.at(undo_history.edits_applied);
-    undo_history.edits_applied++;
-    apply_edit(&text_, edit);
-    set_position(cursor_position_after_edit(edit));
-    undo_history.may_coalesce = false;  // Make a new undo group here.
-    return true;
+    bool did_redo = false;
+
+    maybe_t<int> last_group_id{-1};
+    while (undo_history.edits_applied < undo_history.edits.size()) {
+        const edit_t &edit = undo_history.edits.at(undo_history.edits_applied);
+        if (did_redo && (!edit.group_id.has_value() || edit.group_id != last_group_id)) {
+            // We've restored all the edits in this logical undo group
+            break;
+        }
+        last_group_id = edit.group_id;
+        undo_history.edits_applied++;
+        apply_edit(&text_, edit);
+        set_position(cursor_position_after_edit(edit));
+        did_redo = true;
+    }
+
+    end_edit_group();
+    return did_redo;
+}
+
+void editable_line_t::begin_edit_group() {
+    if (++edit_group_level_ == 0) {
+        // Indicate that the next change must trigger the creation of a new history item
+        undo_history.may_coalesce = false;
+        // Indicate that future changes should be coalesced into the same edit if possible.
+        undo_history.try_coalesce = true;
+        // Assign a logical edit group id to future edits in this group
+        edit_group_id_ += 1;
+    }
+}
+
+void editable_line_t::end_edit_group() {
+    if (edit_group_level_ == -1) {
+        // Clamp the minimum value to -1 to prevent unbalanced end_edit_group() calls from breaking
+        // everything.
+        return;
+    }
+
+    if (--edit_group_level_ == -1) {
+        undo_history.try_coalesce = false;
+        undo_history.may_coalesce = false;
+    }
 }
 
 namespace {
@@ -395,7 +446,7 @@ class reader_history_search_t {
     bool add_skip(const wcstring &str) { return skips_.insert(str).second; }
 
     /// Reset, beginning a new line or token mode search.
-    void reset_to_mode(const wcstring &text, history_t *hist, mode_t mode) {
+    void reset_to_mode(const wcstring &text, const std::shared_ptr<history_t> &hist, mode_t mode) {
         assert(mode != inactive && "mode cannot be inactive in this setter");
         skips_ = {text};
         matches_ = {text};
@@ -407,7 +458,7 @@ class reader_history_search_t {
         if (low == text) flags |= history_search_ignore_case;
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
-            *hist, text,
+            hist, text,
             by_prefix() ? history_search_type_t::prefix : history_search_type_t::contains, flags);
     }
 
@@ -535,7 +586,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// The source of input events.
     inputter_t inputter;
     /// The history.
-    history_t *history{nullptr};
+    std::shared_ptr<history_t> history{};
     /// The history search.
     reader_history_search_t history_search{};
 
@@ -629,11 +680,12 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Access the parser.
     parser_t &parser() { return *parser_ref; }
 
-    reader_data_t(std::shared_ptr<parser_t> parser, history_t *hist, reader_config_t &&conf)
+    reader_data_t(std::shared_ptr<parser_t> parser, std::shared_ptr<history_t> hist,
+                  reader_config_t &&conf)
         : conf(std::move(conf)),
           parser_ref(std::move(parser)),
           inputter(*parser_ref, conf.in),
-          history(hist) {}
+          history(std::move(hist)) {}
 
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
 
@@ -643,8 +695,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Erase @length characters starting at @offset.
     void erase_substring(editable_line_t *el, size_t offset, size_t length);
     /// Replace the text of length @length at @offset by @replacement.
-    void replace_substring(editable_line_t *el, size_t offset, size_t length,
-                           const wcstring &replacement);
+    void replace_substring(editable_line_t *el, size_t offset, size_t length, wcstring replacement);
     void push_edit(editable_line_t *el, edit_t &&edit);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
@@ -1416,7 +1467,7 @@ void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
         assert(el->undo_history.may_coalesce);
     } else {
         el->push_edit(edit_t(el->position(), 0, str));
-        el->undo_history.may_coalesce = (str.size() == 1);
+        el->undo_history.may_coalesce = el->undo_history.try_coalesce || (str.size() == 1);
     }
 
     if (el == &command_line) suppress_autosuggestion = false;
@@ -1440,8 +1491,8 @@ void reader_data_t::erase_substring(editable_line_t *el, size_t offset, size_t l
 }
 
 void reader_data_t::replace_substring(editable_line_t *el, size_t offset, size_t length,
-                                      const wcstring &replacement) {
-    push_edit(el, edit_t(offset, length, replacement));
+                                      wcstring replacement) {
+    push_edit(el, edit_t(offset, length, std::move(replacement)));
 }
 
 /// Insert the string in the given command line at the given cursor position. The function checks if
@@ -1577,14 +1628,11 @@ void reader_data_t::completion_insert(const wcstring &val, size_t token_end,
     set_buffer_maintaining_pager(new_command_line, cursor);
 }
 
-static bool may_add_to_history(const wcstring &commandline_prefix) {
-    return !commandline_prefix.empty() && commandline_prefix.at(0) != L' ';
-}
-
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
-    parser_t &parser, const wcstring &search_string, size_t cursor_pos, history_t *history) {
+    parser_t &parser, const wcstring &search_string, size_t cursor_pos,
+    const std::shared_ptr<history_t> &history) {
     const uint32_t generation_count = read_generation_count();
     auto vars = parser.vars().snapshot();
     const wcstring working_directory = vars->get_pwd_slash();
@@ -1604,21 +1652,20 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
             return nothing;
         }
 
-        if (may_add_to_history(search_string)) {
-            history_search_t searcher(*history, search_string, history_search_type_t::prefix,
-                                      history_search_flags_t{});
-            while (!ctx.check_cancel() && searcher.go_backwards()) {
-                const history_item_t &item = searcher.current_item();
+        // Search history for a matching item.
+        history_search_t searcher(history.get(), search_string, history_search_type_t::prefix,
+                                  history_search_flags_t{});
+        while (!ctx.check_cancel() && searcher.go_backwards()) {
+            const history_item_t &item = searcher.current_item();
 
-                // Skip items with newlines because they make terrible autosuggestions.
-                if (item.str().find(L'\n') != wcstring::npos) continue;
+            // Skip items with newlines because they make terrible autosuggestions.
+            if (item.str().find(L'\n') != wcstring::npos) continue;
 
-                if (autosuggest_validate_from_history(item, working_directory, ctx)) {
-                    // The command autosuggestion was handled specially, so we're done.
-                    // History items are case-sensitive, see #3978.
-                    return autosuggestion_t{searcher.current_string(), search_string,
-                                            false /* icase */};
-                }
+            if (autosuggest_validate_from_history(item, working_directory, ctx)) {
+                // The command autosuggestion was handled specially, so we're done.
+                // History items are case-sensitive, see #3978.
+                return autosuggestion_t{searcher.current_string(), search_string,
+                                        false /* icase */};
             }
         }
 
@@ -2467,7 +2514,7 @@ void reader_change_history(const wcstring &name) {
     reader_data_t *data = current_data_or_null();
     if (data && data->history) {
         data->history->save();
-        data->history = &history_t::history_with_name(name);
+        data->history = history_t::with_name(name);
     }
 }
 
@@ -2476,7 +2523,7 @@ void reader_change_history(const wcstring &name) {
 static std::shared_ptr<reader_data_t> reader_push_ret(parser_t &parser,
                                                       const wcstring &history_name,
                                                       reader_config_t &&conf) {
-    history_t *hist = &history_t::history_with_name(history_name);
+    std::shared_ptr<history_t> hist = history_t::with_name(history_name);
     auto data = std::make_shared<reader_data_t>(parser.shared(), hist, std::move(conf));
     reader_data_stack.push_back(data);
     data->command_line_changed(&data->command_line);
@@ -3082,6 +3129,13 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             delete_char();
             break;
         }
+        case rl::exit: {
+            // This is by definition a successful exit, override the status
+            parser().set_last_statuses(statuses_t::just(STATUS_CMD_OK));
+            exit_loop_requested = true;
+            check_exit_loop_maybe_warning(this);
+            break;
+        }
         case rl::delete_or_exit:
         case rl::delete_char: {
             // Remove the current character in the character buffer and on the screen using
@@ -3159,12 +3213,40 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             if (command_test_result == 0) {
-                // Finished command, execute it. Don't add items that start with a leading
-                // space, or if in silent mode (#7230).
-                const editable_line_t *el = &command_line;
-                if (history != nullptr && !conf.in_silent_mode && may_add_to_history(el->text())) {
-                    history->add_pending_with_file_detection(el->text(), vars.get_pwd_slash());
+                // Finished command, execute it. Don't add items in silent mode (#7230).
+                wcstring text = command_line.text();
+                if (text.empty()) {
+                    // Here the user just hit return. Make a new prompt, don't remove ephemeral
+                    // items.
+                    rls.finished = true;
+                    break;
                 }
+
+                // Historical behavior is to trim trailing spaces.
+                while (!text.empty() && text.back() == L' ') {
+                    text.pop_back();
+                }
+
+                if (history && !conf.in_silent_mode) {
+                    // Remove ephemeral items.
+                    // Note we fall into this case if the user just types a space and hits return.
+                    history->remove_ephemeral_items();
+
+                    // Mark this item as ephemeral if there is a leading space (#615).
+                    history_persistence_mode_t mode;
+                    if (text.front() == L' ') {
+                        // Leading spaces are ephemeral (#615).
+                        mode = history_persistence_mode_t::ephemeral;
+                    } else if (in_private_mode(vars)) {
+                        // Private mode means in-memory only.
+                        mode = history_persistence_mode_t::memory;
+                    } else {
+                        mode = history_persistence_mode_t::disk;
+                    }
+                    history_t::add_pending_with_file_detection(history, text, vars.snapshot(),
+                                                               mode);
+                }
+
                 rls.finished = true;
                 update_buff_pos(&command_line, command_line.size());
             } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
@@ -3682,7 +3764,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
-            // Some commands should have been handled internally by inputter_t::readch().
+        case rl::begin_undo_group: {
+            editable_line_t *el = active_edit_line();
+            el->begin_edit_group();
+            break;
+        }
+        case rl::end_undo_group: {
+            editable_line_t *el = active_edit_line();
+            el->end_edit_group();
+            break;
+        }
+        // Some commands should have been handled internally by inputter_t::readch().
         case rl::self_insert:
         case rl::self_insert_notfirst:
         case rl::func_or:
@@ -3953,6 +4045,13 @@ void reader_schedule_prompt_repaint() {
     }
 }
 
+void reader_handle_command(readline_cmd_t cmd) {
+    if (reader_data_t *data = current_data_or_null()) {
+        readline_loop_state_t rls{};
+        data->handle_readline_command(cmd, rls);
+    }
+}
+
 void reader_queue_ch(const char_event_t &ch) {
     if (reader_data_t *data = current_data_or_null()) {
         data->inputter.queue_ch(ch);
@@ -3965,7 +4064,7 @@ const wchar_t *reader_get_buffer() {
     return data ? data->command_line.text().c_str() : nullptr;
 }
 
-history_t *reader_get_history() {
+std::shared_ptr<history_t> reader_get_history() {
     ASSERT_IS_MAIN_THREAD();
     reader_data_t *data = current_data_or_null();
     return data ? data->history : nullptr;

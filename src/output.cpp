@@ -144,47 +144,24 @@ bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
 /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
 /// color pair to what it should be.
 ///
-/// \param c Foreground color.
-/// \param c2 Background color.
-void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
-    if (!cur_term) return;
+/// \param fg Foreground color.
+/// \param bg Background color.
+void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
+    // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
+    // just give up...
+    if (!cur_term || !exit_attribute_mode) return;
 
     const rgb_color_t normal = rgb_color_t::normal();
     bool bg_set = false, last_bg_set = false;
-    bool is_bold = false;
-    bool is_underline = false;
-    bool is_italics = false;
-    bool is_dim = false;
-    bool is_reverse = false;
+    bool is_bold = fg.is_bold() || bg.is_bold();
+    bool is_underline = fg.is_underline() || bg.is_underline();
+    bool is_italics = fg.is_italics() || bg.is_italics();
+    bool is_dim = fg.is_dim() || bg.is_dim();
+    bool is_reverse = fg.is_reverse() || bg.is_reverse();
 
-    // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
-    // just give up...
-    if (!exit_attribute_mode) {
-        return;
-    }
-
-    is_bold |= c.is_bold();
-    is_bold |= c2.is_bold();
-
-    is_underline |= c.is_underline();
-    is_underline |= c2.is_underline();
-
-    is_italics |= c.is_italics();
-    is_italics |= c2.is_italics();
-
-    is_dim |= c.is_dim();
-    is_dim |= c2.is_dim();
-
-    is_reverse |= c.is_reverse();
-    is_reverse |= c2.is_reverse();
-
-    if (c.is_reset() || c2.is_reset()) {
-        c = c2 = normal;
-        was_bold = false;
-        was_underline = false;
-        was_italics = false;
-        was_dim = false;
-        was_reverse = false;
+    if (fg.is_reset() || bg.is_reset()) {
+        fg = bg = normal;
+        reset_modes();
         // If we exit attibute mode, we must first set a color, or previously colored text might
         // lose it's color. Terminals are weird...
         write_foreground_color(*this, 0);
@@ -192,40 +169,14 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         return;
     }
 
-    if (was_bold && !is_bold) {
-        // Only way to exit bold mode is a reset of all attributes.
+    if ((was_bold && !is_bold)
+        || (was_dim && !is_dim)
+        || (was_reverse && !is_reverse)) {
+        // Only way to exit bold/dim/reverse mode is a reset of all attributes.
         writembs(*this, exit_attribute_mode);
         last_color = normal;
         last_color2 = normal;
-        was_bold = false;
-        was_underline = false;
-        was_italics = false;
-        was_dim = false;
-        was_reverse = false;
-    }
-
-    if (was_dim && !is_dim) {
-        // Only way to exit dim mode is a reset of all attributes.
-        writembs(*this, exit_attribute_mode);
-        last_color = normal;
-        last_color2 = normal;
-        was_bold = false;
-        was_underline = false;
-        was_italics = false;
-        was_dim = false;
-        was_reverse = false;
-    }
-
-    if (was_reverse && !is_reverse) {
-        // Only way to exit reverse mode is a reset of all attributes.
-        writembs(*this, exit_attribute_mode);
-        last_color = normal;
-        last_color2 = normal;
-        was_bold = false;
-        was_underline = false;
-        was_italics = false;
-        was_dim = false;
-        was_reverse = false;
+        reset_modes();
     }
 
     if (!last_color2.is_normal() && !last_color2.is_reset()) {
@@ -233,10 +184,10 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         last_bg_set = true;
     }
 
-    if (!c2.is_normal()) {
+    if (!bg.is_normal()) {
         // Background is set.
         bg_set = true;
-        if (c == c2) c = (c2 == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
+        if (fg == bg) fg = (bg == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
     }
 
     if (enter_bold_mode && enter_bold_mode[0] != '\0') {
@@ -248,11 +199,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         if (!bg_set && last_bg_set) {
             // Background color changed and is no longer set, so we exit bold mode.
             writembs(*this, exit_attribute_mode);
-            was_bold = false;
-            was_underline = false;
-            was_italics = false;
-            was_dim = false;
-            was_reverse = false;
+            reset_modes();
             // We don't know if exit_attribute_mode resets colors, so we set it to something known.
             if (write_foreground_color(*this, 0)) {
                 last_color = rgb_color_t::black();
@@ -260,26 +207,22 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         }
     }
 
-    if (last_color != c) {
-        if (c.is_normal()) {
+    if (last_color != fg) {
+        if (fg.is_normal()) {
             write_foreground_color(*this, 0);
             writembs(*this, exit_attribute_mode);
 
             last_color2 = rgb_color_t::normal();
-            was_bold = false;
-            was_underline = false;
-            was_italics = false;
-            was_dim = false;
-            was_reverse = false;
-        } else if (!c.is_special()) {
-            write_color(c, true /* foreground */);
+            reset_modes();
+        } else if (!fg.is_special()) {
+            write_color(fg, true /* foreground */);
         }
     }
 
-    last_color = c;
+    last_color = fg;
 
-    if (last_color2 != c2) {
-        if (c2.is_normal()) {
+    if (last_color2 != bg) {
+        if (bg.is_normal()) {
             write_background_color(*this, 0);
 
             writembs(*this, exit_attribute_mode);
@@ -287,15 +230,11 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
                 write_color(last_color, true /* foreground */);
             }
 
-            was_bold = false;
-            was_underline = false;
-            was_italics = false;
-            was_dim = false;
-            was_reverse = false;
-            last_color2 = c2;
-        } else if (!c2.is_special()) {
-            write_color(c2, false /* not foreground */);
-            last_color2 = c2;
+            reset_modes();
+            last_color2 = bg;
+        } else if (!bg.is_special()) {
+            write_color(bg, false /* not foreground */);
+            last_color2 = bg;
         }
     }
 

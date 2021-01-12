@@ -94,7 +94,7 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     // We want to fill buffer_ by reading from fd. fd is the read end of a pipe; the write end is
     // owned by another process, or something else writing in fish.
     // Pass fd to an fd_monitor. It will add fd to its select() loop, and give us a callback when
-    // the fd is readable, or when our timeout is hit. The usual path is that we will get called
+    // the fd is readable, or when our item is poked. The usual path is that we will get called
     // back, read a bit from the fd, and append it to the buffer. Eventually the write end of the
     // pipe will be closed - probably the other process exited - and fd will be widowed; read() will
     // then return 0 and we will stop reading.
@@ -102,9 +102,10 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     // e.g.:
     //   cmd ( background & ; echo hi )
     // Here the background process will inherit the write end of the pipe and hold onto it forever.
-    // In this case, we will hit the timeout on waiting for more data and notice that the shutdown
-    // flag is set (this indicates that the command substitution is done); in this case we will read
-    // until we get EAGAIN and then give up.
+    // In this case, when complete_background_fillthread() is called, the callback will be invoked
+    // with item_wake_reason_t::poke, and we will notice that the shutdown flag is set (this
+    // indicates that the command substitution is done); in this case we will read until we get
+    // EAGAIN and then give up.
 
     // Construct a promise that can go into our background thread.
     auto promise = std::make_shared<std::promise<void>>();
@@ -113,25 +114,18 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     // Note this should only ever be called once.
     fillthread_waiter_ = promise->get_future();
 
-    // 100 msec poll rate. Note that in most cases, the write end of the pipe will be closed so
-    // select() will return; the polling is important only for weird cases like a background process
-    // launched in a command substitution.
-    constexpr uint64_t usec_per_msec = 1000;
-    uint64_t poll_usec = 100 * usec_per_msec;
-
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' waits for the promise in its dtor.
     fd_monitor_item_t item;
     item.fd = std::move(fd);
-    item.timeout_usec = poll_usec;
-    item.callback = [this, promise](autoclose_fd_t &fd, bool timed_out) {
+    item.callback = [this, promise](autoclose_fd_t &fd, item_wake_reason_t reason) {
         ASSERT_IS_BACKGROUND_THREAD();
-        // Only check the shutdown flag if we timed out.
+        // Only check the shutdown flag if we timed out or were poked.
         // It's important that if select() indicated we were readable, that we call select() again
         // allowing it to time out. Note the typical case is that the fd will be closed, in which
         // case select will return immediately.
         bool done = false;
-        if (!timed_out) {
+        if (reason == item_wake_reason_t::readable) {
             // select() reported us as readable; read a bit.
             scoped_lock locker(append_lock_);
             ssize_t ret = read_once(fd.fd());
@@ -151,13 +145,16 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
             promise->set_value();
         }
     };
-    fd_monitor().add(std::move(item));
+    this->item_id_ = fd_monitor().add(std::move(item));
 }
 
 void io_buffer_t::complete_background_fillthread() {
+    // Mark that our fillthread is done, then wake it up.
     ASSERT_IS_MAIN_THREAD();
     assert(fillthread_running() && "Should have a fillthread");
+    assert(this->item_id_ > 0 && "Should have a valid item ID");
     shutdown_fillthread_ = true;
+    fd_monitor().poke_item(this->item_id_);
 
     // Wait for the fillthread to fulfill its promise, and then clear the future so we know we no
     // longer have one.

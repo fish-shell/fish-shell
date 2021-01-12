@@ -28,6 +28,8 @@ The generic key binding that matches if no other binding does can be set by spec
 
 If the ``-k`` switch is used, the name of a key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key\_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys). Normally this will print an error if the current ``$TERM`` entry doesn't have a given key, unless the ``-s`` switch is given.
 
+To find out what sequence a key combination sends, you can use :ref:`fish_key_reader <cmd-fish_key_reader>`.
+
 ``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` for a complete list of these input functions.
 
 When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a `function <#function>`__ and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
@@ -125,6 +127,8 @@ The following special input functions are available:
 - ``expand-abbr``, expands any abbreviation currently under the cursor
 
 - ``execute``, run the current commandline
+
+- ``exit``, exit the shell
 
 - ``forward-bigword``, move one whitespace-delimited word to the right
 

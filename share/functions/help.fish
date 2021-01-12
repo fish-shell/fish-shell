@@ -199,7 +199,7 @@ function help --description 'Show help for the fish shell'
                 printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
         end
         $fish_browser $page_url &
-        disown
+        disown $last_pid >/dev/null 2>&1
     else
         # Work around lynx bug where <div class="contents"> always has the same formatting as links (unreadable)
         # by using a custom style sheet. See https://github.com/fish-shell/fish-shell/issues/4170

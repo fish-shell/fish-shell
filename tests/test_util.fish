@@ -125,21 +125,6 @@ function say -V suppress_color
     end
 end
 
-function colordiff -d 'Colored diff output for unified diffs'
-    diff $argv | while read -l line
-        switch $line
-            case '+*'
-                say green $line
-            case '-*'
-                say red $line
-            case '@*'
-                say cyan $line
-            case '*'
-                echo $line
-        end
-    end
-end
-
 # lame timer
 for program in {g,}date
     if command -q $program && $program --version 1>/dev/null 2>/dev/null

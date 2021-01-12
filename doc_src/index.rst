@@ -104,7 +104,7 @@ Syntax Overview
 
 Shells like fish are used by giving them commands. Every fish command follows the same basic syntax. A command is executed by writing the name of the command followed by any arguments. For example::
 
-   echo hello world
+    echo hello world
 
 This calls the :ref:`echo <cmd-echo>` command. ``echo`` writes its arguments to the screen. In the example above, the output is ``hello world``. Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
 
@@ -164,19 +164,19 @@ Single quotes have no special meaning within double quotes and vice versa.
 
 Example::
 
-  rm "cumbersome filename.txt"
+    rm "cumbersome filename.txt"
 
 removes the file ``cumbersome filename.txt``, while
 
 ::
 
-  rm cumbersome filename.txt
+    rm cumbersome filename.txt
 
 removes two files, ``cumbersome`` and ``filename.txt``.
 
 Another example::
 
-   grep 'enabled)$' foo.txt
+    grep 'enabled)$' foo.txt
 
 searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special to ``grep``: it matches the end of the line).
 
@@ -280,24 +280,19 @@ For example, ``echo hello 2> output.stderr`` writes the standard error (file des
 Piping
 ------
 
-Another way to redirect streams is a *pipe*. This connects streams with each other, usually the standard output of one command with the standard input of another.
+Another way to redirect streams is a *pipe*. A pipe connects streams with each other. Usually the standard output of one command is connected with the standard input of another. This is done by separating commands with the pipe character ``|``. For example::
 
-This is done by separating the commands by the pipe character ``|``. For example
+    cat foo.txt | head
 
-::
+The command ``cat foo.txt`` sends the contents of ``foo.txt`` to stdout. This output is provided as input for the ``head`` program, which prints the first 10 lines of its input.
 
-  cat foo.txt | head
+It is possible to pipe a different output file descriptor by prepending its FD number and the output redirect symbol to the pipe. For example::
 
-will call the ``cat`` program with the parameter 'foo.txt', which will print the contents of the file 'foo.txt'. The contents of foo.txt will then be sent to the 'head' program, which will write the first few lines it reads to its output - the screen.
-
-It is possible to use a different output file descriptor by prepending its FD number and then output redirect symbol to the pipe. For example::
-
-  make fish 2>| less
-
+    make fish 2>| less
 
 will attempt to build ``fish``, and any errors will be shown using the ``less`` pager. [#]_
 
-As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. (Note this is different from bash, which uses ``|&``).
+As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. Note that this is different from bash, which uses ``|&``.
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
 

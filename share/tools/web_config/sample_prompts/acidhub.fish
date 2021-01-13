@@ -8,7 +8,7 @@ function fish_prompt -d "Write out the prompt"
     if set -l git_branch (command git symbolic-ref HEAD 2>/dev/null | string replace refs/heads/ '')
         set git_branch (set_color -o blue)"$git_branch"
         set -l git_status
-        if command git diff-index --quiet HEAD --
+        if command git diff-index HEAD -- --quiet
             if set -l count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)
                 echo $count | read -l ahead behind
                 if test "$ahead" -gt 0
@@ -18,7 +18,7 @@ function fish_prompt -d "Write out the prompt"
                     set git_status "$git_status"(set_color red)⬇
                 end
             end
-            for i in (git status --porcelain | string sub -l 2 | uniq)
+            for i in (git status --porcelain | string sub -l 2 | sort | uniq)
                 switch $i
                     case "."
                         set git_status "$git_status"(set_color green)✚

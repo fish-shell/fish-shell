@@ -113,7 +113,7 @@ Scripting improvements
 -  ``functions`` now explains when a function was defined via ``source`` instead of just saying ``Defined in -``.
 -  Significant performance improvements when globbing or in ``math``.
 -  ``echo`` no longer interprets options at the beginning of an argument (``echo "-n foo"``) (:issue:`7614`).
--  Fish now better handles an unset $HOME (:issue:`7620`).
+-  fish now finds user configuration if the ``HOME`` environment variable is not set (:issue:`7620`).
 
 Interactive improvements
 ------------------------
@@ -166,7 +166,7 @@ Interactive improvements
 -  Resizing the terminal window no longer produces a corrupted prompt (:issue:`6532`).
 -  ``functions`` produces an error rather than crashing on certain invalid arguments (:issue:`7515`).
 -  A crash in using tab completions with inline variable assignment (eg ``A= b``) has been fixed (:issue:`7344`).
--  ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`).
+-  ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`), and history is kept in memory in private mode (but not stored permanently) (:issue:`7590`).
 -  Commands with leading spaces may be retrieved from history with up-arrow until a new command is run, matching zsh's ``HIST_IGNORE_SPACE`` (:issue:`1383`).
 -  Importing bash history or reporting errors with recursive globs (``**``) no longer hangs (:issue:`7407`, :issue:`7497`).
 
@@ -238,6 +238,7 @@ Completions
 
    -  ``7z``, ``7za`` and ``7zr`` (:issue:`7220`)
    -  ``alias`` (:issue:`7035`)
+   -  ``alternatives`` (:issue:`7616`)
    -  ``apk`` (:issue:`7108`)
    -  ``asciidoctor`` (:issue:`7000`)
    -  ``bootctl`` (:issue:`7428`)
@@ -249,6 +250,7 @@ Completions
    -  ``dhclient``
    -  Postgres-related commands ``dropdb``, ``createdb``, ``pg_restore``, ``pg_dump`` and
       ``pg_dumpall`` (:issue:`6620`)
+   -  ``dm-tool`` (:issue:`7624`)
    -  ``dotnet`` (:issue:`7558`)
    -  ``downgrade`` (:issue:`6751`)
    -  ``gapplication``, ``gdbus``, ``gio`` and ``gresource`` (:issue:`7300`)
@@ -262,6 +264,8 @@ Completions
    -  ``julia`` (:issue:`7468`)
    -  ``k3d`` (:issue:`7202`)
    -  ``ldapsearch`` (:issue:`7578`)
+   -  ``lightdm`` (:issue:`7624`)
+   -  ``losetup`` (:issue:`7621`)
    -  ``micro`` (:issue:`7339`)
    -  ``mpc`` (:issue:`7169`)
    -  Metasploit's ``msfconsole``, ``msfdb`` and ``msfvenom`` (:issue:`6930`)

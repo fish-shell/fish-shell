@@ -341,13 +341,13 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
 /// Call vars.set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
 static int env_set_reporting_errors(const wchar_t *cmd, const wchar_t *key, int scope,
-                                    const wcstring_list_t &list, io_streams_t &streams,
+                                    wcstring_list_t list, io_streams_t &streams,
                                     env_stack_t &vars, std::vector<event_t> *evts) {
     if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams, vars)) {
         return STATUS_CMD_ERROR;
     }
 
-    int retval = vars.set(key, scope | ENV_USER, list, evts);
+    int retval = vars.set(key, scope | ENV_USER, std::move(list), evts);
     handle_env_return(retval, cmd, key, streams);
 
     return retval;
@@ -677,7 +677,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             dest_var->to_list(result);
             erase_values(result, indexes);
             retval =
-                env_set_reporting_errors(cmd, dest, scope, result, streams, parser.vars(), &evts);
+                env_set_reporting_errors(cmd, dest, scope, std::move(result), streams, parser.vars(), &evts);
         }
 
         // Fire any events.
@@ -801,7 +801,7 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
 
     std::vector<event_t> evts;
     retval =
-        env_set_reporting_errors(cmd, varname, scope, new_values, streams, parser.vars(), &evts);
+        env_set_reporting_errors(cmd, varname, scope, std::move(new_values), streams, parser.vars(), &evts);
     // Fire any events.
     for (const auto &evt : evts) {
         event_fire(parser, evt);

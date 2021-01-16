@@ -25,6 +25,7 @@ COMMENT_RE = r"^(?:[^#].*)?#\s*"
 
 # A regex showing how to run the file.
 RUN_RE = re.compile(COMMENT_RE + r"RUN:\s+(.*)\n")
+REQUIRES_RE = re.compile(COMMENT_RE + r"REQUIRES:\s+(.*)\n")
 
 # A regex capturing lines that should be checked against stdout.
 CHECK_STDOUT_RE = re.compile(COMMENT_RE + r"CHECK:\s+(.*)\n")
@@ -32,6 +33,7 @@ CHECK_STDOUT_RE = re.compile(COMMENT_RE + r"CHECK:\s+(.*)\n")
 # A regex capturing lines that should be checked against stderr.
 CHECK_STDERR_RE = re.compile(COMMENT_RE + r"CHECKERR:\s+(.*)\n")
 
+SKIP = object()
 
 class Config(object):
     def __init__(self):
@@ -357,6 +359,20 @@ def perform_substitution(input_str, subs):
     return re.sub(r"%(%|[a-zA-Z0-9_-]+)", subber, input_str)
 
 
+def runproc(cmd):
+    """ Wrapper around subprocess.Popen to save typing """
+    PIPE = subprocess.PIPE
+    proc = subprocess.Popen(
+        cmd,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        shell=True,
+        close_fds=True,  # For Python 2.6 as shipped on RHEL 6
+    )
+    return proc
+
+
 class TestRun(object):
     def __init__(self, name, runcmd, checker, subs, config):
         self.name = name
@@ -442,14 +458,7 @@ class TestRun(object):
         PIPE = subprocess.PIPE
         if self.config.verbose:
             print(self.subbed_command)
-        proc = subprocess.Popen(
-            self.subbed_command,
-            stdin=PIPE,
-            stdout=PIPE,
-            stderr=PIPE,
-            shell=True,
-            close_fds=True,  # For Python 2.6 as shipped on RHEL 6
-        )
+        proc = runproc(self.subbed_command)
         stdout, stderr = proc.communicate()
         # HACK: This is quite cheesy: POSIX specifies that sh should return 127 for a missing command.
         # Technically it's also possible to return it in other conditions.
@@ -457,6 +466,13 @@ class TestRun(object):
         status = proc.returncode
         if status == 127:
             raise CheckerError("Command could not be found: " + self.subbed_command)
+        if status == 126:
+            raise CheckerError("Command is not executable: " + self.subbed_command)
+
+        # If a test returns 125, we skip it and don't even attempt to compare output.
+        # This is similar to what `git bisect run` does.
+        if status == 125:
+            return SKIP
 
         outlines = [
             Line(text, idx + 1, "stdout")
@@ -575,6 +591,8 @@ class Checker(object):
             else:
                 raise CheckerError("No runlines ('# RUN') found")
 
+        self.requirecmds = [RunCmd.parse(sl) for sl in group1s(REQUIRES_RE)]
+
         # Find check cmds.
         self.outchecks = [
             CheckCmd.parse(sl, "CHECK") for sl in group1s(CHECK_STDOUT_RE)
@@ -589,6 +607,19 @@ def check_file(input_file, name, subs, config, failure_handler):
     success = True
     lines = Line.readfile(input_file, name)
     checker = Checker(name, lines)
+
+    # Run all the REQUIRES lines first,
+    # if any of them fail it's a SKIP
+    for reqcmd in checker.requirecmds:
+        proc = runproc(
+            perform_substitution(reqcmd.args, subs)
+        )
+        stdout, stderr = proc.communicate()
+        status = proc.returncode
+        if proc.returncode > 0:
+            return SKIP
+
+    # Only then run the RUN lines.
     for runcmd in checker.runcmds:
         failure = TestRun(name, runcmd, checker, subs, config).run()
         if failure:
@@ -668,14 +699,20 @@ def main():
         subs = def_subs.copy()
         subs["s"] = path
         starttime = datetime.datetime.now()
-        if not check_path(path, subs, config, TestFailure.print_message):
+        ret = check_path(path, subs, config, TestFailure.print_message)
+        if not ret:
             failure_count += 1
         elif config.progress:
             endtime = datetime.datetime.now()
             duration_ms = round((endtime - starttime).total_seconds() * 1000)
+            reason = "ok"
+            color = "{GREEN}"
+            if ret is SKIP:
+                reason = "SKIPPED"
+                color = "{BLUE}"
             print(
-                "{GREEN}ok{RESET} ({duration} ms)".format(
-                    duration=duration_ms, **fields
+                (color + "{reason}{RESET} ({duration} ms)").format(
+                    duration=duration_ms, reason=reason, **fields
                 )
             )
     sys.exit(failure_count)

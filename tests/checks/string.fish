@@ -710,3 +710,6 @@ end
 # CHECKERR: checks/string.fish (line {{\d+}}): function: The name 'string' is reserved, and cannot be used as a function name
 # CHECKERR: function string
 # CHECKERR: ^
+
+string escape \x7F
+# CHECK: \x7f

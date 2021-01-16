@@ -953,6 +953,14 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                     need_escape = need_complex_escape = true;
                     break;
                 }
+                case L'\x7F': {
+                    out += L'\\';
+                    out += L'x';
+                    out += L'7';
+                    out += L'f';
+                    need_escape = need_complex_escape = true;
+                    break;
+                }
                 case L'\\':
                 case L'\'': {
                     need_escape = need_complex_escape = true;

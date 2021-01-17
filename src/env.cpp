@@ -363,9 +363,12 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that
     // if and only if it matches getcwd (#5647). Note we treat PWD as read-only so it was not set in
     // vars.
+    //
+    // Also reject all paths that don't start with "/", this includes windows paths like "F:\foo".
+    // (see #7636)
     const char *incoming_pwd_cstr = getenv("PWD");
     wcstring incoming_pwd = incoming_pwd_cstr ? str2wcstring(incoming_pwd_cstr) : wcstring{};
-    if (!incoming_pwd.empty() && paths_are_same_file(incoming_pwd, L".")) {
+    if (!incoming_pwd.empty() && incoming_pwd.front() == L'/' &&  paths_are_same_file(incoming_pwd, L".")) {
         vars.set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, incoming_pwd);
     } else {
         vars.set_pwd_from_getcwd();

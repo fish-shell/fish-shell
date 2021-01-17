@@ -979,6 +979,13 @@ Multiple elements can be given in a :ref:`brace expansion<expand-brace>`::
   # Call bash with a reasonable default path.
   PATH={/usr,}/{s,}bin bash
 
+Or with a :ref:`glob <expand-wildcard>`::
+
+  # Run vlc on all mp3 files in the current directory - if no file exists it will still be run with no arguments
+  mp3s=*.mp3 vlc $mp3s
+
+Unlike other shells, this does *not* inhibit any lookup (aliases or similar). Calling a command after setting a variable override will result in the exact same command being run.
+
 This syntax is supported since fish 3.1.
 
 .. _variables-universal:

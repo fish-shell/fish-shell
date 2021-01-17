@@ -580,7 +580,6 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     set -l bare
     set -l step
     set -l total
-    set -l os
 
     if test -d $git_dir/rebase-merge
         set branch (cat $git_dir/rebase-merge/head-name 2>/dev/null)
@@ -630,8 +629,8 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
 							command git describe HEAD
 						case default '*'
 							command git describe --tags --exact-match HEAD
-						end 2>/dev/null; set os $status)
-            if test $os -ne 0
+						end 2>/dev/null)
+            if test $status -ne 0
                 # Shorten the sha ourselves to 8 characters - this should be good for most repositories,
                 # and even for large ones it should be good for most commits
                 if set -q sha
@@ -662,10 +661,6 @@ end
 function __fish_git_prompt_set_char
     set -l user_variable_name "$argv[1]"
     set -l char $argv[2]
-    set -l user_variable
-    if set -q $user_variable_name
-        set user_variable $$user_variable_name
-    end
 
     if set -q argv[3]
         and begin
@@ -679,7 +674,7 @@ function __fish_git_prompt_set_char
     set -l variable_done "$variable"_done
 
     if not set -q $variable
-        set -g $variable (set -q $user_variable_name; and echo $user_variable; or echo $char)
+        set -g $variable (set -q $user_variable_name; and echo $$user_variable; or echo $char)
     end
 end
 
@@ -702,11 +697,6 @@ end
 
 function __fish_git_prompt_set_color
     set -l user_variable_name "$argv[1]"
-    set -l user_variable
-    if set -q $user_variable_name
-        set user_variable $$user_variable_name
-    end
-    set -l user_variable_bright
 
     set -l default default_done
     switch (count $argv)
@@ -725,15 +715,14 @@ function __fish_git_prompt_set_color
     set -l variable_done "$variable"_done
 
     if not set -q $variable
-        if test -n "$user_variable"
-            set -g $variable (set_color $user_variable)
+        if test -n "$$user_variable_name"
+            set -g $variable (set_color $$user_variable_name)
             set -g $variable_done (set_color normal)
         else
             set -g $variable $default
             set -g $variable_done $default_done
         end
     end
-
 end
 
 

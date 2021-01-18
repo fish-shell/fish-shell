@@ -674,7 +674,7 @@ function __fish_git_prompt_set_char
     set -l variable_done "$variable"_done
 
     if not set -q $variable
-        set -g $variable (set -q $user_variable_name; and echo $$user_variable; or echo $char)
+        set -g $variable (set -q $user_variable_name; and echo $$user_variable_name; or echo $char)
     end
 end
 

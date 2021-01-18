@@ -14,6 +14,7 @@ RUN apt-get update \
     ninja-build \
     python3 \
     python3-pexpect \
+    sudo \
   && locale-gen en_US.UTF-8
 
 RUN groupadd -g 1000 fishuser \

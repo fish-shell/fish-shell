@@ -8,7 +8,9 @@ RUN yum install --assumeyes epel-release https://repo.ius.io/ius-release-el7.rpm
     git224-core \
     ncurses-devel \
     ninja-build \
-    python3
+    python3 \
+    openssl \
+    sudo
 
 # cmake is called "cmake3" on centos7.
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake \

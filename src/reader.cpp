@@ -774,6 +774,8 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_lflag &= ~IEXTEN;  // turn off handling of discard and lnext characters
     modes->c_oflag |= OPOST;    // turn on "implementation-defined post processing" - this often
                                 // changes how line breaks work.
+    modes->c_oflag |= ONLCR;    // "translate newline to carriage return-newline" - without
+                                // you see staircase output.
 
     // Disable flow control in the shell. We don't want to be stopped.
     modes->c_iflag &= ~IXON;
@@ -799,9 +801,10 @@ static void term_fix_modes(struct termios *modes) {
 }
 
 static void term_fix_external_modes(struct termios *modes) {
-    // Turning off OPOST breaks output (staircase effect), we don't allow it.
+    // Turning off OPOST or ONLCR breaks output (staircase effect), we don't allow it.
     // See #7133.
     modes->c_oflag |= OPOST;
+    modes->c_oflag |= ONLCR;
     // These cause other ridiculous behaviors like input not being shown.
     modes->c_lflag |= ICANON;
     modes->c_lflag |= IEXTEN;

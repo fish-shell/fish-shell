@@ -1,4 +1,6 @@
-#RUN: %fish %s
+#RUN: %fish -i %s
+# Note: ^ this is interactive so we test interactive behavior,
+# e.g. the fish_git_prompt variable handlers test `status is-interactive`.
 #REQUIRES: command -v git
 
 # Do some tests with `git` - completions are interesting,
@@ -31,4 +33,9 @@ echo # the git prompt doesn't print a newline
 
 __fish_git_prompt_show_informative_status=1 fish_git_prompt
 echo
-#CHECK: (newbranch %1)
+#CHECK: (newbranch|…1)
+
+# Confirm the mode changes back
+fish_git_prompt
+echo
+#CHECK: (newbranch)

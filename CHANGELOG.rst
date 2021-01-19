@@ -111,9 +111,10 @@ Scripting improvements
 -  The fallback ``realpath`` builtin supports the ``-s``/``--no-symlinks`` option, like GNU realpath.
 -  ``.`` and ``:`` are now also builtins instead of functions (:issue:`6854`).
 -  ``functions`` now explains when a function was defined via ``source`` instead of just saying ``Defined in -``.
--  Significant performance improvements when globbing or in ``math``.
+-  Significant performance improvements when globbing, appending to variables or in ``math``.
 -  ``echo`` no longer interprets options at the beginning of an argument (``echo "-n foo"``) (:issue:`7614`).
 -  fish now finds user configuration if the ``HOME`` environment variable is not set (:issue:`7620`).
+-  fish should no longer crash if it inherited a windows-style $PWD (like ``F:\path``) (:issue:`7636`).
 
 Interactive improvements
 ------------------------
@@ -169,6 +170,8 @@ Interactive improvements
 -  ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`), and history is kept in memory in private mode (but not stored permanently) (:issue:`7590`).
 -  Commands with leading spaces may be retrieved from history with up-arrow until a new command is run, matching zsh's ``HIST_IGNORE_SPACE`` (:issue:`1383`).
 -  Importing bash history or reporting errors with recursive globs (``**``) no longer hangs (:issue:`7407`, :issue:`7497`).
+-  ``bind`` now shows ``\x7f`` for the del key instead of a literal DEL character (:issue:`7631`)
+-  fish is now more resilient against broken terminal modes (:issue:`7133`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

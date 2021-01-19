@@ -272,6 +272,7 @@ Completions
    -  ``micro`` (:issue:`7339`)
    -  ``mpc`` (:issue:`7169`)
    -  Metasploit's ``msfconsole``, ``msfdb`` and ``msfvenom`` (:issue:`6930`)
+   -  ``mtr`` (:issue:`7638`)
    -  ``ncat``, ``nc.openbsd`` and ``nc.traditional`` (:issue:`6873`)
    -  ``nmap`` (:issue:`6873`)
    -  ``prime-run`` (:issue:`7241`)

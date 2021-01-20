@@ -18,7 +18,7 @@ Notable improvements and fixes
 -  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
    Although flow control remains off by default, enterprising users can now enable it for external commands with
    ``stty`` (:issue:`2315`). 
--  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in ``config.fish`` (:issue:`6960`).
+-  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates, to be used interactively or in ``config.fish`` (:issue:`6960`, :issue:`7028`).
    For example::
 
      fish_add_path /opt/mycoolthing/bin
@@ -57,6 +57,7 @@ Scripting improvements
    a substring (:issue:`6765`, :issue:`5974`).
 -  ``string split`` has a new ``--fields`` option to specify fields to
    output, similar to ``cut -f`` (:issue:`6770`).
+-  ``string trim`` now also trims vertical tabs by default (:issue:`6795`).
 -  ``printf`` no longer prints an error if not given an argument (not
    even a format string)
 -  The ``true`` and ``false`` builtins ignore any arguments, like other shells (:issue:`7030`).
@@ -69,7 +70,7 @@ Scripting improvements
 - ``fish_indent`` indents continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||``.
 - ``pushd`` only adds a directory to the stack if changing to it was successful (:issue:`6947`).
 -  A new ``fish_job_summary`` function is called whenever a
-   background job stops or ends, or any job terminates from a signal (:issue:`6959`, :issue:`2727`).
+   background job stops or ends, or any job terminates from a signal (:issue:`6959`, :issue:`2727`, :issue:`4319`).
    The default behaviour can now be customized by redefining it.
 -  The ``fish_prompt`` event no longer fires when ``read`` is used. If
    you need a function to run any time ``read`` is invoked by a script,
@@ -121,8 +122,6 @@ Scripting improvements
 Interactive improvements
 ------------------------
 
--  Control-C no longer kills background jobs for which job control is
-   disabled, matching POSIX semantics (:issue:`6828`).
 -  The prompt is reprinted after a background job exits (:issue:`1018`).
 -  fish no longer inserts a space after a completion ending in ``.`` or
    ``,`` is accepted (:issue:`6928`).
@@ -144,10 +143,12 @@ Interactive improvements
    matching other shells (:issue:`6926`). The directory containing the history
    file was already private, so there should not have been any private data
    revealed.
--  The output of ``time`` is now properly aligned in all cases (:issue:`6726`).
+-  The output of ``time`` is now properly aligned in all cases (:issue:`6726`, :issue:`6714`) and no longer depends on locale (:issue:`6757`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Previously-defined ``__fish_command_not_found_handler`` functions with an appropriate event listener will still work (:issue:`7293`).
--  Control-C no longer occasionally prints an "unknown command" error (:issue:`7145`) or overwrites multiline prompts (:issue:`3537`).
+-  Control-C handling has been reimplemented in C++ and is therefore quicker (:issue:`5259`), no longer occasionally prints an "unknown command" error (:issue:`7145`) or overwrites multiline prompts (:issue:`3537`).
+-  Control-C no longer kills background jobs for which job control is
+   disabled, matching POSIX semantics (:issue:`6828`).
 -  Autocompletions work properly after Control-C to cancel the commmand line (:issue:`6937`).
 -  History search is now case-insensitive unless the search string contains an uppercase character (:issue:`7273`).
 -  ``fish_update_completions`` has a new ``-keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`).
@@ -161,7 +162,7 @@ Interactive improvements
 -  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (:issue:`7314`).
 -  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`).
 -  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (:issue:`7041`). 
--  ``help`` works properly on MSYS2 (:issue:`7113`).
+-  ``help`` works properly on MSYS2 (:issue:`7113`) and only uses cmd.exe if running on WSL (:issue:`6797`).
 -  Resuming a piped job by its number, like ``fg %1``, works correctly (:issue:`7406`). Resumed jobs show the correct title in the terminal emulator (:issue:`7444`).
 -  Commands run from key bindings now use the same TTY modes as normal commands (:issue:`7483`).
 -  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
@@ -179,6 +180,7 @@ Interactive improvements
 -  fish's history now also marks some paths with expansions
    like ``~`` or variables as paths.
    This allows only suggesting them when the paths are still valid (:issue:`7591`, :issue:`7582`).
+-  Syntax highlighting can now color a command as invalid even if return was pressed quickly (:issue:`5912`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -194,7 +196,7 @@ New or improved bindings
 -  A new special input function ``forward-single-char`` moves one character to the right, and if an autosuggestion is available, only take a single character from it (:issue:`7217`, :issue:`4984`).
 -  Special input functions can now be joined with ``or`` as a modifier (adding to ``and``), though only some commands set an exit status (:issue:`7217`). This includes ``suppress-autosuggestion`` to reflect whether an autosuggestion was suppressed (:issue:`1419`)
 -  A new function ``__fish_preview_current_file``, bound to Alt+O, opens the
-   current file at the cursor in a pager (:issue:`6838`).
+   current file at the cursor in a pager (:issue:`6838`, :issue:`6855`).
 -  ``edit_command_buffer`` (Alt-E and Alt-V) passes the cursor position
    to the external editor if the editor is recognized (:issue:`6138`, :issue:`6954`).
 -  ``__fish_prepend_sudo`` (Alt-S) now toggles a ``sudo`` prefix (:issue:`7012`) and avoids shifting the cursor (:issue:`6542`).
@@ -202,7 +204,7 @@ New or improved bindings
    to simplify rerunning the previous command with ``sudo`` (:issue:`7079`).
 -  ``__fish_toggle_comment_commandline`` (Alt-#) now uncomments and presents the last comment
    from history if the commandline is empty (:issue:`7137`).
--  ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (:issue:`7191`).
+-  ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (:issue:`7191`, :issue:`2083`).
 -  The definition of "word" and "bigword" for movements was refined, fixing (eg) vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
 -  fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`) and will properly copy newlines in multi-line commands.
 -  Using the ``*-jump`` special input functions before typing anything else no longer crashes fish.
@@ -221,6 +223,7 @@ Improved prompts
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`6715`, :issue:`7278`).
 -  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`).
 -  New colorschemes - ``ayu Light``, ``ayu Dark`` and ``ayu Mirage`` (:issue:`7596`).
+-  Bugs related to multiline prompts, including repainting (:issue:`5860`) or alt-left/right (:issue:`3550`) leading to graphical glitches have been fixed.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -229,7 +232,7 @@ Improved terminal support
    shape in vi mode, regardless of terminal (:issue:`6968`). The ``fish_vi_cursor`` option ``--force-iterm`` has been deprecated.
 -  ``diff`` will now colourize output, if supported (:issue:`7308`).
 -  Autosuggestions appear when the cursor passes the right prompt (:issue:`6948`) or wraps to the next line (:issue:`7213`).
--  The cursor shape in Vi mode changes properly in Windows Terminal (:issue:`6999`).
+-  The cursor shape in Vi mode changes properly in Windows Terminal (:issue:`6999`, :issue:`6478`).
 -  The spurious warning about terminal size in small terminals has been removed (:issue:`6980`).
 -  Dynamic titles are now enabled in Alacritty (:issue:`7073`).
 -  Current working directory updates are enabled in foot (:issue:`7099`).
@@ -237,7 +240,7 @@ Improved terminal support
 -  An issue producing strange status output from commands involving ``not`` has been fixed (:issue:`6566`).
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
--  Sessions with right prompts can be resized correctly in GNOME Terminal (and other VTE-based terminals) and Alacritty (:issue:`7491`).
+-  Sessions with right prompts can be resized correctly in terminals that handle reflow like GNOME Terminal (and other VTE-based terminals), the next Konsole version and Alacritty. This detection can be overridden with the new $fish_handle_reflow variable (:issue:`7491`, :issue:`7623`).
 -  fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 -  Better detection of new Konsole versions for truecolor support and cursor shape changing.
 
@@ -322,8 +325,10 @@ Changes not visible to users
 - The ``littlecheck`` script test driver gained improved output based on diffing rather than stopping on the first error. This makes understanding test failures much easier.
 - fish's test suite now checks all of its .fish scripts with ``fish --no-execute`` (:issue:`6619`).
 - The tests no longer fail if a user with a name starting with "haha" exists on the system (:issue:`6811`).
-- The CHANGELOG was moved to restructured text, allowing it to be included in the documentation.
+- The CHANGELOG was moved to restructured text, allowing it to be included in the documentation (:issue:`7057`).
 - fish moved CI from Travis (which is no longer available for opensource projects) to Github Actions (:issue:`6846`, :issue:`7447`)
+- fish handles ncurses installed in a non-standard prefix better (:issue:`6600`, :issue:`7219`), and uses variadic tparm on NetBSD curses (:issue: `6626`).
+- The web configuration tool no longer uses an obsolete Angular version (:issue:`7147`).
 
 Deprecations and removed features
 ---------------------------------
@@ -339,11 +344,11 @@ For distributors and developers
 
 -  fish source tarballs are now distributed using the XZ compression
    method (:issue:`5460`).
--  The CMake variable ``MAC_CODESIGN_ID`` can now be set to "off" to disable code-signing (:issue:`6952`).
+-  The CMake variable ``MAC_CODESIGN_ID`` can now be set to "off" to disable code-signing (:issue:`6952`, :issue:`6792`).
 -  Building on on macOS earlier than 10.13.6 succeeds, instead of failing on code-signing (:issue:`6791`).
 -  The pkg-config file now uses variables to ensure paths used are portable across prefixes.
 -  The default values for the ``extra_completionsdir``, ``extra_functionsdir``
-   and ``extra_confdir`` options now use the installation prefix rather than ``/usr/local``.
+   and ``extra_confdir`` options now use the installation prefix rather than ``/usr/local`` (:issue:`6778`).
 -  A new CMake variable ``FISH_USE_SYSTEM_PCRE2`` controls whether fish
    builds with the system-installed PCRE2, or the version it bundles. By
    default it prefers the system library if available, unless Mac

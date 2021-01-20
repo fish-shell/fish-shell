@@ -39,7 +39,7 @@ Notable improvements and fixes
 -  ``string match --regex`` now integrates named PCRE2 capture groups with fish variables, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
 -  Globs and other expansions are limited to 512,288 results (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
 -  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux's current directory introspection to work (:issue:`5699`).
--  A new ``fish for bash users`` documentation page gives a quick overview of the scripting differences between bash and fish (:issue:`2382`).
+-  A new ``fish for bash users`` documentation page gives a quick overview of the scripting differences between bash and fish (:issue:`2382`), and the completion tutorial has also been moved out into its own document (:issue:`6709`).
 
 Syntax changes and new commands
 -------------------------------
@@ -50,9 +50,9 @@ Syntax changes and new commands
 Scripting improvements
 ----------------------
 -  ``set`` and backgrounded jobs no longer overwrite ``$pipestatus`` (:issue:`6820`), improving its use in command substitutions (:issue:`6998`).
--  ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (:issue:`4829`).
--  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (:issue:`6824`).
--  A new subcommand, ``string pad``, allows extending strings to a given width (:issue:`7340`).
+-  ``fish_preexec`` and ``fish_postexec`` events are no longer triggered for empty commands (:issue:`4829`, :issue:`7085`).
+-  A new variable, ``fish_kill_signal``, is set to the signal that terminated the last foreground job, or ``0`` if the job exited normally (:issue:`6824`, :issue:`6822`).
+-  A new subcommand, ``string pad``, allows extending strings to a given width (:issue:`7340`, :issue:`7102`).
 -  ``string sub`` has a new ``--end`` option to specify the end index of
    a substring (:issue:`6765`, :issue:`5974`).
 -  ``string split`` has a new ``--fields`` option to specify fields to
@@ -64,7 +64,7 @@ Scripting improvements
 -  Computed ("electric") variables such as ``status`` are now only global in scope, so ``set -Uq status`` returns false (:issue:`7032`).
 -  The output for ``set --show`` has been shortened, only mentioning the scopes in which a variable exists (:issue:`6944`).
    In addition it now shows if a variable is a path variable.
--  A new ``fish_posterror`` event is emitted when attempting to execute a command with syntax errors (:issue:`6880`).
+-  A new ``fish_posterror`` event is emitted when attempting to execute a command with syntax errors (:issue:`6880`, :issue:`6816`).
 - ``fish_indent`` now removes unnecessary quotes in simple cases (:issue:`6722`)
    and learned a ``--check`` option to just check if a file is indented correctly (:issue:`7251`).
 - ``fish_indent`` indents continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||``.
@@ -84,6 +84,7 @@ Scripting improvements
    file descriptor. This allows better error recovery and is more in line with other shells'
    behaviour (:issue:`7038`).
 -  ``jobs --quiet PID`` no longer prints "no suitable job" if the job for PID does not exist (eg because it has finished) (:issue:`6809`, :issue:`6812`).
+-  ``jobs`` now shows continued child processes correctly (:issue:`6818`)
 -  ``command``, ``jobs`` and ``type`` builtins support ``--query`` as the long form of ``-q``, matching other builtins. The long form ``--quiet`` is deprecated (:issue:`7276`).
 -  ``argparse`` no longer requires a short flag letter for long-only options (:issue:`7585`) and only prints a backtrace with invalid options to argparse itself (:issue:`6703`).
 -  ``argparse`` now passes the validation variables (e.g. ``$_flag_value``) as local-exported variables,
@@ -109,7 +110,7 @@ Scripting improvements
 -  Failed redirections will now set ``$status`` (:issue:`7540`).
 -  More consistent $status after errors, including invalid expansions like ``$foo[``.
 -  ``read`` can now read interactively from other files, so e.g. forcing it to read from the terminal via ``read </dev/tty`` works (:issue:`7358`).
--  A new ``fish_status_to_signal`` function for transforming exit statuses to signal names (:issue:`7597`).
+-  A new ``fish_status_to_signal`` function for transforming exit statuses to signal names (:issue:`7597`, :issue:`7595`).
 -  The fallback ``realpath`` builtin supports the ``-s``/``--no-symlinks`` option, like GNU realpath (:issue:`7574`).
 -  ``.`` and ``:`` are now also builtins instead of functions (:issue:`6854`).
 -  ``functions`` now explains when a function was defined via ``source`` instead of just saying ``Defined in -``.
@@ -148,10 +149,10 @@ Interactive improvements
 -  The command-not-found handling has been simplified. When it can't find a command, fish now just executes a function called ``fish_command_not_found`` instead of firing an event, making it easier to replace and reason about. Previously-defined ``__fish_command_not_found_handler`` functions with an appropriate event listener will still work (:issue:`7293`).
 -  Control-C handling has been reimplemented in C++ and is therefore quicker (:issue:`5259`), no longer occasionally prints an "unknown command" error (:issue:`7145`) or overwrites multiline prompts (:issue:`3537`).
 -  Control-C no longer kills background jobs for which job control is
-   disabled, matching POSIX semantics (:issue:`6828`).
+   disabled, matching POSIX semantics (:issue:`6828`, :issue:`6861`).
 -  Autocompletions work properly after Control-C to cancel the commmand line (:issue:`6937`).
 -  History search is now case-insensitive unless the search string contains an uppercase character (:issue:`7273`).
--  ``fish_update_completions`` has a new ``-keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`).
+-  ``fish_update_completions`` has a new ``-keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`, :issue:`6796`).
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (:issue:`6910`).
 -  ``open`` no longer hangs indefinitely as a bug in ``xdg-open`` has been worked around (:issue:`7215`).
 -  Long command lines no longer add a blank line after execution (:issue:`6826`) and behave better with backspace (:issue:`6951`).
@@ -160,7 +161,7 @@ Interactive improvements
 -  fish's debugging can now also be enabled via $FISH_DEBUG and $FISH_DEBUG_OUTPUT from the outside. This helps with debugging when no commandline options can be passed, like when fish is called in a shebang (:issue:`7359`).
 -  fish now creates the path in the environment variable ``XDG_RUNTIME_DIR`` if it does not exist, before using it for runtime data storage (:issue:`7335`).
 -  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (:issue:`7314`).
--  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`).
+-  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`). It also starts the browser in another thread, avoiding hangs in some circumstances, especially with firefox developer edition (:issue:`7158`).
 -  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (:issue:`7041`). 
 -  ``help`` works properly on MSYS2 (:issue:`7113`) and only uses cmd.exe if running on WSL (:issue:`6797`).
 -  Resuming a piped job by its number, like ``fg %1``, works correctly (:issue:`7406`). Resumed jobs show the correct title in the terminal emulator (:issue:`7444`).
@@ -169,7 +170,7 @@ Interactive improvements
 -  ``$status`` from completion scripts is no longer passed outside the completion, which keeps the status display in the prompt as the last command's status (:issue:`7555`).
 -  Updated localisations for pt_BR (:issue:`7480`).
 -  ``fish_trace`` output now starts with ``->`` like ``fish --profile``'s, making the depth more visible (:issue:`7538`).
--  Resizing the terminal window no longer produces a corrupted prompt (:issue:`6532`).
+-  Resizing the terminal window no longer produces a corrupted prompt (:issue:`6532`, :issue:`7404`).
 -  ``functions`` produces an error rather than crashing on certain invalid arguments (:issue:`7515`).
 -  A crash in using tab completions with inline variable assignment (eg ``A= b``) has been fixed (:issue:`7344`).
 -  ``fish_private_mode`` may now be changed dynamically using ``set`` (:issue:`7589`), and history is kept in memory in private mode (but not stored permanently) (:issue:`7590`).
@@ -181,6 +182,7 @@ Interactive improvements
    like ``~`` or variables as paths.
    This allows only suggesting them when the paths are still valid (:issue:`7591`, :issue:`7582`).
 -  Syntax highlighting can now color a command as invalid even if return was pressed quickly (:issue:`5912`)
+-  fish handles being in control of the tty without owning its own pgroup better, avoiding some hangs in special configurations (:issue:`7388`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -206,8 +208,10 @@ New or improved bindings
    from history if the commandline is empty (:issue:`7137`).
 -  ``__fish_whatis_current_token`` (Alt-W) prints descriptions for functions and builtins (:issue:`7191`, :issue:`2083`).
 -  The definition of "word" and "bigword" for movements was refined, fixing (eg) vi mode's behavior with ``e`` on the second-to-last char, and bigword's behavior with single-char words and non-blank non-graphic characters (:issue:`7353`, :issue:`7354`, :issue:`4025`, :issue:`7328`, :issue:`7325`)
--  fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`) and will properly copy newlines in multi-line commands.
+-  fish's clipboard bindings now also support WSL via powershell and clip.exe (:issue:`7455`, :issue:`7458`) and will properly copy newlines in multi-line commands.
 -  Using the ``*-jump`` special input functions before typing anything else no longer crashes fish.
+-  Completing variable overrides (``foo=bar``) could replace the entire thing with just the completion in some circumstances. This has been fixed (:issue:`7398`).
+-  Places where fish uses ``mktemp`` now handle mktemp failure (:issue:`7482`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -221,9 +225,10 @@ Improved prompts
    A new variable ``$fish_prompt_hg_show_informative_status`` can be set to enable more information.
 -  The ``fish_vcs_prompt`` passes its arguments to the various VCS prompts that it calls (:issue:`7033`).
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`6715`, :issue:`7278`).
--  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`).
+-  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`, :issue:`7123`).
 -  New colorschemes - ``ayu Light``, ``ayu Dark`` and ``ayu Mirage`` (:issue:`7596`).
 -  Bugs related to multiline prompts, including repainting (:issue:`5860`) or alt-left/right (:issue:`3550`) leading to graphical glitches have been fixed.
+-  The ``nim`` prompt now handles vi mode better (:issue:`6802`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -234,7 +239,7 @@ Improved terminal support
 -  Autosuggestions appear when the cursor passes the right prompt (:issue:`6948`) or wraps to the next line (:issue:`7213`).
 -  The cursor shape in Vi mode changes properly in Windows Terminal (:issue:`6999`, :issue:`6478`).
 -  The spurious warning about terminal size in small terminals has been removed (:issue:`6980`).
--  Dynamic titles are now enabled in Alacritty (:issue:`7073`).
+-  Dynamic titles are now enabled in Alacritty (:issue:`7073`) and emacs' vterm (:issue:`7122`).
 -  Current working directory updates are enabled in foot (:issue:`7099`).
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (:issue:`7237`).
 -  An issue producing strange status output from commands involving ``not`` has been fixed (:issue:`6566`).
@@ -269,6 +274,7 @@ Completions
    -  ``gapplication``, ``gdbus``, ``gio`` and ``gresource`` (:issue:`7300`)
    -  ``gh`` (:issue:`7112`)
    -  ``gitk``
+   -  ``groups`` (:issue:`6889`)
    -  ``hikari`` (:issue:`7083`)
    -  ``homectl`` (:issue:`7435`)
    -  ``hostnamectl`` (:issue:`7428`)
@@ -299,15 +305,16 @@ Completions
    -  ``strace`` (:issue:`6656`)
    -  ``tcpdump`` (:issue:`6690`)
    -  ``tig``
+   -  ``traceroute`` and ``tracepath`` (:issue:`6803`)
    -  ``windscribe`` (:issue:`6788`)
    -  ``wireshark``, ``tshark``, and ``dumpcap``
    -  ``xbps-*`` (:issue:`7239`)
    -  ``xxhsum``, ``xxh32sum``, ``xxh64sum`` and ``xxh128sum`` (:issue:`7103`)
    -  ``yadm`` (:issue:`7100`)
-   -  ``zopfli`` and ``zopflipng``
+   -  ``zopfli`` and ``zopflipng`` (:issue:`6872`)
 
 - Lots of improvements to completions.
-- Improvements to the manpage completion generator (:issue:`7086`, :issue:`6879`).
+- Improvements to the manpage completion generator (:issue:`7086`, :issue:`6879`, :issue:`7187`).
 - Significant performance improvements to completion of the available commands (:issue:`7153`), especially on macOS Big Sur where there was a significant regression (:issue:`7365`, :issue:`7511`).
 - ``__fish_complete_suffix`` now uses the same fuzzy matching logic as normal file completion.
 - ``__fish_complete_suffix`` completes any file but sorts files with matching suffix first (:issue:`7040`, :issue:`7547`). Previously, it only completed files with matching suffix.
@@ -329,6 +336,7 @@ Changes not visible to users
 - fish moved CI from Travis (which is no longer available for opensource projects) to Github Actions (:issue:`6846`, :issue:`7447`)
 - fish handles ncurses installed in a non-standard prefix better (:issue:`6600`, :issue:`7219`), and uses variadic tparm on NetBSD curses (:issue: `6626`).
 - The web configuration tool no longer uses an obsolete Angular version (:issue:`7147`).
+- The fish project has adopted the Contributor Covenant code of conduct (:issue:`7151`).
 
 Deprecations and removed features
 ---------------------------------

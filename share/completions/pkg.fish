@@ -93,6 +93,8 @@ complete -c pkg -n __fish_pkg_subcommand -xa upgrade -d "Upgrade packages"
 complete -c pkg -n __fish_pkg_subcommand -xa version -d "Show package versions"
 complete -c pkg -n __fish_pkg_subcommand -xa which -d "Check which package provides a file"
 
+complete -c pkg -n __fish_pkg_subcommand -xa '(__fish_pkg_aliases)'
+
 # add
 complete -c pkg -n '__fish_pkg_is add install' -s A -l automatic -d "Mark packages as automatic"
 complete -c pkg -n '__fish_pkg_is add bootstrap install' -s f -l force -d "Force installation even when installed"
@@ -167,103 +169,105 @@ complete -c pkg -n '__fish_pkg_is list' -xa '(pkg query "%n")'
 complete -c pkg -n '__fish_pkg_is add update' -s f -l force -d "Force a full download of a repository"
 
 # alias 
-for alias in (pkg alias -q)
-  set -l name (echo $alias | cut -f 1 -d' ')
-  set -l description (echo $alias | cut -f 2- -d' ')
+function __fish_pkg_aliases
+    for alias in (pkg alias -q)
+        echo $alias | read -l name description
 
-  switch $name
-  case 'all-depends'
-    set description 'Display all dependencies for a given package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+        switch $name
+            case all-depends
+                set description 'Display all dependencies for a given package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'annotations'
-    set description 'Display any annotations added to the package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case annotations
+                set description 'Display any annotations added to the package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'build-depends'
-    set description 'Display build dependencies for a given package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case build-depends
+                set description 'Display build dependencies for a given package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'cinfo'
-    set description 'Display install package matching case-sensitve regex'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case cinfo
+                set description 'Display install package matching case-sensitve regex'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'comment'
-    set description 'Display comment off a package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case comment
+                set description 'Display comment off a package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'csearch'
-    set description 'Displays package using case-sensitive search'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case csearch
+                set description 'Displays package using case-sensitive search'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'desc'
-    set description 'Show package description'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case desc
+                set description 'Show package description'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'iinfo'
-    set description 'Display install package matching case-insensitve regex'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case iinfo
+                set description 'Display install package matching case-insensitve regex'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'isearch'
-    set description 'Finds package using case-insensitive search'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case isearch
+                set description 'Finds package using case-insensitive search'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'prime-list'
-    set description 'Displays names of all manually installed packages'
+            case prime-list
+                set description 'Displays names of all manually installed packages'
 
-  case 'prime-origins'
-    set description 'Displays origin of all manually installed packages'
+            case prime-origins
+                set description 'Displays origin of all manually installed packages'
 
-  case 'leaf'
-    set description 'Lists all leaf packages'
-  
-  case 'list'
-    set description 'Display all files from an installed package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case leaf
+                set description 'Lists all leaf packages'
 
-  case 'noauto'
-    set description 'Displays all non automatically installed packages'
+            case list
+                set description 'Display all files from an installed package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'options'
-    set description 'Display options of a installed package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case noauto
+                set description 'Displays all non automatically installed packages'
 
-  case 'origin'
-    set description 'Shows origin of a package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case options
+                set description 'Display options of a installed package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'provided-depends'
-    set description 'Display all shared libraries provided by package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case origin
+                set description 'Shows origin of a package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'raw'
-    set description 'Display the full manifest for a package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case provided-depends
+                set description 'Display all shared libraries provided by package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'required-depends'
-    set description 'Display the list of packages which require this package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case raw
+                set description 'Display the full manifest for a package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'roptions'
-    set description 'Display options of a package for the default repository'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
-    
-  case 'shared-depends'
-    set description 'Display all shared libraries used by package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case required-depends
+                set description 'Display the list of packages which require this package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'show'
-    set description 'Display full information including lock status for a package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case roptions
+                set description 'Display options of a package for the default repository'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case 'size'
-    set description 'Display the total size of files installed by a package'
-    complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
+            case shared-depends
+                set description 'Display all shared libraries used by package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  case '*'
-    set description "alias: $description"
+            case show
+                set description 'Display full information including lock status for a package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  end
+            case size
+                set description 'Display the total size of files installed by a package'
+                complete -c pkg -n "__fish_pkg_is $name" -xa '(pkg query "%n")'
 
-  complete -c pkg -n __fish_pkg_subcommand -xa $name -d "$description"
+            case '*'
+                set description "alias: $description"
+
+        end
+
+        complete -c pkg -n __fish_pkg_subcommand -xa $name -d "$description"
+    end
+
 end

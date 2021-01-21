@@ -93,6 +93,8 @@ complete -c pkg -n __fish_pkg_subcommand -xa upgrade -d "Upgrade packages"
 complete -c pkg -n __fish_pkg_subcommand -xa version -d "Show package versions"
 complete -c pkg -n __fish_pkg_subcommand -xa which -d "Check which package provides a file"
 
+complete -c pkg -n __fish_pkg_subcommand -xa '(__fish_pkg_aliases)'
+
 # add
 complete -c pkg -n '__fish_pkg_is add install' -s A -l automatic -d "Mark packages as automatic"
 complete -c pkg -n '__fish_pkg_is add bootstrap install' -s f -l force -d "Force installation even when installed"
@@ -165,3 +167,97 @@ complete -c pkg -n '__fish_pkg_is list' -xa '(pkg query "%n")'
 
 # update
 complete -c pkg -n '__fish_pkg_is add update' -s f -l force -d "Force a full download of a repository"
+
+# alias 
+set -l with_packge_names all-depends annotations build-depends cinfo comment csearch desc iinfo isearch \
+    list options origin provided-depends roptions shared-depends show size
+
+for alias in (pkg alias -lq)
+    if contains $with_package_names $alias
+        complete -c pkg -n "__fish_pkg_is $alias" -xa '(pkg query "%n")'
+    end
+end
+
+function __fish_pkg_aliases
+    for alias in (pkg alias -q)
+        echo $alias | read -l name description
+
+        switch $name
+            case all-depends
+                set description 'Display all dependencies for a given package'
+
+            case annotations
+                set description 'Display any annotations added to the package'
+
+            case build-depends
+                set description 'Display build dependencies for a given package'
+
+            case cinfo
+                set description 'Display install package matching case-sensitve regex'
+
+            case comment
+                set description 'Display comment off a package'
+
+            case csearch
+                set description 'Displays package using case-sensitive search'
+
+            case desc
+                set description 'Show package description'
+
+            case iinfo
+                set description 'Display install package matching case-insensitve regex'
+
+            case isearch
+                set description 'Finds package using case-insensitive search'
+
+            case prime-list
+                set description 'Displays names of all manually installed packages'
+
+            case prime-origins
+                set description 'Displays origin of all manually installed packages'
+
+            case leaf
+                set description 'Lists all leaf packages'
+
+            case list
+                set description 'Display all files from an installed package'
+
+            case noauto
+                set description 'Displays all non automatically installed packages'
+
+            case options
+                set description 'Display options of a installed package'
+
+            case origin
+                set description 'Shows origin of a package'
+
+            case provided-depends
+                set description 'Display all shared libraries provided by package'
+
+            case raw
+                set description 'Display the full manifest for a package'
+
+            case required-depends
+                set description 'Display the list of packages which require this package'
+
+            case roptions
+                set description 'Display options of a package for the default repository'
+
+            case shared-depends
+                set description 'Display all shared libraries used by package'
+
+            case show
+                set description 'Display full information including lock status for a package'
+
+            case size
+                set description 'Display the total size of files installed by a package'
+
+            case '*'
+                set description "alias: $description"
+
+        end
+
+        printf '%s\t%s\n' $name $description
+    end
+
+end

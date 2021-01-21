@@ -178,8 +178,6 @@ for alias in (pkg alias -lq)
     end
 end
 
-
-end
 function __fish_pkg_aliases
     for alias in (pkg alias -q)
         echo $alias | read -l name description

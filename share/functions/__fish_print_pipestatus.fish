@@ -25,7 +25,7 @@ function __fish_print_pipestatus --description "Print pipestatus for prompt"
         set -l sep $brace_sep_color$separator$status_color
         set -l last_pipestatus_string (fish_status_to_signal $argv | string join "$sep")
         set -l last_status_string ""
-        if test $last_status -ne $argv[-1]
+        if test "$last_status" -ne "$argv[-1]"
             set last_status_string " "$status_color$last_status
         end
         printf "%s" $brace_sep_color $left_brace \

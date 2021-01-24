@@ -58,3 +58,17 @@ type -p alias
 
 type -s alias
 # CHECK: alias is a function (defined in {{.*}}/alias.fish)
+
+function test-type
+    echo this is a type test
+end
+
+type test-type
+# CHECK: test-type is a function with definition
+# CHECK: # Defined in {{.*}}/type.fish @ line {{\d+}}
+# CHECK: function test-type
+# CHECK: echo this is a type test
+# CHECK: end
+
+type -p test-type
+# CHECK: {{.*}}/type.fish

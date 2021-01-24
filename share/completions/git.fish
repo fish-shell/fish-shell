@@ -1899,6 +1899,16 @@ complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n __fish_git_needs_command -a '(__fish_git_custom_commands)' -d 'Custom command'
 
+function __fish_git_complete_custom_command -a subcommand
+    set -l cmd (commandline -opc)
+    set -e cmd[1] # Drop "git".
+    set -l subcommand_args
+    if argparse -s (__fish_git_global_optspecs) -- $cmd
+        set subcommand_args $argv[2..] # Drop the subcommand.
+    end
+    complete -C "git-$subcommand $subcommand_args "(commandline -ct)
+end
+
 # Get the path to the generated completions
 # If $XDG_DATA_HOME is set, that's it, if not, it will be removed and ~/.local/share will remain.
 set -l generated_path $XDG_DATA_HOME/fish/generated_completions ~/.local/share/fish/generated_completions
@@ -1920,5 +1930,9 @@ for git_ext in $complete_dirs/git-*.fish
     contains -- $cmd $__fish_git_custom_commands_completion
     and continue
     source $git_ext
+    set -l subcommand (string replace -r '^git-' '' -- $cmd)
+    if [ (complete git-$subcommand | count) -gt 0 ]
+        complete git -f -n "__fish_git_using_command $subcommand" -a "(__fish_git_complete_custom_command $subcommand)"
+    end
     set -a __fish_git_custom_commands_completion $cmd
 end

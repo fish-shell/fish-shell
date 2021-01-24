@@ -9,23 +9,23 @@ complete -c gem -n __fish_use_subcommand -s v -l version -d "Print the version a
 
 #####
 # Subcommands
-complete -c gem -n __fish_use_subcommand -xa "build\tBuild a gem from a gemspec"
-complete -c gem -n __fish_use_subcommand -xa "cert\tAdjust RubyGems certificate settings"
-complete -c gem -n __fish_use_subcommand -xa "check\tCheck installed gems"
-complete -c gem -n __fish_use_subcommand -xa "cleanup\tCleanup old versions of installed gems in the local repository"
-complete -c gem -n __fish_use_subcommand -xa "contents\tDisplay the contents of the installed gems"
-complete -c gem -n __fish_use_subcommand -xa "dependency\tShow the dependencies of an installed gem"
-complete -c gem -n __fish_use_subcommand -xa "environment\tDisplay RubyGems environmental information"
-complete -c gem -n __fish_use_subcommand -xa "help\tProvide help on the 'gem' command"
-complete -c gem -n __fish_use_subcommand -xa "install\tInstall a gem into the local repository"
-complete -c gem -n __fish_use_subcommand -xa "list\tDisplay all gems whose name starts with STRING"
-complete -c gem -n __fish_use_subcommand -xa "query\tQuery gem information in local or remote repositories"
-complete -c gem -n __fish_use_subcommand -xa "rdoc\tGenerates RDoc for pre-installed gems"
-complete -c gem -n __fish_use_subcommand -xa "search\tDisplay all gems whose name contains STRING"
-complete -c gem -n __fish_use_subcommand -xa "specification\t'Display gem specification (in YAML)'"
-complete -c gem -n __fish_use_subcommand -xa "uninstall\tUninstall a gem from the local repository"
-complete -c gem -n __fish_use_subcommand -xa "unpack\tUnpack an installed gem to the current directory"
-complete -c gem -n __fish_use_subcommand -xa "update\tUpdate the named gem or all installed gems in the local repository"
+complete -c gem -n __fish_use_subcommand -xa "build" -d "Build a gem from a gemspec"
+complete -c gem -n __fish_use_subcommand -xa "cert" -d "Adjust RubyGems certificate settings"
+complete -c gem -n __fish_use_subcommand -xa "check" -d "Check installed gems"
+complete -c gem -n __fish_use_subcommand -xa "cleanup" -d "Cleanup old versions of installed gems in the local repository"
+complete -c gem -n __fish_use_subcommand -xa "contents" -d "Display the contents of the installed gems"
+complete -c gem -n __fish_use_subcommand -xa "dependency" -d "Show the dependencies of an installed gem"
+complete -c gem -n __fish_use_subcommand -xa "environment" -d "Display RubyGems environmental information"
+complete -c gem -n __fish_use_subcommand -xa "help" -d "Provide help on the 'gem' command"
+complete -c gem -n __fish_use_subcommand -xa "install" -d "Install a gem into the local repository"
+complete -c gem -n __fish_use_subcommand -xa "list" -d "Display all gems whose name starts with STRING"
+complete -c gem -n __fish_use_subcommand -xa "query" -d "Query gem information in local or remote repositories"
+complete -c gem -n __fish_use_subcommand -xa "rdoc" -d "Generates RDoc for pre-installed gems"
+complete -c gem -n __fish_use_subcommand -xa "search" -d "Display all gems whose name contains STRING"
+complete -c gem -n __fish_use_subcommand -xa "specification" -d "Display gem specification (in YAML)"
+complete -c gem -n __fish_use_subcommand -xa "uninstall" -d "Uninstall a gem from the local repository"
+complete -c gem -n __fish_use_subcommand -xa "unpack" -d "Unpack an installed gem to the current directory"
+complete -c gem -n __fish_use_subcommand -xa "update" -d "Update the named gem or all installed gems in the local repository"
 
 #####
 # Subcommand switches
@@ -84,12 +84,12 @@ complete $dep_opt -s p -l pipe -d "Pipe Format (name --version ver)"
 ##
 # environment
 set -l env_opt -c gem -n 'contains environment (commandline -poc)'
-complete $env_opt -xa "packageversion\tdisplay the package version gemdir\tdisplay the path where gems are installed gempath\tdisplay path used to search for gems version\tdisplay the gem format version remotesources\tdisplay the remote gem servers"
+complete $env_opt -xa "packageversion\t'display the package version' gemdir\t'display the path where gems are installed' gempath\t'display path used to search for gems' version\t'display the gem format version' remotesources\t'display the remote gem servers'"
 
 ##
 # help
 set -l help_opt -c gem -n 'contains help (commandline -poc)'
-complete $help_opt -xa "commands\tlist all 'gem' commands examples\tshow some examples of usage build cert check cleanup contents dependency environment help install list query rdoc search specification uninstall unpack update"
+complete $help_opt -xa "commands\t'list all gem commands' examples\t'show some examples of usage' build cert check cleanup contents dependency environment help install list query rdoc search specification uninstall unpack update"
 
 ##
 # install

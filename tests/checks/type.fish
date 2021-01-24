@@ -52,3 +52,9 @@ echo $status
 type -q
 echo $status
 # CHECK: 1
+
+type -p alias
+# CHECK: {{.*}}/alias.fish
+
+type -s alias
+# CHECK: alias is a function (defined in {{.*}}/alias.fish)

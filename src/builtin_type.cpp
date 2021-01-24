@@ -132,7 +132,6 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **arg
             ++found;
             res = true;
             if (!opts.query && !opts.type) {
-                streams.out.append_format(_(L"%ls is a function"), name);
                 auto path = function_get_definition_file(name);
                 if (opts.path) {
                     if (path) {
@@ -140,6 +139,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **arg
                         streams.out.append(L"\n");
                     }
                 } else if (!opts.short_output) {
+                    streams.out.append_format(_(L"%ls is a function"), name);
                     streams.out.append(_(L" with definition"));
                     streams.out.append(L"\n");
                     // Function path
@@ -166,6 +166,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **arg
                         streams.out.append(def);
                     }
                 } else {
+                    streams.out.append_format(_(L"%ls is a function"), name);
                     auto path = function_get_definition_file(name);
                     if (path) {
                         streams.out.append_format(_(L" (defined in %ls)"), path);

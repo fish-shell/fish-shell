@@ -8,16 +8,16 @@ function __fish_print_pipestatus --description "Print pipestatus for prompt"
     set -l left_brace $argv[1]
     set -l right_brace $argv[2]
     set -l separator $argv[3]
-
-    # Colors default to normal
-    set -q argv[4]
-    and set -l brace_sep_color $argv[4]
-    or set -l brace_sep_color normal
-    set -q argv[5]
-    and set -l status_color $argv[5]
-    or set -l status_color normal
+    set -l brace_sep_color $argv[4]
+    set -l status_color $argv[5]
 
     set -e argv[1 2 3 4 5]
+
+    if not set -q argv[1]
+        echo error: missing argument >&2
+        status print-stacktrace >&2
+        return 1
+    end
 
     # Only print status codes if the job failed.
     # SIGPIPE (141 = 128 + 13) is usually not a failure, see #6375.

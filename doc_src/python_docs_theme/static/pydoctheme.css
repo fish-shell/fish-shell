@@ -69,6 +69,13 @@ div.sphinxsidebar {
     float: none;
 }
 
+div#searchbox {
+    /* Cheesy: The padding is on the sphinxsidebar*wrapper*,
+       so if this is the last element the bottom padding won't apply.
+    */
+    padding-bottom: 5px;
+}
+
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
     margin-top: 1.5em;
 }

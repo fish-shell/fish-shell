@@ -556,7 +556,7 @@ A fish function is a list of commands, which may optionally take arguments. Unli
     Hello everybody!
 
 
-Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place.
+Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place. [#]_
 
 You can list the names of all functions with the :ref:`functions <cmd-functions>` builtin (note the plural!). fish starts out with a number of functions::
 
@@ -571,6 +571,7 @@ You can see the source for any function by passing its name to ``functions``::
         command ls -G $argv
     end
 
+.. [#] There is a function called :ref:`alias <cmd-alias>`, but it's just a shortcut to make functions.
 
 Loops
 -----

@@ -1868,7 +1868,7 @@ static uint32_t get_best_rank(const completion_list_t &comp) {
 ///
 /// - If the list is empty, flash the terminal.
 /// - If the list contains one element, write the whole element, and if the element does not end on
-/// a '/', '@', ':', '.', ',' or a '=', also write a trailing space.
+/// a '/', '@', ':', '.', ',', '-' or a '=', also write a trailing space.
 /// - If the list contains multiple elements, insert their common prefix, if any and display
 /// the list in the pager.  Depending on terminal size and the length of the list, the pager
 /// may either show less than a screenfull and exit or use an interactive pager to allow the

@@ -194,8 +194,7 @@ Interactive improvements
 -  The interactive reader now allows ending a line in a logical operators (``&&`` and ``||``) instead of complaining about a missing command
    (This was already syntactically valid, but interactive sessions didn't know about it yet).
 -  The prompt is reprinted after a background job exits (:issue:`1018`).
--  fish no longer inserts a space after a completion ending in ``.`` or
-   ``,`` is accepted (:issue:`6928`).
+-  fish no longer inserts a space after a completion ending in ``.``, ``,`` or ``-`` is accepted (:issue:`6928`).
 -  If a filename is invalid when first pressing Tab, but becomes valid, it will be completed properly on the next attempt (:issue:`6863`).
 - ``help string match/replace/<subcommand>`` will show the help for string subcommands (:issue:`6786`).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (:issue:`6964`).

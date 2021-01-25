@@ -196,7 +196,7 @@ static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_
     if (flags & COMPLETE_AUTO_SPACE) {
         new_flags &= ~COMPLETE_AUTO_SPACE;
         size_t len = comp.size();
-        if (len > 0 && (std::wcschr(L"/=@:.,", comp.at(len - 1)) != nullptr))
+        if (len > 1 && (std::wcschr(L"/=@:.,-", comp.at(len - 1)) != nullptr))
             new_flags |= COMPLETE_NO_SPACE;
     }
     return new_flags;

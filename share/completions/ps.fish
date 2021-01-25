@@ -1,6 +1,6 @@
 # Completions for ps
 
-set -l $gnu_linux 0
+set -l gnu_linux 0
 if ps -V <&- >/dev/null 2>/dev/null
     set gnu_linux 1
 end

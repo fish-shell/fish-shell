@@ -106,9 +106,9 @@ Syntax Overview
 
 Shells like fish are used by giving them commands. Every fish command follows the same basic syntax. A command is executed by writing the name of the command followed by any arguments. For example::
 
-   echo hello world
+    echo hello world
 
-This calls the :ref:`echo <cmd-echo>` command. ``echo`` writes its arguments to the screen. In the example above, the output is 'hello world'. Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
+This calls the :ref:`echo <cmd-echo>` command. ``echo`` writes its arguments to the screen. In the example above, the output is ``hello world``. Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
 
 To learn more about the ``echo`` command, read its manual page by typing ``man echo``. ``man`` is a command for displaying a manual page on a given topic. It takes the name of the manual page to display as an argument. There are manual pages for almost every command. There are also manual pages for many other things, such as system libraries and important files.
 
@@ -166,147 +166,135 @@ Single quotes have no special meaning within double quotes and vice versa.
 
 Example::
 
-  rm "cumbersome filename.txt"
+    rm "cumbersome filename.txt"
 
 removes the file ``cumbersome filename.txt``, while
 
 ::
 
-  rm cumbersome filename.txt
+    rm cumbersome filename.txt
 
 removes two files, ``cumbersome`` and ``filename.txt``.
 
 Another example::
 
-   grep 'enabled)$' foo.txt
+    grep 'enabled)$' foo.txt
 
 searches for lines ending in ``enabled)`` in ``foo.txt`` (the ``$`` is special to ``grep``: it matches the end of the line).
 
 .. _escapes:
 
-Escaping characters
+Escaping Characters
 -------------------
 
-Some characters can not be written directly on the command line. For these characters, so called escape sequences are provided. These are:
+Some characters cannot be written directly on the command line. For these characters, so-called escape sequences are provided. These are:
 
-- ``\a`` represents the alert character
-- ``\b`` represents the backspace character
-- ``\e`` represents the escape character
-- ``\f`` represents the form feed character
-- ``\n`` represents a newline character
-- ``\r`` represents the carriage return character
-- ``\t`` represents the tab character
-- ``\v`` represents the vertical tab character
-- :code:`\ `  escapes the space character
-- ``\$`` escapes the dollar character
-- ``\\`` escapes the backslash character
-- ``\*`` escapes the star character
-- ``\?`` escapes the question mark character (this is not necessary if the ``qmark-noglob`` :ref:`feature flag<featureflags>` is enabled)
-- ``\~`` escapes the tilde character
-- ``\#`` escapes the hash character
-- ``\(`` escapes the left parenthesis character
-- ``\)`` escapes the right parenthesis character
-- ``\{`` escapes the left curly bracket character
-- ``\}`` escapes the right curly bracket character
-- ``\[`` escapes the left bracket character
-- ``\]`` escapes the right bracket character
-- ``\<`` escapes the less than character
-- ``\>`` escapes the more than character
-- ``\^`` escapes the circumflex character
-- ``\&`` escapes the ampersand character
-- ``\|`` escapes the vertical bar character
-- ``\;`` escapes the semicolon character
-- ``\"`` escapes the quote character
-- ``\'`` escapes the apostrophe character
+- ``\a`` represents the alert character.
+- ``\e`` represents the escape character.
+- ``\f`` represents the form feed character.
+- ``\n`` represents a newline character.
+- ``\r`` represents the carriage return character.
+- ``\t`` represents the tab character.
+- ``\v`` represents the vertical tab character.
+- ``\xHH``, where ``HH`` is a hexadecimal number, represents the ASCII character with the specified value. For example, ``\x9`` is the tab character.
+- ``\XHH``, where ``HH`` is a hexadecimal number, represents a byte of data with the specified value. If you are using a multibyte encoding, this can be used to enter invalid strings. Only use this if you know what you are doing.
+- ``\ooo``, where ``ooo`` is an octal number, represents the ASCII character with the specified value. For example, ``\011`` is the tab character.
+- ``\uXXXX``, where ``XXXX`` is a hexadecimal number, represents the 16-bit Unicode character with the specified value. For example, ``\u9`` is the tab character.
+- ``\UXXXXXXXX``, where ``XXXXXXXX`` is a hexadecimal number, represents the 32-bit Unicode character with the specified value. For example, ``\U9`` is the tab character.
+- ``\cX``, where ``X`` is a letter of the alphabet, represents the control sequence generated by pressing the control key and the specified letter. For example, ``\ci`` is the tab character
 
-- ``\xHH``, where *HH* is a hexadecimal number, represents the ascii character with the specified value. For example, ``\x9`` is the tab character.
+Some characters have special meaning to the shell. For example, an apostrophe ``'`` disables expansion (see :ref:`Quotes<quotes>`). To tell the shell to treat these characters literally, escape them with a backslash. For example, the command::
 
-- ``\XHH``, where *HH* is a hexadecimal number, represents a byte of data with the specified value. If you are using a multibyte encoding, this can be used to enter invalid strings. Only use this if you know what you are doing.
+    echo \'hello world\'
 
-- ``\ooo``, where *ooo* is an octal number, represents the ascii character with the specified value. For example, ``\011`` is the tab character.
+outputs ``'hello world'`` (including the apostrophes), while the command::
 
-- ``\uXXXX``, where *XXXX* is a hexadecimal number, represents the 16-bit Unicode character with the specified value. For example, ``\u9`` is the tab character.
+    echo 'hello world'
 
-- ``\UXXXXXXXX``, where *XXXXXXXX* is a hexadecimal number, represents the 32-bit Unicode character with the specified value. For example, ``\U9`` is the tab character.
+outputs ``hello world`` (without the apostrophes). In the former case the shell treats the apostrophes as literal ``'`` characters, while in the latter case it treats them as special expansion modifiers.
 
-- ``\cX``, where *X* is a letter of the alphabet, represents the control sequence generated by pressing the control key and the specified letter. For example, ``\ci`` is the tab character
+The special characters and their escape sequences are:
 
-These sequences are also used with the :ref:`bind <cmd-bind>` builtin to describe key sequences. To see what sequence a key combination sends and how to write it, use :ref:`fish_key_reader <cmd-fish_key_reader>`.
+- :code:`\ ` (backslash space) escapes the space character. This keeps the shell from splitting arguments on the escaped space.
+- ``\$`` escapes the dollar character.
+- ``\\`` escapes the backslash character.
+- ``\*`` escapes the star character.
+- ``\?`` escapes the question mark character (this is not necessary if the ``qmark-noglob`` :ref:`feature flag<featureflags>` is enabled).
+- ``\~`` escapes the tilde character.
+- ``\#`` escapes the hash character.
+- ``\(`` escapes the left parenthesis character.
+- ``\)`` escapes the right parenthesis character.
+- ``\{`` escapes the left curly bracket character.
+- ``\}`` escapes the right curly bracket character.
+- ``\[`` escapes the left bracket character.
+- ``\]`` escapes the right bracket character.
+- ``\<`` escapes the less than character.
+- ``\>`` escapes the more than character.
+- ``\^`` escapes the circumflex character.
+- ``\&`` escapes the ampersand character.
+- ``\|`` escapes the vertical bar character.
+- ``\;`` escapes the semicolon character.
+- ``\"`` escapes the quote character.
+- ``\'`` escapes the apostrophe character.
 
 .. _redirects:
 
 Input/Output Redirection
 -----------------------------
 
-Most programs use three input/output [#]_ streams:
+Most programs use three input/output (I/O) streams:
 
-- Standard input ("stdin"), FD 0, for reading, defaults to reading from the keyboard.
+- Standard input (stdin) for reading. Defaults to reading from the keyboard.
+- Standard output (stdout) for writing output. Defaults to writing to the screen.
+- Standard error (stderr) for writing errors and warnings. Defaults to writing to the screen.
 
-- Standard output ("stdout"), FD 1, for writing, defaults to writing to the screen.
+Each stream has a number called the file descriptor (FD): 0 for stdin, 1 for stdout, and 2 for stderr.
 
-- Standard error ("stderr"), FD 2, for writing errors and warnings, defaults to writing to the screen.
+The destination of a stream can be changed using something called *redirection*. For example, ``echo hello > output.txt``, redirects the standard output of the ``echo`` command to a text file.
 
-They are also represented by numbers: 0 for input, 1 for output, 2 for error. This number is called "file descriptor" or "FD".
-
-The destination of a stream can be changed by something known as *redirection*.
-
-An example of a redirection is ``echo hello > output.txt``, which directs the output of the echo command to the file output.txt.
-
-- To read standard input from a file, write ``<SOURCE_FILE``
-- To write standard output to a file, write ``>DESTINATION``
-- To write standard error to a file, write ``2>DESTINATION`` [#]_
-- To append standard output to a file, write ``>>DESTINATION_FILE``
-- To append standard error to a file, write ``2>>DESTINATION_FILE``
-- To not overwrite ("clobber") an existing file, write ``>?DESTINATION`` or ``2>?DESTINATION`` (this is also known as the "noclobber" redirection)
+- To read standard input from a file, use ``<SOURCE_FILE``.
+- To write standard output to a file, use ``>DESTINATION``.
+- To write standard error to a file, use ``2>DESTINATION``. [#]_
+- To append standard output to a file, use ``>>DESTINATION_FILE``.
+- To append standard error to a file, use ``2>>DESTINATION_FILE``.
+- To not overwrite ("clobber") an existing file, use ``>?DESTINATION`` or ``2>?DESTINATION``. This is known as the "noclobber" redirection.
 
 ``DESTINATION`` can be one of the following:
 
 - A filename. The output will be written to the specified file.
-
-- An ampersand (``&``) followed by the number of another file descriptor. The output will be written to that file descriptor instead.
-
+- An ampersand (``&``) followed by the number of another file descriptor. The output will be written to the destination descriptor.
 - An ampersand followed by a minus sign (``&-``). The file descriptor will be closed.
 
-As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same file.
+As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same destination. For example, ``echo hello &> all_output.txt`` redirects both stdout and stderr to the file ``all_output.txt``. This is equivalent to ``echo hello > all_output.txt 2>&1``.
 
-Example:
+Any arbitrary file descriptor can used in a redirection by prefixing the redirection with the FD number.
 
-To redirect both standard output and standard error to the file 'all_output.txt', you can write ``echo Hello &> all_output.txt``, which is a convenience for ``echo Hello > all_output.txt 2>&1``.
+- To redirect the input of descriptor N, use ``N<DESTINATION``.
+- To redirect the output of descriptor N, use ``N>DESTINATION``.
+- To append the output of descriptor N to a file, use ``N>>DESTINATION_FILE``.
 
-Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
+For example, ``echo hello 2> output.stderr`` writes the standard error (file descriptor 2) to ``output.stderr``.
 
-- To redirect input of FD N, write ``N<DESTINATION``
-- To redirect output of FD N, write ``N>DESTINATION``
-- To append the output of FD N to a file, write ``N>>DESTINATION_FILE``
-
-Example: ``echo Hello 2>output.stderr`` writes the standard error (file descriptor 2) of the target program to ``output.stderr``.
-
-.. [#] Also shortened as "I/O" or "IO".
-.. [#] Previous versions of fish also allowed spelling this as ``^DESTINATION``, but that made another character special so it was deprecated and will be removed in future. See :ref:`feature flags<featureflags>`.
+.. [#] Previous versions of fish also allowed specifying this as ``^DESTINATION``, but that made another character special so it was deprecated and will be removed in the future. See :ref:`feature flags<featureflags>`.
 
 .. _pipes:
 
 Piping
 ------
 
-Another way to redirect streams is a *pipe*. This connects streams with each other, usually the standard output of one command with the standard input of another.
+Another way to redirect streams is a *pipe*. A pipe connects streams with each other. Usually the standard output of one command is connected with the standard input of another. This is done by separating commands with the pipe character ``|``. For example::
 
-This is done by separating the commands by the pipe character ``|``. For example
+    cat foo.txt | head
 
-::
+The command ``cat foo.txt`` sends the contents of ``foo.txt`` to stdout. This output is provided as input for the ``head`` program, which prints the first 10 lines of its input.
 
-  cat foo.txt | head
+It is possible to pipe a different output file descriptor by prepending its FD number and the output redirect symbol to the pipe. For example::
 
-will call the ``cat`` program with the parameter 'foo.txt', which will print the contents of the file 'foo.txt'. The contents of foo.txt will then be sent to the 'head' program, which will write the first few lines it reads to its output - the screen.
-
-It is possible to use a different output file descriptor by prepending its FD number and then output redirect symbol to the pipe. For example::
-
-  make fish 2>| less
-
+    make fish 2>| less
 
 will attempt to build ``fish``, and any errors will be shown using the ``less`` pager. [#]_
 
-As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. (Note this is different from bash, which uses ``|&``).
+As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. Note that this is different from bash, which uses ``|&``.
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
 

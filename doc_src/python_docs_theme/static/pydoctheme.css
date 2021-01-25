@@ -30,6 +30,14 @@ div.related {
     margin-top: 0;
 }
 
+div.section {
+    /* Make scrollable when it's too wide
+       Really only happens with tables, the rest flows nicely,
+       but I have no idea how to make the tables themselves scrollable
+     */
+    overflow-y: auto;
+}
+
 div.related a:hover {
     color: #0095C4;
 }
@@ -242,5 +250,10 @@ dl > dt span ~ em {
     box-shadow: 0;
     width: 100%;
     padding: 0;
+    /* We have some padding/margins that would overflow - just remove it */
+    overflow: clip;
   }
+    div.footer {
+        margin: 0;
+    }
 }

@@ -459,13 +459,13 @@ Here, ``make`` is only executed if ``./configure`` succeeds (returns 0), and ``s
 
 fish also supports :ref:`and <cmd-and>`, :ref:`or <cmd-or>`, and :ref:`not <cmd-not>`. The first two are job modifiers and have lower precedence. Example usage::
 
-    > cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt ; and echo "Backup successful"; or echo "Backup failed"
+    > cp file1 file1_bak && cp file2 file2_bak; and echo "Backup successful"; or echo "Backup failed"
     Backup failed
 
 
 As mentioned in :ref:`the section on the semicolon <tut-semicolon>`, this can also be written in multiple lines, like so::
 
-    cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt
+    cp file1 file1_bak && cp file2 file2_bak
     and echo "Backup successful"
     or echo "Backup failed"
 
@@ -507,7 +507,9 @@ To compare strings or numbers or check file properties (whether a file exists or
 
     # or
 
-    if test -e /etc/hosts # is true if the path /etc/hosts exists - it could be a file or directory or symlink (or possibly something else).
+    # This test is true if the path /etc/hosts exists
+    # - it could be a file or directory or symlink (or possibly something else).
+    if test -e /etc/hosts
         echo We most likely have a hosts file
     else
         echo We do not have a hosts file

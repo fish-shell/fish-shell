@@ -348,7 +348,8 @@ This is a kind of function known as a :ref:`wrapper <syntax-function-wrappers>` 
 Fish's prompt is also defined in a function, called :ref:`fish_prompt <cmd-fish_prompt>`. It is run when the prompt is about to be displayed and its output forms the prompt::
 
   function fish_prompt
-      # A simple prompt. Displays the current directory (which fish stores in the $PWD variable)
+      # A simple prompt. Displays the current directory
+      # (which fish stores in the $PWD variable)
       # and then a user symbol - a '►' for a normal user and a '#' for root.
       set -l user_char '►'
       if fish_is_root_user
@@ -393,7 +394,8 @@ Anything after a ``#`` until the end of the line is a comment. That means it's p
 This is useful to explain what and why you are doing something::
 
   function ls
-      # The function is called ls, so we have to explicitly call `command ls` to avoid calling ourselves.
+      # The function is called ls,
+      # so we have to explicitly call `command ls` to avoid calling ourselves.
       command ls --color=auto $argv
   end
 
@@ -457,12 +459,13 @@ Some examples::
 
   # Just see if the file contains the string "fish" anywhere.
   if grep -q fish myanimals
-      echo You have fish!
+      echo "You have fish!"
   else
-      echo You don't have fish!
+      echo "You don't have fish!"
   end
 
-  # $XDG_CONFIG_HOME is a standard place to store configuration. If it's not set applications should use ~/.config.
+  # $XDG_CONFIG_HOME is a standard place to store configuration.
+  # If it's not set applications should use ~/.config.
   set -q XDG_CONFIG_HOME; and set -l configdir $XDG_CONFIG_HOME
   or set -l configdir ~/.config
 
@@ -694,7 +697,8 @@ When lists are expanded with other parts attached, they are expanded with these 
 
 Examples::
 
-    # Brace expansion is the most familiar - all elements in the brace combine with the parts outside of the braces
+    # Brace expansion is the most familiar:
+    # All elements in the brace combine with the parts outside of the braces
     >_ echo {good,bad}" apples"
     good apples bad apples
 
@@ -734,8 +738,13 @@ E.g.
     >_ set b 1 2 3
     >_ echo (echo x)$b
     x1 x2 x3
-    >_ echo (printf '%s' '')banana # the printf prints nothing, so this is nothing times "banana", which is nothing.
-    >_ echo (printf '%s\n' '')banana # the printf prints a newline, so the command substitution expands to an empty string, so this is `''banana`
+    >_ echo (printf '%s' '')banana
+    # the printf prints nothing, so this is nothing times "banana",
+    # which is nothing.
+    >_ echo (printf '%s\n' '')banana
+    # the printf prints a newline,
+    # so the command substitution expands to an empty string,
+    # so this is `''banana`
     banana
 
 This can also be useful. For example, if you want to go through all the files in all the directories in $PATH, use::
@@ -956,7 +965,8 @@ Overriding variables for a single command
 
 If you want to override a variable for a single command, you can use "var=val" statements before the command::
 
-  # Call git status on another directory (can also be done via `git -C somerepo status`)
+  # Call git status on another directory
+  # (can also be done via `git -C somerepo status`)
   GIT_DIR=somerepo git status
 
 Note that, unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
@@ -971,7 +981,8 @@ Multiple elements can be given in a :ref:`brace expansion<expand-brace>`::
 
 Or with a :ref:`glob <expand-wildcard>`::
 
-  # Run vlc on all mp3 files in the current directory - if no file exists it will still be run with no arguments
+  # Run vlc on all mp3 files in the current directory
+  # If no file exists it will still be run with no arguments
   mp3s=*.mp3 vlc $mp3s
 
 Unlike other shells, this does *not* inhibit any lookup (aliases or similar). Calling a command after setting a variable override will result in the exact same command being run.
@@ -1044,10 +1055,8 @@ As a naming convention, exported variables are in uppercase and unexported varia
 For example::
 
     set -gx ANDROID_HOME ~/.android # /opt/android-sdk
-    set -gx ASPROOT ~/packages/asp
     set -gx CDPATH . ~ (test -e ~/Videos; and echo ~/Videos)
     set -gx EDITOR emacs -nw
-    set -gx GCC_COLORS 'error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
     set -gx GOPATH ~/dev/go
     set -gx GTK2_RC_FILES "$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
     set -gx LESSHISTFILE "-"
@@ -1183,7 +1192,8 @@ A more robust approach to argument handling is :ref:`argparse <cmd-argparse>`, w
           return 0
       end
 
-      # If -s or --second is given, we print the second argument, not the first and third.
+      # If -s or --second is given, we print the second argument,
+      # not the first and third.
       if set -q _flag_second
           echo $argv[2]
       else
@@ -1526,7 +1536,8 @@ The fish editor features copy and paste, a `searchable history <#history-search>
 Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example::
 
 
-    function fish_hybrid_key_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"
+    function fish_hybrid_key_bindings --description \
+    "Vi-style bindings that inherit emacs-style bindings in all modes"
         for mode in default insert visual
             fish_default_key_bindings -M $mode
         end

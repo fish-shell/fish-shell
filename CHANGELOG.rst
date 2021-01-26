@@ -4,14 +4,14 @@ fish 3.2.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 
--  Undo and redo support for the command-line editor and pager search (:issue:`1367`). By default, undo is bound to Control+Z, and redo to Alt+/.
--  builtins may now output before all data is read. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
+-  **Undo and redo support** for the command-line editor and pager search (:issue:`1367`). By default, undo is bound to Control+Z, and redo to Alt+/.
+-  **Builtins can now output before all data is read**. For example, ``string replace`` no longer has to read all of stdin before it can begin to output.
    This makes it usable also for pipes where the previous command hasn't finished yet, like::
 
     # Show all dmesg lines related to "usb"
     dmesg -w | string match '*usb*'
 
--  Prompts whose width exceeds $COLUMNS will now be truncated instead of replaced with ``"> "`` (:issue:`904`).
+-  **Prompts will now be truncated** instead of replaced with ``"> "`` if their width exceeds $COLUMNS (:issue:`904`).
    For example::
 
      ~/dev/build/fish-shell-git/src/fish-shell/build (makepkg)>
@@ -21,13 +21,13 @@ Notable improvements and fixes
      …h-shell/build (makepkg)>
 
    It is still possible to react to $COLUMNS inside the prompt to implement smarter behavior.
--  When pressing Tab, fish displays ambiguous completions even when they
+-  **fish completes ambiguous completions** after pressing tab even when they
    have a common prefix, without the user having to press Tab again
    (:issue:`6924`).
 -  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
    Although flow control remains off by default, enterprising users can now enable it for external commands with
    ``stty`` (:issue:`2315`). 
--  A new ``fish_add_path`` helper function to add paths to $PATH without producing duplicates,
+-  A new **``fish_add_path`` helper function to add paths to $PATH** without producing duplicates,
    to be used interactively or in ``config.fish`` (:issue:`6960`, :issue:`7028`).
    For example::
 
@@ -35,7 +35,7 @@ Notable improvements and fixes
 
    will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
    so it can be called again and again from config.fish or just once interactively, and the path will just be there, once.
--  The ``test`` builtin now better shows where an error occured (:issue:`6030`)::
+-  **Better errors with ``test``** (:issue:`6030`)::
 
     > test 1 = 2 and echo true or false
     test: Expected a combining operator like '-a' at index 4
@@ -43,19 +43,24 @@ Notable improvements and fixes
           ^
 
    This includes numbering the index from 1 instead of 0.
--  The documentation (:issue:`6500`, :issue:`7371`) and Web-based configuration (:issue:`7523`) received a new theme, matching the design on fishshell.com.
--  ``fish --no-execute`` will no longer complain about unknown commands
+-  **A new theme for the documentation and Web-base configuration** (:issue:`6500`, :issue:`7371`, :issue:`7523`), matching the design on fishshell.com.
+-  **``fish --no-execute`` will no longer complain about unknown commands**
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
--  ``string match --regex`` now integrates named PCRE2 capture groups with fish variables, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
--  Globs and other expansions are limited to 512,288 results (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
--  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux's current directory introspection to work (:issue:`5699`).
--  A new ``fish for bash users`` documentation page gives a quick overview of the scripting differences between bash and fish (:issue:`2382`), and the completion tutorial has also been moved out into its own document (:issue:`6709`).
+-  ``string match --regex`` now integrates **named PCRE2 capture groups as fish variables**, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
+-  Globs and other **expansions are limited to 512,288 results** (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
+-  A new **``fish for bash users`` documentation page** gives a quick overview of the scripting differences between bash and fish (:issue:`2382`), and the completion tutorial has also been moved out into its own document (:issue:`6709`).
 
 Syntax changes and new commands
 -------------------------------
 
--  Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively (:issue:`6574`).
+-  Range limits in index range expansions like ``$x[$start..$end]`` may be omitted: ``$start`` and ``$end`` default to 1 and -1 (the last item) respectively (:issue:`6574`)::
+
+     echo $var[1..]
+     echo $var[..-1]
+     echo $var[..]
+
+   All print the full list ``$var``
 -  When globbing, a segment which is exactly ``**`` may now match zero directories. For example ``**/foo`` may match ``foo`` in the current directory (:issue:`7222`).
 
 Scripting improvements
@@ -135,6 +140,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 
+-  fish will now always attempt to become process group leader in interactive mode (:issue:`7060`). This helps avoid hangs in certain circumstances, and allows tmux's current directory introspection to work (:issue:`5699`).
 -  The interactive reader now allows ending a line in a logical operators (``&&`` and ``||``) instead of complaining about a missing command
    (This was already syntactically valid, but interactive sessions didn't know about it yet).
 -  The prompt is reprinted after a background job exits (:issue:`1018`).

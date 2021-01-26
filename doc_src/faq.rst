@@ -91,8 +91,10 @@ You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>
 If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` like::
 
   >_ funced fish_prompt
-  # this opens up your editor (set in $EDITOR), modify the function, save the file, repeat to your liking
-  # once you are happy with it:
+  # This opens up your editor (set in $EDITOR).
+  # Modify the function,
+  # save the file and repeat to your liking.
+  # Once you are happy with it:
   >_ funcsave fish_prompt
 
 This also applies to :ref:`fish_right_prompt <cmd-fish_right_prompt>` and :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`.
@@ -267,7 +269,8 @@ But it also means that these commands can stop working at any moment once a matc
 .. code-block:: sh
 
   for f in ./*.mpg; do
-        # We need to test if the file really exists because the wildcard might have failed to match.
+        # We need to test if the file really exists because
+        # the wildcard might have failed to match.
         test -f "$f" || continue
         mympgviewer "$f"
   done

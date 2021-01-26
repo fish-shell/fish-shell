@@ -447,8 +447,12 @@ code {
     bottom: 0px;
 }
 
+.color_scheme_choices_list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .color_scheme_choice_container {
-    float: left;
     padding: 5px;
 }
 

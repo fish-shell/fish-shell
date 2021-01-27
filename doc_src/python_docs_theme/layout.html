@@ -37,6 +37,8 @@
     {%- endif %}
 {% endblock %}
 
+{% block sidebar1 %}{{ sidebar() }}{% endblock %}
+{% block sidebar2 %} {% endblock %}
 {% block extrahead %}
     <link rel="shortcut icon" type="image/png" href="{{ pathto('_static/' + theme_root_icon, 1) }}" />
     {% if builder != "htmlhelp" %}

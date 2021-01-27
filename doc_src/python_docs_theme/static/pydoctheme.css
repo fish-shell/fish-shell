@@ -241,6 +241,19 @@ dl > dt span ~ em {
         height: auto;
         position: relative;
     }
+    div.sphinxsidebar ul {
+        flex-basis: content;
+        flex-wrap: wrap;
+    }
+    div.sphinxsidebarwrapper {
+        display: flex;
+    }
+    div.sphinxsidebarwrapper > h3:nth-child(5) {
+        display: none;
+    }
+    div#searchbox {
+        display: none !important;
+    }
     div.content {margin-left: 0;}
 
     div.bodywrapper {

@@ -74,7 +74,7 @@ Default Shell
 
 To make fish your default shell:
 
-- Add the line ``/usr/local/bin/fish`` [#]_ to ``/etc/shells``.
+- Add the line ``/usr/local/bin/fish`` to ``/etc/shells``.
 - Change your default shell with ``chsh -s /usr/local/bin/fish``.
 
 For detailed instructions see :ref:`Switching to fish <switching-to-fish>`.

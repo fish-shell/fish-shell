@@ -355,9 +355,9 @@ Unfortunately, there is no way to make the changes take effect at once. You will
 
 Uninstalling fish
 -----------------
-Should you wish to uninstall fish, first ensure fish is not set as your shell. Run ``chsh -s /bin/bash`` if you are not sure.
+If you want to uninstall fish, first make sure fish is not set as your shell. Run ``chsh -s /bin/bash`` if you are not sure.
 
-Next, do the following (assuming fish was installed to /usr/local)::
+If you installed it with a package manager, just use that package manager's uninstall function. If you built fish yourself, assuming you installed it to /usr/local, do this::
 
     rm -Rf /usr/local/etc/fish /usr/local/share/fish ~/.config/fish
     rm /usr/local/share/man/man1/fish*.1

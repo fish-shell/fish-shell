@@ -8,7 +8,7 @@ This is the documentation for **fish**, the **f**\ riendly **i**\ nteractive **s
 
 A shell is a program that helps you operate your computer by starting other programs. fish offers a command-line interface focused on usability and interactive use.
 
-Unlike other shells, fish does not follow the POSIX standard, but still roughly belongs to the same family.
+Unlike other shells, fish does not follow the POSIX standard, but still uses roughly the same model.
 
 Some of the special features of fish are:
 
@@ -74,7 +74,7 @@ Default Shell
 
 To make fish your default shell:
 
-- Add the line ``/usr/local/bin/fish`` to ``/etc/shells``.
+- Add the line ``/usr/local/bin/fish`` [#]_ to ``/etc/shells``.
 - Change your default shell with ``chsh -s /usr/local/bin/fish``.
 
 For detailed instructions see :ref:`Switching to fish <switching-to-fish>`.
@@ -93,9 +93,9 @@ A script written in ``bash`` would need a first line like this::
 
     #!/bin/bash
 
-This tells the shell to execute the file with the interpreter located at ``/bin/bash``.
+When the shell tells the kernel to execute the file, it will use the interpreter ``/bin/bash``.
 
-For a script written in another language, just replace ``/bin/bash`` with the interpreter for that language (for example: ``/bin/python`` for a python script, or ``/usr/local/bin/fish`` for a fish script).
+For a script written in another language, just replace ``/bin/bash`` with the interpreter for that language (for example: ``/usr/bin/python`` for a python script, or ``/usr/local/bin/fish`` for a fish script).
 
 This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
 
@@ -141,7 +141,7 @@ Here we define some of the terms used on this page and throughout the rest of th
 
 - **Builtin**: A command that is implemented by the shell. Builtins are so closely tied to the operation of the shell that it is impossible to implement them as external commands.
 
-- **Command**: A program that the shell can run.
+- **Command**: A program that the shell can run, or more specifically an external program that the shell runs in another process.
 
 - **Function**: A block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple simple commands into one more advanced command.
 
@@ -151,7 +151,7 @@ Here we define some of the terms used on this page and throughout the rest of th
 
 - **Redirection**: An operation that changes one of the input or output streams associated with a job.
 
-- **Switch**: A special kind of argument that alters the behavior of a command. A switch almost always begins with one or two hyphens.
+- **Switch** or **Option**: A special kind of argument that alters the behavior of a command. A switch almost always begins with one or two hyphens.
 
 .. _quotes:
 
@@ -261,8 +261,8 @@ The destination of a stream can be changed using something called *redirection*.
 
 ``DESTINATION`` can be one of the following:
 
-- A filename. The output will be written to the specified file.
-- An ampersand (``&``) followed by the number of another file descriptor. The output will be written to the destination descriptor.
+- A filename. The output will be written to the specified file. Often ``>/dev/null`` to silence output by writing it to the special "sinkhole" file.
+- An ampersand (``&``) followed by the number of another file descriptor like ``&2`` for standard error. The output will be written to the destination descriptor.
 - An ampersand followed by a minus sign (``&-``). The file descriptor will be closed.
 
 As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same destination. For example, ``echo hello &> all_output.txt`` redirects both stdout and stderr to the file ``all_output.txt``. This is equivalent to ``echo hello > all_output.txt 2>&1``.
@@ -446,8 +446,8 @@ After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text 
 
 .. _syntax-conditional:
 
-Conditional execution of code and flow control
-----------------------------------------------
+Conditions
+----------
 
 Fish has some builtins that let you execute commands only if a specific criterion is met: :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>`, :ref:`and <cmd-and>` and :ref:`or <cmd-or>`, and also the familiar :ref:`&&/|| <tut-combiners>` syntax.
 
@@ -455,9 +455,14 @@ The :ref:`switch <cmd-switch>` command is used to execute one of possibly many b
 
 The other conditionals use the :ref:`exit status <variables-status>` of a command to decide if a command or a block of commands should be executed.
 
+Unlike programming languages you might know, :ref:`if <cmd-if>` doesn't take a *condition*, it takes a *command*. If that command returned a successful :ref:`exit status <variables-status>` (that's 0), the ``if`` branch is taken, otherwise the :ref:`else <cmd-else>` branch.
+
 Some examples::
 
   # Just see if the file contains the string "fish" anywhere.
+  # This executes the `grep` command, which searches for a string,
+  # and if it finds it returns a status of 0.
+  # The `-q` switch stops it from printing any matches.
   if grep -q fish myanimals
       echo "You have fish!"
   else
@@ -484,7 +489,7 @@ When fish is given a commandline, it expands the parameters before sending them 
 - :ref:`Brace expansion <expand-brace>`, to write lists with common pre- or suffixes in a shorter way
 - :ref:`Tilde expansion <expand-home>`, to turn the ``~`` at the beginning of paths into the path to the home directory
 
-Parameter expansion is limited to 524288 items.
+Parameter expansion is limited to 524288 items. There is a limit to how many arguments the operating system allows for any command, and 524288 is far above it. This is a measure to stop the shell from hanging doing useless computation.
 
 .. _expand-wildcard:
 
@@ -527,14 +532,14 @@ For most commands, if any wildcard fails to expand, the command is not executed,
 
 Examples::
 
+    # List the .foo files, or warns if there aren't any.
     ls *.foo
-    # Lists the .foo files, or warns if there aren't any.
 
+    # List the .foo files, if any.
     set foos *.foo
     if count $foos >/dev/null
         ls $foos
     end
-    # Lists the .foo files, if any.
 
 .. [#] Technically, unix allows filenames with newlines, and this splits the ``find`` output on newlines. If you want to avoid that, use find's ``-print0`` option and :ref:`string split0<cmd-string-split0>`.
 
@@ -557,19 +562,19 @@ Fish has a default limit of 100 MiB on the data it will read in a command sustit
 
 Examples::
 
-    echo (basename image.jpg .jpg).png
     # Outputs 'image.png'.
+    echo (basename image.jpg .jpg).png
 
-    for i in *.jpg; convert $i (basename $i .jpg).png; end
     # Convert all JPEG files in the current directory to the
     # PNG format using the 'convert' program.
+    for i in *.jpg; convert $i (basename $i .jpg).png; end
 
-    begin; set -l IFS; set data (cat data.txt); end
     # Set the ``data`` variable to the contents of 'data.txt'
     # without splitting it into a list.
+    begin; set -l IFS; set data (cat data.txt); end
 
-    set data (cat data | string split0)
     # Set ``$data`` to the contents of data, splitting on NUL-bytes.
+    set data (cat data | string split0)
 
 
 Sometimes you want to pass the output of a command to another command that only accepts files. If it's just one file, you can usually just pass it via a pipe, like::
@@ -598,22 +603,23 @@ Examples::
   > echo input.{c,h,txt}
   input.c input.h input.txt
 
+  # Move all files with the suffix '.c' or '.h' to the subdirectory src.
   > mv *.{c,h} src/
-  # Moves all files with the suffix '.c' or '.h' to the subdirectory src.
 
-  > cp file{,.bak}
   # Make a copy of `file` at `file.bak`.
+  > cp file{,.bak}
 
-  > set -l dogs hot cool cute
+  > set -l dogs hot cool cute "good "
   > echo {$dogs}dog
-  hotdog cooldog cutedog
+  hotdog cooldog cutedog good dog
 
 If there is no "," or variable expansion between the curly braces, they will not be expanded::
 
+    # This {} isn't special
     > echo foo-{}
     foo-{}
+    # This passes "HEAD@{2}" to git
     > git reset --hard HEAD@{2}
-    # passes "HEAD@{2}" to git
     > echo {{a,b}}
     {a} {b} # because the inner brace pair is expanded, but the outer isn't.
 
@@ -634,7 +640,7 @@ To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 Variable expansion
 ------------------
 
-One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (`$`) followed by a variable name with the _value_ of that variable. For more on shell variables, read the `Shell variables <#variables>`_ section.
+One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable. For more on shell variables, read the :ref:`Shell variables <variables>` section.
 
 In the simplest case, this is just something like::
 
@@ -657,10 +663,7 @@ To separate a variable name from text you can encase the variable within double-
 
 Note that without the quotes or braces, fish will try to expand a variable called ``$WORDs``, which may not exist.
 
-The latter syntax ``{$WORD}`` works by exploiting `brace expansion <#expand-brace>`_.
-
-
-In these cases, the expansion eliminates the string, as a result of the implicit :ref:`cartesian product <cartesian-product>`.
+The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand-brace>`.
 
 If $WORD here is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
 
@@ -683,8 +686,9 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
     # 20
     # 30
 
-When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of the ``$foo`` variable as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1][5]`` (take the first element of ``$foo``, use it as a variable name, then give the fifth element of that).
+``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
 
+When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1][5]`` (take the first element of ``$foo``, use it as a variable name, then give the fifth element of that).
 
 .. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
 
@@ -729,7 +733,7 @@ Examples::
 
 Sometimes this may be unwanted, especially that tokens can disappear after expansion. In those cases, you should double-quote variables - ``echo "$c"word``.
 
-This also happens after `command substitution <#expand-command-substitution>`_. To avoid tokens disappearing there, make the inner command return a trailing newline, or store the output in a variable and double-quote it.
+This also happens after :ref:`command substitution <expand-command-substitution>`. To avoid tokens disappearing there, make the inner command return a trailing newline, or store the output in a variable and double-quote it.
 
 E.g.
 
@@ -747,10 +751,11 @@ E.g.
     # so this is `''banana`
     banana
 
-This can also be useful. For example, if you want to go through all the files in all the directories in $PATH, use::
+This can be quite useful. For example, if you want to go through all the files in all the directories in $PATH, use::
 
     for file in $PATH/*
 
+Because :ref:`$PATH <path>` is a list, this expands to all the files in all the directories in it. And if there are no directories in $PATH, the right answer here is to expand to no files.
 
 .. _expand-index-range:
 
@@ -879,7 +884,7 @@ Example:
 
 To set the variable ``smurf_color`` to the value ``blue``, use the command ``set smurf_color blue``.
 
-After a variable has been set, you can use the value of a variable in the shell through `variable expansion <#expand-variable>`_.
+After a variable has been set, you can use the value of a variable in the shell through :ref:`variable expansion <expand-variable>`.
 
 Example::
 
@@ -1214,7 +1219,7 @@ PATH variables
 
 Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in "PATH" (case-sensitive) become PATH variables.
 
-PATH variables act as normal lists, except they are are implicitly joined and split on colons.
+PATH variables act as normal lists, except they are implicitly joined and split on colons.
 
 ::
 

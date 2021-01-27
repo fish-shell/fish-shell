@@ -177,6 +177,9 @@ table.docutils {
     border-radius: 3px;
     margin-top: 10px;
     margin-bottom: 10px;
+    /* Make table scrollable on overflow */
+    display: block;
+    overflow: auto;
 }
 
 table.docutils td, table.docutils th {

@@ -1923,16 +1923,15 @@ set -l ind (contains -i -- $generated_path[1] $complete_dirs); and set -e comple
 set -l __fish_git_custom_commands_completion
 for git_ext in $complete_dirs/git-*.fish
     # ignore this completion as executable does not exists
-    set -l cmd (string replace -r '.*/([^/]*)\.fish' '$1' $git_ext)
-    not command -q $cmd
+    set -l subcommand (string replace -r '.*/git-([^/]*)\.fish' '$1' $git_ext)
+    not command -q git-$subcommand
     and continue
     # already sourced this git-* completion file from some other dir
-    contains -- $cmd $__fish_git_custom_commands_completion
+    contains -- $subcommand $__fish_git_custom_commands_completion
     and continue
-    complete -C "$cmd " >/dev/null
-    set -l subcommand (string replace -r '^git-' '' -- $cmd)
+    complete -C "git-$subcommand " >/dev/null
     if [ (complete git-$subcommand | count) -gt 0 ]
         complete git -f -n "__fish_git_using_command $subcommand" -a "(__fish_git_complete_custom_command $subcommand)"
     end
-    set -a __fish_git_custom_commands_completion $cmd
+    set -a __fish_git_custom_commands_completion $subcommand
 end

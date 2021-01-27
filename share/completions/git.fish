@@ -1929,7 +1929,7 @@ for git_ext in $complete_dirs/git-*.fish
     # already sourced this git-* completion file from some other dir
     contains -- $cmd $__fish_git_custom_commands_completion
     and continue
-    source $git_ext
+    complete -C "$cmd " >/dev/null
     set -l subcommand (string replace -r '^git-' '' -- $cmd)
     if [ (complete git-$subcommand | count) -gt 0 ]
         complete git -f -n "__fish_git_using_command $subcommand" -a "(__fish_git_complete_custom_command $subcommand)"

@@ -206,7 +206,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         const wchar_t *end;
         long tmp;
         if (idx.empty() && in[pos] == L'.' && in[pos + 1] == L'.') {
-            // If we are at the first index expression, a missing start index means the range starts
+            // If we are at the first index expression, a missing start-index means the range starts
             // at the first item.
             tmp = 1;  // first index
             end = &in[pos];
@@ -229,7 +229,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             while (iswspace(in[pos])) pos++;  // Allow the space in "[.. ]".
 
             long tmp1;
-            // Check if we are at the last index range expression, a missing end index means the
+            // If we are at the last index range expression  then a missing end-index means the
             // range spans until the last item.
             if (in[pos] == L']') {
                 tmp1 = -1;  // last index

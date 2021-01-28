@@ -269,7 +269,8 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
     // not the (missing) local value. Also don't bother to complain about relative paths, which
     // don't start with /.
     const auto existing_variable = vars.get(key, ENV_DEFAULT);
-    const wcstring_list_t &existing_values = existing_variable ? existing_variable->as_list() : wcstring_list_t{};
+    const wcstring_list_t &existing_values =
+        existing_variable ? existing_variable->as_list() : wcstring_list_t{};
 
     for (const wcstring &dir : list) {
         if (!string_prefixes_string(L"/", dir) || contains(existing_values, dir)) {
@@ -341,8 +342,8 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
 /// Call vars.set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
 static int env_set_reporting_errors(const wchar_t *cmd, const wchar_t *key, int scope,
-                                    wcstring_list_t list, io_streams_t &streams,
-                                    env_stack_t &vars, std::vector<event_t> *evts) {
+                                    wcstring_list_t list, io_streams_t &streams, env_stack_t &vars,
+                                    std::vector<event_t> *evts) {
     if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams, vars)) {
         return STATUS_CMD_ERROR;
     }
@@ -377,23 +378,38 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
 
     while (*p != L']') {
         const wchar_t *end;
-        long l_ind = fish_wcstol(p, &end);
-        if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
-            streams.err.append_format(_(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
-            return -1;
+        long l_ind;
+        if (indexes.empty() && *p == L'.' && p[1] == L'.') {
+            // If we are at the first index expression, a missing start-index means the range starts
+            // at the first item.
+            l_ind = 1;  // first index
+        } else {
+            l_ind = fish_wcstol(p, &end);
+            if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
+                streams.err.append_format(_(L"%ls: Invalid index starting at '%ls'\n"), L"set",
+                                          src);
+                return -1;
+            }
+            p = const_cast<wchar_t *>(end);
         }
-        p = const_cast<wchar_t *>(end);
 
         // Convert negative index to a positive index.
         if (l_ind < 0) l_ind = varsize + l_ind + 1;
 
         if (*p == L'.' && *(p + 1) == L'.') {
             p += 2;
-            long l_ind2 = fish_wcstol(p, &end);
-            if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
-                return -1;
+            long l_ind2;
+            // If we are at the last index range expression, a missing end-index means the range
+            // spans until the last item.
+            if (indexes.empty() && *p == L']') {
+                l_ind2 = -1;
+            } else {
+                l_ind2 = fish_wcstol(p, &end);
+                if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
+                    return -1;
+                }
+                p = const_cast<wchar_t *>(end);
             }
-            p = const_cast<wchar_t *>(end);
 
             // Convert negative index to a positive index.
             if (l_ind2 < 0) l_ind2 = varsize + l_ind2 + 1;
@@ -676,8 +692,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             wcstring_list_t result;
             dest_var->to_list(result);
             erase_values(result, indexes);
-            retval =
-                env_set_reporting_errors(cmd, dest, scope, std::move(result), streams, parser.vars(), &evts);
+            retval = env_set_reporting_errors(cmd, dest, scope, std::move(result), streams,
+                                              parser.vars(), &evts);
         }
 
         // Fire any events.
@@ -800,8 +816,8 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
     if (retval != STATUS_CMD_OK) return retval;
 
     std::vector<event_t> evts;
-    retval =
-        env_set_reporting_errors(cmd, varname, scope, std::move(new_values), streams, parser.vars(), &evts);
+    retval = env_set_reporting_errors(cmd, varname, scope, std::move(new_values), streams,
+                                      parser.vars(), &evts);
     // Fire any events.
     for (const auto &evt : evts) {
         event_fire(parser, evt);

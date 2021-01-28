@@ -70,3 +70,11 @@ echo $test[ (true)..3]
 #CHECK:
 echo $test[ (string join \n 1 2 3)..3 ]
 #CHECK: 1 2 3 2 3 3
+
+set -l list 1 2 3
+set list[..2] $list[2..1]
+echo $list # CHECK: 2 1 3
+
+set -l list 1 2 3
+set list[2..] $list[-1..2]
+echo $list # CHECK: 1 3 2

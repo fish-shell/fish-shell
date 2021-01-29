@@ -180,6 +180,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t *
             }
             case 'F': {
                 result_mode.force_files = true;
+                break;
             }
             case 'r': {
                 result_mode.requires_param = true;

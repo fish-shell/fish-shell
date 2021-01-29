@@ -1531,6 +1531,72 @@ It also provides a large number of program specific scripted completions. Most o
 
 You can also write your own completions or install some you got from someone else. For that, see :ref:`Writing your own completions <completion-own>`.
 
+.. _color:
+
+Syntax highlighting
+-------------------
+
+Fish interprets the command line as it is typed and uses syntax highlighting to provide feedback. The most important feedback is the detection of potential errors. By default, errors are marked red.
+
+Detected errors include:
+
+- Non existing commands.
+- Reading from or appending to a non existing file.
+- Incorrect use of output redirects
+- Mismatched parenthesis
+
+
+When the cursor is over a parenthesis or a quote, fish also highlights its matching quote or parenthesis.
+
+To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <#variables-color>`__ section.
+
+.. _title:
+
+Programmable title
+------------------
+
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :ref:`fish_title <cmd-fish_title>` function. The :ref:`fish_title <cmd-fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :ref:`status current-command <cmd-status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the `fish_prompt <cmd-fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
+
+Examples:
+The default fish title is::
+
+
+    function fish_title
+        echo (status current-command) ' '
+        pwd
+    end
+
+To show the last command in the title::
+
+    function fish_title
+        echo $argv[1]
+    end
+
+.. _prompt:
+
+Programmable prompt
+-------------------
+
+When fish waits for input, it will display a prompt by evaluating the :ref:`fish_prompt <cmd-fish_prompt>` and :ref:`fish_right_prompt <cmd-fish_right_prompt>` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
+
+.. _greeting:
+
+Configurable greeting
+---------------------
+
+If a function named :ref:`fish_greeting <cmd-fish_greeting>` exists, it will be run when entering interactive mode. Otherwise, if an environment variable named :ref:`fish_greeting <cmd-fish_greeting>` exists, it will be printed.
+
+.. _private-mode:
+
+Private mode
+-------------
+
+If ``$fish_private_mode`` is set to a non-empty value, commands will not be written to the history file on disk.
+
+You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
+
+You can query the variable ``fish_private_mode`` (``if set -q fish_private_mode ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
+
 .. _editor:
 
 Command line editor
@@ -1959,72 +2025,6 @@ Prefixing a feature with ``no-`` turns it off instead.
 
 Other features
 ==============
-
-.. _color:
-
-Syntax highlighting
--------------------
-
-Fish interprets the command line as it is typed and uses syntax highlighting to provide feedback. The most important feedback is the detection of potential errors. By default, errors are marked red.
-
-Detected errors include:
-
-- Non existing commands.
-- Reading from or appending to a non existing file.
-- Incorrect use of output redirects
-- Mismatched parenthesis
-
-
-When the cursor is over a parenthesis or a quote, fish also highlights its matching quote or parenthesis.
-
-To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <#variables-color>`__ section.
-
-.. _title:
-
-Programmable title
-------------------
-
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :ref:`fish_title <cmd-fish_title>` function. The :ref:`fish_title <cmd-fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :ref:`status current-command <cmd-status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the `fish_prompt <cmd-fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
-
-Examples:
-The default fish title is::
-
-
-    function fish_title
-        echo (status current-command) ' '
-        pwd
-    end
-
-To show the last command in the title::
-
-    function fish_title
-        echo $argv[1]
-    end
-
-.. _prompt:
-
-Programmable prompt
--------------------
-
-When fish waits for input, it will display a prompt by evaluating the :ref:`fish_prompt <cmd-fish_prompt>` and :ref:`fish_right_prompt <cmd-fish_right_prompt>` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
-
-.. _greeting:
-
-Configurable greeting
----------------------
-
-If a function named :ref:`fish_greeting <cmd-fish_greeting>` exists, it will be run when entering interactive mode. Otherwise, if an environment variable named :ref:`fish_greeting <cmd-fish_greeting>` exists, it will be printed.
-
-.. _private-mode:
-
-Private mode
--------------
-
-If ``$fish_private_mode`` is set to a non-empty value, commands will not be written to the history file on disk.
-
-You can also launch with ``fish --private`` (or ``fish -P`` for short). This both hides old history and prevents writing history to disk. This is useful to avoid leaking personal information (e.g. for screencasts) or when dealing with sensitive information.
-
-You can query the variable ``fish_private_mode`` (``if set -q fish_private_mode ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 .. _event:
 

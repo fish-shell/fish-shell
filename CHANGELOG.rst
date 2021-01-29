@@ -136,6 +136,7 @@ Scripting improvements
 -  fish should no longer crash if it inherited a windows-style $PWD (like ``F:\path``) (:issue:`7636`).
 -  ``fish -c`` now reads the remaining arguments into $argv (:issue:`2314`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
+-  ``fish --profile`` now only starts the profile after fish's startup (including config.fish) is done. For profiling startup there is a new ``--profile-startup`` option that profiles only startup (:issue:`7648`).
 
 Interactive improvements
 ------------------------

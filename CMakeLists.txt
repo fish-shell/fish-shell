@@ -39,6 +39,7 @@ if (CMAKE_GENERATOR STREQUAL "Ninja" AND
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always")
 endif()
+
 # Enable a whole bunch of warnings, but turn off:
 # - implicit fallthrough because that does not recognize some cases where it's desired (and I *really* want this one!)
 # - comment because we use a bunch of those, and they're not really all that harmful.
@@ -46,10 +47,8 @@ endif()
 # - strict-aliasing, because on old GCCs (*Travis*) those are triggered by maybe.h, so you get it every time it is included.
 # - redundant-move, because we have one that is required on old libc
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra \
--Wno-implicit-fallthrough \
 -Wno-comment \
 -Wno-address \
--Wno-strict-aliasing \
 ")
 
 # Disable exception handling.

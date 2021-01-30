@@ -300,10 +300,8 @@ Completions
    -  ``alternatives`` (:issue:`7616`)
    -  ``apk`` (:issue:`7108`)
    -  ``asciidoctor`` (:issue:`7000`)
-   -  ``bootctl`` (:issue:`7428`)
    -  ``bluetoothctl`` (:issue:`7438`)
    -  ``cmark`` (:issue:`7000`)
-   -  ``coredumpctl`` (:issue:`7428`) 
    -  ``create_ap`` (:issue:`7096`)
    -  ``deno`` (:issue:`7138`)
    -  ``dhclient`` (:issue:`6684`)
@@ -316,8 +314,6 @@ Completions
    -  ``gitk``
    -  ``groups`` (:issue:`6889`)
    -  ``hikari`` (:issue:`7083`)
-   -  ``homectl`` (:issue:`7435`)
-   -  ``hostnamectl`` (:issue:`7428`)
    -  ``icdiff`` (:issue:`7503`)
    -  ``imv`` (:issue:`6675`)
    -  ``julia`` (:issue:`7468`)
@@ -342,6 +338,7 @@ Completions
    -  ``sphinx-apidoc``, ``sphinx-autogen``, ``sphinx-build`` and
       ``sphinx-quickstart`` (:issue:`7000`)
    -  ``strace`` (:issue:`6656`)
+   -  systemd's ``bootctl``, ``coredumpctl``, ``hostnamectl`` (:issue:`7428`), ``homectl`` (:issue:`7435`) and ``userdbctl`` (:issue:`7667`)
    -  ``tcpdump`` (:issue:`6690`)
    -  ``tig``
    -  ``traceroute`` and ``tracepath`` (:issue:`6803`)

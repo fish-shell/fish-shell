@@ -2,7 +2,7 @@
 
 set -l command_with_devices list status lldp delete up down renew forcerenew reconfigure
 set -l commands label reload $command_with_devices
-set -l devices (networkctl list --no-legend 2>/dev/null | string trim | string split -f 2 -- ' ')
+set -l devices "(networkctl list --no-legend 2>/dev/null | string trim | string split -f 2 -- ' ')"
 
 # Commands
 complete -c networkctl -f

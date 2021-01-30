@@ -3,7 +3,7 @@
 set -l commands_users user groups-of-user
 set -l commands_groups group users-in-group
 set -l commands $commands_users $commands_groups
-set -l services (userdbctl services | string match -r -- '\S+' | string match -v -- 'SERVICE')
+set -l services "(userdbctl services | string match -r -- '\S+' | string match -v -- 'SERVICE')"
 
 # Commands
 complete -c userdbctl -f

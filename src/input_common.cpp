@@ -79,6 +79,10 @@ char_event_t input_event_queue_t::readb() {
         res = select(fd_max + 1, &fdset, nullptr, nullptr, usecs_delay > 0 ? &tv : nullptr);
         if (res == -1) {
             if (errno == EINTR || errno == EAGAIN) {
+                // Some uvar notifiers rely on signals - see #7671.
+                if (notifier.poll()) {
+                    env_universal_barrier();
+                }
                 if (interrupt_handler) {
                     if (auto interrupt_evt = interrupt_handler()) {
                         return *interrupt_evt;

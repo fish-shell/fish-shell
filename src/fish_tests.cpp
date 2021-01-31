@@ -4330,7 +4330,7 @@ void history_tests_t::test_history_path_detection() {
     say(L"Testing history path detection");
     char tmpdirbuff[] = "/tmp/fish_test_history.XXXXXX";
     wcstring tmpdir = str2wcstring(mkdtemp(tmpdirbuff));
-    if (! string_suffixes_string(L"/", tmpdir)) {
+    if (!string_suffixes_string(L"/", tmpdir)) {
         tmpdir.push_back(L'/');
     }
 
@@ -4401,7 +4401,7 @@ void history_tests_t::test_history_path_detection() {
         // Loop until the test passes.
         usleep(1E6 / 500);  // 1 msec
     }
-    //fprintf(stderr, "History saving took %lu laps\n", (unsigned long)lap);
+    // fprintf(stderr, "History saving took %lu laps\n", (unsigned long)lap);
     history->clear();
 }
 
@@ -4436,7 +4436,8 @@ static bool history_equals(const shared_ptr<history_t> &hist, const wchar_t *con
         history_item_t item = hist->item_at_index(history_idx);
         if (expected == NULL) {
             if (!item.empty()) {
-                err(L"Expected empty item at history index %lu, instead found: %ls", history_idx, item.str().c_str());
+                err(L"Expected empty item at history index %lu, instead found: %ls", history_idx,
+                    item.str().c_str());
             }
             break;
         } else {
@@ -6101,7 +6102,7 @@ static void test_pipes() {
     // Here we just test that each pipe has CLOEXEC set and is in the high range.
     // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
     std::vector<autoclose_pipes_t> pipes;
-    for (int i=0; i < 10; i++) {
+    for (int i = 0; i < 10; i++) {
         if (auto pipe = make_autoclose_pipes()) {
             pipes.push_back(pipe.acquire());
         }

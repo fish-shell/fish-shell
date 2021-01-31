@@ -25,13 +25,7 @@ If you are already familiar with other shells like bash and want to see the scri
 Installation and Start
 ======================
 
-This section describes how to install, uninstall, start, and exit the fish shell. It also explains how to make fish the default shell:
-
-- `Installation`_: How to install fish
-- `Starting and Exiting`_ How to start and exit a fish shell
-- `Executing Bash`_: How to execute bash commands in fish
-- `Default Shell`_: How to make fish the default shell
-- `Uninstalling`_: How to uninstall fish
+This section describes how to install, uninstall, start, and exit the fish shell. It also explains how to make fish the default shell.
 
 Installation
 ------------

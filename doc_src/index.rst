@@ -2004,15 +2004,10 @@ You can also use the version as a group, so ``3.0`` is equivalent to "stderr-noc
 
 Prefixing a feature with ``no-`` turns it off instead.
 
-.. _other:
-
-Other features
-==============
-
 .. _event:
 
 Event handlers
----------------
+==============
 
 When defining a new function in fish, it is possible to make it into an event handler, i.e. a function that is automatically run when a specific event takes place. Events that can trigger a handler currently are:
 
@@ -2037,7 +2032,7 @@ For more information on how to define new event handlers, see the documentation 
 .. _debugging:
 
 Debugging fish scripts
------------------------
+======================
 
 Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using :ref:`printf <cmd-printf>` and :ref:`set <cmd-set>`. As another example, you can run :ref:`status print-stack-trace <cmd-status>` to see how this breakpoint was reached. To resume normal execution of the script, simply type :ref:`exit <cmd-exit>` or :kbd:`Control`\ +\ :kbd:`D`.
 

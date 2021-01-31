@@ -3227,28 +3227,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 // Historical behavior is to trim trailing spaces.
                 // However, escaped spaces ('\ ') should not be trimmed (#7661)
-                while (!text.empty() && text.back() == L' ') {
-                    // This can be done by counting pre-trailing '\'
-                    // If there's an odd number, this must be an excaped space
-                  
-                    // first check if the trailing space can be escaped at all
-                    //   (making the common case fast)
-                    if(text.length() == 1 || text[text.length()-2] != L'\\') {
-                        text.pop_back();
-                    } else {
-                        // We've found one backslash so far, count the rest
-                        size_t num_pretrailing_backslashes = 1;
-                        for(size_t i_offset=text.length()-2;
-                            i_offset > 0 && text[i_offset-1] == L'\\'; --i_offset)
-                            num_pretrailing_backslashes++;
-                        if(num_pretrailing_backslashes%2 == 0) {
-                            // even; this space is not escaped and should be removed
-                            text.pop_back();
-                        }
-                        // Because the above accounts for the final character,
-                        // we're done here. Break so there's not an infinite loop
-                        break;
-                    }
+                // This can be done by counting pre-trailing '\'
+                // If there's an odd number, this must be an escaped space.
+                while (!text.empty() && text.back() == L' ' &&
+                       count_preceding_backslashes(text, text.size() - 1) % 2 == 0) {
+                    text.pop_back();
                 }
 
                 if (history && !conf.in_silent_mode) {

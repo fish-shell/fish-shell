@@ -74,6 +74,15 @@ wcstring wcstolower(wcstring input) {
     return result;
 }
 
+size_t count_preceding_backslashes(const wcstring &text, size_t idx) {
+    assert(idx <= text.size() && "Out of bounds");
+    size_t backslashes = 0;
+    while (backslashes < idx && text.at(idx - backslashes - 1) == L'\\') {
+        backslashes++;
+    }
+    return backslashes;
+}
+
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value) {
     return string_prefixes_string(proposed_prefix, value.c_str());
 }

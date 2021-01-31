@@ -46,6 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "print_help.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // The number of spaces per indent isn't supposed to be configurable.
@@ -86,17 +87,6 @@ namespace {
 /// From C++14.
 template <bool B, typename T = void>
 using enable_if_t = typename std::enable_if<B, T>::type;
-
-/// \return the number of escaping backslashes before a character.
-/// \p idx may be "one past the end."
-size_t count_preceding_backslashes(const wcstring &text, size_t idx) {
-    assert(idx <= text.size() && "Out of bounds");
-    size_t backslashes = 0;
-    while (backslashes < idx && text.at(idx - backslashes - 1) == L'\\') {
-        backslashes++;
-    }
-    return backslashes;
-}
 
 /// \return whether a character at a given index is escaped.
 /// A character is escaped if it has an odd number of backslashes.

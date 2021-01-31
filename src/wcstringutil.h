@@ -220,6 +220,10 @@ wcstring trim(wcstring input, const wchar_t *any_of);
 /// Converts a string to lowercase.
 wcstring wcstolower(wcstring input);
 
+/// \return the number of escaping backslashes before a character.
+/// \p idx may be "one past the end."
+size_t count_preceding_backslashes(const wcstring &text, size_t idx);
+
 // Out-of-line helper for wcs2string_callback.
 void wcs2string_bad_char(wchar_t);
 

@@ -298,10 +298,10 @@ As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same p
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
 
-.. _syntax-background:
+.. _syntax-job-control:
 
-Background jobs
----------------
+Job control
+-----------
 
 When you start a job in fish, fish itself will pause, and give control of the terminal to the program just started. Sometimes, you want to continue using the commandline, and have the job run in the background. To create a background job, append an \& (ampersand) to your command. This will tell fish to run the job in the background. Background jobs are very useful when running programs that have a graphical user interface.
 
@@ -312,19 +312,14 @@ Example::
 
 will start the emacs text editor in the background. :ref:`fg <cmd-fg>` can be used to bring it into the foreground again when needed.
 
-See also :ref:`Running multiple programs <job-control>`.
-
-.. _syntax-job-control:
-
-Job control
------------
-
 Most programs allow you to suspend the program's execution and return control to fish by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the fish commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :ref:`fg <cmd-fg>` (foreground) command.
 
 If you instead want to put a suspended job into the background, use the :ref:`bg <cmd-bg>` command.
 
 To get a listing of all currently started jobs, use the :ref:`jobs <cmd-jobs>` command.
 These listed jobs can be removed with the :ref:`disown <cmd-disown>` command.
+
+Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
 
 .. _syntax-function:
 
@@ -1922,22 +1917,6 @@ Another set of commands, usually also available in other shells like bash, deal 
 - :ref:`dirs <cmd-dirs>` prints the stack
 - :ref:`pushd <cmd-pushd>` adds a directory on top of the stack and makes it the current working directory
 - :ref:`popd <cmd-popd>` removes the directory on top of the stack and changes the current working directory
-
-.. _job-control:
-
-Running multiple programs
-=========================
-
-Normally when fish starts a program, this program will be put in the foreground, meaning it will take control of the terminal and fish will be stopped until the program finishes. Sometimes this is not desirable. For example, you may wish to start an application with a graphical user interface from the terminal, and then be able to continue using the shell. There are several ways to do this:
-
-- Fish puts commands ending with the ``&`` (ampersand) symbol into the background. A background process will be run simultaneous with fish. Fish will keep control of the terminal, so the program will not be able to read from the keyboard.
-
-- By pressing :kbd:`Control`\ +\ :kbd:`Z`, you can stop a currently running foreground  program and returns control to fish. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control`\ +\ :kbd:`X` :kbd:`Z` to stop running.
-
-- By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, you can send any currently running job into the foreground or background.
-
-Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
-
 
 .. _initialization:
 

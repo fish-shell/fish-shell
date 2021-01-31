@@ -521,6 +521,63 @@ Examples::
 
 .. [#] Technically, unix allows filenames with newlines, and this splits the ``find`` output on newlines. If you want to avoid that, use find's ``-print0`` option and :ref:`string split0<cmd-string-split0>`.
 
+.. _expand-variable:
+
+Variable expansion
+------------------
+
+One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable. For more on shell variables, read the :ref:`Shell variables <variables>` section.
+
+In the simplest case, this is just something like::
+
+    echo $HOME
+
+which will replace ``$HOME`` with the home directory of the current user, and pass it to :ref:`echo <cmd-echo>`, which will then print it.
+
+Sometimes a variable has no value because it is undefined or empty, and it expands to nothing::
+
+
+    echo $nonexistentvariable
+    # Prints no output.
+
+To separate a variable name from text you can encase the variable within double-quotes or braces::
+
+    echo The plural of $WORD is "$WORD"s
+    # Prints "The plural of cat is cats" when $WORD is set to cat.
+    echo The plural of $WORD is {$WORD}s
+    # ditto
+
+Note that without the quotes or braces, fish will try to expand a variable called ``$WORDs``, which may not exist.
+
+The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand-brace>`.
+
+If $WORD here is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
+
+Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (`:`) instead [#]_.
+
+Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
+
+If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`cartesian product <cartesian-product>` section for more information.
+
+The ``$`` symbol can also be used multiple times, as a kind of "dereference" operator (the ``*`` in C or C++), like in the following code::
+
+    set foo a b c
+    set a 10; set b 20; set c 30
+    for i in (seq (count $$foo))
+        echo $$foo[$i]
+    end
+
+    # Output is:
+    # 10
+    # 20
+    # 30
+
+``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
+
+When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1][5]`` (take the first element of ``$foo``, use it as a variable name, then give the fifth element of that).
+
+.. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
+
 .. _expand-command-substitution:
 
 Command substitution
@@ -612,63 +669,6 @@ If there is nothing between a brace and a comma or two commas, it's interpreted 
     /bin /bin /usr/bin
 
 To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
-
-.. _expand-variable:
-
-Variable expansion
-------------------
-
-One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable. For more on shell variables, read the :ref:`Shell variables <variables>` section.
-
-In the simplest case, this is just something like::
-
-    echo $HOME
-
-which will replace ``$HOME`` with the home directory of the current user, and pass it to :ref:`echo <cmd-echo>`, which will then print it.
-
-Sometimes a variable has no value because it is undefined or empty, and it expands to nothing::
-
-
-    echo $nonexistentvariable
-    # Prints no output.
-
-To separate a variable name from text you can encase the variable within double-quotes or braces::
-
-    echo The plural of $WORD is "$WORD"s
-    # Prints "The plural of cat is cats" when $WORD is set to cat.
-    echo The plural of $WORD is {$WORD}s
-    # ditto
-
-Note that without the quotes or braces, fish will try to expand a variable called ``$WORDs``, which may not exist.
-
-The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand-brace>`.
-
-If $WORD here is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
-
-Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (`:`) instead [#]_.
-
-Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
-
-If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`cartesian product <cartesian-product>` section for more information.
-
-The ``$`` symbol can also be used multiple times, as a kind of "dereference" operator (the ``*`` in C or C++), like in the following code::
-
-    set foo a b c
-    set a 10; set b 20; set c 30
-    for i in (seq (count $$foo))
-        echo $$foo[$i]
-    end
-
-    # Output is:
-    # 10
-    # 20
-    # 30
-
-``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
-
-When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1][5]`` (take the first element of ``$foo``, use it as a variable name, then give the fifth element of that).
-
-.. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
 
 .. _cartesian-product:
 

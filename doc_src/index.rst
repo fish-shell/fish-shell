@@ -454,6 +454,53 @@ Some examples::
 
 For more, see the documentation for the builtins or the :ref:`Conditionals <tut-conditionals>` section of the tutorial.
 
+Loops and blocks
+----------------
+
+Like most programming language, fish also has the familiar :ref:`while <cmd-while>` and :ref:`for <cmd-for>` loops.
+
+``while`` works like a repeated :ref:`if <cmd-if>`::
+
+  while true
+      echo Still running
+      sleep 1
+  end
+
+will print "Still running" once a second. You can abort it with ctrl-c.
+
+``for`` loops work like in other shells, which is more like python's for-loops than e.g. C's::
+
+  for file in *
+      echo file: $file
+  end
+
+will print each file in the current directory. The part after the ``in`` is just a list of arguments, so you can use any :ref:`expansions <expand>` there::
+
+  set moreanimals bird fox
+  for animal in {cat,}fish dog $moreanimals
+     echo I like the $animal
+  end
+
+If you need a list of numbers, you can use the ``seq`` command to create one::
+
+  for i in (seq 1 5)
+      echo $i
+  end
+
+:ref:`break <cmd-break>` is available to break out of a loop, and :ref:`continue <cmd-continue>` to jump to the next iteration.
+
+:ref:`Input and output redirections <redirects>` (including :ref:`pipes <pipes>`) can also be applied to loops::
+
+  while read -l line
+      echo line: $line
+  end < file
+
+In addition there's a :ref:`begin <cmd-begin>` block that just groups commands together so you can redirect to a block or use a new :ref:`variable scope <variables-scope>` without any repetition::
+
+  begin
+     set -l foo bar # this variable will only be available in this block!
+  end
+
 .. _expand:
 
 Parameter expansion

@@ -379,7 +379,9 @@ There are a few important things that need to be noted about aliases:
 
 - Autoloading isn't applicable to aliases. Since, by definition, the function is created at the time the alias command is executed. You cannot autoload aliases.
 
-To easily create a function of this form, you can use the :ref:`alias <cmd-alias>` command.
+To easily create a function of this form, you can use the :ref:`alias <cmd-alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a function wrapper like this.
+
+For an alternative, try :ref:`abbreviations <abbreviations>`. These are words that are expanded while you type, instead of being actual functions inside the shell.
 
 Comments
 --------
@@ -425,19 +427,6 @@ If you are unsure, your functions probably belong in ``~/.config/fish/functions`
 Autoloading also won't work for `event handlers <#event>`_, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the `event handlers <#event>`_ section for more information.
 
 If you are developing another program and want to install fish functions for it, install them to the "vendor" functions directory. As this path varies from system to system, you can use ``pkgconfig`` to discover it with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
-
-.. _abbreviations:
-
-Abbreviations
--------------
-
-To avoid needless typing, a frequently-run command like ``git checkout`` can be abbreviated to ``gco`` using the :ref:`abbr <cmd-abbr>` command.
-
-::
-
-  abbr -a gco git checkout
-
-After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
 
 .. _syntax-conditional:
 
@@ -843,7 +832,11 @@ When using indirect variable expansion with multiple ``$`` (``$$name``), you hav
 Home directory expansion
 ------------------------
 
-The ``~`` (tilde) character at the beginning of a parameter, followed by a username, is expanded into the home directory of the specified user. A lone ``~``, or a ``~`` followed by a slash, is expanded into the home directory of the process owner.
+The ``~`` (tilde) character at the beginning of a parameter, followed by a username, is expanded into the home directory of the specified user. A lone ``~``, or a ``~`` followed by a slash, is expanded into the home directory of the process owner::
+
+  ls ~/Music # lists my music directory
+
+  echo ~root # prints root's home directory, probably "/root"
 
 
 .. _combine:
@@ -1546,6 +1539,21 @@ Detected errors include:
 When the cursor is over a parenthesis or a quote, fish also highlights its matching quote or parenthesis.
 
 To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <#variables-color>`__ section.
+
+.. _abbreviations:
+
+Abbreviations
+-------------
+
+To avoid needless typing, a frequently-run command like ``git checkout`` can be abbreviated to ``gco`` using the :ref:`abbr <cmd-abbr>` command.
+
+::
+
+  abbr -a gco git checkout
+
+After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
+
+This is an alternative to aliases, and has the advantage that you see the actual command before using it, and the actual command will be stored in history.
 
 .. _title:
 

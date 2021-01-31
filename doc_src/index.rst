@@ -357,7 +357,7 @@ For more information on functions, see the documentation for the :ref:`function 
 .. _syntax-function-wrappers:
 
 Defining aliases
-----------------
+^^^^^^^^^^^^^^^^
 
 One of the most common uses for functions is to slightly alter the behavior of an already existing command. For example, one might want to redefine the ``ls`` command to display colors. The switch for turning on colors on GNU systems is ``--color=auto``. An alias, or wrapper, around ``ls`` might look like this::
 
@@ -377,29 +377,10 @@ To easily create a function of this form, you can use the :ref:`alias <cmd-alias
 
 For an alternative, try :ref:`abbreviations <abbreviations>`. These are words that are expanded while you type, instead of being actual functions inside the shell.
 
-Comments
---------
-
-Anything after a ``#`` until the end of the line is a comment. That means it's purely for the reader's benefit, fish ignores it.
-
-This is useful to explain what and why you are doing something::
-
-  function ls
-      # The function is called ls,
-      # so we have to explicitly call `command ls` to avoid calling ourselves.
-      command ls --color=auto $argv
-  end
-
-There are no multiline comments. If you want to make a comment span multiple lines, simply start each line with a ``#``.
-
-Comments can also appear after a line like so::
-
-  set -gx EDITOR emacs # I don't like vim.
-
 .. _syntax-function-autoloading:
 
 Autoloading functions
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Functions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. This has some advantages:
 
@@ -421,6 +402,25 @@ If you are unsure, your functions probably belong in ``~/.config/fish/functions`
 Autoloading also won't work for `event handlers <#event>`_, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the `event handlers <#event>`_ section for more information.
 
 If you are developing another program and want to install fish functions for it, install them to the "vendor" functions directory. As this path varies from system to system, you can use ``pkgconfig`` to discover it with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
+
+Comments
+--------
+
+Anything after a ``#`` until the end of the line is a comment. That means it's purely for the reader's benefit, fish ignores it.
+
+This is useful to explain what and why you are doing something::
+
+  function ls
+      # The function is called ls,
+      # so we have to explicitly call `command ls` to avoid calling ourselves.
+      command ls --color=auto $argv
+  end
+
+There are no multiline comments. If you want to make a comment span multiple lines, simply start each line with a ``#``.
+
+Comments can also appear after a line like so::
+
+  set -gx EDITOR emacs # I don't like vim.
 
 .. _syntax-conditional:
 
@@ -472,7 +472,7 @@ Parameter expansion is limited to 524288 items. There is a limit to how many arg
 .. _expand-wildcard:
 
 Wildcards ("Globbing")
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk") or a ``?`` question mark, fish uses it as a wildcard to match files.
 
@@ -524,7 +524,7 @@ Examples::
 .. _expand-variable:
 
 Variable expansion
-------------------
+^^^^^^^^^^^^^^^^^^
 
 One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable. For more on shell variables, read the :ref:`Shell variables <variables>` section.
 
@@ -581,7 +581,7 @@ When using this feature together with list brackets, the brackets will be used f
 .. _expand-command-substitution:
 
 Command substitution
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 The output of a command (or an entire :ref:`pipeline <pipes>`) can be used as the arguments to another command.
 
@@ -629,7 +629,7 @@ This creates a temporary file, stores the output of the command in that file and
 .. _expand-brace:
 
 Brace expansion
----------------
+^^^^^^^^^^^^^^^
 
 Curly braces can be used to write comma-separated lists. They will be expanded with each element becoming a new parameter, with the surrounding string attached. This is useful to save on typing, and to separate a variable name from surrounding text.
 
@@ -673,7 +673,7 @@ To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 .. _cartesian-product:
 
 Combining lists (Cartesian Product)
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When lists are expanded with other parts attached, they are expanded with these parts still attached. Even if two lists are attached to each other, they are expanded in all combinations. This is referred to as the `cartesian product` (like in mathematics), and works basically like :ref:`brace expansion <expand-brace>`.
 
@@ -738,7 +738,7 @@ Because :ref:`$PATH <path>` is a list, this expands to all the files in all the 
 .. _expand-index-range:
 
 Index range expansion
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes it's necessary to access only some of the elements of a list, or some of the lines a command substitution outputs. Both are possible in fish by writing a set of indices in brackets, like::
 
@@ -824,7 +824,7 @@ When using indirect variable expansion with multiple ``$`` (``$$name``), you hav
 .. _expand-home:
 
 Home directory expansion
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``~`` (tilde) character at the beginning of a parameter, followed by a username, is expanded into the home directory of the specified user. A lone ``~``, or a ``~`` followed by a slash, is expanded into the home directory of the process owner::
 
@@ -836,7 +836,7 @@ The ``~`` (tilde) character at the beginning of a parameter, followed by a usern
 .. _combine:
 
 Combining different expansions
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 All of the above expansions can be combined. If several expansions result in more than one parameter, all possible combinations are created.
 
@@ -880,7 +880,7 @@ So you set a variable with ``set``, and use it with a ``$`` and the name.
 .. _variables-scope:
 
 Variable scope
---------------
+^^^^^^^^^^^^^^
 
 There are three kinds of variables in fish: universal, global and local variables.
 
@@ -948,7 +948,7 @@ The following code will not output anything::
 .. _variables-override:
 
 Overriding variables for a single command
------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you want to override a variable for a single command, you can use "var=val" statements before the command::
 
@@ -979,7 +979,7 @@ This syntax is supported since fish 3.1.
 .. _variables-universal:
 
 More on universal variables
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Universal variables are variables that are shared between all the user's fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
 
@@ -993,7 +993,7 @@ Do not append to universal variables in :ref:`config.fish <initialization>`, bec
 .. _variables-functions:
 
 Variable scope for functions
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When calling a function, all current local variables temporarily disappear. This shadowing of the local scope is needed since the variable namespace would become cluttered, making it very easy to accidentally overwrite variables from another function.
 
@@ -1019,7 +1019,7 @@ For example::
 .. _variables-export:
 
 Exporting variables
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like $LESS or $GOPATH, but also for variables that contain general system settings like $PATH or $LANGUAGE. If an external command needs to know a variable, it needs to be exported.
 
@@ -1053,7 +1053,7 @@ It typically makes sense to make exported variables global as well, but local-ex
 .. _variables-lists:
 
 Lists
--------
+^^^^^
 
 Fish can store a list (or an "array" if you wish) of multiple strings inside of a variable::
 
@@ -1146,7 +1146,7 @@ Unlike other shells, fish does not do "word splitting" - elements in a list stay
 .. _variables-argv:
 
 Argument Handling
------------------
+^^^^^^^^^^^^^^^^^
 
 An important list is ``$argv``, which contains the arguments to a function or script. For example::
 
@@ -1197,7 +1197,7 @@ The options will be *removed* from $argv, so $argv[2] is the second *positional*
 .. _variables-path:
 
 PATH variables
---------------
+^^^^^^^^^^^^^^
 
 Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in "PATH" (case-sensitive) become PATH variables.
 
@@ -1219,7 +1219,7 @@ Variables can be marked or unmarked as PATH variables via the ``--path`` and ``-
 .. _variables-special:
 
 Special variables
------------------
+^^^^^^^^^^^^^^^^^
 
 You can change the settings of fish by changing the values of certain variables.
 
@@ -1304,7 +1304,7 @@ Fish also uses some variables internally, their name usually starting with ``__f
 .. _variables-status:
 
 The status variable
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 Whenever a process exits, an exit status is returned to the program that started it (usually the shell). This exit status is an integer number, which tells the calling application how the execution of the command went. In general, a zero exit status means that the command executed without problem, but a non-zero exit status means there was some form of problem.
 
@@ -1334,7 +1334,7 @@ If a process exits through a signal, the exit status will be 128 plus the number
 .. _variables-color:
 
 Syntax highlighting variables
-------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The ``--bold`` or ``-b`` switches accepted by ``set_color`` are also accepted.
 
@@ -1372,7 +1372,7 @@ Variable                                                   Meaning
 .. _variables-color-pager:
 
 Pager color variables
-------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 fish will sometimes present a list of choices in a table, called the pager.
 
@@ -1411,7 +1411,7 @@ Variable                                                   Meaning
 .. _variables-locale:
 
 Locale variables
-----------------
+^^^^^^^^^^^^^^^^
 
 The "locale" of a program is its set of language and regional settings. In UNIX, there are a few separate variables to control separate things - ``LC_CTYPE`` defines the text encoding while ``LC_TIME`` defines the time format.
 
@@ -1750,7 +1750,7 @@ If the cursor shape does not appear to be changing after setting the above varia
 .. _vi-mode-command:
 
 Command mode
-------------
+^^^^^^^^^^^^
 
 Command mode is also known as normal mode.
 
@@ -1783,7 +1783,7 @@ Command mode is also known as normal mode.
 .. _vi-mode-insert:
 
 Insert mode
------------
+^^^^^^^^^^^
 
 - :kbd:`Escape` enters `command mode <#vi-mode-command>`_.
 
@@ -1792,7 +1792,7 @@ Insert mode
 .. _vi-mode-visual:
 
 Visual mode
------------
+^^^^^^^^^^^
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) extend the selection backward/forward by one character.
 

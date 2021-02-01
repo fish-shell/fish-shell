@@ -10,13 +10,15 @@ How do I set or clear an environment variable?
 ----------------------------------------------
 Use the :ref:`set <cmd-set>` command::
 
-    set -x key value
+    set -x key value # typically set -gx key value
     set -e key
 
 Since fish 3.1 you can set an environment variable for just one command using the ``key=value some command`` syntax, like in other shells.  The two lines below behave identically - unlike other shells, fish will output ``value`` both times::
 
     key=value echo $key
     begin; set -lx key value; echo $key; end
+
+Note that "exported" is not a :ref:`scope <variables-scope>`, but an additional bit of state. A variable can be global and exported or local and exported or even universal and exported. Typically it makes sense to make an exported variable global.
 
 How do I check whether a variable is defined?
 ---------------------------------------------

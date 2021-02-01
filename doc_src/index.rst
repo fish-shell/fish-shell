@@ -1095,7 +1095,7 @@ For example::
     set -gx GTK2_RC_FILES "$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
     set -gx LESSHISTFILE "-"
 
-It typically makes sense to make exported variables global as well, but local-exported variables can be useful if you need something more specific than :ref:`Overrides <variables-override>`. They are *copied* to functions so the function can't alter them outside, and still available to commands.
+Note: Exporting is not a :ref:`scope <variables-scope>`, but an additional state. It typically makes sense to make exported variables global as well, but local-exported variables can be useful if you need something more specific than :ref:`Overrides <variables-override>`. They are *copied* to functions so the function can't alter them outside, and still available to commands.
 
 .. _variables-lists:
 
@@ -2005,9 +2005,8 @@ Examples:
 If you want to add the directory ``~/linux/bin`` to your PATH variable when using a login shell, add the following to your ``~/.config/fish/config.fish`` file::
 
     if status --is-login
-        set -x PATH $PATH ~/linux/bin
+        set -gx PATH $PATH ~/linux/bin
     end
-
 
 If you want to run a set of commands when fish exits, use an `event handler <#event>`_ that is triggered by the exit of the shell::
 

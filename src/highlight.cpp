@@ -784,6 +784,9 @@ class highlighter_t {
     // The resulting colors.
     using color_array_t = std::vector<highlight_spec_t>;
     color_array_t color_array;
+    // A stack of variables that the current commandline probably defines.  We mark redirections
+    // as valid if they use one of these variables, to avoid marking valid targets as error.
+    std::vector<wcstring> pending_variables;
 
     // Flags we use for AST parsing.
     static constexpr parse_tree_flags_t ast_flags =
@@ -818,6 +821,7 @@ class highlighter_t {
     void visit(const ast::variable_assignment_t &varas);
     void visit(const ast::semi_nl_t &semi_nl);
     void visit(const ast::decorated_statement_t &stmt);
+    void visit(const ast::block_statement_t &header);
 
     // Visit an argument, perhaps knowing that our command is cd.
     void visit(const ast::argument_t &arg, bool cmd_is_cd = false);
@@ -1022,6 +1026,8 @@ void highlighter_t::visit(const ast::variable_assignment_t &varas) {
     if (auto where = variable_assignment_equals_pos(varas.source(this->buff))) {
         size_t equals_loc = varas.source_range().start + *where;
         this->color_array.at(equals_loc) = highlight_role_t::operat;
+        auto var_name = varas.source(this->buff).substr(0, *where);
+        this->pending_variables.push_back(std::move(var_name));
     }
 }
 
@@ -1061,13 +1067,35 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     // Color arguments and redirections.
     // Except if our command is 'cd' we have special logic for how arguments are colored.
     bool is_cd = (expanded_cmd == L"cd");
+    bool is_set = (expanded_cmd == L"set");
     for (const ast::argument_or_redirection_t &v : stmt.args_or_redirs) {
         if (v.is_argument()) {
+            if (is_set) {
+                auto arg = v.argument().source(this->buff);
+                if (valid_var_name(arg)) {
+                    this->pending_variables.push_back(std::move(arg));
+                    is_set = false;
+                }
+            }
             this->visit(v.argument(), is_cd);
         } else {
             this->visit(v.redirection());
         }
     }
+}
+
+void highlighter_t::visit(const ast::block_statement_t &block) {
+    this->visit(*block.header.contents.get());
+    this->visit(block.args_or_redirs);
+    const ast::node_t &bh = *block.header.contents;
+    size_t pending_variables_count = this->pending_variables.size();
+    if (const auto *fh = bh.try_as<ast::for_header_t>()) {
+        auto var_name = fh->var_name.source(this->buff);
+        pending_variables.push_back(std::move(var_name));
+    }
+    this->visit(block.jobs);
+    this->visit(block.end);
+    pending_variables.resize(pending_variables_count);
 }
 
 /// \return whether a string contains a command substitution.
@@ -1076,6 +1104,20 @@ static bool has_cmdsub(const wcstring &src) {
     size_t start = 0;
     size_t end = 0;
     return parse_util_locate_cmdsubst_range(src, &cursor, nullptr, &start, &end, true) != 0;
+}
+
+static bool contains_pending_variable(const std::vector<wcstring> &pending_variables,
+                                      const wcstring &haystack) {
+    for (const auto &var_name : pending_variables) {
+        size_t pos = -1;
+        while ((pos = haystack.find(var_name, pos + 1)) != wcstring::npos) {
+            if (pos == 0 || haystack.at(pos - 1) != L'$') continue;
+            size_t end = pos + var_name.size();
+            if (end < haystack.size() && valid_var_name_char(haystack.at(end))) continue;
+            return true;
+        }
+    }
+    return false;
 }
 
 void highlighter_t::visit(const ast::redirection_t &redir) {
@@ -1109,6 +1151,8 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
         if (!this->io_ok) {
             // I/O is disallowed, so we don't have much hope of catching anything but gross
             // errors. Assume it's valid.
+            target_is_valid = true;
+        } else if (contains_pending_variable(this->pending_variables, target)) {
             target_is_valid = true;
         } else if (!expand_one(target, expand_flag::skip_cmdsubst, ctx)) {
             // Could not be expanded.

@@ -5086,6 +5086,43 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
+        {L"for", highlight_role_t::keyword},
+        {L"x", highlight_role_t::param},
+        {L"in", highlight_role_t::keyword},
+        {L"set-by-for-1", highlight_role_t::param},
+        {L"set-by-for-2", highlight_role_t::param},
+        {L";", highlight_role_t::statement_terminator},
+        {L"echo", highlight_role_t::command},
+        {L">", highlight_role_t::redirection},
+        {L"$x", highlight_role_t::redirection},
+        {L";", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::keyword},
+    });
+
+    highlight_tests.push_back({
+        {L"set", highlight_role_t::command},
+        {L"x", highlight_role_t::param},
+        {L"set-by-set", highlight_role_t::param},
+        {L";", highlight_role_t::statement_terminator},
+        {L"echo", highlight_role_t::command},
+        {L">", highlight_role_t::redirection},
+        {L"$x", highlight_role_t::redirection},
+        {L"2>", highlight_role_t::redirection},
+        {L"$totally_not_x", highlight_role_t::error},
+        {L"<", highlight_role_t::redirection},
+        {L"$x_but_its_an_impostor", highlight_role_t::error},
+    });
+
+    highlight_tests.push_back({
+        {L"x", highlight_role_t::param, ns},
+        {L"=", highlight_role_t::operat, ns},
+        {L"set-by-variable-override", highlight_role_t::param, ns},
+        {L"echo", highlight_role_t::command},
+        {L">", highlight_role_t::redirection},
+        {L"$x", highlight_role_t::redirection},
+    });
+
+    highlight_tests.push_back({
         {L"end", highlight_role_t::error},
         {L";", highlight_role_t::statement_terminator},
         {L"if", highlight_role_t::keyword},

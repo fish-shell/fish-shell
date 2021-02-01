@@ -8,6 +8,6 @@ includedir=@includedir@
 Name: libpcre2-posix
 Description: Posix compatible interface to libpcre2-8
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lpcre2-posix
+Libs: -L${libdir} -lpcre2-posix@LIB_POSTFIX@
 Cflags: -I${includedir} @PCRE2_STATIC_CFLAG@
 Requires.private: libpcre2-8

@@ -8,6 +8,6 @@ includedir=@includedir@
 Name: libpcre2-16
 Description: PCRE2 - Perl compatible regular expressions C library (2nd API) with 16 bit character support
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lpcre2-16
+Libs: -L${libdir} -lpcre2-16@LIB_POSTFIX@
 Libs.private: @PTHREAD_CFLAGS@ @PTHREAD_LIBS@
 Cflags: -I${includedir} @PCRE2_STATIC_CFLAG@

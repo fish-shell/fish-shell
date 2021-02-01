@@ -92,11 +92,13 @@
 #            library versioning.
 # 2020-04-25 Carlo added function check for mkostemp used in ProtExecAllocator
 # 2020-04-28 PH added function check for memfd_create based on Carlo's patch
+# 2020-05-25 PH added a check for Intel CET
+# 2020-12-03 PH altered the definition of pcre2test as suggested by Daniel
 
 PROJECT(PCRE2 C)
 
-# Increased minimum to 2.8.0 to support newer add_test features.
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
+# Increased minimum to 2.8.5 to support GNUInstallDirs.
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.5)
 
 # Set policy CMP0026 to avoid warnings for the use of LOCATION in
 # GET_TARGET_PROPERTY. This should no longer be required.
@@ -108,7 +110,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I${PROJECT_SOURCE_DIR}/src")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -I\"${PROJECT_SOURCE_DIR}/src\"")
 
 # external packages
 FIND_PACKAGE( BZip2 QUIET )
@@ -123,6 +125,7 @@ INCLUDE(CheckFunctionExists)
 INCLUDE(CheckSymbolExists)
 INCLUDE(CheckIncludeFile)
 INCLUDE(CheckTypeSize)
+INCLUDE(GNUInstallDirs) # for CMAKE_INSTALL_LIBDIR
 
 CHECK_INCLUDE_FILE(dirent.h     HAVE_DIRENT_H)
 CHECK_INCLUDE_FILE(stdint.h     HAVE_STDINT_H)
@@ -132,11 +135,11 @@ CHECK_INCLUDE_FILE(sys/types.h  HAVE_SYS_TYPES_H)
 CHECK_INCLUDE_FILE(unistd.h     HAVE_UNISTD_H)
 CHECK_INCLUDE_FILE(windows.h    HAVE_WINDOWS_H)
 
-CHECK_FUNCTION_EXISTS(bcopy         HAVE_BCOPY)
-CHECK_FUNCTION_EXISTS(memfd_create  HAVE_MEMFD_CREATE)
-CHECK_FUNCTION_EXISTS(memmove       HAVE_MEMMOVE)
-CHECK_FUNCTION_EXISTS(secure_getenv HAVE_SECURE_GETENV)
-CHECK_FUNCTION_EXISTS(strerror      HAVE_STRERROR)
+CHECK_SYMBOL_EXISTS(bcopy         "strings.h"  HAVE_BCOPY)
+CHECK_SYMBOL_EXISTS(memfd_create  "sys/mman.h" HAVE_MEMFD_CREATE)
+CHECK_SYMBOL_EXISTS(memmove       "string.h"   HAVE_MEMMOVE)
+CHECK_SYMBOL_EXISTS(secure_getenv "stdlib.h"   HAVE_SECURE_GETENV)
+CHECK_SYMBOL_EXISTS(strerror      "string.h"   HAVE_STRERROR)
 
 set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
@@ -145,6 +148,24 @@ CHECK_C_SOURCE_COMPILES(
   HAVE_ATTRIBUTE_UNINITIALIZED
 )
 set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+
+# Check whether Intel CET is enabled, and if so, adjust compiler flags. This
+# code was written by PH, trying to imitate the logic from the autotools
+# configuration.
+
+CHECK_C_SOURCE_COMPILES(
+  "#ifndef __CET__
+   #error CET is not enabled
+   #endif
+   int main() { return 0; }"
+  INTEL_CET_ENABLED
+)
+
+IF (INTEL_CET_ENABLED)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mshstk")
+ENDIF(INTEL_CET_ENABLED)
+
+
 
 # User-configurable options
 #
@@ -445,7 +466,7 @@ foreach(configure_line ${configure_lines})
     foreach(_substitution_variable ${SEARCHED_VARIABLES})
         string(TOUPPER ${_substitution_variable} _substitution_variable_upper)
         if (NOT ${_substitution_variable_upper})
-            string(REGEX MATCH "m4_define\\(${_substitution_variable}, *\\[(.*)\\]" MACTHED_STRING ${configure_line})
+            string(REGEX MATCH "m4_define\\(${_substitution_variable}, *\\[(.*)\\]" MATCHED_STRING ${configure_line})
             if (CMAKE_MATCH_1)
                 set(${_substitution_variable_upper} ${CMAKE_MATCH_1})
             endif()
@@ -475,14 +496,23 @@ CONFIGURE_FILE(src/pcre2.h.in
                ${PROJECT_BINARY_DIR}/pcre2.h
                @ONLY)
 
+# Make sure to not link debug libs
+# against release libs and vice versa
+IF(WIN32)
+  SET(CMAKE_DEBUG_POSTFIX "d")
+ENDIF(WIN32)
+
 # Generate pkg-config files
 
 SET(PACKAGE_VERSION "${PCRE2_MAJOR}.${PCRE2_MINOR}")
 SET(prefix ${CMAKE_INSTALL_PREFIX})
 
 SET(exec_prefix "\${prefix}")
-SET(libdir "\${exec_prefix}/lib")
+SET(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
 SET(includedir "\${prefix}/include")
+IF(WIN32 AND (CMAKE_BUILD_TYPE MATCHES Debug))
+  SET(LIB_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+ENDIF()
 CONFIGURE_FILE(libpcre2-posix.pc.in libpcre2-posix.pc @ONLY)
 SET(pkg_config_files ${pkg_config_files} "${CMAKE_CURRENT_BINARY_DIR}/libpcre2-posix.pc")
 
@@ -622,11 +652,6 @@ IF(MSVC)
 ENDIF(MSVC)
 
 SET(CMAKE_INCLUDE_CURRENT_DIR 1)
-# needed to make sure to not link debug libs
-# against release libs and vice versa
-IF(WIN32)
-  SET(CMAKE_DEBUG_POSTFIX "d")
-ENDIF(WIN32)
 
 SET(targets)
 
@@ -827,7 +852,9 @@ if test \"$?\" != \"0\"; then exit 1; fi
 \@echo off
 setlocal
 SET srcdir=\"${winsrc}\"
-SET pcre2test=\"${winexe}\"
+# The next line was replaced by the following one after a user comment.
+# SET pcre2test=\"${winexe}\"
+SET pcre2test=\"${winbin}\\pcre2test.exe\"
 if not [%CMAKE_CONFIG_TYPE%]==[] SET pcre2test=\"${winbin}\\%CMAKE_CONFIG_TYPE%\\pcre2test.exe\"
 call %srcdir%\\RunTest.Bat
 if errorlevel 1 exit /b 1
@@ -863,9 +890,9 @@ SET(CMAKE_INSTALL_ALWAYS 1)
 
 INSTALL(TARGETS ${targets}
         RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
-INSTALL(FILES ${pkg_config_files} DESTINATION lib/pkgconfig)
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+INSTALL(FILES ${pkg_config_files} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/pcre2-config"
   DESTINATION bin
   # Set 0755 permissions
@@ -916,7 +943,7 @@ IF(PCRE2_SHOW_REPORT)
   ENDIF(CMAKE_C_FLAGS)
   MESSAGE(STATUS "")
   MESSAGE(STATUS "")
-  MESSAGE(STATUS "PCRE2 configuration summary:")
+  MESSAGE(STATUS "PCRE2-${PCRE2_MAJOR}.${PCRE2_MINOR} configuration summary:")
   MESSAGE(STATUS "")
   MESSAGE(STATUS "  Install prefix .................. : ${CMAKE_INSTALL_PREFIX}")
   MESSAGE(STATUS "  C compiler ...................... : ${CMAKE_C_COMPILER}")

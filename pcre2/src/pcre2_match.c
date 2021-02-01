@@ -6115,8 +6115,8 @@ BOOL has_req_cu = FALSE;
 BOOL startline;
 
 #if PCRE2_CODE_UNIT_WIDTH == 8
-BOOL memchr_not_found_first_cu = FALSE;
-BOOL memchr_not_found_first_cu2 = FALSE;
+BOOL memchr_not_found_first_cu;
+BOOL memchr_not_found_first_cu2;
 #endif
 
 PCRE2_UCHAR first_cu = 0;
@@ -6709,6 +6709,11 @@ FRAGMENT_RESTART:
 start_partial = match_partial = NULL;
 mb->hitend = FALSE;
 
+#if PCRE2_CODE_UNIT_WIDTH == 8
+memchr_not_found_first_cu = FALSE;
+memchr_not_found_first_cu2 = FALSE;
+#endif
+
 for(;;)
   {
   PCRE2_SPTR new_start_match;
@@ -7187,6 +7192,7 @@ if (utf && end_subject != true_end_subject &&
     starting code units in 8-bit and 16-bit modes. */
 
     start_match = end_subject + 1;
+
 #if PCRE2_CODE_UNIT_WIDTH != 32
     while (start_match < true_end_subject && NOT_FIRSTCU(*start_match))
       start_match++;

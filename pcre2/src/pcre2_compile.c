@@ -2344,7 +2344,7 @@ if (ptr > *nameptr + MAX_NAME_SIZE)
   *errorcodeptr = ERR48;
   goto FAILED;
   }
-*namelenptr = ptr - *nameptr;
+*namelenptr = (uint32_t)(ptr - *nameptr);
 
 /* Subpattern names must not be empty, and their terminator is checked here.
 (What follows a verb or alpha assertion name is checked separately.) */
@@ -4331,6 +4331,7 @@ while (ptr < ptrend)
           {
           if (++ptr >= ptrend || !IS_DIGIT(*ptr)) goto BAD_VERSION_CONDITION;
           minor = (*ptr++ - CHAR_0) * 10;
+          if (ptr >= ptrend) goto BAD_VERSION_CONDITION;
           if (IS_DIGIT(*ptr)) minor += *ptr++ - CHAR_0;
           if (ptr >= ptrend || *ptr != CHAR_RIGHT_PARENTHESIS)
             goto BAD_VERSION_CONDITION;

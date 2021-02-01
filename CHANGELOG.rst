@@ -268,6 +268,7 @@ Interactive improvements
 -  ``bind`` now shows ``\x7f`` for the del key instead of a literal DEL character (:issue:`7631`)
 -  Paths containing variables or tilde expansion are only suggested when they are still valid (:issue:`7582`).
 -  Syntax highlighting can now color a command as invalid even if executed quickly (:issue:`5912`)
+-  Redirection targets are no longer highlighted as error if they contain variables which will likely be defined by the current commandline (:issue:`6654`).
 -  fish is now more resilient against broken terminal modes (:issue:`7133`, :issue:`4873`).
 -  fish handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
 -  Keywords can now be colored differently by setting the ``fish_color_keyword`` variable (but ``fish_color_command`` will still be used if it is unset) (:issue:`7678`).

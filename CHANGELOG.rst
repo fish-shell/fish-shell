@@ -360,7 +360,7 @@ Completions
 -  The ``make`` completions no longer second-guess make's file detection, fixing target completion in some cases (:issue:`7535`).
 -  The command completions now correctly print the description even if the command was fully matched (like in ``ls<TAB>``).
 -  The ``set`` completions no longer hide variables starting with ``__``, they are sorted last instead.
--  Completion scripts for custom Git subcommands like ``git-xyz`` are now loaded with Git completions. The completions can now be defined directly on the subcommand (using ``complete git-xyz``), and completion for ``git xyz`` will work. (:issue:`7075`, :issue:`7652`)
+-  Completion scripts for custom Git subcommands like ``git-xyz`` are now loaded with Git completions. The completions can now be defined directly on the subcommand (using ``complete git-xyz``), and completion for ``git xyz`` will work. (:issue:`7075`, :issue:`7652`, :issue:`4358`)
 
 Changes not visible to users
 ----------------------------

@@ -1909,26 +1909,18 @@ function __fish_git_complete_custom_command -a subcommand
     complete -C "git-$subcommand $subcommand_args "(commandline -ct)
 end
 
-# Get the path to the generated completions
-# If $XDG_DATA_HOME is set, that's it, if not, it will be removed and ~/.local/share will remain.
-set -l generated_path $XDG_DATA_HOME/fish/generated_completions ~/.local/share/fish/generated_completions
-
-# We don't want to modify $fish_complete_path here, so we make a copy.
-set -l complete_dirs $fish_complete_path
-
-# Remove the path to the generated completions if it is in the list
-set -l ind (contains -i -- $generated_path[1] $complete_dirs); and set -e complete_dirs[$ind]
-
 # source git-* commands' autocompletion file if exists
 set -l __fish_git_custom_commands_completion
-for git_ext in $complete_dirs/git-*.fish
-    # ignore this completion as executable does not exists
-    set -l subcommand (string replace -r '.*/git-([^/]*)\.fish' '$1' $git_ext)
-    not command -q git-$subcommand
+for file in $PATH/git-*
+    not command -q $file
     and continue
-    # already sourced this git-* completion file from some other dir
+
+    set -l subcommand (string replace -r -- '.*/git-([^/]*)$' '$1' $file)
+
+    # Already seen this command earlier in $PATH.
     contains -- $subcommand $__fish_git_custom_commands_completion
     and continue
+
     complete -C "git-$subcommand " >/dev/null
     if [ (complete git-$subcommand | count) -gt 0 ]
         complete git -f -n "__fish_git_using_command $subcommand" -a "(__fish_git_complete_custom_command $subcommand)"

@@ -76,11 +76,6 @@ maximum of 100 MiB (104857600 bytes); if the terminator is not reached before th
 is set to empty and the exit status is set to 122. This limit can be altered with the
 ``fish_read_limit`` variable. If set to 0 (zero), the limit is removed.
 
-Using another read history file
--------------------------------
-
-The ``read`` command supported the ``-m`` and ``--mode-name`` flags in fish versions prior to 2.7.0 to specify an alternative read history file. Those flags are now deprecated and ignored. Instead, set the ``fish_history`` variable to specify a history session ID. That will affect both the ``read`` history file and the fish command history file. You can set it to an empty string to specify that no history should be read or written. This is useful for presentations where you do not want possibly private or sensitive history to be exposed to the audience but do want history relevant to the presentation to be available.
-
 Example
 -------
 

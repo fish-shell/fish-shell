@@ -301,6 +301,7 @@ Completions
    -  ``apk`` (:issue:`7108`)
    -  ``asciidoctor`` (:issue:`7000`)
    -  ``bluetoothctl`` (:issue:`7438`)
+   -  ``cjxl`` and ``djxl`` (:issue:`7673`)
    -  ``cmark`` (:issue:`7000`)
    -  ``create_ap`` (:issue:`7096`)
    -  ``deno`` (:issue:`7138`)

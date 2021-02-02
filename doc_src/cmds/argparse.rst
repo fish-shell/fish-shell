@@ -117,16 +117,20 @@ That means the argument will only be used for the option if you use it like::
 but not if used like::
 
   cmd --flag value
-  # "value" here will be used as a positional argument and "--flag" won't have an argument.
+  # "value" here will be used as a positional argument
+  # and "--flag" won't have an argument.
 
 If this weren't the case, using an option without an optional argument would be difficult if you also wanted to use positional arguments.
 
 For example::
 
   grep --color auto
-  # Here "auto" will be used as the search string, "color" will not have an argument and will fall back to the default, which also *happens to be* auto.
+  # Here "auto" will be used as the search string,
+  # "color" will not have an argument and will fall back to the default,
+  # which also *happens to be* auto.
   grep --color always
-  # Here grep will still only use color "auto"matically and search for the string "always"
+  # Here grep will still only use color "auto"matically
+  # and search for the string "always".
 
 This isn't specific to argparse but common to all things using ``getopt(3)`` (if they have optional arguments at all). That ``grep`` example is how GNU grep actually behaves.
 

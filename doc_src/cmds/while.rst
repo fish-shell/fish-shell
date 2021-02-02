@@ -28,5 +28,6 @@ Example
 ::
 
     while test -f foo.txt; or test -f bar.txt ; echo file exists; sleep 10; end
-    # outputs 'file exists' at 10 second intervals as long as the file foo.txt or bar.txt exists.
+    # outputs 'file exists' at 10 second intervals,
+    # as long as the file foo.txt or bar.txt exists.
 

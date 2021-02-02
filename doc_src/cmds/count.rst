@@ -34,7 +34,8 @@ Example
     # Returns the number of directories in the users PATH variable.
     
     count *.txt
-    # Returns the number of files in the current working directory ending with the suffix '.txt'.
+    # Returns the number of files in the current working directory
+    # ending with the suffix '.txt'.
 
     git ls-files --others --exclude-standard | count
     # Returns the number of untracked files in a git repository

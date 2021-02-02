@@ -300,6 +300,7 @@ Completions
    -  ``alternatives`` (:issue:`7616`)
    -  ``apk`` (:issue:`7108`)
    -  ``asciidoctor`` (:issue:`7000`)
+   -  ``avifdec`` and ``avifenc`` (:issue:`7674`)
    -  ``bluetoothctl`` (:issue:`7438`)
    -  ``cmark`` (:issue:`7000`)
    -  ``create_ap`` (:issue:`7096`)

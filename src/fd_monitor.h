@@ -8,6 +8,7 @@
 #include <sys/select.h>  // IWYU pragma: keep
 
 #include "common.h"
+#include "fds.h"
 #include "maybe.h"
 
 class fd_monitor_t;

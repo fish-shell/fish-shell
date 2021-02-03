@@ -14,6 +14,7 @@
 
 #include "common.h"
 #include "env.h"
+#include "fds.h"
 #include "flog.h"
 #include "global_safety.h"
 #include "maybe.h"

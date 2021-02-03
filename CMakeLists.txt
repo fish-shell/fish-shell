@@ -123,7 +123,7 @@ set(FISH_SRCS
     src/proc.cpp src/reader.cpp src/redirection.cpp src/sanity.cpp src/screen.cpp
     src/signal.cpp src/termsize.cpp src/timer.cpp src/tinyexpr.cpp
     src/tokenizer.cpp src/topic_monitor.cpp src/trace.cpp src/utf8.cpp src/util.cpp
-    src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
+    src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp src/fds.cpp
 )
 
 # Header files are just globbed.

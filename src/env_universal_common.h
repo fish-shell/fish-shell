@@ -11,6 +11,7 @@
 
 #include "common.h"
 #include "env.h"
+#include "fds.h"
 #include "wutil.h"
 
 /// Callback data, reflecting a change in universal variables.

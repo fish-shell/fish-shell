@@ -1751,22 +1751,6 @@ double timef() {
 
 void exit_without_destructors(int code) { _exit(code); }
 
-void autoclose_fd_t::close() {
-    if (fd_ < 0) return;
-    exec_close(fd_);
-    fd_ = -1;
-}
-
-void exec_close(int fd) {
-    assert(fd >= 0 && "Invalid fd");
-    while (close(fd) == -1) {
-        if (errno != EINTR) {
-            wperror(L"close");
-            break;
-        }
-    }
-}
-
 extern "C" {
 [[gnu::noinline]] void debug_thread_error(void) {
     // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another

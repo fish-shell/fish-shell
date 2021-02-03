@@ -24,26 +24,6 @@ using std::shared_ptr;
 
 class job_group_t;
 
-/// A simple set of FDs.
-struct fd_set_t {
-    std::vector<bool> fds;
-
-    void add(int fd) {
-        assert(fd >= 0 && "Invalid fd");
-        if (static_cast<size_t>(fd) >= fds.size()) {
-            fds.resize(fd + 1);
-        }
-        fds[fd] = true;
-    }
-
-    bool contains(int fd) const {
-        assert(fd >= 0 && "Invalid fd");
-        return static_cast<size_t>(fd) < fds.size() && fds[fd];
-    }
-
-    bool empty() const { return fds.empty(); }
-};
-
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
 /// produce a stream of bytes, and those get stored directly. However other commands produce
@@ -51,7 +31,6 @@ struct fd_set_t {
 /// The buffer tracks a sequence of elements. Some elements are explicitly separated and should not
 /// be further split; other elements have inferred separation and may be split by IFS (or not,
 /// depending on its value).
-
 enum class separation_type_t {
     inferred,    // this element should be further separated by IFS
     explicitly,  // this element is explicitly separated and should not be further split
@@ -382,28 +361,6 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     /// \return the set of redirected FDs.
     fd_set_t fd_set() const;
 };
-
-/// Helper type returned from making autoclose pipes.
-struct autoclose_pipes_t {
-    /// Read end of the pipe.
-    autoclose_fd_t read;
-
-    /// Write end of the pipe.
-    autoclose_fd_t write;
-
-    autoclose_pipes_t() = default;
-    autoclose_pipes_t(autoclose_fd_t r, autoclose_fd_t w)
-        : read(std::move(r)), write(std::move(w)) {}
-};
-/// Call pipe(), populating autoclose fds, avoiding conflicts.
-/// The pipes are marked CLO_EXEC.
-/// \return pipes on success, none() on error.
-maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset);
-
-/// If the given fd is present in \p fdset, duplicates it repeatedly until an fd not used in the set
-/// is found or we run out. If we return a new fd or an error, closes the old one. Marks the fd as
-/// cloexec. \returns invalid fd on failure (in which case the given fd is still closed).
-autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset);
 
 /// Base class representing the output that a builtin can generate.
 /// This has various subclasses depending on the ultimate output destination.

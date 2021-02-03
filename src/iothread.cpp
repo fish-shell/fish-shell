@@ -154,17 +154,14 @@ struct notify_pipes_t {
 /// \return the (immortal) set of pipes used for notifying of completions.
 static const notify_pipes_t &get_notify_pipes() {
     static const notify_pipes_t s_notify_pipes = [] {
-        int pipes[2] = {0, 0};
-        assert_with_errno(pipe(pipes) != -1);
-        set_cloexec(pipes[0]);
-        set_cloexec(pipes[1]);
-        // Mark both ends as non-blocking.
-        for (int fd : pipes) {
-            if (make_fd_nonblocking(fd)) {
-                wperror(L"fcntl");
-            }
+        auto pipes = make_autoclose_pipes({});
+        if (!pipes) {
+            DIE_WITH_ERRNO("Unable to create iothread notify pipes");
         }
-        return notify_pipes_t{pipes[0], pipes[1]};
+        // Mark both ends as non-blocking.
+        if (make_fd_nonblocking(pipes->read.fd())) wperror(L"fcntl");
+        if (make_fd_nonblocking(pipes->write.fd())) wperror(L"fcntl");
+        return notify_pipes_t{pipes->read.acquire(), pipes->write.acquire()};
     }();
     return s_notify_pipes;
 }

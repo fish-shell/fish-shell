@@ -154,7 +154,7 @@ struct notify_pipes_t {
 /// \return the (immortal) set of pipes used for notifying of completions.
 static const notify_pipes_t &get_notify_pipes() {
     static const notify_pipes_t s_notify_pipes = [] {
-        auto pipes = make_autoclose_pipes({});
+        auto pipes = make_autoclose_pipes();
         if (!pipes) {
             DIE_WITH_ERRNO("Unable to create iothread notify pipes");
         }

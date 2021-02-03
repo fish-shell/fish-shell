@@ -14,6 +14,9 @@ using wcstring = std::wstring;
 /// Pipe redirection error message.
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
+/// The first "high fd", which is considered outside the range of valid user-specified redirections (like >&5).
+extern const int k_first_high_fd;
+
 /// A helper class for managing and automatically closing a file descriptor.
 class autoclose_fd_t {
     int fd_;
@@ -88,15 +91,10 @@ struct fd_set_t {
     bool empty() const { return fds.empty(); }
 };
 
-/// Call pipe(), populating autoclose fds, avoiding conflicts.
-/// The pipes are marked CLO_EXEC.
+/// Call pipe(), populating autoclose fds.
+/// The pipes are marked CLO_EXEC and are placed in the high fd range.
 /// \return pipes on success, none() on error.
-maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset);
-
-/// If the given fd is present in \p fdset, duplicates it repeatedly until an fd not used in the set
-/// is found or we run out. If we return a new fd or an error, closes the old one. Marks the fd as
-/// cloexec. \returns invalid fd on failure (in which case the given fd is still closed).
-autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset);
+maybe_t<autoclose_pipes_t> make_autoclose_pipes();
 
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.
 int set_cloexec(int fd, bool should_set = true);

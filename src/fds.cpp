@@ -12,9 +12,15 @@
 #include "flog.h"
 #include "wutil.h"
 
+#include <fcntl.h>
+
 #if defined(__linux__)
 #include <sys/statfs.h>
 #endif
+
+// The first fd in the "high range." fds below this are allowed to be used directly by users in
+// redirections, e.g. >&3
+const int k_first_high_fd = 10;
 
 void autoclose_fd_t::close() {
     if (fd_ < 0) return;
@@ -22,50 +28,69 @@ void autoclose_fd_t::close() {
     fd_ = -1;
 }
 
-autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset) {
-    if (!fd.valid() || !fdset.contains(fd.fd())) {
+/// If the given fd is in the "user range", move it to a new fd in the "high range".
+/// zsh calls this movefd().
+/// \p input_has_cloexec describes whether the input has CLOEXEC already set, so we can avoid
+/// setting it again.
+/// \return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
+/// which case an error will have been printed, and the input fd closed.
+static autoclose_fd_t heightenize_fd(autoclose_fd_t fd, bool input_has_cloexec) {
+    // Check if the fd is invalid or already in our high range.
+    if (!fd.valid()) {
         return fd;
     }
-
-    // We have fd >= 0, and it's a conflict. dup it and recurse. Note that we recurse before
+    if (fd.fd() >= k_first_high_fd) {
+        if (!input_has_cloexec) set_cloexec(fd.fd());
+        return fd;
+    }
+#if defined(F_DUPFD_CLOEXEC)
+    // Here we are asking the kernel to give us a
+    int newfd = fcntl(fd.fd(), F_DUPFD_CLOEXEC, k_first_high_fd);
+    if (newfd < 0) {
+        wperror(L"fcntl");
+        return autoclose_fd_t{};
+    }
+    return autoclose_fd_t(newfd);
+#elif defined(F_DUPFD)
+    int newfd = fcntl(fd.fd(), F_DUPFD, k_first_high_fd);
+    if (newfd < 0) {
+        wperror(L"fcntl");
+        return autoclose_fd_t{};
+    }
+    set_cloexec(newfd);
+    return autoclose_fd_t(newfd);
+#else
+    // We have fd >= 0, and it's in the user range. dup it and recurse. Note that we recurse before
     // anything is closed; this forces the kernel to give us a new one (or report fd exhaustion).
     int tmp_fd;
     do {
         tmp_fd = dup(fd.fd());
     } while (tmp_fd < 0 && errno == EINTR);
-
-    assert(tmp_fd != fd.fd());
-    if (tmp_fd < 0) {
-        // Likely fd exhaustion.
-        return autoclose_fd_t{};
-    }
     // Ok, we have a new candidate fd. Recurse.
-    set_cloexec(tmp_fd);
-    return move_fd_to_unused(autoclose_fd_t{tmp_fd}, fdset);
+    return heightenize_fd(autoclose_fd_t{tmp_fd}, false);
+#endif
 }
 
-maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset) {
+maybe_t<autoclose_pipes_t> make_autoclose_pipes() {
     int pipes[2] = {-1, -1};
 
+    // TODO: use pipe2 here if available.
     if (pipe(pipes) < 0) {
         FLOGF(warning, PIPE_ERROR);
         wperror(L"pipe");
         return none();
     }
-    set_cloexec(pipes[0]);
-    set_cloexec(pipes[1]);
 
     autoclose_fd_t read_end{pipes[0]};
     autoclose_fd_t write_end{pipes[1]};
 
-    // Ensure we have no conflicts.
-    if (!fdset.empty()) {
-        read_end = move_fd_to_unused(std::move(read_end), fdset);
-        if (!read_end.valid()) return none();
+    // Ensure our fds are out of the user range.
+    read_end = heightenize_fd(std::move(read_end), false);
+    if (!read_end.valid()) return none();
 
-        write_end = move_fd_to_unused(std::move(write_end), fdset);
-        if (!write_end.valid()) return none();
-    }
+    write_end = heightenize_fd(std::move(write_end), false);
+    if (!write_end.valid()) return none();
+
     return autoclose_pipes_t(std::move(read_end), std::move(write_end));
 }
 

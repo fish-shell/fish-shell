@@ -158,10 +158,11 @@ separated_buffer_t io_buffer_t::complete_background_fillthread_and_take_buffer()
 
 shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts, size_t buffer_limit,
                                                     int target) {
+    (void)conflicts;
     assert(target >= 0 && "Invalid target fd");
 
     // Construct our pipes.
-    auto pipes = make_autoclose_pipes(conflicts);
+    auto pipes = make_autoclose_pipes();
     if (!pipes) {
         return nullptr;
     }

@@ -968,7 +968,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         autoclose_pipes_t proc_pipes;
         proc_pipes.read = std::move(pipe_next_read);
         if (!p->is_last_in_job) {
-            auto pipes = make_autoclose_pipes(conflicts);
+            auto pipes = make_autoclose_pipes();
             if (!pipes) {
                 FLOGF(warning, PIPE_ERROR);
                 wperror(L"pipe");

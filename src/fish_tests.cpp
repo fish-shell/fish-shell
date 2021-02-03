@@ -795,7 +795,7 @@ static void test_fd_monitor() {
         autoclose_fd_t writer;
 
         explicit item_maker_t(uint64_t timeout_usec) {
-            auto pipes = make_autoclose_pipes({}).acquire();
+            auto pipes = make_autoclose_pipes().acquire();
             writer = std::move(pipes.write);
             auto callback = [this](autoclose_fd_t &fd, item_wake_reason_t reason) {
                 bool was_closed = false;
@@ -6110,6 +6110,26 @@ static void test_topic_monitor_torture() {
     for (auto &t : threads) t.join();
 }
 
+static void test_pipes() {
+    say(L"Testing pipes");
+    // Here we just test that each pipe has CLOEXEC set and is in the high range.
+    // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
+    std::vector<autoclose_pipes_t> pipes;
+    for (int i=0; i < 10; i++) {
+        if (auto pipe = make_autoclose_pipes()) {
+            pipes.push_back(pipe.acquire());
+        }
+    }
+    for (const auto &pipe : pipes) {
+        for (int fd : {pipe.read.fd(), pipe.write.fd()}) {
+            do_test(fd >= k_first_high_fd);
+            int flags = fcntl(fd, F_GETFD, 0);
+            do_test(flags >= 0);
+            do_test(bool(flags & FD_CLOEXEC));
+        }
+    }
+}
+
 static void test_timer_format() {
     say(L"Testing timer format");
     // This test uses numeric output, so we need to set the locale.
@@ -6346,6 +6366,7 @@ int main(int argc, char **argv) {
     if (should_test_function("normalize")) test_normalize_path();
     if (should_test_function("topics")) test_topic_monitor();
     if (should_test_function("topics")) test_topic_monitor_torture();
+    if (should_test_function("pipes")) test_pipes();
     if (should_test_function("timer_format")) test_timer_format();
     // history_tests_t::test_history_speed();
 

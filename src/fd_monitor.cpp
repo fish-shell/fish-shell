@@ -12,7 +12,7 @@ static constexpr uint64_t kUsecPerMsec = 1000;
 static constexpr uint64_t kUsecPerSec = 1000 * kUsecPerMsec;
 
 fd_monitor_t::fd_monitor_t() {
-    auto self_pipe = make_autoclose_pipes({});
+    auto self_pipe = make_autoclose_pipes();
     if (!self_pipe) {
         DIE("Unable to create pipes");
     }

@@ -45,7 +45,7 @@ binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
     sem_ok_ = (0 == sem_init(&sem_, 0, 0));
 #endif
     if (!sem_ok_) {
-        auto pipes = make_autoclose_pipes({});
+        auto pipes = make_autoclose_pipes();
         assert(pipes.has_value() && "Failed to make pubsub pipes");
         pipes_ = pipes.acquire();
 

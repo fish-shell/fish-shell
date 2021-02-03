@@ -100,7 +100,6 @@ Sometimes commands take numbers directly as options, like ``foo -55``. To allow 
 The ``#`` must follow the short flag letter (if any), and other modifiers like ``=`` are not allowed, except for ``-`` (for backwards compatibility)::
 
   m#maximum
-
 This does not read numbers given as ``+NNN``, only those that look like flags - ``-NNN``.
 
 Note: Optional arguments
@@ -160,9 +159,7 @@ Some OPTION_SPEC examples:
 
 - ``h/help`` means that both ``-h`` and ``--help`` are valid. The flag is a boolean and can be used more than once. If either flag is used then ``_flag_h`` and ``_flag_help`` will be set to the count of how many times either flag was seen.
 
-- ``h-help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If the long flag is used then ``_flag_h`` and ``_flag_help`` will be set to the count of how many times the long flag was seen.
-
-- ``help`` means that only ``--help`` is valid and only ``_flag_help`` will be set.
+- ``help`` means that only ``--help`` is valid. The flag is a boolean and can be used more than once. If it is used then ``_flag_help`` will be set to the count of how many times the long flag was seen. Also ``h-help`` (with an arbitrary short letter) for backwards compatibility.
 
 - ``longonly=`` is a flag ``--longonly`` that requires an option, there is no short flag or even short flag variable.
 
@@ -170,15 +167,13 @@ Some OPTION_SPEC examples:
 
 - ``n/name=?`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the value associated with the flag if one was provided else it will be set with no values.
 
-- ``n-name=+`` means that only ``--name`` is valid. It requires a value and can be used more than once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the values associated with each occurrence of the flag.
+- ``name=+`` means that only ``--name`` is valid. It requires a value and can be used more than once. If the flag is seen then ``_flag_name`` will be set with the values associated with each occurrence.
 
 - ``x`` means that only ``-x`` is valid. It is a boolean that can be used more than once. If it is seen then ``_flag_x`` will be set to the count of how many times the flag was seen.
 
 - ``x=``, ``x=?``, and ``x=+`` are similar to the n/name examples above but there is no long flag alternative to the short flag ``-x``.
 
-- ``x-`` is not valid since there is no long flag name and therefore the short flag, ``-x``, has to be usable.
-
-- ``#-max`` means that flags matching the regex "^--?\\d+$" are valid. When seen they are assigned to the variable ``_flag_max``. This allows any valid positive or negative integer to be specified by prefixing it with a single "-". Many commands support this idiom. For example ``head -3 /a/file`` to emit only the first three lines of /a/file.
+- ``#max`` (or ``#-max``) means that flags matching the regex "^--?\\d+$" are valid. When seen they are assigned to the variable ``_flag_max``. This allows any valid positive or negative integer to be specified by prefixing it with a single "-". Many commands support this idiom. For example ``head -3 /a/file`` to emit only the first three lines of /a/file.
 
 - ``n#max`` means that flags matching the regex "^--?\\d+$" are valid. When seen they are assigned to the variables ``_flag_n`` and ``_flag_max``. This allows any valid positive or negative integer to be specified by prefixing it with a single "-". Many commands support this idiom. For example ``head -3 /a/file`` to emit only the first three lines of /a/file. You can also specify the value using either flag: ``-n NNN`` or ``--max NNN`` in this example.
 

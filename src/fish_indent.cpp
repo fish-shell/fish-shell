@@ -39,6 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "env.h"
 #include "expand.h"
 #include "fish_version.h"
+#include "fds.h"
 #include "flog.h"
 #include "highlight.h"
 #include "operation_context.h"

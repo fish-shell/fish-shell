@@ -4,9 +4,12 @@
 #define FISH_FDS_H
 
 #include <algorithm>
+#include <string>
 #include <vector>
 
 #include "maybe.h"
+
+using wcstring = std::wstring;
 
 /// Pipe redirection error message.
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
@@ -94,6 +97,27 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset);
 /// is found or we run out. If we return a new fd or an error, closes the old one. Marks the fd as
 /// cloexec. \returns invalid fd on failure (in which case the given fd is still closed).
 autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset);
+
+/// Sets CLO_EXEC on a given fd according to the value of \p should_set.
+int set_cloexec(int fd, bool should_set = true);
+
+/// Wide character version of open() that also sets the close-on-exec flag (atomically when
+/// possible).
+int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);
+
+/// Narrow versions of wopen_cloexec.
+int open_cloexec(const std::string &path, int flags, mode_t mode = 0);
+int open_cloexec(const char *path, int flags, mode_t mode = 0);
+
+/// Mark an fd as nonblocking; returns errno or 0 on success.
+int make_fd_nonblocking(int fd);
+
+/// Mark an fd as blocking; returns errno or 0 on success.
+int make_fd_blocking(int fd);
+
+/// Check if an fd is on a remote filesystem (NFS, SMB, CFS)
+/// Return 1 if remote, 0 if local, -1 on error or if not implemented on this platform.
+int fd_check_is_remote(int fd);
 
 /// Close a file descriptor \p fd, retrying on EINTR.
 void exec_close(int fd);

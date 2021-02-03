@@ -19,27 +19,6 @@
 #include "common.h"
 #include "maybe.h"
 
-/// Sets CLO_EXEC on a given fd according to the value of \p should_set.
-int set_cloexec(int fd, bool should_set = true);
-
-/// Wide character version of open() that also sets the close-on-exec flag (atomically when
-/// possible).
-int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);
-
-/// Narrow versions of wopen_cloexec.
-int open_cloexec(const std::string &path, int flags, mode_t mode = 0);
-int open_cloexec(const char *path, int flags, mode_t mode = 0);
-
-/// Mark an fd as nonblocking; returns errno or 0 on success.
-int make_fd_nonblocking(int fd);
-
-/// Mark an fd as blocking; returns errno or 0 on success.
-int make_fd_blocking(int fd);
-
-/// Check if an fd is on a remote filesystem (NFS, SMB, CFS)
-/// Return 1 if remote, 0 if local, -1 on error or if not implemented on this platform.
-int fd_check_is_remote(int fd);
-
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
 /// POSIX (hooray).
 DIR *wopendir(const wcstring &name);

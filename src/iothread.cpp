@@ -19,6 +19,7 @@
 #include <thread>
 
 #include "common.h"
+#include "fds.h"
 #include "flog.h"
 #include "global_safety.h"
 #include "wutil.h"

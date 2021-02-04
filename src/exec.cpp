@@ -441,7 +441,7 @@ static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p
 
 /// \return an newly allocated output stream for the given fd, which is typically stdout or stderr.
 /// This inspects the io_chain and decides what sort of output stream to return.
-static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(const parser_t &parser,
+static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(size_t read_limit,
                                                                          const io_chain_t &io_chain,
                                                                          int fd) {
     const shared_ptr<const io_data_t> io = io_chain.io_for_fd(fd);
@@ -453,7 +453,7 @@ static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(const p
     switch (io->io_mode) {
         case io_mode_t::bufferfill:
             // Write to a buffer.
-            return make_unique<buffered_output_stream_t>(parser.libdata().read_limit);
+            return make_unique<buffered_output_stream_t>(read_limit);
 
         case io_mode_t::close:
             return make_unique<null_output_stream_t>();
@@ -462,7 +462,7 @@ static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(const p
         case io_mode_t::file:
         case io_mode_t::pipe:
         case io_mode_t::fd:
-            return make_unique<buffered_output_stream_t>(parser.libdata().read_limit);
+            return make_unique<buffered_output_stream_t>(read_limit);
     }
     DIE("Unreachable");
 }
@@ -863,10 +863,11 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
         }
 
         case process_type_t::builtin: {
+            size_t read_limit = parser.libdata().read_limit;
             std::unique_ptr<output_stream_t> output_stream =
-                create_output_stream_for_builtin(parser, process_net_io_chain, STDOUT_FILENO);
+                create_output_stream_for_builtin(read_limit, process_net_io_chain, STDOUT_FILENO);
             std::unique_ptr<output_stream_t> errput_stream =
-                create_output_stream_for_builtin(parser, process_net_io_chain, STDERR_FILENO);
+                create_output_stream_for_builtin(read_limit, process_net_io_chain, STDERR_FILENO);
             io_streams_t builtin_io_streams{*output_stream, *errput_stream};
             builtin_io_streams.job_group = j->group;
 

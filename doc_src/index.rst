@@ -1398,6 +1398,7 @@ Variable                                                   Meaning
 ==========================================                 =====================================================================
 ``fish_color_normal``                                      default color
 ``fish_color_command``                                     commands like echo
+``fish_color_keyword``                                     keywords like if - this falls back on command color if unset
 ``fish_color_quote``                                       quoted text like "abc"
 ``fish_color_redirection``                                 IO redirections like >/dev/null
 ``fish_color_end``                                         process separators like ';' and '&'

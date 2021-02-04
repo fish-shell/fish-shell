@@ -632,6 +632,7 @@ static const char *highlight_role_to_string(highlight_role_t role) {
         TEST_ROLE(normal)
         TEST_ROLE(error)
         TEST_ROLE(command)
+        TEST_ROLE(keyword)
         TEST_ROLE(statement_terminator)
         TEST_ROLE(param)
         TEST_ROLE(comment)

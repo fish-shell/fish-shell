@@ -4969,7 +4969,7 @@ static void test_highlighting() {
                                {L"&", highlight_role_t::statement_terminator}});
 
     highlight_tests.push_back({
-        {L"command", highlight_role_t::command},
+        {L"command", highlight_role_t::keyword},
         {L"echo", highlight_role_t::command},
         {L"abc", highlight_role_t::param},
         {L"test/fish_highlight_test/foo", param_valid_path},
@@ -4977,14 +4977,15 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
-        {L"if command ls", highlight_role_t::command},
+        {L"if command", highlight_role_t::keyword},
+        {L"ls", highlight_role_t::command},
         {L"; ", highlight_role_t::statement_terminator},
         {L"echo", highlight_role_t::command},
         {L"abc", highlight_role_t::param},
         {L"; ", highlight_role_t::statement_terminator},
         {L"/bin/definitely_not_a_command", highlight_role_t::error},
         {L"; ", highlight_role_t::statement_terminator},
-        {L"end", highlight_role_t::command},
+        {L"end", highlight_role_t::keyword},
     });
 
     // Verify that cd shows errors for non-directories.
@@ -5067,7 +5068,7 @@ static void test_highlighting() {
     highlight_tests.push_back({
         {L"end", highlight_role_t::error},
         {L";", highlight_role_t::statement_terminator},
-        {L"if", highlight_role_t::command},
+        {L"if", highlight_role_t::keyword},
         {L"end", highlight_role_t::error},
     });
 
@@ -5097,12 +5098,12 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
-        {L"for", highlight_role_t::command},
+        {L"for", highlight_role_t::keyword},
         {L"i", highlight_role_t::param},
-        {L"in", highlight_role_t::command},
+        {L"in", highlight_role_t::keyword},
         {L"1 2 3", highlight_role_t::param},
         {L";", highlight_role_t::statement_terminator},
-        {L"end", highlight_role_t::command},
+        {L"end", highlight_role_t::keyword},
     });
 
     highlight_tests.push_back({
@@ -5125,7 +5126,7 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
-        {L"if", highlight_role_t::command},
+        {L"if", highlight_role_t::keyword},
         {L"true", highlight_role_t::command},
         {L"&&", highlight_role_t::operat},
         {L"false", highlight_role_t::command},
@@ -5140,7 +5141,7 @@ static void test_highlighting() {
         {L"!", highlight_role_t::operat},
         {L"true", highlight_role_t::command},
         {L";", highlight_role_t::statement_terminator},
-        {L"end", highlight_role_t::command},
+        {L"end", highlight_role_t::keyword},
     });
 
     highlight_tests.push_back({

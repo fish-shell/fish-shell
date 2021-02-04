@@ -34,6 +34,7 @@ ROLE_TO_TOKEN = {
     "normal": Name.Variable,
     "error": Generic.Error,
     "command": Name.Function,
+    "keyword": Keyword,
     "statement_terminator": Punctuation,
     "param": Name.Constant,
     "comment": Comment,

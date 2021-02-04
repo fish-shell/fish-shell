@@ -55,14 +55,13 @@ enum class separation_type_t {
 
 /// A separated_buffer_t contains a list of elements, some of which may be separated explicitly and
 /// others which must be separated further by the user (e.g. via IFS).
-template <typename StringType>
 class separated_buffer_t {
    public:
     struct element_t {
-        StringType contents;
+        std::string contents;
         separation_type_t separation;
 
-        element_t(StringType contents, separation_type_t sep)
+        element_t(std::string contents, separation_type_t sep)
             : contents(std::move(contents)), separation(sep) {}
 
         bool is_explicitly_separated() const { return separation == separation_type_t::explicitly; }
@@ -103,8 +102,6 @@ class separated_buffer_t {
     void operator=(const separated_buffer_t &) = delete;
 
    public:
-    using CharType = typename StringType::value_type;
-
     /// Construct a separated_buffer_t with the given buffer limit \p limit, or 0 for no limit.
     separated_buffer_t(size_t limit) : buffer_limit_(limit) {}
 
@@ -126,8 +123,8 @@ class separated_buffer_t {
 
     /// Serialize the contents to a single string, where explicitly separated elements have a
     /// newline appended.
-    StringType newline_serialized() const {
-        StringType result;
+    std::string newline_serialized() const {
+        std::string result;
         result.reserve(size());
         for (const auto &elem : elements_) {
             result.append(elem.contents);
@@ -142,31 +139,22 @@ class separated_buffer_t {
     const std::vector<element_t> &elements() const { return elements_; }
 
     /// Append an element with range [begin, end) and the given separation type \p sep.
-    void append(const CharType *begin, const CharType *end,
+    void append(const char *begin, const char *end,
                 separation_type_t sep = separation_type_t::inferred) {
-        if (!try_add_size(std::distance(begin, end))) return;
+        if (!try_add_size(end - begin)) return;
         // Try merging with the last element.
         if (sep == separation_type_t::inferred && !elements_.empty() &&
             !elements_.back().is_explicitly_separated()) {
             elements_.back().contents.append(begin, end);
         } else {
-            elements_.emplace_back(StringType(begin, end), sep);
+            elements_.emplace_back(std::string(begin, end), sep);
         }
     }
 
     /// Append a string \p str with the given separation type \p sep.
-    void append(const StringType &str, separation_type_t sep = separation_type_t::inferred) {
-        const CharType *cstr = str.c_str();
+    void append(const std::string &str, separation_type_t sep = separation_type_t::inferred) {
+        const char *cstr = str.c_str();
         append(cstr, cstr + str.size(), sep);
-    }
-
-    // Given that this is a narrow stream, convert a wide stream \p rhs to narrow and then append
-    // it.
-    template <typename RHSStringType>
-    void append_wide_buffer(const separated_buffer_t<RHSStringType> &rhs) {
-        for (const auto &rhs_elem : rhs.elements()) {
-            append(wcs2string(rhs_elem.contents), rhs_elem.separation);
-        }
     }
 };
 
@@ -306,7 +294,7 @@ class io_buffer_t {
     friend io_bufferfill_t;
 
     /// Buffer storing what we have read.
-    separated_buffer_t<std::string> buffer_;
+    separated_buffer_t buffer_;
 
     /// Atomic flag indicating our fillthread should shut down.
     relaxed_atomic_bool_t shutdown_fillthread_{false};
@@ -341,7 +329,7 @@ class io_buffer_t {
 
     /// Access the underlying buffer.
     /// This requires that the background fillthread be none.
-    const separated_buffer_t<std::string> &buffer() const {
+    const separated_buffer_t &buffer() const {
         assert(!fillthread_running() && "Cannot access buffer during background fill");
         return buffer_;
     }
@@ -446,7 +434,7 @@ class output_stream_t {
     void push_back(wchar_t c) { append(c); }
 
     // Append data from a narrow buffer, widening it.
-    void append_narrow_buffer(const separated_buffer_t<std::string> &buffer);
+    void append_narrow_buffer(const separated_buffer_t &buffer);
 
     /// Append a format string.
     void append_format(const wchar_t *format, ...) {

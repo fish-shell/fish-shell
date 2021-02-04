@@ -103,6 +103,8 @@ class separated_buffer_t {
     void operator=(const separated_buffer_t &) = delete;
 
    public:
+    using CharType = typename StringType::value_type;
+
     /// Construct a separated_buffer_t with the given buffer limit \p limit, or 0 for no limit.
     separated_buffer_t(size_t limit) : buffer_limit_(limit) {}
 
@@ -140,8 +142,8 @@ class separated_buffer_t {
     const std::vector<element_t> &elements() const { return elements_; }
 
     /// Append an element with range [begin, end) and the given separation type \p sep.
-    template <typename Iterator>
-    void append(Iterator begin, Iterator end, separation_type_t sep = separation_type_t::inferred) {
+    void append(const CharType *begin, const CharType *end,
+                separation_type_t sep = separation_type_t::inferred) {
         if (!try_add_size(std::distance(begin, end))) return;
         // Try merging with the last element.
         if (sep == separation_type_t::inferred && !elements_.empty() &&
@@ -154,7 +156,8 @@ class separated_buffer_t {
 
     /// Append a string \p str with the given separation type \p sep.
     void append(const StringType &str, separation_type_t sep = separation_type_t::inferred) {
-        append(str.begin(), str.end(), sep);
+        const CharType *cstr = str.c_str();
+        append(cstr, cstr + str.size(), sep);
     }
 
     // Given that this is a narrow stream, convert a wide stream \p rhs to narrow and then append

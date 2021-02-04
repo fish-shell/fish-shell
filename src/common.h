@@ -291,6 +291,7 @@ wcstring str2wcstring(const std::string &in, size_t len);
 /// This function decodes illegal character sequences in a reversible way using the private use
 /// area.
 std::string wcs2string(const wcstring &input);
+std::string wcs2string(const wchar_t *in, size_t len);
 
 // Check if we are running in the test mode, where we should suppress error output
 #define TESTS_PROGRAM_NAME L"(ignore)"

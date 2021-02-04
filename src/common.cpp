@@ -406,10 +406,12 @@ wcstring str2wcstring(const std::string &in, size_t len) {
     return str2wcs_internal(in.data(), len);
 }
 
-std::string wcs2string(const wcstring &input) {
+std::string wcs2string(const wcstring &input) { return wcs2string(input.data(), input.size()); }
+
+std::string wcs2string(const wchar_t *in, size_t len) {
     std::string result;
-    result.reserve(input.size());
-    wcs2string_callback(input.data(), input.size(), [&](const char *buff, size_t bufflen) {
+    result.reserve(len);
+    wcs2string_callback(in, len, [&](const char *buff, size_t bufflen) {
         result.append(buff, bufflen);
         return true;
     });

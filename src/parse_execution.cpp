@@ -390,9 +390,8 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
         return result;
     }
     trace_if_enabled(*parser, L"function", arguments);
-    // no limit on the amount of output from builtin_function()
-    buffered_output_stream_t outs(0);
-    buffered_output_stream_t errs(0);
+    null_output_stream_t outs;
+    string_output_stream_t errs;
     io_streams_t streams(outs, errs);
     int err_code = 0;
     maybe_t<int> err = builtin_function(*parser, streams, arguments, pstree, statement);
@@ -402,7 +401,7 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
         parser->set_last_statuses(statuses_t::just(err_code));
     }
 
-    wcstring errtext = errs.contents();
+    const wcstring &errtext = errs.contents();
     if (!errtext.empty()) {
         return this->report_error(err_code, header, L"%ls", errtext.c_str());
     }

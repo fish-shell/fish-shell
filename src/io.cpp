@@ -373,6 +373,8 @@ void fd_output_stream_t::append(const wchar_t *s, size_t amt) {
 
 void null_output_stream_t::append(const wchar_t *, size_t) {}
 
+void string_output_stream_t::append(const wchar_t *s, size_t amt) { contents_.append(s, amt); }
+
 void buffered_output_stream_t::append(const wchar_t *s, size_t amt) { buffer_.append(s, s + amt); }
 
 void buffered_output_stream_t::append_with_separation(const wchar_t *s, size_t len,

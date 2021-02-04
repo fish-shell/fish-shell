@@ -475,6 +475,19 @@ class fd_output_stream_t final : public output_stream_t {
     bool errored_{false};
 };
 
+/// A simple output stream which buffers into a wcstring.
+class string_output_stream_t final : public output_stream_t {
+   public:
+    string_output_stream_t() = default;
+    void append(const wchar_t *s, size_t amt) override;
+
+    /// \return the wcstring containing the output.
+    const wcstring &contents() const { return contents_; }
+
+   private:
+    wcstring contents_;
+};
+
 /// An output stream for builtins which buffers into a separated buffer.
 class buffered_output_stream_t final : public output_stream_t {
    public:

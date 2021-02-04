@@ -17,6 +17,7 @@ enum class highlight_role_t : uint8_t {
     normal = 0,            // normal text
     error,                 // error
     command,               // command
+    keyword,
     statement_terminator,  // process separator
     param,                 // command parameter (argument)
     comment,               // comment

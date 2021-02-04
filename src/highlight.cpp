@@ -47,6 +47,8 @@ static const wchar_t *get_highlight_var_name(highlight_role_t role) {
             return L"fish_color_error";
         case highlight_role_t::command:
             return L"fish_color_command";
+        case highlight_role_t::keyword:
+            return L"fish_color_keyword";
         case highlight_role_t::statement_terminator:
             return L"fish_color_end";
         case highlight_role_t::param:
@@ -107,6 +109,8 @@ static highlight_role_t get_fallback(highlight_role_t role) {
             return highlight_role_t::normal;
         case highlight_role_t::command:
             return highlight_role_t::normal;
+        case highlight_role_t::keyword:
+            return highlight_role_t::command;
         case highlight_role_t::statement_terminator:
             return highlight_role_t::normal;
         case highlight_role_t::param:
@@ -949,7 +953,7 @@ void highlighter_t::visit(const ast::keyword_base_t &kw) {
         case parse_keyword_t::kw_in:
         case parse_keyword_t::kw_switch:
         case parse_keyword_t::kw_while:
-            role = highlight_role_t::command;
+            role = highlight_role_t::keyword;
             break;
 
         case parse_keyword_t::kw_and:

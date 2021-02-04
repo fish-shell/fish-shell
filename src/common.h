@@ -201,6 +201,10 @@ extern const wchar_t *program_name;
 /// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
 extern const bool has_working_tty_timestamps;
 
+/// A global, empty string. This is useful for functions which wish to return a reference to an
+/// empty string.
+extern const wcstring g_empty_string;
+
 // Pause for input, then exit the program. If supported, print a backtrace first.
 // The `return` will never be run  but silences oclint warnings. Especially when this is called
 // from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the

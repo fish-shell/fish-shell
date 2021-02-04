@@ -57,17 +57,6 @@ void io_bufferfill_t::print() const {
     std::fwprintf(stderr, L"bufferfill %d -> %d\n", write_fd_.fd(), fd);
 }
 
-void io_buffer_t::append_from_wide_buffer(const separated_buffer_t<wcstring> &input) {
-    if (input.elements().empty() && !input.discarded()) return;
-    scoped_lock locker(append_lock_);
-    if (buffer_.discarded()) return;
-    if (input.discarded()) {
-        buffer_.set_discard();
-        return;
-    }
-    buffer_.append_wide_buffer(input);
-}
-
 ssize_t io_buffer_t::read_once(int fd) {
     assert(fd >= 0 && "Invalid fd");
     ASSERT_IS_LOCKED(append_lock_);
@@ -361,6 +350,8 @@ void output_stream_t::append_with_separation(const wchar_t *s, size_t len, separ
     }
 }
 
+const wcstring &output_stream_t::contents() const { return g_empty_string; }
+
 void fd_output_stream_t::append(const wchar_t *s, size_t amt) {
     if (errored_) return;
     int res = wwrite_to_fd(s, amt, this->fd_);
@@ -375,9 +366,15 @@ void null_output_stream_t::append(const wchar_t *, size_t) {}
 
 void string_output_stream_t::append(const wchar_t *s, size_t amt) { contents_.append(s, amt); }
 
-void buffered_output_stream_t::append(const wchar_t *s, size_t amt) { buffer_.append(s, s + amt); }
+const wcstring &string_output_stream_t::contents() const { return contents_; }
+
+void buffered_output_stream_t::append(const wchar_t *s, size_t amt) {
+    buffer_->append(wcs2string(s, amt));
+}
 
 void buffered_output_stream_t::append_with_separation(const wchar_t *s, size_t len,
                                                       separation_type_t type) {
-    buffer_.append(s, s + len, type);
+    buffer_->append(wcs2string(s, len), type);
 }
+
+bool buffered_output_stream_t::discarded() const { return buffer_->discarded(); }

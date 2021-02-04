@@ -318,8 +318,8 @@ class io_buffer_t {
     /// The item id of our background fillthread fd monitor item.
     uint64_t item_id_{0};
 
-    /// Lock for appending.
-    std::mutex append_lock_{};
+    /// Lock for appending. Mutable since we take it in const functions.
+    mutable std::mutex append_lock_{};
 
     /// Read some, filling the buffer. The append lock must be held.
     /// \return positive on success, 0 if closed, -1 on error (in which case errno will be set).
@@ -347,14 +347,22 @@ class io_buffer_t {
     }
 
     /// Function to append to the buffer.
-    void append(const char *ptr, size_t count) {
+    void append(const char *ptr, size_t count,
+                separation_type_t type = separation_type_t::inferred) {
         scoped_lock locker(append_lock_);
-        buffer_.append(ptr, ptr + count);
+        buffer_.append(ptr, ptr + count, type);
     }
 
-    /// Appends data from a given separated buffer.
-    /// Marks the receiver as discarded if the buffer was discarded.
-    void append_from_wide_buffer(const separated_buffer_t<wcstring> &input);
+    /// \return true if output was discarded due to exceeding the read limit.
+    bool discarded() const {
+        scoped_lock locker(append_lock_);
+        return buffer_.discarded();
+    }
+
+    void append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
+        scoped_lock locker(append_lock_);
+        buffer_.append(std::move(str), type);
+    }
 };
 
 using io_data_ref_t = std::shared_ptr<const io_data_t>;
@@ -413,8 +421,13 @@ class output_stream_t {
     /// Required override point. The output stream receives a string \p s with \p amt chars.
     virtual void append(const wchar_t *s, size_t amt) = 0;
 
-    /// \return the separated buffer if this holds one, otherwise nullptr.
-    virtual const separated_buffer_t<wcstring> *get_separated_buffer() const { return nullptr; }
+    /// \return true if output was discarded. This only applies to buffered output streams.
+    virtual bool discarded() const { return false; }
+
+    /// \return any internally buffered contents.
+    /// This is only implemented for a string_output_stream; others flush data to their underlying
+    /// receiver (fd, or separated buffer) immediately and so will return an empty string here.
+    virtual const wcstring &contents() const;
 
     /// An optional override point. This is for explicit separation.
     virtual void append_with_separation(const wchar_t *s, size_t len, separation_type_t type);
@@ -482,31 +495,27 @@ class string_output_stream_t final : public output_stream_t {
     void append(const wchar_t *s, size_t amt) override;
 
     /// \return the wcstring containing the output.
-    const wcstring &contents() const { return contents_; }
+    const wcstring &contents() const override;
 
    private:
     wcstring contents_;
 };
 
-/// An output stream for builtins which buffers into a separated buffer.
+/// An output stream for builtins which writes into a separated buffer.
 class buffered_output_stream_t final : public output_stream_t {
    public:
-    explicit buffered_output_stream_t(size_t buffer_limit) : buffer_(buffer_limit) {}
+    explicit buffered_output_stream_t(std::shared_ptr<io_buffer_t> buffer)
+        : buffer_(std::move(buffer)) {
+        assert(buffer_ && "Buffer must not be null");
+    }
 
     void append(const wchar_t *s, size_t amt) override;
     void append_with_separation(const wchar_t *s, size_t len, separation_type_t type) override;
-
-    wcstring contents() const { return buffer_.newline_serialized(); }
-
-    /// Access the buffer.
-    separated_buffer_t<wcstring> &buffer() { return buffer_; }
-    const separated_buffer_t<wcstring> &buffer() const { return buffer_; }
-
-    const separated_buffer_t<wcstring> *get_separated_buffer() const override { return &buffer_; }
+    bool discarded() const override;
 
    private:
-    /// Storage for our data.
-    separated_buffer_t<wcstring> buffer_;
+    /// The buffer we are filling.
+    std::shared_ptr<io_buffer_t> buffer_;
 };
 
 struct io_streams_t {

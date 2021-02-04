@@ -441,8 +441,7 @@ static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p
 
 /// \return an newly allocated output stream for the given fd, which is typically stdout or stderr.
 /// This inspects the io_chain and decides what sort of output stream to return.
-static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(size_t read_limit,
-                                                                         const io_chain_t &io_chain,
+static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(const io_chain_t &io_chain,
                                                                          int fd) {
     const shared_ptr<const io_data_t> io = io_chain.io_for_fd(fd);
     if (io == nullptr) {
@@ -451,9 +450,13 @@ static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(size_t 
         return make_unique<fd_output_stream_t>(fd);
     }
     switch (io->io_mode) {
-        case io_mode_t::bufferfill:
-            // Write to a buffer.
-            return make_unique<buffered_output_stream_t>(read_limit);
+        case io_mode_t::bufferfill: {
+            // Our IO redirection is to an internal buffer, e.g. a command substitution.
+            // We will write directly to it.
+            std::shared_ptr<io_buffer_t> buffer =
+                dynamic_cast<const io_bufferfill_t *>(io.get())->buffer();
+            return make_unique<buffered_output_stream_t>(buffer);
+        }
 
         case io_mode_t::close:
             return make_unique<null_output_stream_t>();
@@ -462,7 +465,7 @@ static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(size_t 
         case io_mode_t::file:
         case io_mode_t::pipe:
         case io_mode_t::fd:
-            return make_unique<buffered_output_stream_t>(read_limit);
+            return make_unique<string_output_stream_t>();
     }
     DIE("Unreachable");
 }
@@ -470,75 +473,17 @@ static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(size_t 
 /// Handle output from a builtin, by printing the contents of builtin_io_streams to the redirections
 /// given in io_chain.
 static void handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t> &j, process_t *p,
-                                  io_chain_t *io_chain, const io_streams_t &builtin_io_streams) {
+                                  io_chain_t *io_chain, const io_streams_t &streams) {
     assert(p->type == process_type_t::builtin && "Process is not a builtin");
 
-    const separated_buffer_t<wcstring> *output_buffer =
-        builtin_io_streams.out.get_separated_buffer();
-    const separated_buffer_t<wcstring> *errput_buffer =
-        builtin_io_streams.err.get_separated_buffer();
-
     // Mark if we discarded output.
-    if (output_buffer && output_buffer->discarded()) {
+    if (streams.out.discarded() || streams.err.discarded()) {
         p->status = proc_status_t::from_exit_code(STATUS_READ_TOO_MUCH);
     }
 
-    const shared_ptr<const io_data_t> stdout_io = io_chain->io_for_fd(STDOUT_FILENO);
-    const shared_ptr<const io_data_t> stderr_io = io_chain->io_for_fd(STDERR_FILENO);
-
-    // If we are directing output to a buffer, then we can just transfer it directly without needing
-    // to write to the bufferfill pipe. Note this is how we handle explicitly separated stdout
-    // output (i.e. string split0) which can't really be sent through a pipe.
-    bool stdout_done = false;
-    if (output_buffer && stdout_io && stdout_io->io_mode == io_mode_t::bufferfill) {
-        auto stdout_buffer = dynamic_cast<const io_bufferfill_t *>(stdout_io.get())->buffer();
-        stdout_buffer->append_from_wide_buffer(*output_buffer);
-        stdout_done = true;
-    }
-
-    bool stderr_done = false;
-    if (errput_buffer && stderr_io && stderr_io->io_mode == io_mode_t::bufferfill) {
-        auto stderr_buffer = dynamic_cast<const io_bufferfill_t *>(stderr_io.get())->buffer();
-        stderr_buffer->append_from_wide_buffer(*errput_buffer);
-        stderr_done = true;
-    }
-
-    // Figure out any data remaining to write. We may have none in which case we can short-circuit.
-    std::string outbuff;
-    if (output_buffer && !stdout_done) {
-        outbuff = wcs2string(output_buffer->newline_serialized());
-    }
-    std::string errbuff;
-    if (errput_buffer && !stderr_done) {
-        errbuff = wcs2string(errput_buffer->newline_serialized());
-    }
-
-    // If we have no redirections for stdout/stderr, just write them directly.
-    if (!stdout_io && !stderr_io) {
-        bool did_err = false;
-        if (write_loop(STDOUT_FILENO, outbuff.data(), outbuff.size()) < 0) {
-            if (errno != EPIPE) {
-                did_err = true;
-                FLOG(error, L"Error while writing to stdout");
-                wperror(L"write_loop");
-            }
-        }
-        if (write_loop(STDERR_FILENO, errbuff.data(), errbuff.size()) < 0) {
-            if (errno != EPIPE && !did_err) {
-                did_err = true;
-                FLOG(error, L"Error while writing to stderr");
-                wperror(L"write_loop");
-            }
-        }
-        if (did_err) {
-            redirect_tty_output();  // workaround glibc bug
-            FLOG(error, L"!builtin_io_done and errno != EPIPE");
-            show_stackframe(L'E');
-        }
-        // Clear the buffers to indicate we finished.
-        outbuff.clear();
-        errbuff.clear();
-    }
+    // Figure out any data remaining to write. We may have none, in which case we can short-circuit.
+    std::string outbuff = wcs2string(streams.out.contents());
+    std::string errbuff = wcs2string(streams.err.contents());
 
     // Some historical behavior.
     if (!outbuff.empty()) fflush(stdout);
@@ -863,11 +808,10 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
         }
 
         case process_type_t::builtin: {
-            size_t read_limit = parser.libdata().read_limit;
             std::unique_ptr<output_stream_t> output_stream =
-                create_output_stream_for_builtin(read_limit, process_net_io_chain, STDOUT_FILENO);
+                create_output_stream_for_builtin(process_net_io_chain, STDOUT_FILENO);
             std::unique_ptr<output_stream_t> errput_stream =
-                create_output_stream_for_builtin(read_limit, process_net_io_chain, STDERR_FILENO);
+                create_output_stream_for_builtin(process_net_io_chain, STDERR_FILENO);
             io_streams_t builtin_io_streams{*output_stream, *errput_stream};
             builtin_io_streams.job_group = j->group;
 

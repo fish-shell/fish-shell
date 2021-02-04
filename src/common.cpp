@@ -64,6 +64,8 @@
 
 struct termios shell_modes;
 
+const wcstring g_empty_string{};
+
 /// This allows us to notice when we've forked.
 static relaxed_atomic_bool_t is_forked_proc{false};
 /// This allows us to bypass the main thread checks
@@ -409,6 +411,7 @@ wcstring str2wcstring(const std::string &in, size_t len) {
 std::string wcs2string(const wcstring &input) { return wcs2string(input.data(), input.size()); }
 
 std::string wcs2string(const wchar_t *in, size_t len) {
+    if (len == 0) return std::string{};
     std::string result;
     result.reserve(len);
     wcs2string_callback(in, len, [&](const char *buff, size_t bufflen) {

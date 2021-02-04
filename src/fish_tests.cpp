@@ -5366,7 +5366,7 @@ maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **a
 static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
                                 const wchar_t *expected_out) {
     parser_t &parser = parser_t::principal_parser();
-    buffered_output_stream_t outs{0};
+    string_output_stream_t outs{};
     null_output_stream_t errs{};
     io_streams_t streams(outs, errs);
     streams.stdin_is_directly_redirected = false;  // read from argv instead of stdin

@@ -12,11 +12,11 @@ Unlike other shells, fish does not follow the POSIX standard, but still uses rou
 
 Some of the special features of fish are:
 
-- **Extensive UI**: `Syntax highlighting`_, autosuggestions_, `tab completion`_ and selection lists that can be navigated and filtered.
+- **Extensive UI**: :ref:`Syntax highlighting <color>`, :ref:`autosuggestions <suggestions>`, :ref:`tab completion <completion>` and selection lists that can be navigated and filtered.
 
 - **No configuration needed**: fish is designed to be ready to use immediately, without requiring extensive configuration.
 
-- **Easy scripting**: New functions_ can be added on the fly. The syntax is easy to learn and use.
+- **Easy scripting**: New :ref:`functions <syntax-function>` can be added on the fly. The syntax is easy to learn and use.
 
 This page gives an overview of fish's features, syntax, and interface. If this is your first time using fish, see the :ref:`tutorial <tutorial>`.
 
@@ -1520,6 +1520,8 @@ Help on a specific builtin can also be obtained with the ``-h`` parameter. For i
 
 This page can be viewed via ``help index`` (or just ``help``) or ``man fish-doc``. The tutorial can be viewed with ``help tutorial`` or ``man fish-tutorial``.
 
+.. _suggestions:
+
 Autosuggestions
 ---------------
 
@@ -1529,6 +1531,7 @@ To accept the autosuggestion (replacing the command line contents), press :kbd:`
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
+.. _completion:
 
 Tab Completion
 --------------

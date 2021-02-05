@@ -2,7 +2,6 @@
 
 bind - handle fish key bindings
 ===============================
-
 Synopsis
 --------
 
@@ -182,7 +181,7 @@ The following special input functions are available:
 
 - ``swap-selection-start-stop``, go to the other end of the highlighted text without changing the selection
 
-- ``transpose-chars``,  transpose two characters to the left of the cursor
+- ``transpose-chars``, transpose two characters to the left of the cursor
 
 - ``transpose-words``, transpose two words to the left of the cursor
 

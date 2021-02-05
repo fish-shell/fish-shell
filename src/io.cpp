@@ -71,7 +71,7 @@ ssize_t io_buffer_t::read_once(int fd) {
     if (ret < 0 && errno != EAGAIN) {
         wperror(L"read");
     } else if (ret > 0) {
-        buffer_.append(&buff[0], &buff[ret]);
+        buffer_.append(buff, static_cast<size_t>(ret));
     }
     return ret;
 }

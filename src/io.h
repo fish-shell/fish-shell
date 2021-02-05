@@ -43,14 +43,17 @@ struct fd_set_t {
     bool empty() const { return fds.empty(); }
 };
 
-/// separated_buffer_t is composed of a sequence of elements, some of which may be explicitly
-/// separated (e.g. through string spit0) and some of which the separation is inferred. This enum
-/// tracks the type.
+/// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
+/// variable. For example, command substitutions output into one of these. Most commands just
+/// produce a stream of bytes, and those get stored directly. However other commands produce
+/// explicitly separated output, in particular `string` like `string collect` and `string split0`.
+/// The buffer tracks a sequence of elements. Some elements are explicitly separated and should not
+/// be further split; other elements have inferred separation and may be split by IFS (or not,
+/// depending on its value).
+
 enum class separation_type_t {
-    /// This element's separation should be inferred, e.g. through IFS.
-    inferred,
-    /// This element was explicitly separated and should not be separated further.
-    explicitly
+    inferred,    // this element should be further separated by IFS
+    explicitly,  // this element is explicitly separated and should not be further split
 };
 
 /// A separated_buffer_t contains a list of elements, some of which may be separated explicitly and
@@ -100,25 +103,22 @@ class separated_buffer_t {
     /// \return the list of elements.
     const std::vector<element_t> &elements() const { return elements_; }
 
-    /// Append an element with range [begin, end) and the given separation type \p sep.
-    void append(const char *begin, const char *end,
-                separation_type_t sep = separation_type_t::inferred) {
-        if (!try_add_size(end - begin)) return;
+    /// Append a string \p str of a given length \p len, with separation type \p sep.
+    void append(const char *str, size_t len, separation_type_t sep = separation_type_t::inferred) {
+        if (!try_add_size(len)) return;
         // Try merging with the last element.
-        if (sep == separation_type_t::inferred && !elements_.empty() &&
-            !elements_.back().is_explicitly_separated()) {
-            elements_.back().contents.append(begin, end);
+        if (sep == separation_type_t::inferred && last_inferred()) {
+            elements_.back().contents.append(str, len);
         } else {
-            elements_.emplace_back(std::string(begin, end), sep);
+            elements_.emplace_back(std::string(str, len), sep);
         }
     }
 
-    /// Append a string \p str with the given separation type \p sep.
+    /// Append a string \p str with separation type \p sep.
     void append(std::string &&str, separation_type_t sep = separation_type_t::inferred) {
         if (!try_add_size(str.size())) return;
         // Try merging with the last element.
-        if (sep == separation_type_t::inferred && !elements_.empty() &&
-            !elements_.back().is_explicitly_separated()) {
+        if (sep == separation_type_t::inferred && last_inferred()) {
             elements_.back().contents.append(str);
         } else {
             elements_.emplace_back(std::move(str), sep);
@@ -126,6 +126,20 @@ class separated_buffer_t {
     }
 
    private:
+    /// \return true if our last element has an inferred separation type.
+    bool last_inferred() const {
+        return !elements_.empty() && !elements_.back().is_explicitly_separated();
+    }
+
+    /// If our last element has an inferred separation, return a pointer to it; else nullptr.
+    /// This is useful for appending one inferred separation to another.
+    element_t *last_if_inferred() {
+        if (!elements_.empty() && !elements_.back().is_explicitly_separated()) {
+            return &elements_.back();
+        }
+        return nullptr;
+    }
+
     /// Mark that we are about to add the given size \p delta to the buffer. \return true if we
     /// succeed, false if we exceed buffer_limit.
     bool try_add_size(size_t delta) {
@@ -286,7 +300,44 @@ class output_stream_t;
 /// An io_buffer_t is a buffer which can populate itself by reading from an fd.
 /// It is not an io_data_t.
 class io_buffer_t {
+public:
+    explicit io_buffer_t(size_t limit) : buffer_(limit) {}
+
+    ~io_buffer_t();
+
+    /// Access the underlying buffer.
+    /// This requires that the background fillthread be none.
+    const separated_buffer_t &buffer() const {
+        assert(!fillthread_running() && "Cannot access buffer during background fill");
+        return buffer_;
+    }
+
+    /// Append a string to the buffer.
+    void append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
+        scoped_lock locker(append_lock_);
+        buffer_.append(std::move(str), type);
+    }
+
+    /// \return true if output was discarded due to exceeding the read limit.
+    bool discarded() const {
+        scoped_lock locker(append_lock_);
+        return buffer_.discarded();
+    }
+
    private:
+    /// Read some, filling the buffer. The append lock must be held.
+    /// \return positive on success, 0 if closed, -1 on error (in which case errno will be set).
+    ssize_t read_once(int fd);
+
+    /// Begin the fill operation, reading from the given fd in the background.
+    void begin_filling(autoclose_fd_t readfd);
+
+    /// End the background fillthread operation.
+    void complete_background_fillthread();
+
+    /// Helper to return whether the fillthread is running.
+    bool fillthread_running() const { return fillthread_waiter_.valid(); }
+
     friend io_bufferfill_t;
 
     /// Buffer storing what we have read.
@@ -304,49 +355,6 @@ class io_buffer_t {
 
     /// Lock for appending. Mutable since we take it in const functions.
     mutable std::mutex append_lock_{};
-
-    /// Read some, filling the buffer. The append lock must be held.
-    /// \return positive on success, 0 if closed, -1 on error (in which case errno will be set).
-    ssize_t read_once(int fd);
-
-    /// Begin the fill operation, reading from the given fd in the background.
-    void begin_filling(autoclose_fd_t readfd);
-
-    /// End the background fillthread operation.
-    void complete_background_fillthread();
-
-    /// Helper to return whether the fillthread is running.
-    bool fillthread_running() const { return fillthread_waiter_.valid(); }
-
-   public:
-    explicit io_buffer_t(size_t limit) : buffer_(limit) {}
-
-    ~io_buffer_t();
-
-    /// Access the underlying buffer.
-    /// This requires that the background fillthread be none.
-    const separated_buffer_t &buffer() const {
-        assert(!fillthread_running() && "Cannot access buffer during background fill");
-        return buffer_;
-    }
-
-    /// Function to append to the buffer.
-    void append(const char *ptr, size_t count,
-                separation_type_t type = separation_type_t::inferred) {
-        scoped_lock locker(append_lock_);
-        buffer_.append(ptr, ptr + count, type);
-    }
-
-    /// \return true if output was discarded due to exceeding the read limit.
-    bool discarded() const {
-        scoped_lock locker(append_lock_);
-        return buffer_.discarded();
-    }
-
-    void append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
-        scoped_lock locker(append_lock_);
-        buffer_.append(std::move(str), type);
-    }
 };
 
 using io_data_ref_t = std::shared_ptr<const io_data_t>;

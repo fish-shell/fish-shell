@@ -152,9 +152,15 @@ class separated_buffer_t {
     }
 
     /// Append a string \p str with the given separation type \p sep.
-    void append(const std::string &str, separation_type_t sep = separation_type_t::inferred) {
-        const char *cstr = str.c_str();
-        append(cstr, cstr + str.size(), sep);
+    void append(std::string &&str, separation_type_t sep = separation_type_t::inferred) {
+        if (!try_add_size(str.size())) return;
+        // Try merging with the last element.
+        if (sep == separation_type_t::inferred && !elements_.empty() &&
+            !elements_.back().is_explicitly_separated()) {
+            elements_.back().contents.append(str);
+        } else {
+            elements_.emplace_back(std::move(str), sep);
+        }
     }
 };
 

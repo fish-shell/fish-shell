@@ -100,6 +100,7 @@ Sometimes commands take numbers directly as options, like ``foo -55``. To allow 
 The ``#`` must follow the short flag letter (if any), and other modifiers like ``=`` are not allowed, except for ``-`` (for backwards compatibility)::
 
   m#maximum
+
 This does not read numbers given as ``+NNN``, only those that look like flags - ``-NNN``.
 
 Note: Optional arguments

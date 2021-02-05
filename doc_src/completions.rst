@@ -119,7 +119,7 @@ These paths are controlled by parameters set at build, install, or run time, and
 
 This wide search may be confusing. If you are unsure, your completions probably belong in ``~/.config/fish/completions``.
 
-If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in `Further help and development <#more-help>`_.
+If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in :ref:`Further help and development <more-help>`
 
 If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``.
 

@@ -28,8 +28,8 @@ which means you are all set up and can start using fish::
 
 
 This prompt that you see above is the fish default prompt: it shows your username, hostname, and working directory.
-- to change this prompt see `how to change your prompt <#prompt>`_
-- to switch to fish permanently see `switch your default shell to fish <#switching-to-fish>`_.
+- to change this prompt see :ref:`how to change your prompt <prompt>`
+- to switch to fish permanently see :ref:`switch your default shell to fish <switching-to-fish>`.
 
 From now on, we'll pretend your prompt is just a ``>`` to save space.
 
@@ -373,7 +373,7 @@ Lists adjacent to other lists or strings are expanded as :ref:`cartesian product
     1 2 3 banana
 
 
-This is similar to `Brace expansion <index#expand-brace>`__.
+This is similar to :ref:`Brace expansion <expand-brace>`.
 
 Command Substitutions
 ---------------------

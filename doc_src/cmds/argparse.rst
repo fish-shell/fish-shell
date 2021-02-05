@@ -14,9 +14,9 @@ Synopsis
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments like how fish builtin commands handle their arguments. You pass arguments that define the known options, followed by a literal ``--``, then the arguments to be parsed (which might also include a literal ``--``). ``argparse`` then sets variables to indicate the passed options with their values, and sets $argv (and always $argv) to the remaining arguments. More on this in the `usage <#usage>`__ section below.
+This command makes it easy for fish scripts and functions to handle arguments like how fish builtin commands handle their arguments. You pass arguments that define the known options, followed by a literal ``--``, then the arguments to be parsed (which might also include a literal ``--``). ``argparse`` then sets variables to indicate the passed options with their values, and sets $argv (and always $argv) to the remaining arguments. More on this in the :ref:`usage <cmd-argparse-usage>` section below.
 
-Each option specification (``OPTION_SPEC``) is written in the `domain specific language <#option-specifications>`__ described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
+Each option specification (``OPTION_SPEC``) is written in the :ref:`domain specific language <cmd-argparse-option-specification>` described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
 Each option that is seen in the ARG list will result in variables named ``_flag_X``, where ``X`` is the short flag letter and the long flag name (if they are defined). For example a ``--help`` option could cause argparse to define one variable called ``_flag_h`` and another called ``_flag_help``.
 
@@ -40,6 +40,8 @@ The following ``argparse`` options are available. They must appear before all OP
 - ``-s`` or ``--stop-nonopt`` causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 
 - ``-h`` or ``--help`` displays help about using this command.
+
+.. _cmd-argparse-usage:
 
 Usage
 -----
@@ -68,6 +70,8 @@ But this is not::
     argparse 'h/help' 'n/name' $argv
 
 The first ``--`` seen is what allows the ``argparse`` command to reliably separate the option specifications and options to ``argparse`` itself (like ``--ignore-unknown``) from the command arguments, so it is required.
+
+.. _cmd-argparse-option-specification:
 
 Option Specifications
 ---------------------

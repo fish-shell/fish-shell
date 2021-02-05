@@ -484,3 +484,7 @@ echo '-n art'
 echo banana
 # CHECK: -n art
 # CHECK: banana
+
+# This used to be a parse error - #7685.
+echo (echo hello\\)
+# CHECK: hello\

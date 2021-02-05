@@ -109,7 +109,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                                               wchar_t close_type) {
     // open_type is typically ( or [, and close type is the corresponding value.
     wchar_t *pos;
-    wchar_t prev = 0;
+    bool escaped = false;
     bool syntax_error = false;
     int paran_count = 0;
 
@@ -118,7 +118,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     assert(in && "null parameter");
 
     for (pos = const_cast<wchar_t *>(in); *pos; pos++) {
-        if (prev != '\\') {
+        if (!escaped) {
             if (std::wcschr(L"\'\"", *pos)) {
                 wchar_t *q_end = quote_end(pos);
                 if (q_end && *q_end) {
@@ -148,7 +148,11 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                 }
             }
         }
-        prev = *pos;
+        if (*pos == '\\') {
+            escaped = !escaped;
+        } else {
+            escaped = false;
+        }
     }
 
     syntax_error |= (paran_count < 0);

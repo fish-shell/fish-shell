@@ -136,7 +136,7 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     this->item_id_ = fd_monitor().add(std::move(item));
 }
 
-void io_buffer_t::complete_background_fillthread() {
+separated_buffer_t io_buffer_t::complete_background_fillthread_and_take_buffer() {
     // Mark that our fillthread is done, then wake it up.
     ASSERT_IS_MAIN_THREAD();
     assert(fillthread_running() && "Should have a fillthread");
@@ -147,7 +147,13 @@ void io_buffer_t::complete_background_fillthread() {
     // Wait for the fillthread to fulfill its promise, and then clear the future so we know we no
     // longer have one.
     fillthread_waiter_.wait();
-    fillthread_waiter_ = {};
+    fillthread_waiter_ = std::future<void>{};
+
+    // Return our buffer, transferring ownership.
+    auto locked_buff = buffer_.acquire();
+    separated_buffer_t result = std::move(*locked_buff);
+    locked_buff->clear();
+    return result;
 }
 
 shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts, size_t buffer_limit,
@@ -173,7 +179,7 @@ shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts, s
     return std::make_shared<io_bufferfill_t>(target, std::move(pipes->write), buffer);
 }
 
-std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfill_t> &&filler) {
+separated_buffer_t io_bufferfill_t::finish(std::shared_ptr<io_bufferfill_t> &&filler) {
     // The io filler is passed in. This typically holds the only instance of the write side of the
     // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
     // buffer out of the bufferfill and clear the shared_ptr; this will typically widow the pipe.
@@ -181,8 +187,7 @@ std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfi
     assert(filler && "Null pointer in finish");
     auto buffer = filler->buffer();
     filler.reset();
-    buffer->complete_background_fillthread();
-    return buffer;
+    return buffer->complete_background_fillthread_and_take_buffer();
 }
 
 io_buffer_t::~io_buffer_t() {

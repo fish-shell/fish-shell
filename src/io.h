@@ -75,7 +75,7 @@ class separated_buffer_t {
     void operator=(const separated_buffer_t &) = delete;
 
     /// We may be moved.
-    /// Note this leaves the moved-from value in a bogus state, until clear() is called on it.
+    /// Note this leaves the moved-from value in a bogus state until clear() is called on it.
     separated_buffer_t(separated_buffer_t &&rhs) = default;
     separated_buffer_t &operator=(separated_buffer_t &&) = default;
 
@@ -303,7 +303,7 @@ class io_bufferfill_t final : public io_data_t {
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. \return the buffer.
-    static std::shared_ptr<io_buffer_t> finish(std::shared_ptr<io_bufferfill_t> &&filler);
+    static separated_buffer_t finish(std::shared_ptr<io_bufferfill_t> &&filler);
 };
 
 class output_stream_t;
@@ -315,16 +315,6 @@ public:
     explicit io_buffer_t(size_t limit) : buffer_(limit) {}
 
     ~io_buffer_t();
-
-    /// Take the underlying buffer, transferring ownership to the caller.
-    /// This should only be called after the fillthread operation is complete.
-    separated_buffer_t take_buffer() {
-        assert(!fillthread_running() && "Cannot access buffer during background fill");
-        auto locked_buff = buffer_.acquire();
-        separated_buffer_t result = std::move(*locked_buff);
-        locked_buff->clear();
-        return result;
-    }
 
     /// Append a string to the buffer.
     void append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
@@ -343,8 +333,8 @@ public:
     /// Begin the fill operation, reading from the given fd in the background.
     void begin_filling(autoclose_fd_t readfd);
 
-    /// End the background fillthread operation.
-    void complete_background_fillthread();
+    /// End the background fillthread operation, and return the buffer, transferring ownership.
+    separated_buffer_t complete_background_fillthread_and_take_buffer();
 
     /// Helper to return whether the fillthread is running.
     bool fillthread_running() const { return fillthread_waiter_.valid(); }

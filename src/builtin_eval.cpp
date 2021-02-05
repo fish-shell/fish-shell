@@ -74,12 +74,12 @@ maybe_t<int> builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **arg
     // deallocate to close.
     ios.clear();
     if (stdout_fill) {
-        std::shared_ptr<io_buffer_t> output = io_bufferfill_t::finish(std::move(stdout_fill));
-        streams.out.append_narrow_buffer(output->take_buffer());
+        separated_buffer_t output = io_bufferfill_t::finish(std::move(stdout_fill));
+        streams.out.append_narrow_buffer(std::move(output));
     }
     if (stderr_fill) {
-        std::shared_ptr<io_buffer_t> errput = io_bufferfill_t::finish(std::move(stderr_fill));
-        streams.err.append_narrow_buffer(errput->take_buffer());
+        separated_buffer_t errput = io_bufferfill_t::finish(std::move(stderr_fill));
+        streams.err.append_narrow_buffer(std::move(errput));
     }
     return status;
 }

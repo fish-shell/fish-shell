@@ -690,8 +690,8 @@ static launch_result_t exec_block_or_func_process(parser_t &parser, const std::s
         // Remove our write pipe and forget it. This may close the pipe, unless another thread has
         // claimed it (background write) or another process has inherited it.
         io_chain.remove(block_output_bufferfill);
-        auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
-        buffer_contents = block_output_buffer->take_buffer().newline_serialized();
+        buffer_contents =
+            io_bufferfill_t::finish(std::move(block_output_bufferfill)).newline_serialized();
     }
 
     run_internal_process_or_short_circuit(parser, j, p, std::move(buffer_contents),
@@ -1110,7 +1110,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
         return STATUS_CMD_ERROR;
     }
     eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, job_group, block_type_t::subst);
-    separated_buffer_t buffer = io_bufferfill_t::finish(std::move(bufferfill))->take_buffer();
+    separated_buffer_t buffer = io_bufferfill_t::finish(std::move(bufferfill));
     if (buffer.discarded()) {
         *break_expand = true;
         return STATUS_READ_TOO_MUCH;

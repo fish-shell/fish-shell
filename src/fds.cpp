@@ -74,21 +74,30 @@ static autoclose_fd_t heightenize_fd(autoclose_fd_t fd, bool input_has_cloexec) 
 maybe_t<autoclose_pipes_t> make_autoclose_pipes() {
     int pipes[2] = {-1, -1};
 
-    // TODO: use pipe2 here if available.
+    bool already_cloexec = false;
+#ifdef HAVE_PIPE2
+    if (pipe2(pipes, O_CLOEXEC) < 0) {
+        FLOGF(warning, PIPE_ERROR);
+        wperror(L"pipe2");
+        return none();
+    }
+    already_cloexec = true;
+#else
     if (pipe(pipes) < 0) {
         FLOGF(warning, PIPE_ERROR);
         wperror(L"pipe");
         return none();
     }
+#endif
 
     autoclose_fd_t read_end{pipes[0]};
     autoclose_fd_t write_end{pipes[1]};
 
     // Ensure our fds are out of the user range.
-    read_end = heightenize_fd(std::move(read_end), false);
+    read_end = heightenize_fd(std::move(read_end), already_cloexec);
     if (!read_end.valid()) return none();
 
-    write_end = heightenize_fd(std::move(write_end), false);
+    write_end = heightenize_fd(std::move(write_end), already_cloexec);
     if (!write_end.valid()) return none();
 
     return autoclose_pipes_t(std::move(read_end), std::move(write_end));

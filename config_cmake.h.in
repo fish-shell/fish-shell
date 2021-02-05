@@ -58,6 +58,9 @@
 /* Define to 1 if you have the <ncurses/term.h> header file. */
 #cmakedefine HAVE_NCURSES_TERM_H 1
 
+/* Define to 1 if you have the 'pipe2' function. */
+#cmakedefine HAVE_PIPE2 1
+
 /* Define to 1 if you have the <siginfo.h> header file. */
 #cmakedefine HAVE_SIGINFO_H 1
 

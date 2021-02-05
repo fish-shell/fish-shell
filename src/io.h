@@ -67,41 +67,10 @@ class separated_buffer_t {
         bool is_explicitly_separated() const { return separation == separation_type_t::explicitly; }
     };
 
-   private:
-    /// Limit on how much data we'll buffer. Zero means no limit.
-    size_t buffer_limit_;
-
-    /// Current size of all contents.
-    size_t contents_size_{0};
-
-    /// List of buffer elements.
-    std::vector<element_t> elements_;
-
-    /// True if we're discarding input because our buffer_limit has been exceeded.
-    bool discard = false;
-
-    /// Mark that we are about to add the given size \p delta to the buffer. \return true if we
-    /// succeed, false if we exceed buffer_limit.
-    bool try_add_size(size_t delta) {
-        if (discard) return false;
-        contents_size_ += delta;
-        if (contents_size_ < delta) {
-            // Overflow!
-            set_discard();
-            return false;
-        }
-        if (buffer_limit_ > 0 && contents_size_ > buffer_limit_) {
-            set_discard();
-            return false;
-        }
-        return true;
-    }
-
     /// separated_buffer_t may not be copied.
     separated_buffer_t(const separated_buffer_t &) = delete;
     void operator=(const separated_buffer_t &) = delete;
 
-   public:
     /// Construct a separated_buffer_t with the given buffer limit \p limit, or 0 for no limit.
     separated_buffer_t(size_t limit) : buffer_limit_(limit) {}
 
@@ -112,14 +81,7 @@ class separated_buffer_t {
     size_t size() const { return contents_size_; }
 
     /// \return whether the output has been discarded.
-    bool discarded() const { return discard; }
-
-    /// Mark the contents as discarded.
-    void set_discard() {
-        elements_.clear();
-        contents_size_ = 0;
-        discard = true;
-    }
+    bool discarded() const { return discard_; }
 
     /// Serialize the contents to a single string, where explicitly separated elements have a
     /// newline appended.
@@ -162,6 +124,34 @@ class separated_buffer_t {
             elements_.emplace_back(std::move(str), sep);
         }
     }
+
+   private:
+    /// Mark that we are about to add the given size \p delta to the buffer. \return true if we
+    /// succeed, false if we exceed buffer_limit.
+    bool try_add_size(size_t delta) {
+        if (discard_) return false;
+        size_t proposed_size = contents_size_ + delta;
+        if ((proposed_size < delta) || (buffer_limit_ > 0 && proposed_size > buffer_limit_)) {
+            elements_.clear();
+            contents_size_ = 0;
+            discard_ = true;
+            return false;
+        }
+        contents_size_ = proposed_size;
+        return true;
+    }
+
+    /// Limit on how much data we'll buffer. Zero means no limit.
+    size_t buffer_limit_;
+
+    /// Current size of all contents.
+    size_t contents_size_{0};
+
+    /// List of buffer elements.
+    std::vector<element_t> elements_;
+
+    /// True if we're discarding input because our buffer_limit has been exceeded.
+    bool discard_{false};
 };
 
 /// Describes what type of IO operation an io_data_t represents.

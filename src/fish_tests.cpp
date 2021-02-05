@@ -1302,10 +1302,10 @@ static void test_1_cancellation(const wchar_t *src) {
         pthread_kill(thread, SIGINT);
     });
     eval_res_t res = parser_t::principal_parser().eval(src, io_chain_t{filler});
-    auto buffer = io_bufferfill_t::finish(std::move(filler));
-    if (buffer->buffer().size() != 0) {
+    auto buffer = io_bufferfill_t::finish(std::move(filler))->take_buffer();
+    if (buffer.size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes, for command %ls\n",
-            buffer->buffer().size(), src);
+            buffer.size(), src);
     }
     do_test(res.status.signal_exited() && res.status.signal_code() == SIGINT);
     iothread_drain_all();

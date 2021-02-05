@@ -691,7 +691,7 @@ static launch_result_t exec_block_or_func_process(parser_t &parser, const std::s
         // claimed it (background write) or another process has inherited it.
         io_chain.remove(block_output_bufferfill);
         auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
-        buffer_contents = block_output_buffer->buffer().newline_serialized();
+        buffer_contents = block_output_buffer->take_buffer().newline_serialized();
     }
 
     run_internal_process_or_short_circuit(parser, j, p, std::move(buffer_contents),
@@ -1036,9 +1036,10 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
 }
 
 /// Populate \p lst with the output of \p buffer, perhaps splitting lines according to \p split.
-static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &buffer, bool split) {
+static void populate_subshell_output(wcstring_list_t *lst, const separated_buffer_t &buffer,
+                                     bool split) {
     // Walk over all the elements.
-    for (const auto &elem : buffer.buffer().elements()) {
+    for (const auto &elem : buffer.elements()) {
         if (elem.is_explicitly_separated()) {
             // Just append this one.
             lst->push_back(str2wcstring(elem.contents));
@@ -1109,8 +1110,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
         return STATUS_CMD_ERROR;
     }
     eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, job_group, block_type_t::subst);
-    std::shared_ptr<io_buffer_t> buffer = io_bufferfill_t::finish(std::move(bufferfill));
-    if (buffer->buffer().discarded()) {
+    separated_buffer_t buffer = io_bufferfill_t::finish(std::move(bufferfill))->take_buffer();
+    if (buffer.discarded()) {
         *break_expand = true;
         return STATUS_READ_TOO_MUCH;
     }
@@ -1121,7 +1122,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
     }
 
     if (lst) {
-        populate_subshell_output(lst, *buffer, split_output);
+        populate_subshell_output(lst, buffer, split_output);
     }
     *break_expand = false;
     return eval_res.status.status_value();

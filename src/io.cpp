@@ -57,23 +57,22 @@ void io_bufferfill_t::print() const {
     std::fwprintf(stderr, L"bufferfill %d -> %d\n", write_fd_.fd(), fd);
 }
 
-ssize_t io_buffer_t::read_once(int fd) {
+ssize_t io_buffer_t::read_once(int fd, acquired_lock<separated_buffer_t> &buffer) {
     assert(fd >= 0 && "Invalid fd");
-    ASSERT_IS_LOCKED(append_lock_);
     errno = 0;
-    char buff[4096 * 4];
+    char bytes[4096 * 4];
 
     // We want to swallow EINTR only; in particular EAGAIN needs to be returned back to the caller.
-    ssize_t ret;
+    ssize_t amt;
     do {
-        ret = read(fd, buff, sizeof buff);
-    } while (ret < 0 && errno == EINTR);
-    if (ret < 0 && errno != EAGAIN) {
+        amt = read(fd, bytes, sizeof bytes);
+    } while (amt < 0 && errno == EINTR);
+    if (amt < 0 && errno != EAGAIN) {
         wperror(L"read");
-    } else if (ret > 0) {
-        buffer_.append(buff, static_cast<size_t>(ret));
+    } else if (amt > 0) {
+        buffer->append(bytes, static_cast<size_t>(amt));
     }
-    return ret;
+    return amt;
 }
 
 void io_buffer_t::begin_filling(autoclose_fd_t fd) {
@@ -116,16 +115,16 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
         bool done = false;
         if (reason == item_wake_reason_t::readable) {
             // select() reported us as readable; read a bit.
-            scoped_lock locker(append_lock_);
-            ssize_t ret = read_once(fd.fd());
+            auto buffer = buffer_.acquire();
+            ssize_t ret = read_once(fd.fd(), buffer);
             done = (ret == 0 || (ret < 0 && errno != EAGAIN));
         } else if (shutdown_fillthread_) {
             // Here our caller asked us to shut down; read while we keep getting data.
             // This will stop when the fd is closed or if we get EAGAIN.
-            scoped_lock locker(append_lock_);
+            auto buffer = buffer_.acquire();
             ssize_t ret;
             do {
-                ret = read_once(fd.fd());
+                ret = read_once(fd.fd(), buffer);
             } while (ret > 0);
             done = true;
         }

@@ -74,6 +74,11 @@ class separated_buffer_t {
     separated_buffer_t(const separated_buffer_t &) = delete;
     void operator=(const separated_buffer_t &) = delete;
 
+    /// We may be moved.
+    /// Note this leaves the moved-from value in a bogus state, until clear() is called on it.
+    separated_buffer_t(separated_buffer_t &&rhs) = default;
+    separated_buffer_t &operator=(separated_buffer_t &&) = default;
+
     /// Construct a separated_buffer_t with the given buffer limit \p limit, or 0 for no limit.
     separated_buffer_t(size_t limit) : buffer_limit_(limit) {}
 
@@ -125,6 +130,13 @@ class separated_buffer_t {
         }
     }
 
+    /// Remove all elements and unset the discard flag.
+    void clear() {
+        elements_.clear();
+        contents_size_ = 0;
+        discard_ = false;
+    }
+
    private:
     /// \return true if our last element has an inferred separation type.
     bool last_inferred() const {
@@ -146,8 +158,7 @@ class separated_buffer_t {
         if (discard_) return false;
         size_t proposed_size = contents_size_ + delta;
         if ((proposed_size < delta) || (buffer_limit_ > 0 && proposed_size > buffer_limit_)) {
-            elements_.clear();
-            contents_size_ = 0;
+            clear();
             discard_ = true;
             return false;
         }
@@ -305,29 +316,29 @@ public:
 
     ~io_buffer_t();
 
-    /// Access the underlying buffer.
-    /// This requires that the background fillthread be none.
-    const separated_buffer_t &buffer() const {
+    /// Take the underlying buffer, transferring ownership to the caller.
+    /// This should only be called after the fillthread operation is complete.
+    separated_buffer_t take_buffer() {
         assert(!fillthread_running() && "Cannot access buffer during background fill");
-        return buffer_;
+        auto locked_buff = buffer_.acquire();
+        separated_buffer_t result = std::move(*locked_buff);
+        locked_buff->clear();
+        return result;
     }
 
     /// Append a string to the buffer.
     void append(std::string &&str, separation_type_t type = separation_type_t::inferred) {
-        scoped_lock locker(append_lock_);
-        buffer_.append(std::move(str), type);
+        buffer_.acquire()->append(std::move(str), type);
     }
 
     /// \return true if output was discarded due to exceeding the read limit.
-    bool discarded() const {
-        scoped_lock locker(append_lock_);
-        return buffer_.discarded();
-    }
+    bool discarded() { return buffer_.acquire()->discarded(); }
 
    private:
-    /// Read some, filling the buffer. The append lock must be held.
-    /// \return positive on success, 0 if closed, -1 on error (in which case errno will be set).
-    ssize_t read_once(int fd);
+    /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
+    /// held. \return positive on success, 0 if closed, -1 on error (in which case errno will be
+    /// set).
+    ssize_t read_once(int fd, acquired_lock<separated_buffer_t> &buff);
 
     /// Begin the fill operation, reading from the given fd in the background.
     void begin_filling(autoclose_fd_t readfd);
@@ -338,10 +349,8 @@ public:
     /// Helper to return whether the fillthread is running.
     bool fillthread_running() const { return fillthread_waiter_.valid(); }
 
-    friend io_bufferfill_t;
-
     /// Buffer storing what we have read.
-    separated_buffer_t buffer_;
+    owning_lock<separated_buffer_t> buffer_;
 
     /// Atomic flag indicating our fillthread should shut down.
     relaxed_atomic_bool_t shutdown_fillthread_{false};
@@ -353,8 +362,7 @@ public:
     /// The item id of our background fillthread fd monitor item.
     uint64_t item_id_{0};
 
-    /// Lock for appending. Mutable since we take it in const functions.
-    mutable std::mutex append_lock_{};
+    friend io_bufferfill_t;
 };
 
 using io_data_ref_t = std::shared_ptr<const io_data_t>;

@@ -2941,9 +2941,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 parser().libdata().is_repaint = false;
                 break;
             }
-            // Else we repaint as normal
+            // Else we repaint as normal.
+            __fallthrough__
         }
-            /* fallthrough */
         case rl::force_repaint:
         case rl::repaint: {
             parser().libdata().is_repaint = true;

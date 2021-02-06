@@ -198,3 +198,9 @@
 #else
 #define __warn_unused_type
 #endif
+
+#if __has_attribute(fallthrough)
+#define __fallthrough__ __attribute__ ((fallthrough))
+#else
+#define __fallthrough__
+#endif

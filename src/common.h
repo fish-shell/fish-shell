@@ -338,8 +338,7 @@ void format_ullong_safe(wchar_t buff[64], unsigned long long val);
 /// "Narrows" a wide character string. This just grabs any ASCII characters and trunactes.
 void narrow_string_safe(char buff[64], const wchar_t *s);
 
-typedef std::lock_guard<std::mutex> scoped_lock;
-typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
+using scoped_lock = std::lock_guard<std::mutex>;
 
 // An object wrapping a scoped lock and a value
 // This is returned from owning_lock.acquire()

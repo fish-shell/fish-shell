@@ -276,10 +276,7 @@ class io_bufferfill_t final : public io_data_t {
     /// \returns nullptr on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
-    /// \param conflicts A set of fds. The function ensures that any pipe it makes does
-    /// not conflict with an fd redirection in this list.
-    static shared_ptr<io_bufferfill_t> create(const fd_set_t &conflicts, size_t buffer_limit = 0,
-                                              int target = STDOUT_FILENO);
+    static shared_ptr<io_bufferfill_t> create(size_t buffer_limit = 0, int target = STDOUT_FILENO);
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. \return the buffer.
@@ -357,9 +354,6 @@ class io_chain_t : public std::vector<io_data_ref_t> {
 
     /// Output debugging information to stderr.
     void print() const;
-
-    /// \return the set of redirected FDs.
-    fd_set_t fd_set() const;
 };
 
 /// Base class representing the output that a builtin can generate.

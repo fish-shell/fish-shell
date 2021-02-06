@@ -156,9 +156,7 @@ separated_buffer_t io_buffer_t::complete_background_fillthread_and_take_buffer()
     return result;
 }
 
-shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts, size_t buffer_limit,
-                                                    int target) {
-    (void)conflicts;
+shared_ptr<io_bufferfill_t> io_bufferfill_t::create(size_t buffer_limit, int target) {
     assert(target >= 0 && "Invalid target fd");
 
     // Construct our pipes.
@@ -275,14 +273,6 @@ void io_chain_t::print() const {
             io->print();
         }
     }
-}
-
-fd_set_t io_chain_t::fd_set() const {
-    fd_set_t result;
-    for (const auto &io : *this) {
-        result.add(io->fd);
-    }
-    return result;
 }
 
 shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {

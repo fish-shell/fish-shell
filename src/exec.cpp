@@ -658,16 +658,15 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
 }
 
 /// Execute a block node or function "process".
-/// \p conflicts contains the list of fds which pipes should avoid.
 /// \p allow_buffering if true, permit buffering the output.
 static launch_result_t exec_block_or_func_process(parser_t &parser, const std::shared_ptr<job_t> &j,
-                                                  process_t *p, const fd_set_t &conflicts,
-                                                  io_chain_t io_chain, bool allow_buffering) {
+                                                  process_t *p, io_chain_t io_chain,
+                                                  bool allow_buffering) {
     // Create an output buffer if we're piping to another process.
     shared_ptr<io_bufferfill_t> block_output_bufferfill{};
     if (!p->is_last_in_job && allow_buffering) {
         // Be careful to handle failure, e.g. too many open fds.
-        block_output_bufferfill = io_bufferfill_t::create(conflicts);
+        block_output_bufferfill = io_bufferfill_t::create();
         if (!block_output_bufferfill) {
             return launch_result_t::failed;
         }
@@ -709,7 +708,6 @@ static launch_result_t exec_block_or_func_process(parser_t &parser, const std::s
 static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
                                            const std::shared_ptr<job_t> &j,
                                            const io_chain_t &block_io, autoclose_pipes_t pipes,
-                                           const fd_set_t &conflicts,
                                            const autoclose_pipes_t &deferred_pipes,
                                            bool is_deferred_run = false) {
     // The write pipe (destined for stdout) needs to occur before redirections. For example,
@@ -800,8 +798,8 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
             // Allow buffering unless this is a deferred run. If deferred, then processes after us
             // were already launched, so they are ready to receive (or reject) our output.
             bool allow_buffering = !is_deferred_run;
-            if (exec_block_or_func_process(parser, j, p, conflicts, process_net_io_chain,
-                                           allow_buffering) == launch_result_t::failed) {
+            if (exec_block_or_func_process(parser, j, p, process_net_io_chain, allow_buffering) ==
+                launch_result_t::failed) {
                 return launch_result_t::failed;
             }
             break;
@@ -907,14 +905,6 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         return true;
     }
 
-    // Get the list of all FDs so we can ensure our pipes do not conflict.
-    fd_set_t conflicts = block_io.fd_set();
-    for (const auto &p : j->processes) {
-        for (const auto &spec : p->redirection_specs()) {
-            conflicts.add(spec.fd);
-        }
-    }
-
     // Handle an exec call.
     if (j->processes.front()->type == process_type_t::exec) {
         // If we are interactive, perhaps disallow exec if there are background jobs.
@@ -987,8 +977,8 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         }
 
         // Regular process.
-        if (exec_process_in_job(parser, p, j, block_io, std::move(proc_pipes), conflicts,
-                                deferred_pipes) == launch_result_t::failed) {
+        if (exec_process_in_job(parser, p, j, block_io, std::move(proc_pipes), deferred_pipes) ==
+            launch_result_t::failed) {
             aborted_pipeline = true;
             abort_pipeline_from(j, p);
             break;
@@ -1012,7 +1002,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
             // Some other process already aborted our pipeline.
             deferred_process->mark_aborted_before_launch();
         } else if (exec_process_in_job(parser, deferred_process, j, block_io,
-                                       std::move(deferred_pipes), conflicts, {},
+                                       std::move(deferred_pipes), {},
                                        true) == launch_result_t::failed) {
             // The deferred proc itself failed to launch.
             deferred_process->mark_aborted_before_launch();
@@ -1104,7 +1094,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit);
+    auto bufferfill = io_bufferfill_t::create(ld.read_limit);
     if (!bufferfill) {
         *break_expand = true;
         return STATUS_CMD_ERROR;

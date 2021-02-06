@@ -71,26 +71,6 @@ struct autoclose_pipes_t {
         : read(std::move(r)), write(std::move(w)) {}
 };
 
-/// A simple set of FDs.
-struct fd_set_t {
-    std::vector<bool> fds;
-
-    void add(int fd) {
-        assert(fd >= 0 && "Invalid fd");
-        if (static_cast<size_t>(fd) >= fds.size()) {
-            fds.resize(fd + 1);
-        }
-        fds[fd] = true;
-    }
-
-    bool contains(int fd) const {
-        assert(fd >= 0 && "Invalid fd");
-        return static_cast<size_t>(fd) < fds.size() && fds[fd];
-    }
-
-    bool empty() const { return fds.empty(); }
-};
-
 /// Call pipe(), populating autoclose fds.
 /// The pipes are marked CLO_EXEC and are placed in the high fd range.
 /// \return pipes on success, none() on error.

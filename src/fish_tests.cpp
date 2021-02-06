@@ -1293,7 +1293,7 @@ static void test_parser() {
 }
 
 static void test_1_cancellation(const wchar_t *src) {
-    auto filler = io_bufferfill_t::create(fd_set_t{});
+    auto filler = io_bufferfill_t::create();
     pthread_t thread = pthread_self();
     double delay = 0.50 /* seconds */;
     iothread_perform([=]() {
@@ -3539,21 +3539,6 @@ static void test_input() {
     } else if (evt.get_readline() != readline_cmd_t::down_line) {
         err(L"Expected to read char down_line");
     }
-}
-
-static void test_fd_set() {
-    say(L"Testing fd_set");
-    fd_set_t fds;
-    do_test(!fds.contains(0));
-    do_test(!fds.contains(100));
-    fds.add(1);
-    do_test(!fds.contains(0));
-    do_test(!fds.contains(100));
-    do_test(fds.contains(1));
-    fds.add(1);
-    do_test(!fds.contains(0));
-    do_test(!fds.contains(100));
-    do_test(fds.contains(1));
 }
 
 static void test_line_iterator() {
@@ -6335,7 +6320,6 @@ int main(int argc, char **argv) {
     if (should_test_function("complete")) test_complete();
     if (should_test_function("autoload")) test_autoload();
     if (should_test_function("input")) test_input();
-    if (should_test_function("io")) test_fd_set();
     if (should_test_function("line_iterator")) test_line_iterator();
     if (should_test_function("undo")) test_undo();
     if (should_test_function("universal")) test_universal();

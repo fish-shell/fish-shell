@@ -467,6 +467,48 @@ maybe_t<input_mapping_t> inputter_t::find_mapping() {
     return generic ? maybe_t<input_mapping_t>(*generic) : none();
 }
 
+template <size_t N = 16>
+class event_queue_peeker_t {
+    private:
+        input_event_queue_t &event_queue_;
+        std::array<char_event_t, N> peeked_;
+        size_t count = 0;
+        bool consumed_ = false;
+
+    public:
+        event_queue_peeker_t(input_event_queue_t &event_queue)
+            : event_queue_(event_queue) {
+        }
+
+        char_event_t next(bool timed = false) {
+            assert(count < N && "Insufficient backing array size!");
+            auto event = timed ? event_queue_.readch_timed() : event_queue_.readch();
+            peeked_[count++] = event;
+            return event;
+        }
+
+        size_t len() {
+            return count;
+        }
+
+        void consume() {
+            consumed_ = true;
+        }
+
+        void restart() {
+            if (count > 0) {
+                event_queue_.insert_front(peeked_.cbegin(), peeked_.cbegin() + count);
+                count = 0;
+            }
+        }
+
+        ~event_queue_peeker_t() {
+            if (!consumed_) {
+                restart();
+            }
+        }
+};
+
 void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &command_handler) {
     if (auto mapping = find_mapping()) {
         mapping_execute(*mapping, command_handler);

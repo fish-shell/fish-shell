@@ -221,6 +221,14 @@ class input_event_queue_t {
     /// Add a character or a readline function to the front of the queue of unread characters.  This
     /// will be the next character returned by readch.
     void push_front(const char_event_t& ch);
+
+    /// Add multiple characters or readline events to the front of the queue of unread characters.
+    /// The order of the provided events is not changed, i.e. they are not inserted in reverse
+    /// order.
+    template<typename Iterator>
+    void insert_front(const Iterator begin, const Iterator end) {
+        queue_.insert(queue_.begin(), begin, end);
+    }
 };
 
 #endif

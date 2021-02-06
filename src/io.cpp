@@ -95,12 +95,11 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
     // indicates that the command substitution is done); in this case we will read until we get
     // EAGAIN and then give up.
 
-    // Construct a promise that can go into our background thread.
+    // Construct a promise. We will fulfill it in our fill thread, and wait for it in
+    // complete_background_fillthread(). Note that TSan complains if the promise's dtor races with
+    // the future's call to wait(), so we store the promise, not just its future (#7681).
     auto promise = std::make_shared<std::promise<void>>();
-
-    // Get the future associated with our promise.
-    // Note this should only ever be called once.
-    fillthread_waiter_ = promise->get_future();
+    this->fill_waiter_ = promise;
 
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' waits for the promise in its dtor.
@@ -146,8 +145,8 @@ separated_buffer_t io_buffer_t::complete_background_fillthread_and_take_buffer()
 
     // Wait for the fillthread to fulfill its promise, and then clear the future so we know we no
     // longer have one.
-    fillthread_waiter_.wait();
-    fillthread_waiter_ = std::future<void>{};
+    fill_waiter_->get_future().wait();
+    fill_waiter_.reset();
 
     // Return our buffer, transferring ownership.
     auto locked_buff = buffer_.acquire();

@@ -314,7 +314,7 @@ public:
     separated_buffer_t complete_background_fillthread_and_take_buffer();
 
     /// Helper to return whether the fillthread is running.
-    bool fillthread_running() const { return fillthread_waiter_.valid(); }
+    bool fillthread_running() const { return fill_waiter_.get() != nullptr; }
 
     /// Buffer storing what we have read.
     owning_lock<separated_buffer_t> buffer_;
@@ -322,9 +322,9 @@ public:
     /// Atomic flag indicating our fillthread should shut down.
     relaxed_atomic_bool_t shutdown_fillthread_{false};
 
-    /// The future allowing synchronization with the background fillthread, if the fillthread is
-    /// running. The fillthread fulfills the corresponding promise when it exits.
-    std::future<void> fillthread_waiter_{};
+    /// A promise, allowing synchronization with the background fill operation.
+    /// The operation has a reference to this as well, and fulfills this promise when it exits.
+    std::shared_ptr<std::promise<void>> fill_waiter_{};
 
     /// The item id of our background fillthread fd monitor item.
     uint64_t item_id_{0};

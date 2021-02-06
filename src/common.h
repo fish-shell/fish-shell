@@ -311,8 +311,8 @@ void assert_is_background_thread(const char *who);
 
 /// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
 /// it, which it would be nice if it did, but here it is anyways.
-void assert_is_locked(void *mutex, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(x) assert_is_locked(reinterpret_cast<void *>(&x), #x, __FUNCTION__)
+void assert_is_locked(std::mutex &mutex, const char *who, const char *caller);
+#define ASSERT_IS_LOCKED(m) assert_is_locked(m, #m, __FUNCTION__)
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);

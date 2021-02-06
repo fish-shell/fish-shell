@@ -1820,16 +1820,14 @@ void assert_is_background_thread(const char *who) {
     }
 }
 
-void assert_is_locked(void *vmutex, const char *who, const char *caller) {
-    auto mutex = static_cast<std::mutex *>(vmutex);
-
+void assert_is_locked(std::mutex &mutex, const char *who, const char *caller) {
     // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
     // actually locked; fortunately we are checking the opposite so we're safe.
-    if (mutex->try_lock()) {
+    if (mutex.try_lock()) {
         FLOGF(error, L"%s is not locked when it should be in '%s'", who, caller);
         FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
-        mutex->unlock();
+        mutex.unlock();
     }
 }
 

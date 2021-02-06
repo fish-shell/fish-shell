@@ -200,7 +200,7 @@
 #endif
 
 #if __has_attribute(fallthrough)
-#define __fallthrough__ __attribute__ ((fallthrough))
+#define __fallthrough__ __attribute__ ((fallthrough));
 #else
 #define __fallthrough__
 #endif

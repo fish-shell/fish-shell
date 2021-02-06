@@ -56,6 +56,7 @@ binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
 }
 
 binary_semaphore_t::~binary_semaphore_t() {
+    // We never use sem_t on Mac. The #ifdef avoids deprecation warnings.
 #ifndef __APPLE__
     if (sem_ok_) (void)sem_destroy(&sem_);
 #endif
@@ -92,21 +93,22 @@ void binary_semaphore_t::wait() {
         if (res < 0) die(L"sem_wait");
     } else {
         int fd = pipes_.read.fd();
-#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
-        // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read() call
-        // until data is available (that is, fish would use 100% cpu while waiting for processes).
-        // The select prevents that.
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(fd, &fds);
-        (void)select(fd + 1, &fds, nullptr, nullptr, nullptr /* timeout */);
-#endif
         // We must read exactly one byte.
         for (;;) {
+#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
+            // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
+            // call until data is available (that is, fish would use 100% cpu while waiting for
+            // processes). The select prevents that.
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(fd, &fds);
+            (void)select(fd + 1, &fds, nullptr, nullptr, nullptr /* timeout */);
+#endif
             uint8_t ignored;
             auto amt = read(fd, &ignored, sizeof ignored);
             if (amt == 1) break;
-            if (amt < 0 && errno != EINTR) die(L"read");
+            // EAGAIN should only be returned in TSan case.
+            if (amt < 0 && errno != EINTR && errno != EAGAIN) die(L"read");
         }
     }
 }

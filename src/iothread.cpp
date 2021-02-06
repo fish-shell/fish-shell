@@ -490,9 +490,10 @@ bool make_detached_pthread(void_func_t &&func) {
 
 static uint64_t next_thread_id() {
     // Note 0 is an invalid thread id.
-    static owning_lock<uint64_t> s_last_thread_id{};
-    auto tid = s_last_thread_id.acquire();
-    return ++*tid;
+    // Note fetch_add is a CAS which returns the value *before* the modification.
+    static std::atomic<uint64_t> s_last_thread_id{};
+    uint64_t res = 1 + s_last_thread_id.fetch_add(1, std::memory_order_relaxed);
+    return res;
 }
 
 uint64_t thread_id() {

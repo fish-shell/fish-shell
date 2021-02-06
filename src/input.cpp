@@ -159,6 +159,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::redo, L"redo"},
     {readline_cmd_t::begin_undo_group, L"begin-undo-group"},
     {readline_cmd_t::end_undo_group, L"end-undo-group"},
+    {readline_cmd_t::disable_mouse_tracking, L"disable-mouse-tracking"},
 };
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
@@ -509,8 +510,66 @@ class event_queue_peeker_t {
         }
 };
 
+bool inputter_t::have_mouse_tracking_csi() {
+    event_queue_peeker_t<12> peeker(event_queue_);
+
+    // Check for the CSI first
+    if (peeker.next().maybe_char() != L'\x1B'
+            || peeker.next(true /* timed */).maybe_char() != L'[') {
+        return false;
+    }
+
+    auto next = peeker.next().maybe_char();
+    size_t length = 0;
+    if (next == L'M') {
+        // Generic X10 or modified VT200 sequence. It doesn't matter which, they're both 6 chars
+        // reporting the button that was clicked and its location.
+        length = 6;
+    } else if (next == L'P') {
+        // VT200 mouse highlighting. 12 characters, comes after generic button press event.
+        length = 12;
+    } else if (next == L't') {
+        // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
+        length = 5;
+    } else if (next == L'T') {
+        // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
+        length = 9;
+    } else {
+        return false;
+    }
+
+    // Consume however many characters it takes to prevent the mouse tracking sequence from reaching
+    // the prompt, dependent on the class of mouse reporting as detected above.
+    peeker.consume();
+    while (peeker.len() != length) {
+        auto _ = peeker.next();
+    }
+
+    return true;
+}
+
 void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &command_handler) {
-    if (auto mapping = find_mapping()) {
+    // Check for mouse-tracking CSI before mappings to prevent the generic mapping handler from
+    // taking over.
+    if (have_mouse_tracking_csi()) {
+        // fish recognizes but does not actually support mouse reporting. We never turn it on, and
+        // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
+        // it off before exiting. We swallow the events to prevent garbage from piling up at the
+        // prompt, but don't do anything further with the received codes. To prevent this from
+        // breaking user interaction with the tty emulator, wasting CPU, and adding latency to the
+        // event queue, we turn off mouse reporting here.
+        //
+        // Since this is only called when we detect an incoming mouse reporting payload, we know the
+        // terminal emulator supports the xterm ANSI extensions for mouse reporting and can safely
+        // issue this without worrying about termcap.
+        FLOGF(reader, "Disabling mouse tracking");
+
+        // We can't/shouldn't directly manipulate stdout from `input.cpp`, so request the execution
+        // of a helper function to disable mouse tracking.
+        // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
+        event_queue_.push_front(char_event_t(readline_cmd_t::disable_mouse_tracking, L""));
+    }
+    else if (auto mapping = find_mapping()) {
         mapping_execute(*mapping, command_handler);
     } else {
         FLOGF(reader, L"no generic found, ignoring char...");

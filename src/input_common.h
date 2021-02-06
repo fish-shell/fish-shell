@@ -83,6 +83,7 @@ enum class readline_cmd_t {
     begin_undo_group,
     end_undo_group,
     repeat_jump,
+    disable_mouse_tracking,
     // NOTE: This one has to be last.
     reverse_repeat_jump
 };

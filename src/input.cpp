@@ -159,6 +159,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::redo, L"redo"},
     {readline_cmd_t::begin_undo_group, L"begin-undo-group"},
     {readline_cmd_t::end_undo_group, L"end-undo-group"},
+    {readline_cmd_t::disable_mouse_tracking, L"disable-mouse-tracking"},
 };
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
@@ -383,10 +384,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
 
     if (has_commands && !command_handler) {
         // We don't want to run commands yet. Put the characters back and return check_exit.
-        for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end;
-             ++it) {
-            event_queue_.push_front(*it);
-        }
+        event_queue_.insert_front(m.seq.cbegin(), m.seq.cend());
         event_queue_.push_front(char_event_type_t::check_exit);
         return;  // skip the input_set_bind_mode
     } else if (has_functions && !has_commands) {
@@ -424,7 +422,7 @@ bool inputter_t::mapping_is_match(const input_mapping_t &m) {
         auto evt = timed ? event_queue_.readch_timed() : event_queue_.readch();
         if (!evt.is_char() || evt.get_char() != str[i]) {
             // We didn't match the bind sequence/input mapping, (it timed out or they entered
-            // something else) Undo consumption of the read characters since we didn't match the
+            // something else). Undo consumption of the read characters since we didn't match the
             // bind sequence and abort.
             event_queue_.push_front(evt);
             while (i--) event_queue_.push_front(str[i]);
@@ -470,8 +468,108 @@ maybe_t<input_mapping_t> inputter_t::find_mapping() {
     return generic ? maybe_t<input_mapping_t>(*generic) : none();
 }
 
+template <size_t N = 16>
+class event_queue_peeker_t {
+    private:
+        input_event_queue_t &event_queue_;
+        std::array<char_event_t, N> peeked_;
+        size_t count = 0;
+        bool consumed_ = false;
+
+    public:
+        event_queue_peeker_t(input_event_queue_t &event_queue)
+            : event_queue_(event_queue) {
+        }
+
+        char_event_t next(bool timed = false) {
+            assert(count < N && "Insufficient backing array size!");
+            auto event = timed ? event_queue_.readch_timed() : event_queue_.readch();
+            peeked_[count++] = event;
+            return event;
+        }
+
+        size_t len() {
+            return count;
+        }
+
+        void consume() {
+            consumed_ = true;
+        }
+
+        void restart() {
+            if (count > 0) {
+                event_queue_.insert_front(peeked_.cbegin(), peeked_.cbegin() + count);
+                count = 0;
+            }
+        }
+
+        ~event_queue_peeker_t() {
+            if (!consumed_) {
+                restart();
+            }
+        }
+};
+
+bool inputter_t::have_mouse_tracking_csi() {
+    event_queue_peeker_t<12> peeker(event_queue_);
+
+    // Check for the CSI first
+    if (peeker.next().maybe_char() != L'\x1B'
+            || peeker.next(true /* timed */).maybe_char() != L'[') {
+        return false;
+    }
+
+    auto next = peeker.next().maybe_char();
+    size_t length = 0;
+    if (next == L'M') {
+        // Generic X10 or modified VT200 sequence. It doesn't matter which, they're both 6 chars
+        // reporting the button that was clicked and its location.
+        length = 6;
+    } else if (next == L'P') {
+        // VT200 mouse highlighting. 12 characters, comes after generic button press event.
+        length = 12;
+    } else if (next == L't') {
+        // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
+        length = 5;
+    } else if (next == L'T') {
+        // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
+        length = 9;
+    } else {
+        return false;
+    }
+
+    // Consume however many characters it takes to prevent the mouse tracking sequence from reaching
+    // the prompt, dependent on the class of mouse reporting as detected above.
+    peeker.consume();
+    while (peeker.len() != length) {
+        auto _ = peeker.next();
+    }
+
+    return true;
+}
+
 void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &command_handler) {
-    if (auto mapping = find_mapping()) {
+    // Check for mouse-tracking CSI before mappings to prevent the generic mapping handler from
+    // taking over.
+    if (have_mouse_tracking_csi()) {
+        // fish recognizes but does not actually support mouse reporting. We never turn it on, and
+        // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
+        // it off before exiting. We swallow the events to prevent garbage from piling up at the
+        // prompt, but don't do anything further with the received codes. To prevent this from
+        // breaking user interaction with the tty emulator, wasting CPU, and adding latency to the
+        // event queue, we turn off mouse reporting here.
+        //
+        // Since this is only called when we detect an incoming mouse reporting payload, we know the
+        // terminal emulator supports the xterm ANSI extensions for mouse reporting and can safely
+        // issue this without worrying about termcap.
+        FLOGF(reader, "Disabling mouse tracking");
+
+        // We can't/shouldn't directly manipulate stdout from `input.cpp`, so request the execution
+        // of a helper function to disable mouse tracking.
+        // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
+        event_queue_.push_front(char_event_t(readline_cmd_t::disable_mouse_tracking, L""));
+    }
+    else if (auto mapping = find_mapping()) {
         mapping_execute(*mapping, command_handler);
     } else {
         FLOGF(reader, L"no generic found, ignoring char...");
@@ -496,10 +594,8 @@ char_event_t inputter_t::read_characters_no_readline() {
             break;
         }
     }
-    // Restore any readline functions, in reverse to preserve their original order.
-    for (auto iter = saved_events.rbegin(); iter != saved_events.rend(); ++iter) {
-        event_queue_.push_front(*iter);
-    }
+    // Restore any readline functions
+    event_queue_.insert_front(saved_events.cbegin(), saved_events.cend());
     return evt_to_return;
 }
 
@@ -516,9 +612,7 @@ char_event_t inputter_t::readch(const command_handler_t &command_handler) {
                 case readline_cmd_t::self_insert_notfirst: {
                     // Typically self-insert is generated by the generic (empty) binding.
                     // However if it is generated by a real sequence, then insert that sequence.
-                    for (auto iter = evt.seq.crbegin(); iter != evt.seq.crend(); ++iter) {
-                        event_queue_.push_front(*iter);
-                    }
+                    event_queue_.insert_front(evt.seq.cbegin(), evt.seq.cend());
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
                     char_event_t res = read_characters_no_readline();

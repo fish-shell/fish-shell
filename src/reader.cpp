@@ -3781,6 +3781,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             el->end_edit_group();
             break;
         }
+        case rl::disable_mouse_tracking: {
+            outputter_t &outp = outputter_t::stdoutput();
+            outp.writestr(L"\x1B[?1000l");
+            break;
+        }
         // Some commands should have been handled internally by inputter_t::readch().
         case rl::self_insert:
         case rl::self_insert_notfirst:

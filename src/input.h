@@ -68,6 +68,7 @@ class inputter_t {
     void mapping_execute(const input_mapping_t &m, const command_handler_t &command_handler);
     void mapping_execute_matching_or_generic(const command_handler_t &command_handler);
     bool mapping_is_match(const input_mapping_t &m);
+    bool have_mouse_tracking_csi();
     maybe_t<input_mapping_t> find_mapping();
     char_event_t read_characters_no_readline();
 };

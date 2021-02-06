@@ -83,6 +83,7 @@ enum class readline_cmd_t {
     begin_undo_group,
     end_undo_group,
     repeat_jump,
+    disable_mouse_tracking,
     // NOTE: This one has to be last.
     reverse_repeat_jump
 };
@@ -107,6 +108,9 @@ enum class char_event_type_t : uint8_t {
     /// An event was handled internally, or an interrupt was received. Check to see if the reader
     /// loop should exit.
     check_exit,
+
+    /// There is no event. This should never happen, or is an assertion failure.
+    none,
 };
 
 /// Hackish: the input style, which describes how char events (only) are applied to the command
@@ -154,10 +158,20 @@ class char_event_t {
         return v_.c;
     }
 
+    maybe_t<wchar_t> maybe_char() const {
+        if (type == char_event_type_t::charc) {
+            return v_.c;
+        } else {
+            return none();
+        }
+    }
+
     readline_cmd_t get_readline() const {
         assert(type == char_event_type_t::readline && "Not a readline type");
         return v_.rl;
     }
+
+    explicit char_event_t() : type(char_event_type_t::none) { }
 
     /* implicit */ char_event_t(wchar_t c) : type(char_event_type_t::charc) { v_.c = c; }
 
@@ -221,6 +235,14 @@ class input_event_queue_t {
     /// Add a character or a readline function to the front of the queue of unread characters.  This
     /// will be the next character returned by readch.
     void push_front(const char_event_t& ch);
+
+    /// Add multiple characters or readline events to the front of the queue of unread characters.
+    /// The order of the provided events is not changed, i.e. they are not inserted in reverse
+    /// order.
+    template<typename Iterator>
+    void insert_front(const Iterator begin, const Iterator end) {
+        queue_.insert(queue_.begin(), begin, end);
+    }
 };
 
 #endif

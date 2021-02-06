@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 
 #include "maybe.h"

@@ -14,6 +14,10 @@
 
 #include <fcntl.h>
 
+#ifdef HAVE_EVENTFD
+#include <sys/eventfd.h>
+#endif
+
 #if defined(__linux__)
 #include <sys/statfs.h>
 #endif
@@ -27,6 +31,83 @@ void autoclose_fd_t::close() {
     exec_close(fd_);
     fd_ = -1;
 }
+
+#ifdef HAVE_EVENTFD
+// Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.
+fd_event_signaller_t::fd_event_signaller_t() {
+    int fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+    if (fd < 0) {
+        wperror(L"eventfd");
+        exit_without_destructors(1);
+    }
+    fd_.reset(fd);
+};
+
+int fd_event_signaller_t::write_fd() const { return fd_.fd(); }
+
+#else
+// Implementation using pipes.
+fd_event_signaller_t::fd_event_signaller_t() {
+    auto pipes = make_autoclose_pipes();
+    if (!pipes) {
+        wperror(L"pipe");
+        exit_without_destructors(1);
+    }
+    DIE_ON_FAILURE(make_fd_nonblocking(pipes->read.fd()));
+    DIE_ON_FAILURE(make_fd_nonblocking(pipes->write.fd()));
+    fd_ = std::move(pipes->read);
+    write_ = std::move(pipes->write);
+}
+
+int fd_event_signaller_t::write_fd() const { return write_.fd(); }
+#endif
+
+bool fd_event_signaller_t::try_consume() {
+    // If we are using eventfd, we want to read a single uint64.
+    // If we are using pipes, read a lot; note this may leave data on the pipe if post has been
+    // called many more times. In no case do we care about the data which is read.
+#ifdef HAVE_EVENTFD
+    uint64_t buff[1];
+#else
+    uint8_t buff[1024];
+#endif
+    ssize_t ret;
+    do {
+        ret = read(read_fd(), buff, sizeof buff);
+    } while (ret < 0 && errno == EINTR);
+    if (ret < 0 && errno != EAGAIN) {
+        wperror(L"read");
+    }
+    return ret > 0;
+}
+
+void fd_event_signaller_t::post() {
+    // eventfd writes uint64; pipes write 1 byte.
+#ifdef HAVE_EVENTFD
+    const uint64_t c = 1;
+#else
+    const uint8_t c = 1;
+#endif
+    ssize_t ret;
+    do {
+        ret = write(write_fd(), &c, sizeof c);
+    } while (ret < 0 && errno == EINTR);
+    // EAGAIN occurs if either the pipe buffer is full or the eventfd overflows (very unlikely).
+    if (ret < 0 && errno != EAGAIN) {
+        wperror(L"write");
+    }
+}
+
+bool fd_event_signaller_t::poll(bool wait) const {
+    struct timeval timeout = {0, 0};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(read_fd(), &fds);
+    int res = select(read_fd() + 1, &fds, nullptr, nullptr, wait ? nullptr : &timeout);
+    return res > 0;
+}
+
+fd_event_signaller_t::~fd_event_signaller_t() = default;
 
 /// If the given fd is in the "user range", move it to a new fd in the "high range".
 /// zsh calls this movefd().

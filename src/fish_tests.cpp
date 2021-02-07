@@ -6115,6 +6115,31 @@ static void test_pipes() {
     }
 }
 
+static void test_fd_event_signaller() {
+    say(L"Testing fd event signaller");
+    fd_event_signaller_t sema;
+    do_test(!sema.try_consume());
+    do_test(!sema.poll());
+
+    // Post once.
+    sema.post();
+    do_test(sema.poll());
+    do_test(sema.poll());
+    do_test(sema.try_consume());
+    do_test(!sema.poll());
+    do_test(!sema.try_consume());
+
+    // Posts are coalesced.
+    sema.post();
+    sema.post();
+    sema.post();
+    do_test(sema.poll());
+    do_test(sema.poll());
+    do_test(sema.try_consume());
+    do_test(!sema.poll());
+    do_test(!sema.try_consume());
+}
+
 static void test_timer_format() {
     say(L"Testing timer format");
     // This test uses numeric output, so we need to set the locale.
@@ -6351,6 +6376,7 @@ int main(int argc, char **argv) {
     if (should_test_function("topics")) test_topic_monitor();
     if (should_test_function("topics")) test_topic_monitor_torture();
     if (should_test_function("pipes")) test_pipes();
+    if (should_test_function("fd_event")) test_fd_event_signaller();
     if (should_test_function("timer_format")) test_timer_format();
     // history_tests_t::test_history_speed();
 

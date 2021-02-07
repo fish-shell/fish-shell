@@ -107,6 +107,7 @@ check_include_file_cxx(sys/select.h HAVE_SYS_SELECT_H)
 check_include_files("sys/types.h;sys/sysctl.h" HAVE_SYS_SYSCTL_H)
 check_include_file_cxx(termios.h HAVE_TERMIOS_H) # Needed for TIOCGWINSZ
 
+check_cxx_symbol_exists(eventfd sys/eventfd.h HAVE_EVENTFD)
 check_cxx_symbol_exists(pipe2 unistd.h HAVE_PIPE2)
 check_cxx_symbol_exists(wcscasecmp wchar.h HAVE_WCSCASECMP)
 check_cxx_symbol_exists(wcsdup wchar.h HAVE_WCSDUP)

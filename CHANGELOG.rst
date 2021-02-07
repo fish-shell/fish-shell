@@ -131,9 +131,9 @@ Scripting improvements
 -  The fallback ``realpath`` builtin supports the ``-s``/``--no-symlinks`` option, like GNU realpath (:issue:`7574`).
 -  ``functions`` and ``type`` now explain when a function was defined via ``source`` instead of just saying ``Defined in -``.
 -  Significant performance improvements when globbing, appending to variables or in ``math``.
--  ``echo`` no longer interprets options at the beginning of an argument (``echo "-n foo"``) (:issue:`7614`).
--  fish now finds user configuration if the ``HOME`` environment variable is not set (:issue:`7620`).
--  fish should no longer crash if it inherited a windows-style $PWD (like ``F:\path``) (:issue:`7636`).
+-  ``echo`` no longer interprets options at the beginning of an argument (eg ``echo "-n foo"``) (:issue:`7614`).
+-  fish now finds user configuration even if the ``HOME`` environment variable is not set (:issue:`7620`).
+-  fish no longer crashes when started from a Windows-style working directory (eg ``F:\path``) (:issue:`7636`).
 -  ``fish -c`` now reads the remaining arguments into $argv (:issue:`2314`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
 -  ``fish --profile`` now only starts the profile after fish's startup (including config.fish) is done. For profiling startup there is a new ``--profile-startup`` option that profiles only startup (:issue:`7648`).
@@ -218,12 +218,10 @@ Interactive improvements
 -  Commands with leading spaces may be retrieved from history with up-arrow until a new command is run, matching zsh's ``HIST_IGNORE_SPACE`` (:issue:`1383`).
 -  Importing bash history or reporting errors with recursive globs (``**``) no longer hangs (:issue:`7407`, :issue:`7497`).
 -  ``bind`` now shows ``\x7f`` for the del key instead of a literal DEL character (:issue:`7631`)
--  fish's history now also marks some paths with expansions
-   like ``~`` or variables as paths.
-   This allows only suggesting them when the paths are still valid (:issue:`7591`, :issue:`7582`).
--  Syntax highlighting can now color a command as invalid even if return was pressed quickly (:issue:`5912`)
--  fish is now more resilient against broken terminal modes (:issue:`7133`).
--  fish handles being in control of the tty without owning its own pgroup better, avoiding some hangs in special configurations (:issue:`7388`).
+-  Paths containing variables or tilde expansion are only suggested when they are still valid (:issue:`7582`).
+-  Syntax highlighting can now color a command as invalid even if executed quickly (:issue:`5912`)
+-  fish is now more resilient against broken terminal modes (:issue:`7133`, :issue:`4873`).
+-  fish handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -268,7 +266,7 @@ Improved prompts
 -  The Subversion prompt was broken in a number of ways in 3.1.0 and has been restored (:issue:`6715`, :issue:`7278`).
 -  A new helper function ``fish_is_root_user`` simplifies checking for superuser privilege (:issue:`7031`, :issue:`7123`).
 -  New colorschemes - ``ayu Light``, ``ayu Dark`` and ``ayu Mirage`` (:issue:`7596`).
--  Bugs related to multiline prompts, including repainting (:issue:`5860`) or alt-left/right (:issue:`3550`) leading to graphical glitches have been fixed.
+-  Bugs related to multiline prompts, including repainting (:issue:`5860`) or navigating directory history (:issue:`3550`) leading to graphical glitches have been fixed.
 -  The ``nim`` prompt now handles vi mode better (:issue:`6802`)
 
 Improved terminal support
@@ -285,7 +283,7 @@ Improved terminal support
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (:issue:`7237`).
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
--  Sessions with right prompts can be resized correctly in terminals that handle reflow like GNOME Terminal (and other VTE-based terminals), the next Konsole version and Alacritty. This detection can be overridden with the new $fish_handle_reflow variable (:issue:`7491`, :issue:`7623`).
+-  Sessions with right prompts can be resized correctly in terminals that handle reflow, like GNOME Terminal (and other VTE-based terminals), upcoming Konsole releases and Alacritty. This detection can be overridden with the new ``fish_handle_reflow`` variable (:issue:`7491`).
 -  fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 -  Better detection of new Konsole versions for truecolor support and cursor shape changing.
 -  fish no longer attempts to modify the terminal size via ``TIOCSWINSZ`` (:issue:`6994`).
@@ -340,7 +338,7 @@ Completions
    -  ``sphinx-apidoc``, ``sphinx-autogen``, ``sphinx-build`` and
       ``sphinx-quickstart`` (:issue:`7000`)
    -  ``strace`` (:issue:`6656`)
-   -  systemd's ``bootctl``, ``coredumpctl``, ``hostnamectl`` (:issue:`7428`), ``homectl`` (:issue:`7435`) and ``userdbctl`` (:issue:`7667`)
+   -  systemd's ``bootctl``, ``coredumpctl``, ``hostnamectl`` (:issue:`7428`), ``homectl`` (:issue:`7435`), ``networkctl`` (:issue:`7668`) and ``userdbctl`` (:issue:`7667`)
    -  ``tcpdump`` (:issue:`6690`)
    -  ``tig``
    -  ``traceroute`` and ``tracepath`` (:issue:`6803`)
@@ -393,6 +391,7 @@ Deprecations and removed features
    use the new ``fish_read`` event instead (:issue:`7039`).
 -  To disable the greeting message permanently it is no longer enough to just run ``set fish_greeting`` interactively as it is
    no longer implicitly a universal variable. Use ``set -U fish_greeting`` or disable it in config.fish with ``set -g fish_greeting``.
+- The long-deprecated and non-functional ``-m``/``--read-mode`` options to ``read`` were removed in 3.1b1. Using the short form, or a never-implemented ``-B`` option, no longer crashes fish (#7659).
 
 For distributors and developers
 -------------------------------

@@ -10,20 +10,6 @@
 #include "wcstringutil.h"
 #include "wutil.h"
 
-// Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point where
-// instrumented code makes certain blocking calls. But tsan cannot interrupt a signal call, so
-// if we're blocked in read() (like the topic monitor wants to be!), we'll never receive SIGCHLD
-// and so deadlock. So if tsan is enabled, we mark our fd as non-blocking (so reads will never
-// block) and use select() to poll it.
-#if defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#define TOPIC_MONITOR_TSAN_WORKAROUND 1
-#endif
-#endif
-#ifdef __SANITIZE_THREAD__
-#define TOPIC_MONITOR_TSAN_WORKAROUND 1
-#endif
-
 wcstring generation_list_t::describe() const {
     wcstring result;
     for (generation_t gen : this->as_array()) {
@@ -49,7 +35,12 @@ binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
         assert(pipes.has_value() && "Failed to make pubsub pipes");
         pipes_ = pipes.acquire();
 
-#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
+        // Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point
+        // where instrumented code makes certain blocking calls. But tsan cannot interrupt a signal
+        // call, so if we're blocked in read() (like the topic monitor wants to be!), we'll never
+        // receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as non-blocking
+        // (so reads will never block) and use select() to poll it.
+#ifdef FISH_TSAN_WORKAROUNDS
         DIE_ON_FAILURE(make_fd_nonblocking(pipes_.read.fd()));
 #endif
     }
@@ -95,7 +86,7 @@ void binary_semaphore_t::wait() {
         int fd = pipes_.read.fd();
         // We must read exactly one byte.
         for (;;) {
-#ifdef TOPIC_MONITOR_TSAN_WORKAROUND
+#ifdef FISH_TSAN_WORKAROUNDS
             // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
             // call until data is available (that is, fish would use 100% cpu while waiting for
             // processes). The select prevents that.

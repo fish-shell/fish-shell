@@ -39,6 +39,16 @@
 #define OS_IS_CYGWIN
 #endif
 
+// Check if Thread Sanitizer is enabled.
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define FISH_TSAN_WORKAROUNDS 1
+#endif
+#endif
+#ifdef __SANITIZE_THREAD__
+#define FISH_TSAN_WORKAROUNDS 1
+#endif
+
 // Common string type.
 typedef std::wstring wcstring;
 typedef std::vector<wcstring> wcstring_list_t;

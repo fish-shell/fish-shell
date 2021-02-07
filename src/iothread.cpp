@@ -36,17 +36,7 @@
 // properly instrumented with Thread Sanitizer, so it fails to recognize when our mutex is locked.
 // See https://github.com/google/sanitizers/issues/1259
 // When using TSan, disable the wait-around feature.
-#if defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#define IOTHREAD_TSAN_WORKAROUND 1
-#endif
-#endif
-#ifdef __SANITIZE_THREAD__
-#define IOTHREAD_TSAN_WORKAROUND 1
-#endif
-
-// The amount of time an IO thread many hang around to service requests, in milliseconds.
-#ifdef IOTHREAD_TSAN_WORKAROUND
+#ifdef FISH_TSAN_WORKAROUNDS
 #define IO_WAIT_FOR_WORK_DURATION_MS 0
 #else
 #define IO_WAIT_FOR_WORK_DURATION_MS 500

@@ -159,7 +159,8 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::redo, L"redo"},
     {readline_cmd_t::begin_undo_group, L"begin-undo-group"},
     {readline_cmd_t::end_undo_group, L"end-undo-group"},
-    {readline_cmd_t::disable_mouse_tracking, L"disable-mouse-tracking"},
+    // NULL makes it unusable - this is specially inserted when we detect mouse input
+    {readline_cmd_t::disable_mouse_tracking, NULL},
 };
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
@@ -820,14 +821,16 @@ wcstring_list_t input_function_get_names() {
     wcstring_list_t result;
     result.reserve(input_function_count);
     for (const auto &md : input_function_metadata) {
-        result.push_back(md.name);
+        if (md.name) {
+            result.push_back(md.name);
+        }
     }
     return result;
 }
 
 maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name) {
     for (const auto &md : input_function_metadata) {
-        if (name == md.name) {
+        if (md.name && name == md.name) {
             return md.code;
         }
     }

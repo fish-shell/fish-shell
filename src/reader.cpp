@@ -2480,9 +2480,9 @@ void reader_data_t::finish_highlighting_before_exec() {
     auto deadline = now + sc::milliseconds(kHighlightTimeoutForExecutionMs);
     while (now < deadline) {
         long timeout_usec = sc::duration_cast<sc::microseconds>(deadline - now).count();
-        iothread_service_completion_with_timeout(timeout_usec);
+        iothread_service_main_with_timeout(timeout_usec);
 
-        // Note iothread_service_completion_with_timeout will reentrantly modify us,
+        // Note iothread_service_main_with_timeout will reentrantly modify us,
         // by invoking a completion.
         if (in_flight_highlight_request.empty()) break;
         now = sc::steady_clock::now();

@@ -124,7 +124,7 @@ char_event_t input_event_queue_t::readb() {
             // Check for iothread completions only if there is no data to be read from the stdin.
             // This gives priority to the foreground.
             if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
-                iothread_service_completion();
+                iothread_service_main();
                 if (auto mc = pop_discard_timeouts()) {
                     return *mc;
                 }

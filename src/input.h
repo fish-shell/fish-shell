@@ -144,6 +144,6 @@ wcstring_list_t input_terminfo_get_names(bool skip_null);
 maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name);
 
 /// Returns a list of all existing input function names.
-wcstring_list_t input_function_get_names(void);
+const wcstring_list_t &input_function_get_names(void);
 
 #endif

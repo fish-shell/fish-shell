@@ -80,87 +80,89 @@ static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS;
 /// Input function metadata. This list should be kept in sync with the key code list in
 /// input_common.h.
 struct input_function_metadata_t {
-    readline_cmd_t code;
     const wchar_t *name;
+    readline_cmd_t code;
 };
 
+/// A static mapping of all readline commands as strings to their readline_cmd_t equivalent.
+/// Keep this list sorted alphabetically!
 static const input_function_metadata_t input_function_metadata[] = {
-    {readline_cmd_t::beginning_of_line, L"beginning-of-line"},
-    {readline_cmd_t::end_of_line, L"end-of-line"},
-    {readline_cmd_t::forward_char, L"forward-char"},
-    {readline_cmd_t::backward_char, L"backward-char"},
-    {readline_cmd_t::forward_single_char, L"forward-single-char"},
-    {readline_cmd_t::forward_word, L"forward-word"},
-    {readline_cmd_t::backward_word, L"backward-word"},
-    {readline_cmd_t::forward_bigword, L"forward-bigword"},
-    {readline_cmd_t::backward_bigword, L"backward-bigword"},
-    {readline_cmd_t::history_prefix_search_backward, L"history-prefix-search-backward"},
-    {readline_cmd_t::history_prefix_search_forward, L"history-prefix-search-forward"},
-    {readline_cmd_t::history_search_backward, L"history-search-backward"},
-    {readline_cmd_t::history_search_forward, L"history-search-forward"},
-    {readline_cmd_t::delete_char, L"delete-char"},
-    {readline_cmd_t::backward_delete_char, L"backward-delete-char"},
-    {readline_cmd_t::kill_line, L"kill-line"},
-    {readline_cmd_t::yank, L"yank"},
-    {readline_cmd_t::yank_pop, L"yank-pop"},
-    {readline_cmd_t::complete, L"complete"},
-    {readline_cmd_t::complete_and_search, L"complete-and-search"},
-    {readline_cmd_t::pager_toggle_search, L"pager-toggle-search"},
-    {readline_cmd_t::beginning_of_history, L"beginning-of-history"},
-    {readline_cmd_t::end_of_history, L"end-of-history"},
-    {readline_cmd_t::backward_kill_line, L"backward-kill-line"},
-    {readline_cmd_t::kill_whole_line, L"kill-whole-line"},
-    {readline_cmd_t::kill_word, L"kill-word"},
-    {readline_cmd_t::kill_bigword, L"kill-bigword"},
-    {readline_cmd_t::backward_kill_word, L"backward-kill-word"},
-    {readline_cmd_t::backward_kill_path_component, L"backward-kill-path-component"},
-    {readline_cmd_t::backward_kill_bigword, L"backward-kill-bigword"},
-    {readline_cmd_t::history_token_search_backward, L"history-token-search-backward"},
-    {readline_cmd_t::history_token_search_forward, L"history-token-search-forward"},
-    {readline_cmd_t::self_insert, L"self-insert"},
-    {readline_cmd_t::self_insert_notfirst, L"self-insert-notfirst"},
-    {readline_cmd_t::transpose_chars, L"transpose-chars"},
-    {readline_cmd_t::transpose_words, L"transpose-words"},
-    {readline_cmd_t::upcase_word, L"upcase-word"},
-    {readline_cmd_t::downcase_word, L"downcase-word"},
-    {readline_cmd_t::capitalize_word, L"capitalize-word"},
-    {readline_cmd_t::togglecase_char, L"togglecase-char"},
-    {readline_cmd_t::togglecase_selection, L"togglecase-selection"},
-    {readline_cmd_t::execute, L"execute"},
-    {readline_cmd_t::beginning_of_buffer, L"beginning-of-buffer"},
-    {readline_cmd_t::end_of_buffer, L"end-of-buffer"},
-    {readline_cmd_t::repaint_mode, L"repaint-mode"},
-    {readline_cmd_t::repaint, L"repaint"},
-    {readline_cmd_t::force_repaint, L"force-repaint"},
-    {readline_cmd_t::up_line, L"up-line"},
-    {readline_cmd_t::down_line, L"down-line"},
-    {readline_cmd_t::suppress_autosuggestion, L"suppress-autosuggestion"},
-    {readline_cmd_t::accept_autosuggestion, L"accept-autosuggestion"},
-    {readline_cmd_t::begin_selection, L"begin-selection"},
-    {readline_cmd_t::swap_selection_start_stop, L"swap-selection-start-stop"},
-    {readline_cmd_t::end_selection, L"end-selection"},
-    {readline_cmd_t::kill_selection, L"kill-selection"},
-    {readline_cmd_t::insert_line_under, L"insert-line-under"},
-    {readline_cmd_t::insert_line_over, L"insert-line-over"},
-    {readline_cmd_t::forward_jump, L"forward-jump"},
-    {readline_cmd_t::backward_jump, L"backward-jump"},
-    {readline_cmd_t::forward_jump_till, L"forward-jump-till"},
-    {readline_cmd_t::backward_jump_till, L"backward-jump-till"},
-    {readline_cmd_t::repeat_jump, L"repeat-jump"},
-    {readline_cmd_t::reverse_repeat_jump, L"repeat-jump-reverse"},
-    {readline_cmd_t::func_and, L"and"},
-    {readline_cmd_t::func_or, L"or"},
-    {readline_cmd_t::expand_abbr, L"expand-abbr"},
-    {readline_cmd_t::delete_or_exit, L"delete-or-exit"},
-    {readline_cmd_t::exit, L"exit"},
-    {readline_cmd_t::cancel_commandline, L"cancel-commandline"},
-    {readline_cmd_t::cancel, L"cancel"},
-    {readline_cmd_t::undo, L"undo"},
-    {readline_cmd_t::redo, L"redo"},
-    {readline_cmd_t::begin_undo_group, L"begin-undo-group"},
-    {readline_cmd_t::end_undo_group, L"end-undo-group"},
     // NULL makes it unusable - this is specially inserted when we detect mouse input
-    {readline_cmd_t::disable_mouse_tracking, NULL},
+    {L"", readline_cmd_t::disable_mouse_tracking},
+    {L"accept-autosuggestion", readline_cmd_t::accept_autosuggestion},
+    {L"and", readline_cmd_t::func_and},
+    {L"backward-bigword", readline_cmd_t::backward_bigword},
+    {L"backward-char", readline_cmd_t::backward_char},
+    {L"backward-delete-char", readline_cmd_t::backward_delete_char},
+    {L"backward-jump", readline_cmd_t::backward_jump},
+    {L"backward-jump-till", readline_cmd_t::backward_jump_till},
+    {L"backward-kill-bigword", readline_cmd_t::backward_kill_bigword},
+    {L"backward-kill-line", readline_cmd_t::backward_kill_line},
+    {L"backward-kill-path-component", readline_cmd_t::backward_kill_path_component},
+    {L"backward-kill-word", readline_cmd_t::backward_kill_word},
+    {L"backward-word", readline_cmd_t::backward_word},
+    {L"begin-selection", readline_cmd_t::begin_selection},
+    {L"begin-undo-group", readline_cmd_t::begin_undo_group},
+    {L"beginning-of-buffer", readline_cmd_t::beginning_of_buffer},
+    {L"beginning-of-history", readline_cmd_t::beginning_of_history},
+    {L"beginning-of-line", readline_cmd_t::beginning_of_line},
+    {L"cancel", readline_cmd_t::cancel},
+    {L"cancel-commandline", readline_cmd_t::cancel_commandline},
+    {L"capitalize-word", readline_cmd_t::capitalize_word},
+    {L"complete", readline_cmd_t::complete},
+    {L"complete-and-search", readline_cmd_t::complete_and_search},
+    {L"delete-char", readline_cmd_t::delete_char},
+    {L"delete-or-exit", readline_cmd_t::delete_or_exit},
+    {L"down-line", readline_cmd_t::down_line},
+    {L"downcase-word", readline_cmd_t::downcase_word},
+    {L"end-of-buffer", readline_cmd_t::end_of_buffer},
+    {L"end-of-history", readline_cmd_t::end_of_history},
+    {L"end-of-line", readline_cmd_t::end_of_line},
+    {L"end-selection", readline_cmd_t::end_selection},
+    {L"end-undo-group", readline_cmd_t::end_undo_group},
+    {L"execute", readline_cmd_t::execute},
+    {L"exit", readline_cmd_t::exit},
+    {L"expand-abbr", readline_cmd_t::expand_abbr},
+    {L"force-repaint", readline_cmd_t::force_repaint},
+    {L"forward-bigword", readline_cmd_t::forward_bigword},
+    {L"forward-char", readline_cmd_t::forward_char},
+    {L"forward-jump", readline_cmd_t::forward_jump},
+    {L"forward-jump-till", readline_cmd_t::forward_jump_till},
+    {L"forward-single-char", readline_cmd_t::forward_single_char},
+    {L"forward-word", readline_cmd_t::forward_word},
+    {L"history-prefix-search-backward", readline_cmd_t::history_prefix_search_backward},
+    {L"history-prefix-search-forward", readline_cmd_t::history_prefix_search_forward},
+    {L"history-search-backward", readline_cmd_t::history_search_backward},
+    {L"history-search-forward", readline_cmd_t::history_search_forward},
+    {L"history-token-search-backward", readline_cmd_t::history_token_search_backward},
+    {L"history-token-search-forward", readline_cmd_t::history_token_search_forward},
+    {L"insert-line-over", readline_cmd_t::insert_line_over},
+    {L"insert-line-under", readline_cmd_t::insert_line_under},
+    {L"kill-bigword", readline_cmd_t::kill_bigword},
+    {L"kill-line", readline_cmd_t::kill_line},
+    {L"kill-selection", readline_cmd_t::kill_selection},
+    {L"kill-whole-line", readline_cmd_t::kill_whole_line},
+    {L"kill-word", readline_cmd_t::kill_word},
+    {L"or", readline_cmd_t::func_or},
+    {L"pager-toggle-search", readline_cmd_t::pager_toggle_search},
+    {L"redo", readline_cmd_t::redo},
+    {L"repaint", readline_cmd_t::repaint},
+    {L"repaint-mode", readline_cmd_t::repaint_mode},
+    {L"repeat-jump", readline_cmd_t::repeat_jump},
+    {L"repeat-jump-reverse", readline_cmd_t::reverse_repeat_jump},
+    {L"self-insert", readline_cmd_t::self_insert},
+    {L"self-insert-notfirst", readline_cmd_t::self_insert_notfirst},
+    {L"suppress-autosuggestion", readline_cmd_t::suppress_autosuggestion},
+    {L"swap-selection-start-stop", readline_cmd_t::swap_selection_start_stop},
+    {L"togglecase-char", readline_cmd_t::togglecase_char},
+    {L"togglecase-selection", readline_cmd_t::togglecase_selection},
+    {L"transpose-chars", readline_cmd_t::transpose_chars},
+    {L"transpose-words", readline_cmd_t::transpose_words},
+    {L"undo", readline_cmd_t::undo},
+    {L"up-line", readline_cmd_t::up_line},
+    {L"upcase-word", readline_cmd_t::upcase_word},
+    {L"yank", readline_cmd_t::yank},
+    {L"yank-pop", readline_cmd_t::yank_pop},
 };
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
@@ -374,6 +376,10 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
             has_functions = true;
         } else {
             has_commands = true;
+        }
+
+        if (has_functions && has_commands) {
+            break;
         }
     }
 
@@ -817,22 +823,35 @@ wcstring_list_t input_terminfo_get_names(bool skip_null) {
     return result;
 }
 
-wcstring_list_t input_function_get_names() {
-    wcstring_list_t result;
-    result.reserve(input_function_count);
-    for (const auto &md : input_function_metadata) {
-        if (md.name) {
-            result.push_back(md.name);
+const wcstring_list_t &input_function_get_names() {
+    // The list and names of input functions are hard-coded and never change
+    static wcstring_list_t result = ([&]() {
+        wcstring_list_t result;
+        result.reserve(input_function_count);
+        for (const auto &md : input_function_metadata) {
+            if (md.name[0]) {
+                result.push_back(md.name);
+            }
         }
-    }
+        return result;
+    })();
+
     return result;
 }
 
 maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name) {
-    for (const auto &md : input_function_metadata) {
-        if (md.name && name == md.name) {
-            return md.code;
-        }
+    // `input_function_metadata` is required to be kept in asciibetical order, making it OK to do
+    // a binary search for the matching name.
+    constexpr auto end = &input_function_metadata[0] + input_function_count;
+    auto result = std::lower_bound(
+        &input_function_metadata[0], end,
+        input_function_metadata_t{name.data(), static_cast<readline_cmd_t>(-1)},
+        [&](const input_function_metadata_t &lhs, const input_function_metadata_t &rhs) {
+            return wcscmp(lhs.name, rhs.name) < 0;
+        });
+
+    if (result != end && result->name[0] && name == result->name) {
+        return result->code;
     }
     return none();
 }

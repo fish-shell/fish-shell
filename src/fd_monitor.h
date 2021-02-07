@@ -103,6 +103,10 @@ class fd_monitor_t {
     // The background thread runner.
     void run_in_background();
 
+    // If our self-signaller is reported as ready, this reads from it and handles any changes.
+    // Called in the background thread.
+    void handle_self_signal_in_background();
+
     // Poke items in the pokelist, removing any items that close their FD.
     // The pokelist is consumed after this.
     // This is only called in the background thread.
@@ -110,13 +114,6 @@ class fd_monitor_t {
 
     // The list of items to monitor. This is only accessed on the background thread.
     item_list_t items_{};
-
-    // Set to true by the background thread when our self-pipe becomes readable.
-    bool has_pending_or_pokes_{false};
-
-    // Latched to true by the background thread if our self-pipe is closed, which indicates we are
-    // in the destructor and so should terminate.
-    bool terminate_{false};
 
     struct data_t {
         /// Pending items. This is set under the lock, then the background thread grabs them.
@@ -130,11 +127,15 @@ class fd_monitor_t {
 
         /// Whether the thread is running.
         bool running{false};
+
+        // Set if we should terminate.
+        bool terminate{false};
     };
     owning_lock<data_t> data_;
 
-    /// The write end of our self-pipe.
-    autoclose_fd_t notify_write_fd_{};
+    /// Our self-signaller. When this is written to, it means there are new items pending, or new
+    /// items in the pokelist, or terminate is set.
+    fd_event_signaller_t change_signaller_;
 };
 
 #endif

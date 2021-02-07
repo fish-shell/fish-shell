@@ -17,11 +17,11 @@
 // block) and use select() to poll it.
 #if defined(__has_feature)
 #if __has_feature(thread_sanitizer)
-#define TOPIC_MONITOR_TSAN_WORKAROUND
+#define TOPIC_MONITOR_TSAN_WORKAROUND 1
 #endif
 #endif
 #ifdef __SANITIZE_THREAD__
-#define TOPIC_MONITOR_TSAN_WORKAROUND
+#define TOPIC_MONITOR_TSAN_WORKAROUND 1
 #endif
 
 wcstring generation_list_t::describe() const {

@@ -31,8 +31,26 @@
 // which is too low, even tho the system can handle more than 64 threads.
 #define IO_MAX_THREADS 1024
 
+// iothread has a thread pool. Sometimes there's no work to do, but extant threads wait around for a
+// while (on a condition variable) in case new work comes soon. However condition variables are not
+// properly instrumented with Thread Sanitizer, so it fails to recognize when our mutex is locked.
+// See https://github.com/google/sanitizers/issues/1259
+// When using TSan, disable the wait-around feature.
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define IOTHREAD_TSAN_WORKAROUND 1
+#endif
+#endif
+#ifdef __SANITIZE_THREAD__
+#define IOTHREAD_TSAN_WORKAROUND 1
+#endif
+
 // The amount of time an IO thread many hang around to service requests, in milliseconds.
+#ifdef IOTHREAD_TSAN_WORKAROUND
+#define IO_WAIT_FOR_WORK_DURATION_MS 0
+#else
 #define IO_WAIT_FOR_WORK_DURATION_MS 500
+#endif
 
 using void_function_t = std::function<void()>;
 
@@ -173,7 +191,8 @@ maybe_t<work_request_t> thread_pool_t::dequeue_work_or_commit_to_exit() {
     auto data = this->req_data.acquire();
     // If the queue is empty, check to see if we should wait.
     // We should wait if our exiting would drop us below the soft min.
-    if (data->request_queue.empty() && data->total_threads == this->soft_min_threads) {
+    if (data->request_queue.empty() && data->total_threads == this->soft_min_threads &&
+        IO_WAIT_FOR_WORK_DURATION_MS > 0) {
         data->waiting_threads += 1;
         this->queue_cond.wait_for(data.get_lock(),
                                   std::chrono::milliseconds(IO_WAIT_FOR_WORK_DURATION_MS));

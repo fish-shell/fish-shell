@@ -287,6 +287,9 @@ Improved terminal support
 -  fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 -  Better detection of new Konsole versions for truecolor support and cursor shape changing.
 -  fish no longer attempts to modify the terminal size via ``TIOCSWINSZ`` (:issue:`6994`).
+-  Terminal state is no longer corrupted if a TUI application that enables mouse mouse support
+   crashes or exits uncleanly; fish now responds by discarding mouse position CSIs and disabling
+   future mouse reporting (:issue:`4873`).
 
 Completions
 ^^^^^^^^^^^

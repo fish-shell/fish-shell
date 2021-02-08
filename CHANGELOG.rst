@@ -74,7 +74,7 @@ Notable improvements and fixes
 -  fish is less aggressive about resetting terminal modes, such as flow control, after every command.
    Although flow control remains off by default, enterprising users can now enable it for external commands with
    ``stty`` (:issue:`2315`).
--  A new **``fish_add_path`` helper function to add paths to $PATH** without producing duplicates,
+-  A new **"fish_add_path" helper function to add paths to $PATH** without producing duplicates,
    to be used interactively or in ``config.fish`` (:issue:`6960`, :issue:`7028`).
    For example::
 
@@ -82,7 +82,7 @@ Notable improvements and fixes
 
    will add /opt/mycoolthing/bin to the beginning of $fish_user_path without creating duplicates,
    so it can be called again and again from config.fish or just once interactively, and the path will just be there, once.
--  **Better errors with ``test``** (:issue:`6030`)::
+-  **Better errors with "test"** (:issue:`6030`)::
 
     > test 1 = 2 and echo true or false
     test: Expected a combining operator like '-a' at index 4
@@ -91,12 +91,12 @@ Notable improvements and fixes
 
    This includes numbering the index from 1 instead of 0.
 -  **A new theme for the documentation and Web-base configuration** (:issue:`6500`, :issue:`7371`, :issue:`7523`), matching the design on fishshell.com.
--  **``fish --no-execute`` will no longer complain about unknown commands**
+-  ``fish --no-execute`` **will no longer complain about unknown commands**
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
 -  ``string match --regex`` now integrates **named PCRE2 capture groups as fish variables**, allowing variables to be set directly from ``string match`` (:issue:`7459`). To support this functionality, ``string`` is now a reserved word and can no longer be wrapped in a function.
 -  Globs and other **expansions are limited to 512,288 results** (:issue:`7226`). Because operating systems limit arguments to ARG_MAX, larger values are unlikely to work anyway, and this helps to avoid hangs.
--  A new **``fish for bash users`` documentation page** gives a quick overview of the scripting differences between bash and fish (:issue:`2382`), and the completion tutorial has also been moved out into its own document (:issue:`6709`).
+-  A new **"fish for bash users" documentation page** gives a quick overview of the scripting differences between bash and fish (:issue:`2382`), and the completion tutorial has also been moved out into its own document (:issue:`6709`).
 
 Syntax changes and new commands
 -------------------------------

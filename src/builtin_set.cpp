@@ -565,13 +565,6 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         free(dest);
     }
 
-    // The return value is cast to an 8-bit unsigned integer,
-    // so saturate the error count to 255.
-    // Otherwise 256 errors is reported as 0 errors.
-    if (retval > 255) {
-        retval = 255;
-    }
-
     return retval;
 }
 

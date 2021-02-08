@@ -81,6 +81,8 @@ class proc_status_t {
         // Some paranoia.
         constexpr int zerocode = w_exitcode(0, 0);
         static_assert(WIFEXITED(zerocode), "Synthetic exit status not reported as exited");
+
+        assert(ret < 256);
         return proc_status_t(w_exitcode(ret, 0 /* sig */));
     }
 

@@ -86,7 +86,6 @@ maybe_t<int> builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **a
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
-        retval &= 0xFF;
     }
 
     // Find the function block.

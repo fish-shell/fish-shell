@@ -4,7 +4,6 @@ fish next-minor
 Notable improvements and fixes
 ------------------------------
 
-
 Syntax changes and new commands
 -------------------------------
 
@@ -184,6 +183,8 @@ Scripting improvements
 -  ``fish -c`` now reads the remaining arguments into $argv (:issue:`2314`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
 -  ``fish --profile`` now only starts the profile after fish's startup (including config.fish) is done. For profiling startup there is a new ``--profile-startup`` option that profiles only startup (:issue:`7648`).
+- ``set --query``'s $status will now saturate at 255 instead of wrapping around when checking more than 255 variables at once (:issue:`7698`).
+
 
 Interactive improvements
 ------------------------

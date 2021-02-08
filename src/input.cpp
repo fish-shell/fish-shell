@@ -340,7 +340,9 @@ wchar_t inputter_t::function_pop_arg() {
 
 void inputter_t::function_push_args(readline_cmd_t code) {
     int arity = input_function_arity(code);
-    std::vector<char_event_t> skipped;
+    // Use a thread-local to prevent constant heap thrashing in the main input loop
+    static FISH_THREAD_LOCAL std::vector<char_event_t> skipped;
+    skipped.clear();
 
     for (int i = 0; i < arity; i++) {
         // Skip and queue up any function codes. See issue #2357.
@@ -587,7 +589,11 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
 /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
 /// readline function.
 char_event_t inputter_t::read_characters_no_readline() {
-    std::vector<char_event_t> saved_events;
+    // Use a thread-local vector to prevent repeated heap allocation, as this is called in the main
+    // input loop.
+    static FISH_THREAD_LOCAL std::vector<char_event_t> saved_events;
+    saved_events.clear();
+
     char_event_t evt_to_return{0};
     for (;;) {
         auto evt = event_queue_.readch();

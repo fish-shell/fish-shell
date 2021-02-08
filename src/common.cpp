@@ -1966,7 +1966,7 @@ bool is_console_session() {
         ASSERT_IS_MAIN_THREAD();
 
         const char *tty_name = ttyname(0);
-        auto len = strlen("/dev/tty");
+        constexpr auto len = const_strlen("/dev/tty");
         const char *TERM = getenv("TERM");
         return
             // Test that the tty matches /dev/(console|dcons|tty[uv\d])

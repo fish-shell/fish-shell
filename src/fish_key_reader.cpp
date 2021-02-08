@@ -63,7 +63,8 @@ static bool should_exit(wchar_t wc) {
         std::fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
         return false;
     }
-    return std::memcmp(recent_chars, "exit", 4) == 0 || std::memcmp(recent_chars, "quit", 4) == 0;
+    return std::memcmp(recent_chars, "exit", const_strlen("exit")) == 0 ||
+           std::memcmp(recent_chars, "quit", const_strlen("quit")) == 0;
 }
 
 /// Return the name if the recent sequence of characters matches a known terminfo sequence.

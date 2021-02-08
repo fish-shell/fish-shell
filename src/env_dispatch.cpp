@@ -461,9 +461,9 @@ static bool does_term_support_setting_title(const environment_t &vars) {
     const wcstring term_str = term_var->as_string();
     const wchar_t *term = term_str.c_str();
     bool recognized = contains(title_terms, term_var->as_string());
-    if (!recognized) recognized = !std::wcsncmp(term, L"xterm-", std::wcslen(L"xterm-"));
-    if (!recognized) recognized = !std::wcsncmp(term, L"screen-", std::wcslen(L"screen-"));
-    if (!recognized) recognized = !std::wcsncmp(term, L"tmux-", std::wcslen(L"tmux-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"xterm-", const_strlen(L"xterm-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"screen-", const_strlen(L"screen-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"tmux-", const_strlen(L"tmux-"));
     if (!recognized) {
         if (std::wcscmp(term, L"linux") == 0) return false;
         if (std::wcscmp(term, L"dumb") == 0) return false;

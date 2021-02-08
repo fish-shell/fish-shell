@@ -40,7 +40,7 @@ void features_t::set_from_string(const wcstring &str) {
         // A "no-" prefix inverts the sense.
         if (string_prefixes_string(L"no-", name)) {
             value = false;
-            name += 3;  // std::wcslen(L"no-")
+            name += const_strlen("no-");
         }
         // Look for a feature with this name. If we don't find it, assume it's a group name and set
         // all features whose group contain it. Do nothing even if the string is unrecognized; this

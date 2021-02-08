@@ -602,7 +602,7 @@ struct pretty_printer_t {
             bool added_newline = emit_gap_text_before(node.range, flags);
             wcstring text = source.substr(node.range.start, node.range.length);
             if (added_newline && !text.empty() && text.front() == L'\n') {
-                text = text.substr(strlen("\n"));
+                text = text.substr(const_strlen("\n"));
             }
             emit_gap_text(text, flags);
         }

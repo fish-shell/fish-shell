@@ -370,18 +370,18 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
 
         // Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of
         // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
-        const char *double_cmd = "- cmd: - cmd: ";
-        const size_t double_cmd_len = std::strlen(double_cmd);
+        constexpr const char *double_cmd = "- cmd: - cmd: ";
+        constexpr const size_t double_cmd_len = const_strlen(double_cmd);
         while (static_cast<size_t>(a_newline - line_start) > double_cmd_len &&
                !std::memcmp(line_start, double_cmd, double_cmd_len)) {
             // Skip over just one of the - cmd. In the end there will be just one left.
-            line_start += std::strlen("- cmd: ");
+            line_start += const_strlen("- cmd: ");
         }
 
         // Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when:
         // 123456". Ignore those.
-        const char *cmd_when = "- cmd:    when:";
-        const size_t cmd_when_len = std::strlen(cmd_when);
+        constexpr const char *cmd_when = "- cmd:    when:";
+        constexpr const size_t cmd_when_len = const_strlen(cmd_when);
         if (static_cast<size_t>(a_newline - line_start) >= cmd_when_len &&
             !std::memcmp(line_start, cmd_when, cmd_when_len)) {
             continue;

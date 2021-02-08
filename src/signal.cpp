@@ -145,9 +145,9 @@ static const struct lookup_entry signal_table[] = {
 
 /// Test if \c name is a string describing the signal named \c canonical.
 static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
-    if (wcsncasecmp(name, L"sig", 3) == 0) name += 3;
+    if (wcsncasecmp(name, L"sig", const_strlen("sig")) == 0) name += 3;
 
-    return wcscasecmp(canonical + 3, name) == 0;
+    return wcscasecmp(canonical + const_strlen("sig"), name) == 0;
 }
 
 int wcs2sig(const wchar_t *str) {
@@ -187,10 +187,10 @@ static const pid_t s_main_pid = getpid();
 
 /// It's possible that we receive a signal after we have forked, but before we have reset the signal
 /// handlers (or even run the pthread_atfork calls). In that event we will do something dumb like
-/// swallow SIGINT. Ensure that doesn't happen. Check if we are the main fish process; if not reset
+/// swallow SIGINT. Ensure that doesn't happen. Check if we are the main fish process; if not, reset
 /// and re-raise the signal. \return whether we re-raised the signal.
 static bool reraise_if_forked_child(int sig) {
-    // Don't use is_forked_child, that relies on atfork handlers which maybe have not run yet.
+    // Don't use is_forked_child: it relies on atfork handlers which may have not yet run.
     if (getpid() == s_main_pid) {
         return false;
     }

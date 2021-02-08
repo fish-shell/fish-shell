@@ -425,9 +425,9 @@ static char *get_interpreter(const char *command, char *buffer, size_t buff_size
         close(fd);
     }
 
-    if (std::strncmp(buffer, "#! /", 4) == 0) {
+    if (std::strncmp(buffer, "#! /", const_strlen("#! /")) == 0) {
         return buffer + 3;
-    } else if (std::strncmp(buffer, "#!/", 3) == 0) {
+    } else if (std::strncmp(buffer, "#!/", const_strlen("#!/")) == 0) {
         return buffer + 2;
     }
     return nullptr;

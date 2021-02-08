@@ -727,18 +727,14 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // the newline "belongs" to the if statement as it ends its job.
     // But when rendered, it visually belongs to the job list.
 
-    // FIXME: if there's a middle newline, we will indent it wrongly.
-    // For example:
-    //    if true
-    //
-    //    end
-    // Here the middle newline should be indented by 1.
-
     size_t idx = src_size;
     int next_indent = iv.last_indent;
     while (idx--) {
         if (src.at(idx) == L'\n') {
-            indents.at(idx) = next_indent;
+            bool empty_middle_line = idx + 1 < src_size && src.at(idx + 1) == L'\n';
+            if (!empty_middle_line) {
+                indents.at(idx) = next_indent;
+            }
         } else {
             next_indent = indents.at(idx);
         }

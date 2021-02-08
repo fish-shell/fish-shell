@@ -78,10 +78,6 @@ enum token_t {
     test_paren_close,  // ")", close paren
 };
 
-static int stdin_fd{-1};
-static bool out_is_redirected;
-static bool err_is_redirected;
-
 /// Our number type. We support both doubles and long longs. We have to support these separately
 /// because some integers are not representable as doubles; these may come up in practice (e.g.
 /// inodes).
@@ -105,13 +101,13 @@ class number_t {
         return (this->delta > rhs.delta) - (this->delta < rhs.delta);
     }
 
-    // Return true if the number is a tty()/
-    bool isatty() const {
+    // Return true if the number is a tty().
+    bool isatty(const io_streams_t *streams) const {
         if (delta != 0.0 || base > INT_MAX || base < INT_MIN) return false;
         int bint = static_cast<int>(base);
-        if (bint == 0) return ::isatty(stdin_fd);
-        if (bint == 1) return !out_is_redirected && ::isatty(STDOUT_FILENO);
-        if (bint == 2) return !err_is_redirected && ::isatty(STDERR_FILENO);
+        if (bint == 0) return ::isatty(streams->stdin_fd);
+        if (bint == 1) return !streams->out_is_redirected && ::isatty(STDOUT_FILENO);
+        if (bint == 2) return !streams->err_is_redirected && ::isatty(STDERR_FILENO);
         return ::isatty(bint);
     }
 };
@@ -119,7 +115,7 @@ class number_t {
 static bool binary_primary_evaluate(test_expressions::token_t token, const wcstring &left,
                                     const wcstring &right, wcstring_list_t &errors);
 static bool unary_primary_evaluate(test_expressions::token_t token, const wcstring &arg,
-                                   wcstring_list_t &errors);
+                                   io_streams_t *streams, wcstring_list_t &errors);
 
 enum { UNARY_PRIMARY = 1 << 0, BINARY_PRIMARY = 1 << 1 };
 
@@ -235,41 +231,41 @@ class expression {
     virtual ~expression() = default;
 
     /// Evaluate returns true if the expression is true (i.e. STATUS_CMD_OK).
-    virtual bool evaluate(wcstring_list_t &errors) = 0;
+    virtual bool evaluate(io_streams_t *streams, wcstring_list_t &errors) = 0;
 };
 
 /// Single argument like -n foo or "just a string".
-class unary_primary : public expression {
+class unary_primary final : public expression {
    public:
     wcstring arg;
     unary_primary(token_t tok, range_t where, wcstring what)
         : expression(tok, where), arg(std::move(what)) {}
-    bool evaluate(wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
 };
 
 /// Two argument primary like foo != bar.
-class binary_primary : public expression {
+class binary_primary final : public expression {
    public:
     wcstring arg_left;
     wcstring arg_right;
 
     binary_primary(token_t tok, range_t where, wcstring left, wcstring right)
         : expression(tok, where), arg_left(std::move(left)), arg_right(std::move(right)) {}
-    bool evaluate(wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
 };
 
 /// Unary operator like bang.
-class unary_operator : public expression {
+class unary_operator final : public expression {
    public:
     unique_ptr<expression> subject;
     unary_operator(token_t tok, range_t where, unique_ptr<expression> exp)
         : expression(tok, where), subject(move(exp)) {}
-    bool evaluate(wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
 };
 
 /// Combining expression. Contains a list of AND or OR expressions. It takes more than two so that
 /// we don't have to worry about precedence in the parser.
-class combining_expression : public expression {
+class combining_expression final : public expression {
    public:
     const std::vector<unique_ptr<expression>> subjects;
     const std::vector<token_t> combiners;
@@ -283,17 +279,17 @@ class combining_expression : public expression {
 
     ~combining_expression() override = default;
 
-    bool evaluate(wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
 };
 
 /// Parenthetical expression.
-class parenthetical_expression : public expression {
+class parenthetical_expression final : public expression {
    public:
     unique_ptr<expression> contents;
     parenthetical_expression(token_t tok, range_t where, unique_ptr<expression> expr)
         : expression(tok, where), contents(move(expr)) {}
 
-    bool evaluate(wcstring_list_t &errors) override;
+    bool evaluate(io_streams_t *streams, wcstring_list_t &errors) override;
 };
 
 void test_parser::add_error(unsigned int idx, const wchar_t *fmt, ...) {
@@ -603,31 +599,31 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
     return result;
 }
 
-bool unary_primary::evaluate(wcstring_list_t &errors) {
-    return unary_primary_evaluate(token, arg, errors);
+bool unary_primary::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
+    return unary_primary_evaluate(token, arg, streams, errors);
 }
 
-bool binary_primary::evaluate(wcstring_list_t &errors) {
+bool binary_primary::evaluate(io_streams_t *, wcstring_list_t &errors) {
     return binary_primary_evaluate(token, arg_left, arg_right, errors);
 }
 
-bool unary_operator::evaluate(wcstring_list_t &errors) {
+bool unary_operator::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
     if (token == test_bang) {
         assert(subject.get());
-        return !subject->evaluate(errors);
+        return !subject->evaluate(streams, errors);
     }
 
     errors.push_back(format_string(L"Unknown token type in %s", __func__));
     return false;
 }
 
-bool combining_expression::evaluate(wcstring_list_t &errors) {
+bool combining_expression::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
     if (token == test_combine_and || token == test_combine_or) {
         assert(!subjects.empty());  //!OCLINT(multiple unary operator)
         assert(combiners.size() + 1 == subjects.size());
 
         // One-element case.
-        if (subjects.size() == 1) return subjects.at(0)->evaluate(errors);
+        if (subjects.size() == 1) return subjects.front()->evaluate(streams, errors);
 
         // Evaluate our lists, remembering that AND has higher precedence than OR. We can
         // visualize this as a sequence of OR expressions of AND expressions.
@@ -643,7 +639,7 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
             bool and_result = true;
             for (; idx < max; idx++) {
                 // Evaluate it, short-circuiting.
-                and_result = and_result && subjects.at(idx)->evaluate(errors);
+                and_result = and_result && subjects.at(idx)->evaluate(streams, errors);
 
                 // If the combiner at this index (which corresponding to how we combine with the
                 // next subject) is not AND, then exit the loop.
@@ -663,8 +659,8 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
     return false;
 }
 
-bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
-    return contents->evaluate(errors);
+bool parenthetical_expression::evaluate(io_streams_t *streams, wcstring_list_t &errors) {
+    return contents->evaluate(streams, errors);
 }
 
 // Parse a double from arg. Return true on success, false on failure.
@@ -770,7 +766,7 @@ static bool binary_primary_evaluate(test_expressions::token_t token, const wcstr
 }
 
 static bool unary_primary_evaluate(test_expressions::token_t token, const wcstring &arg,
-                                   wcstring_list_t &errors) {
+                                   io_streams_t *streams, wcstring_list_t &errors) {
     using namespace test_expressions;
     struct stat buf;
     switch (token) {
@@ -820,7 +816,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
         }
         case test_filedesc_t: {  // "-t", whether the fd is associated with a terminal
             number_t num;
-            return parse_number(arg, &num, errors) && num.isatty();
+            return parse_number(arg, &num, errors) && num.isatty(streams);
         }
         case test_fileperm_r: {  // "-r", read permission
             return !waccess(arg, R_OK);
@@ -891,13 +887,6 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **arg
         return args.at(0).empty() ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }
 
-    // HACK: We have static variables describing the stream state.
-    // This is supremely cheesy, but the alternative is threading them through
-    // *every single evaluation function*, even the ones that would never use them.
-    stdin_fd = streams.stdin_fd;
-    out_is_redirected = streams.out_is_redirected;
-    out_is_redirected = streams.out_is_redirected;
-
     // Try parsing
     wcstring err;
     unique_ptr<expression> expr = test_parser::parse_args(args, err, program_name);
@@ -908,7 +897,7 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **arg
     }
 
     wcstring_list_t eval_errors;
-    bool result = expr->evaluate(eval_errors);
+    bool result = expr->evaluate(&streams, eval_errors);
     if (!eval_errors.empty()) {
         if (!should_suppress_stderr_for_tests()) {
             for (const auto &eval_error : eval_errors) {

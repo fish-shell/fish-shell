@@ -375,22 +375,16 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
 }
 
 /// Execute an internal builtin. Given a parser and a builtin process, execute the builtin with the
-/// given streams. If pipe_read is set, assign stdin to it; otherwise infer stdin from the IO chain.
-/// An error return here indicates that the process failed to launch, and the rest of
-/// the pipeline should be cancelled.
+/// given streams. Infer stdin from the IO chain. An error return here indicates that the process
+/// failed to launch, and the rest of the pipeline should be cancelled.
 static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p,
-                                                  const io_pipe_t *pipe_read,
                                                   const io_chain_t &proc_io_chain,
                                                   io_streams_t &streams) {
     assert(p->type == process_type_t::builtin && "Process must be a builtin");
     int local_builtin_stdin = STDIN_FILENO;
-    autoclose_fd_t locally_opened_stdin{};
 
-    // If this is the first process, check the io redirections and see where we should
-    // be reading from.
-    if (pipe_read) {
-        local_builtin_stdin = pipe_read->source_fd;
-    } else if (const auto in = proc_io_chain.io_for_fd(STDIN_FILENO)) {
+    // Figure out what fd to use for the builtin's stdin.
+    if (const auto in = proc_io_chain.io_for_fd(STDIN_FILENO)) {
         // Ignore fd redirections from an fd other than the
         // standard ones. e.g. in source <&3 don't actually read from fd 3,
         // which is internal to fish. We still respect this redirection in
@@ -813,8 +807,8 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
             io_streams_t builtin_io_streams{*output_stream, *errput_stream};
             builtin_io_streams.job_group = j->group;
 
-            if (exec_internal_builtin_proc(parser, p, pipe_read.get(), process_net_io_chain,
-                                           builtin_io_streams) == launch_result_t::failed) {
+            if (exec_internal_builtin_proc(parser, p, process_net_io_chain, builtin_io_streams) ==
+                launch_result_t::failed) {
                 return launch_result_t::failed;
             }
             handle_builtin_output(parser, j, p, &process_net_io_chain, builtin_io_streams);

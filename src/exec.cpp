@@ -434,8 +434,10 @@ static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p
 
 /// \return an newly allocated output stream for the given fd, which is typically stdout or stderr.
 /// This inspects the io_chain and decides what sort of output stream to return.
-static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(const io_chain_t &io_chain,
-                                                                         int fd) {
+/// If \p piped_output_needs_buffering is set, and if the output is going to a pipe, then the other
+/// end then synchronously writing to the pipe risks deadlock, so we must buffer it.
+static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(
+    int fd, const io_chain_t &io_chain, bool piped_output_needs_buffering) {
     const shared_ptr<const io_data_t> io = io_chain.io_for_fd(fd);
     if (io == nullptr) {
         // Common case of no redirections.
@@ -452,12 +454,24 @@ static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(const i
         }
 
         case io_mode_t::close:
+            // Like 'echo foo >&-'
             return make_unique<null_output_stream_t>();
 
-        // TODO: reconsider these.
         case io_mode_t::file:
+            // Output is to a file which has been opened.
+            return make_unique<fd_output_stream_t>(io->source_fd);
+
         case io_mode_t::pipe:
+            // Output is to a pipe. We may need to buffer.
+            if (piped_output_needs_buffering) {
+                return make_unique<string_output_stream_t>();
+            } else {
+                return make_unique<fd_output_stream_t>(io->source_fd);
+            }
+
         case io_mode_t::fd:
+            // This is a case like 'echo foo >&5'
+            // It's uncommon and unclear what should happen.
             return make_unique<string_output_stream_t>();
     }
     DIE("Unreachable");
@@ -808,10 +822,10 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
         }
 
         case process_type_t::builtin: {
-            std::unique_ptr<output_stream_t> output_stream =
-                create_output_stream_for_builtin(process_net_io_chain, STDOUT_FILENO);
-            std::unique_ptr<output_stream_t> errput_stream =
-                create_output_stream_for_builtin(process_net_io_chain, STDERR_FILENO);
+            std::unique_ptr<output_stream_t> output_stream = create_output_stream_for_builtin(
+                STDOUT_FILENO, process_net_io_chain, piped_output_needs_buffering);
+            std::unique_ptr<output_stream_t> errput_stream = create_output_stream_for_builtin(
+                STDERR_FILENO, process_net_io_chain, piped_output_needs_buffering);
             io_streams_t builtin_io_streams{*output_stream, *errput_stream};
             builtin_io_streams.job_group = j->group;
 

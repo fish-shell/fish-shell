@@ -278,6 +278,7 @@ New or improved bindings
 -  As mentioned above, new special input functions ``undo`` (Control+\_ or Control+Z) and ``redo`` (Alt-/) can be used to revert changes to the command line or the pager search field (:issue:`6570`).
 -  Control-Z is now available for binding (:issue:`7152`).
 -  Additionally, using the ``cancel`` special input function (bound to escape by default) right after fish picked an unambiguous completion will undo that (:issue:`7433`).
+- ``fish_clipboard_paste`` (Control+V) trims indentation from multiline commands because fish already indents (:issue:`7662`).
 -  Vi mode bindings now support ``dh``, ``dl``, ``c0``, ``cf``, ``ct``, ``cF``, ``cT``, ``ch``, ``cl``, ``y0``, ``ci``, ``ca``, ``yi``, ``ya``, ``di``, ``da``, ``d;``, ``d,``, ``o``, ``O`` and Control+left/right keys to navigate by word (:issue:`6648`, :issue:`6755`, :issue:`6769`, :issue:`7442`, :issue:`7516`).
 -  Vi mode bindings support ``~`` (tilde) to toggle the case of the selected character (:issue:`6908`).
 -  Functions ``up-or-search`` and ``down-or-search`` (up-arrow and down-arrow) can cross empty lines and don't activate search mode if the search fails which makes it easier to use them to move between lines in some situations.

@@ -1738,7 +1738,7 @@ static int string_upper(parser_t &parser, io_streams_t &streams, int argc, wchar
 }
 
 // Keep sorted alphabetically
-static const struct string_subcommand {
+static constexpr const struct string_subcommand {
     const wchar_t *name;
     int (*handler)(parser_t &, io_streams_t &, int argc,  //!OCLINT(unused param)
                    wchar_t **argv);                       //!OCLINT(unused param)
@@ -1750,6 +1750,7 @@ static const struct string_subcommand {
     {L"sub", &string_sub},         {L"trim", &string_trim},     {L"unescape", &string_unescape},
     {L"upper", &string_upper},
 };
+ASSERT_SORT_ORDER(string_subcommands, .name);
 
 /// The string builtin, for manipulating strings.
 maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

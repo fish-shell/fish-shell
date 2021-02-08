@@ -83,7 +83,7 @@ struct electric_var_t {
 };
 
 // Keep sorted alphabetically
-static const std::vector<electric_var_t> electric_variables{
+static constexpr const electric_var_t electric_variables[] = {
     {L"FISH_VERSION", electric_var_t::freadonly},
     {L"PWD", electric_var_t::freadonly | electric_var_t::fcomputed | electric_var_t::fexports},
     {L"SHLVL", electric_var_t::freadonly | electric_var_t::fexports},
@@ -98,16 +98,19 @@ static const std::vector<electric_var_t> electric_variables{
     {L"umask", electric_var_t::fcomputed},
     {L"version", electric_var_t::freadonly},
 };
+ASSERT_SORT_ORDER(electric_variables, .name);
 
 const electric_var_t *electric_var_t::for_name(const wcstring &name) {
-    static auto first = electric_variables.begin();
-    static auto last = electric_variables.end();
+    constexpr auto electric_var_count = sizeof(electric_variables) / sizeof(electric_variables[0]);
+    constexpr auto begin = &electric_variables[0];
+    constexpr auto end = &electric_variables[0] + electric_var_count;
+
     electric_var_t search{name.c_str(), 0};
-    auto binsearch = std::lower_bound(first, last, search,
+    auto binsearch = std::lower_bound(begin, end, search,
                                       [&](const electric_var_t &v1, const electric_var_t &v2) {
                                           return wcscmp(v1.name, v2.name) < 0;
                                       });
-    if (binsearch != last && wcscmp(name.c_str(), binsearch->name) == 0) {
+    if (binsearch != end && wcscmp(name.c_str(), binsearch->name) == 0) {
         return &*binsearch;
     }
     return nullptr;

@@ -7,4 +7,3 @@ function __fish_print_pkg_packages
     end
     return 1
 end
-    

@@ -6,4 +6,3 @@ function __fish_make_cache_dir --description "Create and return XDG_CACHE_HOME"
     mkdir -m 700 -p $xdg_cache_home
     and echo $xdg_cache_home
 end
-

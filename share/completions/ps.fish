@@ -84,4 +84,3 @@ complete -c ps -s t -ltty$bsd_null -d "Select by tty" -r
 complete -c ps -s G -lgroup$bsd_null -d "Select by group" -x -a "(__fish_complete_list , __fish_complete_groups)"
 complete -c ps -s U -luser$bsd_null -d "Select by user" -x -a "(__fish_complete_list , __fish_complete_users)"
 complete -c ps -s p -lpid$bsd_null -d "Select by PID" -x -a "(__fish_complete_list , __fish_complete_pids)"
-

@@ -54,7 +54,7 @@ function fish_prompt
 
         # Get the commit difference counts between local and remote.
         command git rev-list --count --left-right 'HEAD...@{upstream}' 2>/dev/null \
-        | read -d \t -l status_ahead status_behind
+            | read -d \t -l status_ahead status_behind
         if test $status -ne 0
             set status_ahead 0
             set status_behind 0
@@ -182,4 +182,3 @@ function fish_prompt
         set_color normal
     end
 end
-

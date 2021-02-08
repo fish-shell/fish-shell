@@ -13,4 +13,3 @@ complete -c dm-tool -n "not __fish_seen_subcommand_from $cmds" -xa "$cmds"
 set -l session_users "(dm-tool list-seats | string replace -rf '.*UserName=' '' | string trim -c '\'')"
 set -l has_user "__fish_seen_subcommand_from $session_users"
 complete -c dm-tool -n "__fish_seen_subcommand_from switch-to-user; and not $has_user" -xa "$session_users"
-

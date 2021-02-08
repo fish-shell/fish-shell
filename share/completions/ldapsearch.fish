@@ -42,4 +42,3 @@ complete -c ldapsearch -s X -x -d 'Specify the requested authorization ID for SA
 complete -c ldapsearch -s Y -x -d 'Specify the SASL mechanism to be used for authentication'
 complete -c ldapsearch -s Z -d 'Issue StartTLS extended operation'
 complete -c ldapsearch -o ZZ -d 'Issue StartTLS ectended operation only if succesful'
-

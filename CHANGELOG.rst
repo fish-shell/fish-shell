@@ -1,3 +1,52 @@
+fish next-minor
+===============
+
+Notable improvements and fixes
+------------------------------
+
+
+Syntax changes and new commands
+-------------------------------
+
+
+Scripting improvements
+----------------------
+
+
+Interactive improvements
+------------------------
+
+
+New or improved bindings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+
+
+Improved terminal output
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Completions
+^^^^^^^^^^^
+
+
+Changes not visible to users
+----------------------------
+
+
+Deprecations and removed features
+---------------------------------
+
+
+For distributors and developers
+-------------------------------
+
+
+--------------
+
 fish 3.2.0 (released ???)
 =========================
 

@@ -86,7 +86,7 @@ struct input_function_metadata_t {
 
 /// A static mapping of all readline commands as strings to their readline_cmd_t equivalent.
 /// Keep this list sorted alphabetically!
-static const input_function_metadata_t input_function_metadata[] = {
+static constexpr const input_function_metadata_t input_function_metadata[] = {
     // NULL makes it unusable - this is specially inserted when we detect mouse input
     {L"", readline_cmd_t::disable_mouse_tracking},
     {L"accept-autosuggestion", readline_cmd_t::accept_autosuggestion},
@@ -165,6 +165,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {L"yank-pop", readline_cmd_t::yank_pop},
 };
 
+ASSERT_SORT_ORDER(input_function_metadata, .name);
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
                   input_function_count,
               "input_function_metadata size mismatch with input_common. Did you forget to update "

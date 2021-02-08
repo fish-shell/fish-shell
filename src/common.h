@@ -716,4 +716,41 @@ struct cleanup_t {
 
 bool is_console_session();
 
+/// Compile-time agnostic-size strcmp/wcscmp implementation. Unicode-unaware.
+template <typename T>
+constexpr ssize_t const_strcmp(const T *lhs, const T *rhs) {
+    return (*lhs == *rhs) ? (*lhs == 0 ? 0 : const_strcmp(lhs + 1, rhs + 1))
+                          : (*lhs > *rhs ? 1 : -1);
+}
+static_assert(const_strcmp("", "a") < 0, "const_strcmp failure");
+static_assert(const_strcmp("a", "a") == 0, "const_strcmp failure");
+static_assert(const_strcmp("a", "") > 0, "const_strcmp failure");
+static_assert(const_strcmp("aa", "a") > 0, "const_strcmp failure");
+static_assert(const_strcmp("a", "aa") < 0, "const_strcmp failure");
+static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
+
+/// Compile-time agnostic-size strlen/wcslen implementation. Unicode-unaware.
+template <typename T>
+constexpr ssize_t const_strlen(const T *str) {
+    return *str == static_cast<T>(0) ? 0 : 1 + const_strlen(str + 1);
+}
+static_assert(const_strlen("") == 0, "const_strlen failure");
+static_assert(const_strlen("hello") == 5, "const_strlen failure");
+
+/// Compile-time assertion of alphabetical sort of array `array`, by specified
+/// parameter `accessor`. This is only a macro because constexpr lambdas (to
+/// specify the accessor for the sort key) are C++17 and up.
+#define ASSERT_SORT_ORDER(array, accessor) \
+    struct verify_ ## array ## _sort_t { \
+        template <class T, size_t N> \
+        constexpr static bool validate(T(&vals)[N], size_t idx = 0) { \
+            return (idx == (((sizeof(array) / sizeof(vals[0]))) - 1)) \
+                   ? true \
+                   : const_strcmp(vals[idx] accessor, vals[idx + 1] accessor) <= 0 && \
+                         verify_ ## array ## _sort_t::validate<T, N>(vals, idx + 1); \
+    } \
+}; \
+static_assert(verify_ ## array ## _sort_t::validate(array), \
+              #array " members not in asciibetical order!");
+
 #endif  // FISH_COMMON_H

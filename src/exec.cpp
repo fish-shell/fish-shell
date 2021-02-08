@@ -651,13 +651,13 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
 }
 
 /// Execute a block node or function "process".
-/// \p allow_buffering if true, permit buffering the output.
+/// \p piped_output_needs_buffering if true, buffer the output.
 static launch_result_t exec_block_or_func_process(parser_t &parser, const std::shared_ptr<job_t> &j,
                                                   process_t *p, io_chain_t io_chain,
-                                                  bool allow_buffering) {
+                                                  bool piped_output_needs_buffering) {
     // Create an output buffer if we're piping to another process.
     shared_ptr<io_bufferfill_t> block_output_bufferfill{};
-    if (!p->is_last_in_job && allow_buffering) {
+    if (piped_output_needs_buffering) {
         // Be careful to handle failure, e.g. too many open fds.
         block_output_bufferfill = io_bufferfill_t::create();
         if (!block_output_bufferfill) {
@@ -783,15 +783,24 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
         parser.vars().set(assignment.variable_name, ENV_LOCAL | ENV_EXPORT, assignment.values);
     }
 
+    // Decide if outputting to a pipe may deadlock.
+    // This happens if fish pipes from an internal process into another internal process:
+    //    echo $big | string match...
+    // Here fish will only run one process at a time, so the pipe buffer may overfill.
+    // It may also happen when piping internal -> external:
+    //    echo $big | external_proc
+    // fish wants to run `echo` before launching external_proc, so the pipe may deadlock.
+    // However if we are a deferred run, it means that we are piping into an external process
+    // which got launched before us!
+    bool piped_output_needs_buffering = !p->is_last_in_job && !is_deferred_run;
+
     // Execute the process.
     p->check_generations_before_launch();
     switch (p->type) {
         case process_type_t::function:
         case process_type_t::block_node: {
-            // Allow buffering unless this is a deferred run. If deferred, then processes after us
-            // were already launched, so they are ready to receive (or reject) our output.
-            bool allow_buffering = !is_deferred_run;
-            if (exec_block_or_func_process(parser, j, p, process_net_io_chain, allow_buffering) ==
+            if (exec_block_or_func_process(parser, j, p, process_net_io_chain,
+                                           piped_output_needs_buffering) ==
                 launch_result_t::failed) {
                 return launch_result_t::failed;
             }

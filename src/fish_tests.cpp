@@ -1451,6 +1451,60 @@ static void test_indents() {
              1, "\n"      //
     );
 
+    // Continuation lines.
+    add_test(&tests,                            //
+             0, "echo 'continuation line' \\",  //
+             1, "\ncont",                       //
+             0, "\n"                            //
+    );
+    add_test(&tests,                                  //
+             0, "echo 'empty continuation line' \\",  //
+             1, "\n"                                  //
+    );
+    add_test(&tests,                                   //
+             0, "begin # continuation line in block",  //
+             1, "\necho \\",                           //
+             2, "\ncont"                               //
+    );
+    add_test(&tests,                                         //
+             0, "begin # empty continuation line in block",  //
+             1, "\necho \\",                                 //
+             2, "\n",                                        //
+             0, "\nend"                                      //
+    );
+    add_test(&tests,                                      //
+             0, "echo 'multiple continuation lines' \\",  //
+             1, "\nline1 \\",                             //
+             1, "\n# comment",                            //
+             1, "\n# more comment",                       //
+             1, "\nline2 \\",                             //
+             1, "\n"                                      //
+    );
+    add_test(&tests,                            //
+             0, "echo # comment ending in \\",  //
+             0, "\nline"                        //
+    );
+    add_test(&tests,                                            //
+             0, "echo 'multiple empty continuation lines' \\",  //
+             1, "\n\\",                                         //
+             1, "\n",                                           //
+             0, "\n"                                            //
+    );
+    add_test(&tests,                                                      //
+             0, "echo 'multiple statements with continuation lines' \\",  //
+             1, "\nline 1",                                               //
+             0, "\necho \\",                                              //
+             1, "\n"                                                      //
+    );
+    // This is an edge case, probably okay to change the behavior here.
+    add_test(&tests,                                              //
+             0, "begin", 1, " \\",                                //
+             2, "\necho 'continuation line in block header' \\",  //
+             2, "\n",                                             //
+             1, "\n",                                             //
+             0, "\nend"                                           //
+    );
+
     int test_idx = 0;
     for (const test_t &test : tests) {
         // Construct the input text and expected indents.

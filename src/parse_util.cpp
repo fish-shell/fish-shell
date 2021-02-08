@@ -679,6 +679,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
 
             auto range = node.source_range();
             if (range.length > 0 && node.category == category_t::leaf) {
+                record_line_continuations_until(range.start);
                 std::fill(indents.begin() + last_leaf_end, indents.begin() + range.start,
                           last_indent);
             }
@@ -714,6 +715,21 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             return nls.source(src).find(L'\n') != wcstring::npos;
         }
 
+        void record_line_continuations_until(size_t offset) {
+            wcstring gap_text = src.substr(last_leaf_end, offset - last_leaf_end);
+            size_t escaped_nl = gap_text.find(L"\\\n");
+            if (escaped_nl == wcstring::npos) return;
+            auto end = src.begin() + offset;
+            auto newline = src.begin() + last_leaf_end + escaped_nl + 1;
+            // The gap text might contain multiple newlines if there are multiple lines that
+            // don't contain an AST node, for example, comment lines, or lines containing only
+            // the escaped newline.
+            do {
+                line_continuations.push_back(newline - src.begin());
+                newline = std::find(newline + 1, end, L'\n');
+            } while (newline != end);
+        }
+
         // The one-past-the-last index of the most recently encountered leaf node.
         // We use this to populate the indents even if there's no tokens in the range.
         size_t last_leaf_end{0};
@@ -730,10 +746,14 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
         // Initialize our starting indent to -1, as our top-level node is a job list which
         // will immediately increment it.
         int indent{-1};
+
+        // List of locations of escaped newline characters.
+        std::vector<size_t> line_continuations;
     };
 
     indent_visitor_t iv(src, indents);
     node_visitor(iv).accept(ast.top());
+    iv.record_line_continuations_until(indents.size());
     std::fill(indents.begin() + iv.last_leaf_end, indents.end(), iv.last_indent);
 
     // All newlines now get the *next* indent.
@@ -755,6 +775,13 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             next_indent = indents.at(idx);
         }
     }
+    // Add an extra level of indentation to continuation lines.
+    for (size_t idx : iv.line_continuations) {
+        do {
+            indents.at(idx)++;
+        } while (++idx < src_size && src.at(idx) != L'\n');
+    }
+
     return indents;
 }
 

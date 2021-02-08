@@ -272,6 +272,7 @@ Interactive improvements
 -  fish is now more resilient against broken terminal modes (:issue:`7133`, :issue:`4873`).
 -  fish handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
 -  Keywords can now be colored differently by setting the ``fish_color_keyword`` variable (but ``fish_color_command`` will still be used if it is unset) (:issue:`7678`).
+-  Just like new ``fish_indent``, the interactive reader will indent continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||`` (:issue:`7694`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

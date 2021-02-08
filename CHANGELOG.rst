@@ -4,6 +4,7 @@ fish next-minor
 Notable improvements and fixes
 ------------------------------
 
+- **Saturating error count** for ``set --query``. Previously, 256 errors were reported at 0 errors.
 
 Syntax changes and new commands
 -------------------------------

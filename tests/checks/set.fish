@@ -682,4 +682,11 @@ echo $foo
 echo $bar
 #CHECK: 1 3
 
+
+# Test that `set -q` does not return 0 if there are 256 missing variables
+
+set -lq a(seq 1 256)
+echo $status
+#CHECK: 255
+
 true

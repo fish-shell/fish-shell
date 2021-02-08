@@ -6093,6 +6093,7 @@ static void test_topic_monitor_torture() {
     while (completed.load(std::memory_order_relaxed) < thread_count) {
         post_count += 1;
         monitor.post(t1);
+        std::this_thread::yield();
     }
     for (auto &t : threads) t.join();
 }

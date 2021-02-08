@@ -357,10 +357,7 @@ void inputter_t::function_push_args(readline_cmd_t code) {
     }
 
     // Push the function codes back into the input stream.
-    size_t idx = skipped.size();
-    while (idx--) {
-        event_queue_.push_front(skipped.at(idx));
-    }
+    event_queue_.insert_front(skipped.begin(), skipped.end());
 }
 
 /// Perform the action of the specified binding. allow_commands controls whether fish commands
@@ -432,7 +429,7 @@ bool inputter_t::mapping_is_match(const input_mapping_t &m) {
             // something else). Undo consumption of the read characters since we didn't match the
             // bind sequence and abort.
             event_queue_.push_front(evt);
-            while (i--) event_queue_.push_front(str[i]);
+            event_queue_.insert_front(str.begin(), str.begin() + i);
             return false;
         }
 
@@ -601,6 +598,7 @@ char_event_t inputter_t::read_characters_no_readline() {
             break;
         }
     }
+
     // Restore any readline functions
     event_queue_.insert_front(saved_events.cbegin(), saved_events.cend());
     return evt_to_return;
@@ -811,6 +809,7 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
 
 wcstring_list_t input_terminfo_get_names(bool skip_null) {
     assert(s_input_initialized);
+
     wcstring_list_t result;
     const auto &mappings = *s_terminfo_mappings;
     result.reserve(mappings.size());

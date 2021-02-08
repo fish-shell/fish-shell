@@ -390,8 +390,7 @@ static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p
         // which is internal to fish. We still respect this redirection in
         // that we pass it on as a block IO to the code that source runs,
         // and therefore this is not an error.
-        bool ignore_redirect =
-            in->io_mode == io_mode_t::fd && in->source_fd >= 0 && in->source_fd < 3;
+        bool ignore_redirect = in->io_mode == io_mode_t::fd && in->source_fd >= 3;
         if (!ignore_redirect) {
             local_builtin_stdin = in->source_fd;
         }

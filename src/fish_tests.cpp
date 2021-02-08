@@ -1389,7 +1389,7 @@ static void test_indents() {
     add_test(&tests,                //
              0, "if", 1, " foo",    //
              1, "\nif", 2, " bar",  //
-             1, "\n",  // FIXME: this should be 2 but parse_util_compute_indents has a bug
+             2, "\n",               //
              1, "\nend\n");
 
     add_test(&tests,                //

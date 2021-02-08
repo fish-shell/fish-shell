@@ -1,4 +1,4 @@
-function __fish_commandline_is_singlequoted --description "Return 0 if the current token has an open single-quote"
+function __fish_tokenizer_state --description "Print the state of the tokenizer at the end of the given string"
     # Go through the token char-by-char in a state machine.
     # The states are:
     # - normal - no quoting is active (the starting state)
@@ -8,8 +8,15 @@ function __fish_commandline_is_singlequoted --description "Return 0 if the curre
     # - single-escaped - open \\ inside single-quotes
     # - double-escaped - open \\ inside double-quotes
 
+    argparse --min-args 1 --max-args 1 i/initial-state= -- $argv
+    or return 1
+
     set -l state normal
-    for char in (commandline -ct | string split "")
+    if set -q _flag_initial_state
+        set str $_flag_initial_state
+    end
+
+    for char in (string split -- "" $argv[1])
         switch $char
             case "'" # single-quote
                 switch $state
@@ -51,10 +58,6 @@ function __fish_commandline_is_singlequoted --description "Return 0 if the curre
                 end
         end
     end
-    # TODO: Should "single-escaped" also be a success?
-    if contains -- $state single single-escaped
-        return 0
-    else
-        return 1
-    end
+
+    echo $state
 end

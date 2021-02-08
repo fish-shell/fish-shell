@@ -467,7 +467,15 @@ proc_status_t builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &stream
         if (!ret) {
             return proc_status_t::empty();
         }
-        return proc_status_t::from_exit_code(ret.value());
+
+        // The exit code is cast to an 8-bit unsigned integer, so saturate to
+        // 255. Otherwise, multiples of 256 are reported as 0.
+        int code = ret.value();
+        if (code > 255) {
+            code = 255;
+        }
+
+        return proc_status_t::from_exit_code(code);
     }
 
     FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);

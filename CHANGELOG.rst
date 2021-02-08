@@ -183,7 +183,7 @@ Scripting improvements
 -  ``fish -c`` now reads the remaining arguments into $argv (:issue:`2314`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
 -  ``fish --profile`` now only starts the profile after fish's startup (including config.fish) is done. For profiling startup there is a new ``--profile-startup`` option that profiles only startup (:issue:`7648`).
-- ``set --query``'s $status will now saturate at 255 instead of wrapping around when checking more than 255 variables at once (:issue:`7698`).
+-  Builtins return a maximum exit status of 255, rather than potentially overflowing. In particular, this affects ``exit``, ``return``, ``functions --query``, and ``set --query`` (:issue:`7698`, :issue:`7702`).
 
 
 Interactive improvements

@@ -92,6 +92,12 @@ functions --erase ls
 type -t ls
 #CHECK: file
 
+# ==========
+# Verify that `functions --query` does not return 0 if there are 256 missing functions
+functions --query a(seq 1 256)
+echo $status
+#CHECK: 255
+
 echo "function t; echo tttt; end" | source
 functions t
 # CHECK: # Defined via `source`

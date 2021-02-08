@@ -110,6 +110,18 @@ end
 echo Test 5 $sta
 #CHECK: Test 5 pass
 
+
+function test_builtin_status_clamp_to_255
+    return 300
+end
+test_builtin_status_clamp_to_255
+echo $status
+#CHECK: 255
+
+$fish -c "exit 300"
+echo $status
+#CHECK: 255
+
 ####################
 # echo tests
 echo 'abc\ndef'

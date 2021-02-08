@@ -9,7 +9,7 @@
 
 // 24-bit color.
 struct color24_t {
-    unsigned char rgb[3];
+    uint8_t rgb[3];
 };
 
 /// A type that represents a color. We work hard to keep it at a size of 4 bytes and verify with
@@ -17,7 +17,7 @@ struct color24_t {
 class rgb_color_t {
     // Types
     enum { type_none, type_named, type_rgb, type_normal, type_reset };
-    unsigned char type : 3;
+    uint8_t type : 3;
 
     // Flags
     enum {
@@ -27,10 +27,10 @@ class rgb_color_t {
         flag_dim = 1 << 3,
         flag_reverse = 1 << 4
     };
-    unsigned char flags : 5;
+    uint8_t flags : 5;
 
     union {
-        unsigned char name_idx;  // 0-10
+        uint8_t name_idx;  // 0-10
         color24_t color;
     } data;
 
@@ -47,7 +47,7 @@ class rgb_color_t {
     void parse(const wcstring &str);
 
     /// Private constructor.
-    explicit rgb_color_t(unsigned char t, unsigned char i = 0);
+    explicit rgb_color_t(uint8_t t, uint8_t i = 0);
 
    public:
     /// Default constructor of type none.
@@ -94,10 +94,10 @@ class rgb_color_t {
     wcstring description() const;
 
     /// Returns the name index for the given color. Requires that the color be named or RGB.
-    unsigned char to_name_index() const;
+    uint8_t to_name_index() const;
 
     /// Returns the term256 index for the given color. Requires that the color be RGB.
-    unsigned char to_term256_index() const;
+    uint8_t to_term256_index() const;
 
     /// Returns the 24 bit color for the given color. Requires that the color be RGB.
     color24_t to_color24() const;

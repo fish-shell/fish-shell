@@ -660,10 +660,29 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
                     inc = 1;
                     dec = node.parent->as<switch_statement_t>()->end.unsourced ? 0 : 1;
                     break;
-
+                case type_t::token_base: {
+                    auto tok = node.as<token_base_t>();
+                    if (node.parent->type == type_t::begin_header &&
+                        tok->type == parse_token_type_t::end) {
+                        // The newline after "begin" is optional, so it is part of the header.
+                        // The header is not in the indented block, so indent the newline here.
+                        if (node.source(src) == L"\n") {
+                            inc = 1;
+                            dec = 1;
+                        }
+                    }
+                    break;
+                }
                 default:
                     break;
             }
+
+            auto range = node.source_range();
+            if (range.length > 0 && node.category == category_t::leaf) {
+                std::fill(indents.begin() + last_leaf_end, indents.begin() + range.start,
+                          last_indent);
+            }
+
             indent += inc;
 
             // If we increased the indentation, apply it to the remainder of the string, even if the
@@ -674,17 +693,13 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             //
             // we want to indent the newline.
             if (inc) {
-                std::fill(indents.begin() + last_leaf_end, indents.end(), indent);
                 last_indent = indent;
             }
 
             // If this is a leaf node, apply the current indentation.
             if (node.category == category_t::leaf) {
-                auto range = node.source_range();
                 if (range.length > 0) {
-                    // Fill to the end.
-                    // Later nodes will come along and overwrite these.
-                    std::fill(indents.begin() + range.start, indents.end(), indent);
+                    std::fill(indents.begin() + range.start, indents.begin() + range.end(), indent);
                     last_leaf_end = range.start + range.length;
                     last_indent = indent;
                 }
@@ -719,6 +734,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
 
     indent_visitor_t iv(src, indents);
     node_visitor(iv).accept(ast.top());
+    std::fill(indents.begin() + iv.last_leaf_end, indents.end(), iv.last_indent);
 
     // All newlines now get the *next* indent.
     // For example, in this code:

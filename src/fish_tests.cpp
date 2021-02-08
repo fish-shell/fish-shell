@@ -1445,6 +1445,12 @@ static void test_indents() {
              1, "\n# comment 2"        //
     );
 
+    add_test(&tests,      //
+             0, "begin",  //
+             1, "\n",     // "begin" is special because this newline belongs to the block header
+             1, "\n"      //
+    );
+
     int test_idx = 0;
     for (const test_t &test : tests) {
         // Construct the input text and expected indents.

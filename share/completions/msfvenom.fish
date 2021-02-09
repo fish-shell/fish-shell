@@ -52,6 +52,7 @@ complete -c msfvenom -s p -l payload -xa "(__fish_complete_msf_payloads)" -d 'Pa
 complete -c msfvenom -l list-options -d 'List options for payload'
 complete -c msfvenom -s f -l format -xa "(__fish_complete_msf_formats)" -d 'Output format'
 complete -c msfvenom -s e -l encoder -xa "(__fish_complete_msf_encoders)" -d 'The encoder to use'
+complete -c msfvenom -l service-name -x -d 'Service name to use when generating a service binary'
 complete -c msfvenom -l sec-name -x -d 'Section name when generating Windows binaries'
 complete -c msfvenom -l smallest -d 'Generate the smallest possible payload'
 complete -c msfvenom -l encrypt -xa "(__fish_complete_msf_encrypt)" -d 'Type of encryption to apply to the shellcode'

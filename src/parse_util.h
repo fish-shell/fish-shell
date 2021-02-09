@@ -14,16 +14,6 @@ namespace ast {
 struct argument_t;
 }
 
-/// Find the beginning and end of the first subshell in the specified string.
-///
-/// \param in the string to search for subshells
-/// \param begin the starting parenthesis of the subshell
-/// \param end the ending parenthesis of the subshell
-/// \param accept_incomplete whether to permit missing closing parenthesis
-/// \return -1 on syntax error, 0 if no subshells exist and 1 on success
-int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end,
-                               bool accept_incomplete);
-
 /// Same as parse_util_locate_cmdsubst, but handles square brackets [ ].
 int parse_util_locate_slice(const wchar_t *in, wchar_t **begin, wchar_t **end,
                             bool accept_incomplete);

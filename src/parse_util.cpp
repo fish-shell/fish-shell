@@ -177,11 +177,6 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     return 1;
 }
 
-int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end,
-                               bool accept_incomplete) {
-    return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'(', L')');
-}
-
 int parse_util_locate_slice(const wchar_t *in, wchar_t **begin, wchar_t **end,
                             bool accept_incomplete) {
     return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'[', L']');
@@ -254,7 +249,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
     const wchar_t *pos = buff;
     for (;;) {
         wchar_t *begin = nullptr, *end = nullptr;
-        if (parse_util_locate_cmdsubst(pos, &begin, &end, true) <= 0) {
+        if (parse_util_locate_brackets_of_type(pos, &begin, &end, true, L'(', L')') <= 0) {
             // No subshell found, all done.
             break;
         }

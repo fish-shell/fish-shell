@@ -179,6 +179,12 @@ wcstring token_type_user_presentable_description(parse_token_type_t type, parse_
             return L"end of the statement";
         case parse_token_type_t::terminate:
             return L"end of the input";
+        case parse_token_type_t::error:
+            return L"a parse error";
+        case parse_token_type_t::tokenizer_error:
+            return L"an incomplete token";
+        case parse_token_type_t::comment:
+            return L"a comment";
         default: {
             return format_string(L"a %ls", token_type_description(type));
         }

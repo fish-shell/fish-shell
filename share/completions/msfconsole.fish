@@ -19,6 +19,7 @@ complete -c msfconsole -s m -l module-path -xa "(__fish_complete_directories)" -
 # Console options
 complete -c msfconsole -s a -l ask -d 'Ask before exiting Metasploit'
 complete -c msfconsole -s H -l history-file -F -d 'Save command history to the specified file'
+complete -c msfconsole -s l -l logger -xa 'Stdout Flatfile StdoutWithoutTimestamps TimestampColorlessFlatfile Stderr' -d 'Specify a logger to use'
 complete -c msfconsole -s L -l real-readline -d 'Use the system Readline library'
 complete -c msfconsole -s o -l output -F -d 'Output to the specified file'
 complete -c msfconsole -s p -l plugin -x -d 'Load a plugin on startup'

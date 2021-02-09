@@ -4790,6 +4790,14 @@ static void test_new_parser_ad_hoc() {
     // because we don't want to color it as an error.
     ast = ast_t::parse(L"a=", parse_flag_leave_unterminated);
     do_test(!ast.errored());
+
+    parse_error_list_t errors;
+    ast = ast_t::parse(L"begin; echo (", parse_flag_leave_unterminated, &errors);
+    do_test(errors.size() == 1 && errors.at(0).code == parse_error_tokenizer_unterminated_subshell);
+
+    errors.clear();
+    ast = ast_t::parse(L"for x in (", parse_flag_leave_unterminated, &errors);
+    do_test(errors.size() == 1 && errors.at(0).code == parse_error_tokenizer_unterminated_subshell);
 }
 
 static void test_new_parser_errors() {

@@ -1111,6 +1111,11 @@ class ast_t::populator_t {
 
         if (!token.allows_token(peek_token().type)) {
             const auto &peek = peek_token();
+            if ((flags_ & parse_flag_leave_unterminated) &&
+                peek.tok_error == tokenizer_error_t::unterminated_subshell) {
+                return;
+            }
+
             parse_error(peek, parse_error_generic, L"Expected %ls, but found %ls",
                         token_types_user_presentable_description({TokTypes...}).c_str(),
                         peek.user_presentable_description().c_str());
@@ -1133,6 +1138,11 @@ class ast_t::populator_t {
         if (!keyword.allows_keyword(peek_token().keyword)) {
             keyword.unsourced = true;
             const auto &peek = peek_token();
+
+            if ((flags_ & parse_flag_leave_unterminated) &&
+                peek.tok_error == tokenizer_error_t::unterminated_subshell) {
+                return;
+            }
 
             // Special error reporting for keyword_t<kw_end>.
             std::array<parse_keyword_t, sizeof...(KWs)> allowed = {{KWs...}};

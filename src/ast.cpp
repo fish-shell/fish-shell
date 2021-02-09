@@ -1112,7 +1112,8 @@ class ast_t::populator_t {
         if (!token.allows_token(peek_token().type)) {
             const auto &peek = peek_token();
             if ((flags_ & parse_flag_leave_unterminated) &&
-                peek.tok_error == tokenizer_error_t::unterminated_subshell) {
+                (peek.tok_error == tokenizer_error_t::unterminated_quote ||
+                 peek.tok_error == tokenizer_error_t::unterminated_subshell)) {
                 return;
             }
 
@@ -1140,7 +1141,8 @@ class ast_t::populator_t {
             const auto &peek = peek_token();
 
             if ((flags_ & parse_flag_leave_unterminated) &&
-                peek.tok_error == tokenizer_error_t::unterminated_subshell) {
+                (peek.tok_error == tokenizer_error_t::unterminated_quote ||
+                 peek.tok_error == tokenizer_error_t::unterminated_subshell)) {
                 return;
             }
 

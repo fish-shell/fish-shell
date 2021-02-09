@@ -4798,6 +4798,10 @@ static void test_new_parser_ad_hoc() {
     errors.clear();
     ast = ast_t::parse(L"for x in (", parse_flag_leave_unterminated, &errors);
     do_test(errors.size() == 1 && errors.at(0).code == parse_error_tokenizer_unterminated_subshell);
+
+    errors.clear();
+    ast = ast_t::parse(L"begin; echo '", parse_flag_leave_unterminated, &errors);
+    do_test(errors.size() == 1 && errors.at(0).code == parse_error_tokenizer_unterminated_quote);
 }
 
 static void test_new_parser_errors() {

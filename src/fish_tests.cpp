@@ -868,7 +868,14 @@ static void test_fd_monitor() {
         item42_thenclose.writer.close();
         item_oneshot.write42();
         monitor.poke_item(item_pokee.item_id);
-        std::this_thread::sleep_for(std::chrono::milliseconds(84));
+
+        // May need to loop here to ensure our fd_monitor gets scheduled - see #7699.
+        for (int i = 0; i < 100; i++) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(84));
+            if (item0_timeout.did_timeout) {
+                break;
+            }
+        }
     }
 
     do_test(!item_never.did_timeout);

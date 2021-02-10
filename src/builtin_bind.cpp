@@ -35,20 +35,6 @@ struct bind_cmd_opts_t {
     const wchar_t *sets_bind_mode = L"";
 };
 
-// Here follows the definition of all builtin commands. The function names are all of the form
-// builtin_NAME where NAME is the name of the builtin. so the function name for the builtin 'fg' is
-// 'builtin_fg'.
-//
-// A few builtins, including 'while', 'command' and 'builtin' are not defined here as they are
-// handled directly by the parser. (They are not parsed as commands, instead they only alter the
-// parser state)
-//
-// The builtins 'break' and 'continue' are so closely related that they share the same
-// implementation, namely 'builtin_break_continue.
-//
-// Several other builtins, including jobs, ulimit and set are so big that they have been given their
-// own module. These files are all named 'builtin_NAME.cpp', where NAME is the name of the builtin.
-
 /// List a single key binding.
 /// Returns false if no binding with that sequence and mode exists.
 bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,

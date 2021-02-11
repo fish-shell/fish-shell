@@ -14,7 +14,7 @@ grep\t"Open the grep view. Supports the same options as git-grep(1)"
 '
 complete -c tig -n 'not contains -- -- (commandline -opc)' -l stdin -d 'Read git commit IDs from stdin'
 complete -c tig -n 'not contains -- -- (commandline -opc)' -l pretty=raw -d 'Read git log output from stdin'
-complete -c tig -n 'not contains -- -- (commandline -opc)' -o C. -d 'Run as if Tig was started in .'
+complete -c tig -n 'not contains -- -- (commandline -opc)' -s C -r -d 'Run as if Tig was started in this directory'
 complete -c tig -n 'not contains -- -- (commandline -opc)' -s v -l version -d 'Show version and exit'
 complete -c tig -n 'not contains -- -- (commandline -opc)' -s h -l help -d 'Show help message and exit'
 

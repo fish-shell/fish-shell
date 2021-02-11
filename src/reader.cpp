@@ -790,10 +790,6 @@ static void term_fix_modes(struct termios *modes) {
 
     // We ignore these anyway, so there is no need to sacrifice a character.
     modes->c_cc[VSUSP] = disabling_char;
-
-    // (these two are already disabled because of IXON/IXOFF)
-    modes->c_cc[VSTOP] = disabling_char;
-    modes->c_cc[VSTART] = disabling_char;
 }
 
 static void term_fix_external_modes(struct termios *modes) {

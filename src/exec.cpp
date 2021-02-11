@@ -377,9 +377,8 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
 /// Execute an internal builtin. Given a parser and a builtin process, execute the builtin with the
 /// given streams. Infer stdin from the IO chain. An error return here indicates that the process
 /// failed to launch, and the rest of the pipeline should be cancelled.
-static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p,
-                                                  const io_chain_t &proc_io_chain,
-                                                  io_streams_t &streams) {
+static void exec_internal_builtin_proc(parser_t &parser, process_t *p,
+                                       const io_chain_t &proc_io_chain, io_streams_t &streams) {
     assert(p->type == process_type_t::builtin && "Process must be a builtin");
     int local_builtin_stdin = STDIN_FILENO;
 
@@ -425,9 +424,8 @@ static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p
     streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
     streams.io_chain = &proc_io_chain;
 
-    // Note this call may block for a long time, while the builtin performs I/O.
+    // Note this call may block for a long time while the builtin runs.
     p->status = builtin_run(parser, p->get_argv(), streams);
-    return launch_result_t::ok;
 }
 
 /// \return an newly allocated output stream for the given fd, which is typically stdout or stderr.
@@ -827,10 +825,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
             io_streams_t builtin_io_streams{*output_stream, *errput_stream};
             builtin_io_streams.job_group = j->group;
 
-            if (exec_internal_builtin_proc(parser, p, process_net_io_chain, builtin_io_streams) ==
-                launch_result_t::failed) {
-                return launch_result_t::failed;
-            }
+            exec_internal_builtin_proc(parser, p, process_net_io_chain, builtin_io_streams);
             handle_builtin_output(parser, j, p, &process_net_io_chain, builtin_io_streams);
             break;
         }

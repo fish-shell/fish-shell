@@ -777,10 +777,6 @@ static void term_fix_modes(struct termios *modes) {
     modes->c_oflag |= ONLCR;    // "translate newline to carriage return-newline" - without
                                 // you see staircase output.
 
-    // Disable flow control in the shell. We don't want to be stopped.
-    modes->c_iflag &= ~IXON;
-    modes->c_iflag &= ~IXOFF;
-
     modes->c_cc[VMIN] = 1;
     modes->c_cc[VTIME] = 0;
 
@@ -864,6 +860,19 @@ static void term_steal() {
     tcgetattr(STDIN_FILENO, &modes);
     std::memcpy(&tty_modes_for_external_cmds, &modes, sizeof tty_modes_for_external_cmds);
     term_fix_external_modes(&tty_modes_for_external_cmds);
+
+    // Copy flow control settings to shell modes.
+    if (tty_modes_for_external_cmds.c_iflag & IXON) {
+        shell_modes.c_iflag |= IXON;
+    } else {
+        shell_modes.c_iflag &= ~IXON;
+    }
+    if (tty_modes_for_external_cmds.c_iflag & IXOFF) {
+        shell_modes.c_iflag |= IXOFF;
+    } else {
+        shell_modes.c_iflag &= ~IXOFF;
+    }
+
 
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
@@ -1314,12 +1323,13 @@ void reader_init() {
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
 
+    // Disable flow control by default.
+    terminal_mode_on_startup.c_iflag &= ~IXON;
+    terminal_mode_on_startup.c_iflag &= ~IXOFF;
+
     // Set the mode used for program execution, initialized to the current mode.
     std::memcpy(&tty_modes_for_external_cmds, &terminal_mode_on_startup,
                 sizeof tty_modes_for_external_cmds);
-    // Disable flow control for external commands by default.
-    tty_modes_for_external_cmds.c_iflag &= ~IXON;
-    tty_modes_for_external_cmds.c_iflag &= ~IXOFF;
     term_fix_external_modes(&tty_modes_for_external_cmds);
 
     // Set the mode used for the terminal, initialized to the current mode.

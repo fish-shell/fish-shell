@@ -1319,10 +1319,6 @@ void reader_init() {
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
 
-    // Disable flow control by default.
-    terminal_mode_on_startup.c_iflag &= ~IXON;
-    terminal_mode_on_startup.c_iflag &= ~IXOFF;
-
     // Set the mode used for program execution, initialized to the current mode.
     std::memcpy(&tty_modes_for_external_cmds, &terminal_mode_on_startup,
                 sizeof tty_modes_for_external_cmds);
@@ -1330,6 +1326,12 @@ void reader_init() {
 
     // Set the mode used for the terminal, initialized to the current mode.
     std::memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
+
+    // Disable flow control by default.
+    tty_modes_for_external_cmds.c_iflag &= ~IXON;
+    tty_modes_for_external_cmds.c_iflag &= ~IXOFF;
+    shell_modes.c_iflag &= ~IXON;
+    shell_modes.c_iflag &= ~IXOFF;
 
     term_fix_modes(&shell_modes);
 

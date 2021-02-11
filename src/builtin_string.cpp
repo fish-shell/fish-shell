@@ -83,6 +83,7 @@ class arg_iterator_t {
     /// not. On true, the string is stored in storage_.
     bool get_arg_stdin() {
         assert(string_args_from_stdin(streams_) && "should not be reading from stdin");
+        assert(streams_.stdin_fd >= 0 && "should have a valid fd");
         // Read in chunks from fd until buffer has a line (or the end if split_ is unset).
         size_t pos;
         while (!split_ || (pos = buffer_.find('\n')) == std::string::npos) {

@@ -466,11 +466,13 @@ struct io_streams_t {
     output_stream_t &err;
 
     // fd representing stdin. This is not closed by the destructor.
+    // Note: if stdin is explicitly closed by `<&-` then this is -1!
     int stdin_fd{-1};
 
     // Whether stdin is "directly redirected," meaning it is the recipient of a pipe (foo | cmd) or
-    // direct redirection (cmd < foo.txt). An "indirect redirection" would be e.g. begin ; cmd ; end
-    // < foo.txt
+    // direct redirection (cmd < foo.txt). An "indirect redirection" would be e.g.
+    //    begin ; cmd ; end < foo.txt
+    // If stdin is closed (cmd <&-) this is false.
     bool stdin_is_directly_redirected{false};
 
     // Indicates whether stdout and stderr are specifically piped.

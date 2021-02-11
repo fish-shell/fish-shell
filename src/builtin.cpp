@@ -236,11 +236,17 @@ static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, wchar
 
     // Count the newlines coming in via stdin like `wc -l`.
     if (streams.stdin_is_directly_redirected) {
+        assert(streams.stdin_fd >= 0 &&
+               "Should have a valid fd since stdin is directly redirected");
         char buf[COUNT_CHUNK_SIZE];
         while (true) {
             long n = read_blocked(streams.stdin_fd, buf, COUNT_CHUNK_SIZE);
-            // Ignore all errors for now.
-            if (n <= 0) break;
+            if (n == 0) {
+                break;
+            } else if (n < 0) {
+                wperror(L"read");
+                return STATUS_CMD_ERROR;
+            }
             for (int i = 0; i < n; i++) {
                 if (buf[i] == L'\n') {
                     argc++;

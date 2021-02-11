@@ -50,7 +50,7 @@ test -f $tmpdir/file.txt && echo "File exists" || echo "File does not exist"
 
 function foo
     if set -q argv[1]
-        foo > $argv[1]
+        foo >$argv[1]
     end
     echo foo
 end
@@ -88,6 +88,19 @@ begin
     echo is_stderr 1>&2
 end 2>| cat >/dev/null
 #CHECK: is_stdout
+
+# Verify builtin behavior with closed stdin.
+# count silently ignores closed stdin, others may print an error.
+true <&-
+echo $status
+#CHECK: 0
+test -t 0 <&-
+echo $status
+#CHECK: 1
+read abc <&-
+#CHECKERR: read: stdin is closed
+
+
 
 # "Verify that pipes don't conflict with fd redirections"
 # This code is very similar to eval. We go over a bunch of fads

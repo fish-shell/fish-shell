@@ -120,7 +120,10 @@ static const wchar_t *math_get_arg_stdin(wcstring *storage, const io_streams_t &
         char ch = '\0';
         long rc = read_blocked(streams.stdin_fd, &ch, 1);
 
-        if (rc < 0) return nullptr;  // failure
+        if (rc < 0) {  // error
+            wperror(L"read");
+            return nullptr;
+        }
 
         if (rc == 0) {  // EOF
             if (arg.empty()) return nullptr;
@@ -146,6 +149,8 @@ static const wchar_t *math_get_arg_argv(int *argidx, wchar_t **argv) {
 static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storage,
                                    const io_streams_t &streams) {
     if (math_args_from_stdin(streams)) {
+        assert(streams.stdin_fd >= 0 &&
+               "stdin should not be closed since it is directly redirected");
         return math_get_arg_stdin(storage, streams);
     }
     return math_get_arg_argv(argidx, argv);

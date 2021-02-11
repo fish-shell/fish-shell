@@ -184,6 +184,7 @@ Scripting improvements
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
 -  ``fish --profile`` now only starts the profile after fish's startup (including config.fish) is done. For profiling startup there is a new ``--profile-startup`` option that profiles only startup (:issue:`7648`).
 - ``set --query``'s $status will now saturate at 255 instead of wrapping around when checking more than 255 variables at once (:issue:`7698`).
+- It is no longer an error to run builtin with closed stdin. For example ``count <&-`` now prints 0, instead of failing.
 
 
 Interactive improvements

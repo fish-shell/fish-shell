@@ -396,8 +396,6 @@ static launch_result_t exec_internal_builtin_proc(parser_t &parser, process_t *p
         }
     }
 
-    if (local_builtin_stdin == -1) return launch_result_t::failed;
-
     // Determine if we have a "direct" redirection for stdin.
     bool stdin_is_directly_redirected = false;
     if (!p->is_first_in_job) {

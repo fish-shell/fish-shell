@@ -47,6 +47,10 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **a
     const wchar_t *fn, *fn_intern;
 
     if (argc == optind || std::wcscmp(argv[optind], L"-") == 0) {
+        if (streams.stdin_fd < 0) {
+            streams.err.append_format(_(L"%ls: stdin is closed\n"), cmd);
+            return STATUS_CMD_ERROR;
+        }
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
         if (argc == optind && isatty(streams.stdin_fd)) {
             // Don't implicitly read from the terminal.

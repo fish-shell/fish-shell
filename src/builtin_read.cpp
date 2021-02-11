@@ -461,6 +461,12 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **arg
     retval = validate_read_args(cmd, opts, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
+    // stdin may have been explicitly closed
+    if (streams.stdin_fd < 0) {
+        streams.err.append_format(_(L"%ls: stdin is closed\n"), cmd);
+        return STATUS_CMD_ERROR;
+    }
+
     if (opts.one_line) {
         // --line is the same as read -d \n repeated N times
         opts.have_delimiter = true;

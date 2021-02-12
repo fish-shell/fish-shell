@@ -126,7 +126,7 @@ class SpawnedProc(object):
             function to ensure that each printed prompt is distinct.
     """
 
-    def __init__(self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy()):
+    def __init__(self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy(), **kwargs):
         """Construct from a name, timeout, and environment.
 
         Args:
@@ -143,7 +143,7 @@ class SpawnedProc(object):
         self.colorize = sys.stdout.isatty()
         self.messages = []
         self.start_time = None
-        self.spawn = pexpect.spawn(exe_path, env=env, encoding="utf-8", timeout=timeout)
+        self.spawn = pexpect.spawn(exe_path, env=env, encoding="utf-8", timeout=timeout, **kwargs)
         self.spawn.delaybeforesend = None
         self.prompt_counter = 0
 

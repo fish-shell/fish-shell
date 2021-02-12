@@ -16,6 +16,15 @@ static maybe_t<termsize_t> read_termsize_from_tty() {
 #ifdef HAVE_WINSIZE
     struct winsize winsize = {0, 0, 0, 0};
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize) >= 0) {
+        // 0 values are unusable, fall back to the default instead.
+        if (winsize.ws_col == 0) {
+            FLOGF(term_support, L"Terminal has 0 columns, falling back to default width");
+            winsize.ws_col = termsize_t::DEFAULT_WIDTH;
+        }
+        if (winsize.ws_row == 0) {
+            FLOGF(term_support, L"Terminal has 0 rows, falling back to default height");
+            winsize.ws_row = termsize_t::DEFAULT_HEIGHT;
+        }
         result = termsize_t{winsize.ws_col, winsize.ws_row};
     }
 #endif

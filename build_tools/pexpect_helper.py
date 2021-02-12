@@ -26,6 +26,7 @@ import pexpect
 # Default timeout for failing to match.
 TIMEOUT_SECS = 5
 
+UNEXPECTED_SUCCESS = object()
 
 def get_prompt_re(counter):
     """ Return a regular expression for matching a with a given prompt counter. """
@@ -74,6 +75,8 @@ def pexpect_error_type(err):
         return "EOF"
     elif isinstance(err, pexpect.TIMEOUT):
         return "timeout"
+    elif err is UNEXPECTED_SUCCESS:
+        return "unexpected success"
     else:
         return "unknown error"
 
@@ -169,7 +172,7 @@ class SpawnedProc(object):
         """
         return self.send(s + os.linesep)
 
-    def expect_re(self, pat, pat_desc=None, unmatched=None, **kwargs):
+    def expect_re(self, pat, pat_desc=None, unmatched=None, shouldfail=False, **kwargs):
         """Cover over pexpect.spawn.expect().
         Consume all "new" output of self.spawn until the given pattern is matched, or
         the timeout is reached.
@@ -190,8 +193,15 @@ class SpawnedProc(object):
             # When a match is found,
             # spawn.match is the MatchObject that produced it.
             # This can be used to check what exactly was matched.
+            if shouldfail:
+                err = UNEXPECTED_SUCCESS
+                if not pat_desc:
+                    pat_desc = str(pat)
+                self.report_exception_and_exit(pat_desc, unmatched, err)
             return self.spawn.match
         except pexpect.ExceptionPexpect as err:
+            if shouldfail:
+                return True
             if not pat_desc:
                 pat_desc = str(pat)
             self.report_exception_and_exit(pat_desc, unmatched, err)

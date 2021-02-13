@@ -182,7 +182,7 @@ Scripting improvements
 -  fish no longer crashes when started from a Windows-style working directory (eg ``F:\path``) (:issue:`7636`).
 -  ``fish -c`` now reads the remaining arguments into $argv (:issue:`2314`).
 -  The ``pwd`` command supports the long options ``--logical`` and ``--physical``, matching other implementations (:issue:`6787`).
--  ``fish --profile`` now only starts the profile after fish's startup (including config.fish) is done. For profiling startup there is a new ``--profile-startup`` option that profiles only startup (:issue:`7648`).
+-  ``fish --profile`` now only starts profiling after fish is ready to execute commands (all configuration is completed). There is a new ``--profile-startup`` option that only profiles the startup and configuration process (:issue:`7648`).
 -  Builtins return a maximum exit status of 255, rather than potentially overflowing. In particular, this affects ``exit``, ``return``, ``functions --query``, and ``set --query`` (:issue:`7698`, :issue:`7702`).
 - It is no longer an error to run builtin with closed stdin. For example ``count <&-`` now prints 0, instead of failing.
 
@@ -194,7 +194,7 @@ Interactive improvements
 -  The interactive reader now allows ending a line in a logical operators (``&&`` and ``||``) instead of complaining about a missing command
    (This was already syntactically valid, but interactive sessions didn't know about it yet).
 -  The prompt is reprinted after a background job exits (:issue:`1018`).
--  fish no longer inserts a space after a completion ending in ``.``, ``,`` or ``-`` is accepted (:issue:`6928`).
+-  fish no longer inserts a space after a completion ending in ``.``, ``,`` or ``-`` is accepted, improving completions for tools that provide dynamic completions (:issue:`6928`).
 -  If a filename is invalid when first pressing Tab, but becomes valid, it will be completed properly on the next attempt (:issue:`6863`).
 - ``help string match/replace/<subcommand>`` will show the help for string subcommands (:issue:`6786`).
 -  ``fish_key_reader`` sets the exit status to 0 when used with ``--help`` or ``--version`` (:issue:`6964`).
@@ -273,6 +273,7 @@ Interactive improvements
 -  fish handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
 -  Keywords can now be colored differently by setting the ``fish_color_keyword`` variable (but ``fish_color_command`` will still be used if it is unset) (:issue:`7678`).
 -  Just like new ``fish_indent``, the interactive reader will indent continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||`` (:issue:`7694`).
+-  Escaped spaces are saved in history correctly (#7661).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -331,7 +332,7 @@ Improved terminal support
 -  The cursor shape in Vi mode changes properly in Windows Terminal (:issue:`6999`, :issue:`6478`).
 -  The spurious warning about terminal size in small terminals has been removed (:issue:`6980`).
 -  Dynamic titles are now enabled in Alacritty (:issue:`7073`) and emacs' vterm (:issue:`7122`).
--  Current working directory updates are enabled in foot (:issue:`7099`).
+-  Current working directory updates are enabled in foot (:issue:`7099`) and WezTerm (:issue:`7649`).
 -  The width computation for certain emoji agrees better with terminals. In particular, flags now have width 2. (:issue:`7237`).
 -  Long command lines are wrapped in all cases, instead of sometimes being put on a new line (:issue:`5118`).
 -  The pager is properly rendered with long command lines selected (:issue:`2557`).
@@ -404,30 +405,25 @@ Completions
    -  ``yadm`` (:issue:`7100`)
    -  ``zopfli`` and ``zopflipng`` (:issue:`6872`)
 
--  Lots of improvements to completions.
+-  Lots of improvements to completions, including:
+
+   -  ``git`` completions can complete the right and left parts of a commit range like ``from..to`` or ``left...right``.
+   -  Completion scripts for custom Git subcommands like ``git-xyz`` are now loaded with Git completions. The completions can now be defined directly on the subcommand (using ``complete git-xyz``), and completion for ``git xyz`` will work. (:issue:`7075`, :issue:`7652`, :issue:`4358`)
+   -  ``make`` completions no longer second-guess make's file detection, fixing target completion in some cases (:issue:`7535`).
+   -  Command completions now correctly print the description even if the command was fully matched (like in ``ls<TAB>``).
+   -  ``set`` completions no longer hide variables starting with ``__``, they are sorted last instead.
+
 -  Improvements to the manpage completion generator (:issue:`7086`, :issue:`6879`, :issue:`7187`).
 -  Significant performance improvements to completion of the available commands (:issue:`7153`), especially on macOS Big Sur where there was a significant regression (:issue:`7365`, :issue:`7511`).
--  ``__fish_complete_suffix`` now uses the same fuzzy matching logic as normal file completion.
--  ``__fish_complete_suffix`` completes any file but sorts files with matching suffix first (:issue:`7040`, :issue:`7547`). Previously, it only completed files with matching suffix.
--  Completions for ``git`` learned to complete the right and left parts of a commit range like ``from..to`` or ``left...right``.
--  The ``__fish_print_packages`` function was broken apart into one function per package manager, and any completion now only calls its specific function. This helps if multiple package managers are installed on a system (e.g. to create containers). ``__fish_print_packages`` remains as a stub that calls all functions (:issue:`7542`).
--  Many completions have their descriptions shortened to fit more options on the screen (:issue:`6981`, :issue:`7550`, :issue:`7109`, :issue:`7569`, :issue:`7081`, :issue:`7291`, :issue:`7163`, :issue:`7378`).
--  The ``make`` completions no longer second-guess make's file detection, fixing target completion in some cases (:issue:`7535`).
--  The command completions now correctly print the description even if the command was fully matched (like in ``ls<TAB>``).
--  The ``set`` completions no longer hide variables starting with ``__``, they are sorted last instead.
--  Completion scripts for custom Git subcommands like ``git-xyz`` are now loaded with Git completions. The completions can now be defined directly on the subcommand (using ``complete git-xyz``), and completion for ``git xyz`` will work. (:issue:`7075`, :issue:`7652`, :issue:`4358`)
+-  Suffix completion using ``__fish_complete_suffix``  uses the same fuzzy matching logic as normal file completion, and completes any file but sorts files with matching suffix first (:issue:`7040`, :issue:`7547`). Previously, it only completed files with matching suffix.
 
-Changes not visible to users
-----------------------------
+For distributors
+----------------
 
--  fish has a new interactive test driver based on pexpect. This means that interactive tests are now written in python rather than the less known tcl, which reduces the number of programming languages required to work on fish (:issue:`5451`, :issue:`6825`).
--  The ``littlecheck`` script test driver gained improved output based on diffing rather than stopping on the first error. This makes understanding test failures much easier.
--  fish's test suite now checks all of its .fish scripts with ``fish --no-execute`` (:issue:`6619`).
--  The tests no longer fail if a user with a name starting with "haha" exists on the system (:issue:`6811`).
+-  fish has a new interactive test driver based on pexpect, removing the optional dependency on expect (and adding an optional dependency on pexpect) (:issue:`5451`, :issue:`6825`).
 -  The CHANGELOG was moved to restructured text, allowing it to be included in the documentation (:issue:`7057`).
--  fish moved CI from Travis (which is no longer available for opensource projects) to Github Actions (:issue:`6846`, :issue:`7447`)
 -  fish handles ncurses installed in a non-standard prefix better (:issue:`6600`, :issue:`7219`), and uses variadic tparm on NetBSD curses (:issue:`6626`).
--  The web configuration tool no longer uses an obsolete Angular version (:issue:`7147`).
+-  The Web-based configuration tool no longer uses an obsolete Angular version (:issue:`7147`).
 -  The fish project has adopted the Contributor Covenant code of conduct (:issue:`7151`).
 
 Deprecations and removed features

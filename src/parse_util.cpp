@@ -698,12 +698,10 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             }
 
             // If this is a leaf node, apply the current indentation.
-            if (node.category == category_t::leaf) {
-                if (range.length > 0) {
-                    std::fill(indents.begin() + range.start, indents.begin() + range.end(), indent);
-                    last_leaf_end = range.start + range.length;
-                    last_indent = indent;
-                }
+            if (node.category == category_t::leaf && range.length > 0) {
+                std::fill(indents.begin() + range.start, indents.begin() + range.end(), indent);
+                last_leaf_end = range.start + range.length;
+                last_indent = indent;
             }
 
             node_visitor(*this).accept_children_of(&node);

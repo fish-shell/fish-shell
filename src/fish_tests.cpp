@@ -1818,7 +1818,7 @@ static void test_escape_sequences() {
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (lc.escape_code_length(L"\x1B[2J") != 4)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (lc.escape_code_length(L"\x1B[38;5;123mABC") != const_strlen("\x1B[38;5;123m"))
+    if (lc.escape_code_length(L"\x1B[38;5;123mABC") != strlen("\x1B[38;5;123m"))
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (lc.escape_code_length(L"\x1B@") != 2)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);

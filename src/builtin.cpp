@@ -453,25 +453,25 @@ bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_look
 /// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
 static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L"if",
                                                L"end", L"switch", L"case"};
-static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
+static bool cmd_needs_help(const wcstring &cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-proc_status_t builtin_run(parser_t &parser, const wchar_t **argv, io_streams_t &streams) {
-    UNUSED(parser);
-    UNUSED(streams);
-    if (argv == nullptr || argv[0] == nullptr)
-        return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
+proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_streams_t &streams) {
+    if (argv.empty()) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
+    const wcstring &cmdname = argv.front();
 
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
     // handle displaying help for it here.
-    if (argv[1] && !argv[2] && parse_util_argument_is_help(argv[1]) && cmd_needs_help(argv[0])) {
-        builtin_print_help(parser, streams, argv[0]);
+    if (argv.size() == 2 && parse_util_argument_is_help(argv[1]) && cmd_needs_help(cmdname)) {
+        builtin_print_help(parser, streams, cmdname.c_str());
         return proc_status_t::from_exit_code(STATUS_CMD_OK);
     }
 
-    if (const builtin_data_t *data = builtin_lookup(argv[0])) {
-        maybe_t<int> ret = data->func(parser, streams, argv);
+    if (const builtin_data_t *data = builtin_lookup(cmdname)) {
+        // Construct the permutable argv array which the builtin expects.
+        null_terminated_array_t<wchar_t> argv_arr(argv);
+        maybe_t<int> ret = data->func(parser, streams, argv_arr.get());
         if (!ret) {
             return proc_status_t::empty();
         }
@@ -486,7 +486,7 @@ proc_status_t builtin_run(parser_t &parser, const wchar_t **argv, io_streams_t &
         return proc_status_t::from_exit_code(code);
     }
 
-    FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);
+    FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, cmdname.c_str());
     return proc_status_t::from_exit_code(STATUS_CMD_ERROR);
 }
 

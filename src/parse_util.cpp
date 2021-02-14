@@ -805,9 +805,7 @@ static int parser_is_pipe_forbidden(const wcstring &word) {
     return contains(forbidden_pipe_commands, word);
 }
 
-bool parse_util_argument_is_help(const wchar_t *s) {
-    return std::wcscmp(L"-h", s) == 0 || std::wcscmp(L"--help", s) == 0;
-}
+bool parse_util_argument_is_help(const wcstring &s) { return s == L"-h" || s == L"--help"; }
 
 // \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
 // there are no arguments.

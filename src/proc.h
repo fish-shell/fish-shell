@@ -198,15 +198,6 @@ enum { INVALID_PID = -2 };
 /// the name of the shellscript function.
 class parser_t;
 class process_t {
-   private:
-    null_terminated_array_t<wchar_t> argv_array;
-
-    redirection_spec_list_t proc_redirection_specs;
-
-    // No copying.
-    process_t(const process_t &rhs) = delete;
-    void operator=(const process_t &rhs) = delete;
-
    public:
     process_t();
 
@@ -230,30 +221,19 @@ class process_t {
     std::vector<concrete_assignment> variable_assignments;
 
     /// Sets argv.
-    void set_argv(const wcstring_list_t &argv) { argv_array.set(argv); }
+    void set_argv(wcstring_list_t argv) { argv_ = std::move(argv); }
 
     /// Returns argv.
-    const wchar_t **get_argv() { return argv_array.get(); }
-    const wchar_t *const *get_argv() const { return argv_array.get(); }
-    const null_terminated_array_t<wchar_t> &get_argv_array() const { return argv_array; }
+    const wcstring_list_t &argv() { return argv_; }
 
-    /// Returns argv[idx].
-    const wchar_t *argv(size_t idx) const {
-        const wchar_t *const *argv = argv_array.get();
-        assert(argv != nullptr);
-        return argv[idx];
-    }
-
-    /// Returns argv[0], or NULL.
-    const wchar_t *argv0() const {
-        const wchar_t *const *argv = argv_array.get();
-        return argv ? argv[0] : nullptr;
-    }
+    /// Returns argv[0], or nullptr.
+    const wchar_t *argv0() const { return argv_.empty() ? nullptr : argv_.front().c_str(); }
 
     /// Redirection list getter and setter.
-    const redirection_spec_list_t &redirection_specs() const { return proc_redirection_specs; }
+    const redirection_spec_list_t &redirection_specs() const { return proc_redirection_specs_; }
+
     void set_redirection_specs(redirection_spec_list_t specs) {
-        this->proc_redirection_specs = std::move(specs);
+        this->proc_redirection_specs_ = std::move(specs);
     }
 
     /// Store the current topic generations. That is, right before the process is launched, record
@@ -297,6 +277,14 @@ class process_t {
 
     /// Number of jiffies spent in process at last cpu time check.
     unsigned long last_jiffies{0};
+
+    // No copying.
+    process_t(const process_t &rhs) = delete;
+    void operator=(const process_t &rhs) = delete;
+
+   private:
+    wcstring_list_t argv_;
+    redirection_spec_list_t proc_redirection_specs_;
 };
 
 typedef std::unique_ptr<process_t> process_ptr_t;

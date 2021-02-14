@@ -94,7 +94,7 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 wcstring parse_util_unescape_wildcards(const wcstring &str);
 
 /// Checks if the specified string is a help option.
-bool parse_util_argument_is_help(const wchar_t *s);
+bool parse_util_argument_is_help(const wcstring &s);
 
 /// Calculates information on the parameter at the specified index.
 ///

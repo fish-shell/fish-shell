@@ -280,7 +280,7 @@ class env_stack_t final : public environment_t {
     bool universal_barrier();
 
     /// Returns an array containing all exported variables in a format suitable for execv.
-    std::shared_ptr<const null_terminated_array_t<char>> export_arr();
+    std::shared_ptr<owning_null_terminated_array_t> export_arr();
 
     /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
     /// but globals are shared (i.e. changes to global will be visible to this snapshot). This

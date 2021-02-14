@@ -184,17 +184,20 @@ bool is_thompson_shell_script(const char *path) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
 
-    null_terminated_array_t<char> argv_array;
-    convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
+    // Construct argv. Ensure the strings stay alive for the duration of this function.
+    std::vector<std::string> narrow_strings = wide_string_list_to_narrow(p->argv());
+    null_terminated_array_t<char> narrow_argv(narrow_strings);
+    const char **argv = narrow_argv.get();
 
+    // Construct envp.
     auto export_vars = vars.export_arr();
-    const char *const *envv = export_vars->get();
+    const char **envp = export_vars->get();
     std::string actual_cmd = wcs2string(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
     // Bounce to launch_process. This never returns.
-    safe_launch_process(p, actual_cmd.c_str(), argv_array.get(), envv);
+    safe_launch_process(p, actual_cmd.c_str(), argv, envp);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.
@@ -495,7 +498,7 @@ static void exec_internal_builtin_proc(parser_t &parser, process_t *p,
     streams.io_chain = &proc_io_chain;
 
     // Note this call may block for a long time while the builtin runs.
-    p->status = builtin_run(parser, p->get_argv(), streams);
+    p->status = builtin_run(parser, p->argv(), streams);
 }
 
 /// \return an newly allocated output stream for the given fd, which is typically stdout or stderr.
@@ -576,8 +579,8 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
                                              process_t *p, const io_chain_t &proc_io_chain) {
     assert(p->type == process_type_t::external && "Process is not external");
     // Get argv and envv before we fork.
-    null_terminated_array_t<char> argv_array;
-    convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
+    const std::vector<std::string> narrow_argv = wide_string_list_to_narrow(p->argv());
+    null_terminated_array_t<char> argv_array(narrow_argv);
 
     // Convert our IO chain to a dup2 sequence.
     auto dup2s = dup2_list_t::resolve_chain(proc_io_chain);
@@ -716,11 +719,11 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return proc_performer_t{};
         }
-        auto argv = move_to_sharedptr(p->get_argv_array().to_list());
+        const wcstring_list_t &argv = p->argv();
         return [=](parser_t &parser) {
             // Pull out the job list from the function.
             const ast::job_list_t &body = props->func_node->jobs;
-            const block_t *fb = function_prepare_environment(parser, *argv, *props);
+            const block_t *fb = function_prepare_environment(parser, argv, *props);
             auto res = parser.eval_node(props->parsed_source, body, io_chain, job_group);
             function_restore_environment(parser, fb);
 
@@ -817,7 +820,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
     // Maybe trace this process.
     // TODO: 'and' and 'or' will not show.
     if (trace_enabled(parser)) {
-        trace_argv(parser, nullptr, p->get_argv_array().to_list());
+        trace_argv(parser, nullptr, p->argv());
     }
 
     // The IO chain for this process.

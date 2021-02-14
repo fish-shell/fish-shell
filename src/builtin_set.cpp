@@ -436,26 +436,6 @@ maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_flags_t 
     return res;
 }
 
-static int update_values(wcstring_list_t &list, std::vector<long> &indexes,
-                         const wcstring_list_t &values) {
-    // Replace values where needed.
-    for (size_t i = 0; i < indexes.size(); i++) {
-        // The '- 1' below is because the indices in fish are one-based, but the vector uses
-        // zero-based indices.
-        long ind = indexes[i] - 1;
-        const wcstring newv = values[i];
-        if (ind < 0) {
-            return 1;
-        }
-        if (static_cast<size_t>(ind) >= list.size()) {
-            list.resize(ind + 1);
-        }
-
-        list[ind] = newv;
-    }
-
-    return 0;
-}
 
 /// Given a list of values and 1-based indexes, return a new list, with those elements removed.
 /// Note this deliberately accepts both args by value, as it modifies them both.
@@ -706,67 +686,62 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     return ret;
 }
 
-/// This handles the common case of setting the entire var to a set of values.
-static int set_var_array(const wchar_t *cmd, const set_cmd_opts_t &opts, const wcstring &varname,
-                         wcstring_list_t &new_values, int argc, wchar_t **argv, parser_t &parser,
-                         const io_streams_t &streams) {
-    UNUSED(cmd);
-    UNUSED(streams);
-
-    if (opts.prepend || opts.append) {
-        if (opts.prepend) {
-            for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
+/// Return a list of new values for the variable \p varname, respecting the \p opts.
+/// The arguments are given as the argc, argv pair.
+/// This handles the simple case where there are no indexes.
+static wcstring_list_t new_var_values(const wcstring &varname, const set_cmd_opts_t &opts, int argc,
+                                      const wchar_t *const *argv, const environment_t &vars) {
+    wcstring_list_t result;
+    if (!opts.prepend && !opts.append) {
+        // Not prepending or appending.
+        result.assign(argv, argv + argc);
+    } else {
+        // Note: when prepending or appending, we always use default scoping when fetching existing
+        // values. For example:
+        //   set --global var 1 2
+        //   set --local --append var 3 4
+        // This starts with the existing global variable, appends to it, and sets it locally.
+        // So do not use the given variable: we must re-fetch it.
+        // TODO: this races under concurrent execution.
+        if (auto existing = vars.get(varname, ENV_DEFAULT)) {
+            result = existing->as_list();
         }
 
-        auto var_str = parser.vars().get(varname, ENV_DEFAULT);
-        if (var_str) {
-            const auto &var_array = var_str->as_list();
-            new_values.insert(new_values.end(), var_array.begin(), var_array.end());
+        if (opts.prepend) {
+            result.insert(result.begin(), argv, argv + argc);
         }
 
         if (opts.append) {
-            for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
+            result.insert(result.end(), argv, argv + argc);
         }
-    } else {
-        for (int i = 0; i < argc; i++) new_values.push_back(argv[i]);
     }
-
-    return STATUS_CMD_OK;
+    return result;
 }
 
 /// This handles the more difficult case of setting individual slices of a var.
-static int set_var_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wcstring &varname,
-                          wcstring_list_t &new_values, std::vector<long> &indexes, int argc,
-                          wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    UNUSED(parser);
+static wcstring_list_t new_var_values_by_index(const split_var_t &split, int argc,
+                                               const wchar_t *const *argv) {
+    assert(static_cast<size_t>(argc) == split.indexes.size() &&
+           "Must have the same number of indexes as arguments");
 
-    if (opts.append || opts.prepend) {
-        streams.err.append_format(
-            L"%ls: Cannot use --append or --prepend when assigning to a slice", cmd);
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
-    }
-
-    if (indexes.size() != static_cast<size_t>(argc)) {
-        streams.err.append_format(BUILTIN_SET_MISMATCHED_ARGS, cmd, indexes.size(), argc);
-        return STATUS_INVALID_ARGS;
-    }
-
-    int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
-    const auto var_str = parser.vars().get(varname, scope);
-    if (var_str) var_str->to_list(new_values);
-
-    // Slice indexes have been calculated, do the actual work.
+    // Inherit any existing values.
+    // Note unlike the append/prepend case, we start with a variable in the same scope as we are
+    // setting.
     wcstring_list_t result;
-    for (int i = 0; i < argc; i++) result.push_back(argv[i]);
+    if (split.var) result = split.var->as_list();
 
-    int retval = update_values(new_values, indexes, result);
-    if (retval != STATUS_CMD_OK) {
-        streams.err.append_format(BUILTIN_SET_ARRAY_BOUNDS_ERR, cmd);
-        return retval;
+    // For each (index, argument) pair, set the element in our \p result to the replacement string.
+    // Extend the list with empty strings as needed. The indexes are 1-based.
+    for (int i = 0; i < argc; i++) {
+        long lidx = split.indexes.at(i);
+        assert(lidx >= 1 && "idx should have been verified in range already");
+        // Convert from 1-based to 0-based.
+        size_t idx = static_cast<size_t>(lidx - 1);
+        // Extend as needed with empty strings.
+        if (idx >= result.size()) result.resize(idx + 1);
+        result.at(idx) = argv[i];
     }
-
-    return STATUS_CMD_OK;
+    return result;
 }
 
 /// Set a variable.
@@ -789,28 +764,52 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
         return STATUS_INVALID_ARGS;
     }
 
+    // Is the variable valid?
     if (!valid_var_name(split->varname)) {
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, split->varname.c_str());
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
-    int retval;
+    // Setting with explicit indexes like `set foo[3] ...` has additional error handling.
+    if (!split->indexes.empty()) {
+        // Indexes must be > 0. (Note split_var_and_indexes negates negative values).
+        for (long v : split->indexes) {
+            if (v <= 0) {
+                streams.err.append_format(BUILTIN_SET_ARRAY_BOUNDS_ERR, cmd);
+                return STATUS_INVALID_ARGS;
+            }
+        }
+
+        // Append and prepend are disallowed.
+        if (opts.append || opts.prepend) {
+            streams.err.append_format(
+                L"%ls: Cannot use --append or --prepend when assigning to a slice", cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
+
+        // Argument count and index count must agree.
+        if (split->indexes.size() != static_cast<size_t>(argc)) {
+            streams.err.append_format(BUILTIN_SET_MISMATCHED_ARGS, cmd, split->indexes.size(),
+                                      argc);
+            return STATUS_INVALID_ARGS;
+        }
+    }
+
     wcstring_list_t new_values;
     if (split->indexes.empty()) {
         // Handle the simple, common, case. Set the var to the specified values.
-        retval = set_var_array(cmd, opts, split->varname, new_values, argc, argv, parser, streams);
+        new_values = new_var_values(split->varname, opts, argc, argv, parser.vars());
     } else {
         // Handle the uncommon case of setting specific slices of a var.
-        retval = set_var_slices(cmd, opts, split->varname, new_values, split->indexes, argc, argv,
-                                parser, streams);
+        new_values = new_var_values_by_index(*split, argc, argv);
     }
-    if (retval != STATUS_CMD_OK) return retval;
 
+    // Set the value back in the variable stack and fire any events.
     std::vector<event_t> evts;
-    retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(new_values), streams,
-                                      parser.vars(), &evts);
-    // Fire any events.
+    int retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(new_values),
+                                          streams, parser.vars(), &evts);
     for (const auto &evt : evts) {
         event_fire(parser, evt);
     }

@@ -476,7 +476,7 @@ static std::unique_ptr<output_stream_t> create_output_stream_for_builtin(
 /// Handle output from a builtin, by printing the contents of builtin_io_streams to the redirections
 /// given in io_chain.
 static void handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t> &j, process_t *p,
-                                  io_chain_t *io_chain, const io_streams_t &streams) {
+                                  const io_chain_t &io_chain, const io_streams_t &streams) {
     assert(p->type == process_type_t::builtin && "Process is not a builtin");
 
     // Mark if we discarded output.
@@ -494,7 +494,7 @@ static void handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
 
     // Construct and run our background process.
     run_internal_process_or_short_circuit(parser, j, p, std::move(outbuff), std::move(errbuff),
-                                          *io_chain);
+                                          io_chain);
 }
 
 /// Executes an external command.
@@ -826,7 +826,7 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
             builtin_io_streams.job_group = j->group;
 
             exec_internal_builtin_proc(parser, p, process_net_io_chain, builtin_io_streams);
-            handle_builtin_output(parser, j, p, &process_net_io_chain, builtin_io_streams);
+            handle_builtin_output(parser, j, p, process_net_io_chain, builtin_io_streams);
             break;
         }
 

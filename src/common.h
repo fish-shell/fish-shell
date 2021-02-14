@@ -732,7 +732,7 @@ static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
 
 /// Compile-time agnostic-size strlen/wcslen implementation. Unicode-unaware.
 template <typename T>
-constexpr ssize_t const_strlen(const T *str) {
+constexpr size_t const_strlen(const T *str) {
     return *str == static_cast<T>(0) ? 0 : 1 + const_strlen(str + 1);
 }
 static_assert(const_strlen("") == 0, "const_strlen failure");

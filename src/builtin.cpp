@@ -119,8 +119,8 @@ static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h
                                               {nullptr, 0, nullptr, 0}};
 
 int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int argc,
-                             wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                             const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -204,7 +204,7 @@ void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wch
 
 /// A generic bultin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
-static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     help_only_cmd_opts_t opts;
@@ -231,7 +231,7 @@ static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, wch
 // Since this is just for counting, it can be massive.
 #define COUNT_CHUNK_SIZE (512 * 256)
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
-static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     int argc = 0;
 
@@ -266,7 +266,7 @@ static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, wchar
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
 static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &streams,
-                                           wchar_t **argv) {
+                                           const wchar_t **argv) {
     int is_break = (std::wcscmp(argv[0], L"break") == 0);
     int argc = builtin_count_args(argv);
 
@@ -297,8 +297,9 @@ static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &strea
 }
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
-static maybe_t<int> builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+static maybe_t<int> builtin_breakpoint(parser_t &parser, io_streams_t &streams,
+                                       const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     if (argv[1] != nullptr) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 0, builtin_count_args(argv) - 1);
         return STATUS_INVALID_ARGS;
@@ -323,21 +324,21 @@ static maybe_t<int> builtin_breakpoint(parser_t &parser, io_streams_t &streams, 
     return parser.get_last_status();
 }
 
-maybe_t<int> builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_true(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     UNUSED(argv);
     return STATUS_CMD_OK;
 }
 
-maybe_t<int> builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_false(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     UNUSED(argv);
     return STATUS_CMD_ERROR;
 }
 
-maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     for (int i = 1; i < builtin_count_args(argv); i++) {
@@ -455,7 +456,7 @@ static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-proc_status_t builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams) {
+proc_status_t builtin_run(parser_t &parser, const wchar_t **argv, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
     if (argv == nullptr || argv[0] == nullptr)

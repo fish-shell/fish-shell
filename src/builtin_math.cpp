@@ -43,7 +43,7 @@ static const struct woption long_options[] = {{L"scale", required_argument, null
                                               {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = L"math";
     int opt;
     wgetopter_t w;
@@ -140,13 +140,13 @@ static const wchar_t *math_get_arg_stdin(wcstring *storage, const io_streams_t &
 }
 
 /// Return the next argument from argv.
-static const wchar_t *math_get_arg_argv(int *argidx, wchar_t **argv) {
+static const wchar_t *math_get_arg_argv(int *argidx, const wchar_t **argv) {
     return argv && argv[*argidx] ? argv[(*argidx)++] : nullptr;
 }
 
 /// Get the arguments from argv or stdin based on the execution context. This mimics how builtin
 /// `string` does it.
-static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storage,
+static const wchar_t *math_get_arg(int *argidx, const wchar_t **argv, wcstring *storage,
                                    const io_streams_t &streams) {
     if (math_args_from_stdin(streams)) {
         assert(streams.stdin_fd >= 0 &&
@@ -272,8 +272,8 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
 }
 
 /// The math builtin evaluates math expressions.
-maybe_t<int> builtin_math(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_math(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     math_cmd_opts_t opts;
     int optind;

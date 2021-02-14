@@ -81,8 +81,8 @@ static const struct woption long_options[] = {
 static int is_path_variable(const wcstring &env) { return env == L"PATH" || env == L"CDPATH"; }
 
 static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
 
     int opt;
     wgetopter_t w;
@@ -470,8 +470,8 @@ static env_mode_flags_t compute_scope(const set_cmd_opts_t &opts) {
 
 /// Print the names of all environment variables in the scope. It will include the values unless the
 /// `set --names` flag was used.
-static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
-                            parser_t &parser, io_streams_t &streams) {
+static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
+                            const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     UNUSED(cmd);
     UNUSED(argc);
     UNUSED(argv);
@@ -520,8 +520,8 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
 }
 
 // Query mode. Return the number of variables that do NOT exist out of the specified variables.
-static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
-                             parser_t &parser, io_streams_t &streams) {
+static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
+                             const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     int retval = 0;
     env_mode_flags_t scope = compute_scope(opts);
 
@@ -596,7 +596,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
 
 /// Show mode. Show information about the named variable(s).
 static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int argc,
-                            wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                            const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     UNUSED(opts);
     const auto &vars = parser.vars();
     if (argc == 0) {  // show all vars
@@ -610,7 +610,7 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
         }
     } else {
         for (int i = 0; i < argc; i++) {
-            wchar_t *arg = argv[i];
+            const wchar_t *arg = argv[i];
 
             if (!valid_var_name(arg)) {
                 streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, arg);
@@ -635,8 +635,8 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
 }
 
 /// Erase a variable.
-static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
-                             parser_t &parser, io_streams_t &streams) {
+static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
+                             const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     int ret = STATUS_CMD_OK;
     env_mode_flags_t scope = compute_scope(opts);
     for (int i = 0; i < argc; i++) {
@@ -745,7 +745,7 @@ static wcstring_list_t new_var_values_by_index(const split_var_t &split, int arg
 }
 
 /// Set a variable.
-static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
+static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, const wchar_t **argv,
                            parser_t &parser, io_streams_t &streams) {
     if (argc == 0) {
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1);
@@ -819,8 +819,8 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
-maybe_t<int> builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_set(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     set_cmd_opts_t opts;
 

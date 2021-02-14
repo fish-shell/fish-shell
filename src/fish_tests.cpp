@@ -2768,31 +2768,24 @@ static void test_is_potential_path() {
 }
 
 /// Test the 'test' builtin.
-maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
-static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) {
+maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+static bool run_one_test_test(int expected, const wcstring_list_t &lst, bool bracket) {
     parser_t &parser = parser_t::principal_parser();
-    size_t i, count = lst.size();
-    wchar_t **argv = new wchar_t *[count + 3];
-    argv[0] = (wchar_t *)(bracket ? L"[" : L"test");
-    for (i = 0; i < count; i++) {
-        argv[i + 1] = (wchar_t *)lst.at(i).c_str();
-    }
-    if (bracket) {
-        argv[i + 1] = (wchar_t *)L"]";
-        i++;
-    }
-    argv[i + 1] = NULL;
+    wcstring_list_t argv;
+    argv.push_back(bracket ? L"[" : L"test");
+    argv.insert(argv.end(), lst.begin(), lst.end());
+    if (bracket) argv.push_back(L"]");
+
+    null_terminated_array_t<wchar_t> cargv(argv);
+
     null_output_stream_t null{};
     io_streams_t streams(null, null);
-    maybe_t<int> result = builtin_test(parser, streams, argv);
+    maybe_t<int> result = builtin_test(parser, streams, cargv.get());
 
     if (result != expected) {
         std::wstring got = result ? std::to_wstring(result.value()) : L"nothing";
         err(L"expected builtin_test() to return %d, got %s", expected, got.c_str());
     }
-
-    delete[] argv;
-
     return result == expected;
 }
 
@@ -5551,20 +5544,26 @@ static void test_pcre2_escape() {
     }
 }
 
-maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
-static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
+maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
+static void run_one_string_test(const wchar_t *const *argv_raw, int expected_rc,
                                 const wchar_t *expected_out) {
+    // Copy to a null terminated array, as builtin_string may wish to rearrange our pointers.
+    wcstring_list_t argv_list(argv_raw, argv_raw + null_terminated_array_length(argv_raw));
+    null_terminated_array_t<wchar_t> argv(argv_list);
+
     parser_t &parser = parser_t::principal_parser();
     string_output_stream_t outs{};
     null_output_stream_t errs{};
     io_streams_t streams(outs, errs);
     streams.stdin_is_directly_redirected = false;  // read from argv instead of stdin
-    maybe_t<int> rc = builtin_string(parser, streams, const_cast<wchar_t **>(argv));
+    maybe_t<int> rc = builtin_string(parser, streams, argv.get());
+
     wcstring args;
-    for (int i = 0; argv[i] != NULL; i++) {
-        args += escape_string(argv[i], ESCAPE_ALL) + L' ';
+    for (const wcstring &arg : argv_list) {
+        args += escape_string(arg, ESCAPE_ALL) + L' ';
     }
     args.resize(args.size() - 1);
+
     if (rc != expected_rc) {
         std::wstring got = rc ? std::to_wstring(rc.value()) : L"nothing";
         err(L"Test failed on line %lu: [%ls]: expected return code %d but got %s", __LINE__,

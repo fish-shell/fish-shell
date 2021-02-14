@@ -9,29 +9,32 @@
 
 #include "common.h"
 
-wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
-char **make_null_terminated_array(const std::vector<std::string> &lst);
+const wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
+const char **make_null_terminated_array(const std::vector<std::string> &lst);
+
+/// \return the length of a null terminated array.
+template <typename CharT>
+inline size_t null_terminated_array_length(const CharT *const *arr) {
+    if (!arr) return 0;
+    size_t len = 0;
+    while (arr[len] != nullptr) {
+        len++;
+    }
+    return len;
+}
 
 // Helper class for managing a null-terminated array of null-terminated strings (of some char type).
 template <typename CharT>
 class null_terminated_array_t {
     using string_list_t = std::vector<std::basic_string<CharT>>;
 
-    CharT **array{nullptr};
+    const CharT **array{nullptr};
 
     // No assignment or copying.
     void operator=(null_terminated_array_t rhs) = delete;
     null_terminated_array_t(const null_terminated_array_t &) = delete;
 
-    size_t size() const {
-        size_t len = 0;
-        if (array != nullptr) {
-            while (array[len] != nullptr) {
-                len++;
-            }
-        }
-        return len;
-    }
+    size_t size() const { return nullterm_array_length(array); }
 
     void free(void) {
         ::free(reinterpret_cast<void *>(array));
@@ -74,7 +77,7 @@ class null_terminated_array_t {
     string_list_t to_list() const { return to_list(array); }
 
     const CharT *const *get() const { return array; }
-    CharT **get() { return array; }
+    const CharT **get() { return array; }
 
     void clear() { this->free(); }
 };

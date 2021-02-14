@@ -28,9 +28,9 @@ static const struct woption long_options[] = {
     {L"quiet", no_argument, nullptr, 'q'},  {L"query", no_argument, nullptr, 'q'},
     {L"search", no_argument, nullptr, 's'}, {nullptr, 0, nullptr, 0}};
 
-static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
+static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -72,7 +72,7 @@ static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, wchar
 
 /// Implementation of the builtin 'command'. Actual command running is handled by the parser, this
 /// just processes the flags.
-maybe_t<int> builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_command(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     command_cmd_opts_t opts;

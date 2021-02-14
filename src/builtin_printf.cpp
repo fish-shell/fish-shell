@@ -90,7 +90,7 @@ struct builtin_printf_state_t {
     void print_direc(const wchar_t *start, size_t length, wchar_t conversion, bool have_field_width,
                      int field_width, bool have_precision, int precision, wchar_t const *argument);
 
-    int print_formatted(const wchar_t *format, int argc, wchar_t **argv);
+    int print_formatted(const wchar_t *format, int argc, const wchar_t **argv);
 
     void nonfatal_error(const wchar_t *fmt, ...);
     void fatal_error(const wchar_t *fmt, ...);
@@ -585,7 +585,7 @@ static inline void modify_allowed_format_specifiers(bool ok[UCHAR_MAX + 1], cons
 
 /// Print the text in FORMAT, using ARGV (with ARGC elements) for arguments to any `%' directives.
 /// Return the number of elements of ARGV used.
-int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
+int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, const wchar_t **argv) {
     int save_argc = argc;        /* Preserve original value.  */
     const wchar_t *f;            /* Pointer into `format'.  */
     const wchar_t *direc_start;  /* Start of % directive.  */
@@ -737,7 +737,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
 }
 
 /// The printf builtin.
-maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     help_only_cmd_opts_t opts;
@@ -759,7 +759,7 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **a
 
     builtin_printf_state_t state(streams);
     int args_used;
-    wchar_t *format = argv[0];
+    const wchar_t *format = argv[0];
     argc--;
     argv++;
 

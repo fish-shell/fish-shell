@@ -1,7 +1,7 @@
 #include "null_terminated_array.h"
 
 template <typename CharT>
-static CharT **make_null_terminated_array_helper(
+static const CharT **make_null_terminated_array_helper(
     const std::vector<std::basic_string<CharT> > &argv) {
     size_t count = argv.size();
 
@@ -48,14 +48,14 @@ static CharT **make_null_terminated_array_helper(
     assert(reinterpret_cast<unsigned char *>(strings) - base ==
            static_cast<std::ptrdiff_t>(pointers_allocation_len + strings_allocation_len));
 
-    return reinterpret_cast<CharT **>(base);
+    return reinterpret_cast<const CharT **>(base);
 }
 
-wchar_t **make_null_terminated_array(const wcstring_list_t &lst) {
+const wchar_t **make_null_terminated_array(const wcstring_list_t &lst) {
     return make_null_terminated_array_helper(lst);
 }
 
-char **make_null_terminated_array(const std::vector<std::string> &lst) {
+const char **make_null_terminated_array(const std::vector<std::string> &lst) {
     return make_null_terminated_array_helper(lst);
 }
 

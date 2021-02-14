@@ -21,11 +21,11 @@ struct echo_cmd_opts_t {
 static const wchar_t *const short_options = L"+:Eens";
 static const struct woption *const long_options = nullptr;
 
-static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
+static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
-    wchar_t *cmd = argv[0];
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     echo_cmd_opts_t oldopts = opts;
@@ -194,8 +194,8 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
 ///
 /// Bash only respects -n if it's the first argument. We'll do the same. We also support a new,
 /// fish specific, option -s to mean "no spaces".
-maybe_t<int> builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_echo(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     UNUSED(cmd);
     int argc = builtin_count_args(argv);
     echo_cmd_opts_t opts;

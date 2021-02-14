@@ -22,8 +22,8 @@ struct block_cmd_opts_t {
 };
 
 static int parse_cmd_opts(block_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":eghl";
     static const struct woption long_options[] = {{L"erase", no_argument, nullptr, 'e'},
                                                   {L"local", no_argument, nullptr, 'l'},
@@ -70,7 +70,7 @@ static int parse_cmd_opts(block_cmd_opts_t &opts, int *optind,  //!OCLINT(high n
 }
 
 /// The block builtin, used for temporarily blocking events.
-maybe_t<int> builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_block(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     block_cmd_opts_t opts;

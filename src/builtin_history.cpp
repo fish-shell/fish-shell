@@ -61,7 +61,7 @@ static const struct woption long_options[] = {{L"prefix", no_argument, nullptr, 
                                               {nullptr, 0, nullptr, 0}};
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
-static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
+static bool set_hist_cmd(const wchar_t *cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
                          io_streams_t &streams) {
     if (*hist_cmd != HIST_UNDEF) {
         wchar_t err_text[1024];
@@ -95,8 +95,8 @@ static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const
 }
 
 static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -200,8 +200,8 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
 }
 
 /// Manipulate history of interactive commands executed by the user.
-maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     history_cmd_opts_t opts;
 

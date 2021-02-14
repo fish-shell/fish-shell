@@ -170,7 +170,7 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
     return found;
 }
 
-maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     int retval = STATUS_CMD_OK;
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);

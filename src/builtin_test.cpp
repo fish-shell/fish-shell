@@ -209,7 +209,7 @@ class test_parser {
     unique_ptr<expression> parse_just_a_string(unsigned int start, unsigned int end);
 
     static unique_ptr<expression> parse_args(const wcstring_list_t &args, wcstring &err,
-                                             wchar_t *program_name);
+                                             const wchar_t *program_name);
 };
 
 struct range_t {
@@ -549,7 +549,7 @@ unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigne
 }
 
 unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcstring &err,
-                                               wchar_t *program_name) {
+                                               const wchar_t *program_name) {
     // Empty list and one-arg list should be handled by caller.
     assert(args.size() > 1);
 
@@ -850,7 +850,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
 /// supports a more limited range of functionality.
 ///
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     using namespace test_expressions;
 
@@ -858,7 +858,7 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **arg
     if (!argv[0]) return STATUS_INVALID_ARGS;
 
     // Whether we are invoked with bracket '[' or not.
-    wchar_t *program_name = argv[0];
+    const wchar_t *program_name = argv[0];
     const bool is_bracket = !std::wcscmp(program_name, L"[");
 
     size_t argc = 0;

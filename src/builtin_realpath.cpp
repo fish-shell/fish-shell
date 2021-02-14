@@ -27,7 +27,7 @@ static const struct woption long_options[] = {{L"no-symlinks", no_argument, null
                                               {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(realpath_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
@@ -61,7 +61,7 @@ static int parse_cmd_opts(realpath_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
 /// An implementation of the external realpath command. Doesn't support any options.
 /// In general scripts shouldn't invoke this directly. They should just use `realpath` which
 /// will fallback to this builtin if an external command cannot be found.
-maybe_t<int> builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_realpath(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     realpath_cmd_opts_t opts;
     int argc = builtin_count_args(argv);

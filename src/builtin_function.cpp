@@ -54,7 +54,7 @@ static const struct woption long_options[] = {
     {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = L"function";
     int opt;
     wgetopter_t w;
@@ -210,8 +210,8 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
     args.insert(args.end(), c_args.begin(), c_args.end());
 
     null_terminated_array_t<wchar_t> argv_array(args);
-    wchar_t **argv = argv_array.get();
-    wchar_t *cmd = argv[0];
+    const wchar_t **argv = argv_array.get();
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
 
     // A valid function name has to be the first argument.

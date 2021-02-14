@@ -124,7 +124,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 }
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
-maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     // Pointer to what the commandline builtin considers to be the current contents of the command
     // line buffer.
     const wchar_t *current_buffer = nullptr;
@@ -132,7 +132,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_
     // What the commandline builtin considers to be the current cursor position.
     auto current_cursor_pos = static_cast<size_t>(-1);
 
-    wchar_t *cmd = argv[0];
+    const wchar_t *cmd = argv[0];
     int buffer_part = 0;
     bool cut_at_cursor = false;
 

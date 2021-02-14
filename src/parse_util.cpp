@@ -1124,7 +1124,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     bool first_arg_is_help = false;
     if (const auto *arg = get_first_arg(dst.args_or_redirs)) {
         const wcstring &arg_src = arg->source(buff_src, storage);
-        first_arg_is_help = parse_util_argument_is_help(arg_src.c_str());
+        first_arg_is_help = parse_util_argument_is_help(arg_src);
     }
 
     // Get the statement we are part of.

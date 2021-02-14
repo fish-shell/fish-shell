@@ -638,6 +638,7 @@ std::string get_path_to_tmp_dir();
 
 bool valid_var_name_char(wchar_t chr);
 bool valid_var_name(const wcstring &str);
+bool valid_var_name(const wchar_t *str);
 bool valid_func_name(const wcstring &str);
 
 // Return values (`$status` values for fish scripts) for various situations.

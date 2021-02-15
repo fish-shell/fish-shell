@@ -56,3 +56,7 @@ false
 eval "begin; end;"
 echo empty block eval: $status # 0
 # CHECK: empty block eval: 0
+
+source /banana/\t/foo
+# CHECKERR: source: Error encountered while sourcing file '/banana/\t/foo':
+# CHECKERR: source: No such file or directory

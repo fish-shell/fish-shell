@@ -465,8 +465,12 @@ int main(int argc, char **argv) {
         save_term_foreground_process_group();
     }
 
-    const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
-    env_init(&paths);
+    struct config_paths_t paths;
+    // If we're not executing, there's no need to find the config.
+    if (!opts.no_exec) {
+        paths = determine_config_directory_paths(argv[0]);
+        env_init(&paths);
+    }
 
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
@@ -484,7 +488,9 @@ int main(int argc, char **argv) {
 
     parser_t &parser = parser_t::principal_parser();
 
-    read_init(parser, paths);
+    if (!opts.no_exec) {
+        read_init(parser, paths);
+    }
     // Stomp the exit status of any initialization commands (issue #635).
     parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 

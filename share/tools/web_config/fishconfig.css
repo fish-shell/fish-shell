@@ -16,14 +16,6 @@ code {
         "Lucida Console", monospace, fixed;
 }
 
-@media screen and (max-width: 700px) {
-    /* On small screens remove the margins to leave more for the actual content */
-    body {
-        width: 100%;
-        margin-left: none;
-        margin-right: none;
-    }
-}
 #parent {
     width: 100%;
     min-height: 480px;
@@ -617,4 +609,19 @@ img.delete_icon {
     color: #bbb;
     background-color: transparent;
     cursor: default;
+}
+
+@media screen and (max-width: 700px) {
+    /* On small screens remove the margins to leave more for the actual content */
+    body {
+        width: 100%;
+        margin: 0 0 0 0;
+    }
+
+    #parent {
+        margin-top: 0;
+    }
+    #tab_contents {
+        margin-bottom: 0;
+    }
 }

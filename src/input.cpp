@@ -314,9 +314,14 @@ void init_input() {
         input_mapping->add(L"\n", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\r", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\t", L"complete", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x3", L"commandline ''", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping->add(L"\x3", L"cancel-commandline", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\x4", L"exit", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\x5", L"bind", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        // ctrl-s
+        input_mapping->add(L"\x13", L"pager-toggle-search", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        // ctrl-u
+        input_mapping->add(L"\x15", L"backward-kill-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        // del/backspace
         input_mapping->add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
                            false);
         // Arrows - can't have functions, so *-or-search isn't available.
@@ -325,6 +330,11 @@ void init_input() {
         input_mapping->add(L"\x1B[C", L"forward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\x1B[D", L"backward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
                            false);
+        // emacs-style ctrl-p/n/b/f
+        input_mapping->add(L"\x10", L"up-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping->add(L"\x0e", L"down-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping->add(L"\x02", L"backward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping->add(L"\x06", L"forward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
     }
 }
 

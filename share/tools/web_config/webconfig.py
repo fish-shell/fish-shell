@@ -973,6 +973,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if name in vars:
                 vars[name].exported = True
 
+        # Do not return history as a variable, it may be so large the browser hangs.
+        vars.pop('history', None)
+
         return [
             vars[key].get_json_obj()
             for key in sorted(vars.keys(), key=lambda x: x.lower())

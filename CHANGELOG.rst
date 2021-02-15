@@ -250,7 +250,7 @@ Interactive improvements
 -  History search now flashes when it found no more results (:issue:`7362`)
 -  fish now creates the path in the environment variable ``XDG_RUNTIME_DIR`` if it does not exist, before using it for runtime data storage (:issue:`7335`).
 -  ``set_color --print-colors`` now also respects the bold, dim, underline, reverse, italic and background modifiers, to better show their effect (:issue:`7314`).
--  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`). It also starts the browser in another thread, avoiding hangs in some circumstances, especially with firefox developer edition (:issue:`7158`).
+-  The fish Web configuration tool (``fish_config``) shows prompts correctly on Termux for Android (:issue:`7298`) and detects Windows Services for Linux 2 properly (:issue:`7027`). It no longer shows the ``history`` variable as it may be too large (one can use the History tab instead). It also starts the browser in another thread, avoiding hangs in some circumstances, especially with firefox developer edition (:issue:`7158`).
 -  ``funcsave`` has a new ``--directory`` option to specify the location of the saved function (:issue:`7041`).
 -  ``help`` works properly on MSYS2 (:issue:`7113`) and only uses cmd.exe if running on WSL (:issue:`6797`).
 -  Resuming a piped job by its number, like ``fg %1``, works correctly (:issue:`7406`). Resumed jobs show the correct title in the terminal emulator (:issue:`7444`).

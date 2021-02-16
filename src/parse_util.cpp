@@ -717,6 +717,8 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             wcstring gap_text = src.substr(last_leaf_end, offset - last_leaf_end);
             size_t escaped_nl = gap_text.find(L"\\\n");
             if (escaped_nl == wcstring::npos) return;
+            auto line_end = gap_text.begin() + escaped_nl;
+            if (std::find(gap_text.begin(), line_end, L'#') != line_end) return;
             auto end = src.begin() + offset;
             auto newline = src.begin() + last_leaf_end + escaped_nl + 1;
             // The gap text might contain multiple newlines if there are multiple lines that

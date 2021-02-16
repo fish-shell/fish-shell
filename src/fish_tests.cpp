@@ -1480,8 +1480,12 @@ static void test_indents() {
              1, "\nline2 \\",                             //
              1, "\n"                                      //
     );
+    add_test(&tests,                                   //
+             0, "echo # inline comment ending in \\",  //
+             0, "\nline"                               //
+    );
     add_test(&tests,                            //
-             0, "echo # comment ending in \\",  //
+             0, "# line comment ending in \\",  //
              0, "\nline"                        //
     );
     add_test(&tests,                                            //

@@ -23,25 +23,37 @@ bind --user --preset | string match -v '*backward-delete-char'
 # CHECK: bind --preset \n execute
 # CHECK: bind --preset \r execute
 # CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc commandline\ \'\'
+# CHECK: bind --preset \cc cancel-commandline
 # CHECK: bind --preset \cd exit
 # CHECK: bind --preset \ce bind
+# CHECK: bind --preset \cs pager-toggle-search
+# CHECK: bind --preset \cu backward-kill-line
 # CHECK: bind --preset \e\[A up-line
 # CHECK: bind --preset \e\[B down-line
 # CHECK: bind --preset \e\[C forward-char
 # CHECK: bind --preset \e\[D backward-char
+# CHECK: bind --preset \cp up-line
+# CHECK: bind --preset \cn down-line
+# CHECK: bind --preset \cb backward-char
+# CHECK: bind --preset \cf forward-char
 # CHECK: bind -M bind_mode \cx true
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset \n execute
 # CHECK: bind --preset \r execute
 # CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc commandline\ \'\'
+# CHECK: bind --preset \cc cancel-commandline
 # CHECK: bind --preset \cd exit
 # CHECK: bind --preset \ce bind
+# CHECK: bind --preset \cs pager-toggle-search
+# CHECK: bind --preset \cu backward-kill-line
 # CHECK: bind --preset \e\[A up-line
 # CHECK: bind --preset \e\[B down-line
 # CHECK: bind --preset \e\[C forward-char
 # CHECK: bind --preset \e\[D backward-char
+# CHECK: bind --preset \cp up-line
+# CHECK: bind --preset \cn down-line
+# CHECK: bind --preset \cb backward-char
+# CHECK: bind --preset \cf forward-char
 # CHECK: bind -M bind_mode \cx true
 
 # Preset only
@@ -50,13 +62,19 @@ bind --preset | string match -v '*backward-delete-char'
 # CHECK: bind --preset \n execute
 # CHECK: bind --preset \r execute
 # CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc commandline\ \'\'
+# CHECK: bind --preset \cc cancel-commandline
 # CHECK: bind --preset \cd exit
 # CHECK: bind --preset \ce bind
+# CHECK: bind --preset \cs pager-toggle-search
+# CHECK: bind --preset \cu backward-kill-line
 # CHECK: bind --preset \e\[A up-line
 # CHECK: bind --preset \e\[B down-line
 # CHECK: bind --preset \e\[C forward-char
 # CHECK: bind --preset \e\[D backward-char
+# CHECK: bind --preset \cp up-line
+# CHECK: bind --preset \cn down-line
+# CHECK: bind --preset \cb backward-char
+# CHECK: bind --preset \cf forward-char
 
 # User only
 bind --user | string match -v '*backward-delete-char'
@@ -69,13 +87,19 @@ bind | string match -v '*backward-delete-char'
 # CHECK: bind --preset \n execute
 # CHECK: bind --preset \r execute
 # CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc commandline\ \'\'
+# CHECK: bind --preset \cc cancel-commandline
 # CHECK: bind --preset \cd exit
 # CHECK: bind --preset \ce bind
+# CHECK: bind --preset \cs pager-toggle-search
+# CHECK: bind --preset \cu backward-kill-line
 # CHECK: bind --preset \e\[A up-line
 # CHECK: bind --preset \e\[B down-line
 # CHECK: bind --preset \e\[C forward-char
 # CHECK: bind --preset \e\[D backward-char
+# CHECK: bind --preset \cp up-line
+# CHECK: bind --preset \cn down-line
+# CHECK: bind --preset \cb backward-char
+# CHECK: bind --preset \cf forward-char
 # CHECK: bind -M bind_mode \cx true
 # CHECK: bind \t 'echo banana'
 

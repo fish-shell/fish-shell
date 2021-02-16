@@ -38,8 +38,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "common.h"
 #include "env.h"
 #include "expand.h"
-#include "fish_version.h"
 #include "fds.h"
+#include "fish_version.h"
 #include "flog.h"
 #include "highlight.h"
 #include "operation_context.h"
@@ -367,7 +367,8 @@ struct pretty_printer_t {
     //   begin | stuff
     //
     //  We do not handle errors here - instead our caller does.
-    bool emit_gap_text(const wcstring &gap_text, gap_flags_t flags) {
+    bool emit_gap_text(source_range_t range, gap_flags_t flags) {
+        wcstring gap_text = substr(range);
         // Common case: if we are only spaces, do nothing.
         if (gap_text.find_first_not_of(L' ') == wcstring::npos) return false;
 
@@ -376,7 +377,6 @@ struct pretty_printer_t {
         // Note we do not have to be concerned with escaped backslashes or escaped #s. This is gap
         // text - we already know it has no semantic significance.
         size_t escaped_nl = gap_text.find(L"\\\n");
-        bool have_line_continuation = false;
         if (escaped_nl != wcstring::npos) {
             size_t comment_idx = gap_text.find(L'#');
             if ((flags & allow_escaped_newlines) ||
@@ -386,9 +386,9 @@ struct pretty_printer_t {
                     output.append(L" ");
                 }
                 output.append(L"\\\n");
-                // Indent the line continuation and any comment before it (#7252).
-                have_line_continuation = true;
-                current_indent += 1;
+                // Indent the continuation line and any leading comments (#7252).
+                // Use the indentation level of the next newline.
+                current_indent = indents.at(range.start + escaped_nl + 1);
                 emit_space_or_indent();
             }
         }
@@ -431,10 +431,6 @@ struct pretty_printer_t {
             }
         }
         if (needs_nl) emit_newline();
-        if (have_line_continuation) {
-            emit_space_or_indent();
-            current_indent -= 1;
-        }
         return needs_nl;
     }
 
@@ -486,7 +482,7 @@ struct pretty_printer_t {
             if (range_contained_error(range)) {
                 output.append(substr(range));
             } else {
-                added_newline = emit_gap_text(substr(range), flags);
+                added_newline = emit_gap_text(range, flags);
             }
         }
         // Always clear gap_text_mask_newline after emitting even empty gap text.
@@ -600,11 +596,11 @@ struct pretty_printer_t {
             auto flags = gap_text_flags_before_node(node);
             current_indent = indents.at(node.range.start);
             bool added_newline = emit_gap_text_before(node.range, flags);
-            wcstring text = source.substr(node.range.start, node.range.length);
-            if (added_newline && !text.empty() && text.front() == L'\n') {
-                text = text.substr(const_strlen("\n"));
+            source_range_t gap_range = node.range;
+            if (added_newline && gap_range.length > 0 && source.at(gap_range.start) == L'\n') {
+                gap_range.start++;
             }
-            emit_gap_text(text, flags);
+            emit_gap_text(gap_range, flags);
         }
     }
 

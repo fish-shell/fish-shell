@@ -389,3 +389,19 @@ echo 'if true; and false; or true
 end' | $fish_indent --check
 echo $status
 #CHECK: 0
+
+echo -n '
+function hello_continuations
+   echo cmd \
+   echo --opt1 \
+   echo --opt2 \
+   echo --opt3
+                  end
+' | $fish_indent
+
+#CHECK: function hello_continuations
+#CHECK: {{^}}    echo cmd \
+#CHECK: {{^}}        echo --opt1 \
+#CHECK: {{^}}        echo --opt2 \
+#CHECK: {{^}}        echo --opt3
+#CHECK: end

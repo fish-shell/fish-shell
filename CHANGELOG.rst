@@ -89,7 +89,7 @@ Notable improvements and fixes
           ^
 
    This includes numbering the index from 1 instead of 0.
--  **A new theme for the documentation and Web-base configuration** (:issue:`6500`, :issue:`7371`, :issue:`7523`), matching the design on fishshell.com.
+-  **A new theme for the documentation and Web-based configuration** (:issue:`6500`, :issue:`7371`, :issue:`7523`), matching the design on fishshell.com.
 -  ``fish --no-execute`` **will no longer complain about unknown commands**
    or non-matching wildcards, as these could be defined differently at
    runtime (especially for functions). This makes it usable as a static syntax checker (:issue:`977`).
@@ -273,7 +273,7 @@ Interactive improvements
 -  fish handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
 -  Keywords can now be colored differently by setting the ``fish_color_keyword`` variable (``fish_color_command`` is used as a fallback) (:issue:`7678`).
 -  Just like new ``fish_indent``, the interactive reader will indent continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||`` (:issue:`7694`).
--  Escaped spaces are saved in history correctly (#7661).
+-  Commands with a trailing escaped space are saved in history correctly (:issue:`7661`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -439,7 +439,7 @@ Deprecations and removed features
    use the new ``fish_read`` event instead (:issue:`7039`).
 -  To disable the greeting message permanently it is no longer enough to just run ``set fish_greeting`` interactively as it is
    no longer implicitly a universal variable. Use ``set -U fish_greeting`` or disable it in config.fish with ``set -g fish_greeting``.
-- The long-deprecated and non-functional ``-m``/``--read-mode`` options to ``read`` were removed in 3.1b1. Using the short form, or a never-implemented ``-B`` option, no longer crashes fish (#7659).
+- The long-deprecated and non-functional ``-m``/``--read-mode`` options to ``read`` were removed in 3.1b1. Using the short form, or a never-implemented ``-B`` option, no longer crashes fish (:issue:`7659`).
 
 For distributors and developers
 -------------------------------

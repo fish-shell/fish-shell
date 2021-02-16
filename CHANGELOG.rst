@@ -271,7 +271,7 @@ Interactive improvements
 -  Redirection targets are no longer highlighted as error if they contain variables which will likely be defined by the current commandline (:issue:`6654`).
 -  fish is now more resilient against broken terminal modes (:issue:`7133`, :issue:`4873`).
 -  fish handles being in control of the TTY without owning its own process group better, avoiding some hangs in special configurations (:issue:`7388`).
--  Keywords can now be colored differently by setting the ``fish_color_keyword`` variable (but ``fish_color_command`` will still be used if it is unset) (:issue:`7678`).
+-  Keywords can now be colored differently by setting the ``fish_color_keyword`` variable (``fish_color_command`` is used as a fallback) (:issue:`7678`).
 -  Just like new ``fish_indent``, the interactive reader will indent continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||`` (:issue:`7694`).
 -  Escaped spaces are saved in history correctly (#7661).
 
@@ -340,9 +340,6 @@ Improved terminal support
 -  fish now sets terminal modes sooner, which stops output from appearing before the greeting and prompt are ready (:issue:`7489`).
 -  Better detection of new Konsole versions for truecolor support and cursor shape changing.
 -  fish no longer attempts to modify the terminal size via ``TIOCSWINSZ`` (:issue:`6994`).
--  Terminal state is no longer corrupted if a TUI application that enables mouse mouse support
-   crashes or exits uncleanly; fish now responds by discarding mouse position CSIs and disabling
-   future mouse reporting (:issue:`4873`).
 
 Completions
 ^^^^^^^^^^^

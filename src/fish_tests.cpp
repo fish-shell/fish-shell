@@ -3895,7 +3895,7 @@ static void test_universal_ok_to_save() {
     // Ensure we don't try to save after reading from a newer fish.
     say(L"Testing universal Ok to save");
     if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
-    constexpr const char *contents = "# VERSION: 99999.99\n";
+    constexpr const char contents[] = "# VERSION: 99999.99\n";
     FILE *fp = fopen(wcs2string(UVARS_TEST_PATH).c_str(), "w");
     assert(fp && "Failed to open UVARS_TEST_PATH for writing");
     fwrite(contents, const_strlen(contents), 1, fp);

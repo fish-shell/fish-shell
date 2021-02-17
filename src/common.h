@@ -733,14 +733,19 @@ static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
 /// Compile-time agnostic-size strlen/wcslen implementation. Unicode-unaware.
 template <typename T, size_t N>
 constexpr size_t const_strlen(const T(&val)[N], ssize_t index = -1) {
-    // N is the length of the character array, but that includes one **or more** trailing nulls.
-    return index == -1 ? N - const_strlen(val, N - 1)
+    // N is the length of the character array, but that includes one **or more** trailing nuls.
+    static_assert(N > 0, "Invalid input to const_strlen");
+    return index == -1 ?
+        // Assume a minimum of one trailing nul and do a quick check for the usual case (single
+        // trailing nul) before recursing:
+        N - 1 - (N <= 2 || val[N-2] != static_cast<T>(0) ? 0 : const_strlen(val, N - 2))
         // Prevent an underflow in case the string is comprised of all \0 bytes
-        : index == 0 ? 1
-        // Keep back-tracking until a non-null byte is found
-        : (val[index] == static_cast<T>(0) ? 1 + const_strlen(val, index - 1) : 0);
+        : index == 0 ? 0
+        // Keep back-tracking until a non-nul byte is found
+        : (val[index] != static_cast<T>(0) ? 0 : 1 + const_strlen(val, index - 1));
 }
 static_assert(const_strlen("") == 0, "const_strlen failure");
+static_assert(const_strlen("a") == 1, "const_strlen failure");
 static_assert(const_strlen("hello") == 5, "const_strlen failure");
 
 /// Compile-time assertion of alphabetical sort of array `array`, by specified

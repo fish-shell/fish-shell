@@ -731,9 +731,14 @@ static_assert(const_strcmp("a", "aa") < 0, "const_strcmp failure");
 static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
 
 /// Compile-time agnostic-size strlen/wcslen implementation. Unicode-unaware.
-template <typename T>
-constexpr size_t const_strlen(const T *str) {
-    return *str == static_cast<T>(0) ? 0 : 1 + const_strlen(str + 1);
+template <typename T, size_t N>
+constexpr size_t const_strlen(const T(&val)[N], ssize_t index = -1) {
+    // N is the length of the character array, but that includes one **or more** trailing nulls.
+    return index == -1 ? N - const_strlen(val, N - 1)
+        // Prevent an underflow in case the string is comprised of all \0 bytes
+        : index == 0 ? 1
+        // Keep back-tracking until a non-null byte is found
+        : (val[index] == static_cast<T>(0) ? 1 + const_strlen(val, index - 1) : 0);
 }
 static_assert(const_strlen("") == 0, "const_strlen failure");
 static_assert(const_strlen("hello") == 5, "const_strlen failure");

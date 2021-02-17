@@ -833,9 +833,7 @@ static void redirect_tty_after_sighup() {
 }
 
 /// Give up control of terminal.
-static void term_donate(outputter_t &outp) {
-    outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
-
+static void term_donate() {
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
             if (errno == EIO) redirect_tty_output();
@@ -2376,7 +2374,8 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     outputter_t &outp = outputter_t::stdoutput();
     reader_write_title(cmd, parser);
-    term_donate(outp);
+    outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
+    term_donate();
 
     gettimeofday(&time_before, nullptr);
 
@@ -2798,8 +2797,8 @@ struct readline_loop_state_t {
 
 /// Run a sequence of commands from an input binding.
 void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
-    // Need to donate/steal the tty - see #2214.
-    term_donate(outputter_t::stdoutput());
+    // Need to donate/steal the tty - see #2114.
+    term_donate();
     auto last_statuses = parser().get_last_statuses();
     for (const wcstring &cmd : cmds) {
         parser().eval(cmd, io_chain_t{});

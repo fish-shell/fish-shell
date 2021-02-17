@@ -413,12 +413,17 @@ std::string wcs2string(const wcstring &input) { return wcs2string(input.data(), 
 std::string wcs2string(const wchar_t *in, size_t len) {
     if (len == 0) return std::string{};
     std::string result;
-    result.reserve(len);
+    wcs2string_appending(in, len, &result);
+    return result;
+}
+
+void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver) {
+    assert(receiver && "Null receiver");
+    receiver->reserve(receiver->size() + len);
     wcs2string_callback(in, len, [&](const char *buff, size_t bufflen) {
-        result.append(buff, bufflen);
+        receiver->append(buff, bufflen);
         return true;
     });
-    return result;
 }
 
 /// Test if the character can be encoded using the current locale.

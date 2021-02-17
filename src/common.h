@@ -307,6 +307,9 @@ wcstring str2wcstring(const std::string &in, size_t len);
 std::string wcs2string(const wcstring &input);
 std::string wcs2string(const wchar_t *in, size_t len);
 
+/// Like wcs2string, but appends to \p receiver instead of returning a new string.
+void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver);
+
 // Check if we are running in the test mode, where we should suppress error output
 #define TESTS_PROGRAM_NAME L"(ignore)"
 bool should_suppress_stderr_for_tests();

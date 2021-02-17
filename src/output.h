@@ -19,7 +19,7 @@ class outputter_t {
     std::string contents_;
 
     /// Count of how many outstanding begin_buffering() calls there are.
-    uint32_t bufferCount_{0};
+    uint32_t buffer_count_{0};
 
     /// fd to output to.
     int fd_{-1};
@@ -45,7 +45,7 @@ class outputter_t {
 
     /// Flush output, if we have a set fd and our buffering count is 0.
     void maybe_flush() {
-        if (fd_ >= 0 && bufferCount_ == 0) flush_to(fd_);
+        if (fd_ >= 0 && buffer_count_ == 0) flush_to(fd_);
     }
 
    public:
@@ -94,14 +94,14 @@ class outputter_t {
     /// Begins buffering. Output will not be automatically flushed until a corresponding
     /// end_buffering() call.
     void begin_buffering() {
-        bufferCount_++;
-        assert(bufferCount_ > 0 && "bufferCount_ overflow");
+        buffer_count_++;
+        assert(buffer_count_ > 0 && "bufferCount_ overflow");
     }
 
     /// Balance a begin_buffering() call.
     void end_buffering() {
-        assert(bufferCount_ > 0 && "bufferCount_ underflow");
-        bufferCount_--;
+        assert(buffer_count_ > 0 && "bufferCount_ underflow");
+        buffer_count_--;
         maybe_flush();
     }
 

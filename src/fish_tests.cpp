@@ -548,6 +548,32 @@ static void test_convert_ascii() {
     }
 }
 
+/// fish uses the private-use range to encode bytes that could not be decoded using the user's locale.
+/// If the input could be decoded, but decoded to private-use codepoints, then fish should also use the direct encoding for those bytes.
+/// Verify that characters in the private use area are correctly round-tripped.
+/// See #7723.
+static void test_convert_private_use() {
+    for (wchar_t wc = ENCODE_DIRECT_BASE; wc < ENCODE_DIRECT_END; wc++) {
+        // Encode the char via the locale. Do not use fish functions which interpret these specially.
+        char converted[MB_LEN_MAX];
+        mbstate_t state{};
+        size_t len = std::wcrtomb(converted, wc, &state);
+        if (len == static_cast<size_t>(-1)) {
+            // Could not be encoded in this locale.
+            continue;
+        }
+        std::string s(converted, len);
+
+        // Ask fish to decode this via str2wcstring.
+        // str2wcstring should notice that the decoded form collides with its private use and encode it directly.
+        wcstring ws = str2wcstring(s);
+
+        // Each byte should be encoded directly, and round tripping should work.
+        do_test(ws.size() == s.size());
+        do_test(wcs2string(ws) == s);
+    }
+}
+
 static void perf_convert_ascii() {
     std::string s(128 * 1024, '\0');
     for (size_t i = 0; i < s.size(); i++) {
@@ -6432,6 +6458,7 @@ int main(int argc, char **argv) {
     if (should_test_function("escape")) test_escape_quotes();
     if (should_test_function("format")) test_format();
     if (should_test_function("convert")) test_convert();
+    if (should_test_function("convert")) test_convert_private_use();
     if (should_test_function("convert_ascii")) test_convert_ascii();
     if (should_test_function("perf_convert_ascii", false)) perf_convert_ascii();
     if (should_test_function("convert_nulls")) test_convert_nulls();

@@ -59,16 +59,19 @@ class outputter_t {
     void set_color(rgb_color_t c, rgb_color_t c2);
 
     /// Write a wide character to the receiver.
-    int writech(wint_t ch);
+    void writech(wchar_t ch) { writestr(&ch, 1); }
 
     /// Write a NUL-terminated wide character string to the receiver.
-    void writestr(const wchar_t *str);
+    void writestr(const wchar_t *str) { writestr(str, wcslen(str)); }
 
     /// Write a wide character string to the receiver.
-    void writestr(const wcstring &str) { writestr(str.c_str()); }
+    void writestr(const wcstring &str) { writestr(str.data(), str.size()); }
 
     /// Write the given terminfo string to the receiver, like tputs().
     int term_puts(const char *str, int affcnt);
+
+    /// Write a wide string of the given length.
+    void writestr(const wchar_t *str, size_t len);
 
     /// Write a narrow string of the given length.
     void writestr(const char *str, size_t len) {

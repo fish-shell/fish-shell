@@ -309,64 +309,9 @@ int outputter_t::term_puts(const char *str, int affcnt) {
     return res;
 }
 
-/// Write a wide character to the outputter. This should only be used when writing characters from
-/// user supplied strings. This is needed due to our use of the ENCODE_DIRECT_BASE mechanism to
-/// allow the user to specify arbitrary byte values to be output. Such as in a `printf` invocation
-/// that includes literal byte values such as `\x1B`. This should not be used for writing non-user
-/// supplied characters.
-int outputter_t::writech(wint_t ch) {
-    char buff[MB_LEN_MAX + 1];
-    size_t len;
-
-    if (ch >= ENCODE_DIRECT_BASE && ch < ENCODE_DIRECT_BASE + 256) {
-        buff[0] = ch - ENCODE_DIRECT_BASE;
-        len = 1;
-    } else if (MB_CUR_MAX == 1) {
-        // single-byte locale (C/POSIX/ISO-8859)
-        // If `wc` contains a wide character we emit a question-mark.
-        buff[0] = ch & ~0xFF ? '?' : ch;
-        len = 1;
-    } else {
-        mbstate_t state = {};
-        len = std::wcrtomb(buff, ch, &state);
-        if (len == static_cast<size_t>(-1)) {
-            return 1;
-        }
-    }
-    this->writestr(buff, len);
-    return 0;
-}
-
-/// Write a wide character string to stdout. This should not be used to output things like warning
-/// messages; just use debug() or std::fwprintf() for that. It should only be used to output user
-/// supplied strings that might contain literal bytes; e.g., "\342\224\214" from issue #1894. This
-/// is needed because those strings may contain chars specially encoded using ENCODE_DIRECT_BASE.
-void outputter_t::writestr(const wchar_t *str) {
-    assert(str && "Empty input string");
-
-    if (MB_CUR_MAX == 1) {
-        // Single-byte locale (C/POSIX/ISO-8859).
-        while (*str) writech(*str++);
-        return;
-    }
-    size_t len = wcstombs(nullptr, str, 0);  // figure amount of space needed
-    if (len == static_cast<size_t>(-1)) {
-        FLOGF(output_invalid, L"Tried to print invalid wide character string");
-        return;
-    }
-
-    // Convert the string.
-    len++;
-    char *buffer, static_buffer[256];
-    if (len <= sizeof static_buffer) {
-        buffer = static_buffer;
-    } else {
-        buffer = new char[len];
-    }
-
-    int new_len = wcstombs(buffer, str, len);
-    this->writestr(buffer, new_len);
-    if (buffer != static_buffer) delete[] buffer;
+void outputter_t::writestr(const wchar_t *str, size_t len) {
+    wcs2string_appending(str, len, &contents_);
+    maybe_flush();
 }
 
 outputter_t &outputter_t::stdoutput() {

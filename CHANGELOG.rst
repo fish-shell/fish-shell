@@ -275,6 +275,7 @@ Interactive improvements
 -  Just like new ``fish_indent``, the interactive reader will indent continuation lines that follow a line ending in a backslash, ``|``, ``&&`` or ``||`` (:issue:`7694`).
 -  Commands with a trailing escaped space are saved in history correctly (:issue:`7661`).
 -  ``fish_prompt`` no longer mangles Unicode characters in the private-use range U+F600-U+F700. (:issue:`7723`).
+- ``set -U`` now behaves correctly when ``fish_variables`` is a symbolic link instead of overwriting it with a regular file (:issue:`7466`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

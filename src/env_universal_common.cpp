@@ -739,9 +739,16 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
     }
 
     if (success) {
+        wcstring real_path;
+        if (auto maybe_real_path = wrealpath(vars_path)) {
+            real_path = *maybe_real_path;
+        } else {
+            real_path = vars_path;
+        }
+
         // Ensure we maintain ownership and permissions (#2176).
         struct stat sbuf;
-        if (wstat(vars_path, &sbuf) >= 0) {
+        if (wstat(real_path, &sbuf) >= 0) {
             if (fchown(private_fd.fd(), sbuf.st_uid, sbuf.st_gid) == -1)
                 FLOGF(uvar_file, L"universal log fchown() failed");
             if (fchmod(private_fd.fd(), sbuf.st_mode) == -1)
@@ -765,7 +772,7 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
 #endif
 
         // Apply new file.
-        success = this->move_new_vars_file_into_place(private_file_path, vars_path);
+        success = this->move_new_vars_file_into_place(private_file_path, real_path);
         if (!success) FLOGF(uvar_file, L"universal log move_new_vars_file_into_place() failed");
     }
 

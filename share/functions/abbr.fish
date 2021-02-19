@@ -39,6 +39,7 @@ function abbr --description "Manage abbreviations"
         __fish_abbr_add $argv
         return
     else if set -q _flag_erase[1]
+        set -q argv[1]; or return 1
         __fish_abbr_erase $argv
         return
     else if set -q _flag_rename[1]

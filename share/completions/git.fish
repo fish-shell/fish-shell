@@ -1643,7 +1643,7 @@ set -l git_worktree_commands add list lock move prune remove unlock
 complete -c git -n __fish_git_needs_command -a worktree -d 'Manage multiple working trees'
 complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a add -d 'Create a working tree'
 complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a list -d 'List details of each worktree'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a lock -d 'Unlock a working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a lock -d 'Lock a working tree'
 complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a move -d 'Move a working tree to a new location'
 complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a prune -d 'Prune working tree information in $GIT_DIR/worktrees'
 complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a remove -d 'Remove a working tree'

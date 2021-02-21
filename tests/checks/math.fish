@@ -186,3 +186,6 @@ math --base notabase
 # CHECKERR: math: 'notabase' is not a valid base value
 echo $status
 # CHECK: 2
+
+math 'log2(8)'
+# CHECK: 3

@@ -202,6 +202,7 @@ static const te_builtin functions[] = {
     {L"ln", reinterpret_cast<const void *>(static_cast<te_fun1>(log)), TE_FUNCTION1},
     {L"log", reinterpret_cast<const void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
     {L"log10", reinterpret_cast<const void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
+    {L"log2", reinterpret_cast<const void *>(static_cast<te_fun1>(log2)), TE_FUNCTION1},
     {L"ncr", reinterpret_cast<const void *>(static_cast<te_fun2>(ncr)), TE_FUNCTION2},
     {L"npr", reinterpret_cast<const void *>(static_cast<te_fun2>(npr)), TE_FUNCTION2},
     {L"pi", reinterpret_cast<const void *>(static_cast<te_fun0>(pi)), TE_FUNCTION0},

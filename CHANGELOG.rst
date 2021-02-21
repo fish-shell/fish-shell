@@ -1,49 +1,3 @@
-fish next-minor
-===============
-
-Notable improvements and fixes
-------------------------------
-
-Syntax changes and new commands
--------------------------------
-
-
-Scripting improvements
-----------------------
-
-
-Interactive improvements
-------------------------
-
-
-New or improved bindings
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Improved prompts
-^^^^^^^^^^^^^^^^
-
-
-Improved terminal output
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Completions
-^^^^^^^^^^^
-
-
-Changes not visible to users
-----------------------------
-
-
-Deprecations and removed features
----------------------------------
-
-
-For distributors and developers
--------------------------------
-
-
 fish 3.2.0 (released ???)
 =========================
 
@@ -241,7 +195,7 @@ Interactive improvements
 -  Control-C handling has been reimplemented in C++ and is therefore quicker (:issue:`5259`), no longer occasionally prints an "unknown command" error (:issue:`7145`) or overwrites multiline prompts (:issue:`3537`).
 -  Control-C no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (:issue:`6828`, :issue:`6861`).
--  Autocompletions work properly after Control-C to cancel the commmand line (:issue:`6937`).
+-  Autosuggestions work properly after Control-C to cancel the commmand line (:issue:`6937`).
 -  History search is now case-insensitive unless the search string contains an uppercase character (:issue:`7273`).
 -  ``fish_update_completions`` has a new ``--keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`, :issue:`6796`).
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (:issue:`6910`).
@@ -449,6 +403,7 @@ For distributors and developers
 
 -  fish source tarballs are now distributed using the XZ compression
    method (:issue:`5460`).
+-  The fish source tarball contains an example FreeDesktop entry and icon.
 -  The CMake variable ``MAC_CODESIGN_ID`` can now be set to "off" to disable code-signing (:issue:`6952`, :issue:`6792`).
 -  Building on on macOS earlier than 10.13.6 succeeds, instead of failing on code-signing (:issue:`6791`).
 -  The pkg-config file now uses variables to ensure paths used are portable across prefixes.

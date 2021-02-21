@@ -185,6 +185,7 @@ Scripting improvements
 -  ``fish --profile`` now only starts profiling after fish is ready to execute commands (all configuration is completed). There is a new ``--profile-startup`` option that only profiles the startup and configuration process (:issue:`7648`).
 -  Builtins return a maximum exit status of 255, rather than potentially overflowing. In particular, this affects ``exit``, ``return``, ``functions --query``, and ``set --query`` (:issue:`7698`, :issue:`7702`).
 - It is no longer an error to run builtin with closed stdin. For example ``count <&-`` now prints 0, instead of failing.
+- Blocks, functions, and builtins no longer permit redirecting to fds above 2. For example ``echo hello >&5`` is now an error. External commands may redirect to any fd below 10.
 
 
 Interactive improvements

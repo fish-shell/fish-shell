@@ -35,6 +35,19 @@ CHECK_STDERR_RE = re.compile(COMMENT_RE + r"CHECKERR:\s+(.*)\n")
 
 SKIP = object()
 
+def find_command(program):
+    import os
+
+    path, name = os.path.split(program)
+    if path:
+        return os.path.isfile(program) and os.access(program, os.X_OK)
+    for path in os.environ["PATH"].split(os.pathsep):
+        exe = os.path.join(path, program)
+        if os.path.isfile(exe) and os.access(exe, os.X_OK):
+            return exe
+
+    return None
+
 class Config(object):
     def __init__(self):
         # Whether to have verbose output.
@@ -461,18 +474,15 @@ class TestRun(object):
         proc = runproc(self.subbed_command)
         stdout, stderr = proc.communicate()
         # HACK: This is quite cheesy: POSIX specifies that sh should return 127 for a missing command.
-        # Technically it's also possible to return it in other conditions.
-        # Practically, that's *probably* not going to happen.
+        # It's also possible that it'll be returned in other situations,
+        # most likely when the last command in a shell script doesn't exist.
+        # So we check if the command *we execute* exists, and complain then.
         status = proc.returncode
-        if status == 127:
-            raise CheckerError("Command could not be found: " + self.subbed_command)
-        if status == 126:
-            raise CheckerError("Command is not executable: " + self.subbed_command)
-
-        # If a test returns 125, we skip it and don't even attempt to compare output.
-        # This is similar to what `git bisect run` does.
-        if status == 125:
-            return SKIP
+        cmd = shlex.split(self.subbed_command)[0]
+        if status == 127 and not find_command(cmd):
+            raise CheckerError("Command could not be found: " + cmd)
+        if status == 126 and not find_command(cmd):
+            raise CheckerError("Command is not executable: " + cmd)
 
         outlines = [
             Line(text, idx + 1, "stdout")
@@ -587,7 +597,10 @@ class Checker(object):
             # If no RUN command has been given, fall back to the shebang.
             if lines[0].text.startswith("#!"):
                 # Remove the "#!" at the beginning, and the newline at the end.
-                self.runcmds = [RunCmd(lines[0].text[2:-1] + " %s", lines[0])]
+                cmd = lines[0].text[2:-1]
+                if not find_command(cmd):
+                    raise CheckerError("Command could not be found: " + cmd)
+                self.runcmds = [RunCmd(cmd + " %s", lines[0])]
             else:
                 raise CheckerError("No runlines ('# RUN') found")
 

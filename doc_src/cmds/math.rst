@@ -14,9 +14,9 @@ Synopsis
 Description
 -----------
 
-``math`` is used to perform mathematical calculations. It supports all the usual operations such as addition, subtraction, etc. As well as functions like ``abs()``, ``sqrt()`` and ``log2()``.
+``math`` performs mathematical calculations. It supports simple operations such as addition, subtraction, and so on, as well as functions like ``abs()``, ``sqrt()`` and ``ln()``.
 
-By default, the output is as a float with trailing zeroes trimmed. To get a fixed representation, the ``--scale`` option can be used, including ``--scale=0`` for integer output.
+By default, the output is a floating-point number with trailing zeroes trimmed. To get a fixed representation, the ``--scale`` option can be used, including ``--scale=0`` for integer output.
 
 Keep in mind that parameter expansion happens before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis (``()``) and the asterisk (``*``) glob character have to be escaped or quoted. ``x`` can also be used to denote multiplication, but it needs to be followed by whitespace to distinguish it from hexadecimal numbers.
 
@@ -63,7 +63,8 @@ Constants
 ``math`` knows the following constants:
 
 - ``e`` - Euler's number.
-- ``pi`` - You know that one. Half of Tau. (``tau`` is also implemented)
+- ``pi`` - π. You know this one. Half of Tau.
+- ``tau``. Equivalent to 2π, or the number of radians in a circle.
 
 Use them without a leading ``$`` - ``pi - 3`` should be about 0.
 
@@ -84,7 +85,7 @@ Functions
 - ``exp`` - the base-e exponential function
 - ``fac`` - factorial
 - ``floor``
-- ``ln``
+- ``ln`` - the base-e logarithm
 - ``log`` or ``log10`` - the base-10 logarithm
 - ``ncr``
 - ``npr``
@@ -128,4 +129,4 @@ Compatibility notes
 
 Fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
 
-You don't need to use ``--`` before the expression even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert ``--`` before the expression it will cause option scanning to stop just like for every other command and it won't be part of the expression.
+You don't need to use ``--`` before the expression, even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert ``--`` before the expression, it will cause option scanning to stop just like for every other command and it won't be part of the expression.

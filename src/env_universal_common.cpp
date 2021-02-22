@@ -1374,9 +1374,13 @@ class universal_notifier_sigio_t final : public universal_notifier_t {
         }
         // Note that O_ASYNC cannot be passed to open() (see Linux kernel bug #5993).
         // We have to set it afterwards like so.
-        // Also Linux got support for O_ASYNC on fifos in 2.6 (released 2003).
-        // Do not be noisy if this fails.
-        if (fcntl(pipe.fd(), F_SETFL, O_NONBLOCK | O_ASYNC) == -1) {
+        // Linux got support for O_ASYNC on fifos in 2.6 (released 2003). Treat its absence as a
+        // failure, but don't be noisy if this fails. Non-Linux platforms without O_ASYNC should use
+        // a different notifier strategy to avoid running into this.
+#ifdef O_ASYNC
+        if (fcntl(pipe.fd(), F_SETFL, O_NONBLOCK | O_ASYNC) == -1)
+#endif
+        {
             FLOGF(uvar_file,
                   _(L"fcntl(F_SETFL) failed, universal variable notifications disabled"));
             return autoclose_fd_t{};

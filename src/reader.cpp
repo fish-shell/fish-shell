@@ -1948,6 +1948,23 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
         all_matches_exact_or_prefix = all_matches_exact_or_prefix && el.match.is_exact_or_prefix();
     }
 
+    if (surviving_completions.size() == 1) {
+        // After sorting and stuff only one completion is left, use it.
+        //
+        // TODO: This happens when smartcase kicks in, e.g.
+        // the token is "cma" and the options are "cmake/" and "CMakeLists.txt"
+        // it would be nice if we could figure
+        // out how to use it more.
+        const completion_t &c = surviving_completions.at(0);
+
+        // If this is a replacement completion, check that we know how to replace it, e.g. that
+        // the token doesn't contain evil operators like {}.
+        if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags)) {
+            completion_insert(c.completion, token_end, c.flags);
+        }
+        return true;
+    }
+
     bool use_prefix = false;
     wcstring common_prefix;
     if (all_matches_exact_or_prefix) {

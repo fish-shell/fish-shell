@@ -308,8 +308,17 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"TZ", handle_tz_change);
     var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
 
-    // This std::move is required to avoid a build error on old versions of libc++ (#5801)
+    // This std::move is required to avoid a build error on old versions of libc++ (#5801),
+    // but it causes a different warning under newer versions of GCC (observed under GCC 9.3.0,
+    // but not under llvm/clang 9).
+#if __GNUC__ > 4
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-move"
+#endif
     return std::move(var_dispatch_table);
+#if __GNUC__ > 4
+#pragma GCC diagnostic pop
+#endif
 }
 
 static void run_inits(const environment_t &vars) {

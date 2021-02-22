@@ -3142,7 +3142,9 @@ static void test_complete() {
     if (system("mkdir -p 'test/complete_test'")) err(L"mkdir failed");
     if (system("touch 'test/complete_test/has space'")) err(L"touch failed");
     if (system("touch 'test/complete_test/bracket[abc]'")) err(L"touch failed");
+#ifndef __CYGWIN__ // Square brackets are not legal path characters on WIN32/CYGWIN
     if (system(R"(touch 'test/complete_test/gnarlybracket\[abc]')")) err(L"touch failed");
+#endif
     if (system("touch 'test/complete_test/testfile'")) err(L"touch failed");
     if (system("chmod 700 'test/complete_test/testfile'")) err(L"chmod failed");
 
@@ -3177,6 +3179,7 @@ static void test_complete() {
         completions.front().completion, completions.front().flags, cmdline, &where, false);
     do_test(newcmdline == L"touch test/complete_test/bracket\\[abc\\] ");
 
+#ifndef __CYGWIN__ // Square brackets are not legal path characters on WIN32/CYGWIN
     cmdline = LR"(touch test/complete_test/gnarlybracket\\[)";
     completions = do_complete(cmdline, {});
     do_test(completions.size() == 1);
@@ -3185,6 +3188,7 @@ static void test_complete() {
     newcmdline = completion_apply_to_command_line(
         completions.front().completion, completions.front().flags, cmdline, &where, false);
     do_test(newcmdline == LR"(touch test/complete_test/gnarlybracket\\\[abc\] )");
+#endif
 
     // Add a function and test completing it in various ways.
     // Note we're depending on function_add not complaining when given missing parsed_source /

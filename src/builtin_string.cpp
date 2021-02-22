@@ -925,10 +925,18 @@ class pcre2_matcher_t : public string_matcher_t {
 #if PCRE2_CODE_UNIT_WIDTH == 8
                 uint8_t match_index_msb;
                 uint8_t match_index_lsb;
+#if CHAR_BIT == PCRE2_CODE_UNIT_WIDTH
                 char name[];
+#else
+                char8_t name[];
+#endif
 #elif PCRE2_CODE_UNIT_WIDTH == 16
                 uint16_t match_index;
+#if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH
+                wchar_t name[];
+#else
                 char16_t name[];
+#endif
 #else
                 uint32_t match_index;
 #if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH

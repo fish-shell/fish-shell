@@ -146,11 +146,34 @@ static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
         del_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
     } else if (wc < 0x80) {  // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
-    } else if (wc <= 0xFFFF) {  // BMP Unicode chararacter
+    }
+// Conditional handling of BMP Unicode characters depends on the encoding. Assume width of wchar_t
+// corresponds to the encoding, i.e. WCHAR_T_BITS == 16 implies UTF-16 and WCHAR_T_BITS == 32
+// because there's no other sane way of handling the input.
+#if WCHAR_T_BITS == 16
+    else if (wc <= 0xD7FF || (wc >= 0xE000 && wc <= 0xFFFD)) {
+        // UTF-16 encoding of Unicode character in BMP range
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\u%04X", wc);
+    } else {
+        // Our support for UTF-16 surrogate pairs is non-existent.
+        // See https://github.com/fish-shell/fish-shell/issues/6585#issuecomment-783669903 for what
+        // correct handling of surrogate pairs would look like - except it would need to be done
+        // everywhere.
+
+        // 0xFFFD is the unicode codepoint for "symbol doesn't exist in codepage" and is the most
+        // correct thing we can do given the byte-by-byte parsing without any support for surrogate
+        // pairs.
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\uFFFD");
+    }
+#elif WCHAR_T_BITS == 32
+    else if (wc <= 0xFFFF) {  // BMP Unicode chararacter
         std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\u%04X", wc);
     } else {  // Non-BMP Unicode chararacter
         std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\U%06X", wc);
     }
+#else
+    static_assert(false, "Unsupported WCHAR_T size; unknown encoding!");
+#endif
 
     return buf;
 }

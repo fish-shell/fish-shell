@@ -15,9 +15,20 @@ endif()
 
 # An unrecognized flag is usually a warning and not an error, which CMake apparently does
 # not pick up on. Combine it with -Werror to determine if it's actually supported.
-check_cxx_compiler_flag("-Wno-redundant-move -Werror" HAS_NO_REDUNDANT_MOVE)
+# This is not bulletproof; old versions of GCC only emit a warning about unrecognized warning
+# options when there are other warnings to emit :rolleyes:
+# See https://github.com/fish-shell/fish-shell/commit/fe2da0a9#commitcomment-47431659
+
+# GCC supports -Wno-redundant-move from GCC9 onwards
+check_cxx_compiler_flag("-Werror=no-redundant-move" HAS_NO_REDUNDANT_MOVE)
 if (HAS_NO_REDUNDANT_MOVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-redundant-move")
+endif()
+# Clang once supported -Wno-redundant-move but replaced it with a Wredundant-move option instead
+# (and it is functionally different from its older version of GCC's Wno-redundant-move).
+check_cxx_compiler_flag("-Werror=redundant-move" HAS_REDUNDANT_MOVE)
+if (HAS_REDUNDANT_MOVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wredundant-move")
 endif()
 
 # Try using CMake's own logic to locate curses/ncurses

@@ -116,3 +116,14 @@ end
 emit bar
 #CHECK: foo
 #CHECK: caller
+# Since we are in a script context, this would not trigger "job control"
+# if it was set to "interactive"
+status is-full-job-control
+and echo is full job control
+#CHECK: is full job control
+
+# We can't rely on a *specific* pgid being assigned,
+# but we can rely on it not being fish's.
+command true &
+set -l truepid $last_pid
+test $truepid != $fish_pid || echo true has same pid as fish

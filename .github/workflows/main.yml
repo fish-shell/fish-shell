@@ -116,7 +116,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install deps
       run: |
-        brew install python3
         sudo pip3 install pexpect
     - name: cmake
       run: |

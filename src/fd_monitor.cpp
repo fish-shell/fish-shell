@@ -3,6 +3,8 @@
 
 #include "fd_monitor.h"
 
+#include <cstring>
+
 #include "flog.h"
 #include "io.h"
 #include "iothread.h"

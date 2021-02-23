@@ -7,6 +7,10 @@
 #include "wcstringutil.h"
 #include "wutil.h"
 
+#ifdef HAVE_WINSIZE
+#include <sys/termios.h>
+#endif
+
 // A counter which is incremented every SIGWINCH, or when the tty is otherwise invalidated.
 static volatile uint32_t s_tty_termsize_gen_count{0};
 
@@ -25,7 +29,7 @@ static maybe_t<termsize_t> read_termsize_from_tty() {
             FLOGF(term_support, L"Terminal has 0 rows, falling back to default height");
             winsize.ws_row = termsize_t::DEFAULT_HEIGHT;
         }
-        result = termsize_t{winsize.ws_col, winsize.ws_row};
+        result = termsize_t(winsize.ws_col, winsize.ws_row);
     }
 #endif
     return result;

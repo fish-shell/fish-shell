@@ -8,11 +8,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <cstring>
+
 #include "common.h"
 #include "flog.h"
 #include "wutil.h"
-
-#include <fcntl.h>
 
 #ifdef HAVE_EVENTFD
 #include <sys/eventfd.h>

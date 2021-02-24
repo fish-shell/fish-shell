@@ -766,7 +766,8 @@ Interactive improvements
 -  History newly imported from bash includes command lines using ``&&``
    or ``||``.
 -  The automatic generation of completions from manual pages is better
-   described in job and process listings (:issue:`6269`).
+   described in job and process listings, and no longer produces a
+   warning when exiting fish (:issue:`6269`).
 -  In private mode, setting ``$fish_greeting`` to an empty string before
    starting the private session will prevent the warning about history
    not being saved from being printed (:issue:`6299`).

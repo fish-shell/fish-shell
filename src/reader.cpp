@@ -580,6 +580,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// When backspacing, we temporarily suppress autosuggestions.
     bool suppress_autosuggestion{false};
 
+    /// HACK: A flag to reset the loop state from the outside.
+    bool reset_loop_state{false};
+
     /// The representation of the current screen contents.
     screen_t screen;
 
@@ -3875,6 +3878,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     force_exec_prompt_and_repaint = true;
 
     while (!rls.finished && !check_exit_loop_maybe_warning(this)) {
+        if (reset_loop_state) {
+            reset_loop_state = false;
+            rls.last_cmd = none();
+            rls.complete_did_insert = false;
+        }
         // Perhaps update the termsize. This is cheap if it has not changed.
         update_termsize();
 
@@ -4113,6 +4121,7 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
 
     data->pager.clear();
     data->set_buffer_maintaining_pager(b, pos);
+    data->reset_loop_state = true;
 }
 
 size_t reader_get_cursor_pos() {

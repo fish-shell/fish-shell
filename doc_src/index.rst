@@ -2118,5 +2118,5 @@ Other help pages
    completions
    faq
    license
-   CHANGELOG
+   relnotes 
    fish_for_bash_users

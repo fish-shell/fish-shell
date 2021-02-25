@@ -128,8 +128,8 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "tutorial.html#"(string sub -s 5 -- $fish_help_item | string replace -a -- _ -)
         case tutorial
             set fish_help_page "tutorial.html"
-        case changelog
-            set fish_help_page changelog.html
+        case releasenotes
+            set fish_help_page relnotes.html
         case completions
             set fish_help_page completions.html
         case faq

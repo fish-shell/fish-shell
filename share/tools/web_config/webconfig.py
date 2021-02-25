@@ -20,6 +20,11 @@ import tempfile
 import threading
 from itertools import chain
 
+COMMON_WSL_CMD_PATHS = (
+    "/mnt/c/Windows/System32",
+    "/windir/c/Windows/System32",
+    "/c/Windows/System32"
+)
 FISH_BIN_PATH = False  # will be set later
 IS_PY2 = sys.version_info[0] == 2
 
@@ -33,8 +38,11 @@ else:
     from urllib.parse import parse_qs
 
 
-def find_executable(exe):
-    for p in os.environ["PATH"].split(os.pathsep):
+def find_executable(exe, paths=()):
+    final_path = os.environ["PATH"].split(os.pathsep)
+    if paths:
+        final_path.extend(paths)
+    for p in final_path:
         proposed_path = os.path.join(p, exe)
         if os.access(proposed_path, os.X_OK):
             return proposed_path
@@ -1533,7 +1541,11 @@ def runThing():
     if isMacOS10_12_5_OrLater():
         subprocess.check_call(["open", fileurl])
     elif is_wsl():
-        subprocess.call(["cmd.exe", "/c", "start %s" % url])
+        cmd_path = find_executable("cmd.exe", COMMON_WSL_CMD_PATHS)
+        if cmd_path:
+            subprocess.call([cmd_path, "/c", "start %s" % url])
+        else:
+            print("Please add the directory containing cmd.exe to your $PATH")
     elif is_termux():
         subprocess.call(["termux-open-url", url])
     else:

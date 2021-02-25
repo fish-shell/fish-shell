@@ -1546,6 +1546,7 @@ def runThing():
             subprocess.call([cmd_path, "/c", "start %s" % url])
         else:
             print("Please add the directory containing cmd.exe to your $PATH")
+            sys.exit(-1)
     elif is_termux():
         subprocess.call(["termux-open-url", url])
     else:

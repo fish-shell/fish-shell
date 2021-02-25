@@ -230,12 +230,10 @@ uint32_t string_fuzzy_match_t::rank() const {
     // Combine our type and our case fold into a single number, such that better matches are
     // smaller. Treat 'exact' types the same as 'prefix' types; this is because we do not
     // prefer exact matches to prefix matches when presenting completions to the user.
-    // Treat smartcase the same as samecase; see #3978.
     auto effective_type = (type == contain_type_t::exact ? contain_type_t::prefix : type);
-    auto effective_case = (case_fold == case_fold_t::smartcase ? case_fold_t::samecase : case_fold);
 
     // Type dominates fold.
-    return static_cast<uint32_t>(effective_type) * 8 + static_cast<uint32_t>(effective_case);
+    return static_cast<uint32_t>(effective_type) * 8 + static_cast<uint32_t>(case_fold);
 }
 
 template <bool Fuzzy, typename T>

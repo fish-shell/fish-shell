@@ -3077,8 +3077,8 @@ static void test_complete() {
     struct test_complete_vars_t : environment_t {
         wcstring_list_t get_names(int flags) const override {
             UNUSED(flags);
-            return {L"Foo1", L"Foo2",  L"Foo3",   L"Bar1",   L"Bar2",
-                    L"Bar3", L"alpha", L"ALPHA!", L"gamma1", L"GAMMA2"};
+            return {L"Foo1",  L"Foo2",   L"Foo3",   L"Bar1",   L"Bar2",  L"Bar3",
+                    L"alpha", L"ALPHA!", L"gamma1", L"GAMMA2", L"Delta", L"DELTA"};
         }
 
         maybe_t<env_var_t> get(const wcstring &key,
@@ -3102,24 +3102,31 @@ static void test_complete() {
 
     completions = do_complete(L"$", {});
     completions_sort_and_prioritize(&completions);
-    do_test(completions.size() == 10);
+    do_test(completions.size() == 12);
     do_test(completions.at(0).completion == L"alpha");
     do_test(completions.at(1).completion == L"ALPHA!");
     do_test(completions.at(2).completion == L"Bar1");
     do_test(completions.at(3).completion == L"Bar2");
     do_test(completions.at(4).completion == L"Bar3");
-    do_test(completions.at(5).completion == L"Foo1");
-    do_test(completions.at(6).completion == L"Foo2");
-    do_test(completions.at(7).completion == L"Foo3");
-    do_test(completions.at(8).completion == L"gamma1");
-    do_test(completions.at(9).completion == L"GAMMA2");
+    do_test(completions.at(5).completion == L"DELTA");
+    do_test(completions.at(6).completion == L"Delta");
+    do_test(completions.at(7).completion == L"Foo1");
+    do_test(completions.at(8).completion == L"Foo2");
+    do_test(completions.at(9).completion == L"Foo3");
+    do_test(completions.at(10).completion == L"gamma1");
+    do_test(completions.at(11).completion == L"GAMMA2");
 
     // Smartcase test. Lowercase inputs match both lowercase and uppercase.
-    completions = do_complete(L"$a", {});
+    completions = do_complete(L"$d", {});
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 2);
-    do_test(completions.at(0).completion == L"$ALPHA!");
-    do_test(completions.at(1).completion == L"lpha");
+    do_test(completions.at(0).completion == L"$DELTA");
+    do_test(completions.at(1).completion == L"$Delta");
+    // But only if there is no exact match (#7738).
+    completions = do_complete(L"$a", {});
+    completions_sort_and_prioritize(&completions);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"lpha");
 
     completions = do_complete(L"$F", {});
     completions_sort_and_prioritize(&completions);

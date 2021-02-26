@@ -46,10 +46,8 @@ using void_function_t = std::function<void()>;
 
 struct work_request_t {
     void_function_t handler;
-    void_function_t completion;
 
-    work_request_t(void_function_t &&f, void_function_t &&comp)
-        : handler(std::move(f)), completion(std::move(comp)) {}
+    explicit work_request_t(void_function_t &&f) : handler(std::move(f)) {}
 
     // Move-only
     work_request_t &operator=(const work_request_t &) = delete;
@@ -109,10 +107,9 @@ struct thread_pool_t {
 
     /// Enqueue a new work item onto the thread pool.
     /// The function \p func will execute in one of the pool's threads.
-    /// \p completion will run on the main thread, if it is not missing.
     /// If \p cant_wait is set, disrespect the thread limit, because extant threads may
     /// want to wait for new threads.
-    int perform(void_function_t &&func, void_function_t &&completion, bool cant_wait);
+    int perform(void_function_t &&func, bool cant_wait);
 
    private:
     /// The worker loop for this thread.
@@ -143,7 +140,7 @@ static thread_pool_t &s_io_thread_pool = *(new thread_pool_t(1, IO_MAX_THREADS))
 
 /// A queue of "things to do on the main thread."
 struct main_thread_queue_t {
-    // Functions to invoke as the completion callback from iothread_perform.
+    // Functions to invoke as the completion callback from debounce.
     std::vector<void_function_t> completions;
 
     // iothread_perform_on_main requests.
@@ -205,26 +202,13 @@ maybe_t<work_request_t> thread_pool_t::dequeue_work_or_commit_to_exit() {
     return result;
 }
 
-static void enqueue_thread_result(void_function_t req) {
-    s_main_thread_queue.acquire()->completions.push_back(std::move(req));
-    get_notify_signaller().post();
-}
-
 static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
 
 void *thread_pool_t::run() {
     while (auto req = dequeue_work_or_commit_to_exit()) {
         FLOGF(iothread, L"pthread %p got work", this_thread());
-
         // Perform the work
         req->handler();
-
-        // If there's a completion handler, we have to enqueue it on the result queue.
-        // Note we're using std::function's weirdo operator== here
-        if (req->completion != nullptr) {
-            // Enqueue the result, and tell the main thread about it.
-            enqueue_thread_result(std::move(req->completion));
-        }
     }
     FLOGF(iothread, L"pthread %p exiting", this_thread());
     return nullptr;
@@ -240,10 +224,10 @@ bool thread_pool_t::spawn() const {
     return make_detached_pthread(&run_trampoline, const_cast<thread_pool_t *>(this));
 }
 
-int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion, bool cant_wait) {
+int thread_pool_t::perform(void_function_t &&func, bool cant_wait) {
     assert(func && "Missing function");
     // Note we permit an empty completion.
-    struct work_request_t req(std::move(func), std::move(completion));
+    struct work_request_t req(std::move(func));
     int local_thread_count = -1;
     auto &pool = s_io_thread_pool;
     bool spawn_new_thread = false;
@@ -285,10 +269,10 @@ int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion,
     return local_thread_count;
 }
 
-void iothread_perform_impl(void_function_t &&func, void_function_t &&completion, bool cant_wait) {
+void iothread_perform_impl(void_function_t &&func, bool cant_wait) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
-    s_io_thread_pool.perform(std::move(func), std::move(completion), cant_wait);
+    s_io_thread_pool.perform(std::move(func), cant_wait);
 }
 
 int iothread_port() { return get_notify_signaller().read_fd(); }
@@ -511,19 +495,16 @@ bool debounce_t::impl_t::run_next(uint64_t token) {
 
     assert(req && req->handler && "Request should have value");
     req->handler();
-    if (req->completion) {
-        enqueue_thread_result(std::move(req->completion));
-    }
     return true;
 }
 
-uint64_t debounce_t::perform_impl(std::function<void()> handler, std::function<void()> completion) {
+uint64_t debounce_t::perform(std::function<void()> handler) {
     uint64_t active_token{0};
     bool spawn{false};
     // Local lock.
     {
         auto d = impl_->data.acquire();
-        d->next_req = work_request_t{std::move(handler), std::move(completion)};
+        d->next_req = work_request_t{std::move(handler)};
         // If we have a timeout, and our running thread has exceeded it, abandon that thread.
         if (d->active_token && timeout_msec_ > 0 &&
             std::chrono::steady_clock::now() - d->start_time >
@@ -550,6 +531,12 @@ uint64_t debounce_t::perform_impl(std::function<void()> handler, std::function<v
         });
     }
     return active_token;
+}
+
+// static
+void debounce_t::enqueue_main_thread_result(std::function<void()> func) {
+    s_main_thread_queue.acquire()->completions.push_back(std::move(func));
+    get_notify_signaller().post();
 }
 
 debounce_t::debounce_t(long timeout_msec)

@@ -26,58 +26,18 @@ void iothread_service_main_with_timeout(long timeout_usec);
 int iothread_drain_all();
 
 // Internal implementation
-void iothread_perform_impl(std::function<void()> &&func, std::function<void()> &&completion,
-                           bool cant_wait = false);
+void iothread_perform_impl(std::function<void()> &&, bool cant_wait = false);
 
-// This is the glue part of the handler-completion handoff.
-// Given a Handler and Completion, where the return value of Handler should be passed to Completion,
-// this generates new void->void functions that wraps that behavior. The type T is the return type
-// of Handler and the argument to Completion
-template <typename Handler, typename Completion,
-          typename Result = typename std::result_of<Handler()>::type>
-struct iothread_trampoline_t {
-    iothread_trampoline_t(const Handler &hand, const Completion &comp) {
-        auto result = std::make_shared<maybe_t<Result>>();
-        this->handler = [=] { *result = hand(); };
-        this->completion = [=] { comp(result->acquire()); };
-    }
-
-    // The generated handler and completion functions.
-    std::function<void()> handler;
-    std::function<void()> completion;
-};
-
-// Void specialization.
-template <typename Handler, typename Completion>
-struct iothread_trampoline_t<Handler, Completion, void> {
-    iothread_trampoline_t(std::function<void()> hand, std::function<void()> comp)
-        : handler(std::move(hand)), completion(std::move(comp)) {}
-
-    // The handler and completion functions.
-    std::function<void()> handler;
-    std::function<void()> completion;
-};
-
-// iothread_perform invokes a handler on a background thread, and then a completion function
-// on the main thread. The value returned from the handler is passed to the completion.
-// In other words, this is like Completion(Handler()) except the handler part is invoked
-// on a background thread.
-template <typename Handler, typename Completion>
-void iothread_perform(const Handler &handler, const Completion &completion) {
-    iothread_trampoline_t<Handler, Completion> tramp(handler, completion);
-    iothread_perform_impl(std::move(tramp.handler), std::move(tramp.completion));
-}
-
-// variant of iothread_perform without a completion handler
+// iothread_perform invokes a handler on a background thread.
 inline void iothread_perform(std::function<void()> &&func) {
-    iothread_perform_impl(std::move(func), {});
+    iothread_perform_impl(std::move(func));
 }
 
 /// Variant of iothread_perform that disrespects the thread limit.
 /// It does its best to spawn a new thread if all other threads are occupied.
 /// This is for cases where deferring a new thread might lead to deadlock.
 inline void iothread_perform_cantwait(std::function<void()> &&func) {
-    iothread_perform_impl(std::move(func), {}, true);
+    iothread_perform_impl(std::move(func), true);
 }
 
 /// Performs a function on the main thread, blocking until it completes.
@@ -103,22 +63,31 @@ class debounce_t {
     /// Enqueue \p handler to be performed on a background thread, and \p completion (if any) to be
     /// performed on the main thread. If a function is already enqueued, this overwrites it; that
     /// function will not execute.
-    /// This returns the active thread token, which is only of interest to tests.
+    /// If the function executes, then \p completion will be invoked on the main thread, with the
+    /// result of the handler.
+    /// The result is a token which is only of interest to the tests.
     template <typename Handler, typename Completion>
-    void perform(Handler handler, Completion completion) {
-        iothread_trampoline_t<Handler, Completion> tramp(handler, completion);
-        perform_impl(std::move(tramp.handler), std::move(tramp.completion));
+    uint64_t perform(const Handler &handler, const Completion &completion) {
+        // Make a trampoline function which calls the handler, puts the result into a shared
+        // pointer, and then enqueues a completion.
+        auto trampoline = [=] {
+            using result_type_t = decltype(handler());
+            auto result = std::make_shared<result_type_t>(handler());
+            enqueue_main_thread_result([=] { completion(std::move(*result)); });
+        };
+        return perform(std::move(trampoline));
     }
 
     /// One-argument form with no completion.
-    uint64_t perform(std::function<void()> func) { return perform_impl(std::move(func), {}); }
+    /// The result is a token which is only of interest to the tests.
+    uint64_t perform(std::function<void()> func);
 
     explicit debounce_t(long timeout_msec = 0);
     ~debounce_t();
 
    private:
-    /// Implementation of perform().
-    uint64_t perform_impl(std::function<void()> handler, std::function<void()> completion);
+    /// Helper to enqueue a function to run on the main thread.
+    static void enqueue_main_thread_result(std::function<void()> func);
 
     const long timeout_msec_;
     struct impl_t;

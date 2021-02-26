@@ -56,23 +56,6 @@ struct work_request_t {
     work_request_t(work_request_t &&) = default;
 };
 
-struct main_thread_request_t {
-    // The function to execute.
-    void_function_t func;
-
-    // Set by the main thread when the work is done.
-    std::promise<void> done{};
-
-    explicit main_thread_request_t(void_function_t &&f) : func(f) {}
-
-    // No moving OR copying
-    // main_thread_requests are always stack allocated, and we deal in pointers to them
-    void operator=(const main_thread_request_t &) = delete;
-    void operator=(main_thread_request_t &&) = delete;
-    main_thread_request_t(const main_thread_request_t &) = delete;
-    main_thread_request_t(main_thread_request_t &&) = delete;
-};
-
 struct thread_pool_t {
     struct data_t {
         /// The queue of outstanding, unclaimed requests.
@@ -145,7 +128,7 @@ struct main_thread_queue_t {
 
     // iothread_perform_on_main requests.
     // Note this contains pointers to structs that are stack-allocated on the requesting thread.
-    std::vector<main_thread_request_t *> requests;
+    std::vector<void_function_t> requests;
 
     /// Transfer ownership of ourselves to a new queue and return it.
     /// 'this' is left empty.
@@ -355,29 +338,31 @@ void iothread_service_main() {
         if (func) func();
     }
 
-    // Perform each main thread request. Note we are NOT responsible for deleting these. They are
-    // stack allocated in their respective threads!
-    for (main_thread_request_t *req : queue.requests) {
-        req->func();
-        req->done.set_value();
+    // Perform each main thread request.
+    for (const void_function_t &func : queue.requests) {
+        if (func) func();
     }
 }
 
-void iothread_perform_on_main(void_function_t &&func) {
+void iothread_perform_on_main(const void_function_t &func) {
     if (is_main_thread()) {
         func();
         return;
     }
 
-    // Make a new request. Note we are synchronous, so this can be stack allocated!
-    main_thread_request_t req(std::move(func));
-
+    // Make a new request. Note we are synchronous, so our closure can use references instead of
+    // copying.
+    std::promise<void> wait_until_done;
+    auto handler = [&] {
+        func();
+        wait_until_done.set_value();
+    };
     // Append it. Ensure we don't hold the lock after.
-    s_main_thread_queue.acquire()->requests.push_back(&req);
+    s_main_thread_queue.acquire()->requests.push_back(std::move(handler));
 
     // Tell the signaller and then wait until our future is set.
     get_notify_signaller().post();
-    req.done.get_future().wait();
+    wait_until_done.get_future().wait();
 }
 
 bool make_detached_pthread(void *(*func)(void *), void *param) {

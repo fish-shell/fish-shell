@@ -98,9 +98,9 @@ complete -c pandoc -r -f -l bibliography -k -a "(__fish_complete_suffix 'ria')"
 complete -c pandoc -r -f -l lua-filter -k -a "(__fish_complete_suffix 'lua')"
 
 # options that take files in DATADIR
-complete -c pandoc -r -s F -l filter -a "(find $datadir/filters/** | string replace -- '$datadir/filters/' '')"
-complete -c pandoc -r -l template -a "(find $datadir/templates/** | string replace -- '$datadir/templates/' '')"
-complete -c pandoc -r -f -l lua-filter -a "(find $datadir/** | string match -r '.lua\$' | string replace -- '$datadir/' '')"
+complete -c pandoc -r -s F -l filter -a "(find $datadir/filters -type f 2>/dev/null | string replace -- '$datadir/filters/' '')"
+complete -c pandoc -r -l template -a "(find $datadir/templates -type f 2>/dev/null | string replace -- '$datadir/templates/' '')"
+complete -c pandoc -r -f -l lua-filter -a "(find $datadir -type f 2>/dev/null | string match -r '.lua\$' | string replace -- '$datadir/' '')"
 
 # options that require arguments which cannot be autocompleted
 complete -c pandoc -x -l indented-code-classes

@@ -10,7 +10,7 @@ complete -c gitk -n 'not contains -- -- (commandline -opc)' -l merge -d 'On a me
 complete -c gitk -n 'not contains -- -- (commandline -opc)' -l left-right -d 'Mark which side of a symmetric difference a commit is reachable from'
 complete -c gitk -n 'not contains -- -- (commandline -opc)' -l full-history -d 'When filtering history with -- path..., do not prune some history'
 complete -c gitk -n 'not contains -- -- (commandline -opc)' -l simplify-merges -d 'Hide needless merges from history'
-complete -c gitk -n 'not contains -- -- (commandline -opc)' -l ancestry-path -d 'Only display commits that exist directly on the ancestry chain between the given range'
+complete -c gitk -n 'not contains -- -- (commandline -opc)' -l ancestry-path -d 'Only display commits that exist directly on the ancestry chain between the range'
 complete -c gitk -n 'not contains -- -- (commandline -opc)' -l argscmd= -d 'Command to be run to determine th revision range to show'
 complete -c gitk -n 'not contains -- -- (commandline -opc)' -l select-commit= -d 'Select the specified commit after loading the graph, instead of HEAD'
 complete -c gitk -n 'not contains -- -- (commandline -opc)' -l select-commit=HEAD -d 'Select the specified commit after loading the graph, instead of HEAD'

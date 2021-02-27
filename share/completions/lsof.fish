@@ -4,7 +4,7 @@ complete -c lsof -s A -r -d 'Use alternative name list file'
 complete -c lsof -s b -d 'Avoid kernel functions that might block: lstat, readlink, stat'
 complete -c lsof -s c -d 'Select the listing for processes, whose command begins with string (^ - negate)' -xa '(__fish_complete_proc)'
 complete -c lsof -s C -d 'Do not report any pathname component from kernel\'s namecache'
-complete -c lsof -s d -r -d 'specifies a list of file descriptors (FDs) to exclude from or include in the  output  listing'
+complete -c lsof -s d -r -d 'specifies a list of file descriptors to exclude or include in the output listing'
 complete -c lsof -s D -d 'use of device cache file' -xa '\?\t"report device cache file paths"
 b\t"build the device cache file"
 i\t"ignore the device cache file"

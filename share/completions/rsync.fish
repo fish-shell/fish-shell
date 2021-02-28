@@ -2,7 +2,22 @@ function __rsync_remote_target
     commandline -ct | string match -r '.*::?(?:.*/)?' | string unescape
 end
 
+function __rsync_parse_flags -d "Print info|help FLAGS from help output"
+    set -l helptext $argv[2..-1]
+    for line in $helptext
+        set -l tokens (string match -r "([A-Z]+)(?: {2,})(.+)" $line)
+        if [ (count $tokens) -ge 3 ]
+            echo -e "$tokens[2]\t$tokens[3]"
+        end
+    end
+end
+
 complete -c rsync -s v -l verbose -d "Increase verbosity"
+complete -c rsync -l info -d "Fine-grained informational verbosity" -xa "
+(__rsync_parse_flags (rsync --info=help))"
+complete -c rsync -l debug -d "Fine-grained debug verbosity" -xa "
+(__rsync_parse_flags (rsync --debug=help))"
+complete -c rsync -l stderr -xa '{errors,all,client}' -d "change stderr output mode, default: errors"
 complete -c rsync -s q -l quiet -d "Suppress non-error messages"
 complete -c rsync -s c -l checksum -d "Skip based on checksum, not mod-time & size"
 complete -c rsync -s a -l archive -d "Archive mode; same as -rlptgoD (no -H)"

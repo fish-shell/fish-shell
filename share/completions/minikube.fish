@@ -142,10 +142,10 @@ complete -c minikube -n "__minikube_using_command service" -l url -d "Display th
 # Sub-command: start
 complete -c minikube -n "__minikube_using_command start" -l container-runtime -d "The container runtime to be used"
 complete -c minikube -n "__minikube_using_command start" -l cpus -d "Number of CPUs allocated to the minikube VM (default 2)"
-complete -c minikube -n "__minikube_using_command start" -l disk-size -d "Disk size allocated to the minikube VM (format: <number>[<unit>], where unit = b, k, m or g) (default 20g)"
+complete -c minikube -n "__minikube_using_command start" -l disk-size -d "Disk size allocated to the minikube VM (format: <number>[<unit>]) (default 20g)"
 complete -c minikube -n "__minikube_using_command start" -l docker-env -d "Environment variables to pass to the Docker daemon (format: key=value)"
-complete -c minikube -n "__minikube_using_command start" -l extra-config -d "A set of key=value pairs that describe configuration that may be passed to different components"
-complete -c minikube -n "__minikube_using_command start" -l feature-gates -d "A set of key=value pairs that describe feature gates for alpha/experimental features"
+complete -c minikube -n "__minikube_using_command start" -l extra-config -d "key=value pairs that describe config that may be passed to different components"
+complete -c minikube -n "__minikube_using_command start" -l feature-gates -d "key=value pairs that describe feature gates for alpha/experimental features"
 complete -c minikube -n "__minikube_using_command start" -l insecure-registry -d "Insecure Docker registries to pass to the Docker daemon"
 complete -c minikube -n "__minikube_using_command start" -l iso-url -d "Location of the minikube iso"
 complete -c minikube -n "__minikube_using_command start" -l keep-context -d "Keep the existing kubectl context and create a minikube context instead"

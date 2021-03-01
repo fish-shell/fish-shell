@@ -8,7 +8,7 @@
 #include "wutil.h"
 
 #ifdef HAVE_WINSIZE
-#include <sys/termios.h>
+#include <termios.h>
 #endif
 
 // A counter which is incremented every SIGWINCH, or when the tty is otherwise invalidated.

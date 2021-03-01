@@ -1,5 +1,5 @@
-fish 3.2.0 (released ???)
-=========================
+fish 3.2.0 (released March 1, 2021)
+===================================
 
 Notable improvements and fixes
 ------------------------------

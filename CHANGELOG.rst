@@ -203,7 +203,7 @@ Interactive improvements
 -  ``help`` works properly on MSYS2 (:issue:`7113`) and only uses ``cmd.exe`` if running on WSL (:issue:`6797`).
 -  Resuming a piped job by its number, like ``fg %1``, works correctly (:issue:`7406`). Resumed jobs show the correct title in the terminal emulator (:issue:`7444`).
 -  Commands run from key bindings now use the same TTY modes as normal commands (:issue:`7483`).
--  Autosuggestions from history are now case-sensitive, and tab completions are "smartcase": they offer case-insensitive matches if the input string is lowercase (:issue:`3978`).
+-  Autosuggestions from history are now case-sensitive (:issue:`3978`).
 -  ``$status`` from completion scripts is no longer passed outside the completion, which keeps the status display in the prompt as the last command's status (:issue:`7555`).
 -  Updated localisations for pt_BR (:issue:`7480`).
 -  ``fish_trace`` output now starts with ``->`` (like ``fish --profile``), making the depth more visible (:issue:`7538`).
@@ -317,9 +317,11 @@ Completions
    -  ``gh`` (:issue:`7112`)
    -  ``gitk``
    -  ``groups`` (:issue:`6889`)
+   -  ``hashcat`` (:issue:`7746`)
    -  ``hikari`` (:issue:`7083`)
    -  ``icdiff`` (:issue:`7503`)
    -  ``imv`` (:issue:`6675`)
+   -  ``john`` (:issue:`7746`)
    -  ``julia`` (:issue:`7468`)
    -  ``k3d`` (:issue:`7202`)
    -  ``ldapsearch`` (:issue:`7578`)

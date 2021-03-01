@@ -1,3 +1,30 @@
+fish 3.3.0 (released ???)
+=========================
+
+Notable improvements and fixes
+------------------------------
+
+Syntax changes and new commands
+-------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Scripting improvements
+----------------------
+
+Interactive improvements
+------------------------
+
+New or improved bindings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+
+Improved terminal support
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 fish 3.2.0 (released March 1, 2021)
 ===================================
 

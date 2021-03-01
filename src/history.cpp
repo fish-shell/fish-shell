@@ -850,7 +850,8 @@ bool history_impl_t::save_internal_via_rewrite() {
 
             // Slide it into place
             if (wrename(tmp_name, target_name) == -1) {
-                FLOGF(history_file, L"Error %d when renaming history file", errno);
+                const char *error = std::strerror(errno);
+                FLOGF(error, _(L"Error when renaming history file: %s"), error);
             }
 
             // We did it

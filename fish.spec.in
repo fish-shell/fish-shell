@@ -21,18 +21,12 @@ BuildRequires: cmake pcre2-devel
 BuildRequires: update-desktop-files
 %endif
 
-%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
-BuildRequires: gcc48 gcc48-c++
-%endif
-
 # for tests
 %if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} > 7 )
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en
 %endif
-%if 0%{?rhel} != 6
 BuildRequires: python3 procps
-%endif
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -59,11 +53,6 @@ is simple but incompatible with other shell languages.
 %setup -q -n %{name}-@VERSION@
 
 %build
-%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
-export CC=gcc48
-export CXX=g++48
-EXTRA_CMAKE_FLAGS="-DCURSES_EXTRA_LIBRARY=tinfo"
-%endif
 # CMake macros define -DBUILD_SHARED_LIBS:BOOL=ON, which breaks the
 # bundled PCRE2 static library.
 EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DBUILD_SHARED_LIBS:BOOL=OFF"
@@ -99,12 +88,7 @@ cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
 %if 0%{?__builddir:1}
 cd %__builddir
 %endif
-# Turn off tests on RHEL 6, they are hard to keep running
-%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
-./fish -c 'exit 0'
-%else
 make test SHOW_INTERACTIVE_LOG=1
-%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT

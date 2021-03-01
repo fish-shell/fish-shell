@@ -14,7 +14,9 @@ Scripting improvements
 ----------------------
 
 Interactive improvements
-------------------------
+-------------------------
+- The history file can be made a symbolic link without it being overwritten.
+
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

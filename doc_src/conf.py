@@ -52,12 +52,6 @@ def setup(app):
     )
     lexers["fish-docs-samples"] = fish_indent_lexer
 
-    # add_css_file only appears in Sphinx 1.8.0
-    if hasattr(app, "add_css_file"):
-        app.add_css_file("custom.css")
-    else:
-        app.add_stylesheet("custom.css")
-
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_role("issue", issue_role)
 

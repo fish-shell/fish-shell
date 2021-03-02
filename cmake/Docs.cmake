@@ -17,8 +17,6 @@ set(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 # Prepend the output dir of fish_indent to PATH.
 add_custom_target(sphinx-docs
     mkdir -p ${SPHINX_HTML_DIR}/_static/
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SPHINX_SRC_DIR}/_static/pygments.css ${SPHINX_HTML_DIR}/_static/
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SPHINX_SRC_DIR}/_static/custom.css ${SPHINX_HTML_DIR}/_static/
     COMMAND env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
         ${SPHINX_EXECUTABLE}
         -q -b html

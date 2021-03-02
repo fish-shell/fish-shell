@@ -40,6 +40,7 @@ static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h
                                               {L"path", no_argument, nullptr, 'p'},
                                               {L"force-path", no_argument, nullptr, 'P'},
                                               {L"query", no_argument, nullptr, 'q'},
+                                              {L"quiet", no_argument, nullptr, 'q'},
                                               {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(type_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,

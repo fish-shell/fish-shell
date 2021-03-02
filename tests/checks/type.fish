@@ -23,6 +23,10 @@ echo $status
 type -q '['
 echo $status
 # CHECK: 0
+# Confirm that --quiet is still a thing
+type --quiet '['
+echo $status
+# CHECK: 0
 
 # Test that we print a command path
 type sh

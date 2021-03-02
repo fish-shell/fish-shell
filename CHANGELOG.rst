@@ -15,6 +15,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- ``help`` and ``fish_config`` no longer open to a "Your file couldn't be accessed" page when fish is running in a Chrome OS Crostini Linux VM and URLs are opened in Chrome running outside the VM.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

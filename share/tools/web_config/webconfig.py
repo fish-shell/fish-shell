@@ -71,6 +71,16 @@ def is_termux():
     return "com.termux" in os.environ["PATH"] and find_executable("termux-open-url")
 
 
+def is_chromeos_garcon():
+    """ Return whether we are running in Chrome OS and the browser can't see local files """
+    # In Crostini Chrome OS Linux, the default browser opens URLs in Chrome
+    # running outside the linux VM. This browser does not have access to the
+    # Linux filesystem. This uses Garcon, see for example
+    # https://chromium.googlesource.com/chromiumos/platform2/+/master/vm_tools/garcon/#opening-urls
+    # https://source.chromium.org/search?q=garcon-url-handler
+    return "garcon-url-handler" in webbrowser.get().name
+
+
 # Disable CLI web browsers
 term = os.environ.pop("TERM", None)
 # This import must be done with an empty $TERM, otherwise a command-line browser may be started
@@ -1549,6 +1559,8 @@ def runThing():
             sys.exit(-1)
     elif is_termux():
         subprocess.call(["termux-open-url", url])
+    elif is_chromeos_garcon():
+        webbrowser.open(url)
     else:
         webbrowser.open(fileurl)
 

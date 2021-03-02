@@ -142,12 +142,20 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "index.html#$fish_help_item"
     end
 
+    # In Crostini Chrome OS Linux, the default browser opens URLs in Chrome running outside the
+    # linux VM. This browser does not have access to the Linux filesystem. This uses Garcon, see e.g.
+    # https://chromium.googlesource.com/chromiumos/platform2/+/master/vm_tools/garcon/#opening-urls
+    # https://source.chromium.org/search?q=garcon-url-handler
+    string match -q '*garcon-url-handler*' $fish_browser[1]
+    and set -l chromeos_linux_garcon
+
     set -l page_url
-    if test -f $__fish_help_dir/index.html
+    if test -f $__fish_help_dir/index.html; and not set -lq chromeos_linux_garcon
         # Help is installed, use it
         set page_url file://$__fish_help_dir/$fish_help_page
 
-        # For Windows (Cygwin, msys2 and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
+        # For Windows (Cygwin, msys2 and WSL), we need to convert the base
+        # help dir to a Windows path before converting it to a file URL
         # but only if a Windows browser is being used
         if type -q cygpath
             and string match -qr '(cygstart|\.exe)(\s+|$)' $fish_browser[1]

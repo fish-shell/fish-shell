@@ -1,4 +1,4 @@
-{% extends "classic/layout.html" %}
+{% extends "basic/layout.html" %}
 {# Remove broken "genindex" link - unfortunately this takes with it the acceptable "next" and "previous" links, but they're not super necessary. #}
 {% set rellinks = [] %}
 
@@ -41,9 +41,6 @@
 {% block sidebar2 %} {% endblock %}
 {% block extrahead %}
     <link rel="shortcut icon" type="image/png" href="{{ pathto('_static/' + theme_root_icon, 1) }}" />
-    {% if builder != "htmlhelp" %}
-    {% if not embedded %}<script type="text/javascript" src="{{ pathto('_static/copybutton.js', 1) }}"></script>{% endif %}
-    {% endif %}
     {{ super() }}
 {% endblock %}
 

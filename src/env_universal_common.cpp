@@ -1582,11 +1582,10 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
     return strategy_notifyd;
 #elif defined(__CYGWIN__)
     return strategy_shmem_polling;
-#elif defined(SIGIO) && (defined(__APPLE__) || defined(__BSD__) || defined(__linux__))
-    // The SIGIO notifier relies on an extremely specific interaction between signal handling and
-    // O_ASYNC writes, and doesn't excercise codepaths that are particularly well explored on all
-    // POSIX and POSIX-like systems, so we only explicitly enable it on platforms where it's known
-    // to work. See discussion in #6585 for examples of breakage.
+#elif 0 && defined(SIGIO) && (defined(__APPLE__) || defined(__BSD__) || defined(__linux__))
+    // FIXME: The SIGIO notifier relies on an extremely specific interaction between signal handling and
+    // O_ASYNC writes, and doesn't currently work particularly well, so it's disabled.
+    // See discussion in #6585 and #7774 for examples of breakage.
     //
     // The SIGIO notifier does not yet work on WSL. See #7429
     if (is_windows_subsystem_for_linux()) {

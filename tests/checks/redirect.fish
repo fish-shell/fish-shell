@@ -100,35 +100,10 @@ echo $status
 read abc <&-
 #CHECKERR: read: stdin is closed
 
-# This one should output nothing.
-echo derp >&-
 
-# Verify that builtins, blocks, and functions may not write to arbitrary fds.
-echo derp >&12
-#CHECKERR: {{.*}} Redirection to fd 12 is only valid for external commands
-#CHECKERR: echo derp >&12
-#CHECKERR:           ^
-
-begin
-    echo derp
-end <&42
-#CHECKERR: {{.*}} Redirection to fd 42 is only valid for external commands
-#CHECKERR: end <&42
-#CHECKERR:     ^
-
-outnerr 2>&7
-#CHECKERR: {{.*}} Redirection to fd 7 is only valid for external commands
-#CHECKERR: outnerr 2>&7
-#CHECKERR:          ^
-
-# Redirection to 0, 1, 2 is allowed. We don't test 0 since writing to stdin is weird and unpredictable.
-echo hooray1 >&1
-echo hooray2 >&2
-#CHECK: hooray1
-#CHECKERR: hooray2
 
 # "Verify that pipes don't conflict with fd redirections"
-# This code is very similar to eval. We go over a bunch of fds
+# This code is very similar to eval. We go over a bunch of fads
 # to make it likely that we will nominally conflict with a pipe
 # fish is supposed to detect this case and dup the pipe to something else
 echo "/bin/echo pipe 3 <&3 3<&-" | source 3<&0
@@ -138,6 +113,9 @@ echo "/bin/echo pipe 6 <&6 6<&-" | source 6<&0
 echo "/bin/echo pipe 7 <&7 7<&-" | source 7<&0
 echo "/bin/echo pipe 8 <&8 8<&-" | source 8<&0
 echo "/bin/echo pipe 9 <&9 9<&-" | source 9<&0
+echo "/bin/echo pipe 10 <&10 10<&-" | source 10<&0
+echo "/bin/echo pipe 11 <&11 11<&-" | source 11<&0
+echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 #CHECK: pipe 3
 #CHECK: pipe 4
 #CHECK: pipe 5
@@ -145,3 +123,6 @@ echo "/bin/echo pipe 9 <&9 9<&-" | source 9<&0
 #CHECK: pipe 7
 #CHECK: pipe 8
 #CHECK: pipe 9
+#CHECK: pipe 10
+#CHECK: pipe 11
+#CHECK: pipe 12

@@ -130,11 +130,7 @@ class parse_execution_context_t {
                                                        globspec_t glob_behavior);
 
     // Determines the list of redirections for a node.
-    // If \p allow_high_fds is false, then report an error for an fd redirection other than to
-    // in/out/err. This is set when constructing an internal process and prevents writing random
-    // data to internal fish fds.
     end_execution_reason_t determine_redirections(const ast::argument_or_redirection_list_t &list,
-                                                  bool allow_high_fds,
                                                   redirection_spec_list_t *out_redirections);
 
     end_execution_reason_t run_1_job(const ast::job_t &job, const block_t *associated_block);

@@ -269,8 +269,6 @@ Any arbitrary file descriptor can used in a redirection by prefixing the redirec
 
 For example, ``echo hello 2> output.stderr`` writes the standard error (file descriptor 2) to ``output.stderr``.
 
-It is an error to redirect a builtin, function, or block to a file descriptor above 2. However this is supported for external commands.
-
 .. [#] Previous versions of fish also allowed specifying this as ``^DESTINATION``, but that made another character special so it was deprecated and will be removed in the future. See :ref:`feature flags<featureflags>`.
 
 .. _pipes:

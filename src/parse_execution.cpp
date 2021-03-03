@@ -900,19 +900,14 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
             return arg_result;
         }
 
-        // Determine the process type.
-        process_type = process_type_for_command(statement, cmd);
-
-        // Only external commands and exec may redirect arbitrary fds.
-        bool allow_high_fds =
-            (process_type == process_type_t::external || process_type == process_type_t::exec);
-
         // The set of IO redirections that we construct for the process.
-        auto reason =
-            this->determine_redirections(statement.args_or_redirs, allow_high_fds, &redirections);
+        auto reason = this->determine_redirections(statement.args_or_redirs, &redirections);
         if (reason != end_execution_reason_t::ok) {
             return reason;
         }
+
+        // Determine the process type.
+        process_type = process_type_for_command(statement, cmd);
     }
 
     // Populate the process.
@@ -985,8 +980,7 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
 }
 
 end_execution_reason_t parse_execution_context_t::determine_redirections(
-    const ast::argument_or_redirection_list_t &list, bool allow_high_fds,
-    redirection_spec_list_t *out_redirections) {
+    const ast::argument_or_redirection_list_t &list, redirection_spec_list_t *out_redirections) {
     // Get all redirection nodes underneath the statement.
     for (const ast::argument_or_redirection_t &arg_or_redir : list) {
         if (!arg_or_redir.is_redirection()) continue;
@@ -1014,18 +1008,10 @@ end_execution_reason_t parse_execution_context_t::determine_redirections(
         redirection_spec_t spec{oper->fd, oper->mode, std::move(target)};
 
         // Validate this spec.
-        if (spec.mode == redirection_mode_t::fd && !spec.is_close()) {
-            maybe_t<int> target_fd = spec.get_target_as_fd();
-            if (!target_fd.has_value()) {
-                // Like `cmd >&gibberish`.
-                const wchar_t *fmt =
-                    _(L"Requested redirection to '%ls', which is not a valid file descriptor");
-                return report_error(STATUS_INVALID_ARGS, redir_node, fmt, spec.target.c_str());
-            } else if (*target_fd > STDERR_FILENO && !allow_high_fds) {
-                // Like `echo foo 2>&5`. Don't allow internal procs to write to internal fish fds.
-                const wchar_t *fmt = _(L"Redirection to fd %d is only valid for external commands");
-                return report_error(STATUS_INVALID_ARGS, redir_node, fmt, *target_fd);
-            }
+        if (spec.mode == redirection_mode_t::fd && !spec.is_close() && !spec.get_target_as_fd()) {
+            const wchar_t *fmt =
+                _(L"Requested redirection to '%ls', which is not a valid file descriptor");
+            return report_error(STATUS_INVALID_ARGS, redir_node, fmt, spec.target.c_str());
         }
         out_redirections->push_back(std::move(spec));
 
@@ -1080,8 +1066,7 @@ end_execution_reason_t parse_execution_context_t::populate_block_process(
     assert(args_or_redirs && "Should have args_or_redirs");
 
     redirection_spec_list_t redirections;
-    auto reason =
-        this->determine_redirections(*args_or_redirs, false /* no high fds */, &redirections);
+    auto reason = this->determine_redirections(*args_or_redirs, &redirections);
     if (reason == end_execution_reason_t::ok) {
         proc->type = process_type_t::block_node;
         proc->block_node_source = pstree;

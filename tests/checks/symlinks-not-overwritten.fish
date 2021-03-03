@@ -1,11 +1,14 @@
 #RUN: %fish -C 'set -g fish %fish' %s
 
-# fish_variables
 set -gx XDG_CONFIG_HOME (mktemp -d)
+set -gx XDG_DATA_HOME $XDG_CONFIG_HOME
 mkdir -p $XDG_CONFIG_HOME/fish
+
+
+# fish_variables
 set -l target_file $XDG_CONFIG_HOME/fish/target_fish_variables
 set -l fish_variables $XDG_CONFIG_HOME/fish/fish_variables
-set -l backup_file $XDG_DATA_HOME/fish/fish_variables_backup
+set -l backup_file $XDG_CONFIG_HOME/fish/fish_variables_backup
 
 echo >$target_file
 cp $target_file $backup_file
@@ -23,7 +26,6 @@ end
 
 
 # fish_history
-set -gx XDG_DATA_HOME $XDG_CONFIG_HOME
 set -l history_file $XDG_DATA_HOME/fish/fish_history
 set -l target_file $XDG_DATA_HOME/fish/target_fish_history
 set -l backup_file $XDG_DATA_HOME/fish/fish_history_backup

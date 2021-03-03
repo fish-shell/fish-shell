@@ -28,8 +28,10 @@ function __fish_print_pipestatus --description "Print pipestatus for prompt"
         if test "$last_status" -ne "$argv[-1]"
             set last_status_string " "$status_color$last_status
         end
-        printf "%s" $brace_sep_color $left_brace \
+        set -l normal (set_color normal)
+        # The "normal"s are to reset modifiers like bold - see #7771.
+        printf "%s" $normal $brace_sep_color $left_brace \
             $status_color $last_pipestatus_string \
-            $brace_sep_color $right_brace $last_status_string (set_color normal)
+            $normal $brace_sep_color $right_brace $normal $last_status_string $normal
     end
 end

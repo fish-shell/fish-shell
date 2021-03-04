@@ -766,7 +766,7 @@ set -l varargs
 for var in repaint describe_style show_informative_status use_informative_chars showdirtystate showstashstate showuntrackedfiles showupstream
     set -a varargs --on-variable __fish_git_prompt_$var
 end
-function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"
+function __fish_git_prompt_reset $varargs --description "Event handler, resets prompt when functionality changes"
     if status --is-interactive
         if contains -- $argv[3] __fish_git_prompt_show_informative_status __fish_git_prompt_use_informative_chars
             # Clear characters that have different defaults with/without informative status
@@ -776,8 +776,6 @@ function __fish_git_prompt_repaint $varargs --description "Event handler, repain
             # Clear init so we reset the chars next time.
             set -e ___fish_git_prompt_init
         end
-
-        commandline -f repaint 2>/dev/null
     end
 end
 
@@ -786,7 +784,7 @@ for var in '' _prefix _suffix _bare _merging _cleanstate _invalidstate _upstream
     set -a varargs --on-variable __fish_git_prompt_color$var
 end
 set -a varargs --on-variable __fish_git_prompt_showcolorhints
-function __fish_git_prompt_repaint_color $varargs --description "Event handler, repaints prompt when any color changes"
+function __fish_git_prompt_reset_color $varargs --description "Event handler, resets prompt when any color changes"
     if status --is-interactive
         set -e ___fish_git_prompt_init
         set -l var $argv[3]
@@ -799,7 +797,6 @@ function __fish_git_prompt_repaint_color $varargs --description "Event handler, 
                 set -e ___fish_git_prompt_color_{$name}_done
             end
         end
-        commandline -f repaint 2>/dev/null
     end
 end
 
@@ -807,10 +804,9 @@ set -l varargs
 for var in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind upstream_diverged upstream_equal upstream_prefix
     set -a varargs --on-variable __fish_git_prompt_char_$var
 end
-function __fish_git_prompt_repaint_char $varargs --description "Event handler, repaints prompt when any char changes"
+function __fish_git_prompt_reset_char $varargs --description "Event handler, resets prompt when any char changes"
     if status --is-interactive
         set -e ___fish_git_prompt_init
         set -e _$argv[3]
-        commandline -f repaint 2>/dev/null
     end
 end

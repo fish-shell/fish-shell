@@ -156,7 +156,7 @@ complete -c rsync -l daemon -d "Run as an rsync daemon"
 complete -c rsync -l config -r -d "Specify alternate rsyncd.conf file"
 complete -c rsync -l dparam -x -d "Override global daemon config parameter"
 complete -c rsync -l no-detach -x -d "Do not detach from the parent"
-complete -c rsync -s V -l version -d "Display version + other info and exit"
+complete -c rsync -s V -l version -d "Display version and feature info"
 complete -c rsync -s h -l help -d "Display help and exit"
 
 #

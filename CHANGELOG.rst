@@ -25,6 +25,22 @@ Improved prompts
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+fish 3.2.1 (released ???)
+====================================
+
+This release of fish fixes a few issues discovered in fish 3.2.0:
+
+-  The new ``type`` builtin didn't have the (deprecated) ``--quiet`` long form of ``-q`` (:issue:`7766`).
+-  ``__fish_print_pipestatus`` failed to reset modifiers like bold which led to the closing parentheses being bold as well (:issue:`7771`).
+-  The error for high file descriptors has been removed as mc relied on it to communicate with its subshell (:issue:`7769`).
+-  The new universal variable notifier failed to notify of universal variables on some systems and has been deactivated for the time being (:issue:`7774`).
+-  The git prompt tried to repaint whenever its variables changed which could lead to repaint loops when setting them inside the prompt.
+   This repainting has been removed (:issue:`7775`).
+-  ``fish_add_path`` would remove the wrong entry when moving multiple entries (:issue:`7776`).
+
+If you are upgrading from version 3.1.2 or before, please also review
+the release notes for 3.2.0 (included below).
+
 fish 3.2.0 (released March 1, 2021)
 ===================================
 

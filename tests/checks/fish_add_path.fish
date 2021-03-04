@@ -54,4 +54,8 @@ fish_add_path -nP $tmpdir/etc | string replace -- $tmpdir ''
 test "$oldpath" = "$PATH"
 or echo "PATH CHANGED!!!" >&2
 
+# See that moving multiple arguments removes the correct ones - #7776
+PATH=$tmpdir/{bin,etc,link,sbin} fish_add_path -nPpm $tmpdir/{link,sbin} | string replace -a $tmpdir ''
+# CHECK: set PATH /link /sbin /bin /etc
+
 exit 0

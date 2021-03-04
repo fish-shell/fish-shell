@@ -110,21 +110,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     #
-    # This event handler makes sure the prompt is repainted when
-    # fish_color_cwd{,_root} changes value. Like all event handlers, it can't be
-    # autoloaded.
-    #
-    set -l varargs --on-variable fish_key_bindings
-    for var in user host{,_remote} cwd{,_root} status error
-        set -a varargs --on-variable fish_color_$var
-    end
-    function __fish_repaint $varargs -d "Event handler, repaints the prompt when fish_color_cwd* changes"
-        if status --is-interactive
-            commandline -f repaint 2>/dev/null
-        end
-    end
-
-    #
     # Completions for SysV startup scripts. These aren't bound to any
     # specific command, so they can't be autoloaded.
     #

@@ -68,5 +68,9 @@ else if type -q pacman
         __fish_default_command_not_found_handler $argv[1]
         pacman -F $paths
     end
+else
+    # Use standard fish command not found handler otherwise
+    function fish_command_not_found --on-event fish_command_not_found
+        __fish_default_command_not_found_handler $argv
+    end
 end
-# Use standard fish command not found handler otherwise

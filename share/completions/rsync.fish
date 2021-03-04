@@ -3,11 +3,11 @@ function __rsync_remote_target
 end
 
 function __rsync_parse_flags -d "Print info|help FLAGS from help output"
-    set -l helptext $argv[2..-1]
+    set -l helptext $argv[2..-1] # Skips header line
     for line in $helptext
         set -l tokens (string match -r "([A-Z]+)(?: {2,})(.+)" $line)
-        if [ (count $tokens) -ge 3 ]
-            echo -e "$tokens[2]\t$tokens[3]"
+        if test (count $tokens) -ge 3
+            echo $tokens[2]\t$tokens[3]
         end
     end
 end

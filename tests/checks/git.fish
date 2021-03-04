@@ -24,7 +24,7 @@ git init >/dev/null 2>&1
 # Note: We *can't* list all here because in addition to aliases,
 # git also uses all commands in $PATH called `git-something` as custom commands,
 # so this depends on system state!
-complete -C'git ' | grep '^add\s'
+complete -C'git ' | grep '^add'\t
 # (note: actual tab character in the check here)
 #CHECK: add	Add file contents to the index
 

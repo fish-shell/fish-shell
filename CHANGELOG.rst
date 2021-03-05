@@ -37,6 +37,7 @@ This release of fish fixes a few issues discovered in fish 3.2.0:
 -  The git prompt tried to repaint whenever its variables changed which could lead to repaint loops when setting them inside the prompt.
    This repainting has been removed (:issue:`7775`).
 -  ``fish_add_path`` would remove the wrong entry when moving multiple entries (:issue:`7776`).
+-  Pasting into a multi-line prompt would cause a ``__fish_tokenizer_state`` error (:issue:`7782`).
 
 If you are upgrading from version 3.1.2 or before, please also review
 the release notes for 3.2.0 (included below).

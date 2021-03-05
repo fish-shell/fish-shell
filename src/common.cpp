@@ -212,7 +212,7 @@ bool is_windows_subsystem_for_linux() {
                      status == 0                 ? demangled
                      : info.dli_sname == nullptr ? symbols[i]
                                                  : info.dli_sname,
-                     static_cast<char *>(callstack[i]) - static_cast<char *>(info.dli_saddr));
+                     static_cast<char *>(callstack[i]) - static_cast<const char *>(info.dli_saddr));
             free(demangled);
         } else {
             swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s", i - skip_levels, symbols[i]);

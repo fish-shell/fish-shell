@@ -24,9 +24,6 @@
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Unexpected error in path_get_path().
-#define MISSING_COMMAND_ERR_MSG _(L"Error while searching for command '%ls'")
-
 // Note that PREFIX is defined in the `Makefile` and is thus defined when this module is compiled.
 // This ensures we always default to "/bin", "/usr/bin" and the bin dir defined for the fish
 // programs. Possibly with a duplicate dir if PREFIX is empty, "/", "/usr" or "/usr/". If the PREFIX
@@ -81,36 +78,6 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 return true;
             }
             err = EACCES;
-        } else {
-            switch (errno) {
-                case EACCES:
-                case ENAMETOOLONG:
-                case ENOENT:
-                case ENOTDIR: {
-                    break;
-                }
-#ifdef __sun
-                // Solaris 5.11 can return any of the following three if the path
-                // does not exist. Yes, even 0. No, none of this is documented.
-                case 0:
-                case EAGAIN:
-                case EEXIST: {
-                    break;
-                }
-#endif
-                // WSL has a bug where access(2) can return EINVAL
-                // See https://github.com/Microsoft/BashOnWindows/issues/2522
-                // The only other way EINVAL can happen is if the wrong
-                // mode was specified, but we have X_OK hard-coded above.
-                case EINVAL: {
-                    break;
-                }
-                default: {
-                    FLOGF(warning, MISSING_COMMAND_ERR_MSG, next_path.c_str());
-                    wperror(L"access");
-                    break;
-                }
-            }
         }
     }
 

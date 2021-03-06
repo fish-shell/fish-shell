@@ -8,9 +8,7 @@ function __fish_tokenizer_state --description "Print the state of the tokenizer 
     # - single-escaped - open \\ inside single-quotes
     # - double-escaped - open \\ inside double-quotes
 
-    # Don't expect one arg only, as (commandline -ct) may evaluate to multiple arguments since
-    # output is forcibly split on new lines (issue #7782).
-    argparse --min-args 1 i/initial-state= -- $argv
+    argparse --min-args 1 --max-args 1 i/initial-state= -- $argv
     or return 1
 
     set -l state normal
@@ -18,11 +16,7 @@ function __fish_tokenizer_state --description "Print the state of the tokenizer 
         set str $_flag_initial_state
     end
 
-    # HACK: We care about quotes and don't care about new lines, joining multi-line arguments
-    # produced by (commandline -ct) on anything other than \n will corrupt the contents but will
-    # allow the following logic to work (including escape of subsequent character). This entire
-    # function should probably be implemented as part of the `commandline` builtin.
-    for char in (string split -- "" (string join -- \x1e $argv))
+    for char in (string split -- "" $argv[1])
         switch $char
             case "'" # single-quote
                 switch $state

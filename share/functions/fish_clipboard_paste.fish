@@ -26,7 +26,7 @@ function fish_clipboard_paste
     # in order to turn it into a single literal token.
     #
     # This eases pasting non-code (e.g. markdown or git commitishes).
-    set -l quote_state (__fish_tokenizer_state -- (commandline -ct))
+    set -l quote_state (__fish_tokenizer_state -- (commandline -ct | string collect))
     if contains -- $quote_state single single-escaped
         if status test-feature regex-easyesc
             set data (string replace -ra "(['\\\])" '\\\\$1' -- $data)

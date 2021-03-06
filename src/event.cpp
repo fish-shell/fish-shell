@@ -269,8 +269,24 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         // TODO: this is kind of crazy. We want to support removing (and thereby suppressing) an
         // event handler from another, but we also don't want to hold the lock across callouts. How
         // can we make this less silly?
-        if (!contains(*s_event_handlers.acquire(), handler)) {
-            continue;
+        {
+            auto event_handlers = s_event_handlers.acquire();
+            if (!contains(*event_handlers, handler)) {
+                continue;
+            }
+
+            // Delete the event before firing it so we don't have to lock and unlock the event
+            // handlers list when handing control off to the handler.
+            if (firing_event.delete_after_call) {
+                FLOGF(event, L"Pruning handler '%ls' before firing", event.desc.str_param1.c_str());
+                for (auto event_handler = event_handlers->begin();
+                     event_handler != event_handlers->end(); ++event_handler) {
+                    if (event_handler->get() == firing_event.handler.get()) {
+                        event_handlers->erase(event_handler);
+                        break;
+                    }
+                }
+            }
         }
 
         // Construct a buffer to evaluate, starting with the function name and then all the
@@ -291,18 +307,6 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         parser.eval(buffer, io_chain_t());
         parser.pop_block(b);
         parser.set_last_statuses(std::move(prev_statuses));
-
-        if (firing_event.delete_after_call) {
-            FLOGF(event, L"Deleting event '%ls'", event.desc.str_param1.c_str());
-            auto event_handlers = s_event_handlers.acquire();
-            for (auto event_handler = event_handlers->begin();
-                 event_handler != event_handlers->end(); ++event_handler) {
-                if (event_handler->get() == firing_event.handler.get()) {
-                    event_handlers->erase(event_handler);
-                    break;
-                }
-            }
-        }
     }
 }
 

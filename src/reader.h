@@ -141,6 +141,7 @@ void reader_sighup();
 
 /// Initialize the reader.
 void reader_init();
+void term_copy_modes();
 
 /// Restore the term mode at startup.
 void restore_term_mode();

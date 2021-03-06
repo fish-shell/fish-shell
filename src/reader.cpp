@@ -839,13 +839,15 @@ static void redirect_tty_after_sighup() {
 }
 
 /// Give up control of terminal.
-static void term_donate() {
+static void term_donate(bool quiet = false) {
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
             if (errno == EIO) redirect_tty_output();
             if (errno != EINTR) {
-                FLOGF(warning, _(L"Could not set terminal mode for new job"));
-                wperror(L"tcsetattr");
+                if (!quiet) {
+                    FLOGF(warning, _(L"Could not set terminal mode for new job"));
+                    wperror(L"tcsetattr");
+                }
                 break;
             }
         } else
@@ -853,9 +855,8 @@ static void term_donate() {
     }
 }
 
-/// Grab control of terminal.
-static void term_steal() {
-    // Copy the (potentially changed) terminal modes and use them from now on.
+/// Copy the (potentially changed) terminal modes and use them from now on.
+void term_copy_modes() {
     struct termios modes;
     tcgetattr(STDIN_FILENO, &modes);
     std::memcpy(&tty_modes_for_external_cmds, &modes, sizeof tty_modes_for_external_cmds);
@@ -872,8 +873,11 @@ static void term_steal() {
     } else {
         shell_modes.c_iflag &= ~IXOFF;
     }
+}
 
-
+/// Grab control of terminal.
+void term_steal() {
+    term_copy_modes();
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
@@ -1335,6 +1339,10 @@ void reader_init() {
     shell_modes.c_iflag &= ~IXOFF;
 
     term_fix_modes(&shell_modes);
+
+    // Set up our fixed terminal modes once,
+    // so we don't get flow control just because we inherited it.
+    term_donate(/* quiet */ true);
 
     // We do this not because we actually need the window size but for its side-effect of correctly
     // setting the COLUMNS and LINES env vars.

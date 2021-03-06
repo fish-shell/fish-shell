@@ -491,6 +491,9 @@ int main(int argc, char **argv) {
     if (!opts.no_exec) {
         read_init(parser, paths);
     }
+    // Re-read the terminal modes after config, it might have changed them.
+    term_copy_modes();
+
     // Stomp the exit status of any initialization commands (issue #635).
     parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 

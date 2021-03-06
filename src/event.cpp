@@ -97,8 +97,11 @@ static void set_signal_observed(int sig, bool val) {
     }
 }
 
-/// Tests if one event instance matches the definition of a event class.
-static bool handler_matches(const event_handler_t &classv, const event_t &instance) {
+/// Tests if one event instance matches the definition of an event class.
+/// In case of a match, \p only_once indicates that the event cannot match again by nature.
+static bool handler_matches(const event_handler_t &classv, const event_t &instance,
+                            bool &only_once) {
+    only_once = false;
     if (classv.desc.type == event_type_t::any) return true;
     if (classv.desc.type != instance.desc.type) return false;
 
@@ -111,9 +114,11 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
         }
         case event_type_t::exit: {
             if (classv.desc.param1.pid == EVENT_ANY_PID) return true;
+            only_once = true;
             return classv.desc.param1.pid == instance.desc.param1.pid;
         }
         case event_type_t::caller_exit: {
+            only_once = true;
             return classv.desc.param1.caller_id == instance.desc.param1.caller_id;
         }
         case event_type_t::generic: {
@@ -234,16 +239,32 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
     scoped_push<bool> suppress_trace{&ld.suppress_fish_trace, true};
 
     // Capture the event handlers that match this event.
-    event_handler_list_t fire;
-    for (const auto &handler : *s_event_handlers.acquire()) {
-        // Check if this event is a match.
-        if (handler_matches(*handler, event)) {
-            fire.push_back(handler);
+    struct firing_handler_t {
+        std::shared_ptr<event_handler_t> handler;
+        bool delete_after_call;
+    };
+    std::vector<firing_handler_t> fire;
+    {
+        for (const auto &handler : *s_event_handlers.acquire()) {
+            // Check if this event is a match.
+            bool only_once = false;
+            if (!handler_matches(*handler, event, only_once)) {
+                continue;
+            }
+
+            // If the nature of the event means it can't be fired more than once, deregister the
+            // event. This also works around a bug where jobs run without job control (no separate
+            // pgrp) cause handlers to run for each subsequent job started without job control
+            // (#7721). We can't erase it here because we check if the event is still extant before
+            // actually calling it below, so we instead push it along with its "delete after
+            // calling" value.
+            fire.push_back(firing_handler_t{handler, only_once});
         }
     }
 
     // Iterate over our list of matching events. Fire the ones that are still present.
-    for (const shared_ptr<event_handler_t> &handler : fire) {
+    for (const auto &firing_event : fire) {
+        auto &handler = firing_event.handler;
         // Only fire if this event is still present.
         // TODO: this is kind of crazy. We want to support removing (and thereby suppressing) an
         // event handler from another, but we also don't want to hold the lock across callouts. How
@@ -270,6 +291,18 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         parser.eval(buffer, io_chain_t());
         parser.pop_block(b);
         parser.set_last_statuses(std::move(prev_statuses));
+
+        if (firing_event.delete_after_call) {
+            FLOGF(event, L"Deleting event '%ls'", event.desc.str_param1.c_str());
+            auto event_handlers = s_event_handlers.acquire();
+            for (auto event_handler = event_handlers->begin();
+                 event_handler != event_handlers->end(); ++event_handler) {
+                if (event_handler->get() == firing_event.handler.get()) {
+                    event_handlers->erase(event_handler);
+                    break;
+                }
+            }
+        }
     }
 }
 

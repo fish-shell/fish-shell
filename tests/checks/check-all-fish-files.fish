@@ -7,8 +7,14 @@ set -l find_args
 if test -f $timestamp_file
     set find_args -mnewer $timestamp_file
 end
+set -l fail_count 0
 for file in (find $__fish_data_dir/ -name "*.fish" $find_args)
-    $fish -n $file
+    $fish -n $file; or set fail_count (math $fail_count + 1)
 end
-touch $timestamp_file
+
+# Prevent setting timestamp if any errors were encountered
+if test "$fail_count" -eq 0
+    touch $timestamp_file
+end
+
 # No output is good output

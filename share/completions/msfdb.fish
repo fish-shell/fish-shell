@@ -24,7 +24,7 @@ complete -c msfdb -l db-port -x -d 'Database port'
 complete -c msfdb -l db-pool -x -d 'Database connection pool size'
 
 # Web Service Options
-complete -c msfdb -s a -l address -x -a "(__fish_print_addresses)" -d 'Bind to host address'
+complete -c msfdb -s a -l address -x -a "(__fish_print_addresses --all)" -d 'Bind to host address'
 complete -c msfdb -s p -l port -x -d 'Web service port'
 complete -c msfdb -l ssl -d 'Enable SSL'
 complete -c msfdb -l no-ssl -d 'Disable SSL'

@@ -16,7 +16,7 @@ function __fish_complete_bittorrent
     complete -c $argv -l timeout_check_interval -x --description "Time between checking timeouts"
     complete -c $argv -l max_slice_length -x --description "Maximum outgoing slice length"
     complete -c $argv -l max_rate_period -x --description "Maximum time to guess rate"
-    complete -c $argv -l bind -x --description "IP to bind to locally" -a "(__fish_print_addresses)"
+    complete -c $argv -l bind -x --description "IP to bind to locally" -a "(__fish_print_addresses --all)"
     complete -c $argv -l display_interval -x --description "Time between screen updates"
     complete -c $argv -l rerequest_interval -x --description "Time to wait between requesting more peers"
     complete -c $argv -l min_peers -x --description "Minimum number of peers to not do requesting"

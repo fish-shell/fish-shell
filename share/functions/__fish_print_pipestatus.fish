@@ -15,7 +15,7 @@ function __fish_print_pipestatus --description "Print pipestatus for prompt"
 
     if not set -q argv[1]
         echo error: missing argument >&2
-        status print-stacktrace >&2
+        status print-stack-trace >&2
         return 1
     end
 

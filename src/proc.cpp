@@ -649,13 +649,17 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
             printed = true;
         }
 
-        // Prepare events for completed jobs, except for jobs that themselves came from event
-        // handlers.
-        if (!j->from_event_handler() && j->is_completed()) {
-            if (j->should_report_process_exits()) {
+        // Prepare events for completed jobs
+        if (j->is_completed()) {
+            // If this job already came from an event handler,
+            // don't create an event or it's easy to get an infinite loop.
+            if (!j->from_event_handler() && j->should_report_process_exits()) {
                 pid_t pgid = *j->get_pgid();
                 exit_events.push_back(proc_create_event(L"JOB_EXIT", event_type_t::exit, -pgid, 0));
             }
+            // Caller exit events we still create, which anecdotally fixes `source (thing | psub)` inside event handlers.
+            // This seems benign since this event is barely used (basically only psub), and it seems hard
+            // to construct an infinite loop with it.
             exit_events.push_back(
                 proc_create_event(L"JOB_EXIT", event_type_t::caller_exit, j->job_id(), 0));
             exit_events.back().desc.param1.caller_id = j->internal_job_id;

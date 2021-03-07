@@ -23,7 +23,7 @@ from itertools import chain
 COMMON_WSL_CMD_PATHS = (
     "/mnt/c/Windows/System32",
     "/windir/c/Windows/System32",
-    "/c/Windows/System32"
+    "/c/Windows/System32",
 )
 FISH_BIN_PATH = False  # will be set later
 IS_PY2 = sys.version_info[0] == 2
@@ -36,6 +36,21 @@ else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+
+# Disable CLI web browsers
+term = os.environ.pop("TERM", None)
+# This import must be done with an empty $TERM, otherwise a command-line browser may be started
+# which will block the whole process - see https://docs.python.org/3/library/webbrowser.html
+import webbrowser
+
+if term:
+    os.environ["TERM"] = term
 
 
 def find_executable(exe, paths=()):
@@ -79,21 +94,6 @@ def is_chromeos_garcon():
     # https://chromium.googlesource.com/chromiumos/platform2/+/master/vm_tools/garcon/#opening-urls
     # https://source.chromium.org/search?q=garcon-url-handler
     return "garcon-url-handler" in webbrowser.get().name
-
-
-# Disable CLI web browsers
-term = os.environ.pop("TERM", None)
-# This import must be done with an empty $TERM, otherwise a command-line browser may be started
-# which will block the whole process - see https://docs.python.org/3/library/webbrowser.html
-import webbrowser
-
-if term:
-    os.environ["TERM"] = term
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 
 def run_fish_cmd(text):
@@ -992,7 +992,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 vars[name].exported = True
 
         # Do not return history as a variable, it may be so large the browser hangs.
-        vars.pop('history', None)
+        vars.pop("history", None)
 
         return [
             vars[key].get_json_obj()

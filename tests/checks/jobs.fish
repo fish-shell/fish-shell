@@ -101,3 +101,18 @@ echo $status
 #CHECK: Command
 #CHECK: sleep
 #CHECK: 0
+
+function foo
+    function caller --on-job-exit caller
+        echo caller
+    end
+    echo foo
+end
+
+function bar --on-event bar
+    echo (foo)
+end
+
+emit bar
+#CHECK: foo
+#CHECK: caller

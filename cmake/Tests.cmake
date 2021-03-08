@@ -113,6 +113,7 @@ endforeach(TESTTYPE)
 
 # Now add a dependency chain between the serial versions.
 # This ensures they run in order.
+add_dependencies(serial_test_low_level test_prep)
 add_dependencies(serial_test_fishscript serial_test_low_level)
 add_dependencies(serial_test_interactive serial_test_fishscript)
 

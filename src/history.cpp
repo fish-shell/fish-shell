@@ -774,10 +774,18 @@ bool history_impl_t::save_internal_via_rewrite() {
     // We want to rewrite the file, while holding the lock for as briefly as possible
     // To do this, we speculatively write a file, and then lock and see if our original file changed
     // Repeat until we succeed or give up
-    const maybe_t<wcstring> target_name = history_filename(name);
+    const maybe_t<wcstring> possibly_indirect_target_name = history_filename(name);
     const maybe_t<wcstring> tmp_name_template = history_filename(name, L".XXXXXX");
-    if (!target_name.has_value() || !tmp_name_template.has_value()) {
+    if (!possibly_indirect_target_name.has_value() || !tmp_name_template.has_value()) {
         return false;
+    }
+
+    // If the history file is a symlink, we want to rewrite the real file so long as we can find it.
+    wcstring target_name;
+    if (auto maybe_real_path = wrealpath(*possibly_indirect_target_name)) {
+        target_name = *maybe_real_path;
+    } else {
+        target_name = *possibly_indirect_target_name;
     }
 
     // Make our temporary file
@@ -792,7 +800,7 @@ bool history_impl_t::save_internal_via_rewrite() {
     for (int i = 0; i < max_save_tries && !done; i++) {
         // Open any target file, but do not lock it right away
         autoclose_fd_t target_fd_before{
-            wopen_cloexec(*target_name, O_RDONLY | O_CREAT, history_file_mode)};
+            wopen_cloexec(target_name, O_RDONLY | O_CREAT, history_file_mode)};
         file_id_t orig_file_id = file_id_for_fd(target_fd_before.fd());  // possibly invalid
         bool wrote = this->rewrite_to_temporary_file(target_fd_before.fd(), tmp_fd);
         target_fd_before.close();
@@ -805,14 +813,14 @@ bool history_impl_t::save_internal_via_rewrite() {
         // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
         // If the open fails, then proceed; this may be because there is no current history
         file_id_t new_file_id = kInvalidFileID;
-        autoclose_fd_t target_fd_after{wopen_cloexec(*target_name, O_RDONLY)};
+        autoclose_fd_t target_fd_after{wopen_cloexec(target_name, O_RDONLY)};
         if (target_fd_after.valid()) {
             // critical to take the lock before checking file IDs,
             // and hold it until after we are done replacing
             // Also critical to check the file at the path, NOT based on our fd
             // It's only OK to replace the file while holding the lock
             history_file_lock(target_fd_after.fd(), LOCK_EX);
-            new_file_id = file_id_for_path(*target_name);
+            new_file_id = file_id_for_path(target_name);
         }
         bool can_replace_file = (new_file_id == orig_file_id || new_file_id == kInvalidFileID);
         if (!can_replace_file) {
@@ -841,8 +849,9 @@ bool history_impl_t::save_internal_via_rewrite() {
             }
 
             // Slide it into place
-            if (wrename(tmp_name, *target_name) == -1) {
-                FLOGF(history_file, L"Error %d when renaming history file", errno);
+            if (wrename(tmp_name, target_name) == -1) {
+                const char *error = std::strerror(errno);
+                FLOGF(error, _(L"Error when renaming history file: %s"), error);
             }
 
             // We did it

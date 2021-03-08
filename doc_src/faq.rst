@@ -301,19 +301,23 @@ The ``open`` command uses the MIME type database and the ``.desktop`` files used
 Why won't SSH/SCP/rsync connect properly when fish is my login shell?
 ---------------------------------------------------------------------
 
-This problem may manifest as messages such as "``Received message too long``", "``open terminal
+This problem may show up as messages like "``Received message too long``", "``open terminal
 failed: not a terminal``", "``Bad packet length``", or "``Connection refused``" with strange output
 in ``ssh_exchange_identification`` messages in the debug log.
 
-These problems are generally caused by the :ref:`user initialization file <initialization>` (usually
-``~/.config/fish/config.fish``) producing output when started in non-interactive mode.
+This usually happens because fish reads the :ref:`user configuration file <initialization>` (``~/.config/fish/config.fish``) *always*,
+whether it's in an interactive or login or non-interactive or non-login shell.
 
-All statements in initialization files that output to the terminal should be guarded with something
-like the following::
+This simplifies matters, but it also means when config.fish generates output, it will do that even in non-interactive shells like the one ssh/scp/rsync start when they connect.
+
+Anything in config.fish that produces output should be guarded with ``status is-interactive`` (or ``status is-login`` if you prefer)::
+
 
   if status is-interactive
     ...
   end
+
+The same applies for example when you start ``tmux`` in config.fish without guards, which will cause a message like ``sessions should be nested with care, unset $TMUX to force``.
 
 .. _faq-unicode:
 

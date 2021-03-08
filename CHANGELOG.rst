@@ -15,8 +15,6 @@ Scripting improvements
 
 Interactive improvements
 -------------------------
-- The history file can be made a symbolic link without it being overwritten.
-
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -37,15 +35,23 @@ This release of fish fixes a few issues discovered in fish 3.2.0:
 -  The error for high file descriptors has been removed as mc relied on it to communicate with its subshell (:issue:`7769`).
 -  The new universal variable notifier failed to notify of universal variables on some systems and has been deactivated for the time being (:issue:`7774`).
 -  The git prompt tried to repaint whenever its variables changed which could lead to repaint loops when setting them inside the prompt.
+   In certain terminals this could appear as screen flickering.
    This repainting has been removed (:issue:`7775`).
 -  ``fish_add_path`` would remove the wrong entry when moving multiple entries (:issue:`7776`).
 -  Pasting into a multi-line prompt would cause a ``__fish_tokenizer_state`` error (:issue:`7782`).
 -  Calling ``psub`` inside of an event handler will no longer leave temporary files behind (:issue:`7792`).
+-  Event handlers declared with ``--on-job-exit $fish_pid`` no longer run constantly (:issue:`7721`). Note that this specification doesn't make much sense.
+-  Changing terminal modes inside config.fish now works (:issue:`7783`).
 
 As well as a few small enhancements:
 
 -  ``help`` and ``fish_config`` no longer open to a "Your file couldn't be accessed" page when fish is running in a Chrome OS Crostini Linux VM and URLs are opened in Chrome running outside the VM (:issue:`7789`).
 -  Additions to the ``rsync`` completions (:issue:`7763`).
+-  The history file can be made a symbolic link without it being overwritten (:issue:`7754`). A similar change was made to the universal variable file in 3.2.0.
+-  ``__fish_print_addresses`` can now also print the 0.0.0.0 and ``::`` wildcard addresses (:issue:`7787`).
+-  ``fish_command_not_found`` is now always defined, even if there is no os-specific handler, instead of relying on fish's hardcoded fallback (:issue:`7777`).
+-  fish no longer prints an annoying error if ``access(3)`` fails in standard-nonconforming ways (:issue:`7785`).
+
 
 If you are upgrading from version 3.1.2 or before, please also review
 the release notes for 3.2.0 (included below).

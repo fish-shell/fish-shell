@@ -9,8 +9,8 @@ complete -c read -s U -l universal -d "Share variable with all the users fish pr
 complete -c read -s u -l unexport -d "Do not export variable to subprocess"
 complete -c read -s m -l mode-name -d "Name to load/save history under" -r -a "read fish"
 complete -c read -s c -l command -d "Initial contents of read buffer when reading interactively" -r
-complete -c read -s S -l shell -d "Highlight syntax, complete tabs, terminate commands as in shellscript"
-complete -c read -s s -l silent -d "Mask input at the command line"
+complete -c read -s S -l shell -d "Read like the shell would"
+complete -c read -s s -l silent -d "Mask input with ●"
 complete -c read -s n -l nchars -d "Read the specified number of characters" -x
 complete -c read -s a -l list -l array -d "Store the results as an array"
 complete -c read -s R -l right-prompt -d "Set right-hand prompt command" -x

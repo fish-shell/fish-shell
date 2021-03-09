@@ -35,9 +35,10 @@ expect_str("bryellow")
 expect_str("cyan")
 expect_str("green")
 expect_str("magenta")
-expect_str("\x1b[31mred")
-expect_str("\x1b[37mwhite")
-expect_str("\x1b[33myellow")
+# These should be anchored at the beginning of the line, no e.g. bold sequence before.
+expect_str("\n\x1b[31mred")
+expect_str("\n\x1b[37mwhite")
+expect_str("\n\x1b[33myellow")
 expect_str("normal")
 expect_prompt()
 

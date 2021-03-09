@@ -179,12 +179,14 @@ void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
         reset_modes();
     }
 
-    if (!last_color2.is_normal() && !last_color2.is_reset()) {
+    if (!last_color2.is_special()) {
         // Background was set.
+        // "Special" here refers to the special "normal", "reset" and "none" colors,
+        // that really jus disable the background.
         last_bg_set = true;
     }
 
-    if (!bg.is_normal()) {
+    if (!bg.is_special()) {
         // Background is set.
         bg_set = true;
         if (fg == bg) fg = (bg == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();

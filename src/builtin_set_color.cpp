@@ -188,13 +188,19 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t 
         }
     }
 
-    const rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : L"");
+    rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : L"");
     if (bgcolor && bg.is_none()) {
         streams.err.append_format(_(L"%ls: Unknown color '%ls'\n"), argv[0], bgcolor);
         return STATUS_INVALID_ARGS;
     }
 
     if (print) {
+        // Hack: Explicitly setting a background of "normal" crashes
+        // for --print-colors. Because it's not interesting in terms of display,
+        // just skip it.
+        if (bgcolor && bg.is_special()) {
+            bg = rgb_color_t(L"");
+        }
         print_colors(streams, bold, underline, italics, dim, reverse, bg);
         return STATUS_CMD_OK;
     }

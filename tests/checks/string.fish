@@ -713,3 +713,8 @@ end
 
 string escape \x7F
 # CHECK: \x7f
+
+# This used to crash.
+string pad -w 8 he \eh
+# CHECK: he
+# CHECK: {{\x1bh}}

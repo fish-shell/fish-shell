@@ -183,7 +183,7 @@ struct options_t {  //!OCLINT(too many fields)
     long max = 0;
     long start = 0;
     long end = 0;
-    size_t width = 0;
+    ssize_t width = 0;
 
     wchar_t char_to_pad = L' ';
 
@@ -1181,24 +1181,24 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     }
 
     // Find max width of strings and keep the inputs
-    size_t max_width = 0;
+    ssize_t max_width = 0;
     std::vector<wcstring> inputs;
 
     arg_iterator_t aiter_width(argv, optind, streams);
     while (const wcstring *arg = aiter_width.nextstr()) {
         wcstring input_string = *arg;
-        size_t width = fish_wcswidth(input_string);
+        ssize_t width = fish_wcswidth(input_string);
         if (width > max_width) max_width = width;
         inputs.push_back(std::move(input_string));
     }
 
-    size_t pad_width = max_width > opts.width ? max_width : opts.width;
+    ssize_t pad_width = max_width > opts.width ? max_width : opts.width;
     for (auto &input : inputs) {
         wcstring padded;
-        size_t padded_width = fish_wcswidth(input);
+        ssize_t padded_width = fish_wcswidth(input);
         if (pad_width >= padded_width) {
-            size_t pad = (pad_width - padded_width) / pad_char_width;
-            size_t remaining_width = (pad_width - padded_width) % pad_char_width;
+            ssize_t pad = (pad_width - padded_width) / pad_char_width;
+            ssize_t remaining_width = (pad_width - padded_width) % pad_char_width;
             if (opts.left) {
                 padded.append(pad, opts.char_to_pad);
                 padded.append(remaining_width, L' ');

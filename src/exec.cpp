@@ -13,6 +13,7 @@
 #ifdef HAVE_SPAWN_H
 #include <spawn.h>
 #endif
+#include <paths.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -62,6 +63,46 @@ enum class launch_result_t {
     failed,
 } __warn_unused_type;
 
+static bool is_thompson_shell_payload(const char *p, size_t n) {
+    if (!memchr(p, '\0', n)) return true;
+    bool haslower = false;
+    for (; *p; p++) {
+        if (islower(*p) || *p == '$' || *p == '`') {
+            haslower = true;
+        }
+        if (haslower && *p == '\n') {
+            return true;
+        }
+    }
+    return false;
+}
+
+/// This function checks the beginning of a file to see if it's safe to
+/// pass to the system interpreter when execve() returns ENOEXEC.
+///
+/// The motivation is to be able to run classic shell scripts which
+/// didn't have shebang, while protecting the user from accidentally
+/// running a binary file which may corrupt terminal driver state. We
+/// check for lowercase letters because the ASCII magic of binary files
+/// is usually uppercase, e.g. PNG, JFIF, MZ, etc. These rules are also
+/// flexible enough to permit scripts with concatenated binary content,
+/// such as Actually Portable Executable.
+bool is_thompson_shell_script(const char *path) {
+    int e = errno;
+    bool res = false;
+    int fd = open(path, O_RDONLY | O_NOCTTY);
+    if (fd != -1) {
+        char buf[256];
+        ssize_t got = read(fd, buf, sizeof(buf));
+        close(fd);
+        if (got != -1 && is_thompson_shell_payload(buf, got)) {
+            res = true;
+        }
+    }
+    errno = e;
+    return res;
+}
+
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
@@ -71,36 +112,19 @@ enum class launch_result_t {
     int err;
 
     // This function never returns, so we take certain liberties with constness.
-    const auto envv = const_cast<char *const *>(cenvv);
-    const auto argv = const_cast<char *const *>(cargv);
+    auto envv = const_cast<char **>(cenvv);
+    auto argv = const_cast<char **>(cargv);
 
     execve(actual_cmd, argv, envv);
     err = errno;
 
-    // Something went wrong with execve, check for a ":", and run /bin/sh if encountered. This is a
-    // weird predecessor to the shebang that is still sometimes used since it is supported on
-    // Windows. OK to not use CLO_EXEC here because this is called after fork and the file is
-    // immediately closed.
-    int fd = open(actual_cmd, O_RDONLY);
-    if (fd >= 0) {
-        char begin[1] = {0};
-        ssize_t amt_read = read(fd, begin, 1);
-        close(fd);
-
-        if ((amt_read == 1) && (begin[0] == ':')) {
-            // Relaunch it with /bin/sh. Don't allocate memory, so if you have more args than this,
-            // update your silly script! Maybe this should be changed to be based on ARG_MAX
-            // somehow.
-            char sh_command[] = "/bin/sh";
-            char *argv2[128];
-            argv2[0] = sh_command;
-            for (size_t i = 1; i < sizeof argv2 / sizeof *argv2; i++) {
-                argv2[i] = argv[i - 1];
-                if (argv2[i] == nullptr) break;
-            }
-
-            execve(sh_command, argv2, envv);
-        }
+    // The shebang wasn't introduced until UNIX Seventh Edition, so if
+    // the kernel won't run the binary we hand it off to the intpreter
+    // after performing a binary safety check, recommended by POSIX: a
+    // line needs to exist before the first \0 with a lowercase letter
+    if (err == ENOEXEC && is_thompson_shell_script(actual_cmd)) {
+        *--argv = const_cast<char *>(_PATH_BSHELL);
+        execve(_PATH_BSHELL, argv, envv);
     }
 
     errno = err;

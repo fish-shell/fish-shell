@@ -1,7 +1,6 @@
 #RUN: %fish -C "set -g helper %fish_test_helper; set -g fish %fish" %s
 
 # Check that nohup is propagated.
-set fish (status fish-path)
 set output_path (mktemp)
 nohup $fish -c "$helper print_ignored_signals" 2>&1 > $output_path
 cat $output_path

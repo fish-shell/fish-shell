@@ -1342,7 +1342,9 @@ void reader_init() {
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
-    term_donate(/* quiet */ true);
+    if (getpgrp() == tcgetpgrp(STDIN_FILENO)) {
+        term_donate(/* quiet */ true);
+    }
 
     // We do this not because we actually need the window size but for its side-effect of correctly
     // setting the COLUMNS and LINES env vars.

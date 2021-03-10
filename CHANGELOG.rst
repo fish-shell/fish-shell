@@ -42,6 +42,8 @@ This release of fish fixes a few issues discovered in fish 3.2.0:
 -  Calling ``psub`` inside of an event handler will no longer leave temporary files behind (:issue:`7792`).
 -  Event handlers declared with ``--on-job-exit $fish_pid`` no longer run constantly (:issue:`7721`). Note that this specification doesn't make much sense.
 -  Changing terminal modes inside config.fish now works (:issue:`7783`).
+-  ``set_color --print-colors`` no longer prints all colors in bold (:issue:`7805`)
+-  Completing commands starting with a ``-`` no longer prints an error (:issue:`7809`).
 
 As well as a few small enhancements:
 
@@ -51,6 +53,7 @@ As well as a few small enhancements:
 -  ``__fish_print_addresses`` can now also print the 0.0.0.0 and ``::`` wildcard addresses (:issue:`7787`).
 -  ``fish_command_not_found`` is now always defined, even if there is no os-specific handler, instead of relying on fish's hardcoded fallback (:issue:`7777`).
 -  fish no longer prints an annoying error if ``access(3)`` fails in standard-nonconforming ways (:issue:`7785`).
+-  Some completion descriptions were reworded and shortened (:issue:`7788`).
 
 
 If you are upgrading from version 3.1.2 or before, please also review

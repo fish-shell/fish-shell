@@ -2,13 +2,16 @@ body {
     background: linear-gradient(to bottom, #a7cfdf 0%, #23538a 100%);
     font-family: monospace, fixed;
     color: #222;
-    min-height: 100vh; /* at least 1 screen high - to prevent the gradient from running out on a short tab */
+}
+
+#ancestor {
     width: 90%;
     margin-left: auto;
     margin-right: auto;
     -moz-box-shadow: 0 0 1px 1px #333;
     -webkit-box-shadow: 0 0 1px 1px #333;
     box-shadow: 0 0 5px 1px #333;
+    border-radius: 8px;
 }
 
 code {
@@ -33,6 +36,7 @@ code {
     display: table-cell;
     border: 1px solid #ccc;
     border-right: none;
+    border-top: none;
     padding-bottom: 15px;
     padding-top: 15px;
     padding-left: 3px;
@@ -45,20 +49,11 @@ code {
 
 #tab_parent :first-child {
     border-top-left-radius: 8px;
+    border-left: none;
 }
 
 #tab_parent :last-child {
     border-top-right-radius: 8px;
-}
-
-.tab_first {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-}
-
-.tab_last {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
 }
 
 .selected_tab {
@@ -70,11 +65,24 @@ code {
     padding-top: 20px;
     padding-bottom: 20px;
     width: 100%;
-    min-height: 80vh;
+    min-height: 90vh;
     background-color: #eeeefa;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     margin-bottom: 20px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* This may be placed directly inside a tab, to prevent its contents from growing vertically. */
+.height_limiter {
+    display: flex;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-direction: column;
 }
 
 .footer {
@@ -429,7 +437,10 @@ code {
 .prompt_choices_scrollview {
     padding-top: 5px;
     overflow-y: scroll;
-    max-height: 70vh; /* fill out roughly the rest of the screen once scrolled to the preview */
+}
+
+.prompt_choices_scrollview {
+    position: relative;
 }
 
 .color_scheme_choices_list,

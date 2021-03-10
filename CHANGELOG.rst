@@ -45,6 +45,7 @@ This release of fish fixes a few issues discovered in fish 3.2.0:
 -  ``set_color --print-colors`` no longer prints all colors in bold (:issue:`7805`)
 -  Completing commands starting with a ``-`` no longer prints an error (:issue:`7809`).
 
+
 As well as a few small enhancements:
 
 -  ``help`` and ``fish_config`` no longer open to a "Your file couldn't be accessed" page when fish is running in a Chrome OS Crostini Linux VM and URLs are opened in Chrome running outside the VM (:issue:`7789`).
@@ -54,6 +55,7 @@ As well as a few small enhancements:
 -  ``fish_command_not_found`` is now always defined, even if there is no os-specific handler, instead of relying on fish's hardcoded fallback (:issue:`7777`).
 -  fish no longer prints an annoying error if ``access(3)`` fails in standard-nonconforming ways (:issue:`7785`).
 -  Some completion descriptions were reworded and shortened (:issue:`7788`).
+-  Some graphics glitches in ``fish_config`` have been resolved  (:issue:`7811`).
 
 
 If you are upgrading from version 3.1.2 or before, please also review

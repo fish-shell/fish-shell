@@ -2828,13 +2828,19 @@ struct readline_loop_state_t {
 /// Run a sequence of commands from an input binding.
 void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
     // Need to donate/steal the tty - see #2114.
-    term_donate();
+    // Unfortunately this causes us to enable ECHO,
+    // which means if input arrives while we're running a bind function
+    // it will turn up on screen, see #7770.
+    //
+    // What needs to happen is to tell the parser to acquire the terminal
+    // when it's running an external command, but that's a lot more involved.
+    // term_donate();
     auto last_statuses = parser().get_last_statuses();
     for (const wcstring &cmd : cmds) {
         parser().eval(cmd, io_chain_t{});
     }
     parser().set_last_statuses(std::move(last_statuses));
-    term_steal();
+    // term_steal();
 }
 
 /// Read normal characters, inserting them into the command line.

@@ -73,31 +73,31 @@ Functions
 
 ``math`` supports the following functions:
 
-- ``abs``
-- ``acos``
-- ``asin``
-- ``atan``
-- ``atan2``
+- ``abs`` - the absolute value, with positive sign
+- ``acos`` - arc cosine
+- ``asin`` - arc sine
+- ``atan`` - arc tangent
+- ``atan2`` - arc tangent of two variables
 - ``bitand``, ``bitor`` and ``bitxor`` to perform bitwise operations. These will throw away any non-integer parts and interpret the rest as an int.
-- ``ceil``
-- ``cos``
-- ``cosh``
+- ``ceil`` - round number up to nearest integer
+- ``cos`` - the cosine
+- ``cosh`` - hyperbolic cosine
 - ``exp`` - the base-e exponential function
-- ``fac`` - factorial
-- ``floor``
+- ``fac`` - factorial - also known as ``x!`` (``x * (x - 1) * (x - 2) * ... * 1``)
+- ``floor`` - round number down to nearest integer
 - ``ln`` - the base-e logarithm
 - ``log`` or ``log10`` - the base-10 logarithm
-- ``ncr``
-- ``npr``
+- ``ncr`` - "from n choose r" combination function - how many subsets of size r can be taken from n (order doesn't matter)
+- ``npr`` - the number of subsets of size r that can be taken from a set of n elements (including different order)
 - ``pow(x,y)`` returns x to the y (and can be written as ``x ^ y``)
 - ``round`` - rounds to the nearest integer, away from 0
-- ``sin``
-- ``sinh``
-- ``sqrt``
-- ``tan``
-- ``tanh``
+- ``sin`` - the sine function
+- ``sinh`` - the hyperbolic sine
+- ``sqrt`` - the square root - (can also be written as ``x ^ 0.5``)
+- ``tan`` - the tangent
+- ``tanh`` - the hyperbolic tangent
 
-All of the trigonometric functions use radians.
+All of the trigonometric functions use radians (the pi-based scale, not 360°).
 
 Examples
 --------
@@ -123,6 +123,8 @@ Examples
 ``math "bitor(9,2)"`` outputs 11.
 
 ``math --base=hex 192`` prints ``0xc0``.
+
+``math 'ncr(49,6)'`` prints 13983816 - that's the number of possible picks in 6-from-49 lotto.
 
 Compatibility notes
 -------------------

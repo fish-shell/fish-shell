@@ -92,13 +92,11 @@ send("\x12")  # ctrl-r, placing fth in foreground
 expect_str("SIGCONT")
 
 # Do it again.
-# FIXME: Unfortunately the fix for #2114 had to be reverted because of #7770,
-# so this is broken.
-# send("\x1A")
-# expect_str("SIGTSTP")
-# sleep(0.1)
-# send("\x12")
-# expect_str("SIGCONT")
+send("\x1A")
+expect_str("SIGTSTP")
+sleep(0.1)
+send("\x12")
+expect_str("SIGCONT")
 
 # End fth by sending it anything.
 send("\x12")

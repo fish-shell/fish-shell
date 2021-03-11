@@ -2827,20 +2827,25 @@ struct readline_loop_state_t {
 
 /// Run a sequence of commands from an input binding.
 void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
-    // Need to donate/steal the tty - see #2114.
-    // Unfortunately this causes us to enable ECHO,
-    // which means if input arrives while we're running a bind function
-    // it will turn up on screen, see #7770.
-    //
-    // What needs to happen is to tell the parser to acquire the terminal
-    // when it's running an external command, but that's a lot more involved.
-    // term_donate();
     auto last_statuses = parser().get_last_statuses();
     for (const wcstring &cmd : cmds) {
         parser().eval(cmd, io_chain_t{});
     }
     parser().set_last_statuses(std::move(last_statuses));
-    // term_steal();
+
+    // Restore tty to shell modes.
+    // Some input commands will take over the tty - see #2114 for an example where vim is invoked
+    // from a key binding. However we do NOT want to invoke term_donate(), because that will enable
+    // ECHO mode, causing a race between new input and restoring the mode (#7770). So we leave the
+    // tty alone, run the commands in shell mode, and then restore shell modes.
+    int res;
+    do {
+        res = tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);
+    } while (res < 0 && errno == EINTR);
+    if (res < 0) {
+        wperror(L"tcsetattr");
+    }
+    termsize_container_t::shared().invalidate_tty();
 }
 
 /// Read normal characters, inserting them into the command line.

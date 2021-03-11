@@ -94,7 +94,7 @@ function help --description 'Show help for the fish shell'
 
     if not set -q fish_browser[1]
         printf (_ '%s: Could not find a web browser.\n') help
-        printf (_ 'Please set the variable $BROWSER or fish_help_browser and try again.\n\n')
+        printf (_ 'Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\n\n')
         return 1
     end
 

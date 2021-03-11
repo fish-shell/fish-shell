@@ -44,6 +44,7 @@ This release of fish fixes a few issues discovered in fish 3.2.0:
 -  Changing terminal modes inside config.fish now works (:issue:`7783`).
 -  ``set_color --print-colors`` no longer prints all colors in bold (:issue:`7805`)
 -  Completing commands starting with a ``-`` no longer prints an error (:issue:`7809`).
+-  Commands in key bindings are run with fish's internal tty modes, instead of the tty modes typically used for commands. This fixes a bug introduced in 3.2.0 which could cause text to unexpectedly appear on the terminal (:issue:`7770`).
 
 
 As well as a few small enhancements:

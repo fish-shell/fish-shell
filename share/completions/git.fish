@@ -47,7 +47,7 @@ function __fish_git_recent_commits
     # Like __fish_git_commits, but not on all branches and limited to
     # the last 50 commits. Used for fixup, where only the current branch
     # and the latest commits make sense.
-    __fish_git log --pretty=tformat:"%h"\t"%<(64,trunc)%s" --max-count=50 2>/dev/null
+    __fish_git log --pretty=tformat:"%h"\t"%<(64,trunc)%s" --max-count=50 $argv 2>/dev/null
 end
 
 function __fish_git_branches
@@ -972,7 +972,7 @@ complete -k -f -c git -n '__fish_git_using_command checkout; and not contains --
 complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_heads)' -d Head
 complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
 complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_recent_commits)'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_recent_commits --all)'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_files modified deleted)'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'

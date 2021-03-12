@@ -1505,6 +1505,7 @@ complete -f -c git -n __fish_git_needs_command -a rebase -d 'Forward-port local 
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_remotes)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' -d Head
+complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d Tag
 complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
 complete -f -c git -n '__fish_git_using_command rebase' -l abort -d 'Abort the rebase operation'

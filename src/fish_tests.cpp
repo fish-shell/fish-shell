@@ -5386,7 +5386,16 @@ static void test_highlighting() {
             // Hackish space handling. We don't care about the colors in spaces.
             if (text.at(i) == L' ') continue;
 
-            if (expected_colors.at(i) != colors.at(i)) {
+            auto e = expected_colors.at(i);
+            auto c = colors.at(i);
+            // Compare the colors, but don't care about pathness
+            // unless we're asking for a valid path.
+            //
+            // That way stray files in the build directory don't break the test.
+            if (e.foreground != c.foreground
+                || e.background != c.background
+                || e.force_underline != c.force_underline
+                || (e.valid_path && !c.valid_path)) {
                 const wcstring spaces(i, L' ');
                 err(L"Wrong color in test at index %lu in text (expected %#x, actual "
                     L"%#x):\n%ls\n%ls^",

@@ -15,6 +15,7 @@ Scripting improvements
 
 Interactive improvements
 -------------------------
+- When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

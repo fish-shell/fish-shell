@@ -1996,15 +1996,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
                 size_t idx, max = std::min(common_prefix.size(), el.completion.size());
 
                 for (idx = 0; idx < max; idx++) {
-                    wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
-                    bool matches = (ac == bc);
-                    // If we are replacing the token, allow case to vary.
-                    if (will_replace_token && !matches) {
-                        // Hackish way to compare two strings in a case insensitive way,
-                        // hopefully better than towlower().
-                        matches = (wcsncasecmp(&ac, &bc, 1) == 0);
-                    }
-                    if (!matches) break;
+                    if (common_prefix.at(idx) != el.completion.at(idx)) break;
                 }
 
                 // idx is now the length of the new common prefix.

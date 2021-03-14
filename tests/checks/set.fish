@@ -504,7 +504,11 @@ sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'globa
 
 # Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
-#CHECKERR: $argle bargle: invalid var name
+#CHECKERR: set: Variable name 'argle bargle' is not valid. See `help identifiers`.
+#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: set --show 'argle bargle'
+#CHECKERR: ^
+#CHECKERR: (Type 'help set' for related documentation)
 
 # Verify behavior of `set --show`
 set semiempty ''
@@ -690,3 +694,17 @@ echo $status
 #CHECK: 255
 
 true
+
+set "" foo
+#CHECKERR: set: Variable name '' is not valid. See `help identifiers`.
+#CHECKERR: {{.*}}set.fish (line {{\d+}}): 
+#CHECKERR: set "" foo
+#CHECKERR: ^
+#CHECKERR: (Type 'help set' for related documentation)
+
+set --show ""
+#CHECKERR: set: Variable name '' is not valid. See `help identifiers`.
+#CHECKERR: {{.*}}set.fish (line {{\d+}}): 
+#CHECKERR: set --show ""
+#CHECKERR: ^
+#CHECKERR: (Type 'help set' for related documentation)

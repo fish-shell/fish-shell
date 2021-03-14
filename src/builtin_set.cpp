@@ -634,8 +634,9 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
             wchar_t *arg = argv[i];
 
             if (!valid_var_name(arg)) {
-                streams.err.append_format(_(L"$%ls: invalid var name\n"), arg);
-                continue;
+                streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, arg);
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                return STATUS_INVALID_ARGS;
             }
 
             if (std::wcschr(arg, L'[')) {

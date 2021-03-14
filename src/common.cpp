@@ -1881,10 +1881,11 @@ bool valid_var_name_char(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'
 /// Test if the given string is a valid variable name.
 bool valid_var_name(const wcstring &str) {
     // Note do not use c_str(), we want to fail on embedded nul bytes.
-    return std::all_of(str.begin(), str.end(), valid_var_name_char);
+    return !str.empty() && std::all_of(str.begin(), str.end(), valid_var_name_char);
 }
 
 bool valid_var_name(const wchar_t *str) {
+    if (str[0] == L'\0') return false;
     for (size_t i = 0; str[i] != L'\0'; i++) {
         if (!valid_var_name_char(str[i])) return false;
     }

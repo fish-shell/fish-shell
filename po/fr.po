@@ -3556,7 +3556,7 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:5
 msgid "Select directory by letter or number: "
-msgstr "Sélectionner un dossier par lettre ou chiffre"
+msgstr "Sélectionner un dossier par lettre ou chiffre : "
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:6
 msgid ""

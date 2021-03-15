@@ -10,7 +10,7 @@ function __fish_print_help --description "Print help message for the specified f
 
     # Do nothing if the file does not exist
     if not test -e "$__fish_data_dir/man/man1/$item.1" -o -e "$__fish_data_dir/man/man1/$item.1.gz"
-        return
+        return 2
     end
 
     # Render help output, save output into the variable 'help'

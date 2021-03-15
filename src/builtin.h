@@ -36,6 +36,10 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 /// Error message on missing argument.
 #define BUILTIN_ERR_MISSING _(L"%ls: Expected argument for option %ls\n")
 
+/// Error message on missing man page.
+#define BUILTIN_ERR_MISSING_HELP \
+    _(L"fish: Missing man page for '%ls'. Did you install the documentation?\n")
+
 /// Error message on invalid combination of options.
 #define BUILTIN_ERR_COMBO _(L"%ls: Invalid combination of options\n")
 

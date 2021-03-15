@@ -155,7 +155,6 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
 /// Process and print help for the specified builtin or function.
 void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
                         wcstring *error_message) {
-    UNUSED(streams);
     // This won't ever work if no_exec is set.
     if (no_exec()) return;
     const wcstring name_esc = escape_string(name, ESCAPE_ALL);
@@ -166,8 +165,10 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
         // If it's an error, redirect the output of __fish_print_help to stderr
         ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO));
     }
-    parser.eval(cmd, ios);
-    // ignore the exit status of __fish_print_help
+    auto res = parser.eval(cmd, ios);
+    if (res.status.exit_code() == 2) {
+        streams.err.append_format(BUILTIN_ERR_MISSING_HELP, name_esc.c_str());
+    }
 }
 
 /// Perform error reporting for encounter with unknown option.

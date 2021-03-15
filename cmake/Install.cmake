@@ -175,7 +175,7 @@ install(FILES fish.png DESTINATION ${rel_datadir}/pixmaps)
 
 # Group install targets into a InstallTargets folder
 set_property(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
-                    test_fishscript
+                    # test_fishscript
                     test_prep tests_buildroot_target
              PROPERTY FOLDER cmake/InstallTargets)
 

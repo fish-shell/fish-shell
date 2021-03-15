@@ -130,7 +130,7 @@ function funced --description 'Edit function definition'
     end
 
     set -l stat $status
-    rm $tmpname >/dev/null
+    command rm $tmpname >/dev/null
     and rmdir $tmpdir >/dev/null
     return $stat
 end

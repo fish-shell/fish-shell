@@ -113,22 +113,28 @@ echo comment after conjunction
 
 # --help works
 builtin and --help >/dev/null
+# CHECKERR: fish: Missing man page {{.*}}
 echo $status
 and --help >/dev/null
+# CHECKERR: fish: Missing man page {{.*}}
 echo $status
 # CHECK: 0
 # CHECK: 0
 
 builtin or --help >/dev/null
+# CHECKERR: fish: Missing man page {{.*}}
 echo $status
 or --help >/dev/null
+# CHECKERR: fish: Missing man page {{.*}}
 echo $status
 # CHECK: 0
 # CHECK: 0
 
 builtin not --help >/dev/null
+# CHECKERR: fish: Missing man page {{.*}}
 echo $status
 not --help >/dev/null
+# CHECKERR: fish: Missing man page {{.*}}
 echo $status
 # CHECK: 0
 # CHECK: 0

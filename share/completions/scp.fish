@@ -1,7 +1,6 @@
-#
-# Load completions shared by ssh and scp.
-#
+# Load completions shared by various ssh tools like ssh, scp and sftp.
 __fish_complete_ssh scp
+
 
 # Helper functions to simplify the completions.
 function __scp2ssh_port_number
@@ -58,10 +57,11 @@ complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -
         string escape -n
 )
 "
+complete -c scp -s 3 -d "Copies between two remote hosts are transferred through the local host"
 complete -c scp -s B -d "Batch mode"
 complete -c scp -s l -x -d "Bandwidth limit"
 complete -c scp -s P -x -d Port
 complete -c scp -s p -d "Preserves modification times, access times, and modes from the original file"
-complete -c scp -s q -d "Do not display progress bar"
 complete -c scp -s r -d "Recursively copy"
 complete -c scp -s S -d "Encryption program"
+complete -c scp -s T -d "Disable strict filename checking"

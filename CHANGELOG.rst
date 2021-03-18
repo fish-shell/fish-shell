@@ -1,11 +1,11 @@
-fish 3.2.1 (released ???)
-=========================
+fish 3.2.1 (released March 18, 2021)
+====================================
 
 This release of fish fixes the following problems identified in fish 3.2.0:
 
 -  Commands in key bindings are run with fish's internal terminal modes, instead of the terminal modes typically used for commands. This fixes a bug introduced in 3.2.0, where text would unexpectedly appear on the terminal, especially when pasting (:issue:`7770`).
 -  Prompts which use the internal ``__fish_print_pipestatus`` function will display correctly rather than carrying certain modifiers (such as bold) further than intended (:issue:`7771`).
--  Redirections to internal file descriptors is no longer an error, fixing problems with Midnight Commander (:issue:`7769`).
+-  Redirections to internal file descriptors is allowed again, reversing the changes in 3.2.0. This fixes a problem with Midnight Commander (:issue:`7769`).
 -  Universal variables should be fully reliable regardless of operating system again (:issue:`7774`).
 -  ``fish_git_prompt`` no longer causes screen flickering in certain terminals (:issue:`7775`).
 -  ``fish_add_path`` manipulates the ``fish_user_paths`` variable correctly when moving multiple paths (:issue:`7776`).
@@ -28,6 +28,8 @@ It also includes some small enhancements:
 
 If you are upgrading from version 3.1.2 or before, please also review
 the release notes for 3.2.0 (included below).
+
+--------------
 
 fish 3.2.0 (released March 1, 2021)
 ===================================

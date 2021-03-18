@@ -23,6 +23,7 @@ die() {
 # in this script. Instead, make all paths relative to one of these or $homedir."
 TESTS_ROOT="$(realpath "$(dirname "$0")")"
 BUILD_ROOT="$(realpath "${TESTS_ROOT}/..")"
+FISH_ROOT="$(realpath "${BUILD_ROOT}/..")"
 
 if test -z "$__fish_is_running_tests"; then
     # Set up a test environment and re-run the original script. We do not share environments
@@ -46,7 +47,7 @@ if test -z "$__fish_is_running_tests"; then
 
     # Set the function path at startup, referencing the default fish functions and the test-specific
     # functions.
-    fish_init_cmd="set fish_function_path ${XDG_CONFIG_HOME}/fish/functions ${BUILD_ROOT}/share/functions"
+    fish_init_cmd="set fish_function_path ${XDG_CONFIG_HOME}/fish/functions ${FISH_ROOT}/share/functions"
 
     __fish_is_running_tests="$homedir"
     export __fish_is_running_tests

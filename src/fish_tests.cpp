@@ -6552,7 +6552,7 @@ static const test_t s_tests[] {
     { "ifind", test_ifind },
     { "ifind_fuzzy", test_ifind_fuzzy },
     { "abbreviations", test_abbreviations },
-    { "test", test_test },
+    { "builtin_test", test_test },
     { "wcstod", test_wcstod },
     { "dup2s", test_dup2s },
     { "dup2s", test_dup2s_fd_for_target_fd },

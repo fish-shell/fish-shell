@@ -115,8 +115,8 @@ foreach(LTEST ${LOW_LEVEL_TESTS})
   )
 endforeach(LTEST)
 
-add_test(test_prep
-         "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target test_prep)
+add_test(tests_buildroot_target
+         "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target tests_buildroot_target)
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
@@ -127,5 +127,5 @@ foreach(CHECK ${FISH_CHECKS})
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
 
-  set_tests_properties(${LTEST} PROPERTIES DEPENDS test_prep)
+  set_tests_properties(${LTEST} PROPERTIES DEPENDS tests_buildroot_target)
 endforeach(CHECK)

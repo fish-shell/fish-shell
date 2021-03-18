@@ -76,39 +76,8 @@ add_custom_target(tests_buildroot_target
                           ${TEST_ROOT_DIR}
                   DEPENDS fish fish_test_helper)
 
-if(NOT FISH_IN_TREE_BUILD)
-  # We need to symlink share/functions for the tests.
-  # This should be simplified.
-  add_custom_target(symlink_functions
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ${CMAKE_CURRENT_SOURCE_DIR}/share/functions
-            ${CMAKE_CURRENT_BINARY_DIR}/share/functions)
-  add_dependencies(tests_buildroot_target symlink_functions)
-else()
-  add_custom_target(symlink_functions)
-endif()
-
-# Prep the environment for running the unit tests.
-add_custom_target(test_prep
-    # Add directories hard-coded into the tests
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/data
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/data
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/temp
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/temp
-
-    # Add the XDG_* directories
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_data
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_data
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_config
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_config
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_runtime
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_runtime
-
-    DEPENDS tests_buildroot_target tests_dir
-    USES_TERMINAL)
-
 # CMake being CMake, you can't just add a DEPENDS argument to add_test to make it depend on any of
-# your binaries actually being build before `make test` is executed (requiring `make all` first),
+# your binaries actually being built before `make test` is executed (requiring `make all` first),
 # and the only dependency a test can have is on another test. So we make building `fish_tests` a
 # test, and then depend on this in all the low-level tests :/
 add_test(build_fish_tests
@@ -125,8 +94,8 @@ foreach(LTEST ${LOW_LEVEL_TESTS})
   set_tests_properties(${LTEST} PROPERTIES DEPENDS build_fish_tests)
 endforeach(LTEST)
 
-add_test(test_prep
-         "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target test_prep)
+add_test(tests_buildroot_target
+         "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target tests_buildroot_target)
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
@@ -137,5 +106,5 @@ foreach(CHECK ${FISH_CHECKS})
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
 
-  set_tests_properties(${LTEST} PROPERTIES DEPENDS test_prep)
+  set_tests_properties(${LTEST} PROPERTIES DEPENDS tests_buildroot_target)
 endforeach(CHECK)

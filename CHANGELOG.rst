@@ -25,6 +25,8 @@ Improved prompts
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+--------------
+
 fish 3.2.1 (released March 18, 2021)
 ====================================
 

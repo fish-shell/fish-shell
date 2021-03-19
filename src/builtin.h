@@ -38,7 +38,7 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 
 /// Error message on missing man page.
 #define BUILTIN_ERR_MISSING_HELP \
-    _(L"fish: Missing man page for '%ls'. Did you install the documentation?\n")
+    _(L"fish: Missing man page for '%ls'. Did you install the documentation?\n`help '%ls'` will open the online version.\n")
 
 /// Error message on invalid combination of options.
 #define BUILTIN_ERR_COMBO _(L"%ls: Invalid combination of options\n")

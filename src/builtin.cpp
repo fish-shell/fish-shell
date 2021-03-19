@@ -167,7 +167,7 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
     }
     auto res = parser.eval(cmd, ios);
     if (res.status.exit_code() == 2) {
-        streams.err.append_format(BUILTIN_ERR_MISSING_HELP, name_esc.c_str());
+        streams.err.append_format(BUILTIN_ERR_MISSING_HELP, name_esc.c_str(), name_esc.c_str());
     }
 }
 

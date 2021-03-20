@@ -1743,7 +1743,8 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         }
 
         // Hack. If we're cd, handle it specially (issue #1059, others).
-        handle_as_special_cd = (unesc_command == L"cd");
+        handle_as_special_cd =
+            (unesc_command == L"cd") || arg_data.visited_wrapped_commands.count(L"cd");
     }
 
     // Maybe apply variable assignments.

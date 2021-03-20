@@ -16,6 +16,7 @@ Scripting improvements
 Interactive improvements
 -------------------------
 - When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
+- Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

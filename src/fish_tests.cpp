@@ -3147,6 +3147,9 @@ static void test_complete() {
 #endif
     if (system("touch 'test/complete_test/testfile'")) err(L"touch failed");
     if (system("chmod 700 'test/complete_test/testfile'")) err(L"chmod failed");
+    if (system("mkdir -p 'test/complete_test/foo1'")) err(L"mkdir failed");
+    if (system("mkdir -p 'test/complete_test/foo2'")) err(L"mkdir failed");
+    if (system("mkdir -p 'test/complete_test/foo3'")) err(L"mkdir failed");
 
     completions = do_complete(L"echo (test/complete_test/testfil", {});
     do_test(completions.size() == 1);
@@ -3309,6 +3312,36 @@ static void test_complete() {
     do_test(comma_join(complete_get_wrap_targets(L"wrapper1")).empty());
     do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
     do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
+
+    // Test cd wrapping chain
+    if (!pushd("test/complete_test")) err(L"pushd(\"test/complete_test\") failed");
+
+    complete_add_wrapper(L"cdwrap1", L"cd");
+    complete_add_wrapper(L"cdwrap2", L"cdwrap1");
+
+    completion_list_t cd_compl = do_complete(L"cd ", {});
+    completions_sort_and_prioritize(&cd_compl);
+
+    completion_list_t cdwrap1_compl = do_complete(L"cdwrap1 ", {});
+    completions_sort_and_prioritize(&cdwrap1_compl);
+
+    completion_list_t cdwrap2_compl = do_complete(L"cdwrap2 ", {});
+    completions_sort_and_prioritize(&cdwrap2_compl);
+
+    size_t min_compl_size = std::min(cd_compl.size(),
+        std::min(cdwrap1_compl.size(), cdwrap2_compl.size()));
+
+    do_test(cd_compl.size() == min_compl_size);
+    do_test(cdwrap1_compl.size() == min_compl_size);
+    do_test( cdwrap2_compl.size() == min_compl_size);
+    for (size_t i = 0; i < min_compl_size; ++i) {
+        do_test(cd_compl[i].completion == cdwrap1_compl[i].completion);
+        do_test(cdwrap1_compl[i].completion == cdwrap2_compl[i].completion);
+    }
+
+    complete_remove_wrapper(L"cdwrap1", L"cd");
+    complete_remove_wrapper(L"cdwrap2", L"cdwrap1");
+    popd();
 }
 
 static void test_1_completion(wcstring line, const wcstring &completion, complete_flags_t flags,

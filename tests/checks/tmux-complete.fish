@@ -36,7 +36,7 @@ $sleep
 $tmux capture-pane -p
 # CHECK: prompt 1> cat cmake/
 
-# Correct case in pager when prefies differ in case (#7743).
+# Correct case in pager when prefixes differ in case (#7743).
 $tmux send-keys C-u C-l 'complete -c foo2 -a "aabc aaBd" -f' Enter C-l \
     'foo2 A' Tab
 $sleep

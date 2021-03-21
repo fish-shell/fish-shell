@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import argparse
-from collections import deque
 import datetime
 import io
 import re

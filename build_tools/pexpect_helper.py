@@ -141,7 +141,7 @@ class SpawnedProc(object):
             env: a string->string dictionary, describing the environment variables.
         """
         if name not in env:
-            raise ValueError("'name' variable not found in environment" % name)
+            raise ValueError("'%s' variable not found in environment" % name)
         exe_path = env.get(name)
         self.colorize = sys.stdout.isatty()
         self.messages = []
@@ -291,7 +291,6 @@ class SpawnedProc(object):
             else:
                 timestampstr = "{timestamp:10.2f} ms".format(timestamp=timestamp)
             delta = m.when * 1000.0
-            dir = m.dir
             print(
                 "{dir} {timestampstr} (Line {lineno}): {BOLD}{etext}{RESET}".format(
                     dir=m.dir,

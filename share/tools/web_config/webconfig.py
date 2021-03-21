@@ -902,7 +902,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 "quote",
                 "redirection",
                 "valid_path",
-                "autosuggestion" "user",
+                "autosuggestion",
+                "user",
                 "host",
                 "cancel",
             ]

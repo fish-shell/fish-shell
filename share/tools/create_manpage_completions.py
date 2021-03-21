@@ -274,7 +274,7 @@ class ManParser(object):
 
 class Type1ManParser(ManParser):
     def is_my_type(self, manpage):
-        return compile_and_search('\.SH "OPTIONS"(.*?)', manpage) != None
+        return compile_and_search('\.SH "OPTIONS"(.*?)', manpage) is not None
 
     def parse_man_page(self, manpage):
         options_section_regex = re.compile('\.SH "OPTIONS"(.*?)(\.SH|\Z)', re.DOTALL)
@@ -284,7 +284,7 @@ class Type1ManParser(ManParser):
         options_matched = re.search(options_parts_regex, options_section)
         add_diagnostic("Command is %r" % CMDNAME)
 
-        if options_matched == None:
+        if options_matched is None:
             add_diagnostic("Unable to find options")
             if self.fallback(options_section):
                 return True
@@ -292,7 +292,7 @@ class Type1ManParser(ManParser):
                 return True
             return False
 
-        while options_matched != None:
+        while options_matched is not None:
             data = options_matched.group(1)
             last_dotpp_index = data.rfind(".PP")
             if last_dotpp_index != -1:
@@ -322,10 +322,10 @@ class Type1ManParser(ManParser):
         add_diagnostic("Trying fallback")
         options_parts_regex = re.compile("\.TP( \d+)?(.*?)\.TP", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
-        if options_matched == None:
+        if options_matched is None:
             add_diagnostic("Still not found")
             return False
-        while options_matched != None:
+        while options_matched is not None:
             data = options_matched.group(2)
             data = remove_groff_formatting(data)
             data = data.strip()
@@ -355,10 +355,10 @@ class Type1ManParser(ManParser):
 
         options_section = re.sub(ix_remover_regex, "", options_section)
         options_matched = re.search(options_parts_regex, options_section)
-        if options_matched == None:
+        if options_matched is None:
             add_diagnostic("Still (still!) not found")
             return False
-        while options_matched != None:
+        while options_matched is not None:
             data = options_matched.group(1)
 
             data = remove_groff_formatting(data)
@@ -386,7 +386,7 @@ class Type1ManParser(ManParser):
 
 class Type2ManParser(ManParser):
     def is_my_type(self, manpage):
-        return compile_and_search("\.SH OPTIONS(.*?)", manpage) != None
+        return compile_and_search("\.SH OPTIONS(.*?)", manpage) is not None
 
     def parse_man_page(self, manpage):
         options_section_regex = re.compile("\.SH OPTIONS(.*?)(\.SH|\Z)", re.DOTALL)
@@ -398,11 +398,11 @@ class Type2ManParser(ManParser):
         options_matched = re.search(options_parts_regex, options_section)
         add_diagnostic("Command is %r" % CMDNAME)
 
-        if options_matched == None:
+        if options_matched is None:
             add_diagnostic("%r: Unable to find options" % self)
             return False
 
-        while options_matched != None:
+        while options_matched is not None:
             data = options_matched.group(3)
             data = remove_groff_formatting(data)
             data = data.strip()
@@ -436,7 +436,7 @@ class Type3ManParser(ManParser):
         options_matched = re.search(options_parts_regex, options_section)
         add_diagnostic("Command is %r" % CMDNAME)
 
-        if options_matched == None:
+        if options_matched is None:
             add_diagnostic("Unable to find options section")
             return False
 
@@ -479,7 +479,7 @@ class Type4ManParser(ManParser):
         options_matched = re.search(options_parts_regex, options_section)
         add_diagnostic("Command is %r" % CMDNAME)
 
-        if options_matched == None:
+        if options_matched is None:
             print("Unable to find options section", file=sys.stderr)
             return False
 
@@ -520,7 +520,7 @@ class TypeScdocManParser(ManParser):
     def parse_man_page(self, manpage):
         options_section_regex = re.compile("\.SH OPTIONS(.*?)\.SH", re.DOTALL)
         options_section_matched = re.search(options_section_regex, manpage)
-        if options_section_matched == None:
+        if options_section_matched is None:
             return False
         options_section = options_section_matched.group(1)
 
@@ -528,11 +528,11 @@ class TypeScdocManParser(ManParser):
         options_matched = re.match(options_parts_regex, options_section)
         add_diagnostic("Command is %r" % CMDNAME)
 
-        if options_matched == None:
+        if options_matched is None:
             add_diagnostic("%r: Unable to find options" % self)
             return False
 
-        while options_matched != None:
+        while options_matched is not None:
             # Get first option and move options_section
             option = options_matched.group(1)
             options_section = options_section[options_matched.end() : :]
@@ -568,7 +568,7 @@ class TypeScdocManParser(ManParser):
 
 class TypeDarwinManParser(ManParser):
     def is_my_type(self, manpage):
-        return compile_and_search("\.S[hH] DESCRIPTION", manpage) != None
+        return compile_and_search("\.S[hH] DESCRIPTION", manpage) is not None
 
     def trim_groff(self, line):
         # Remove initial period

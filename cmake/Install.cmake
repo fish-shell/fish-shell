@@ -110,7 +110,7 @@ add_custom_command(OUTPUT fish.pc
     COMMAND printf "Version: " >> fish.pc
     COMMAND sed 's/FISH_BUILD_VERSION=//\;s/\"//g' ${FBVF} >> fish.pc
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
+    DEPENDS CHECK-FISH-BUILD-VERSION-FILE ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 
 add_custom_target(build_fish_pc ALL DEPENDS fish.pc)
 

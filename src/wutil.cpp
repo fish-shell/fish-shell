@@ -400,16 +400,51 @@ wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path) {
     return result;
 }
 
-wcstring wdirname(const wcstring &path) {
-    std::string tmp = wcs2string(path);
-    const char *narrow_res = dirname(&tmp[0]);
-    return str2wcstring(narrow_res);
+wcstring wdirname(wcstring path) {
+    // Do not use system-provided dirname (#7837).
+    // On Mac it's not thread safe, and will error for paths exceeding PATH_MAX.
+    // This follows OpenGroup dirname recipe.
+    // 1: Double-slash stays.
+    if (path == L"//") return path;
+
+    // 2: All slashes => return slash.
+    if (!path.empty() && path.find_first_not_of(L'/') == wcstring::npos) return L"/";
+
+    // 3: Trim trailing slashes.
+    while (!path.empty() && path.back() == L'/') path.pop_back();
+
+    // 4: No slashes left => return period.
+    size_t last_slash = path.rfind(L'/');
+    if (last_slash == wcstring::npos) return L".";
+
+    // 5: Remove trailing non-slashes.
+    path.erase(last_slash + 1, wcstring::npos);
+
+    // 6: Skip as permitted.
+    // 7: Remove trailing slashes again.
+    while (!path.empty() && path.back() == L'/') path.pop_back();
+
+    // 8: Empty => return slash.
+    if (path.empty()) path = L"/";
+    return path;
 }
 
-wcstring wbasename(const wcstring &path) {
-    std::string tmp = wcs2string(path);
-    char *narrow_res = basename(&tmp[0]);
-    return str2wcstring(narrow_res);
+wcstring wbasename(wcstring path) {
+    // This follows OpenGroup basename recipe.
+    // 1: empty => allowed to return ".". This is what system impls do.
+    if (path.empty()) return L".";
+
+    // 2: Skip as permitted.
+    // 3: All slashes => return slash.
+    if (!path.empty() && path.find_first_not_of(L'/') == wcstring::npos) return L"/";
+
+    // 4: Remove trailing slashes.
+    while (!path.empty() && path.back() == L'/') path.pop_back();
+
+    // 5: Remove up to and including last slash.
+    size_t last_slash = path.rfind(L'/');
+    if (last_slash != wcstring::npos) path.erase(0, last_slash + 1);
+    return path;
 }
 
 // Really init wgettext.

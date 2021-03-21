@@ -75,10 +75,10 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, wcstring &out_na
 bool wreaddir_for_dirs(DIR *dir, wcstring *out_name);
 
 /// Wide character version of dirname().
-std::wstring wdirname(const std::wstring &path);
+std::wstring wdirname(std::wstring path);
 
 /// Wide character version of basename().
-std::wstring wbasename(const std::wstring &path);
+std::wstring wbasename(std::wstring path);
 
 /// Wide character wrapper around the gettext function. For historic reasons, unlike the real
 /// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain

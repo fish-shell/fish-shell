@@ -6217,6 +6217,42 @@ void test_normalize_path() {
     do_test(path_normalize_for_cd(L"/abc/def/", L"../ghi/..") == L"/abc/ghi/..");
 }
 
+void test_dirname_basename() {
+    say(L"Testing wdirname and wbasename");
+    const struct testcase_t {
+        const wchar_t *path;
+        const wchar_t *dir;
+        const wchar_t *base;
+    } testcases[] = {
+        {L"", L".", L"."},
+        {L"foo//", L".", L"foo"},
+        {L"foo//////", L".", L"foo"},
+        {L"/////foo", L"/", L"foo"},
+        {L"/////foo", L"/", L"foo"},
+        {L"//foo/////bar", L"//foo", L"bar"},
+        {L"foo/////bar", L"foo", L"bar"},
+
+        // Examples given in XPG4.2.
+        {L"/usr/lib", L"/usr", L"lib"},
+        {L"usr", L".", L"usr"},
+        {L"/", L"/", L"/"},
+        {L".", L".", L"."},
+        {L"..", L".", L".."},
+    };
+    for (const auto &tc : testcases) {
+        wcstring dir = wdirname(tc.path);
+        if (dir != tc.dir) {
+            err(L"Wrong dirname for \"%ls\": expected \"%ls\", got \"%ls\"", tc.path, tc.dir,
+                dir.c_str());
+        }
+        wcstring base = wbasename(tc.path);
+        if (base != tc.base) {
+            err(L"Wrong basename for \"%ls\": expected \"%ls\", got \"%ls\"", tc.path, tc.base,
+                base.c_str());
+        }
+    }
+}
+
 static void test_topic_monitor() {
     say(L"Testing topic monitor");
     topic_monitor_t monitor;
@@ -6562,6 +6598,7 @@ int main(int argc, char **argv) {
     if (should_test_function("layout_cache")) test_layout_cache();
     if (should_test_function("prompt")) test_prompt_truncation();
     if (should_test_function("normalize")) test_normalize_path();
+    if (should_test_function("dirname")) test_dirname_basename();
     if (should_test_function("topics")) test_topic_monitor();
     if (should_test_function("topics")) test_topic_monitor_torture();
     if (should_test_function("pipes")) test_pipes();

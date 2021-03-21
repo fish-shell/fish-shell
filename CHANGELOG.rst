@@ -16,6 +16,8 @@ Scripting improvements
 Interactive improvements
 -------------------------
 
+-  Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
+
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

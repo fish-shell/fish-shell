@@ -266,6 +266,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
 
+    # Create empty configuration directores if they do not already exist
+    test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
+        mkdir -p $__fish_config_dir/{completions, conf.d, functions}
+
+    # Create config.fish with some boilerplate if it does not exist
+    test -e $__fish_config_dir/config.fish || echo "\
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+end" >$__fish_config_dir/config.fish
+
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.
     set __fish_initialized 3100

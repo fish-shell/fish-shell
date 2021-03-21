@@ -1342,7 +1342,7 @@ void reader_init() {
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
-    if (getpgrp() == tcgetpgrp(STDIN_FILENO)) {
+    if (is_interactive_session()) {
         term_donate(/* quiet */ true);
     }
 

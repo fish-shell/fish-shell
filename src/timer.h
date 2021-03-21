@@ -22,7 +22,8 @@ struct timer_snapshot_t {
     std::chrono::time_point<std::chrono::steady_clock> wall;
 
     static timer_snapshot_t take();
-    static wcstring print_delta(timer_snapshot_t t1, timer_snapshot_t t2, bool verbose = false);
+    static wcstring print_delta(const timer_snapshot_t &t1, const timer_snapshot_t &t2,
+                                bool verbose = false);
 
    private:
     timer_snapshot_t() {}

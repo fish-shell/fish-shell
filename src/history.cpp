@@ -238,7 +238,7 @@ struct history_impl_t {
     // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
     // into the array of new items, so adding a non-pending item has the effect of resolving all
     // pending items.
-    void add(history_item_t item, bool pending = false, bool do_save = true);
+    void add(history_item_t &&item, bool pending = false, bool do_save = true);
 
     // Internal function.
     void clear_file_state();
@@ -379,7 +379,7 @@ struct history_impl_t {
     size_t size();
 };
 
-void history_impl_t::add(history_item_t item, bool pending, bool do_save) {
+void history_impl_t::add(history_item_t &&item, bool pending, bool do_save) {
     assert(item.timestamp() != 0 && "Should not add an item with a 0 timestamp");
     // We use empty items as sentinels to indicate the end of history.
     // Do not allow them to be added (#6032).
@@ -1096,7 +1096,7 @@ bool history_impl_t::is_empty() {
 
 void history_t::add(wcstring str) {
     auto imp = this->impl();
-    time_t when =  imp->timestamp_now();
+    time_t when = imp->timestamp_now();
     imp->add(history_item_t(std::move(str), when));
 }
 
@@ -1327,7 +1327,7 @@ bool history_t::is_default() const { return impl()->is_default(); }
 
 bool history_t::is_empty() { return impl()->is_empty(); }
 
-void history_t::add(history_item_t item, bool pending) { impl()->add(std::move(item), pending); }
+void history_t::add(history_item_t &&item, bool pending) { impl()->add(std::move(item), pending); }
 
 void history_t::remove(const wcstring &str) { impl()->remove(str); }
 

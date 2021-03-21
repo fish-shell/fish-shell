@@ -71,7 +71,7 @@ timer_snapshot_t timer_snapshot_t::take() {
     return snapshot;
 }
 
-wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
+wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_snapshot_t &t2,
                                        bool verbose /* = true */) {
     int64_t fish_sys_micros = micros(t2.cpu_fish.ru_stime) - micros(t1.cpu_fish.ru_stime);
     int64_t fish_usr_micros = micros(t2.cpu_fish.ru_utime) - micros(t1.cpu_fish.ru_utime);

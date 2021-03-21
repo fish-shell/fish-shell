@@ -3328,12 +3328,12 @@ static void test_complete() {
     completion_list_t cdwrap2_compl = do_complete(L"cdwrap2 ", {});
     completions_sort_and_prioritize(&cdwrap2_compl);
 
-    size_t min_compl_size = std::min(cd_compl.size(),
-        std::min(cdwrap1_compl.size(), cdwrap2_compl.size()));
+    size_t min_compl_size =
+        std::min(cd_compl.size(), std::min(cdwrap1_compl.size(), cdwrap2_compl.size()));
 
     do_test(cd_compl.size() == min_compl_size);
     do_test(cdwrap1_compl.size() == min_compl_size);
-    do_test( cdwrap2_compl.size() == min_compl_size);
+    do_test(cdwrap2_compl.size() == min_compl_size);
     for (size_t i = 0; i < min_compl_size; ++i) {
         do_test(cd_compl[i].completion == cdwrap1_compl[i].completion);
         do_test(cdwrap1_compl[i].completion == cdwrap2_compl[i].completion);
@@ -4207,7 +4207,7 @@ void history_tests_t::test_history() {
         history_item_t item(value, time(NULL));
         item.required_paths = paths;
         before.push_back(item);
-        history->add(item);
+        history->add(std::move(item));
     }
     history->save();
 

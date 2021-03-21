@@ -240,12 +240,16 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset , repeat-jump-reverse
 
     # in emacs yank means paste
-    bind -s --preset p yank
-    bind -s --preset P backward-char yank
+    # in vim p means paste *after* current character, so go forward a char before pasting
+    # also in vim, P means paste *at* current position (like at '|' with cursor = line),
+    # \ so there's no need to go back a char, just paste it without moving
+    bind -s --preset p forward-char yank
+    bind -s --preset P yank
     bind -s --preset gp yank-pop
 
-    bind -s --preset '"*p' "commandline -i ( xsel -p; echo )[1]"
-    bind -s --preset '"*P' backward-char "commandline -i ( xsel -p; echo )[1]"
+    # same vim 'pasting' note as upper
+    bind -s --preset '"*p' forward-char "commandline -i ( xsel -p; echo )[1]"
+    bind -s --preset '"*P' "commandline -i ( xsel -p; echo )[1]"
 
     #
     # Lowercase r, enters replace_one mode

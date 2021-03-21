@@ -918,6 +918,11 @@ void highlighter_t::color_as_argument(const ast::node_t &node) {
 static bool range_is_potential_path(const wcstring &src, const source_range_t &range,
                                     const operation_context_t &ctx,
                                     const wcstring &working_directory) {
+    // Skip strings exceeding PATH_MAX. See #7837.
+    // Note some paths may exceed PATH_MAX, but this is just for highlighting.
+    if (range.length > PATH_MAX) {
+        return false;
+    }
     // Get the node source, unescape it, and then pass it to is_potential_path along with the
     // working directory (as a one element list).
     bool result = false;

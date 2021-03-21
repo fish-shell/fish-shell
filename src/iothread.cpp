@@ -397,11 +397,18 @@ void iothread_perform_on_main(void_function_t &&func) {
 }
 
 bool make_detached_pthread(void *(*func)(void *), void *param) {
-    // The spawned thread inherits our signal mask. We don't want the thread to ever receive signals
-    // on the spawned thread, so temporarily block all signals, spawn the thread, and then restore
-    // it.
+    // The spawned thread inherits our signal mask. Temporarily block signals, spawn the thread, and
+    // then restore it. But we must not block SIGBUS, SIGFPE, SIGILL, or SIGSEGV; that's undefined
+    // (#7837). Conservatively don't try to mask SIGKILL or SIGSTOP either; that's ignored on Linux
+    // but maybe has an effect elsewhere.
     sigset_t new_set, saved_set;
     sigfillset(&new_set);
+    sigdelset(&new_set, SIGILL);   // bad jump
+    sigdelset(&new_set, SIGFPE);   // divide by zero
+    sigdelset(&new_set, SIGBUS);   // unaligned memory access
+    sigdelset(&new_set, SIGSEGV);  // bad memory access
+    sigdelset(&new_set, SIGSTOP);  // unblockable
+    sigdelset(&new_set, SIGKILL);  // unblockable
     DIE_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &new_set, &saved_set));
 
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very

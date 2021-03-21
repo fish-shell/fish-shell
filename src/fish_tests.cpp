@@ -195,6 +195,16 @@ static void popd() {
     env_stack_t::principal().set_pwd_from_getcwd();
 }
 
+// Helper to return a string whose length greatly exceeds PATH_MAX.
+wcstring get_overlong_path() {
+    wcstring longpath;
+    longpath.reserve(PATH_MAX * 2 + 10);
+    while (longpath.size() <= PATH_MAX * 2) {
+        longpath += L"/overlong";
+    }
+    return longpath;
+}
+
 // The odd formulation of these macros is to avoid "multiple unary operator" warnings from oclint
 // were we to use the more natural "if (!(e)) err(..." form. We have to do this because the rules
 // for the C preprocessor make it practically impossible to embed a comment in the body of a macro.
@@ -5369,6 +5379,13 @@ static void test_highlighting() {
         {L"# comment", highlight_role_t::comment},
     });
 
+    // Overlong paths don't crash (#7837).
+    const wcstring overlong = get_overlong_path();
+    highlight_tests.push_back({
+        {L"touch", highlight_role_t::command},
+        {overlong.c_str(), highlight_role_t::param},
+    });
+
     highlight_tests.push_back({
         {L"a", highlight_role_t::param},
         {L"=", highlight_role_t::operat, ns},
@@ -6251,6 +6268,11 @@ void test_dirname_basename() {
                 base.c_str());
         }
     }
+    // Ensures strings which greatly exceed PATH_MAX still work (#7837).
+    wcstring longpath = get_overlong_path();
+    wcstring longpath_dir = longpath.substr(0, longpath.rfind(L'/'));
+    do_test(wdirname(longpath) == longpath_dir);
+    do_test(wbasename(longpath) == L"overlong");
 }
 
 static void test_topic_monitor() {

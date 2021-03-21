@@ -73,3 +73,6 @@ add_custom_target(signed_fish_macapp
             $<TARGET_BUNDLE_DIR:fish_macapp>
     VERBATIM
 )
+
+# Group our targets in a folder.
+set_property(TARGET fish_macapp signed_fish_macapp PROPERTY FOLDER macapp)

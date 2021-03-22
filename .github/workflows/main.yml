@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  CTEST_PARALLEL_LEVEL: "1"
+
 jobs:
   ubuntu:
 

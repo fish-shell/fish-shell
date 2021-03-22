@@ -26,7 +26,7 @@ endif()
 
 # Set a policy so CMake stops complaining when we use the target name "test"
 cmake_policy(PUSH)
-if(${CMAKE_VERSION} VERSION_LESS 3.11.0 AND POLICY CMP0037)
+if(POLICY CMP0037)
   cmake_policy(SET CMP0037 OLD)
 endif()
 add_custom_target(test

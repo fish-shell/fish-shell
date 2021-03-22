@@ -71,21 +71,21 @@ typedef struct te_expr {
     int type;
     union {
         double value;
-        const void *function;
+        void *function;
     };
     te_expr *parameters[];
 } te_expr;
 
 using te_builtin = struct {
     const wchar_t *name;
-    const void *address;
+    void *address;
     int type;
 };
 
 using state = struct {
     union {
         double value;
-        const void *function;
+        void *function;
     };
     const wchar_t *start;
     const wchar_t *next;
@@ -184,36 +184,36 @@ static constexpr double bit_xor(double a, double b) {
 
 static const te_builtin functions[] = {
     /* must be in alphabetical order */
-    {L"abs", reinterpret_cast<const void *>(static_cast<te_fun1>(fabs)), TE_FUNCTION1},
-    {L"acos", reinterpret_cast<const void *>(static_cast<te_fun1>(acos)), TE_FUNCTION1},
-    {L"asin", reinterpret_cast<const void *>(static_cast<te_fun1>(asin)), TE_FUNCTION1},
-    {L"atan", reinterpret_cast<const void *>(static_cast<te_fun1>(atan)), TE_FUNCTION1},
-    {L"atan2", reinterpret_cast<const void *>(static_cast<te_fun2>(atan2)), TE_FUNCTION2},
-    {L"bitand", reinterpret_cast<const void *>(static_cast<te_fun2>(bit_and)), TE_FUNCTION2},
-    {L"bitor", reinterpret_cast<const void *>(static_cast<te_fun2>(bit_or)), TE_FUNCTION2},
-    {L"bitxor", reinterpret_cast<const void *>(static_cast<te_fun2>(bit_xor)), TE_FUNCTION2},
-    {L"ceil", reinterpret_cast<const void *>(static_cast<te_fun1>(ceil)), TE_FUNCTION1},
-    {L"cos", reinterpret_cast<const void *>(static_cast<te_fun1>(cos)), TE_FUNCTION1},
-    {L"cosh", reinterpret_cast<const void *>(static_cast<te_fun1>(cosh)), TE_FUNCTION1},
-    {L"e", reinterpret_cast<const void *>(static_cast<te_fun0>(e)), TE_FUNCTION0},
-    {L"exp", reinterpret_cast<const void *>(static_cast<te_fun1>(exp)), TE_FUNCTION1},
-    {L"fac", reinterpret_cast<const void *>(static_cast<te_fun1>(fac)), TE_FUNCTION1},
-    {L"floor", reinterpret_cast<const void *>(static_cast<te_fun1>(floor)), TE_FUNCTION1},
-    {L"ln", reinterpret_cast<const void *>(static_cast<te_fun1>(log)), TE_FUNCTION1},
-    {L"log", reinterpret_cast<const void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
-    {L"log10", reinterpret_cast<const void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
-    {L"log2", reinterpret_cast<const void *>(static_cast<te_fun1>(log2)), TE_FUNCTION1},
-    {L"ncr", reinterpret_cast<const void *>(static_cast<te_fun2>(ncr)), TE_FUNCTION2},
-    {L"npr", reinterpret_cast<const void *>(static_cast<te_fun2>(npr)), TE_FUNCTION2},
-    {L"pi", reinterpret_cast<const void *>(static_cast<te_fun0>(pi)), TE_FUNCTION0},
-    {L"pow", reinterpret_cast<const void *>(static_cast<te_fun2>(pow)), TE_FUNCTION2},
-    {L"round", reinterpret_cast<const void *>(static_cast<te_fun1>(round)), TE_FUNCTION1},
-    {L"sin", reinterpret_cast<const void *>(static_cast<te_fun1>(sin)), TE_FUNCTION1},
-    {L"sinh", reinterpret_cast<const void *>(static_cast<te_fun1>(sinh)), TE_FUNCTION1},
-    {L"sqrt", reinterpret_cast<const void *>(static_cast<te_fun1>(sqrt)), TE_FUNCTION1},
-    {L"tan", reinterpret_cast<const void *>(static_cast<te_fun1>(tan)), TE_FUNCTION1},
-    {L"tanh", reinterpret_cast<const void *>(static_cast<te_fun1>(tanh)), TE_FUNCTION1},
-    {L"tau", reinterpret_cast<const void *>(static_cast<te_fun0>(tau)), TE_FUNCTION0},
+    {L"abs", reinterpret_cast<void *>(static_cast<te_fun1>(fabs)), TE_FUNCTION1},
+    {L"acos", reinterpret_cast<void *>(static_cast<te_fun1>(acos)), TE_FUNCTION1},
+    {L"asin", reinterpret_cast<void *>(static_cast<te_fun1>(asin)), TE_FUNCTION1},
+    {L"atan", reinterpret_cast<void *>(static_cast<te_fun1>(atan)), TE_FUNCTION1},
+    {L"atan2", reinterpret_cast<void *>(static_cast<te_fun2>(atan2)), TE_FUNCTION2},
+    {L"bitand", reinterpret_cast<void *>(static_cast<te_fun2>(bit_and)), TE_FUNCTION2},
+    {L"bitor", reinterpret_cast<void *>(static_cast<te_fun2>(bit_or)), TE_FUNCTION2},
+    {L"bitxor", reinterpret_cast<void *>(static_cast<te_fun2>(bit_xor)), TE_FUNCTION2},
+    {L"ceil", reinterpret_cast<void *>(static_cast<te_fun1>(ceil)), TE_FUNCTION1},
+    {L"cos", reinterpret_cast<void *>(static_cast<te_fun1>(cos)), TE_FUNCTION1},
+    {L"cosh", reinterpret_cast<void *>(static_cast<te_fun1>(cosh)), TE_FUNCTION1},
+    {L"e", reinterpret_cast<void *>(static_cast<te_fun0>(e)), TE_FUNCTION0},
+    {L"exp", reinterpret_cast<void *>(static_cast<te_fun1>(exp)), TE_FUNCTION1},
+    {L"fac", reinterpret_cast<void *>(static_cast<te_fun1>(fac)), TE_FUNCTION1},
+    {L"floor", reinterpret_cast<void *>(static_cast<te_fun1>(floor)), TE_FUNCTION1},
+    {L"ln", reinterpret_cast<void *>(static_cast<te_fun1>(log)), TE_FUNCTION1},
+    {L"log", reinterpret_cast<void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
+    {L"log10", reinterpret_cast<void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
+    {L"log2", reinterpret_cast<void *>(static_cast<te_fun1>(log2)), TE_FUNCTION1},
+    {L"ncr", reinterpret_cast<void *>(static_cast<te_fun2>(ncr)), TE_FUNCTION2},
+    {L"npr", reinterpret_cast<void *>(static_cast<te_fun2>(npr)), TE_FUNCTION2},
+    {L"pi", reinterpret_cast<void *>(static_cast<te_fun0>(pi)), TE_FUNCTION0},
+    {L"pow", reinterpret_cast<void *>(static_cast<te_fun2>(pow)), TE_FUNCTION2},
+    {L"round", reinterpret_cast<void *>(static_cast<te_fun1>(round)), TE_FUNCTION1},
+    {L"sin", reinterpret_cast<void *>(static_cast<te_fun1>(sin)), TE_FUNCTION1},
+    {L"sinh", reinterpret_cast<void *>(static_cast<te_fun1>(sinh)), TE_FUNCTION1},
+    {L"sqrt", reinterpret_cast<void *>(static_cast<te_fun1>(sqrt)), TE_FUNCTION1},
+    {L"tan", reinterpret_cast<void *>(static_cast<te_fun1>(tan)), TE_FUNCTION1},
+    {L"tanh", reinterpret_cast<void *>(static_cast<te_fun1>(tanh)), TE_FUNCTION1},
+    {L"tau", reinterpret_cast<void *>(static_cast<te_fun0>(tau)), TE_FUNCTION0},
 };
 
 static const te_builtin *find_builtin(const wchar_t *name, int len) {
@@ -290,29 +290,29 @@ static void next_token(state *s) {
                     // The "te_fun2" casts are necessary to pick the right overload.
                     case '+':
                         s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(add));
+                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(add));
                         break;
                     case '-':
                         s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(sub));
+                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(sub));
                         break;
                     case 'x':
                     case '*':
                         // We've already checked for whitespace above.
                         s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(mul));
+                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(mul));
                         break;
                     case '/':
                         s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(divide));
+                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(divide));
                         break;
                     case '^':
                         s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(pow));
+                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(pow));
                         break;
                     case '%':
                         s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(fmod));
+                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(fmod));
                         break;
                     case '(':
                         s->type = TOK_OPEN;
@@ -465,7 +465,7 @@ static te_expr *power(state *s) {
         ret = base(s);
     } else {
         ret = NEW_EXPR(TE_FUNCTION1, base(s));
-        ret->function = reinterpret_cast<const void *>(negate);
+        ret->function = reinterpret_cast<void *>(negate);
     }
 
     return ret;
@@ -478,19 +478,19 @@ static te_expr *factor(state *s) {
     te_expr *insertion = nullptr;
 
     while (s->type == TOK_INFIX &&
-           (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(pow)))) {
-        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
+           (s->function == reinterpret_cast<void *>(static_cast<te_fun2>(pow)))) {
+        auto t = reinterpret_cast<te_fun2>(s->function);
         next_token(s);
 
         if (insertion) {
             /* Make exponentiation go right-to-left. */
             te_expr *insert = NEW_EXPR(TE_FUNCTION2, insertion->parameters[1], power(s));
-            insert->function = reinterpret_cast<const void *>(t);
+            insert->function = reinterpret_cast<void *>(t);
             insertion->parameters[1] = insert;
             insertion = insert;
         } else {
             ret = NEW_EXPR(TE_FUNCTION2, ret, power(s));
-            ret->function = reinterpret_cast<const void *>(t);
+            ret->function = reinterpret_cast<void *>(t);
             insertion = ret;
         }
     }
@@ -503,13 +503,13 @@ static te_expr *term(state *s) {
     te_expr *ret = factor(s);
 
     while (s->type == TOK_INFIX &&
-           (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(mul)) ||
-            s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(divide)) ||
-            s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(fmod)))) {
-        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
+           (s->function == reinterpret_cast<void *>(static_cast<te_fun2>(mul)) ||
+            s->function == reinterpret_cast<void *>(static_cast<te_fun2>(divide)) ||
+            s->function == reinterpret_cast<void *>(static_cast<te_fun2>(fmod)))) {
+        auto t = reinterpret_cast<te_fun2>(s->function);
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, factor(s));
-        ret->function = reinterpret_cast<const void *>(t);
+        ret->function = reinterpret_cast<void *>(t);
     }
 
     return ret;
@@ -520,10 +520,10 @@ static te_expr *expr(state *s) {
     te_expr *ret = term(s);
 
     while (s->type == TOK_INFIX && (s->function == add || s->function == sub)) {
-        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
+        auto t = reinterpret_cast<te_fun2>(s->function);
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, term(s));
-        ret->function = reinterpret_cast<const void *>(t);
+        ret->function = reinterpret_cast<void *>(t);
     }
 
     return ret;

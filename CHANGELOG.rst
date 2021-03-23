@@ -19,6 +19,8 @@ Interactive improvements
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - Arguments longer than 1024 characters no longer trigger excessive CPU usage on Mac (:issue:`7837`).
 
+-  Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
+
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

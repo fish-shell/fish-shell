@@ -21,9 +21,16 @@ die() {
 
 # To keep things sane and to make error messages comprehensible, do not use relative paths anywhere
 # in this script. Instead, make all paths relative to one of these or $homedir."
-TESTS_ROOT="$(realpath "$(dirname "$0")")"
-BUILD_ROOT="$(realpath "${TESTS_ROOT}/..")"
-FISH_ROOT="$(realpath "${BUILD_ROOT}/..")"
+TESTS_ROOT="$(dirname "$0")"
+BUILD_ROOT="${TESTS_ROOT}/.."
+FISH_ROOT="${BUILD_ROOT}/.."
+
+# macOS (still) doesn't have `readlink -f` or `realpath`. It's OK, this is just for aesthetics.
+if which realpath 1>/dev/null 2>/dev/null; then
+    TESTS_ROOT="$(realpath "${TESTS_ROOT}")"
+    BUILD_ROOT="$(realpath "${BUILD_ROOT}")"
+    FISH_ROOT="$(realpath "${FISH_ROOT}")"
+fi
 
 if test -z "$__fish_is_running_tests"; then
     # Set up a test environment and re-run the original script. We do not share environments

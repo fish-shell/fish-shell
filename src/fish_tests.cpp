@@ -102,7 +102,8 @@ static bool should_test_function(const char *func_name, bool default_on = true) 
         result = default_on;
     } else {
         for (size_t i = 0; s_arguments[i] != NULL; i++) {
-            if (!std::strncmp(func_name, s_arguments[i], std::strlen(s_arguments[i]))) {
+            if (std::strcmp(func_name, s_arguments[i]) == 0) {
+            // if (!std::strncmp(func_name, s_arguments[i], std::strlen(s_arguments[i]))) {
                 // Prefix match.
                 result = true;
                 break;

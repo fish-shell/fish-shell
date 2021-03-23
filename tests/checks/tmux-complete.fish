@@ -5,7 +5,7 @@
 set -g tmpdir (mktemp -d)
 set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null
 
-set -g sleep sleep .3 # TSan tests in the CI failed with .1.
+set -g sleep sleep .6 # We got occasional failures in the CI with 0.3
 
 set fish (realpath $fish)
 cd $tmpdir

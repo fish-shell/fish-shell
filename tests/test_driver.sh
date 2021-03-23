@@ -38,14 +38,14 @@ fi
 # Set up a test environment and re-run the original script. We do not share environments
 # whatsoever between tests, so each test driver run sets up a new profile altogether.
 
-homedir="$(mktemp -d)"
+# macOS 10.10 requires an explicit template for `mktemp` and will create the folder in the
+# current directory unless told otherwise. Linux isn't guaranteed to have $TMPDIR set.
+homedir="$(mktemp -d 2>/dev/null || mktemp -d "${TMPDIR}tmp.XXXXXXXXXX")"
 
-# cp -a ../test/xdg_data_home "$homedir/"
 XDG_DATA_HOME="$homedir/xdg_data_home"
 export XDG_DATA_HOME
 mkdir -p $XDG_DATA_HOME/fish || die
 
-# cp -a ../test/xdg_config_home "$homedir/"
 XDG_CONFIG_HOME="$homedir/xdg_config_home"
 export XDG_CONFIG_HOME
 mkdir -p $XDG_CONFIG_HOME/fish || die
@@ -107,15 +107,10 @@ export suppress_color
 fish_init_cmd="${fish_init_cmd} && source ${TESTS_ROOT}/test_util.fish";
 
 # Run the test script, but don't exec so we can do cleanup after it succeeds/fails
-# echo $PWD
-# echo "BUILD_ROOT: $BUILD_ROOT"
-# echo "TESTS_ROOT: $TESTS_ROOT"
-env HOME=$homedir "${BUILD_ROOT}/test/root/bin/fish" \
+env HOME="$homedir" "${BUILD_ROOT}/test/root/bin/fish" \
     --init-command "${fish_init_cmd}" \
     "$fish_script" "$script_args"
 test_status="$?"
-
-echo test completed in $homedir with status $test_status
 
 rm -rf "$homedir"
 exit "$test_status"

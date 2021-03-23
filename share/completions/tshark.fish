@@ -5,14 +5,14 @@ __fish_complete_wireshark tshark
 function __fish_tshark_protocols
     set -l tok (commandline -ct | string collect)
     set -l tok_param (string replace -r -- '^-O' '' $tok)
-    command tshark -G protocols | while read -l -d \t name shortname identifier
+    command tshark -G protocols 2>/dev/null | while read -l -d \t name shortname identifier
         printf "%s%s\t%s\n" (string replace -r -- '(.+),[^,]*$' '$1,' $tok_param) $tok_no_comma $identifier $name
     end
 end
 
 complete -c tshark -s 2 -d 'Perform a two-pass analysis'
 # This is fairly expensive, but only done upon the user pressing tab.
-complete -c tshark -s e -d 'Add a field to the list of fields to display' -xa '(command tshark -G fields | awk -F\t \'{print $3"\t"$2}\')'
+complete -c tshark -s e -d 'Add a field to the list of fields to display' -xa '(command tshark -G fields 2> /dev/null | awk -F\t \'{print $3"\t"$2}\')'
 complete -c tshark -s E -d 'Set an option controlling the printing of fields' -xa '
 bom=y\t"Prepend output with the UTF-8 byte order mark"
 header=y\t"Print a list of the selected field names"
@@ -24,7 +24,7 @@ quote=\t"Set the quote character to use to surround fields d=\", s=\', n=no quot
 complete -c tshark -s F -d 'Set the output capture file format' -xa '(command tshark -F 2>| string replace -rf "\s+(\S+) - (.*)" \'$1\t$2\')'
 complete -c tshark -s G -d 'Print a glossary' -xa '(
 printf "help\tList available report types\n"
-command tshark -G help | string replace -rf "\s+-G (\S+)\s+(.*)" \'$1\t$2\'
+command tshark -G help 2>/dev/null | string replace -rf "\s+-G (\S+)\s+(.*)" \'$1\t$2\'
 )'
 complete -c tshark -s H -d 'Read a list of entries from a "hosts" file' -r
 complete -c tshark -s j -d 'Protocol match filter used for ek|json|jsonraw|pdml output file types' -x

@@ -17,7 +17,7 @@ $tmux new-session -d $fish -C '
     # No autosuggestion from older history.
     set fish_history ""
 '
-$tmux resize-window -x 80 -y 10
+$tmux resize-pane -x 80 -y 10
 $sleep # Let fish draw a prompt.
 
 # Don't escape existing token (#7526).

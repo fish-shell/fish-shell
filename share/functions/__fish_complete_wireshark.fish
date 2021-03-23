@@ -6,15 +6,15 @@ end
 
 function __fish_wireshark_interface
     # no remote capture yet
-    command tshark -D | string replace -r ".*\. (\S+)\s*\(?([^)]*)\)?\$" '$1\t$2'
+    command tshark -D 2>/dev/null | string replace -r ".*\. (\S+)\s*\(?([^)]*)\)?\$" '$1\t$2'
 end
 
 function __fish_wireshark_protocol
-    command tshark -G protocols | awk -F\t '{print $3"\t"$1}'
+    command tshark -G protocols 2>/dev/null | awk -F\t '{print $3"\t"$1}'
 end
 
 function __fish_wireshark_heuristic
-    command tshark -G heuristic-decodes | awk -F\t '{print $2"\t"$1}'
+    command tshark -G heuristic-decodes 2>/dev/null | awk -F\t '{print $2"\t"$1}'
 end
 
 function __fish_tshark_name_resolving_flags
@@ -67,10 +67,10 @@ packets:\t"Switch to the next file after it contains N packets"'
     complete -c $shark -l list-time-stamp-types -d 'List time stamp types supported for the interface'
     complete -c $shark -s p -l no-promiscuous-mode -d "Don't put the interface into promiscuous mode"
     complete -c $shark -s s -l snapshot-length -d 'Set the default snapshot length in bytes to use when capturing live data' -x
-    complete -c $shark -l time-stamp-type -d "Change the interface's timestamp method" -xa '(__fish_wireshark_choices (command tshark --list-time-stamp-types))'
+    complete -c $shark -l time-stamp-type -d "Change the interface's timestamp method" -xa '(__fish_wireshark_choices (command tshark --list-time-stamp-types 2>/dev/null))'
     complete -c $shark -s v -l version -d 'Print the version and exit'
     complete -c $shark -s w -d 'Write raw packet data to the given file ("-" means stdout)' -r
-    complete -c $shark -s y -l linktype -d 'Set the data link type to use while capturing packets' -xa '(__fish_wireshark_choices (command tshark -L))'
+    complete -c $shark -s y -l linktype -d 'Set the data link type to use while capturing packets' -xa '(__fish_wireshark_choices (command tshark -L 2>/dev/null))'
 
     switch $shark
         case dumpcap tshark
@@ -81,7 +81,7 @@ packets:\t"Switch to the next file after it contains N packets"'
     switch $shark
         case wireshark tshark
             complete -c $shark -s C -d 'Run with the given configuration profile' -xa '(
-set -l folders (tshark -G folders | awk \'/Personal configuration/{ print $NF}\')/profiles/*
+set -l folders (tshark -G folders 2>/dev/null | awk \'/Personal configuration/{ print $NF}\')/profiles/*
 string match -r "[^/]*\\$" -- $folders)'
             complete -c $shark -s d -d 'Specify how a layer type should be dissected' -xa '(__fish_tshark_decode_as)'
             complete -c $shark -l enable-protocol -d 'Enable dissection of the given protocol' -xa '(__fish_wireshark_protocol)'
@@ -92,7 +92,7 @@ string match -r "[^/]*\\$" -- $folders)'
             complete -c $shark -s n -d 'Disable network object name resolution (hostname, TCP and UDP port names)'
             complete -c $shark -s N -d 'Turn on name resolution only for particular types of addresses and port numbers' -xa '( __fish_tshark_name_resolving_flags)'
             complete -c $shark -s o -d 'Override a preference value' -xa '(
-    command tshark -G defaultprefs | string replace -rf -- \'^#([a-z].*):.*\' \'$1:\')'
+    command tshark -G defaultprefs 2>/dev/null | string replace -rf -- \'^#([a-z].*):.*\' \'$1:\')'
             complete -c $shark -s r -l read-file -d 'Read packet data from the given file' -r
             complete -c $shark -s R -l read-filter -d 'Apply the given read filter' -x
             complete -c $shark -s t -d 'Set the format of the packet timestamp printed in summary lines' -xa '

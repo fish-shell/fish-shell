@@ -29,6 +29,9 @@ Improved prompts
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- *This placeholder silences a sphinx doc warning, so the last section is not empty.*
+
+--------------
 
 fish 3.2.1 (released March 18, 2021)
 ====================================

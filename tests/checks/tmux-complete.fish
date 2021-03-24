@@ -1,14 +1,17 @@
 #RUN: %fish -C 'set -g fish %fish' %s
 #REQUIRES: command -v tmux
 
-# Isolated tmux.
-set -g tmpdir (mktemp -d)
-set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null
+# Resolve absolute path to fish (if needed) before changing directories
+set fish (realpath $fish)
+
+# Isolated tmux. tmux can't handle session sockets in paths that are too long, and macOS has a very
+# long $TMPDIR, so use a relative path - except macOS doesn't have `realpath --relative-to`...
+# We have a unique TMPDIR assigned by the test driver, so this will work so long as `tmux` is only
+# invoked from the same PWD.
+cd $TMPDIR
+set -g tmux tmux -S ./.tmux-socket -f /dev/null
 
 set -g sleep sleep .6 # We got occasional failures in the CI with 0.3
-
-set fish (realpath $fish)
-cd $tmpdir
 
 $tmux new-session -d $fish -C '
     # This is similar to "tests/interactive.config".
@@ -46,4 +49,3 @@ $tmux capture-pane -p
 # CHECK: aabc  aaBd
 
 $tmux kill-server
-rm -r $tmpdir

@@ -1,15 +1,5 @@
 #RUN: %fish %s
 
-# # Ensure there's no zombies before we start, otherwise the tests will mysteriously fail.
-# set zombies_among_us (ps -o stat | string match 'Z*' | count)
-# [ "$zombies_among_us" -eq "0" ]
-# or begin
-# 	echo "Found existing zombie processes. Clean up zombies before running this test."
-# 	exit 1
-# end
-# echo "All clear of zombies."
-# # CHECK: All clear of zombies.
-
 # Verify zombies are not left by disown (#7183, #5342)
 # Do this first to avoid colliding with the other disowned processes below, which may
 # still be running at the end of the script
@@ -21,9 +11,11 @@ sleep 0.1
 #CHECK: Trigger process reaping
 # The initial approach here was to kill the PID of the sleep process, which should
 # be gone by the time we get here. Unfortunately, kill from procps on pre-2016 distributions
-# does not print an error for non-existent PIDs, so instead look for zombies in this session
-# (there should be none).
-ps -o stat | string match 'Z*'
+# does not print an error for non-existent PIDs, so instead look for zombies in this session.
+# There could already be zombies from previous tests run in this session or a test could be run
+# simultaneously that causes a zombie to spawn, so limit the output only to processes started by
+# this fish instance.
+ps -o ppid,stat | string match -e $fish_pid | string match 'Z*'
 
 jobs -q
 echo $status

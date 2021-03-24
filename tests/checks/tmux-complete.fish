@@ -8,7 +8,8 @@ set fish (realpath $fish)
 # long $TMPDIR, so use a relative path - except macOS doesn't have `realpath --relative-to`...
 # We have a unique TMPDIR assigned by the test driver, so this will work so long as `tmux` is only
 # invoked from the same PWD.
-cd $TMPDIR
+set tmpdir (command mktemp -d $TMPDIR/tmp.XXXXXXXX)
+cd $tmpdir
 set -g tmux tmux -S ./.tmux-socket -f /dev/null
 
 set -g sleep sleep .6 # We got occasional failures in the CI with 0.3

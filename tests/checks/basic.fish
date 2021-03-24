@@ -42,12 +42,12 @@ end
 # Simple function tests
 
 function foo
-    echo >../test/temp/fish_foo.txt $argv
+    echo >$TMPDIR/fish_foo.txt $argv
 end
 
 foo hello
 
-cat ../test/temp/fish_foo.txt |read foo
+cat $TMPDIR/fish_foo.txt |read foo
 
 if test $foo = hello;
   echo Test 2 pass
@@ -297,7 +297,7 @@ else if test -n "def"
 else if not_a_valid_command but it should be OK because a previous branch was taken
 	echo "epsilon 5.3"
 else if test ! -n "abc"
-	echo "epsilon 5.4"	
+	echo "epsilon 5.4"
 end
 #CHECK: epsilon5.2
 
@@ -327,10 +327,10 @@ type -q -f fish_test_type_zzz ; echo $status
 
 # ensure that builtins that produce no output can still truncate files
 # (bug PCA almost reintroduced!)
-echo abc > ../test/temp/file_truncation_test.txt
-cat ../test/temp/file_truncation_test.txt
-echo -n > ../test/temp/file_truncation_test.txt
-cat ../test/temp/file_truncation_test.txt
+echo abc > $TMPDIR/file_truncation_test.txt
+cat $TMPDIR/file_truncation_test.txt
+echo -n > $TMPDIR/file_truncation_test.txt
+cat $TMPDIR/file_truncation_test.txt
 #CHECK: abc
 
 # Test events.

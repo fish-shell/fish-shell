@@ -1,16 +1,16 @@
 #RUN: %fish -C 'set -g fish %fish' %s
 #REQUIRES: command -v tmux
 
+# Resolve absolute path to fish (if needed) before changing directories
 set fish (builtin realpath $fish)
 
-# Isolated tmux.
-set -g tmpdir (mktemp -d)
-
-# Don't CD elsewhere, because tmux socket file is relative to CWD. Using
-# absolute path to socket file is prone to 'socket file name too long' error.
+# Isolated tmux. tmux can't handle session sockets in paths that are too long, and macOS has a very
+# long $TMPDIR, so use a relative path - except macOS doesn't have `realpath --relative-to`...
+# We have a unique TMPDIR assigned by the test driver, so this will work so long as `tmux` is only
+# invoked from the same PWD.
+set tmpdir (command mktemp -d $TMPDIR/tmp.XXXXXXXX)
 cd $tmpdir
-
-set -g tmux tmux -S .tmux-socket -f /dev/null
+set -g tmux tmux -S ./.tmux-socket -f /dev/null
 
 set -g sleep sleep .1
 set -q CI && set sleep sleep 1
@@ -55,4 +55,3 @@ $tmux capture-pane -p
 # CHECK: aabc  aaBd
 
 $tmux kill-server
-rm -r $tmpdir

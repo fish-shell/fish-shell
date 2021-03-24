@@ -16,16 +16,15 @@ cd $oldpwd
 rm -Rf $dir
 
 
-# Verify that we can do wildcard expansion when we
-# don't have read access to some path components
+# Verify that we can do wildcard expansion when we don't have read access to some path components.
 # See #2099
-set -l where ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess
+set -l where $TMPDIR/fish_wildcard_permissions_test/noaccess/yesaccess
 mkdir -p $where
 chmod 300 (dirname $where) # no read permissions
 mkdir -p $where
 # "__env.fish" here to confirm ordering - #6593.
 touch $where/alpha.txt $where/beta.txt $where/delta.txt $where/__env.fish
-echo $where/*
-#CHECK: ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/__env.fish ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/alpha.txt ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/beta.txt ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/delta.txt
+echo $where/* | string replace -a $TMPDIR '$TMPDIR'
+#CHECK: $TMPDIR/fish_wildcard_permissions_test/noaccess/yesaccess/__env.fish $TMPDIR/fish_wildcard_permissions_test/noaccess/yesaccess/alpha.txt $TMPDIR/fish_wildcard_permissions_test/noaccess/yesaccess/beta.txt $TMPDIR/fish_wildcard_permissions_test/noaccess/yesaccess/delta.txt
 chmod 700 (dirname $where) # so we can delete it
-rm -rf ../test/temp/fish_wildcard_permissions_test
+rm -rf $TMPDIR/fish_wildcard_permissions_test

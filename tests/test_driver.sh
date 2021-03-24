@@ -48,6 +48,12 @@ if test -z "$__fish_is_running_tests"; then
     export XDG_CONFIG_HOME
     mkdir -p $XDG_CONFIG_HOME/fish || die
 
+    # Create a temp/scratch directory for tests to use, if they want (tests shouldn't write to a
+    # shared temp folder).
+    TMPDIR="$homedir/temp"
+    mkdir ${TMPDIR}
+    export TMPDIR
+
     # These are used read-only so it's OK to symlink instead of copy
     rm -f "$XDG_CONFIG_HOME/fish/functions"
     ln -s "$PWD/test_functions" "$XDG_CONFIG_HOME/fish/functions" || die "Failed to symlink"

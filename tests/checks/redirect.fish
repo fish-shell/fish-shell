@@ -67,8 +67,8 @@ rm -Rf $tmpdir
 begin
     echo output
     echo errput 1>&2
-end 2>&1 | sort | tee ../test/temp/tee_test.txt
-cat ../test/temp/tee_test.txt
+end 2>&1 | sort | tee $TMPDIR/tee_test.txt
+cat $TMPDIR/tee_test.txt
 #CHECK: errput
 #CHECK: output
 #CHECK: errput

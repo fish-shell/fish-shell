@@ -19,10 +19,6 @@ else
     set files_to_test checks/*.fish
 end
 
-# test_util handles the environment setup and then restarts us
-source test_util.fish (status -f) $argv
-or exit
-
 say -o cyan "Testing high level script functionality"
 
 set -g python (__fish_anypython)

@@ -8,14 +8,14 @@ complete -c complete_test_alpha2 --no-files -w 'complete_test_alpha1 extra1'
 complete -c complete_test_alpha3 --no-files -w 'complete_test_alpha2 extra2'
 
 complete -C'complete_test_alpha1 arg1 '
-# CHECK: complete_test_alpha1 arg1 
+# CHECK: complete_test_alpha1 arg1
 complete -C'complete_test_alpha2 arg2 '
-# CHECK: complete_test_alpha1 extra1 arg2 
+# CHECK: complete_test_alpha1 extra1 arg2
 complete -C'complete_test_alpha3 arg3 '
-# CHECK: complete_test_alpha1 extra1 extra2 arg3 
+# CHECK: complete_test_alpha1 extra1 extra2 arg3
 # Works even with the argument as a separate token.
 complete -C 'complete_test_alpha3 arg3 '
-# CHECK: complete_test_alpha1 extra1 extra2 arg3 
+# CHECK: complete_test_alpha1 extra1 extra2 arg3
 
 alias myalias1 'complete_test_alpha1 arg1'
 alias myalias2='complete_test_alpha1 arg2'
@@ -26,8 +26,8 @@ myalias2 call2
 # CHECK: arg2 call2
 complete -C'myalias1 call3 '
 complete -C'myalias2 call3 '
-# CHECK: complete_test_alpha1 arg1 call3 
-# CHECK: complete_test_alpha1 arg2 call3 
+# CHECK: complete_test_alpha1 arg1 call3
+# CHECK: complete_test_alpha1 arg2 call3
 
 # Ensure that commands can't wrap themselves - if this did,
 # the completion would be executed a bunch of times.
@@ -199,7 +199,7 @@ complete -C'BBBB -'
 echo "BBBB:"
 complete -C'BBBB -'
 #CHECK: BBBB:
-#CHECK: 
+#CHECK:
 
 # Test that erasing completions works correctly
 echo
@@ -290,7 +290,11 @@ if begin
         rm -rf test6.tmp.dir; and mkdir test6.tmp.dir
     end
     pushd test6.tmp.dir
-    set -l dir (mktemp -d XXXXXXXX)
+    # The "incorrect implicit cd from PATH" fails if mktemp returns an absolute path and
+    # `realpath --relative-to` is not available on macOS.
+    # set dir (realpath --relative-to="$PWD" (mktemp -d XXXXXXXX))
+    set dir (basename (mktemp -d XXXXXXXX))
+    mkdir -p $dir
     if complete -C$dir | grep "^$dir/.*Directory" >/dev/null
         echo "implicit cd complete works"
     else

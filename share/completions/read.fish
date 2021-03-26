@@ -15,6 +15,6 @@ complete -c read -s n -l nchars -d "Read the specified number of characters" -x
 complete -c read -s a -l list -l array -d "Store the results as an array"
 complete -c read -s R -l right-prompt -d "Set right-hand prompt command" -x
 complete -c read -s z -l null -d "Use NUL character as line terminator"
-complete -c read -s l -l line -d "Read each line into its own variable"
+complete -c read -s L -l line -d "Read each line into its own variable"
 complete -c read -s d -l delimiter -d "Set string to use as delimiter" -x
 complete -c read -s t -l tokenize -d "Use shell tokenization rules when splitting"

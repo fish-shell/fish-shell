@@ -12,6 +12,7 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
+- ``math`` now has a ``log2`` function like the documentation already claimed.
 
 Interactive improvements
 -------------------------
@@ -19,7 +20,9 @@ Interactive improvements
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - Arguments longer than 1024 characters no longer trigger excessive CPU usage on Mac (:issue:`7837`).
 
--  Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
+- Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
+- ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
+- Fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

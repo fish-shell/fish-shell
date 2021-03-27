@@ -88,7 +88,7 @@ Dependencies
 
 Running fish requires:
 
--  curses or ncurses (preinstalled on most \*nix systems)
+-  curses or ncurses (preinstalled on most \*nix systems), including the utilities (``tput``)
 -  some common \*nix system utilities (currently ``mktemp``), in
    addition to the basic POSIX utilities (``cat``, ``cut``, ``dirname``,
    ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sort``, ``tee``, ``tr``,

@@ -1208,7 +1208,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 - ``fish_history``, the current history session name. If set, all subsequent commands within an
   interactive fish session will be logged to a separate file identified by the value of the
-  variable. If unset, or set to ``default``, the default session name "fish" is used. If set to an
+  variable. If unset, the default session name "fish" is used. If set to an
   empty string, history is not saved to disk (but is still available within the interactive
   session).
 

@@ -309,15 +309,15 @@ maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char 
         // line needs to exist before the first \0 with a lowercase letter
         if (error_ == ENOEXEC && is_thompson_shell_script(cmd)) {
             error_ = 0;
-            size_t n = 0;
-            while (argv[n]) ++n;
-            std::unique_ptr<char *[]> argv2(new char *[1 + n + 1]);
+            // Create a new argv with /bin/sh prepended.
+            std::vector<char *> argv2;
             char interp[] = _PATH_BSHELL;
-            argv2[0] = interp;
-            for (size_t i = 0; i < n + 1; ++i) {
-                argv2[i + 1] = argv[i];
+            argv2.push_back(interp);
+            for (size_t i = 0; argv[i] != nullptr; i++) {
+                argv2.push_back(argv[i]);
             }
-            if (check_fail(posix_spawn(&pid, interp, &*actions_, &*attr_, argv2.get(), envp))) {
+            argv2.push_back(nullptr);
+            if (check_fail(posix_spawn(&pid, interp, &*actions_, &*attr_, &argv2[0], envp))) {
                 return none();
             }
         } else {

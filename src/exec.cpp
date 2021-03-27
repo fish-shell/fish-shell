@@ -63,6 +63,9 @@ enum class launch_result_t {
     failed,
 } __warn_unused_type;
 
+/// This is a 'looks like text' check.
+/// \return true if either there is no NUL byte, or there is a line containing a lowercase letter
+/// before the first NUL byte.
 static bool is_thompson_shell_payload(const char *p, size_t n) {
     if (!memchr(p, '\0', n)) return true;
     bool haslower = false;
@@ -87,15 +90,16 @@ static bool is_thompson_shell_payload(const char *p, size_t n) {
 /// is usually uppercase, e.g. PNG, JFIF, MZ, etc. These rules are also
 /// flexible enough to permit scripts with concatenated binary content,
 /// such as Actually Portable Executable.
+/// N.B.: this is called after fork, it must not allocate heap memory.
 bool is_thompson_shell_script(const char *path) {
     int e = errno;
     bool res = false;
-    int fd = open(path, O_RDONLY | O_NOCTTY);
+    int fd = open_cloexec(path, O_RDONLY | O_NOCTTY);
     if (fd != -1) {
         char buf[256];
         ssize_t got = read(fd, buf, sizeof(buf));
         close(fd);
-        if (got != -1 && is_thompson_shell_payload(buf, got)) {
+        if (got >= 0 && is_thompson_shell_payload(buf, static_cast<size_t>(got))) {
             res = true;
         }
     }
@@ -119,12 +123,22 @@ bool is_thompson_shell_script(const char *path) {
     err = errno;
 
     // The shebang wasn't introduced until UNIX Seventh Edition, so if
-    // the kernel won't run the binary we hand it off to the intpreter
+    // the kernel won't run the binary we hand it off to the interpreter
     // after performing a binary safety check, recommended by POSIX: a
     // line needs to exist before the first \0 with a lowercase letter
     if (err == ENOEXEC && is_thompson_shell_script(actual_cmd)) {
-        *--argv = const_cast<char *>(_PATH_BSHELL);
-        execve(_PATH_BSHELL, argv, envv);
+        // Construct new argv.
+        // We must not allocate memory, so only 128 args are supported.
+        constexpr size_t maxargs = 128;
+        size_t nargs = 0;
+        while (argv[nargs]) nargs++;
+        if (nargs <= maxargs) {
+            char *argv2[1 + maxargs + 1];  // +1 for /bin/sh, +1 for terminating nullptr
+            char interp[] = _PATH_BSHELL;
+            argv2[0] = interp;
+            std::copy_n(argv, 1 + nargs, &argv2[1]);  // +1 to copy terminating nullptr
+            execve(_PATH_BSHELL, argv2, envv);
+        }
     }
 
     errno = err;

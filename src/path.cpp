@@ -126,11 +126,8 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     return paths;
 }
 
-maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
+wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &env_vars) {
-    int err = ENOENT;
-    if (dir.empty()) return none();
-    assert(!wd.empty() && wd.back() == L'/');
     wcstring_list_t paths;
     if (dir.at(0) == L'/') {
         // Absolute path.
@@ -169,6 +166,16 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
             paths.push_back(whole_path);
         }
     }
+
+    return paths;
+}
+
+maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
+                                  const environment_t &env_vars) {
+    int err = ENOENT;
+    if (dir.empty()) return none();
+    assert(!wd.empty() && wd.back() == L'/');
+    auto paths = path_apply_cdpath(dir, wd, env_vars);
 
     for (const wcstring &dir : paths) {
         struct stat buf;

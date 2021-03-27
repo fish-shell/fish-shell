@@ -19,6 +19,8 @@ BuildRequires: cmake pcre2-devel
 
 %if 0%{?suse_version}
 BuildRequires: update-desktop-files
+# for tput etc
+Requires: ncurses-utils
 %endif
 
 # for tests

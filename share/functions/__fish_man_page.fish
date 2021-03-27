@@ -18,12 +18,24 @@ function __fish_man_page
     # Try "man first-second" and fall back to "man first" if that doesn't work out.
     set -l maincmd (basename $args[1])
     if set -q args[2]
-        man "$maincmd-$args[2]" 2>/dev/null
-        or man "$maincmd" 2>/dev/null
-        or printf \a
+        # HACK: If stderr is not attached to a terminal `less` (the default pager)
+        # wouldn't use the alternate screen.
+        # But since we don't know what pager it is, and because `man` is totally underspecified,
+        # the best we can do is to *try* the man page, and assume that `man` will return false if it fails.
+        # See #7863.
+        if man "$maincmd-$args[2]" &>/dev/null
+            man "$maincmd-$args[2]"
+        else if man "$maincmd" &>/dev/null
+            man "$maincmd"
+        else
+            printf \a
+        end
     else
-        man "$maincmd" 2>/dev/null
-        or printf \a
+        if man "$maincmd" &>/dev/null
+            man "$maincmd"
+        else
+            printf \a
+        end
     end
 
     commandline -f repaint

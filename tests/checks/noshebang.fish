@@ -32,6 +32,27 @@ runfile
 #CHECK: 0
 #CHECK: 0
 
+# Never implicitly pass files ending with .fish to /bin/sh.
+true >file.fish
+chmod a+x file.fish
+set -g fish_use_posix_spawn 0
+./file.fish
+echo $status
+set -g fish_use_posix_spawn 1
+./file.fish
+echo $status
+rm file.fish
+#CHECK: 125
+#CHECKERR: Failed {{.*}}
+#CHECKERR: exec: {{.*}}
+#CHECKERR: {{.*}}
+
+#CHECK: 125
+#CHECKERR: Failed {{.*}}
+#CHECKERR: exec: {{.*}}
+#CHECKERR: {{.*}}
+
+
 # On to NUL bytes.
 # The heuristic is that there must be a line containing a lowercase letter before the first NUL byte.
 echo -n -e 'true\n\x00' >file

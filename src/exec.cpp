@@ -92,6 +92,12 @@ static bool is_thompson_shell_payload(const char *p, size_t n) {
 /// such as Actually Portable Executable.
 /// N.B.: this is called after fork, it must not allocate heap memory.
 bool is_thompson_shell_script(const char *path) {
+    // Paths ending in ".fish" are never considered Thompson shell scripts.
+    if (const char *lastdot = strrchr(path, '.')) {
+        if (0 == strcmp(lastdot, ".fish")) {
+            return false;
+        }
+    }
     int e = errno;
     bool res = false;
     int fd = open_cloexec(path, O_RDONLY | O_NOCTTY);

@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import argparse
-from collections import deque
 import datetime
 import io
 import re
@@ -468,7 +467,6 @@ class TestRun(object):
             """
             return [s + "\n" for s in s.decode("utf-8").split("\n")]
 
-        PIPE = subprocess.PIPE
         if self.config.verbose:
             print(self.subbed_command)
         proc = runproc(self.subbed_command)
@@ -593,13 +591,13 @@ class Checker(object):
 
         # Find run commands.
         self.runcmds = [RunCmd.parse(sl) for sl in group1s(RUN_RE)]
+        self.shebang_cmd = None
         if not self.runcmds:
             # If no RUN command has been given, fall back to the shebang.
             if lines[0].text.startswith("#!"):
                 # Remove the "#!" at the beginning, and the newline at the end.
                 cmd = lines[0].text[2:-1]
-                if not find_command(cmd):
-                    raise CheckerError("Command could not be found: " + cmd)
+                self.shebang_cmd = cmd
                 self.runcmds = [RunCmd(cmd + " %s", lines[0])]
             else:
                 raise CheckerError("No runlines ('# RUN') found")
@@ -627,10 +625,12 @@ def check_file(input_file, name, subs, config, failure_handler):
         proc = runproc(
             perform_substitution(reqcmd.args, subs)
         )
-        stdout, stderr = proc.communicate()
-        status = proc.returncode
+        proc.communicate()
         if proc.returncode > 0:
             return SKIP
+
+    if checker.shebang_cmd is not None and not find_command(checker.shebang_cmd):
+        raise CheckerError("Command could not be found: " + checker.shebang_cmd)
 
     # Only then run the RUN lines.
     for runcmd in checker.runcmds:
@@ -698,13 +698,16 @@ def main():
     def_subs = {"%": "%"}
     def_subs.update(parse_subs(args.substitute))
 
-    failure_count = 0
+    tests_count = 0
+    failed = False
+    skip_count = 0
     config = Config()
     config.colorize = sys.stdout.isatty()
     config.progress = args.progress
     fields = config.colors()
 
     for path in args.file:
+        tests_count += 1
         fields["path"] = path
         if config.progress:
             print("Testing file {path} ... ".format(**fields), end="")
@@ -714,13 +717,14 @@ def main():
         starttime = datetime.datetime.now()
         ret = check_path(path, subs, config, TestFailure.print_message)
         if not ret:
-            failure_count += 1
+            failed = True
         elif config.progress:
             endtime = datetime.datetime.now()
             duration_ms = round((endtime - starttime).total_seconds() * 1000)
             reason = "ok"
             color = "{GREEN}"
             if ret is SKIP:
+                skip_count += 1
                 reason = "SKIPPED"
                 color = "{BLUE}"
             print(
@@ -728,7 +732,15 @@ def main():
                     duration=duration_ms, reason=reason, **fields
                 )
             )
-    sys.exit(failure_count)
+
+    # To facilitate integration with testing frameworks, use exit code 125 to indicate that all
+    # tests have been skipped (primarily for use when tests are run one at a time). Exit code 125 is
+    # used to indicate to automated `git bisect` runs that a revision has been skipped; we use it
+    # for the same reasons git does.
+    if skip_count > 0 and skip_count == tests_count:
+        sys.exit(125)
+
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":

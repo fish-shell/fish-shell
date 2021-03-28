@@ -465,9 +465,7 @@ static std::shared_ptr<output_stream_t> create_output_stream_for_builtin(
             // Our IO redirection is to an internal buffer, e.g. a command substitution.
             // We will write directly to it.
             std::shared_ptr<io_buffer_t> buffer =
-                // (this is not a dynamic_cast because that needs rtti,
-                // and we currently use it nowhere else)
-                ((const io_bufferfill_t *)io.get())->buffer();
+                std::static_pointer_cast<const io_bufferfill_t>(io)->buffer();
             return make_unique<buffered_output_stream_t>(buffer);
         }
 

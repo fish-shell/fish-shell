@@ -88,6 +88,8 @@ Functions
 - ``ln`` - the base-e logarithm
 - ``log`` or ``log10`` - the base-10 logarithm
 - ``log2`` - the base-2 logarithm
+- ``max`` - returns the larger of two numbers
+- ``min`` - returns the smaller of two numbers
 - ``ncr`` - "from n choose r" combination function - how many subsets of size r can be taken from n (order doesn't matter)
 - ``npr`` - the number of subsets of size r that can be taken from a set of n elements (including different order)
 - ``pow(x,y)`` returns x to the y (and can be written as ``x ^ y``)

@@ -182,6 +182,20 @@ static constexpr double bit_xor(double a, double b) {
     return static_cast<double>(static_cast<long long>(a) ^ static_cast<long long>(b));
 }
 
+static double max(double a, double b) {
+    if (std::isnan(a)) return a;
+    if (std::isnan(b)) return b;
+    if (a == b) return std::signbit(a) ? b : a; // treat +0 as larger than -0
+    return a > b ? a : b;
+}
+
+static double min(double a, double b) {
+    if (std::isnan(a)) return a;
+    if (std::isnan(b)) return b;
+    if (a == b) return std::signbit(a) ? a : b; // treat -0 as smaller than +0
+    return a < b ? a : b;
+}
+
 static const te_builtin functions[] = {
     /* must be in alphabetical order */
     {L"abs", reinterpret_cast<void *>(static_cast<te_fun1>(fabs)), TE_FUNCTION1},
@@ -203,6 +217,8 @@ static const te_builtin functions[] = {
     {L"log", reinterpret_cast<void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
     {L"log10", reinterpret_cast<void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
     {L"log2", reinterpret_cast<void *>(static_cast<te_fun1>(log2)), TE_FUNCTION1},
+    {L"max", reinterpret_cast<void *>(static_cast<te_fun2>(max)), TE_FUNCTION2},
+    {L"min", reinterpret_cast<void *>(static_cast<te_fun2>(min)), TE_FUNCTION2},
     {L"ncr", reinterpret_cast<void *>(static_cast<te_fun2>(ncr)), TE_FUNCTION2},
     {L"npr", reinterpret_cast<void *>(static_cast<te_fun2>(npr)), TE_FUNCTION2},
     {L"pi", reinterpret_cast<void *>(static_cast<te_fun0>(pi)), TE_FUNCTION0},

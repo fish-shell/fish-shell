@@ -27,6 +27,7 @@ Interactive improvements
 - ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
 - Fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
 - ``math`` learned two new functions, ``max`` and ``min`.
+- Terminal bells are now off by default. Enable them by setting ``fish_bell``.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

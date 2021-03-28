@@ -1196,6 +1196,8 @@ You can change the settings of fish by changing the values of certain variables.
 
 - ``fish_ambiguous_width`` controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal renders these characters as single-width (typical), or 2 if double-width.
 
+- ``fish_bell``, if set, causes fish to emit BEL characters. This happens when a history search finds nothing, when no suitable completions are found, or when an undo or redo fails. Useful over bad network connections to distinguish failed user interaction from network lag.
+
 - ``fish_emoji_width`` controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
 
 - ``FISH_DEBUG`` and ``FISH_DEBUG_OUTPUT`` control what debug output fish generates and where it puts it, analogous to the ``--debug`` and ``--debug-output`` options. These have to be set on startup, via e.g. ``FISH_DEBUG='reader*' FISH_DEBUG_OUTPUT=/tmp/fishlog fish``.

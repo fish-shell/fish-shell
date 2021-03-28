@@ -18,6 +18,7 @@ Interactive improvements
 - When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - Arguments longer than 1024 characters no longer trigger excessive CPU usage on Mac (:issue:`7837`).
+- When ``backward-kill-path-component`` is triggered with separator under cursor, subsequent separators and a word (if there are any) will be consumed (:issue:`6258`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

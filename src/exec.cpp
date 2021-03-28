@@ -63,6 +63,32 @@ enum class launch_result_t {
     failed,
 } __warn_unused_type;
 
+/// Given an error \p err returned from either posix_spawn or exec, \return a process exit code.
+static int exit_code_from_exec_error(int err) {
+    assert(err && "Zero is success, not an error");
+    switch (err) {
+        case ENOENT:
+        case ENOTDIR:
+            // This indicates either the command was not found, or a file redirection was not found.
+            // We do not use posix_spawn file redirections so this is always command-not-found.
+            return STATUS_CMD_UNKNOWN;
+
+        case EACCES:
+        case ENOEXEC:
+            // The file is not executable for various reasons.
+            return STATUS_NOT_EXECUTABLE;
+
+#ifdef EBADARCH
+        case EBADARCH:
+            // This is for e.g. running ARM app on Intel Mac.
+            return STATUS_NOT_EXECUTABLE;
+#endif
+        default:
+            // Generic failure.
+            return EXIT_FAILURE;
+    }
+}
+
 /// This is a 'looks like text' check.
 /// \return true if either there is no NUL byte, or there is a line containing a lowercase letter
 /// before the first NUL byte.
@@ -149,7 +175,7 @@ bool is_thompson_shell_script(const char *path) {
 
     errno = err;
     safe_report_exec_error(errno, actual_cmd, argv, envv);
-    exit_without_destructors(STATUS_EXEC_FAIL);
+    exit_without_destructors(exit_code_from_exec_error(err));
 }
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
@@ -582,6 +608,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
                                            const_cast<char *const *>(envv));
         if (int err = spawner.get_error()) {
             safe_report_exec_error(err, actual_cmd, argv, envv);
+            p->status = proc_status_t::from_exit_code(exit_code_from_exec_error(err));
             return launch_result_t::failed;
         }
         assert(pid.has_value() && *pid > 0 && "Should have either a valid pid, or an error");

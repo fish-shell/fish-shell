@@ -657,13 +657,9 @@ enum {
 
     /// The status code used when a command was not found.
     STATUS_CMD_UNKNOWN = 127,
-    /// TODO: Figure out why we have two distinct failure codes for when an external command cannot
-    /// be run.
-    ///
+
     /// The status code used when an external command can not be run.
     STATUS_NOT_EXECUTABLE = 126,
-    /// The status code used when an external command can not be run.
-    STATUS_EXEC_FAIL = 125,
 
     /// The status code used when a wildcard had no matches.
     STATUS_UNMATCHED_WILDCARD = 124,

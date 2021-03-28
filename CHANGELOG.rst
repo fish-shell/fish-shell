@@ -14,6 +14,7 @@ Scripting improvements
 ----------------------
 - ``math`` now has a ``log2`` function like the documentation already claimed.
 - Shebang lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke the file using `/bin/sh` (:issue:`7802`).
+- Exit codes are better aligned with bash. A failed exec now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
 
 Interactive improvements
 -------------------------

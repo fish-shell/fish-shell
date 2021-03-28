@@ -8,6 +8,10 @@ if(NOT CTEST_PARALLEL_LEVEL)
   set(CTEST_PARALLEL_LEVEL ${CORES})
 endif()
 
+# We will use 125 as a reserved exit code to indicate that a test has been skipped, i.e. it did not
+# pass but it should not be considered a failed test run, either.
+set(SKIP_RETURN_CODE 125)
+
 # Even though we are using CMake's ctest for testing, we still define our own `make test` target
 # rather than use its default for many reasons:
 #  * CMake doesn't run tests in-proc or even add each tests as an individual node in the ninja
@@ -121,6 +125,7 @@ foreach(LTEST ${LOW_LEVEL_TESTS})
     COMMAND ${CMAKE_BINARY_DIR}/fish_tests ${LTEST}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
+  set_tests_properties(${LTEST} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
   add_test_target("${LTEST}")
 endforeach(LTEST)
 
@@ -133,6 +138,7 @@ foreach(CHECK ${FISH_CHECKS})
                ${CMAKE_CURRENT_BINARY_DIR}/tests/test.fish ${CHECK}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
+  set_tests_properties(${CHECK_NAME} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
   add_test_target("${CHECK_NAME}")
 endforeach(CHECK)
 
@@ -144,5 +150,6 @@ foreach(PEXPECT ${PEXPECTS})
       ${CMAKE_CURRENT_BINARY_DIR}/tests/interactive.fish ${PEXPECT}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
+  set_tests_properties(${PEXPECT} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
   add_test_target("${PEXPECT}")
 endforeach(PEXPECT)

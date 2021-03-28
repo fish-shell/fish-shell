@@ -33,6 +33,12 @@ math -- -4 / 2
 math -- '-4 * 2'
 # CHECK: -8
 
+# Validate max and min
+math 'max(1,2)'
+math 'min(1,2)'
+# CHECK: 2
+# CHECK: 1
+
 # Validate some rounding functions
 math 'round(3/2)'
 math 'floor(3/2)'
@@ -100,10 +106,10 @@ not math 'ncr(1)'
 # CHECKERR: 'ncr(1)'
 # CHECKERR:       ^
 
-# There is no "max" function.
-not math 'max()'
+# There is no "blah" function.
+not math 'blah()'
 # CHECKERR: math: Error: Unknown function
-# CHECKERR: 'max()'
+# CHECKERR: 'blah()'
 # CHECKERR:    ^
 
 math n + 4

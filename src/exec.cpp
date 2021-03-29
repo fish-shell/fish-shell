@@ -240,15 +240,17 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
     dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
     if (child_setup_process(INVALID_PID, INVALID_PID, *j, false, redirs) == 0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
-        auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
-        wcstring shlvl_str = L"0";
-        if (shlvl_var) {
-            long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
-            if (!errno && shlvl > 0) {
-                shlvl_str = to_string(shlvl - 1);
+        if (is_interactive_session()) {
+            auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+            wcstring shlvl_str = L"0";
+            if (shlvl_var) {
+                long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
+                if (!errno && shlvl > 0) {
+                    shlvl_str = to_string(shlvl - 1);
+                }
             }
+            vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, std::move(shlvl_str));
         }
-        vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, std::move(shlvl_str));
 
         // launch_process _never_ returns.
         launch_process_nofork(vars, p);

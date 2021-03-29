@@ -347,24 +347,31 @@ $FISH -c 'set -q testu; or echo testu undef in sub shell'
 
 # test SHLVL
 # use a subshell to ensure a clean slate
-env SHLVL= $FISH -c 'echo SHLVL: $SHLVL; $FISH -c \'echo SHLVL: $SHLVL\''
+env SHLVL= $FISH -ic 'echo SHLVL: $SHLVL; $FISH -ic \'echo SHLVL: $SHLVL\''
 # CHECK: SHLVL: 1
 # CHECK: SHLVL: 2
 
-# exec should decrement SHLVL
-env SHLVL= $FISH -c 'echo SHLVL: $SHLVL; exec $FISH -c \'echo SHLVL: $SHLVL\''
-# CHECK: SHLVL: 1
-# CHECK: SHLVL: 1
+# exec should decrement SHLVL - outer fish increments by 1, decrements for exec,
+# inner fish increments again so the value stays the same.
+env SHLVL=1 $FISH -ic 'echo SHLVL: $SHLVL; exec $FISH -ic \'echo SHLVL: $SHLVL\''
+# CHECK: SHLVL: 2
+# CHECK: SHLVL: 2
 
 # garbage SHLVLs should be treated as garbage
-env SHLVL=3foo $FISH -c 'echo SHLVL: $SHLVL'
+env SHLVL=3foo $FISH -ic 'echo SHLVL: $SHLVL'
 # CHECK: SHLVL: 1
 
 # whitespace is allowed though (for bash compatibility)
-env SHLVL="3  " $FISH -c 'echo SHLVL: $SHLVL'
-env SHLVL="  3" $FISH -c 'echo SHLVL: $SHLVL'
+env SHLVL="3  " $FISH -ic 'echo SHLVL: $SHLVL'
+env SHLVL="  3" $FISH -ic 'echo SHLVL: $SHLVL'
 # CHECK: SHLVL: 4
 # CHECK: SHLVL: 4
+
+# Non-interactive fish doesn't touch $SHLVL
+env SHLVL=2 $FISH -c 'echo SHLVL: $SHLVL'
+# CHECK: SHLVL: 2
+env SHLVL=banana $FISH -c 'echo SHLVL: $SHLVL'
+# CHECK: SHLVL: banana
 
 # Test transformation of inherited variables
 env DISPLAY="localhost:0.0" $FISH -c 'echo Elements in DISPLAY: (count $DISPLAY)'

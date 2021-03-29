@@ -351,16 +351,23 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore
     // was not inherited from the environment.
-    wcstring nshlvl_str = L"1";
-    if (const char *shlvl_var = getenv("SHLVL")) {
-        const wchar_t *end;
-        // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
-        long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
-        if (!errno && shlvl_i >= 0) {
-            nshlvl_str = to_string(shlvl_i + 1);
+    if (is_interactive_session()) {
+        wcstring nshlvl_str = L"1";
+        if (const char *shlvl_var = getenv("SHLVL")) {
+            const wchar_t *end;
+            // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
+            long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
+            if (!errno && shlvl_i >= 0) {
+                nshlvl_str = to_string(shlvl_i + 1);
+            }
+        }
+        vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
+    } else {
+        // If we're not interactive, simply pass the value along.
+        if (const char *shlvl_var = getenv("SHLVL")) {
+            vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, str2wcstring(shlvl_var));
         }
     }
-    vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
 
     // initialize the PWD variable if necessary
     // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that

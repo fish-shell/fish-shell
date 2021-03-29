@@ -22,6 +22,8 @@ Keep in mind that parameter expansion happens before expressions are evaluated. 
 
 ``math`` ignores whitespace between arguments and takes its input as multiple arguments (internally joined with a space), so ``math 2 +2`` and ``math "2 +    2"`` work the same. ``math 2 2`` is an error.
 
+Parentheses for functions are optional - ``math sin pi`` prints ``0``.
+
 The following options are available:
 
 - ``-sN`` or ``--scale=N`` sets the scale of the result. ``N`` must be an integer or the word "max" for the maximum scale. A scale of zero causes results to be rounded down to the nearest integer. So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to. This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0. Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.

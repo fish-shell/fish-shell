@@ -121,8 +121,8 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 }
 
 /// The jobs builtin. Used for printing running jobs. Defined in builtin_jobs.c.
-maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bool found = false;
     int mode = JOBS_DEFAULT;

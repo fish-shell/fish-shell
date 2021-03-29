@@ -2500,29 +2500,42 @@ void reader_data_t::super_highlight_me_plenty() {
 }
 
 void reader_data_t::finish_highlighting_before_exec() {
+    // Early-out if highlighting is not OK.
     if (!conf.highlight_ok) return;
-    if (in_flight_highlight_request.empty()) return;
 
-    // We have an in-flight highlight request scheduled.
-    // Wait for its completion to run, but not forever.
-    namespace sc = std::chrono;
-    auto now = sc::steady_clock::now();
-    auto deadline = now + sc::milliseconds(kHighlightTimeoutForExecutionMs);
-    while (now < deadline) {
-        long timeout_usec = sc::duration_cast<sc::microseconds>(deadline - now).count();
-        iothread_service_main_with_timeout(timeout_usec);
+    // Decide if our current highlighting is OK. If not we will do a quick highlight without I/O.
+    bool current_highlight_ok = false;
+    if (in_flight_highlight_request.empty()) {
+        // There is no in-flight highlight request. Two possibilities:
+        // 1: The user hit return after highlighting finished, so current highlighting is correct.
+        // 2: The user hit return before highlighting started, so current highlighting is stale.
+        // We can distinguish these based on what we last rendered.
+        current_highlight_ok = (this->rendered_layout.text == command_line.text());
+    } else if (in_flight_highlight_request == command_line.text()) {
+        // The user hit return while our in-flight highlight request was still processing the text.
+        // Wait for its completion to run, but not forever.
+        namespace sc = std::chrono;
+        auto now = sc::steady_clock::now();
+        auto deadline = now + sc::milliseconds(kHighlightTimeoutForExecutionMs);
+        while (now < deadline) {
+            long timeout_usec = sc::duration_cast<sc::microseconds>(deadline - now).count();
+            iothread_service_main_with_timeout(timeout_usec);
 
-        // Note iothread_service_main_with_timeout will reentrantly modify us,
-        // by invoking a completion.
-        if (in_flight_highlight_request.empty()) break;
-        now = sc::steady_clock::now();
+            // Note iothread_service_main_with_timeout will reentrantly modify us,
+            // by invoking a completion.
+            if (in_flight_highlight_request.empty()) break;
+            now = sc::steady_clock::now();
+        }
+
+        // If our in_flight_highlight_request is now empty, it means it completed and we highlighted
+        // successfully.
+        current_highlight_ok = in_flight_highlight_request.empty();
     }
 
-    if (!in_flight_highlight_request.empty()) {
-        // We did not complete before the deadline.
-        // Give up and highlight without I/O.
-        const editable_line_t *el = &command_line;
-        auto highlight_no_io = get_highlight_performer(parser(), el->text(), false /* io not ok */);
+    if (!current_highlight_ok) {
+        // We need to do a quick highlight without I/O.
+        auto highlight_no_io =
+            get_highlight_performer(parser(), command_line.text(), false /* io not ok */);
         this->highlight_complete(highlight_no_io());
     }
 }
@@ -3993,8 +4006,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     if (this->is_repaint_needed() || conf.in != STDIN_FILENO)
         this->layout_and_repaint(L"prepare to execute");
 
-    // Finish any outstanding syntax highlighting (but do not wait forever).
-    finish_highlighting_before_exec();
+    // Finish syntax highlighting (but do not wait forever).
+    if (rls.finished) {
+        finish_highlighting_before_exec();
+    }
 
     // Emit a newline so that the output is on the line after the command.
     // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.

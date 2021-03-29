@@ -177,11 +177,6 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     return 1;
 }
 
-int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end,
-                               bool accept_incomplete) {
-    return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'(', L')');
-}
-
 int parse_util_locate_slice(const wchar_t *in, wchar_t **begin, wchar_t **end,
                             bool accept_incomplete) {
     return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'[', L']');
@@ -254,7 +249,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
     const wchar_t *pos = buff;
     for (;;) {
         wchar_t *begin = nullptr, *end = nullptr;
-        if (parse_util_locate_cmdsubst(pos, &begin, &end, true) <= 0) {
+        if (parse_util_locate_brackets_of_type(pos, &begin, &end, true, L'(', L')') <= 0) {
             // No subshell found, all done.
             break;
         }
@@ -810,9 +805,7 @@ static int parser_is_pipe_forbidden(const wcstring &word) {
     return contains(forbidden_pipe_commands, word);
 }
 
-bool parse_util_argument_is_help(const wchar_t *s) {
-    return std::wcscmp(L"-h", s) == 0 || std::wcscmp(L"--help", s) == 0;
-}
+bool parse_util_argument_is_help(const wcstring &s) { return s == L"-h" || s == L"--help"; }
 
 // \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
 // there are no arguments.
@@ -1131,7 +1124,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     bool first_arg_is_help = false;
     if (const auto *arg = get_first_arg(dst.args_or_redirs)) {
         const wcstring &arg_src = arg->source(buff_src, storage);
-        first_arg_is_help = parse_util_argument_is_help(arg_src.c_str());
+        first_arg_is_help = parse_util_argument_is_help(arg_src);
     }
 
     // Get the statement we are part of.

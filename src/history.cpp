@@ -1139,32 +1139,33 @@ void history_impl_t::populate_from_config_path() {
 static bool should_import_bash_history_line(const wcstring &line) {
     if (line.empty()) return false;
 
-    if (ast::ast_t::parse(line).errored()) return false;
-
-    // In doing this test do not allow incomplete strings. Hence the "false" argument.
-    parse_error_list_t errors;
-    parse_util_detect_errors(line, &errors);
-    if (!errors.empty()) return false;
-
     // The following are Very naive tests!
 
     // Skip comments.
     if (line[0] == '#') return false;
 
-    // Skip lines with backticks.
-    if (line.find('`') != std::string::npos) return false;
+    // Skip lines with backticks because we don't have that syntax,
+    // Skip brace expansions and globs because they don't work like ours
+    // Skip lines with literal tabs since we don't handle them well and we don't know what they
+    // mean. It could just be whitespace or it's actually passed somewhere (like e.g. `sed`).
+    // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
+    if (line.find_first_of(L"`{*\t\\") != std::string::npos) return false;
 
     // Skip lines with [[...]] and ((...)) since we don't handle those constructs.
     if (line.find(L"[[") != std::string::npos) return false;
     if (line.find(L"]]") != std::string::npos) return false;
     if (line.find(L"((") != std::string::npos) return false;
     if (line.find(L"))") != std::string::npos) return false;
-    // Skip lines with literal tabs since we don't handle them well and we don't know what they
-    // mean. It could just be whitespace or it's actually passed somewhere (like e.g. `sed`).
-    if (line.find(L'\t') != std::string::npos) return false;
+    // "<<" here is a proxy for heredocs (and herestrings).
+    if (line.find(L"<<") != std::string::npos) return false;
 
-    // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
-    if (line.back() == L'\\') return false;
+
+    if (ast::ast_t::parse(line).errored()) return false;
+
+    // In doing this test do not allow incomplete strings. Hence the "false" argument.
+    parse_error_list_t errors;
+    parse_util_detect_errors(line, &errors);
+    if (!errors.empty()) return false;
 
     return true;
 }
@@ -1240,8 +1241,6 @@ wcstring history_session_id(const environment_t &vars) {
         wcstring session_id = var->as_string();
         if (session_id.empty()) {
             result.clear();
-        } else if (session_id == L"default") {
-            // using the default value
         } else if (valid_var_name(session_id)) {
             result = session_id;
         } else {

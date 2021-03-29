@@ -23,9 +23,9 @@ static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h
                                               {L"index", no_argument, nullptr, 'i'},
                                               {nullptr, 0, nullptr, 0}};
 
-static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
+static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -58,7 +58,7 @@ static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, wcha
 
 /// Implementation of the builtin contains command, used to check if a specified string is part of
 /// a list.
-maybe_t<int> builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_contains(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     contains_cmd_opts_t opts;
@@ -72,7 +72,7 @@ maybe_t<int> builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t *
         return STATUS_CMD_OK;
     }
 
-    wchar_t *needle = argv[optind];
+    const wchar_t *needle = argv[optind];
     if (!needle) {
         streams.err.append_format(_(L"%ls: Key not specified\n"), cmd);
     } else {

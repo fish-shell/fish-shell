@@ -271,8 +271,12 @@ void process_t::check_generations_before_launch() {
 }
 
 void process_t::mark_aborted_before_launch() {
-    completed = true;
-    status = proc_status_t::from_exit_code(EXIT_FAILURE);
+    this->completed = true;
+    // The status may have already been set to e.g. STATUS_NOT_EXECUTABLE.
+    // Only stomp a successful status.
+    if (this->status.is_success()) {
+        this->status = proc_status_t::from_exit_code(EXIT_FAILURE);
+    }
 }
 
 bool process_t::is_internal() const {

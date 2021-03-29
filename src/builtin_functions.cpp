@@ -42,8 +42,8 @@ struct functions_cmd_opts_t {
     bool report_metadata = false;
     bool verbose = false;
     bool handlers = false;
-    wchar_t *handlers_type = nullptr;
-    wchar_t *description = nullptr;
+    const wchar_t *handlers_type = nullptr;
+    const wchar_t *description = nullptr;
 };
 static const wchar_t *const short_options = L":Ht:Dacd:ehnqv";
 static const struct woption long_options[] = {{L"erase", no_argument, nullptr, 'e'},
@@ -60,8 +60,8 @@ static const struct woption long_options[] = {{L"erase", no_argument, nullptr, '
                                               {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -184,7 +184,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
 }
 
 /// The functions builtin, used for listing and erasing functions.
-maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     functions_cmd_opts_t opts;
@@ -212,15 +212,13 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t 
     }
 
     if (opts.description) {
-        wchar_t *func;
-
         if (argc - optind != 1) {
             streams.err.append_format(_(L"%ls: Expected exactly one function name\n"), cmd);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
 
-        func = argv[optind];
+        const wchar_t *func = argv[optind];
         if (!function_exists(func, parser)) {
             streams.err.append_format(_(L"%ls: Function '%ls' does not exist\n"), cmd, func);
             builtin_print_error_trailer(parser, streams.err, cmd);

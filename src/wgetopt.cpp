@@ -65,11 +65,11 @@
 //
 // `first_nonopt' and `last_nonopt' are relocated so that they describe the new indices of the
 // non-options in ARGV after they are moved.
-void wgetopter_t::exchange(wchar_t **argv) {
+void wgetopter_t::exchange(string_array_t argv) {
     int bottom = first_nonopt;
     int middle = last_nonopt;
     int top = woptind;
-    wchar_t *tem;
+    const wchar_t *tem{};
 
     // Exchange the shorter segment with the far end of the longer segment. That puts the shorter
     // segment into the right place. It leaves the longer segment in the right place overall, but it
@@ -139,7 +139,7 @@ void wgetopter_t::_wgetopt_initialize(const wchar_t *optstring) {
 
 // Advance to the next ARGV-element.
 int wgetopter_t::_advance_to_next_argv(  //!OCLINT(high cyclomatic complexity)
-    int argc, wchar_t **argv, const struct woption *longopts) {
+    int argc, string_array_t argv, const struct woption *longopts) {
     if (ordering == PERMUTE) {
         // If we have just processed some options following some non-options, exchange them so
         // that the options come first.
@@ -196,7 +196,7 @@ int wgetopter_t::_advance_to_next_argv(  //!OCLINT(high cyclomatic complexity)
 }
 
 // Check for a matching short opt.
-int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
+int wgetopter_t::_handle_short_opt(int argc, string_array_t argv) {
     // Look at and handle the next short option-character.
     wchar_t c = *nextchar++;
     const wchar_t *temp = std::wcschr(shortopts, c);
@@ -254,8 +254,9 @@ int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
     return c;
 }
 
-void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woption *pfound,
-                                   wchar_t *nameend, int *longind, int option_index, int *retval) {
+void wgetopter_t::_update_long_opt(int argc, string_array_t argv, const struct woption *pfound,
+                                   const wchar_t *nameend, int *longind, int option_index,
+                                   int *retval) {
     woptind++;
     if (*nameend) {
         // Don't test has_arg with >, because some C compilers don't allow it to be used on
@@ -301,8 +302,8 @@ void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woptio
 
 // Find a matching long opt.
 const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption *longopts,
-                                                           wchar_t *nameend, int *exact, int *ambig,
-                                                           int *indfound) const {
+                                                           const wchar_t *nameend, int *exact,
+                                                           int *ambig, int *indfound) const {
     const struct woption *pfound = nullptr;
     int option_index = 0;
 
@@ -330,13 +331,13 @@ const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption 
 }
 
 // Check for a matching long opt.
-bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woption *longopts,
+bool wgetopter_t::_handle_long_opt(int argc, string_array_t argv, const struct woption *longopts,
                                    int *longind, int long_only, int *retval) {
     int exact = 0;
     int ambig = 0;
     int indfound = 0;
 
-    wchar_t *nameend;
+    const wchar_t *nameend;
     for (nameend = nextchar; *nameend && *nameend != '='; nameend++)
         ;  //!OCLINT(empty body)
 
@@ -419,7 +420,7 @@ bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woptio
 // long-named option has been found by the most recent call.
 //
 // If LONG_ONLY is nonzero, '-' as well as '--' can introduce long-named options.
-int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *optstring,
+int wgetopter_t::_wgetopt_internal(int argc, string_array_t argv, const wchar_t *optstring,
                                    const struct woption *longopts, int *longind, int long_only) {
     if (!initialized) _wgetopt_initialize(optstring);
     woptarg = nullptr;
@@ -452,7 +453,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
     return _handle_short_opt(argc, argv);
 }
 
-int wgetopter_t::wgetopt_long(int argc, wchar_t **argv, const wchar_t *options,
+int wgetopter_t::wgetopt_long(int argc, string_array_t argv, const wchar_t *options,
                               const struct woption *long_options, int *opt_index) {
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 0);
 }

@@ -188,8 +188,8 @@ bool builtin_bind_t::add(const wcstring &seq, const wchar_t *const *cmds, size_t
 /// @param  use_terminfo
 ///    Whether to look use terminfo -k name
 ///
-bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo,
-                           bool user, io_streams_t &streams) {
+bool builtin_bind_t::erase(const wchar_t *const *seq, bool all, const wchar_t *mode,
+                           bool use_terminfo, bool user, io_streams_t &streams) {
     if (all) {
         input_mappings_->clear(mode, user);
         return false;
@@ -214,8 +214,8 @@ bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool us
     return res;
 }
 
-bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
 
     if (arg_count < 2) {
@@ -300,8 +300,8 @@ void builtin_bind_t::list_modes(io_streams_t &streams) {
 }
 
 static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":aehkKfM:Lm:s";
     static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'},
                                                   {L"erase", no_argument, nullptr, 'e'},
@@ -399,8 +399,9 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
 }
 
 /// The bind builtin, used for setting character sequences.
-maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams,
+                                          const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bind_cmd_opts_t opts;
     this->opts = &opts;

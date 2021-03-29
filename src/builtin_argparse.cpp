@@ -321,9 +321,9 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts,  //!OCLINT(high npath c
     return true;
 }
 
-static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
-                                io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc,
+                                const wchar_t **argv, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
 
     // A counter to give short chars to long-only options because getopt needs that.
     // Luckily we have wgetopt so we can use wchars - this is one of the private use areas so we
@@ -360,8 +360,8 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
 }
 
 static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -564,7 +564,7 @@ static int handle_flag(parser_t &parser, const argparse_cmd_opts_t &opts, option
 
 static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
                                 const wchar_t *short_options, const woption *long_options,
-                                const wchar_t *cmd, int argc, wchar_t **argv, int *optind,
+                                const wchar_t *cmd, int argc, const wchar_t **argv, int *optind,
                                 io_streams_t &streams) {
     int opt;
     int long_idx = -1;
@@ -704,7 +704,7 @@ static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_
 /// an external command also means its output has to be in a form that can be eval'd. Because our
 /// version is a builtin it can directly set variables local to the current scope (e.g., a
 /// function). It doesn't need to write anything to stdout that then needs to be eval'd.
-maybe_t<int> builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_argparse(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     argparse_cmd_opts_t opts;

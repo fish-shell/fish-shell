@@ -1,11 +1,13 @@
 #RUN: %fish -C 'set -g fish %fish' %s
 #REQUIRES: command -v tmux
+# Don't run this on GitHub Actions since it's flaky.
+#REQUIRES: test "$CI" != true
 
 # Isolated tmux.
 set -g tmpdir (mktemp -d)
 set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null
 
-set -g sleep sleep .3 # TSan tests in the CI failed with .1.
+set -g sleep sleep .1
 
 set fish (realpath $fish)
 cd $tmpdir
@@ -17,7 +19,7 @@ $tmux new-session -d $fish -C '
     # No autosuggestion from older history.
     set fish_history ""
 '
-$tmux resize-window -x 80 -y 10
+$tmux resize-pane -x 80 -y 10
 $sleep # Let fish draw a prompt.
 
 # Don't escape existing token (#7526).

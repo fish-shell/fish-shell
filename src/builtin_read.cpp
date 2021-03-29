@@ -80,8 +80,8 @@ static const struct woption long_options[] = {{L"array", no_argument, nullptr, '
                                               {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -434,8 +434,8 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
-maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     wcstring buff;
     int exit_res = STATUS_CMD_OK;
@@ -475,7 +475,7 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **arg
         opts.shell = false;
     }
 
-    wchar_t *const *var_ptr = argv;
+    const wchar_t *const *var_ptr = argv;
     auto vars_left = [&]() { return argv + argc - var_ptr; };
     auto clear_remaining_vars = [&]() {
         while (vars_left()) {

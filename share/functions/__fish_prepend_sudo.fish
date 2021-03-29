@@ -1,9 +1,14 @@
 function __fish_prepend_sudo -d "Prepend 'sudo ' to the beginning of the current commandline"
+    # If there is no commandline, insert the last item from history
+    # and *then* toggle
+    if not commandline | string length -q
+        commandline -r "$history[1]"
+    end
+
     set -l cmd (commandline -po)
     set -l cursor (commandline -C)
-    if test -z "$cmd"
-        commandline -r "sudo $history[1]"
-    else if test "$cmd[1]" != sudo
+
+    if test "$cmd[1]" != sudo
         commandline -C 0
         commandline -i "sudo "
         commandline -C (math $cursor + 5)

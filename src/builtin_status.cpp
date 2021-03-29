@@ -82,7 +82,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
 /// Values that may be returned from the test-feature option to status.
 enum { TEST_FEATURE_ON, TEST_FEATURE_OFF, TEST_FEATURE_NOT_RECOGNIZED };
 
-static maybe_t<job_control_t> job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd,
+static maybe_t<job_control_t> job_control_str_to_mode(const wchar_t *mode, const wchar_t *cmd,
                                                       io_streams_t &streams) {
     if (std::wcscmp(mode, L"full") == 0) {
         return job_control_t::all;
@@ -129,7 +129,7 @@ static const struct woption long_options[] = {
     {nullptr, 0, nullptr, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
-static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,
+static bool set_status_cmd(const wchar_t *cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,
                            io_streams_t &streams) {
     if (opts.status_cmd != STATUS_UNDEF) {
         wchar_t err_text[1024];
@@ -156,8 +156,8 @@ static void print_features(io_streams_t &streams) {
 }
 
 static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    wchar_t *cmd = argv[0];
+                          int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -274,8 +274,8 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
 }
 
 /// The status builtin. Gives various status information on fish.
-maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
+maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     status_cmd_opts_t opts;
 

@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <paths.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
@@ -39,6 +40,7 @@
 /// Fork error message.
 #define FORK_ERROR "Could not create child process - exiting"
 
+extern bool is_thompson_shell_script(const char *path);
 static char *get_interpreter(const char *command, char *buffer, size_t buff_size);
 
 /// Report the error code \p err for a failed setpgid call.
@@ -300,7 +302,28 @@ posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
 maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char *const envp[]) {
     if (get_error()) return none();
     pid_t pid = -1;
-    if (check_fail(posix_spawn(&pid, cmd, &*actions_, &*attr_, argv, envp))) return none();
+    if (check_fail(posix_spawn(&pid, cmd, &*actions_, &*attr_, argv, envp))) {
+        // The shebang wasn't introduced until UNIX Seventh Edition, so if
+        // the kernel won't run the binary we hand it off to the intpreter
+        // after performing a binary safety check, recommended by POSIX: a
+        // line needs to exist before the first \0 with a lowercase letter
+        if (error_ == ENOEXEC && is_thompson_shell_script(cmd)) {
+            error_ = 0;
+            // Create a new argv with /bin/sh prepended.
+            std::vector<char *> argv2;
+            char interp[] = _PATH_BSHELL;
+            argv2.push_back(interp);
+            for (size_t i = 0; argv[i] != nullptr; i++) {
+                argv2.push_back(argv[i]);
+            }
+            argv2.push_back(nullptr);
+            if (check_fail(posix_spawn(&pid, interp, &*actions_, &*attr_, &argv2[0], envp))) {
+                return none();
+            }
+        } else {
+            return none();
+        }
+    }
     return pid;
 }
 

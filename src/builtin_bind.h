@@ -11,7 +11,7 @@ struct bind_cmd_opts_t;
 
 class builtin_bind_t {
    public:
-    maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv);
+    maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
 
     builtin_bind_t() : input_mappings_(input_mappings()) {}
 
@@ -28,17 +28,17 @@ class builtin_bind_t {
     void function_names(io_streams_t &streams);
     bool add(const wcstring &seq, const wchar_t *const *cmds, size_t cmds_len, const wchar_t *mode,
              const wchar_t *sets_mode, bool terminfo, bool user, io_streams_t &streams);
-    bool erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool user,
-               io_streams_t &streams);
+    bool erase(const wchar_t *const *seq, bool all, const wchar_t *mode, bool use_terminfo,
+               bool user, io_streams_t &streams);
     bool get_terminfo_sequence(const wcstring &seq, wcstring *out_seq, io_streams_t &streams) const;
-    bool insert(int optind, int argc, wchar_t **argv, io_streams_t &streams);
+    bool insert(int optind, int argc, const wchar_t **argv, io_streams_t &streams);
     void list_modes(io_streams_t &streams);
     bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, io_streams_t &streams);
     bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool preset,
                   io_streams_t &streams);
 };
 
-inline maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+inline maybe_t<int> builtin_bind(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     builtin_bind_t bind;
     return bind.builtin_bind(parser, streams, argv);
 }

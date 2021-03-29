@@ -64,6 +64,10 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars);
 maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &vars);
 
+/// Returns the given directory with all CDPATH components applied.
+wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
+                                  const environment_t &env_vars);
+
 /// Returns the path resolved as an implicit cd command, or none() if none. This requires it to
 /// start with one of the allowed prefixes (., .., ~) and resolve to a directory.
 maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,

@@ -762,7 +762,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
             case s_initial_punctuation: {
                 if (!is_path_component_character(c) && !iswspace(c)) {
                     state = s_initial_separator;
-                } else{
+                } else {
                     if (!is_path_component_character(c)) {
                         consumed = true;
                     }

@@ -43,10 +43,10 @@ static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h
                                               {L"quiet", no_argument, nullptr, 'q'},
                                               {nullptr, 0, nullptr, 0}};
 
-static int parse_cmd_opts(type_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
+static int parse_cmd_opts(type_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     UNUSED(parser);
-    wchar_t *cmd = argv[0];
+    const wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -102,7 +102,7 @@ static int parse_cmd_opts(type_cmd_opts_t &opts, int *optind, int argc, wchar_t 
 }
 
 /// Implementation of the builtin 'type'.
-maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);

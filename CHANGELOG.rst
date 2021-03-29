@@ -12,13 +12,22 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
+- ``math`` now has a ``log2`` function like the documentation already claimed.
+- Shebang lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke the file using `/bin/sh` (:issue:`7802`).
+- Exit codes are better aligned with bash. A failed exec now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
 
 Interactive improvements
 -------------------------
 - When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - Arguments longer than 1024 characters no longer trigger excessive CPU usage on Mac (:issue:`7837`).
-- When ``backward-kill-path-component`` is triggered with separator under cursor, subsequent separators and a word (if there are any) will be consumed (:issue:`6258`).
+- Commands entered before the previous command finishes will now be properly syntax highlighted.
+
+- Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
+- ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
+- Fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
+- ``math`` learned two new functions, ``max`` and ``min`.
+- ``backward-kill-path-component`` (Control+W) no longer erases parts of two tokens when the cursor is positioned immediately after `` /``. (:issue:`6258`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -28,6 +37,7 @@ Improved prompts
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- *This placeholder silences a sphinx doc warning, so the last section is not empty.*
 
 --------------
 

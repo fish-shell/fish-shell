@@ -22,7 +22,7 @@
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.
-maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
@@ -93,10 +93,14 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **a
     auto &ld = parser.libdata();
     scoped_push<const wchar_t *> filename_push{&ld.current_filename, fn_intern};
 
+    // Construct argv from our null-terminated list.
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
-    wcstring_list_t argv_list =
-        null_terminated_array_t<wchar_t>::to_list(argv + optind + (argc == optind ? 0 : 1));
+    wcstring_list_t argv_list;
+    const wchar_t *const *remaining_args = argv + optind + (argc == optind ? 0 : 1);
+    for (size_t i = 0, len = null_terminated_array_length(remaining_args); i < len; i++) {
+        argv_list.push_back(remaining_args[i]);
+    }
     parser.vars().set_argv(std::move(argv_list));
 
     retval = reader_read(parser, fd, streams.io_chain ? *streams.io_chain : io_chain_t());

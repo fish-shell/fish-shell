@@ -534,7 +534,7 @@ class env_scoped_impl_t : public environment_t {
 
     ~env_scoped_impl_t() override = default;
 
-    std::shared_ptr<const null_terminated_array_t<char>> export_array();
+    std::shared_ptr<owning_null_terminated_array_t> export_array();
 
     env_scoped_impl_t(env_scoped_impl_t &&) = delete;
     env_scoped_impl_t(const env_scoped_impl_t &) = delete;
@@ -552,7 +552,7 @@ class env_scoped_impl_t : public environment_t {
     perproc_data_t perproc_data_{};
 
     // Exported variable array used by execv.
-    std::shared_ptr<const null_terminated_array_t<char>> export_array_{};
+    std::shared_ptr<owning_null_terminated_array_t> export_array_{};
 
     // Cached list of export generations corresponding to the above export_array_.
     // If this differs from the current export generations then we need to regenerate the array.
@@ -584,7 +584,7 @@ class env_scoped_impl_t : public environment_t {
     bool export_array_needs_regeneration() const;
 
     /// \return a newly allocated export array.
-    std::shared_ptr<const null_terminated_array_t<char>> create_export_array() const;
+    std::shared_ptr<owning_null_terminated_array_t> create_export_array() const;
 };
 
 /// Get the exported variables into a variable table.
@@ -631,8 +631,7 @@ bool env_scoped_impl_t::export_array_needs_regeneration() const {
     return mismatch;
 }
 
-std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_export_array()
-    const {
+std::shared_ptr<owning_null_terminated_array_t> env_scoped_impl_t::create_export_array() const {
     var_table_t table;
 
     FLOG(env_export, L"create_export_array() recalc");
@@ -665,10 +664,10 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
         str.append(wcs2string(kv.second.as_string()));
         export_list.push_back(std::move(str));
     }
-    return std::make_shared<null_terminated_array_t<char>>(export_list);
+    return std::make_shared<owning_null_terminated_array_t>(std::move(export_list));
 }
 
-std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::export_array() {
+std::shared_ptr<owning_null_terminated_array_t> env_scoped_impl_t::export_array() {
     ASSERT_IS_NOT_FORKED_CHILD();
     if (export_array_needs_regeneration()) {
         export_array_ = create_export_array();
@@ -1341,7 +1340,7 @@ int env_stack_t::remove(const wcstring &key, int mode, std::vector<event_t> *out
     return ret.status;
 }
 
-std::shared_ptr<const null_terminated_array_t<char>> env_stack_t::export_arr() {
+std::shared_ptr<owning_null_terminated_array_t> env_stack_t::export_arr() {
     return acquire_impl()->export_array();
 }
 

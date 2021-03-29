@@ -87,7 +87,7 @@ for condition in query sync
     complete -c aura -n $$condition -s s -l search -r -d 'Search packages for regexp'
 end
 
-for condition in abs aur
+for condition in aur
     complete -c aura -n $$condition -s a -l delmakedeps -d 'Remove packages only needed during installation'
     complete -c aura -n $$condition -s d -l deps -d 'View package dependencies'
     complete -c aura -n $$condition -s i -l info -d 'View package information'

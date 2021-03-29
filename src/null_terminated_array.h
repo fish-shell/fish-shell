@@ -4,84 +4,78 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "common.h"
 
-wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
-char **make_null_terminated_array(const std::vector<std::string> &lst);
-
-// Helper class for managing a null-terminated array of null-terminated strings (of some char type).
-template <typename CharT>
+/// This supports the null-terminated array of NUL-terminated strings consumed by exec.
+/// Given a list of strings, construct a vector of pointers to those strings contents.
+/// This is used for building null-terminated arrays of null-terminated strings.
+/// *Important*: the vector stores pointers into the interior of the input strings, which may be
+/// subject to the small-string optimization. This means that pointers will be left dangling if any
+/// input string is deallocated *or moved*. This class should only be used in transient calls.
+template <typename T>
 class null_terminated_array_t {
-    using string_list_t = std::vector<std::basic_string<CharT>>;
-
-    CharT **array{nullptr};
-
-    // No assignment or copying.
-    void operator=(null_terminated_array_t rhs) = delete;
-    null_terminated_array_t(const null_terminated_array_t &) = delete;
-
-    size_t size() const {
-        size_t len = 0;
-        if (array != nullptr) {
-            while (array[len] != nullptr) {
-                len++;
-            }
-        }
-        return len;
-    }
-
-    void free(void) {
-        ::free(reinterpret_cast<void *>(array));
-        array = nullptr;
-    }
-
    public:
-    null_terminated_array_t() = default;
-
-    explicit null_terminated_array_t(const string_list_t &argv)
-        : array(make_null_terminated_array(argv)) {}
-
-    ~null_terminated_array_t() { this->free(); }
-
-    null_terminated_array_t(null_terminated_array_t &&rhs) : array(rhs.array) {
-        rhs.array = nullptr;
+    /// \return the list of pointers, appropriate for envp or argv.
+    /// Note this returns a mutable array of const strings. The caller may rearrange the strings but
+    /// not modify their contents.
+    const T **get() {
+        assert(!pointers_.empty() && pointers_.back() == nullptr && "Should have null terminator");
+        return &pointers_[0];
     }
 
-    null_terminated_array_t operator=(null_terminated_array_t &&rhs) {
-        free();
-        array = rhs.array;
-        rhs.array = nullptr;
-    }
-
-    void set(const string_list_t &argv) {
-        this->free();
-        this->array = make_null_terminated_array(argv);
-    }
-
-    /// Convert from a null terminated list to a vector of strings.
-    static string_list_t to_list(const CharT *const *arr) {
-        string_list_t result;
-        for (auto cursor = arr; cursor && *cursor; cursor++) {
-            result.push_back(*cursor);
+    // Construct from a list of strings (std::string or wcstring).
+    // This holds pointers into the strings.
+    explicit null_terminated_array_t(const std::vector<std::basic_string<T>> &strs) {
+        pointers_.reserve(strs.size() + 1);
+        for (const auto &s : strs) {
+            pointers_.push_back(s.c_str());
         }
-        return result;
+        pointers_.push_back(nullptr);
     }
 
-    /// Instance method.
-    string_list_t to_list() const { return to_list(array); }
+    // Because this class holds unowned pointers, it should not be copied or moved.
+    null_terminated_array_t(const null_terminated_array_t &) = delete;
+    null_terminated_array_t(null_terminated_array_t &&) = delete;
+    void operator=(const null_terminated_array_t &) = delete;
+    void operator=(null_terminated_array_t &&) = delete;
 
-    const CharT *const *get() const { return array; }
-    CharT **get() { return array; }
-
-    void clear() { this->free(); }
+   private:
+    std::vector<const T *> pointers_{};
 };
 
-// Helper function to convert from a null_terminated_array_t<wchar_t> to a
-// null_terminated_array_t<char_t>.
-void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
-                                  null_terminated_array_t<char> *output);
+/// A container which exposes a null-terminated array of pointers to strings that it owns.
+/// This is useful for persisted null-terminated arrays, e.g. the exported environment variable
+/// list. This assumes char, since we don't need this for wchar_t.
+/// Note this class is not movable or copyable as it embeds a null_terminated_array_t.
+class owning_null_terminated_array_t {
+   public:
+    // Access the null-terminated array of nul-terminated strings, appropriate for execv().
+    const char **get() { return pointers_.get(); }
+
+    // Construct, taking ownership of a list of strings.
+    explicit owning_null_terminated_array_t(std::vector<std::string> &&strings)
+        : strings_(std::move(strings)), pointers_(strings_) {}
+
+   private:
+    const std::vector<std::string> strings_;
+    null_terminated_array_t<char> pointers_;
+};
+
+/// Helper to convert a list of wcstring to a list of std::string.
+std::vector<std::string> wide_string_list_to_narrow(const wcstring_list_t &strs);
+
+/// \return the length of a null-terminated array of pointers to something.
+template <typename T>
+size_t null_terminated_array_length(const T *const *arr) {
+    size_t idx = 0;
+    while (arr[idx] != nullptr) {
+        idx++;
+    }
+    return idx;
+}
 
 #endif  // FISH_NULL_TERMINATED_ARRAY_H

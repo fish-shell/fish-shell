@@ -207,3 +207,12 @@ math pow sin 3, 5
 
 math sin pow 3, 5
 # CHECK: -0.890009
+
+math pow 2, cos -pi
+# CHECK: 0.5
+
+# pow(2*cos(-pi), 2)
+# i.e. 2^2
+# i.e. 4
+math pow 2 x cos'(-pi)', 2
+# CHECK: 4

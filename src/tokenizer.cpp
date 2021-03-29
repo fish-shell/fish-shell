@@ -752,18 +752,22 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
         s_separator,
         s_slash,
         s_path_component_characters,
+        s_initial_separator,
         s_end
     };
 
-    // std::fwprintf(stdout, L"state %d, consume '%lc'\n", state, c);
     bool consumed = false;
     while (state != s_end && !consumed) {
         switch (state) {
             case s_initial_punctuation: {
-                if (!is_path_component_character(c)) {
-                    consumed = true;
+                if (!is_path_component_character(c) && !iswspace(c)) {
+                    state = s_initial_separator;
+                } else {
+                    if (!is_path_component_character(c)) {
+                        consumed = true;
+                    }
+                    state = s_whitespace;
                 }
-                state = s_whitespace;
                 break;
             }
             case s_whitespace: {
@@ -797,6 +801,17 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
                     consumed = true;  // consumed string character except slash
                 } else {
                     state = s_end;
+                }
+                break;
+            }
+            case s_initial_separator: {
+                if (is_path_component_character(c)) {
+                    consumed = true;
+                    state = s_path_component_characters;
+                } else if (iswspace(c)) {
+                    state = s_end;
+                } else {
+                    consumed = true;
                 }
                 break;
             }

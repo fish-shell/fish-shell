@@ -2716,10 +2716,15 @@ static void test_word_motion() {
     test_1_word_motion(word_motion_left, move_word_style_path_components, L"^/^foo/^bar/^baz/^");
     test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^--foo ^--bar^");
     test_1_word_motion(word_motion_left, move_word_style_path_components,
-                       L"^echo ^hi ^> /^dev/^null^");
+                       L"^echo ^hi ^> ^/^dev/^null^");
 
     test_1_word_motion(word_motion_left, move_word_style_path_components,
-                       L"^echo /^foo/^bar{^aaa,^bbb,^ccc}^bak/^");
+                       L"^echo ^/^foo/^bar{^aaa,^bbb,^ccc}^bak/^");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^bak ^///^");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aaa ^@ ^@^aaa^");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aaa ^a ^@^aaa^");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aaa ^@@@ ^@@^aa^");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^aa^@@  ^aa@@^a^");
 
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^a^ bcd^");
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"a^b^ cde^");

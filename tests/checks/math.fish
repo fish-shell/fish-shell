@@ -193,3 +193,17 @@ echo $status
 
 math 'log2(8)'
 # CHECK: 3
+
+# same as sin(cos(2 x pi))
+math sin cos 2 x pi
+# CHECK: 0.841471
+# Inner function binds stronger, so this is interpreted as
+# pow(sin(3,5))
+
+math pow sin 3, 5
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: 'pow sin 3, 5'
+# CHECKERR: ^
+
+math sin pow 3, 5
+# CHECK: -0.890009

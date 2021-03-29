@@ -13,8 +13,10 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - ``math`` now has a ``log2`` function like the documentation already claimed.
-- Shebang lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke the file using `/bin/sh` (:issue:`7802`).
+- Shebang lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke the file using ``/bin/sh`` (:issue:`7802`).
 - Exit codes are better aligned with bash. A failed exec now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
+- ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with linux' special API files (/proc, /sys and such) (:issue:`7836`).
+- Fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`, :issue:`7586`).
 
 Interactive improvements
 -------------------------
@@ -22,11 +24,14 @@ Interactive improvements
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - Arguments longer than 1024 characters no longer trigger excessive CPU usage on Mac (:issue:`7837`).
 - Commands entered before the previous command finishes will now be properly syntax highlighted.
-
 - Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
 - ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
 - Fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
 - ``math`` learned two new functions, ``max`` and ``min``.
+- ``$SHLVL`` is no longer incremented in non-interactive shells. This means it won't be set to values larger than 1 just because your environment happens to run some scripts in $SHELL in its startup path (:issue:`7864`).
+- Fish no longer rings the bell when flashing. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).
+- The F1 binding to open the man page for the current command now cleans the screen again with new ``less`` versions (:issue:`7863`).
+- ``fish --help`` now has a better error if the documentation wasn't installed (:issue:`7824`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

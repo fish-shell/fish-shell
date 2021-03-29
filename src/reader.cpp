@@ -1817,8 +1817,7 @@ void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
     }
 }
 
-/// Flash the screen. This function changes the color of the current line momentarily and sends a
-/// BEL to maybe flash the screen or emite a sound, depending on how it is configured.
+/// Flash the screen. This function changes the color of the current line momentarily.
 void reader_data_t::flash() {
     struct timespec pollint;
     editable_line_t *el = &command_line;

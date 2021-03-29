@@ -31,8 +31,6 @@ struct builtin_data_t {
 /// The default prompt for the read command.
 #define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""
 
-enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
-
 /// Error message on missing argument.
 #define BUILTIN_ERR_MISSING _(L"%ls: Expected argument for option %ls\n")
 

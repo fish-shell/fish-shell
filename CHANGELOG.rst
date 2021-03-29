@@ -26,8 +26,8 @@ Interactive improvements
 - Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
 - ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
 - Fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
-- ``math`` learned two new functions, ``max`` and ``min`.
 - ``backward-kill-path-component`` (Control+W) no longer erases parts of two tokens when the cursor is positioned immediately after `` /``. (:issue:`6258`).
+- ``math`` learned two new functions, ``max`` and ``min``.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

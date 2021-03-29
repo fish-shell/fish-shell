@@ -1834,11 +1834,6 @@ void reader_data_t::flash() {
 
     layout_data_t old_data = std::move(rendered_layout);
 
-    ignore_result(write(STDOUT_FILENO, "\a", 1));
-    // The write above changed the timestamp of stdout; ensure we don't therefore reset our screen.
-    // See #3693.
-    s_save_status(&screen);
-
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
     nanosleep(&pollint, nullptr);

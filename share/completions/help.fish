@@ -105,3 +105,69 @@ complete -c help -x -a releasenotes -d "Fish's release notes"
 complete -c help -x -a completions -d "How to write completions"
 complete -c help -x -a faq -d "Frequently Asked Questions"
 complete -c help -x -a fish-for-bash-users -d "Differences from bash"
+
+complete -c help -x -a argument-handling -d "How to handle arguments"
+complete -c help -x -a autoloading-functions -d "How functions are loaded"
+complete -c help -x -a brace-expansion -d "{a,b} brace expansion"
+complete -c help -x -a builtin-commands -d "An overview of fish's builtins"
+complete -c help -x -a combining-different-expansions -d "How different expansions work together"
+complete -c help -x -a combining-lists-cartesian-product -d "How lists combine"
+complete -c help -x -a command-substitution -d "(command) command substitution"
+complete -c help -x -a comments -d "# comments"
+complete -c help -x -a conditions -d "ifs and elses"
+complete -c help -x -a defining-aliases -d "How to define an alias"
+complete -c help -x -a escaping-characters -d "How \\\\ escaping works"
+complete -c help -x -a exporting-variables -d "What set -x does"
+complete -c help -x -a functions -d "How to define functions"
+complete -c help -x -a home-directory-expansion -d "~ expansion"
+complete -c help -x -a index-range-expansion -d "var[x..y] slices"
+complete -c help -x -a input-output-redirection -d "< and > redirectoins"
+complete -c help -x -a lists -d "Variables with multiple elements"
+complete -c help -x -a loops-and-blocks -d "while, for and begin"
+complete -c help -x -a more-on-universal-variables
+complete -c help -x -a overriding-variables-for-a-single-command -d "foo=bar variable overrides"
+complete -c help -x -a pager-color-variables -d "How to color the pager"
+complete -c help -x -a path-variables -d 'Why $PATH is special'
+complete -c help -x -a shell-variable-and-function-names -d 'What characters are allowed in names'
+complete -c help -x -a shell-variables
+complete -c help -x -a special-variables
+complete -c help -x -a syntax-highlighting-variables
+complete -c help -x -a syntax-overview
+complete -c help -x -a terminology
+complete -c help -x -a the-fish-language
+complete -c help -x -a the-status-variable -d '$status, the return code'
+complete -c help -x -a variable-expansion -d '$variable'
+complete -c help -x -a variable-scope -d 'Local, global and universal scope'
+complete -c help -x -a variable-scope-for-functions
+complete -c help -x -a wildcards-globbing
+complete -c help -x -a abbreviations
+complete -c help -x -a command-line-editor
+complete -c help -x -a configurable-greeting
+complete -c help -x -a copy-and-paste-kill-ring
+complete -c help -x -a custom-bindings
+complete -c help -x -a directory-stack
+complete -c help -x -a emacs-mode-commands
+complete -c help -x -a help
+complete -c help -x -a interactive-use
+complete -c help -x -a multiline-editing
+complete -c help -x -a navigating-directories
+complete -c help -x -a private-mode
+complete -c help -x -a programmable-prompt
+complete -c help -x -a programmable-title
+complete -c help -x -a searchable-command-history
+complete -c help -x -a shared-bindings
+complete -c help -x -a syntax-highlighting
+complete -c help -x -a vi-mode-commands
+complete -c help -x -a arithmetic-expansion
+complete -c help -x -a blocks-and-loops
+complete -c help -x -a builtins-and-other-commands
+complete -c help -x -a command-substitutions
+complete -c help -x -a heredocs
+complete -c help -x -a process-substitution
+complete -c help -x -a prompts -d 'How to make your own prompt'
+complete -c help -x -a quoting -d 'How "" and \'\' work'
+complete -c help -x -a special-variables
+complete -c help -x -a string-manipulation
+complete -c help -x -a test-test
+complete -c help -x -a wildcards-globs
+complete -c help -x -a frequently-asked-questions

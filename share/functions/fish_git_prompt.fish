@@ -513,22 +513,22 @@ end
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 
 function __fish_git_prompt_informative_status
-
-    set -l changedFiles (command git diff --name-status 2>/dev/null | string match -r \\w)
-    set -l stagedFiles (command git diff --staged --name-status | string match -r \\w)
-
-    set -l x (count $changedFiles)
-    set -l y (count (string match -r "U" -- $changedFiles))
-    set -l dirtystate (math $x - $y)
-    set -l x (count $stagedFiles)
-    set -l invalidstate (count (string match -r "U" -- $stagedFiles))
-    set -l stagedstate (math $x - $invalidstate)
-    set -l untrackedfiles (command git ls-files --others --exclude-standard :/ | count)
     set -l stashstate 0
     set -l stashfile "$argv[1]/logs/refs/stash"
     if set -q __fish_git_prompt_showstashstate; and test -e "$stashfile"
         set stashstate (count < $stashfile)
     end
+
+    # Use git status --porcelain.
+    # This uses the "normal" untracked mode so untracked directories are considered as 1 entry.
+    # It's quite a bit faster and unlikely anyone cares about the number of files if it's *all* of the files
+    # in that directory.
+    # The v2 format is better, but we don't actually care in this case.
+    set -l stats (string sub -l 2 (git status --porcelain -z -unormal | string split0))
+    set -l invalidstate (string match -r '^UU' $stats | count)
+    set -l stagedstate (string match -r '^[ACDMR].' $stats | count)
+    set -l dirtystate (string match -r '^.[ACDMR]' $stats | count)
+    set -l untrackedfiles (string match -r '^\?\?' $stats | count)
 
     set -l info
 

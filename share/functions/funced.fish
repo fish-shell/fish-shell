@@ -60,7 +60,7 @@ function funced --description 'Edit function definition'
 
     if test "$editor" = fish
         if functions -q -- $funcname
-            functions -- $funcname | fish_indent --no-indent | read -z init
+            functions --no-details -- $funcname | fish_indent --no-indent | read -z init
         end
 
         set -l prompt 'printf "%s%s%s> " (set_color green) '$funcname' (set_color normal)'

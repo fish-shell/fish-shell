@@ -40,6 +40,7 @@ struct functions_cmd_opts_t {
     bool query = false;
     bool copy = false;
     bool report_metadata = false;
+    bool no_metadata = false;
     bool verbose = false;
     bool handlers = false;
     const wchar_t *handlers_type = nullptr;
@@ -54,6 +55,7 @@ static const struct woption long_options[] = {{L"erase", no_argument, nullptr, '
                                               {L"query", no_argument, nullptr, 'q'},
                                               {L"copy", no_argument, nullptr, 'c'},
                                               {L"details", no_argument, nullptr, 'D'},
+                                              {L"no-details", no_argument, nullptr, 1},
                                               {L"verbose", no_argument, nullptr, 'v'},
                                               {L"handlers", no_argument, nullptr, 'H'},
                                               {L"handlers-type", required_argument, nullptr, 't'},
@@ -76,6 +78,10 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
             }
             case 'D': {
                 opts.report_metadata = true;
+                break;
+            }
+            case 1: {
+                opts.no_metadata = true;
                 break;
             }
             case 'd': {
@@ -201,6 +207,12 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
     // Erase, desc, query, copy and list are mutually exclusive.
     bool describe = opts.description != nullptr;
     if (describe + opts.erase + opts.list + opts.query + opts.copy > 1) {
+        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.report_metadata && opts.no_metadata) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -335,7 +347,9 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
             if (!opts.query) {
                 if (i != optind) streams.out.append(L"\n");
                 const wchar_t *funcname = argv[i];
-                report_function_metadata(funcname, opts.verbose, streams, parser, true);
+                if (!opts.no_metadata) {
+                    report_function_metadata(funcname, opts.verbose, streams, parser, true);
+                }
                 wcstring def = functions_def(funcname);
 
                 if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {

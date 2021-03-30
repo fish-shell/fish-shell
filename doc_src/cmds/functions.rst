@@ -39,6 +39,8 @@ The following options are available:
 
 You should not assume that only five lines will be written since we may add additional information to the output in the future.
 
+- ``--no-details`` turns off function path reporting, so just the definition will be printed.
+
 - ``-n`` or ``--names`` lists the names of all defined functions.
 
 - ``-q`` or ``--query`` tests if the specified functions exist.

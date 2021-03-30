@@ -105,3 +105,15 @@ functions t
 # CHECK: echo tttt;
 # CHECK: end
 
+functions --no-details t
+# CHECK: function t
+# CHECK: echo tttt;
+# CHECK: end
+
+functions --no-details --details t
+# CHECKERR: functions: Invalid combination of options
+# CHECKERR:
+# CHECKERR: checks/functions.fish (line {{\d+}}):
+# CHECKERR: functions --no-details --details t
+# CHECKERR: ^
+# CHECKERR: (Type 'help functions' for related documentation)

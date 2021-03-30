@@ -171,9 +171,7 @@ math "bitor(37 ^ 5, 255)"
 # CHECK: 69343999
 
 math 'log 16'
-# CHECKERR: math: Error: Missing opening parenthesis
-# CHECKERR: 'log 16'
-# CHECKERR:       ^
+# CHECK: 1.20412
 
 math 'log(16'
 # CHECKERR: math: Error: Missing closing parenthesis
@@ -195,3 +193,26 @@ echo $status
 
 math 'log2(8)'
 # CHECK: 3
+
+# same as sin(cos(2 x pi))
+math sin cos 2 x pi
+# CHECK: 0.841471
+# Inner function binds stronger, so this is interpreted as
+# pow(sin(3,5))
+
+math pow sin 3, 5
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: 'pow sin 3, 5'
+# CHECKERR: ^
+
+math sin pow 3, 5
+# CHECK: -0.890009
+
+math pow 2, cos -pi
+# CHECK: 0.5
+
+# pow(2*cos(-pi), 2)
+# i.e. 2^2
+# i.e. 4
+math pow 2 x cos'(-pi)', 2
+# CHECK: 4

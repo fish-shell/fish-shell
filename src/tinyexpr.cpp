@@ -396,41 +396,52 @@ static te_expr *base(state *s) {
 
         case TE_FUNCTION1:
         case TE_FUNCTION2:
-        case TE_FUNCTION3:
+        case TE_FUNCTION3: {
             arity = get_arity(s->type);
 
             ret = new_expr(s->type, nullptr);
             ret->function = s->function;
             next_token(s);
 
+            bool have_open = false;
             if (s->type == TOK_OPEN) {
-                int i;
-                for (i = 0; i < arity; i++) {
-                    next_token(s);
-                    ret->parameters[i] = expr(s);
-                    if (s->type != TOK_SEP) {
-                        break;
-                    }
+                // If we *have* an opening parenthesis,
+                // we need to consume it and
+                // expect a closing one.
+                have_open = true;
+                next_token(s);
+            }
+
+            int i;
+            for (i = 0; i < arity; i++) {
+                ret->parameters[i] = expr(s);
+                if (s->type != TOK_SEP) {
+                    break;
                 }
-                if (s->type == TOK_CLOSE && i == arity - 1) {
-                    next_token(s);
-                } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNEXPECTED_TOKEN) {
-                    // If we had the right number of arguments, we're missing a closing paren.
-                    if (i == arity - 1 && s->type != TOK_ERROR) {
-                        s->error = TE_ERROR_MISSING_CLOSING_PAREN;
-                    } else {
-                        // Otherwise we complain about the number of arguments *first*,
-                        // a closing parenthesis should be more obvious.
-                        s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
-                    }
-                    s->type = TOK_ERROR;
+                next_token(s);
+            }
+
+            if (!have_open && i == arity - 1) {
+                break;
+            }
+
+            if (have_open && s->type == TOK_CLOSE && i == arity - 1) {
+                // We have an opening and a closing paren, consume the closing one and done.
+                next_token(s);
+            } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNEXPECTED_TOKEN) {
+                // If we had the right number of arguments, we're missing a closing paren.
+                if (have_open && i == arity - 1 && s->type != TOK_ERROR) {
+                    s->error = TE_ERROR_MISSING_CLOSING_PAREN;
+                } else {
+                    // Otherwise we complain about the number of arguments *first*,
+                    // a closing parenthesis should be more obvious.
+                    s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 }
-            } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
                 s->type = TOK_ERROR;
-                s->error = TE_ERROR_MISSING_OPENING_PAREN;
             }
 
             break;
+        }
 
         case TOK_OPEN:
             next_token(s);

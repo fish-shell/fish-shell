@@ -189,7 +189,7 @@ The following special input functions are available:
 
 - ``togglecase-char``, toggle the capitalisation (case) of the character under the cursor
 
-- ``togglecase-selection`, toogle the capitalisation (case) of the selection
+- ``togglecase-selection``, toogle the capitalisation (case) of the selection
 
 - ``insert-line-under``, add a new line under the current line
 

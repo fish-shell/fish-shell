@@ -38,12 +38,6 @@
 #include <iterator>
 #include <utility>
 
-// Older version of libstdc++ (GCC 5 and before) need this as wutil.h includes common.h, which
-// includes <algorithm>, which includes <cmath> - meaning the functions get included into the std::
-// namespace, and including math.h later does not reimport them.
-using std::isnan;
-using std::signbit;
-
 // TODO: It would be nice not to rely on a typedef for this, especially one that can only do
 // functions with two args.
 using te_fun2 = double (*)(double, double);

@@ -39,6 +39,7 @@ New or improved bindings
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
+- The default fish_mode_prompt (used to display the vi-mode) now uses foreground instead of background colors, making it stand out less (:issue:`7880`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

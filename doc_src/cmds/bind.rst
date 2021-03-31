@@ -97,6 +97,8 @@ The following special input functions are available:
 
 - ``begin-selection``, start selecting text
 
+- ``begin-undo-group`` and ``end-undo-group``, for coalescing multiple changes into a single action that will be undone with ``undo``
+
 - ``cancel``, cancel the current commandline and replace it with a new empty one
 
 - ``cancel-commandline``, cancel the current commandline and replace it with a new empty one, leaving the old one in place with a marker to show that it was cancelled
@@ -185,6 +187,10 @@ The following special input functions are available:
 
 - ``transpose-words``, transpose two words to the left of the cursor
 
+- ``togglecase-char``, toggle the capitalisation (case) of the character under the cursor
+
+- ``togglecase-selection`, toogle the capitalisation (case) of the selection
+
 - ``insert-line-under``, add a new line under the current line
 
 - ``insert-line-over``, add a new line over the current line
@@ -198,6 +204,20 @@ The following special input functions are available:
 - ``yank``, insert the latest entry of the killring into the buffer
 
 - ``yank-pop``, rotate to the previous entry of the killring
+
+Additional functions
+--------------------
+The following functions are included as normal functions, but are particularly useful for input editing:
+
+- ``up-or-search`` and ``down-or-search``,  which move the cursor or search the history depending on the cursor position and current mode
+
+- ``edit_command_buffer``, open the visual editor (controlled by the ``VISUAL`` or ``EDITOR`` environment variables) with the current command-line contents
+
+- ``delete-or-exit``, quit the shell if the current command-line is empty, or delete the character under the cursor if not
+
+- ``fish_clipboard_copy``, copy the current selection to the system clipboard
+
+- ``fish_clipboard_paste``, paste the current selection from the system clipboard before the cursor
 
 Examples
 --------

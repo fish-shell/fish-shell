@@ -241,13 +241,13 @@ Other help pages
    :maxdepth: 1
 
    self
+   faq
    interactive
    language
    commands
-   design
+   fish_for_bash_users
    tutorial
    completions
-   faq
-   license
+   design
    relnotes 
-   fish_for_bash_users
+   license

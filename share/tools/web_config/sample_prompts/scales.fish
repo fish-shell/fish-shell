@@ -1,4 +1,4 @@
-# name: Sorin
+# name: Scales
 # author: Leonard Hecker <leonard@hecker.io>
 
 # Sources:

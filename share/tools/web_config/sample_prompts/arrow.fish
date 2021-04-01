@@ -1,11 +1,11 @@
-# name: Robbyrussell
+# name: Arrow
 # author: Bruno Ferreira Pinto, Pawel Zubrycki
 
 function fish_prompt
     set -l __last_command_exit_status $status
 
-    if not set -q -g __fish_robbyrussell_functions_defined
-        set -g __fish_robbyrussell_functions_defined
+    if not set -q -g __fish_arrow_functions_defined
+        set -g __fish_arrow_functions_defined
         function _git_branch_name
             set -l branch (git symbolic-ref --quiet HEAD 2>/dev/null)
             if set -q branch[1]

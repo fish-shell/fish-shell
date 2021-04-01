@@ -13,7 +13,7 @@ function fish_prompt
     echo -n (set_color blue)(prompt_pwd)' '
 
     set_color -o
-    if test "$USER" = root
+    if fish_is_root_user
         echo -n (set_color red)'# '
     end
     echo -n (set_color red)'❯'(set_color yellow)'❯'(set_color green)'❯ '

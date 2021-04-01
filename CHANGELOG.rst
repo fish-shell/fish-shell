@@ -9,37 +9,43 @@ Syntax changes and new commands
 
 Deprecations and removed features
 ---------------------------------
+- The ``fish_history`` value "default" is no longer an alias for "fish" (:issue:`7650`).
 
 Scripting improvements
 ----------------------
-- ``math`` now has a ``log2`` function like the documentation already claimed.
+- ``math`` gained new functions ``log2`` (like the documentation claimed), ``max`` and ``min`` (:issue:`7856`). ``math`` functions can be used without the parentheses (eg ``math sin 2 + 6``), and functions have the lowest precedence in the order of operations (:issue:`7877`).
 - Shebang lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke the file using ``/bin/sh`` (:issue:`7802`).
 - Exit codes are better aligned with bash. A failed exec now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
-- ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with linux' special API files (/proc, /sys and such) (:issue:`7836`).
-- Fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`, :issue:`7586`).
+- ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with linux' special API files (``/proc``, ``/sys`` and such) (:issue:`7836`).
+- fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`).
 
 Interactive improvements
 -------------------------
 - When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
-- Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - Arguments longer than 1024 characters no longer trigger excessive CPU usage on Mac (:issue:`7837`).
 - Commands entered before the previous command finishes will now be properly syntax highlighted.
-- Fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist.
+- fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist (:issue:`7402`).
 - ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
-- Fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
-- ``backward-kill-path-component`` (Control+W) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
-- ``math`` learned two new functions, ``max`` and ``min``.
+- fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
+- ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 - ``$SHLVL`` is no longer incremented in non-interactive shells. This means it won't be set to values larger than 1 just because your environment happens to run some scripts in $SHELL in its startup path (:issue:`7864`).
-- Fish no longer rings the bell when flashing. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).
-- The F1 binding to open the man page for the current command now cleans the screen again with new ``less`` versions (:issue:`7863`).
-- ``fish --help`` now has a better error if the documentation wasn't installed (:issue:`7824`).
+- fish no longer rings the bell when flashing the command line. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).
+- The :kbd:`F1` binding, which opens the manual page for the current command, now clears the screen with new ``less`` versions (:issue:`7863`).
+- ``fish --help`` is more helpful if the documentation isn't installed (:issue:`7824`).
+- ``funced`` won't include an entry on where a function is defined, thanks to the new ``functions --no-details`` option (:issue:`7879`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
+- Pasting in Vi mode puts text in the right place in normal mode (:issue:`7847`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
-- The default fish_mode_prompt (used to display the vi-mode) now uses foreground instead of background colors, making it stand out less (:issue:`7880`).
+- The default Vi mode prompt now uses foreground instead of background colors, making it less obtrusive (:issue:`7880`).
+- Performance of the git prompt is improved somewhat (:issue:`7871`).
+
+Completions
+^^^^^^^^^^^
+- Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -221,7 +227,7 @@ Scripting improvements
 -  ``fish --profile`` now only starts profiling after fish is ready to execute commands (all configuration is completed). There is a new ``--profile-startup`` option that only profiles the startup and configuration process (:issue:`7648`).
 -  Builtins return a maximum exit status of 255, rather than potentially overflowing. In particular, this affects ``exit``, ``return``, ``functions --query``, and ``set --query`` (:issue:`7698`, :issue:`7702`).
 - It is no longer an error to run builtin with closed stdin. For example ``count <&-`` now prints 0, instead of failing.
-- Blocks, functions, and builtins no longer permit redirecting to file descriptors other than 0 (standard input), 1 (standard output) and 2 (standard error). For example, ``echo hello >&5`` is now an error. This prevents corruption of internal state (#3303).
+- Blocks, functions, and builtins no longer permit redirecting to file descriptors other than 0 (standard input), 1 (standard output) and 2 (standard error). For example, ``echo hello >&5`` is now an error. This prevents corruption of internal state (:issue:`3303`).
 
 Interactive improvements
 ------------------------

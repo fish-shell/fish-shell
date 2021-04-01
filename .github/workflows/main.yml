@@ -48,7 +48,7 @@ jobs:
           CFLAGS: "-m32"
       run: |
         mkdir build && cd build
-        cmake ..
+        cmake -DFISH_USE_SYSTEM_PCRE2=OFF ..
     - name: make
       run: |
         make

@@ -27,7 +27,7 @@ and if test $sysver[2] = 'Darwin' -a $sysver[3] -ge 19
         #
         # the cache is rebuilt once a week.
         set -l whatis $cache/whatis
-        set -l max_age 86400 # one day
+        set -l max_age 600000 # like a week
         set -l age $max_age
 
         if test -f "$whatis"

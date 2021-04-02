@@ -8,8 +8,8 @@ end
 # https://en.wikipedia.org/wiki/Darwin_(operating_system)
 set -l sysver (uname -sr | string match -r "(Darwin) (\d\d)"\.)
 
-test $status -eq 0 -a (count $sysver) -eq 3
-and if test $sysver[2] = 'Darwin' -a $sysver[3] -ge 19
+if test $status -eq 0 -a (count $sysver) -eq 3
+    and test $sysver[2] = 'Darwin' -a $sysver[3] -ge 19
 
     if test -n "$XDG_CACHE_HOME"
         set dir $XDG_CACHE_HOME/fish
@@ -48,5 +48,4 @@ else
     function __fish_apropos
         apropos $argv
     end
-
 end

@@ -37,7 +37,7 @@ and if test $sysver[2] = 'Darwin' -a $sysver[3] -ge 19
             set age (math (date +%s) - (/usr/bin/stat -f %m $whatis))
         end
 
-        MANPATH="$dir" apropos $argv
+        MANPATH="$dir" apropos -- "^$argv"
 
         if test $age -ge $max_age
             test -d "$dir" || mkdir -m 700 -p $dir

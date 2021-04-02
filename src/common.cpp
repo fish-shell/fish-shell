@@ -547,7 +547,7 @@ void fish_setlocale() {
         obfuscation_read_char = L'*';
     } else {
         if (can_be_encoded(L'\u23CE')) {
-            omitted_newline_str = L"\u23CE";
+            omitted_newline_str = L"\u23CE";  // "return symbol" (⏎)
             omitted_newline_width = 1;
         } else {
             omitted_newline_str = L"^J";

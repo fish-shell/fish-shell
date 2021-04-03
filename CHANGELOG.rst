@@ -18,6 +18,7 @@ Scripting improvements
 - Exit codes are better aligned with bash. A failed exec now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
 - ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with linux' special API files (``/proc``, ``/sys`` and such) (:issue:`7836`).
 - fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`).
+- Builtins now properly report a ``$status`` of 1 upon unsuccessful writes (:issue:`7857`).
 
 Interactive improvements
 -------------------------

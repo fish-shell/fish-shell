@@ -80,3 +80,28 @@ if false
 end
 echo $status
 #CHECK: 0
+
+# Verify errors from writes - see #7857.
+if test -e /dev/full
+    # Failed writes to stdout produce 1.
+    echo foo > /dev/full
+    if test $status -ne 1
+        echo "Wrong status when writing to /dev/full"
+    end
+
+   # Here the builtin should fail with status 2,
+   # and also the write should fail with status 1.
+   # The builtin has precedence.
+   builtin string --not-a-valid-option 2> /dev/full
+   if test $status -ne 2
+       echo "Wrong status for failing builtin"
+   end
+   echo "Failed write tests finished"
+else
+    echo "Failed write tests skipped"
+    echo "write: skipped" 1>&2
+    echo "write: skipped" 1>&2
+end
+# CHECK: Failed write tests {{finished|skipped}}
+# CHECKERR: write: {{.*}}
+# CHECKERR: write: {{.*}}

@@ -299,6 +299,8 @@ void output_stream_t::append_with_separation(const wchar_t *s, size_t len, separ
 
 const wcstring &output_stream_t::contents() const { return g_empty_string; }
 
+int output_stream_t::flush_and_check_error() { return STATUS_CMD_OK; }
+
 void fd_output_stream_t::append(const wchar_t *s, size_t amt) {
     if (errored_) return;
     int res = wwrite_to_fd(s, amt, this->fd_);
@@ -307,6 +309,11 @@ void fd_output_stream_t::append(const wchar_t *s, size_t amt) {
         wperror(L"write");
         errored_ = true;
     }
+}
+
+int fd_output_stream_t::flush_and_check_error() {
+    // Return a generic 1 on any write failure.
+    return errored_ ? STATUS_CMD_ERROR : STATUS_CMD_OK;
 }
 
 void null_output_stream_t::append(const wchar_t *, size_t) {}
@@ -324,4 +331,9 @@ void buffered_output_stream_t::append_with_separation(const wchar_t *s, size_t l
     buffer_->append(wcs2string(s, len), type);
 }
 
-bool buffered_output_stream_t::discarded() const { return buffer_->discarded(); }
+int buffered_output_stream_t::flush_and_check_error() {
+    if (buffer_->discarded()) {
+        return STATUS_READ_TOO_MUCH;
+    }
+    return 0;
+}

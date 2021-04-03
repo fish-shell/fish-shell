@@ -363,13 +363,14 @@ class output_stream_t {
     /// Required override point. The output stream receives a string \p s with \p amt chars.
     virtual void append(const wchar_t *s, size_t amt) = 0;
 
-    /// \return true if output was discarded. This only applies to buffered output streams.
-    virtual bool discarded() const { return false; }
-
     /// \return any internally buffered contents.
     /// This is only implemented for a string_output_stream; others flush data to their underlying
     /// receiver (fd, or separated buffer) immediately and so will return an empty string here.
     virtual const wcstring &contents() const;
+
+    /// Flush any unwritten data to the underlying device, and return an error code.
+    /// A 0 code indicates success. The base implementation returns 0.
+    virtual int flush_and_check_error();
 
     /// An optional override point. This is for explicit separation.
     virtual void append_with_separation(const wchar_t *s, size_t len, separation_type_t type);
@@ -420,6 +421,8 @@ class fd_output_stream_t final : public output_stream_t {
     /// Construct from a file descriptor, which must be nonegative.
     explicit fd_output_stream_t(int fd) : fd_(fd) { assert(fd_ >= 0 && "Invalid fd"); }
 
+    int flush_and_check_error() override;
+
     void append(const wchar_t *s, size_t amt) override;
 
    private:
@@ -453,7 +456,7 @@ class buffered_output_stream_t final : public output_stream_t {
 
     void append(const wchar_t *s, size_t amt) override;
     void append_with_separation(const wchar_t *s, size_t len, separation_type_t type) override;
-    bool discarded() const override;
+    int flush_and_check_error() override;
 
    private:
     /// The buffer we are filling.

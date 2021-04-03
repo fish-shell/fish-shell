@@ -469,20 +469,29 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
     }
 
     if (const builtin_data_t *data = builtin_lookup(cmdname)) {
-        // Construct the permutable argv array which the builtin expects.
+        // Construct the permutable argv array which the builtin expects, and execute the builtin.
         null_terminated_array_t<wchar_t> argv_arr(argv);
-        maybe_t<int> ret = data->func(parser, streams, argv_arr.get());
-        if (!ret) {
-            return proc_status_t::empty();
-        }
+        maybe_t<int> builtin_ret = data->func(parser, streams, argv_arr.get());
+
+        // Flush our out and error streams, and check for their errors.
+        int out_ret = streams.out.flush_and_check_error();
+        int err_ret = streams.err.flush_and_check_error();
+
+        // Resolve our status code.
+        // If the builtin itself produced an error, use that error.
+        // Otherwise use any errors from writing to out and writing to err, in that order.
+        int code = builtin_ret ? *builtin_ret : 0;
+        if (code == 0) code = out_ret;
+        if (code == 0) code = err_ret;
 
         // The exit code is cast to an 8-bit unsigned integer, so saturate to 255. Otherwise,
         // multiples of 256 are reported as 0.
-        int code = ret.value();
-        if (code > 255) {
-            code = 255;
-        }
+        if (code > 255) code = 255;
 
+        // Handle the case of an empty status.
+        if (code == 0 && !builtin_ret.has_value()) {
+            return proc_status_t::empty();
+        }
         return proc_status_t::from_exit_code(code);
     }
 

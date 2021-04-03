@@ -502,11 +502,6 @@ static void handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
                                   const output_stream_t &err) {
     assert(p->type == process_type_t::builtin && "Process is not a builtin");
 
-    // Mark if we discarded output.
-    if (out.discarded() || err.discarded()) {
-        p->status = proc_status_t::from_exit_code(STATUS_READ_TOO_MUCH);
-    }
-
     // Figure out any data remaining to write. We may have none, in which case we can short-circuit.
     std::string outbuff = wcs2string(out.contents());
     std::string errbuff = wcs2string(err.contents());

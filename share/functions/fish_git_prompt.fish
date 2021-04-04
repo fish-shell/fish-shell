@@ -299,6 +299,12 @@ function fish_git_prompt --description "Prompt function for Git"
         if test $detached = yes
             set branch_color $___fish_git_prompt_color_branch_detached
             set branch_done $___fish_git_prompt_color_branch_detached_done
+        else if test -n "$dirtystate$untrackedfiles"; and set -q __fish_git_prompt_color_branch_dirty
+            set branch_color (set_color $__fish_git_prompt_color_branch_dirty)
+            set branch_done (set_color $__fish_git_prompt_color_branch_dirty_done)
+        else if test -n "$stagedstate"; and set -q __fish_git_prompt_color_branch_staged
+            set branch_color (set_color $__fish_git_prompt_color_branch_staged)
+            set branch_done (set_color $__fish_git_prompt_color_branch_staged_done)
         end
     end
 

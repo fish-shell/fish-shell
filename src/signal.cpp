@@ -207,11 +207,6 @@ void signal_clear_cancel() { s_cancellation_signal = 0; }
 
 int signal_check_cancel() { return s_cancellation_signal; }
 
-/// Number of SIGIO events.
-static volatile relaxed_atomic_t<uint32_t> s_sigio_count{0};
-
-uint32_t signal_get_sigio_count() { return s_sigio_count; }
-
 /// The single signal handler. By centralizing signal handling we ensure that we can never install
 /// the "wrong" signal handler (see #5969).
 static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
@@ -276,14 +271,6 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             // test, to verify that we behave correctly when receiving lots of irrelevant signals.
             break;
 
-#if defined(SIGIO)
-        case SIGIO:
-            // An async FD became readable/writable/etc.
-            // Don't try to look at si_code, it is not set under BSD.
-            // Don't use ++ to avoid a CAS.
-            s_sigio_count = s_sigio_count + 1;
-            break;
-#endif
     }
     errno = saved_errno;
 }
@@ -365,11 +352,6 @@ void signal_set_handlers(bool interactive) {
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGINT, &act, nullptr);
-
-    // Apply our SIGIO handler.
-    act.sa_sigaction = &fish_signal_handler;
-    act.sa_flags = SA_SIGINFO;
-    sigaction(SIGIO, &act, nullptr);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
     act.sa_sigaction = &fish_signal_handler;

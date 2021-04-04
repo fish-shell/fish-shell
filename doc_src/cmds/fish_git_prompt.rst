@@ -115,8 +115,10 @@ Variables used with ``showupstream`` (also implied by informative status):
 
 Colors used with ``showcolorhints``:
 
-- ``$__fish_git_prompt_color_branch`` (green) - the color of the branch
+- ``$__fish_git_prompt_color_branch`` (green) - the color of the branch if nothing else applies
 - ``$__fish_git_prompt_color_branch_detached`` (red) the color of the branch if it's detached (e.g. a commit is checked out)
+- ``$__fish_git_prompt_color_branch_dirty`` (no default) the color of the branch if it's dirty and not detached
+- ``$__fish_git_prompt_color_branch_staged`` (no default) the color of the branch if it just has something staged and is otherwise clean
 - ``$__fish_git_prompt_color_flags`` (--bold blue) - the default color for dirty/staged/stashed/untracked state
 
 Note that all colors can also have a corresponding ``_done`` color. For example, the contents of ``$__fish_git_prompt_color_upstream_done`` is printed right _after_ the upstream.

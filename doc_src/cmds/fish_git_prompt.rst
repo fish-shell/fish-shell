@@ -80,10 +80,8 @@ A number of variables set characters and color used as indicators. Many of these
 - ``$__fish_git_prompt_color_bare`` - the color to use for a bare repository - one without a working tree
 - ``$__fish_git_prompt_color_merging`` - the color when a merge/rebase/revert/bisect or cherry-pick is in progress
 
-Some variables are only used in some modes, like when informative status is enabled:
-
-- ``$__fish_git_prompt_char_cleanstate`` (✔) - the character to be used when nothing else applies
-- ``$__fish_git_prompt_color_cleanstate``
+- ``$__fish_git_prompt_char_cleanstate`` (✔ in informative mode) - the character to be used when nothing else applies
+- ``$__fish_git_prompt_color_cleanstate`` (no default)
 
 Variables used with ``showdirtystate``:
 

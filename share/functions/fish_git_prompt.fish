@@ -331,6 +331,10 @@ function fish_git_prompt --description "Prompt function for Git"
     end
     if test -n "$b"
         set b "$branch_color$b$branch_done"
+        if test -z "$dirtystate$untrackedfiles$stagedstate"; and test -n "$___fish_git_prompt_char_cleanstate"
+            and not set -q __fish_git_prompt_show_informative_status
+            set b "$b$___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done"
+        end
     end
     if test -n "$c"
         set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
@@ -528,8 +532,11 @@ function __fish_git_prompt_set_char
 end
 
 function __fish_git_prompt_validate_chars --description "fish_git_prompt helper, checks char variables"
+    # cleanstate is only defined with actual informative status.
+    set -q __fish_git_prompt_show_informative_status
+    and __fish_git_prompt_set_char __fish_git_prompt_char_cleanstate '✔'
+    or __fish_git_prompt_set_char __fish_git_prompt_char_cleanstate ''
 
-    __fish_git_prompt_set_char __fish_git_prompt_char_cleanstate '✔'
     __fish_git_prompt_set_char __fish_git_prompt_char_dirtystate '*' '✚'
     __fish_git_prompt_set_char __fish_git_prompt_char_invalidstate '#' '✖'
     __fish_git_prompt_set_char __fish_git_prompt_char_stagedstate '+' '●'

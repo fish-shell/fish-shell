@@ -3987,8 +3987,7 @@ static void trigger_or_wait_for_notification(universal_notifier_t::notifier_stra
             usleep(40000);
             break;
         }
-        case universal_notifier_t::strategy_named_pipe:
-        case universal_notifier_t::strategy_sigio: {
+        case universal_notifier_t::strategy_named_pipe: {
             break;  // nothing required
         }
     }
@@ -3998,9 +3997,6 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     say(L"Testing universal notifiers with strategy %d", (int)strategy);
     std::unique_ptr<universal_notifier_t> notifiers[16];
     size_t notifier_count = sizeof notifiers / sizeof *notifiers;
-
-    // Set up SIGIO handler as needed.
-    signal_set_handlers(false);
 
     // Populate array of notifiers.
     for (size_t i = 0; i < notifier_count; i++) {
@@ -4051,12 +4047,6 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 
     // Nobody should poll now.
     for (size_t i = 0; i < notifier_count; i++) {
-        // On BSD, SIGIO may be delivered by read() even if it returns EAGAIN;
-        // that is the polling itself may trigger a SIGIO. Therefore we poll twice.
-        if (strategy == universal_notifier_t::strategy_sigio) {
-            (void)poll_notifier(notifiers[i]);
-        }
-
         if (poll_notifier(notifiers[i])) {
             err(L"Universal variable notifier polled true after all changes, with strategy %d",
                 (int)strategy);

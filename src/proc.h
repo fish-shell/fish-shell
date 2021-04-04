@@ -552,7 +552,7 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
 
 /// Add a job to the list of PIDs/PGIDs we wait on even though they are not associated with any
 /// jobs. Used to avoid zombie processes after disown.
-void add_disowned_job(job_t *j);
+void add_disowned_job(const job_t *j);
 
 bool have_proc_stat();
 

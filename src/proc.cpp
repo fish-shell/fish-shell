@@ -337,7 +337,7 @@ bool job_t::has_external_proc() const {
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
 static owning_lock<std::vector<pid_t>> s_disowned_pids;
 
-void add_disowned_job(job_t *j) {
+void add_disowned_job(const job_t *j) {
     if (j == nullptr) return;
 
     // Never add our own (or an invalid) pgid as it is not unique to only

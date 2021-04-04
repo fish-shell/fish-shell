@@ -1,4 +1,4 @@
-# name: Classic + Vcs (the default)
+# name: Default
 # author: Lily Ballard
 
 function fish_prompt --description 'Write out the prompt'

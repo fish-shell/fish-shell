@@ -20,6 +20,26 @@ static void become_foreground_then_print_stderr() {
     fprintf(stderr, "become_foreground_then_print_stderr done\n");
 }
 
+static void nohup_wait() {
+    pid_t init_parent = getppid();
+    if (signal(SIGHUP, SIG_IGN)) {
+        perror("tcsetgrp");
+        exit(EXIT_FAILURE);
+    }
+    // Note: these silly close() calls are necessary to prevent our parent process (presumably fish)
+    // from getting stuck in the "E" state ("Trying to exit"). This appears to be a (kernel?) bug on
+    // macOS: the process is no longer running but is not a zombie either, and so cannot be reaped.
+    // It is unclear why closing these fds successfully works around this issue.
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+    // To avoid leaving fish_test_helpers around, we exit once our parent changes, meaning the fish
+    // instance exited.
+    while (getppid() == init_parent) {
+        usleep(1000000 / 4);
+    }
+}
+
 static void report_foreground_loop() {
     int was_fg = -1;
     const auto grp = getpgrp();
@@ -146,6 +166,7 @@ struct fth_command_t {
 static fth_command_t s_commands[] = {
     {"become_foreground_then_print_stderr", become_foreground_then_print_stderr,
      "Claim the terminal (tcsetpgrp) and then print to stderr"},
+    {"nohup_wait", nohup_wait, "Ignore SIGHUP and just wait"},
     {"report_foreground", report_foreground, "Report to stderr whether we own the terminal"},
     {"report_foreground_loop", report_foreground_loop,
      "Continually report to stderr whether we own the terminal"},

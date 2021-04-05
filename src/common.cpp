@@ -1789,12 +1789,15 @@ void save_term_foreground_process_group() {
 }
 
 void restore_term_foreground_process_group_for_exit() {
-    if (initial_fg_process_group != -1) {
-        // This is called during shutdown and from a signal handler. We don't bother to complain on
-        // failure because doing so is unlikely to be noticed.
-        // However we want this to fail if we are not the tty owner (#7060), so clear our SIGTTOU
-        // handler to allow it to fail properly. Note that we are about to exit.
-        (void)signal(SIGTTOU, SIG_DFL);
+    // We wish to restore the tty to the initial owner. There's two ways this can go wrong:
+    //  1. We may steal the tty from someone else (#7060).
+    //  2. The call to tcsetpgrp may deliver SIGSTOP to us, and we will not exit.
+    // Hanging on exit seems worse, so ensure that SIGTTOU is ignored so we do not get SIGSTOP.
+    // Note initial_fg_process_group == 0 is possible with Linux pid namespaces.
+    // This is called during shutdown and from a signal handler. We don't bother to complain on
+    // failure because doing so is unlikely to be noticed.
+    if (initial_fg_process_group > 0 && initial_fg_process_group != getpgrp()) {
+        (void)signal(SIGTTOU, SIG_IGN);
         (void)tcsetpgrp(STDIN_FILENO, initial_fg_process_group);
     }
 }

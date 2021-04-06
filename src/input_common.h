@@ -199,23 +199,8 @@ void update_wait_on_escape_ms(const environment_t& vars);
 
 /// A class which knows how to produce a stream of input events.
 class input_event_queue_t {
-    std::deque<char_event_t> queue_;
-
-    /// \return if we have any lookahead.
-    bool has_lookahead() const { return !queue_.empty(); }
-
-    /// \return the next event in the queue.
-    char_event_t pop();
-
-    /// \return the next event in the queue, discarding timeouts.
-    maybe_t<char_event_t> pop_discard_timeouts();
-
-    char_event_t readb();
-
-    int in_{0};
-
    public:
-    input_event_queue_t(int in = 0) : in_(in){};
+    explicit input_event_queue_t(int in = 0) : in_(in) {}
 
     /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
     /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
@@ -230,11 +215,11 @@ class input_event_queue_t {
 
     /// Enqueue a character or a readline function to the queue of unread characters that
     /// readch will return before actually reading from fd 0.
-    void push_back(const char_event_t& ch);
+    void push_back(const char_event_t &ch);
 
     /// Add a character or a readline function to the front of the queue of unread characters.  This
     /// will be the next character returned by readch.
-    void push_front(const char_event_t& ch);
+    void push_front(const char_event_t &ch);
 
     /// Add multiple characters or readline events to the front of the queue of unread characters.
     /// The order of the provided events is not changed, i.e. they are not inserted in reverse
@@ -243,6 +228,21 @@ class input_event_queue_t {
     void insert_front(const Iterator begin, const Iterator end) {
         queue_.insert(queue_.begin(), begin, end);
     }
+
+   private:
+    /// \return if we have any lookahead.
+    bool has_lookahead() const { return !queue_.empty(); }
+
+    /// \return the next event in the queue.
+    char_event_t pop();
+
+    /// \return the next event in the queue, discarding timeouts.
+    maybe_t<char_event_t> pop_discard_timeouts();
+
+    char_event_t readb();
+
+    int in_{0};
+    std::deque<char_event_t> queue_;
 };
 
 #endif

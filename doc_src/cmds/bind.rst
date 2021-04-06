@@ -97,8 +97,6 @@ The following special input functions are available:
 
 - ``begin-selection``, start selecting text
 
-- ``begin-undo-group`` and ``end-undo-group``, for coalescing multiple changes into a single action that will be undone with ``undo``
-
 - ``cancel``, cancel the current commandline and replace it with a new empty one
 
 - ``cancel-commandline``, cancel the current commandline and replace it with a new empty one, leaving the old one in place with a marker to show that it was cancelled
@@ -189,7 +187,7 @@ The following special input functions are available:
 
 - ``togglecase-char``, toggle the capitalisation (case) of the character under the cursor
 
-- ``togglecase-selection``, toogle the capitalisation (case) of the selection
+- ``togglecase-selection``, toggle the capitalisation (case) of the selection
 
 - ``insert-line-under``, add a new line under the current line
 

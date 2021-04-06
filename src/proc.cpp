@@ -133,12 +133,7 @@ bool job_t::should_report_process_exits() const {
     }
 
     // Return whether we have an external process.
-    for (const auto &p : this->processes) {
-        if (p->type == process_type_t::external) {
-            return true;
-        }
-    }
-    return false;
+    return this->has_external_proc();
 }
 
 bool job_t::job_chain_is_fully_constructed() const { return group->is_root_constructed(); }

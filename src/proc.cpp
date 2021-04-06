@@ -480,7 +480,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 }
 
 /// Call the fish_job_summary function with the given args.
-static void print_job_summary(parser_t &parser, const wcstring_list_t &args) {
+static void call_job_summary(parser_t &parser, const wcstring_list_t &args) {
     wcstring buffer = wcstring(L"fish_job_summary");
     for (const wcstring &arg : args) {
         buffer.push_back(L' ');
@@ -507,7 +507,7 @@ static void print_job_status(parser_t &parser, const job_t *j, job_status_t stat
         j->command(),
         status == JOB_STOPPED ? L"STOPPED" : L"ENDED",
     };
-    print_job_summary(parser, args);
+    call_job_summary(parser, args);
 }
 
 event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
@@ -577,7 +577,7 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
         args.push_back(format_string(L"%d", p->pid));
         args.push_back(p->argv0());
     }
-    print_job_summary(parser, args);
+    call_job_summary(parser, args);
     // Clear status so it is not reported more than once.
     // TODO: this seems like a clumsy way to ensure that.
     p->status = proc_status_t::from_exit_code(0);

@@ -46,6 +46,10 @@ Improved prompts
 
 Completions
 ^^^^^^^^^^^
+- Added completions for:
+
+  - ``firewall-cmd`` (:issue:`7900`)
+
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 
 Improved terminal support

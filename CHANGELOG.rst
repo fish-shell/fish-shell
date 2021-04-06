@@ -1,3 +1,20 @@
+fish 3.2.2 (released April XX, 2021)
+====================================
+
+This release of fish fixes a number of additional issues identified in the fish 3.2 series:
+
+- The command-not-found handler used suggestions from ``pacman`` on Arch Linux, but this caused major slowdowns on some systems and has been disabled (:issue:`7841`).
+- fish will no longer hang on exit if another process is in the foreground on macOS (:issue:`7901`).
+- Certain programs (such as ``lazygit``) could create situations where fish would not receive keystrokes correctly, but it is now more robust in these situations (:issue:`7853`).
+- Arguments longer than 1024 characters no longer trigger excessive CPU usage on macOS (:issue:`7837`).
+- fish builds correctly on macOS when using new versions of Xcode (:issue:`7838`).
+- Completions for ``aura`` (:issue:`7865`) and ``tshark`` (:issue:`7858`) should no longer produce errors.
+- Background jobs no longer interfere with syntax highlighting (a regression introduced in fish 3.2.1, :issue:`7842`).
+
+If you are upgrading from version 3.1.2 or before, please also review the release notes for 3.2.1 and 3.2.0 (included below).
+
+--------------
+
 fish 3.2.1 (released March 18, 2021)
 ====================================
 

@@ -23,7 +23,6 @@ Scripting improvements
 Interactive improvements
 -------------------------
 - When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
-- Arguments longer than 1024 characters no longer trigger excessive CPU usage on Mac (:issue:`7837`).
 - Commands entered before the previous command finishes will now be properly syntax highlighted.
 - fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist (:issue:`7402`).
 - ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.

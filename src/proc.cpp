@@ -497,8 +497,8 @@ static void call_job_summary(parser_t &parser, const wcstring_list_t &args) {
 using job_status_t = enum { JOB_STOPPED, JOB_ENDED };
 static void print_job_status(parser_t &parser, const job_t *j, job_status_t status) {
     wcstring_list_t args = {
-        format_string(L"%d", j->job_id()),
-        format_string(L"%d", j->is_foreground()),
+        to_string(j->job_id()),
+        to_string(static_cast<int>(j->is_foreground())),
         j->command(),
         status == JOB_STOPPED ? L"STOPPED" : L"ENDED",
     };
@@ -563,13 +563,13 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
 
     wcstring_list_t args;
     args.reserve(proc_is_job ? 5 : 7);
-    args.push_back(format_string(L"%d", j->job_id()));
-    args.push_back(format_string(L"%d", j->is_foreground()));
+    args.push_back(to_string(j->job_id()));
+    args.push_back(to_string(static_cast<int>(j->is_foreground())));
     args.push_back(j->command());
     args.push_back(sig2wcs(s.signal_code()));
     args.push_back(signal_get_desc(s.signal_code()));
     if (!proc_is_job) {
-        args.push_back(format_string(L"%d", p->pid));
+        args.push_back(to_string(p->pid));
         args.push_back(p->argv0());
     }
     call_job_summary(parser, args);

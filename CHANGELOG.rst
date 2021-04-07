@@ -10,6 +10,7 @@ Syntax changes and new commands
 Deprecations and removed features
 ---------------------------------
 - The ``fish_history`` value "default" is no longer an alias for "fish" (:issue:`7650`).
+- Redirection to standard error with the ``^`` character has been disabled by default. It can be turned back on using the ``stderr-nocaret`` feature flag, but will eventually be disabled completely (:issue:`7105`).
 
 Scripting improvements
 ----------------------

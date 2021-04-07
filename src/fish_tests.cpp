@@ -664,7 +664,7 @@ static void test_tokenizer() {
     using tt = token_type_t;
     const token_type_t types[] = {
         tt::string,     tt::redirect,   tt::string,   tt::redirect, tt::string, tt::string,
-        tt::string,     tt::redirect,   tt::redirect, tt::string,   tt::pipe,   tt::redirect,
+        tt::string,     tt::string,     tt::string,   tt::pipe,     tt::redirect,
         tt::andand,     tt::background, tt::oror,     tt::pipe,     tt::andand, tt::oror,
         tt::background, tt::pipe,       tt::string,   tt::end,      tt::string};
 
@@ -770,8 +770,6 @@ static void test_tokenizer() {
     };
 
     if (get_redir_mode(L"<") != redirection_mode_t::input)
-        err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (get_redir_mode(L"^") != redirection_mode_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     if (get_redir_mode(L">") != redirection_mode_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
@@ -1885,7 +1883,7 @@ static void test_feature_flags() {
     say(L"Testing future feature flags");
     using ft = features_t;
     ft f;
-    do_test(!f.test(ft::stderr_nocaret));
+    do_test(f.test(ft::stderr_nocaret));
     f.set(ft::stderr_nocaret, true);
     do_test(f.test(ft::stderr_nocaret));
     f.set(ft::stderr_nocaret, false);

@@ -54,12 +54,12 @@ eval test_function
 
 # Future Feature Flags
 status features
-#CHECK: stderr-nocaret	off	3.0	^ no longer redirects stderr
+#CHECK: stderr-nocaret	on	3.0	^ no longer redirects stderr
 #CHECK: qmark-noglob	off	3.0	? no longer globs
 #CHECK: regex-easyesc	off	3.1	string replace -r needs fewer \'s
 status test-feature stderr-nocaret
 echo $status
-#CHECK: 1
+#CHECK: 0
 status test-feature not-a-feature
 echo $status
 #CHECK: 2

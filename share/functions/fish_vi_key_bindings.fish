@@ -101,8 +101,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         bind -s --preset $key beginning-of-line
     end
 
-    bind -s --preset u history-search-backward
-    bind -s --preset \cr history-search-forward
+    bind -s --preset u undo
+    bind -s --preset \cr redo
 
     bind -s --preset [ history-token-search-backward
     bind -s --preset ] history-token-search-forward

@@ -40,6 +40,7 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Pasting in Vi mode puts text in the right place in normal mode (:issue:`7847`).
+- Vi mode's ``u`` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, ``C-r`` is bound to ``redo`` instead of ``history-search-backward``, following Vim (#7908).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

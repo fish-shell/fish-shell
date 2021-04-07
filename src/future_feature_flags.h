@@ -57,6 +57,9 @@ class features_t {
 
         /// User-presentable description of the feature flag.
         const wchar_t *description;
+
+        /// Default flag value.
+        const bool default_value;
     };
 
     /// The metadata, indexed by flag.

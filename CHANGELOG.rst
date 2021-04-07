@@ -1,4 +1,4 @@
-fish 3.2.2 (released April XX, 2021)
+fish 3.2.2 (released April 7, 2021)
 ====================================
 
 This release of fish fixes a number of additional issues identified in the fish 3.2 series:

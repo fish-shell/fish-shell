@@ -272,28 +272,6 @@ void input_mapping_set_t::add(wcstring sequence, const wchar_t *command, const w
     input_mapping_set_t::add(std::move(sequence), &command, 1, mode, sets_mode, user);
 }
 
-/// Handle interruptions to key reading by reaping finished jobs and propagating the interrupt to
-/// the reader.
-static maybe_t<char_event_t> interrupt_handler() {
-    // Fire any pending events.
-    // TODO: eliminate this principal_parser().
-    auto &parser = parser_t::principal_parser();
-    event_fire_delayed(parser);
-    // Reap stray processes, including printing exit status messages.
-    // TODO: shouldn't need this parser here.
-    if (job_reap(parser, true)) reader_schedule_prompt_repaint();
-    // Tell the reader an event occurred.
-    if (reader_reading_interrupted()) {
-        auto vintr = shell_modes.c_cc[VINTR];
-        if (vintr == 0) {
-            return none();
-        }
-        return char_event_t{vintr};
-    }
-
-    return char_event_t{char_event_type_t::check_exit};
-}
-
 static relaxed_atomic_bool_t s_input_initialized{false};
 
 /// Set up arrays used by readch to detect escape sequences for special keys and perform related
@@ -303,7 +281,6 @@ void init_input() {
     if (s_input_initialized) return;
     s_input_initialized = true;
 
-    input_common_init(&interrupt_handler);
     s_terminfo_mappings = create_input_terminfo();
 
     auto input_mapping = input_mappings();
@@ -338,7 +315,35 @@ void init_input() {
     }
 }
 
-inputter_t::inputter_t(parser_t &parser, int in) : event_queue_(in), parser_(parser.shared()) {}
+inputter_t::inputter_t(parser_t &parser, int in)
+    : parser_(parser.shared()), event_queue_(in, get_interrupt_handler()) {}
+
+/// Handle interruptions to key reading by reaping finished jobs and propagating the interrupt to
+/// the reader.
+maybe_t<char_event_t> inputter_t::handle_interrupt() {
+    // Fire any pending events.
+    auto &parser = *this->parser_;
+    event_fire_delayed(parser);
+    // Reap stray processes, including printing exit status messages.
+    if (job_reap(parser, true)) reader_schedule_prompt_repaint();
+    // Tell the reader an event occurred.
+    if (reader_reading_interrupted()) {
+        auto vintr = shell_modes.c_cc[VINTR];
+        if (vintr == 0) {
+            return none();
+        }
+        return char_event_t{vintr};
+    }
+
+    return char_event_t{char_event_type_t::check_exit};
+}
+
+interrupt_handler_t inputter_t::get_interrupt_handler() {
+    // It's OK to capture 'this' by value because we use this to populate one of our instance
+    // variables.
+    interrupt_handler_t func = [this] { return this->handle_interrupt(); };
+    return func;
+}
 
 void inputter_t::function_push_arg(wchar_t arg) { input_function_args_.push_back(arg); }
 

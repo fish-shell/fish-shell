@@ -36,10 +36,8 @@
 #define WAIT_ON_ESCAPE_DEFAULT 30
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
-/// Callback function for handling interrupts on reading.
-static interrupt_func_t interrupt_handler;
-
-void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
+input_event_queue_t::input_event_queue_t(int in, interrupt_handler_t handler)
+    : in_(in), interrupt_handler_(std::move(handler)) {}
 
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
 /// only be called by input_common_readch().
@@ -73,8 +71,8 @@ char_event_t input_event_queue_t::readb() {
                 if (notifier.poll()) {
                     env_universal_barrier();
                 }
-                if (interrupt_handler) {
-                    if (auto interrupt_evt = interrupt_handler()) {
+                if (interrupt_handler_) {
+                    if (auto interrupt_evt = interrupt_handler_()) {
                         return *interrupt_evt;
                     } else if (auto mc = try_pop()) {
                         return *mc;

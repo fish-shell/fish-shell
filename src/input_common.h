@@ -176,21 +176,19 @@ class char_event_t {
     }
 };
 
-/// A type of function invoked on interrupt.
-/// \return the event which is to be returned to the reader loop, or none if VINTR is 0.
-using interrupt_func_t = maybe_t<char_event_t> (*)();
-
-/// Init the library with an interrupt function.
-void input_common_init(interrupt_func_t func);
-
 /// Adjust the escape timeout.
 class environment_t;
 void update_wait_on_escape_ms(const environment_t& vars);
 
+/// A function type called when select() is interrupted by a signal.
+/// The function maybe returns an event which is propagated back to the caller.
+using interrupt_handler_t = std::function<maybe_t<char_event_t>()>;
+
 /// A class which knows how to produce a stream of input events.
 class input_event_queue_t {
    public:
-    explicit input_event_queue_t(int in = 0) : in_(in) {}
+    /// Construct from a file descriptor \p in, and an interrupt handler \p handler.
+    explicit input_event_queue_t(int in = STDIN_FILENO, interrupt_handler_t handler = {});
 
     /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
     /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
@@ -225,9 +223,12 @@ class input_event_queue_t {
     /// \return the next event in the queue, or none if the queue is empty.
     maybe_t<char_event_t> try_pop();
 
+    /// Read at most one byte from stdin, and return the event.
+    /// If select() is interrupted by a signal, then invoke the interrupt handler.
     char_event_t readb();
 
     int in_{0};
+    const interrupt_handler_t interrupt_handler_;
     std::deque<char_event_t> queue_;
 };
 

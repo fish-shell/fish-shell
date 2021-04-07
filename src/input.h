@@ -57,12 +57,17 @@ class inputter_t {
     wchar_t function_pop_arg();
 
    private:
+    // We need a parser to evaluate bindings.
+    const std::shared_ptr<parser_t> parser_;
+
     input_event_queue_t event_queue_;
     std::vector<wchar_t> input_function_args_{};
     bool function_status_{false};
 
-    // We need a parser to evaluate bindings.
-    const std::shared_ptr<parser_t> parser_;
+    // A function called when select() is interrupted by a signal.
+    // See interrupt_handler_t.
+    maybe_t<char_event_t> handle_interrupt();
+    interrupt_handler_t get_interrupt_handler();
 
     void function_push_arg(wchar_t arg);
     void function_push_args(readline_cmd_t code);

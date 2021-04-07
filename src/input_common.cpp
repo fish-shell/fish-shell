@@ -218,7 +218,7 @@ char_event_t input_event_queue_t::readch_timed(bool dequeue_timeouts) {
         FD_ZERO(&fds);
         FD_SET(in_, &fds);
         struct timeval tm = {wait_on_escape_ms / 1000, 1000 * (wait_on_escape_ms % 1000)};
-        if (select(1, &fds, nullptr, nullptr, &tm) > 0) {
+        if (select(in_ + 1, &fds, nullptr, nullptr, &tm) > 0) {
             result = readch();
         }
     }

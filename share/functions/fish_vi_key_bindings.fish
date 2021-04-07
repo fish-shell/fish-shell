@@ -206,6 +206,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset J end-of-line delete-char
     bind -s --preset K 'man (commandline -t) 2>/dev/null; or echo -n \a'
 
+    bind -s --preset u undo
+    bind -s --preset \cr redo
+
     bind -s --preset yy kill-whole-line yank
     bind -s --preset Y kill-whole-line yank
     bind -s --preset y\$ kill-line yank

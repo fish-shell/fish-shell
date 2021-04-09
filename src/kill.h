@@ -19,4 +19,7 @@ wcstring kill_yank_rotate();
 /// Paste from the killring.
 wcstring kill_yank();
 
+/// Get copy of kill ring as vector of strings
+wcstring_list_t kill_entries();
+
 #endif

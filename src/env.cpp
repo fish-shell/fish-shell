@@ -35,6 +35,7 @@
 #include "termsize.h"
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
+#include "kill.h"
 
 /// Some configuration path environment variables.
 #define FISH_DATADIR_VAR L"__fish_data_dir"
@@ -92,6 +93,7 @@ static constexpr const electric_var_t electric_variables[] = {
     {L"fish_pid", electric_var_t::freadonly},
     {L"history", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"hostname", electric_var_t::freadonly},
+    {L"killring", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"status", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"status_generation", electric_var_t::freadonly | electric_var_t::fcomputed},
@@ -708,6 +710,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
         wcstring_list_t result;
         if (history) history->get_history(result);
         return env_var_t(L"history", std::move(result));
+    } else if (key == L"killring") {
+        return env_var_t(L"killring", kill_entries());
     } else if (key == L"pipestatus") {
         const auto &js = perproc_data().statuses;
         wcstring_list_t result;

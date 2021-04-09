@@ -83,6 +83,7 @@
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
+#include "kill.h"
 
 static const char *const *s_arguments;
 static int s_test_run_count = 0;
@@ -6413,6 +6414,31 @@ Executed in  500.00 micros    fish         external
     free(saved_locale);
 }
 
+static void test_killring() {
+    say(L"Testing killring");
+
+    do_test(kill_entries().empty());
+
+    kill_add(L"a");
+    kill_add(L"b");
+    kill_add(L"c");
+
+    do_test((kill_entries() == wcstring_list_t{L"c", L"b", L"a"}));
+
+    do_test(kill_yank_rotate() == L"b");
+    do_test((kill_entries() == wcstring_list_t{L"b", L"a", L"c"}));
+
+    do_test(kill_yank_rotate() == L"a");
+    do_test((kill_entries() == wcstring_list_t{L"a", L"c", L"b"}));
+
+    kill_add(L"d");
+
+    do_test((kill_entries() == wcstring_list_t{L"d", L"a", L"c", L"b"}));
+
+    do_test(kill_yank_rotate() == L"a");
+    do_test((kill_entries() == wcstring_list_t{L"a", L"c", L"b", L"d"}));
+}
+
 struct termsize_tester_t {
     static void test();
 };
@@ -6621,6 +6647,7 @@ int main(int argc, char **argv) {
     // history_tests_t::test_history_speed();
 
     if (should_test_function("termsize")) termsize_tester_t::test();
+    if (should_test_function("killring")) test_killring();
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");

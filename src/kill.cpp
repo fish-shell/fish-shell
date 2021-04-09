@@ -55,3 +55,7 @@ wcstring kill_yank() {
     }
     return kill_list.front();
 }
+
+wcstring_list_t kill_entries() {
+    return {kill_list.begin(), kill_list.end()};
+}

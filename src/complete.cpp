@@ -1060,6 +1060,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
             if (!this->condition_test(o.condition)) continue;
             if (o.option.empty()) {
                 use_files = use_files && (!(o.result_mode.no_files));
+                has_force = has_force || o.result_mode.force_files;
                 complete_from_args(str, o.comp, o.localized_desc(), o.flags);
             }
 
@@ -1144,7 +1145,10 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
         }
     }
 
-    if (!(has_force || use_files)) {
+    if (has_force) {
+        *out_do_file = true;
+    }
+    else if (!use_files) {
         *out_do_file = false;
     }
     return true;

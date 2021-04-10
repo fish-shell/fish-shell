@@ -386,4 +386,13 @@ echo >$dir/target
 complete -C ': $dir/'
 # CHECK: $dir/target
 rm $dir/target
-rmdir $dir
+
+cd $dir
+touch yummyinmytummy
+complete -c fudge -f
+complete -c fudge -n '__fish_seen_subcommand_from eat' -F
+complete -C'fudge eat yummyin'
+# CHECK: yummyinmytummy
+cd -
+
+rm -r $dir

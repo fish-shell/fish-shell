@@ -5,9 +5,11 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <sys/select.h>
 #include <sys/types.h>
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -18,7 +20,8 @@ using wcstring = std::wstring;
 /// Pipe redirection error message.
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
-/// The first "high fd", which is considered outside the range of valid user-specified redirections (like >&5).
+/// The first "high fd", which is considered outside the range of valid user-specified redirections
+/// (like >&5).
 extern const int k_first_high_fd;
 
 /// A helper class for managing and automatically closing a file descriptor.
@@ -60,6 +63,43 @@ class autoclose_fd_t {
 
     explicit autoclose_fd_t(int fd = -1) : fd_(fd) {}
     ~autoclose_fd_t() { close(); }
+};
+
+/// A modest wrapper around fd_set and select().
+/// This allows accumulating a set of fds and then select()ing on them.
+/// This only handles readability.
+struct select_wrapper_t {
+    /// Construct an empty set.
+    select_wrapper_t();
+
+    /// Reset back to an empty set.
+    void clear();
+
+    /// Add an fd to the set. The fd is ignored if negative (for convenience).
+    void add(int fd);
+
+    /// \return true if the given fd is marked as set, in our set. \returns false if negative.
+    bool test(int fd) const;
+
+    /// Call select(), with this set as 'readfds' and null for the other sets, with a timeout given
+    /// by timeout_usec. Note this destructively modifies the set. \return the result of select().
+    int select(uint64_t timeout_usec = select_wrapper_t::kNoTimeout);
+
+    /// Poll a single fd: select() on it with a given timeout.
+    /// \return true if readable, false if not.
+    static bool is_fd_readable(int fd, uint64_t timeout_usec);
+
+    /// Poll a single fd: select() on it with zero timeout.
+    /// \return true if readable, false if not.
+    static bool poll_fd_readable(int fd);
+
+    /// A special timeout value which may be passed to indicate no timeout.
+    static constexpr uint64_t kNoTimeout = std::numeric_limits<uint64_t>::max();
+
+   private:
+    /// The underlying fdset and nfds value to pass to select().
+    fd_set fdset_;
+    int nfds_{0};
 };
 
 /// Helper type returned from making autoclose pipes.

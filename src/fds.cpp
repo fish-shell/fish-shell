@@ -26,11 +26,53 @@
 // redirections, e.g. >&3
 const int k_first_high_fd = 10;
 
+static constexpr uint64_t kUsecPerMsec = 1000;
+static constexpr uint64_t kUsecPerSec = 1000 * kUsecPerMsec;
+
 void autoclose_fd_t::close() {
     if (fd_ < 0) return;
     exec_close(fd_);
     fd_ = -1;
 }
+
+select_wrapper_t::select_wrapper_t() { clear(); }
+
+void select_wrapper_t::clear() {
+    FD_ZERO(&fdset_);
+    nfds_ = 0;
+}
+
+void select_wrapper_t::add(int fd) {
+    if (fd >= 0) {
+        FD_SET(fd, &fdset_);
+        nfds_ = std::max(nfds_, fd + 1);
+    }
+}
+
+bool select_wrapper_t::test(int fd) const { return fd >= 0 && FD_ISSET(fd, &fdset_); }
+
+int select_wrapper_t::select(uint64_t timeout_usec) {
+    if (timeout_usec == kNoTimeout) {
+        return ::select(nfds_, &fdset_, nullptr, nullptr, nullptr);
+    } else {
+        struct timeval tvs;
+        tvs.tv_sec = timeout_usec / kUsecPerSec;
+        tvs.tv_usec = timeout_usec % kUsecPerSec;
+        return ::select(nfds_, &fdset_, nullptr, nullptr, &tvs);
+    }
+}
+
+// static
+bool select_wrapper_t::is_fd_readable(int fd, uint64_t timeout_usec) {
+    if (fd < 0) return false;
+    select_wrapper_t s;
+    s.add(fd);
+    int res = s.select(timeout_usec);
+    return res > 0 && s.test(fd);
+}
+
+// static
+bool select_wrapper_t::poll_fd_readable(int fd) { return is_fd_readable(fd, 0); }
 
 #ifdef HAVE_EVENTFD
 // Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.

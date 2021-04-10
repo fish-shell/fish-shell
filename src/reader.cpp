@@ -2751,16 +2751,6 @@ static int read_i(parser_t &parser) {
     return 0;
 }
 
-/// Test if there are bytes available for reading on the specified file descriptor.
-static int can_read(int fd) {
-    struct timeval can_read_timeout = {0, 0};
-    fd_set fds;
-
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-    return select(fd + 1, &fds, nullptr, nullptr, &can_read_timeout) == 1;
-}
-
 /// Test if the specified character in the specified string is backslashed. pos may be at the end of
 /// the string, which indicates if there is a trailing backslash.
 static bool is_backslashed(const wcstring &str, size_t pos) {
@@ -2867,7 +2857,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
         auto evt = inputter.readch(allow_commands ? normal_handler : empty_handler);
-        if (!event_is_normal_char(evt) || !can_read(conf.in)) {
+        if (!event_is_normal_char(evt) || !select_wrapper_t::poll_fd_readable(conf.in)) {
             event_needing_handling = std::move(evt);
             break;
         } else if (evt.input_style == char_input_style_t::notfirst && accumulated_chars.empty() &&

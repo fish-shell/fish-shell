@@ -3993,14 +3993,8 @@ bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
 
     bool result = false;
     int fd = note->notification_fd();
-    if (fd >= 0) {
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(fd, &fds);
-        struct timeval tv = {0, 0};
-        if (select(fd + 1, &fds, NULL, NULL, &tv) > 0 && FD_ISSET(fd, &fds)) {
-            result = note->notification_fd_became_readable(fd);
-        }
+    if (fd >= 0 && select_wrapper_t::poll_fd_readable(fd)) {
+        result = note->notification_fd_became_readable(fd);
     }
     return result;
 }

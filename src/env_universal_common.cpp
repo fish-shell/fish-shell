@@ -1437,12 +1437,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 
         // We are polling, so we are definitely going to sync.
         // See if this is still readable.
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(pipe_fd.fd(), &fds);
-        struct timeval timeout = {};
-        select(pipe_fd.fd() + 1, &fds, nullptr, nullptr, &timeout);
-        if (!FD_ISSET(pipe_fd.fd(), &fds)) {
+        if (!select_wrapper_t::poll_fd_readable(pipe_fd.fd())) {
             // No longer readable, no longer polling.
             polling_due_to_readable_fd = false;
             drain_if_still_readable_time_usec = 0;

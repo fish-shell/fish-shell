@@ -12,7 +12,6 @@
 #include "wutil.h"
 
 static constexpr uint64_t kUsecPerMsec = 1000;
-static constexpr uint64_t kUsecPerSec = 1000 * kUsecPerMsec;
 
 fd_monitor_t::fd_monitor_t() = default;
 
@@ -79,15 +78,6 @@ void fd_monitor_t::poke_item(fd_monitor_item_id_t item_id) {
     }
 }
 
-// Given a usec count, populate and return a timeval.
-// If the usec count is kNoTimeout, return nullptr.
-static struct timeval *usec_to_tv_or_null(uint64_t usec, struct timeval *timeout) {
-    if (usec == fd_monitor_item_t::kNoTimeout) return nullptr;
-    timeout->tv_sec = usec / kUsecPerSec;
-    timeout->tv_usec = usec % kUsecPerSec;
-    return timeout;
-}
-
 uint64_t fd_monitor_item_t::usec_remaining(const time_point_t &now) const {
     assert(last_time.has_value() && "Should always have a last_time");
     if (timeout_usec == kNoTimeout) return kNoTimeout;
@@ -97,9 +87,9 @@ uint64_t fd_monitor_item_t::usec_remaining(const time_point_t &now) const {
     return since >= timeout_usec ? 0 : timeout_usec - since;
 }
 
-bool fd_monitor_item_t::service_item(const fd_set *fds, const time_point_t &now) {
+bool fd_monitor_item_t::service_item(const select_wrapper_t &fds, const time_point_t &now) {
     bool should_retain = true;
-    bool readable = FD_ISSET(fd.fd(), fds);
+    bool readable = fds.test(fd.fd());
     bool timed_out = !readable && usec_remaining(now) == 0;
     if (readable || timed_out) {
         last_time = now;
@@ -123,6 +113,7 @@ bool fd_monitor_item_t::poke_item(const poke_list_t &pokelist) {
 void fd_monitor_t::run_in_background() {
     ASSERT_IS_BACKGROUND_THREAD();
     poke_list_t pokelist;
+    select_wrapper_t fds;
     for (;;) {
         // Poke any items that need it.
         if (!pokelist.empty()) {
@@ -130,22 +121,19 @@ void fd_monitor_t::run_in_background() {
             pokelist.clear();
         }
 
-        fd_set fds;
-        FD_ZERO(&fds);
+        fds.clear();
 
         // Our change_signaller is special cased.
         int change_signal_fd = change_signaller_.read_fd();
-        FD_SET(change_signal_fd, &fds);
-        int max_fd = change_signal_fd;
+        fds.add(change_signal_fd);
 
         auto now = std::chrono::steady_clock::now();
         uint64_t timeout_usec = fd_monitor_item_t::kNoTimeout;
 
         for (auto &item : items_) {
-            FD_SET(item.fd.fd(), &fds);
+            fds.add(item.fd.fd());
             if (!item.last_time.has_value()) item.last_time = now;
             timeout_usec = std::min(timeout_usec, item.usec_remaining(now));
-            max_fd = std::max(max_fd, item.fd.fd());
         }
 
         // If we have only one item, it means that we are not actively monitoring any fds other than
@@ -161,8 +149,7 @@ void fd_monitor_t::run_in_background() {
         }
 
         // Call select().
-        struct timeval tv;
-        int ret = select(max_fd + 1, &fds, nullptr, nullptr, usec_to_tv_or_null(timeout_usec, &tv));
+        int ret = fds.select(timeout_usec);
         if (ret < 0 && errno != EINTR) {
             // Surprising error.
             wperror(L"select");
@@ -171,7 +158,7 @@ void fd_monitor_t::run_in_background() {
         // A predicate which services each item in turn, returning true if it should be removed.
         auto servicer = [&fds, &now](fd_monitor_item_t &item) {
             int fd = item.fd.fd();
-            bool remove = !item.service_item(&fds, now);
+            bool remove = !item.service_item(fds, now);
             if (remove) FLOG(fd_monitor, "Removing fd", fd);
             return remove;
         };
@@ -183,7 +170,7 @@ void fd_monitor_t::run_in_background() {
 
         // Handle any changes if the change signaller was set. Alternatively this may be the wait
         // lap, in which case we might want to commit to exiting.
-        if (FD_ISSET(change_signal_fd, &fds) || is_wait_lap) {
+        if (fds.test(change_signal_fd) || is_wait_lap) {
             // Clear the change signaller before processing incoming changes.
             change_signaller_.try_consume();
             auto data = data_.acquire();

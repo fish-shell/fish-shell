@@ -19,7 +19,7 @@ int iothread_port();
 void iothread_service_main();
 
 // Services any main thread requests. Does not wait more than \p timeout_usec.
-void iothread_service_main_with_timeout(long timeout_usec);
+void iothread_service_main_with_timeout(uint64_t timeout_usec);
 
 /// Waits for all iothreads to terminate.
 /// \return the number of threads that were running.

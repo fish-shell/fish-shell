@@ -260,21 +260,8 @@ void iothread_perform_impl(void_function_t &&func, bool cant_wait) {
 
 int iothread_port() { return get_notify_signaller().read_fd(); }
 
-static bool iothread_wait_for_main_requests(long timeout_usec) {
-    const long usec_per_sec = 1000000;
-    struct timeval tv;
-    tv.tv_sec = timeout_usec / usec_per_sec;
-    tv.tv_usec = timeout_usec % usec_per_sec;
-    const int fd = iothread_port();
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-    int ret = select(fd + 1, &fds, nullptr, nullptr, &tv);
-    return ret > 0;
-}
-
-void iothread_service_main_with_timeout(long timeout_usec) {
-    if (iothread_wait_for_main_requests(timeout_usec)) {
+void iothread_service_main_with_timeout(uint64_t timeout_usec) {
+    if (select_wrapper_t::is_fd_readable(iothread_port(), timeout_usec)) {
         iothread_service_main();
     }
 }

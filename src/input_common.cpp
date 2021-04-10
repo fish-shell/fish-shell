@@ -44,40 +44,30 @@ void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
 /// only be called by input_common_readch().
 char_event_t input_event_queue_t::readb() {
+    select_wrapper_t fdset;
     for (;;) {
-        fd_set fdset;
-        int fd_max = in_;
-        int ioport = iothread_port();
-        int res;
+        fdset.clear();
+        fdset.add(in_);
 
-        FD_ZERO(&fdset);
-        FD_SET(in_, &fdset);
+        int ioport = iothread_port();
         if (ioport > 0) {
-            FD_SET(ioport, &fdset);
-            fd_max = std::max(fd_max, ioport);
+            fdset.add(ioport);
         }
 
         // Get our uvar notifier.
         universal_notifier_t& notifier = universal_notifier_t::default_notifier();
-
-        // Get the notification fd (possibly none).
         int notifier_fd = notifier.notification_fd();
         if (notifier_fd > 0) {
-            FD_SET(notifier_fd, &fdset);
-            fd_max = std::max(fd_max, notifier_fd);
+            fdset.add(notifier_fd);
         }
 
         // Get its suggested delay (possibly none).
-        struct timeval tv = {};
-        const unsigned long usecs_delay = notifier.usec_delay_between_polls();
-        if (usecs_delay > 0) {
-            unsigned long usecs_per_sec = 1000000;
-            tv.tv_sec = static_cast<int>(usecs_delay / usecs_per_sec);
-            tv.tv_usec = static_cast<int>(usecs_delay % usecs_per_sec);
+        uint64_t timeout_usec = select_wrapper_t::kNoTimeout;
+        if (auto notifier_usec_delay = notifier.usec_delay_between_polls()) {
+            timeout_usec = notifier_usec_delay;
         }
-
-        res = select(fd_max + 1, &fdset, nullptr, nullptr, usecs_delay > 0 ? &tv : nullptr);
-        if (res == -1) {
+        int res = fdset.select(timeout_usec);
+        if (res < 0) {
             if (errno == EINTR || errno == EAGAIN) {
                 // Some uvar notifiers rely on signals - see #7671.
                 if (notifier.poll()) {
@@ -98,7 +88,7 @@ char_event_t input_event_queue_t::readb() {
             // Check to see if we want a universal variable barrier.
             bool barrier_from_poll = notifier.poll();
             bool barrier_from_readability = false;
-            if (notifier_fd > 0 && FD_ISSET(notifier_fd, &fdset)) {
+            if (notifier_fd > 0 && fdset.test(notifier_fd)) {
                 barrier_from_readability = notifier.notification_fd_became_readable(notifier_fd);
             }
             if (barrier_from_poll || barrier_from_readability) {
@@ -110,7 +100,7 @@ char_event_t input_event_queue_t::readb() {
                 }
             }
 
-            if (FD_ISSET(in_, &fdset)) {
+            if (fdset.test(in_)) {
                 unsigned char arr[1];
                 if (read_blocked(in_, arr, 1) != 1) {
                     // The teminal has been closed.
@@ -123,7 +113,7 @@ char_event_t input_event_queue_t::readb() {
 
             // Check for iothread completions only if there is no data to be read from the stdin.
             // This gives priority to the foreground.
-            if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
+            if (ioport > 0 && fdset.test(ioport)) {
                 iothread_service_main();
                 if (auto mc = pop_discard_timeouts()) {
                     return *mc;
@@ -214,11 +204,9 @@ char_event_t input_event_queue_t::readch_timed(bool dequeue_timeouts) {
     if (has_lookahead()) {
         result = pop();
     } else {
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(in_, &fds);
-        struct timeval tm = {wait_on_escape_ms / 1000, 1000 * (wait_on_escape_ms % 1000)};
-        if (select(in_ + 1, &fds, nullptr, nullptr, &tm) > 0) {
+        const uint64_t usec_per_msec = 1000;
+        uint64_t timeout_usec = static_cast<uint64_t>(wait_on_escape_ms) * usec_per_msec;
+        if (select_wrapper_t::is_fd_readable(in_, timeout_usec)) {
             result = readch();
         }
     }

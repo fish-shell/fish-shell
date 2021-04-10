@@ -586,6 +586,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// HACK: A flag to reset the loop state from the outside.
     bool reset_loop_state{false};
 
+    /// Whether this is the first prompt.
+    bool first_prompt{true};
+
     /// The representation of the current screen contents.
     screen_t screen;
 
@@ -3881,7 +3884,20 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
     }
 
-    s_reset_abandoning_line(&screen, termsize_last().width);
+    // HACK: Don't abandon line for the first prompt, because
+    // if we're started with the terminal it might not have settled,
+    // so the width is quite likely to be in flight.
+    //
+    // This means that `printf %s foo; fish` will overwrite the `foo`,
+    // but that's a smaller problem than having the omitted newline char
+    // appear constantly.
+    //
+    // I can't see a good way around this.
+    if (!first_prompt) {
+        s_reset_abandoning_line(&screen, termsize_last().width);
+    }
+    first_prompt = false;
+
     event_fire_generic(parser(), L"fish_prompt");
     exec_prompt();
 

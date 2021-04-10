@@ -1431,9 +1431,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         pass
 
     def log_error(self, format, *args):
-        if format == "code %d, message %s":
+        if format == "code %d, message %s" and hasattr(self, 'path'):
             # This appears to be a send_error() message
-            # We want to include the path
+            # We want to include the path (if we have one)
             (code, msg) = args
             format = "code %d, message %s, path %s"
             args = (code, msg, self.path)

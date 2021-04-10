@@ -13,6 +13,7 @@
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 #define DEFAULT_BIND_MODE L"default"
 
+class event_queue_peeker_t;
 class parser_t;
 
 wcstring describe_char(wint_t c);
@@ -67,9 +68,7 @@ class inputter_t {
     void function_push_args(readline_cmd_t code);
     void mapping_execute(const input_mapping_t &m, const command_handler_t &command_handler);
     void mapping_execute_matching_or_generic(const command_handler_t &command_handler);
-    bool mapping_is_match(const input_mapping_t &m);
-    bool have_mouse_tracking_csi();
-    maybe_t<input_mapping_t> find_mapping();
+    maybe_t<input_mapping_t> find_mapping(event_queue_peeker_t *peeker);
     char_event_t read_characters_no_readline();
 };
 

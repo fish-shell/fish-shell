@@ -41,7 +41,7 @@ New or improved bindings
 Improved prompts
 ^^^^^^^^^^^^^^^^
 - The default Vi mode prompt now uses foreground instead of background colors, making it less obtrusive (:issue:`7880`).
-- Performance of the git prompt is improved somewhat (:issue:`7871`).
+- Performance of the "informative" git prompt is improved somewhat (:issue:`7871`). This is still slower than the non-informative version by its very nature. In particular it is IO-bound, so it will be very slow on slow disks or network mounts.
 
 Completions
 ^^^^^^^^^^^
@@ -53,7 +53,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- *This placeholder silences a sphinx doc warning, so the last section is not empty.*
+- fish no longer performs the PROMPT_SP hack to get onto a new line during startup, this prevents ``⏎`` from showing up if the terminal is resized at the wrong time, which can happen in tiling window managers (:issue:`7893`).
 
 --------------
 

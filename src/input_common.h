@@ -99,18 +99,12 @@ enum class char_event_type_t : uint8_t {
     /// A readline event.
     readline,
 
-    /// A timeout was hit.
-    timeout,
-
     /// end-of-file was reached.
     eof,
 
     /// An event was handled internally, or an interrupt was received. Check to see if the reader
     /// loop should exit.
     check_exit,
-
-    /// There is no event. This should never happen, or is an assertion failure.
-    none,
 };
 
 /// Hackish: the input style, which describes how char events (only) are applied to the command
@@ -143,8 +137,6 @@ class char_event_t {
     /// Note that the generic self-insert case does not have any characters, so this would be empty.
     wcstring seq{};
 
-    bool is_timeout() const { return type == char_event_type_t::timeout; }
-
     bool is_char() const { return type == char_event_type_t::charc; }
 
     bool is_eof() const { return type == char_event_type_t::eof; }
@@ -170,8 +162,6 @@ class char_event_t {
         assert(type == char_event_type_t::readline && "Not a readline type");
         return v_.rl;
     }
-
-    explicit char_event_t() : type(char_event_type_t::none) { }
 
     /* implicit */ char_event_t(wchar_t c) : type(char_event_type_t::charc) { v_.c = c; }
 
@@ -204,14 +194,13 @@ class input_event_queue_t {
 
     /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
     /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
-    /// been read and then 'unread' using \c input_common_unreadch, that character is returned. This
-    /// function never returns a timeout.
+    /// been read and then 'unread' using \c input_common_unreadch, that character is returned.
     char_event_t readch();
 
     /// Like readch(), except it will wait at most WAIT_ON_ESCAPE milliseconds for a
     /// character to be available for reading.
-    /// If \p dequeue_timeouts is set, remove any timeout from the queue; otherwise retain them.
-    char_event_t readch_timed(bool dequeue_timeouts = false);
+    /// \return none on timeout, the event on success.
+    maybe_t<char_event_t> readch_timed();
 
     /// Enqueue a character or a readline function to the queue of unread characters that
     /// readch will return before actually reading from fd 0.
@@ -233,11 +222,8 @@ class input_event_queue_t {
     /// \return if we have any lookahead.
     bool has_lookahead() const { return !queue_.empty(); }
 
-    /// \return the next event in the queue.
-    char_event_t pop();
-
-    /// \return the next event in the queue, discarding timeouts.
-    maybe_t<char_event_t> pop_discard_timeouts();
+    /// \return the next event in the queue, or none if the queue is empty.
+    maybe_t<char_event_t> try_pop();
 
     char_event_t readb();
 

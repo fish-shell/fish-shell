@@ -229,13 +229,13 @@ static void process_input(bool continuous_mode) {
 
     std::fwprintf(stderr, L"Press a key:\n");
     for (;;) {
-        char_event_t evt{0};
+        maybe_t<char_event_t> evt{};
         if (reader_test_and_clear_interrupted()) {
             evt = char_event_t{shell_modes.c_cc[VINTR]};
         } else {
-            evt = queue.readch_timed(true);
+            evt = queue.readch_timed();
         }
-        if (!evt.is_char()) {
+        if (!evt || !evt->is_char()) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
                 return;
@@ -243,7 +243,7 @@ static void process_input(bool continuous_mode) {
             continue;
         }
 
-        wchar_t wc = evt.get_char();
+        wchar_t wc = evt->get_char();
         prev_tstamp = output_elapsed_time(prev_tstamp, first_char_seen);
         // Hack for #3189. Do not suggest \c@ as the binding for nul, because a string containing
         // nul cannot be passed to builtin_bind since it uses C strings. We'll output the name of

@@ -462,10 +462,14 @@ class event_queue_peeker_t {
             return false;
         }
         // Grab a new event if we have exhausted what we have already peeked.
+        // Use either readch or readch_timed, per our param.
         if (idx_ == peeked_.size()) {
-            auto newevt = timed ? event_queue_.readch_timed() : event_queue_.readch();
-            if (newevt.is_timeout()) {
-                assert(timed && "Should only get timeouts from timed reads");
+            char_event_t newevt{L'\0'};
+            if (!timed) {
+                newevt = event_queue_.readch();
+            } else if (auto mevt = event_queue_.readch_timed()) {
+                newevt = mevt.acquire();
+            } else {
                 had_timeout_ = true;
                 return false;
             }

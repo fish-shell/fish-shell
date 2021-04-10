@@ -76,7 +76,7 @@ char_event_t input_event_queue_t::readb() {
                 if (interrupt_handler) {
                     if (auto interrupt_evt = interrupt_handler()) {
                         return *interrupt_evt;
-                    } else if (auto mc = pop_discard_timeouts()) {
+                    } else if (auto mc = try_pop()) {
                         return *mc;
                     }
                 }
@@ -94,7 +94,7 @@ char_event_t input_event_queue_t::readb() {
             if (barrier_from_poll || barrier_from_readability) {
                 if (env_universal_barrier()) {
                     // A variable change may have triggered a repaint, etc.
-                    if (auto mc = pop_discard_timeouts()) {
+                    if (auto mc = try_pop()) {
                         return *mc;
                     }
                 }
@@ -115,8 +115,8 @@ char_event_t input_event_queue_t::readb() {
             // This gives priority to the foreground.
             if (ioport > 0 && fdset.test(ioport)) {
                 iothread_service_main();
-                if (auto mc = pop_discard_timeouts()) {
-                    return *mc;
+                if (auto mc = try_pop()) {
+                    return mc.acquire();
                 }
             }
         }
@@ -143,26 +143,19 @@ void update_wait_on_escape_ms(const environment_t& vars) {
     }
 }
 
-char_event_t input_event_queue_t::pop() {
-    auto result = queue_.front();
+maybe_t<char_event_t> input_event_queue_t::try_pop() {
+    if (queue_.empty()) {
+        return none();
+    }
+    auto result = std::move(queue_.front());
     queue_.pop_front();
     return result;
 }
 
-maybe_t<char_event_t> input_event_queue_t::pop_discard_timeouts() {
-    while (has_lookahead()) {
-        auto evt = pop();
-        if (!evt.is_timeout()) {
-            return evt;
-        }
-    }
-    return none();
-}
-
 char_event_t input_event_queue_t::readch() {
     ASSERT_IS_MAIN_THREAD();
-    if (auto mc = pop_discard_timeouts()) {
-        return *mc;
+    if (auto mc = try_pop()) {
+        return mc.acquire();
     }
     wchar_t res;
     mbstate_t state = {};
@@ -199,23 +192,16 @@ char_event_t input_event_queue_t::readch() {
     }
 }
 
-char_event_t input_event_queue_t::readch_timed(bool dequeue_timeouts) {
-    char_event_t result{char_event_type_t::timeout};
-    if (has_lookahead()) {
-        result = pop();
-    } else {
-        const uint64_t usec_per_msec = 1000;
-        uint64_t timeout_usec = static_cast<uint64_t>(wait_on_escape_ms) * usec_per_msec;
-        if (select_wrapper_t::is_fd_readable(in_, timeout_usec)) {
-            result = readch();
-        }
+maybe_t<char_event_t> input_event_queue_t::readch_timed() {
+    if (auto evt = try_pop()) {
+        return evt;
     }
-    // If we got a timeout, either through dequeuing or creating, ensure it stays on the queue.
-    if (result.is_timeout()) {
-        if (!dequeue_timeouts) queue_.push_front(char_event_type_t::timeout);
-        return char_event_type_t::timeout;
+    const uint64_t usec_per_msec = 1000;
+    uint64_t timeout_usec = static_cast<uint64_t>(wait_on_escape_ms) * usec_per_msec;
+    if (select_wrapper_t::is_fd_readable(in_, timeout_usec)) {
+        return readch();
     }
-    return result;
+    return none();
 }
 
 void input_event_queue_t::push_back(const char_event_t& ch) { queue_.push_back(ch); }

@@ -274,6 +274,9 @@ void env_init(const struct config_paths_t *paths, bool do_uvars) {
         vars.set_one(FISH_SYSCONFDIR_VAR, ENV_GLOBAL, paths->sysconf);
         vars.set_one(FISH_HELPDIR_VAR, ENV_GLOBAL, paths->doc);
         vars.set_one(FISH_BIN_DIR, ENV_GLOBAL, paths->bin);
+        wcstring scstr = paths->data;
+        scstr.append(L"/functions");
+        vars.set_one(L"fish_function_path", ENV_GLOBAL, scstr);
     }
 
     // Some `su`s keep $USER when changing to root.

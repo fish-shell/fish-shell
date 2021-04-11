@@ -296,6 +296,7 @@ In fish versions prior to 2.5.0 it was possible to create a function named ``-``
 The open command doesn't work.
 ------------------------------
 The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider :ref:`asking for more help <more-help>`.
+
 .. _faq-ssh-interactive:
 
 Why won't SSH/SCP/rsync connect properly when fish is my login shell?

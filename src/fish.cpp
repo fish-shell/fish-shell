@@ -474,7 +474,7 @@ int main(int argc, char **argv) {
 
     struct config_paths_t paths;
     // If we're not executing, there's no need to find the config.
-    if (!opts.no_exec && !opts.no_config) {
+    if (!opts.no_exec) {
         paths = determine_config_directory_paths(argv[0]);
     }
     if (!opts.no_exec) {

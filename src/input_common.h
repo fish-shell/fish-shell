@@ -178,7 +178,7 @@ class char_event_t {
 
 /// Adjust the escape timeout.
 class environment_t;
-void update_wait_on_escape_ms(const environment_t& vars);
+void update_wait_on_escape_ms(const environment_t &vars);
 
 /// A function type called when select() is interrupted by a signal.
 /// The function maybe returns an event which is propagated back to the caller.
@@ -211,7 +211,7 @@ class input_event_queue_t {
     /// Add multiple characters or readline events to the front of the queue of unread characters.
     /// The order of the provided events is not changed, i.e. they are not inserted in reverse
     /// order.
-    template<typename Iterator>
+    template <typename Iterator>
     void insert_front(const Iterator begin, const Iterator end) {
         queue_.insert(queue_.begin(), begin, end);
     }
@@ -222,10 +222,6 @@ class input_event_queue_t {
 
     /// \return the next event in the queue, or none if the queue is empty.
     maybe_t<char_event_t> try_pop();
-
-    /// Read at most one byte from stdin, and return the event.
-    /// If select() is interrupted by a signal, then invoke the interrupt handler.
-    char_event_t readb();
 
     int in_{0};
     const interrupt_handler_t interrupt_handler_;

@@ -480,7 +480,7 @@ class event_queue_peeker_t {
             }
             peeked_.push_back(newevt);
         }
-        // Now we have peeked far enough, check the event.
+        // Now we have peeked far enough; check the event.
         // If it matches the char, then increment the index.
         if (peeked_.at(idx_).maybe_char() == c) {
             idx_++;

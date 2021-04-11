@@ -17,7 +17,16 @@ Description
 
 ``prompt_pwd`` is a function to print the current working directory in a way suitable for prompts. It will replace the home directory with "~" and shorten every path component but the last to a default of one character.
 
-To change the number of characters per path component, set ``$fish_prompt_pwd_dir_length`` to the number of characters. Setting it to 0 or an invalid value will disable shortening entirely.
+To change the number of characters per path component, pass ``--dir-length=`` or set ``$fish_prompt_pwd_dir_length`` to the number of characters. Setting it to 0 or an invalid value will disable shortening entirely.
+
+To keep some components unshortened, pass ``--full-length-dirs=`` or set ``$fish_prompt_pwd_full_dirs`` to the number of components.
+
+Options
+-------
+
+- ``-h`` or ``--help`` displays the help and exits
+- ``-d`` or ``--dir-length=MAX`` causes the components to be shortened to MAX characters each. This overrides $fish_prompt_pwd_dir_length.
+- ``-D`` or ``--full-length-dirs=NUM`` keeps NUM components (counted from the right) as full length without shortening. This overrides $fish_prompt_pwd_full_dirs.
 
 Examples
 --------
@@ -38,3 +47,6 @@ Examples
     >_ set -g fish_prompt_pwd_dir_length 3
     >_ prompt_pwd
     /tmp/ban/sau/wit/mustard
+
+    >_ prompt_pwd --full-length-dirs=2 --dir-length=1
+    /t/b/s/with/mustard

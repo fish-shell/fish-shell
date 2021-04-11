@@ -336,6 +336,8 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             }
             case 'N': {
                 opts->no_config = true;
+                // --no-config implies private mode, we won't be saving history
+                opts->enable_private_mode = true;
                 break;
             }
             case 'n': {

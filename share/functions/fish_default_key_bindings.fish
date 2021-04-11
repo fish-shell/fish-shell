@@ -42,7 +42,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     # Closing a command substitution expands abbreviations
     bind --preset $argv ")" self-insert expand-abbr
     # Ctrl-space inserts space without expanding abbrs
-    bind -k nul 'commandline -i " "'
+    bind --preset $argv -k nul 'commandline -i " "'
 
 
     bind --preset $argv \n execute

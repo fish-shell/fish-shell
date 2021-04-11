@@ -36,8 +36,7 @@
 #define WAIT_ON_ESCAPE_DEFAULT 30
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
-input_event_queue_t::input_event_queue_t(int in, interrupt_handler_t handler)
-    : in_(in), interrupt_handler_(std::move(handler)) {}
+input_event_queue_t::input_event_queue_t(int in) : in_(in) {}
 
 /// Internal function used by readch to read one byte.
 /// This calls select() on three fds: input (e.g. stdin), the ioport notifier fd (for main thread
@@ -169,11 +168,7 @@ char_event_t input_event_queue_t::readch() {
 
             case readb_interrupted:
                 // FIXME: here signals may break multibyte sequences.
-                if (interrupt_handler_) {
-                    if (auto interrupt_evt = interrupt_handler_()) {
-                        return interrupt_evt.acquire();
-                    }
-                }
+                this->select_interrupted();
                 break;
 
             case readb_uvar_notified:
@@ -233,3 +228,6 @@ maybe_t<char_event_t> input_event_queue_t::readch_timed() {
 void input_event_queue_t::push_back(const char_event_t& ch) { queue_.push_back(ch); }
 
 void input_event_queue_t::push_front(const char_event_t& ch) { queue_.push_front(ch); }
+
+void input_event_queue_t::select_interrupted() {}
+input_event_queue_t::~input_event_queue_t() = default;

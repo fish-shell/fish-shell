@@ -2856,7 +2856,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
-        auto evt = inputter.readch(allow_commands ? normal_handler : empty_handler);
+        auto evt = inputter.read_char(allow_commands ? normal_handler : empty_handler);
         if (!event_is_normal_char(evt) || !select_wrapper_t::poll_fd_readable(conf.in)) {
             event_needing_handling = std::move(evt);
             break;
@@ -4114,7 +4114,7 @@ void reader_schedule_prompt_repaint() {
     reader_data_t *data = current_data_or_null();
     if (data && !data->force_exec_prompt_and_repaint) {
         data->force_exec_prompt_and_repaint = true;
-        data->inputter.queue_ch(readline_cmd_t::repaint);
+        data->inputter.queue_char(readline_cmd_t::repaint);
     }
 }
 
@@ -4127,7 +4127,7 @@ void reader_handle_command(readline_cmd_t cmd) {
 
 void reader_queue_ch(const char_event_t &ch) {
     if (reader_data_t *data = current_data_or_null()) {
-        data->inputter.queue_ch(ch);
+        data->inputter.queue_char(ch);
     }
 }
 

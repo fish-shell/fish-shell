@@ -180,15 +180,12 @@ class char_event_t {
 class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
 
-/// A function type called when select() is interrupted by a signal.
-/// The function maybe returns an event which is propagated back to the caller.
-using interrupt_handler_t = std::function<maybe_t<char_event_t>()>;
-
 /// A class which knows how to produce a stream of input events.
+/// This is a base class; you may subclass it for its override points.
 class input_event_queue_t {
    public:
     /// Construct from a file descriptor \p in, and an interrupt handler \p handler.
-    explicit input_event_queue_t(int in = STDIN_FILENO, interrupt_handler_t handler = {});
+    explicit input_event_queue_t(int in = STDIN_FILENO);
 
     /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
     /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
@@ -216,6 +213,11 @@ class input_event_queue_t {
         queue_.insert(queue_.begin(), begin, end);
     }
 
+    /// Override point for when when select() is interrupted by a signal. The default does nothing.
+    virtual void select_interrupted();
+
+    virtual ~input_event_queue_t();
+
    private:
     /// \return if we have any lookahead.
     bool has_lookahead() const { return !queue_.empty(); }
@@ -224,7 +226,6 @@ class input_event_queue_t {
     maybe_t<char_event_t> try_pop();
 
     int in_{0};
-    const interrupt_handler_t interrupt_handler_;
     std::deque<char_event_t> queue_;
 };
 

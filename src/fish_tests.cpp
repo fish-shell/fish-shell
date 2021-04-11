@@ -3669,11 +3669,11 @@ static void test_input() {
 
     // Push the desired binding to the queue.
     for (wchar_t c : desired_binding) {
-        input.queue_ch(c);
+        input.queue_char(c);
     }
 
     // Now test.
-    auto evt = input.readch();
+    auto evt = input.read_char();
     if (!evt.is_readline()) {
         err(L"Event is not a readline");
     } else if (evt.get_readline() != readline_cmd_t::down_line) {

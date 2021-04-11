@@ -316,11 +316,11 @@ void init_input() {
 }
 
 inputter_t::inputter_t(parser_t &parser, int in)
-    : parser_(parser.shared()), event_queue_(in, get_interrupt_handler()) {}
+    : input_event_queue_t(in), parser_(parser.shared()) {}
 
 /// Handle interruptions to key reading by reaping finished jobs and propagating the interrupt to
 /// the reader.
-maybe_t<char_event_t> inputter_t::handle_interrupt() {
+void inputter_t::select_interrupted() /* override */ {
     // Fire any pending events.
     auto &parser = *this->parser_;
     event_fire_delayed(parser);
@@ -329,20 +329,12 @@ maybe_t<char_event_t> inputter_t::handle_interrupt() {
     // Tell the reader an event occurred.
     if (reader_reading_interrupted()) {
         auto vintr = shell_modes.c_cc[VINTR];
-        if (vintr == 0) {
-            return none();
+        if (vintr != 0) {
+            this->push_front(char_event_t{vintr});
         }
-        return char_event_t{vintr};
+        return;
     }
-
-    return char_event_t{char_event_type_t::check_exit};
-}
-
-interrupt_handler_t inputter_t::get_interrupt_handler() {
-    // It's OK to capture 'this' by value because we use this to populate one of our instance
-    // variables.
-    interrupt_handler_t func = [this] { return this->handle_interrupt(); };
-    return func;
+    this->push_front(char_event_t{char_event_type_t::check_exit});
 }
 
 void inputter_t::function_push_arg(wchar_t arg) { input_function_args_.push_back(arg); }
@@ -364,7 +356,7 @@ void inputter_t::function_push_args(readline_cmd_t code) {
         // Skip and queue up any function codes. See issue #2357.
         wchar_t arg{};
         for (;;) {
-            auto evt = event_queue_.readch();
+            auto evt = this->readch();
             if (evt.is_char()) {
                 arg = evt.get_char();
                 break;
@@ -375,7 +367,7 @@ void inputter_t::function_push_args(readline_cmd_t code) {
     }
 
     // Push the function codes back into the input stream.
-    event_queue_.insert_front(skipped.begin(), skipped.end());
+    this->insert_front(skipped.begin(), skipped.end());
 }
 
 /// Perform the action of the specified binding. allow_commands controls whether fish commands
@@ -406,15 +398,15 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
 
     if (has_commands && !command_handler) {
         // We don't want to run commands yet. Put the characters back and return check_exit.
-        event_queue_.insert_front(m.seq.cbegin(), m.seq.cend());
-        event_queue_.push_front(char_event_type_t::check_exit);
+        this->insert_front(m.seq.cbegin(), m.seq.cend());
+        this->push_front(char_event_type_t::check_exit);
         return;  // skip the input_set_bind_mode
     } else if (has_functions && !has_commands) {
         // Functions are added at the head of the input queue.
         for (auto it = m.commands.rbegin(), end = m.commands.rend(); it != end; ++it) {
             readline_cmd_t code = input_function_get_code(*it).value();
             function_push_args(code);
-            event_queue_.push_front(char_event_t(code, m.seq));
+            this->push_front(char_event_t(code, m.seq));
         }
     } else if (has_commands && !has_functions) {
         // Execute all commands.
@@ -422,25 +414,23 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
         // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
         // see that until all other commands have also been run.
         command_handler(m.commands);
-        event_queue_.push_front(char_event_type_t::check_exit);
+        this->push_front(char_event_type_t::check_exit);
     } else {
         // Invalid binding, mixed commands and functions.  We would need to execute these one by
         // one.
-        event_queue_.push_front(char_event_type_t::check_exit);
+        this->push_front(char_event_type_t::check_exit);
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
     if (!m.sets_mode.empty()) input_set_bind_mode(*parser_, m.sets_mode);
 }
 
-void inputter_t::queue_ch(const char_event_t &ch) {
+void inputter_t::queue_char(const char_event_t &ch) {
     if (ch.is_readline()) {
         function_push_args(ch.get_readline());
     }
-    event_queue_.push_back(ch);
+    this->push_back(ch);
 }
-
-void inputter_t::push_front(const char_event_t &ch) { event_queue_.push_front(ch); }
 
 /// A class which allows accumulating input events, or returns them to the queue.
 /// This contains a list of events which have been dequeued, and a current index into that list.
@@ -617,7 +607,7 @@ maybe_t<input_mapping_t> inputter_t::find_mapping(event_queue_peeker_t *peeker) 
 }
 
 void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &command_handler) {
-    event_queue_peeker_t peeker(event_queue_);
+    event_queue_peeker_t peeker(*this);
 
     // Check for mouse-tracking CSI before mappings to prevent the generic mapping handler from
     // taking over.
@@ -638,7 +628,7 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
         // of a helper function to disable mouse tracking.
         // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
         peeker.consume();
-        event_queue_.push_front(char_event_t(readline_cmd_t::disable_mouse_tracking, L""));
+        this->push_front(char_event_t(readline_cmd_t::disable_mouse_tracking, L""));
         return;
     }
     peeker.restart();
@@ -654,7 +644,7 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
     FLOGF(reader, L"no generic found, ignoring char...");
     auto evt = peeker.next();
     if (evt.is_eof()) {
-        event_queue_.push_front(evt);
+        this->push_front(evt);
     }
     peeker.consume();
 }
@@ -669,7 +659,7 @@ char_event_t inputter_t::read_characters_no_readline() {
 
     char_event_t evt_to_return{0};
     for (;;) {
-        auto evt = event_queue_.readch();
+        auto evt = this->readch();
         if (evt.is_readline()) {
             saved_events.push_back(evt);
         } else {
@@ -679,16 +669,16 @@ char_event_t inputter_t::read_characters_no_readline() {
     }
 
     // Restore any readline functions
-    event_queue_.insert_front(saved_events.cbegin(), saved_events.cend());
+    this->insert_front(saved_events.cbegin(), saved_events.cend());
     return evt_to_return;
 }
 
-char_event_t inputter_t::readch(const command_handler_t &command_handler) {
+char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.
     while (true) {
-        auto evt = event_queue_.readch();
+        auto evt = this->readch();
 
         if (evt.is_readline()) {
             switch (evt.get_readline()) {
@@ -696,7 +686,7 @@ char_event_t inputter_t::readch(const command_handler_t &command_handler) {
                 case readline_cmd_t::self_insert_notfirst: {
                     // Typically self-insert is generated by the generic (empty) binding.
                     // However if it is generated by a real sequence, then insert that sequence.
-                    event_queue_.insert_front(evt.seq.cbegin(), evt.seq.cend());
+                    this->insert_front(evt.seq.cbegin(), evt.seq.cend());
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
                     char_event_t res = read_characters_no_readline();
@@ -718,9 +708,9 @@ char_event_t inputter_t::readch(const command_handler_t &command_handler) {
                     }
                     // Else we flush remaining tokens
                     do {
-                        evt = event_queue_.readch();
+                        evt = this->readch();
                     } while (evt.is_readline());
-                    event_queue_.push_front(evt);
+                    this->push_front(evt);
                     return readch();
                 }
                 default: {
@@ -732,7 +722,7 @@ char_event_t inputter_t::readch(const command_handler_t &command_handler) {
             // There's no need to go through the input functions.
             return evt;
         } else {
-            event_queue_.push_front(evt);
+            this->push_front(evt);
             mapping_execute_matching_or_generic(command_handler);
             // Regarding allow_commands, we're in a loop, but if a fish command is executed,
             // check_exit is unread, so the next pass through the loop we'll break out and return

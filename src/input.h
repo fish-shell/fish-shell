@@ -23,7 +23,7 @@ wcstring describe_char(wint_t c);
 void init_input();
 
 struct input_mapping_t;
-class inputter_t {
+class inputter_t final : private input_event_queue_t {
    public:
     /// Construct from a parser, and the fd from which to read.
     explicit inputter_t(parser_t &parser, int in = STDIN_FILENO);
@@ -41,14 +41,11 @@ class inputter_t {
     /// character is encountered that would invoke a fish command, it is unread and
     /// char_event_type_t::check_exit is returned. Note the handler is not stored.
     using command_handler_t = std::function<void(const wcstring_list_t &)>;
-    char_event_t readch(const command_handler_t &command_handler = {});
+    char_event_t read_char(const command_handler_t &command_handler = {});
 
     /// Enqueue a char event to the queue of unread characters that input_readch will return before
     /// actually reading from fd 0.
-    void queue_ch(const char_event_t &ch);
-
-    /// Enqueue a char event to the front of the queue; this will be the next event returned.
-    void push_front(const char_event_t &ch);
+    void queue_char(const char_event_t &ch);
 
     /// Sets the return status of the most recently executed input function.
     void function_set_status(bool status) { function_status_ = status; }
@@ -57,17 +54,14 @@ class inputter_t {
     wchar_t function_pop_arg();
 
    private:
+    // Called when select() is interrupted by a signal.
+    void select_interrupted() override;
+
     // We need a parser to evaluate bindings.
     const std::shared_ptr<parser_t> parser_;
 
-    input_event_queue_t event_queue_;
     std::vector<wchar_t> input_function_args_{};
     bool function_status_{false};
-
-    // A function called when select() is interrupted by a signal.
-    // See interrupt_handler_t.
-    maybe_t<char_event_t> handle_interrupt();
-    interrupt_handler_t get_interrupt_handler();
 
     void function_push_arg(wchar_t arg);
     void function_push_args(readline_cmd_t code);

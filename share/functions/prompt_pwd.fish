@@ -39,6 +39,10 @@ function prompt_pwd --description 'Print the current working directory, shortene
                 set -l all (string split -m (math $fish_prompt_pwd_full_dirs - 1) -r / $tmp)
                 set tmp $all[1]
                 set full $all[2..]
+            else if test $fish_prompt_pwd_full_dirs -eq 0
+                # 0 means not even the last component is kept
+                string replace -ar '(\.?[^/]{'"$fish_prompt_pwd_dir_length"'})[^/]*' '$1' $tmp
+                continue
             end
 
             string join / (string replace -ar '(\.?[^/]{'"$fish_prompt_pwd_dir_length"'})[^/]*/' '$1/' $tmp) $full

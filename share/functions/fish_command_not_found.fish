@@ -11,6 +11,10 @@ if test -r /etc/os-release
     string replace -r '^ID(?:_LIKE)?\s*=(.*)' '$1' | string trim -c '\'"' | string split " ")
 end
 
+function __fish_default_command_not_found_handler
+    printf "fish: Unknown command: %s\n" (string escape -- $argv[1]) >&2
+end
+
 # If an old handler already exists, defer to that.
 if functions -q __fish_command_not_found_handler
     function fish_command_not_found

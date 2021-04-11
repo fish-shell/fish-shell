@@ -1158,10 +1158,12 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
     mod_result_t result{ENV_OK};
     if (query.has_scope) {
         // The user requested a particular scope.
-        if (query.universal) {
+        //
+        // If we don't have uvars, fall back to using globals
+        if (query.universal && uvars()) {
             set_universal(key, std::move(val), query);
             result.uvar_modified = true;
-        } else if (query.global) {
+        } else if (query.global || (query.universal && !uvars())) {
             set_in_node(globals_, key, std::move(val), flags);
             result.global_modified = true;
         } else if (query.local) {

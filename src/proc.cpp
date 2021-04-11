@@ -688,17 +688,13 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
 bool job_reap(parser_t &parser, bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    process_mark_finished_children(parser, false);
+    // Early out for the common case that there are no jobs.
+    if (parser.jobs().empty()) {
+        return false;
+    }
 
-    // Preserve the exit status.
-    auto saved_statuses = parser.get_last_statuses();
-
-    bool printed = process_clean_after_marking(parser, allow_interactive);
-
-    // Restore the exit status.
-    parser.set_last_statuses(std::move(saved_statuses));
-
-    return printed;
+    process_mark_finished_children(parser, false /* not block_ok */);
+    return process_clean_after_marking(parser, allow_interactive);
 }
 
 /// Get the CPU time for the specified process.

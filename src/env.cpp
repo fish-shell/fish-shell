@@ -238,7 +238,7 @@ static void setup_path() {
     }
 }
 
-void env_init(const struct config_paths_t *paths /* or NULL */) {
+void env_init(const struct config_paths_t *paths, bool do_uvars) {
     env_stack_t &vars = env_stack_t::principal();
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins
     // (See issue #2784).
@@ -402,22 +402,24 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Complain about invalid config paths.
     path_emit_config_directory_errors(vars);
 
-    // Set up universal variables. The empty string means to use the default path.
-    s_universal_variables.emplace(L"");
-    callback_data_list_t callbacks;
-    s_universal_variables->initialize(callbacks);
-    env_universal_callbacks(&vars, callbacks);
+    if (do_uvars) {
+        // Set up universal variables. The empty string means to use the default path.
+        s_universal_variables.emplace(L"");
+        callback_data_list_t callbacks;
+        s_universal_variables->initialize(callbacks);
+        env_universal_callbacks(&vars, callbacks);
 
-    // Do not import variables that have the same name and value as
-    // an exported universal variable. See issues #5258 and #5348.
-    for (const auto &kv : uvars()->get_table()) {
-        const wcstring &name = kv.first;
-        const env_var_t &uvar = kv.second;
-        if (!uvar.exports()) continue;
-        // Look for a global exported variable with the same name.
-        maybe_t<env_var_t> global = vars.globals().get(name, ENV_GLOBAL | ENV_EXPORT);
-        if (global && uvar.as_string() == global->as_string()) {
-            vars.globals().remove(name, ENV_GLOBAL | ENV_EXPORT);
+        // Do not import variables that have the same name and value as
+        // an exported universal variable. See issues #5258 and #5348.
+        for (const auto &kv : uvars()->get_table()) {
+            const wcstring &name = kv.first;
+            const env_var_t &uvar = kv.second;
+            if (!uvar.exports()) continue;
+            // Look for a global exported variable with the same name.
+            maybe_t<env_var_t> global = vars.globals().get(name, ENV_GLOBAL | ENV_EXPORT);
+            if (global && uvar.as_string() == global->as_string()) {
+                vars.globals().remove(name, ENV_GLOBAL | ENV_EXPORT);
+            }
         }
     }
 }

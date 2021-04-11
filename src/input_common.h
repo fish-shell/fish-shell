@@ -213,6 +213,10 @@ class input_event_queue_t {
         queue_.insert(queue_.begin(), begin, end);
     }
 
+    /// Override point for when we are about to (potentially) block in select(). The default does
+    /// nothing.
+    virtual void prepare_to_select();
+
     /// Override point for when when select() is interrupted by a signal. The default does nothing.
     virtual void select_interrupted();
 

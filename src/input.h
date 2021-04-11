@@ -54,6 +54,9 @@ class inputter_t final : private input_event_queue_t {
     wchar_t function_pop_arg();
 
    private:
+    // Called right before potentially blocking in select().
+    void prepare_to_select() override;
+
     // Called when select() is interrupted by a signal.
     void select_interrupted() override;
 

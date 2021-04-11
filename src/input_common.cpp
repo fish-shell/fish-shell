@@ -161,6 +161,12 @@ char_event_t input_event_queue_t::readch() {
             return mevt.acquire();
         }
 
+        // We are going to block; but first allow any override to inject events.
+        this->prepare_to_select();
+        if (auto mevt = try_pop()) {
+            return mevt.acquire();
+        }
+
         readb_result_t rr = readb(in_);
         switch (rr) {
             case readb_eof:
@@ -229,5 +235,6 @@ void input_event_queue_t::push_back(const char_event_t& ch) { queue_.push_back(c
 
 void input_event_queue_t::push_front(const char_event_t& ch) { queue_.push_front(ch); }
 
+void input_event_queue_t::prepare_to_select() {}
 void input_event_queue_t::select_interrupted() {}
 input_event_queue_t::~input_event_queue_t() = default;

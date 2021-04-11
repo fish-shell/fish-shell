@@ -318,14 +318,19 @@ void init_input() {
 inputter_t::inputter_t(parser_t &parser, int in)
     : input_event_queue_t(in), parser_(parser.shared()) {}
 
-/// Handle interruptions to key reading by reaping finished jobs and propagating the interrupt to
-/// the reader.
-void inputter_t::select_interrupted() /* override */ {
-    // Fire any pending events.
+void inputter_t::prepare_to_select() /* override */ {
+    // Fire any pending events and reap stray processes, including printing exit status messages.
     auto &parser = *this->parser_;
     event_fire_delayed(parser);
-    // Reap stray processes, including printing exit status messages.
     if (job_reap(parser, true)) reader_schedule_prompt_repaint();
+}
+
+void inputter_t::select_interrupted() /* override */ {
+    // Fire any pending events and reap stray processes, including printing exit status messages.
+    auto &parser = *this->parser_;
+    event_fire_delayed(parser);
+    if (job_reap(parser, true)) reader_schedule_prompt_repaint();
+
     // Tell the reader an event occurred.
     if (reader_reading_interrupted()) {
         auto vintr = shell_modes.c_cc[VINTR];

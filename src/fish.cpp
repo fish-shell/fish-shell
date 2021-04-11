@@ -478,7 +478,7 @@ int main(int argc, char **argv) {
         paths = determine_config_directory_paths(argv[0]);
     }
     if (!opts.no_exec) {
-        env_init(&paths);
+        env_init(&paths, !opts.no_config);
     }
 
     // Set features early in case other initialization depends on them.

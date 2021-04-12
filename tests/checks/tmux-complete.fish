@@ -28,7 +28,8 @@ echo >file-2
 $tmux send-keys 'HOME=$PWD ls ~/' Tab
 $sleep
 $tmux capture-pane -p
-# CHECK: prompt 0> HOME=$PWD ls ~/file-
+# Note the contents may or may not have the autosuggestion appended - it is a race.
+# CHECK: prompt 0> HOME=$PWD ls ~/file-{{1?}}
 # CHECK: ~/file-1  ~/file-2
 
 # No pager on single smartcase completion (#7738).

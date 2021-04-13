@@ -342,7 +342,8 @@ function __fish_git_prompt_dirty --description "fish_git_prompt helper, tells wh
     and echo $___fish_git_prompt_char_dirtystate
 end
 
-set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
+set -q __fish_git_prompt_status_order
+or set -g __fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 
 function __fish_git_prompt_informative_status
     set -l stashstate 0
@@ -372,7 +373,7 @@ function __fish_git_prompt_informative_status
             set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
         end
     else
-        for i in $___fish_git_prompt_status_order
+        for i in $__fish_git_prompt_status_order
             if [ $$i != 0 ]
                 set -l color_var ___fish_git_prompt_color_$i
                 set -l color_done_var ___fish_git_prompt_color_{$i}_done

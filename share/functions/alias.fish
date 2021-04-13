@@ -35,10 +35,10 @@ function alias --description 'Creates a function wrapping a command'
 
     # sanity check
     if test -z "$name"
-        printf ( _ "%s: Name cannot be empty\n") alias
+        printf ( _ "%s: Name cannot be empty\n") alias >&2
         return 1
     else if test -z "$body"
-        printf ( _ "%s: Body cannot be empty\n") alias
+        printf ( _ "%s: Body cannot be empty\n") alias >&2
         return 1
     end
 

@@ -222,7 +222,9 @@ function fish_git_prompt --description "Prompt function for Git"
         and set dirty true
     end
     # If we don't print these, there is no need to compute them.
+    # Note: For now, staged and dirty are coupled.
     contains dirtystate $__fish_git_prompt_status_order
+    or contains stagedstate $__fish_git_prompt_status_order
     or set dirty false
 
     set -l untracked (command git config --bool bash.showUntrackedFiles)
@@ -252,12 +254,11 @@ function fish_git_prompt --description "Prompt function for Git"
             # This has to be set explicitly.
             if test "$dirty" = true
                 set dirtystate (__fish_git_prompt_dirty)
-            end
-
-            if test -n "$sha"
-                set stagedstate (__fish_git_prompt_staged)
-            else
-                set invalidstate 1
+                if test -n "$sha"
+                    set stagedstate (__fish_git_prompt_staged)
+                else
+                    set invalidstate 1
+                end
             end
 
             if set -q __fish_git_prompt_showstashstate

@@ -247,11 +247,12 @@ function fish_git_prompt --description "Prompt function for Git"
             # This has to be set explicitly.
             if test "$dirty" = true
                 set dirtystate (__fish_git_prompt_dirty)
-                if test -n "$sha"
-                    set stagedstate (__fish_git_prompt_staged)
-                else
-                    set invalidstate 1
-                end
+            end
+
+            if test -n "$sha"
+                set stagedstate (__fish_git_prompt_staged)
+            else
+                set invalidstate 1
             end
 
             if set -q __fish_git_prompt_showstashstate

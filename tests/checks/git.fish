@@ -38,7 +38,7 @@ complete -C'git add '
 git checkout -b newbranch >/dev/null 2>&1
 fish_git_prompt
 echo # the git prompt doesn't print a newline
-#CHECK: (newbranch)
+#CHECK: (newbranch +)
 
 set -g __fish_git_prompt_show_informative_status 1
 fish_git_prompt
@@ -49,10 +49,8 @@ set -e __fish_git_prompt_show_informative_status
 # Confirm the mode changes back
 fish_git_prompt
 echo
-#CHECK: (newbranch)
+#CHECK: (newbranch +)
 
-# (for some reason stagedstate is only shown with showdirtystate?)
-set -g __fish_git_prompt_showdirtystate 1
 git add foo
 fish_git_prompt
 echo

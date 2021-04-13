@@ -188,13 +188,17 @@ function fish_git_prompt --description "Prompt function for Git"
     set -l r $rbc[1] # current operation
     set -l b $rbc[2] # current branch
     set -l detached $rbc[3]
-    set -l w #dirty working directory
-    set -l i #staged changes
-    set -l s #stashes
-    set -l u #untracked
+    set -l dirtystate #dirty working directory
+    set -l stagedstate #staged changes
+    set -l invalidstate #staged changes
+    set -l stashstate #stashes
+    set -l untrackedfiles #untracked
     set -l c $rbc[4] # bare repository
     set -l p #upstream
     set -l informative_status
+
+    set -q __fish_git_prompt_status_order
+    or set -g __fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 
     if not set -q ___fish_git_prompt_init
         # This takes a while, so it only needs to be done once,
@@ -242,21 +246,21 @@ function fish_git_prompt --description "Prompt function for Git"
         else
             # This has to be set explicitly.
             if test "$dirty" = true
-                set w (__fish_git_prompt_dirty)
+                set dirtystate (__fish_git_prompt_dirty)
                 if test -n "$sha"
-                    set i (__fish_git_prompt_staged)
+                    set stagedstate (__fish_git_prompt_staged)
                 else
-                    set i $___fish_git_prompt_char_invalidstate
+                    set invalidstate 1
                 end
             end
 
             if set -q __fish_git_prompt_showstashstate
                 and test -r $git_dir/logs/refs/stash
-                set s $___fish_git_prompt_char_stashstate
+                set stashstate 1
             end
 
             if test "$untracked" = true
-                set u (__fish_git_prompt_untracked)
+                set untrackedfiles (__fish_git_prompt_untracked)
             end
         end
 
@@ -275,17 +279,19 @@ function fish_git_prompt --description "Prompt function for Git"
         end
     end
 
-    if test -n "$w"
-        set w "$___fish_git_prompt_color_dirtystate$w$___fish_git_prompt_color_dirtystate_done"
-    end
-    if test -n "$i"
-        set i "$___fish_git_prompt_color_stagedstate$i$___fish_git_prompt_color_stagedstate_done"
-    end
-    if test -n "$s"
-        set s "$___fish_git_prompt_color_stashstate$s$___fish_git_prompt_color_stashstate_done"
-    end
-    if test -n "$u"
-        set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
+    set -l f ""
+    for i in $__fish_git_prompt_status_order
+        if test -n "$$i"
+            set -l color_var ___fish_git_prompt_color_$i
+            set -l color_done_var ___fish_git_prompt_color_{$i}_done
+            set -l symbol_var ___fish_git_prompt_char_$i
+
+            set -l color $$color_var
+            set -l color_done $$color_done_var
+            set -l symbol $$symbol_var
+
+            set f "$f$color$symbol$color_done"
+        end
     end
 
     set b (string replace refs/heads/ '' -- $b)
@@ -309,7 +315,6 @@ function fish_git_prompt --description "Prompt function for Git"
     end
 
     # Formatting
-    set -l f "$w$i$s$u"
     if test -n "$f"
         set f "$space$f"
     end
@@ -328,22 +333,19 @@ function __fish_git_prompt_staged --description "fish_git_prompt helper, tells w
     # but we want to return 0 if there are staged changes.
     # So we invert the status.
     not command git diff-index --cached --quiet HEAD -- 2>/dev/null
-    and echo $___fish_git_prompt_char_stagedstate
+    and echo 1
 end
 
 function __fish_git_prompt_untracked --description "fish_git_prompt helper, tells whether or not the current repository has untracked files"
     command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>&1
-    and echo $___fish_git_prompt_char_untrackedfiles
+    and echo 1
 end
 
 function __fish_git_prompt_dirty --description "fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
     # Like staged, invert the status because we want 0 to mean there are dirty files.
     not command git diff --no-ext-diff --quiet --exit-code 2>/dev/null
-    and echo $___fish_git_prompt_char_dirtystate
+    and echo 1
 end
-
-set -q __fish_git_prompt_status_order
-or set -g __fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 
 function __fish_git_prompt_informative_status
     set -l stashstate 0

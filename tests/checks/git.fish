@@ -40,11 +40,36 @@ fish_git_prompt
 echo # the git prompt doesn't print a newline
 #CHECK: (newbranch)
 
-__fish_git_prompt_show_informative_status=1 fish_git_prompt
+set -g __fish_git_prompt_show_informative_status 1
+fish_git_prompt
 echo
 #CHECK: (newbranch|…1)
+set -e __fish_git_prompt_show_informative_status
 
 # Confirm the mode changes back
 fish_git_prompt
 echo
 #CHECK: (newbranch)
+
+# (for some reason stagedstate is only shown with showdirtystate?)
+set -g __fish_git_prompt_showdirtystate 1
+git add foo
+fish_git_prompt
+echo
+#CHECK: (newbranch +)
+
+set -g __fish_git_prompt_showuntrackedfiles 1
+touch bananan
+fish_git_prompt
+echo
+#CHECK: (newbranch +%)
+
+set -g __fish_git_prompt_status_order untrackedfiles stagedstate
+fish_git_prompt
+echo
+#CHECK: (newbranch %+)
+
+set -g __fish_git_prompt_status_order untrackedfiles
+fish_git_prompt
+echo
+#CHECK: (newbranch %)

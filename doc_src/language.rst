@@ -1262,6 +1262,8 @@ Fish also provides additional information through the values of certain environm
 
 - ``version``, the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
 
+- ``killring``, list of entries in fish kill ring.
+
 As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables.
 
 Fish also uses some variables internally, their name usually starting with ``__fish``. These are internal and should not typically be modified directly.

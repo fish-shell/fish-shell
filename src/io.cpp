@@ -306,7 +306,9 @@ void fd_output_stream_t::append(const wchar_t *s, size_t amt) {
     int res = wwrite_to_fd(s, amt, this->fd_);
     if (res < 0) {
         // TODO: this error is too aggressive, e.g. if we got SIGINT we should not complain.
-        wperror(L"write");
+        if (errno != EPIPE) {
+            wperror(L"write");
+        }
         errored_ = true;
     }
 }

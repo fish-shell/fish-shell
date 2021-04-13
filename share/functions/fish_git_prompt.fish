@@ -221,12 +221,17 @@ function fish_git_prompt --description "Prompt function for Git"
         set -q __fish_git_prompt_showdirtystate
         and set dirty true
     end
+    # If we don't print these, there is no need to compute them.
+    contains dirtystate $__fish_git_prompt_status_order
+    or set dirty false
 
     set -l untracked (command git config --bool bash.showUntrackedFiles)
     if not set -q untracked[1]
         set -q __fish_git_prompt_showuntrackedfiles
         and set untracked true
     end
+    contains untrackedfiles $__fish_git_prompt_status_order
+    or set untracked false
 
     if test true = $inside_worktree
         # Use informative status if it has been enabled locally, or it has been

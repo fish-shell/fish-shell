@@ -34,6 +34,8 @@ Interactive improvements
 - The :kbd:`F1` binding, which opens the manual page for the current command, now clears the screen with new ``less`` versions (:issue:`7863`).
 - ``fish --help`` is more helpful if the documentation isn't installed (:issue:`7824`).
 - ``funced`` won't include an entry on where a function is defined, thanks to the new ``functions --no-details`` option (:issue:`7879`).
+- The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__fish_git_prompt_status_order`` (:issue:`7926`).
+- The git prompt now shows staged state in non-informative mode even when not told to show "dirty" files.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -21,6 +21,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "signal.h"
+#include "termsize.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class pending_signals_t {
@@ -327,6 +328,12 @@ void event_fire_delayed(parser_t &parser) {
     if (signals.any()) {
         for (uint32_t sig = 0; sig < signals.size(); sig++) {
             if (signals.test(sig)) {
+                // HACK: The only variables we change in response to a *signal*
+                // are $COLUMNS and $LINES.
+                // Do that now.
+                if (sig == SIGWINCH) {
+                    (void)termsize_container_t::shared().updating(parser);
+                }
                 auto e = std::make_shared<event_t>(event_type_t::signal);
                 e->desc.param1.signal = sig;
                 e->arguments.push_back(sig2wcs(sig));

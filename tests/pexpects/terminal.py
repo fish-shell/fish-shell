@@ -21,6 +21,19 @@ expect_str("term-support: Terminal has 0 columns, falling back to default width"
 expect_str("term-support: Terminal has 0 rows, falling back to default height")
 expect_prompt()
 
+# See if $LINES/$COLUMNS change in response to sigwinch, also in a --on-signal function
+sendline("function on-winch --on-signal winch; echo $LINES $COLUMNS; end")
+expect_prompt()
+sp.spawn.setwinsize(40, 50)
+expect_str("40 50")
+sendline("echo $LINES $COLUMNS")
+expect_prompt("40 50")
+
+sp.spawn.setwinsize(20, 70)
+expect_str("20 70")
+sendline("echo $LINES $COLUMNS")
+expect_prompt("20 70")
+
 sendline("stty -a")
 expect_prompt()
 # Confirm flow control in the shell is disabled - we should ignore the ctrl-s in there.
@@ -48,3 +61,4 @@ if platform.system() in ["Linux"]:
     expect_str("hellohello", timeout=1, shouldfail=True)
     send("\x11") # ctrl-q to resume flow
     expect_prompt("hellohello")
+

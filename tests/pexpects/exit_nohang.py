@@ -46,7 +46,7 @@ os.kill(fish_pid, signal.SIGTERM)
 
 # Loop a bit until the process exits (correct) or stops (incorrrect).
 # When it exits it should be due to the SIGTERM that we sent it.
-for i in range(10):
+for i in range(50):
     pid, status = os.waitpid(fish_pid, os.WUNTRACED | os.WNOHANG)
     if pid == 0:
         # No process ready yet, loop again.

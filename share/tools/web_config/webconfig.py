@@ -1123,9 +1123,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         out, err = run_fish_cmd(cmd)
         return len(err) == 0
 
-    def do_get_prompt(self, command_to_run, prompt_function_text, extras_dict):
+    def do_get_prompt(self, prompt_function_text, extras_dict):
         # Return the prompt output by the given command
-        prompt_demo_ansi, err = run_fish_cmd(command_to_run)
+        cmd = prompt_function_text + '\n builtin cd "' + initial_wd + '" \n false \n fish_prompt\n'
+        prompt_demo_ansi, err = run_fish_cmd(cmd)
         prompt_demo_html = ansi_to_html(prompt_demo_ansi)
         prompt_demo_font_size = self.font_size_for_ansi_prompt(prompt_demo_ansi)
         result = {
@@ -1142,7 +1143,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # prompt shows the command status (#1624).
         prompt_func, err = run_fish_cmd("functions fish_prompt")
         result = self.do_get_prompt(
-            'builtin cd "' + initial_wd + '" ; false ; fish_prompt',
             prompt_func.strip(),
             {"name": "Current"},
         )
@@ -1152,8 +1152,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Return the prompt you get from the given text. Extras_dict is a
         # dictionary whose values get merged in. We run 'false' to demonstrate
         # how the prompt shows the command status (#1624)
-        cmd = text + '\n builtin cd "' + initial_wd + '" \n false \n fish_prompt\n'
-        return self.do_get_prompt(cmd, text.strip(), extras_dict)
+        return self.do_get_prompt(text.strip(), extras_dict)
 
     def parse_one_sample_prompt_hash(self, line, result_dict):
         # Allow us to skip whitespace, etc.

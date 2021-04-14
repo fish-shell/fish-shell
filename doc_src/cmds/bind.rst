@@ -228,7 +228,7 @@ Perform a history search when :kbd:`Page Up` is pressed::
 
     bind -k ppage history-search-backward
 
-Turn on Vi key bindings and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
+Turn on :ref:`Vi key bindings <vi-mode>` and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
 
     set -g fish_key_bindings fish_vi_key_bindings
     bind -M insert \cc kill-whole-line repaint

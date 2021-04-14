@@ -1212,6 +1212,8 @@ You can change the settings of fish by changing the values of certain variables.
   empty string, history is not saved to disk (but is still available within the interactive
   session).
 
+- ``fish_key_bindings``, the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.
+
 - ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish (stderr by default).
 
 - ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.

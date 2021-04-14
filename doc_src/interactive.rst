@@ -153,7 +153,7 @@ Command line editor
 
 The fish editor features copy and paste, a `searchable history <#history-search>`_ and many editor functions that can be bound to special keyboard shortcuts.
 
-Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example::
+Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the Vi text editor. The default editing mode is Emacs. You can switch to Vi mode by running ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
 
 
     function fish_hybrid_key_bindings --description \
@@ -165,13 +165,14 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
     end
     set -g fish_key_bindings fish_hybrid_key_bindings
 
+While the key bindings included with fish include many of the shortcuts popular from the respective text editors, they are not a complete implementation. They include a shortcut to open the current command line in your preferred editor (:kbd:`Alt`\ +\ :kbd:`E` by default) if you need the full power of your editor.
 
 .. _shared-binds:
 
 Shared bindings
 ---------------
 
-Some bindings are shared between emacs- and vi-mode because they aren't text editing bindings or because what Vi/Vim does for a particular key doesn't make sense for a shell.
+Some bindings are common across Emacs and Vi mode, because they aren't text editing bindings, or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
 - :kbd:`Tab` `completes <#tab-completion>`_ the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode.
 

@@ -63,7 +63,7 @@ The following operations (sub-commands) are available:
 - ``fish-path`` prints the absolute path to the currently executing instance of fish.
 
 - ``function`` prints the name of the currently called function if able, when missing displays "Not a
-  function" (or equivalent translated string). Also ``current-function``, ``-u`` or ``--current-function``.
+  function" (or equivalent translated string). Also ``current-function``.
 
 - ``line-number`` prints the line number of the currently running script. Also ``current-line-number``, ``-n`` or ``--current-line-number``.
 
@@ -78,6 +78,6 @@ The following operations (sub-commands) are available:
 Notes
 -----
 
-For backwards compatibility each subcommand can also be specified as a long or short option. For example, rather than ``status is-login`` you can type ``status --is-login``. The flag forms are deprecated and may be removed in a future release (but not before fish 3.0).
+For backwards compatibility most subcommands can also be specified as a long or short option. For example, rather than ``status is-login`` you can type ``status --is-login``. The flag forms are deprecated and may be removed in a future release (but not before fish 4.0).
 
 You can only specify one subcommand per invocation even if you use the flag form of the subcommand.

@@ -198,6 +198,7 @@ controllers.controller("promptController", function($scope, $http) {
 
             // Update attributes of current prompt and select it
             $scope.samplePrompts[0].demo = selectedPrompt.demo;
+            $scope.samplePrompts[0].right = selectedPrompt.right;
             $scope.samplePrompts[0].function = selectedPrompt.function;
             $scope.samplePrompts[0].font_size = selectedPrompt.font_size;
             $scope.selectedPrompt = $scope.samplePrompts[0];

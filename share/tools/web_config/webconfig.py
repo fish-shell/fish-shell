@@ -1119,7 +1119,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return True
 
     def do_set_prompt_function(self, prompt_func):
-        cmd = prompt_func + "\n" + "funcsave fish_prompt"
+        cmd = "functions -e fish_right_prompt; " + prompt_func + "\n" + "funcsave fish_prompt && funcsave fish_right_prompt 2>/dev/null"
         out, err = run_fish_cmd(cmd)
         return len(err) == 0
 
@@ -1128,11 +1128,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         cmd = prompt_function_text + '\n builtin cd "' + initial_wd + '" \n false \n fish_prompt\n'
         prompt_demo_ansi, err = run_fish_cmd(cmd)
         prompt_demo_html = ansi_to_html(prompt_demo_ansi)
-        prompt_demo_font_size = self.font_size_for_ansi_prompt(prompt_demo_ansi)
+        right_demo_ansi, err = run_fish_cmd(
+            "functions -e fish_right_prompt; " + prompt_function_text + '\n builtin cd "' + initial_wd + '" \n false \n functions -q fish_right_prompt && fish_right_prompt\n'
+        )
+        right_demo_html = ansi_to_html(right_demo_ansi)
+        prompt_demo_font_size = self.font_size_for_ansi_prompt(prompt_demo_ansi + right_demo_ansi)
         result = {
             "function": prompt_function_text,
             "demo": prompt_demo_html,
             "font_size": prompt_demo_font_size,
+            "right": right_demo_html,
         }
         if extras_dict:
             result.update(extras_dict)
@@ -1141,7 +1146,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_current_prompt(self):
         # Return the current prompt. We run 'false' to demonstrate how the
         # prompt shows the command status (#1624).
-        prompt_func, err = run_fish_cmd("functions fish_prompt")
+        prompt_func, err = run_fish_cmd("functions fish_prompt; functions fish_right_prompt")
         result = self.do_get_prompt(
             prompt_func.strip(),
             {"name": "Current"},

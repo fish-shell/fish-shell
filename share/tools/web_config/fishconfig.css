@@ -499,7 +499,7 @@ img.delete_icon {
 .current_prompt {
     background-color: #000;
     font-size: 12pt;
-    padding: 25px;
+    padding: 10px;
     margin: 5px 5px 25px 5px; /* top right bottom left */
     cursor: pointer;
     line-height: 1.8em;

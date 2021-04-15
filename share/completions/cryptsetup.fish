@@ -1,4 +1,4 @@
-#cryptsetup 2.3.1
+#cryptsetup 2.3.5
 
 #variables
 set -l seen __fish_seen_subcommand_from
@@ -34,6 +34,7 @@ complete -c cryptsetup -l integrity-legacy-padding -d "Use inefficient legacy pa
 complete -c cryptsetup -l integrity-no-journal -d "Disable journal for integrity device"
 complete -c cryptsetup -l integrity-no-wipe -d "Do not wipe device after format"
 complete -c cryptsetup -l iter-time -s i -d "PBKDF iteration time for LUKS (in ms)"
+complete -c cryptsetup -l iv-large-sectors -d "Use IV counted in sector size (not in 512 bytes)"
 complete -c cryptsetup -l json-file -d "Read or write the json from or to a file"
 complete -c cryptsetup -l key-description -d "Key description"
 complete -c cryptsetup -l key-file -s d -d "Read the key from a file"
@@ -54,6 +55,8 @@ complete -c cryptsetup -l pbkdf -d "PBKDF algorithm (for LUKS2): argon2i, argon2
 complete -c cryptsetup -l pbkdf-force-iterations -d "PBKDF iterations cost (forced, disables benchmark)"
 complete -c cryptsetup -l pbkdf-memory -d "PBKDF memory cost limit"
 complete -c cryptsetup -l pbkdf-parallel -d "PBKDF parallel cost"
+complete -c cryptsetup -l perf-no_read_workqueue -d "Bypass dm-crypt workqueue and process read requests synchronously"
+complete -c cryptsetup -l perf-no_write_workqueue -d "Bypass dm-crypt workqueue and process write requests synchronously"
 complete -c cryptsetup -l perf-same_cpu_crypt -d "Use dm-crypt same_cpu_crypt performance compatibility option"
 complete -c cryptsetup -l perf-submit_from_crypt_cpus -d "Use dm-crypt submit_from_crypt_cpus performance compatibility option"
 complete -c cryptsetup -l persistent -d "Set activation flags persistent for device"
@@ -80,7 +83,7 @@ complete -c cryptsetup -l token-id -d "Token number (default: any)"
 complete -c cryptsetup -l token-only -d "Do not ask for passphrase if activation by token fails"
 complete -c cryptsetup -l tries -s T -d "How often the input of the passphrase can be retried"
 complete -c cryptsetup -l type -s M -d "Type of device metadata: luks, luks1, luks2, plain, loopaes, tcrypt, bitlk"
-complete -c cryptsetup -l unbound -d "Create unbound (no assigned data segment) LUKS2 keyslot"
+complete -c cryptsetup -l unbound -d "Create or dump unbound (no assigned data segment) LUKS2 keyslot"
 complete -c cryptsetup -l usage -d "Display brief usage"
 complete -c cryptsetup -l use-random -d "Use /dev/random for generating volume key"
 complete -c cryptsetup -l use-urandom -d "Use /dev/urandom for generating volume key"

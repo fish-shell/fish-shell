@@ -1,6 +1,6 @@
 #
 # These are very common and useful
 #
-function ll --description "List contents of directory using long format"
+function ll --wraps ls --description "List contents of directory using long format"
     ls -lh $argv
 end

@@ -1,4 +1,4 @@
-#Keybase 5.3.0
+#Keybase 5.6.1
 
 function __fish_keybase_line_ends_with
     set -l line (commandline -poc | string match -v -r '^-')
@@ -13,12 +13,13 @@ end
 set -l ends __fish_keybase_line_ends_with
 set -l seen __fish_seen_subcommand_from
 #L1
-set -l keybase account blocks bot chat ctl currency decrypt deprovision device encrypt follow fs git h help id kvstore list-followers list-following log login logout oneshot paperkey passphrase pgp ping prove rekey selfprovision service sign signup sigs status team track unfollow untrack update verify version wallet whoami
+set -l keybase account blocks bot chat config ctl currency decrypt deprovision device encrypt follow fs git h help id kvstore list-followers list-following log login logout oneshot paperkey passphrase pgp ping prove rekey selfprovision service sign signup sigs status team track unfollow untrack update verify version wallet whoami
 #L2
 set -l keybase_account contact-settings delete email h help lockdown recover-username upload-avatar
 set -l keybase_blocks h help list-users list-teams
 set -l keybase_bot h help signup token
 set -l keybase_chat add-bot-member add-to-channel api api-listen bot-member-settings clear-commands conv-info create-channel default-channels delete-channel delete-history download edit-bot-member featured-bots h help hide join-channel leave-channel list list-channels list-members list-unread ls lsur min-writer-role mute notification-settings read readd-member remove-bot-member rename-channel report retention-policy search search-bots search-regexp send upload
+set -l keybase_config get h help info set
 set -l keybase_ctl app-exit autostart h help init log-rotate redirector reload restart start stop wait watchdog watchdog2
 set -l keybase_currency add h help
 set -l keybase_device add h help list remove
@@ -122,6 +123,7 @@ complete -c keybase -f -n "$ends keybase account" -a "$keybase_account"
 complete -c keybase -f -n "$ends keybase blocks" -a "$keybase_blocks"
 complete -c keybase -f -n "$ends keybase bot" -a "$keybase_bot"
 complete -c keybase -f -n "$ends keybase chat" -a "$keybase_chat"
+complete -c keybase -f -n "$ends keybase config" -a "$keybase_config"
 complete -c keybase -f -n "$ends keybase ctl" -a "$keybase_ctl"
 complete -c keybase -f -n "$ends keybase currency" -a "$keybase_currency"
 complete -c keybase -f -n "$ends keybase device" -a "$keybase_device"

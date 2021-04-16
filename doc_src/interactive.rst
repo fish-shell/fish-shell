@@ -10,7 +10,7 @@ Fish is used by giving commands in the fish language, see :ref:`The Fish Languag
 Help
 ----
 
-Fish has an extensive help system. Use the :ref:`help <cmd-help>` command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the `syntax section <#syntax>`_ of this documentation.
+Fish has an extensive help system. Use the :ref:`help <cmd-help>` command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the :ref:`syntax section <syntax>` of this documentation.
 
 Fish also has man pages for its commands, and translates the help pages to man pages. For example, ``man set`` will show the documentation for ``set`` as a man page.
 
@@ -23,7 +23,7 @@ This page can be viewed via ``help index`` (or just ``help``) or ``man fish-doc`
 Autosuggestions
 ---------------
 
-fish suggests commands as you type, based on `command history <#history-search>`_, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
+fish suggests commands as you type, based on :ref:`command history <history-search>`, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
 To accept the autosuggestion (replacing the command line contents), press :kbd:`→` or :kbd:`Control`\ +\ :kbd:`F`. To accept the first suggested word, press :kbd:`Alt`\ +\ :kbd:`→` or :kbd:`Alt`\ +\ :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
@@ -82,7 +82,7 @@ Detected errors include:
 
 When the cursor is over a parenthesis or a quote, fish also highlights its matching quote or parenthesis.
 
-To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <#variables-color>`__ section.
+To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
 
 .. _abbreviations:
 
@@ -126,7 +126,7 @@ To show the last command in the title::
 Programmable prompt
 -------------------
 
-When fish waits for input, it will display a prompt by evaluating the :ref:`fish_prompt <cmd-fish_prompt>` and :ref:`fish_right_prompt <cmd-fish_right_prompt>` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
+When fish waits for input, it will display a prompt by evaluating the :ref:`fish_prompt <cmd-fish_prompt>` and :ref:`fish_right_prompt <cmd-fish_right_prompt>` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` will be prepended on the left, though the default function only does this when in :ref:`vi-mode <vi-mode>`.
 
 .. _greeting:
 
@@ -151,7 +151,7 @@ You can query the variable ``fish_private_mode`` (``if set -q fish_private_mode 
 Command line editor
 -------------------
 
-The fish editor features copy and paste, a `searchable history <#history-search>`_ and many editor functions that can be bound to special keyboard shortcuts.
+The fish editor features copy and paste, a :ref:`searchable history <history-search>` and many editor functions that can be bound to special keyboard shortcuts.
 
 Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the Vi text editor. The default editing mode is Emacs. You can switch to Vi mode by running ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
 
@@ -174,7 +174,7 @@ Shared bindings
 
 Some bindings are common across Emacs and Vi mode, because they aren't text editing bindings, or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
-- :kbd:`Tab` `completes <#tab-completion>`_ the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode.
+- :kbd:`Tab` :ref:`completes <tab-completion>` the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode.
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`→` accepts the autosuggestion.
 
@@ -184,25 +184,25 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`Shift`\ +\ :kbd:`←` and :kbd:`Shift`\ +\ :kbd:`→` move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
 
-- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control`\ +\ :kbd:`P` and :kbd:`Control`\ +\ :kbd:`N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history-search>`_ section for more information on history searching.
+- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control`\ +\ :kbd:`P` and :kbd:`Control`\ +\ :kbd:`N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the :ref:`history <history-search>` section for more information on history searching.
 
-- :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history-search>`_ section for more information on history searching.
+- :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the :ref:`history <history-search>` section for more information on history searching.
 
 - :kbd:`Control`\ +\ :kbd:`C` cancels the entire line.
 
 - :kbd:`Control`\ +\ :kbd:`D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
 
-- :kbd:`Control`\ +\ :kbd:`U` moves contents from the beginning of line to the cursor to the `killring <#killring>`__.
+- :kbd:`Control`\ +\ :kbd:`U` moves contents from the beginning of line to the cursor to the :ref:`killring <killring>`.
 
 - :kbd:`Control`\ +\ :kbd:`L` clears and repaints the screen.
 
 - :kbd:`Control`\ +\ :kbd:`R` searches the history if there is something in the commandline. This is mainly to ease the transition from other shells, where ctrl+r initiates the history search.
 
-- :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the `killring <#killring>`__.
+- :kbd:`Control`\ +\ :kbd:`W` moves the previous path component (everything up to the previous "/", ":" or "@") to the :ref:`killring`.
 
 - :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents.
 
-- :kbd:`Alt`\ +\ :kbd:`D` moves the next word to the `killring <#killring>`__.
+- :kbd:`Alt`\ +\ :kbd:`D` moves the next word to the :ref:`killring`.
 
 - :kbd:`Alt`\ +\ :kbd:`H` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
 
@@ -237,7 +237,7 @@ Emacs mode commands
 
 - :kbd:`Delete` or :kbd:`Backspace` removes one character forwards or backwards respectively.
 
-- :kbd:`Control`\ +\ :kbd:`K` moves contents from the cursor to the end of line to the `killring <#killring>`__.
+- :kbd:`Control`\ +\ :kbd:`K` moves contents from the cursor to the end of line to the :ref:`killring`.
 
 - :kbd:`Alt`\ +\ :kbd:`C` capitalizes the current word.
 
@@ -260,7 +260,7 @@ You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.
 Vi mode commands
 ----------------
 
-Vi mode allows for the use of Vi-like commands at the prompt. Initially, `insert mode <#vi-mode-insert>`_ is active. :kbd:`Escape` enters `command mode <#vi-mode-command>`_. The commands available in command, insert and visual mode are described below. Vi mode shares `some bindings <#shared-binds>`_ with `Emacs mode <#emacs-mode>`_.
+Vi mode allows for the use of Vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
 
 It is also possible to add all emacs-mode bindings to vi-mode by using something like::
 
@@ -309,25 +309,25 @@ Command mode is also known as normal mode.
 
 - :kbd:`L` moves the cursor right.
 
-- :kbd:`I` enters `insert mode <#vi-mode-insert>`_ at the current cursor position.
+- :kbd:`I` enters :ref:`insert mode <vi-mode-insert>` at the current cursor position.
 
-- :kbd:`V` enters `visual mode <#vi-mode-visual>`_ at the current cursor position.
+- :kbd:`V` enters :ref:`visual mode <vi-mode-visual>` at the current cursor position.
 
-- :kbd:`A` enters `insert mode <#vi-mode-insert>`_ after the current cursor position.
+- :kbd:`A` enters :ref:`insert mode <vi-mode-insert>` after the current cursor position.
 
-- :kbd:`Shift`\ +\ :kbd:`A` enters `insert mode <#vi-mode-insert>`_ at the end of the line.
+- :kbd:`Shift`\ +\ :kbd:`A` enters :ref:`insert mode <vi-mode-insert>` at the end of the line.
 
 - :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
-- :kbd:`D`\ +\ :kbd:`D` deletes the current line and moves it to the `killring <#killring>`__.
+- :kbd:`D`\ +\ :kbd:`D` deletes the current line and moves it to the :ref:`killring`.
 
-- :kbd:`Shift`\ +\ :kbd:`D` deletes text after the current cursor position and moves it to the `killring <#killring>`__.
+- :kbd:`Shift`\ +\ :kbd:`D` deletes text after the current cursor position and moves it to the :ref:`killring`.
 
-- :kbd:`P` pastes text from the `killring <#killring>`__.
+- :kbd:`P` pastes text from the :ref:`killring`.
 
 - :kbd:`U` search history backwards.
 
-- :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the `history <#history-search>`_ section for more information on history searching.
+- :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the :ref:`history <history-search>` section for more information on history searching.
 
 - :kbd:`Backspace` moves the cursor left.
 
@@ -336,7 +336,7 @@ Command mode is also known as normal mode.
 Insert mode
 ^^^^^^^^^^^
 
-- :kbd:`Escape` enters `command mode <#vi-mode-command>`_.
+- :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`.
 
 - :kbd:`Backspace` removes one character to the left.
 
@@ -349,9 +349,9 @@ Visual mode
 
 - :kbd:`B` and :kbd:`W` extend the selection backward/forward by one word.
 
-- :kbd:`D` and :kbd:`X` move the selection to the `killring <#killring>`__ and enter `command mode <#vi-mode-command>`__.
+- :kbd:`D` and :kbd:`X` move the selection to the :ref:`killring` and enter :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`C` enter `command mode <#vi-mode-command>`_.
+- :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`C` enter :ref:`command mode <vi-mode-command>`.
 
 .. _custom-binds:
 

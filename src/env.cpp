@@ -90,10 +90,10 @@ static constexpr const electric_var_t electric_variables[] = {
     {L"SHLVL", electric_var_t::freadonly | electric_var_t::fexports},
     {L"_", electric_var_t::freadonly},
     {L"fish_kill_signal", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"fish_killring", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"fish_pid", electric_var_t::freadonly},
     {L"history", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"hostname", electric_var_t::freadonly},
-    {L"killring", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"status", electric_var_t::freadonly | electric_var_t::fcomputed},
     {L"status_generation", electric_var_t::freadonly | electric_var_t::fcomputed},
@@ -710,8 +710,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
         wcstring_list_t result;
         if (history) history->get_history(result);
         return env_var_t(L"history", std::move(result));
-    } else if (key == L"killring") {
-        return env_var_t(L"killring", kill_entries());
+    } else if (key == L"fish_killring") {
+        return env_var_t(L"fish_killring", kill_entries());
     } else if (key == L"pipestatus") {
         const auto &js = perproc_data().statuses;
         wcstring_list_t result;

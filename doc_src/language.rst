@@ -1420,3 +1420,72 @@ The names given to variables and functions (so called "identifiers") have to fol
 - A bind mode name (e.g., ``bind -m abc ...``) must be a valid variable name.
 
 Other things have other restrictions. For instance what is allowed for file names depends on your system, but at the very least they cannot contain a "/" (because that is the path separator) or NULL byte (because that is how UNIX ends strings).
+
+.. _featureflags:
+
+Future feature flags
+--------------------
+
+Feature flags are how fish stages changes that might break scripts. Breaking changes are introduced as opt-in, in a few releases they become opt-out, and eventually the old behavior is removed.
+
+You can see the current list of features via ``status features``::
+
+    > status features
+    stderr-nocaret  on     3.0      ^ no longer redirects stderr
+    qmark-noglob    off    3.0      ? no longer globs
+    regex-easyesc   off    3.1      string replace -r needs fewer \\'s
+
+There are two breaking changes in fish 3.0: caret ``^`` no longer redirects stderr, and question mark ``?`` is no longer a glob.
+
+There is one breaking change in fish 3.1: ``string replace -r`` does a superfluous round of escaping for the replacement, so escaping backslashes would look like ``string replace -ra '([ab])' '\\\\\\\$1' a``. This flag removes that if turned on, so ``'\\\\$1'`` is enough.
+
+
+These changes are off by default. They can be enabled on a per session basis::
+
+    > fish --features qmark-noglob,stderr-nocaret
+
+
+or opted into globally for a user::
+
+
+    > set -U fish_features stderr-nocaret qmark-noglob
+
+Features will only be set on startup, so this variable will only take effect if it is universal or exported.
+
+You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob".
+
+Prefixing a feature with ``no-`` turns it off instead.
+
+.. _event:
+
+Event handlers
+--------------
+
+When defining a new function in fish, it is possible to make it into an event handler, i.e. a function that is automatically run when a specific event takes place. Events that can trigger a handler currently are:
+
+- When a signal is delivered
+- When a job exits
+- When the value of a variable is updated
+- When the prompt is about to be shown
+
+Example:
+
+To specify a signal handler for the WINCH signal, write::
+
+    function my_signal_handler --on-signal WINCH
+        echo Got WINCH signal!
+    end
+
+Please note that event handlers only become active when a function is loaded, which means you might need to otherwise :ref:`source <cmd-source>` or execute a function instead of relying on :ref:`autoloading <syntax-function-autoloading>`. One approach is to put it into your :ref:`initialization file <initialization>`.
+
+For more information on how to define new event handlers, see the documentation for the :ref:`function <cmd-function>` command.
+
+
+.. _debugging:
+
+Debugging fish scripts
+----------------------
+
+Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using :ref:`printf <cmd-printf>` and :ref:`set <cmd-set>`. As another example, you can run :ref:`status print-stack-trace <cmd-status>` to see how this breakpoint was reached. To resume normal execution of the script, simply type :ref:`exit <cmd-exit>` or :kbd:`Control`\ +\ :kbd:`D`.
+
+To start a debug session simply run the builtin command :ref:`breakpoint <cmd-breakpoint>` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.

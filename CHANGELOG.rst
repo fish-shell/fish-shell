@@ -38,7 +38,7 @@ Interactive improvements
 - ``funced`` won't include an entry on where a function is defined, thanks to the new ``functions --no-details`` option (:issue:`7879`).
 - The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__fish_git_prompt_status_order`` (:issue:`7926`).
 - The git prompt now shows staged state in non-informative mode even when not told to show "dirty" files.
-- Variable ``killring`` containing entries from killring is now available (:issue:`7445`).
+- Variable ``fish_killring`` containing entries from killring is now available (:issue:`7445`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -233,5 +233,3 @@ issue <https://github.com/fish-shell/fish-shell/issues/new>`__.
 
 .. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/C/C++%20CI/badge.svg
    :target: https://github.com/fish-shell/fish-shell/actions
-.. |Try in browser| image:: https://cdn.rawgit.com/rootnroll/library/assets/try.svg
-   :target: https://rootnroll.com/d/fish-shell/

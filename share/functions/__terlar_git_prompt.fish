@@ -34,5 +34,5 @@ function __terlar_git_prompt --description 'Write out the git prompt'
     set -q __fish_git_prompt_char_stateseparator
     or set -g __fish_git_prompt_char_stateseparator '⚡'
 
-    fish_git_prompt $argv
+    fish_git_prompt '|%s'
 end

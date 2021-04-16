@@ -3,6 +3,10 @@
 # Don't run this on GitHub Actions since it's flaky.
 #REQUIRES: test "$CI" != true
 
+# Don't inflict relative XDG paths on tmux, or it will be confused.
+set -e XDG_DATA_HOME
+set -e XDG_CONFIG_HOME
+
 # Isolated tmux.
 set -g tmpdir (mktemp -d)
 set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null
@@ -12,14 +16,13 @@ set -g sleep sleep .1
 set fish (realpath $fish)
 cd $tmpdir
 
-$tmux new-session -d $fish -C '
+$tmux new-session -x 80 -y 10 -d $fish -C '
     # This is similar to "tests/interactive.config".
     function fish_greeting; end
     function fish_prompt; printf "prompt $status_generation> "; end
     # No autosuggestion from older history.
     set fish_history ""
 '
-$tmux resize-pane -x 80 -y 10
 $sleep # Let fish draw a prompt.
 
 # Don't escape existing token (#7526).

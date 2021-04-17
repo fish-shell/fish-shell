@@ -7,17 +7,28 @@ function __dnf_list_installed_packages
 end
 
 function __dnf_list_available_packages
+    set -l tok (commandline -ct | string collect)
+    if string match -q -- '*/*' $tok
+        # Fast path - package names can't contain slashes, so show files.
+        __fish_complete_suffix rpm
+        return
+    end
+    set -l results
     # dnf --cacheonly list --available gives a list of non-installed packages dnf is aware of,
     # but it is slow as molasses. Unfortunately, sqlite3 is not available oob (Fedora Server 32).
     if type -q sqlite3
         # This schema is bad, there is only a "pkg" field with the full
         #    packagename-version-release.fedorarelease.architecture
         # tuple. We are only interested in the packagename.
-        sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE \"$cur%\"" 2>/dev/null |
-            string replace -r -- '-[^-]*-[^-]*$' ''
+        set results (sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE \"$tok%\"" 2>/dev/null |
+            string replace -r -- '-[^-]*-[^-]*$' '')
     else
-        dnf repoquery --cacheonly "$cur*" --qf "%{NAME}" --available 2>/dev/null
+        set results (dnf repoquery --cacheonly "$tok*" --qf "%{NAME}" --available 2>/dev/null)
     end
+    if not set -q results[1]
+        set results (__fish_complete_suffix .rpm)
+    end
+    string join \n $results
 end
 
 function __dnf_list_transactions
@@ -103,11 +114,11 @@ end
 
 # Info
 complete -c dnf -n __fish_use_subcommand -xa info -d "Describes the given package"
-complete -c dnf -n "__fish_seen_subcommand_from info; and not __fish_seen_subcommand_from history" -xa "(__dnf_list_available_packages)"
+complete -c dnf -n "__fish_seen_subcommand_from info; and not __fish_seen_subcommand_from history" -k -xa "(__dnf_list_available_packages)"
 
 # Install
 complete -c dnf -n __fish_use_subcommand -xa install -d "Install package"
-complete -c dnf -n "__fish_seen_subcommand_from install" -xa "(__dnf_list_available_packages)"
+complete -c dnf -n "__fish_seen_subcommand_from install" -k -xa "(__dnf_list_available_packages)"
 
 # List
 complete -c dnf -n __fish_use_subcommand -xa list -d "Lists all packages"

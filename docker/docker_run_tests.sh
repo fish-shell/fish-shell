@@ -16,7 +16,7 @@ DOCKER_EXTRA_ARGS=""
 set -e
 
 # Get fish source directory.
-FISH_SRC_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd)
+FISH_SRC_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )"/.. >/dev/null && pwd)
 
 # Parse args.
 while [ $# -gt 1 ]; do

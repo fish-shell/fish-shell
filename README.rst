@@ -76,7 +76,7 @@ If packages are not available for your platform, GPG-signed tarballs are
 available from `fishshell.com <https://fishshell.com/>`__ and
 `fish-shell on
 GitHub <https://github.com/fish-shell/fish-shell/releases>`__. See the
-*Building* section for instructions.
+`Building <#building>`__ section for instructions.
 
 Running fish
 ------------

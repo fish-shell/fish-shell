@@ -2,6 +2,7 @@
 
 html {
     background: none;
+    min-height: 100%;
 }
 
 body {

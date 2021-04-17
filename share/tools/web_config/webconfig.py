@@ -239,10 +239,10 @@ def parse_bool(val):
 def html_color_for_ansi_color_index(val):
     arr = [
         "black",
-        "#AA0000",
-        "#00AA00",
+        "#FF0000",
+        "#00FF00",
         "#AA5500",
-        "#0000AA",
+        "#0000FF",
         "#AA00AA",
         "#00AAAA",
         "#AAAAAA",

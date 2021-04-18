@@ -737,7 +737,7 @@ class string_matcher_t {
     int match_count() const { return total_matched; }
 };
 
-class wildcard_matcher_t : public string_matcher_t {
+class wildcard_matcher_t final : public string_matcher_t {
    private:
     wcstring wcpattern;
 
@@ -831,7 +831,7 @@ struct compiled_regex_t {
     }
 };
 
-class pcre2_matcher_t : public string_matcher_t {
+class pcre2_matcher_t final : public string_matcher_t {
     const wchar_t *argv0;
     compiled_regex_t regex;
     parser_t &parser;
@@ -897,14 +897,7 @@ class pcre2_matcher_t : public string_matcher_t {
         parser_t &parser_;
         const wcstring &haystack_;
         const compiled_regex_t &regex_;
-        /// fish variables may be empty, but there's no such thing as a fish array that contains
-        /// an empty value/index. Since a match may evaluate to a literal empty string, we can't
-        /// use that as a sentinel value in place of null/none to indicate that no matches were
-        /// found, which is required to determine whether, in the case of a single
-        /// `string match -r` invocation without `--all` we export a variable set to "" or an
-        /// empty variable.
-        bool match_found_ = false;
-        bool skip_import_ = true;
+        bool regex_valid_ = false;
 
        public:
         regex_importer_t(parser_t &parser, const wcstring &haystack, const compiled_regex_t &regex)
@@ -950,7 +943,7 @@ class pcre2_matcher_t : public string_matcher_t {
 
             auto *names = static_cast<name_table_entry_t *>((void *)(name_table));
             for (uint32_t i = 0; i < name_count; ++i) {
-                auto &name_entry = names[i * name_entry_size];
+                const auto &name_entry = names[i * name_entry_size];
 
                 if (env_var_t::flags_for(name_entry.name) & env_var_t::flag_read_only) {
                     // Modification of read-only variables is not allowed
@@ -962,20 +955,17 @@ class pcre2_matcher_t : public string_matcher_t {
                 matches_.emplace(name_entry.name, std::vector<wcstring>{});
             }
 
-            skip_import_ = false;
+            regex_valid_ = true;
             return true;
         }
 
         /// This member function should be called each time a match is found
-        void import_vars(bool match_found) {
-            match_found_ |= match_found;
-            if (!match_found) {
-                return;
-            }
-
+        void import_vars() {
             PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex_.match);
-            for (const auto &kv : matches_) {
+            for (auto &kv : matches_) {
                 const auto &name = kv.first;
+                wcstring_list_t &vals = kv.second;
+
                 // A named group may actually correspond to multiple group numbers, each of which
                 // might have to be enumerated.
                 PCRE2_SPTR first = nullptr;
@@ -987,13 +977,8 @@ class pcre2_matcher_t : public string_matcher_t {
                     continue;
                 }
 
-                if (!match_found) {
-                    matches_[name].emplace_back(L"");
-                    continue;
-                }
-
                 bool value_found = false;
-                for (auto group_ptr = first; group_ptr <= last; group_ptr += entry_size) {
+                for (const auto *group_ptr = first; group_ptr <= last; group_ptr += entry_size) {
                     int group_num = group_ptr[0];
 
                     PCRE2_SIZE *capture = ovector + (2 * group_num);
@@ -1001,7 +986,7 @@ class pcre2_matcher_t : public string_matcher_t {
                     PCRE2_SIZE end = capture[1];
 
                     if (begin != PCRE2_UNSET && end != PCRE2_UNSET && end >= begin) {
-                        matches_[name].emplace_back(haystack_.substr(begin, end - begin));
+                        vals.push_back(haystack_.substr(begin, end - begin));
                         value_found = true;
                         break;
                     }
@@ -1013,26 +998,21 @@ class pcre2_matcher_t : public string_matcher_t {
                 // resulting array, and unfortunately fish doesn't support empty/null members so
                 // we're going to have to use an empty string as the sentinel value.
                 if (!value_found) {
-                    matches_[name].emplace_back(wcstring{});
+                    vals.push_back(wcstring{});
                 }
             }
         }
 
         ~regex_importer_t() {
-            if (skip_import_) {
+            if (!regex_valid_) {
                 return;
             }
 
             auto &vars = parser_.vars();
-            for (const auto &kv : matches_) {
-                const auto &name = kv.first;
-                const auto &value = kv.second;
-
-                if (!match_found_) {
-                    vars.set_empty(name, ENV_DEFAULT);
-                } else {
-                    vars.set(name, ENV_DEFAULT, value);
-                }
+            for (auto &kv : matches_) {
+                const wcstring &name = kv.first;
+                wcstring_list_t &value = kv.second;
+                vars.set(name, ENV_DEFAULT, std::move(value));
             }
         }
     };
@@ -1072,7 +1052,7 @@ class pcre2_matcher_t : public string_matcher_t {
         // We only import variables for the *first matching argument*
         bool had_match = false;
         if (rc == match_result_t::match && !imported_vars) {
-            var_importer.import_vars(rc == match_result_t::match);
+            var_importer.import_vars();
             had_match = true;
         }
 
@@ -1107,7 +1087,7 @@ class pcre2_matcher_t : public string_matcher_t {
 
             // Call import_vars() before modifying the ovector
             if (rc == match_result_t::match) {
-                var_importer.import_vars(true /* match found */);
+                var_importer.import_vars();
             }
 
             if (rc == match_result_t::no_match) {

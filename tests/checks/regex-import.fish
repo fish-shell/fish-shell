@@ -54,3 +54,27 @@ echo hello | string match -rq "(?<version>.*)"
 string match -rq '(?<bee>b.*)' -- aaa ba ccc be
 echo $bee
 # CHECK: ba
+
+string match -r --all '(?<nums>\d+)|(?<text>[a-z]+)' -- '111 aaa 222 bbb'
+# CHECK: 111
+# CHECK: 111
+# CHECK: aaa
+# CHECK: aaa
+# CHECK: 222
+# CHECK: 222
+# CHECK: bbb
+# CHECK: bbb
+
+set --show nums
+# CHECK: $nums: set in global scope, unexported, with 4 elements
+# CHECK: $nums[1]: |111|
+# CHECK: $nums[2]: ||
+# CHECK: $nums[3]: |222|
+# CHECK: $nums[4]: ||
+
+set --show text
+# CHECK: $text: set in global scope, unexported, with 4 elements
+# CHECK: $text[1]: ||
+# CHECK: $text[2]: |aaa|
+# CHECK: $text[3]: ||
+# CHECK: $text[4]: |bbb|

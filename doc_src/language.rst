@@ -445,7 +445,7 @@ When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk")
 
 - ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the ``qmark-noglob`` :ref:`feature flag<featureflags>`, so ``?`` will just be an ordinary character.
 
-Other shells, such as zsh, have a much richer glob syntax, like ``**(.)`` to only match regular files. Fish does not. Instead of reinventing the whell, use programs like ``find`` to look for files. For example::
+Other shells, such as zsh, have a much richer glob syntax, like ``**(.)`` to only match regular files. Fish does not. Instead of reinventing the wheel, use programs like ``find`` to look for files. For example::
 
     function ff --description 'Like ** but only returns plain files.'
         # This also ignores .git directories.

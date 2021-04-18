@@ -1,13 +1,12 @@
 #RUN: %fish -C 'set -g fish %fish' %s
 #REQUIRES: command -v tmux
-# Don't run this on GitHub Actions since it's flaky.
-#REQUIRES: test "$CI" != true
 
 # Isolated tmux.
 set -g tmpdir (mktemp -d)
 set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null
 
 set -g sleep sleep .1
+set -q CI && set sleep sleep 1
 
 set fish (builtin realpath $fish)
 cd $tmpdir

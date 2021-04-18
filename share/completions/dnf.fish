@@ -8,9 +8,10 @@ end
 
 function __dnf_list_available_packages
     set -l tok (commandline -ct | string collect)
+    set -l files (__fish_complete_suffix .rpm)
     if string match -q -- '*/*' $tok
         # Fast path - package names can't contain slashes, so show files.
-        __fish_complete_suffix rpm
+        string join -- \n $files
         return
     end
     set -l results
@@ -25,8 +26,10 @@ function __dnf_list_available_packages
     else
         set results (dnf repoquery --cacheonly "$tok*" --qf "%{NAME}" --available 2>/dev/null)
     end
-    if not set -q results[1]
-        set results (__fish_complete_suffix .rpm)
+    if set -q results[1]
+        set results (string match -r -- '.*\\.rpm$' $files) $results
+    else
+        set results $files
     end
     string join \n $results
 end

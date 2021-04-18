@@ -13,6 +13,25 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 
+/// Compare wide strings with simple ASCII canonicalization.
+/// \return -1, 0, or 1 if s1 is less than, equal to, or greater than s2, respectively.
+static int simple_icase_compare(const wchar_t *s1, const wchar_t *s2) {
+    for (size_t idx = 0; s1[idx] || s2[idx]; idx++) {
+        wchar_t c1 = s1[idx];
+        wchar_t c2 = s2[idx];
+
+        // "Canonicalize" to lower case.
+        if (L'A' <= c1 && c1 <= L'Z') c1 = L'a' + (c1 - L'A');
+        if (L'A' <= c2 && c2 <= L'Z') c2 = L'a' + (c2 - L'A');
+
+        if (c1 != c2) {
+            return c1 < c2 ? -1 : 1;
+        }
+    }
+    // We must have equal lengths and equal values.
+    return 0;
+}
+
 bool rgb_color_t::try_parse_special(const wcstring &special) {
     std::memset(&data, 0, sizeof data);
     const wchar_t *name = special.c_str();
@@ -26,11 +45,11 @@ bool rgb_color_t::try_parse_special(const wcstring &special) {
     // what amounts to a simple memcmp before needing to access the invariant case lookup tables.
     this->type = type_none;
     if (special.size() == const_strlen(L"normal")) {
-        if (!wcscmp(name, L"normal") || !wcscasecmp(name, L"normal")) {
+        if (!simple_icase_compare(name, L"normal")) {
             this->type = type_normal;
         }
     } else if (special.size() == const_strlen(L"reset")) {
-        if (!wcscmp(name, L"reset") || !wcscasecmp(name, L"reset")) {
+        if (!simple_icase_compare(name, L"reset")) {
             this->type = type_reset;
         }
     }
@@ -203,47 +222,23 @@ wcstring_list_t rgb_color_t::named_color_names() {
 }
 
 bool rgb_color_t::try_parse_named(const wcstring &str) {
-    constexpr size_t colors_count = sizeof(named_colors) / sizeof(named_colors[0]);
-    constexpr const named_color_t *named_colors_begin = &named_colors[0];
-    constexpr const named_color_t *named_colors_end = &named_colors[0] + colors_count;
     std::memset(&data, 0, sizeof data);
-
-    if (str.size() == 0) {
+    if (str.empty()) {
         return false;
     }
 
-    // Binary search
-    named_color_t search;
-    search.name = str.c_str();
-
-    // Optimized conversion to lowercase with early abort
-    maybe_t<wcstring> lowercase;
-    for (auto &c : str) {
-        if (c >= L'a' && c <= L'z') {
-            continue;
-        }
-        if (c >= L'A' && c <= L'Z') {
-            lowercase = str;
-            std::transform(lowercase.value().begin(), lowercase.value().end(),
-                           lowercase.value().begin(), std::towlower);
-            search.name = lowercase.value().c_str();
-            break;
-        }
-        // Cannot be a named color
-        return false;
-    }
-
-    auto result = std::lower_bound(named_colors_begin, named_colors_end, search,
-                                   [&](const named_color_t &c1, const named_color_t &c2) {
-                                       return wcscmp(c1.name, c2.name) < 0;
-                                   });
-
-    if (result != named_colors_end && !(wcscmp(search.name, result->name) < 0)) {
-        data.name_idx = result->idx;
+    // Binary search with simple case-insensitive compares.
+    auto is_less = [](const named_color_t &s1, const wchar_t *s2) -> bool {
+        return simple_icase_compare(s1.name, s2) < 0;
+    };
+    auto start = std::begin(named_colors);
+    auto end = std::end(named_colors);
+    auto where = std::lower_bound(start, end, str.c_str(), is_less);
+    if (where != end && simple_icase_compare(where->name, str.c_str()) == 0) {
+        data.name_idx = where->idx;
         this->type = type_named;
         return true;
     }
-
     return false;
 }
 

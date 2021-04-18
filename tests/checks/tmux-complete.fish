@@ -4,8 +4,8 @@
 #REQUIRES: test "$CI" != true
 
 # Don't inflict relative XDG paths on tmux, or it will be confused.
-set -e XDG_DATA_HOME
-set -e XDG_CONFIG_HOME
+set -gx XDG_DATA_HOME (builtin realpath $XDG_DATA_HOME)
+set -gx XDG_CONFIG_HOME (builtin realpath $XDG_CONFIG_HOME)
 
 # Isolated tmux.
 set -g tmpdir (mktemp -d)
@@ -13,7 +13,7 @@ set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null
 
 set -g sleep sleep .1
 
-set fish (realpath $fish)
+set fish (builtin realpath $fish)
 cd $tmpdir
 
 $tmux new-session -x 80 -y 10 -d $fish -C '

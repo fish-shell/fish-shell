@@ -5430,31 +5430,26 @@ static void test_highlighting() {
     vars.remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
 }
 
-static void test_wcstring_tok() {
-    say(L"Testing wcstring_tok");
-    wcstring buff = L"hello world";
-    wcstring needle = L" \t\n";
-    wcstring_range loc = wcstring_tok(buff, needle);
-    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"hello") {
-        err(L"Wrong results from first wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
-    }
-    loc = wcstring_tok(buff, needle, loc);
-    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"world") {
-        err(L"Wrong results from second wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
-    }
-    loc = wcstring_tok(buff, needle, loc);
-    if (loc.first != wcstring::npos) {
-        err(L"Wrong results from third wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
-    }
+static void test_split_string_tok() {
+    say(L"Testing split_string_tok");
+    wcstring_list_t splits;
+    splits = split_string_tok(L" hello \t   world", L" \t\n");
+    do_test((splits == wcstring_list_t{L"hello", L"world"}));
 
-    buff = L"hello world";
-    loc = wcstring_tok(buff, needle);
-    // loc is "hello" again
-    loc = wcstring_tok(buff, L"", loc);
-    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"world") {
-        err(L"Wrong results from wcstring_tok with empty needle: {%zu, %zu}", loc.first,
-            loc.second);
-    }
+    splits = split_string_tok(L" stuff ", wcstring(L" "), 0);
+    do_test((splits == wcstring_list_t{}));
+
+    splits = split_string_tok(L" stuff ", wcstring(L" "), 1);
+    do_test((splits == wcstring_list_t{L" stuff "}));
+
+    splits = split_string_tok(L" hello \t   world  andstuff ", L" \t\n", 3);
+    do_test((splits == wcstring_list_t{L"hello", L"world", L" andstuff "}));
+
+    // NUL chars are OK.
+    wcstring nullstr = L" hello X  world";
+    nullstr.at(nullstr.find(L'X')) = L'\0';
+    splits = split_string_tok(nullstr, wcstring(L" \0", 2));
+    do_test((splits == wcstring_list_t{L"hello", L"world"}));
 }
 
 static void test_wwrite_to_fd() {
@@ -6521,7 +6516,7 @@ int main(int argc, char **argv) {
     env_stack_t::principal().set_pwd_from_getcwd();
 
     if (should_test_function("utility_functions")) test_utility_functions();
-    if (should_test_function("wcstring_tok")) test_wcstring_tok();
+    if (should_test_function("string_split")) test_split_string_tok();
     if (should_test_function("wwrite_to_fd")) test_wwrite_to_fd();
     if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("env")) test_env_snapshot();

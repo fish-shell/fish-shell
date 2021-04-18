@@ -120,6 +120,16 @@ inline maybe_t<string_fuzzy_match_t> string_fuzzy_match_string(const wcstring &s
 /// Split a string by a separator character.
 wcstring_list_t split_string(const wcstring &val, wchar_t sep);
 
+/// Split a string by runs of any of the separator characters provided in \p seps.
+/// Note the delimiters are the characters in \p seps, not \p seps itself.
+/// \p seps may contain the NUL character.
+/// Do not output more than \p max_results results. If we are to output exactly that much,
+/// the last output is the the remainder of the input, including leading delimiters,
+/// except for the first. This is historical behavior.
+/// Example: split_string_tok(" a  b   c ", " ", 3) -> {"a", "b", "  c  "}
+wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps,
+                                 size_t max_results = std::numeric_limits<size_t>::max());
+
 /// Join a list of strings by a separator character.
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
@@ -156,19 +166,6 @@ inline bool bool_from_string(const std::string &x) {
 inline bool bool_from_string(const wcstring &x) {
     return !x.empty() && std::wcschr(L"YTyt1", x.at(0));
 }
-
-/// @typedef wcstring_range represents a range in a wcstring.
-/// The first element is the location, the second is the count.
-typedef std::pair<wcstring::size_type, wcstring::size_type> wcstring_range;
-
-/// wcstring equivalent of wcstok(). Supports NUL. For convenience and wcstok() compatibility, the
-/// first character of each token separator is replaced with NUL.
-/// @return Returns a pair of (pos, count).
-///         This will be (npos, npos) when it's done. In the form of (pos, npos)
-///         when the token is already known to be the final token.
-/// @note The final token may not necessarily return (pos, npos).
-wcstring_range wcstring_tok(wcstring &str, const wcstring &needle,
-                            wcstring_range last = wcstring_range(0, 0));
 
 /// Given iterators into a string (forward or reverse), splits the haystack iterators
 /// about the needle sequence, up to max times. Inserts splits into the output array.

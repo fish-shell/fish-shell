@@ -10,31 +10,6 @@
 #include "common.h"
 #include "flog.h"
 
-wcstring_range wcstring_tok(wcstring &str, const wcstring &needle, wcstring_range last) {
-    using size_type = wcstring::size_type;
-    size_type pos = last.second == wcstring::npos ? wcstring::npos : last.first;
-    if (pos != wcstring::npos && last.second != wcstring::npos) pos += last.second;
-    if (pos != wcstring::npos && pos != 0) ++pos;
-    if (pos == wcstring::npos || pos >= str.size()) {
-        return std::make_pair(wcstring::npos, wcstring::npos);
-    }
-
-    if (needle.empty()) {
-        return std::make_pair(pos, wcstring::npos);
-    }
-
-    pos = str.find_first_not_of(needle, pos);
-    if (pos == wcstring::npos) return std::make_pair(wcstring::npos, wcstring::npos);
-
-    size_type next_pos = str.find_first_of(needle, pos);
-    if (next_pos == wcstring::npos) {
-        return std::make_pair(pos, wcstring::npos);
-    }
-
-    str[next_pos] = L'\0';
-    return std::make_pair(pos, next_pos - pos);
-}
-
 wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
     if (input.size() <= static_cast<size_t>(max_len)) {
         return input;
@@ -279,6 +254,33 @@ wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
         out.emplace_back(val, pos, next_pos - pos);
         pos = next_pos + 1;  // skip the separator, or skip past the end
     }
+    return out;
+}
+
+wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps, size_t max_results) {
+    wcstring_list_t out;
+    size_t end = val.size();
+    size_t pos = 0;
+    while (pos < end && out.size() + 1 < max_results) {
+        // Skip leading seps.
+        pos = val.find_first_not_of(seps, pos);
+        if (pos == wcstring::npos) break;
+
+        // Find next sep.
+        size_t next_sep = val.find_first_of(seps, pos);
+        if (next_sep == wcstring::npos) {
+            next_sep = end;
+        }
+        out.emplace_back(val, pos, next_sep - pos);
+        // Note we skip exactly one sep here. This is because on the last iteration we retain all
+        // but the first leading separators. This is historical.
+        pos = next_sep + 1;
+    }
+    if (pos < end && max_results > 0) {
+        assert(out.size() + 1 == max_results && "Should have split the max");
+        out.emplace_back(val, pos);
+    }
+    assert(out.size() <= max_results && "Got too many results");
     return out;
 }
 

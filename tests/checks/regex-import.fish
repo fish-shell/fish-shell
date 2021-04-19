@@ -20,7 +20,7 @@ printf "%s\n" $word1 $word2
 
 # Clear variables on no match
 set foo foo
-echo "foo" | string match -rq -- '^(?<foo>bar)$'
+echo foo | string match -rq -- '^(?<foo>bar)$'
 echo $foo
 # CHECK:
 
@@ -54,6 +54,21 @@ echo hello | string match -rq "(?<version>.*)"
 string match -rq '(?<bee>b.*)' -- aaa ba ccc be
 echo $bee
 # CHECK: ba
+
+# Verify the following regarding capture groups which are not matched:
+#    1. Set no values if --all is not provided
+#    2. Set an empty string value if --all is provided
+set -e nums
+set -e text
+
+string match -r '(?<nums>\d+)|(?<text>[a-z]+)' -- xyz
+# CHECK: xyz
+# CHECK: xyz
+set --show text
+# CHECK: $text: set in global scope, unexported, with 1 elements
+# CHECK: $text[1]: |xyz|
+set --show nums
+# CHECK: $nums: set in global scope, unexported, with 0 elements
 
 string match -r --all '(?<nums>\d+)|(?<text>[a-z]+)' -- '111 aaa 222 bbb'
 # CHECK: 111

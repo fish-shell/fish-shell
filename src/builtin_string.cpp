@@ -897,11 +897,13 @@ class pcre2_matcher_t final : public string_matcher_t {
         parser_t &parser_;
         const wcstring &haystack_;
         const compiled_regex_t &regex_;
+        const bool all_flag_;
         bool regex_valid_ = false;
 
        public:
-        regex_importer_t(parser_t &parser, const wcstring &haystack, const compiled_regex_t &regex)
-            : parser_(parser), haystack_(haystack), regex_(regex) {}
+        regex_importer_t(parser_t &parser, const wcstring &haystack, const compiled_regex_t &regex,
+                         bool all_flag)
+            : parser_(parser), haystack_(haystack), regex_(regex), all_flag_(all_flag) {}
 
         /// Enumerates the named groups in the compiled PCRE2 expression, validates the names of
         /// the groups as variable names, and initializes their value (overriding any previous
@@ -997,7 +999,7 @@ class pcre2_matcher_t final : public string_matcher_t {
                 // didn't match but its brethren did, we need to make sure to put *something* in the
                 // resulting array, and unfortunately fish doesn't support empty/null members so
                 // we're going to have to use an empty string as the sentinel value.
-                if (!value_found) {
+                if (!value_found && all_flag_) {
                     vals.push_back(wcstring{});
                 }
             }
@@ -1035,7 +1037,7 @@ class pcre2_matcher_t final : public string_matcher_t {
             return false;
         }
 
-        regex_importer_t var_importer(this->parser, arg, this->regex);
+        regex_importer_t var_importer(this->parser, arg, this->regex, opts.all);
 
         // We must manually init the importer rather than relegating this to the constructor
         // because it will validate the names it is importing to make sure they're all legal and

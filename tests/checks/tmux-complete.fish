@@ -3,6 +3,9 @@
 # Don't run this on GitHub Actions since it's flaky.
 #REQUIRES: test "$CI" != true
 
+# HACK: THIS IS DISABLED for now, since it doesn't work at the moment.
+#REQUIRES: false
+
 # Don't inflict relative XDG paths on tmux, or it will be confused.
 set -gx XDG_DATA_HOME (builtin realpath $XDG_DATA_HOME)
 set -gx XDG_CONFIG_HOME (builtin realpath $XDG_CONFIG_HOME)

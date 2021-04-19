@@ -20,7 +20,8 @@ Scripting improvements
 - ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with linux' special API files (``/proc``, ``/sys`` and such) (:issue:`7836`).
 - fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`).
 - Builtins now properly report a ``$status`` of 1 upon unsuccessful writes (:issue:`7857`).
-- `string match` with unmatched capture groups and without the `--all` flag now sets an empty variable instead of a variable containing the empty string, matching the documentation.
+- ``string match`` with unmatched capture groups and without the ``--all`` flag now sets an empty variable instead of a variable containing the empty string, matching the documentation.
+- Better errors when a command in a command substitution wasn't found or is not allowed.
 
 Interactive improvements
 -------------------------

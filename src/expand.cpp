@@ -652,6 +652,15 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             case STATUS_CMD_ERROR:
                 err = L"Too many active file descriptors";
                 break;
+            case STATUS_CMD_UNKNOWN:
+                err = L"Unknown command";
+                break;
+            case STATUS_ILLEGAL_CMD:
+                err = L"Commandname was invalid";
+                break;
+            case STATUS_NOT_EXECUTABLE:
+                err = L"Command not executable";
+                break;
             default:
                 err = L"Unknown error while evaluating command substitution";
                 break;

@@ -100,3 +100,20 @@ switch $smurf
         echo Test 3 pass
 end
 #CHECK: Test 3 pass
+
+begin
+    set -l PATH
+    switch (doesnotexist)
+        case '*'
+            echo Matched!
+    end
+    # CHECKERR: fish: Unknown command: doesnotexist
+    # CHECKERR: checks/switch.fish (line {{\d+}}):
+    # CHECKERR: doesnotexist
+    # CHECKERR: ^
+    # CHECKERR: in command substitution
+    # CHECKERR: {{\t}}called on line {{\d+}} of file checks/switch.fish
+    # CHECKERR: checks/switch.fish (line {{\d+}}): Unknown command
+    # CHECKERR: switch (doesnotexist)
+    # CHECKERR: ^
+end

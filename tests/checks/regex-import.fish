@@ -97,3 +97,26 @@ set --show text
 # CHECK: $text[2]: |aaa|
 # CHECK: $text[3]: ||
 # CHECK: $text[4]: |bbb|
+
+# Regression test for #7938.
+set -e text
+echo one\ntwo | string match -ra '(?<text>[a-z]+)'
+# CHECK: one
+# CHECK: one
+# CHECK: two
+# CHECK: two
+set --show text
+# CHECK: $text: set in global scope, unexported, with 1 elements
+# CHECK: $text[1]: |one|
+
+set -e text
+echo three\nfour | string match -qra '(?<text>[a-z]+)'
+set --show text
+# CHECK: $text: set in global scope, unexported, with 1 elements
+# CHECK: $text[1]: |three|
+
+set -e text
+echo 555\nsix | string match -qra '(?<text>[a-z]+)'
+set --show text
+# CHECK: $text: set in global scope, unexported, with 1 elements
+# CHECK: $text[1]: |six|

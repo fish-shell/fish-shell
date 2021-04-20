@@ -737,6 +737,7 @@ class string_matcher_t {
     int match_count() const { return total_matched; }
 
     virtual bool is_valid() const = 0;
+    virtual void clear_capture_vars() {}
 };
 
 class wildcard_matcher_t final : public string_matcher_t {
@@ -802,6 +803,9 @@ struct compiled_regex_t {
     pcre2_code *code{nullptr};
     pcre2_match_data *match{nullptr};
 
+    // The list of named capture groups.
+    wcstring_list_t capture_group_names;
+
     compiled_regex_t(const wchar_t *argv0, const wcstring &pattern, bool ignore_case,
                      io_streams_t &streams) {
         // Disable some sequences that can lead to security problems.
@@ -824,8 +828,74 @@ struct compiled_regex_t {
             return;
         }
 
+        this->capture_group_names = get_capture_group_names(code);
+        if (!validate_capture_group_names(streams)) {
+            return;
+        }
+
         match = pcre2_match_data_create_from_pattern(code, nullptr);
         assert(match);
+        this->valid_ = true;
+    }
+
+    /// \return the list of capture group names from \p code.
+    static wcstring_list_t get_capture_group_names(const pcre2_code *code) {
+        PCRE2_SPTR name_table;
+        uint32_t name_entry_size;
+        uint32_t name_count;
+
+        pcre2_pattern_info(code, PCRE2_INFO_NAMETABLE, &name_table);
+        pcre2_pattern_info(code, PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size);
+        pcre2_pattern_info(code, PCRE2_INFO_NAMECOUNT, &name_count);
+
+        struct name_table_entry_t {
+#if PCRE2_CODE_UNIT_WIDTH == 8
+            uint8_t match_index_msb;
+            uint8_t match_index_lsb;
+#if CHAR_BIT == PCRE2_CODE_UNIT_WIDTH
+            char name[];
+#else
+            char8_t name[];
+#endif
+#elif PCRE2_CODE_UNIT_WIDTH == 16
+            uint16_t match_index;
+#if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH
+            wchar_t name[];
+#else
+            char16_t name[];
+#endif
+#else
+            uint32_t match_index;
+#if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH
+            wchar_t name[];
+#else
+            char32_t name[];
+#endif  // WCHAR_T_BITS
+#endif  // PCRE2_CODE_UNIT_WIDTH
+        };
+
+        const auto *names = reinterpret_cast<const name_table_entry_t *>(name_table);
+        wcstring_list_t result;
+        result.reserve(name_count);
+        for (uint32_t i = 0; i < name_count; ++i) {
+            const auto &name_entry = names[i * name_entry_size];
+            result.emplace_back(name_entry.name);
+        }
+        return result;
+    }
+
+    /// Check if our capture group names are valid. If any are invalid then report an error to \p
+    /// streams. \return true if all names are valid.
+    bool validate_capture_group_names(io_streams_t &streams) {
+        for (const wcstring &name : this->capture_group_names) {
+            if (env_var_t::flags_for(name.c_str()) & env_var_t::flag_read_only) {
+                // Modification of read-only variables is not allowed
+                streams.err.append_format(
+                    L"Modification of read-only variable \"%ls\" is not allowed\n", name.c_str());
+                return false;
+            }
+        }
+        return true;
     }
 
     ~compiled_regex_t() {
@@ -833,10 +903,13 @@ struct compiled_regex_t {
         pcre2_code_free(code);
     }
 
-    bool is_valid() const { return this->code != nullptr; }
+    bool is_valid() const { return this->valid_; }
 
     compiled_regex_t(const compiled_regex_t &) = delete;
     void operator=(const compiled_regex_t &) = delete;
+
+   private:
+    bool valid_{false};
 };
 
 class pcre2_matcher_t final : public string_matcher_t {
@@ -901,76 +974,25 @@ class pcre2_matcher_t final : public string_matcher_t {
 
     class regex_importer_t {
        private:
-        std::map<wcstring, std::vector<wcstring>> matches_;
-        parser_t &parser_;
+        std::map<wcstring, wcstring_list_t> matches_;
+        env_stack_t &vars_;
         const wcstring &haystack_;
         const compiled_regex_t &regex_;
         const bool all_flag_;
-        bool regex_valid_ = false;
+        bool do_import_{false};
 
        public:
-        regex_importer_t(parser_t &parser, const wcstring &haystack, const compiled_regex_t &regex,
+        regex_importer_t(env_stack_t &vars, const wcstring &haystack, const compiled_regex_t &regex,
                          bool all_flag)
-            : parser_(parser), haystack_(haystack), regex_(regex), all_flag_(all_flag) {}
-
-        /// Enumerates the named groups in the compiled PCRE2 expression, validates the names of
-        /// the groups as variable names, and initializes their value (overriding any previous
-        /// contents).
-        bool init(io_streams_t &streams) {
-            PCRE2_SPTR name_table;
-            uint32_t name_entry_size;
-            uint32_t name_count;
-
-            pcre2_pattern_info(regex_.code, PCRE2_INFO_NAMETABLE, &name_table);
-            pcre2_pattern_info(regex_.code, PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size);
-            pcre2_pattern_info(regex_.code, PCRE2_INFO_NAMECOUNT, &name_count);
-
-            struct name_table_entry_t {
-#if PCRE2_CODE_UNIT_WIDTH == 8
-                uint8_t match_index_msb;
-                uint8_t match_index_lsb;
-#if CHAR_BIT == PCRE2_CODE_UNIT_WIDTH
-                char name[];
-#else
-                char8_t name[];
-#endif
-#elif PCRE2_CODE_UNIT_WIDTH == 16
-                uint16_t match_index;
-#if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH
-                wchar_t name[];
-#else
-                char16_t name[];
-#endif
-#else
-                uint32_t match_index;
-#if WCHAR_T_BITS == PCRE2_CODE_UNIT_WIDTH
-                wchar_t name[];
-#else
-                char32_t name[];
-#endif  // WCHAR_T_BITS
-#endif  // PCRE2_CODE_UNIT_WIDTH
-            };
-
-            auto *names = static_cast<name_table_entry_t *>((void *)(name_table));
-            for (uint32_t i = 0; i < name_count; ++i) {
-                const auto &name_entry = names[i * name_entry_size];
-
-                if (env_var_t::flags_for(name_entry.name) & env_var_t::flag_read_only) {
-                    // Modification of read-only variables is not allowed
-                    streams.err.append_format(
-                        L"Modification of read-only variable \"%S\" is not allowed\n",
-                        name_entry.name);
-                    return false;
-                }
-                matches_.emplace(name_entry.name, std::vector<wcstring>{});
+            : vars_(vars), haystack_(haystack), regex_(regex), all_flag_(all_flag) {
+            for (const wcstring &name : regex_.capture_group_names) {
+                matches_.emplace(name, wcstring_list_t{});
             }
-
-            regex_valid_ = true;
-            return true;
         }
 
         /// This member function should be called each time a match is found
         void import_vars() {
+            do_import_ = true;
             PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex_.match);
             for (auto &kv : matches_) {
                 const auto &name = kv.first;
@@ -1014,15 +1036,11 @@ class pcre2_matcher_t final : public string_matcher_t {
         }
 
         ~regex_importer_t() {
-            if (!regex_valid_) {
-                return;
-            }
-
-            auto &vars = parser_.vars();
+            if (!do_import_) return;
             for (auto &kv : matches_) {
                 const wcstring &name = kv.first;
                 wcstring_list_t &value = kv.second;
-                vars.set(name, ENV_DEFAULT, std::move(value));
+                vars_.set(name, ENV_DEFAULT, std::move(value));
             }
         }
     };
@@ -1042,24 +1060,18 @@ class pcre2_matcher_t final : public string_matcher_t {
         // an unrecoverable error.
         assert(regex.code && "report_matches should only be called if the regex was valid");
 
-        regex_importer_t var_importer(this->parser, arg, this->regex, opts.all);
+        regex_importer_t var_importer(this->parser.vars(), arg, this->regex, opts.all);
 
-        // We must manually init the importer rather than relegating this to the constructor
-        // because it will validate the names it is importing to make sure they're all legal and
-        // writeable.
-        if (!var_importer.init(streams)) {
-            // init() directly reports errors itself so it can specify the problem variable
-            return false;
-        }
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
         auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                 regex.match, nullptr));
+
         // We only import variables for the *first matching argument*
-        bool had_match = false;
-        if (rc == match_result_t::match && !imported_vars) {
+        bool do_var_import = (rc == match_result_t::match && !imported_vars);
+        if (do_var_import) {
             var_importer.import_vars();
-            had_match = true;
+            imported_vars = true;
         }
 
         switch (rc) {
@@ -1074,7 +1086,7 @@ class pcre2_matcher_t final : public string_matcher_t {
         if (opts.invert_match) return true;
 
         // Report any additional matches.
-        for (auto ovector = pcre2_get_ovector_pointer(regex.match); opts.all; total_matched++) {
+        for (auto *ovector = pcre2_get_ovector_pointer(regex.match); opts.all; total_matched++) {
             uint32_t options = 0;
             PCRE2_SIZE offset = ovector[1];  // start at end of previous match
 
@@ -1092,7 +1104,7 @@ class pcre2_matcher_t final : public string_matcher_t {
             }
 
             // Call import_vars() before modifying the ovector
-            if (rc == match_result_t::match) {
+            if (rc == match_result_t::match && do_var_import) {
                 var_importer.import_vars();
             }
 
@@ -1101,9 +1113,15 @@ class pcre2_matcher_t final : public string_matcher_t {
                 ovector[1] = offset + 1;
             }
         }
-
-        imported_vars |= had_match;
         return true;
+    }
+
+    /// Override to clear our capture variables if we had no match.
+    void clear_capture_vars() override {
+        assert(!imported_vars && "Should not already have imported variables");
+        for (const wcstring &name : regex.capture_group_names) {
+            parser.vars().set_empty(name, ENV_DEFAULT);
+        }
     }
 
     bool is_valid() const override { return regex.is_valid(); }
@@ -1148,6 +1166,10 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, const
             return STATUS_INVALID_ARGS;
         }
         if (opts.quiet && matcher->match_count() > 0) return STATUS_CMD_OK;
+    }
+
+    if (matcher->match_count() == 0) {
+        matcher->clear_capture_vars();
     }
 
     return matcher->match_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;

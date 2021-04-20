@@ -182,7 +182,7 @@ function __fish_start_bracketed_paste
     set -g __fish_last_bind_mode $fish_bind_mode
     # If the token is currently single-quoted,
     # we escape single-quotes (and backslashes).
-    __fish_commandline_is_singlequoted
+    string match -q 'single*' (__fish_tokenizer_state -- (commandline -ct | string collect))
     and set -g __fish_paste_quoted 1
 end
 

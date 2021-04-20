@@ -1,6 +1,10 @@
 #RUN: %fish %s
 # Tests for importing named regex groups as fish variables
 
+# Invalid variable name?
+string match --regex -q '(?<FISH_VERSION>.*)' -- derp
+# CHECKERR: Modification of read-only variable "FISH_VERSION" is not allowed
+
 # Capture first match
 echo "hello world" | string match --regex -q -- '(?<words>[^ ]+) ?'
 printf "%s\n" $words

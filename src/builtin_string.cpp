@@ -724,17 +724,19 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
 
 class string_matcher_t {
    protected:
-    options_t opts;
+    const options_t opts;
     io_streams_t &streams;
-    int total_matched;
+    int total_matched{0};
 
    public:
     string_matcher_t(options_t opts_, io_streams_t &streams_)
-        : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
+        : opts(std::move(opts_)), streams(streams_) {}
 
     virtual ~string_matcher_t() = default;
     virtual bool report_matches(const wcstring &arg) = 0;
     int match_count() const { return total_matched; }
+
+    virtual bool is_valid() const = 0;
 };
 
 class wildcard_matcher_t final : public string_matcher_t {
@@ -785,6 +787,8 @@ class wildcard_matcher_t final : public string_matcher_t {
         }
         return true;
     }
+
+    bool is_valid() const override { return true; }
 };
 
 static wcstring pcre2_strerror(int err_code) {
@@ -795,12 +799,11 @@ static wcstring pcre2_strerror(int err_code) {
 }
 
 struct compiled_regex_t {
-    pcre2_code *code;
-    pcre2_match_data *match;
+    pcre2_code *code{nullptr};
+    pcre2_match_data *match{nullptr};
 
     compiled_regex_t(const wchar_t *argv0, const wcstring &pattern, bool ignore_case,
-                     io_streams_t &streams)
-        : code(nullptr), match(nullptr) {
+                     io_streams_t &streams) {
         // Disable some sequences that can lead to security problems.
         uint32_t options = PCRE2_NEVER_UTF;
 #if PCRE2_CODE_UNIT_WIDTH < 32
@@ -829,6 +832,11 @@ struct compiled_regex_t {
         pcre2_match_data_free(match);
         pcre2_code_free(code);
     }
+
+    bool is_valid() const { return this->code != nullptr; }
+
+    compiled_regex_t(const compiled_regex_t &) = delete;
+    void operator=(const compiled_regex_t &) = delete;
 };
 
 class pcre2_matcher_t final : public string_matcher_t {
@@ -1032,10 +1040,7 @@ class pcre2_matcher_t final : public string_matcher_t {
     bool report_matches(const wcstring &arg) override {
         // A return value of true means all is well (even if no matches were found), false indicates
         // an unrecoverable error.
-        if (regex.code == nullptr) {
-            // pcre2_compile() failed.
-            return false;
-        }
+        assert(regex.code && "report_matches should only be called if the regex was valid");
 
         regex_importer_t var_importer(this->parser, arg, this->regex, opts.all);
 
@@ -1046,7 +1051,6 @@ class pcre2_matcher_t final : public string_matcher_t {
             // init() directly reports errors itself so it can specify the problem variable
             return false;
         }
-
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
         auto rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
@@ -1101,6 +1105,8 @@ class pcre2_matcher_t final : public string_matcher_t {
         imported_vars |= had_match;
         return true;
     }
+
+    bool is_valid() const override { return regex.is_valid(); }
 };
 
 static int string_match(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
@@ -1130,6 +1136,10 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, const
         matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams, parser);
     } else {
         matcher = make_unique<wildcard_matcher_t>(cmd, pattern, opts, streams);
+    }
+    if (!matcher->is_valid()) {
+        // An error will have been printed by the constructor.
+        return STATUS_INVALID_ARGS;
     }
 
     arg_iterator_t aiter(argv, optind, streams);

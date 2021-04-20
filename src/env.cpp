@@ -79,6 +79,7 @@ struct electric_var_t {
 
     bool exports() const { return flags & fexports; }
 
+    static const electric_var_t *for_name(const wchar_t *name);
     static const electric_var_t *for_name(const wcstring &name);
 };
 
@@ -100,29 +101,34 @@ static constexpr const electric_var_t electric_variables[] = {
 };
 ASSERT_SORT_ORDER(electric_variables, .name);
 
-const electric_var_t *electric_var_t::for_name(const wcstring &name) {
-    constexpr auto electric_var_count = sizeof(electric_variables) / sizeof(electric_variables[0]);
-    constexpr auto begin = &electric_variables[0];
-    constexpr auto end = &electric_variables[0] + electric_var_count;
+const electric_var_t *electric_var_t::for_name(const wchar_t *name) {
+    auto begin = std::begin(electric_variables);
+    auto end = std::end(electric_variables);
 
-    electric_var_t search{name.c_str(), 0};
+    electric_var_t search{name, 0};
     auto binsearch = std::lower_bound(begin, end, search,
                                       [&](const electric_var_t &v1, const electric_var_t &v2) {
                                           return wcscmp(v1.name, v2.name) < 0;
                                       });
-    if (binsearch != end && wcscmp(name.c_str(), binsearch->name) == 0) {
+    if (binsearch != end && wcscmp(name, binsearch->name) == 0) {
         return &*binsearch;
     }
     return nullptr;
 }
 
+const electric_var_t *electric_var_t::for_name(const wcstring &name) {
+    return electric_var_t::for_name(name.c_str());
+}
+
 /// Check if a variable may not be set using the set command.
-static bool is_read_only(const wcstring &key) {
+static bool is_read_only(const wchar_t *key) {
     if (auto ev = electric_var_t::for_name(key)) {
         return ev->readonly();
     }
     return false;
 }
+
+static bool is_read_only(const wcstring &key) { return is_read_only(key.c_str()); }
 
 /// Return true if a variable should become a path variable by default. See #436.
 static bool variable_should_auto_pathvar(const wcstring &name) {

@@ -44,7 +44,8 @@ class autoclose_fd_t {
 
     // Resets to a new fd, taking ownership.
     void reset(int fd) {
-        if (fd == fd_) return;
+        if (fd == fd_)
+            return;
         close();
         fd_ = fd;
     }

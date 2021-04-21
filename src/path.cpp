@@ -46,7 +46,8 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
             return false;
         }
         if (S_ISREG(buff.st_mode)) {
-            if (out_path) out_path->assign(cmd);
+            if (out_path)
+                out_path->assign(cmd);
             return true;
         }
         errno = EACCES;
@@ -62,7 +63,8 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
 
     int err = ENOENT;
     for (auto next_path : *pathsv) {
-        if (next_path.empty()) continue;
+        if (next_path.empty())
+            continue;
         append_path_component(next_path, cmd);
         std::string narrow = wcs2string(next_path);
         if (access(narrow.c_str(), X_OK) == 0) {
@@ -74,7 +76,8 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 continue;
             }
             if (S_ISREG(buff.st_mode)) {
-                if (out_path) *out_path = std::move(next_path);
+                if (out_path)
+                    *out_path = std::move(next_path);
                 return true;
             }
             err = EACCES;
@@ -90,13 +93,16 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
 }
 
 bool path_is_executable(const std::string &path) {
-    if (access(path.c_str(), X_OK)) return false;
+    if (access(path.c_str(), X_OK))
+        return false;
     struct stat buff;
     if (stat(path.c_str(), &buff) == -1) {
-        if (errno != EACCES) wperror(L" stat");
+        if (errno != EACCES)
+            wperror(L" stat");
         return false;
     }
-    if (!S_ISREG(buff.st_mode)) return false;
+    if (!S_ISREG(buff.st_mode))
+        return false;
     return true;
 }
 
@@ -108,19 +114,23 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     // looking for matching commands in the PATH var.
     if (cmd.find(L'/') != wcstring::npos) {
         std::string narrow = wcs2string(cmd);
-        if (path_is_executable(narrow)) paths.push_back(cmd);
+        if (path_is_executable(narrow))
+            paths.push_back(cmd);
         return paths;
     }
 
     auto path_var = vars.get(L"PATH");
-    if (!path_var) return paths;
+    if (!path_var)
+        return paths;
 
     const wcstring_list_t &pathsv = path_var->as_list();
     for (auto path : pathsv) {
-        if (path.empty()) continue;
+        if (path.empty())
+            continue;
         append_path_component(path, cmd);
         std::string narrow = wcs2string(path);
-        if (path_is_executable(narrow)) paths.push_back(path);
+        if (path_is_executable(narrow))
+            paths.push_back(path);
     }
 
     return paths;
@@ -145,7 +155,8 @@ wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
         // Always append $PWD
         cdpathsv.push_back(L".");
         for (wcstring next_path : cdpathsv) {
-            if (next_path.empty()) next_path = L".";
+            if (next_path.empty())
+                next_path = L".";
             if (next_path == L".") {
                 // next_path is just '.', and we have a working directory, so use the wd instead.
                 next_path = wd;
@@ -159,7 +170,8 @@ wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
             }
 
             expand_tilde(next_path, env_vars);
-            if (next_path.empty()) continue;
+            if (next_path.empty())
+                continue;
 
             wcstring whole_path = std::move(next_path);
             append_path_component(whole_path, dir);
@@ -173,7 +185,8 @@ wcstring_list_t path_apply_cdpath(const wcstring &dir, const wcstring &wd,
 maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &env_vars) {
     int err = ENOENT;
-    if (dir.empty()) return none();
+    if (dir.empty())
+        return none();
     assert(!wd.empty() && wd.back() == L'/');
     auto paths = path_apply_cdpath(dir, wd, env_vars);
 
@@ -208,7 +221,8 @@ maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
 // If the given path looks like it's relative to the working directory, then prepend that working
 // directory. This operates on unescaped paths only (so a ~ means a literal ~).
 wcstring path_apply_working_directory(const wcstring &path, const wcstring &working_directory) {
-    if (path.empty() || working_directory.empty()) return path;
+    if (path.empty() || working_directory.empty())
+        return path;
 
     // We're going to make sure that if we want to prepend the wd, that the string has no leading
     // "/".
@@ -275,14 +289,17 @@ static int create_directory(const wcstring &d) {
     int stat_res = 0;
 
     while ((stat_res = wstat(d, &buf)) != 0) {
-        if (errno != EAGAIN) break;
+        if (errno != EAGAIN)
+            break;
     }
 
     if (stat_res == 0) {
-        if (S_ISDIR(buf.st_mode)) ok = true;
+        if (S_ISDIR(buf.st_mode))
+            ok = true;
     } else if (errno == ENOENT) {
         wcstring dir = wdirname(d);
-        if (!create_directory(dir) && !wmkdir(d, 0700)) ok = true;
+        if (!create_directory(dir) && !wmkdir(d, 0700))
+            ok = true;
     }
 
     return ok ? 0 : -1;
@@ -379,11 +396,13 @@ void path_make_canonical(wcstring &path) {
         prev_was_slash = is_slash;
     }
     assert(trailing <= len);
-    if (trailing < len) path.resize(trailing);
+    if (trailing < len)
+        path.resize(trailing);
 }
 
 bool paths_are_equivalent(const wcstring &p1, const wcstring &p2) {
-    if (p1 == p2) return true;
+    if (p1 == p2)
+        return true;
 
     size_t len1 = p1.size(), len2 = p2.size();
 
@@ -397,7 +416,8 @@ bool paths_are_equivalent(const wcstring &p1, const wcstring &p2) {
         wchar_t c1 = p1.at(idx1), c2 = p2.at(idx2);
 
         // If the characters are different, the strings are not equivalent.
-        if (c1 != c2) break;
+        if (c1 != c2)
+            break;
 
         idx1++;
         idx2++;
@@ -434,7 +454,8 @@ bool path_is_valid(const wcstring &path, const wcstring &working_directory) {
 }
 
 bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
-    if (paths_are_equivalent(path1, path2)) return true;
+    if (paths_are_equivalent(path1, path2))
+        return true;
 
     struct stat s1, s2;
     if (wstat(path1, &s1) == 0 && wstat(path2, &s2) == 0) {

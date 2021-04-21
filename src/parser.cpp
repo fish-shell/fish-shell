@@ -165,7 +165,8 @@ void parser_t::pop_block(const block_t *expected) {
     block_t old = block_list.front();
     block_list.pop_front();
 
-    if (old.wants_pop_env) vars().pop();
+    if (old.wants_pop_env)
+        vars().pop();
 
     // Figure out if `status is-block` should consider us to be in a block now.
     bool new_is_block = false;
@@ -235,7 +236,8 @@ block_t *parser_t::current_block() { return block_at_index(0); }
 static void print_profile(const std::deque<profile_item_t> &items, FILE *out) {
     for (size_t idx = 0; idx < items.size(); idx++) {
         const profile_item_t &item = items.at(idx);
-        if (item.skipped || item.cmd.empty()) continue;
+        if (item.skipped || item.cmd.empty())
+            continue;
 
         long long total_time = item.duration;
 
@@ -244,13 +246,16 @@ static void print_profile(const std::deque<profile_item_t> &items, FILE *out) {
         long long self_time = item.duration;
         for (size_t i = idx + 1; i < items.size(); i++) {
             const profile_item_t &nested_item = items.at(i);
-            if (nested_item.skipped) continue;
+            if (nested_item.skipped)
+                continue;
 
             // If the eval level is not larger, then we have exhausted nested items.
-            if (nested_item.level <= item.level) break;
+            if (nested_item.level <= item.level)
+                break;
 
             // If the eval level is exactly one more than our level, it is a directly nested item.
-            if (nested_item.level == item.level + 1) self_time -= nested_item.duration;
+            if (nested_item.level == item.level + 1)
+                self_time -= nested_item.duration;
         }
 
         if (std::fwprintf(out, L"%lld\t%lld\t", self_time, total_time) < 0) {
@@ -337,7 +342,8 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
             // Print arguments on the same line.
             wcstring args_str;
             for (const wcstring &arg : b.function_args) {
-                if (!args_str.empty()) args_str.push_back(L' ');
+                if (!args_str.empty())
+                    args_str.push_back(L' ');
                 // We can't quote the arguments because we print this in quotes.
                 // As a special-case, add the empty argument as "".
                 if (!arg.empty()) {
@@ -407,7 +413,8 @@ wcstring parser_t::stack_trace() const {
         // It might make sense in the future to continue printing the stack trace of the code
         // that invoked the event, if this is a programmatic event, but we can't currently
         // detect that.
-        if (b.type() == block_type_t::event) break;
+        if (b.type() == block_type_t::event)
+            break;
     }
     return trace;
 }
@@ -568,14 +575,16 @@ void parser_t::job_promote(job_t *job) {
 
 job_t *parser_t::job_get(job_id_t id) {
     for (const auto &job : job_list) {
-        if (id <= 0 || job->job_id() == id) return job.get();
+        if (id <= 0 || job->job_id() == id)
+            return job.get();
     }
     return nullptr;
 }
 
 const job_t *parser_t::job_get(job_id_t id) const {
     for (const auto &job : job_list) {
-        if (id <= 0 || job->job_id() == id) return job.get();
+        if (id <= 0 || job->job_id() == id)
+            return job.get();
     }
     return nullptr;
 }
@@ -672,7 +681,8 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, const T &node,
         // Did fish itself get a signal?
         int sig = signal_check_cancel();
         // Has this job group been cancelled?
-        if (!sig) sig = cancel_group->get_cancel_signal();
+        if (!sig)
+            sig = cancel_group->get_cancel_signal();
         return sig;
     };
 

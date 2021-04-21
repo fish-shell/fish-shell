@@ -45,8 +45,10 @@ termsize_container_t &termsize_container_t::shared() {
 termsize_t termsize_container_t::data_t::current() const {
     // This encapsulates our ordering logic. If we have a termsize from a tty, use it; otherwise use
     // what we have seen from the environment.
-    if (this->last_from_tty) return *this->last_from_tty;
-    if (this->last_from_env) return *this->last_from_env;
+    if (this->last_from_tty)
+        return *this->last_from_tty;
+    if (this->last_from_env)
+        return *this->last_from_env;
     return termsize_t::defaults();
 }
 
@@ -82,7 +84,8 @@ termsize_t termsize_container_t::updating(parser_t &parser) {
     }
 
     // Announce any updates.
-    if (new_size != prev_size) set_columns_lines_vars(new_size, parser);
+    if (new_size != prev_size)
+        set_columns_lines_vars(new_size, parser);
     return new_size;
 }
 
@@ -124,7 +127,8 @@ termsize_t termsize_container_t::initialize(const environment_t &vars) {
 
 void termsize_container_t::handle_columns_lines_var_change(const environment_t &vars) {
     // Do nothing if we are the ones setting it.
-    if (setting_env_vars_) return;
+    if (setting_env_vars_)
+        return;
 
     // Construct a new termsize from COLUMNS and LINES, then set it in our data.
     termsize_t new_termsize{

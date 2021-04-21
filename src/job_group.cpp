@@ -77,7 +77,8 @@ job_group_ref_t job_group_t::resolve_group_for_job(const job_t &job,
         needs_new_group = true;
     }
 
-    if (!needs_new_group) return proposed;
+    if (!needs_new_group)
+        return proposed;
 
     // We share a cancel group unless we are a background job.
     // For example, if we write "begin ; true ; sleep 1 &; end" the `begin` and `true` should cancel

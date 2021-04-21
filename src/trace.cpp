@@ -10,7 +10,8 @@ static const wcstring VAR_fish_trace = L"fish_trace";
 
 bool trace_enabled(const parser_t &parser) {
     const auto &ld = parser.libdata();
-    if (ld.suppress_fish_trace) return false;
+    if (ld.suppress_fish_trace)
+        return false;
     // TODO: this variable lookup is somewhat expensive, consider how to make this cheaper.
     return !parser.vars().get(VAR_fish_trace).missing_or_empty();
 }
@@ -35,5 +36,6 @@ void trace_argv(const parser_t &parser, const wchar_t *command, const wcstring_l
 }
 
 void trace_if_enabled(const parser_t &parser, const wchar_t *command, const wcstring_list_t &argv) {
-    if (trace_enabled(parser)) trace_argv(parser, command, argv);
+    if (trace_enabled(parser))
+        trace_argv(parser, command, argv);
 }

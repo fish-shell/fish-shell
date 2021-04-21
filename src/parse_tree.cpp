@@ -46,7 +46,8 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     wcstring result = prefix;
     switch (code) {
         default:
-            if (skip_caret && this->text.empty()) return L"";
+            if (skip_caret && this->text.empty())
+                return L"";
             break;
         case parse_error_andor_in_pipeline:
             append_format(result, EXEC_ERR_MSG,
@@ -101,7 +102,8 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     }
 
     // Append the line of text.
-    if (!result.empty()) result.push_back(L'\n');
+    if (!result.empty())
+        result.push_back(L'\n');
     result.append(src, line_start, line_end - line_start);
 
     // Append the caret line. The input source may include tabs; for that reason we
@@ -147,13 +149,15 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt) {
 /// Returns a string description for the given token type.
 const wchar_t *token_type_description(parse_token_type_t type) {
     const wchar_t *description = enum_to_str(type, token_enum_map);
-    if (description) return description;
+    if (description)
+        return description;
     return L"unknown_token_type";
 }
 
 const wchar_t *keyword_description(parse_keyword_t type) {
     const wchar_t *keyword = enum_to_str(type, keyword_enum_map);
-    if (keyword) return keyword;
+    if (keyword)
+        return keyword;
     return L"unknown_keyword";
 }
 

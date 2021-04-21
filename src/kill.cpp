@@ -31,7 +31,8 @@ void kill_add(wcstring str) {
 static void kill_remove(const wcstring &s) {
     ASSERT_IS_MAIN_THREAD();
     auto iter = std::find(kill_list.begin(), kill_list.end(), s);
-    if (iter != kill_list.end()) kill_list.erase(iter);
+    if (iter != kill_list.end())
+        kill_list.erase(iter);
 }
 
 void kill_replace(const wcstring &old, const wcstring &newv) {

@@ -156,7 +156,8 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
 void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wchar_t *name,
                         wcstring *error_message) {
     // This won't ever work if no_exec is set.
-    if (no_exec()) return;
+    if (no_exec())
+        return;
     const wcstring name_esc = escape_string(name, ESCAPE_ALL);
     wcstring cmd = format_string(L"__fish_print_help %ls ", name_esc.c_str());
     io_chain_t ios;
@@ -210,7 +211,8 @@ static maybe_t<int> builtin_generic(parser_t &parser, io_streams_t &streams, con
     help_only_cmd_opts_t opts;
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -283,7 +285,8 @@ static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &strea
             has_loop = true;
             break;
         }
-        if (b.is_function_call()) break;
+        if (b.is_function_call())
+            break;
     }
     if (!has_loop) {
         wcstring error_message = format_string(_(L"%ls: Not inside of loop\n"), argv[0]);
@@ -457,7 +460,8 @@ static bool cmd_needs_help(const wcstring &cmd) { return contains(help_builtins,
 
 /// Execute a builtin command
 proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_streams_t &streams) {
-    if (argv.empty()) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
+    if (argv.empty())
+        return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
     const wcstring &cmdname = argv.front();
 
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
@@ -481,12 +485,15 @@ proc_status_t builtin_run(parser_t &parser, const wcstring_list_t &argv, io_stre
         // If the builtin itself produced an error, use that error.
         // Otherwise use any errors from writing to out and writing to err, in that order.
         int code = builtin_ret ? *builtin_ret : 0;
-        if (code == 0) code = out_ret;
-        if (code == 0) code = err_ret;
+        if (code == 0)
+            code = out_ret;
+        if (code == 0)
+            code = err_ret;
 
         // The exit code is cast to an 8-bit unsigned integer, so saturate to 255. Otherwise,
         // multiples of 256 are reported as 0.
-        if (code > 255) code = 255;
+        if (code > 255)
+            code = 255;
 
         // Handle the case of an empty status.
         if (code == 0 && !builtin_ret.has_value()) {

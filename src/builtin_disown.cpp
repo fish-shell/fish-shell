@@ -26,7 +26,8 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
     // Stopped disowned jobs must be manually signaled; explain how to do so.
     auto pgid = j->get_pgid();
     if (j->is_stopped()) {
-        if (pgid) killpg(*pgid, SIGCONT);
+        if (pgid)
+            killpg(*pgid, SIGCONT);
         const wchar_t *fmt =
             _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n");
         streams.err.append_format(fmt, cmd, j->job_id(), j->command_wcstr());
@@ -49,7 +50,8 @@ maybe_t<int> builtin_disown(parser_t &parser, io_streams_t &streams, const wchar
 
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);

@@ -66,8 +66,10 @@ layout_cache_t layout_cache_t::shared;
 /// specified wide character string. All of \c seq must match, but str may be longer than seq.
 static size_t try_sequence(const char *seq, const wchar_t *str) {
     for (size_t i = 0;; i++) {
-        if (!seq[i]) return i;
-        if (seq[i] != str[i]) return 0;
+        if (!seq[i])
+            return i;
+        if (seq[i] != str[i])
+            return 0;
     }
 
     DIE("unexpectedly fell off end of try_sequence()");
@@ -174,7 +176,8 @@ static bool is_csi_style_escape_seq(const wchar_t *code, size_t *resulting_lengt
         wchar_t widechar = code[cursor];
 
         // If we're not in ASCII, just stop.
-        if (widechar > 127) break;
+        if (widechar > 127)
+            break;
 
         // If we're the end character, then consume it and then stop.
         if (widechar >= L'@' && widechar <= L'~') {
@@ -192,7 +195,8 @@ static bool is_csi_style_escape_seq(const wchar_t *code, size_t *resulting_lengt
 /// such sequences. This function only handles those escape sequences for setting color that rely on
 /// the terminfo definition and which might use a different pattern.
 static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
-    if (!cur_term) return false;
+    if (!cur_term)
+        return false;
 
     // Detect these terminfo color escapes with parameter value up to max_colors, all of which
     // don't move the cursor.
@@ -204,7 +208,8 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
     };
 
     for (auto p : esc) {
-        if (!p) continue;
+        if (!p)
+            continue;
 
         for (int k = 0; k < max_colors; k++) {
             size_t esc_seq_len = try_sequence(tparm(const_cast<char *>(p), k), code);
@@ -221,7 +226,8 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
 /// Detect whether the escape sequence sets one of the terminal attributes that affects how text is
 /// displayed other than the color.
 static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) {
-    if (!cur_term) return false;
+    if (!cur_term)
+        return false;
     const char *const esc2[] = {
         enter_bold_mode,     exit_attribute_mode, enter_underline_mode,   exit_underline_mode,
         enter_standout_mode, exit_standout_mode,  enter_blink_mode,       enter_protected_mode,
@@ -230,7 +236,8 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
         enter_dim_mode,      enter_blink_mode,    enter_alt_charset_mode, exit_alt_charset_mode};
 
     for (auto p : esc2) {
-        if (!p) continue;
+        if (!p)
+            continue;
         // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
         // actually seem to do anything these days.
         size_t esc_seq_len =
@@ -249,19 +256,28 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 /// the escape sequence based on querying terminfo and other heuristics.
 size_t layout_cache_t::escape_code_length(const wchar_t *code) {
     assert(code != nullptr);
-    if (*code != L'\x1B') return 0;
+    if (*code != L'\x1B')
+        return 0;
 
     size_t esc_seq_len = this->find_escape_code(code);
-    if (esc_seq_len) return esc_seq_len;
+    if (esc_seq_len)
+        return esc_seq_len;
 
     bool found = is_color_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_visual_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_screen_name_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_osc_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_three_byte_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
-    if (found) this->add_escape_code(wcstring(code, esc_seq_len));
+    if (!found)
+        found = is_visual_escape_seq(code, &esc_seq_len);
+    if (!found)
+        found = is_screen_name_escape_seq(code, &esc_seq_len);
+    if (!found)
+        found = is_osc_escape_seq(code, &esc_seq_len);
+    if (!found)
+        found = is_three_byte_escape_seq(code, &esc_seq_len);
+    if (!found)
+        found = is_csi_style_escape_seq(code, &esc_seq_len);
+    if (!found)
+        found = is_two_byte_escape_seq(code, &esc_seq_len);
+    if (found)
+        this->add_escape_code(wcstring(code, esc_seq_len));
     return esc_seq_len;
 }
 
@@ -272,7 +288,8 @@ const layout_cache_t::prompt_cache_entry_t *layout_cache_t::find_prompt_layout(
     for (auto iter = start; iter != end; ++iter) {
         if (iter->text == input && iter->max_line_width == max_line_width) {
             // Found it. Move it to the front if not already there.
-            if (iter != start) prompt_cache_.splice(start, prompt_cache_, iter);
+            if (iter != start)
+                prompt_cache_.splice(start, prompt_cache_, iter);
             return &*prompt_cache_.begin();
         }
     }
@@ -305,7 +322,8 @@ static size_t measure_run_from(const wchar_t *input, size_t start, size_t *out_e
             // This is the start of an escape code; we assume it has width 0.
             // -1 because we are going to increment in the loop.
             size_t len = cache.escape_code_length(&input[idx]);
-            if (len > 0) idx += len - 1;
+            if (len > 0)
+                idx += len - 1;
         } else if (input[idx] == L'\t') {
             width = next_tab_stop(width);
         } else {
@@ -313,7 +331,8 @@ static size_t measure_run_from(const wchar_t *input, size_t start, size_t *out_e
             width += fish_wcwidth_min_0(input[idx]);
         }
     }
-    if (out_end) *out_end = idx;
+    if (out_end)
+        *out_end = idx;
     return width;
 }
 
@@ -361,7 +380,8 @@ prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
                                                    size_t max_line_width) {
     // FIXME: we could avoid allocating trunc_prompt if max_line_width is SIZE_T_MAX.
     if (const auto *entry = this->find_prompt_layout(prompt_str, max_line_width)) {
-        if (out_trunc_prompt) out_trunc_prompt->assign(entry->trunc_text);
+        if (out_trunc_prompt)
+            out_trunc_prompt->assign(entry->trunc_text);
         return entry->layout;
     }
 
@@ -526,7 +546,8 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
 /// \param new_x the new x position
 /// \param new_y the new y position
 static void s_move(screen_t *s, int new_x, int new_y) {
-    if (s->actual.cursor.x == new_x && s->actual.cursor.y == new_y) return;
+    if (s->actual.cursor.x == new_x && s->actual.cursor.y == new_y)
+        return;
 
     const scoped_buffer_t buffering(*s);
 
@@ -652,7 +673,8 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b) {
                     while (idx > 1 && (fish_wcwidth(c->char_at(idx - 1)) < 1 ||
                                        fish_wcwidth(c->char_at(idx)) < 1))
                         idx--;
-                    if (idx == 1 && fish_wcwidth(c->char_at(idx)) < 1) idx = 0;
+                    if (idx == 1 && fish_wcwidth(c->char_at(idx)) < 1)
+                        idx = 0;
                 }
             }
             break;
@@ -732,7 +754,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
     // want.
     const size_t lines_with_stuff = std::max(actual_lines_before_reset, scr->actual.line_count());
-    if (scr->desired.line_count() < lines_with_stuff) need_clear_screen = true;
+    if (scr->desired.line_count() < lines_with_stuff)
+        need_clear_screen = true;
 
     // Output the left prompt if it has changed.
     if (left_prompt != scr->actual_left_prompt) {
@@ -789,7 +812,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         if (skip_prefix > 0) {
             size_t skip_width =
                 shared_prefix < skip_prefix ? skip_prefix : o_line.wcswidth_min_0(shared_prefix);
-            if (skip_width > skip_remaining) skip_remaining = skip_width;
+            if (skip_width > skip_remaining)
+                skip_remaining = skip_width;
         }
 
         if (!should_clear_screen_this_line) {
@@ -813,7 +837,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         size_t j = 0;
         for (; j < o_line.size(); j++) {
             size_t width = fish_wcwidth_min_0(o_line.char_at(j));
-            if (skip_remaining < width) break;
+            if (skip_remaining < width)
+                break;
             skip_remaining -= width;
             current_width += width;
         }
@@ -821,7 +846,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Skip over zero-width characters (e.g. combining marks at the end of the prompt).
         for (; j < o_line.size(); j++) {
             int width = fish_wcwidth_min_0(o_line.char_at(j));
-            if (width > 0) break;
+            if (width > 0)
+                break;
         }
 
         // Now actually output stuff.
@@ -839,7 +865,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
                 s_write_mbs(scr, clr_eos);
                 has_cleared_screen = true;
             }
-            if (done) break;
+            if (done)
+                break;
 
             perform_any_impending_soft_wrap(scr, current_width, static_cast<int>(i));
             s_move(scr, current_width, static_cast<int>(i));
@@ -917,7 +944,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
 /// Returns true if we are using a dumb terminal.
 static bool is_dumb() {
-    if (!cur_term) return true;
+    if (!cur_term)
+        return true;
     return !cursor_up || !cursor_down || !cursor_left || !cursor_right;
 }
 
@@ -941,7 +969,8 @@ static size_t truncation_offset_for_width(const std::vector<size_t> &width_by_of
     assert(!width_by_offset.empty() && width_by_offset.at(0) == 0);
     size_t i;
     for (i = 1; i < width_by_offset.size(); i++) {
-        if (width_by_offset.at(i) > max_width) break;
+        if (width_by_offset.at(i) > max_width)
+            break;
     }
     // i is the first index that did not fit; i-1 is therefore the last that did.
     return i - 1;

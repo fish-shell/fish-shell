@@ -68,7 +68,8 @@ static bool write_color_escape(outputter_t &outp, const char *todo, unsigned cha
         // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that combined
         // with what we do here, will make the brights actually work for virtual consoles/ancient
         // emulators.
-        if (max_colors == 8 && idx > 8) idx -= 8;
+        if (max_colors == 8 && idx > 8)
+            idx -= 8;
         snprintf(buff, sizeof buff, "\x1B[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
     } else {
         snprintf(buff, sizeof buff, "\x1B[%d;5;%dm", is_fg ? 38 : 48, idx);
@@ -79,7 +80,8 @@ static bool write_color_escape(outputter_t &outp, const char *todo, unsigned cha
 }
 
 static bool write_foreground_color(outputter_t &outp, unsigned char idx) {
-    if (!cur_term) return false;
+    if (!cur_term)
+        return false;
     if (set_a_foreground && set_a_foreground[0]) {
         return write_color_escape(outp, set_a_foreground, idx, true);
     } else if (set_foreground && set_foreground[0]) {
@@ -89,7 +91,8 @@ static bool write_foreground_color(outputter_t &outp, unsigned char idx) {
 }
 
 static bool write_background_color(outputter_t &outp, unsigned char idx) {
-    if (!cur_term) return false;
+    if (!cur_term)
+        return false;
     if (set_a_background && set_a_background[0]) {
         return write_color_escape(outp, set_a_background, idx, false);
     } else if (set_background && set_background[0]) {
@@ -107,7 +110,8 @@ void outputter_t::flush_to(int fd) {
 
 // Exported for builtin_set_color's usage only.
 bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
-    if (!cur_term) return false;
+    if (!cur_term)
+        return false;
     bool supports_term24bit =
         static_cast<bool>(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
@@ -149,7 +153,8 @@ bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
 void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
-    if (!cur_term || !exit_attribute_mode) return;
+    if (!cur_term || !exit_attribute_mode)
+        return;
 
     const rgb_color_t normal = rgb_color_t::normal();
     bool bg_set = false, last_bg_set = false;
@@ -402,7 +407,8 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
     }
     rgb_color_t result = best_color(candidates, output_get_color_support());
 
-    if (result.is_none()) result = rgb_color_t::normal();
+    if (result.is_none())
+        result = rgb_color_t::normal();
 
     result.set_bold(is_bold);
     result.set_underline(is_underline);

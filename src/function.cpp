@@ -118,20 +118,23 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     // TODO: justfy this.
     auto &vars = env_stack_t::principal();
     const auto path_var = vars.get(L"fish_function_path");
-    if (path_var.missing_or_empty()) return;
+    if (path_var.missing_or_empty())
+        return;
 
     const wcstring_list_t &path_list = path_var->as_list();
 
     for (i = 0; i < path_list.size(); i++) {
         const wcstring &ndir_str = path_list.at(i);
         dir_t dir(ndir_str);
-        if (!dir.valid()) continue;
+        if (!dir.valid())
+            continue;
 
         wcstring name;
         while (dir.read(name)) {
             const wchar_t *fn = name.c_str();
             const wchar_t *suffix;
-            if (!get_hidden && fn[0] == L'_') continue;
+            if (!get_hidden && fn[0] == L'_')
+                continue;
 
             suffix = std::wcsrchr(fn, L'.');
             if (suffix && (std::wcscmp(suffix, L".fish") == 0)) {
@@ -174,7 +177,8 @@ void function_add(wcstring name, wcstring description, function_properties_ref_t
 }
 
 std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name) {
-    if (parser_keywords_is_reserved(name)) return nullptr;
+    if (parser_keywords_is_reserved(name))
+        return nullptr;
     auto funcset = function_set.acquire();
     if (auto info = funcset->get_info(name)) {
         return info->props;
@@ -184,7 +188,8 @@ std::shared_ptr<const function_properties_t> function_get_properties(const wcstr
 
 int function_exists(const wcstring &cmd, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
-    if (parser_keywords_is_reserved(cmd)) return 0;
+    if (parser_keywords_is_reserved(cmd))
+        return 0;
     try_autoload(cmd, parser);
     auto funcset = function_set.acquire();
     return funcset->funcs.find(cmd) != funcset->funcs.end();
@@ -198,7 +203,8 @@ void function_load(const wcstring &cmd, parser_t &parser) {
 }
 
 int function_exists_no_autoload(const wcstring &cmd) {
-    if (parser_keywords_is_reserved(cmd)) return 0;
+    if (parser_keywords_is_reserved(cmd))
+        return 0;
     auto funcset = function_set.acquire();
 
     // Check if we either have the function, or it could be autoloaded.
@@ -223,7 +229,8 @@ void function_remove(const wcstring &name) {
 bool function_get_definition(const wcstring &name, wcstring &out_definition) {
     const auto funcset = function_set.acquire();
     const function_info_t *func = funcset->get_info(name);
-    if (!func || !func->props) return false;
+    if (!func || !func->props)
+        return false;
     // We want to preserve comments that the AST attaches to the header (#5285).
     // Take everything from the end of the header to the 'end' keyword.
     const auto &props = func->props;
@@ -307,7 +314,8 @@ bool function_is_autoloaded(const wcstring &name) {
 int function_get_definition_lineno(const wcstring &name) {
     const auto funcset = function_set.acquire();
     const function_info_t *func = funcset->get_info(name);
-    if (!func) return -1;
+    if (!func)
+        return -1;
     // return one plus the number of newlines at offsets less than the start of our function's
     // statement (which includes the header).
     // TODO: merge with line_offset_of_character_at_offset?

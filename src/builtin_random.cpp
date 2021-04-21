@@ -34,7 +34,8 @@ maybe_t<int> builtin_random(parser_t &parser, io_streams_t &streams, const wchar
 
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -83,7 +84,8 @@ maybe_t<int> builtin_random(parser_t &parser, io_streams_t &streams, const wchar
             step = 1;
         } else if (arg_count == 1) {
             long long seed = parse_ll(argv[optind]);
-            if (parse_error) return STATUS_INVALID_ARGS;
+            if (parse_error)
+                return STATUS_INVALID_ARGS;
             engine.seed(static_cast<uint32_t>(seed));
             return STATUS_CMD_OK;
         } else if (arg_count == 2) {

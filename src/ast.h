@@ -198,9 +198,11 @@ void accept_field_visitor(FieldVisitor &v, bool /*reverse*/, Field &field) {
 // Call visit_field on visitor \p v, for the field \p field and also \p rest.
 template <typename FieldVisitor, typename Field, typename... Rest>
 void accept_field_visitor(FieldVisitor &v, bool reverse, Field &field, Rest &...rest) {
-    if (!reverse) visit_1_field(v, field);
+    if (!reverse)
+        visit_1_field(v, field);
     accept_field_visitor<FieldVisitor, Rest...>(v, reverse, rest...);
-    if (reverse) visit_1_field(v, field);
+    if (reverse)
+        visit_1_field(v, field);
 }
 
 }  // namespace template_goo
@@ -253,13 +255,15 @@ struct node_t {
     ///     if (const auto *job_list = node->try_as<job_list_t>()) job_list->...
     template <typename To>
     To *try_as() {
-        if (this->type == To::AstType) return as<To>();
+        if (this->type == To::AstType)
+            return as<To>();
         return nullptr;
     }
 
     template <typename To>
     const To *try_as() const {
-        if (this->type == To::AstType) return as<To>();
+        if (this->type == To::AstType)
+            return as<To>();
         return nullptr;
     }
 
@@ -277,20 +281,23 @@ struct node_t {
 
     /// \return the source range for this node, or an empty range {0, 0} if unsourced.
     source_range_t source_range() const {
-        if (auto r = try_source_range()) return *r;
+        if (auto r = try_source_range())
+            return *r;
         return source_range_t{0, 0};
     }
 
     /// \return the source code for this node, or none if unsourced.
     maybe_t<wcstring> try_source(const wcstring &orig) const {
-        if (auto r = try_source_range()) return orig.substr(r->start, r->length);
+        if (auto r = try_source_range())
+            return orig.substr(r->start, r->length);
         return none();
     }
 
     /// \return the source code for this node, or an empty string if unsourced.
     wcstring source(const wcstring &orig) const {
         wcstring res{};
-        if (auto s = try_source(orig)) res = s.acquire();
+        if (auto s = try_source(orig))
+            res = s.acquire();
         return res;
     }
 
@@ -377,7 +384,8 @@ struct list_t : public node_t {
 
     /// \return a node at a given index, or nullptr if out of range.
     const ContentsNode *at(size_t idx, bool reverse = false) const {
-        if (idx >= count()) return nullptr;
+        if (idx >= count())
+            return nullptr;
         return contents[reverse ? count() - idx - 1 : idx].get();
     }
 
@@ -771,7 +779,8 @@ void node_t::base_accept(FieldVisitor &v, bool reverse) {
 template <parse_token_type_t... Toks>
 bool token_t<Toks...>::allows_token(parse_token_type_t type) {
     for (parse_token_type_t t : {Toks...}) {
-        if (type == t) return true;
+        if (type == t)
+            return true;
     }
     return false;
 }
@@ -780,7 +789,8 @@ bool token_t<Toks...>::allows_token(parse_token_type_t type) {
 template <parse_keyword_t... KWs>
 bool keyword_t<KWs...>::allows_keyword(parse_keyword_t kw) {
     for (parse_keyword_t k : {KWs...}) {
-        if (k == kw) return true;
+        if (k == kw)
+            return true;
     }
     return false;
 }
@@ -876,7 +886,8 @@ class node_visitation_t {
     // Optional pointers get visited if not null.
     template <typename Node>
     void visit_optional_field(optional_t<Node> &node) {
-        if (node.contents) v_.visit(*node.contents);
+        if (node.contents)
+            v_.visit(*node.contents);
     }
 
     // Define our custom implementations of non-node fields.
@@ -926,7 +937,8 @@ class traversal_t {
 
     // \return the next node, or nullptr if exhausted.
     const node_t *next() {
-        if (stack_.empty()) return nullptr;
+        if (stack_.empty())
+            return nullptr;
         const node_t *node = stack_.back();
         stack_.pop_back();
 

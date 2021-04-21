@@ -93,7 +93,8 @@ static int exit_code_from_exec_error(int err) {
 /// \return true if either there is no NUL byte, or there is a line containing a lowercase letter
 /// before the first NUL byte.
 static bool is_thompson_shell_payload(const char *p, size_t n) {
-    if (!memchr(p, '\0', n)) return true;
+    if (!memchr(p, '\0', n))
+        return true;
     bool haslower = false;
     for (; *p; p++) {
         if (islower(*p) || *p == '$' || *p == '`') {
@@ -214,7 +215,8 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
     // to add a dup2 action, it would be ignored and the CLO_EXEC bit would remain. So don't use
     // posix_spawn in this case; instead we'll call fork() and clear the CLO_EXEC bit manually.
     for (const auto &action : dup2s.get_actions()) {
-        if (action.src == action.target) return false;
+        if (action.src == action.target)
+            return false;
     }
     if (job->wants_job_control()) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
@@ -443,7 +445,8 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
     // The parent attempts to send the child to its pgroup.
     // EACCESS is an expected benign error as the child may have called exec().
     if (int err = execute_setpgid(p->pid, pgid, true /* is parent */)) {
-        if (err != EACCES) report_setpgid_error(err, true /* is_parent */, pgid, job.get(), p);
+        if (err != EACCES)
+            report_setpgid_error(err, true /* is_parent */, pgid, job.get(), p);
     }
     terminal_maybe_give_to_job_group(job->group.get(), false);
     return launch_result_t::ok;
@@ -507,8 +510,10 @@ static void handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     std::string errbuff = wcs2string(err.contents());
 
     // Some historical behavior.
-    if (!outbuff.empty()) fflush(stdout);
-    if (!errbuff.empty()) fflush(stderr);
+    if (!outbuff.empty())
+        fflush(stdout);
+    if (!errbuff.empty())
+        fflush(stderr);
 
     // Construct and run our background process.
     run_internal_process_or_short_circuit(parser, j, p, std::move(outbuff), std::move(errbuff),
@@ -884,7 +889,8 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
 
     const block_t *block = nullptr;
     cleanup_t pop_block([&]() {
-        if (block) parser.pop_block(block);
+        if (block)
+            parser.pop_block(block);
     });
     if (!p->variable_assignments.empty()) {
         block = parser.push_block(block_t::variable_assignment_block());
@@ -951,10 +957,12 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
 // Any such process (only one per job) will be called the "deferred" process.
 static process_t *get_deferred_process(const shared_ptr<job_t> &j) {
     // Common case is no deferred proc.
-    if (j->processes.size() <= 1) return nullptr;
+    if (j->processes.size() <= 1)
+        return nullptr;
 
     // Skip execs, which can only appear at the front.
-    if (j->processes.front()->type == process_type_t::exec) return nullptr;
+    if (j->processes.front()->type == process_type_t::exec)
+        return nullptr;
 
     // Find the last non-external process, and return it if it pipes into an extenal process.
     for (auto i = j->processes.rbegin(); i != j->processes.rend(); ++i) {
@@ -972,7 +980,8 @@ static void abort_pipeline_from(const shared_ptr<job_t> &job, const process_t *f
     bool found = false;
     for (process_ptr_t &p : job->processes) {
         found = found || (p.get() == failed_proc);
-        if (found) p->mark_aborted_before_launch();
+        if (found)
+            p->mark_aborted_before_launch();
     }
     assert(found && "Process not present in job");
 }
@@ -982,11 +991,13 @@ static void abort_pipeline_from(const shared_ptr<job_t> &job, const process_t *f
 // \return true if we should allow exec, false to disallow it.
 static bool allow_exec_with_background_jobs(parser_t &parser) {
     // If we're not interactive, we cannot warn.
-    if (!parser.is_interactive()) return true;
+    if (!parser.is_interactive())
+        return true;
 
     // Construct the list of running background jobs.
     job_list_t bgs = jobs_requiring_warning_on_exit(parser);
-    if (bgs.empty()) return true;
+    if (bgs.empty())
+        return true;
 
     // Compare run counts, so we only warn once.
     uint64_t current_run_count = reader_run_count();

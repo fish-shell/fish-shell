@@ -19,7 +19,8 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
 // Check if we should mmap the fd.
 // Don't try mmap() on non-local filesystems.
 static bool should_mmap(int fd) {
-    if (history_t::never_mmap) return false;
+    if (history_t::never_mmap)
+        return false;
 
     // mmap only if we are known not-remote (return is 0).
     int ret = fd_check_is_remote(fd);
@@ -119,8 +120,10 @@ history_file_contents_t::history_file_contents_t(const char *mmap_start, size_t 
 std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd) {
     // Check that the file is seekable, and its size.
     off_t len = lseek(fd, 0, SEEK_END);
-    if (len <= 0 || static_cast<unsigned long>(len) >= SIZE_MAX) return nullptr;
-    if (lseek(fd, 0, SEEK_SET) != 0) return nullptr;
+    if (len <= 0 || static_cast<unsigned long>(len) >= SIZE_MAX)
+        return nullptr;
+    if (lseek(fd, 0, SEEK_SET) != 0)
+        return nullptr;
 
     // Read the file, possibly using mmap.
     void *mmap_start = nullptr;
@@ -128,7 +131,8 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
         // We feel confident to map the file directly. Note this is still risky: if another
         // process truncates the file we risk SIGBUS.
         mmap_start = mmap(nullptr, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
-        if (mmap_start == MAP_FAILED) return nullptr;
+        if (mmap_start == MAP_FAILED)
+            return nullptr;
     } else {
         // We don't want to map the file. mmap some private memory and then read into it. We use
         // mmap instead of malloc so that the destructor can always munmap().
@@ -138,13 +142,16 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
 #else
             mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif
-        if (mmap_start == MAP_FAILED) return nullptr;
-        if (!read_from_fd(fd, mmap_start, len)) return nullptr;
+        if (mmap_start == MAP_FAILED)
+            return nullptr;
+        if (!read_from_fd(fd, mmap_start, len))
+            return nullptr;
     }
 
     // Check the file type.
     auto mtype = infer_file_type(mmap_start, len);
-    if (!mtype) return nullptr;
+    if (!mtype)
+        return nullptr;
 
     return std::unique_ptr<history_file_contents_t>(
         new history_file_contents_t(static_cast<const char *>(mmap_start), len, *mtype));
@@ -212,7 +219,8 @@ static bool extract_prefix_and_unescape_yaml(std::string *key, std::string *valu
 
         // Skip a space after the : if necessary.
         size_t val_start = where + 1;
-        if (val_start < line.size() && line.at(val_start) == ' ') val_start++;
+        if (val_start < line.size() && line.at(val_start) == ' ')
+            val_start++;
         value->assign(line, val_start, line.size() - val_start);
 
         unescape_yaml_fish_2_0(key);
@@ -245,11 +253,14 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
         size_t advance = read_line(base, cursor, len, line);
 
         size_t this_indent = trim_leading_spaces(line);
-        if (indent == 0) indent = this_indent;
+        if (indent == 0)
+            indent = this_indent;
 
-        if (this_indent == 0 || indent != this_indent) break;
+        if (this_indent == 0 || indent != this_indent)
+            break;
 
-        if (!extract_prefix_and_unescape_yaml(&key, &value, line)) break;
+        if (!extract_prefix_and_unescape_yaml(&key, &value, line))
+            break;
 
         // We are definitely going to consume this line.
         cursor += advance;
@@ -264,9 +275,11 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
             // Read lines starting with " - " until we can't read any more.
             for (;;) {
                 size_t advance = read_line(base, cursor, len, line);
-                if (trim_leading_spaces(line) <= indent) break;
+                if (trim_leading_spaces(line) <= indent)
+                    break;
 
-                if (std::strncmp(line.c_str(), "- ", 2) != 0) break;
+                if (std::strncmp(line.c_str(), "- ", 2) != 0)
+                    break;
 
                 // We're going to consume this line.
                 cursor += advance;
@@ -295,7 +308,8 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
 
     // Look for "when:".
     size_t when_len = 5;
-    if (std::strncmp(cursor, "when:", when_len) != 0) return false;
+    if (std::strncmp(cursor, "when:", when_len) != 0)
+        return false;
     cursor += when_len;
 
     // Advance past spaces.
@@ -314,7 +328,8 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
 /// newline. Note that the string is not null terminated.
 static const char *next_line(const char *start, const char *end) {
     // Handle the hopeless case.
-    if (end == start) return nullptr;
+    if (end == start)
+        return nullptr;
 
     // Skip past the next newline.
     const char *nextline = std::find(start, end, '\n');
@@ -352,16 +367,19 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
 
         // Advance the cursor to the next line.
         auto a_newline = static_cast<const char *>(std::memchr(line_start, '\n', length - cursor));
-        if (a_newline == nullptr) break;
+        if (a_newline == nullptr)
+            break;
 
         // Advance the cursor past this line. +1 is for the newline.
         cursor = a_newline - begin + 1;
 
         // Skip lines with a leading space, since these are in the interior of one of our items.
-        if (line_start[0] == ' ') continue;
+        if (line_start[0] == ' ')
+            continue;
 
         // Skip very short lines to make one of the checks below easier.
-        if (a_newline - line_start < 3) continue;
+        if (a_newline - line_start < 3)
+            continue;
 
         // Try to be a little YAML compatible. Skip lines with leading %, ---, or ...
         if (!std::memcmp(line_start, "%", 1) || !std::memcmp(line_start, "---", 3) ||
@@ -406,7 +424,8 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
                  interior_line != nullptr && !has_timestamp;
                  interior_line = next_line(interior_line, end)) {
                 // If the first character is not a space, it's not an interior line, so we're done.
-                if (interior_line[0] != ' ') break;
+                if (interior_line[0] != ' ')
+                    break;
 
                 // Hackish optimization: since we just stepped over some interior line, update the
                 // cursor so we don't have to look at these lines next time.
@@ -434,9 +453,12 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
 void append_history_item_to_buffer(const history_item_t &item, std::string *buffer) {
     assert(item.should_write_to_disk() && "Item should not be persisted");
     auto append = [=](const char *a, const char *b = nullptr, const char *c = nullptr) {
-        if (a) buffer->append(a);
-        if (b) buffer->append(b);
-        if (c) buffer->append(c);
+        if (a)
+            buffer->append(a);
+        if (b)
+            buffer->append(b);
+        if (c)
+            buffer->append(c);
     };
 
     std::string cmd = wcs2string(item.str());
@@ -520,12 +542,14 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
                 timestamp_mode = false;
                 continue;
             }
-            if (!was_backslash) break;
+            if (!was_backslash)
+                break;
         }
 
         if (first_char) {
             first_char = false;
-            if (c == L'#') timestamp_mode = true;
+            if (c == L'#')
+                timestamp_mode = true;
         }
 
         out.push_back(c);
@@ -540,7 +564,8 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
 /// Adapted from history_populate_from_mmap in history.c
 static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
                                            size_t *inout_cursor) {
-    if (mmap_length == 0 || *inout_cursor >= mmap_length) return static_cast<size_t>(-1);
+    if (mmap_length == 0 || *inout_cursor >= mmap_length)
+        return static_cast<size_t>(-1);
 
     const char *end = begin + mmap_length;
     const char *pos;

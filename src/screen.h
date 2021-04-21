@@ -262,7 +262,8 @@ class layout_cache_t {
         // element that is less than or equal to entry.
         if (where != esc_cache_.begin()) {
             const wcstring &candidate = where[-1];
-            if (string_prefixes_string(candidate.c_str(), entry)) return candidate.size();
+            if (string_prefixes_string(candidate.c_str(), entry))
+                return candidate.size();
         }
         return 0;
     }

@@ -103,8 +103,10 @@ static void set_signal_observed(int sig, bool val) {
 static bool handler_matches(const event_handler_t &classv, const event_t &instance,
                             bool &only_once) {
     only_once = false;
-    if (classv.desc.type == event_type_t::any) return true;
-    if (classv.desc.type != instance.desc.type) return false;
+    if (classv.desc.type == event_type_t::any)
+        return true;
+    if (classv.desc.type != instance.desc.type)
+        return false;
 
     switch (classv.desc.type) {
         case event_type_t::signal: {
@@ -114,7 +116,8 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
             return instance.desc.str_param1 == classv.desc.str_param1;
         }
         case event_type_t::exit: {
-            if (classv.desc.param1.pid == EVENT_ANY_PID) return true;
+            if (classv.desc.param1.pid == EVENT_ANY_PID)
+                return true;
             only_once = true;
             return classv.desc.param1.pid == instance.desc.param1.pid;
         }
@@ -139,7 +142,8 @@ static int event_is_blocked(parser_t &parser, const event_t &e) {
     const block_t *block;
     size_t idx = 0;
     while ((block = parser.block_at_index(idx++))) {
-        if (event_block_list_blocks_type(block->event_blocks)) return true;
+        if (event_block_list_blocks_type(block->event_blocks))
+            return true;
     }
     return event_block_list_blocks_type(parser.global_event_blocks);
 }
@@ -315,9 +319,11 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
 void event_fire_delayed(parser_t &parser) {
     auto &ld = parser.libdata();
     // Do not invoke new event handlers from within event handlers.
-    if (ld.is_event) return;
+    if (ld.is_event)
+        return;
     // Do not invoke new event handlers if we are unwinding (#6649).
-    if (signal_check_cancel()) return;
+    if (signal_check_cancel())
+        return;
 
     std::vector<shared_ptr<const event_t>> to_send;
     to_send.swap(ld.blocked_events);
@@ -431,7 +437,8 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
         }
 
         if (!last_type || *last_type != evt->desc.type) {
-            if (last_type) streams.out.append(L"\n");
+            if (last_type)
+                streams.out.append(L"\n");
             last_type = evt->desc.type;
             streams.out.append_format(L"Event %ls\n", event_name_for_type(*last_type));
         }
@@ -464,7 +471,8 @@ void event_fire_generic(parser_t &parser, const wchar_t *name, const wcstring_li
 
     event_t ev(event_type_t::generic);
     ev.desc.str_param1 = name;
-    if (args) ev.arguments = *args;
+    if (args)
+        ev.arguments = *args;
     event_fire(parser, ev);
 }
 

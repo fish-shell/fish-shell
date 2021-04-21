@@ -126,11 +126,13 @@ static const wchar_t *math_get_arg_stdin(wcstring *storage, const io_streams_t &
         }
 
         if (rc == 0) {  // EOF
-            if (arg.empty()) return nullptr;
+            if (arg.empty())
+                return nullptr;
             break;
         }
 
-        if (ch == '\n') break;  // we're done
+        if (ch == '\n')
+            break;  // we're done
 
         arg += ch;
     }
@@ -157,7 +159,8 @@ static const wchar_t *math_get_arg(int *argidx, const wchar_t **argv, wcstring *
 }
 
 static const wchar_t *math_describe_error(const te_error_t &error) {
-    if (error.position == 0) return L"NO ERROR?!?";
+    if (error.position == 0)
+        return L"NO ERROR?!?";
 
     switch (error.type) {
         case TE_ERROR_NONE:
@@ -282,7 +285,8 @@ maybe_t<int> builtin_math(parser_t &parser, io_streams_t &streams, const wchar_t
     // if (argc == 0) return STATUS_CMD_OK;
 
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -292,7 +296,8 @@ maybe_t<int> builtin_math(parser_t &parser, io_streams_t &streams, const wchar_t
     wcstring expression;
     wcstring storage;
     while (const wchar_t *arg = math_get_arg(&optind, argv, &storage, streams)) {
-        if (!expression.empty()) expression.push_back(L' ');
+        if (!expression.empty())
+            expression.push_back(L' ');
         expression.append(arg);
     }
 

@@ -239,7 +239,8 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                         FLOGF(warning, NOCLOB_ERROR, spec.target.c_str());
                     } else {
                         FLOGF(warning, FILE_ERROR, spec.target.c_str());
-                        if (should_flog(warning)) wperror(L"open");
+                        if (should_flog(warning))
+                            wperror(L"open");
                     }
                     // If opening a file fails, insert a closed FD instead of the file redirection
                     // and return false. This lets execution potentially recover and at least gives
@@ -302,7 +303,8 @@ const wcstring &output_stream_t::contents() const { return g_empty_string; }
 int output_stream_t::flush_and_check_error() { return STATUS_CMD_OK; }
 
 void fd_output_stream_t::append(const wchar_t *s, size_t amt) {
-    if (errored_) return;
+    if (errored_)
+        return;
     int res = wwrite_to_fd(s, amt, this->fd_);
     if (res < 0) {
         // TODO: this error is too aggressive, e.g. if we got SIGINT we should not complain.

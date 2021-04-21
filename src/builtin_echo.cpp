@@ -108,7 +108,8 @@ static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
         }
     }
 
-    if (base != 16) return UINT_MAX;
+    if (base != 16)
+        return UINT_MAX;
 
     switch (wc) {
         case L'8':
@@ -177,7 +178,8 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
     unsigned char val = 0;  // resulting character
     for (idx = start; idx < start + max_digits; idx++) {
         unsigned int digit = builtin_echo_digit(str[idx], base);
-        if (digit == UINT_MAX) break;
+        if (digit == UINT_MAX)
+            break;
         val = val * base + digit;
     }
 
@@ -201,7 +203,8 @@ maybe_t<int> builtin_echo(parser_t &parser, io_streams_t &streams, const wchar_t
     echo_cmd_opts_t opts;
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     // The special character \c can be used to indicate no more output.
     bool continue_output = true;

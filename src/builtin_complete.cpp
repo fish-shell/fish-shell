@@ -270,7 +270,8 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
             case 'C': {
                 do_complete = true;
                 have_do_complete_param = w.woptarg != nullptr;
-                if (have_do_complete_param) do_complete_param = w.woptarg;
+                if (have_do_complete_param)
+                    do_complete_param = w.woptarg;
                 break;
             }
             case 'h': {

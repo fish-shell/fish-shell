@@ -18,7 +18,8 @@ maybe_t<int> builtin_emit(parser_t &parser, io_streams_t &streams, const wchar_t
 
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);

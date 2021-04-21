@@ -97,17 +97,22 @@ class number_t {
     // Compare two numbers. Returns an integer -1, 0, 1 corresponding to whether we are less than,
     // equal to, or greater than the rhs.
     int compare(number_t rhs) const {
-        if (this->base != rhs.base) return (this->base > rhs.base) - (this->base < rhs.base);
+        if (this->base != rhs.base)
+            return (this->base > rhs.base) - (this->base < rhs.base);
         return (this->delta > rhs.delta) - (this->delta < rhs.delta);
     }
 
     // Return true if the number is a tty().
     bool isatty(const io_streams_t *streams) const {
-        if (delta != 0.0 || base > INT_MAX || base < INT_MIN) return false;
+        if (delta != 0.0 || base > INT_MAX || base < INT_MIN)
+            return false;
         int bint = static_cast<int>(base);
-        if (bint == 0) return ::isatty(streams->stdin_fd);
-        if (bint == 1) return !streams->out_is_redirected && ::isatty(STDOUT_FILENO);
-        if (bint == 2) return !streams->err_is_redirected && ::isatty(STDERR_FILENO);
+        if (bint == 0)
+            return ::isatty(streams->stdin_fd);
+        if (bint == 1)
+            return !streams->out_is_redirected && ::isatty(STDOUT_FILENO);
+        if (bint == 2)
+            return !streams->err_is_redirected && ::isatty(STDERR_FILENO);
         return ::isatty(bint);
     }
 };
@@ -163,7 +168,8 @@ const token_info_t *token_for_string(const wcstring &str) {
         {L")", {test_paren_close, 0}}};
 
     auto t = token_infos.find(str);
-    if (t != token_infos.end()) return &t->second;
+    if (t != token_infos.end())
+        return &t->second;
     return &token_infos.find(L"")->second;
 }
 
@@ -334,7 +340,8 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
 /// Parse a combining expression (AND, OR).
 unique_ptr<expression> test_parser::parse_combining_expression(unsigned int start,
                                                                unsigned int end) {
-    if (start >= end) return nullptr;
+    if (start >= end)
+        return nullptr;
 
     std::vector<unique_ptr<expression>> subjects;
     std::vector<token_t> combiners;
@@ -394,7 +401,8 @@ unique_ptr<expression> test_parser::parse_unary_primary(unsigned int start, unsi
 
     // All our unary primaries are prefix, so the operator is at start.
     const token_info_t *info = token_for_string(arg(start));
-    if (!(info->flags & UNARY_PRIMARY)) return nullptr;
+    if (!(info->flags & UNARY_PRIMARY))
+        return nullptr;
 
     return make_unique<unary_primary>(info->tok, range_t(start, start + 2), arg(start + 1));
 }
@@ -428,7 +436,8 @@ unique_ptr<expression> test_parser::parse_binary_primary(unsigned int start, uns
 
     // All our binary primaries are infix, so the operator is at start + 1.
     const token_info_t *info = token_for_string(arg(start + 1));
-    if (!(info->flags & BINARY_PRIMARY)) return nullptr;
+    if (!(info->flags & BINARY_PRIMARY))
+        return nullptr;
 
     return make_unique<binary_primary>(info->tok, range_t(start, start + 3), arg(start),
                                        arg(start + 2));
@@ -436,15 +445,18 @@ unique_ptr<expression> test_parser::parse_binary_primary(unsigned int start, uns
 
 unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, unsigned int end) {
     // We need at least three arguments: open paren, argument, close paren.
-    if (start + 3 >= end) return nullptr;
+    if (start + 3 >= end)
+        return nullptr;
 
     // Must start with an open expression.
     const token_info_t *open_paren = token_for_string(arg(start));
-    if (open_paren->tok != test_paren_open) return nullptr;
+    if (open_paren->tok != test_paren_open)
+        return nullptr;
 
     // Parse a subexpression.
     unique_ptr<expression> subexpr = parse_expression(start + 1, end);
-    if (!subexpr) return nullptr;
+    if (!subexpr)
+        return nullptr;
 
     // Parse a close paren.
     unsigned close_index = subexpr->range.end;
@@ -468,10 +480,14 @@ unique_ptr<expression> test_parser::parse_primary(unsigned int start, unsigned i
     }
 
     unique_ptr<expression> expr = nullptr;
-    if (!expr) expr = parse_parenthentical(start, end);
-    if (!expr) expr = parse_unary_primary(start, end);
-    if (!expr) expr = parse_binary_primary(start, end);
-    if (!expr) expr = parse_just_a_string(start, end);
+    if (!expr)
+        expr = parse_parenthentical(start, end);
+    if (!expr)
+        expr = parse_unary_primary(start, end);
+    if (!expr)
+        expr = parse_binary_primary(start, end);
+    if (!expr)
+        expr = parse_just_a_string(start, end);
     return expr;
 }
 
@@ -623,7 +639,8 @@ bool combining_expression::evaluate(io_streams_t *streams, wcstring_list_t &erro
         assert(combiners.size() + 1 == subjects.size());
 
         // One-element case.
-        if (subjects.size() == 1) return subjects.front()->evaluate(streams, errors);
+        if (subjects.size() == 1)
+            return subjects.front()->evaluate(streams, errors);
 
         // Evaluate our lists, remembering that AND has higher precedence than OR. We can
         // visualize this as a sequence of OR expressions of AND expressions.
@@ -667,7 +684,8 @@ bool parenthetical_expression::evaluate(io_streams_t *streams, wcstring_list_t &
 static bool parse_double(const wchar_t *arg, double *out_res) {
     // Consume leading spaces.
     while (arg && *arg != L'\0' && iswspace(*arg)) arg++;
-    if (!arg) return false;
+    if (!arg)
+        return false;
     errno = 0;
     wchar_t *end = nullptr;
     *out_res = fish_wcstod(arg, &end);
@@ -855,7 +873,8 @@ maybe_t<int> builtin_test(parser_t &parser, io_streams_t &streams, const wchar_t
     using namespace test_expressions;
 
     // The first argument should be the name of the command ('test').
-    if (!argv[0]) return STATUS_INVALID_ARGS;
+    if (!argv[0])
+        return STATUS_INVALID_ARGS;
 
     // Whether we are invoked with bracket '[' or not.
     const wchar_t *program_name = argv[0];

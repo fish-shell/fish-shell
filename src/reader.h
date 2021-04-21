@@ -106,7 +106,8 @@ class editable_line_t {
 
     void clear() {
         undo_history.clear();
-        if (empty()) return;
+        if (empty())
+            return;
         set_text_bypassing_undo_history(L"");
         set_position(0);
     }

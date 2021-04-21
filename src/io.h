@@ -90,7 +90,8 @@ class separated_buffer_t {
 
     /// Append a string \p str of a given length \p len, with separation type \p sep.
     void append(const char *str, size_t len, separation_type_t sep = separation_type_t::inferred) {
-        if (!try_add_size(len)) return;
+        if (!try_add_size(len))
+            return;
         // Try merging with the last element.
         if (sep == separation_type_t::inferred && last_inferred()) {
             elements_.back().contents.append(str, len);
@@ -101,7 +102,8 @@ class separated_buffer_t {
 
     /// Append a string \p str with separation type \p sep.
     void append(std::string &&str, separation_type_t sep = separation_type_t::inferred) {
-        if (!try_add_size(str.size())) return;
+        if (!try_add_size(str.size()))
+            return;
         // Try merging with the last element.
         if (sep == separation_type_t::inferred && last_inferred()) {
             elements_.back().contents.append(str);
@@ -135,7 +137,8 @@ class separated_buffer_t {
     /// Mark that we are about to add the given size \p delta to the buffer. \return true if we
     /// succeed, false if we exceed buffer_limit.
     bool try_add_size(size_t delta) {
-        if (discard_) return false;
+        if (discard_)
+            return false;
         size_t proposed_size = contents_size_ + delta;
         if ((proposed_size < delta) || (buffer_limit_ > 0 && proposed_size > buffer_limit_)) {
             clear();

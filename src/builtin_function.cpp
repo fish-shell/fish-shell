@@ -60,7 +60,8 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     wgetopter_t w;
     bool handling_named_arguments = false;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
-        if (opt != 'a' && opt != 1) handling_named_arguments = false;
+        if (opt != 'a' && opt != 1)
+            handling_named_arguments = false;
         switch (opt) {
             case 1: {
                 if (handling_named_arguments) {
@@ -217,14 +218,16 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
     // A valid function name has to be the first argument.
     wcstring function_name;
     int retval = validate_function_name(argc, argv, function_name, cmd, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
     argv++;
     argc--;
 
     function_cmd_opts_t opts;
     int optind;
     retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_error_trailer(parser, streams.err, cmd);

@@ -192,7 +192,8 @@ static void guess_emoji_width(const environment_t &vars) {
 void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
     ASSERT_IS_MAIN_THREAD();
     // Do nothing if not yet fully initialized.
-    if (!s_var_dispatch_table) return;
+    if (!s_var_dispatch_table)
+        return;
 
     s_var_dispatch_table->dispatch(key, vars);
 }
@@ -339,7 +340,8 @@ static void update_fish_color_support(const environment_t &vars) {
     bool support_term256 = false;
     bool support_term24bit = false;
 
-    if (auto term_var = vars.get(L"TERM")) term = term_var->as_string();
+    if (auto term_var = vars.get(L"TERM"))
+        term = term_var->as_string();
 
     if (auto fish_term256 = vars.get(L"fish_term256")) {
         // $fish_term256
@@ -352,7 +354,8 @@ static void update_fish_color_support(const environment_t &vars) {
     } else if (term.find(L"xterm") != wcstring::npos) {
         // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
         wcstring term_program;
-        if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
+        if (auto tp = vars.get(L"TERM_PROGRAM"))
+            term_program = tp->as_string();
         if (term_program == L"Apple_Terminal") {
             auto tpv = vars.get(L"TERM_PROGRAM_VERSION");
             if (tpv && fish_wcstod(tpv->as_string().c_str(), nullptr) > 299) {
@@ -436,15 +439,19 @@ static bool initialize_curses_using_fallback(const char *term) {
     // seeing if the fallback name can be used.
     auto &vars = env_stack_t::globals();
     auto term_var = vars.get(L"TERM");
-    if (term_var.missing_or_empty()) return false;
+    if (term_var.missing_or_empty())
+        return false;
 
     auto term_env = wcs2string(term_var->as_string());
-    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) return false;
+    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2)
+        return false;
 
-    if (is_interactive_session()) FLOGF(warning, _(L"Using fallback terminal type '%s'."), term);
+    if (is_interactive_session())
+        FLOGF(warning, _(L"Using fallback terminal type '%s'."), term);
 
     int err_ret;
-    if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) return true;
+    if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK)
+        return true;
     if (is_interactive_session()) {
         FLOGF(warning, _(L"Could not set up terminal using the fallback terminal type '%s'."),
               term);
@@ -465,24 +472,33 @@ static const wchar_t *const title_terms[] = {L"xterm",  L"screen", L"tmux",
                                              L"nxterm", L"rxvt",   L"alacritty"};
 static bool does_term_support_setting_title(const environment_t &vars) {
     const auto term_var = vars.get(L"TERM");
-    if (term_var.missing_or_empty()) return false;
+    if (term_var.missing_or_empty())
+        return false;
 
     const wcstring term_str = term_var->as_string();
     const wchar_t *term = term_str.c_str();
     bool recognized = contains(title_terms, term_var->as_string());
-    if (!recognized) recognized = !std::wcsncmp(term, L"xterm-", const_strlen(L"xterm-"));
-    if (!recognized) recognized = !std::wcsncmp(term, L"screen-", const_strlen(L"screen-"));
-    if (!recognized) recognized = !std::wcsncmp(term, L"tmux-", const_strlen(L"tmux-"));
+    if (!recognized)
+        recognized = !std::wcsncmp(term, L"xterm-", const_strlen(L"xterm-"));
+    if (!recognized)
+        recognized = !std::wcsncmp(term, L"screen-", const_strlen(L"screen-"));
+    if (!recognized)
+        recognized = !std::wcsncmp(term, L"tmux-", const_strlen(L"tmux-"));
     if (!recognized) {
-        if (std::wcscmp(term, L"linux") == 0) return false;
-        if (std::wcscmp(term, L"dumb") == 0) return false;
+        if (std::wcscmp(term, L"linux") == 0)
+            return false;
+        if (std::wcscmp(term, L"dumb") == 0)
+            return false;
         // NetBSD
-        if (std::wcscmp(term, L"vt100") == 0) return false;
-        if (std::wcscmp(term, L"wsvt25") == 0) return false;
+        if (std::wcscmp(term, L"vt100") == 0)
+            return false;
+        if (std::wcscmp(term, L"wsvt25") == 0)
+            return false;
 
         char buf[PATH_MAX];
         int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);
-        if (retval != 0 || std::strstr(buf, "tty") || std::strstr(buf, "/vc/")) return false;
+        if (retval != 0 || std::strstr(buf, "tty") || std::strstr(buf, "/vc/"))
+            return false;
     }
 
     return true;

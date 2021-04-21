@@ -365,7 +365,8 @@ class job_t {
     /// untruncated job string when we don't care what the job is, only which of the currently
     /// running jobs it is.
     wcstring preview() const {
-        if (processes.empty()) return L"";
+        if (processes.empty())
+            return L"";
         // Note argv0 may be empty in e.g. a block process.
         const wchar_t *argv0 = processes.front()->argv0();
         wcstring result = argv0 ? argv0 : L"null";

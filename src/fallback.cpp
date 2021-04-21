@@ -99,7 +99,8 @@ int fish_mkstemp_cloexec(char *name_template) {
 }
 
 [[gnu::unused]] static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b, size_t count) {
-    if (count == 0) return 0;
+    if (count == 0)
+        return 0;
 
     if (*a == 0) {
         return *b == 0 ? 0 : -1;
@@ -107,7 +108,8 @@ int fish_mkstemp_cloexec(char *name_template) {
         return 1;
     }
     int diff = towlower(*a) - towlower(*b);
-    if (diff != 0) return diff;
+    if (diff != 0)
+        return diff;
     return wcsncasecmp_fallback(a + 1, b + 1, count - 1);
 }
 
@@ -168,13 +170,15 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
     // Copy as many bytes as will fit.
     if (n != 0 && --n != 0) {
         do {
-            if ((*d++ = *s++) == 0) break;
+            if ((*d++ = *s++) == 0)
+                break;
         } while (--n != 0);
     }
 
     // Not enough room in dst, add NUL and traverse rest of src.
     if (n == 0) {
-        if (siz != 0) *d = '\0';  // NUL-terminate dst
+        if (siz != 0)
+            *d = '\0';  // NUL-terminate dst
         while (*s++)
             ;  // ignore rest of src
     }
@@ -230,7 +234,8 @@ static int fish_get_emoji_width(wchar_t c) {
     (void)c;
     // Respect an explicit value. If we don't have one, use the guessed value. Do not try to fall
     // back to wcwidth(), it's hopeless.
-    if (g_fish_emoji_width > 0) return g_fish_emoji_width;
+    if (g_fish_emoji_width > 0)
+        return g_fish_emoji_width;
     return g_guessed_fish_emoji_width;
 }
 
@@ -259,7 +264,8 @@ int fish_wcwidth(wchar_t wc) {
     // These can either appear in combined form, taking 0 width themselves,
     // or standalone with a 1 width. Since that's literally not expressible with wcwidth(),
     // we take the position that the typical way for them to show up is composed.
-    if (wc >= L'\u1160' && wc <= L'\u11FF') return 0;
+    if (wc >= L'\u1160' && wc <= L'\u11FF')
+        return 0;
     int width = widechar_wcwidth(wc);
 
     switch (width) {
@@ -356,7 +362,8 @@ int flock(int fd, int op) {
     fl.l_whence = SEEK_SET;
     rc = fcntl(fd, op & LOCK_NB ? F_SETLK : F_SETLKW, &fl);
 
-    if (rc && (errno == EAGAIN)) errno = EWOULDBLOCK;
+    if (rc && (errno == EAGAIN))
+        errno = EWOULDBLOCK;
 
     return rc;
 }

@@ -72,7 +72,8 @@ static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
                                               io_streams_t &streams) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
-        if (opt_spec->num_seen == 0) continue;
+        if (opt_spec->num_seen == 0)
+            continue;
 
         // We saw this option at least once. Check all the sets of mutually exclusive options to see
         // if this option appears in any of them.
@@ -82,24 +83,30 @@ static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
                 // other mutually exclusive options have been seen.
                 for (const auto &xflag : xarg_set) {
                     auto xopt_spec_iter = opts.options.find(xflag);
-                    if (xopt_spec_iter == opts.options.end()) continue;
+                    if (xopt_spec_iter == opts.options.end())
+                        continue;
 
                     const auto &xopt_spec = xopt_spec_iter->second;
                     // Ignore this flag in the list of mutually exclusive flags.
-                    if (xopt_spec->short_flag == opt_spec->short_flag) continue;
+                    if (xopt_spec->short_flag == opt_spec->short_flag)
+                        continue;
 
                     // If it is a different flag check if it has been seen.
                     if (xopt_spec->num_seen) {
                         wcstring flag1;
-                        if (opt_spec->short_flag_valid) flag1 = wcstring(1, opt_spec->short_flag);
+                        if (opt_spec->short_flag_valid)
+                            flag1 = wcstring(1, opt_spec->short_flag);
                         if (!opt_spec->long_flag.empty()) {
-                            if (opt_spec->short_flag_valid) flag1 += L"/";
+                            if (opt_spec->short_flag_valid)
+                                flag1 += L"/";
                             flag1 += opt_spec->long_flag;
                         }
                         wcstring flag2;
-                        if (xopt_spec->short_flag_valid) flag2 = wcstring(1, xopt_spec->short_flag);
+                        if (xopt_spec->short_flag_valid)
+                            flag2 = wcstring(1, xopt_spec->short_flag);
                         if (!xopt_spec->long_flag.empty()) {
-                            if (xopt_spec->short_flag_valid) flag2 += L"/";
+                            if (xopt_spec->short_flag_valid)
+                                flag2 += L"/";
                             flag2 += xopt_spec->long_flag;
                         }
                         // We want the flag order to be deterministic. Primarily to make unit
@@ -259,7 +266,8 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_r
             counter++;
         } else {
             // Try to parse any other flag modifiers
-            if (!parse_flag_modifiers(opts, opt_spec, option_spec, &s, streams)) return false;
+            if (!parse_flag_modifiers(opts, opt_spec, option_spec, &s, streams))
+                return false;
         }
     }
 
@@ -422,7 +430,8 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
         }
     }
 
-    if (opts.print_help) return STATUS_CMD_OK;
+    if (opts.print_help)
+        return STATUS_CMD_OK;
 
     if (argc == w.woptind || std::wcscmp(L"--", argv[w.woptind - 1]) == 0) {
         // The user didn't specify any option specs.
@@ -435,7 +444,8 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
         // If any error happens, the backtrace will show which argparse it was.
         const wchar_t *fn = parser.get_function_name(1);
 
-        if (!fn) fn = L"argparse";
+        if (!fn)
+            fn = L"argparse";
         opts.name = fn;
     }
 
@@ -447,15 +457,18 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
                                     std::vector<woption> *long_options) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
-        if (opt_spec->short_flag_valid) short_options->push_back(opt_spec->short_flag);
+        if (opt_spec->short_flag_valid)
+            short_options->push_back(opt_spec->short_flag);
 
         int arg_type = no_argument;
         if (opt_spec->num_allowed == -1) {
             arg_type = optional_argument;
-            if (opt_spec->short_flag_valid) short_options->append(L"::");
+            if (opt_spec->short_flag_valid)
+                short_options->append(L"::");
         } else if (opt_spec->num_allowed > 0) {
             arg_type = required_argument;
-            if (opt_spec->short_flag_valid) short_options->append(L":");
+            if (opt_spec->short_flag_valid)
+                short_options->append(L":");
         }
 
         if (!opt_spec->long_flag.empty()) {
@@ -469,7 +482,8 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
 static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
                         bool is_long_flag, const wchar_t *woptarg, io_streams_t &streams) {
     // Obviously if there is no arg validation command we assume the arg is okay.
-    if (opt_spec->validation_command.empty()) return STATUS_CMD_OK;
+    if (opt_spec->validation_command.empty())
+        return STATUS_CMD_OK;
 
     wcstring_list_t cmd_output;
 
@@ -516,7 +530,8 @@ static int validate_and_store_implicit_int(parser_t &parser, const argparse_cmd_
     assert(found != opts.options.end());
     const auto &opt_spec = found->second;
     int retval = validate_arg(parser, opts, opt_spec.get(), long_idx != -1, val, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     // It's a valid integer so store it and return success.
     opt_spec->vals.clear();
@@ -543,7 +558,8 @@ static int handle_flag(parser_t &parser, const argparse_cmd_opts_t &opts, option
 
     if (woptarg) {
         int retval = validate_arg(parser, opts, opt_spec, long_idx != -1, woptarg, streams);
-        if (retval != STATUS_CMD_OK) return retval;
+        if (retval != STATUS_CMD_OK)
+            return retval;
     }
 
     if (opt_spec->num_allowed == -1 || opt_spec->num_allowed == 1) {
@@ -590,9 +606,11 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
                 // or just ignoring the error (e.g. in completions).
                 opts.argv.push_back(arg_contents - 1);
                 // Work around weirdness with wgetopt, which crashes if we `continue` here.
-                if (w.woptind == argc) break;
+                if (w.woptind == argc)
+                    break;
             }
-            if (retval != STATUS_CMD_OK) return retval;
+            if (retval != STATUS_CMD_OK)
+                return retval;
             long_idx = -1;
             continue;
         } else if (opt == 1) {
@@ -610,7 +628,8 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
         assert(found != opts.options.end());
 
         int retval = handle_flag(parser, opts, found->second.get(), long_idx, w.woptarg, streams);
-        if (retval != STATUS_CMD_OK) return retval;
+        if (retval != STATUS_CMD_OK)
+            return retval;
         long_idx = -1;
     }
 
@@ -623,7 +642,8 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
 // arguments provided to the `argparse` command.
 static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t &args,
                                parser_t &parser, io_streams_t &streams) {
-    if (args.empty()) return STATUS_CMD_OK;
+    if (args.empty())
+        return STATUS_CMD_OK;
 
     // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't
     // reorder.
@@ -645,10 +665,12 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     int optind;
     int retval = argparse_parse_flags(parser, opts, short_options.c_str(), long_options.data(), cmd,
                                       argc, argv, &optind, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     retval = check_for_mutually_exclusive_flags(opts, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     for (int i = optind; argv[i]; i++) {
         opts.argv.push_back(argv[i]);
@@ -678,7 +700,8 @@ static int check_min_max_args_constraints(const argparse_cmd_opts_t &opts, const
 static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_t &opts) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
-        if (!opt_spec->num_seen) continue;
+        if (!opt_spec->num_seen)
+            continue;
 
         if (opt_spec->short_flag_valid) {
             vars.set(var_name_prefix + opt_spec->short_flag, ENV_LOCAL, opt_spec->vals);
@@ -688,7 +711,8 @@ static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_
             // escape_string(long_flag, 0, STRING_STYLE_VAR).
             wcstring long_flag = opt_spec->long_flag;
             for (auto &pos : long_flag) {
-                if (!iswalnum(pos)) pos = L'_';
+                if (!iswalnum(pos))
+                    pos = L'_';
             }
             vars.set(var_name_prefix + long_flag, ENV_LOCAL, opt_spec->vals);
         }
@@ -729,13 +753,16 @@ maybe_t<int> builtin_argparse(parser_t &parser, io_streams_t &streams, const wch
     while (optind < argc) args.push_back(argv[optind++]);
 
     retval = parse_exclusive_args(opts, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     retval = argparse_parse_args(opts, args, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     retval = check_min_max_args_constraints(opts, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     set_argparse_result_vars(parser.vars(), opts);
     return retval;

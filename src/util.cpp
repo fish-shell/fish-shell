@@ -20,12 +20,16 @@ static int wcsfilecmp_leading_digits(const wchar_t **a, const wchar_t **b) {
     const wchar_t *a_end, *b_end;
 
     long a_num = fish_wcstol(*a, &a_end, 10);
-    if (errno > 0) return 0;  // invalid number -- fallback to simple string compare
+    if (errno > 0)
+        return 0;  // invalid number -- fallback to simple string compare
     long b_num = fish_wcstol(*b, &b_end, 10);
-    if (errno > 0) return 0;  // invalid number -- fallback to simple string compare
+    if (errno > 0)
+        return 0;  // invalid number -- fallback to simple string compare
 
-    if (a_num < b_num) return -1;
-    if (a_num > b_num) return 1;
+    if (a_num < b_num)
+        return -1;
+    if (a_num > b_num)
+        return 1;
     *a = a_end;
     *b = b_end;
     return 0;
@@ -59,14 +63,17 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
             retval = wcsfilecmp_leading_digits(&a, &b);
             // If we know the strings aren't logically equal or we've reached the end of one or both
             // strings we can stop iterating over the chars in each string.
-            if (retval || *a == 0 || *b == 0) break;
+            if (retval || *a == 0 || *b == 0)
+                break;
         }
 
         wint_t al = towupper(*a);
         wint_t bl = towupper(*b);
         // Sort dashes after Z - see #5634
-        if (al == L'-') al = L'[';
-        if (bl == L'-') bl = L'[';
+        if (al == L'-')
+            al = L'[';
+        if (bl == L'-')
+            bl = L'[';
 
         if (al < bl) {
             retval = -1;
@@ -80,7 +87,8 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
         }
     }
 
-    if (retval != 0) return retval;  // we already know the strings aren't logically equal
+    if (retval != 0)
+        return retval;  // we already know the strings aren't logically equal
 
     if (*a == 0) {
         if (*b == 0) {
@@ -112,7 +120,8 @@ int wcsfilecmp_glob(const wchar_t *a, const wchar_t *b) {
             retval = wcsfilecmp_leading_digits(&a, &b);
             // If we know the strings aren't logically equal or we've reached the end of one or both
             // strings we can stop iterating over the chars in each string.
-            if (retval || *a == 0 || *b == 0) break;
+            if (retval || *a == 0 || *b == 0)
+                break;
         }
 
         wint_t al = towlower(*a);
@@ -129,7 +138,8 @@ int wcsfilecmp_glob(const wchar_t *a, const wchar_t *b) {
         }
     }
 
-    if (retval != 0) return retval;  // we already know the strings aren't logically equal
+    if (retval != 0)
+        return retval;  // we already know the strings aren't logically equal
 
     if (*a == 0) {
         if (*b == 0) {

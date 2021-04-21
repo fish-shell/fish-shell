@@ -151,7 +151,8 @@ parse_execution_context_t::infinite_recursive_statement_in_job_list(const ast::j
 
     // Get the first job in the job list.
     const ast::job_conjunction_t *jc = jobs.at(0);
-    if (!jc) return nullptr;
+    if (!jc)
+        return nullptr;
     const ast::job_t *job = &jc->job;
 
     // Helper to return if a statement is infinitely recursive in this function.
@@ -160,11 +161,13 @@ parse_execution_context_t::infinite_recursive_statement_in_job_list(const ast::j
         // Ignore non-decorated statements like `if`, etc.
         const ast::decorated_statement_t *dc =
             stat.contents.contents->try_as<ast::decorated_statement_t>();
-        if (!dc) return nullptr;
+        if (!dc)
+            return nullptr;
 
         // Ignore statements with decorations like 'builtin' or 'command', since those
         // are not infinite recursion. In particular that is what enables 'wrapper functions'.
-        if (dc->decoration() != statement_decoration_t::none) return nullptr;
+        if (dc->decoration() != statement_decoration_t::none)
+            return nullptr;
 
         // Check the command.
         wcstring cmd = dc->command.source(pstree->src);
@@ -255,7 +258,8 @@ bool parse_execution_context_t::job_is_simple_block(const ast::job_t &job) const
     // Helper to check if an argument_or_redirection_list_t has no redirections.
     auto no_redirs = [](const argument_or_redirection_list_t &list) -> bool {
         for (const argument_or_redirection_t &val : list) {
-            if (val.is_redirection()) return false;
+            if (val.is_redirection())
+                return false;
         }
         return true;
     };
@@ -538,7 +542,8 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
     }
 
     end_execution_reason_t result = end_execution_reason_t::ok;
-    if (trace_enabled(*parser)) trace_argv(*parser, L"switch", {switch_value_expanded});
+    if (trace_enabled(*parser))
+        trace_argv(*parser, L"switch", {switch_value_expanded});
     block_t *sb = parser->push_block(block_t::switch_block());
 
     // Expand case statements.
@@ -569,7 +574,8 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
                 }
             }
         }
-        if (matching_case_item) break;
+        if (matching_case_item)
+            break;
     }
 
     if (matching_case_item) {
@@ -717,7 +723,8 @@ parse_execution_context_t::ast_args_list_t parse_execution_context_t::get_argume
     const ast::argument_or_redirection_list_t &args) {
     ast_args_list_t result;
     for (const ast::argument_or_redirection_t &v : args) {
-        if (v.is_argument()) result.push_back(&v.argument());
+        if (v.is_argument())
+            result.push_back(&v.argument());
     }
     return result;
 }
@@ -839,7 +846,8 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         return ret;
     }
     // For no-exec, having an empty command is okay. We can't do anything more with it tho.
-    if (no_exec()) return end_execution_reason_t::ok;
+    if (no_exec())
+        return end_execution_reason_t::ok;
     assert(!cmd.empty() && "expand_command should not produce an empty command");
 
     // Determine the process type.
@@ -867,7 +875,8 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
 
         if (!has_command && !use_implicit_cd) {
             // No command. If we're --no-execute return okay - it might be a function.
-            if (no_exec()) return end_execution_reason_t::ok;
+            if (no_exec())
+                return end_execution_reason_t::ok;
             return this->handle_command_not_found(cmd, statement, no_cmd_err_code);
         }
     }
@@ -948,7 +957,8 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
             case expand_result_t::wildcard_no_match: {
                 if (glob_behavior == failglob) {
                     // For no_exec, ignore the error - this might work at runtime.
-                    if (no_exec()) return end_execution_reason_t::ok;
+                    if (no_exec())
+                        return end_execution_reason_t::ok;
                     // Report the unmatched wildcard error and stop processing.
                     return report_error(STATUS_UNMATCHED_WILDCARD, *arg_node, WILDCARD_ERR_MSG,
                                         get_source(*arg_node).c_str());
@@ -983,7 +993,8 @@ end_execution_reason_t parse_execution_context_t::determine_redirections(
     const ast::argument_or_redirection_list_t &list, redirection_spec_list_t *out_redirections) {
     // Get all redirection nodes underneath the statement.
     for (const ast::argument_or_redirection_t &arg_or_redir : list) {
-        if (!arg_or_redir.is_redirection()) continue;
+        if (!arg_or_redir.is_redirection())
+            continue;
         const ast::redirection_t &redir_node = arg_or_redir.redirection();
 
         maybe_t<pipe_or_redir_t> oper = pipe_or_redir_t::from_string(get_source(redir_node.oper));
@@ -1079,7 +1090,8 @@ end_execution_reason_t parse_execution_context_t::populate_block_process(
 end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
     process_t *proc, const ast::variable_assignment_list_t &variable_assignment_list,
     const block_t **block) {
-    if (variable_assignment_list.empty()) return end_execution_reason_t::ok;
+    if (variable_assignment_list.empty())
+        return end_execution_reason_t::ok;
     *block = parser->push_block(block_t::variable_assignment_block());
     for (const ast::variable_assignment_t &variable_assignment : variable_assignment_list) {
         const wcstring &source = get_source(variable_assignment);
@@ -1112,7 +1124,8 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
         for (auto &completion : expression_expanded) {
             vals.emplace_back(std::move(completion.completion));
         }
-        if (proc) proc->variable_assignments.push_back({variable_name, vals});
+        if (proc)
+            proc->variable_assignments.push_back({variable_name, vals});
         parser->set_var_and_fire(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
     }
     return end_execution_reason_t::ok;
@@ -1129,9 +1142,11 @@ end_execution_reason_t parse_execution_context_t::populate_job_process(
     end_execution_reason_t result =
         this->apply_variable_assignments(proc, variable_assignments, &block);
     cleanup_t scope([&]() {
-        if (block) parser->pop_block(block);
+        if (block)
+            parser->pop_block(block);
     });
-    if (result != end_execution_reason_t::ok) return result;
+    if (result != end_execution_reason_t::ok)
+        return result;
 
     switch (specific_statement.type) {
         case type_t::not_statement: {
@@ -1234,22 +1249,26 @@ static bool remove_job(parser_t &parser, job_t *job) {
 /// `sleep 1 | not time true` will time the whole job!
 static bool job_node_wants_timing(const ast::job_t &job_node) {
     // Does our job have the job-level time prefix?
-    if (job_node.time) return true;
+    if (job_node.time)
+        return true;
 
     // Helper to return true if a node is 'not time ...' or 'not not time...' or...
     auto is_timed_not_statement = [](const ast::statement_t &stat) {
         const auto *ns = stat.contents->try_as<ast::not_statement_t>();
         while (ns) {
-            if (ns->time) return true;
+            if (ns->time)
+                return true;
             ns = ns->contents.try_as<ast::not_statement_t>();
         }
         return false;
     };
 
     // Do we have a 'not time ...' anywhere in our pipeline?
-    if (is_timed_not_statement(job_node.statement)) return true;
+    if (is_timed_not_statement(job_node.statement))
+        return true;
     for (const ast::job_continuation_t &jc : job_node.continuation) {
-        if (is_timed_not_statement(jc.statement)) return true;
+        if (is_timed_not_statement(jc.statement))
+            return true;
     }
     return false;
 }
@@ -1261,7 +1280,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     }
 
     // We definitely do not want to execute anything if we're told we're --no-execute!
-    if (no_exec()) return end_execution_reason_t::ok;
+    if (no_exec())
+        return end_execution_reason_t::ok;
 
     // Get terminal modes.
     struct termios tmodes = {};
@@ -1294,7 +1314,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         end_execution_reason_t result =
             this->apply_variable_assignments(nullptr, job_node.variables, &block);
         cleanup_t scope([&]() {
-            if (block) parser->pop_block(block);
+            if (block)
+                parser->pop_block(block);
         });
 
         const ast::node_t *specific_statement = job_node.statement.contents.get();

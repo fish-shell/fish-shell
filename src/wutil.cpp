@@ -103,7 +103,8 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
     struct dirent *result = nullptr;
     while (!result) {
         result = readdir(dir);
-        if (!result) break;
+        if (!result)
+            break;
 
 #if HAVE_STRUCT_DIRENT_D_TYPE
         switch (result->d_type) {
@@ -271,7 +272,8 @@ void safe_perror(const char *message) {
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,
 /// wrealpath() returns none() and errno is likely set.
 maybe_t<wcstring> wrealpath(const wcstring &pathname) {
-    if (pathname.empty()) return none();
+    if (pathname.empty())
+        return none();
 
     cstring real_path;
     cstring narrow_path = wcs2string(pathname);
@@ -307,13 +309,15 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
                 narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuf);
             }
 
-            if (!narrow_res) return none();
+            if (!narrow_res)
+                return none();
 
             pathsep_idx++;
             real_path.append(narrow_res);
 
             // This test is to deal with cases such as /../../x => //x.
-            if (real_path.size() > 1) real_path.append("/");
+            if (real_path.size() > 1)
+                real_path.append("/");
 
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
         }
@@ -326,7 +330,8 @@ wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes)
     const wchar_t sep = L'/';
     size_t leading_slashes = 0;
     for (wchar_t c : path) {
-        if (c != sep) break;
+        if (c != sep)
+            break;
         leading_slashes++;
     }
 
@@ -351,7 +356,8 @@ wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes)
     result.insert(0, allow_leading_double_slashes && leading_slashes > 2 ? 1 : leading_slashes,
                   sep);
     // Ensure ./ normalizes to . and not empty.
-    if (result.empty()) result.push_back(L'.');
+    if (result.empty())
+        result.push_back(L'.');
     return result;
 }
 
@@ -404,17 +410,20 @@ wcstring wdirname(wcstring path) {
     // On Mac it's not thread safe, and will error for paths exceeding PATH_MAX.
     // This follows OpenGroup dirname recipe.
     // 1: Double-slash stays.
-    if (path == L"//") return path;
+    if (path == L"//")
+        return path;
 
     // 2: All slashes => return slash.
-    if (!path.empty() && path.find_first_not_of(L'/') == wcstring::npos) return L"/";
+    if (!path.empty() && path.find_first_not_of(L'/') == wcstring::npos)
+        return L"/";
 
     // 3: Trim trailing slashes.
     while (!path.empty() && path.back() == L'/') path.pop_back();
 
     // 4: No slashes left => return period.
     size_t last_slash = path.rfind(L'/');
-    if (last_slash == wcstring::npos) return L".";
+    if (last_slash == wcstring::npos)
+        return L".";
 
     // 5: Remove trailing non-slashes.
     path.erase(last_slash + 1, wcstring::npos);
@@ -424,25 +433,29 @@ wcstring wdirname(wcstring path) {
     while (!path.empty() && path.back() == L'/') path.pop_back();
 
     // 8: Empty => return slash.
-    if (path.empty()) path = L"/";
+    if (path.empty())
+        path = L"/";
     return path;
 }
 
 wcstring wbasename(wcstring path) {
     // This follows OpenGroup basename recipe.
     // 1: empty => allowed to return ".". This is what system impls do.
-    if (path.empty()) return L".";
+    if (path.empty())
+        return L".";
 
     // 2: Skip as permitted.
     // 3: All slashes => return slash.
-    if (!path.empty() && path.find_first_not_of(L'/') == wcstring::npos) return L"/";
+    if (!path.empty() && path.find_first_not_of(L'/') == wcstring::npos)
+        return L"/";
 
     // 4: Remove trailing slashes.
     while (!path.empty() && path.back() == L'/') path.pop_back();
 
     // 5: Remove up to and including last slash.
     size_t last_slash = path.rfind(L'/');
-    if (last_slash != wcstring::npos) path.erase(0, last_slash + 1);
+    if (last_slash != wcstring::npos)
+        path.erase(0, last_slash + 1);
     return path;
 }
 
@@ -502,7 +515,8 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
     auto do_write = [fd, &total_written](const char *cursor, size_t remaining) {
         while (remaining > 0) {
             ssize_t samt = write(fd, cursor, remaining);
-            if (samt < 0) return false;
+            if (samt < 0)
+                return false;
             total_written += samt;
             size_t amt = static_cast<size_t>(samt);
             assert(amt <= remaining && "Wrote more than requested");
@@ -514,7 +528,8 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
 
     // Helper to flush the accumulation buffer.
     auto flush_accum = [&] {
-        if (!do_write(accum, accumlen)) return false;
+        if (!do_write(accum, accumlen))
+            return false;
         accumlen = 0;
         return true;
     };
@@ -523,7 +538,8 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
         if (len + accumlen > maxaccum) {
             // We have to flush.
             // Note this modifies 'accumlen'.
-            if (!flush_accum()) return false;
+            if (!flush_accum())
+                return false;
         }
         if (len + accumlen <= maxaccum) {
             // Accumulate more.
@@ -536,31 +552,39 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
         }
     });
     // Flush any remaining.
-    if (success) success = flush_accum();
+    if (success)
+        success = flush_accum();
     return success ? total_written : -1;
 }
 
 /// Return one if the code point is in a Unicode private use area.
 static int fish_is_pua(wint_t wc) {
-    if (PUA1_START <= wc && wc < PUA1_END) return 1;
-    if (PUA2_START <= wc && wc < PUA2_END) return 1;
-    if (PUA3_START <= wc && wc < PUA3_END) return 1;
+    if (PUA1_START <= wc && wc < PUA1_END)
+        return 1;
+    if (PUA2_START <= wc && wc < PUA2_END)
+        return 1;
+    if (PUA3_START <= wc && wc < PUA3_END)
+        return 1;
     return 0;
 }
 
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswalnum(wint_t wc) {
-    if (fish_reserved_codepoint(wc)) return 0;
-    if (fish_is_pua(wc)) return 0;
+    if (fish_reserved_codepoint(wc))
+        return 0;
+    if (fish_is_pua(wc))
+        return 0;
     return iswalnum(wc);
 }
 
 /// We need this because there are too many implementations that don't return the proper answer for
 /// some code points. See issue #3050.
 int fish_iswgraph(wint_t wc) {
-    if (fish_reserved_codepoint(wc)) return 0;
-    if (fish_is_pua(wc)) return 1;
+    if (fish_reserved_codepoint(wc))
+        return 0;
+    if (fish_is_pua(wc))
+        return 1;
     return iswgraph(wc);
 }
 
@@ -592,7 +616,8 @@ int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
     if (!*str) {  // this is because some implementations don't handle this sensibly
         errno = EINVAL;
-        if (endptr) *endptr = str;
+        if (endptr)
+            *endptr = str;
         return 0;
     }
 
@@ -614,7 +639,8 @@ int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
             errno = -1;
         }
     }
-    if (endptr) *endptr = _endptr;
+    if (endptr)
+        *endptr = _endptr;
     return static_cast<int>(result);
 }
 
@@ -630,7 +656,8 @@ long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
     if (!*str) {  // this is because some implementations don't handle this sensibly
         errno = EINVAL;
-        if (endptr) *endptr = str;
+        if (endptr)
+            *endptr = str;
         return 0;
     }
 
@@ -645,7 +672,8 @@ long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
             errno = -1;
         }
     }
-    if (endptr) *endptr = _endptr;
+    if (endptr)
+        *endptr = _endptr;
     return result;
 }
 
@@ -661,7 +689,8 @@ long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
     while (iswspace(*str)) ++str;  // skip leading whitespace
     if (!*str) {  // this is because some implementations don't handle this sensibly
         errno = EINVAL;
-        if (endptr) *endptr = str;
+        if (endptr)
+            *endptr = str;
         return 0;
     }
 
@@ -676,7 +705,8 @@ long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
             errno = -1;
         }
     }
-    if (endptr) *endptr = _endptr;
+    if (endptr)
+        *endptr = _endptr;
     return result;
 }
 
@@ -694,7 +724,8 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
         *str == '-')  // disallow minus as the first character to avoid questionable wrap-around
     {
         errno = EINVAL;
-        if (endptr) *endptr = str;
+        if (endptr)
+            *endptr = str;
         return 0;
     }
 
@@ -709,7 +740,8 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
             errno = -1;
         }
     }
-    if (endptr) *endptr = _endptr;
+    if (endptr)
+        *endptr = _endptr;
     return result;
 }
 
@@ -805,13 +837,20 @@ int compare(T a, T b) {
 int file_id_t::compare_file_id(const file_id_t &rhs) const {
     // Compare each field, stopping when we get to a non-equal field.
     int ret = 0;
-    if (!ret) ret = compare(device, rhs.device);
-    if (!ret) ret = compare(inode, rhs.inode);
-    if (!ret) ret = compare(size, rhs.size);
-    if (!ret) ret = compare(change_seconds, rhs.change_seconds);
-    if (!ret) ret = compare(change_nanoseconds, rhs.change_nanoseconds);
-    if (!ret) ret = compare(mod_seconds, rhs.mod_seconds);
-    if (!ret) ret = compare(mod_nanoseconds, rhs.mod_nanoseconds);
+    if (!ret)
+        ret = compare(device, rhs.device);
+    if (!ret)
+        ret = compare(inode, rhs.inode);
+    if (!ret)
+        ret = compare(size, rhs.size);
+    if (!ret)
+        ret = compare(change_seconds, rhs.change_seconds);
+    if (!ret)
+        ret = compare(change_nanoseconds, rhs.change_nanoseconds);
+    if (!ret)
+        ret = compare(mod_seconds, rhs.mod_seconds);
+    if (!ret)
+        ret = compare(mod_nanoseconds, rhs.mod_nanoseconds);
     return ret;
 }
 

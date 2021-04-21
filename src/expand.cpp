@@ -68,10 +68,12 @@ static void remove_internal_separator(wcstring *s, bool conv);
 ///
 /// \param in the string to test
 static bool expand_is_clean(const wcstring &in) {
-    if (in.empty()) return true;
+    if (in.empty())
+        return true;
 
     // Test characters that have a special meaning in the first character position.
-    if (std::wcschr(UNCLEAN_FIRST, in.at(0)) != nullptr) return false;
+    if (std::wcschr(UNCLEAN_FIRST, in.at(0)) != nullptr)
+        return false;
 
     // Test characters that have a special meaning in any character position.
     return in.find_first_of(UNCLEAN) == wcstring::npos;
@@ -80,7 +82,8 @@ static bool expand_is_clean(const wcstring &in) {
 /// Append a syntax error to the given error list.
 static void append_syntax_error(parse_error_list_t *errors, size_t source_start, const wchar_t *fmt,
                                 ...) {
-    if (!errors) return;
+    if (!errors)
+        return;
 
     parse_error_t error;
     error.source_start = source_start;
@@ -100,7 +103,8 @@ static void append_syntax_error(parse_error_list_t *errors, size_t source_start,
 /// could consequently be recorded more than once.
 static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start, const wchar_t *fmt,
                                 ...) {
-    if (!errors) return;
+    if (!errors)
+        return;
 
     parse_error_t error;
     error.source_start = source_start;
@@ -113,7 +117,8 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
     va_end(va);
 
     for (const auto &it : *errors) {
-        if (error.text == it.text) return;
+        if (error.text == it.text)
+            return;
     }
 
     errors->push_back(error);
@@ -145,7 +150,8 @@ wcstring expand_escape_variable(const env_var_t &var) {
 
     for (size_t j = 0; j < lst.size(); j++) {
         const wcstring &el = lst.at(j);
-        if (j) buff.append(L"  ");
+        if (j)
+            buff.append(L"  ");
 
         // We want to use quotes if we have more than one string, or the string contains a space.
         bool prefer_quotes = lst.size() > 1 || el.find(L' ') != wcstring::npos;
@@ -335,7 +341,8 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
             var_name_stop++;
             break;
         }
-        if (!valid_var_name_char(nc)) break;
+        if (!valid_var_name_char(nc))
+            break;
         var_name_stop++;
     }
     assert(var_name_stop >= var_name_start && "Bogus variable name indexes");
@@ -516,7 +523,8 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
     for (const wchar_t *pos = in; (*pos) && !syntax_error; pos++) {
         switch (*pos) {
             case BRACE_BEGIN: {
-                if (brace_count == 0) brace_begin = pos;
+                if (brace_count == 0)
+                    brace_begin = pos;
                 brace_count++;
                 break;
             }
@@ -530,7 +538,8 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
                 break;
             }
             case BRACE_SEP: {
-                if (brace_count == 1) last_sep = pos;
+                if (brace_count == 1)
+                    last_sep = pos;
                 break;
             }
             default: {
@@ -596,7 +605,8 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
             expand_braces(std::move(whole_item), flags, out, errors);
 
             item_begin = pos + 1;
-            if (pos == brace_end) break;
+            if (pos == brace_end)
+                break;
         }
 
         if (*pos == BRACE_BEGIN) {
@@ -775,7 +785,8 @@ static void expand_home_directory(wcstring &input, const environment_t &vars) {
         }
 
         maybe_t<wcstring> realhome;
-        if (home) realhome = normalize_path(*home);
+        if (home)
+            realhome = normalize_path(*home);
 
         if (realhome) {
             input.replace(input.begin(), input.begin() + tail_idx, *realhome);
@@ -805,7 +816,8 @@ static void unexpand_tildes(const wcstring &input, const environment_t &vars,
                             completion_list_t *completions) {
     // If input begins with tilde, then try to replace the corresponding string in each completion
     // with the tilde. If it does not, there's nothing to do.
-    if (input.empty() || input.at(0) != L'~') return;
+    if (input.empty() || input.at(0) != L'~')
+        return;
 
     // We only operate on completions that replace their contents. If we don't have any, we're done.
     // In particular, empty vectors are common.
@@ -816,7 +828,8 @@ static void unexpand_tildes(const wcstring &input, const environment_t &vars,
             break;
         }
     }
-    if (!has_candidate_completion) return;
+    if (!has_candidate_completion)
+        return;
 
     size_t tail_idx;
     wcstring username_with_tilde = L"~";
@@ -1204,10 +1217,12 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const operatio
         bool first = true;
         for (auto &comp : completions) {
             if (first) {
-                if (out_cmd) *out_cmd = std::move(comp.completion);
+                if (out_cmd)
+                    *out_cmd = std::move(comp.completion);
                 first = false;
             } else {
-                if (out_args) out_args->push_back(std::move(comp.completion));
+                if (out_args)
+                    out_args->push_back(std::move(comp.completion));
             }
         }
     }
@@ -1229,7 +1244,8 @@ static std::string escape_single_quoted_hack_hack_hack_hack(const char *str) {
     for (size_t i = 0; i < len; i++) {
         char c = str[i];
         // Escape backslashes and single quotes only.
-        if (c == '\\' || c == '\'') result.push_back('\\');
+        if (c == '\\' || c == '\'')
+            result.push_back('\\');
         result.push_back(c);
     }
     result.push_back('\'');
@@ -1263,7 +1279,8 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
 }
 
 maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &vars) {
-    if (src.empty()) return none();
+    if (src.empty())
+        return none();
 
     wcstring esc_src = escape_string(src, 0, STRING_STYLE_VAR);
     if (esc_src.empty()) {

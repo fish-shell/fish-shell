@@ -73,7 +73,8 @@ const enum_map<status_cmd_t> status_enum_map[] = {
 #define CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)                                        \
     if (!args.empty()) {                                                                    \
         const wchar_t *subcmd_str = enum_to_str(status_cmd, status_enum_map);               \
-        if (!subcmd_str) subcmd_str = L"default";                                           \
+        if (!subcmd_str)                                                                    \
+            subcmd_str = L"default";                                                        \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size()); \
         retval = STATUS_INVALID_ARGS;                                                       \
         break;                                                                              \
@@ -281,7 +282,8 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -383,7 +385,8 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const wchar_t *fn = parser.get_function_name(opts.level);
 
-            if (!fn) fn = _(L"Not a function");
+            if (!fn)
+                fn = _(L"Not a function");
             streams.out.append_format(L"%ls\n", fn);
             break;
         }

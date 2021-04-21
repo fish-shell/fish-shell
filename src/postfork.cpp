@@ -216,7 +216,8 @@ pid_t execute_fork() {
 // Given an error code, if it is the first error, record it.
 // \return whether we have any error.
 bool posix_spawner_t::check_fail(int err) {
-    if (error_ == 0) error_ = err;
+    if (error_ == 0)
+        error_ = err;
     return error_ != 0;
 }
 
@@ -233,13 +234,15 @@ posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
     // Initialize our fields. This may fail.
     {
         posix_spawnattr_t attr;
-        if (check_fail(posix_spawnattr_init(&attr))) return;
+        if (check_fail(posix_spawnattr_init(&attr)))
+            return;
         this->attr_ = attr;
     }
 
     {
         posix_spawn_file_actions_t actions;
-        if (check_fail(posix_spawn_file_actions_init(&actions))) return;
+        if (check_fail(posix_spawn_file_actions_init(&actions)))
+            return;
         this->actions_ = actions;
     }
 
@@ -263,21 +266,27 @@ posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
 
     // Set our flags.
     short flags = 0;
-    if (reset_signal_handlers) flags |= POSIX_SPAWN_SETSIGDEF;
-    if (reset_sigmask) flags |= POSIX_SPAWN_SETSIGMASK;
-    if (desired_pgid.has_value()) flags |= POSIX_SPAWN_SETPGROUP;
+    if (reset_signal_handlers)
+        flags |= POSIX_SPAWN_SETSIGDEF;
+    if (reset_sigmask)
+        flags |= POSIX_SPAWN_SETSIGMASK;
+    if (desired_pgid.has_value())
+        flags |= POSIX_SPAWN_SETPGROUP;
 
-    if (check_fail(posix_spawnattr_setflags(attr(), flags))) return;
+    if (check_fail(posix_spawnattr_setflags(attr(), flags)))
+        return;
 
     if (desired_pgid.has_value()) {
-        if (check_fail(posix_spawnattr_setpgroup(attr(), *desired_pgid))) return;
+        if (check_fail(posix_spawnattr_setpgroup(attr(), *desired_pgid)))
+            return;
     }
 
     // Everybody gets default handlers.
     if (reset_signal_handlers) {
         sigset_t sigdefault;
         get_signals_with_handlers(&sigdefault);
-        if (check_fail(posix_spawnattr_setsigdefault(attr(), &sigdefault))) return;
+        if (check_fail(posix_spawnattr_setsigdefault(attr(), &sigdefault)))
+            return;
     }
 
     // No signals blocked.
@@ -285,13 +294,15 @@ posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
         sigset_t sigmask;
         sigemptyset(&sigmask);
         blocked_signals_for_job(*j, &sigmask);
-        if (check_fail(posix_spawnattr_setsigmask(attr(), &sigmask))) return;
+        if (check_fail(posix_spawnattr_setsigmask(attr(), &sigmask)))
+            return;
     }
 
     // Apply our dup2s.
     for (const auto &act : dup2s.get_actions()) {
         if (act.target < 0) {
-            if (check_fail(posix_spawn_file_actions_addclose(actions(), act.src))) return;
+            if (check_fail(posix_spawn_file_actions_addclose(actions(), act.src)))
+                return;
         } else {
             if (check_fail(posix_spawn_file_actions_adddup2(actions(), act.src, act.target)))
                 return;
@@ -300,7 +311,8 @@ posix_spawner_t::posix_spawner_t(const job_t *j, const dup2_list_t &dup2s) {
 }
 
 maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char *const envp[]) {
-    if (get_error()) return none();
+    if (get_error())
+        return none();
     pid_t pid = -1;
     if (check_fail(posix_spawn(&pid, cmd, &*actions_, &*attr_, argv, envp))) {
         // The shebang wasn't introduced until UNIX Seventh Edition, so if
@@ -440,8 +452,10 @@ static char *get_interpreter(const char *command, char *buffer, size_t buff_size
         while (idx + 1 < buff_size) {
             char ch;
             ssize_t amt = read(fd, &ch, sizeof ch);
-            if (amt <= 0) break;
-            if (ch == '\n') break;
+            if (amt <= 0)
+                break;
+            if (ch == '\n')
+                break;
             buffer[idx++] = ch;
         }
         buffer[idx++] = '\0';

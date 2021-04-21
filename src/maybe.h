@@ -85,7 +85,8 @@ struct maybe_impl_t {
         }
     }
     maybe_impl_t &operator=(const maybe_impl_t &v) {
-        if (&v == this) return *this;
+        if (&v == this)
+            return *this;
         if (!v.filled) {
             reset();
         } else {
@@ -197,7 +198,8 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
 
     // Compare values for equality.
     bool operator==(const maybe_t &rhs) const {
-        if (this->has_value() && rhs.has_value()) return this->value() == rhs.value();
+        if (this->has_value() && rhs.has_value())
+            return this->value() == rhs.value();
         return this->has_value() == rhs.has_value();
     }
 

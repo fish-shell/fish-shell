@@ -61,7 +61,8 @@ inline bool selection_direction_is_cardinal(selection_motion_t dir) {
 
 /// Returns numer / denom, rounding up. As a "courtesy" 0/0 is 0.
 static size_t divide_round_up(size_t numer, size_t denom) {
-    if (numer == 0) return 0;
+    if (numer == 0)
+        return 0;
     assert(denom > 0);
     bool has_rem = (numer % denom) != 0;
     return numer / denom + (has_rem ? 1 : 0);
@@ -87,7 +88,8 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
         }
         auto width_c = size_t(iwidth_c);
 
-        if (width_c > remaining) break;
+        if (width_c > remaining)
+            break;
 
         wchar_t ellipsis = get_ellipsis_char();
         if ((width_c == remaining) && (has_more || i + 1 < str.size())) {
@@ -219,7 +221,8 @@ void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_
 
     for (size_t row = row_start; row < row_stop; row++) {
         for (size_t col = 0; col < cols; col++) {
-            if (lst.size() <= col * rows + row) continue;
+            if (lst.size() <= col * rows + row)
+                continue;
 
             size_t idx = col * rows + row;
             const comp_t *el = &lst.at(idx);
@@ -246,7 +249,8 @@ static void mangle_1_completion_description(wcstring *str) {
 
     // Skip leading spaces.
     for (; leading < len; leading++) {
-        if (!iswspace(str->at(leading))) break;
+        if (!iswspace(str->at(leading)))
+            break;
     }
 
     // Compress runs of spaces to a single space.
@@ -279,7 +283,8 @@ static void join_completions(comp_info_list_t *comps) {
     for (size_t i = 0; i < comps->size(); i++) {
         const comp_t &new_comp = comps->at(i);
         const wcstring &desc = new_comp.desc;
-        if (desc.empty()) continue;
+        if (desc.empty())
+            continue;
 
         // See if it's in the table.
         size_t prev_idx_plus_one = desc_table[desc];
@@ -330,11 +335,13 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
 
         for (size_t j = 0; j < comp_strings.size(); j++) {
             // If there's more than one, append the length of ', '.
-            if (j >= 1) comp->comp_width += 2;
+            if (j >= 1)
+                comp->comp_width += 2;
 
             // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
             int comp_width = fish_wcswidth(comp_strings.at(j));
-            if (comp_width >= 0) comp->comp_width += prefix_len + comp_width;
+            if (comp_width >= 0)
+                comp->comp_width += prefix_len + comp_width;
         }
 
         // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
@@ -346,7 +353,8 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
 // Indicates if the given completion info passes any filtering we have.
 bool pager_t::completion_info_passes_filter(const comp_t &info) const {
     // If we have no filter, everything passes.
-    if (!search_field_shown || this->search_field_line.empty()) return true;
+    if (!search_field_shown || this->search_field_line.empty())
+        return true;
 
     const wcstring &needle = this->search_field_line.text();
 
@@ -380,7 +388,8 @@ void pager_t::set_completions(const completion_list_t &raw_completions) {
     unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
     // Maybe join them.
-    if (prefix == L"-") join_completions(&unfiltered_completion_infos);
+    if (prefix == L"-")
+        join_completions(&unfiltered_completion_infos);
 
     // Compute their various widths.
     measure_completion_infos(&unfiltered_completion_infos, prefix);
@@ -440,7 +449,8 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     for (size_t col = 0; col < cols; col++) {
         for (size_t row = 0; row < row_count; row++) {
             const size_t comp_idx = col * row_count + row;
-            if (comp_idx >= lst.size()) continue;
+            if (comp_idx >= lst.size())
+                continue;
             const comp_t &c = lst.at(comp_idx);
             width_by_column[col] = std::max(width_by_column[col], c.preferred_width());
         }
@@ -575,7 +585,8 @@ page_rendering_t pager_t::render() const {
 
 bool pager_t::rendering_needs_update(const page_rendering_t &rendering) const {
     // Common case is no pager.
-    if (this->empty() && rendering.screen_data.empty()) return false;
+    if (this->empty() && rendering.screen_data.empty())
+        return false;
 
     return (this->empty() && !rendering.screen_data.empty()) ||     // Do update after clear().
            rendering.term_width != this->available_term_width ||    //
@@ -791,7 +802,8 @@ size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const
         }
 
         // If we are still beyond the last selection, clamp it.
-        if (result >= completion_infos.size()) result = completion_infos.size() - 1;
+        if (result >= completion_infos.size())
+            result = completion_infos.size() - 1;
     }
     assert(result == PAGER_SELECTION_NONE || result < completion_infos.size());
     return result;
@@ -818,7 +830,8 @@ const completion_t *pager_t::selected_completion(const page_rendering_t &renderi
 /// we go west. So if we have N rows, and our selected index is N + 2, then our row is 2 (mod by N)
 /// and our column is 1 (divide by N).
 size_t pager_t::get_selected_row(const page_rendering_t &rendering) const {
-    if (rendering.rows == 0) return PAGER_SELECTION_NONE;
+    if (rendering.rows == 0)
+        return PAGER_SELECTION_NONE;
 
     return selected_completion_idx == PAGER_SELECTION_NONE
                ? PAGER_SELECTION_NONE
@@ -826,7 +839,8 @@ size_t pager_t::get_selected_row(const page_rendering_t &rendering) const {
 }
 
 size_t pager_t::get_selected_column(const page_rendering_t &rendering) const {
-    if (rendering.rows == 0) return PAGER_SELECTION_NONE;
+    if (rendering.rows == 0)
+        return PAGER_SELECTION_NONE;
 
     return selected_completion_idx == PAGER_SELECTION_NONE
                ? PAGER_SELECTION_NONE

@@ -28,7 +28,8 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
 
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -101,7 +102,8 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
 
     wcstring ft = tok_command(job->command());
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    if (!ft.empty()) parser.set_var_and_fire(L"_", ENV_EXPORT, std::move(ft));
+    if (!ft.empty())
+        parser.set_var_and_fire(L"_", ENV_EXPORT, std::move(ft));
     reader_write_title(job->command(), parser);
 
     parser.job_promote(job);

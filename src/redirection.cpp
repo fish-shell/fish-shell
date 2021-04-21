@@ -12,7 +12,8 @@ dup2_list_t::~dup2_list_t() = default;
 maybe_t<int> redirection_spec_t::get_target_as_fd() const {
     errno = 0;
     int result = fish_wcstoi(target.c_str());
-    if (errno || result < 0) return none();
+    if (errno || result < 0)
+        return none();
     return result;
 }
 

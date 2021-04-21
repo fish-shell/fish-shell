@@ -109,7 +109,8 @@ static bool should_test_function(const char *func_name, bool default_on = true) 
             }
         }
     }
-    if (result) s_test_run_count++;
+    if (result)
+        s_test_run_count++;
     return result;
 }
 
@@ -1976,7 +1977,8 @@ static void test_lru() {
     for (int i = 0; i < total_nodes; i++) {
         do_test(cache.size() == size_t(std::min(i, 16)));
         do_test(cache.values() == expected_values);
-        if (i < 4) expected_evicted.push_back({to_string(i), i});
+        if (i < 4)
+            expected_evicted.push_back({to_string(i), i});
         // Adding the node the first time should work, and subsequent times should fail.
         do_test(cache.insert(to_string(i), i));
         do_test(!cache.insert(to_string(i), i + 1));
@@ -2006,7 +2008,8 @@ static void test_lru() {
             for (int v : vs) {
                 append_format(ret, L"%d,", v);
             }
-            if (!ret.empty()) ret.pop_back();
+            if (!ret.empty())
+                ret.pop_back();
             return ret;
         };
         err(L"LRU stable sort failed. Expected %ls, got %ls\n", commajoin(new_ints).c_str(),
@@ -2113,7 +2116,8 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
             wcstring msg = L"Expected [";
             bool first = true;
             for (const wcstring &exp : expected) {
-                if (!first) msg += L", ";
+                if (!first)
+                    msg += L", ";
                 first = false;
                 msg += '"';
                 msg += exp;
@@ -2122,7 +2126,8 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
             msg += L"], found [";
             first = true;
             for (const auto &completion : output) {
-                if (!first) msg += L", ";
+                if (!first)
+                    msg += L", ";
                 first = false;
                 msg += '"';
                 msg += completion.completion;
@@ -2166,21 +2171,36 @@ static void test_expand() {
     // aaa
     // aaa2
     //    x
-    if (system("mkdir -p test/fish_expand_test/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/bb/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/baz/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/bax/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/lol/nub/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/aaa/")) err(L"mkdir failed");
-    if (system("mkdir -p test/fish_expand_test/aaa2/")) err(L"mkdir failed");
-    if (system("touch test/fish_expand_test/.foo")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/bb/x")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/bar")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/bax/xxx")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/baz/xxx")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/baz/yyy")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/lol/nub/q")) err(L"touch failed");
-    if (system("touch test/fish_expand_test/aaa2/x")) err(L"touch failed");
+    if (system("mkdir -p test/fish_expand_test/"))
+        err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/bb/"))
+        err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/baz/"))
+        err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/bax/"))
+        err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/lol/nub/"))
+        err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/aaa/"))
+        err(L"mkdir failed");
+    if (system("mkdir -p test/fish_expand_test/aaa2/"))
+        err(L"mkdir failed");
+    if (system("touch test/fish_expand_test/.foo"))
+        err(L"touch failed");
+    if (system("touch test/fish_expand_test/bb/x"))
+        err(L"touch failed");
+    if (system("touch test/fish_expand_test/bar"))
+        err(L"touch failed");
+    if (system("touch test/fish_expand_test/bax/xxx"))
+        err(L"touch failed");
+    if (system("touch test/fish_expand_test/baz/xxx"))
+        err(L"touch failed");
+    if (system("touch test/fish_expand_test/baz/yyy"))
+        err(L"touch failed");
+    if (system("touch test/fish_expand_test/lol/nub/q"))
+        err(L"touch failed");
+    if (system("touch test/fish_expand_test/aaa2/x"))
+        err(L"touch failed");
 
     // This is checking that .* does NOT match . and ..
     // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
@@ -2263,7 +2283,8 @@ static void test_expand() {
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
 
-    if (!pushd("test/fish_expand_test")) return;
+    if (!pushd("test/fish_expand_test"))
+        return;
 
     expand_test(L"b/xx", fuzzy_comp, L"bax/xxx", L"baz/xxx", wnull, L"Wrong fuzzy matching 5");
 
@@ -2363,19 +2384,26 @@ static void test_abbreviations() {
     };
     for (const auto &kv : abbreviations) {
         int ret = vars.set_one(L"_fish_abbr_" + kv.first, ENV_LOCAL, kv.second);
-        if (ret != 0) err(L"Unable to set abbreviation variable");
+        if (ret != 0)
+            err(L"Unable to set abbreviation variable");
     }
 
-    if (expand_abbreviation(L"", vars)) err(L"Unexpected success with empty abbreviation");
-    if (expand_abbreviation(L"nothing", vars)) err(L"Unexpected success with missing abbreviation");
+    if (expand_abbreviation(L"", vars))
+        err(L"Unexpected success with empty abbreviation");
+    if (expand_abbreviation(L"nothing", vars))
+        err(L"Unexpected success with missing abbreviation");
 
     auto mresult = expand_abbreviation(L"gc", vars);
-    if (!mresult) err(L"Unexpected failure with gc abbreviation");
-    if (*mresult != L"git checkout") err(L"Wrong abbreviation result for gc");
+    if (!mresult)
+        err(L"Unexpected failure with gc abbreviation");
+    if (*mresult != L"git checkout")
+        err(L"Wrong abbreviation result for gc");
 
     mresult = expand_abbreviation(L"foo", vars);
-    if (!mresult) err(L"Unexpected failure with foo abbreviation");
-    if (*mresult != L"bar") err(L"Wrong abbreviation result for foo");
+    if (!mresult)
+        err(L"Unexpected failure with foo abbreviation");
+    if (*mresult != L"bar")
+        err(L"Wrong abbreviation result for foo");
 
     maybe_t<wcstring> result;
     auto expand_abbreviation_in_command = [](const wcstring &cmdline, size_t cursor_pos,
@@ -2388,46 +2416,55 @@ static void test_abbreviations() {
         return none_t();
     };
     result = expand_abbreviation_in_command(L"just a command", 3, vars);
-    if (result) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
+    if (result)
+        err(L"Command wrongly expanded on line %ld", (long)__LINE__);
     result = expand_abbreviation_in_command(L"gc somebranch", 0, vars);
-    if (!result) err(L"Command not expanded on line %ld", (long)__LINE__);
+    if (!result)
+        err(L"Command not expanded on line %ld", (long)__LINE__);
 
     result = expand_abbreviation_in_command(L"gc somebranch", const_strlen(L"gc"), vars);
-    if (!result) err(L"gc not expanded");
+    if (!result)
+        err(L"gc not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Space separation.
     result = expand_abbreviation_in_command(L"gx somebranch", const_strlen(L"gc"), vars);
-    if (!result) err(L"gx not expanded");
+    if (!result)
+        err(L"gx not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     result = expand_abbreviation_in_command(L"echo hi ; gc somebranch",
                                             const_strlen(L"echo hi ; g"), vars);
-    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (!result)
+        err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo hi ; git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     result = expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ",
                                             const_strlen(L"echo (echo (echo (echo (gc"), vars);
-    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (!result)
+        err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo (echo (echo (echo (git checkout ")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // If commands should be expanded.
     result = expand_abbreviation_in_command(L"if gc", const_strlen(L"if gc"), vars);
-    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (!result)
+        err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"if git checkout")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Others should not be.
     result = expand_abbreviation_in_command(L"of gc", const_strlen(L"of gc"), vars);
-    if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+    if (result)
+        err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // Others should not be.
     result = expand_abbreviation_in_command(L"command gc", const_strlen(L"command gc"), vars);
-    if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+    if (result)
+        err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     vars.pop();
 }
@@ -2483,15 +2520,19 @@ static void test_pager_navigation() {
     pager.set_term_size(termsize_t::defaults());
     page_rendering_t render = pager.render();
 
-    if (render.term_width != 80) err(L"Wrong term width");
-    if (render.term_height != 24) err(L"Wrong term height");
+    if (render.term_width != 80)
+        err(L"Wrong term width");
+    if (render.term_height != 24)
+        err(L"Wrong term height");
 
     size_t rows = 4, cols = 5;
 
     // We have 19 completions. We can fit into 6 columns with 4 rows or 5 columns with 4 rows; the
     // second one is better and so is what we ought to have picked.
-    if (render.rows != rows) err(L"Wrong row count");
-    if (render.cols != cols) err(L"Wrong column count");
+    if (render.rows != rows)
+        err(L"Wrong row count");
+    if (render.cols != cols)
+        err(L"Wrong column count");
 
     // Initially expect to have no completion index.
     if (render.selected_completion_idx != (size_t)(-1)) {
@@ -2740,12 +2781,16 @@ static void test_is_potential_path() {
     say(L"Testing is_potential_path");
 
     // Directories
-    if (system("mkdir -p test/is_potential_path_test/alpha/")) err(L"mkdir failed");
-    if (system("mkdir -p test/is_potential_path_test/beta/")) err(L"mkdir failed");
+    if (system("mkdir -p test/is_potential_path_test/alpha/"))
+        err(L"mkdir failed");
+    if (system("mkdir -p test/is_potential_path_test/beta/"))
+        err(L"mkdir failed");
 
     // Files
-    if (system("touch test/is_potential_path_test/aardvark")) err(L"touch failed");
-    if (system("touch test/is_potential_path_test/gamma")) err(L"touch failed");
+    if (system("touch test/is_potential_path_test/aardvark"))
+        err(L"touch failed");
+    if (system("touch test/is_potential_path_test/gamma"))
+        err(L"touch failed");
 
     const wcstring wd = L"test/is_potential_path_test/";
     const wcstring_list_t wds({L".", wd});
@@ -2779,7 +2824,8 @@ static bool run_one_test_test(int expected, const wcstring_list_t &lst, bool bra
     wcstring_list_t argv;
     argv.push_back(bracket ? L"[" : L"test");
     argv.insert(argv.end(), lst.begin(), lst.end());
-    if (bracket) argv.push_back(L"]");
+    if (bracket)
+        argv.push_back(L"]");
 
     null_terminated_array_t<wchar_t> cargv(argv);
 
@@ -3147,17 +3193,26 @@ static void test_complete() {
     do_test(completions.at(1).completion == L"$Foo1");
     do_test(completions.at(2).completion == L"$gamma1");
 
-    if (system("mkdir -p 'test/complete_test'")) err(L"mkdir failed");
-    if (system("touch 'test/complete_test/has space'")) err(L"touch failed");
-    if (system("touch 'test/complete_test/bracket[abc]'")) err(L"touch failed");
+    if (system("mkdir -p 'test/complete_test'"))
+        err(L"mkdir failed");
+    if (system("touch 'test/complete_test/has space'"))
+        err(L"touch failed");
+    if (system("touch 'test/complete_test/bracket[abc]'"))
+        err(L"touch failed");
 #ifndef __CYGWIN__  // Square brackets are not legal path characters on WIN32/CYGWIN
-    if (system(R"(touch 'test/complete_test/gnarlybracket\[abc]')")) err(L"touch failed");
+    if (system(R"(touch 'test/complete_test/gnarlybracket\[abc]')"))
+        err(L"touch failed");
 #endif
-    if (system("touch 'test/complete_test/testfile'")) err(L"touch failed");
-    if (system("chmod 700 'test/complete_test/testfile'")) err(L"chmod failed");
-    if (system("mkdir -p 'test/complete_test/foo1'")) err(L"mkdir failed");
-    if (system("mkdir -p 'test/complete_test/foo2'")) err(L"mkdir failed");
-    if (system("mkdir -p 'test/complete_test/foo3'")) err(L"mkdir failed");
+    if (system("touch 'test/complete_test/testfile'"))
+        err(L"touch failed");
+    if (system("chmod 700 'test/complete_test/testfile'"))
+        err(L"chmod failed");
+    if (system("mkdir -p 'test/complete_test/foo1'"))
+        err(L"mkdir failed");
+    if (system("mkdir -p 'test/complete_test/foo2'"))
+        err(L"mkdir failed");
+    if (system("mkdir -p 'test/complete_test/foo3'"))
+        err(L"mkdir failed");
 
     completions = do_complete(L"echo (test/complete_test/testfil", {});
     do_test(completions.size() == 1);
@@ -3249,7 +3304,8 @@ static void test_complete() {
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
 
-    if (!pushd("test/complete_test")) return;
+    if (!pushd("test/complete_test"))
+        return;
     completions = do_complete(L"cat te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
@@ -3322,7 +3378,8 @@ static void test_complete() {
     do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
 
     // Test cd wrapping chain
-    if (!pushd("test/complete_test")) err(L"pushd(\"test/complete_test\") failed");
+    if (!pushd("test/complete_test"))
+        err(L"pushd(\"test/complete_test\") failed");
 
     complete_add_wrapper(L"cdwrap1", L"cd");
     complete_add_wrapper(L"cdwrap2", L"cdwrap1");
@@ -3482,10 +3539,14 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
 // backslashes.
 static void test_autosuggest_suggest_special() {
-    if (system("mkdir -p 'test/autosuggest_test/0foobar'")) err(L"mkdir failed");
-    if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
-    if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
-    if (system("mkdir -p 'test/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
+    if (system("mkdir -p 'test/autosuggest_test/0foobar'"))
+        err(L"mkdir failed");
+    if (system("mkdir -p 'test/autosuggest_test/1foo bar'"))
+        err(L"mkdir failed");
+    if (system("mkdir -p 'test/autosuggest_test/2foo  bar'"))
+        err(L"mkdir failed");
+    if (system("mkdir -p 'test/autosuggest_test/3foo\\bar'"))
+        err(L"mkdir failed");
     if (system("mkdir -p test/autosuggest_test/4foo\\'bar")) {
         err(L"mkdir failed");  // a path with a single quote
     }
@@ -3549,7 +3610,8 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/start/", L"unique2/unique3/",
                                        vars, __LINE__);
 
-    if (!pushd(wcs2string(wd).c_str())) return;
+    if (!pushd(wcs2string(wd).c_str()))
+        return;
     perform_one_autosuggestion_cd_test(L"cd 0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"0", L"foobar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '0", L"foobar/", vars, __LINE__);
@@ -3574,7 +3636,8 @@ static void test_autosuggest_suggest_special() {
                                        __LINE__);
 
     // Don't crash on ~ (issue #2696). Note this is cwd dependent.
-    if (system("mkdir -p '~absolutelynosuchuser/path1/path2/'")) err(L"mkdir failed");
+    if (system("mkdir -p '~absolutelynosuchuser/path1/path2/'"))
+        err(L"mkdir failed");
     perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchus", L"er/path1/path2/", vars,
                                        __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~absolutelynosuchuser/", L"path1/path2/", vars,
@@ -3640,7 +3703,8 @@ static bool history_contains(history_t *history, const wcstring &txt) {
     size_t i;
     for (i = 1;; i++) {
         history_item_t item = history->item_at_index(i);
-        if (item.empty()) break;
+        if (item.empty())
+            break;
 
         if (item.str() == txt) {
             result = true;
@@ -3784,7 +3848,8 @@ static int test_universal_helper(int x) {
 
 static void test_universal() {
     say(L"Testing universal variables");
-    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_uvars_test/"))
+        err(L"mkdir failed");
 
     const int threads = 1;
     for (int i = 0; i < threads; i++) {
@@ -3808,7 +3873,8 @@ static void test_universal() {
                 expected_val = env_var_t(format_string(L"val_%d_%d", i, j), 0);
             }
             const maybe_t<env_var_t> var = uvars.get(key);
-            if (j == 0) assert(!expected_val);
+            if (j == 0)
+                assert(!expected_val);
             if (var != expected_val) {
                 const wchar_t *missing_desc = L"<missing>";
                 err(L"Wrong value for key %ls: expected %ls, got %ls\n", key.c_str(),
@@ -3893,7 +3959,8 @@ static bool callback_data_less_than(const callback_data_t &a, const callback_dat
 
 static void test_universal_callbacks() {
     say(L"Testing universal callbacks");
-    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_uvars_test/"))
+        err(L"mkdir failed");
     callback_data_list_t callbacks;
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
@@ -3965,7 +4032,8 @@ static void test_universal_formats() {
 static void test_universal_ok_to_save() {
     // Ensure we don't try to save after reading from a newer fish.
     say(L"Testing universal Ok to save");
-    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_uvars_test/"))
+        err(L"mkdir failed");
     constexpr const char contents[] = "# VERSION: 99999.99\n";
     FILE *fp = fopen(wcs2string(UVARS_TEST_PATH).c_str(), "w");
     assert(fp && "Failed to open UVARS_TEST_PATH for writing");
@@ -3991,7 +4059,8 @@ static void test_universal_ok_to_save() {
 }
 
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
-    if (note->poll()) return true;
+    if (note->poll())
+        return true;
 
     bool result = false;
     int fd = note->notification_fd();
@@ -4129,7 +4198,8 @@ void history_tests_t::test_history() {
     auto set_expected = [&](const std::function<bool(const wcstring &)> &filt) {
         expected.clear();
         for (const auto &s : items) {
-            if (filt(s)) expected.push_back(s);
+            if (filt(s))
+                expected.push_back(s);
         }
         std::reverse(expected.begin(), expected.end());
     };
@@ -4186,7 +4256,8 @@ void history_tests_t::test_history() {
         wcstring value = wcstring(L"test item ") + to_string(i);
 
         // Maybe add some backslashes.
-        if (i % 3 == 0) value.append(L"(slashies \\\\\\ slashies)");
+        if (i % 3 == 0)
+            value.append(L"(slashies \\\\\\ slashies)");
 
         // Generate some paths.
         path_list_t paths;
@@ -4309,7 +4380,8 @@ void history_tests_t::test_history_races() {
     size_t hist_idx;
     for (hist_idx = 1;; hist_idx++) {
         history_item_t item = hist.item_at_index(hist_idx);
-        if (item.empty()) break;
+        if (item.empty())
+            break;
 
         bool found = false;
         for (wcstring_list_t &list : expected_lines) {
@@ -4440,7 +4512,8 @@ void history_tests_t::test_history_merge() {
                                    L"Item_#3496_4", L"Item_#3496_5", L"Item_#3496_6"};
     for (size_t i = 0; i < sizeof more_texts / sizeof *more_texts; i++) {
         // time_barrier because merging will ignore items that may be newer
-        if (i > 0) time_barrier();
+        if (i > 0)
+            time_barrier();
         writer->add(more_texts[i]);
         writer->incorporate_external_changes();
         reader->incorporate_external_changes();
@@ -4758,7 +4831,8 @@ static void test_new_parser_fuzzing() {
     bool log_it = true;
     unsigned long max_len = 5;
     for (unsigned long len = 0; len < max_len; len++) {
-        if (log_it) std::fwprintf(stderr, L"%lu / %lu...", len, max_len);
+        if (log_it)
+            std::fwprintf(stderr, L"%lu / %lu...", len, max_len);
 
         // We wish to look at all permutations of 4 elements of 'fuzzes' (with replacement).
         // Construct an int and keep incrementing it.
@@ -4767,10 +4841,12 @@ static void test_new_parser_fuzzing() {
                                       &src)) {
             ast::ast_t::parse(src);
         }
-        if (log_it) std::fwprintf(stderr, L"done (%lu)\n", permutation);
+        if (log_it)
+            std::fwprintf(stderr, L"done (%lu)\n", permutation);
     }
     double end = timef();
-    if (log_it) say(L"All fuzzed in %f seconds!", end - start);
+    if (log_it)
+        say(L"All fuzzed in %f seconds!", end - start);
 }
 
 // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
@@ -4783,7 +4859,8 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     *out_deco = statement_decoration_t::none;
 
     auto ast = ast_t::parse(src);
-    if (ast.errored()) return false;
+    if (ast.errored())
+        return false;
 
     // Get the statement. Should only have one.
     const decorated_statement_t *statement = nullptr;
@@ -4808,8 +4885,10 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     // Return arguments separated by spaces.
     bool first = true;
     for (const ast::argument_or_redirection_t &arg : statement->args_or_redirs) {
-        if (!arg.is_argument()) continue;
-        if (!first) out_joined_args->push_back(L' ');
+        if (!arg.is_argument())
+            continue;
+        if (!first)
+            out_joined_args->push_back(L' ');
         out_joined_args->append(arg.source(src));
         first = false;
     }
@@ -4868,7 +4947,8 @@ static void test_new_parser_ll2() {
         wcstring cmd, args;
         enum statement_decoration_t deco = statement_decoration_t::none;
         bool success = test_1_parse_ll2(test.src, &cmd, &args, &deco);
-        if (!success) err(L"Parse of '%ls' failed on line %ld", test.cmd.c_str(), (long)__LINE__);
+        if (!success)
+            err(L"Parse of '%ls' failed on line %ld", test.cmd.c_str(), (long)__LINE__);
         if (cmd != test.cmd)
             err(L"When parsing '%ls', expected command '%ls' but got '%ls' on line %ld",
                 test.src.c_str(), test.cmd.c_str(), cmd.c_str(), (long)__LINE__);
@@ -5012,7 +5092,8 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
 
         cursor++;
         // Flag
-        if (std::wcschr(L"#0- +'", *cursor)) cursor++;
+        if (std::wcschr(L"#0- +'", *cursor))
+            cursor++;
         // Minimum field width
         while (iswdigit(*cursor)) cursor++;
         // Precision
@@ -5088,11 +5169,15 @@ static void test_error_messages() {
 
 static void test_highlighting() {
     say(L"Testing syntax highlighting");
-    if (!pushd("test/fish_highlight_test/")) return;
+    if (!pushd("test/fish_highlight_test/"))
+        return;
     cleanup_t pop{[] { popd(); }};
-    if (system("mkdir -p dir")) err(L"mkdir failed");
-    if (system("touch foo")) err(L"touch failed");
-    if (system("touch bar")) err(L"touch failed");
+    if (system("mkdir -p dir"))
+        err(L"mkdir failed");
+    if (system("touch foo"))
+        err(L"touch failed");
+    if (system("touch bar"))
+        err(L"touch failed");
 
     // Here are the components of our source and the colors we expect those to be.
     struct highlight_component_t {
@@ -5423,7 +5508,8 @@ static void test_highlighting() {
         do_test(expected_colors.size() == colors.size());
         for (size_t i = 0; i < text.size(); i++) {
             // Hackish space handling. We don't care about the colors in spaces.
-            if (text.at(i) == L' ') continue;
+            if (text.at(i) == L' ')
+                continue;
 
             if (expected_colors.at(i) != colors.at(i)) {
                 const wcstring spaces(i, L' ');
@@ -5932,7 +6018,8 @@ static void test_env_vars() {
 }
 
 static void test_env_snapshot() {
-    if (system("mkdir -p test/fish_env_snapshot_test/")) err(L"mkdir failed");
+    if (system("mkdir -p test/fish_env_snapshot_test/"))
+        err(L"mkdir failed");
     bool pushed = pushd("test/fish_env_snapshot_test");
     do_test(pushed);
     auto &vars = parser_t::principal_parser().vars();
@@ -5969,7 +6056,8 @@ static void test_illegal_command_exit_code() {
     // We need to be in an empty directory so that none of the wildcards match a file that might be
     // in the fish source tree. In particular we need to ensure that "?" doesn't match a file
     // named by a single character. See issue #3852.
-    if (!pushd("test/temp")) return;
+    if (!pushd("test/temp"))
+        return;
 
     struct command_result_tuple_t {
         const wchar_t *txt;
@@ -6522,104 +6610,193 @@ int main(int argc, char **argv) {
     // Set PWD from getcwd - fixes #5599
     env_stack_t::principal().set_pwd_from_getcwd();
 
-    if (should_test_function("utility_functions")) test_utility_functions();
-    if (should_test_function("string_split")) test_split_string_tok();
-    if (should_test_function("wwrite_to_fd")) test_wwrite_to_fd();
-    if (should_test_function("env_vars")) test_env_vars();
-    if (should_test_function("env")) test_env_snapshot();
-    if (should_test_function("str_to_num")) test_str_to_num();
-    if (should_test_function("enum")) test_enum_set();
-    if (should_test_function("enum")) test_enum_array();
-    if (should_test_function("highlighting")) test_highlighting();
-    if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
+    if (should_test_function("utility_functions"))
+        test_utility_functions();
+    if (should_test_function("string_split"))
+        test_split_string_tok();
+    if (should_test_function("wwrite_to_fd"))
+        test_wwrite_to_fd();
+    if (should_test_function("env_vars"))
+        test_env_vars();
+    if (should_test_function("env"))
+        test_env_snapshot();
+    if (should_test_function("str_to_num"))
+        test_str_to_num();
+    if (should_test_function("enum"))
+        test_enum_set();
+    if (should_test_function("enum"))
+        test_enum_array();
+    if (should_test_function("highlighting"))
+        test_highlighting();
+    if (should_test_function("new_parser_ll2"))
+        test_new_parser_ll2();
     if (should_test_function("new_parser_fuzzing"))
         test_new_parser_fuzzing();  // fuzzing is expensive
-    if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
-    if (should_test_function("new_parser_ad_hoc")) test_new_parser_ad_hoc();
-    if (should_test_function("new_parser_errors")) test_new_parser_errors();
-    if (should_test_function("error_messages")) test_error_messages();
-    if (should_test_function("escape")) test_unescape_sane();
-    if (should_test_function("escape")) test_escape_crazy();
-    if (should_test_function("escape")) test_escape_quotes();
-    if (should_test_function("format")) test_format();
-    if (should_test_function("convert")) test_convert();
-    if (should_test_function("convert")) test_convert_private_use();
-    if (should_test_function("convert_ascii")) test_convert_ascii();
-    if (should_test_function("perf_convert_ascii", false)) perf_convert_ascii();
-    if (should_test_function("convert_nulls")) test_convert_nulls();
-    if (should_test_function("tokenizer")) test_tokenizer();
-    if (should_test_function("fd_monitor")) test_fd_monitor();
-    if (should_test_function("iothread")) test_iothread();
-    if (should_test_function("pthread")) test_pthread();
-    if (should_test_function("debounce")) test_debounce();
-    if (should_test_function("debounce")) test_debounce_timeout();
-    if (should_test_function("parser")) test_parser();
-    if (should_test_function("cancellation")) test_cancellation();
-    if (should_test_function("indents")) test_indents();
-    if (should_test_function("utf8")) test_utf8();
-    if (should_test_function("feature_flags")) test_feature_flags();
-    if (should_test_function("escape_sequences")) test_escape_sequences();
-    if (should_test_function("pcre2_escape")) test_pcre2_escape();
-    if (should_test_function("lru")) test_lru();
-    if (should_test_function("expand")) test_expand();
-    if (should_test_function("expand")) test_expand_overflow();
-    if (should_test_function("fuzzy_match")) test_fuzzy_match();
-    if (should_test_function("ifind")) test_ifind();
-    if (should_test_function("ifind_fuzzy")) test_ifind_fuzzy();
-    if (should_test_function("abbreviations")) test_abbreviations();
-    if (should_test_function("test")) test_test();
-    if (should_test_function("wcstod")) test_wcstod();
-    if (should_test_function("dup2s")) test_dup2s();
-    if (should_test_function("dup2s")) test_dup2s_fd_for_target_fd();
-    if (should_test_function("path")) test_path();
-    if (should_test_function("pager_navigation")) test_pager_navigation();
-    if (should_test_function("pager_layout")) test_pager_layout();
-    if (should_test_function("word_motion")) test_word_motion();
-    if (should_test_function("is_potential_path")) test_is_potential_path();
-    if (should_test_function("colors")) test_colors();
-    if (should_test_function("complete")) test_complete();
-    if (should_test_function("autoload")) test_autoload();
-    if (should_test_function("input")) test_input();
-    if (should_test_function("line_iterator")) test_line_iterator();
-    if (should_test_function("undo")) test_undo();
-    if (should_test_function("universal")) test_universal();
-    if (should_test_function("universal")) test_universal_output();
-    if (should_test_function("universal")) test_universal_parsing();
-    if (should_test_function("universal")) test_universal_parsing_legacy();
-    if (should_test_function("universal")) test_universal_callbacks();
-    if (should_test_function("universal")) test_universal_formats();
-    if (should_test_function("universal")) test_universal_ok_to_save();
-    if (should_test_function("notifiers")) test_universal_notifiers();
-    if (should_test_function("completion_insertions")) test_completion_insertions();
-    if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
-    if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
-    if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
-    if (should_test_function("history")) history_tests_t::test_history();
-    if (should_test_function("history_merge")) history_tests_t::test_history_merge();
-    if (should_test_function("history_paths")) history_tests_t::test_history_path_detection();
+    if (should_test_function("new_parser_correctness"))
+        test_new_parser_correctness();
+    if (should_test_function("new_parser_ad_hoc"))
+        test_new_parser_ad_hoc();
+    if (should_test_function("new_parser_errors"))
+        test_new_parser_errors();
+    if (should_test_function("error_messages"))
+        test_error_messages();
+    if (should_test_function("escape"))
+        test_unescape_sane();
+    if (should_test_function("escape"))
+        test_escape_crazy();
+    if (should_test_function("escape"))
+        test_escape_quotes();
+    if (should_test_function("format"))
+        test_format();
+    if (should_test_function("convert"))
+        test_convert();
+    if (should_test_function("convert"))
+        test_convert_private_use();
+    if (should_test_function("convert_ascii"))
+        test_convert_ascii();
+    if (should_test_function("perf_convert_ascii", false))
+        perf_convert_ascii();
+    if (should_test_function("convert_nulls"))
+        test_convert_nulls();
+    if (should_test_function("tokenizer"))
+        test_tokenizer();
+    if (should_test_function("fd_monitor"))
+        test_fd_monitor();
+    if (should_test_function("iothread"))
+        test_iothread();
+    if (should_test_function("pthread"))
+        test_pthread();
+    if (should_test_function("debounce"))
+        test_debounce();
+    if (should_test_function("debounce"))
+        test_debounce_timeout();
+    if (should_test_function("parser"))
+        test_parser();
+    if (should_test_function("cancellation"))
+        test_cancellation();
+    if (should_test_function("indents"))
+        test_indents();
+    if (should_test_function("utf8"))
+        test_utf8();
+    if (should_test_function("feature_flags"))
+        test_feature_flags();
+    if (should_test_function("escape_sequences"))
+        test_escape_sequences();
+    if (should_test_function("pcre2_escape"))
+        test_pcre2_escape();
+    if (should_test_function("lru"))
+        test_lru();
+    if (should_test_function("expand"))
+        test_expand();
+    if (should_test_function("expand"))
+        test_expand_overflow();
+    if (should_test_function("fuzzy_match"))
+        test_fuzzy_match();
+    if (should_test_function("ifind"))
+        test_ifind();
+    if (should_test_function("ifind_fuzzy"))
+        test_ifind_fuzzy();
+    if (should_test_function("abbreviations"))
+        test_abbreviations();
+    if (should_test_function("test"))
+        test_test();
+    if (should_test_function("wcstod"))
+        test_wcstod();
+    if (should_test_function("dup2s"))
+        test_dup2s();
+    if (should_test_function("dup2s"))
+        test_dup2s_fd_for_target_fd();
+    if (should_test_function("path"))
+        test_path();
+    if (should_test_function("pager_navigation"))
+        test_pager_navigation();
+    if (should_test_function("pager_layout"))
+        test_pager_layout();
+    if (should_test_function("word_motion"))
+        test_word_motion();
+    if (should_test_function("is_potential_path"))
+        test_is_potential_path();
+    if (should_test_function("colors"))
+        test_colors();
+    if (should_test_function("complete"))
+        test_complete();
+    if (should_test_function("autoload"))
+        test_autoload();
+    if (should_test_function("input"))
+        test_input();
+    if (should_test_function("line_iterator"))
+        test_line_iterator();
+    if (should_test_function("undo"))
+        test_undo();
+    if (should_test_function("universal"))
+        test_universal();
+    if (should_test_function("universal"))
+        test_universal_output();
+    if (should_test_function("universal"))
+        test_universal_parsing();
+    if (should_test_function("universal"))
+        test_universal_parsing_legacy();
+    if (should_test_function("universal"))
+        test_universal_callbacks();
+    if (should_test_function("universal"))
+        test_universal_formats();
+    if (should_test_function("universal"))
+        test_universal_ok_to_save();
+    if (should_test_function("notifiers"))
+        test_universal_notifiers();
+    if (should_test_function("completion_insertions"))
+        test_completion_insertions();
+    if (should_test_function("autosuggestion_ignores"))
+        test_autosuggestion_ignores();
+    if (should_test_function("autosuggestion_combining"))
+        test_autosuggestion_combining();
+    if (should_test_function("autosuggest_suggest_special"))
+        test_autosuggest_suggest_special();
+    if (should_test_function("history"))
+        history_tests_t::test_history();
+    if (should_test_function("history_merge"))
+        history_tests_t::test_history_merge();
+    if (should_test_function("history_paths"))
+        history_tests_t::test_history_path_detection();
     if (!is_windows_subsystem_for_linux()) {
         // this test always fails under WSL
-        if (should_test_function("history_races")) history_tests_t::test_history_races();
+        if (should_test_function("history_races"))
+            history_tests_t::test_history_races();
     }
-    if (should_test_function("history_formats")) history_tests_t::test_history_formats();
-    if (should_test_function("string")) test_string();
-    if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
-    if (should_test_function("maybe")) test_maybe();
-    if (should_test_function("layout_cache")) test_layout_cache();
-    if (should_test_function("prompt")) test_prompt_truncation();
-    if (should_test_function("normalize")) test_normalize_path();
-    if (should_test_function("dirname")) test_dirname_basename();
-    if (should_test_function("topics")) test_topic_monitor();
-    if (should_test_function("topics")) test_topic_monitor_torture();
-    if (should_test_function("pipes")) test_pipes();
-    if (should_test_function("fd_event")) test_fd_event_signaller();
-    if (should_test_function("timer_format")) test_timer_format();
+    if (should_test_function("history_formats"))
+        history_tests_t::test_history_formats();
+    if (should_test_function("string"))
+        test_string();
+    if (should_test_function("illegal_command_exit_code"))
+        test_illegal_command_exit_code();
+    if (should_test_function("maybe"))
+        test_maybe();
+    if (should_test_function("layout_cache"))
+        test_layout_cache();
+    if (should_test_function("prompt"))
+        test_prompt_truncation();
+    if (should_test_function("normalize"))
+        test_normalize_path();
+    if (should_test_function("dirname"))
+        test_dirname_basename();
+    if (should_test_function("topics"))
+        test_topic_monitor();
+    if (should_test_function("topics"))
+        test_topic_monitor_torture();
+    if (should_test_function("pipes"))
+        test_pipes();
+    if (should_test_function("fd_event"))
+        test_fd_event_signaller();
+    if (should_test_function("timer_format"))
+        test_timer_format();
     // history_tests_t::test_history_speed();
 
-    if (should_test_function("termsize")) termsize_tester_t::test();
+    if (should_test_function("termsize"))
+        termsize_tester_t::test();
 
     say(L"Encountered %d errors in low-level tests", err_count);
-    if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");
+    if (s_test_run_count == 0)
+        say(L"*** No Tests Were Actually Run! ***");
 
     if (err_count != 0) {
         return 1;

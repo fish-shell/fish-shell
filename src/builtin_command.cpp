@@ -79,7 +79,8 @@ maybe_t<int> builtin_command(parser_t &parser, io_streams_t &streams, const wcha
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -98,13 +99,15 @@ maybe_t<int> builtin_command(parser_t &parser, io_streams_t &streams, const wcha
         if (opts.all_paths) {
             wcstring_list_t paths = path_get_paths(command_name, parser.vars());
             for (const auto &path : paths) {
-                if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
+                if (!opts.quiet)
+                    streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }
         } else {  // Either find_path explicitly or just quiet.
             wcstring path;
             if (path_get_path(command_name, &path, parser.vars())) {
-                if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
+                if (!opts.quiet)
+                    streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }
         }

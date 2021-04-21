@@ -21,7 +21,8 @@ static bool string_less_than_string(const wchar_t *a, const wchar_t *b) {
 owning_lock<std::vector<const wchar_t *>> string_table;
 
 static const wchar_t *intern_with_dup(const wchar_t *in, bool dup) {
-    if (!in) return nullptr;
+    if (!in)
+        return nullptr;
 
     auto table = string_table.acquire();
 

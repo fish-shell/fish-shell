@@ -128,7 +128,8 @@ static int __utf8_forbitten(unsigned char octet);
 
 static int __wchar_forbitten(utf8_wchar_t sym) {
     // Surrogate pairs.
-    if (sym >= 0xd800 && sym <= 0xdfff) return -1;
+    if (sym >= 0xd800 && sym <= 0xdfff)
+        return -1;
     return 0;
 }
 
@@ -171,16 +172,19 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
     utf8_wchar_t high;
     size_t n, total, i, n_bits;
 
-    if (in == nullptr || insize == 0) return 0;
+    if (in == nullptr || insize == 0)
+        return 0;
 
-    if (out_string != nullptr) out_string->clear();
+    if (out_string != nullptr)
+        out_string->clear();
 
     total = 0;
     p = reinterpret_cast<unsigned char *>(const_cast<char *>(in));
     lim = p + insize;
 
     for (; p < lim; p += n) {
-        if (__utf8_forbitten(*p) != 0 && (flags & UTF8_IGNORE_ERROR) == 0) return 0;
+        if (__utf8_forbitten(*p) != 0 && (flags & UTF8_IGNORE_ERROR) == 0)
+            return 0;
 
         // Get number of bytes for one wide character.
         n = 1;  // default: 1 byte. Used when skipping bytes
@@ -196,13 +200,15 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
             n = 4;
             high = static_cast<utf8_wchar_t>(*p & 0x07);
         } else {
-            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
+            if ((flags & UTF8_IGNORE_ERROR) == 0)
+                return 0;
             continue;
         }
 
         // Does the sequence header tell us truth about length?
         if (static_cast<size_t>(lim - p) <= n - 1) {
-            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
+            if ((flags & UTF8_IGNORE_ERROR) == 0)
+                return 0;
             n = 1;
             continue;  // skip
         }
@@ -210,17 +216,20 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         // Validate sequence. All symbols must have higher bits set to 10xxxxxx.
         if (n > 1) {
             for (i = 1; i < n; i++) {
-                if ((p[i] & 0xc0) != _NXT) break;
+                if ((p[i] & 0xc0) != _NXT)
+                    break;
             }
             if (i != n) {
-                if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
+                if ((flags & UTF8_IGNORE_ERROR) == 0)
+                    return 0;
                 n = 1;
                 continue;  // skip
             }
         }
 
         total++;
-        if (out_string == nullptr) continue;
+        if (out_string == nullptr)
+            continue;
 
         uint32_t out_val = 0;
         n_bits = 0;
@@ -272,7 +281,8 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
     unsigned char *p, *lim;
     size_t total, n;
 
-    if (in == nullptr || insize == 0 || (outsize == 0 && out != nullptr)) return 0;
+    if (in == nullptr || insize == 0 || (outsize == 0 && out != nullptr))
+        return 0;
 
     w = in;
     wlim = w + insize;
@@ -281,15 +291,18 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
     total = 0;
     for (; w < wlim; w++) {
         if (__wchar_forbitten(*w) != 0) {
-            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
+            if ((flags & UTF8_IGNORE_ERROR) == 0)
+                return 0;
             continue;
         }
 
-        if (*w == _BOM && (flags & UTF8_SKIP_BOM) != 0) continue;
+        if (*w == _BOM && (flags & UTF8_SKIP_BOM) != 0)
+            continue;
 
         const int32_t w_wide = *w;
         if (w_wide < 0) {
-            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
+            if ((flags & UTF8_IGNORE_ERROR) == 0)
+                return 0;
             continue;
         }
         if (w_wide <= 0x0000007f) {
@@ -306,8 +319,10 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
 
         total += n;
 
-        if (out == nullptr) continue;
-        if (size_t(lim - p) <= n - 1) return 0;  // no space left
+        if (out == nullptr)
+            continue;
+        if (size_t(lim - p) <= n - 1)
+            return 0;  // no space left
 
         // Extract the wchar_t as big-endian. If wchar_t is UCS-16, the first two bytes will be 0.
         unsigned char oc[4];

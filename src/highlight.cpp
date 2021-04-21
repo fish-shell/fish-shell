@@ -205,14 +205,16 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                        const operation_context_t &ctx, path_flags_t flags) {
     ASSERT_IS_BACKGROUND_THREAD();
 
-    if (ctx.check_cancel()) return false;
+    if (ctx.check_cancel())
+        return false;
 
     const bool require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
     wcstring clean_potential_path_fragment;
     bool has_magic = false;
 
     wcstring path_with_magic(potential_path_fragment);
-    if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic, ctx.vars);
+    if (flags & PATH_EXPAND_TILDE)
+        expand_tilde(path_with_magic, ctx.vars);
 
     for (auto c : path_with_magic) {
         switch (c) {
@@ -250,14 +252,16 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     case_sensitivity_cache_t case_sensitivity_cache;
 
     for (const wcstring &wd : directories) {
-        if (ctx.check_cancel()) return false;
+        if (ctx.check_cancel())
+            return false;
         wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
         if (flags & PATH_FOR_CD) {
             abs_path = normalize_path(abs_path);
         }
 
         // Skip this if it's empty or we've already checked it.
-        if (abs_path.empty() || checked_paths.count(abs_path)) continue;
+        if (abs_path.empty() || checked_paths.count(abs_path))
+            continue;
         checked_paths.insert(abs_path);
 
         // If we end with a slash, then it must be a directory.
@@ -288,7 +292,8 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                 wcstring ent;
                 bool is_dir = false;
                 while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : nullptr)) {
-                    if (ctx.check_cancel()) return false;
+                    if (ctx.check_cancel())
+                        return false;
 
                     // Maybe skip directories.
                     if (require_dir && !is_dir) {
@@ -324,7 +329,8 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
             cdpath.missing_or_empty() ? wcstring_list_t{L"."} : cdpath->as_list();
 
         for (auto next_path : pathsv) {
-            if (next_path.empty()) next_path = L".";
+            if (next_path.empty())
+                next_path = L".";
             // Ensure that we use the working directory for relative cdpaths like ".".
             directories.push_back(path_apply_working_directory(next_path, working_directory));
         }
@@ -341,7 +347,8 @@ static bool statement_get_expanded_command(const wcstring &src,
                                            const operation_context_t &ctx, wcstring *out_cmd) {
     // Get the command. Try expanding it. If we cannot, it's an error.
     maybe_t<wcstring> cmd = stmt.command.source(src);
-    if (!cmd) return false;
+    if (!cmd)
+        return false;
     expand_result_t err = expand_to_command_and_args(*cmd, ctx, out_cmd, nullptr);
     return err == expand_result_t::ok;
 }
@@ -353,9 +360,12 @@ rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_sp
     highlight_role_t role = is_background ? highlight.background : highlight.foreground;
 
     auto var = vars.get(get_highlight_var_name(role));
-    if (!var) var = vars.get(get_highlight_var_name(get_fallback(role)));
-    if (!var) var = vars.get(get_highlight_var_name(highlight_role_t::normal));
-    if (var) result = parse_color(*var, is_background);
+    if (!var)
+        var = vars.get(get_highlight_var_name(get_fallback(role)));
+    if (!var)
+        var = vars.get(get_highlight_var_name(highlight_role_t::normal));
+    if (var)
+        result = parse_color(*var, is_background);
 
     // Handle modifiers.
     if (!is_background && highlight.valid_path) {
@@ -365,11 +375,16 @@ rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_sp
             if (result.is_normal())
                 result = result2;
             else {
-                if (result2.is_bold()) result.set_bold(true);
-                if (result2.is_underline()) result.set_underline(true);
-                if (result2.is_italics()) result.set_italics(true);
-                if (result2.is_dim()) result.set_dim(true);
-                if (result2.is_reverse()) result.set_reverse(true);
+                if (result2.is_bold())
+                    result.set_bold(true);
+                if (result2.is_underline())
+                    result.set_underline(true);
+                if (result2.is_italics())
+                    result.set_italics(true);
+                if (result2.is_dim())
+                    result.set_dim(true);
+                if (result2.is_reverse())
+                    result.set_reverse(true);
             }
         }
     }
@@ -620,7 +635,8 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         // Consume
                         for (int i = 0; i < chars && in_pos < buff_len; i++) {
                             long d = convert_digit(buffstr.at(in_pos), base);
-                            if (d < 0) break;
+                            if (d < 0)
+                                break;
                             res = (res * base) + d;
                             in_pos++;
                         }
@@ -630,7 +646,8 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         fill_end = in_pos;
 
                         // It's an error if we exceeded the max value.
-                        if (res > max_val) fill_color = highlight_role_t::error;
+                        if (res > max_val)
+                            fill_color = highlight_role_t::error;
 
                         // Subtract one from in_pos, so that the increment in the loop will move to
                         // the next character.
@@ -930,7 +947,8 @@ static bool range_is_potential_path(const wcstring &src, const source_range_t &r
     if (unescape_string_in_place(&token, UNESCAPE_SPECIAL)) {
         // Big hack: is_potential_path expects a tilde, but unescape_string gives us HOME_DIRECTORY.
         // Put it back.
-        if (!token.empty() && token.at(0) == HOME_DIRECTORY) token.at(0) = L'~';
+        if (!token.empty() && token.at(0) == HOME_DIRECTORY)
+            token.at(0) = L'~';
 
         const wcstring_list_t working_directory_list(1, working_directory);
         result = is_potential_path(token, working_directory_list, ctx, PATH_EXPAND_TILDE);
@@ -1002,7 +1020,8 @@ void highlighter_t::visit(const ast::token_base_t &tok) {
         default:
             break;
     }
-    if (role) color_node(tok, *role);
+    if (role)
+        color_node(tok, *role);
 }
 
 void highlighter_t::visit(const ast::semi_nl_t &semi_nl) {
@@ -1038,12 +1057,14 @@ void highlighter_t::visit(const ast::variable_assignment_t &varas) {
 
 void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     // Color any decoration.
-    if (stmt.opt_decoration) this->visit(*stmt.opt_decoration);
+    if (stmt.opt_decoration)
+        this->visit(*stmt.opt_decoration);
 
     // Color the command's source code.
     // If we get no source back, there's nothing to color.
     maybe_t<wcstring> cmd = stmt.command.try_source(this->buff);
-    if (!cmd.has_value()) return;
+    if (!cmd.has_value())
+        return;
 
     wcstring expanded_cmd;
     bool is_valid_cmd = false;
@@ -1116,9 +1137,11 @@ static bool contains_pending_variable(const std::vector<wcstring> &pending_varia
     for (const auto &var_name : pending_variables) {
         size_t pos = -1;
         while ((pos = haystack.find(var_name, pos + 1)) != wcstring::npos) {
-            if (pos == 0 || haystack.at(pos - 1) != L'$') continue;
+            if (pos == 0 || haystack.at(pos - 1) != L'$')
+                continue;
             size_t end = pos + var_name.size();
-            if (end < haystack.size() && valid_var_name_char(haystack.at(end))) continue;
+            if (end < haystack.size() && valid_var_name_char(haystack.at(end)))
+                continue;
             return true;
         }
     }
@@ -1215,7 +1238,8 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
                         // Ensure that the parent ends with the path separator. This will ensure
                         // that we get an error if the parent directory is not really a
                         // directory.
-                        if (!string_suffixes_string(L"/", parent)) parent.push_back(L'/');
+                        if (!string_suffixes_string(L"/", parent))
+                            parent.push_back(L'/');
 
                         // Now the file is considered writable if the parent directory is
                         // writable.
@@ -1265,16 +1289,20 @@ static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t de
     bool is_valid = false;
 
     // Builtins
-    if (!is_valid && builtin_ok) is_valid = builtin_exists(cmd);
+    if (!is_valid && builtin_ok)
+        is_valid = builtin_exists(cmd);
 
     // Functions
-    if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd);
+    if (!is_valid && function_ok)
+        is_valid = function_exists_no_autoload(cmd);
 
     // Abbreviations
-    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
+    if (!is_valid && abbreviation_ok)
+        is_valid = expand_abbreviation(cmd, vars).has_value();
 
     // Regular commands
-    if (!is_valid && command_ok) is_valid = path_get_path(cmd, nullptr, vars);
+    if (!is_valid && command_ok)
+        is_valid = path_get_path(cmd, nullptr, vars);
 
     // Implicit cd
     if (!is_valid && implicit_cd_ok) {
@@ -1295,7 +1323,8 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     std::fill(this->color_array.begin(), this->color_array.end(), highlight_spec_t{});
 
     this->visit_children(*ast.top());
-    if (ctx.check_cancel()) return std::move(color_array);
+    if (ctx.check_cancel())
+        return std::move(color_array);
 
     // Color every comment.
     const auto &extras = ast.extras();
@@ -1317,8 +1346,10 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     if (io_ok) {
         for (const ast::node_t &node : ast) {
             const ast::argument_t *arg = node.try_as<ast::argument_t>();
-            if (!arg || arg->unsourced) continue;
-            if (ctx.check_cancel()) break;
+            if (!arg || arg->unsourced)
+                continue;
+            if (ctx.check_cancel())
+                break;
             if (range_is_potential_path(buff, arg->range, ctx, working_directory)) {
                 // Don't color highlight_role_t::error because it looks dorky. For example,
                 // trying to cd into a non-directory would show an underline and also red.

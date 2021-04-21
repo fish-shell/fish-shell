@@ -254,7 +254,8 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
                                             const wcstring_list_t &list, io_streams_t &streams,
                                             const environment_t &vars) {
     // Always allow setting an empty value.
-    if (list.empty()) return true;
+    if (list.empty())
+        return true;
 
     bool any_success = false;
 
@@ -405,7 +406,8 @@ maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_flags_t 
         }
 
         // Convert negative index to a positive index.
-        if (l_ind < 0) l_ind = varsize + l_ind + 1;
+        if (l_ind < 0)
+            l_ind = varsize + l_ind + 1;
 
         if (p[0] == L'.' && p[1] == L'.') {
             p += 2;
@@ -423,7 +425,8 @@ maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_flags_t 
             }
 
             // Convert negative index to a positive index.
-            if (l_ind2 < 0) l_ind2 = varsize + l_ind2 + 1;
+            if (l_ind2 < 0)
+                l_ind2 = varsize + l_ind2 + 1;
 
             int direction = l_ind2 < l_ind ? -1 : 1;
             for (long jjj = l_ind; jjj * direction <= l_ind2 * direction; jjj += direction) {
@@ -457,13 +460,20 @@ static wcstring_list_t erased_at_indexes(wcstring_list_t input, std::vector<long
 
 static env_mode_flags_t compute_scope(const set_cmd_opts_t &opts) {
     int scope = ENV_USER;
-    if (opts.local) scope |= ENV_LOCAL;
-    if (opts.global) scope |= ENV_GLOBAL;
-    if (opts.exportv) scope |= ENV_EXPORT;
-    if (opts.unexport) scope |= ENV_UNEXPORT;
-    if (opts.universal) scope |= ENV_UNIVERSAL;
-    if (opts.pathvar) scope |= ENV_PATHVAR;
-    if (opts.unpathvar) scope |= ENV_UNPATHVAR;
+    if (opts.local)
+        scope |= ENV_LOCAL;
+    if (opts.global)
+        scope |= ENV_GLOBAL;
+    if (opts.exportv)
+        scope |= ENV_EXPORT;
+    if (opts.unexport)
+        scope |= ENV_UNEXPORT;
+    if (opts.universal)
+        scope |= ENV_UNIVERSAL;
+    if (opts.pathvar)
+        scope |= ENV_PATHVAR;
+    if (opts.unpathvar)
+        scope |= ENV_UNPATHVAR;
     return scope;
 }
 
@@ -490,7 +500,8 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                 std::shared_ptr<history_t> history =
                     history_t::with_name(history_session_id(parser.vars()));
                 for (size_t i = 1; i < history->size() && val.size() < 64; i++) {
-                    if (i > 1) val += L' ';
+                    if (i > 1)
+                        val += L' ';
                     val += expand_escape_string(history->item_at_index(i).str());
                 }
             } else {
@@ -508,7 +519,8 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                 streams.out.append(L" ");
                 streams.out.append(val);
 
-                if (shorten) streams.out.push_back(get_ellipsis_char());
+                if (shorten)
+                    streams.out.push_back(get_ellipsis_char());
             }
         }
 
@@ -533,12 +545,14 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
         if (split->indexes.empty()) {
             // No indexes, just increment if our variable is missing.
-            if (!split->var) retval++;
+            if (!split->var)
+                retval++;
         } else {
             // Increment for every index out of range.
             long varsize = split->varsize();
             for (long idx : split->indexes) {
-                if (idx < 1 || idx > varsize) retval++;
+                if (idx < 1 || idx > varsize)
+                    retval++;
             }
         }
     }
@@ -585,7 +599,8 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
                 streams.out.append(get_ellipsis_char() > 256 ? L"\u22EF" : get_ellipsis_str());
                 streams.out.push_back(L'\n');
             }
-            if (i >= 50 && i < vals.size() - 50) continue;
+            if (i >= 50 && i < vals.size() - 50)
+                continue;
         }
         const wcstring value = vals[i];
         const wcstring escaped_val = escape_string(value, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
@@ -602,7 +617,8 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
         wcstring_list_t names = parser.vars().get_names(ENV_USER);
         sort(names.begin(), names.end());
         for (const auto &name : names) {
-            if (name == L"history") continue;
+            if (name == L"history")
+                continue;
             show_scope(name.c_str(), ENV_LOCAL, streams, vars);
             show_scope(name.c_str(), ENV_GLOBAL, streams, vars);
             show_scope(name.c_str(), ENV_UNIVERSAL, streams, vars);
@@ -662,7 +678,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                 handle_env_return(retval, cmd, split->varname, streams);
             }
         } else {  // remove just the specified indexes of the var
-            if (!split->var) return STATUS_CMD_ERROR;
+            if (!split->var)
+                return STATUS_CMD_ERROR;
             wcstring_list_t result = erased_at_indexes(split->var->as_list(), split->indexes);
             retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(result),
                                               streams, parser.vars(), &evts);
@@ -679,7 +696,8 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             ret = retval;
         } else {
             retval = check_global_scope_exists(cmd, opts, split->varname, streams, parser);
-            if (retval != STATUS_CMD_OK) ret = retval;
+            if (retval != STATUS_CMD_OK)
+                ret = retval;
         }
     }
     return ret;
@@ -727,7 +745,8 @@ static wcstring_list_t new_var_values_by_index(const split_var_t &split, int arg
     // Note unlike the append/prepend case, we start with a variable in the same scope as we are
     // setting.
     wcstring_list_t result;
-    if (split.var) result = split.var->as_list();
+    if (split.var)
+        result = split.var->as_list();
 
     // For each (index, argument) pair, set the element in our \p result to the replacement string.
     // Extend the list with empty strings as needed. The indexes are 1-based.
@@ -737,7 +756,8 @@ static wcstring_list_t new_var_values_by_index(const split_var_t &split, int arg
         // Convert from 1-based to 0-based.
         size_t idx = static_cast<size_t>(lidx - 1);
         // Extend as needed with empty strings.
-        if (idx >= result.size()) result.resize(idx + 1);
+        if (idx >= result.size())
+            result.resize(idx + 1);
         result.at(idx) = argv[i];
     }
     return result;
@@ -813,7 +833,8 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, c
         event_fire(parser, evt);
     }
 
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
     return check_global_scope_exists(cmd, opts, split->varname, streams, parser);
 }
 
@@ -825,7 +846,8 @@ maybe_t<int> builtin_set(parser_t &parser, io_streams_t &streams, const wchar_t 
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
     argv += optind;
     argc -= optind;
 
@@ -835,7 +857,8 @@ maybe_t<int> builtin_set(parser_t &parser, io_streams_t &streams, const wchar_t 
     }
 
     retval = validate_cmd_opts(cmd, opts, argc, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.query) {
         retval = builtin_set_query(cmd, opts, argc, argv, parser, streams);
@@ -851,6 +874,7 @@ maybe_t<int> builtin_set(parser_t &parser, io_streams_t &streams, const wchar_t 
         retval = builtin_set_set(cmd, opts, argc, argv, parser, streams);
     }
 
-    if (retval == STATUS_CMD_OK && opts.preserve_failure_exit_status) return none();
+    if (retval == STATUS_CMD_OK && opts.preserve_failure_exit_status)
+        return none();
     return retval;
 }

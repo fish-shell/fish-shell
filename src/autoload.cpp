@@ -171,7 +171,8 @@ maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const environ
 
 maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const wcstring_list_t &paths) {
     // Are we currently in the process of autoloading this?
-    if (current_autoloading_.count(cmd) > 0) return none();
+    if (current_autoloading_.count(cmd) > 0)
+        return none();
 
     // Check to see if our paths have changed. If so, replace our cache.
     // Note we don't have to modify autoloadable_files_. We'll naturally detect if those have
@@ -182,7 +183,8 @@ maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const wcstrin
 
     // Do we have an entry to load?
     auto mfile = cache_->check(cmd);
-    if (!mfile) return none();
+    if (!mfile)
+        return none();
 
     // Is this file the same as what we previously autoloaded?
     auto iter = autoloaded_files_.find(cmd);

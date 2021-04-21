@@ -80,7 +80,8 @@ void fd_monitor_t::poke_item(fd_monitor_item_id_t item_id) {
 
 uint64_t fd_monitor_item_t::usec_remaining(const time_point_t &now) const {
     assert(last_time.has_value() && "Should always have a last_time");
-    if (timeout_usec == kNoTimeout) return kNoTimeout;
+    if (timeout_usec == kNoTimeout)
+        return kNoTimeout;
     assert(now >= *last_time && "steady clock went backwards!");
     uint64_t since = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::microseconds>(now - *last_time).count());
@@ -132,7 +133,8 @@ void fd_monitor_t::run_in_background() {
 
         for (auto &item : items_) {
             fds.add(item.fd.fd());
-            if (!item.last_time.has_value()) item.last_time = now;
+            if (!item.last_time.has_value())
+                item.last_time = now;
             timeout_usec = std::min(timeout_usec, item.usec_remaining(now));
         }
 
@@ -159,7 +161,8 @@ void fd_monitor_t::run_in_background() {
         auto servicer = [&fds, &now](fd_monitor_item_t &item) {
             int fd = item.fd.fd();
             bool remove = !item.service_item(fds, now);
-            if (remove) FLOG(fd_monitor, "Removing fd", fd);
+            if (remove)
+                FLOG(fd_monitor, "Removing fd", fd);
             return remove;
         };
 
@@ -204,7 +207,8 @@ void fd_monitor_t::poke_in_background(const poke_list_t &pokelist) {
     auto poker = [&pokelist](fd_monitor_item_t &item) {
         int fd = item.fd.fd();
         bool remove = !item.poke_item(pokelist);
-        if (remove) FLOG(fd_monitor, "Removing fd", fd);
+        if (remove)
+            FLOG(fd_monitor, "Removing fd", fd);
         return remove;
     };
     items_.erase(std::remove_if(items_.begin(), items_.end(), poker), items_.end());

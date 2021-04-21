@@ -111,7 +111,8 @@ static wcstring_list_t get_legacy_paths(const wcstring &wdir) {
 
 static maybe_t<wcstring> default_vars_path_directory() {
     wcstring path;
-    if (!path_get_config(path)) return none();
+    if (!path_get_config(path))
+        return none();
     return path;
 }
 
@@ -131,14 +132,16 @@ static bool match(const wchar_t **inout_cursor, const char *cmd) {
     if (!std::equal(cmd, cmd + len, cursor)) {
         return false;
     }
-    if (cursor[len] && cursor[len] != L' ' && cursor[len] != L'\t') return false;
+    if (cursor[len] && cursor[len] != L' ' && cursor[len] != L'\t')
+        return false;
     *inout_cursor = cursor + len;
     return true;
 }
 
 /// The universal variable format has some funny escaping requirements; here we try to be safe.
 static bool is_universal_safe_to_encode_directly(wchar_t c) {
-    if (c < 32 || c > 128) return false;
+    if (c < 32 || c > 128)
+        return false;
 
     return iswalnum(c) || std::wcschr(L"/_", c);
 }
@@ -241,13 +244,15 @@ static const wchar_t UVAR_ARRAY_SEP = 0x1e;
 
 /// Decode a serialized universal variable value into a list.
 static wcstring_list_t decode_serialized(const wcstring &val) {
-    if (val == ENV_NULL) return {};
+    if (val == ENV_NULL)
+        return {};
     return split_string(val, UVAR_ARRAY_SEP);
 }
 
 /// Decode a a list into a serialized universal variable value.
 static wcstring encode_serialized(const wcstring_list_t &vals) {
-    if (vals.empty()) return ENV_NULL;
+    if (vals.empty())
+        return ENV_NULL;
     return join_strings(vals, UVAR_ARRAY_SEP);
 }
 
@@ -256,7 +261,8 @@ env_universal_t::env_universal_t(wcstring path)
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     auto where = vars.find(name);
-    if (where != vars.end()) return where->second;
+    if (where != vars.end())
+        return where->second;
     return none();
 }
 
@@ -275,7 +281,8 @@ void env_universal_t::set_internal(const wcstring &key, const env_var_t &var) {
     if (new_entry || entry != var) {
         entry = var;
         this->modified.insert(key);
-        if (entry.exports()) export_generation += 1;
+        if (entry.exports())
+            export_generation += 1;
     }
 }
 
@@ -288,7 +295,8 @@ bool env_universal_t::remove_internal(const wcstring &key) {
     ASSERT_IS_LOCKED(lock);
     auto iter = this->vars.find(key);
     if (iter != this->vars.end()) {
-        if (iter->second.exports()) export_generation += 1;
+        if (iter->second.exports())
+            export_generation += 1;
         this->vars.erase(iter);
         this->modified.insert(key);
         return true;
@@ -329,7 +337,8 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
         // If the value is not present in new_vars, it has been erased.
         if (new_vars.count(key) == 0) {
             callbacks.push_back(callback_data_t(key, none()));
-            if (kv.second.exports()) export_generation += 1;
+            if (kv.second.exports())
+                export_generation += 1;
         }
     }
 
@@ -500,7 +509,8 @@ bool env_universal_t::initialize(callback_data_list_t &callbacks) {
 
     // Get the variables path; if there is none (e.g. HOME is bogus) it's hopeless.
     auto vars_path = default_vars_path();
-    if (!vars_path) return false;
+    if (!vars_path)
+        return false;
 
     bool success = load_from_path(*vars_path, callbacks);
     if (!success && errno == ENOENT) {
@@ -571,7 +581,8 @@ static bool check_duration(double start_time) {
 static bool lock_uvar_file(int fd) {
     double start_time = timef();
     while (flock(fd, LOCK_EX) == -1) {
-        if (errno != EINTR) return false;  // do nothing per issue #2149
+        if (errno != EINTR)
+            return false;  // do nothing per issue #2149
     }
     return check_duration(start_time);
 }
@@ -599,7 +610,8 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, autoclose_f
         double start_time = timef();
         fd = autoclose_fd_t{open_cloexec(path, flags, 0644)};
         if (!fd.valid()) {
-            if (errno == EINTR) continue;  // signaled; try again
+            if (errno == EINTR)
+                continue;  // signaled; try again
 #ifdef O_EXLOCK
             if (do_locking && (errno == ENOTSUP || errno == EOPNOTSUPP)) {
                 // Filesystem probably does not support locking. Clear the flag and try again. Note
@@ -703,7 +715,8 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // Open the file.
     if (success) {
         success = this->open_and_acquire_lock(narrow_vars_path, &vars_fd);
-        if (!success) FLOGF(uvar_file, L"universal log open_and_acquire_lock() failed");
+        if (!success)
+            FLOGF(uvar_file, L"universal log open_and_acquire_lock() failed");
     }
 
     // Read from it.
@@ -729,13 +742,15 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
     autoclose_fd_t private_fd = this->open_temporary_file(directory, &private_file_path);
     bool success = private_fd.valid();
 
-    if (!success) FLOGF(uvar_file, L"universal log open_temporary_file() failed");
+    if (!success)
+        FLOGF(uvar_file, L"universal log open_temporary_file() failed");
 
     // Write to it.
     if (success) {
         assert(private_fd.valid());
         success = this->write_to_fd(private_fd.fd(), private_file_path);
-        if (!success) FLOGF(uvar_file, L"universal log write_to_fd() failed");
+        if (!success)
+            FLOGF(uvar_file, L"universal log write_to_fd() failed");
     }
 
     if (success) {
@@ -773,7 +788,8 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
 
         // Apply new file.
         success = this->move_new_vars_file_into_place(private_file_path, real_path);
-        if (!success) FLOGF(uvar_file, L"universal log move_new_vars_file_into_place() failed");
+        if (!success)
+            FLOGF(uvar_file, L"universal log move_new_vars_file_into_place() failed");
     }
 
     if (success) {
@@ -821,14 +837,16 @@ uvar_format_t env_universal_t::format_for_contents(const std::string &s) {
     line_iterator_t<std::string> iter{s};
     while (iter.next()) {
         const std::string &line = iter.line();
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
         if (line.front() != L'#') {
             // Exhausted leading comments.
             break;
         }
         // Note scanf %s is max characters to write; add 1 for null terminator.
         char versionbuf[64 + 1];
-        if (sscanf(line.c_str(), "# VERSION: %64s", versionbuf) != 1) continue;
+        if (sscanf(line.c_str(), "# VERSION: %64s", versionbuf) != 1)
+            continue;
 
         // Try reading the version.
         if (!std::strcmp(versionbuf, UVARS_VERSION_3_0)) {
@@ -852,11 +870,13 @@ uvar_format_t env_universal_t::populate_variables(const std::string &s, var_tabl
     while (iter.next()) {
         const std::string &line = iter.line();
         // Skip empties and constants.
-        if (line.empty() || line.front() == L'#') continue;
+        if (line.empty() || line.front() == L'#')
+            continue;
 
         // Convert to UTF8.
         wide_line.clear();
-        if (!utf8_to_wchar(line.data(), line.size(), &wide_line, 0)) continue;
+        if (!utf8_to_wchar(line.data(), line.size(), &wide_line, 0))
+            continue;
 
         switch (format) {
             case uvar_format_t::fish_2_x:
@@ -881,7 +901,8 @@ bool env_universal_t::populate_1_variable(const wchar_t *input, env_var_t::env_v
                                           var_table_t *vars, wcstring *storage) {
     const wchar_t *str = skip_spaces(input);
     const wchar_t *colon = std::wcschr(str, L':');
-    if (!colon) return false;
+    if (!colon)
+        return false;
 
     // Parse out the value into storage, and decode it into a variable.
     storage->clear();
@@ -902,7 +923,8 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
                                                 wcstring *storage) {
     namespace f3 = fish3_uvars;
     const wchar_t *const msg = msgstr.c_str();
-    if (msg[0] == L'#') return;
+    if (msg[0] == L'#')
+        return;
 
     const wchar_t *cursor = msg;
     if (!match(&cursor, f3::SETUVAR)) {
@@ -913,7 +935,8 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
     env_var_t::env_var_flags_t flags = 0;
     for (;;) {
         cursor = skip_spaces(cursor);
-        if (*cursor != L'-') break;
+        if (*cursor != L'-')
+            break;
         if (match(&cursor, f3::EXPORT)) {
             flags |= env_var_t::flag_export;
         } else if (match(&cursor, f3::PATH)) {
@@ -937,7 +960,8 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
     const wchar_t *const msg = msgstr.c_str();
     const wchar_t *cursor = msg;
 
-    if (cursor[0] == L'#') return;
+    if (cursor[0] == L'#')
+        return;
 
     env_var_t::env_var_flags_t flags = 0;
     if (match(&cursor, f2x::SET_EXPORT)) {
@@ -1006,7 +1030,8 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
             const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
 
             size_t alen = sdl.sdl_alen;
-            if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
+            if (alen > MAC_ADDRESS_MAX_LEN)
+                alen = MAC_ADDRESS_MAX_LEN;
             std::memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
             ok = true;
             break;
@@ -1371,7 +1396,8 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
     }
 
     void post_notification() override {
-        if (!pipe_fd.valid()) return;
+        if (!pipe_fd.valid())
+            return;
         // We need to write some data (any data) to the pipe, then wait for a while, then read
         // it back. Nobody is expected to read it except us.
         char c[1] = {'\0'};
@@ -1415,7 +1441,8 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
     }
 
     bool poll() override {
-        if (!pipe_fd.valid()) return false;
+        if (!pipe_fd.valid())
+            return false;
 
         // Check if we are past the readback time.
         if (this->readback_time_usec > 0 && get_time() >= this->readback_time_usec) {

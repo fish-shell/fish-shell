@@ -104,7 +104,8 @@ class generation_list_t {
     bool any_valid() const {
         bool valid = false;
         for (auto gen : as_array()) {
-            if (gen != invalid_generation) valid = true;
+            if (gen != invalid_generation)
+                valid = true;
         }
         return valid;
     }

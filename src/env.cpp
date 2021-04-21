@@ -163,7 +163,8 @@ void env_var_t::to_list(wcstring_list_t &out) const { out = *vals_; }
 
 env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
     env_var_flags_t result = 0;
-    if (is_read_only(name)) result |= flag_read_only;
+    if (is_read_only(name))
+        result |= flag_read_only;
     return result;
 }
 
@@ -421,7 +422,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     for (const auto &kv : uvars()->get_table()) {
         const wcstring &name = kv.first;
         const env_var_t &uvar = kv.second;
-        if (!uvar.exports()) continue;
+        if (!uvar.exports())
+            continue;
         // Look for a global exported variable with the same name.
         maybe_t<env_var_t> global = vars.globals().get(name, ENV_GLOBAL | ENV_EXPORT);
         if (global && uvar.as_string() == global->as_string()) {
@@ -436,7 +438,8 @@ static int set_umask(const wcstring_list_t &list_val) {
         mask = fish_wcstol(list_val.front().c_str(), nullptr, 8);
     }
 
-    if (errno || mask > 0777 || mask < 0) return ENV_INVALID;
+    if (errno || mask > 0777 || mask < 0)
+        return ENV_INVALID;
     // Do not actually create a umask variable. On env_stack_t::get() it will be calculated.
     umask(mask);
     return ENV_OK;
@@ -514,7 +517,8 @@ class env_node_t {
 
     maybe_t<env_var_t> find_entry(const wcstring &key) {
         auto it = env.find(key);
-        if (it != env.end()) return it->second;
+        if (it != env.end())
+            return it->second;
         return none();
     }
 
@@ -589,9 +593,11 @@ class env_scoped_impl_t : public environment_t {
         // Our uvars generation count doesn't come from next_export_generation(), so always supply
         // it even if it's 0.
         func(uvars() ? uvars()->get_export_generation() : 0);
-        if (globals_->exports()) func(globals_->export_gen);
+        if (globals_->exports())
+            func(globals_->export_gen);
         for (auto node = locals_; node; node = node->next) {
-            if (node->exports()) func(node->export_gen);
+            if (node->exports())
+                func(node->export_gen);
         }
     }
 
@@ -604,7 +610,8 @@ class env_scoped_impl_t : public environment_t {
 
 /// Get the exported variables into a variable table.
 static void get_exported(const env_node_ref_t &n, var_table_t &table) {
-    if (!n) return;
+    if (!n)
+        return;
 
     // Allow parent scopes to populate first, since we may want to overwrite those results.
     get_exported(n->next, table);
@@ -628,7 +635,8 @@ bool env_scoped_impl_t::export_array_needs_regeneration() const {
     // Check if our export array is stale. If we don't have one, it's obviously stale. Otherwise,
     // compare our cached generations with the current generations. If they don't match exactly then
     // our generation list is stale.
-    if (!export_array_) return true;
+    if (!export_array_)
+        return true;
 
     bool mismatch = false;
     auto cursor = export_array_generations_.begin();
@@ -714,7 +722,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
             history = history_t::with_name(history_session_id(*this));
         }
         wcstring_list_t result;
-        if (history) history->get_history(result);
+        if (history)
+            history->get_history(result);
         return env_var_t(L"history", std::move(result));
     } else if (key == L"pipestatus") {
         const auto &js = perproc_data().statuses;
@@ -739,7 +748,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
         // against races. Guess what the umask is; if we guess right we don't need to reset it.
         mode_t guess = 022;
         mode_t res = umask(guess);
-        if (res != guess) umask(res);
+        if (res != guess)
+            umask(res);
         return env_var_t(L"umask", format_string(L"0%0.3o", res));
     }
     // We should never get here unless the electric var list is out of sync with the above code.
@@ -767,7 +777,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key) const 
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key) const {
-    if (!uvars()) return none();
+    if (!uvars())
+        return none();
     auto var = uvars()->get(key);
     if (var) {
         return var;
@@ -960,7 +971,8 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     // Implement the default behavior of 'set' by finding the node for an unspecified scope.
     env_node_ref_t resolve_unspecified_scope() {
         for (auto cursor = locals_; cursor; cursor = cursor->next) {
-            if (cursor->new_scope) return cursor;
+            if (cursor->new_scope)
+                return cursor;
         }
         return globals_;
     }
@@ -969,7 +981,8 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     /// This is used for inheriting pathvar and export status.
     const env_var_t *find_variable(const wcstring &key) const {
         env_node_ref_t node = find_in_chain(locals_, key);
-        if (!node) node = find_in_chain(globals_, key);
+        if (!node)
+            node = find_in_chain(globals_, key);
         if (node) {
             auto iter = node->env.find(key);
             assert(iter != node->env.end() && "Node should contain key");
@@ -1099,7 +1112,8 @@ maybe_t<int> env_stack_impl_t::try_set_electric(const wcstring &key, const query
 void env_stack_impl_t::set_universal(const wcstring &key, wcstring_list_t val,
                                      const query_t &query) {
     ASSERT_IS_MAIN_THREAD();
-    if (!uvars()) return;
+    if (!uvars())
+        return;
     auto oldvar = uvars()->get(key);
     // Resolve whether or not to export.
     bool exports = false;
@@ -1131,8 +1145,10 @@ void env_stack_impl_t::set_universal(const wcstring &key, wcstring_list_t val,
 
     // Construct and set the new variable.
     env_var_t::env_var_flags_t varflags = 0;
-    if (exports) varflags |= env_var_t::flag_export;
-    if (pathvar) varflags |= env_var_t::flag_pathvar;
+    if (exports)
+        varflags |= env_var_t::flag_export;
+    if (pathvar)
+        varflags |= env_var_t::flag_pathvar;
     env_var_t new_var{val, varflags};
 
     uvars()->set(key, new_var);
@@ -1240,10 +1256,12 @@ bool env_stack_t::universal_barrier() {
     // Only perform universal barriers for the principal env stack.
     // This means that changes from other fish processes will only be visible when the "main thread
     // runs."
-    if (!is_principal()) return false;
+    if (!is_principal())
+        return false;
 
     ASSERT_IS_MAIN_THREAD();
-    if (!uvars()) return false;
+    if (!uvars())
+        return false;
 
     callback_data_list_t callbacks;
     bool changed = uvars()->sync(callbacks);
@@ -1430,8 +1448,10 @@ static int check_runtime_path(const char *path) {
     struct stat statpath;
     uid_t uid = geteuid();
 
-    if (mkdir(path, S_IRWXU) != 0 && errno != EEXIST) return errno;
-    if (lstat(path, &statpath) != 0) return errno;
+    if (mkdir(path, S_IRWXU) != 0 && errno != EEXIST)
+        return errno;
+    if (lstat(path, &statpath) != 0)
+        return errno;
     if (!S_ISDIR(statpath.st_mode) || statpath.st_uid != uid ||
         (statpath.st_mode & (S_IRWXG | S_IRWXO)) != 0)
         return EACCES;

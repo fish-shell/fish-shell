@@ -30,7 +30,8 @@ static constexpr uint64_t kUsecPerMsec = 1000;
 static constexpr uint64_t kUsecPerSec = 1000 * kUsecPerMsec;
 
 void autoclose_fd_t::close() {
-    if (fd_ < 0) return;
+    if (fd_ < 0)
+        return;
     exec_close(fd_);
     fd_ = -1;
 }
@@ -64,7 +65,8 @@ int select_wrapper_t::select(uint64_t timeout_usec) {
 
 // static
 bool select_wrapper_t::is_fd_readable(int fd, uint64_t timeout_usec) {
-    if (fd < 0) return false;
+    if (fd < 0)
+        return false;
     select_wrapper_t s;
     s.add(fd);
     int res = s.select(timeout_usec);
@@ -163,7 +165,8 @@ static autoclose_fd_t heightenize_fd(autoclose_fd_t fd, bool input_has_cloexec) 
         return fd;
     }
     if (fd.fd() >= k_first_high_fd) {
-        if (!input_has_cloexec) set_cloexec(fd.fd());
+        if (!input_has_cloexec)
+            set_cloexec(fd.fd());
         return fd;
     }
 #if defined(F_DUPFD_CLOEXEC)
@@ -218,10 +221,12 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes() {
 
     // Ensure our fds are out of the user range.
     read_end = heightenize_fd(std::move(read_end), already_cloexec);
-    if (!read_end.valid()) return none();
+    if (!read_end.valid())
+        return none();
 
     write_end = heightenize_fd(std::move(write_end), already_cloexec);
-    if (!write_end.valid()) return none();
+    if (!write_end.valid())
+        return none();
 
     return autoclose_pipes_t(std::move(read_end), std::move(write_end));
 }
@@ -294,11 +299,13 @@ int fd_check_is_remote(int fd) {
     // ST_LOCAL is a flag to statvfs, which is itself standardized.
     // In practice the only system to use this path is NetBSD.
     struct statvfs buf {};
-    if (fstatvfs(fd, &buf) < 0) return -1;
+    if (fstatvfs(fd, &buf) < 0)
+        return -1;
     return (buf.f_flag & ST_LOCAL) ? 0 : 1;
 #elif defined(MNT_LOCAL)
     struct statfs buf {};
-    if (fstatfs(fd, &buf) < 0) return -1;
+    if (fstatfs(fd, &buf) < 0)
+        return -1;
     return (buf.f_flags & MNT_LOCAL) ? 0 : 1;
 #else
     return -1;

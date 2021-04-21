@@ -23,7 +23,8 @@ maybe_t<int> builtin_eval(parser_t &parser, io_streams_t &streams, const wchar_t
 
     wcstring new_cmd;
     for (int i = 1; i < argc; ++i) {
-        if (i > 1) new_cmd += L' ';
+        if (i > 1)
+            new_cmd += L' ';
         new_cmd += argv[i];
     }
 

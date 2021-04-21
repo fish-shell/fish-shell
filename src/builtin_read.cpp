@@ -335,9 +335,12 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
             exit_res = STATUS_READ_TOO_MUCH;
             break;
         }
-        if (eof) break;
-        if (!split_null && res == L'\n') break;
-        if (split_null && res == L'\0') break;
+        if (eof)
+            break;
+        if (!split_null && res == L'\n')
+            break;
+        if (split_null && res == L'\0')
+            break;
 
         buff.push_back(res);
         if (nchars > 0 && static_cast<size_t>(nchars) <= buff.size()) {
@@ -443,7 +446,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
     if (!opts.to_stdout) {
         argc -= optind;
         argv += optind;
@@ -459,7 +463,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
     }
 
     retval = validate_read_args(cmd, opts, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     // stdin may have been explicitly closed
     if (streams.stdin_fd < 0) {
@@ -555,7 +560,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
 
         if (!opts.have_delimiter) {
             auto ifs = parser.vars().get(L"IFS");
-            if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
+            if (!ifs.missing_or_empty())
+                opts.delimiter = ifs->as_string();
         }
 
         if (opts.delimiter.empty()) {

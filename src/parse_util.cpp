@@ -43,7 +43,8 @@
 static constexpr int var_err_len = 16;
 
 int parse_util_lineno(const wchar_t *str, size_t offset) {
-    if (!str) return 0;
+    if (!str)
+        return 0;
 
     int res = 1;
     for (size_t i = 0; i < offset && str[i] != L'\0'; i++) {
@@ -74,11 +75,14 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
     size_t i;
     int count = 0;
 
-    if (line < 0) return static_cast<size_t>(-1);
-    if (line == 0) return 0;
+    if (line < 0)
+        return static_cast<size_t>(-1);
+    if (line == 0)
+        return 0;
 
     for (i = 0;; i++) {
-        if (!buff[i]) return static_cast<size_t>(-1);
+        if (!buff[i])
+            return static_cast<size_t>(-1);
 
         if (buff[i] == L'\n') {
             count++;
@@ -93,9 +97,12 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
     size_t off = parse_util_get_offset_from_line(str, line);
     size_t off2 = parse_util_get_offset_from_line(str, line + 1);
 
-    if (off == static_cast<size_t>(-1)) return static_cast<size_t>(-1);
-    if (off2 == static_cast<size_t>(-1)) off2 = str.length() + 1;
-    if (line_offset < 0) line_offset = 0;  //!OCLINT(parameter reassignment)
+    if (off == static_cast<size_t>(-1))
+        return static_cast<size_t>(-1);
+    if (off2 == static_cast<size_t>(-1))
+        off2 = str.length() + 1;
+    if (line_offset < 0)
+        line_offset = 0;  //!OCLINT(parameter reassignment)
 
     if (static_cast<size_t>(line_offset) >= off2 - off - 1) {
         line_offset = off2 - off - 1;  //!OCLINT(parameter reassignment)
@@ -187,12 +194,14 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
                                             size_t *out_end, bool accept_incomplete,
                                             wchar_t open_type, wchar_t close_type) {
     // Clear the return values.
-    if (out_contents != nullptr) out_contents->clear();
+    if (out_contents != nullptr)
+        out_contents->clear();
     *out_start = 0;
     *out_end = str.size();
 
     // Nothing to do if the offset is at or past the end of the string.
-    if (*inout_cursor_offset >= str.size()) return 0;
+    if (*inout_cursor_offset >= str.size())
+        return 0;
 
     // Defer to the wonky version.
     const wchar_t *const buff = str.c_str();
@@ -265,7 +274,8 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
             bp = end;
             // pos is where to begin looking for the next one. But if we reached the end there's no
             // next one.
-            if (begin >= end) break;
+            if (begin >= end)
+                break;
             pos = begin + 1;
         } else if (begin >= cursor) {
             // This command substitution starts at or after the cursor. Since it was the first
@@ -279,8 +289,10 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
         }
     }
 
-    if (a != nullptr) *a = ap;
-    if (b != nullptr) *b = bp;
+    if (a != nullptr)
+        *a = ap;
+    if (b != nullptr)
+        *b = bp;
 }
 
 /// Get the beginning and end of the job or process definition under the cursor.
@@ -291,8 +303,10 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
     const wchar_t *begin = nullptr, *end = nullptr;
     int finished = 0;
 
-    if (a) *a = nullptr;
-    if (b) *b = nullptr;
+    if (a)
+        *a = nullptr;
+    if (b)
+        *b = nullptr;
     parse_util_cmdsubst_extent(buff, cursor_pos, &begin, &end);
     if (!end || !begin) {
         return;
@@ -301,8 +315,10 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
     assert(cursor_pos >= static_cast<size_t>(begin - buff));
     const size_t pos = cursor_pos - (begin - buff);
 
-    if (a) *a = begin;
-    if (b) *b = end;
+    if (a)
+        *a = begin;
+    if (b)
+        *b = end;
 
     const wcstring buffcpy(begin, end);
     tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
@@ -324,11 +340,14 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
             case token_type_t::comment: {
                 if (tok_begin >= pos) {
                     finished = 1;
-                    if (b) *b = const_cast<wchar_t *>(begin) + tok_begin;
+                    if (b)
+                        *b = const_cast<wchar_t *>(begin) + tok_begin;
                 } else {
                     // Statement at cursor might start after this token.
-                    if (a) *a = const_cast<wchar_t *>(begin) + tok_begin + token->length;
-                    if (tokens) tokens->clear();
+                    if (a)
+                        *a = const_cast<wchar_t *>(begin) + tok_begin + token->length;
+                    if (tokens)
+                        tokens->clear();
                 }
                 continue;  // Do not add this to tokens
             }
@@ -336,7 +355,8 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
                 break;
             }
         }
-        if (tokens) tokens->push_back(*token);
+        if (tokens)
+            tokens->push_back(*token);
     }
 }
 
@@ -411,10 +431,14 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
         }
     }
 
-    if (tok_begin) *tok_begin = a;
-    if (tok_end) *tok_end = b;
-    if (prev_begin) *prev_begin = pa;
-    if (prev_end) *prev_end = pb;
+    if (tok_begin)
+        *tok_begin = a;
+    if (tok_end)
+        *tok_end = b;
+    if (prev_begin)
+        *prev_begin = pa;
+    if (prev_end)
+        *prev_end = pb;
 
     assert(pa >= buff);
     assert(pa <= (buff + bufflen));
@@ -457,11 +481,13 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
     const wchar_t *const cmd = cmd_str.c_str();
 
     while (true) {
-        if (!cmd[i]) break;
+        if (!cmd[i])
+            break;
 
         if (cmd[i] == L'\\') {
             i++;
-            if (!cmd[i]) break;
+            if (!cmd[i])
+                break;
             i++;
         } else {
             if (cmd[i] == L'\'' || cmd[i] == L'\"') {
@@ -487,12 +513,14 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
     while (auto token = tok.next()) {
-        if (token->offset > pos) break;
+        if (token->offset > pos)
+            break;
 
         if (token->type == token_type_t::string)
             last_quote = get_quote(tok.text_of(*token), pos - token->offset);
 
-        if (out_type != nullptr) *out_type = token->type;
+        if (out_type != nullptr)
+            *out_type = token->type;
 
         prev_pos = token->offset;
     }
@@ -508,7 +536,8 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
         }
     }
 
-    if (quote) *quote = last_quote;
+    if (quote)
+        *quote = last_quote;
 
     if (offset != nullptr) {
         if (finished) {
@@ -551,11 +580,13 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
                     result.append({L'\\', L'\\'});
                     break;
                 case L'$':
-                    if (quote == L'"') result.push_back(L'\\');
+                    if (quote == L'"')
+                        result.push_back(L'\\');
                     result.push_back(L'$');
                     break;
                 default:
-                    if (c == quote) result.push_back(L'\\');
+                    if (c == quote)
+                        result.push_back(L'\\');
                     result.push_back(c);
                     break;
             }
@@ -711,9 +742,11 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
         void record_line_continuations_until(size_t offset) {
             wcstring gap_text = src.substr(last_leaf_end, offset - last_leaf_end);
             size_t escaped_nl = gap_text.find(L"\\\n");
-            if (escaped_nl == wcstring::npos) return;
+            if (escaped_nl == wcstring::npos)
+                return;
             auto line_end = gap_text.begin() + escaped_nl;
-            if (std::find(gap_text.begin(), line_end, L'#') != line_end) return;
+            if (std::find(gap_text.begin(), line_end, L'#') != line_end)
+                return;
             auto end = src.begin() + offset;
             auto newline = src.begin() + last_leaf_end + escaped_nl + 1;
             // The gap text might contain multiple newlines if there are multiple lines that
@@ -783,7 +816,8 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
 /// Append a syntax error to the given error list.
 static bool append_syntax_error(parse_error_list_t *errors, size_t source_location,
                                 const wchar_t *fmt, ...) {
-    if (!errors) return true;
+    if (!errors)
+        return true;
     parse_error_t error;
     error.source_start = source_location;
     error.source_length = 0;
@@ -811,7 +845,8 @@ bool parse_util_argument_is_help(const wcstring &s) { return s == L"-h" || s == 
 // there are no arguments.
 static const ast::argument_t *get_first_arg(const ast::argument_or_redirection_list_t &list) {
     for (const ast::argument_or_redirection_t &v : list) {
-        if (v.is_argument()) return &v.argument();
+        if (v.is_argument())
+            return &v.argument();
     }
     return nullptr;
 }
@@ -973,7 +1008,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                                                               const wcstring &arg_src,
                                                               parse_error_list_t *out_errors) {
     maybe_t<source_range_t> source_range = arg.try_source_range();
-    if (!source_range.has_value()) return 0;
+    if (!source_range.has_value())
+        return 0;
 
     size_t source_start = source_range->start;
     parser_test_error_bits_t err = 0;
@@ -1068,7 +1104,8 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
                                               parse_error_list_t *parse_errors) {
     using namespace ast;
     auto source_range = job.try_source_range();
-    if (!source_range) return false;
+    if (!source_range)
+        return false;
 
     bool errored = false;
     // Disallow background in the following cases:
@@ -1077,7 +1114,8 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
     // if foo & ; end
     // while foo & ; end
     const job_conjunction_t *job_conj = job.parent->try_as<job_conjunction_t>();
-    if (!job_conj) return false;
+    if (!job_conj)
+        return false;
 
     if (job_conj->parent->try_as<if_clause_t>()) {
         errored = append_syntax_error(parse_errors, source_range->start,
@@ -1090,7 +1128,8 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
         // Find the index of ourselves in the job list.
         size_t index;
         for (index = 0; index < jlist->count(); index++) {
-            if (jlist->at(index) == job_conj) break;
+            if (jlist->at(index) == job_conj)
+                break;
         }
         assert(index < jlist->count() && "Should have found the job in the list");
 
@@ -1213,7 +1252,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
             bool found_loop = false;
             for (const node_t *ancestor = &dst; ancestor != nullptr; ancestor = ancestor->parent) {
                 const auto *block = ancestor->try_as<block_statement_t>();
-                if (!block) continue;
+                if (!block)
+                    continue;
                 if (block->header->type == type_t::for_header ||
                     block->header->type == type_t::while_header) {
                     // This is a loop header, so we can break or continue.
@@ -1317,20 +1357,24 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
             errored |= detect_errors_in_decorated_statement(buff_src, *stmt, &storage, out_errors);
         } else if (const auto *block = node.try_as<block_statement_t>()) {
             // If our 'end' had no source, we are unsourced.
-            if (block->end.unsourced) has_unclosed_block = true;
+            if (block->end.unsourced)
+                has_unclosed_block = true;
             errored |= detect_errors_in_block_redirection_list(block->args_or_redirs, out_errors);
         } else if (const auto *ifs = node.try_as<if_statement_t>()) {
             // If our 'end' had no source, we are unsourced.
-            if (ifs->end.unsourced) has_unclosed_block = true;
+            if (ifs->end.unsourced)
+                has_unclosed_block = true;
             errored |= detect_errors_in_block_redirection_list(ifs->args_or_redirs, out_errors);
         } else if (const auto *switchs = node.try_as<switch_statement_t>()) {
             // If our 'end' had no source, we are unsourced.
-            if (switchs->end.unsourced) has_unclosed_block = true;
+            if (switchs->end.unsourced)
+                has_unclosed_block = true;
             errored |= detect_errors_in_block_redirection_list(switchs->args_or_redirs, out_errors);
         }
     }
 
-    if (errored) res |= PARSER_TEST_ERROR;
+    if (errored)
+        res |= PARSER_TEST_ERROR;
 
     if (has_unclosed_block || has_unclosed_pipe || has_unclosed_conjunction)
         res |= PARSER_TEST_INCOMPLETE;
@@ -1375,7 +1419,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     // Early parse error, stop here.
     if (!parse_errors.empty()) {
-        if (out_errors) vec_append(*out_errors, std::move(parse_errors));
+        if (out_errors)
+            vec_append(*out_errors, std::move(parse_errors));
         return PARSER_TEST_ERROR;
     }
 

@@ -130,7 +130,8 @@ static bool iswnumeric(const wchar_t *n) {
 /// See if the process described by \c proc matches the commandline \c cmd.
 static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
     // Don't wait for itself
-    if (std::wcscmp(proc, L"wait") == 0) return false;
+    if (std::wcscmp(proc, L"wait") == 0)
+        return false;
 
     // Get the command to match against. We're only interested in the last path component.
     const wcstring base_cmd = wbasename(cmd);
@@ -143,7 +144,8 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
     bool found = false;
 
     for (const auto &j : parser.jobs()) {
-        if (j->command().empty()) continue;
+        if (j->command().empty())
+            continue;
 
         if (match_pid(j->command(), proc)) {
             if (!contains(ids, j->job_id())) {
@@ -155,7 +157,8 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
 
         // Check if the specified pid is a child process of the job.
         for (const process_ptr_t &p : j->processes) {
-            if (p->actual_cmd.empty()) continue;
+            if (p->actual_cmd.empty())
+                continue;
 
             if (match_pid(p->actual_cmd, proc)) {
                 if (!contains(ids, j->job_id())) {
@@ -243,7 +246,8 @@ maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, const wchar_t
             }
         }
 
-        if (waited_job_ids.empty()) return STATUS_INVALID_ARGS;
+        if (waited_job_ids.empty())
+            return STATUS_INVALID_ARGS;
 
         retval = wait_for_backgrounds_specified(parser, waited_job_ids, any_flag);
     }

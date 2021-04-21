@@ -21,8 +21,10 @@ static int simple_icase_compare(const wchar_t *s1, const wchar_t *s2) {
         wchar_t c2 = s2[idx];
 
         // "Canonicalize" to lower case.
-        if (L'A' <= c1 && c1 <= L'Z') c1 = L'a' + (c1 - L'A');
-        if (L'A' <= c2 && c2 <= L'Z') c2 = L'a' + (c2 - L'A');
+        if (L'A' <= c1 && c1 <= L'Z')
+            c1 = L'a' + (c1 - L'A');
+        if (L'A' <= c2 && c2 <= L'Z')
+            c2 = L'a' + (c2 - L'A');
 
         if (c1 != c2) {
             return c1 < c2 ? -1 : 1;
@@ -151,7 +153,8 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name) {
     size_t digit_idx = 0, len = name.size();
 
     // Skip any leading #.
-    if (len > 0 && name.at(0) == L'#') digit_idx++;
+    if (len > 0 && name.at(0) == L'#')
+        digit_idx++;
 
     bool success = false;
     size_t i;
@@ -159,7 +162,8 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name) {
         // Format: FA3
         for (i = 0; i < 3; i++) {
             int val = parse_hex_digit(name.at(digit_idx++));
-            if (val < 0) break;
+            if (val < 0)
+                break;
             data.color.rgb[i] = val * 16 + val;
         }
         success = (i == 3);
@@ -168,7 +172,8 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name) {
         for (i = 0; i < 3; i++) {
             int hi = parse_hex_digit(name.at(digit_idx++));
             int lo = parse_hex_digit(name.at(digit_idx++));
-            if (lo < 0 || hi < 0) break;
+            if (lo < 0 || hi < 0)
+                break;
             data.color.rgb[i] = hi * 16 + lo;
         }
         success = (i == 3);
@@ -332,16 +337,21 @@ color24_t rgb_color_t::to_color24() const {
 uint8_t rgb_color_t::to_name_index() const {
     // TODO: This should look for the nearest color.
     assert(type == type_named || type == type_rgb);
-    if (type == type_named) return data.name_idx;
-    if (type == type_rgb) return term16_color_for_rgb(data.color.rgb);
+    if (type == type_named)
+        return data.name_idx;
+    if (type == type_rgb)
+        return term16_color_for_rgb(data.color.rgb);
     return static_cast<uint8_t>(-1);  // this is an error
 }
 
 void rgb_color_t::parse(const wcstring &str) {
     bool success = false;
-    if (!success) success = try_parse_special(str);
-    if (!success) success = try_parse_named(str);
-    if (!success) success = try_parse_rgb(str);
+    if (!success)
+        success = try_parse_special(str);
+    if (!success)
+        success = try_parse_named(str);
+    if (!success)
+        success = try_parse_rgb(str);
     if (!success) {
         std::memset(&this->data, 0, sizeof this->data);
         this->type = type_none;

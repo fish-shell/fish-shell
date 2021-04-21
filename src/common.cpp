@@ -199,7 +199,8 @@ bool is_windows_subsystem_for_linux() {
     wchar_t text[1024];
     wcstring_list_t backtrace_text;
 
-    if (skip_levels + max_frames < n_frames) n_frames = skip_levels + max_frames;
+    if (skip_levels + max_frames < n_frames)
+        n_frames = skip_levels + max_frames;
 
     for (int i = skip_levels; i < n_frames; i++) {
         Dl_info info;
@@ -224,7 +225,8 @@ bool is_windows_subsystem_for_linux() {
 }
 
 [[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
-    if (frame_count < 1) return;
+    if (frame_count < 1)
+        return;
 
     wcstring_list_t bt = demangled_backtrace(frame_count, skip_levels + 2);
     debug_shared(msg_level, L"Backtrace:\n" + join_strings(bt, L'\n') + L'\n');
@@ -280,22 +282,27 @@ static size_t count_ascii_prefix(const char *in, size_t in_len) {
 
     // Consume the unaligned prefix.
     for (const char *cursor = in; cursor < aligned_start; cursor++) {
-        if (cursor[0] & 0x80) return &cursor[0] - in;
+        if (cursor[0] & 0x80)
+            return &cursor[0] - in;
     }
 
     // Consume the aligned middle.
     for (const char *cursor = aligned_start; cursor < aligned_end; cursor += sizeof(WordType)) {
         if (*reinterpret_cast<const WordType *>(cursor) & 0x80808080) {
-            if (cursor[0] & 0x80) return &cursor[0] - in;
-            if (cursor[1] & 0x80) return &cursor[1] - in;
-            if (cursor[2] & 0x80) return &cursor[2] - in;
+            if (cursor[0] & 0x80)
+                return &cursor[0] - in;
+            if (cursor[1] & 0x80)
+                return &cursor[1] - in;
+            if (cursor[2] & 0x80)
+                return &cursor[2] - in;
             return &cursor[3] - in;
         }
     }
 
     // Consume the unaligned suffix.
     for (const char *cursor = aligned_end; cursor < in + in_len; cursor++) {
-        if (cursor[0] & 0x80) return &cursor[0] - in;
+        if (cursor[0] & 0x80)
+            return &cursor[0] - in;
     }
     return in_len;
 }
@@ -307,7 +314,8 @@ static size_t count_ascii_prefix(const char *in, size_t in_len) {
 /// This function encodes illegal character sequences in a reversible way using the private use
 /// area.
 static wcstring str2wcs_internal(const char *in, const size_t in_len) {
-    if (in_len == 0) return wcstring();
+    if (in_len == 0)
+        return wcstring();
     assert(in != nullptr);
 
     wcstring result;
@@ -332,7 +340,8 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         result.insert(result.end(), &in[in_pos], &in[in_pos + ascii_prefix_length]);
         in_pos += ascii_prefix_length;
         assert(in_pos <= in_len && "Position overflowed length");
-        if (in_pos == in_len) break;
+        if (in_pos == in_len)
+            break;
 
         // We have found a non-ASCII character.
         bool use_encode_direct = false;
@@ -411,7 +420,8 @@ wcstring str2wcstring(const std::string &in, size_t len) {
 std::string wcs2string(const wcstring &input) { return wcs2string(input.data(), input.size()); }
 
 std::string wcs2string(const wchar_t *in, size_t len) {
-    if (len == 0) return std::string{};
+    if (len == 0)
+        return std::string{};
     std::string result;
     wcs2string_appending(in, len, &result);
     return result;
@@ -507,11 +517,13 @@ wchar_t *quote_end(const wchar_t *pos) {
     while (true) {
         pos++;
 
-        if (!*pos) return nullptr;
+        if (!*pos)
+            return nullptr;
 
         if (*pos == L'\\') {
             pos++;
-            if (!*pos) return nullptr;
+            if (!*pos)
+                return nullptr;
         } else {
             if (*pos == c) {
                 return const_cast<wchar_t *>(pos);
@@ -614,17 +626,20 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
                 const char *param11, const char *param12) {
     const char *const params[] = {param1, param2, param3, param4,  param5,  param6,
                                   param7, param8, param9, param10, param11, param12};
-    if (!msg) return;
+    if (!msg)
+        return;
 
     // Can't call fwprintf, that may allocate memory Just call write() over and over.
-    if (level > debug_level) return;
+    if (level > debug_level)
+        return;
     int errno_old = errno;
 
     size_t param_idx = 0;
     const char *cursor = msg;
     while (*cursor != '\0') {
         const char *end = std::strchr(cursor, '%');
-        if (end == nullptr) end = cursor + std::strlen(cursor);
+        if (end == nullptr)
+            end = cursor + std::strlen(cursor);
 
         ignore_result(write(STDERR_FILENO, cursor, end - cursor));
 
@@ -632,7 +647,8 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
             // Handle a format string.
             assert(param_idx < sizeof params / sizeof *params);
             const char *format = params[param_idx++];
-            if (!format) format = "(null)";
+            if (!format)
+                format = "(null)";
             ignore_result(write(STDERR_FILENO, format, std::strlen(format)));
             cursor = end + 2;
         } else if (end[0] == '\0') {
@@ -652,7 +668,8 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
 
 // Careful to not negate LLONG_MIN.
 static unsigned long long absolute_value(long long x) {
-    if (x >= 0) return static_cast<unsigned long long>(x);
+    if (x >= 0)
+        return static_cast<unsigned long long>(x);
     x = -(x + 1);
     return static_cast<unsigned long long>(x) + 1;
 }
@@ -744,7 +761,8 @@ wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
             } else if (overflow) {
                 // In case of overflow, we print a newline, except if we already are at position 0.
                 wchar_t *token = wcsndup(start, pos - start);
-                if (line_width != 0) buff.push_back(L'\n');
+                if (line_width != 0)
+                    buff.push_back(L'\n');
                 buff.append(format_string(L"%ls-\n", token));
                 free(token);
                 line_width = 0;
@@ -799,20 +817,25 @@ static bool unescape_string_url(const wchar_t *in, wcstring *out) {
     std::string result;
     result.reserve(out->size());
     for (wchar_t c = *in; c; c = *++in) {
-        if (c > 0x7F) return false;  // invalid character means we can't decode the string
+        if (c > 0x7F)
+            return false;  // invalid character means we can't decode the string
         if (c == '%') {
             int c1 = in[1];
-            if (c1 == 0) return false;  // found unexpected end of string
+            if (c1 == 0)
+                return false;  // found unexpected end of string
             if (c1 == '%') {
                 result.push_back('%');
                 in++;
             } else {
                 int c2 = in[2];
-                if (c2 == 0) return false;  // string ended prematurely
+                if (c2 == 0)
+                    return false;  // string ended prematurely
                 long d1 = convert_digit(c1, 16);
-                if (d1 < 0) return false;
+                if (d1 < 0)
+                    return false;
                 long d2 = convert_digit(c2, 16);
-                if (d2 < 0) return false;
+                if (d2 < 0)
+                    return false;
                 result.push_back(16 * d1 + d2);
                 in += 2;
             }
@@ -863,11 +886,13 @@ static bool unescape_string_var(const wchar_t *in, wcstring *out) {
     result.reserve(out->size());
     bool prev_was_hex_encoded = false;
     for (wchar_t c = *in; c; c = *++in) {
-        if (c > 0x7F) return false;  // invalid character means we can't decode the string
+        if (c > 0x7F)
+            return false;  // invalid character means we can't decode the string
         if (c == '_') {
             int c1 = in[1];
             if (c1 == 0) {
-                if (prev_was_hex_encoded) break;
+                if (prev_was_hex_encoded)
+                    break;
                 return false;  // found unexpected escape char at end of string
             }
             if (c1 == '_') {
@@ -875,11 +900,14 @@ static bool unescape_string_var(const wchar_t *in, wcstring *out) {
                 in++;
             } else if (is_hex_digit(c1)) {
                 int c2 = in[2];
-                if (c2 == 0) return false;  // string ended prematurely
+                if (c2 == 0)
+                    return false;  // string ended prematurely
                 long d1 = convert_hex_digit(c1);
-                if (d1 < 0) return false;
+                if (d1 < 0)
+                    return false;
                 long d2 = convert_hex_digit(c2);
-                if (d2 < 0) return false;
+                if (d2 < 0)
+                    return false;
                 result.push_back(16 * d1 + d2);
                 in += 2;
                 prev_was_hex_encoded = true;
@@ -1015,7 +1043,8 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                                           (c == L'?' && no_qmark);
                     if (!char_is_normal) {
                         need_escape = true;
-                        if (escape_all) out += L'\\';
+                        if (escape_all)
+                            out += L'\\';
                     }
                     out += *in;
                     break;
@@ -1150,7 +1179,8 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_s
 
 /// Helper to return the last character in a string, or none.
 static maybe_t<wchar_t> string_last_char(const wcstring &str) {
-    if (str.empty()) return none();
+    if (str.empty())
+        return none();
     return str.back();
 }
 
@@ -1176,7 +1206,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             in_pos--;
 
             // It's an error, unless we're allowing incomplete escapes.
-            if (!allow_incomplete) errored = true;
+            if (!allow_incomplete)
+                errored = true;
             break;
         }
         // Numeric escape sequences. No prefix means octal escape, otherwise hexadecimal.
@@ -1209,7 +1240,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                     max_val = WCHAR_MAX;
 
                     // Don't exceed the largest Unicode code point - see #1107.
-                    if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
+                    if (0x10FFFF < max_val)
+                        max_val = static_cast<wchar_t>(0x10FFFF);
                     break;
                 }
                 case L'x': {
@@ -1310,7 +1342,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             break;
         }
         default: {
-            if (unescape_special) result->push_back(INTERNAL_SEPARATOR);
+            if (unescape_special)
+                result->push_back(INTERNAL_SEPARATOR);
             result_char_or_none = c;
             break;
         }
@@ -1319,7 +1352,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
     if (!errored && result_char_or_none.has_value()) {
         result->push_back(*result_char_or_none);
     }
-    if (errored) return none();
+    if (errored)
+        return none();
 
     return in_pos;
 }
@@ -1446,7 +1480,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                                 result[braces.back()] = L'{';
                                 // We also need to turn all spaces back.
                                 for (size_t i = braces.back() + 1; i < result.size(); i++) {
-                                    if (result[i] == BRACE_SPACE) result[i] = L' ';
+                                    if (result[i] == BRACE_SPACE)
+                                        result[i] = L' ';
                                 }
                                 to_append_or_none = L'}';
                             }
@@ -1621,7 +1656,8 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
             break;
         }
     }
-    if (!success) output->clear();
+    if (!success)
+        output->clear();
     return success;
 }
 
@@ -1647,7 +1683,8 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
             break;
         }
     }
-    if (!success) output->clear();
+    if (!success)
+        output->clear();
     return success;
 }
 
@@ -1859,9 +1896,12 @@ void redirect_tty_output() {
     if (fd == -1) {
         __fish_assert("Could not open /dev/null!", __FILE__, __LINE__, errno);
     }
-    if (tcgetattr(STDIN_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDIN_FILENO);
-    if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDOUT_FILENO);
-    if (tcgetattr(STDERR_FILENO, &t) == -1 && errno == EIO) dup2(fd, STDERR_FILENO);
+    if (tcgetattr(STDIN_FILENO, &t) == -1 && errno == EIO)
+        dup2(fd, STDIN_FILENO);
+    if (tcgetattr(STDOUT_FILENO, &t) == -1 && errno == EIO)
+        dup2(fd, STDOUT_FILENO);
+    if (tcgetattr(STDERR_FILENO, &t) == -1 && errno == EIO)
+        dup2(fd, STDERR_FILENO);
     close(fd);
 }
 
@@ -1887,18 +1927,23 @@ bool valid_var_name(const wcstring &str) {
 }
 
 bool valid_var_name(const wchar_t *str) {
-    if (str[0] == L'\0') return false;
+    if (str[0] == L'\0')
+        return false;
     for (size_t i = 0; str[i] != L'\0'; i++) {
-        if (!valid_var_name_char(str[i])) return false;
+        if (!valid_var_name_char(str[i]))
+            return false;
     }
     return true;
 }
 
 /// Test if the string is a valid function name.
 bool valid_func_name(const wcstring &str) {
-    if (str.empty()) return false;
-    if (str.at(0) == L'-') return false;
-    if (str.find_first_of(L'/') != wcstring::npos) return false;
+    if (str.empty())
+        return false;
+    if (str.at(0) == L'-')
+        return false;
+    if (str.find_first_of(L'/') != wcstring::npos)
+        return false;
     return true;
 }
 
@@ -1911,7 +1956,8 @@ std::string get_executable_path(const char *argv0) {
     // This is basically grabbing exec_path after argc, argv, envp, ...: for us
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buffSize = sizeof buff;
-    if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
+    if (_NSGetExecutablePath(buff, &buffSize) == 0)
+        return std::string(buff);
 #elif defined(__BSD__) && defined(KERN_PROC_PATHNAME) && !defined(__NetBSD__)
     // BSDs do not have /proc by default, (although it can be mounted as procfs via the Linux
     // compatibility layer). We can use sysctl instead: per sysctl(3), passing in a process ID of -1

@@ -25,7 +25,8 @@ const features_t::metadata_t features_t::metadata[features_t::flag_count] = {
 const struct features_t::metadata_t *features_t::metadata_for(const wchar_t *name) {
     assert(name && "null flag name");
     for (const auto &md : metadata) {
-        if (!std::wcscmp(name, md.name)) return &md;
+        if (!std::wcscmp(name, md.name))
+            return &md;
     }
     return nullptr;
 }
@@ -34,7 +35,8 @@ void features_t::set_from_string(const wcstring &str) {
     wcstring_list_t entries = split_string(str, L',');
     const wchar_t *whitespace = L"\t\n\v\f\r ";
     for (wcstring entry : entries) {
-        if (entry.empty()) continue;
+        if (entry.empty())
+            continue;
 
         // Trim leading and trailing whitespace
         entry.erase(0, entry.find_first_not_of(whitespace));

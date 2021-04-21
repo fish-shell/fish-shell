@@ -17,9 +17,12 @@ static tok_flags_t tokenizer_flags_from_parse_flags(parse_tree_flags_t flags) {
     tok_flags_t tok_flags = 0;
     // Note we do not need to respect parse_flag_show_blank_lines, no clients are interested in
     // them.
-    if (flags & parse_flag_include_comments) tok_flags |= TOK_SHOW_COMMENTS;
-    if (flags & parse_flag_accept_incomplete_tokens) tok_flags |= TOK_ACCEPT_UNFINISHED;
-    if (flags & parse_flag_continue_after_error) tok_flags |= TOK_CONTINUE_AFTER_ERROR;
+    if (flags & parse_flag_include_comments)
+        tok_flags |= TOK_SHOW_COMMENTS;
+    if (flags & parse_flag_accept_incomplete_tokens)
+        tok_flags |= TOK_ACCEPT_UNFINISHED;
+    if (flags & parse_flag_continue_after_error)
+        tok_flags |= TOK_CONTINUE_AFTER_ERROR;
     return tok_flags;
 }
 
@@ -293,7 +296,8 @@ const wchar_t *ast_type_to_string(type_t type) {
 
 /// Delete an untyped node.
 void node_deleter_t::operator()(node_t *n) {
-    if (!n) return;
+    if (!n)
+        return;
     switch (n->type) {
 #define ELEM(T)                \
     case type_t::T:            \
@@ -320,7 +324,8 @@ using enable_if_t = typename std::enable_if<B, T>::type;
 struct source_range_visitor_t {
     template <typename Node>
     enable_if_t<Node::Category == category_t::leaf> visit(const Node &node) {
-        if (node.unsourced) any_unsourced = true;
+        if (node.unsourced)
+            any_unsourced = true;
         // Union with our range.
         if (node.range.length > 0) {
             if (total.length == 0) {
@@ -350,7 +355,8 @@ struct source_range_visitor_t {
 maybe_t<source_range_t> node_t::try_source_range() const {
     source_range_visitor_t v;
     node_visitor(v).accept(this);
-    if (v.any_unsourced) return none();
+    if (v.any_unsourced)
+        return none();
     return v.total;
 }
 
@@ -623,7 +629,8 @@ class ast_t::populator_t {
 
         // Ignore additional parse errors while unwinding.
         // These may come about e.g. from `true | and`.
-        if (unwinding_) return;
+        if (unwinding_)
+            return;
         unwinding_ = true;
 
         FLOGF(ast_construction, L"%*sparse error - begin unwinding", spaces(), "");
@@ -765,7 +772,8 @@ class ast_t::populator_t {
     // overloading purposes.
     bool can_parse(job_conjunction_t *) {
         const auto &token = peek_token();
-        if (token.type != parse_token_type_t::string) return false;
+        if (token.type != parse_token_type_t::string)
+            return false;
         switch (peek_token().keyword) {
             case parse_keyword_t::kw_end:
             case parse_keyword_t::kw_else:
@@ -786,7 +794,8 @@ class ast_t::populator_t {
 
     bool can_parse(variable_assignment_t *) {
         // Do we have a variable assignment at all?
-        if (!peek_token(0).may_be_variable_assignment) return false;
+        if (!peek_token(0).may_be_variable_assignment)
+            return false;
 
         // What is the token after it?
         switch (peek_type(1)) {
@@ -1053,7 +1062,8 @@ class ast_t::populator_t {
 
     template <typename AstNode>
     unique_ptr<AstNode> try_parse() {
-        if (!can_parse((AstNode *)nullptr)) return nullptr;
+        if (!can_parse((AstNode *)nullptr))
+            return nullptr;
         return allocate_visit<AstNode>();
     }
 

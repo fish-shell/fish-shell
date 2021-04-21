@@ -145,7 +145,8 @@ static const struct lookup_entry signal_table[] = {
 
 /// Test if \c name is a string describing the signal named \c canonical.
 static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
-    if (wcsncasecmp(name, L"sig", const_strlen("sig")) == 0) name += 3;
+    if (wcsncasecmp(name, L"sig", const_strlen("sig")) == 0)
+        name += 3;
 
     return wcscasecmp(canonical + const_strlen("sig"), name) == 0;
 }
@@ -158,7 +159,8 @@ int wcs2sig(const wchar_t *str) {
     }
 
     int res = fish_wcstoi(str);
-    if (errno || res < 0) return -1;
+    if (errno || res < 0)
+        return -1;
     return res;
 }
 
@@ -284,7 +286,8 @@ void signal_reset_handlers() {
         if (data.signal == SIGHUP) {
             struct sigaction oact;
             sigaction(SIGHUP, nullptr, &oact);
-            if (oact.sa_handler == SIG_IGN) continue;
+            if (oact.sa_handler == SIG_IGN)
+                continue;
         }
         sigaction(data.signal, &act, nullptr);
     }
@@ -370,7 +373,8 @@ void signal_set_handlers_once(bool interactive) {
     std::call_once(s_noninter_once, signal_set_handlers, false);
 
     static std::once_flag s_inter_once;
-    if (interactive) std::call_once(s_inter_once, set_interactive_handlers);
+    if (interactive)
+        std::call_once(s_inter_once, set_interactive_handlers);
 }
 
 void signal_handle(int sig) {
@@ -396,8 +400,10 @@ void get_signals_with_handlers(sigset_t *set) {
         // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
         // We don't special case other signals because if they're being ignored that shouldn't
         // affect processes we spawn. They should get the default behavior for those signals.
-        if (data.signal == SIGHUP && act.sa_handler == SIG_IGN) continue;
-        if (act.sa_handler != SIG_DFL) sigaddset(set, data.signal);
+        if (data.signal == SIGHUP && act.sa_handler == SIG_IGN)
+            continue;
+        if (act.sa_handler != SIG_DFL)
+            sigaddset(set, data.signal);
     }
 }
 

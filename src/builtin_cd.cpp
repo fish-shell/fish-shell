@@ -27,7 +27,8 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
 
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -52,7 +53,8 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
         streams.err.append_format(_(L"%ls: The directory '%ls' does not exist\n"), cmd,
                                   dir_in.c_str());
 
-        if (!parser.is_interactive()) streams.err.append(parser.current_line());
+        if (!parser.is_interactive())
+            streams.err.append(parser.current_line());
 
         return STATUS_CMD_ERROR;
     }
@@ -74,7 +76,8 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
             // - if in another directory there was a *file* by the correct name
             // we prefer *that* error because it's more specific
             if (errno == ENOENT) {
-                if (!best_errno) best_errno = errno;
+                if (!best_errno)
+                    best_errno = errno;
                 continue;
             } else if (errno == ENOTDIR) {
                 best_errno = errno;

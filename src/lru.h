@@ -194,7 +194,8 @@ class lru_cache_t {
     // Evicts the node for a given key, returning true if a node was evicted.
     bool evict_node(const wcstring &key) {
         auto where = this->node_map.find(key);
-        if (where == this->node_map.end()) return false;
+        if (where == this->node_map.end())
+            return false;
         evict_node(&where->second);
         return true;
     }

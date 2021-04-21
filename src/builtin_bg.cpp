@@ -44,7 +44,8 @@ maybe_t<int> builtin_bg(parser_t &parser, io_streams_t &streams, const wchar_t *
 
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -86,7 +87,8 @@ maybe_t<int> builtin_bg(parser_t &parser, io_streams_t &streams, const wchar_t *
         pids.push_back(pid);
     }
 
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     // Background all existing jobs that match the pids.
     // Non-existent jobs aren't an error, but information about them is useful.

@@ -207,7 +207,8 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -217,7 +218,8 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
     std::shared_ptr<history_t> history = reader_get_history();
-    if (!history) history = history_t::with_name(history_session_id(parser.vars()));
+    if (!history)
+        history = history_t::with_name(history_session_id(parser.vars()));
 
     // If a history command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
@@ -238,10 +240,13 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
     const wcstring_list_t args(argv + optind, argv + argc);
 
     // Establish appropriate defaults.
-    if (opts.hist_cmd == HIST_UNDEF) opts.hist_cmd = HIST_SEARCH;
+    if (opts.hist_cmd == HIST_UNDEF)
+        opts.hist_cmd = HIST_SEARCH;
     if (!opts.history_search_type_defined) {
-        if (opts.hist_cmd == HIST_SEARCH) opts.search_type = history_search_type_t::contains_glob;
-        if (opts.hist_cmd == HIST_DELETE) opts.search_type = history_search_type_t::exact;
+        if (opts.hist_cmd == HIST_SEARCH)
+            opts.search_type = history_search_type_t::contains_glob;
+        if (opts.hist_cmd == HIST_DELETE)
+            opts.search_type = history_search_type_t::exact;
     }
 
     int status = STATUS_CMD_OK;

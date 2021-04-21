@@ -62,9 +62,12 @@ enum {
 };
 
 static int get_arity(const int type) {
-    if (type == TE_FUNCTION3) return 3;
-    if (type == TE_FUNCTION2) return 2;
-    if (type == TE_FUNCTION1) return 1;
+    if (type == TE_FUNCTION3)
+        return 3;
+    if (type == TE_FUNCTION2)
+        return 2;
+    if (type == TE_FUNCTION1)
+        return 1;
     return 0;
 }
 
@@ -124,7 +127,8 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
 }
 
 static void te_free_parameters(te_expr *n) {
-    if (!n) return;
+    if (!n)
+        return;
     int arity = get_arity(n->type);
     // Free all parameters from the back to the front.
     while (arity > 0) {
@@ -134,7 +138,8 @@ static void te_free_parameters(te_expr *n) {
 }
 
 void te_free(te_expr *n) {
-    if (!n) return;
+    if (!n)
+        return;
     te_free_parameters(n);
     free(n);
 }
@@ -144,25 +149,32 @@ static constexpr double tau() { return 2 * M_PI; }
 static constexpr double e() { return M_E; }
 
 static double fac(double a) { /* simplest version of fac */
-    if (a < 0.0) return NAN;
-    if (a > UINT_MAX) return INFINITY;
+    if (a < 0.0)
+        return NAN;
+    if (a > UINT_MAX)
+        return INFINITY;
     auto ua = static_cast<unsigned int>(a);
     unsigned long int result = 1, i;
     for (i = 1; i <= ua; i++) {
-        if (i > ULONG_MAX / result) return INFINITY;
+        if (i > ULONG_MAX / result)
+            return INFINITY;
         result *= i;
     }
     return static_cast<double>(result);
 }
 
 static double ncr(double n, double r) {
-    if (n < 0.0 || r < 0.0 || n < r) return NAN;
-    if (n > UINT_MAX || r > UINT_MAX) return INFINITY;
+    if (n < 0.0 || r < 0.0 || n < r)
+        return NAN;
+    if (n > UINT_MAX || r > UINT_MAX)
+        return INFINITY;
     unsigned long int un = static_cast<unsigned int>(n), ur = static_cast<unsigned int>(r), i;
     unsigned long int result = 1;
-    if (ur > un / 2) ur = un - ur;
+    if (ur > un / 2)
+        ur = un - ur;
     for (i = 1; i <= ur; i++) {
-        if (result > ULONG_MAX / (un - ur + i)) return INFINITY;
+        if (result > ULONG_MAX / (un - ur + i))
+            return INFINITY;
         result *= un - ur + i;
         result /= i;
     }
@@ -184,16 +196,22 @@ static constexpr double bit_xor(double a, double b) {
 }
 
 static double max(double a, double b) {
-    if (std::isnan(a)) return a;
-    if (std::isnan(b)) return b;
-    if (a == b) return std::signbit(a) ? b : a;  // treat +0 as larger than -0
+    if (std::isnan(a))
+        return a;
+    if (std::isnan(b))
+        return b;
+    if (a == b)
+        return std::signbit(a) ? b : a;  // treat +0 as larger than -0
     return a > b ? a : b;
 }
 
 static double min(double a, double b) {
-    if (std::isnan(a)) return a;
-    if (std::isnan(b)) return b;
-    if (a == b) return std::signbit(a) ? a : b;  // treat -0 as smaller than +0
+    if (std::isnan(a))
+        return a;
+    if (std::isnan(b))
+        return b;
+    if (a == b)
+        return std::signbit(a) ? a : b;  // treat -0 as smaller than +0
     return a < b ? a : b;
 }
 
@@ -483,7 +501,8 @@ static te_expr *power(state *s) {
     /* <power>     =    {("-" | "+")} <base> */
     int sign = 1;
     while (s->type == TOK_INFIX && (s->function == add || s->function == sub)) {
-        if (s->function == sub) sign = -sign;
+        if (s->function == sub)
+            sign = -sign;
         next_token(s);
     }
 
@@ -561,7 +580,8 @@ static te_expr *expr(state *s) {
 #define M(e) te_eval(n->parameters[e])
 
 double te_eval(const te_expr *n) {
-    if (!n) return NAN;
+    if (!n)
+        return NAN;
 
     switch (n->type) {
         case TE_CONSTANT:
@@ -584,7 +604,8 @@ double te_eval(const te_expr *n) {
 
 static void optimize(te_expr *n) {
     /* Evaluates as much as possible. */
-    if (n->type == TE_CONSTANT) return;
+    if (n->type == TE_CONSTANT)
+        return;
 
     const int arity = get_arity(n->type);
     bool known = true;
@@ -628,7 +649,8 @@ te_expr *te_compile(const wchar_t *expression, te_error_t *error) {
         return nullptr;
     } else {
         optimize(root);
-        if (error) error->position = 0;
+        if (error)
+            error->position = 0;
         return root;
     }
 }

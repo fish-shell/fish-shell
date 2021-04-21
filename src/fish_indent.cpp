@@ -242,7 +242,8 @@ struct pretty_printer_t {
     // Return the gap ranges from our ast.
     std::vector<source_range_t> compute_gaps() const {
         auto range_compare = [](source_range_t r1, source_range_t r2) {
-            if (r1.start != r2.start) return r1.start < r2.start;
+            if (r1.start != r2.start)
+                return r1.start < r2.start;
             return r1.length < r2.length;
         };
         // Collect the token ranges into a list.
@@ -250,7 +251,8 @@ struct pretty_printer_t {
         for (const node_t &node : ast) {
             if (node.category == category_t::leaf) {
                 auto r = node.source_range();
-                if (r.length > 0) tok_ranges.push_back(r);
+                if (r.length > 0)
+                    tok_ranges.push_back(r);
             }
         }
         // Place a zero length range at end to aid in our inverting.
@@ -297,7 +299,8 @@ struct pretty_printer_t {
 
             // If there is no and-or tail then we always use a newline.
             if (andors && andors->count() > 0) {
-                if (condition) mark_semi_from_input(*condition);
+                if (condition)
+                    mark_semi_from_input(*condition);
                 // Mark all but last of the andor list.
                 for (uint32_t i = 0; i + 1 < andors->count(); i++) {
                     mark_semi_from_input(andors->at(i)->job.semi_nl);
@@ -315,11 +318,13 @@ struct pretty_printer_t {
                     prev_job_semi_nl = job.semi_nl.contents.get();
 
                     // Is this an 'and' or 'or' job?
-                    if (!job.decorator) continue;
+                    if (!job.decorator)
+                        continue;
 
                     // Now see if we want to mark 'prev' as allowing a semi.
                     // Did we have a previous semi_nl which was a newline?
-                    if (!prev || substr(prev->range) != L";") continue;
+                    if (!prev || substr(prev->range) != L";")
+                        continue;
 
                     // Is there a newline between them?
                     assert(prev->range.start <= job.decorator->range.start &&
@@ -370,7 +375,8 @@ struct pretty_printer_t {
     bool emit_gap_text(source_range_t range, gap_flags_t flags) {
         wcstring gap_text = substr(range);
         // Common case: if we are only spaces, do nothing.
-        if (gap_text.find_first_not_of(L' ') == wcstring::npos) return false;
+        if (gap_text.find_first_not_of(L' ') == wcstring::npos)
+            return false;
 
         // Look to see if there is an escaped newline.
         // Emit it if either we allow it, or it comes before the first comment.
@@ -404,11 +410,13 @@ struct pretty_printer_t {
             if (needs_nl) {
                 emit_newline();
                 needs_nl = false;
-                if (tok_text == L"\n") continue;
+                if (tok_text == L"\n")
+                    continue;
             } else if (gap_text_mask_newline) {
                 // We only respect mask_newline the first time through the loop.
                 gap_text_mask_newline = false;
-                if (tok_text == L"\n") continue;
+                if (tok_text == L"\n")
+                    continue;
             }
 
             if (tok->type == token_type_t::comment) {
@@ -430,7 +438,8 @@ struct pretty_printer_t {
                 DIE("Gap text should only have comments and newlines");
             }
         }
-        if (needs_nl) emit_newline();
+        if (needs_nl)
+            emit_newline();
         return needs_nl;
     }
 
@@ -474,7 +483,8 @@ struct pretty_printer_t {
             // end
             // Here the comment is the gap text before the end, but we want the indent from the
             // command.
-            if (range.start < indents.size()) current_indent = indents.at(range.start);
+            if (range.start < indents.size())
+                current_indent = indents.at(range.start);
 
             // If this range contained an error, append the gap text without modification.
             // For example in: echo foo "

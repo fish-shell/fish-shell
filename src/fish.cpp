@@ -431,7 +431,8 @@ int main(int argc, char **argv) {
     // --debug-output takes precedence, otherwise $FISH_DEBUG_OUTPUT is used.
     if (opts.debug_output.empty()) {
         const char *var = getenv("FISH_DEBUG_OUTPUT");
-        if (var) opts.debug_output = var;
+        if (var)
+            opts.debug_output = var;
     }
 
     FILE *debug_output = nullptr;
@@ -454,10 +455,14 @@ int main(int argc, char **argv) {
     }
 
     // Apply our options.
-    if (opts.is_login) mark_login();
-    if (opts.no_exec) mark_no_exec();
-    if (opts.is_interactive_session) set_interactive_session(true);
-    if (opts.enable_private_mode) start_private_mode(env_stack_t::globals());
+    if (opts.is_login)
+        mark_login();
+    if (opts.no_exec)
+        mark_no_exec();
+    if (opts.is_interactive_session)
+        set_interactive_session(true);
+    if (opts.enable_private_mode)
+        start_private_mode(env_stack_t::globals());
 
     // Only save (and therefore restore) the fg process group if we are interactive. See issues
     // #197 and #1002.

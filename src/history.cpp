@@ -110,10 +110,12 @@ class time_profiler_t {
 /// \return the path for the history file for the given \p session_id, or none() if it could not be
 /// loaded. If suffix is provided, append that suffix to the path; this is used for temporary files.
 maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &suffix = {}) {
-    if (session_id.empty()) return none();
+    if (session_id.empty())
+        return none();
 
     wcstring result;
-    if (!path_get_data(result)) return none();
+    if (!path_get_data(result))
+        return none();
 
     result.append(L"/");
     result.append(session_id);
@@ -126,7 +128,8 @@ maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &s
 /// Returns true on success, false on failure.
 bool history_file_lock(int fd, int lock_type) {
     static std::atomic<bool> do_locking(true);
-    if (!do_locking) return false;
+    if (!do_locking)
+        return false;
 
     double start_time = timef();
     int retval = flock(fd, lock_type);
@@ -154,7 +157,8 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item
     /// Function to add a history item.
     void add_item(history_item_t item) {
         // Skip empty items.
-        if (item.empty()) return;
+        if (item.empty())
+            return;
 
         // See if it's in the cache. If it is, update the timestamp. If not, we create a new node
         // and add it. Note that calling get_node promotes the node to the front.
@@ -217,13 +221,16 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
         }
         case history_search_type_t::contains_glob: {
             wcstring wcpattern1 = parse_util_unescape_wildcards(term);
-            if (wcpattern1.front() != ANY_STRING) wcpattern1.insert(0, 1, ANY_STRING);
-            if (wcpattern1.back() != ANY_STRING) wcpattern1.push_back(ANY_STRING);
+            if (wcpattern1.front() != ANY_STRING)
+                wcpattern1.insert(0, 1, ANY_STRING);
+            if (wcpattern1.back() != ANY_STRING)
+                wcpattern1.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern1);
         }
         case history_search_type_t::prefix_glob: {
             wcstring wcpattern2 = parse_util_unescape_wildcards(term);
-            if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
+            if (wcpattern2.back() != ANY_STRING)
+                wcpattern2.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern2);
         }
         case history_search_type_t::match_everything: {
@@ -396,7 +403,8 @@ void history_impl_t::add(history_item_t &&item, bool pending, bool do_save) {
         // We have to add a new item.
         new_items.push_back(item);
         this->has_pending_item = pending;
-        if (do_save) save_unless_disabled();
+        if (do_save)
+            save_unless_disabled();
     }
 }
 
@@ -488,7 +496,8 @@ void history_impl_t::get_history(wcstring_list_t &result) {
             continue;
         }
 
-        if (seen.insert(iter->str()).second) result.push_back(iter->str());
+        if (seen.insert(iter->str()).second)
+            result.push_back(iter->str());
     }
 
     // Append old items.
@@ -496,13 +505,15 @@ void history_impl_t::get_history(wcstring_list_t &result) {
     for (auto iter = old_item_offsets.crbegin(); iter != old_item_offsets.crend(); ++iter) {
         size_t offset = *iter;
         const history_item_t item = file_contents->decode_item(offset);
-        if (seen.insert(item.str()).second) result.push_back(item.str());
+        if (seen.insert(item.str()).second)
+            result.push_back(item.str());
     }
 }
 
 size_t history_impl_t::size() {
     size_t new_item_count = new_items.size();
-    if (this->has_pending_item && new_item_count > 0) new_item_count -= 1;
+    if (this->has_pending_item && new_item_count > 0)
+        new_item_count -= 1;
     load_old_if_needed();
     size_t old_item_count = old_item_offsets.size();
     return new_item_count + old_item_count;
@@ -584,7 +595,8 @@ void history_impl_t::populate_from_file_contents() {
 }
 
 void history_impl_t::load_old_if_needed() {
-    if (loaded_old) return;
+    if (loaded_old)
+        return;
     loaded_old = true;
 
     time_profiler_t profiler("load_old");  //!OCLINT(side-effect)
@@ -602,10 +614,12 @@ void history_impl_t::load_old_if_needed() {
             // is unlikely because we only treat an item as valid if it has a terminating newline.
             //
             // Simulate a failing lock in chaos_mode.
-            if (!history_t::chaos_mode) history_file_lock(fd, LOCK_SH);
+            if (!history_t::chaos_mode)
+                history_file_lock(fd, LOCK_SH);
             file_contents = history_file_contents_t::create(fd);
             this->history_file_id = file_contents ? file_id_for_fd(fd) : kInvalidFileID;
-            if (!history_t::chaos_mode) history_file_lock(fd, LOCK_UN);
+            if (!history_t::chaos_mode)
+                history_file_lock(fd, LOCK_UN);
 
             time_profiler_t profiler("populate_from_file_contents");  //!OCLINT(side-effect)
             this->populate_from_file_contents();
@@ -617,7 +631,8 @@ bool history_search_t::go_backwards() {
     // Backwards means increasing our index.
     const auto max_index = static_cast<size_t>(-1);
 
-    if (current_index_ == max_index) return false;
+    if (current_index_ == max_index)
+        return false;
 
     size_t index = current_index_;
     while (++index < max_index) {
@@ -668,7 +683,8 @@ void history_impl_t::compact_new_items() {
         const history_item_t &item = new_items[idx];
 
         // Only compact persisted items.
-        if (!item.should_write_to_disk()) continue;
+        if (!item.should_write_to_disk())
+            continue;
 
         if (!seen.insert(item.contents).second) {
             // This item was not inserted because it was already in the set, so delete the item at
@@ -741,7 +757,8 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     for (const auto key_item : lru) {
         append_history_item_to_buffer(key_item.second, &buffer);
         err = flush_to_fd(&buffer, dst_fd, HISTORY_OUTPUT_BUFFER_SIZE);
-        if (err) break;
+        if (err)
+            break;
     }
     if (!err) {
         err = flush_to_fd(&buffer, dst_fd, 0);
@@ -915,7 +932,8 @@ bool history_impl_t::save_internal_via_appending() {
         // by writing with O_APPEND.
         //
         // Simulate a failing lock in chaos_mode
-        if (!history_t::chaos_mode) history_file_lock(fd.fd(), LOCK_EX);
+        if (!history_t::chaos_mode)
+            history_file_lock(fd.fd(), LOCK_EX);
         const file_id_t file_id = file_id_for_fd(fd.fd());
         if (file_id_for_path(history_path) == file_id) {
             // File IDs match, so the file we opened is still at that path
@@ -958,7 +976,8 @@ bool history_impl_t::save_internal_via_appending() {
             if (item.should_write_to_disk()) {
                 append_history_item_to_buffer(item, &buffer);
                 err = flush_to_fd(&buffer, history_fd.fd(), HISTORY_OUTPUT_BUFFER_SIZE);
-                if (err) break;
+                if (err)
+                    break;
             }
             // We wrote or skipped this item, hooray.
             first_unwritten_new_item_index++;
@@ -990,7 +1009,8 @@ bool history_impl_t::save_internal_via_appending() {
 /// Save the specified mode to file; optionally also vacuums.
 void history_impl_t::save(bool vacuum) {
     // Nothing to do if there's no new items.
-    if (first_unwritten_new_item_index >= new_items.size() && deleted_items.empty()) return;
+    if (first_unwritten_new_item_index >= new_items.size() && deleted_items.empty())
+        return;
 
     if (!history_filename(name).has_value()) {
         // We're in the "incognito" mode. Pretend we've saved the history.
@@ -1068,7 +1088,8 @@ bool history_impl_t::is_default() const { return name == DFLT_FISH_HISTORY_SESSI
 
 bool history_impl_t::is_empty() {
     // If we have new items, we're not empty.
-    if (!new_items.empty()) return false;
+    if (!new_items.empty())
+        return false;
 
     bool empty = false;
     if (loaded_old) {
@@ -1137,34 +1158,44 @@ void history_impl_t::populate_from_config_path() {
 
 /// Decide whether we ought to import a bash history line into fish. This is a very crude heuristic.
 static bool should_import_bash_history_line(const wcstring &line) {
-    if (line.empty()) return false;
+    if (line.empty())
+        return false;
 
     // The following are Very naive tests!
 
     // Skip comments.
-    if (line[0] == '#') return false;
+    if (line[0] == '#')
+        return false;
 
     // Skip lines with backticks because we don't have that syntax,
     // Skip brace expansions and globs because they don't work like ours
     // Skip lines with literal tabs since we don't handle them well and we don't know what they
     // mean. It could just be whitespace or it's actually passed somewhere (like e.g. `sed`).
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
-    if (line.find_first_of(L"`{*\t\\") != std::string::npos) return false;
+    if (line.find_first_of(L"`{*\t\\") != std::string::npos)
+        return false;
 
     // Skip lines with [[...]] and ((...)) since we don't handle those constructs.
-    if (line.find(L"[[") != std::string::npos) return false;
-    if (line.find(L"]]") != std::string::npos) return false;
-    if (line.find(L"((") != std::string::npos) return false;
-    if (line.find(L"))") != std::string::npos) return false;
+    if (line.find(L"[[") != std::string::npos)
+        return false;
+    if (line.find(L"]]") != std::string::npos)
+        return false;
+    if (line.find(L"((") != std::string::npos)
+        return false;
+    if (line.find(L"))") != std::string::npos)
+        return false;
     // "<<" here is a proxy for heredocs (and herestrings).
-    if (line.find(L"<<") != std::string::npos) return false;
+    if (line.find(L"<<") != std::string::npos)
+        return false;
 
-    if (ast::ast_t::parse(line).errored()) return false;
+    if (ast::ast_t::parse(line).errored())
+        return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     parse_error_list_t errors;
     parse_util_detect_errors(line, &errors);
-    if (!errors.empty()) return false;
+    if (!errors.empty())
+        return false;
 
     return true;
 }
@@ -1191,9 +1222,11 @@ void history_impl_t::populate_from_bash(FILE *stream) {
 
             // Deal with the newline if present.
             char *a_newline = std::strchr(buff, '\n');
-            if (a_newline) *a_newline = '\0';
+            if (a_newline)
+                *a_newline = '\0';
             line.append(buff);
-            if (a_newline) break;
+            if (a_newline)
+                break;
         }
 
         wcstring wide_line = trim(str2wcstring(line));
@@ -1439,7 +1472,8 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
 
     // The function we use to act on each item.
     std::function<bool(const history_item_t &item)> func = [&](const history_item_t &item) -> bool {
-        if (remaining == 0) return false;
+        if (remaining == 0)
+            return false;
         remaining -= 1;
         format_history_record(item, show_time_format, null_terminate, &formatted_record);
         if (reverse) {

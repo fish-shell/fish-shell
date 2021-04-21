@@ -75,7 +75,8 @@ static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
     } else {
         wchar_t prev = 0;
         for (; str < end; str++) {
-            if (((*str == L'*') || (*str == L'?' && qmark_is_wild)) && (prev != L'\\')) return true;
+            if (((*str == L'*') || (*str == L'?' && qmark_is_wild)) && (prev != L'\\'))
+                return true;
             prev = *str;
         }
     }
@@ -228,7 +229,8 @@ static wildcard_result_t wildcard_complete_internal(const wchar_t *const str, si
     if (next_wc_char_pos == wcstring::npos) {
         // Try matching.
         maybe_t<string_fuzzy_match_t> match = string_fuzzy_match_string(wc, str);
-        if (!match) return wildcard_result_t::no_match;
+        if (!match)
+            return wildcard_result_t::no_match;
 
         // If we're not allowing fuzzy match, then we require a prefix match.
         bool needs_prefix_match = !(params.expand_flags & expand_flag::fuzzy_match);
@@ -434,8 +436,10 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
             return COMPLETE_SYMLINK_DESC;
         }
 
-        if (err == ENOENT) return COMPLETE_ROTTEN_SYMLINK_DESC;
-        if (err == ELOOP) return COMPLETE_LOOP_SYMLINK_DESC;
+        if (err == ENOENT)
+            return COMPLETE_ROTTEN_SYMLINK_DESC;
+        if (err == ELOOP)
+            return COMPLETE_LOOP_SYMLINK_DESC;
         // On unknown errors we do nothing. The file will be given the default 'File'
         // description or one based on the suffix.
     } else if (S_ISCHR(buf.st_mode)) {
@@ -510,7 +514,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         desc = file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
 
         if (file_size >= 0) {
-            if (!desc.empty()) desc.append(L", ");
+            if (!desc.empty())
+                desc.append(L", ");
             desc.append(format_size(file_size));
         }
     }
@@ -651,7 +656,8 @@ class wildcard_expander_t {
         append_path_component(abs_path, filepath);
 
         // We must normalize the path to allow 'cd ..' to operate on logical paths.
-        if (flags & expand_flag::special_for_cd) abs_path = normalize_path(abs_path);
+        if (flags & expand_flag::special_for_cd)
+            abs_path = normalize_path(abs_path);
 
         size_t before = this->resolved_completions->size();
         if (wildcard_test_flags_then_complete(abs_path, filename, wildcard.c_str(), this->flags,
@@ -809,7 +815,8 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
         // Skip cases that don't match or match exactly. The match-exactly case was handled directly
         // in expand().
         const maybe_t<string_fuzzy_match_t> match = string_fuzzy_match_string(wc_segment, name_str);
-        if (!match || match->is_samecase_exact()) continue;
+        if (!match || match->is_samecase_exact())
+            continue;
 
         wcstring new_full_path = base_dir + name_str;
         new_full_path.push_back(L'/');

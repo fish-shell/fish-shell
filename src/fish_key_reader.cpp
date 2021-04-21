@@ -54,12 +54,14 @@ static bool should_exit(wchar_t wc) {
     recent_chars[2] = recent_chars[3];
     recent_chars[3] = c;
     if (c == shell_modes.c_cc[VINTR]) {
-        if (recent_chars[2] == shell_modes.c_cc[VINTR]) return true;
+        if (recent_chars[2] == shell_modes.c_cc[VINTR])
+            return true;
         std::fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VINTR] + 0x40);
         return false;
     }
     if (c == shell_modes.c_cc[VEOF]) {
-        if (recent_chars[2] == shell_modes.c_cc[VEOF]) return true;
+        if (recent_chars[2] == shell_modes.c_cc[VEOF])
+            return true;
         std::fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
         return false;
     }
@@ -210,7 +212,8 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
     double now = timef();
     long long int delta_tstamp_us = 1000000 * (now - prev_tstamp);
 
-    if (delta_tstamp_us >= 200000 && first_char_seen) std::fputwc(L'\n', stderr);
+    if (delta_tstamp_us >= 200000 && first_char_seen)
+        std::fputwc(L'\n', stderr);
     if (delta_tstamp_us >= 1000000) {
         std::fwprintf(stderr, L"              ");
     } else {
@@ -323,7 +326,8 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
         }
     }
 
-    if (error) return false;
+    if (error)
+        return false;
 
     argc -= optind;
     if (argc != 0) {
@@ -338,7 +342,8 @@ int main(int argc, char **argv) {
     program_name = L"fish_key_reader";
     bool continuous_mode = false;
 
-    if (!parse_flags(argc, argv, &continuous_mode)) return 1;
+    if (!parse_flags(argc, argv, &continuous_mode))
+        return 1;
 
     if (!isatty(STDIN_FILENO)) {
         std::fwprintf(stderr, L"Stdin must be attached to a tty.\n");

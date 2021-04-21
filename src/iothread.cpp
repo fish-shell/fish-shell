@@ -322,12 +322,14 @@ void iothread_service_main() {
     // Perform each completion in order.
     for (const void_function_t &func : queue.completions) {
         // ensure we don't invoke empty functions, that raises an exception
-        if (func) func();
+        if (func)
+            func();
     }
 
     // Perform each main thread request.
     for (const void_function_t &func : queue.requests) {
-        if (func) func();
+        if (func)
+            func();
     }
 }
 

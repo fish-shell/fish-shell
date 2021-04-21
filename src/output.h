@@ -45,7 +45,8 @@ class outputter_t {
 
     /// Flush output, if we have a set fd and our buffering count is 0.
     void maybe_flush() {
-        if (fd_ >= 0 && buffer_count_ == 0) flush_to(fd_);
+        if (fd_ >= 0 && buffer_count_ == 0)
+            flush_to(fd_);
     }
 
    public:

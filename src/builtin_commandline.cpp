@@ -102,7 +102,8 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
         wcstring buff(begin, end - begin);
         tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED);
         while (auto token = tok.next()) {
-            if ((cut_at_cursor) && (token->offset + token->length >= pos)) break;
+            if ((cut_at_cursor) && (token->offset + token->length >= pos))
+                break;
 
             if (token->type == token_type_t::string) {
                 wcstring tmp = tok.text_of(*token);
@@ -303,7 +304,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 // Don't enqueue a repaint if we're currently in the middle of one,
                 // because that's an infinite loop.
                 if (mc == rl::repaint_mode || mc == rl::force_repaint || mc == rl::repaint) {
-                    if (ld.is_repaint) continue;
+                    if (ld.is_repaint)
+                        continue;
                 }
 
                 // HACK: Execute these right here and now so they can affect any insertions/changes

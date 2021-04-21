@@ -197,7 +197,8 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -335,7 +336,8 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
             return STATUS_CMD_ERROR;
         }
 
-        if (function_copy(current_func, new_func)) return STATUS_CMD_OK;
+        if (function_copy(current_func, new_func))
+            return STATUS_CMD_OK;
         return STATUS_CMD_ERROR;
     }
 
@@ -345,7 +347,8 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
             res++;
         } else {
             if (!opts.query) {
-                if (i != optind) streams.out.append(L"\n");
+                if (i != optind)
+                    streams.out.append(L"\n");
                 const wchar_t *funcname = argv[i];
                 if (!opts.no_metadata) {
                     report_function_metadata(funcname, opts.verbose, streams, parser, true);

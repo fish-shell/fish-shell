@@ -316,14 +316,16 @@ void job_t::mark_constructed() {
 
 bool job_t::has_internal_proc() const {
     for (const auto &p : processes) {
-        if (p->is_internal()) return true;
+        if (p->is_internal())
+            return true;
     }
     return false;
 }
 
 bool job_t::has_external_proc() const {
     for (const auto &p : processes) {
-        if (!p->is_internal()) return true;
+        if (!p->is_internal())
+            return true;
     }
     return false;
 }
@@ -333,7 +335,8 @@ bool job_t::has_external_proc() const {
 static owning_lock<std::vector<pid_t>> s_disowned_pids;
 
 void add_disowned_job(const job_t *j) {
-    if (j == nullptr) return;
+    if (j == nullptr)
+        return;
 
     // Never add our own (or an invalid) pgid as it is not unique to only
     // one job, and may result in a deadlock if we attempt the wait.
@@ -383,7 +386,8 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     generation_list_t reapgens = generation_list_t::invalids();
     for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
-            if (!j->can_reap(proc)) continue;
+            if (!j->can_reap(proc))
+                continue;
 
             if (proc->pid > 0) {
                 // Reaps with a pid.
@@ -411,20 +415,23 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             // Does this proc have a pid that is reapable?
-            if (proc->pid <= 0 || !j->can_reap(proc)) continue;
+            if (proc->pid <= 0 || !j->can_reap(proc))
+                continue;
 
             // Always update the signal hup/int gen.
             proc->gens_.sighupint = reapgens.sighupint;
 
             // Nothing to do if we did not get a new sigchld.
-            if (proc->gens_.sigchld == reapgens.sigchld) continue;
+            if (proc->gens_.sigchld == reapgens.sigchld)
+                continue;
             proc->gens_.sigchld = reapgens.sigchld;
 
             // Ok, we are reapable. Run waitpid()!
             int statusv = -1;
             pid_t pid = waitpid(proc->pid, &statusv, WNOHANG | WUNTRACED | WCONTINUED);
             assert((pid <= 0 || pid == proc->pid) && "Unexpcted waitpid() return");
-            if (pid <= 0) continue;
+            if (pid <= 0)
+                continue;
 
             // The process has stopped or exited! Update its status.
             proc_status_t status = proc_status_t::from_waitpid(statusv);
@@ -451,17 +458,20 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             // Does this proc have an internal process that is reapable?
-            if (!proc->internal_proc_ || !j->can_reap(proc)) continue;
+            if (!proc->internal_proc_ || !j->can_reap(proc))
+                continue;
 
             // Always update the signal hup/int gen.
             proc->gens_.sighupint = reapgens.sighupint;
 
             // Nothing to do if we did not get a new internal exit.
-            if (proc->gens_.internal_exit == reapgens.internal_exit) continue;
+            if (proc->gens_.internal_exit == reapgens.internal_exit)
+                continue;
             proc->gens_.internal_exit = reapgens.internal_exit;
 
             // Has the process exited?
-            if (!proc->internal_proc_->exited()) continue;
+            if (!proc->internal_proc_->exited())
+                continue;
 
             // The process gets the status from its internal proc.
             handle_child_status(j, proc.get(), proc->internal_proc_->get_status());
@@ -553,7 +563,8 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
     }
 
     int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
-    if (proc_is_job) j->mut_flags().notified = true;
+    if (proc_is_job)
+        j->mut_flags().notified = true;
 
     // Handle signals other than SIGPIPE.
     // Always report crashes.
@@ -582,15 +593,18 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
 /// \return whether this job wants a status message printed when it stops or completes.
 static bool job_wants_message(const shared_ptr<job_t> &j) {
     // Did we already print a status message?
-    if (j->flags().notified) return false;
+    if (j->flags().notified)
+        return false;
 
     // Do we just skip notifications?
-    if (j->skip_notification()) return false;
+    if (j->skip_notification())
+        return false;
 
     // Are we foreground?
     // The idea here is to not print status messages for jobs that execute in the foreground (i.e.
     // without & and without being `bg`).
-    if (j->is_foreground()) return false;
+    if (j->is_foreground())
+        return false;
 
     return true;
 }
@@ -630,7 +644,8 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
     // Print status messages for completed or stopped jobs.
     for (const auto &j : parser.jobs()) {
-        if (!should_process_job(j)) continue;
+        if (!should_process_job(j))
+            continue;
 
         // Clean processes within the job.
         // Note this may print the message on behalf of the job, affecting the result of
@@ -699,8 +714,10 @@ bool job_reap(parser_t &parser, bool allow_interactive) {
 
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
-    if (!have_proc_stat()) return 0;
-    if (p->pid <= 0) return 0;
+    if (!have_proc_stat())
+        return 0;
+    if (p->pid <= 0)
+        return 0;
 
     char state;
     int pid, ppid, pgrp, session, tty_nr, tpgid, exit_signal, processor;
@@ -716,7 +733,8 @@ unsigned long proc_get_jiffies(process_t *p) {
     std::snprintf(fn, FN_SIZE, "/proc/%d/stat", p->pid);
     // Don't use autoclose_fd here, we will fdopen() and then fclose() instead.
     int fd = open_cloexec(fn, O_RDONLY);
-    if (fd < 0) return 0;
+    if (fd < 0)
+        return 0;
 
     // TODO: replace the use of fscanf() as it is brittle and should never be used.
     FILE *f = fdopen(fd, "r");
@@ -732,7 +750,8 @@ unsigned long proc_get_jiffies(process_t *p) {
                        &startcode, &endcode, &startstack, &kstkesp, &kstkeip, &signal, &blocked,
                        &sigignore, &sigcatch, &wchan, &nswap, &cnswap, &exit_signal, &processor);
     fclose(f);
-    if (count < 17) return 0;
+    if (count < 17)
+        return 0;
     return utime + stime + cutime + cstime;
 }
 
@@ -771,7 +790,8 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
         make_fd_blocking(STDIN_FILENO);
         if (jg->tmodes.has_value()) {
             int res = tcsetattr(STDIN_FILENO, TCSADRAIN, &jg->tmodes.value());
-            if (res < 0) wperror(L"tcsetattr");
+            if (res < 0)
+                wperror(L"tcsetattr");
         }
     }
 
@@ -906,7 +926,8 @@ static bool terminal_return_from_job_group(job_group_t *jg) {
 
     FLOG(proc_pgroup, "fish reclaiming terminal after job pgid", *pgid);
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
-        if (errno == ENOTTY) redirect_tty_output();
+        if (errno == ENOTTY)
+            redirect_tty_output();
         FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
         return false;
@@ -916,7 +937,8 @@ static bool terminal_return_from_job_group(job_group_t *jg) {
     struct termios tmodes {};
     if (tcgetattr(STDIN_FILENO, &tmodes)) {
         // If it's not a tty, it's not a tty, and there are no attributes to save (or restore)
-        if (errno == ENOTTY) return false;
+        if (errno == ENOTTY)
+            return false;
         FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
         return false;
@@ -937,7 +959,8 @@ void job_t::continue_job(parser_t &parser, bool in_foreground) {
     mut_flags().notified = false;
 
     int pgid = -2;
-    if (auto tmp = get_pgid()) pgid = *tmp;
+    if (auto tmp = get_pgid())
+        pgid = *tmp;
 
     // We must send_sigcont if the job is stopped.
     bool send_sigcont = this->is_stopped();

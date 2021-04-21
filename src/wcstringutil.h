@@ -85,7 +85,8 @@ struct string_fuzzy_match_t {
     // \return if our match requires a full replacement, i.e. is not a strict extension of our
     // existing string. This is false only if our case matches, and our type is prefix or exact.
     bool requires_full_replacement() const {
-        if (case_fold != case_fold_t::samecase) return true;
+        if (case_fold != case_fold_t::samecase)
+            return true;
         switch (type) {
             case contain_type_t::exact:
             case contain_type_t::prefix:
@@ -150,7 +151,8 @@ inline wcstring to_string(int x) { return to_string(static_cast<long>(x)); }
 inline wcstring to_string(size_t x) { return to_string(static_cast<unsigned long long>(x)); }
 
 inline bool bool_from_string(const std::string &x) {
-    if (x.empty()) return false;
+    if (x.empty())
+        return false;
     switch (x.front()) {
         case 'Y':
         case 'T':
@@ -240,14 +242,16 @@ bool wcs2string_callback(const wchar_t *input, size_t len, const Func &func) {
             // do nothing
         } else if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
             converted[0] = wc - ENCODE_DIRECT_BASE;
-            if (!func(converted, 1)) return false;
+            if (!func(converted, 1))
+                return false;
         } else if (MB_CUR_MAX == 1) {  // single-byte locale (C/POSIX/ISO-8859)
             // If `wc` contains a wide character we emit a question-mark.
             if (wc & ~0xFF) {
                 wc = '?';
             }
             converted[0] = wc;
-            if (!func(converted, 1)) return false;
+            if (!func(converted, 1))
+                return false;
         } else {
             std::memset(converted, 0, sizeof converted);
             size_t len = std::wcrtomb(converted, wc, &state);
@@ -255,7 +259,8 @@ bool wcs2string_callback(const wchar_t *input, size_t len, const Func &func) {
                 wcs2string_bad_char(wc);
                 std::memset(&state, 0, sizeof(state));
             } else {
-                if (!func(converted, len)) return false;
+                if (!func(converted, len))
+                    return false;
             }
         }
     }
@@ -283,13 +288,15 @@ class line_iterator_t {
 
     /// Advances to the next line. \return true on success, false if we have exhausted the string.
     bool next() {
-        if (current == coll.end()) return false;
+        if (current == coll.end())
+            return false;
         auto newline_or_end = std::find(current, coll.cend(), '\n');
         storage.assign(current, newline_or_end);
         current = newline_or_end;
 
         // Skip the newline.
-        if (current != coll.cend()) ++current;
+        if (current != coll.cend())
+            ++current;
         return true;
     }
 };

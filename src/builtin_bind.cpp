@@ -196,7 +196,8 @@ bool builtin_bind_t::erase(const wchar_t *const *seq, bool all, const wchar_t *m
     }
 
     bool res = false;
-    if (mode == nullptr) mode = DEFAULT_BIND_MODE;  //!OCLINT(parameter reassignment)
+    if (mode == nullptr)
+        mode = DEFAULT_BIND_MODE;  //!OCLINT(parameter reassignment)
 
     while (*seq) {
         if (use_terminfo) {
@@ -408,7 +409,8 @@ maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &stream
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.list_modes) {
         list_modes(streams);
@@ -420,7 +422,8 @@ maybe_t<int> builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &stream
     }
 
     // Default to user mode
-    if (!opts.have_preset && !opts.have_user) opts.user = true;
+    if (!opts.have_preset && !opts.have_user)
+        opts.user = true;
     switch (opts.mode) {
         case BIND_ERASE: {
             const wchar_t *bind_mode = opts.bind_mode_given ? opts.bind_mode : nullptr;

@@ -13,7 +13,8 @@
 wcstring generation_list_t::describe() const {
     wcstring result;
     for (generation_t gen : this->as_array()) {
-        if (!result.empty()) result.push_back(L',');
+        if (!result.empty())
+            result.push_back(L',');
         if (gen == invalid_generation) {
             result.append(L"-1");
         } else {
@@ -49,7 +50,8 @@ binary_semaphore_t::binary_semaphore_t() : sem_ok_(false) {
 binary_semaphore_t::~binary_semaphore_t() {
     // We never use sem_t on Mac. The #ifdef avoids deprecation warnings.
 #ifndef __APPLE__
-    if (sem_ok_) (void)sem_destroy(&sem_);
+    if (sem_ok_)
+        (void)sem_destroy(&sem_);
 #endif
 }
 
@@ -62,7 +64,8 @@ void binary_semaphore_t::post() {
     if (sem_ok_) {
         int res = sem_post(&sem_);
         // sem_post is non-interruptible.
-        if (res < 0) die(L"sem_post");
+        if (res < 0)
+            die(L"sem_post");
     } else {
         // Write exactly one byte.
         ssize_t ret;
@@ -70,7 +73,8 @@ void binary_semaphore_t::post() {
             const uint8_t v = 0;
             ret = write(pipes_.write.fd(), &v, sizeof v);
         } while (ret < 0 && errno == EINTR);
-        if (ret < 0) die(L"write");
+        if (ret < 0)
+            die(L"write");
     }
 }
 
@@ -81,7 +85,8 @@ void binary_semaphore_t::wait() {
             res = sem_wait(&sem_);
         } while (res < 0 && errno == EINTR);
         // Other errors here are very unexpected.
-        if (res < 0) die(L"sem_wait");
+        if (res < 0)
+            die(L"sem_wait");
     } else {
         int fd = pipes_.read.fd();
         // We must read exactly one byte.
@@ -94,9 +99,11 @@ void binary_semaphore_t::wait() {
 #endif
             uint8_t ignored;
             auto amt = read(fd, &ignored, sizeof ignored);
-            if (amt == 1) break;
+            if (amt == 1)
+                break;
             // EAGAIN should only be returned in TSan case.
-            if (amt < 0 && errno != EINTR && errno != EAGAIN) die(L"read");
+            if (amt < 0 && errno != EINTR && errno != EAGAIN)
+                die(L"read");
         }
     }
 }
@@ -252,7 +259,8 @@ generation_list_t topic_monitor_t::await_gens(const generation_list_t &input_gen
 }
 
 bool topic_monitor_t::check(generation_list_t *gens, bool wait) {
-    if (!gens->any_valid()) return false;
+    if (!gens->any_valid())
+        return false;
 
     generation_list_t current = updated_gens();
     bool changed = false;

@@ -69,7 +69,8 @@ struct terminfo_mapping_t {
     maybe_t<std::string> seq;
 
     terminfo_mapping_t(const wchar_t *name, const char *s) : name(name) {
-        if (s) seq.emplace(s);
+        if (s)
+            seq.emplace(s);
     }
 
     terminfo_mapping_t(const wchar_t *name, std::string s) : name(name), seq(std::move(s)) {}
@@ -278,7 +279,8 @@ static relaxed_atomic_bool_t s_input_initialized{false};
 /// initializations for our input subsystem.
 void init_input() {
     ASSERT_IS_MAIN_THREAD();
-    if (s_input_initialized) return;
+    if (s_input_initialized)
+        return;
     s_input_initialized = true;
 
     s_terminfo_mappings = create_input_terminfo();
@@ -325,14 +327,16 @@ void inputter_t::prepare_to_select() /* override */ {
     // Fire any pending events and reap stray processes, including printing exit status messages.
     auto &parser = *this->parser_;
     event_fire_delayed(parser);
-    if (job_reap(parser, true)) reader_schedule_prompt_repaint();
+    if (job_reap(parser, true))
+        reader_schedule_prompt_repaint();
 }
 
 void inputter_t::select_interrupted() /* override */ {
     // Fire any pending events and reap stray processes, including printing exit status messages.
     auto &parser = *this->parser_;
     event_fire_delayed(parser);
-    if (job_reap(parser, true)) reader_schedule_prompt_repaint();
+    if (job_reap(parser, true))
+        reader_schedule_prompt_repaint();
 
     // Tell the reader an event occurred.
     if (reader_reading_interrupted()) {
@@ -400,7 +404,8 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
 
     // !has_functions && !has_commands: only set bind mode
     if (!has_commands && !has_functions) {
-        if (!m.sets_mode.empty()) input_set_bind_mode(*parser_, m.sets_mode);
+        if (!m.sets_mode.empty())
+            input_set_bind_mode(*parser_, m.sets_mode);
         return;
     }
 
@@ -430,7 +435,8 @@ void inputter_t::mapping_execute(const input_mapping_t &m,
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
-    if (!m.sets_mode.empty()) input_set_bind_mode(*parser_, m.sets_mode);
+    if (!m.sets_mode.empty())
+        input_set_bind_mode(*parser_, m.sets_mode);
 }
 
 void inputter_t::queue_char(const char_event_t &ch) {
@@ -602,7 +608,8 @@ maybe_t<input_mapping_t> inputter_t::find_mapping(event_queue_peeker_t *peeker) 
 
         // Defer generic mappings until the end.
         if (m.is_generic()) {
-            if (!generic) generic = &m;
+            if (!generic)
+                generic = &m;
             continue;
         }
 
@@ -709,10 +716,12 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
                 case readline_cmd_t::func_or: {
                     // If previous function has right status, we keep reading tokens
                     if (evt.get_readline() == readline_cmd_t::func_and) {
-                        if (function_status_) return readch();
+                        if (function_status_)
+                            return readch();
                     } else {
                         assert(evt.get_readline() == readline_cmd_t::func_or);
-                        if (!function_status_) return readch();
+                        if (!function_status_)
+                            return readch();
                     }
                     // Else we flush remaining tokens
                     do {
@@ -805,7 +814,8 @@ std::shared_ptr<const mapping_list_t> input_mapping_set_t::all_mappings() {
 /// Create a list of terminfo mappings.
 static std::vector<terminfo_mapping_t> create_input_terminfo() {
     assert(curses_initialized);
-    if (!cur_term) return {};  // setupterm() failed so we can't referency any key definitions
+    if (!cur_term)
+        return {};  // setupterm() failed so we can't referency any key definitions
 
 #define TERMINFO_ADD(key) \
     { (L## #key) + 4, key }

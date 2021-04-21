@@ -124,7 +124,8 @@ static int set_limit(int resource, int hard, int soft, rlim_t value, io_streams_
     struct rlimit ls;
 
     getrlimit(resource, &ls);
-    if (hard) ls.rlim_max = value;
+    if (hard)
+        ls.rlim_max = value;
     if (soft) {
         ls.rlim_cur = value;
 

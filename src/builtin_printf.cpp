@@ -202,14 +202,16 @@ static int octal_to_bin(wchar_t c) {
 
 void builtin_printf_state_t::nonfatal_error(const wchar_t *fmt, ...) {
     // Don't error twice.
-    if (early_exit) return;
+    if (early_exit)
+        return;
 
     va_list va;
     va_start(va, fmt);
     wcstring errstr = vformat_string(fmt, va);
     va_end(va);
     streams.err.append(errstr);
-    if (!string_suffixes_string(L"\n", errstr)) streams.err.push_back(L'\n');
+    if (!string_suffixes_string(L"\n", errstr))
+        streams.err.push_back(L'\n');
 
     // We set the exit code to error, because one occurred,
     // but we don't do an early exit so we still print what we can.
@@ -218,35 +220,40 @@ void builtin_printf_state_t::nonfatal_error(const wchar_t *fmt, ...) {
 
 void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
     // Don't error twice.
-    if (early_exit) return;
+    if (early_exit)
+        return;
 
     va_list va;
     va_start(va, fmt);
     wcstring errstr = vformat_string(fmt, va);
     va_end(va);
     streams.err.append(errstr);
-    if (!string_suffixes_string(L"\n", errstr)) streams.err.push_back(L'\n');
+    if (!string_suffixes_string(L"\n", errstr))
+        streams.err.push_back(L'\n');
 
     this->exit_code = STATUS_CMD_ERROR;
     this->early_exit = true;
 }
 void builtin_printf_state_t::append_output(wchar_t c) {
     // Don't output if we're done.
-    if (early_exit) return;
+    if (early_exit)
+        return;
 
     streams.out.push_back(c);
 }
 
 void builtin_printf_state_t::append_output(const wchar_t *c) {
     // Don't output if we're done.
-    if (early_exit) return;
+    if (early_exit)
+        return;
 
     streams.out.append(c);
 }
 
 void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...) {
     // Don't output if we're done.
-    if (early_exit) return;
+    if (early_exit)
+        return;
 
     va_list va;
     va_start(va, fmt);
@@ -290,7 +297,8 @@ uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
 template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
     double val = std::wcstod(s, end);
-    if (**end == L'\0') return val;
+    if (**end == L'\0')
+        return val;
     // The conversion using the user's locale failed. That may be due to the string not being a
     // valid floating point value. It could also be due to the locale using different separator
     // characters than the normal english convention. So try again by forcing the use of a locale
@@ -372,7 +380,8 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
         // A hexadecimal \xhh escape sequence must have 1 or 2 hex. digits.
         for (esc_length = 0, ++p; esc_length < 2 && iswxdigit(*p); ++esc_length, ++p)
             esc_value = esc_value * 16 + hex_to_bin(*p);
-        if (esc_length == 0) this->fatal_error(_(L"missing hexadecimal number in escape"));
+        if (esc_length == 0)
+            this->fatal_error(_(L"missing hexadecimal number in escape"));
         this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
     } else if (is_octal_digit(*p)) {
         // Parse \0ooo (if octal_0 && *p == L'0') or \ooo (otherwise). Allow \ooo if octal_0 && *p
@@ -744,7 +753,8 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar
 
     int optind;
     int retval = parse_help_only_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);

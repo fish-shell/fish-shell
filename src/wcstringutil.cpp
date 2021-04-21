@@ -71,7 +71,8 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value
     for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
         // Note if the prefix is longer than value, then we will compare a nonzero prefix character
         // against a zero value character, and so we'll return false;
-        if (proposed_prefix[idx] != value[idx]) return false;
+        if (proposed_prefix[idx] != value[idx])
+            return false;
     }
     // We must have that proposed_prefix[idx] == L'\0', so we have a prefix match.
     return true;
@@ -83,7 +84,8 @@ bool string_prefixes_string(const char *proposed_prefix, const std::string &valu
 
 bool string_prefixes_string(const char *proposed_prefix, const char *value) {
     for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
-        if (proposed_prefix[idx] != value[idx]) return false;
+        if (proposed_prefix[idx] != value[idx])
+            return false;
     }
     return true;
 }
@@ -146,7 +148,8 @@ maybe_t<string_fuzzy_match_t> string_fuzzy_match_t::try_create(const wcstring &s
     // Use icase if the input contains any uppercase characters, smartcase otherwise.
     auto get_case_fold = [&] {
         for (wchar_t c : string) {
-            if (towlower(c) != static_cast<wint_t>(c)) return case_fold_t::icase;
+            if (towlower(c) != static_cast<wint_t>(c))
+                return case_fold_t::icase;
         }
         return case_fold_t::smartcase;
     };
@@ -219,11 +222,13 @@ size_t ifind_impl(const T &haystack, const T &needle) {
     std::locale locale;
 
     auto ieq = [&locale](char_t c1, char_t c2) {
-        if (c1 == c2 || std::toupper(c1, locale) == std::toupper(c2, locale)) return true;
+        if (c1 == c2 || std::toupper(c1, locale) == std::toupper(c2, locale))
+            return true;
 
         // In fuzzy matching treat treat `-` and `_` as equal (#3584).
         if (Fuzzy) {
-            if ((c1 == '-' || c1 == '_') && (c2 == '-' || c2 == '_')) return true;
+            if ((c1 == '-' || c1 == '_') && (c2 == '-' || c2 == '_'))
+                return true;
         }
         return false;
     };
@@ -264,7 +269,8 @@ wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps, size
     while (pos < end && out.size() + 1 < max_results) {
         // Skip leading seps.
         pos = val.find_first_not_of(seps, pos);
-        if (pos == wcstring::npos) break;
+        if (pos == wcstring::npos)
+            break;
 
         // Find next sep.
         size_t next_sep = val.find_first_of(seps, pos);
@@ -285,7 +291,8 @@ wcstring_list_t split_string_tok(const wcstring &val, const wcstring &seps, size
 }
 
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
-    if (vals.empty()) return wcstring{};
+    if (vals.empty())
+        return wcstring{};
 
     // Reserve the size we will need.
     // count-1 separators, plus the length of all strings.

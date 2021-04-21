@@ -292,7 +292,8 @@ static int parse_fd(const wchar_t *start, const wchar_t *end) {
     for (const wchar_t *cursor = start; cursor < end; ++cursor) {
         assert(L'0' <= *cursor && *cursor <= L'9' && "Not a digit");
         big_fd = big_fd * 10 + (*cursor - L'0');
-        if (big_fd > INT_MAX) return -1;
+        if (big_fd > INT_MAX)
+            return -1;
     }
     assert(big_fd <= INT_MAX && "big_fd should be in range");
     return static_cast<int>(big_fd);
@@ -336,7 +337,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
     // Try consuming a given character.
     // Return true if consumed. On success, advances cursor.
     auto try_consume = [&cursor](wchar_t c) -> bool {
-        if (*cursor != c) return false;
+        if (*cursor != c)
+            return false;
         cursor++;
         return true;
     };
@@ -362,7 +364,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
         }
         case L'>': {
             consume(L'>');
-            if (try_consume(L'>')) result.mode = redirection_mode_t::append;
+            if (try_consume(L'>'))
+                result.mode = redirection_mode_t::append;
             if (try_consume(L'|')) {
                 // Note we differ from bash here.
                 // Consider `echo foo 2>| bar`
@@ -389,7 +392,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                 // Note 'echo abc >>? file' is valid: it means append and noclobber.
                 // But here "noclobber" means the file must not exist, so appending
                 // can be ignored.
-                if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
+                if (try_consume(L'?'))
+                    result.mode = redirection_mode_t::noclob;
             }
             break;
         }
@@ -421,7 +425,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                     // This is a redirection to an fd.
                     result.mode = redirection_mode_t::fd;
                 }
-                if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
+                if (try_consume(L'?'))
+                    result.mode = redirection_mode_t::noclob;
                 break;
             }
         }
@@ -436,7 +441,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                 result.fd = STDOUT_FILENO;
                 result.stderr_merge = true;
                 result.mode = redirection_mode_t::overwrite;
-                if (try_consume(L'>')) result.mode = redirection_mode_t::append;  // like &>>
+                if (try_consume(L'>'))
+                    result.mode = redirection_mode_t::append;  // like &>>
                 if (try_consume(L'?'))
                     result.mode = redirection_mode_t::noclob;  // like &>? or &>>?
             } else {
@@ -898,11 +904,14 @@ maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt) {
     for (size_t i = 0; i < txt.size(); i++) {
         wchar_t c = txt[i];
         if (state == init) {
-            if (!valid_var_name_char(c)) return {};
+            if (!valid_var_name_char(c))
+                return {};
             state = has_some_variable_identifier;
         } else {
-            if (c == '=') return {i};
-            if (!valid_var_name_char(c)) return {};
+            if (c == '=')
+                return {i};
+            if (!valid_var_name_char(c))
+                return {};
         }
     }
     return {};

@@ -65,7 +65,8 @@ maybe_t<int> builtin_contains(parser_t &parser, io_streams_t &streams, const wch
 
     int optind;
     int retval = parse_cmd_opts(opts, &optind, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
+    if (retval != STATUS_CMD_OK)
+        return retval;
 
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd);
@@ -78,7 +79,8 @@ maybe_t<int> builtin_contains(parser_t &parser, io_streams_t &streams, const wch
     } else {
         for (int i = optind + 1; i < argc; i++) {
             if (!std::wcscmp(needle, argv[i])) {
-                if (opts.print_index) streams.out.append_format(L"%d\n", i - optind);
+                if (opts.print_index)
+                    streams.out.append_format(L"%d\n", i - optind);
                 return STATUS_CMD_OK;
             }
         }

@@ -1203,7 +1203,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return None
 
     def do_get_sample_prompts_list(self):
-        paths = glob.iglob("sample_prompts/*.fish")
+        paths = sorted(glob.iglob("sample_prompts/*.fish"))
         result = []
         try:
             pool = multiprocessing.pool.ThreadPool(processes=8)

@@ -49,6 +49,10 @@ Improved prompts
 ^^^^^^^^^^^^^^^^
 - The default Vi mode prompt now uses foreground instead of background colors, making it less obtrusive (:issue:`7880`).
 - Performance of the "informative" git prompt is improved somewhat (:issue:`7871`). This is still slower than the non-informative version by its very nature. In particular it is IO-bound, so it will be very slow on slow disks or network mounts.
+- The sample prompts were pruned. Some duplicated prompts like the various classic variants or less useful ones like the "justadollar" prompt were removed,
+  some prompts were cleaned up and in some cases renamed. A new "simple" and "disco" prompt were added (:issue:`7884`, :issue:`7897`, :issue:`7930`).
+  (Because prompts are copied into the user's ~/.config/fish/functions/, existing installations keep whatever prompt they picked)
+- The prompt picker now shows and installs right prompts (:issue:`7930`).
 
 Completions
 ^^^^^^^^^^^

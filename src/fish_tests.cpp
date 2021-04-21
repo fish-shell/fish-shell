@@ -558,13 +558,14 @@ static void test_convert_ascii() {
     }
 }
 
-/// fish uses the private-use range to encode bytes that could not be decoded using the user's locale.
-/// If the input could be decoded, but decoded to private-use codepoints, then fish should also use the direct encoding for those bytes.
-/// Verify that characters in the private use area are correctly round-tripped.
-/// See #7723.
+/// fish uses the private-use range to encode bytes that could not be decoded using the user's
+/// locale. If the input could be decoded, but decoded to private-use codepoints, then fish should
+/// also use the direct encoding for those bytes. Verify that characters in the private use area are
+/// correctly round-tripped. See #7723.
 static void test_convert_private_use() {
     for (wchar_t wc = ENCODE_DIRECT_BASE; wc < ENCODE_DIRECT_END; wc++) {
-        // Encode the char via the locale. Do not use fish functions which interpret these specially.
+        // Encode the char via the locale. Do not use fish functions which interpret these
+        // specially.
         char converted[MB_LEN_MAX];
         mbstate_t state{};
         size_t len = std::wcrtomb(converted, wc, &state);
@@ -575,7 +576,8 @@ static void test_convert_private_use() {
         std::string s(converted, len);
 
         // Ask fish to decode this via str2wcstring.
-        // str2wcstring should notice that the decoded form collides with its private use and encode it directly.
+        // str2wcstring should notice that the decoded form collides with its private use and encode
+        // it directly.
         wcstring ws = str2wcstring(s);
 
         // Each byte should be encoded directly, and round tripping should work.
@@ -663,10 +665,10 @@ static void test_tokenizer() {
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
     using tt = token_type_t;
     const token_type_t types[] = {
-        tt::string,     tt::redirect,   tt::string,   tt::redirect, tt::string, tt::string,
-        tt::string,     tt::string,     tt::string,   tt::pipe,     tt::redirect,
-        tt::andand,     tt::background, tt::oror,     tt::pipe,     tt::andand, tt::oror,
-        tt::background, tt::pipe,       tt::string,   tt::end,      tt::string};
+        tt::string,     tt::redirect, tt::string, tt::redirect, tt::string,   tt::string,
+        tt::string,     tt::string,   tt::string, tt::pipe,     tt::redirect, tt::andand,
+        tt::background, tt::oror,     tt::pipe,   tt::andand,   tt::oror,     tt::background,
+        tt::pipe,       tt::string,   tt::end,    tt::string};
 
     say(L"Test correct tokenization");
 
@@ -3148,7 +3150,7 @@ static void test_complete() {
     if (system("mkdir -p 'test/complete_test'")) err(L"mkdir failed");
     if (system("touch 'test/complete_test/has space'")) err(L"touch failed");
     if (system("touch 'test/complete_test/bracket[abc]'")) err(L"touch failed");
-#ifndef __CYGWIN__ // Square brackets are not legal path characters on WIN32/CYGWIN
+#ifndef __CYGWIN__  // Square brackets are not legal path characters on WIN32/CYGWIN
     if (system(R"(touch 'test/complete_test/gnarlybracket\[abc]')")) err(L"touch failed");
 #endif
     if (system("touch 'test/complete_test/testfile'")) err(L"touch failed");
@@ -3188,7 +3190,7 @@ static void test_complete() {
         completions.front().completion, completions.front().flags, cmdline, &where, false);
     do_test(newcmdline == L"touch test/complete_test/bracket\\[abc\\] ");
 
-#ifndef __CYGWIN__ // Square brackets are not legal path characters on WIN32/CYGWIN
+#ifndef __CYGWIN__  // Square brackets are not legal path characters on WIN32/CYGWIN
     cmdline = LR"(touch test/complete_test/gnarlybracket\\[)";
     completions = do_complete(cmdline, {});
     do_test(completions.size() == 1);
@@ -4619,10 +4621,15 @@ void history_tests_t::test_history_formats() {
     } else {
         // The results are in the reverse order that they appear in the bash history file.
         // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
-        const wchar_t *expected[] = {
-            L"EOF",                  L"sleep 123",   L"a && echo valid construct",
-            L"final line",           L"echo supsup", L"export XVAR='exported'",
-            L"history --help",       L"echo foo",    NULL};
+        const wchar_t *expected[] = {L"EOF",
+                                     L"sleep 123",
+                                     L"a && echo valid construct",
+                                     L"final line",
+                                     L"echo supsup",
+                                     L"export XVAR='exported'",
+                                     L"history --help",
+                                     L"echo foo",
+                                     NULL};
         auto test_history = history_t::with_name(L"bash_import");
         test_history->populate_from_bash(f);
         if (!history_equals(test_history, expected)) {

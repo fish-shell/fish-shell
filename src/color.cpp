@@ -123,8 +123,7 @@ static unsigned long squared_difference(long p1, long p2) {
     return diff * diff;
 }
 
-static uint8_t convert_color(const uint8_t rgb[3], const uint32_t *colors,
-                                   size_t color_count) {
+static uint8_t convert_color(const uint8_t rgb[3], const uint32_t *colors, size_t color_count) {
     long r = rgb[0], g = rgb[1], b = rgb[2];
     auto best_distance = static_cast<unsigned long>(-1);
     auto best_index = static_cast<uint8_t>(-1);
@@ -254,9 +253,7 @@ static const wchar_t *name_for_color_idx(uint8_t idx) {
     return L"unknown";
 }
 
-rgb_color_t::rgb_color_t(uint8_t t, uint8_t i) : type(t), flags(), data() {
-    data.name_idx = i;
-}
+rgb_color_t::rgb_color_t(uint8_t t, uint8_t i) : type(t), flags(), data() { data.name_idx = i; }
 
 rgb_color_t rgb_color_t::normal() { return rgb_color_t(type_normal); }
 

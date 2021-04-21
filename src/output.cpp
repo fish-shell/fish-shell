@@ -169,9 +169,7 @@ void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
         return;
     }
 
-    if ((was_bold && !is_bold)
-        || (was_dim && !is_dim)
-        || (was_reverse && !is_reverse)) {
+    if ((was_bold && !is_bold) || (was_dim && !is_dim) || (was_reverse && !is_reverse)) {
         // Only way to exit bold/dim/reverse mode is a reset of all attributes.
         writembs(*this, exit_attribute_mode);
         last_color = normal;
@@ -189,7 +187,8 @@ void outputter_t::set_color(rgb_color_t fg, rgb_color_t bg) {
     if (!bg.is_special()) {
         // Background is set.
         bg_set = true;
-        if (fg == bg) fg = (bg == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
+        if (fg == bg)
+            fg = (bg == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
     }
 
     if (enter_bold_mode && enter_bold_mode[0] != '\0') {

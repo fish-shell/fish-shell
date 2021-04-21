@@ -80,8 +80,7 @@ maybe_t<int> builtin_source(parser_t &parser, io_streams_t &streams, const wchar
 
         if (!S_ISREG(buf.st_mode)) {
             wcstring esc = escape_string(argv[optind], ESCAPE_ALL);
-            streams.err.append_format(_(L"%ls: '%ls' is not a file\n"),
-                                      cmd, esc.c_str());
+            streams.err.append_format(_(L"%ls: '%ls' is not a file\n"), cmd, esc.c_str());
             return STATUS_CMD_ERROR;
         }
 

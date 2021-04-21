@@ -361,7 +361,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         wcstring nshlvl_str = L"1";
         if (const char *shlvl_var = getenv("SHLVL")) {
             const wchar_t *end;
-            // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
+            // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a
+            // diagnostic?
             long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
             if (!errno && shlvl_i >= 0) {
                 nshlvl_str = to_string(shlvl_i + 1);
@@ -384,7 +385,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // (see #7636)
     const char *incoming_pwd_cstr = getenv("PWD");
     wcstring incoming_pwd = incoming_pwd_cstr ? str2wcstring(incoming_pwd_cstr) : wcstring{};
-    if (!incoming_pwd.empty() && incoming_pwd.front() == L'/' &&  paths_are_same_file(incoming_pwd, L".")) {
+    if (!incoming_pwd.empty() && incoming_pwd.front() == L'/' &&
+        paths_are_same_file(incoming_pwd, L".")) {
         vars.set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, incoming_pwd);
     } else {
         vars.set_pwd_from_getcwd();

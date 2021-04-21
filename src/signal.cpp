@@ -270,7 +270,6 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             // We have a sigalarm handler that does nothing. This is used in the signal torture
             // test, to verify that we behave correctly when receiving lots of irrelevant signals.
             break;
-
     }
     errno = saved_errno;
 }

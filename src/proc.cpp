@@ -656,9 +656,9 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
                 pid_t pgid = *j->get_pgid();
                 exit_events.push_back(proc_create_event(L"JOB_EXIT", event_type_t::exit, -pgid, 0));
             }
-            // Caller exit events we still create, which anecdotally fixes `source (thing | psub)` inside event handlers.
-            // This seems benign since this event is barely used (basically only psub), and it seems hard
-            // to construct an infinite loop with it.
+            // Caller exit events we still create, which anecdotally fixes `source (thing | psub)`
+            // inside event handlers. This seems benign since this event is barely used (basically
+            // only psub), and it seems hard to construct an infinite loop with it.
             exit_events.push_back(
                 proc_create_event(L"JOB_EXIT", event_type_t::caller_exit, j->job_id(), 0));
             exit_events.back().desc.param1.caller_id = j->internal_job_id;

@@ -291,13 +291,16 @@ void init_input() {
         input_mapping->add(L"\n", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\r", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\t", L"complete", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping->add(L"\x3", L"cancel-commandline", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping->add(L"\x3", L"cancel-commandline", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
+                           false);
         input_mapping->add(L"\x4", L"exit", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping->add(L"\x5", L"bind", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         // ctrl-s
-        input_mapping->add(L"\x13", L"pager-toggle-search", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping->add(L"\x13", L"pager-toggle-search", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
+                           false);
         // ctrl-u
-        input_mapping->add(L"\x15", L"backward-kill-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping->add(L"\x15", L"backward-kill-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
+                           false);
         // del/backspace
         input_mapping->add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
                            false);

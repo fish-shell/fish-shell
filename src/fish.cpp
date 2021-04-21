@@ -501,8 +501,8 @@ int main(int argc, char **argv) {
     parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 
     // If we're profiling startup to a separate file, write it now.
-    if (!opts.profile_startup_output.empty()
-        && opts.profile_startup_output != opts.profile_output) {
+    if (!opts.profile_startup_output.empty() &&
+        opts.profile_startup_output != opts.profile_output) {
         parser.emit_profiling(opts.profile_startup_output.c_str());
 
         // If we are profiling both, ensure the startup data only

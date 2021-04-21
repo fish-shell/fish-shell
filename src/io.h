@@ -288,7 +288,7 @@ class output_stream_t;
 /// An io_buffer_t is a buffer which can populate itself by reading from an fd.
 /// It is not an io_data_t.
 class io_buffer_t {
-public:
+   public:
     explicit io_buffer_t(size_t limit) : buffer_(limit) {}
 
     ~io_buffer_t();

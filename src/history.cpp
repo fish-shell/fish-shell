@@ -1159,7 +1159,6 @@ static bool should_import_bash_history_line(const wcstring &line) {
     // "<<" here is a proxy for heredocs (and herestrings).
     if (line.find(L"<<") != std::string::npos) return false;
 
-
     if (ast::ast_t::parse(line).errored()) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.

@@ -23,20 +23,21 @@
  */
 
 // This version has been altered and ported to C++ for inclusion in fish.
-#include "fallback.h"  // IWYU pragma: keep
 #include "tinyexpr.h"
-#include "wutil.h"
 
-#include <cmath>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <iterator>
 #include <utility>
+
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"
 
 // TODO: It would be nice not to rely on a typedef for this, especially one that can only do
 // functions with two args.
@@ -185,14 +186,14 @@ static constexpr double bit_xor(double a, double b) {
 static double max(double a, double b) {
     if (std::isnan(a)) return a;
     if (std::isnan(b)) return b;
-    if (a == b) return std::signbit(a) ? b : a; // treat +0 as larger than -0
+    if (a == b) return std::signbit(a) ? b : a;  // treat +0 as larger than -0
     return a > b ? a : b;
 }
 
 static double min(double a, double b) {
     if (std::isnan(a)) return a;
     if (std::isnan(b)) return b;
-    if (a == b) return std::signbit(a) ? a : b; // treat -0 as smaller than +0
+    if (a == b) return std::signbit(a) ? a : b;  // treat -0 as smaller than +0
     return a < b ? a : b;
 }
 

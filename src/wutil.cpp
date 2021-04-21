@@ -2,6 +2,8 @@
 #define FISH_NO_ISW_WRAPPERS
 #include "config.h"
 
+#include "wutil.h"  // IWYU pragma: keep
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -9,16 +11,15 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-
-#include <cstring>
 #include <sys/mount.h>
+#include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wctype.h>
 
 #include <atomic>
+#include <cstring>
 #include <cwchar>
 #include <string>
 #include <unordered_map>
@@ -27,7 +28,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "wcstringutil.h"
-#include "wutil.h"  // IWYU pragma: keep
 
 using cstring = std::string;
 
@@ -138,7 +138,6 @@ wcstring wgetcwd() {
     FLOGF(error, _(L"getcwd() failed with errno %d/%s"), errno, std::strerror(errno));
     return wcstring();
 }
-
 
 DIR *wopendir(const wcstring &name) {
     const cstring tmp = wcs2string(name);

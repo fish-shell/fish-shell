@@ -32,16 +32,12 @@ struct type_cmd_opts_t {
     bool query = false;
 };
 static const wchar_t *const short_options = L":hasftpPq";
-static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
-                                              {L"all", no_argument, nullptr, 'a'},
-                                              {L"short", no_argument, nullptr, 's'},
-                                              {L"no-functions", no_argument, nullptr, 'f'},
-                                              {L"type", no_argument, nullptr, 't'},
-                                              {L"path", no_argument, nullptr, 'p'},
-                                              {L"force-path", no_argument, nullptr, 'P'},
-                                              {L"query", no_argument, nullptr, 'q'},
-                                              {L"quiet", no_argument, nullptr, 'q'},
-                                              {nullptr, 0, nullptr, 0}};
+static const struct woption long_options[] = {
+    {L"help", no_argument, nullptr, 'h'},       {L"all", no_argument, nullptr, 'a'},
+    {L"short", no_argument, nullptr, 's'},      {L"no-functions", no_argument, nullptr, 'f'},
+    {L"type", no_argument, nullptr, 't'},       {L"path", no_argument, nullptr, 'p'},
+    {L"force-path", no_argument, nullptr, 'P'}, {L"query", no_argument, nullptr, 'q'},
+    {L"quiet", no_argument, nullptr, 'q'},      {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(type_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
@@ -149,7 +145,8 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
                         int line_number = function_get_definition_lineno(name);
                         wcstring comment;
                         if (std::wcscmp(path, L"-") != 0) {
-                            append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
+                            append_format(comment, L"# Defined in %ls @ line %d\n", path,
+                                          line_number);
                         } else {
                             append_format(comment, L"# Defined via `source`\n");
                         }

@@ -436,7 +436,6 @@ maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_flags_t 
     return res;
 }
 
-
 /// Given a list of values and 1-based indexes, return a new list, with those elements removed.
 /// Note this deliberately accepts both args by value, as it modifies them both.
 static wcstring_list_t erased_at_indexes(wcstring_list_t input, std::vector<long> indexes) {

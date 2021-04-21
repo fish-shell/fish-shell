@@ -272,9 +272,7 @@ static void print_profile(const std::deque<profile_item_t> &items, FILE *out) {
     }
 }
 
-void parser_t::clear_profiling() {
-    profile_items.clear();
-}
+void parser_t::clear_profiling() { profile_items.clear(); }
 
 void parser_t::emit_profiling(const char *path) const {
     // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is

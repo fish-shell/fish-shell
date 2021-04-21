@@ -60,7 +60,7 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
     errno = 0;
     auto best_errno = errno;
 
-    for (const auto &dir: dirs) {
+    for (const auto &dir : dirs) {
         wcstring norm_dir = normalize_path(dir);
 
         // We need to keep around the fd for this directory, in the parser.
@@ -106,8 +106,8 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
     } else {
         errno = best_errno;
         wperror(L"cd");
-        streams.err.append_format(_(L"%ls: Unknown error trying to locate directory '%ls'\n"),
-                                  cmd, dir_in.c_str());
+        streams.err.append_format(_(L"%ls: Unknown error trying to locate directory '%ls'\n"), cmd,
+                                  dir_in.c_str());
     }
 
     if (!parser.is_interactive()) {

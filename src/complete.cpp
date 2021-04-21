@@ -1147,8 +1147,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
 
     if (has_force) {
         *out_do_file = true;
-    }
-    else if (!use_files) {
+    } else if (!use_files) {
         *out_do_file = false;
     }
     return true;

@@ -20,11 +20,6 @@ magic phrase “unlike other shells”.
 Detailed user documentation is available by running ``help`` within
 fish, and also at https://fishshell.com/docs/current/index.html
 
-You can quickly play with fish right in your browser by clicking the
-button below:
-
-|Try in browser|
-
 Getting fish
 ------------
 

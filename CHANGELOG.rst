@@ -33,11 +33,10 @@ Interactive improvements
 - ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 - ``$SHLVL`` is no longer incremented in non-interactive shells. This means it won't be set to values larger than 1 just because your environment happens to run some scripts in $SHELL in its startup path (:issue:`7864`).
 - fish no longer rings the bell when flashing the command line. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).
-- The :kbd:`F1` binding, which opens the manual page for the current command, now clears the screen with new ``less`` versions (:issue:`7863`).
+- The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
 - ``fish --help`` is more helpful if the documentation isn't installed (:issue:`7824`).
 - ``funced`` won't include an entry on where a function is defined, thanks to the new ``functions --no-details`` option (:issue:`7879`).
 - The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__fish_git_prompt_status_order`` (:issue:`7926`).
-- The git prompt now shows staged state in non-informative mode even when not told to show "dirty" files.
 - Variable ``fish_killring`` containing entries from killring is now available (:issue:`7445`).
 
 New or improved bindings

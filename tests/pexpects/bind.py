@@ -68,6 +68,7 @@ expect_prompt(
 )
 
 send("echo fail: default escape timeout")
+expect_str("echo fail: default escape timeout")
 send("\033")
 
 # Delay needed to allow fish to transition to vi "normal" mode. The delay is
@@ -186,7 +187,9 @@ expect_prompt()
 # by another function (and) https://github.com/fish-shell/fish-shell/issues/2357
 send("\033")
 sleep(0.200)
-send("ddiecho TEXT\033")
+send("ddiecho TEXT")
+expect_str("echo TEXT")
+send("\033")
 sleep(0.200)
 send("hhtTrN\r")
 expect_prompt("\r\nTENT\r\n", unmatched="Couldn't find expected output 'TENT'")

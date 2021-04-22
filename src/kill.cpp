@@ -17,45 +17,45 @@
 #include "fallback.h"  // IWYU pragma: keep
 
 /** Kill ring */
-using kill_list_t = std::list<wcstring>;
-static kill_list_t kill_list;
+static owning_lock<std::list<wcstring>> s_kill_list;
 
 void kill_add(wcstring str) {
-    ASSERT_IS_MAIN_THREAD();
     if (!str.empty()) {
-        kill_list.push_front(std::move(str));
+        s_kill_list.acquire()->push_front(std::move(str));
     }
-}
-
-/// Remove first match for specified string from circular list.
-static void kill_remove(const wcstring &s) {
-    ASSERT_IS_MAIN_THREAD();
-    auto iter = std::find(kill_list.begin(), kill_list.end(), s);
-    if (iter != kill_list.end()) kill_list.erase(iter);
 }
 
 void kill_replace(const wcstring &old, const wcstring &newv) {
-    kill_remove(old);
-    kill_add(newv);
+    auto kill_list = s_kill_list.acquire();
+    // Remove old.
+    auto iter = std::find(kill_list->begin(), kill_list->end(), old);
+    if (iter != kill_list->end()) kill_list->erase(iter);
+
+    // Add new.
+    if (!newv.empty()) {
+        kill_list->push_front(newv);
+    }
 }
 
 wcstring kill_yank_rotate() {
-    ASSERT_IS_MAIN_THREAD();
+    auto kill_list = s_kill_list.acquire();
     // Move the first element to the end.
-    if (kill_list.empty()) {
+    if (kill_list->empty()) {
         return {};
     }
-    kill_list.splice(kill_list.end(), kill_list, kill_list.begin());
-    return kill_list.front();
+    kill_list->splice(kill_list->end(), *kill_list, kill_list->begin());
+    return kill_list->front();
 }
 
 wcstring kill_yank() {
-    if (kill_list.empty()) {
+    auto kill_list = s_kill_list.acquire();
+    if (kill_list->empty()) {
         return {};
     }
-    return kill_list.front();
+    return kill_list->front();
 }
 
 wcstring_list_t kill_entries() {
-    return {kill_list.begin(), kill_list.end()};
+    auto kill_list = s_kill_list.acquire();
+    return wcstring_list_t{kill_list->begin(), kill_list->end()};
 }

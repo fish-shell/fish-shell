@@ -8,23 +8,37 @@ Synopsis
 
 ::
 
-    fish_config [TAB]
+    fish_config
+    fish_config browse
+    fish_config prompt (choose | list | save | show)
 
 Description
 -----------
 
-``fish_config`` starts the web-based configuration interface.
+``fish_config`` is used to configure fish.
 
-The web interface allows you to view your functions, variables and history, and to make changes to your prompt and color configuration.
-
-``fish_config`` starts a local web server and then opens a web browser window; when you have finished, close the browser window and then press the Enter key to terminate the configuration session.
-
-``fish_config`` optionally accepts name of the initial configuration tab. For e.g. ``fish_config history`` will start configuration interface with history tab.
+Without arguments or with the ``browse`` command it starts the web-based configuration interface. The web interface allows you to view your functions, variables and history, and to make changes to your prompt and color configuration. It starts a local web server and opens a browser window. When you are finished, close the browser window and press the Enter key to terminate the configuration session.
 
 If the ``BROWSER`` environment variable is set, it will be used as the name of the web browser to open instead of the system default.
 
+With the ``prompt`` command ``fish_config`` can be used to view and choose a prompt from fish's sample prompts inside the terminal directly.
+
+Available subcommands for the ``prompt`` command:
+
+- ``choose`` loads a sample prompt in the current session.
+- ``list`` lists the names of the available sample prompts.
+- ``save`` saves the current prompt to a file (via :ref:`funcsave <cmd-funcsave>`).
+- ``show`` shows what the given sample prompts (or all) would look like.
 
 Example
 -------
 
-``fish_config`` opens a new web browser window and allows you to configure certain fish settings.
+``fish_config`` or ``fish_config browse`` opens a new web browser window and allows you to configure certain fish settings.
+
+``fish_config prompt show`` demos the available sample prompts.
+
+``fish_config prompt choose disco`` makes the disco prompt the prompt for the current session. This can also be used in :ref:`config.fish <initialization>` to set the prompt.
+
+``fish_config prompt save`` saves the current prompt to an :ref:`autoloaded <autoloading-functions>` file.
+
+``fish_config prompt save default`` chooses the default prompt and saves it.

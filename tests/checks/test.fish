@@ -37,7 +37,7 @@ function t
 end
 
 t foo
-# CHECKERR: Invalid argument: 'foo'
+# CHECKERR: Argument is not a number: 'foo'
 # CHECKERR: {{.*}}test.fish (line {{\d+}}):
 # CHECKERR: test $argv[1] -eq 5
 # CHECKERR: ^

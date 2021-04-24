@@ -716,6 +716,8 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
             errors.push_back(_(L"Not a number"));
         } else if (std::isinf(floating)) {
             errors.push_back(_(L"Number is infinite"));
+        } else if (errno == EINVAL) {
+            errors.push_back(format_string(L"Argument is not a number: '%ls'", argcs));
         } else {
             errors.push_back(format_string(L"%s: '%ls'", std::strerror(errno), argcs));
         }

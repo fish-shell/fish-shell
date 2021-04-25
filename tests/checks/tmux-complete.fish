@@ -3,9 +3,6 @@
 # Don't run this on GitHub Actions since it's flaky.
 #REQUIRES: test "$CI" != true
 
-# HACK: THIS IS DISABLED for now, since it doesn't work at the moment.
-#REQUIRES: false
-
 # Isolated tmux.
 set -g tmpdir (mktemp -d)
 set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null

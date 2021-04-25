@@ -57,7 +57,7 @@ enum {
 };
 using readb_result_t = int;
 
-static readb_result_t readb(int in_fd) {
+static readb_result_t readb(int in_fd, bool queue_is_empty) {
     assert(in_fd >= 0 && "Invalid in fd");
     universal_notifier_t& notifier = universal_notifier_t::default_notifier();
     select_wrapper_t fdset;
@@ -98,7 +98,9 @@ static readb_result_t readb(int in_fd) {
         // This may come about through readability, or through a call to poll().
         if (notifier.poll() ||
             (fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd))) {
-            return readb_uvar_notified;
+            if (env_universal_barrier() && !queue_is_empty) {
+                return readb_uvar_notified;
+            }
         }
 
         // Check stdin.
@@ -167,7 +169,7 @@ char_event_t input_event_queue_t::readch() {
             return mevt.acquire();
         }
 
-        readb_result_t rr = readb(in_);
+        readb_result_t rr = readb(in_, queue_.empty());
         switch (rr) {
             case readb_eof:
                 return char_event_type_t::eof;
@@ -178,7 +180,6 @@ char_event_t input_event_queue_t::readch() {
                 break;
 
             case readb_uvar_notified:
-                env_universal_barrier();
                 break;
 
             case readb_ioport_notified:

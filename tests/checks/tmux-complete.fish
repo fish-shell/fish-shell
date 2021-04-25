@@ -6,10 +6,6 @@
 # HACK: THIS IS DISABLED for now, since it doesn't work at the moment.
 #REQUIRES: false
 
-# Don't inflict relative XDG paths on tmux, or it will be confused.
-set -gx XDG_DATA_HOME (builtin realpath $XDG_DATA_HOME)
-set -gx XDG_CONFIG_HOME (builtin realpath $XDG_CONFIG_HOME)
-
 # Isolated tmux.
 set -g tmpdir (mktemp -d)
 set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null

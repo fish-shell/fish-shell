@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install deps
       run: |
-        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
         sudo pip3 install pexpect
     - name: cmake
       env:
@@ -36,7 +36,7 @@ jobs:
     - name: Install deps
       run: |
         sudo apt update
-        sudo apt install gettext lib32ncurses5-dev python3-pip g++-multilib
+        sudo apt install gettext lib32ncurses5-dev python3-pip g++-multilib tmux
         sudo pip3 install pexpect
     - name: cmake
       env:
@@ -60,7 +60,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install deps
       run: |
-        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
         sudo pip3 install pexpect
     - name: cmake
       env:
@@ -87,7 +87,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install deps
       run: |
-        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip
+        sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
         sudo pip3 install pexpect
     - name: cmake
       env:
@@ -113,6 +113,7 @@ jobs:
     - name: Install deps
       run: |
         sudo pip3 install pexpect
+        brew install tmux
     - name: cmake
       run: |
         mkdir build && cd build

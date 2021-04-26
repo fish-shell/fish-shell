@@ -22,6 +22,7 @@ Scripting improvements
 - Builtins now properly report a ``$status`` of 1 upon unsuccessful writes (:issue:`7857`).
 - ``string match`` with unmatched capture groups and without the ``--all`` flag now sets an empty variable instead of a variable containing the empty string. It also correctly imports the first match if multiple arguments are provided, matching the documentation. (:issue:`7938`).
 - Better errors when a command in a command substitution wasn't found or is not allowed.
+- ``fish_indent`` allows to write inline variable assignments on multiple lines (ending in a backslash), instead of joining them into one line (:issue:`7955`).
 
 Interactive improvements
 -------------------------

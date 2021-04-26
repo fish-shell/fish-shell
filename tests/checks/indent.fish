@@ -405,3 +405,14 @@ function hello_continuations
 #CHECK: {{^}}        echo --opt2 \
 #CHECK: {{^}}        echo --opt3
 #CHECK: end
+
+echo "\
+a=1 \\
+    a=2 \\
+    echo" | $fish_indent --check
+echo $status #CHECK: 0
+
+echo "\
+a=1 \\
+    a=2 echo" | $fish_indent --check
+echo $status #CHECK: 0

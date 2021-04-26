@@ -167,9 +167,10 @@ struct pretty_printer_t {
     static gap_flags_t gap_text_flags_before_node(const node_t &node) {
         gap_flags_t result = default_flags;
         switch (node.type) {
-            // Allow escaped newlines in argument and redirection lists.
+            // Allow escaped newlines before leaf nodes that can be part of a long command.
             case type_t::argument:
             case type_t::redirection:
+            case type_t::variable_assignment:
                 result |= allow_escaped_newlines;
                 break;
 
@@ -181,6 +182,23 @@ struct pretty_printer_t {
                     case parse_token_type_t::pipe:
                         result |= allow_escaped_newlines;
                         break;
+                    case parse_token_type_t::string: {
+                        // Allow escaped newlines before commands that follow a variable assignment
+                        // since both can be long (#7955).
+                        const node_t *p = node.parent;
+                        if (p->type != type_t::decorated_statement) break;
+                        p = p->parent;
+                        assert(p->type == type_t::statement);
+                        p = p->parent;
+                        if (auto job = p->try_as<job_t>()) {
+                            if (!job->variables.empty()) result |= allow_escaped_newlines;
+                        } else if (auto job_cnt = p->try_as<job_continuation_t>()) {
+                            if (!job_cnt->variables.empty()) result |= allow_escaped_newlines;
+                        } else if (auto not_stmt = p->try_as<not_statement_t>()) {
+                            if (!not_stmt->variables.empty()) result |= allow_escaped_newlines;
+                        }
+                        break;
+                    }
                     default:
                         break;
                 }

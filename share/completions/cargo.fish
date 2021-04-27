@@ -17,7 +17,7 @@ function __list_cargo_examples
         return
     end
 
-    find ./examples/ -mindepth 1 -maxdepth 1 -type f -name "*.rs" -or -type d \
+    find ./examples -mindepth 1 -maxdepth 1 -type f -name "*.rs" -or -type d \
         | string replace -r './examples/(.*?)(?:.rs)?$' '$1'
 end
 for x in bench b build r run rustc t test

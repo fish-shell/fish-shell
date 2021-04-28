@@ -235,6 +235,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
         if set -q VTE_VERSION
             # Same for alacritty
             or string match -q -- 'alacritty*' $TERM
+            # Same for kitty
+            or string match -q -- '*kitty' $TERM
             set -g fish_handle_reflow 0
         else if set -q KONSOLE_VERSION
             and test "$KONSOLE_VERSION" -ge 210400 2>/dev/null

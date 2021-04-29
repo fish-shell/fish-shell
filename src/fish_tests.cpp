@@ -6504,6 +6504,8 @@ void termsize_tester_t::test() {
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
+    setlocale(LC_ALL, "");
+
     // Look for the file tests/test.fish. We expect to run in a directory containing that file.
     // If we don't find it, walk up the directory hierarchy until we do, or error.
     while (access("./tests/test.fish", F_OK) != 0) {

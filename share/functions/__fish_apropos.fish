@@ -37,7 +37,7 @@ if test $status -eq 0 -a (count $sysver) -eq 3
             set age (math (date +%s) - (/usr/bin/stat -f %m $whatis))
         end
 
-        MANPATH="$dir" apropos -- "^$argv"
+        MANPATH="$dir" apropos "^$argv"
 
         if test $age -ge $max_age
             test -d "$dir" || mkdir -m 700 -p $dir

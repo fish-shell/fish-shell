@@ -26,7 +26,7 @@ if test $status -eq 0 -a (count $sysver) -eq 3
         # and override the MANPATH using that directory before we run `apropos`
         #
         # the cache is rebuilt once a week.
-        set -l whatis $cache/whatis
+        set -l whatis $dir/whatis
         set -l max_age 600000 # like a week
         set -l age $max_age
 

@@ -329,8 +329,8 @@ var ayuTheme = {
         receiver['param'] = theme.fg
         receiver['quote'] = theme.string
         receiver['redirection'] = theme.constant
-        receiver['search_match'] = theme.accent
-        receiver['selection'] = theme.accent
+        receiver['search_match'] = "--background="+theme.accent
+        receiver['selection'] = "--background="+theme.accent
 
         receiver['colors'] = []
         for (var key in theme) receiver['colors'].push(theme[key])

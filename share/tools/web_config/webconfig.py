@@ -1527,7 +1527,7 @@ if len(sys.argv) > 1:
         "abbreviations",
     ]:
         if tab.startswith(sys.argv[1]):
-            initial_tab = "#" + tab
+            initial_tab = "#!/" + tab
             break
 
 url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)

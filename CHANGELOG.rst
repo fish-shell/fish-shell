@@ -11,6 +11,7 @@ Deprecations and removed features
 ---------------------------------
 - The ``fish_history`` value "default" is no longer an alias for "fish" (:issue:`7650`).
 - Redirection to standard error with the ``^`` character has been disabled by default. It can be turned back on using the ``stderr-nocaret`` feature flag, but will eventually be disabled completely (:issue:`7105`).
+- Specifying an initial tab to ``fish_config`` now only works with ``fish_config browse`` (e.g. ``fish_config browse variables``), otherwise it would interfere with the new ``prompt`` subcommand (see below) (:issue:`7958`).
 
 Scripting improvements
 ----------------------
@@ -52,7 +53,9 @@ Improved prompts
 - The sample prompts were pruned. Some duplicated prompts like the various classic variants or less useful ones like the "justadollar" prompt were removed,
   some prompts were cleaned up and in some cases renamed. A new "simple" and "disco" prompt were added (:issue:`7884`, :issue:`7897`, :issue:`7930`).
   (Because prompts are copied into the user's ~/.config/fish/functions/, existing installations keep whatever prompt they picked)
+- A new ``prompt_login`` helper function to describe the kind of "login" (user@host and chroot status) for use in prompts. This replaces the old "debian chroot" prompt and has been added to the default and terlar prompts (:issue:`7932`).
 - The prompt picker now shows and installs right prompts (:issue:`7930`).
+- ``fish_config`` gained a ``prompt`` subcommand to show and pick from the sample prompts directly in the terminal, instead of having to open a webbrowser. For example ``fish_config prompt choose default`` loads the default prompt in the current session (:issue:`7958`).
 
 Completions
 ^^^^^^^^^^^

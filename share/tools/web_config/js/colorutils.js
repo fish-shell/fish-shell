@@ -241,7 +241,7 @@ var color_scheme_fish_default = {
     'search_match' : 'bryellow --background=brblack',
     'fish_pager_color_completion' : '',
     'fish_pager_color_description' : 'B3A06D yellow',
-    'fish_pager_color_prefix' : 'white --bold --underline',
+    'fish_pager_color_prefix' : 'normal --bold --underline',
     'fish_pager_color_progress' : 'brwhite --background=cyan',
     'normal' : 'normal',
     'user' : 'brgreen',

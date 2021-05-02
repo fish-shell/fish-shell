@@ -86,6 +86,7 @@ class category_list_t {
     category_t env_dispatch{L"env-dispatch", L"Reacting to variables"};
 
     category_t uvar_file{L"uvar-file", L"Writing/reading the universal variable store"};
+    category_t uvar_notifier{L"uvar-notifier", L"Notifications about universal variable changes"};
 
     category_t topic_monitor{L"topic-monitor", L"Internal details of the topic monitor"};
     category_t char_encoding{L"char-encoding", L"Character encoding issues"};

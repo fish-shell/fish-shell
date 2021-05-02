@@ -1139,12 +1139,14 @@ class universal_notifier_shmem_poller_t final : public universal_notifier_t {
             do {
                 seed++;
             } while (seed == 0);
-            last_seed = seed;
 
             // Write out our data.
             region->magic = htonl(SHMEM_MAGIC_NUMBER);       //!OCLINT(constant cond op)
             region->version = htonl(SHMEM_VERSION_CURRENT);  //!OCLINT(constant cond op)
             region->universal_variable_seed = htonl(seed);   //!OCLINT(constant cond op)
+
+            FLOGF(uvar_notifier, "posting notification: seed %u -> %u", last_seed, seed);
+            last_seed = seed;
         }
     }
 
@@ -1165,6 +1167,7 @@ class universal_notifier_shmem_poller_t final : public universal_notifier_t {
             uint32_t seed = ntohl(region->universal_variable_seed);  //!OCLINT(constant cond op)
             if (seed != last_seed) {
                 result = true;
+                FLOGF(uvar_notifier, "polled true: shmem seed change %u -> %u", last_seed, seed);
                 last_seed = seed;
                 last_change_time = get_time();
             }
@@ -1252,10 +1255,12 @@ class universal_notifier_notifyd_t final : public universal_notifier_t {
             amt_read = read(notify_fd, buff, sizeof buff);
             read_something = (read_something || amt_read > 0);
         } while (amt_read == sizeof buff);
+        FLOGF(uvar_notifier, "notify fd %s readable", read_something ? "was" : "was not");
         return read_something;
     }
 
     void post_notification() override {
+        FLOG(uvar_notifier, "posting notification");
         uint32_t status = notify_post(name.c_str());
         if (status != NOTIFY_STATUS_OK) {
             FLOGF(warning,
@@ -1334,6 +1339,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
         // The pipe seems to have data on it, that won't go away. Read a big chunk out of it. We
         // don't read until it's exhausted, because if someone were to pipe say /dev/null, that
         // would cause us to hang!
+        FLOG(uvar_notifier, "pipe was full, draining it");
         char buff[512];
         ignore_result(read(pipe_fd.fd(), buff, sizeof buff));
     }
@@ -1363,6 +1369,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
         UNUSED(fd);
         bool should_sync = false;
         if (readback_time_usec == 0) {
+            FLOG(uvar_notifier, "entering polling mode");
             polling_due_to_readable_fd = true;
             drain_if_still_readable_time_usec = get_time() + k_readable_too_long_duration_usec;
             should_sync = true;
@@ -1374,6 +1381,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
         if (!pipe_fd.valid()) return;
         // We need to write some data (any data) to the pipe, then wait for a while, then read
         // it back. Nobody is expected to read it except us.
+        FLOG(uvar_notifier, "posting notification by writing to pipe");
         char c[1] = {'\0'};
         ssize_t amt_written = write(pipe_fd.fd(), c, sizeof c);
         if (amt_written < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
@@ -1419,6 +1427,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
 
         // Check if we are past the readback time.
         if (this->readback_time_usec > 0 && get_time() >= this->readback_time_usec) {
+            FLOGF(uvar_notifier, "reading back %lu bytes we wrote to pipe", this->readback_amount);
             // Read back what we wrote. We do nothing with the value.
             while (this->readback_amount > 0) {
                 char buff[64];
@@ -1439,6 +1448,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
         // See if this is still readable.
         if (!select_wrapper_t::poll_fd_readable(pipe_fd.fd())) {
             // No longer readable, no longer polling.
+            FLOG(uvar_notifier, "exiting polling mode");
             polling_due_to_readable_fd = false;
             drain_if_still_readable_time_usec = 0;
         } else {

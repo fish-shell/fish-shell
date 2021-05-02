@@ -317,3 +317,19 @@ sendline('bind \cz "echo bound ctrl-z"')
 expect_prompt()
 send("\x1A")
 expect_str("bound ctrl-z")
+
+# Check that the builtin version of `exit` works
+# (for obvious reasons this MUST BE LAST)
+sendline('function myexit; echo exit; exit; end; bind \cz myexit')
+expect_prompt()
+send("\x1A")
+expect_str("exit")
+
+for t in range(0, 5):
+    if not sp.spawn.isalive():
+        break
+    # This is cheesy, but on CI with thread-sanitizer this can be slow enough that the process is still running, so we sleep for a bit.
+    time.sleep(1)
+else:
+    print("Fish did not exit via binding!")
+    sys.exit(1)

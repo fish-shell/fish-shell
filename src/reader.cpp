@@ -3932,6 +3932,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             }
         }
 
+        // If we ran `exit` anywhere, exit.
+        exit_loop_requested |= parser().libdata().exit_current_script;
+        parser().libdata().exit_current_script = false;
+        if (exit_loop_requested) continue;
+
         if (!event_needing_handling || event_needing_handling->is_check_exit()) {
             continue;
         } else if (event_needing_handling->is_eof()) {

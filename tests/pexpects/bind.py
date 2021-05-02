@@ -329,7 +329,7 @@ for t in range(0, 5):
     if not sp.spawn.isalive():
         break
     # This is cheesy, but on CI with thread-sanitizer this can be slow enough that the process is still running, so we sleep for a bit.
-    time.sleep(1)
+    sleep(1)
 else:
     print("Fish did not exit via binding!")
     sys.exit(1)

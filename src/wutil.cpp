@@ -31,13 +31,7 @@
 
 using cstring = std::string;
 
-const file_id_t kInvalidFileID = {static_cast<dev_t>(-1LL),
-                                  static_cast<ino_t>(-1LL),
-                                  static_cast<uint64_t>(-1LL),
-                                  -1,
-                                  -1,
-                                  -1,
-                                  -1};
+const file_id_t kInvalidFileID{};
 
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;

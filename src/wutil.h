@@ -137,13 +137,15 @@ double fish_wcstod(const wchar_t *str, wchar_t **endptr);
 /// seems to aggressively re-use inodes, so it cannot determine if a file has been deleted (ABA
 /// problem). Therefore we include richer information.
 struct file_id_t {
-    dev_t device;
-    ino_t inode;
-    uint64_t size;
-    time_t change_seconds;
-    long change_nanoseconds;
-    time_t mod_seconds;
-    long mod_nanoseconds;
+    dev_t device{static_cast<dev_t>(-1LL)};
+    ino_t inode{static_cast<ino_t>(-1LL)};
+    uint64_t size{static_cast<uint64_t>(-1LL)};
+    time_t change_seconds{-1};
+    long change_nanoseconds{-1};
+    time_t mod_seconds{-1};
+    long mod_nanoseconds{-1};
+
+    constexpr file_id_t() = default;
 
     bool operator==(const file_id_t &rhs) const;
     bool operator!=(const file_id_t &rhs) const;

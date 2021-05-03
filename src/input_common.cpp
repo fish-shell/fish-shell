@@ -96,8 +96,8 @@ static readb_result_t readb(int in_fd, bool queue_is_empty) {
         // The priority order is: uvars, stdin, ioport.
         // Check to see if we want a universal variable barrier.
         // This may come about through readability, or through a call to poll().
-        if (notifier.poll() ||
-            (fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd))) {
+        if ((fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd)) ||
+            notifier.poll()) {
             if (env_universal_barrier() && !queue_is_empty) {
                 return readb_uvar_notified;
             }

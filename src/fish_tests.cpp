@@ -4002,27 +4002,10 @@ bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
     return result;
 }
 
-static void trigger_or_wait_for_notification(universal_notifier_t::notifier_strategy_t strategy) {
-    switch (strategy) {
-        case universal_notifier_t::strategy_shmem_polling: {
-            break;  // nothing required
-        }
-        case universal_notifier_t::strategy_notifyd: {
-            // notifyd requires a round trip to the notifyd server, which means we have to wait a
-            // little bit to receive it. In practice 40 ms seems to be enough.
-            usleep(40000);
-            break;
-        }
-        case universal_notifier_t::strategy_named_pipe: {
-            break;  // nothing required
-        }
-    }
-}
-
 static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy) {
     say(L"Testing universal notifiers with strategy %d", (int)strategy);
-    std::unique_ptr<universal_notifier_t> notifiers[16];
-    size_t notifier_count = sizeof notifiers / sizeof *notifiers;
+    constexpr size_t notifier_count = 16;
+    std::unique_ptr<universal_notifier_t> notifiers[notifier_count];
 
     // Populate array of notifiers.
     for (size_t i = 0; i < notifier_count; i++) {
@@ -4041,20 +4024,30 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     for (size_t post_idx = 0; post_idx < notifier_count; post_idx++) {
         notifiers[post_idx]->post_notification();
 
-        // Do special stuff to "trigger" a notification for testing.
-        trigger_or_wait_for_notification(strategy);
+        if (strategy == universal_notifier_t::strategy_notifyd) {
+            // notifyd requires a round trip to the notifyd server, which means we have to wait a
+            // little bit to receive it. In practice 40 ms seems to be enough.
+            usleep(40000);
+        }
 
         for (size_t i = 0; i < notifier_count; i++) {
+            bool polled = poll_notifier(notifiers[i]);
+
             // We aren't concerned with the one who posted. Poll from it (to drain it), and then
             // skip it.
             if (i == post_idx) {
-                poll_notifier(notifiers[i]);
                 continue;
             }
 
-            if (!poll_notifier(notifiers[i])) {
+            if (!polled) {
                 err(L"Universal variable notifier (%lu) %p polled failed to notice changes, with "
                     L"strategy %d",
+                    i, notifiers[i].get(), (int)strategy);
+                continue;
+            }
+            // It should not poll again immediately.
+            if (poll_notifier(notifiers[i])) {
+                err(L"Universal variable notifier (%lu) %p polled twice in a row with strategy %d",
                     i, notifiers[i].get(), (int)strategy);
             }
         }

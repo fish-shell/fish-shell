@@ -1323,6 +1323,7 @@ static autoclose_fd_t make_fifo(const wchar_t *test_path, const wchar_t *suffix)
 class universal_notifier_named_pipe_t final : public universal_notifier_t {
 #if !defined(__CYGWIN__)
     autoclose_fd_t pipe_fd;
+    file_id_t pipe_fd_id{};
     long long readback_time_usec{0};
     size_t readback_amount{0};
 
@@ -1342,6 +1343,19 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
         FLOG(uvar_notifier, "pipe was full, draining it");
         char buff[512];
         ignore_result(read(pipe_fd.fd(), buff, sizeof buff));
+    }
+
+    /// Check if the pipe's file ID (aka struct stat) is different from what we have stored.
+    /// If it has changed, it indicates that someone has written to the pipe; update our stored id.
+    /// \return true if changed, false if not.
+    bool check_pipe_id_changed() {
+        if (!pipe_fd.valid()) return false;
+        file_id_t file_id = file_id_for_fd(pipe_fd.fd());
+        if (file_id == this->pipe_fd_id) {
+            return false;
+        }
+        this->pipe_fd_id = file_id;
+        return true;
     }
 
    public:
@@ -1373,6 +1387,8 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
             polling_due_to_readable_fd = true;
             drain_if_still_readable_time_usec = get_time() + k_readable_too_long_duration_usec;
             should_sync = true;
+            // Update our pipe's timestamps.
+            check_pipe_id_changed();
         }
         return should_sync;
     }
@@ -1392,6 +1408,9 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
         // Now schedule a read for some time in the future.
         this->readback_time_usec = get_time() + k_flash_duration_usec;
         this->readback_amount += sizeof c;
+
+        // No need to react to our own changes.
+        check_pipe_id_changed();
     }
 
     unsigned long usec_delay_between_polls() const override {
@@ -1458,7 +1477,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
                 drain_excessive_data();
             }
         }
-        return true;
+        return check_pipe_id_changed();
     }
 #else  // this class isn't valid on this system
    public:

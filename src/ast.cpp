@@ -1233,8 +1233,6 @@ class ast_t::populator_t {
         assert(!visit_stack_.empty() && visit_stack_.back() == &node &&
                "Node was not at the top of the visit stack");
         visit_stack_.pop_back();
-        FLOGF(ast_construction, L"%*sdid_visit %ls %p", spaces(), "", node.describe().c_str(),
-              (const void *)&node);
     }
 
     // The ast which we are populating.

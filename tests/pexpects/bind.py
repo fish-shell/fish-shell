@@ -23,7 +23,7 @@ expect_prompt(increment=False)
 #
 # Because common CI systems are awful, we have to increase this:
 
-sendline("set -g fish_escape_delay_ms 80")
+sendline("set -g fish_escape_delay_ms 120")
 expect_prompt("")
 
 # Verify the emacs transpose word (\et) behavior using various delays,
@@ -161,6 +161,7 @@ send("echo fail: lengthened escape timeout")
 send("\033")
 sleep(0.250)
 send("ddi")
+sleep(0.1)
 send("echo success: lengthened escape timeout\r")
 expect_prompt(
     "\r\nsuccess: lengthened escape timeout\r\n",

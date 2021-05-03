@@ -86,7 +86,7 @@ expect_prompt(
 send("echo TEXT")
 send("\033")
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep(0.250)
+sleep(0.300)
 send("hhrAi\r")
 expect_prompt(
     "\r\nTAXT\r\n", unmatched="vi mode replace char, default timeout: long delay"
@@ -96,7 +96,7 @@ expect_prompt(
 send("echo MORE-TEXT")
 send("\033")
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep(0.250)
+sleep(0.300)
 send("xxxxx\r")
 
 # vi mode delete char, default timeout: long delay
@@ -159,9 +159,9 @@ expect_prompt()
 
 send("echo fail: lengthened escape timeout")
 send("\033")
-sleep(0.250)
+sleep(0.300)
 send("ddi")
-sleep(0.1)
+sleep(0.15)
 send("echo success: lengthened escape timeout\r")
 expect_prompt(
     "\r\nsuccess: lengthened escape timeout\r\n",

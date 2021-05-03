@@ -291,7 +291,7 @@ It can also be unexported with ``--unexport`` or ``-u``.
 
 This works the other way around as well! If fish is started by something else, it inherits that parents exported variables. So if your terminal emulator starts fish, and it exports ``$LANG`` set to ``en_US.UTF-8``, fish will receive that setting. And whatever started your terminal emulator also gave *it* some variables that it will then pass on unless it specifically decides not to. This is how fish usually receives the values for things like ``$LANG``, ``$PATH`` and ``$TERM``, without you having to specify them again.
 
-Note that exported variables can be local or global or universal - "exported" is not a :ref:`scope <variables-scope>`. Usually you'd make them global via ``set -gx MyVariable SomeValue``.
+Exported variables can be local or global or universal - "exported" is not a :ref:`scope <variables-scope>`! Usually you'd make them global via ``set -gx MyVariable SomeValue``.
 
 For more, see :ref:`Exporting variables <variables-export>`.
 
@@ -547,8 +547,7 @@ There is also a :ref:`switch <cmd-switch>` command::
         echo Hi, stranger!
     end
 
-
-Note that :ref:`case <cmd-case>` does not fall through, and can accept multiple arguments or (quoted) wildcards.
+As you see, :ref:`case <cmd-case>` does not fall through, and can accept multiple arguments or (quoted) wildcards.
 
 For more, see :ref:`Conditions <syntax-conditional>`.
 

@@ -204,7 +204,7 @@ It is possible to pipe a different output file descriptor by prepending its FD n
 
 will attempt to build ``fish``, and any errors will be shown using the ``less`` pager. [#]_
 
-As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. Note that this is different from bash, which uses ``|&``.
+As a convenience, the pipe ``&|`` redirects both stdout and stderr to the same process. This is different from bash, which uses ``|&``.
 
 .. [#] A "pager" here is a program that takes output and "paginates" it. ``less`` doesn't just do pages, it allows arbitrary scrolling (even back!).
 
@@ -229,7 +229,7 @@ If you instead want to put a suspended job into the background, use the :ref:`bg
 To get a listing of all currently started jobs, use the :ref:`jobs <cmd-jobs>` command.
 These listed jobs can be removed with the :ref:`disown <cmd-disown>` command.
 
-Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
+At the moment, functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
 
 .. _syntax-function:
 
@@ -512,7 +512,7 @@ To separate a variable name from text you can encase the variable within double-
     echo The plural of $WORD is {$WORD}s
     # ditto
 
-Note that without the quotes or braces, fish will try to expand a variable called ``$WORDs``, which may not exist.
+Without the quotes or braces, fish will try to expand a variable called ``$WORDs``, which may not exist.
 
 The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand-brace>`.
 
@@ -859,7 +859,7 @@ Variables can be explicitly set to be universal with the ``-U`` or ``--universal
 
 - When no scope is given, but a variable of that name exists, the variable of the smallest scope will be modified. The scope will not be changed.
 
-- As a special case, when no scope is given and no variable has been defined the variable will belong to the scope of the currently executing *function*. Note that this is different from the ``--local`` flag, which would make the variable local to the current *block*.
+- As a special case, when no scope is given and no variable has been defined the variable will belong to the scope of the currently executing *function*. This is different from the ``--local`` flag, which would make the variable local to the current *block*.
 
 There can be many variables with the same name, but different scopes. When you :ref:`use a variable <expand-variable>`, the smallest scoped variable of that name will be used. If a local variable exists, it will be used instead of the global or universal variable of the same name.
 
@@ -921,7 +921,7 @@ If you want to override a variable for a single command, you can use "var=val" s
   # (can also be done via `git -C somerepo status`)
   GIT_DIR=somerepo git status
 
-Note that, unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
+Unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
 
   set foo banana
   foo=gagaga echo $foo # prints gagaga, while in other shells it might print "banana"
@@ -1032,7 +1032,7 @@ To access one element of a list, use the index of the element inside of square b
 
    echo $PATH[3]
 
-Note that list indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
+List indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
 
 If you don't use any brackets, all the elements of the list will be passed to the command as separate items. This means you can iterate over a list with ``for``::
 
@@ -1480,7 +1480,7 @@ To specify a signal handler for the WINCH signal, write::
         echo Got WINCH signal!
     end
 
-Please note that event handlers only become active when a function is loaded, which means you might need to otherwise :ref:`source <cmd-source>` or execute a function instead of relying on :ref:`autoloading <syntax-function-autoloading>`. One approach is to put it into your :ref:`initialization file <initialization>`.
+Please note that event handlers only become active when a function is loaded, which means you need to otherwise :ref:`source <cmd-source>` or execute a function instead of relying on :ref:`autoloading <syntax-function-autoloading>`. One approach is to put it into your :ref:`initialization file <initialization>`.
 
 For more information on how to define new event handlers, see the documentation for the :ref:`function <cmd-function>` command.
 

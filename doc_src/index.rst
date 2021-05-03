@@ -126,7 +126,7 @@ These paths are controlled by parameters set at build, install, or run time, and
 
 This wide search may be confusing. If you are unsure where to put your own customisations, use ``~/.config/fish/config.fish``.
 
-Note that ``~/.config/fish/config.fish`` is sourced `after` the snippets. This is so users can copy snippets and override some of their behavior.
+``~/.config/fish/config.fish`` is sourced *after* the snippets. This is so users can copy snippets and override some of their behavior.
 
 These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command ``status --is-interactive`` to determine if the shell is interactive. If you want to run a command only when using a login shell, use ``status --is-login`` instead. This will speed up the starting of non-interactive or non-login shells.
 

@@ -51,9 +51,7 @@ Fish runs commands like other shells: you type a command, followed by its argume
     hello world
 
 
-This runs the command ``echo`` with the arguments ``hello`` and ``world``.
-
-You can include a literal space in an argument with a backslash, or by using single or double quotes::
+This runs the command ``echo`` with the arguments ``hello`` and ``world``. In this case that's the same as one argument ``hello world``, but in many cases it's not. If you need to pass an argument that includes a space, you can :ref:`escape <escapes>` with a backslash, or :ref:`quote <quotes>` it using single or double quotes::
 
     > mkdir My\ Files
     > cp ~/Some\ File 'My Files'
@@ -61,15 +59,10 @@ You can include a literal space in an argument with a backslash, or by using sin
     Some File
 
 
-Commands can be chained with semicolons.
-
-
 Getting Help
 ------------
 
-Fish has excellent help and man pages. Run ``help`` to open help in a web browser, and ``man`` to open it in a man page. You can also ask for help with a specific command, for example, ``help set`` to open in a web browser, or ``man set`` to see it in the terminal.
-
-
+Run ``help`` to open fish's help in a web browser, and ``man`` with the page (like ``fish-language``) to open it in a man page. You can also ask for help with a specific command, for example, ``help set`` to open in a web browser, or ``man set`` to see it in the terminal.
 
 ::
 
@@ -141,6 +134,7 @@ Especially powerful is the recursive wildcard ** which searches directories recu
 
 If that directory traversal is taking a long time, you can :kbd:`Control`\ +\ :kbd:`C` out of it.
 
+For more, see :ref:`Wildcards <expand-wildcard>`.
 
 Pipes and Redirections
 ----------------------
@@ -164,6 +158,7 @@ To redirect stdout and stderr into one file, you need to first redirect stdout, 
 
     > make > make_output.txt 2>&1
 
+For more, see :ref:`Input and output redirections <redirects>` and :ref:`Pipes <pipes>`.
 
 Autosuggestions
 ---------------
@@ -275,6 +270,8 @@ You can erase (or "delete") a variable with ``-e`` or ``--erase``
     > env | grep MyVariable
     (no output)
 
+For more, see :ref:`Variable expansion <expand-variable>`.
+
 .. _tut-exports:
 
 Exports (Shell Variables)
@@ -295,6 +292,8 @@ It can also be unexported with ``--unexport`` or ``-u``.
 This works the other way around as well! If fish is started by something else, it inherits that parents exported variables. So if your terminal emulator starts fish, and it exports ``$LANG`` set to ``en_US.UTF-8``, fish will receive that setting. And whatever started your terminal emulator also gave *it* some variables that it will then pass on unless it specifically decides not to. This is how fish usually receives the values for things like ``$LANG``, ``$PATH`` and ``$TERM``, without you having to specify them again.
 
 Note that exported variables can be local or global or universal - "exported" is not a :ref:`scope <variables-scope>`. Usually you'd make them global via ``set -gx MyVariable SomeValue``.
+
+For more, see :ref:`Exporting variables <variables-export>`.
 
 .. _tut-lists:
 
@@ -375,6 +374,9 @@ Lists adjacent to other lists or strings are expanded as :ref:`cartesian product
 
 This is similar to :ref:`Brace expansion <expand-brace>`.
 
+For more, see :ref:`Lists <variables-lists>`.
+
+
 Command Substitutions
 ---------------------
 
@@ -410,6 +412,7 @@ Unlike other shells, fish does not split command substitutions on any whitespace
     -lgobject-2.0
     -lglib-2.0
 
+For more, see :ref:`Command substitution <expand-command-substitution>`.
 
 .. _tut-semicolon:
 
@@ -445,6 +448,8 @@ Unlike other shells, fish stores the exit status of the last command in ``$statu
 This indicates how the command fared - 0 usually means success, while the others signify kinds of failure. For instance fish's ``set --query`` returns the number of variables it queried that weren't set - ``set --query PATH`` usually returns 0, ``set --query arglbargl boogagoogoo`` usually returns 2.
 
 There is also a ``$pipestatus`` list variable for the exit statuses [#]_ of processes in a pipe.
+
+For more, see :ref:`The status variable <variables-status>`.
 
 .. [#] or "stati" if you prefer, or "statūs" if you've time-travelled from ancient Rome or work as a latin teacher
 
@@ -545,6 +550,7 @@ There is also a :ref:`switch <cmd-switch>` command::
 
 Note that :ref:`case <cmd-case>` does not fall through, and can accept multiple arguments or (quoted) wildcards.
 
+For more, see :ref:`Conditions <syntax-conditional>`.
 
 Functions
 ---------
@@ -575,6 +581,8 @@ You can see the source for any function by passing its name to ``functions``::
         command ls -G $argv
     end
 
+For more, see :ref:`Functions <syntax-function>`.
+
 .. [#] There is a function called :ref:`alias <cmd-alias>`, but it's just a shortcut to make functions.
 
 Loops
@@ -604,6 +612,7 @@ Iterating over a list of numbers can be done with ``seq``::
         touch file_$x.txt
     end
 
+For more, see :ref:`Loops and blocks <syntax-loops-and-blocks>`.
 
 Prompt
 ------
@@ -642,7 +651,7 @@ This prompt would look like:
     :red:`/home/tutorial >` _
 
 
-You can choose among some sample prompts by running ``fish_config prompt``.
+You can choose among some sample prompts by running ``fish_config`` for a web UI or ``fish_config prompt`` for a simpler version inside your terminal.
 
 $PATH
 -----

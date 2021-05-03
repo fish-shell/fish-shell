@@ -370,6 +370,8 @@ Some examples::
 
 For more, see the documentation for the builtins or the :ref:`Conditionals <tut-conditionals>` section of the tutorial.
 
+.. _syntax-loops-and-blocks:
+
 Loops and blocks
 ----------------
 

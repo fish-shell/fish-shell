@@ -42,4 +42,5 @@ Examples
     # Just put the strings together without a separator
     >_ string join '' a b c
     abc
+
 .. END EXAMPLES

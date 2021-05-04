@@ -26,25 +26,23 @@ Example
 
 ::
 
-    pushd /usr/src
-    # Working directory is now /usr/src
-    # Directory stack contains /usr/src
+    cd ~/dir1
+    pushd ~/dir2
+    pushd ~/dir3
+    # Working directory is now ~/dir3
+    # Directory stack contains ~/dir2 ~/dir1
 
-    pushd /usr/src/fish-shell
-    # Working directory is now /usr/src/fish-shell
-    # Directory stack contains /usr/src /usr/src/fish-shell
-
-    pushd /tmp/
+    pushd /tmp
     # Working directory is now /tmp
-    # Directory stack contains /tmp /usr/src /usr/src/fish-shell
+    # Directory stack contains ~/dir3 ~/dir2 ~/dir1
 
     pushd +1
-    # Working directory is now /usr/src
-    # Directory stack contains /usr/src /usr/src/fish-shell /tmp
+    # Working directory is now ~/dir3
+    # Directory stack contains ~/dir2 ~/dir1 /tmp
 
     popd
-    # Working directory is now /usr/src/fish-shell
-    # Directory stack contains /usr/src/fish-shell /tmp
+    # Working directory is now ~/dir2
+    # Directory stack contains ~/dir1 /tmp
 
 See Also
 --------

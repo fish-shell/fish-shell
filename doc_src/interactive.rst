@@ -178,6 +178,10 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 
 - :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`→` accepts the autosuggestion.
 
+- :kbd:`Enter` executes the current commandline or inserts a newline if it's not complete yet (e.g. a ``)`` or ``end`` is missing).
+
+- :kbd:`Alt`\ +\ :kbd:`Enter` inserts a newline at the cursor position.
+
 - :kbd:`Alt`\ +\ :kbd:`←` and :kbd:`Alt`\ +\ :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt`\ +\ :kbd:`→` (or :kbd:`Alt`\ +\ :kbd:`F`) accepts the first word in the suggestion.
 
 - :kbd:`Control`\ +\ :kbd:`←` and :kbd:`Control`\ +\ :kbd:`→` move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.

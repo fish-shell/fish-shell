@@ -1155,7 +1155,7 @@ static maybe_t<wchar_t> string_last_char(const wcstring &str) {
 }
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
-/// appending to result. Return the number of characters consumed, or 0 on error.
+/// appending to result. Return the number of characters consumed, or none on error.
 maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
                                      bool unescape_special) {
     assert(input[0] == L'\\' && "Not an escape");
@@ -1244,6 +1244,9 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             }
 
             if (res <= max_val) {
+                // Prepend internal sep so this does not get treated as part of a variable.
+                // See #7969.
+                if (unescape_special) result->push_back(INTERNAL_SEPARATOR);
                 result_char_or_none =
                     static_cast<wchar_t>((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
             } else {

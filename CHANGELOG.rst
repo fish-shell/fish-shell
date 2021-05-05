@@ -6,6 +6,7 @@ Notable improvements and fixes
 
 Syntax changes and new commands
 -------------------------------
+- Escaped characters like ``\x41`` are no longer valid in a variable name (:issue:`7969`).
 
 Deprecations and removed features
 ---------------------------------

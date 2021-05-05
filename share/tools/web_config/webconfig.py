@@ -865,7 +865,7 @@ class BindingParser:
         return readable_command + result
 
 
-class FishConfigTCPServer(SocketServer.TCPServer):
+class FishConfigTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
 
     WHITELIST = set(["::1", "::ffff:127.0.0.1", "127.0.0.1"])
@@ -1574,6 +1574,11 @@ def runThing():
 # so we just spawn it in a thread.
 thread = threading.Thread(target=runThing)
 thread.start()
+
+# Safari will open sockets and not write to them, causing potential hangs
+# on shutdown.
+httpd.block_on_close = False
+httpd.daemon_threads = True
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()

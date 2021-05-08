@@ -53,16 +53,21 @@ class history_file_contents_t {
 
    private:
     // The memory mapped pointer.
-    const char *start_;
+    const char *const start_;
 
     // The mapped length.
     const size_t length_;
 
     // The type of the mapped file.
-    const history_file_type_t type_;
+    // This is set at construction and not changed after.
+    history_file_type_t type_{};
 
     // Private constructor; use the static create() function.
-    history_file_contents_t(const char *mmap_start, size_t mmap_length, history_file_type_t type);
+    history_file_contents_t(const char *mmap_start, size_t mmap_length);
+
+    // Try to infer the file type to populate type_.
+    // \return true on success, false on error.
+    bool infer_file_type();
 
     history_file_contents_t(history_file_contents_t &&) = delete;
     void operator=(history_file_contents_t &&) = delete;

@@ -126,7 +126,6 @@ class history_item_t {
 
 typedef std::deque<history_item_t> history_item_list_t;
 
-class history_file_contents_t;
 struct history_impl_t;
 
 class history_t {

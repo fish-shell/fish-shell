@@ -48,19 +48,6 @@ static bool read_from_fd(int fd, void *address, size_t len) {
     return true;
 }
 
-/// Try to infer the history file type based on inspecting the data.
-static maybe_t<history_file_type_t> infer_file_type(const void *data, size_t len) {
-    maybe_t<history_file_type_t> result{};
-    if (len > 0) {  // old fish started with a #
-        if (static_cast<const char *>(data)[0] == '#') {
-            result = history_type_fish_1_x;
-        } else {  // assume new fish
-            result = history_type_fish_2_0;
-        }
-    }
-    return result;
-}
-
 static void replace_all(std::string *str, const char *needle, const char *replacement) {
     size_t needle_len = std::strlen(needle), replacement_len = std::strlen(replacement);
     size_t offset = 0;
@@ -110,10 +97,20 @@ static void unescape_yaml_fish_2_0(std::string *str) {
 
 history_file_contents_t::~history_file_contents_t() { munmap(const_cast<char *>(start_), length_); }
 
-history_file_contents_t::history_file_contents_t(const char *mmap_start, size_t mmap_length,
-                                                 history_file_type_t type)
-    : start_(mmap_start), length_(mmap_length), type_(type) {
-    assert(mmap_start != MAP_FAILED && "Invalid mmap address");
+history_file_contents_t::history_file_contents_t(const char *mmap_start, size_t mmap_length)
+    : start_(mmap_start), length_(mmap_length) {
+    assert(mmap_start != MAP_FAILED && mmap_length > 0 && "Invalid mmap params");
+}
+
+/// Try to infer the history file type based on inspecting the data.
+bool history_file_contents_t::infer_file_type() {
+    assert(length_ >= 0 && "File shoudl never be empty");
+    if (start_[0] == '#') {
+        this->type_ = history_type_fish_1_x;
+    } else {  // assume new fish
+        this->type_ = history_type_fish_2_0;
+    }
+    return true;
 }
 
 std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd) {
@@ -124,11 +121,11 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
 
     // Read the file, possibly using mmap.
     void *mmap_start = nullptr;
-    if (should_mmap(fd)) {
+    bool mmap_file_directly = should_mmap(fd);
+    if (mmap_file_directly) {
         // We feel confident to map the file directly. Note this is still risky: if another
         // process truncates the file we risk SIGBUS.
         mmap_start = mmap(nullptr, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
-        if (mmap_start == MAP_FAILED) return nullptr;
     } else {
         // We don't want to map the file. mmap some private memory and then read into it. We use
         // mmap instead of malloc so that the destructor can always munmap().
@@ -138,16 +135,21 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
 #else
             mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif
-        if (mmap_start == MAP_FAILED) return nullptr;
-        if (!read_from_fd(fd, mmap_start, len)) return nullptr;
+    }
+    if (mmap_start == MAP_FAILED) return nullptr;
+
+    // Construct the contents right away so it can clean up on error.
+    std::unique_ptr<history_file_contents_t> result(
+        new history_file_contents_t(static_cast<const char *>(mmap_start), len));
+
+    // If we mapped anonymous memory, we have to read from the file.
+    if (!mmap_file_directly && !read_from_fd(fd, mmap_start, len)) {
+        return nullptr;
     }
 
     // Check the file type.
-    auto mtype = infer_file_type(mmap_start, len);
-    if (!mtype) return nullptr;
-
-    return std::unique_ptr<history_file_contents_t>(
-        new history_file_contents_t(static_cast<const char *>(mmap_start), len, *mtype));
+    if (!result->infer_file_type()) return nullptr;
+    return result;
 }
 
 history_item_t history_file_contents_t::decode_item(size_t offset) const {

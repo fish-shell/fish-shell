@@ -52,10 +52,13 @@ class history_file_contents_t {
     ~history_file_contents_t();
 
    private:
-    // The memory mapped pointer.
-    const char *const start_;
+    // A type wrapping up the logic around mmap and munmap.
+    struct mmap_region_t;
+    const std::unique_ptr<mmap_region_t> region_{};
 
-    // The mapped length.
+    // The memory mapped pointer and length.
+    // These just alias the mapped region.
+    const char *const start_;
     const size_t length_;
 
     // The type of the mapped file.
@@ -63,7 +66,7 @@ class history_file_contents_t {
     history_file_type_t type_{};
 
     // Private constructor; use the static create() function.
-    history_file_contents_t(const char *mmap_start, size_t mmap_length);
+    explicit history_file_contents_t(std::unique_ptr<mmap_region_t> region);
 
     // Try to infer the file type to populate type_.
     // \return true on success, false on error.

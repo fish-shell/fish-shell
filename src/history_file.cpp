@@ -95,16 +95,56 @@ static void unescape_yaml_fish_2_0(std::string *str) {
     }
 }
 
-history_file_contents_t::~history_file_contents_t() { munmap(const_cast<char *>(start_), length_); }
+// A type wrapping up a region allocated via mmap().
+struct history_file_contents_t::mmap_region_t {
+    void *const ptr;
+    const size_t len;
 
-history_file_contents_t::history_file_contents_t(const char *mmap_start, size_t mmap_length)
-    : start_(mmap_start), length_(mmap_length) {
-    assert(mmap_start != MAP_FAILED && mmap_length > 0 && "Invalid mmap params");
+    mmap_region_t(void *ptr, size_t len) : ptr(ptr), len(len) {
+        assert(ptr != MAP_FAILED && len > 0 && "Invalid params");
+    }
+
+    ~mmap_region_t() { (void)munmap(ptr, len); }
+
+    /// Map a region [0, len) from an fd.
+    /// \return nullptr on failure.
+    static std::unique_ptr<mmap_region_t> map_file(int fd, size_t len) {
+        if (len == 0) return nullptr;
+        void *ptr = mmap(nullptr, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
+        if (ptr == MAP_FAILED) return nullptr;
+        return make_unique<mmap_region_t>(ptr, len);
+    }
+
+    /// Map anonymous memory of a given length.
+    /// \return nullptr on failure.
+    static std::unique_ptr<mmap_region_t> map_anon(size_t len) {
+        if (len == 0) return nullptr;
+        void *ptr =
+#ifdef MAP_ANON
+            mmap(nullptr, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+#else
+            mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
+        if (ptr == MAP_FAILED) return nullptr;
+        return make_unique<mmap_region_t>(ptr, len);
+    }
+
+    mmap_region_t(mmap_region_t &&rhs) = delete;
+    void operator=(mmap_region_t &&rhs) = delete;
+    mmap_region_t(const mmap_region_t &) = delete;
+    void operator=(const mmap_region_t &) = delete;
+};
+
+history_file_contents_t::~history_file_contents_t() = default;
+
+history_file_contents_t::history_file_contents_t(std::unique_ptr<mmap_region_t> region)
+    : region_(std::move(region)), start_(static_cast<char *>(region_->ptr)), length_(region_->len) {
+    assert(region_ && start_ && length_ > 0 && "Invalid params");
 }
 
 /// Try to infer the history file type based on inspecting the data.
 bool history_file_contents_t::infer_file_type() {
-    assert(length_ >= 0 && "File shoudl never be empty");
+    assert(length_ > 0 && "File should never be empty");
     if (start_[0] == '#') {
         this->type_ = history_type_fish_1_x;
     } else {  // assume new fish
@@ -117,35 +157,19 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
     // Check that the file is seekable, and its size.
     off_t len = lseek(fd, 0, SEEK_END);
     if (len <= 0 || static_cast<unsigned long>(len) >= SIZE_MAX) return nullptr;
-    if (lseek(fd, 0, SEEK_SET) != 0) return nullptr;
 
-    // Read the file, possibly using mmap.
-    void *mmap_start = nullptr;
     bool mmap_file_directly = should_mmap(fd);
-    if (mmap_file_directly) {
-        // We feel confident to map the file directly. Note this is still risky: if another
-        // process truncates the file we risk SIGBUS.
-        mmap_start = mmap(nullptr, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
-    } else {
-        // We don't want to map the file. mmap some private memory and then read into it. We use
-        // mmap instead of malloc so that the destructor can always munmap().
-        mmap_start =
-#ifdef MAP_ANON
-            mmap(nullptr, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-#else
-            mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-#endif
-    }
-    if (mmap_start == MAP_FAILED) return nullptr;
-
-    // Construct the contents right away so it can clean up on error.
-    std::unique_ptr<history_file_contents_t> result(
-        new history_file_contents_t(static_cast<const char *>(mmap_start), len));
+    std::unique_ptr<mmap_region_t> region =
+        mmap_file_directly ? mmap_region_t::map_file(fd, len) : mmap_region_t::map_anon(len);
+    if (!region) return nullptr;
 
     // If we mapped anonymous memory, we have to read from the file.
-    if (!mmap_file_directly && !read_from_fd(fd, mmap_start, len)) {
-        return nullptr;
+    if (!mmap_file_directly) {
+        if (lseek(fd, 0, SEEK_SET) != 0) return nullptr;
+        if (!read_from_fd(fd, region->ptr, region->len)) return nullptr;
     }
+
+    std::unique_ptr<history_file_contents_t> result(new history_file_contents_t(std::move(region)));
 
     // Check the file type.
     if (!result->infer_file_type()) return nullptr;

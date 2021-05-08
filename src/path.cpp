@@ -292,9 +292,10 @@ static int create_directory(const wcstring &d) {
 /// actually) to XDG spec.
 struct base_directory_t {
     wcstring path{};       /// the path where we attempted to create the directory.
-    bool success{false};   /// whether creating the directory succeeded.
-    int err{0};            /// the error code if creating the directory failed.
+    int err{0};            /// the error code if creating the directory failed, or 0 on success.
     bool used_xdg{false};  /// whether an XDG variable was used in resolving the directory.
+
+    bool success() const { return err == 0; }
 };
 
 /// Attempt to get a base directory, creating it if necessary. If a variable named \p xdg_var is
@@ -319,8 +320,13 @@ static base_directory_t make_base_directory(const wcstring &xdg_var,
     }
 
     errno = 0;
-    result.success = !result.path.empty() && create_directory(result.path) != -1;
-    result.err = errno;
+    if (result.path.empty()) {
+        result.err = ENOENT;
+    } else if (create_directory(result.path) < 0) {
+        result.err = errno;
+    } else {
+        result.err = 0;
+    }
     return result;
 }
 
@@ -336,13 +342,13 @@ static const base_directory_t &get_config_directory() {
 
 void path_emit_config_directory_errors(env_stack_t &vars) {
     const auto &data = get_data_directory();
-    if (!data.success) {
+    if (!data.success()) {
         maybe_issue_path_warning(L"data", _(L"Your history will not be saved."), data.used_xdg,
                                  L"XDG_DATA_HOME", data.path, data.err, vars);
     }
 
     const auto &config = get_config_directory();
-    if (!config.success) {
+    if (!config.success()) {
         maybe_issue_path_warning(L"config", _(L"Your personal settings will not be saved."),
                                  config.used_xdg, L"XDG_CONFIG_HOME", config.path, config.err,
                                  vars);
@@ -351,14 +357,14 @@ void path_emit_config_directory_errors(env_stack_t &vars) {
 
 bool path_get_config(wcstring &path) {
     const auto &dir = get_config_directory();
-    path = dir.success ? dir.path : L"";
-    return dir.success;
+    path = dir.success() ? dir.path : L"";
+    return dir.success();
 }
 
 bool path_get_data(wcstring &path) {
     const auto &dir = get_data_directory();
-    path = dir.success ? dir.path : L"";
-    return dir.success;
+    path = dir.success() ? dir.path : L"";
+    return dir.success();
 }
 
 void path_make_canonical(wcstring &path) {

@@ -10,3 +10,4 @@ end
 echo #abc
 # 1339520884
 #def
+echo no trailing newline ignore me

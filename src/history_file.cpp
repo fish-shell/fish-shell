@@ -11,10 +11,10 @@
 static history_item_t decode_item_fish_2_0(const char *base, size_t len);
 static history_item_t decode_item_fish_1_x(const char *begin, size_t length);
 
-static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
-                                           size_t *inout_cursor, time_t cutoff_timestamp);
-static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
-                                           size_t *inout_cursor);
+static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
+                                                    size_t *inout_cursor, time_t cutoff_timestamp);
+static maybe_t<size_t> offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
+                                                    size_t *inout_cursor);
 
 // Check if we should mmap the fd.
 // Don't try mmap() on non-local filesystems.
@@ -142,6 +142,11 @@ history_file_contents_t::history_file_contents_t(std::unique_ptr<mmap_region_t> 
     assert(region_ && start_ && length_ > 0 && "Invalid params");
 }
 
+history_file_contents_t::history_file_contents_t(const char *start, size_t length)
+    : start_(start), length_(length) {
+    // Construct from explicit data, not backed by a file. This is used in tests.
+}
+
 /// Try to infer the history file type based on inspecting the data.
 bool history_file_contents_t::infer_file_type() {
     assert(length_ > 0 && "File should never be empty");
@@ -189,19 +194,13 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
 }
 
 maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) const {
-    auto offset = size_t(-1);
     switch (this->type()) {
         case history_type_fish_2_0:
-            offset = offset_of_next_item_fish_2_0(*this, cursor, cutoff);
-            break;
+            return offset_of_next_item_fish_2_0(*this, cursor, cutoff);
         case history_type_fish_1_x:
-            offset = offset_of_next_item_fish_1_x(this->begin(), this->length(), cursor);
-            break;
+            return offset_of_next_item_fish_1_x(this->begin(), this->length(), cursor);
     }
-    if (offset == size_t(-1)) {
-        return none();
-    }
-    return offset;
+    return none();
 }
 
 /// Read one line, stripping off any newline, and updating cursor. Note that our input string is NOT
@@ -366,10 +365,10 @@ static const char *next_line(const char *start, const char *end) {
 /// Pass the file contents and a pointer to a cursor size_t, initially 0.
 /// If custoff_timestamp is nonzero, skip items created at or after that timestamp.
 /// Returns (size_t)-1 when done.
-static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
-                                           size_t *inout_cursor, time_t cutoff_timestamp) {
+static maybe_t<size_t> offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
+                                                    size_t *inout_cursor, time_t cutoff_timestamp) {
     size_t cursor = *inout_cursor;
-    auto result = size_t(-1);
+    maybe_t<size_t> result = none();
     const size_t length = contents.length();
     const char *const begin = contents.begin();
     const char *const end = contents.end();
@@ -449,12 +448,10 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         }
 
         // We made it through the gauntlet.
-        result = line_start - begin;
-        break;  //!OCLINT(avoid branching statement as last in loop)
+        *inout_cursor = cursor;
+        return line_start - begin;
     }
-
-    *inout_cursor = cursor;
-    return result;
+    return none();
 }
 
 void append_history_item_to_buffer(const history_item_t &item, std::string *buffer) {
@@ -564,9 +561,9 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
 
 /// Same as offset_of_next_item_fish_2_0, but for fish 1.x (pre fishfish).
 /// Adapted from history_populate_from_mmap in history.c
-static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
-                                           size_t *inout_cursor) {
-    if (mmap_length == 0 || *inout_cursor >= mmap_length) return static_cast<size_t>(-1);
+static maybe_t<size_t> offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
+                                                    size_t *inout_cursor) {
+    if (mmap_length == 0 || *inout_cursor >= mmap_length) return none();
 
     const char *end = begin + mmap_length;
     const char *pos;
@@ -590,6 +587,11 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
             }
             ignore_newline = false;
         }
+    }
+
+    if (pos == end && !all_done) {
+        // No trailing newline, treat this item as incomplete and ignore it.
+        return none();
     }
 
     *inout_cursor = (pos - begin);

@@ -4,3 +4,4 @@
    when: 1339717377
 - cmd: echo this has\\\nbackslashes
    when: 1339717385
+- cmd: I should be ignored no trailing newline

@@ -22,6 +22,9 @@
 #include <sys/statfs.h>
 #endif
 
+#include <sys/mount.h>
+#include <sys/param.h>
+
 // The first fd in the "high range." fds below this are allowed to be used directly by users in
 // redirections, e.g. >&3
 const int k_first_high_fd = 10;

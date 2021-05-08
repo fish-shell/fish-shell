@@ -79,3 +79,7 @@ Examples
     functions -e bar
     # Erases the function ``bar``
 
+See more
+--------
+
+For more explanation of how functions fit into fish, see :ref:`Functions <syntax-function>`.

@@ -51,3 +51,10 @@ The following code will create ``rmi``, which runs ``rm`` with additional argume
     # will be seen as an argument to "/Applications/Google":
     alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome banana'
 
+
+See more
+--------
+
+1. The :ref:`function <cmd-function>` builtin this builds on.
+2. :ref:`Functions <syntax-function>`.
+3. :ref:`Function wrappers <syntax-function-wrappers>`.

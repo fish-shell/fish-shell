@@ -115,4 +115,9 @@ This will beep when the most recent job completes.
 Notes
 -----
 
-Note that events are only received from the current fish process as there is no way to send events from one fish process to another.
+Events are only received from the current fish process as there is no way to send events from one fish process to another.
+
+See more
+--------
+
+For more explanation of how functions fit into fish, see :ref:`Functions <syntax-function>`.

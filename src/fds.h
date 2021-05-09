@@ -180,10 +180,6 @@ int make_fd_nonblocking(int fd);
 /// Mark an fd as blocking; returns errno or 0 on success.
 int make_fd_blocking(int fd);
 
-/// Check if an fd is on a remote filesystem (NFS, SMB, CFS)
-/// Return 1 if remote, 0 if local, -1 on error or if not implemented on this platform.
-int fd_check_is_remote(int fd);
-
 /// Close a file descriptor \p fd, retrying on EINTR.
 void exec_close(int fd);
 

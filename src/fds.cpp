@@ -18,12 +18,6 @@
 #include <sys/eventfd.h>
 #endif
 
-#if defined(__linux__)
-#include <sys/statfs.h>
-#endif
-
-#include <sys/mount.h>
-#include <sys/param.h>
 
 // The first fd in the "high range." fds below this are allowed to be used directly by users in
 // redirections, e.g. >&3
@@ -271,41 +265,6 @@ int open_cloexec(const char *path, int flags, mode_t mode) {
 
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode) {
     return open_cloexec(wcs2string(pathname), flags, mode);
-}
-
-int fd_check_is_remote(int fd) {
-    UNUSED(fd);
-#if defined(__linux__)
-    struct statfs buf {};
-    if (fstatfs(fd, &buf) < 0) {
-        return -1;
-    }
-    // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
-    // these are in varying headers. Simply hard code them.
-    // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
-    switch (static_cast<unsigned int>(buf.f_type)) {
-        case 0x6969:       // NFS_SUPER_MAGIC
-        case 0x517B:       // SMB_SUPER_MAGIC
-        case 0xFE534D42U:  // SMB2_MAGIC_NUMBER - not in the manpage
-        case 0xFF534D42U:  // CIFS_MAGIC_NUMBER
-            return 1;
-        default:
-            // Other FSes are assumed local.
-            return 0;
-    }
-#elif defined(ST_LOCAL)
-    // ST_LOCAL is a flag to statvfs, which is itself standardized.
-    // In practice the only system to use this path is NetBSD.
-    struct statvfs buf {};
-    if (fstatvfs(fd, &buf) < 0) return -1;
-    return (buf.f_flag & ST_LOCAL) ? 0 : 1;
-#elif defined(MNT_LOCAL)
-    struct statfs buf {};
-    if (fstatfs(fd, &buf) < 0) return -1;
-    return (buf.f_flags & MNT_LOCAL) ? 0 : 1;
-#else
-    return -1;
-#endif
 }
 
 void exec_close(int fd) {

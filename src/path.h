@@ -32,7 +32,7 @@ bool path_get_data(wcstring &path);
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 class env_stack_t;
-void path_emit_config_directory_errors(env_stack_t &vars);
+void path_emit_config_directory_messages(env_stack_t &vars);
 
 /// Finds the full path of an executable.
 ///

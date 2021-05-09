@@ -415,7 +415,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     init_input();
 
     // Complain about invalid config paths.
-    path_emit_config_directory_errors(vars);
+    path_emit_config_directory_messages(vars);
 
     if (do_uvars) {
         // Set up universal variables. The empty string means to use the default path.

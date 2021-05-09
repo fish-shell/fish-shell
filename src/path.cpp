@@ -6,7 +6,12 @@
 #include "path.h"
 
 #include <errno.h>
+#include <sys/mount.h>
+#include <sys/param.h>
 #include <sys/stat.h>
+#if defined(__linux__)
+#include <sys/statfs.h>
+#endif
 #include <unistd.h>
 
 #include <cstring>
@@ -98,6 +103,42 @@ bool path_is_executable(const std::string &path) {
     }
     if (!S_ISREG(buff.st_mode)) return false;
     return true;
+}
+
+/// \return 1 if the path is remote, 0 if local, -1 if unknown.
+static int path_is_remote(const wcstring &path) {
+    std::string narrow = wcs2string(path);
+#if defined(__linux__)
+    struct statfs buf {};
+    if (statfs(narrow.c_str(), &buf) < 0) {
+        return -1;
+    }
+    // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
+    // these are in varying headers. Simply hard code them.
+    // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
+    switch (static_cast<unsigned int>(buf.f_type)) {
+        case 0x6969:       // NFS_SUPER_MAGIC
+        case 0x517B:       // SMB_SUPER_MAGIC
+        case 0xFE534D42U:  // SMB2_MAGIC_NUMBER - not in the manpage
+        case 0xFF534D42U:  // CIFS_MAGIC_NUMBER
+            return 1;
+        default:
+            // Other FSes are assumed local.
+            return 0;
+    }
+#elif defined(ST_LOCAL)
+    // ST_LOCAL is a flag to statvfs, which is itself standardized.
+    // In practice the only system to use this path is NetBSD.
+    struct statvfs buf {};
+    if (statvfs(narrow.c_str(), &buf) < 0) return -1;
+    return (buf.f_flag & ST_LOCAL) ? 0 : 1;
+#elif defined(MNT_LOCAL)
+    struct statfs buf {};
+    if (statfs(narrow.c_str(), &buf) < 0) return -1;
+    return (buf.f_flags & MNT_LOCAL) ? 0 : 1;
+#else
+    return -1;
+#endif
 }
 
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
@@ -293,6 +334,7 @@ static int create_directory(const wcstring &d) {
 struct base_directory_t {
     wcstring path{};       /// the path where we attempted to create the directory.
     int err{0};            /// the error code if creating the directory failed, or 0 on success.
+    int is_remote{-1};     /// 1 if the directory is remote (e.g. NFS), 0 if local, -1 if unknown.
     bool used_xdg{false};  /// whether an XDG variable was used in resolving the directory.
 
     bool success() const { return err == 0; }
@@ -326,6 +368,8 @@ static base_directory_t make_base_directory(const wcstring &xdg_var,
         result.err = errno;
     } else {
         result.err = 0;
+        // Need to append a trailing slash to check the contents of the directory, not its parent.
+        result.is_remote = path_is_remote(result.path + L'/');
     }
     return result;
 }
@@ -340,11 +384,14 @@ static const base_directory_t &get_config_directory() {
     return s_dir;
 }
 
-void path_emit_config_directory_errors(env_stack_t &vars) {
+void path_emit_config_directory_messages(env_stack_t &vars) {
     const auto &data = get_data_directory();
     if (!data.success()) {
         maybe_issue_path_warning(L"data", _(L"Your history will not be saved."), data.used_xdg,
                                  L"XDG_DATA_HOME", data.path, data.err, vars);
+    }
+    if (data.is_remote > 0) {
+        FLOG(path, "data path appears to be on a network volume");
     }
 
     const auto &config = get_config_directory();
@@ -352,6 +399,9 @@ void path_emit_config_directory_errors(env_stack_t &vars) {
         maybe_issue_path_warning(L"config", _(L"Your personal settings will not be saved."),
                                  config.used_xdg, L"XDG_CONFIG_HOME", config.path, config.err,
                                  vars);
+    }
+    if (config.is_remote > 0) {
+        FLOG(path, "config path appears to be on a network volume");
     }
 }
 

@@ -309,7 +309,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 }
                 for (auto cat : get_flog_categories()) {
                     if (cat->enabled) {
-                        printf("Debug enabled for category: %ls\n", cat->name);
+                        std::fwprintf(stdout, L"Debug enabled for category: %ls\n", cat->name);
                     }
                 }
                 break;

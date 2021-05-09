@@ -6,6 +6,7 @@
 
 #include "fds.h"
 #include "history.h"
+#include "path.h"
 
 // Some forward declarations.
 static history_item_t decode_item_fish_2_0(const char *base, size_t len);
@@ -18,12 +19,11 @@ static maybe_t<size_t> offset_of_next_item_fish_1_x(const char *begin, size_t mm
 
 // Check if we should mmap the fd.
 // Don't try mmap() on non-local filesystems.
-static bool should_mmap(int fd) {
+static bool should_mmap() {
     if (history_t::never_mmap) return false;
 
     // mmap only if we are known not-remote (return is 0).
-    int ret = fd_check_is_remote(fd);
-    return ret == 0;
+    return path_get_data_is_remote() == 0;
 }
 
 // Read up to len bytes from fd into address, zeroing the rest.
@@ -163,7 +163,7 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
     off_t len = lseek(fd, 0, SEEK_END);
     if (len <= 0 || static_cast<unsigned long>(len) >= SIZE_MAX) return nullptr;
 
-    bool mmap_file_directly = should_mmap(fd);
+    bool mmap_file_directly = should_mmap();
     std::unique_ptr<mmap_region_t> region =
         mmap_file_directly ? mmap_region_t::map_file(fd, len) : mmap_region_t::map_anon(len);
     if (!region) return nullptr;

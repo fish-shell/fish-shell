@@ -122,27 +122,6 @@ maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &s
     return result;
 }
 
-/// Lock the history file.
-/// Returns true on success, false on failure.
-bool history_file_lock(int fd, int lock_type) {
-    static std::atomic<bool> do_locking(true);
-    if (!do_locking) return false;
-
-    double start_time = timef();
-    int retval = flock(fd, lock_type);
-    double duration = timef() - start_time;
-    if (duration > 0.25) {
-        FLOGF(warning, _(L"Locking the history file took too long (%.3f seconds)."), duration);
-        // we've decided to stop doing any locking behavior
-        // but make sure we don't leave the file locked!
-        if (retval == 0 && lock_type != LOCK_UN) {
-            flock(fd, LOCK_UN);
-        }
-        do_locking = false;
-        return false;
-    }
-    return retval != -1;
-}
 
 }  // anonymous namespace
 
@@ -288,6 +267,10 @@ struct history_impl_t {
     // List of old items, as offsets into out mmap data.
     std::deque<size_t> old_item_offsets{};
 
+    // If set, we gave up on file locking because it took too long.
+    // Note this is shared among all history instances.
+    static relaxed_atomic_bool_t abandoned_locking;
+
     /// \return a timestamp for new items - see the implementation for a subtlety.
     time_t timestamp_now() const;
 
@@ -377,7 +360,37 @@ struct history_impl_t {
 
     // Return the number of history entries.
     size_t size();
+
+    // Maybe lock a history file.
+    // \return true if successful, false if locking was skipped.
+    static bool maybe_lock_file(int fd, int lock_type);
+    static void unlock_file(int fd);
 };
+
+relaxed_atomic_bool_t history_impl_t::abandoned_locking{false};
+
+// static
+bool history_impl_t::maybe_lock_file(int fd, int lock_type) {
+    assert(!(lock_type & LOCK_UN) && "Do not use lock_file to unlock");
+
+    // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
+    // is on a remote filesystem.
+    if (abandoned_locking) return false;
+    if (history_t::chaos_mode) return false;
+    if (path_get_data_is_remote() == 1) return false;
+
+    double start_time = timef();
+    int retval = flock(fd, lock_type);
+    double duration = timef() - start_time;
+    if (duration > 0.25) {
+        FLOGF(warning, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        abandoned_locking = true;
+    }
+    return retval != -1;
+}
+
+// static
+void history_impl_t::unlock_file(int fd) { flock(fd, LOCK_UN); }
 
 void history_impl_t::add(history_item_t &&item, bool pending, bool do_save) {
     assert(item.timestamp() != 0 && "Should not add an item with a 0 timestamp");
@@ -592,20 +605,18 @@ void history_impl_t::load_old_if_needed() {
         autoclose_fd_t file{wopen_cloexec(*filename, O_RDONLY)};
         int fd = file.fd();
         if (fd >= 0) {
-            // Take a read lock to guard against someone else appending. This is released when the
-            // file is closed (below). We will read the file after releasing the lock, but that's
+            // Take a read lock to guard against someone else appending. This is released after
+            // getting the file's length. We will read the file after releasing the lock, but that's
             // not a problem, because we never modify already written data. In short, the purpose of
             // this lock is to ensure we don't see the file size change mid-update.
             //
             // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
             // as if it did not fail. The risk is that we may get an incomplete history item; this
             // is unlikely because we only treat an item as valid if it has a terminating newline.
-            //
-            // Simulate a failing lock in chaos_mode.
-            if (!history_t::chaos_mode) history_file_lock(fd, LOCK_SH);
+            bool locked = maybe_lock_file(fd, LOCK_SH);
             file_contents = history_file_contents_t::create(fd);
             this->history_file_id = file_contents ? file_id_for_fd(fd) : kInvalidFileID;
-            if (!history_t::chaos_mode) history_file_lock(fd, LOCK_UN);
+            if (locked) unlock_file(fd);
 
             time_profiler_t profiler("populate_from_file_contents");  //!OCLINT(side-effect)
             this->populate_from_file_contents();
@@ -816,10 +827,11 @@ bool history_impl_t::save_internal_via_rewrite() {
         autoclose_fd_t target_fd_after{wopen_cloexec(target_name, O_RDONLY)};
         if (target_fd_after.valid()) {
             // critical to take the lock before checking file IDs,
-            // and hold it until after we are done replacing
-            // Also critical to check the file at the path, NOT based on our fd
-            // It's only OK to replace the file while holding the lock
-            history_file_lock(target_fd_after.fd(), LOCK_EX);
+            // and hold it until after we are done replacing.
+            // Also critical to check the file at the path, NOT based on our fd.
+            // It's only OK to replace the file while holding the lock.
+            // Note any lock is released when target_fd_after is closed.
+            (void)maybe_lock_file(target_fd_after.fd(), LOCK_EX);
             new_file_id = file_id_for_path(target_name);
         }
         bool can_replace_file = (new_file_id == orig_file_id || new_file_id == kInvalidFileID);
@@ -913,9 +925,7 @@ bool history_impl_t::save_internal_via_appending() {
         // we may get interleaved history items, which is considered better than no history, or
         // forcing everything through the slow copy-move mode. We try to minimize this possibility
         // by writing with O_APPEND.
-        //
-        // Simulate a failing lock in chaos_mode
-        if (!history_t::chaos_mode) history_file_lock(fd.fd(), LOCK_EX);
+        maybe_lock_file(fd.fd(), LOCK_EX);
         const file_id_t file_id = file_id_for_fd(fd.fd());
         if (file_id_for_path(history_path) == file_id) {
             // File IDs match, so the file we opened is still at that path

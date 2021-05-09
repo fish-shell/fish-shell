@@ -516,7 +516,7 @@ Without the quotes or braces, fish will try to expand a variable called ``$WORDs
 
 The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand-brace>`.
 
-If $WORD here is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
+If $WORD is undefined or an empty list, the "s" is printed after the quotes expansion but not after the braces expansion. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
 
 Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (`:`) instead [#]_.
 

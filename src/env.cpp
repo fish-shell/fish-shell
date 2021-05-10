@@ -418,8 +418,8 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     path_emit_config_directory_messages(vars);
 
     if (do_uvars) {
-        // Set up universal variables. The empty string means to use the default path.
-        s_universal_variables.emplace(L"");
+        // Set up universal variables using the default path.
+        s_universal_variables.emplace();
         callback_data_list_t callbacks;
         s_universal_variables->initialize(callbacks);
         env_universal_callbacks(&vars, callbacks);

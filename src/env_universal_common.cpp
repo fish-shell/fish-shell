@@ -115,12 +115,13 @@ static maybe_t<wcstring> default_vars_path_directory() {
     return path;
 }
 
-static maybe_t<wcstring> default_vars_path() {
+/// \return the default variable path, or an empty string on failure.
+static wcstring default_vars_path() {
     if (auto path = default_vars_path_directory()) {
         path->append(L"/fish_variables");
-        return path;
+        return path.acquire();
     }
-    return none();
+    return wcstring{};
 }
 
 /// Test if the message msg contains the command cmd.
@@ -251,8 +252,12 @@ static wcstring encode_serialized(const wcstring_list_t &vals) {
     return join_strings(vals, UVAR_ARRAY_SEP);
 }
 
-env_universal_t::env_universal_t(wcstring path)
-    : narrow_vars_path(wcs2string(path)), explicit_vars_path(std::move(path)) {}
+env_universal_t::env_universal_t(wcstring path, bool load_legacy)
+    : vars_path(std::move(path)),
+      narrow_vars_path(wcs2string(vars_path)),
+      load_legacy(load_legacy) {}
+
+env_universal_t::env_universal_t() : env_universal_t(default_vars_path(), true /* load_legacy */) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     auto where = vars.find(name);
@@ -359,7 +364,7 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
     }
 }
 
-void env_universal_t::acquire_variables(var_table_t &vars_to_acquire) {
+void env_universal_t::acquire_variables(var_table_t &&vars_to_acquire) {
     // Copy modified values from existing vars to vars_to_acquire.
     for (const auto &key : this->modified) {
         auto src_iter = this->vars.find(key);
@@ -401,7 +406,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
         this->generate_callbacks_and_update_exports(new_vars, callbacks);
 
         // Acquire the new variables.
-        this->acquire_variables(new_vars);
+        this->acquire_variables(std::move(new_vars));
         last_read_file = current_file;
     }
 }
@@ -427,8 +432,7 @@ bool env_universal_t::load_from_path(const std::string &path, callback_data_list
 }
 
 bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
-    std::string tmp = wcs2string(path);
-    return load_from_path(tmp, callbacks);
+    return load_from_path(wcs2string(path), callbacks);
 }
 
 uint64_t env_universal_t::get_export_generation() const {
@@ -492,18 +496,16 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     return ret == 0;
 }
 
-bool env_universal_t::initialize(callback_data_list_t &callbacks) {
+void env_universal_t::initialize(callback_data_list_t &callbacks) {
+    if (vars_path.empty()) return;
     scoped_lock locker(lock);
-    if (!explicit_vars_path.empty()) {
-        return load_from_path(narrow_vars_path, callbacks);
+
+    if (load_from_path(narrow_vars_path, callbacks)) {
+        // Successfully loaded from our normal path.
+        return;
     }
 
-    // Get the variables path; if there is none (e.g. HOME is bogus) it's hopeless.
-    auto vars_path = default_vars_path();
-    if (!vars_path) return false;
-
-    bool success = load_from_path(*vars_path, callbacks);
-    if (!success && errno == ENOENT) {
+    if (errno == ENOENT && load_legacy) {
         // We failed to load, because the file was not found. Attempt to load from our legacy paths.
         if (auto dir = default_vars_path_directory()) {
             for (const wcstring &path : get_legacy_paths(*dir)) {
@@ -515,18 +517,11 @@ bool env_universal_t::initialize(callback_data_list_t &callbacks) {
                     for (const auto &kv : vars) {
                         modified.insert(kv.first);
                     }
-                    success = true;
                     break;
                 }
             }
         }
     }
-    // If we succeeded, we store the *default path*, not the legacy one.
-    if (success) {
-        explicit_vars_path = *vars_path;
-        narrow_vars_path = wcs2string(*vars_path);
-    }
-    return success;
 }
 
 autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, wcstring *out_path) {
@@ -642,6 +637,8 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, autoclose_f
 // Returns true if modified variables were written, false if not. (There may still be variable
 // changes due to other processes on a false return).
 bool env_universal_t::sync(callback_data_list_t &callbacks) {
+    if (vars_path.empty()) return false;
+
     FLOGF(uvar_file, L"universal log sync");
     scoped_lock locker(lock);
     // Our saving strategy:
@@ -673,20 +670,6 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // instances of fish will not be able to obtain it. This seems to be a greater risk than that of
     // data loss on lockless NFS. Users who put their home directory on lockless NFS are playing
     // with fire anyways.
-    if (explicit_vars_path.empty()) {
-        // Initialize the vars path from the default one.
-        // In some cases we don't "initialize()" before, so we're doing that now.
-        // This should only happen once.
-        // FIXME: Why don't we initialize()?
-        auto def_vars_path = default_vars_path();
-        if (!def_vars_path) {
-            FLOG(uvar_file, L"No universal variable path available");
-            return false;
-        }
-        explicit_vars_path = *def_vars_path;
-        narrow_vars_path = wcs2string(explicit_vars_path);
-    }
-
     // If we have no changes, just load.
     if (modified.empty()) {
         this->load_from_path(narrow_vars_path, callbacks);
@@ -694,28 +677,26 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
         return false;
     }
 
-    const wcstring directory = wdirname(explicit_vars_path);
-    bool success = true;
+    const wcstring directory = wdirname(vars_path);
     autoclose_fd_t vars_fd{};
 
     FLOGF(uvar_file, L"universal log performing full sync");
 
     // Open the file.
-    if (success) {
-        success = this->open_and_acquire_lock(narrow_vars_path, &vars_fd);
-        if (!success) FLOGF(uvar_file, L"universal log open_and_acquire_lock() failed");
+    if (!this->open_and_acquire_lock(narrow_vars_path, &vars_fd)) {
+        FLOGF(uvar_file, L"universal log open_and_acquire_lock() failed");
+        return false;
     }
 
     // Read from it.
-    if (success) {
-        assert(vars_fd.valid());
-        this->load_from_fd(vars_fd.fd(), callbacks);
-    }
+    assert(vars_fd.valid());
+    this->load_from_fd(vars_fd.fd(), callbacks);
 
-    if (success && ok_to_save) {
-        success = this->save(directory, explicit_vars_path);
+    if (ok_to_save) {
+        return this->save(directory, vars_path);
+    } else {
+        return true;
     }
-    return success;
 }
 
 // Write our file contents.

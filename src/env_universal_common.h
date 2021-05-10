@@ -36,6 +36,7 @@ typedef std::vector<callback_data_t> callback_data_list_t;
 enum class uvar_format_t { fish_2_x, fish_3_0, future };
 
 bool get_hostname_identifier(wcstring &result);
+
 /// Class representing universal variables.
 class env_universal_t {
     // The table of variables. Note this is sorted; this ensures that the output file is in sorted
@@ -46,9 +47,9 @@ class env_universal_t {
     // vars indicates a deleted value.
     std::unordered_set<wcstring> modified;
 
-    std::string narrow_vars_path;
-    // Path that we save to. If empty, use the default.
-    wcstring explicit_vars_path;
+    // Path that we save to.
+    const wcstring vars_path;
+    const std::string narrow_vars_path;
 
     // A generation count which is incremented every time an exported variable is modified.
     uint64_t export_generation{1};
@@ -56,6 +57,9 @@ class env_universal_t {
     // Whether it's OK to save. This may be set to false if we discover that a future version of
     // fish wrote the uvars contents.
     bool ok_to_save{true};
+
+    // Whether to load from legacy paths.
+    const bool load_legacy;
 
     mutable std::mutex lock;
     bool load_from_path(const std::string &path, callback_data_list_t &callbacks);
@@ -79,9 +83,8 @@ class env_universal_t {
     void generate_callbacks_and_update_exports(const var_table_t &new_vars,
                                                callback_data_list_t &callbacks);
 
-    // Given a variable table, copy unmodified values into self. May destructively modify
-    // vars_to_acquire.
-    void acquire_variables(var_table_t &vars_to_acquire);
+    // Given a variable table, copy unmodified values into self.
+    void acquire_variables(var_table_t &&vars_to_acquire);
 
     static bool populate_1_variable(const wchar_t *input, env_var_t::env_var_flags_t flags,
                                     var_table_t *vars, wcstring *storage);
@@ -95,7 +98,12 @@ class env_universal_t {
     bool save(const wcstring &directory, const wcstring &vars_path);
 
    public:
-    explicit env_universal_t(wcstring path);
+    // Construct referencing a path \p path.
+    // If \p load_legacy is true, then attempt to load from legacy paths as well.
+    explicit env_universal_t(wcstring path, bool load_legacy = false);
+
+    // Construct with the default path, loading from legacy paths.
+    env_universal_t();
 
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;
@@ -116,7 +124,7 @@ class env_universal_t {
     const var_table_t &get_table() const { return vars; }
 
     /// Loads variables at the correct path, optionally migrating from a legacy path.
-    bool initialize(callback_data_list_t &callbacks);
+    void initialize(callback_data_list_t &callbacks);
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.

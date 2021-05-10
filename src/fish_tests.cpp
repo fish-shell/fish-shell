@@ -3795,10 +3795,7 @@ static void test_universal() {
 
     env_universal_t uvars(UVARS_TEST_PATH);
     callback_data_list_t callbacks;
-    bool loaded = uvars.initialize(callbacks);
-    if (!loaded) {
-        err(L"Failed to load universal variables");
-    }
+    uvars.initialize(callbacks);
     for (int i = 0; i < threads; i++) {
         for (int j = 0; j < UVARS_PER_THREAD; j++) {
             const wcstring key = format_string(L"key_%d_%d", i, j);

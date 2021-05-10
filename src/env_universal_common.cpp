@@ -266,8 +266,7 @@ maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &n
     return none();
 }
 
-void env_universal_t::set_internal(const wcstring &key, const env_var_t &var) {
-    ASSERT_IS_LOCKED(lock);
+void env_universal_t::set(const wcstring &key, const env_var_t &var) {
     bool new_entry = vars.count(key) == 0;
     env_var_t &entry = vars[key];
     if (new_entry || entry != var) {
@@ -277,13 +276,7 @@ void env_universal_t::set_internal(const wcstring &key, const env_var_t &var) {
     }
 }
 
-void env_universal_t::set(const wcstring &key, const env_var_t &var) {
-    scoped_lock locker(lock);
-    this->set_internal(key, var);
-}
-
-bool env_universal_t::remove_internal(const wcstring &key) {
-    ASSERT_IS_LOCKED(lock);
+bool env_universal_t::remove(const wcstring &key) {
     auto iter = this->vars.find(key);
     if (iter != this->vars.end()) {
         if (iter->second.exports()) export_generation += 1;
@@ -294,14 +287,8 @@ bool env_universal_t::remove_internal(const wcstring &key) {
     return false;
 }
 
-bool env_universal_t::remove(const wcstring &key) {
-    scoped_lock locker(lock);
-    return this->remove_internal(key);
-}
-
 wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const {
     wcstring_list_t result;
-    scoped_lock locker(lock);
     for (const auto &kv : vars) {
         const wcstring &key = kv.first;
         const env_var_t &var = kv.second;
@@ -378,7 +365,6 @@ void env_universal_t::acquire_variables(var_table_t &&vars_to_acquire) {
 }
 
 void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
-    ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
     // Get the dev / inode.
     const file_id_t current_file = file_id_for_fd(fd);
@@ -405,7 +391,6 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
 }
 
 bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
-    ASSERT_IS_LOCKED(lock);
 
     // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
     // opening the file unnecessarily.
@@ -422,11 +407,6 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
         result = true;
     }
     return result;
-}
-
-uint64_t env_universal_t::get_export_generation() const {
-    scoped_lock locker(lock);
-    return export_generation;
 }
 
 /// Serialize the contents to a string.
@@ -457,7 +437,6 @@ std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
 
 /// Writes our state to the fd. path is provided only for error reporting.
 bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
-    ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
     bool success = true;
     std::string contents = serialize_with_vars(vars);
@@ -490,7 +469,6 @@ void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstri
     if (path.empty()) return;
     assert(!initialized() && "Already initialized");
     vars_path_ = std::move(path);
-    scoped_lock locker(lock);
 
     if (load_from_path(vars_path_, callbacks)) {
         // Successfully loaded from our normal path.
@@ -636,7 +614,6 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     if (!initialized()) return false;
 
     FLOGF(uvar_file, L"universal log sync");
-    scoped_lock locker(lock);
     // Our saving strategy:
     //
     // 1. Open the file, producing an fd.

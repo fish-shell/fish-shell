@@ -89,7 +89,7 @@ class env_universal_t {
     bool is_ok_to_save() const { return ok_to_save; }
 
     /// Access the export generation.
-    uint64_t get_export_generation() const;
+    uint64_t get_export_generation() const { return export_generation; }
 
    private:
     // Path that we save to. This is set in initialize(). If empty, initialize has not been called.
@@ -115,12 +115,8 @@ class env_universal_t {
     /// \return whether we are initialized.
     bool initialized() const { return !vars_path_.empty(); }
 
-    mutable std::mutex lock;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
-
-    void set_internal(const wcstring &key, const env_var_t &var);
-    bool remove_internal(const wcstring &key);
 
     // Functions concerned with saving.
     bool open_and_acquire_lock(const wcstring &path, autoclose_fd_t *out_fd);

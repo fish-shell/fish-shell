@@ -60,6 +60,7 @@
 #include "input_common.h"
 #include "io.h"
 #include "iothread.h"
+#include "kill.h"
 #include "lru.h"
 #include "maybe.h"
 #include "operation_context.h"
@@ -83,7 +84,6 @@
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
-#include "kill.h"
 
 static const char *const *s_arguments;
 static int s_test_run_count = 0;
@@ -3763,7 +3763,8 @@ static void test_undo() {
 
 static int test_universal_helper(int x) {
     callback_data_list_t callbacks;
-    env_universal_t uvars(UVARS_TEST_PATH);
+    env_universal_t uvars;
+    uvars.initialize_at_path(callbacks, UVARS_TEST_PATH);
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
@@ -3793,9 +3794,9 @@ static void test_universal() {
     }
     iothread_drain_all();
 
-    env_universal_t uvars(UVARS_TEST_PATH);
+    env_universal_t uvars;
     callback_data_list_t callbacks;
-    uvars.initialize(callbacks);
+    uvars.initialize_at_path(callbacks, UVARS_TEST_PATH);
     for (int i = 0; i < threads; i++) {
         for (int j = 0; j < UVARS_PER_THREAD; j++) {
             const wcstring key = format_string(L"key_%d_%d", i, j);
@@ -3893,8 +3894,10 @@ static void test_universal_callbacks() {
     say(L"Testing universal callbacks");
     if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
     callback_data_list_t callbacks;
-    env_universal_t uvars1(UVARS_TEST_PATH);
-    env_universal_t uvars2(UVARS_TEST_PATH);
+    env_universal_t uvars1;
+    env_universal_t uvars2;
+    uvars1.initialize_at_path(callbacks, UVARS_TEST_PATH);
+    uvars2.initialize_at_path(callbacks, UVARS_TEST_PATH);
 
     env_var_t::env_var_flags_t noflags = 0;
 
@@ -3974,11 +3977,12 @@ static void test_universal_ok_to_save() {
     do_test(before_id != kInvalidFileID && "UVARS_TEST_PATH should be readable");
 
     callback_data_list_t cbs;
-    env_universal_t uvars(UVARS_TEST_PATH);
-    do_test(uvars.is_ok_to_save() && "Should be OK to save before sync");
+    env_universal_t uvars;
+    uvars.initialize_at_path(cbs, UVARS_TEST_PATH);
+    do_test(!uvars.is_ok_to_save() && "Should not be OK to save");
     uvars.sync(cbs);
     cbs.clear();
-    do_test(!uvars.is_ok_to_save() && "Should no longer be OK to save");
+    do_test(!uvars.is_ok_to_save() && "Should still not be OK to save");
     uvars.set(L"SOMEVAR", env_var_t{wcstring{L"SOMEVALUE"}, 0});
     uvars.sync(cbs);
 

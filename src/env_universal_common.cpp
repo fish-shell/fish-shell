@@ -252,11 +252,6 @@ static wcstring encode_serialized(const wcstring_list_t &vals) {
     return join_strings(vals, UVAR_ARRAY_SEP);
 }
 
-env_universal_t::env_universal_t(wcstring path, bool load_legacy)
-    : vars_path_(std::move(path)), load_legacy_(load_legacy) {}
-
-env_universal_t::env_universal_t() : env_universal_t(default_vars_path(), true /* load_legacy */) {}
-
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     auto where = vars.find(name);
     if (where != vars.end()) return where->second;
@@ -490,8 +485,11 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     return ret == 0;
 }
 
-void env_universal_t::initialize(callback_data_list_t &callbacks) {
-    if (vars_path_.empty()) return;
+void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstring path,
+                                         bool migrate_legacy) {
+    if (path.empty()) return;
+    assert(!initialized() && "Already initialized");
+    vars_path_ = std::move(path);
     scoped_lock locker(lock);
 
     if (load_from_path(vars_path_, callbacks)) {
@@ -499,7 +497,7 @@ void env_universal_t::initialize(callback_data_list_t &callbacks) {
         return;
     }
 
-    if (errno == ENOENT && load_legacy_) {
+    if (errno == ENOENT && migrate_legacy) {
         // We failed to load, because the file was not found. Attempt to load from our legacy paths.
         if (auto dir = default_vars_path_directory()) {
             for (const wcstring &path : get_legacy_paths(*dir)) {
@@ -516,6 +514,10 @@ void env_universal_t::initialize(callback_data_list_t &callbacks) {
             }
         }
     }
+}
+
+void env_universal_t::initialize(callback_data_list_t &callbacks) {
+    this->initialize_at_path(callbacks, default_vars_path(), true /* migrate legacy */);
 }
 
 autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, wcstring *out_path) {
@@ -631,7 +633,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, autoclose_fd_t
 // Returns true if modified variables were written, false if not. (There may still be variable
 // changes due to other processes on a false return).
 bool env_universal_t::sync(callback_data_list_t &callbacks) {
-    if (vars_path_.empty()) return false;
+    if (!initialized()) return false;
 
     FLOGF(uvar_file, L"universal log sync");
     scoped_lock locker(lock);

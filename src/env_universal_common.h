@@ -40,13 +40,8 @@ bool get_hostname_identifier(wcstring &result);
 /// Class representing universal variables.
 class env_universal_t {
    public:
-    // Construct referencing a path \p path. If the path is empty, then the uvars will be empty as
-    // well.
-    // If \p load_legacy is true, then attempt to load from legacy paths as well.
-    explicit env_universal_t(wcstring path, bool load_legacy = false);
-
-    // Construct with the default path, loading from legacy paths.
-    env_universal_t();
+    // Construct an empty universal variables.
+    env_universal_t() = default;
 
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;
@@ -66,8 +61,14 @@ class env_universal_t {
     /// Get a view on the universal variable table.
     const var_table_t &get_table() const { return vars; }
 
-    /// Loads variables at the correct path, optionally migrating from a legacy path.
+    /// Initialize this uvars for the default path, migrating legacy variables.
+    /// This should be called at most once on any given instance.
     void initialize(callback_data_list_t &callbacks);
+
+    /// Initialize a this uvars for a given path.
+    /// This is exposed for testing only.
+    void initialize_at_path(callback_data_list_t &callbacks, wcstring path,
+                            bool migrate_legacy = false);
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
@@ -91,11 +92,8 @@ class env_universal_t {
     uint64_t get_export_generation() const;
 
    private:
-    // Path that we save to.
-    const wcstring vars_path_;
-
-    // Whether to load from legacy paths.
-    const bool load_legacy_;
+    // Path that we save to. This is set in initialize(). If empty, initialize has not been called.
+    wcstring vars_path_;
 
     // The table of variables.
     var_table_t vars;
@@ -111,6 +109,12 @@ class env_universal_t {
     // fish wrote the uvars contents.
     bool ok_to_save{true};
 
+    // File id from which we last read.
+    file_id_t last_read_file = kInvalidFileID;
+
+    /// \return whether we are initialized.
+    bool initialized() const { return !vars_path_.empty(); }
+
     mutable std::mutex lock;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
@@ -123,9 +127,6 @@ class env_universal_t {
     autoclose_fd_t open_temporary_file(const wcstring &directory, wcstring *out_path);
     bool write_to_fd(int fd, const wcstring &path);
     bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
-
-    // File id from which we last read.
-    file_id_t last_read_file = kInvalidFileID;
 
     // Given a variable table, generate callbacks representing the difference between our vars and
     // the new vars. Also update our exports generation count as necessary.

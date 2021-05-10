@@ -178,7 +178,7 @@ class env_var_t {
     static env_var_flags_t flags_for(const wchar_t *name);
     static std::shared_ptr<const wcstring_list_t> empty_list();
 
-    env_var_t &operator=(const env_var_t &var) = default;
+    env_var_t &operator=(const env_var_t &) = default;
     env_var_t &operator=(env_var_t &&) = default;
 
     bool operator==(const env_var_t &rhs) const {

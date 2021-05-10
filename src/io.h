@@ -56,7 +56,7 @@ class separated_buffer_t {
 
     /// We may be moved.
     /// Note this leaves the moved-from value in a bogus state until clear() is called on it.
-    separated_buffer_t(separated_buffer_t &&rhs) = default;
+    separated_buffer_t(separated_buffer_t &&) = default;
     separated_buffer_t &operator=(separated_buffer_t &&) = default;
 
     /// Construct a separated_buffer_t with the given buffer limit \p limit, or 0 for no limit.

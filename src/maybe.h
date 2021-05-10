@@ -179,8 +179,8 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
 
     // Note that defaulting these allows these to be conditionally deleted via
     // conditionally_copyable_t().
-    maybe_t &operator=(const maybe_t &v) = default;
-    maybe_t &operator=(maybe_t &&v) = default;
+    maybe_t &operator=(const maybe_t &) = default;
+    maybe_t &operator=(maybe_t &&) = default;
 
     // Dereference support.
     const T *operator->() const { return &value(); }

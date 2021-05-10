@@ -522,9 +522,13 @@ autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, w
     return result;
 }
 
-/// Check how long the operation took and print a message if it took too long.
-/// Returns false if it took too long else true.
-static bool check_duration(double start_time) {
+/// Try locking the file.
+/// \return true on success, false on error.
+static bool flock_uvar_file(int fd) {
+    double start_time = timef();
+    while (flock(fd, LOCK_EX) == -1) {
+        if (errno != EINTR) return false;  // do nothing per issue #2149
+    }
     double duration = timef() - start_time;
     if (duration > 0.25) {
         FLOGF(warning, _(L"Locking the universal var file took too long (%.3f seconds)."),
@@ -534,17 +538,6 @@ static bool check_duration(double start_time) {
     return true;
 }
 
-/// Try locking the file. Return true if we succeeded else false. This is safe in terms of the
-/// fallback function implemented in terms of fcntl: only ever run on the main thread, and protected
-/// by the universal variable lock.
-static bool lock_uvar_file(int fd) {
-    double start_time = timef();
-    while (flock(fd, LOCK_EX) == -1) {
-        if (errno != EINTR) return false;  // do nothing per issue #2149
-    }
-    return check_duration(start_time);
-}
-
 bool env_universal_t::open_and_acquire_lock(const wcstring &path, autoclose_fd_t *out_fd) {
     // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
     // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
@@ -552,48 +545,46 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, autoclose_fd_t
     //
     // We pass O_RDONLY with O_CREAT; this creates a potentially empty file. We do this so that we
     // have something to lock on.
-    static std::atomic<bool> do_locking(true);
-    bool needs_lock = true;
+    bool locked_by_open = false;
     int flags = O_RDWR | O_CREAT;
 
 #ifdef O_EXLOCK
-    if (do_locking) {
+    if (do_flock) {
         flags |= O_EXLOCK;
-        needs_lock = false;
+        locked_by_open = true;
     }
 #endif
 
     autoclose_fd_t fd{};
     while (!fd.valid()) {
-        double start_time = timef();
         fd = autoclose_fd_t{wopen_cloexec(path, flags, 0644)};
+
         if (!fd.valid()) {
-            if (errno == EINTR) continue;  // signaled; try again
+            int err = errno;
+            if (err == EINTR) continue;  // signaled; try again
+
 #ifdef O_EXLOCK
-            if (do_locking && (errno == ENOTSUP || errno == EOPNOTSUPP)) {
-                // Filesystem probably does not support locking. Clear the flag and try again. Note
-                // that we try taking the lock via flock anyways. Note that on Linux the two errno
-                // symbols have the same value but on BSD they're different.
+            if ((flags & O_EXLOCK) && (err == ENOTSUP || err == EOPNOTSUPP)) {
+                // Filesystem probably does not support locking. Give up on locking.
+                // Note that on Linux the two errno symbols have the same value but on BSD they're
+                // different.
                 flags &= ~O_EXLOCK;
-                needs_lock = true;
+                do_flock = false;
+                locked_by_open = false;
                 continue;
             }
 #endif
-            const char *error = std::strerror(errno);
             FLOGF(error, _(L"Unable to open universal variable file '%s': %s"), path.c_str(),
-                  error);
+                  std::strerror(err));
             break;
         }
 
         assert(fd.valid() && "Should have a valid fd here");
-        if (!needs_lock && do_locking) {
-            do_locking = check_duration(start_time);
-        }
 
-        // Try taking the lock, if necessary. If we failed, we may be on lockless NFS, etc.; in that
-        // case we pretend we succeeded. See the comment in save_to_path for the rationale.
-        if (needs_lock && do_locking) {
-            do_locking = lock_uvar_file(fd.fd());
+        // Lock if we want to lock and open() didn't do it for us.
+        // If flock fails, give up on locking forever.
+        if (do_flock && !locked_by_open) {
+            if (!flock_uvar_file(fd.fd())) do_flock = false;
         }
 
         // Hopefully we got the lock. However, it's possible the file changed out from under us

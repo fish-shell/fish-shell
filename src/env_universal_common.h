@@ -109,6 +109,10 @@ class env_universal_t {
     // fish wrote the uvars contents.
     bool ok_to_save{true};
 
+    // If true, attempt to flock the uvars file.
+    // This latches to false if the file is found to be remote, where flock may hang.
+    bool do_flock{true};
+
     // File id from which we last read.
     file_id_t last_read_file = kInvalidFileID;
 

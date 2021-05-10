@@ -40,7 +40,8 @@ bool get_hostname_identifier(wcstring &result);
 /// Class representing universal variables.
 class env_universal_t {
    public:
-    // Construct referencing a path \p path.
+    // Construct referencing a path \p path. If the path is empty, then the uvars will be empty as
+    // well.
     // If \p load_legacy is true, then attempt to load from legacy paths as well.
     explicit env_universal_t(wcstring path, bool load_legacy = false);
 

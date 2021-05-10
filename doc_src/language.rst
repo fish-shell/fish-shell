@@ -897,7 +897,7 @@ If you want to set some personal customization, universal variables are nice::
      # Typically you'd run this interactively, fish takes care of keeping it.
      set -U fish_color_autosuggestion 555
 
-The following code will not output anything::
+Here is an example of local vs function-scoped variables::
 
     begin
         # This is a nice local scope where all variables will die

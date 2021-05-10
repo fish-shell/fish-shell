@@ -55,7 +55,7 @@ class history_file_contents_t {
    private:
     // A type wrapping up the logic around mmap and munmap.
     struct mmap_region_t;
-    const std::unique_ptr<mmap_region_t> region_{};
+    const std::unique_ptr<mmap_region_t> region_;
 
     // The memory mapped pointer and length.
     // The ptr aliases our region. The length may be slightly smaller, if there is a trailing

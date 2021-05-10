@@ -43,6 +43,7 @@ Interactive improvements
 - The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__fish_git_prompt_status_order`` (:issue:`7926`).
 - Variable ``fish_killring`` containing entries from killring is now available (:issue:`7445`).
 - ``fish --private`` prints a note on private mode on startup even if ``$fish_greeting`` is an empty list (:issue:`7974`).
+- fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and SMB. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

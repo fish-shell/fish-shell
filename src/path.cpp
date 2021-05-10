@@ -419,6 +419,8 @@ bool path_get_data(wcstring &path) {
 
 int path_get_data_is_remote() { return get_data_directory().is_remote; }
 
+int path_get_config_is_remote() { return get_config_directory().is_remote; }
+
 void path_make_canonical(wcstring &path) {
     // Ignore trailing slashes, unless it's the first character.
     size_t len = path.size();

@@ -33,6 +33,9 @@ bool path_get_data(wcstring &path);
 /// -1 means unknown, 0 means known local, 1 means known remote.
 int path_get_data_is_remote();
 
+/// Like path_get_data_is_remote but for config directory.
+int path_get_config_is_remote();
+
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 class env_stack_t;

@@ -39,62 +39,6 @@ bool get_hostname_identifier(wcstring &result);
 
 /// Class representing universal variables.
 class env_universal_t {
-    // Path that we save to.
-    const wcstring vars_path;
-
-    // Whether to load from legacy paths.
-    const bool load_legacy;
-
-    // The table of variables. Note this is sorted; this ensures that the output file is in sorted
-    // order.
-    var_table_t vars;
-
-    // Keys that have been modified, and need to be written. A value here that is not present in
-    // vars indicates a deleted value.
-    std::unordered_set<wcstring> modified;
-
-    // A generation count which is incremented every time an exported variable is modified.
-    uint64_t export_generation{1};
-
-    // Whether it's OK to save. This may be set to false if we discover that a future version of
-    // fish wrote the uvars contents.
-    bool ok_to_save{true};
-
-    mutable std::mutex lock;
-    bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
-    void load_from_fd(int fd, callback_data_list_t &callbacks);
-
-    void set_internal(const wcstring &key, const env_var_t &var);
-    bool remove_internal(const wcstring &key);
-
-    // Functions concerned with saving.
-    bool open_and_acquire_lock(const wcstring &path, autoclose_fd_t *out_fd);
-    autoclose_fd_t open_temporary_file(const wcstring &directory, wcstring *out_path);
-    bool write_to_fd(int fd, const wcstring &path);
-    bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
-
-    // File id from which we last read.
-    file_id_t last_read_file = kInvalidFileID;
-
-    // Given a variable table, generate callbacks representing the difference between our vars and
-    // the new vars. Also update our exports generation count as necessary.
-    void generate_callbacks_and_update_exports(const var_table_t &new_vars,
-                                               callback_data_list_t &callbacks);
-
-    // Given a variable table, copy unmodified values into self.
-    void acquire_variables(var_table_t &&vars_to_acquire);
-
-    static bool populate_1_variable(const wchar_t *input, env_var_t::env_var_flags_t flags,
-                                    var_table_t *vars, wcstring *storage);
-
-    static void parse_message_2x_internal(const wcstring &msg, var_table_t *vars,
-                                          wcstring *storage);
-    static void parse_message_30_internal(const wcstring &msg, var_table_t *vars,
-                                          wcstring *storage);
-    static uvar_format_t read_message_internal(int fd, var_table_t *vars);
-
-    bool save(const wcstring &directory, const wcstring &vars_path);
-
    public:
     // Construct referencing a path \p path.
     // If \p load_legacy is true, then attempt to load from legacy paths as well.
@@ -144,6 +88,62 @@ class env_universal_t {
 
     /// Access the export generation.
     uint64_t get_export_generation() const;
+
+   private:
+    // Path that we save to.
+    const wcstring vars_path_;
+
+    // Whether to load from legacy paths.
+    const bool load_legacy_;
+
+    // The table of variables.
+    var_table_t vars;
+
+    // Keys that have been modified, and need to be written. A value here that is not present in
+    // vars indicates a deleted value.
+    std::unordered_set<wcstring> modified;
+
+    // A generation count which is incremented every time an exported variable is modified.
+    uint64_t export_generation{1};
+
+    // Whether it's OK to save. This may be set to false if we discover that a future version of
+    // fish wrote the uvars contents.
+    bool ok_to_save{true};
+
+    mutable std::mutex lock;
+    bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
+    void load_from_fd(int fd, callback_data_list_t &callbacks);
+
+    void set_internal(const wcstring &key, const env_var_t &var);
+    bool remove_internal(const wcstring &key);
+
+    // Functions concerned with saving.
+    bool open_and_acquire_lock(const wcstring &path, autoclose_fd_t *out_fd);
+    autoclose_fd_t open_temporary_file(const wcstring &directory, wcstring *out_path);
+    bool write_to_fd(int fd, const wcstring &path);
+    bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
+
+    // File id from which we last read.
+    file_id_t last_read_file = kInvalidFileID;
+
+    // Given a variable table, generate callbacks representing the difference between our vars and
+    // the new vars. Also update our exports generation count as necessary.
+    void generate_callbacks_and_update_exports(const var_table_t &new_vars,
+                                               callback_data_list_t &callbacks);
+
+    // Given a variable table, copy unmodified values into self.
+    void acquire_variables(var_table_t &&vars_to_acquire);
+
+    static bool populate_1_variable(const wchar_t *input, env_var_t::env_var_flags_t flags,
+                                    var_table_t *vars, wcstring *storage);
+
+    static void parse_message_2x_internal(const wcstring &msg, var_table_t *vars,
+                                          wcstring *storage);
+    static void parse_message_30_internal(const wcstring &msg, var_table_t *vars,
+                                          wcstring *storage);
+    static uvar_format_t read_message_internal(int fd, var_table_t *vars);
+
+    bool save(const wcstring &directory, const wcstring &vars_path);
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

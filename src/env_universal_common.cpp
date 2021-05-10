@@ -253,7 +253,7 @@ static wcstring encode_serialized(const wcstring_list_t &vals) {
 }
 
 env_universal_t::env_universal_t(wcstring path, bool load_legacy)
-    : vars_path(std::move(path)), load_legacy(load_legacy) {}
+    : vars_path_(std::move(path)), load_legacy_(load_legacy) {}
 
 env_universal_t::env_universal_t() : env_universal_t(default_vars_path(), true /* load_legacy */) {}
 
@@ -491,15 +491,15 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
 }
 
 void env_universal_t::initialize(callback_data_list_t &callbacks) {
-    if (vars_path.empty()) return;
+    if (vars_path_.empty()) return;
     scoped_lock locker(lock);
 
-    if (load_from_path(vars_path, callbacks)) {
+    if (load_from_path(vars_path_, callbacks)) {
         // Successfully loaded from our normal path.
         return;
     }
 
-    if (errno == ENOENT && load_legacy) {
+    if (errno == ENOENT && load_legacy_) {
         // We failed to load, because the file was not found. Attempt to load from our legacy paths.
         if (auto dir = default_vars_path_directory()) {
             for (const wcstring &path : get_legacy_paths(*dir)) {
@@ -631,7 +631,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, autoclose_fd_t
 // Returns true if modified variables were written, false if not. (There may still be variable
 // changes due to other processes on a false return).
 bool env_universal_t::sync(callback_data_list_t &callbacks) {
-    if (vars_path.empty()) return false;
+    if (vars_path_.empty()) return false;
 
     FLOGF(uvar_file, L"universal log sync");
     scoped_lock locker(lock);
@@ -666,18 +666,18 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // with fire anyways.
     // If we have no changes, just load.
     if (modified.empty()) {
-        this->load_from_path(vars_path, callbacks);
+        this->load_from_path(vars_path_, callbacks);
         FLOGF(uvar_file, L"universal log no modifications");
         return false;
     }
 
-    const wcstring directory = wdirname(vars_path);
+    const wcstring directory = wdirname(vars_path_);
     autoclose_fd_t vars_fd{};
 
     FLOGF(uvar_file, L"universal log performing full sync");
 
     // Open the file.
-    if (!this->open_and_acquire_lock(vars_path, &vars_fd)) {
+    if (!this->open_and_acquire_lock(vars_path_, &vars_fd)) {
         FLOGF(uvar_file, L"universal log open_and_acquire_lock() failed");
         return false;
     }
@@ -687,7 +687,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     this->load_from_fd(vars_fd.fd(), callbacks);
 
     if (ok_to_save) {
-        return this->save(directory, vars_path);
+        return this->save(directory, vars_path_);
     } else {
         return true;
     }

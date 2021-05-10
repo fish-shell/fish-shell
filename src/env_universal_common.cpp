@@ -253,9 +253,7 @@ static wcstring encode_serialized(const wcstring_list_t &vals) {
 }
 
 env_universal_t::env_universal_t(wcstring path, bool load_legacy)
-    : vars_path(std::move(path)),
-      narrow_vars_path(wcs2string(vars_path)),
-      load_legacy(load_legacy) {}
+    : vars_path(std::move(path)), load_legacy(load_legacy) {}
 
 env_universal_t::env_universal_t() : env_universal_t(default_vars_path(), true /* load_legacy */) {}
 
@@ -411,7 +409,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
     }
 }
 
-bool env_universal_t::load_from_path(const std::string &path, callback_data_list_t &callbacks) {
+bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
     ASSERT_IS_LOCKED(lock);
 
     // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
@@ -422,17 +420,13 @@ bool env_universal_t::load_from_path(const std::string &path, callback_data_list
     }
 
     bool result = false;
-    autoclose_fd_t fd{open_cloexec(path.c_str(), O_RDONLY)};
+    autoclose_fd_t fd{wopen_cloexec(path, O_RDONLY)};
     if (fd.valid()) {
         FLOGF(uvar_file, L"universal log reading from file");
         this->load_from_fd(fd.fd(), callbacks);
         result = true;
     }
     return result;
-}
-
-bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
-    return load_from_path(wcs2string(path), callbacks);
 }
 
 uint64_t env_universal_t::get_export_generation() const {
@@ -500,7 +494,7 @@ void env_universal_t::initialize(callback_data_list_t &callbacks) {
     if (vars_path.empty()) return;
     scoped_lock locker(lock);
 
-    if (load_from_path(narrow_vars_path, callbacks)) {
+    if (load_from_path(vars_path, callbacks)) {
         // Successfully loaded from our normal path.
         return;
     }
@@ -571,7 +565,7 @@ static bool lock_uvar_file(int fd) {
     return check_duration(start_time);
 }
 
-bool env_universal_t::open_and_acquire_lock(const std::string &path, autoclose_fd_t *out_fd) {
+bool env_universal_t::open_and_acquire_lock(const wcstring &path, autoclose_fd_t *out_fd) {
     // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
     // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
     // stat(); if they match, it means that the file was not replaced before we acquired the lock.
@@ -592,7 +586,7 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, autoclose_f
     autoclose_fd_t fd{};
     while (!fd.valid()) {
         double start_time = timef();
-        fd = autoclose_fd_t{open_cloexec(path, flags, 0644)};
+        fd = autoclose_fd_t{wopen_cloexec(path, flags, 0644)};
         if (!fd.valid()) {
             if (errno == EINTR) continue;  // signaled; try again
 #ifdef O_EXLOCK
@@ -672,7 +666,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // with fire anyways.
     // If we have no changes, just load.
     if (modified.empty()) {
-        this->load_from_path(narrow_vars_path, callbacks);
+        this->load_from_path(vars_path, callbacks);
         FLOGF(uvar_file, L"universal log no modifications");
         return false;
     }
@@ -683,7 +677,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     FLOGF(uvar_file, L"universal log performing full sync");
 
     // Open the file.
-    if (!this->open_and_acquire_lock(narrow_vars_path, &vars_fd)) {
+    if (!this->open_and_acquire_lock(vars_path, &vars_fd)) {
         FLOGF(uvar_file, L"universal log open_and_acquire_lock() failed");
         return false;
     }

@@ -29,7 +29,7 @@ struct callback_data_t {
     bool is_erase() const { return !val.has_value(); }
 };
 
-typedef std::vector<callback_data_t> callback_data_list_t;
+using callback_data_list_t = std::vector<callback_data_t>;
 
 // List of fish universal variable formats.
 // This is exposed for testing.
@@ -39,6 +39,12 @@ bool get_hostname_identifier(wcstring &result);
 
 /// Class representing universal variables.
 class env_universal_t {
+    // Path that we save to.
+    const wcstring vars_path;
+
+    // Whether to load from legacy paths.
+    const bool load_legacy;
+
     // The table of variables. Note this is sorted; this ensures that the output file is in sorted
     // order.
     var_table_t vars;
@@ -47,10 +53,6 @@ class env_universal_t {
     // vars indicates a deleted value.
     std::unordered_set<wcstring> modified;
 
-    // Path that we save to.
-    const wcstring vars_path;
-    const std::string narrow_vars_path;
-
     // A generation count which is incremented every time an exported variable is modified.
     uint64_t export_generation{1};
 
@@ -58,11 +60,7 @@ class env_universal_t {
     // fish wrote the uvars contents.
     bool ok_to_save{true};
 
-    // Whether to load from legacy paths.
-    const bool load_legacy;
-
     mutable std::mutex lock;
-    bool load_from_path(const std::string &path, callback_data_list_t &callbacks);
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
@@ -70,7 +68,7 @@ class env_universal_t {
     bool remove_internal(const wcstring &key);
 
     // Functions concerned with saving.
-    bool open_and_acquire_lock(const std::string &path, autoclose_fd_t *out_fd);
+    bool open_and_acquire_lock(const wcstring &path, autoclose_fd_t *out_fd);
     autoclose_fd_t open_temporary_file(const wcstring &directory, wcstring *out_path);
     bool write_to_fd(int fd, const wcstring &path);
     bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
@@ -152,7 +150,7 @@ class env_universal_t {
 /// variable change notifications. These notifications do not contain the change, but merely
 /// indicate that the uvar file has changed. It is up to the uvar subsystem to re-read the file.
 ///
-/// We support a few notificatins strategies. Not all strategies are supported on all platforms.
+/// We support a few notification strategies. Not all strategies are supported on all platforms.
 ///
 /// Notifiers may request polling, and/or provide a file descriptor to be watched for readability in
 /// select().

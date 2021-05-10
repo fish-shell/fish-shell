@@ -34,7 +34,7 @@ Here is a list of some useful commands:
 
 Commands and arguments are separated by the space character ``' '``. Every command ends with either a newline (by pressing the return key) or a semicolon ``;``. Multiple commands can be written on the same line by separating them with semicolons.
 
-A switch is a very common special type of argument. Switches almost always start with one or more hyphens ``-`` and alter the way a command operates. For example, the ``ls`` command usually lists the names of all files and directories in the current working directory. By using the ``-l`` switch, the behavior of ``ls`` is changed to not only display the filename, but also the size, permissions, owner, and modification time of each file.
+A switch is a very common special type of argument. Swi always start with one or more hyphens ``-`` and alter the way a command operates. For example, the ``ls`` command usually lists the names of all files and directories in the current working directory. By using the ``-l`` switch, the behavior of ``ls`` is changed to not only display the filename, but also the size, permissions, owner, and modification time of each file.
 
 Switches differ between commands and are usually documented on a command's manual page. There are some switches, however, that are common to most commands. For example, ``--help`` will usually display a help text, ``--version`` will usually display the command version, and ``-i`` will often turn on interactive prompting before taking action.
 
@@ -591,6 +591,99 @@ This creates a temporary file, stores the output of the command in that file and
 .. [#] Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :ref:`string split <cmd-string-split>` instead.
 .. [#] Bash and Zsh at least, though it is a POSIX extension
 
+.. _variables-lists:
+
+Lists
+^^^^^
+
+Fish can store a list (or an "array" if you wish) of multiple strings inside of a variable::
+
+   > set mylist first second third
+   > printf '%s\n' $mylist # prints each element on its own line
+   first
+   second
+   third
+
+To access one element of a list, use the index of the element inside of square brackets, like this::
+
+   echo $PATH[3]
+
+List indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
+
+If you don't use any brackets, all the elements of the list will be passed to the command as separate items. This means you can iterate over a list with ``for``::
+
+    for i in $PATH
+        echo $i is in the path
+    end
+
+This goes over every directory in $PATH separately and prints a line saying it is in the path.
+
+To create a variable ``smurf``, containing the items ``blue`` and ``small``, simply write::
+
+    set smurf blue small
+
+It is also possible to set or erase individual elements of a list::
+
+    # Set smurf to be a list with the elements 'blue' and 'small'
+    set smurf blue small
+
+    # Change the second element of smurf to 'evil'
+    set smurf[2] evil
+
+    # Erase the first element
+    set -e smurf[1]
+
+    # Output 'evil'
+    echo $smurf
+
+
+If you specify a negative index when expanding or assigning to a list variable, the index will be taken from the *end* of the list. For example, the index -1 is the last element of the list::
+
+    > set fruit apple orange banana
+    > echo $fruit[-1]
+    banana
+
+    > echo $fruit[-2..-1]
+    orange
+    banana
+
+    > echo $fruit[-1..1] # reverses the list
+    banana
+    orange
+    apple
+
+As you see, you can use a range of indices, see :ref:`index range expansion <expand-index-range>` for details.
+
+All lists are one-dimensional and can't contain other lists, although it is possible to fake nested lists using dereferencing - see :ref:`variable expansion <expand-variable>`.
+
+When a list is exported as an environment variable, it is either space or colon delimited, depending on whether it is a :ref:`path variable <variables-path>`::
+
+    > set -x smurf blue small
+    > set -x smurf_PATH forest mushroom
+    > env | grep smurf
+    smurf=blue small
+    smurf_PATH=forest:mushroom
+
+Fish automatically creates lists from all environment variables whose name ends in PATH (like $PATH, $CDPATH or $MANPATH), by splitting them on colons. Other variables are not automatically split.
+
+Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
+
+    count $smurf
+    # 2
+
+    contains blue $smurf
+    # key found, exits with status 0
+
+    > contains -i blue $smurf
+    1
+
+A nice thing about lists is that they are passed to commands one element as one argument, so once you've set your list, you can just pass it::
+
+  set -l grep_args -r "my string"
+  grep $grep_args . # will run the same as `grep -r "my string"` .
+
+Unlike other shells, fish does not do "word splitting" - elements in a list stay as they are, even if they contain spaces or tabs.
+
 .. _expand-brace:
 
 Brace expansion
@@ -1014,99 +1107,6 @@ For example::
     set -gx LESSHISTFILE "-"
 
 Note: Exporting is not a :ref:`scope <variables-scope>`, but an additional state. It typically makes sense to make exported variables global as well, but local-exported variables can be useful if you need something more specific than :ref:`Overrides <variables-override>`. They are *copied* to functions so the function can't alter them outside, and still available to commands.
-
-.. _variables-lists:
-
-Lists
-^^^^^
-
-Fish can store a list (or an "array" if you wish) of multiple strings inside of a variable::
-
-   > set mylist first second third
-   > printf '%s\n' $mylist # prints each element on its own line
-   first
-   second
-   third
-
-To access one element of a list, use the index of the element inside of square brackets, like this::
-
-   echo $PATH[3]
-
-List indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
-
-If you don't use any brackets, all the elements of the list will be passed to the command as separate items. This means you can iterate over a list with ``for``::
-
-    for i in $PATH
-        echo $i is in the path
-    end
-
-This goes over every directory in $PATH separately and prints a line saying it is in the path.
-
-To create a variable ``smurf``, containing the items ``blue`` and ``small``, simply write::
-
-    set smurf blue small
-
-It is also possible to set or erase individual elements of a list::
-
-    # Set smurf to be a list with the elements 'blue' and 'small'
-    set smurf blue small
-
-    # Change the second element of smurf to 'evil'
-    set smurf[2] evil
-
-    # Erase the first element
-    set -e smurf[1]
-
-    # Output 'evil'
-    echo $smurf
-
-
-If you specify a negative index when expanding or assigning to a list variable, the index will be taken from the *end* of the list. For example, the index -1 is the last element of the list::
-
-    > set fruit apple orange banana
-    > echo $fruit[-1]
-    banana
-
-    > echo $fruit[-2..-1]
-    orange
-    banana
-
-    > echo $fruit[-1..1] # reverses the list
-    banana
-    orange
-    apple
-
-As you see, you can use a range of indices, see :ref:`index range expansion <expand-index-range>` for details.
-
-All lists are one-dimensional and can't contain other lists, although it is possible to fake nested lists using dereferencing - see :ref:`variable expansion <expand-variable>`.
-
-When a list is exported as an environment variable, it is either space or colon delimited, depending on whether it is a :ref:`path variable <variables-path>`::
-
-    > set -x smurf blue small
-    > set -x smurf_PATH forest mushroom
-    > env | grep smurf
-    smurf=blue small
-    smurf_PATH=forest:mushroom
-
-Fish automatically creates lists from all environment variables whose name ends in PATH (like $PATH, $CDPATH or $MANPATH), by splitting them on colons. Other variables are not automatically split.
-
-Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
-
-    count $smurf
-    # 2
-
-    contains blue $smurf
-    # key found, exits with status 0
-
-    > contains -i blue $smurf
-    1
-
-A nice thing about lists is that they are passed to commands one element as one argument, so once you've set your list, you can just pass it::
-
-  set -l grep_args -r "my string"
-  grep $grep_args . # will run the same as `grep -r "my string"` .
-
-Unlike other shells, fish does not do "word splitting" - elements in a list stay as they are, even if they contain spaces or tabs.
 
 .. _variables-argv:
 

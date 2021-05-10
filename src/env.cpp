@@ -57,13 +57,12 @@ bool curses_initialized = false;
 /// Does the terminal have the "eat_newline_glitch".
 bool term_has_xn = false;
 
-/// Universal variables global instance. Initialized in env_init.
-/// This is allocated via new() and deliberately leaked.
-static owning_lock<env_universal_t> *s_universal_variables{nullptr};
-
-/// Getter for universal variables, which assumes they have been populated.
+/// Getter for universal variables.
+/// This is typically initialized in env_init(), and is considered empty before then.
 static acquired_lock<env_universal_t> uvars() {
-    assert(s_universal_variables && "Null uvars");
+    // Leaked to avoid shutdown dtor registration.
+    static owning_lock<env_universal_t> *const s_universal_variables =
+        new owning_lock<env_universal_t>();
     return s_universal_variables->acquire();
 }
 
@@ -424,23 +423,19 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // Complain about invalid config paths.
     path_emit_config_directory_messages(vars);
 
-    assert(!s_universal_variables && "s_universal_variables already allocated");
-
-    // Allocate our uvars. Note this is deliberately leaked.
+    // Initialize our uvars if requested.
     if (!do_uvars) {
-        // Create an empty uvars and mark s_uvar_scope_is_global.
-        s_universal_variables = new owning_lock<env_universal_t>();
         s_uvar_scope_is_global = true;
     } else {
         // Set up universal variables using the default path.
-        s_universal_variables = new owning_lock<env_universal_t>();
         callback_data_list_t callbacks;
-        s_universal_variables->acquire()->initialize(callbacks);
+        uvars()->initialize(callbacks);
         env_universal_callbacks(&vars, callbacks);
 
         // Do not import variables that have the same name and value as
         // an exported universal variable. See issues #5258 and #5348.
-        for (const auto &kv : uvars()->get_table()) {
+        var_table_t table = uvars()->get_table();
+        for (const auto &kv : table) {
             const wcstring &name = kv.first;
             const env_var_t &uvar = kv.second;
             if (!uvar.exports()) continue;
@@ -790,7 +785,6 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key) const 
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key) const {
-    if (!s_universal_variables) return none();
     return uvars()->get(key);
 }
 
@@ -1205,7 +1199,7 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
         // Existing global variable.
         set_in_node(node, key, std::move(val), flags);
         result.global_modified = true;
-    } else if (s_universal_variables && uvars()->get(key)) {
+    } else if (uvars()->get(key)) {
         // Existing universal variable.
         set_universal(key, std::move(val), query);
         result.uvar_modified = true;
@@ -1227,14 +1221,11 @@ mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
         return mod_result_t{ENV_SCOPE};
     }
 
-    // Helper to remove from uvars.
-    auto remove_from_uvars = [&] { return uvars()->remove(key); };
-
     mod_result_t result{ENV_OK};
     if (query.has_scope) {
         // The user requested erasing from a particular scope.
         if (query.universal) {
-            result.status = remove_from_uvars() ? ENV_OK : ENV_NOT_FOUND;
+            result.status = uvars()->remove(key) ? ENV_OK : ENV_NOT_FOUND;
             result.uvar_modified = true;
         } else if (query.global) {
             result.status = remove_from_chain(globals_, key) ? ENV_OK : ENV_NOT_FOUND;
@@ -1248,7 +1239,7 @@ mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
         // pass
     } else if (remove_from_chain(globals_, key)) {
         result.global_modified = true;
-    } else if (remove_from_uvars()) {
+    } else if (uvars()->remove(key)) {
         result.uvar_modified = true;
     } else {
         result.status = ENV_NOT_FOUND;

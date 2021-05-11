@@ -41,17 +41,19 @@ int path_get_config_is_remote();
 class env_stack_t;
 void path_emit_config_directory_messages(env_stack_t &vars);
 
-/// Finds the full path of an executable.
+/// Finds the path of an executable.
 ///
 /// Args:
 /// cmd - The name of the executable.
-/// output_or_NULL - If non-NULL, store the full path.
+/// output_or_NULL - If non-NULL, store the path.
 /// vars - The environment variables to use
+/// absolute - Should returned path be absolute (if it is set to false, returned path may be either
+///            absolute or relative depending on the content of cmd argument)
 ///
 /// Returns:
 /// false if the command can not be found else true. The result
 /// should be freed with free().
-bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars);
+bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars, bool absolute);
 
 /// Return all the paths that match the given command.
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars);

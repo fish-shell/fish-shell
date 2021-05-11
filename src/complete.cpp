@@ -573,7 +573,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
 /// Find the full path and commandname from a command string 'str'.
 static void parse_cmd_string(const wcstring &str, wcstring *path, wcstring *cmd,
                              const environment_t &vars) {
-    if (!path_get_path(str, path, vars)) {
+    if (!path_get_path(str, path, vars, true)) {
         /// Use the empty string as the 'path' for commands that can not be found.
         path->clear();
     }
@@ -947,7 +947,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
         // may be faster, path_get_path can potentially do a lot of FS/IO access, so env.get() +
         // function_exists() should still be faster.
         // Use cmd_orig here as it is potentially pathed.
-        head_exists = head_exists || path_get_path(cmd_orig, nullptr, ctx.vars);
+        head_exists = head_exists || path_get_path(cmd_orig, nullptr, ctx.vars, false);
     }
 
     if (!head_exists) {

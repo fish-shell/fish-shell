@@ -69,6 +69,7 @@ Completions
   - ``firewall-cmd`` (:issue:`7900`)
 
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
+- Completion defined with ``complete -p`` now also work when the commandline uses a relative path to the command (:issue:`6001`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

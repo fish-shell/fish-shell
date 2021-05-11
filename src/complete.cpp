@@ -573,9 +573,13 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
 /// Find the full path and commandname from a command string 'str'.
 static void parse_cmd_string(const wcstring &str, wcstring *path, wcstring *cmd,
                              const environment_t &vars) {
-    if (!path_get_path(str, path, vars)) {
-        /// Use the empty string as the 'path' for commands that can not be found.
-        path->clear();
+    bool found = path_get_path(str, path, vars);
+    // If the command was not found, 'path' is the empty string.
+    // Resolve commands that use relative paths because we compare full paths with "complete -p".
+    if (found && !str.empty() && str.at(0) != L'/') {
+        if (auto full_path = wrealpath(*path)) {
+            path->assign(full_path.acquire());
+        }
     }
 
     // Make sure the path is not included in the command.

@@ -41,11 +41,11 @@ int path_get_config_is_remote();
 class env_stack_t;
 void path_emit_config_directory_messages(env_stack_t &vars);
 
-/// Finds the full path of an executable.
+/// Finds the path of an executable.
 ///
 /// Args:
 /// cmd - The name of the executable.
-/// output_or_NULL - If non-NULL, store the full path.
+/// output_or_NULL - If non-NULL, store the path.
 /// vars - The environment variables to use
 ///
 /// Returns:

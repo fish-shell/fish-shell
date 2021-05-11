@@ -11,6 +11,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "signal.h"
+#include "wait_handle.h"
 #include "wgetopt.h"
 #include "wutil.h"
 
@@ -20,10 +21,11 @@ static bool can_wait_on_job(const std::shared_ptr<job_t> &j) {
 }
 
 /// \return true if a wait handle matches a pid or a process name. Exactly one should be passed.
+/// For convenience, this returns false if the wait handle is null.
 static bool wait_handle_matches(pid_t pid, const wchar_t *proc_name, const wait_handle_ref_t &wh) {
     assert((pid > 0 || proc_name) && "Must specify either pid or proc_name");
-    return (pid > 0 && contains(wh->pids, pid)) ||
-           (proc_name && contains(wh->proc_base_names, proc_name));
+    if (!wh) return false;
+    return (pid > 0 && pid == wh->pid) || (proc_name && proc_name == wh->base_name);
 }
 
 /// Walk the list of jobs, looking for a process with \p pid (if nonzero) or \p proc_name (if not
@@ -34,8 +36,9 @@ static bool find_wait_handles(pid_t pid, const wchar_t *proc_name, const parser_
     assert((pid > 0 || proc_name) && "Must specify either pid or proc_name");
 
     // Has a job already completed?
+    // TODO: we can avoid traversing this list if searching by pid.
     bool matched = false;
-    for (const auto &wh : parser.get_recorded_wait_handles()) {
+    for (const auto &wh : parser.get_wait_handles().get_list()) {
         if (wait_handle_matches(pid, proc_name, wh)) {
             handles->push_back(wh);
             matched = true;
@@ -44,18 +47,13 @@ static bool find_wait_handles(pid_t pid, const wchar_t *proc_name, const parser_
 
     // Is there a running job match?
     for (const auto &j : parser.jobs()) {
-        if (can_wait_on_job(j) && wait_handle_matches(pid, proc_name, j->get_wait_handle())) {
-            handles->push_back(j->get_wait_handle());
-            matched = true;
-        }
-    }
-
-    if (!matched) {
-        // Maybe we could have matched, but a job was stopped or otherwise unwaitable.
-        for (const auto &j : parser.jobs()) {
-            if (wait_handle_matches(pid, proc_name, j->get_wait_handle())) {
+        // We want to set 'matched' to true if we could have matched, even if the job was stopped.
+        bool provide_handle = can_wait_on_job(j);
+        for (const auto &proc : j->processes) {
+            auto wh = proc->get_wait_handle();
+            if (wait_handle_matches(pid, proc_name, wh)) {
                 matched = true;
-                break;
+                if (provide_handle) handles->push_back(std::move(wh));
             }
         }
     }
@@ -65,11 +63,17 @@ static bool find_wait_handles(pid_t pid, const wchar_t *proc_name, const parser_
 /// \return all wait handles for all jobs, current and already completed (!).
 static std::vector<wait_handle_ref_t> get_all_wait_handles(const parser_t &parser) {
     std::vector<wait_handle_ref_t> result;
-    const auto &whs = parser.get_recorded_wait_handles();
+    // Get wait handles for reaped jobs.
+    const auto &whs = parser.get_wait_handles().get_list();
     result.insert(result.end(), whs.begin(), whs.end());
+
+    // Get wait handles for running jobs.
     for (const auto &j : parser.jobs()) {
-        if (can_wait_on_job(j)) {
-            result.push_back(j->get_wait_handle());
+        if (!can_wait_on_job(j)) continue;
+        for (const auto &proc : j->processes) {
+            if (auto wh = proc->get_wait_handle()) {
+                result.push_back(std::move(wh));
+            }
         }
     }
     return result;
@@ -91,7 +95,7 @@ static int wait_for_completion(parser_t &parser, const std::vector<wait_handle_r
             // Remove completed wait handles (at most 1 if any_flag is set).
             for (const auto &wh : whs) {
                 if (is_completed(wh)) {
-                    parser.wait_handle_remove(wh);
+                    parser.get_wait_handles().remove(wh);
                     if (any_flag) break;
                 }
             }

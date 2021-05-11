@@ -3375,6 +3375,42 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     do_test(cursor_pos == out_cursor_pos);
 }
 
+static void test_wait_handles() {
+    say(L"Testing wait handles");
+    constexpr size_t limit = 4;
+    wait_handle_store_t whs(limit);
+    do_test(whs.size() == 0);
+
+    // Null handles ignored.
+    whs.add(wait_handle_ref_t{});
+    do_test(whs.size() == 0);
+    do_test(whs.get_by_pid(5) == nullptr);
+
+    // Duplicate pids drop oldest.
+    whs.add(std::make_shared<wait_handle_t>(5, L"first"));
+    whs.add(std::make_shared<wait_handle_t>(5, L"second"));
+    do_test(whs.size() == 1);
+    do_test(whs.get_by_pid(5)->base_name == L"second");
+
+    whs.remove_by_pid(123);
+    do_test(whs.size() == 1);
+    whs.remove_by_pid(5);
+    do_test(whs.size() == 0);
+
+    // Test evicting oldest.
+    whs.add(std::make_shared<wait_handle_t>(1, L"1"));
+    whs.add(std::make_shared<wait_handle_t>(2, L"2"));
+    whs.add(std::make_shared<wait_handle_t>(3, L"3"));
+    whs.add(std::make_shared<wait_handle_t>(4, L"4"));
+    whs.add(std::make_shared<wait_handle_t>(5, L"5"));
+    do_test(whs.size() == 4);
+    auto start = whs.get_list().begin();
+    do_test(std::next(start, 0)->get()->base_name == L"5");
+    do_test(std::next(start, 1)->get()->base_name == L"4");
+    do_test(std::next(start, 2)->get()->base_name == L"3");
+    do_test(std::next(start, 3)->get()->base_name == L"2");
+}
+
 static void test_completion_insertions() {
 #define TEST_1_COMPLETION(a, b, c, d, e) test_1_completion(a, b, c, d, e, __LINE__)
     say(L"Testing completion insertions");
@@ -6612,6 +6648,7 @@ int main(int argc, char **argv) {
     if (should_test_function("universal")) test_universal_formats();
     if (should_test_function("universal")) test_universal_ok_to_save();
     if (should_test_function("notifiers")) test_universal_notifiers();
+    if (should_test_function("wait_handles")) test_wait_handles();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();

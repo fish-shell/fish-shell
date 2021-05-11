@@ -553,32 +553,6 @@ void parser_t::job_add(shared_ptr<job_t> job) {
     job_list.push_front(std::move(job));
 }
 
-void parser_t::save_wait_handle_for_completed_job(job_t *job) {
-    assert(job && job->is_completed() && "Job null or not completed");
-    // Are we a background job with an external process?
-    if (!job->is_foreground() && job->has_external_proc()) {
-        rec_wait_handles.push_front(job->get_wait_handle(true /* create */));
-
-        // Limit how many background jobs we will remember.
-        // This is CHILD_MAX (controlled by _SC_CHILD_MAX) but we just hard code it.
-        // 1024 is zsh's fallback.
-        while (rec_wait_handles.size() > 1024) rec_wait_handles.pop_back();
-    }
-
-    // Mark the job as complete in its wait handle (but don't create it just for this).
-    if (auto wh = job->get_wait_handle(false /* create */)) {
-        wh->completed = true;
-    }
-}
-
-void parser_t::wait_handle_remove(const wait_handle_ref_t &handle) {
-    // Note the handle may not be found, if we exceeded our wait handle limit.
-    auto iter = std::find(rec_wait_handles.begin(), rec_wait_handles.end(), handle);
-    if (iter != rec_wait_handles.end()) {
-        rec_wait_handles.erase(iter);
-    }
-}
-
 void parser_t::job_promote(job_t *job) {
     job_list_t::iterator loc;
     for (loc = job_list.begin(); loc != job_list.end(); ++loc) {

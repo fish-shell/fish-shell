@@ -31,6 +31,7 @@
 #endif
 #include <sys/time.h>  // IWYU pragma: keep
 #include <sys/types.h>
+#include <sys/wait.h>
 
 #include <algorithm>  // IWYU pragma: keep
 #include <memory>
@@ -189,21 +190,6 @@ maybe_t<statuses_t> job_t::get_statuses() const {
     return st;
 }
 
-wait_handle_ref_t job_t::get_wait_handle(bool create) {
-    if (!wait_handle && create) {
-        wait_handle = std::make_shared<wait_handle_t>();
-        for (const auto &proc : processes) {
-            // Only external processes may be wait'ed upon.
-            if (proc->type != process_type_t::external) continue;
-            if (proc->pid > 0) {
-                wait_handle->pids.push_back(proc->pid);
-            }
-            wait_handle->proc_base_names.push_back(wbasename(proc->actual_cmd));
-        }
-    }
-    return wait_handle;
-}
-
 void internal_proc_t::mark_exited(proc_status_t status) {
     assert(!exited() && "Process is already exited");
     status_.store(status, std::memory_order_relaxed);
@@ -307,6 +293,16 @@ bool process_t::is_internal() const {
            "process_t::is_internal: Total logic failure, universe is broken. Please replace "
            "universe and retry.");
     return true;
+}
+
+wait_handle_ref_t process_t::get_wait_handle(bool create) {
+    if (type != process_type_t::external || pid <= 0) {
+        return nullptr;
+    }
+    if (!wait_handle_ && create) {
+        wait_handle_ = std::make_shared<wait_handle_t>(this->pid, wbasename(this->actual_cmd));
+    }
+    return wait_handle_;
 }
 
 static uint64_t next_internal_job_id() {
@@ -610,6 +606,26 @@ static bool job_wants_message(const shared_ptr<job_t> &j) {
     return true;
 }
 
+/// Given that a job has completed, check if it may be wait'ed on; if so add it to the wait handle
+/// store. Then mark all wait handles as complete.
+static void save_wait_handle_for_completed_job(const shared_ptr<job_t> &job,
+                                               wait_handle_store_t &store) {
+    assert(job && job->is_completed() && "Job null or not completed");
+    // Are we a background job?
+    if (!job->is_foreground()) {
+        for (auto &proc : job->processes) {
+            store.add(proc->get_wait_handle(true));
+        }
+    }
+
+    // Mark all wait handles as complete (but don't create just for this).
+    for (auto &proc : job->processes) {
+        if (wait_handle_ref_t wh = proc->get_wait_handle(false /* create */)) {
+            wh->completed = true;
+        }
+    }
+}
+
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// \return whether something was printed.
 static bool process_clean_after_marking(parser_t &parser, bool allow_interactive) {
@@ -688,7 +704,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         const shared_ptr<job_t> &j = *iter;
         if (should_process_job(j) && j->is_completed()) {
             // If this job finished in the background, we have to remember to wait on it.
-            parser.save_wait_handle_for_completed_job(j.get());
+            save_wait_handle_for_completed_job(j, parser.get_wait_handles());
             iter = jobs.erase(iter);
         } else {
             ++iter;

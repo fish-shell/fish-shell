@@ -930,6 +930,9 @@ static launch_result_t exec_process_in_job(parser_t &parser, process_t *p,
                 launch_result_t::failed) {
                 return launch_result_t::failed;
             }
+            // It's possible (though unlikely) that this is a background process which recycled a
+            // pid from another, previous background process. Forget any such old process.
+            parser.get_wait_handles().remove_by_pid(p->pid);
             break;
         }
 

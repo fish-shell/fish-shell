@@ -499,6 +499,14 @@ In the simplest case, this is just something like::
 
 which will replace ``$HOME`` with the home directory of the current user, and pass it to :ref:`echo <cmd-echo>`, which will then print it.
 
+Some variables like ``$HOME`` are already set because fish sets them by default or because fish's parent process passed them to fish when it started it. You can define your own variables by setting them with :ref:`set <cmd-set>`::
+
+    set my_directory /home/cooluser/mystuff
+    ls $my_directory
+    # shows the contents of /home/cooluser/mystuff
+
+For more on how setting variables works, see :ref:`Shell variables <variables>` and the following sections.
+
 Sometimes a variable has no value because it is undefined or empty, and it expands to nothing::
 
 
@@ -507,8 +515,9 @@ Sometimes a variable has no value because it is undefined or empty, and it expan
 
 To separate a variable name from text you can encase the variable within double-quotes or braces::
 
+    set WORD cat
     echo The plural of $WORD is "$WORD"s
-    # Prints "The plural of cat is cats" when $WORD is set to cat.
+    # Prints "The plural of cat is cats" because $WORD is set to "cat".
     echo The plural of $WORD is {$WORD}s
     # ditto
 

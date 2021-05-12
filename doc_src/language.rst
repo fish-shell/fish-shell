@@ -714,11 +714,16 @@ Because :ref:`$PATH <path>` is a list, this expands to all the files in all the 
 Index range expansion
 ^^^^^^^^^^^^^^^^^^^^^
 
-Sometimes it's necessary to access only some of the elements of a list, or some of the lines a command substitution outputs. Both are possible in fish by writing a set of indices in brackets, like::
+Sometimes it's necessary to access only some of the elements of a :ref:`list <variables-lists>` (all fish variables are lists), or some of the lines a :ref:`command substitution <expand-command-substitution>` outputs. Both are possible in fish by writing a set of indices in brackets, like::
 
-  $var[2]
-  # or
-  $var[1..3]
+  # Make $var a list of four elements
+  set var one two three four
+  # Print the second:
+  echo $var[2]
+  # prints "two"
+  # or print the first three:
+  echo $var[1..3]
+  # prints "one two three"
 
 In index brackets, fish understands ranges written like ``a..b`` ('a' and 'b' being indices). They are expanded into a sequence of indices from a to b (so ``a a+1 a+2 ... b``), going up if b is larger and going down if a is larger. Negative indices can also be used - they are taken from the end of the list, so ``-1`` is the last element, and ``-2`` the one before it. If an index doesn't exist the range is clamped to the next possible index.
 

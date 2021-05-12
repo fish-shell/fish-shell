@@ -21,15 +21,17 @@ Description
 
 ``set`` manipulates :ref:`shell variables <variables>`.
 
-If set is called with no arguments, the names and values of all shell variables are printed in sorted order. If some of the scope or export flags have been given, only the variables matching the specified scope are printed.
+If both a variable name and values are provided, ``set`` assigns the values to the variable of that name. Because all variables in fish are :ref:`lists <variables-lists>`, multiple values are allowed.
 
-With both variable names and values provided, ``set`` assigns the variable ``VARIABLE_NAME`` the values ``VALUES...``.
+If only a variable name has been given, ``set`` sets the variable to the empty list.
+
+If ``set`` is called with no arguments, it prints the names and values of all shell variables in sorted order. Passing :ref:`scope <variables-scope>` or :ref:`export <variables-export>` flags allows filtering this to only matching variables, so ``set --local`` would only show local variables.
+
+With ``--erase`` and optionally a scope flag ``set`` will erase the matching variable (or the variable of that name in the smallest possible scope).
+
+With ``--show``, ``set`` will describe the given variable names, explaining how they have been defined - in which scope with which values and options.
 
 The following options control variable scope:
-
-- ``-a`` or ``--append`` causes the values to be appended to the current set of values for the variable. This can be used with ``--prepend`` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
-
-- ``-p`` or ``--prepend`` causes the values to be prepended to the current set of values for the variable. This can be used with ``--append`` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
 
 - ``-l`` or ``--local`` forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
 
@@ -37,23 +39,29 @@ The following options control variable scope:
 
 - ``-U`` or ``--universal`` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current user's fish instances on the current computer, and will be preserved across restarts of the shell.
 
+These options control additional variable options:
+
 - ``-x`` or ``--export`` causes the specified shell variable to be exported to child processes (making it an "environment variable")
 
 - ``-u`` or ``--unexport`` causes the specified shell variable to NOT be exported to child processes
 
-- ``--path`` causes the specified variable to be treated as a path variable, meaning it will automatically be split on colons,  and joined using colons when quoted (`echo "$PATH"`) or exported.
+- ``--path`` causes the specified variable to be treated as a path variable, meaning it will automatically be split on colons,  and joined using colons when quoted (``echo "$PATH"``) or exported.
 
 - ``--unpath`` causes the specified variable to not be treated as a path variable. Variables with a name ending in "PATH" are automatically path variables, so this can be used to treat such a variable normally.
 
-The following options are available:
+The following other options are available:
+
+- ``-a`` or ``--append`` causes the values to be appended to the current set of values for the variable. This can be used with ``--prepend`` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
+
+- ``-p`` or ``--prepend`` causes the values to be prepended to the current set of values for the variable. This can be used with ``--append`` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
 
 - ``-e`` or ``--erase`` causes the specified shell variables to be erased
 
 - ``-q`` or ``--query`` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined, or 255 if more than 255 variables are not defined.
 
-- ``-n`` or ``--names`` List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
+- ``-n`` or ``--names``: List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
 
-- ``-S`` or ``--show`` Shows information about the given variables. If no variable names are given then all variables are shown in sorted order. It shows the scopes the given variables are set in, along with the values in each and whether or not it is exported. No other flags can be used with this option.
+- ``-S`` or ``--show`` shows information about the given variables. If no variable names are given then all variables are shown in sorted order. It shows the scopes the given variables are set in, along with the values in each and whether or not it is exported. No other flags can be used with this option.
 
 - ``-L`` or ``--long`` do not abbreviate long values when printing set variables
 

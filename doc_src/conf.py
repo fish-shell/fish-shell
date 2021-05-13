@@ -210,6 +210,9 @@ def get_command_description(path, name):
                 return desc.strip()
     raise SphinxWarning("No description in file %s" % os.path.basename(path))
 
+# Newer sphinxen apparently create another subdirectory which breaks our man lookup.
+# Unbreak it (#7996)
+man_make_section_directory = False
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).

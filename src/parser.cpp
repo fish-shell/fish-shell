@@ -566,16 +566,16 @@ void parser_t::job_promote(job_t *job) {
     std::rotate(job_list.begin(), loc, std::next(loc));
 }
 
-job_t *parser_t::job_get(job_id_t id) {
+const job_t *parser_t::job_with_id(job_id_t id) const {
     for (const auto &job : job_list) {
         if (id <= 0 || job->job_id() == id) return job.get();
     }
     return nullptr;
 }
 
-const job_t *parser_t::job_get(job_id_t id) const {
+const job_t *parser_t::job_with_internal_id(internal_job_id_t id) const {
     for (const auto &job : job_list) {
-        if (id <= 0 || job->job_id() == id) return job.get();
+        if (job->internal_job_id == id) return job.get();
     }
     return nullptr;
 }

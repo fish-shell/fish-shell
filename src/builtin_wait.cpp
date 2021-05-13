@@ -17,15 +17,15 @@
 /// Return the job id to which the process with pid belongs.
 /// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()
 /// doesn't work properly, so use this function in wait command.
-static job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
+static internal_job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
     for (const auto &j : parser.jobs()) {
         if (j->get_pgid() == maybe_t<pid_t>{pid}) {
-            return j->job_id();
+            return j->internal_job_id;
         }
         // Check if the specified pid is a child process of the job.
         for (const process_ptr_t &p : j->processes) {
             if (p->pid == pid) {
-                return j->job_id();
+                return j->internal_job_id;
             }
         }
     }
@@ -76,9 +76,10 @@ static int wait_for_backgrounds(parser_t &parser, bool any_flag) {
     return 0;
 }
 
-static bool all_specified_jobs_finished(const parser_t &parser, const std::vector<job_id_t> &ids) {
+static bool all_specified_jobs_finished(const parser_t &parser,
+                                        const std::vector<internal_job_id_t> &ids) {
     for (auto id : ids) {
-        if (const job_t *j = parser.job_get(id)) {
+        if (const job_t *j = parser.job_with_internal_id(id)) {
             // If any specified job is not completed, return false.
             // If there are stopped jobs, they are ignored.
             if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
@@ -89,9 +90,10 @@ static bool all_specified_jobs_finished(const parser_t &parser, const std::vecto
     return true;
 }
 
-static bool any_specified_jobs_finished(const parser_t &parser, const std::vector<job_id_t> &ids) {
+static bool any_specified_jobs_finished(const parser_t &parser,
+                                        const std::vector<internal_job_id_t> &ids) {
     for (auto id : ids) {
-        if (const job_t *j = parser.job_get(id)) {
+        if (const job_t *j = parser.job_with_internal_id(id)) {
             // If any specified job is completed, return true.
             if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
                 return true;
@@ -104,7 +106,8 @@ static bool any_specified_jobs_finished(const parser_t &parser, const std::vecto
     return false;
 }
 
-static int wait_for_backgrounds_specified(parser_t &parser, const std::vector<job_id_t> &ids,
+static int wait_for_backgrounds_specified(parser_t &parser,
+                                          const std::vector<internal_job_id_t> &ids,
                                           bool any_flag) {
     sigchecker_t sigint(topic_t::sighupint);
     while ((!any_flag && !all_specified_jobs_finished(parser, ids)) ||
@@ -138,7 +141,7 @@ static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
 }
 
 /// It should search the job list for something matching the given proc.
-static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
+static bool find_job_by_name(const wchar_t *proc, std::vector<internal_job_id_t> &ids,
                              const parser_t &parser) {
     bool found = false;
 
@@ -146,9 +149,9 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
         if (j->command().empty()) continue;
 
         if (match_pid(j->command(), proc)) {
-            if (!contains(ids, j->job_id())) {
+            if (!contains(ids, j->internal_job_id)) {
                 // If pids doesn't already have the pgid, add it.
-                ids.push_back(j->job_id());
+                ids.push_back(j->internal_job_id);
             }
             found = true;
         }
@@ -158,9 +161,9 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
             if (p->actual_cmd.empty()) continue;
 
             if (match_pid(p->actual_cmd, proc)) {
-                if (!contains(ids, j->job_id())) {
+                if (!contains(ids, j->internal_job_id)) {
                     // If pids doesn't already have the pgid, add it.
-                    ids.push_back(j->job_id());
+                    ids.push_back(j->internal_job_id);
                 }
                 found = true;
             }
@@ -216,7 +219,7 @@ maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, const wchar_t
         retval = wait_for_backgrounds(parser, any_flag);
     } else {
         // jobs specified
-        std::vector<job_id_t> waited_job_ids;
+        std::vector<internal_job_id_t> waited_job_ids;
 
         for (int i = w.woptind; i < argc; i++) {
             if (iswnumeric(argv[i])) {
@@ -227,7 +230,7 @@ maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, const wchar_t
                                               argv[i]);
                     continue;
                 }
-                if (job_id_t id = get_job_id_from_pid(pid, parser)) {
+                if (internal_job_id_t id = get_job_id_from_pid(pid, parser)) {
                     waited_job_ids.push_back(id);
                 } else {
                     streams.err.append_format(

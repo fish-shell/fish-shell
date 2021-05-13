@@ -196,12 +196,12 @@ maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, const wchar_t
 
                 if (argv[i][0] == L'%') {
                     int job_id = fish_wcstoi(argv[i] + 1);
-                    if (errno || job_id < -1) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd,
+                    if (errno || job_id < 0) {
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id\n"), cmd,
                                                   argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
-                    j = parser.job_get(job_id);
+                    j = parser.job_with_id(job_id);
                 } else {
                     int pid = fish_wcstoi(argv[i]);
                     if (errno || pid < 0) {

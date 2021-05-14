@@ -93,7 +93,7 @@ function history --description "display or manipulate interactive command histor
                 # screen from clearing on quit, so there is something to see if it exits.
                 # These are two of the options `git` sets through $LESS before starting the pager.
                 not set -qx LESS
-                and set -x LESS --quit-if-one-screen --no-init
+                and set -x LESS --quit-if-one-screen
                 not set -qx LV # ask the pager lv not to strip colors
                 and set -x LV -c
 

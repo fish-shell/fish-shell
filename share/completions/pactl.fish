@@ -12,7 +12,7 @@ set -l ctlcommands stat info list exit {upload,play,remove}-sample {load,unload}
 
 # HACK: This is the list of commands from pacmd - used so we can use complete -w there
 if command -sq pacmd
-    set commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
+    set commands (pacmd help 2>/dev/null | string match -r '^ +[-\w]+' | string trim)
 else
     set commands $ctlcommands
 end

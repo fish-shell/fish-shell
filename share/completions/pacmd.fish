@@ -1,13 +1,13 @@
 # Pulseaudio's pacmd
 # This covers the most useful commands
-set -l commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
+set -l commands (pacmd help 2>/dev/null | string match -r '^ +[-\w]+' | string trim)
 complete -f -c pacmd
 complete -f -c pacmd -w pactl
 
 # These descriptions are a bit wordy and unnecessary
 # Sample: set-source-port Change the port of a source (args: index|name, port-name)
 # Or: list-source-outputs List source outputs
-complete -f -c pacmd -n "not __fish_seen_subcommand_from $commands" -a "(pacmd help | string match ' *' | string trim | string replace -r '\s+' '\t')"
+complete -f -c pacmd -n "not __fish_seen_subcommand_from $commands" -a "(pacmd help 2>/dev/null | string match ' *' | string trim | string replace -r '\s+' '\t')"
 
 # Since we wrapped pactl, we can also use functions defined there
 complete -f -c pacmd -n "__fish_seen_subcommand_from describe-module" -a '(__fish_pa_complete_type modules)'

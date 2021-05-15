@@ -248,8 +248,14 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
    private:
     /// The current execution context.
     std::unique_ptr<parse_execution_context_t> execution_context;
+
     /// The jobs associated with this parser.
     job_list_t job_list;
+
+    /// The list of recorded wait-handles. These are jobs that finished in the background, and have
+    /// been reaped, but may still be wait'ed on.
+    std::deque<wait_handle_ref_t> rec_wait_handles;
+
     /// The list of blocks. This is a deque because we give out raw pointers to callers, who hold
     /// them across manipulating this stack.
     /// This is in "reverse" order: the topmost block is at the front. This enables iteration from
@@ -361,6 +367,11 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     library_data_t &libdata() { return library_data; }
     const library_data_t &libdata() const { return library_data; }
 
+    /// Access the list of wait handles for jobs that have finished in the background.
+    const std::deque<wait_handle_ref_t> &get_recorded_wait_handles() const {
+        return rec_wait_handles;
+    }
+
     /// Get and set the last proc statuses.
     int get_last_status() const { return vars().get_last_status(); }
     statuses_t get_last_statuses() const { return vars().get_last_statuses(); }
@@ -396,6 +407,13 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Returns the job with the given pid.
     job_t *job_get_from_pid(pid_t pid) const;
+
+    /// Given that a job has completed, check if it may be wait'ed on; if so add it to our list of
+    /// wait handles.
+    void save_wait_handle_for_completed_job(job_t *job);
+
+    /// Remove a wait handle, if present in the list.
+    void wait_handle_remove(const wait_handle_ref_t &handle);
 
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The parser_t will deallocate it.

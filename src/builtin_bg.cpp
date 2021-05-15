@@ -72,7 +72,7 @@ maybe_t<int> builtin_bg(parser_t &parser, io_streams_t &streams, const wchar_t *
     }
 
     // The user specified at least one job to be backgrounded.
-    std::vector<int> pids;
+    std::vector<pid_t> pids;
 
     // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
     // but still print errors for all of them.

@@ -287,8 +287,8 @@ class process_t {
     redirection_spec_list_t proc_redirection_specs_;
 };
 
-typedef std::unique_ptr<process_t> process_ptr_t;
-typedef std::vector<process_ptr_t> process_list_t;
+using process_ptr_t = std::unique_ptr<process_t>;
+using process_list_t = std::vector<process_ptr_t>;
 
 /// A user-visible job ID.
 using job_id_t = int;
@@ -296,6 +296,21 @@ using job_id_t = int;
 /// The non user-visible, never-recycled job ID.
 /// Every job has a unique positive value for this.
 using internal_job_id_t = uint64_t;
+
+/// The bits of a job necessary to support 'wait'.
+/// This may outlive the job.
+struct wait_handle_t {
+    /// The list of pids of the processes in this job.
+    std::vector<pid_t> pids{};
+
+    /// The list of "base names" of the processes from the job.
+    /// For example if the job is "/bin/sleep" then this will be 'sleep'.
+    wcstring_list_t proc_base_names{};
+
+    /// Set to true when the job is completed.
+    bool completed{false};
+};
+using wait_handle_ref_t = std::shared_ptr<wait_handle_t>;
 
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t {
@@ -378,6 +393,10 @@ class job_t {
     // The group containing this job.
     // This is never null and not changed after construction.
     job_group_ref_t group{};
+
+    // The wait handle. This is constructed lazily, and cached.
+    // Do not access this directly, use the get_wait_handle() function below.
+    wait_handle_ref_t wait_handle{};
 
     /// \return the pgid for the job, based on the job group.
     /// This may be none if the job consists of just internal fish functions or builtins.
@@ -472,6 +491,9 @@ class job_t {
 
     /// \returns the statuses for this job.
     maybe_t<statuses_t> get_statuses() const;
+
+    /// \return the wait handle for the job, creating it if \p create is set.
+    wait_handle_ref_t get_wait_handle(bool create);
 };
 
 /// Whether this shell is attached to a tty.

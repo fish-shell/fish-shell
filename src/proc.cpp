@@ -189,6 +189,21 @@ maybe_t<statuses_t> job_t::get_statuses() const {
     return st;
 }
 
+wait_handle_ref_t job_t::get_wait_handle(bool create) {
+    if (!wait_handle && create) {
+        wait_handle = std::make_shared<wait_handle_t>();
+        for (const auto &proc : processes) {
+            // Only external processes may be wait'ed upon.
+            if (proc->type != process_type_t::external) continue;
+            if (proc->pid > 0) {
+                wait_handle->pids.push_back(proc->pid);
+            }
+            wait_handle->proc_base_names.push_back(wbasename(proc->actual_cmd));
+        }
+    }
+    return wait_handle;
+}
+
 void internal_proc_t::mark_exited(proc_status_t status) {
     assert(!exited() && "Process is already exited");
     status_.store(status, std::memory_order_relaxed);
@@ -668,11 +683,17 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     // Remove completed jobs.
     // Do this before calling out to user code in the event handler below, to ensure an event
     // handler doesn't remove jobs on our behalf.
-    auto should_remove = [&](const shared_ptr<job_t> &j) {
-        return should_process_job(j) && j->is_completed();
-    };
     auto &jobs = parser.jobs();
-    jobs.erase(std::remove_if(jobs.begin(), jobs.end(), should_remove), jobs.end());
+    for (auto iter = jobs.begin(); iter != jobs.end();) {
+        const shared_ptr<job_t> &j = *iter;
+        if (should_process_job(j) && j->is_completed()) {
+            // If this job finished in the background, we have to remember to wait on it.
+            parser.save_wait_handle_for_completed_job(j.get());
+            iter = jobs.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
 
     // Post pending exit events.
     for (const auto &evt : exit_events) {

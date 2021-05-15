@@ -124,7 +124,7 @@ Configuration files are evaluated in the following order:
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
-This wide search may be confusing. If you are unsure where to put your own customisations, use ``~/.config/fish/config.fish``.
+If you are unsure where to put your own customisations, use ``~/.config/fish/config.fish``.
 
 ``~/.config/fish/config.fish`` is sourced *after* the snippets. This is so users can copy snippets and override some of their behavior.
 
@@ -134,11 +134,13 @@ If you are developing another program, you may wish to install configuration whi
 
 Examples:
 
-If you want to add the directory ``~/linux/bin`` to your PATH variable when using a login shell, add the following to your ``~/.config/fish/config.fish`` file::
+If you want to add the directory ``~/linux/bin`` to your PATH variable when using a login shell, add this to your ``~/.config/fish/config.fish`` file::
 
     if status --is-login
         set -gx PATH $PATH ~/linux/bin
     end
+
+(alternatively use :ref:`fish_add_path <cmd-fish_add_path>` like ``fish_add_path ~/linux/bin``, which only adds the path if it isn't included yet)
 
 If you want to run a set of commands when fish exits, use an :ref:`event handler <event>` that is triggered by the exit of the shell::
 

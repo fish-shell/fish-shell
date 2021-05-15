@@ -306,16 +306,22 @@ Functions can be defined on the commandline or in a configuration file, but they
 
 When fish needs to load a function, it searches through any directories in the :ref:`list variable <variables-lists>` ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix ``.fish`` and loads the first it finds.
 
+For example if you try to execute something called ``banana``, fish will go through all directories in $fish_function_path looking for a file called ``banana.fish`` and load the first one it finds.
+
 By default ``$fish_function_path`` contains the following:
 
-- A directory for end-users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
-- A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
+- A directory for users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
+- A directory for functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
 - Directories for other software to put their own functions. These are in the directories in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``fish/vendor_functions.d``. The default is usually ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
 - The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
 If you are unsure, your functions probably belong in ``~/.config/fish/functions``.
 
+As we've explained, autoload files are loaded *by name*, so, while you can put multiple functions into one file, the file will only be loaded automatically once you try to execute the one that shares the name.
+
 Autoloading also won't work for :ref:`event handlers <event>`, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the :ref:`event handlers <event>` section for more information.
+
+If a file of the right name doesn't define the function, fish will not read other autoload files, instead it will go on to try builtins and finally commands. This allows masking a function defined later in $fish_function_path, e.g. if your administrator has put something into /etc/fish/functions that you want to skip.
 
 If you are developing another program and want to install fish functions for it, install them to the "vendor" functions directory. As this path varies from system to system, you can use ``pkgconfig`` to discover it with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 

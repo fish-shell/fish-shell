@@ -493,7 +493,7 @@ class job_t {
     maybe_t<statuses_t> get_statuses() const;
 
     /// \return the wait handle for the job, creating it if \p create is set.
-    wait_handle_ref_t get_wait_handle(bool create);
+    wait_handle_ref_t get_wait_handle(bool create = true);
 };
 
 /// Whether this shell is attached to a tty.

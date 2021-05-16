@@ -14,110 +14,95 @@
 #include "wgetopt.h"
 #include "wutil.h"
 
-/// Return the job id to which the process with pid belongs.
-/// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()
-/// doesn't work properly, so use this function in wait command.
-static internal_job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
-    for (const auto &j : parser.jobs()) {
-        if (j->get_pgid() == maybe_t<pid_t>{pid}) {
-            return j->internal_job_id;
+/// \return true if we can wait on a job.
+static bool can_wait_on_job(const std::shared_ptr<job_t> &j) {
+    return j->is_constructed() && !j->is_foreground() && !j->is_stopped();
+}
+
+/// \return true if a wait handle matches a pid and/or a process name.
+static bool wait_handle_matches(pid_t pid, const wchar_t *proc_name, const wait_handle_ref_t &wh) {
+    assert((pid > 0 || proc_name) && "Must specify either pid or proc_name");
+    return (pid > 0 && contains(wh->pids, pid)) ||
+           (proc_name && contains(wh->proc_base_names, proc_name));
+}
+
+/// Walk the list of jobs, looking for a process with \p pid (if nonzero) or \p proc_name (if not
+/// null). Append all matching wait handles to \p handles.
+/// \return true if we found a matching job (even if not waitable), false if not.
+static bool find_wait_handles(pid_t pid, const wchar_t *proc_name, const parser_t &parser,
+                              std::vector<wait_handle_ref_t> *handles) {
+    assert((pid > 0 || proc_name) && "Must specify either pid or proc_name");
+
+    // Has a job already completed?
+    bool matched = false;
+    for (const auto &wh : parser.get_recorded_wait_handles()) {
+        if (wait_handle_matches(pid, proc_name, wh)) {
+            handles->push_back(wh);
+            matched = true;
         }
-        // Check if the specified pid is a child process of the job.
-        for (const process_ptr_t &p : j->processes) {
-            if (p->pid == pid) {
-                return j->internal_job_id;
+    }
+
+    // Is there a running job match?
+    for (const auto &j : parser.jobs()) {
+        if (can_wait_on_job(j) && wait_handle_matches(pid, proc_name, j->get_wait_handle())) {
+            handles->push_back(j->get_wait_handle());
+            matched = true;
+        }
+    }
+
+    if (!matched) {
+        // Maybe we could have matched, but a job was stopped or otherwise unwaitable.
+        for (const auto &j : parser.jobs()) {
+            if (wait_handle_matches(pid, proc_name, j->get_wait_handle())) {
+                matched = true;
+                break;
             }
         }
     }
-    return 0;
+    return matched;
 }
 
-static bool all_jobs_finished(const parser_t &parser) {
+/// \return all wait handles for all jobs, current and already completed (!).
+static std::vector<wait_handle_ref_t> get_all_wait_handles(const parser_t &parser) {
+    std::vector<wait_handle_ref_t> result;
+    const auto &whs = parser.get_recorded_wait_handles();
+    result.insert(result.end(), whs.begin(), whs.end());
     for (const auto &j : parser.jobs()) {
-        // If any job is not completed, return false.
-        // If there are stopped jobs, they are ignored.
-        if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
-            return false;
+        if (can_wait_on_job(j)) {
+            result.push_back(j->get_wait_handle());
         }
     }
-    return true;
+    return result;
 }
 
-static bool any_jobs_finished(size_t jobs_len, const parser_t &parser) {
-    bool no_jobs_running = true;
+static inline bool is_completed(const wait_handle_ref_t &wh) { return wh->completed; }
 
-    // If any job is removed from list, return true.
-    if (jobs_len != parser.jobs().size()) {
-        return true;
-    }
-    for (const auto &j : parser.jobs()) {
-        // If any job is completed, return true.
-        if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
-            return true;
-        }
-        // Check for jobs running exist or not.
-        if (j->is_constructed() && !j->is_stopped()) {
-            no_jobs_running = false;
-        }
-    }
-    return no_jobs_running;
-}
+/// Wait for the given wait handles to be marked as completed.
+/// If \p any_flag is set, wait for the first one; otherwise wait for all.
+/// \return a status code.
+static int wait_for_completion(parser_t &parser, const std::vector<wait_handle_ref_t> &whs,
+                               bool any_flag) {
+    if (whs.empty()) return 0;
 
-static int wait_for_backgrounds(parser_t &parser, bool any_flag) {
     sigchecker_t sigint(topic_t::sighupint);
-    size_t jobs_len = parser.jobs().size();
-    while ((!any_flag && !all_jobs_finished(parser)) ||
-           (any_flag && !any_jobs_finished(jobs_len, parser))) {
+    for (;;) {
+        if (any_flag ? std::any_of(whs.begin(), whs.end(), is_completed)
+                     : std::all_of(whs.begin(), whs.end(), is_completed)) {
+            // Remove completed wait handles (at most 1 if any_flag is set).
+            for (const auto &wh : whs) {
+                if (is_completed(wh)) {
+                    parser.wait_handle_remove(wh);
+                    if (any_flag) break;
+                }
+            }
+            return 0;
+        }
         if (sigint.check()) {
             return 128 + SIGINT;
         }
         proc_wait_any(parser);
     }
-    return 0;
-}
-
-static bool all_specified_jobs_finished(const parser_t &parser,
-                                        const std::vector<internal_job_id_t> &ids) {
-    for (auto id : ids) {
-        if (const job_t *j = parser.job_with_internal_id(id)) {
-            // If any specified job is not completed, return false.
-            // If there are stopped jobs, they are ignored.
-            if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-static bool any_specified_jobs_finished(const parser_t &parser,
-                                        const std::vector<internal_job_id_t> &ids) {
-    for (auto id : ids) {
-        if (const job_t *j = parser.job_with_internal_id(id)) {
-            // If any specified job is completed, return true.
-            if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
-                return true;
-            }
-        } else {
-            // If any specified job is removed from list, return true.
-            return true;
-        }
-    }
-    return false;
-}
-
-static int wait_for_backgrounds_specified(parser_t &parser,
-                                          const std::vector<internal_job_id_t> &ids,
-                                          bool any_flag) {
-    sigchecker_t sigint(topic_t::sighupint);
-    while ((!any_flag && !all_specified_jobs_finished(parser, ids)) ||
-           (any_flag && !any_specified_jobs_finished(parser, ids))) {
-        if (sigint.check()) {
-            return 128 + SIGINT;
-        }
-        proc_wait_any(parser);
-    }
-    return 0;
+    DIE("Unreachable");
 }
 
 /// Tests if all characters in the wide string are numeric.
@@ -130,51 +115,7 @@ static bool iswnumeric(const wchar_t *n) {
     return true;
 }
 
-/// See if the process described by \c proc matches the commandline \c cmd.
-static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
-    // Don't wait for itself
-    if (std::wcscmp(proc, L"wait") == 0) return false;
-
-    // Get the command to match against. We're only interested in the last path component.
-    const wcstring base_cmd = wbasename(cmd);
-    return std::wcscmp(proc, base_cmd.c_str()) == 0;
-}
-
-/// It should search the job list for something matching the given proc.
-static bool find_job_by_name(const wchar_t *proc, std::vector<internal_job_id_t> &ids,
-                             const parser_t &parser) {
-    bool found = false;
-
-    for (const auto &j : parser.jobs()) {
-        if (j->command().empty()) continue;
-
-        if (match_pid(j->command(), proc)) {
-            if (!contains(ids, j->internal_job_id)) {
-                // If pids doesn't already have the pgid, add it.
-                ids.push_back(j->internal_job_id);
-            }
-            found = true;
-        }
-
-        // Check if the specified pid is a child process of the job.
-        for (const process_ptr_t &p : j->processes) {
-            if (p->actual_cmd.empty()) continue;
-
-            if (match_pid(p->actual_cmd, proc)) {
-                if (!contains(ids, j->internal_job_id)) {
-                    // If pids doesn't already have the pgid, add it.
-                    ids.push_back(j->internal_job_id);
-                }
-                found = true;
-            }
-        }
-    }
-
-    return found;
-}
-
 maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
-    int retval = STATUS_CMD_OK;
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bool any_flag = false;  // flag for -n option
@@ -215,41 +156,34 @@ maybe_t<int> builtin_wait(parser_t &parser, io_streams_t &streams, const wchar_t
     }
 
     if (w.woptind == argc) {
-        // no jobs specified
-        retval = wait_for_backgrounds(parser, any_flag);
-    } else {
-        // jobs specified
-        std::vector<internal_job_id_t> waited_job_ids;
-
-        for (int i = w.woptind; i < argc; i++) {
-            if (iswnumeric(argv[i])) {
-                // argument is pid
-                pid_t pid = fish_wcstoi(argv[i]);
-                if (errno || pid <= 0) {
-                    streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd,
-                                              argv[i]);
-                    continue;
-                }
-                if (internal_job_id_t id = get_job_id_from_pid(pid, parser)) {
-                    waited_job_ids.push_back(id);
-                } else {
-                    streams.err.append_format(
-                        _(L"%ls: Could not find a job with process id '%d'\n"), cmd, pid);
-                }
-            } else {
-                // argument is process name
-                if (!find_job_by_name(argv[i], waited_job_ids, parser)) {
-                    streams.err.append_format(
-                        _(L"%ls: Could not find child processes with the name '%ls'\n"), cmd,
-                        argv[i]);
-                }
-            }
-        }
-
-        if (waited_job_ids.empty()) return STATUS_INVALID_ARGS;
-
-        retval = wait_for_backgrounds_specified(parser, waited_job_ids, any_flag);
+        // No jobs specified.
+        // Note this may succeed with an empty wait list.
+        return wait_for_completion(parser, get_all_wait_handles(parser), any_flag);
     }
 
-    return retval;
+    // Get the list of wait handles for our waiting.
+    std::vector<wait_handle_ref_t> wait_handles;
+    for (int i = w.woptind; i < argc; i++) {
+        if (iswnumeric(argv[i])) {
+            // argument is pid
+            pid_t pid = fish_wcstoi(argv[i]);
+            if (errno || pid <= 0) {
+                streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd,
+                                          argv[i]);
+                continue;
+            }
+            if (!find_wait_handles(pid, nullptr, parser, &wait_handles)) {
+                streams.err.append_format(_(L"%ls: Could not find a job with process id '%d'\n"),
+                                          cmd, pid);
+            }
+        } else {
+            // argument is process name
+            if (!find_wait_handles(0, argv[i], parser, &wait_handles)) {
+                streams.err.append_format(
+                    _(L"%ls: Could not find child processes with the name '%ls'\n"), cmd, argv[i]);
+            }
+        }
+    }
+    if (wait_handles.empty()) return STATUS_INVALID_ARGS;
+    return wait_for_completion(parser, wait_handles, any_flag);
 }

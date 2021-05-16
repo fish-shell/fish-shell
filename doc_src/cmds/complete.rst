@@ -13,7 +13,7 @@ Synopsis
           [( -e | --erase )]
           [( -s | --short-option ) SHORT_OPTION]...
           [( -l | --long-option | -o | --old-option ) LONG_OPTION]...
-          [( -a | --arguments ) OPTION_ARGUMENTS]
+          [( -a | --arguments ) ARGUMENTS]
           [( -k | --keep-order )]
           [( -f | --no-files )]
           [( -F | --force-files )]
@@ -44,9 +44,9 @@ the fish manual.
 
 - ``-o LONG_OPTION`` or ``--old-option=LONG_OPTION`` adds an old style long option to the completions list (See below for details).
 
-- ``-a OPTION_ARGUMENTS`` or ``--arguments=OPTION_ARGUMENTS`` adds the specified option arguments to the completions list.
+- ``-a ARGUMENTS`` or ``--arguments=ARGUMENTS`` adds the specified option arguments to the completions list.
 
-- ``-k`` or ``--keep-order`` keeps the order of the ``OPTION_ARGUMENTS`` instead of sorting alphabetically. Multiple ``complete`` calls with ``-k`` result in arguments of the later ones displayed first.
+- ``-k`` or ``--keep-order`` keeps the order of ``ARGUMENTS`` instead of sorting alphabetically. Multiple ``complete`` calls with ``-k`` result in arguments of the later ones displayed first.
 
 - ``-f`` or ``--no-files`` says that this completion may not be followed by a filename.
 
@@ -76,9 +76,9 @@ Multiple command switches and wrapped commands can also be given to define multi
 
 Invoking ``complete`` multiple times for the same command adds the new definitions on top of any existing completions defined for the command.
 
-When ``-a`` or ``--arguments`` is specified in conjunction with long, short, or old style options, the specified arguments are only completed as arguments for any of the specified options. If ``-a`` or ``--arguments`` is specified without any long, short, or old style options, the specified arguments are used when completing any argument to the command (except when completing an option argument that was specified with ``-r`` or ``--require-parameter``).
+When ``-a`` or ``--arguments`` is specified in conjunction with long, short, or old style options, the specified arguments are only completed as arguments for any of the specified options. If ``-a`` or ``--arguments`` is specified without any long, short, or old style options, the specified arguments are used when completing non-option arguments to the command (except when completing an option argument that was specified with ``-r`` or ``--require-parameter``).
 
-Command substitutions found in ``OPTION_ARGUMENTS`` should return a newline-separated list of arguments, and each argument may optionally have a tab character followed by the argument description. Description given this way override a description given with ``-d`` or ``--description``.
+Command substitutions found in ``ARGUMENTS`` should return a newline-separated list of arguments, and each argument may optionally have a tab character followed by the argument description. Description given this way override a description given with ``-d`` or ``--description``.
 
 The ``-w`` or ``--wraps`` options causes the specified command to inherit completions from another command, "wrapping" the other command. The wrapping command can also have additional completions. A command can wrap multiple commands, and wrapping is transitive: if A wraps B, and B wraps C, then A automatically inherits all of C's completions. Wrapping can be removed using the ``-e`` or ``--erase`` options. Wrapping only works for completions specified with ``-c`` or ``--command`` and are ignored when specifying completions with ``-p`` or ``--path``.
 

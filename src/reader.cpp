@@ -3274,9 +3274,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     text.pop_back();
                 }
 
-                if (history && !conf.in_silent_mode) {
+                if (!text.empty() && history && !conf.in_silent_mode) {
                     // Remove ephemeral items.
-                    // Note we fall into this case if the user just types a space and hits return.
                     history->remove_ephemeral_items();
 
                     // Mark this item as ephemeral if there is a leading space (#615).

@@ -19,7 +19,7 @@ static bool can_wait_on_job(const std::shared_ptr<job_t> &j) {
     return j->is_constructed() && !j->is_foreground() && !j->is_stopped();
 }
 
-/// \return true if a wait handle matches a pid and/or a process name.
+/// \return true if a wait handle matches a pid or a process name. Exactly one should be passed.
 static bool wait_handle_matches(pid_t pid, const wchar_t *proc_name, const wait_handle_ref_t &wh) {
     assert((pid > 0 || proc_name) && "Must specify either pid or proc_name");
     return (pid > 0 && contains(wh->pids, pid)) ||

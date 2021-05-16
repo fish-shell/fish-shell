@@ -45,7 +45,7 @@ Interactive improvements
 - ``fish --private`` prints a note on private mode on startup even if ``$fish_greeting`` is an empty list (:issue:`7974`).
 - fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and SMB. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
 - ``wait`` works correctly with jobs that have already exited (:issue:`7210`).
-- completion for paths will resolve relative paths (:issue: `6001`).
+- completion for paths will resolve relative paths (:issue:`6001`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

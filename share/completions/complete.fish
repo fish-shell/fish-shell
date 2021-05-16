@@ -6,7 +6,7 @@ complete -c complete -s s -l short-option -d "POSIX-style short option to comple
 complete -c complete -s l -l long-option -d "GNU-style long option to complete" -x
 complete -c complete -s o -l old-option -d "Old style long option to complete" -x
 complete -c complete -s f -l no-files -d "Don't use file completion"
-complete -c complete -s F -l force-files -d "Use file completion even if another applicable complete doesn't"
+complete -c complete -s F -l force-files -d "Always use file completion"
 complete -c complete -s r -l require-parameter -d "Require parameter"
 complete -c complete -s x -l exclusive -d "Require parameter and don't use file completion"
 complete -c complete -s a -l arguments -d "Space-separated list of possible option arguments" -x

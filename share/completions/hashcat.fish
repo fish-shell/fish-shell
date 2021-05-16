@@ -1,6 +1,6 @@
 function __fish_hashcat_types --description "Get hashcat hash types"
-    set -l modes (hashcat --example-hashes | string replace -f -r '^MODE: (\d+)' '$1')
-    set -l types (hashcat --example-hashes | string replace -f -r '^TYPE: (.+)' '$1')
+    set -l modes (hashcat --example-hashes | string replace -f -r '^(?:MODE: |Hash mode #)(\d+)' '$1')
+    set -l types (hashcat --example-hashes | string replace -f -r '^(?:TYPE:|\s+Name\.+:)\s+(.+)' '$1')
     for i in (seq (count $modes))
         echo -e "$modes[$i]\t$types[$i]"
     end
@@ -29,7 +29,8 @@ complete -c hashcat -s a -l attack-mode -d "Attack-mode" -xa "
                                                 1\t'Combination'
                                                 3\t'Brute-force'
                                                 6\t'Hybrid Wordlist + Mask'
-                                                7\t'Hybrid Mask + Wordlist'"
+                                                7\t'Hybrid Mask + Wordlist'
+                                                9\t'Association'"
 complete -c hashcat -s V -l version -d "Print version"
 complete -c hashcat -s h -l help -d "Print help"
 complete -c hashcat -l quiet -d "Suppress output"
@@ -74,8 +75,7 @@ complete -c hashcat -l debug-mode -d "Defines the debug mode" -xa "
                                             1\t'Finding-Rule'
                                             2\t'Original-Word'
                                             3\t'Original-Word:Finding-Rule'
-                                            4\t'Original-Word:Finding-Rule:Processed-Word'
-                                            "
+                                            4\t'Original-Word:Finding-Rule:Processed-Word'"
 complete -c hashcat -l debug-file -rF -d "Output file for debugging rules"
 complete -c hashcat -l induction-dir -xa "(__fish_complete_directories)" -d "Specify the induction directory to use for loopback"
 complete -c hashcat -l outfile-check-dir -xa "(__fish_complete_directories)" -d "Specify the outfile directory to monitor for plains"
@@ -96,7 +96,8 @@ complete -c hashcat -l bitmap-min -x -d "Sets minimum bits allowed for bitmaps"
 complete -c hashcat -l bitmap-max -x -d "Sets maximum bits allowed for bitmaps"
 complete -c hashcat -l cpu-affinity -x -d "Locks to CPU devices"
 complete -c hashcat -l hook-threads -x -d "Sets number of threads for a hook (per compute unit)"
-complete -c hashcat -l example-hashes -d "Show an example hash for each hash-mode"
+complete -c hashcat -l hash-info -d "Show information for each hash-mode"
+complete -c hashcat -l example-hashes -d "Alias of --hash-info"
 complete -c hashcat -l backend-ignore-cuda -d "Do not try to open CUDA interface on startup"
 complete -c hashcat -l backend-ignore-opencl -d "Do not try to open OpenCL interface on startup"
 complete -c hashcat -s I -l backend-info -d "Show info about detected backend API devices"
@@ -107,8 +108,7 @@ complete -c hashcat -s w -l workload-profile -d "Enable a specific workload prof
                                                         1\tLow
                                                         2\tDefault
                                                         3\tHigh
-                                                        4\tNightmare
-                                                        "
+                                                        4\tNightmare"
 complete -c hashcat -s n -l kernel-accel -x -d "Manual workload tuning, set outerloop step size"
 complete -c hashcat -s u -l kernel-loops -x -d "Manual workload tuning, set innerloop step size"
 complete -c hashcat -s T -l kernel-threads -x -d "Manual workload tuning, set thread count"
@@ -141,8 +141,7 @@ complete -c hashcat -s z -l brain-client -d "Enable brain client, activates -S"
 complete -c hashcat -l brain-client-features -d "Define brain client features" -xa "
                                                     1\t'Send hashed passwords'
                                                     2\t'Send attack positions'
-                                                    3\t'Send hashed passwords and attack positions'
-                                                    "
+                                                    3\t'Send hashed passwords and attack positions'"
 complete -c hashcat -l brain-host -xa "(__fish_print_hostnames)" -d "Brain server host (IP or domain)"
 complete -c hashcat -l brain-port -x -d "Brain server port"
 complete -c hashcat -l brain-password -x -d "Brain server authentication password"

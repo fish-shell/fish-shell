@@ -37,7 +37,7 @@
 const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
-                               const maybe_t<env_var_t> &bin_path_var, bool absolute) {
+                               const maybe_t<env_var_t> &bin_path_var) {
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {
@@ -51,17 +51,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
             return false;
         }
         if (S_ISREG(buff.st_mode)) {
-            if (out_path) {
-                if (absolute) {
-                    auto absolute_path = wrealpath(cmd);
-                    if (!absolute_path.has_value()) {
-                        return false;
-                    }
-                    out_path->assign(absolute_path.acquire());
-                } else {
-                    out_path->assign(cmd);
-                }
-            }
+            if (out_path) out_path->assign(cmd);
             return true;
         }
         errno = EACCES;
@@ -100,8 +90,8 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     return false;
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars, bool absolute) {
-    return path_get_path_core(cmd, out_path, vars.get(L"PATH"), absolute);
+bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars) {
+    return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
 bool path_is_executable(const std::string &path) {

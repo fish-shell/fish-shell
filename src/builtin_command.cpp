@@ -103,7 +103,7 @@ maybe_t<int> builtin_command(parser_t &parser, io_streams_t &streams, const wcha
             }
         } else {  // Either find_path explicitly or just quiet.
             wcstring path;
-            if (path_get_path(command_name, &path, parser.vars(), true)) {
+            if (path_get_path(command_name, &path, parser.vars())) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }

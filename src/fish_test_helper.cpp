@@ -135,18 +135,21 @@ static void print_ignored_signals() {
 
 static void print_stop_cont() {
     signal(SIGTSTP, [](int) {
-        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
+        (void)write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
         kill(getpid(), SIGSTOP);
     });
-    signal(SIGCONT, [](int) {
-        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
-    });
+    signal(SIGCONT, [](int) { (void)write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n")); });
     char buff[1];
     for (;;) {
         if (read(STDIN_FILENO, buff, sizeof buff) >= 0) {
             exit(0);
         }
     }
+}
+
+static void sigkill_self() {
+    kill(getpid(), SIGKILL);
+    abort();
 }
 
 static void show_help();
@@ -180,6 +183,7 @@ static fth_command_t s_commands[] = {
     {"print_ignored_signals", print_ignored_signals,
      "Print to stdout the name(s) of ignored signals"},
     {"print_stop_cont", print_stop_cont, "Print when we get SIGTSTP and SIGCONT, exiting on input"},
+    {"sigkill_self", sigkill_self, "Send SIGKILL to self"},
     {"help", show_help, "Print list of fish_test_helper commands"},
 };
 

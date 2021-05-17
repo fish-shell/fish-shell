@@ -554,8 +554,8 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
 
     // Add an exit event if the process did not come from a job handler.
     if (!j->from_event_handler()) {
-        exit_events->push_back(proc_create_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
-                                                 s.normal_exited() ? s.exit_code() : -1));
+        exit_events->push_back(
+            proc_create_event(L"PROCESS_EXIT", event_type_t::exit, p->pid, s.status_value()));
     }
 
     // Ignore SIGPIPE. We issue it ourselves to the pipe writer when the pipe reader dies.

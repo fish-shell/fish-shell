@@ -900,6 +900,10 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         }
     }
 
+    // Also move the cursor to the beginning of the line here,
+    // in case we're wrong about the width anywhere.
+    s_move(scr, 0, 0);
+
     // Clear remaining lines (if any) if we haven't cleared the screen.
     if (!has_cleared_screen && need_clear_screen && clr_eol) {
         set_color(highlight_spec_t{});

@@ -627,6 +627,7 @@ static void s_write_mbs(screen_t *screen, const char *s) { writembs(screen->outp
 
 /// Convert a wide string to a multibyte string and append it to the buffer.
 static void s_write_str(screen_t *screen, const wchar_t *s) { screen->outp().writestr(s); }
+static void s_write_str(screen_t *screen, const wcstring &s) { screen->outp().writestr(s); }
 
 /// Returns the length of the "shared prefix" of the two lines, which is the run of matching text
 /// and colors. If the prefix ends on a combining character, do not include the previous character
@@ -742,12 +743,13 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             if (clr_eol) {
                 s_write_mbs(scr, clr_eol);
             }
-            s_write_str(scr, left_prompt.substr(start, line_break - start).c_str());
+            s_write_str(scr, left_prompt.substr(start, line_break - start));
             start = line_break;
         }
-        s_write_str(scr, left_prompt.c_str() + start);
+        s_write_str(scr, left_prompt.substr(start));
         scr->actual_left_prompt = left_prompt;
         scr->actual.cursor.x = static_cast<int>(left_prompt_width);
+        set_color(highlight_spec_t{});
     }
 
     // Output all lines.
@@ -882,7 +884,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             s_move(scr, 0, 0);
             s_move(scr, static_cast<int>(screen_width - right_prompt_width), static_cast<int>(i));
             set_color(highlight_spec_t{});
-            s_write_str(scr, right_prompt.c_str());
+            s_write_str(scr, right_prompt);
             scr->actual.cursor.x += right_prompt_width;
 
             // We output in the last column. Some terms (Linux) push the cursor further right, past

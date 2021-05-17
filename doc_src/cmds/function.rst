@@ -28,7 +28,7 @@ The following options are available:
 
 - ``-e`` or ``--on-event EVENT_NAME`` tells fish to run this function when the specified named event is emitted. Fish internally generates named events e.g. when showing the prompt.
 
-- ``-v`` or ``--on-variable VARIABLE_NAME`` tells fish to run this function when the variable VARIABLE_NAME changes value. Note that the function will not necessarily be run for each change; rather, it will be run when the variable has changed at least once.
+- ``-v`` or ``--on-variable VARIABLE_NAME`` tells fish to run this function when the variable VARIABLE_NAME changes value. Note that fish makes no guarantees on any particular timing or even that the function will be run for every single ``set``. Rather it will be run when the variable has been set at least once, possibly skipping some values or being run when the variable has been set to the same value (except for universal variables set in other shells - only changes in the value will be picked up for those).
 
 - ``-j PGID`` or ``--on-job-exit PGID`` tells fish to run this function when the job with group ID PGID exits. Instead of PGID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
 

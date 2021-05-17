@@ -877,6 +877,9 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
         // Output any rprompt if this is the first line.
         if (i == 0 && right_prompt_width > 0) {  //!OCLINT(Use early exit/continue)
+            // Move the cursor to the beginning of the line first to be independent of the width.
+            // This helps prevent staircase effects if fish and the terminal disagree.
+            s_move(scr, 0, 0);
             s_move(scr, static_cast<int>(screen_width - right_prompt_width), static_cast<int>(i));
             set_color(highlight_spec_t{});
             s_write_str(scr, right_prompt.c_str());

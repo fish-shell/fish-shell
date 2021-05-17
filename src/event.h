@@ -86,9 +86,20 @@ struct event_t {
     /// Arguments to any handler.
     wcstring_list_t arguments{};
 
-    event_t(event_type_t t) : desc(t) {}
+    explicit event_t(event_type_t t) : desc(t) {}
 
+    /// Create an event_type_t::variable event.
     static event_t variable(wcstring name, wcstring_list_t args);
+
+    /// Create a PROCESS_EXIT event.
+    static event_t process_exit(pid_t pid, int status);
+
+    /// Create a JOB_EXIT event. The pgid should be negative.
+    /// The reported status is always 0 for historical reasons.
+    static event_t job_exit(pid_t pgid);
+
+    /// Create a caller_exit event.
+    static event_t caller_exit(uint64_t internal_job_id, int job_id);
 };
 
 class parser_t;

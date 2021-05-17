@@ -22,6 +22,7 @@
 #include "proc.h"
 #include "signal.h"
 #include "termsize.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class pending_signals_t {
@@ -486,9 +487,43 @@ event_description_t event_description_t::generic(wcstring str) {
     return event;
 }
 
+// static
 event_t event_t::variable(wcstring name, wcstring_list_t args) {
     event_t evt{event_type_t::variable};
     evt.desc.str_param1 = std::move(name);
     evt.arguments = std::move(args);
+    return evt;
+}
+
+// static
+event_t event_t::process_exit(pid_t pid, int status) {
+    event_t evt{event_type_t::exit};
+    evt.desc.param1.pid = pid;
+    evt.arguments.reserve(3);
+    evt.arguments.push_back(L"PROCESS_EXIT");
+    evt.arguments.push_back(to_string(pid));
+    evt.arguments.push_back(to_string(status));
+    return evt;
+}
+
+// static
+event_t event_t::job_exit(pid_t pgid) {
+    event_t evt{event_type_t::exit};
+    evt.desc.param1.pid = pgid;
+    evt.arguments.reserve(3);
+    evt.arguments.push_back(L"JOB_EXIT");
+    evt.arguments.push_back(to_string(pgid));
+    evt.arguments.push_back(L"0");  // historical
+    return evt;
+}
+
+// static
+event_t event_t::caller_exit(uint64_t caller_id, int job_id) {
+    event_t evt{event_type_t::caller_exit};
+    evt.desc.param1.caller_id = caller_id;
+    evt.arguments.reserve(3);
+    evt.arguments.push_back(L"JOB_EXIT");
+    evt.arguments.push_back(to_string(job_id));
+    evt.arguments.push_back(L"0");  // historical
     return evt;
 }

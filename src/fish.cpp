@@ -577,9 +577,7 @@ int main(int argc, char **argv) {
     }
 
     int exit_status = res ? STATUS_CMD_UNKNOWN : parser.get_last_status();
-
-    event_fire(parser,
-               proc_create_event(L"PROCESS_EXIT", event_type_t::exit, getpid(), exit_status));
+    event_fire(parser, event_t::process_exit(getpid(), exit_status));
 
     // Trigger any exit handlers.
     wcstring_list_t event_args = {to_string(exit_status)};

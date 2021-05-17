@@ -530,9 +530,6 @@ void proc_update_jiffies(parser_t &parser);
 /// job is in the foreground, that every process is in a valid state, etc.
 void proc_sanity_check(const parser_t &parser);
 
-/// Create a process/job exit event notification.
-event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status);
-
 /// Initializations.
 void proc_init();
 

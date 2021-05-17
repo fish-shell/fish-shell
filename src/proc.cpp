@@ -516,17 +516,6 @@ static void print_job_status(parser_t &parser, const job_t *j, job_status_t stat
     call_job_summary(parser, args);
 }
 
-event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
-    event_t event{type};
-    event.desc.param1.pid = pid;
-
-    event.arguments.reserve(3);
-    event.arguments.push_back(msg);
-    event.arguments.push_back(to_string(pid));
-    event.arguments.push_back(to_string(status));
-    return event;
-}
-
 /// Remove all disowned jobs whose job chain is fully constructed (that is, do not erase disowned
 /// jobs that still have an in-flight parent job). Note we never print statuses for such jobs.
 static void remove_disowned_jobs(job_list_t &jobs) {
@@ -554,8 +543,7 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
 
     // Add an exit event if the process did not come from a job handler.
     if (!j->from_event_handler()) {
-        exit_events->push_back(
-            proc_create_event(L"PROCESS_EXIT", event_type_t::exit, p->pid, s.status_value()));
+        exit_events->push_back(event_t::process_exit(p->pid, s.status_value()));
     }
 
     // Ignore SIGPIPE. We issue it ourselves to the pipe writer when the pipe reader dies.
@@ -685,14 +673,12 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
             // don't create an event or it's easy to get an infinite loop.
             if (!j->from_event_handler() && j->should_report_process_exits()) {
                 pid_t pgid = *j->get_pgid();
-                exit_events.push_back(proc_create_event(L"JOB_EXIT", event_type_t::exit, -pgid, 0));
+                exit_events.push_back(event_t::job_exit(-pgid));
             }
             // Caller exit events we still create, which anecdotally fixes `source (thing | psub)`
             // inside event handlers. This seems benign since this event is barely used (basically
             // only psub), and it seems hard to construct an infinite loop with it.
-            exit_events.push_back(
-                proc_create_event(L"JOB_EXIT", event_type_t::caller_exit, j->job_id(), 0));
-            exit_events.back().desc.param1.caller_id = j->internal_job_id;
+            exit_events.push_back(event_t::caller_exit(j->internal_job_id, j->job_id()));
         }
     }
 

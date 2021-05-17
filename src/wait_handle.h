@@ -27,6 +27,9 @@ struct wait_handle_t {
     /// For example if the process is "/bin/sleep" then this will be 'sleep'.
     wcstring base_name{};
 
+    /// The value appropriate for populating $status, if completed.
+    int status{0};
+
     /// Set to true when the process is completed.
     bool completed{false};
 };

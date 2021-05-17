@@ -609,6 +609,7 @@ static void save_wait_handle_for_completed_job(const shared_ptr<job_t> &job,
     // Mark all wait handles as complete (but don't create just for this).
     for (auto &proc : job->processes) {
         if (wait_handle_ref_t wh = proc->get_wait_handle(false /* create */)) {
+            wh->status = proc->status.status_value();
             wh->completed = true;
         }
     }

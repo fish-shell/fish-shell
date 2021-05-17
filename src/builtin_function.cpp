@@ -264,12 +264,30 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
     // Add the function itself.
     function_add(function_name, opts.description, props, parser.libdata().current_filename);
 
+    // Handle wrap targets by creating the appropriate completions.
+    for (const wcstring &wt : opts.wrap_targets) {
+        complete_add_wrapper(function_name, wt);
+    }
+
     // Add any event handlers.
     for (const event_description_t &ed : opts.events) {
         event_add_handler(std::make_shared<event_handler_t>(ed, function_name));
     }
 
-    // Handle wrap targets by creating the appropriate completions.
-    for (const wcstring &wt : opts.wrap_targets) complete_add_wrapper(function_name, wt);
+    // If there is an --on-process-exit or --on-job-exit event handler for some pid, and that
+    // process has already exited, run it immediately (#7210).
+    for (const event_description_t &ed : opts.events) {
+        if (ed.type == event_type_t::exit && ed.param1.pid != EVENT_ANY_PID) {
+            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(abs(ed.param1.pid));
+            if (wh && wh->completed) {
+                if (ed.param1.pid > 0) {
+                    event_fire(parser, event_t::process_exit(ed.param1.pid, wh->status));
+                } else {
+                    event_fire(parser, event_t::job_exit(ed.param1.pid));
+                }
+            }
+        }
+    }
+
     return STATUS_CMD_OK;
 }

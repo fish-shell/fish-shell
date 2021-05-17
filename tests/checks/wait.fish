@@ -24,3 +24,15 @@ end
 wait true false
 jobs
 # CHECK: jobs: There are no jobs
+
+# Ensure on-process-exit works for exited jobs.
+command false &
+set pid $last_pid
+
+# Ensure it gets reaped
+sleep .1
+
+function waiter --on-process-exit $pid
+    echo exited $argv
+end
+# CHECK: exited PROCESS_EXIT {{\d+}} 1

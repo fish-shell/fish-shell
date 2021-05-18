@@ -749,7 +749,6 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         s_write_str(scr, left_prompt.substr(start));
         scr->actual_left_prompt = left_prompt;
         scr->actual.cursor.x = static_cast<int>(left_prompt_width);
-        set_color(highlight_spec_t{});
     }
 
     // Output all lines.

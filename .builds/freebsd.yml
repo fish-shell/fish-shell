@@ -7,7 +7,7 @@ packages:
   - gmake
   - pcre2
   - python
-  - py37-pexpect
+  - py38-pexpect
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:

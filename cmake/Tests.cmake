@@ -83,7 +83,7 @@ add_custom_target(test_prep
 # So define both a normal target, and a serial variant which enforces ordering.
 foreach(TESTTYPE test serial_test)
   add_custom_target(${TESTTYPE}_low_level
-    COMMAND env -u XDG_DATA_DIRS
+    COMMAND env XDG_DATA_DIRS=
                 XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_data
                 XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_config
                 XDG_RUNTIME_DIR=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_runtime
@@ -95,7 +95,7 @@ foreach(TESTTYPE test serial_test)
   add_custom_target(${TESTTYPE}_fishscript
                     COMMAND
                         cd tests &&
-                        env -u XDG_DATA_DIRS
+                        env XDG_DATA_DIRS=
                             XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_data
                             XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_config
                             XDG_RUNTIME_DIR=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_runtime
@@ -105,7 +105,7 @@ foreach(TESTTYPE test serial_test)
 
   add_custom_target(${TESTTYPE}_interactive
       COMMAND cd tests &&
-                env -u XDG_DATA_DIRS
+                env XDG_DATA_DIRS=
                     XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_data
                     XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_config
                     XDG_RUNTIME_DIR=${CMAKE_CURRENT_BINARY_DIR}/test/xdg_runtime

@@ -16,7 +16,7 @@ function __fish_complete_rc-update_runlevels
         default \
         'Last startup runlevel' \
         shutdown \
-        'Runlevel for stutting down'
+        'Runlevel for shutting down'
     printf "%s\t%s\n" $levels
 end
 

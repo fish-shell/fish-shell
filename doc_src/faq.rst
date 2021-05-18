@@ -322,8 +322,8 @@ The same applies for example when you start ``tmux`` in config.fish without guar
 
 .. _faq-unicode:
 
-I'm getting weird graphical glitches (a staircase effect, ghost characters,...)?
---------------------------------------------------------------------------------
+I'm getting weird graphical glitches (a staircase effect, ghost characters, cursor in the wrong position,...)?
+--------------------------------------------------------------------------------------------------------------
 In a terminal, the application running inside it and the terminal itself need to agree on the width of characters in order to handle cursor movement.
 
 This is more important to fish than other shells because features like syntax highlighting and autosuggestions are implemented by moving the cursor.

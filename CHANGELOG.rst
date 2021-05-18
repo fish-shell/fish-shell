@@ -46,6 +46,8 @@ Interactive improvements
 - ``fish --private`` prints a note on private mode on startup even if ``$fish_greeting`` is an empty list (:issue:`7974`).
 - fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and SMB. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
 - ``wait`` and ``on-process-exit`` work correctly with jobs that have already exited (:issue:`7210`).
+- Completion scripts are now loaded when calling a command via a relative path (like ``./git``) (:issue:`6001`, :issue:`7992`).
+- ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects $LESS and uses a better default value (:issue:`7997`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,6 +77,10 @@ Completions
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - fish no longer performs the PROMPT_SP hack to get onto a new line during startup, this prevents ``⏎`` from showing up if the terminal is resized at the wrong time, which can happen in tiling window managers (:issue:`7893`).
+- fish fails in a less awful way when it disagrees with the terminal on the width of characters. In particular staircase effects with right prompts should be gone in most cases (:issue:`8011`).
+- If the prompt takes up the entire line, the last character should no longer be chopped off in certain terminals (:issue:`8002`).
+- fish's reflow handling has been disabled by default for kitty as well (:issue:`7961`).
+- The default prompt no longer spews errors when used with TERM=dumb (:issue:`7904`).
 
 --------------
 

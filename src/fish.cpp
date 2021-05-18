@@ -497,9 +497,6 @@ int main(int argc, char **argv) {
     misc_init();
     reader_init();
 
-    // And now enable "job control" for everything.
-    set_job_control_mode(job_control_t::all);
-
     parser_t &parser = parser_t::principal_parser();
 
     if (!opts.no_exec && !opts.no_config) {

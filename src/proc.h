@@ -392,6 +392,11 @@ class job_t {
     /// This may also be fish itself.
     maybe_t<pid_t> get_pgid() const;
 
+    /// \return the pid of the last external process in the job.
+    /// This may be none if the job consists of just internal fish functions or builtins.
+    /// This will never be fish's own pid.
+    maybe_t<pid_t> get_last_pid() const;
+
     /// The id of this job.
     /// This is user-visible, is recycled, and may be -1.
     job_id_t job_id() const;

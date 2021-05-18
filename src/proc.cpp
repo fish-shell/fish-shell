@@ -953,6 +953,14 @@ bool job_t::is_foreground() const { return group->is_foreground(); }
 
 maybe_t<pid_t> job_t::get_pgid() const { return group->get_pgid(); }
 
+maybe_t<pid_t> job_t::get_last_pid() const {
+    for (auto iter = processes.rbegin(); iter != processes.rend(); ++iter) {
+        const process_t *proc = iter->get();
+        if (proc->pid > 0) return proc->pid;
+    }
+    return none();
+}
+
 job_id_t job_t::job_id() const { return group->get_id(); }
 
 void job_t::continue_job(parser_t &parser, bool in_foreground) {

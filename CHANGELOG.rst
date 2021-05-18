@@ -38,7 +38,6 @@ Interactive improvements
 - Commands entered before the previous command finishes will now be properly syntax highlighted.
 - fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist (:issue:`7402`).
 - ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
-- fish now defaults job-control to "full" meaning it more sensibly handles assigning the terminal and process groups (:issue:`5036`, :issue:`5832`, :issue:`7721`)
 - ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 - ``$SHLVL`` is no longer incremented in non-interactive shells. This means it won't be set to values larger than 1 just because your environment happens to run some scripts in $SHELL in its startup path (:issue:`7864`).
 - fish no longer rings the bell when flashing the command line. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).

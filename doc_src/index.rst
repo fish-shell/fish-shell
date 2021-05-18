@@ -20,6 +20,9 @@ Some of the special features of fish are:
 
 This page explains how to install and set up fish and where to get more information.
 
+Further Reading
+===============
+
 If this is your first time using fish, see the :ref:`tutorial <tutorial>`.
 
 If you are already familiar with other shells like bash and want to see the scripting differences, see :ref:`Fish For Bash Users <fish_for_bash_users>`.

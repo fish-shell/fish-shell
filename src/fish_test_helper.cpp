@@ -135,10 +135,14 @@ static void print_ignored_signals() {
 
 static void print_stop_cont() {
     signal(SIGTSTP, [](int) {
-        (void)write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
+        // C++ compilers are awful and this is the dance we need to do to silence the "Unused result" warning.
+        // No, casting to (void) does *not* work. Please leave this.
+        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
         kill(getpid(), SIGSTOP);
     });
-    signal(SIGCONT, [](int) { (void)write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n")); });
+    signal(SIGCONT, [](int) {
+        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
+    });
     char buff[1];
     for (;;) {
         if (read(STDIN_FILENO, buff, sizeof buff) >= 0) {

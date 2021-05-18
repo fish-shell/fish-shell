@@ -1123,9 +1123,12 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
 
     // If exec_error then a backgrounded job would have been terminated before it was ever assigned
     // a pgroup, so error out before setting last_pid.
-    auto pgid = j->get_pgid();
-    if (!j->is_foreground() && pgid.has_value()) {
-        parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(*pgid));
+    if (!j->is_foreground()) {
+        if (maybe_t<pid_t> last_pid = j->get_last_pid()) {
+            parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(*last_pid));
+        } else {
+            parser.vars().set_empty(L"last_pid", ENV_GLOBAL);
+        }
     }
 
     j->continue_job(parser, !j->is_initially_background());

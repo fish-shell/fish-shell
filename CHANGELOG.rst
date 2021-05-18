@@ -27,6 +27,7 @@ Scripting improvements
 - ``fish_indent`` allows to write inline variable assignments on multiple lines (ending in a backslash), instead of joining them into one line (:issue:`7955`).
 - fish gained a ``--no-config`` option to disable reading the configuration. This applies both to the user's and the admin's config.fish (typically in /etc/fish/config.fish) and snippets and also sets $fish_function_path to just the functions shipped with fish and disables universal variables and history. (:issue:`7921`, :issue:`1256`).
 - When universal variables are unavailable for some reason, setting a universal variable now sets a global variable instead (:issue:`7921`).
+- ``$last_pid`` now reports the pid of the last process in the pipeline, allowing it to be used in scripts (:issue:`5036`, :issue:`5832`, :issue:`7721`).
 - ``process-exit`` event handlers now receive the same value as ``$status`` in all cases, instead of receiving -1 when the exit was due to a signal.
 - ``process-exit`` event handlers for pid 0 also received ``JOB_EXIT`` events; this has been fixed.
 

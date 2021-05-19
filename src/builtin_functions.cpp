@@ -189,6 +189,15 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     return STATUS_CMD_OK;
 }
 
+/// \return whether a type filter is valid.
+static bool type_filter_valid(const wcstring &filter) {
+    if (filter.empty()) return true;
+    for (size_t i = 0; event_filter_names[i]; i++) {
+        if (filter == event_filter_names[i]) return true;
+    }
+    return false;
+}
+
 /// The functions builtin, used for listing and erasing functions.
 maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
@@ -253,15 +262,12 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
     }
 
     if (opts.handlers) {
-        maybe_t<event_type_t> type_filter{};
-        if (opts.handlers_type) {
-            type_filter = event_type_for_name(opts.handlers_type);
-            if (!type_filter) {
-                streams.err.append_format(_(L"%ls: Expected generic | variable | signal | exit | "
-                                            L"job-id for --handlers-type\n"),
-                                          cmd);
-                return STATUS_INVALID_ARGS;
-            }
+        wcstring type_filter = opts.handlers_type ? opts.handlers_type : L"";
+        if (!type_filter_valid(type_filter)) {
+            streams.err.append_format(_(L"%ls: Expected generic | variable | signal | exit | "
+                                        L"job-id for --handlers-type\n"),
+                                      cmd);
+            return STATUS_INVALID_ARGS;
         }
         event_print(streams, type_filter);
         return STATUS_CMD_OK;

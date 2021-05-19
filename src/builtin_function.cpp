@@ -113,7 +113,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     e.type = event_type_t::caller_exit;
                     e.param1.caller_id = caller_id;
                 } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
-                    e.type = event_type_t::exit;
+                    e.type = event_type_t::process_exit;
                     e.param1.pid = getpid();
                 } else {
                     pid_t pid = fish_wcstoi(w.woptarg);
@@ -122,9 +122,13 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                                                   w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
-
-                    e.type = event_type_t::exit;
-                    e.param1.pid = (opt == 'j' ? -1 : 1) * abs(pid);
+                    if (opt == 'p') {
+                        e.type = event_type_t::process_exit;
+                        e.param1.pid = pid;
+                    } else {
+                        e.type = event_type_t::job_exit;
+                        e.param1.pgid = pid;
+                    }
                 }
                 opts.events.push_back(e);
                 break;
@@ -277,13 +281,14 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
     // If there is an --on-process-exit or --on-job-exit event handler for some pid, and that
     // process has already exited, run it immediately (#7210).
     for (const event_description_t &ed : opts.events) {
-        if (ed.type == event_type_t::exit && ed.param1.pid != EVENT_ANY_PID) {
-            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(abs(ed.param1.pid));
+        if ((ed.type == event_type_t::process_exit || ed.type == event_type_t::job_exit) &&
+            ed.param1.pid != EVENT_ANY_PID) {
+            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(ed.param1.pid);
             if (wh && wh->completed) {
-                if (ed.param1.pid > 0) {
+                if (ed.type == event_type_t::process_exit) {
                     event_fire(parser, event_t::process_exit(ed.param1.pid, wh->status));
                 } else {
-                    event_fire(parser, event_t::job_exit(ed.param1.pid));
+                    event_fire(parser, event_t::job_exit(ed.param1.pgid));
                 }
             }
         }

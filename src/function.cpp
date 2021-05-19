@@ -383,11 +383,12 @@ wcstring functions_def(const wcstring &name) {
                 append_format(out, L" --on-variable %ls", d.str_param1.c_str());
                 break;
             }
-            case event_type_t::exit: {
-                if (d.param1.pid > 0)
-                    append_format(out, L" --on-process-exit %d", d.param1.pid);
-                else
-                    append_format(out, L" --on-job-exit %d", -d.param1.pid);
+            case event_type_t::process_exit: {
+                append_format(out, L" --on-process-exit %d", d.param1.pid);
+                break;
+            }
+            case event_type_t::job_exit: {
+                append_format(out, L" --on-job-exit %d", d.param1.pgid);
                 break;
             }
             case event_type_t::caller_exit: {

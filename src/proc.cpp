@@ -674,7 +674,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
             // don't create an event or it's easy to get an infinite loop.
             if (!j->from_event_handler() && j->should_report_process_exits()) {
                 pid_t pgid = *j->get_pgid();
-                exit_events.push_back(event_t::job_exit(-pgid));
+                exit_events.push_back(event_t::job_exit(pgid));
             }
             // Caller exit events we still create, which anecdotally fixes `source (thing | psub)`
             // inside event handlers. This seems benign since this event is barely used (basically

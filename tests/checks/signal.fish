@@ -28,6 +28,11 @@ function anychild --on-process-exit 0
     echo $argv[1] $argv[3]
 end
 
+function anyjob --on-job-exit 0
+    # Type and exit status
+    echo $argv[1] $argv[3]
+end
+
 echo "command false:"
 command false
 # CHECK: command false:

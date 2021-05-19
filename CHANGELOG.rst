@@ -10,22 +10,23 @@ Syntax changes and new commands
 
 Deprecations and removed features
 ---------------------------------
-- The ``fish_history`` value "default" is no longer an alias for "fish" (:issue:`7650`).
+- The ``$fish_history`` value "default" is no longer special. It used to be treated the same as "fish" (:issue:`7650`).
 - Redirection to standard error with the ``^`` character has been disabled by default. It can be turned back on using the ``stderr-nocaret`` feature flag, but will eventually be disabled completely (:issue:`7105`).
 - Specifying an initial tab to ``fish_config`` now only works with ``fish_config browse`` (e.g. ``fish_config browse variables``), otherwise it would interfere with the new ``prompt`` subcommand (see below) (:issue:`7958`).
 
 Scripting improvements
 ----------------------
 - ``math`` gained new functions ``log2`` (like the documentation claimed), ``max`` and ``min`` (:issue:`7856`). ``math`` functions can be used without the parentheses (eg ``math sin 2 + 6``), and functions have the lowest precedence in the order of operations (:issue:`7877`).
-- Shebang lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke the file using ``/bin/sh`` (:issue:`7802`).
+- Shebang lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke it using ``/bin/sh`` (:issue:`7802`).
 - Exit codes are better aligned with bash. A failed exec now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
 - ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with linux' special API files (``/proc``, ``/sys`` and such) (:issue:`7836`).
 - fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`).
 - Builtins now properly report a ``$status`` of 1 upon unsuccessful writes (:issue:`7857`).
 - ``string match`` with unmatched capture groups and without the ``--all`` flag now sets an empty variable instead of a variable containing the empty string. It also correctly imports the first match if multiple arguments are provided, matching the documentation. (:issue:`7938`).
-- Better errors when a command in a command substitution wasn't found or is not allowed.
+- More specific errors when a command in a command substitution wasn't found or is not allowed. This now prints something like "Unknown command" instead of "Unknown error while evaluating command substitution".
 - ``fish_indent`` allows to write inline variable assignments on multiple lines (ending in a backslash), instead of joining them into one line (:issue:`7955`).
-- fish gained a ``--no-config`` option to disable reading config.fish. This applies both to the user's and the admin's config.fish (typically in /etc/fish/config.fish) and also sets $fish_function_path to just the functions shipped with fish and disables universal variables and history. (:issue:`7921`, :issue:`1256`).
+- fish gained a ``--no-config`` option to disable reading the configuration. This applies both to the user's and the admin's config.fish (typically in /etc/fish/config.fish) and snippets and also sets $fish_function_path to just the functions shipped with fish and disables universal variables and history. (:issue:`7921`, :issue:`1256`).
+- When universal variables are unavailable for some reason, setting a universal variable now sets a global variable instead (:issue:`7921`).
 - ``process-exit`` event handlers now receive the same value as ``$status`` in all cases, instead of receiving -1 when the exit was due to a signal.
 
 Interactive improvements

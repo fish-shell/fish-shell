@@ -55,8 +55,6 @@ The default behavior of ``functions``, when called with no arguments, is to prin
 
 If any non-option parameters are given, the definition of the specified functions are printed.
 
-Automatically loaded functions cannot be removed using ``functions -e``. Either remove the definition file or change the $fish_function_path variable to remove autoloaded functions.
-
 Copying a function using ``-c`` copies only the body of the function, and does not attach any event notifications from the original function.
 
 Only one function's description can be changed in a single invocation of ``functions -d``.

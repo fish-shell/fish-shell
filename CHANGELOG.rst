@@ -30,6 +30,7 @@ Scripting improvements
 - ``$last_pid`` now reports the pid of the last process in the pipeline, allowing it to be used in scripts (:issue:`5036`, :issue:`5832`, :issue:`7721`).
 - ``process-exit`` event handlers now receive the same value as ``$status`` in all cases, instead of receiving -1 when the exit was due to a signal.
 - ``process-exit`` event handlers for pid 0 also received ``JOB_EXIT`` events; this has been fixed.
+- ``job-exit`` event handlers may now be created with any of the pids from the job. The handler is passed the last pid in the job as its second argument, instead of the process group.
 
 Interactive improvements
 -------------------------

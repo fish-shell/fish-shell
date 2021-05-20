@@ -156,6 +156,13 @@ enum {
 };
 typedef unsigned int escape_flags_t;
 
+/// A user-visible job ID.
+using job_id_t = int;
+
+/// The non user-visible, never-recycled job ID.
+/// Every job has a unique positive value for this.
+using internal_job_id_t = uint64_t;
+
 /// Issue a debug message with printf-style string formating and automatic line breaking. The string
 /// will begin with the string \c program_name, followed by a colon and a whitespace.
 ///

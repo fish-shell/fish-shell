@@ -53,6 +53,18 @@ static const struct woption long_options[] = {
     {L"inherit-variable", required_argument, nullptr, 'V'},
     {nullptr, 0, nullptr, 0}};
 
+/// \return the internal_job_id for a pid, or 0 if none.
+/// This looks through both active and finished jobs.
+static internal_job_id_t job_id_for_pid(pid_t pid, parser_t &parser) {
+    if (const auto *job = parser.job_get_from_pid(pid)) {
+        return job->internal_job_id;
+    }
+    if (wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid)) {
+        return wh->internal_job_id;
+    }
+    return 0;
+}
+
 static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = L"function";
@@ -127,7 +139,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                         e.param1.pid = pid;
                     } else {
                         e.type = event_type_t::job_exit;
-                        e.param1.pgid = pid;
+                        e.param1.jobspec = {pid, job_id_for_pid(pid, parser)};
                     }
                 }
                 opts.events.push_back(e);
@@ -281,15 +293,19 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
     // If there is an --on-process-exit or --on-job-exit event handler for some pid, and that
     // process has already exited, run it immediately (#7210).
     for (const event_description_t &ed : opts.events) {
-        if ((ed.type == event_type_t::process_exit || ed.type == event_type_t::job_exit) &&
-            ed.param1.pid != EVENT_ANY_PID) {
-            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(ed.param1.pid);
+        if (ed.type == event_type_t::process_exit) {
+            pid_t pid = ed.param1.pid;
+            if (pid == EVENT_ANY_PID) continue;
+            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid);
             if (wh && wh->completed) {
-                if (ed.type == event_type_t::process_exit) {
-                    event_fire(parser, event_t::process_exit(ed.param1.pid, wh->status));
-                } else {
-                    event_fire(parser, event_t::job_exit(ed.param1.pgid));
-                }
+                event_fire(parser, event_t::process_exit(pid, wh->status));
+            }
+        } else if (ed.type == event_type_t::job_exit) {
+            pid_t pid = ed.param1.jobspec.pid;
+            if (pid == EVENT_ANY_PID) continue;
+            wait_handle_ref_t wh = parser.get_wait_handles().get_by_pid(pid);
+            if (wh && wh->completed) {
+                event_fire(parser, event_t::job_exit(pid, wh->internal_job_id));
             }
         }
     }

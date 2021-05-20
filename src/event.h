@@ -43,6 +43,16 @@ extern const wchar_t *const event_filter_names[];
 
 /// Properties of an event.
 struct event_description_t {
+    /// Helper type for on-job-exit events.
+    struct job_spec_t {
+        // pid requested by the event, or ANY_PID for all.
+        pid_t pid;
+
+        // internal_job_id of the job to match.
+        // If this is 0, we match either all jobs (pid == ANY_PID) or no jobs (otherwise).
+        uint64_t internal_job_id;
+    };
+
     /// The event type.
     event_type_t type;
 
@@ -50,12 +60,12 @@ struct event_description_t {
     ///
     /// signal: Signal number for signal-type events.Use EVENT_ANY_SIGNAL to match any signal
     /// pid: Process id for process-type events. Use EVENT_ANY_PID to match any pid.
-    /// pgid: Process id for job-type events. This value is positive (or EVENT_ANY_PID).
+    /// jobspec: Info for on-job-exit events.
     /// caller_id: Internal job id for caller_exit type events
     union {
         int signal;
         pid_t pid;
-        pid_t pgid;
+        job_spec_t jobspec;
         uint64_t caller_id;
     } param1{};
 
@@ -103,7 +113,7 @@ struct event_t {
 
     /// Create a JOB_EXIT event. The pgid should be positive.
     /// The reported status is always 0 for historical reasons.
-    static event_t job_exit(pid_t pgid);
+    static event_t job_exit(pid_t pgid, internal_job_id_t jid);
 
     /// Create a caller_exit event.
     static event_t caller_exit(uint64_t internal_job_id, int job_id);

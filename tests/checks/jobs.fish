@@ -25,6 +25,11 @@ sleep 0.1
 # (there should be none).
 ps -o stat | string match 'Z*'
 
+# Verify disown can be used with last_pid, even if it is separate from the pgroup.
+# This should silently succeed.
+command true | sleep 0.5 &
+disown $last_pid
+
 jobs -q
 echo $status
 #CHECK: 1

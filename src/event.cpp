@@ -172,7 +172,7 @@ wcstring event_get_desc(const parser_t &parser, const event_t &evt) {
                                      j->command_wcstr());
             } else {
                 return format_string(_(L"exit handler for job with process group %d"),
-                                     -ed.param1.pgid);
+                                     ed.param1.pgid);
             }
         }
 

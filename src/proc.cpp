@@ -610,6 +610,7 @@ static void save_wait_handle_for_completed_job(const shared_ptr<job_t> &job,
     for (auto &proc : job->processes) {
         if (wait_handle_ref_t wh = proc->get_wait_handle(false /* create */)) {
             wh->status = proc->status.status_value();
+            wh->internal_job_id = job->internal_job_id;
             wh->completed = true;
         }
     }
@@ -673,8 +674,9 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
             // If this job already came from an event handler,
             // don't create an event or it's easy to get an infinite loop.
             if (!j->from_event_handler() && j->should_report_process_exits()) {
-                pid_t pgid = *j->get_pgid();
-                exit_events.push_back(event_t::job_exit(pgid));
+                if (auto last_pid = j->get_last_pid()) {
+                    exit_events.push_back(event_t::job_exit(*last_pid, j->internal_job_id));
+                }
             }
             // Caller exit events we still create, which anecdotally fixes `source (thing | psub)`
             // inside event handlers. This seems benign since this event is barely used (basically

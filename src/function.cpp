@@ -388,7 +388,7 @@ wcstring functions_def(const wcstring &name) {
                 break;
             }
             case event_type_t::job_exit: {
-                append_format(out, L" --on-job-exit %d", d.param1.pgid);
+                append_format(out, L" --on-job-exit %d", d.param1.jobspec.pid);
                 break;
             }
             case event_type_t::caller_exit: {

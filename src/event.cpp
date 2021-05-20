@@ -120,9 +120,10 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
             return classv.desc.param1.pid == instance.desc.param1.pid;
         }
         case event_type_t::job_exit: {
-            if (classv.desc.param1.pgid == EVENT_ANY_PID) return true;
+            const auto &jobspec = classv.desc.param1.jobspec;
+            if (jobspec.pid == EVENT_ANY_PID) return true;
             only_once = true;
-            return classv.desc.param1.pgid == instance.desc.param1.pgid;
+            return jobspec.internal_job_id == instance.desc.param1.jobspec.internal_job_id;
         }
         case event_type_t::caller_exit: {
             only_once = true;
@@ -167,12 +168,12 @@ wcstring event_get_desc(const parser_t &parser, const event_t &evt) {
         }
 
         case event_type_t::job_exit: {
-            if (job_t *j = parser.job_get_from_pid(ed.param1.pid)) {
+            const auto &jobspec = ed.param1.jobspec;
+            if (const job_t *j = parser.job_get_from_pid(jobspec.pid)) {
                 return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id(),
                                      j->command_wcstr());
             } else {
-                return format_string(_(L"exit handler for job with process group %d"),
-                                     ed.param1.pgid);
+                return format_string(_(L"exit handler for job with pid %d"), jobspec.pid);
             }
         }
 
@@ -431,7 +432,7 @@ void event_print(io_streams_t &streams, const wcstring &type_filter) {
                       case event_type_t::process_exit:
                           return d1.param1.pid < d2.param1.pid;
                       case event_type_t::job_exit:
-                          return d1.param1.pgid < d2.param1.pgid;
+                          return d1.param1.jobspec.pid < d2.param1.jobspec.pid;
                       case event_type_t::caller_exit:
                           return d1.param1.caller_id < d2.param1.caller_id;
                       case event_type_t::variable:
@@ -526,12 +527,12 @@ event_t event_t::process_exit(pid_t pid, int status) {
 }
 
 // static
-event_t event_t::job_exit(pid_t pgid) {
+event_t event_t::job_exit(pid_t pid, internal_job_id_t jid) {
     event_t evt{event_type_t::job_exit};
-    evt.desc.param1.pgid = pgid;
+    evt.desc.param1.jobspec = {pid, jid};
     evt.arguments.reserve(3);
     evt.arguments.push_back(L"JOB_EXIT");
-    evt.arguments.push_back(to_string(pgid));
+    evt.arguments.push_back(to_string(pid));
     evt.arguments.push_back(L"0");  // historical
     return evt;
 }

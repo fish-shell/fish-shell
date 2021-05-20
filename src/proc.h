@@ -298,13 +298,6 @@ class process_t {
 using process_ptr_t = std::unique_ptr<process_t>;
 using process_list_t = std::vector<process_ptr_t>;
 
-/// A user-visible job ID.
-using job_id_t = int;
-
-/// The non user-visible, never-recycled job ID.
-/// Every job has a unique positive value for this.
-using internal_job_id_t = uint64_t;
-
 /// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t {
    public:

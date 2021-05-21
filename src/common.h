@@ -722,12 +722,6 @@ constexpr ssize_t const_strcmp(const T *lhs, const T *rhs) {
     return (*lhs == *rhs) ? (*lhs == 0 ? 0 : const_strcmp(lhs + 1, rhs + 1))
                           : (*lhs > *rhs ? 1 : -1);
 }
-static_assert(const_strcmp("", "a") < 0, "const_strcmp failure");
-static_assert(const_strcmp("a", "a") == 0, "const_strcmp failure");
-static_assert(const_strcmp("a", "") > 0, "const_strcmp failure");
-static_assert(const_strcmp("aa", "a") > 0, "const_strcmp failure");
-static_assert(const_strcmp("a", "aa") < 0, "const_strcmp failure");
-static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
 
 /// Compile-time agnostic-size strlen/wcslen implementation. Unicode-unaware.
 template <typename T, size_t N>
@@ -745,9 +739,6 @@ constexpr size_t const_strlen(const T (&val)[N], ssize_t index = -1) {
                      // Keep back-tracking until a non-nul byte is found
                      : (val[index] != static_cast<T>(0) ? 0 : 1 + const_strlen(val, index - 1));
 }
-static_assert(const_strlen("") == 0, "const_strlen failure");
-static_assert(const_strlen("a") == 1, "const_strlen failure");
-static_assert(const_strlen("hello") == 5, "const_strlen failure");
 
 /// Compile-time assertion of alphabetical sort of array `array`, by specified
 /// parameter `accessor`. This is only a macro because constexpr lambdas (to

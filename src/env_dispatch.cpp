@@ -139,7 +139,7 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
     const auto var = vars.get(env_var_name, ENV_DEFAULT);
     FLOGF(env_dispatch, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
           !var ? L"MISSING" : var->as_string().c_str());
-    const std::string &name = wcs2string(env_var_name);
+    std::string name = wcs2string(env_var_name);
     if (var.missing_or_empty()) {
         unsetenv_lock(name.c_str());
     } else {
@@ -539,7 +539,7 @@ static void init_locale(const environment_t &vars) {
 
     for (const auto &var_name : locale_variables) {
         const auto var = vars.get(var_name, ENV_EXPORT);
-        const std::string &name = wcs2string(var_name);
+        std::string name = wcs2string(var_name);
         if (var.missing_or_empty()) {
             FLOGF(env_locale, L"locale var %s missing or empty", name.c_str());
             unsetenv_lock(name.c_str());

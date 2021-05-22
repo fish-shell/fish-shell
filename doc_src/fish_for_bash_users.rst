@@ -7,6 +7,8 @@ This is to give you a quick overview if you come from bash (or to a lesser exten
 
 Many things are similar - they both fundamentally expand commandlines to execute commands, have pipes, redirections, variables, globs, use command output in various ways. This document is there to quickly show you the differences.
 
+.. _bash-command-substitutions:
+
 Command substitutions
 ---------------------
 
@@ -261,6 +263,48 @@ Fish's blocking constructs look a little different. They all start with a word, 
   # (note that bash specifically allows the word "function" as an extension, but POSIX only specifies the form without, so it's more compatible to just use the form without)
 
 Fish does not have an ``until``. Use ``while not`` or ``while !``.
+
+Subshells
+---------
+
+Bash has a feature called "subshells", where it will start another shell process for certain things. That shell will then be independent and e.g. any changes it makes to variables won't be visible in the main shell.
+
+This includes things like:
+
+.. code-block:: sh
+
+    # A list of commands in `()` parentheses
+    (foo; bar) | baz
+
+    # Both sides of a pipe
+    foo | while read -r bar; do
+        # This variable will not be visible outside of the while loop.
+        VAR=VAL
+        # This background process will not be, either
+        baz &
+    done
+
+``()`` subshells are often confused with ``{}`` grouping, which does *not* use a subshell. When you just need to group, you can use ``begin; end`` in fish::
+
+    (foo; bar) | baz
+    # when it should really have been:
+    { foo; bar } | baz
+    # becomes
+    begin; foo; bar; end | baz
+
+The pipe will simply be run in the same process, so ``while read`` loops can set variables outside::
+
+    foo | while read bar
+        set -g VAR VAL
+        baz &
+    end
+
+    echo $VAR # will print VAL
+    jobs # will show "baz"
+
+Subshells are also frequently confused with :ref:`command substitutions <bash-command-substitutions>`, which bash writes as ```command``` or ``$(command)`` and fish writes as ``(command)``. Bash also *uses* subshells to implement them.
+
+The isolation can usually be achieved by just scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can always use ``fish -c 'your code here'`` to do so explicitly.
 
 Builtins and other commands
 ---------------------------

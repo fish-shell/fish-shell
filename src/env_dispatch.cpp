@@ -60,15 +60,15 @@
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
-static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
-                                               L"LC_COLLATE", L"LC_CTYPE", L"LC_IDENTIFICATION",
-                                               L"LC_MEASUREMENT", L"LC_MESSAGES", L"LC_MONETARY",
-                                               L"LC_NAME", L"LC_NUMERIC", L"LC_PAPER",
-                                               L"LC_TELEPHONE", L"LC_TIME", L"LOCPATH"});
+static const wcstring locale_variables[] = {
+    L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
+    L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
+    L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
+    L"LOCPATH"};
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
-static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
+static const wcstring curses_variables[] = {L"TERM", L"TERMINFO", L"TERMINFO_DIRS"};
 
 class var_dispatch_table_t {
     using named_callback_t = std::function<void(const wcstring &, env_stack_t &)>;

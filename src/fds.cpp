@@ -255,7 +255,7 @@ int open_cloexec(const char *path, int flags, mode_t mode) {
     fd = open(path, flags | O_CLOEXEC, mode);
 #else
     fd = open(path, flags, mode);
-    if (fd >= 0 && !set_cloexec(fd)) {
+    if (fd >= 0 && set_cloexec(fd)) {
         exec_close(fd);
         fd = -1;
     }

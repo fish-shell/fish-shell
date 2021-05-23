@@ -53,6 +53,9 @@ function test_pexpect_file
     if test "$exit_status" -eq 0
         set test_duration (delta $starttime)
         say green "ok ($test_duration $unit)"
+    else if test "$exit_status" -eq 127
+        say blue "SKIPPED"
+        set exit_status 0
     end
     return $exit_status
 end

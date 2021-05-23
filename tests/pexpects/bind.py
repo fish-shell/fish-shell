@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
+import os
+import platform
+import sys
+
+# Skip on macOS on Github Actions because it's too resource-starved
+# and fails this a lot.
+#
+# Presumably we still have users on macOS that would notice binding errors
+if "GITHUB_WORKFLOW" in os.environ and platform.system() == "Darwin":
+    sys.exit(127)
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (

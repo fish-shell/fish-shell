@@ -244,7 +244,11 @@ static void setup_path() {
         // _CS_PATH: colon-separated paths to find POSIX utilities
         std::string cspath;
         cspath.resize(confstr(_CS_PATH, nullptr, 0));
-        confstr(_CS_PATH, &cspath[0], cspath.length());
+        if (cspath.length() > 0) {
+            confstr(_CS_PATH, &cspath[0], cspath.length());
+            // remove the trailing null-terminator
+            cspath.resize(cspath.length() - 1);
+        }
 #else
         std::string cspath = "/usr/bin:/bin";  // I doubt this is even necessary
 #endif

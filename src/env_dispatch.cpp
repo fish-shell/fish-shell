@@ -531,6 +531,15 @@ static void init_curses(const environment_t &vars) {
     curses_initialized = true;
 }
 
+static const std::string utf8_locales[] = {
+    "C.UTF-8",
+    "en_US.UTF-8",
+    "en_GB.UTF-8",
+    "de_DE.UTF-8",
+    "C.utf8",
+    "UTF-8",
+};
+
 /// Initialize the locale subsystem.
 static void init_locale(const environment_t &vars) {
     // We have to make a copy because the subsequent setlocale() call to change the locale will
@@ -551,6 +560,24 @@ static void init_locale(const environment_t &vars) {
     }
 
     char *locale = setlocale(LC_ALL, "");
+
+    // Try to get a multibyte-capable encoding
+    // A "C" locale is broken for our purposes - any wchar functions will break on it.
+    // So we try *really really really hard* to not have one.
+    if (MB_CUR_MAX == 1) {
+        FLOGF(env_locale, L"Have singlebyte locale, trying to fix");
+        for (auto loc : utf8_locales) {
+            setlocale(LC_CTYPE, loc.c_str());
+            if (MB_CUR_MAX > 1) {
+                FLOGF(env_locale, L"Fixed locale: '%s'", loc.c_str());
+                break;
+            }
+        }
+        if (MB_CUR_MAX == 1) {
+            FLOGF(env_locale, L"Failed to fix locale");
+        }
+    }
+
     fish_setlocale();
     FLOGF(env_locale, L"init_locale() setlocale(): '%s'", locale);
 

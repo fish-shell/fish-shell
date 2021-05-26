@@ -35,7 +35,7 @@ The following options change the way ``commandline`` updates the command line bu
 
 The following options change what part of the commandline is printed or updated:
 
-- ``-b`` or ``--current-buffer`` select the entire buffer, including any displayed autosuggestion (default)
+- ``-b`` or ``--current-buffer`` select the entire commandline, not including any displayed autosuggestion (default)
 
 - ``-j`` or ``--current-job`` select the current job - a `job` here is one pipeline. It stops at logical operators or terminators (``;``, ``&`` or newlines).
 

@@ -24,6 +24,7 @@ end
 
 # Empty executable files are 'true'.
 true >file
+sleep 0.1
 runfile
 #CHECK: 0
 #CHECK: 0
@@ -36,6 +37,7 @@ runfile
 
 # Never implicitly pass files ending with .fish to /bin/sh.
 true >file.fish
+sleep 0.1
 chmod a+x file.fish
 set -g fish_use_posix_spawn 0
 ./file.fish
@@ -58,12 +60,14 @@ rm file.fish
 # On to NUL bytes.
 # The heuristic is that there must be a line containing a lowercase letter before the first NUL byte.
 echo -n -e 'true\n\x00' >file
+sleep 0.1
 runfile
 #CHECK: 0
 #CHECK: 0
 
 # Doesn't meet our heuristic as there is no newline.
 echo -n -e 'true\x00' >file
+sleep 0.1
 runfile
 #CHECK: 126
 #CHECKERR: Failed {{.*}}
@@ -77,6 +81,7 @@ runfile
 
 # Doesn't meet our heuristic as there is no lowercase before newline.
 echo -n -e 'NOPE\n\x00' >file
+sleep 0.1
 runfile
 #CHECK: 126
 #CHECKERR: Failed {{.*}}

@@ -37,7 +37,8 @@
     {%- endif %}
 {% endblock %}
 
-{% block sidebar1 %}{{ sidebar() }}{% endblock %}
+{# The sidebar goes into the *document* block, so it ends up in the document *div* so it doesn't go over the footer #}
+{% block document %}{{ sidebar() }}{{ super() }}{% endblock %}
 {% block sidebar2 %} {% endblock %}
 {% block extrahead %}
     <link rel="shortcut icon" type="image/png" href="{{ pathto('_static/' + theme_root_icon, 1) }}" />

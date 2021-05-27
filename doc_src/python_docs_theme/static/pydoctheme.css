@@ -62,9 +62,29 @@ div.sphinxsidebar {
     border-radius: 0px;
     line-height: 130%;
     font-size: smaller;
-    overflow: auto;
-    position: absolute;
     margin-left: 0;
+    float: left;
+    /* Let this move along with the screen, but be scrollable itself.
+    This means the user can't scroll *away* from the sidebar - it's always available */
+    overflow: auto;
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    /* Default scrollbar is too thicc */
+    scrollbar-width: thin;
+}
+
+div.sphinxsidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+div.sphinxsidebar::-webkit-scrollbar-thumb {
+  /* Without, chrome lets the scrollbar disappear? */
+  background-color: grey;
+  border-radius: 10px;
+}
+
+div.documentwrapper {
     float: none;
 }
 
@@ -242,6 +262,10 @@ dl > dt span ~ em {
         height: auto;
         position: relative;
     }
+    div.documentwrapper {
+        float: left;
+    }
+
     div.sphinxsidebar ul {
         flex-basis: content;
         flex-wrap: wrap;

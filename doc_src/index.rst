@@ -165,8 +165,6 @@ If you have a question not answered by this documentation, there are several ave
 
 - The official mailing list at `fish-users@lists.sourceforge.net <https://lists.sourceforge.net/lists/listinfo/fish-users>`_
 
-- The IRC channel, \#fish on ``irc.oftc.net``
-
 If you have an improvement for fish, you can submit it via the GitHub page.
 
 .. _other_pages:

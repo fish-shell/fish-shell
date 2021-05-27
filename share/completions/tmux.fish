@@ -66,7 +66,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $detach" -s P -d 'SIGHUP parent
 
 complete -c tmux -n __fish_use_subcommand -a $has -d 'report error and exit with 1 if the session does not exist'
 complete -c tmux -n __fish_use_subcommand -a $killserver -d 'kill tmux server, clients, and sessions'
-complete -c tmux -n __fish_use_subcommand -a $killsession -d 'destroy session, closing windows linked to it, and detach all clients'
+complete -c tmux -n __fish_use_subcommand -a $killsession -d 'destroy session, close its windows, and detach all its clients'
 complete -c tmux -n __fish_use_subcommand -a $lsc -d 'list all attached clients'
 complete -c tmux -n __fish_use_subcommand -a $lscm -d 'list syntax for all tmux commands'
 complete -c tmux -n __fish_use_subcommand -a $ls -d 'list all sessions'

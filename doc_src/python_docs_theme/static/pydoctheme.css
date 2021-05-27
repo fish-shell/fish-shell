@@ -35,6 +35,10 @@ div.section {
        but I have no idea how to make the tables themselves scrollable
      */
     overflow-y: auto;
+    /* This avoids leaving the actual text narrower than necessary
+       in certain widths.
+     */
+    width: 100%;
 }
 
 div.related a:hover {

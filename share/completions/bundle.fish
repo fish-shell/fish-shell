@@ -66,7 +66,7 @@ complete -f -n '__fish_bundle_using_command update' -c bundle -s g -l group -d '
 complete -f -n '__fish_bundle_using_command update' -c bundle -a '(__fish_bundled_gems)'
 
 # Package
-complete -f -n __fish_bundle_no_command -c bundle -a package -d 'Package the .gem files required by your application into the vendor/cache directory'
+complete -f -n __fish_bundle_no_command -c bundle -a package -d 'Package the .gem files into vendor/cache directory'
 
 # Binstubs
 complete -f -n __fish_bundle_no_command -c bundle -a binstubs -d 'Install the binstubs of the listed gem'
@@ -102,7 +102,7 @@ complete -f -n '__fish_bundle_using_command help' -c bundle -a cleanup -d 'Clean
 ##
 
 # Check
-complete -f -n __fish_bundle_no_command -c bundle -a check -d 'Determine whether the requirements for your application are installed and available to bundler'
+complete -f -n __fish_bundle_no_command -c bundle -a check -d 'Check if the requirements are installed and available to bundler'
 complete -f -n '__fish_bundle_using_command check' -c bundle -l gemfile -d 'The location of the Gemfile bundler should use'
 complete -f -n '__fish_bundle_using_command check' -c bundle -l path -d 'Specify a path other than the system default (BUNDLE_PATH or GEM_HOME)'
 complete -f -n '__fish_bundle_using_command check' -c bundle -l dry-run -d 'Lock the Gemfile'

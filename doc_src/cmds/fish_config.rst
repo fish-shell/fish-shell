@@ -37,7 +37,7 @@ Example
 
 ``fish_config prompt show`` demos the available sample prompts.
 
-``fish_config prompt choose disco`` makes the disco prompt the prompt for the current session. This can also be used in :ref:`config.fish <initialization>` to set the prompt.
+``fish_config prompt choose disco`` makes the disco prompt the prompt for the current session. This can also be used in :ref:`config.fish <configuration>` to set the prompt.
 
 ``fish_config prompt save`` saves the current prompt to an :ref:`autoloaded <syntax-function-autoloading>` file.
 

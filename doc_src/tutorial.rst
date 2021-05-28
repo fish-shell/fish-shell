@@ -710,7 +710,7 @@ It is possible to directly create functions and variables in ``config.fish`` fil
 
 However, it is more common and efficient to use  autoloading functions and universal variables.
 
-If you want to organize your configuration, fish also reads commands in .fish files in ``~/.config/fish/conf.d/``. See :ref:`initialization <initialization>` for the details.
+If you want to organize your configuration, fish also reads commands in .fish files in ``~/.config/fish/conf.d/``. See :ref:`Configuration Files <configuration>` for the details.
 
 Autoloading Functions
 ---------------------

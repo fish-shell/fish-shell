@@ -64,7 +64,7 @@ variables.
 This means that the global value takes precedence over the universal value.
 
 To avoid this problem, consider changing the setting which fish inherits. If this is not possible,
-add a statement to your :ref:`user initialization file <initialization>` (usually
+add a statement to your :ref:`configuration file <configuration>` (usually
 ``~/.config/fish/config.fish``)::
 
     set -gx EDITOR vim
@@ -306,7 +306,7 @@ This problem may show up as messages like "``Received message too long``", "``op
 failed: not a terminal``", "``Bad packet length``", or "``Connection refused``" with strange output
 in ``ssh_exchange_identification`` messages in the debug log.
 
-This usually happens because fish reads the :ref:`user configuration file <initialization>` (``~/.config/fish/config.fish``) *always*,
+This usually happens because fish reads the :ref:`user configuration file <configuration>` (``~/.config/fish/config.fish``) *always*,
 whether it's in an interactive or login or non-interactive or non-login shell.
 
 This simplifies matters, but it also means when config.fish generates output, it will do that even in non-interactive shells like the one ssh/scp/rsync start when they connect.

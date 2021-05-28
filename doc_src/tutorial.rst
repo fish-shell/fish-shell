@@ -41,6 +41,7 @@ This tutorial assumes a basic understanding of command line shells and Unix comm
 
 If you have a strong understanding of other shells, and want to know what fish does differently, search for the magic phrase *unlike other shells*, which is used to call out important differences.
 
+Or, if you want a quick overview over the differences to other shells like Bash, see :ref:`Fish For Bash Users <fish_for_bash_users>`.
 
 Running Commands
 ----------------
@@ -54,7 +55,9 @@ Fish runs commands like other shells: you type a command, followed by its argume
 This runs the command ``echo`` with the arguments ``hello`` and ``world``. In this case that's the same as one argument ``hello world``, but in many cases it's not. If you need to pass an argument that includes a space, you can :ref:`escape <escapes>` with a backslash, or :ref:`quote <quotes>` it using single or double quotes::
 
     > mkdir My\ Files
+    # Makes a directory called "My Files", with a space in the name
     > cp ~/Some\ File 'My Files'
+    # Copies a file called "Some File" in the home directory to "My Files"
     > ls "My Files"
     Some File
 
@@ -69,7 +72,6 @@ Run ``help`` to open fish's help in a web browser, and ``man`` with the page (li
     > man set
     set - handle shell variables
       Synopsis...
-
 
 
 Syntax Highlighting
@@ -228,13 +230,13 @@ Try hitting tab and see what fish can do!
 Variables
 ---------
 
-Like other shells, a dollar sign performs variable substitution::
+Like other shells, a dollar sign followed by a variable name is replaced with the value of that variable::
 
     > echo My home directory is $HOME
     My home directory is /home/tutorial
 
 
-Variable substitution also happens in double quotes, but not single quotes::
+This is known as variable substitution, and it also happens in double quotes, but not single quotes::
 
     > echo "My current directory is $PWD"
     My current directory is /home/tutorial
@@ -309,7 +311,6 @@ Other variables, like ``$PATH``, really do have multiple values. During variable
     > echo $PATH
     /usr/bin /bin /usr/sbin /sbin /usr/local/bin
 
-
 Variables whose name ends in "PATH" are automatically split on colons to become lists. They are joined using colons when exported to subcommands. This is for compatibility with other tools, which expect $PATH to use colons. You can also explicitly add this quirk to a variable with ``set --path``, or remove it with ``set --unpath``.
 
 Lists cannot contain other lists: there is no recursion.  A variable is a list of strings, full stop.
@@ -319,12 +320,9 @@ Get the length of a list with ``count``::
     > count $PATH
     5
 
-
 You can append (or prepend) to a list by setting the list to itself, with some additional arguments. Here we append /usr/local/bin to $PATH::
 
     > set PATH $PATH /usr/local/bin
-
-
 
 You can access individual elements with square brackets. Indexing starts at 1 from the beginning, and -1 from the end::
 
@@ -335,10 +333,7 @@ You can access individual elements with square brackets. Indexing starts at 1 fr
     > echo $PATH[-1]
     /usr/local/bin
 
-
 You can also access ranges of elements, known as "slices":
-
-
 
 ::
 
@@ -346,7 +341,6 @@ You can also access ranges of elements, known as "slices":
     /usr/bin /bin
     > echo $PATH[-1..2]
     /usr/local/bin /sbin /usr/sbin /bin
-
 
 You can iterate over a list (or a slice) with a for loop::
 
@@ -359,7 +353,6 @@ You can iterate over a list (or a slice) with a for loop::
     entry: /sbin
     entry: /usr/local/bin
 
-
 Lists adjacent to other lists or strings are expanded as :ref:`cartesian products <cartesian-product>` unless quoted (see :ref:`Variable expansion <expand-variable>`)::
 
     > set a 1 2 3
@@ -370,7 +363,6 @@ Lists adjacent to other lists or strings are expanded as :ref:`cartesian product
     1 banana 2 banana 3 banana
     > echo "$a banana"
     1 2 3 banana
-
 
 This is similar to :ref:`Brace expansion <expand-brace>`.
 
@@ -385,13 +377,11 @@ Command substitutions use the output of one command as an argument to another. U
     > echo In (pwd), running (uname)
     In /home/tutorial, running FreeBSD
 
-
 A common idiom is to capture the output of a command in a variable::
 
     > set os (uname)
     > echo $os
     Linux
-
 
 Command substitutions are not expanded within quotes. Instead, you can temporarily close the quotes, add the command substitution, and reopen them, all in the same argument::
 
@@ -399,9 +389,7 @@ Command substitutions are not expanded within quotes. Instead, you can temporari
     > ls *.txt
     testing_1360099791.txt
 
-
 Unlike other shells, fish does not split command substitutions on any whitespace (like spaces or tabs), only newlines. This can be an issue with commands like ``pkg-config`` that print what is meant to be multiple arguments on a single line. To split it on spaces too, use ``string split``.
-
 
 ::
 
@@ -411,6 +399,15 @@ Unlike other shells, fish does not split command substitutions on any whitespace
     -lgio-2.0
     -lgobject-2.0
     -lglib-2.0
+
+If you need a command substitutions output as one argument, without any splits, use ``string collect``::
+
+    > echo "first line
+    second line" > myfile
+    > set myfile (cat myfile | string collect)
+    > printf '|%s|' $myfile
+    |first line
+    second line|
 
 For more, see :ref:`Command substitution <expand-command-substitution>`.
 
@@ -443,7 +440,6 @@ Unlike other shells, fish stores the exit status of the last command in ``$statu
     > false
     > echo $status
     1
-
 
 This indicates how the command fared - 0 usually means success, while the others signify kinds of failure. For instance fish's ``set --query`` returns the number of variables it queried that weren't set - ``set --query PATH`` usually returns 0, ``set --query arglbargl boogagoogoo`` usually returns 2.
 

@@ -24,11 +24,17 @@ function ls --description "List contents of directory"
     # BSD, macOS and others support colors with ls -G.
     # GNU ls and FreeBSD ls takes --color=auto. Order of this test is important because ls also takes -G but it has a different meaning.
     # Solaris 11's ls command takes a --color flag.
+    # OpenBSD requires the separate colorls program
     # Also test -F because we'll want to define this function even with an ls that can't do colors (like NetBSD).
-    if not set -q __fish_ls_color_opt
+    if not set -q __fish_ls_command
+        if which colorls >/dev/null 2>/dev/null
+            set -g __fish_ls_command colorls
+        else
+            set -g __fish_ls_command ls
+        end
         set -g __fish_ls_color_opt
         for opt in --color=auto -G --color -F
-            if command ls $opt / >/dev/null 2>/dev/null
+            if command $__fish_ls_command $opt / >/dev/null 2>/dev/null
                 set -g __fish_ls_color_opt $opt
                 break
             end
@@ -40,5 +46,5 @@ function ls --description "List contents of directory"
 
     isatty stdout
     and set -a opt -F
-    command ls $__fish_ls_color_opt $argv
+    command $__fish_ls_command $__fish_ls_color_opt $argv
 end

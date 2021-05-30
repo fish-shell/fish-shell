@@ -23,6 +23,7 @@ function runfile
 end
 
 # Empty executable files are 'true'.
+sleep 0.2
 runfile
 #CHECK: 0
 #CHECK: 0
@@ -31,7 +32,7 @@ runfile
 # NOTE: We redirect in a new process because the file must be *closed*
 # before it can be run. On some systems that doesn't happen quickly enough.
 $fish -c "echo -e -n '#COMMENT\n#COMMENT' >file"
-sleep 0.1
+sleep 0.2
 runfile
 #CHECK: 0
 #CHECK: 0
@@ -39,6 +40,7 @@ runfile
 # Never implicitly pass files ending with .fish to /bin/sh.
 touch file.fish
 chmod a+x file.fish
+sleep 0.3
 set -g fish_use_posix_spawn 0
 ./file.fish
 echo $status
@@ -60,14 +62,14 @@ rm file.fish
 # On to NUL bytes.
 # The heuristic is that there must be a line containing a lowercase letter before the first NUL byte.
 $fish -c "echo -n -e 'true\n\x00' >file"
-sleep 0.1
+sleep 0.3
 runfile
 #CHECK: 0
 #CHECK: 0
 
 # Doesn't meet our heuristic as there is no newline.
 $fish -c "echo -n -e 'true\x00' >file"
-sleep 0.1
+sleep 0.3
 runfile
 #CHECK: 126
 #CHECKERR: Failed {{.*}}

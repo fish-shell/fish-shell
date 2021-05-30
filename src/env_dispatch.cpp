@@ -531,7 +531,7 @@ static void init_curses(const environment_t &vars) {
     curses_initialized = true;
 }
 
-static const std::string utf8_locales[] = {
+static const char *utf8_locales[] = {
     "C.UTF-8",
     "en_US.UTF-8",
     "en_GB.UTF-8",
@@ -567,9 +567,9 @@ static void init_locale(const environment_t &vars) {
     if (MB_CUR_MAX == 1) {
         FLOGF(env_locale, L"Have singlebyte locale, trying to fix");
         for (auto loc : utf8_locales) {
-            setlocale(LC_CTYPE, loc.c_str());
+            setlocale(LC_CTYPE, loc);
             if (MB_CUR_MAX > 1) {
-                FLOGF(env_locale, L"Fixed locale: '%s'", loc.c_str());
+                FLOGF(env_locale, L"Fixed locale: '%s'", loc);
                 break;
             }
         }

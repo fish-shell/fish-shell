@@ -265,9 +265,27 @@ static relaxed_atomic_bool_t g_use_posix_spawn{false};
 
 bool get_use_posix_spawn() { return g_use_posix_spawn; }
 
+extern "C" {
+const char *gnu_get_libc_version();
+}
+
+// Disallow posix_spawn entirely on glibc <= 2.24.
+// See #8021.
+static bool allow_use_posix_spawn() {
+    bool result = true;
+    // uClibc defines __GLIBC__.
+#if defined(__GLIBC__) && !defined(__UCLIBC__)
+    const char *version = gnu_get_libc_version();
+    result = version && strtod(version, nullptr) >= 2.24;
+#endif
+    return result;
+}
+
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
     // Note if the variable is missing or empty, we default to true.
-    if (auto var = vars.get(L"fish_use_posix_spawn")) {
+    if (!allow_use_posix_spawn()) {
+        g_use_posix_spawn = false;
+    } else if (auto var = vars.get(L"fish_use_posix_spawn")) {
         g_use_posix_spawn = var->empty() || bool_from_string(var->as_string());
     } else {
         g_use_posix_spawn = true;

@@ -302,6 +302,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     end
 
     bind -s --preset -M visual -m insert c kill-selection end-selection repaint-mode
+    bind -s --preset -M visual -m insert s kill-selection end-selection repaint-mode
     bind -s --preset -M visual -m default d kill-selection end-selection repaint-mode
     bind -s --preset -M visual -m default x kill-selection end-selection repaint-mode
     bind -s --preset -M visual -m default X kill-whole-line end-selection repaint-mode

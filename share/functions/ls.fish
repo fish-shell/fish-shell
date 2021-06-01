@@ -17,14 +17,6 @@ function __fish_set_lscolors --description 'Set $LS_COLORS if possible'
     end
 end
 
-function __fish_ls_command --description 'Use colorls if it is installed'
-    if command -sq colorls
-        command colorls $argv
-    else
-        command ls $argv
-    end
-end
-
 function ls --description "List contents of directory"
     # Make ls use colors and show indicators if we are on a system that supports that feature and writing to stdout.
     #
@@ -37,7 +29,7 @@ function ls --description "List contents of directory"
     if not set -q __fish_ls_color_opt
         set -g __fish_ls_color_opt
         for opt in --color=auto -G --color -F
-            if __fish_ls_command $opt / >/dev/null 2>/dev/null
+            if command ls $opt / >/dev/null 2>/dev/null
                 set -g __fish_ls_color_opt $opt
                 break
             end
@@ -49,5 +41,11 @@ function ls --description "List contents of directory"
 
     isatty stdout
     and set -a opt -F
-    __fish_ls_command $__fish_ls_color_opt $argv
+
+    if command -sq colorls
+        command colorls $__fish_ls_color_opt $argv
+    else
+        command ls $__fish_ls_color_opt $argv
+    end
+
 end

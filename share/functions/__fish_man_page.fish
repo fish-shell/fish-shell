@@ -27,12 +27,16 @@ function __fish_man_page
             man "$maincmd-$args[2]"
         else if man "$maincmd" &>/dev/null
             man "$maincmd"
+        else if "$maincmd" "$args[2]" --help &>/dev/null
+            "$maincmd" "$args[2]" --help | less
         else
             printf \a
         end
     else
         if man "$maincmd" &>/dev/null
             man "$maincmd"
+        else if "$maincmd" --help &>/dev/null
+            "$maincmd" --help | less
         else
             printf \a
         end

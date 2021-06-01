@@ -260,11 +260,36 @@ static void handle_curses_change(const environment_t &vars) {
     init_curses(vars);
 }
 
+/// Whether to use posix_spawn when possible.
+static relaxed_atomic_bool_t g_use_posix_spawn{false};
+
+bool get_use_posix_spawn() { return g_use_posix_spawn; }
+
+extern "C" {
+const char *gnu_get_libc_version();
+}
+
+// Disallow posix_spawn entirely on glibc <= 2.24.
+// See #8021.
+static bool allow_use_posix_spawn() {
+    bool result = true;
+    // uClibc defines __GLIBC__.
+#if defined(__GLIBC__) && !defined(__UCLIBC__)
+    const char *version = gnu_get_libc_version();
+    result = version && strtod(version, nullptr) >= 2.24;
+#endif
+    return result;
+}
+
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
-    // note this defaults to true
-    auto use_posix_spawn = vars.get(L"fish_use_posix_spawn");
-    g_use_posix_spawn =
-        use_posix_spawn.missing_or_empty() ? true : bool_from_string(use_posix_spawn->as_string());
+    // Note if the variable is missing or empty, we default to true.
+    if (!allow_use_posix_spawn()) {
+        g_use_posix_spawn = false;
+    } else if (auto var = vars.get(L"fish_use_posix_spawn")) {
+        g_use_posix_spawn = var->empty() || bool_from_string(var->as_string());
+    } else {
+        g_use_posix_spawn = true;
+    }
 }
 
 /// Allow the user to override the limit on how much data the `read` command will process.
@@ -569,9 +594,6 @@ static void init_locale(const environment_t &vars) {
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title() { return can_set_term_title; }
-
-/// Miscellaneous variables.
-bool g_use_posix_spawn = false;
 
 // Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
 // fish_read_limit variable.

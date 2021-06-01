@@ -51,12 +51,15 @@ Interactive improvements
 - ``wait`` and ``on-process-exit`` work correctly with jobs that have already exited (:issue:`7210`).
 - Completion scripts are now loaded when calling a command via a relative path (like ``./git``) (:issue:`6001`, :issue:`7992`).
 - ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects $LESS and uses a better default value (:issue:`7997`).
-- ls output is colorized on OpenBSD if colorls utility is installed
+- ls output is colorized on OpenBSD if colorls utility is installed (:issue:`8035`)
+- The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
+- Further robustness improvements to the bash history import (:issue:`7874`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Pasting in Vi mode puts text in the right place in normal mode (:issue:`7847`).
-- Vi mode's ``u`` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, ``C-r`` is bound to ``redo`` instead of ``history-search-backward``, following Vim (#7908).
+- Vi mode's ``u`` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, ``C-r`` is bound to ``redo`` instead of ``history-search-backward``, following Vim (:issue:`7908`).
+- ``exit`` works correctly in bindings (:issue:`7967`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -80,11 +83,15 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- fish no longer performs the PROMPT_SP hack to get onto a new line during startup, this prevents ``⏎`` from showing up if the terminal is resized at the wrong time, which can happen in tiling window managers (:issue:`7893`).
-- fish fails in a less awful way when it disagrees with the terminal on the width of characters. In particular staircase effects with right prompts should be gone in most cases (:issue:`8011`).
+- fish no longer tries to detect a missing new line during startup, preventing an erroneous ``⏎`` from appearing if the terminal is resized at the wrong time, which can happen in tiling window managers (:issue:`7893`).
+- fish behaves better when it disagrees with the terminal on the width of characters. In particular, staircase effects with right prompts should be gone in most cases (:issue:`8011`).
 - If the prompt takes up the entire line, the last character should no longer be chopped off in certain terminals (:issue:`8002`).
-- fish's reflow handling has been disabled by default for kitty as well (:issue:`7961`).
-- The default prompt no longer spews errors when used with TERM=dumb (:issue:`7904`).
+- fish's reflow handling has been disabled by default for kitty (:issue:`7961`).
+- The default prompt no longer produces errors when used with a dumb terminal (:issue:`7904`).
+
+For distributors
+----------------
+- fish runs correctly on platforms without the ``O_CLOEXEC`` flag for ``open(2)`` (:issue:`8023`).
 
 --------------
 

@@ -207,6 +207,9 @@ bool is_thompson_shell_script(const char *path) {
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
                                         const dup2_list_t &dup2s) {
+    // Is it globally disabled?
+    if (!get_use_posix_spawn()) return false;
+
     // Hack - do not use posix_spawn if there are self-fd redirections.
     // For example if you were to write:
     //   cmd 6< /dev/null
@@ -545,8 +548,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
 
 #if FISH_USE_POSIX_SPAWN
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
-    bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, dup2s);
-    if (use_posix_spawn) {
+    if (can_use_posix_spawn_for_job(j, dup2s)) {
         s_fork_count++;  // spawn counts as a fork+exec
 
         posix_spawner_t spawner(j.get(), dup2s);

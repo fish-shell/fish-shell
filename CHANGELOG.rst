@@ -51,6 +51,7 @@ Interactive improvements
 - ``wait`` and ``on-process-exit`` work correctly with jobs that have already exited (:issue:`7210`).
 - Completion scripts are now loaded when calling a command via a relative path (like ``./git``) (:issue:`6001`, :issue:`7992`).
 - ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects $LESS and uses a better default value (:issue:`7997`).
+- ls output is colorized on OpenBSD if colorls utility is installed (:issue:`8035`)
 - The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
 - Further robustness improvements to the bash history import (:issue:`7874`).
 

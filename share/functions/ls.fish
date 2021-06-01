@@ -43,7 +43,7 @@ function ls --description "List contents of directory"
     and set -a opt -F
 
     if command -sq colorls
-        command colorls $__fish_ls_color_opt $argv
+        command colorls -GF $argv
     else
         command ls $__fish_ls_color_opt $argv
     end

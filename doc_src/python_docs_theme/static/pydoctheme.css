@@ -42,7 +42,9 @@ div.section {
     width: 100%;
 }
 
-div.related a:hover {
+div.related a:hover,
+div.footer a:hover,
+div.sphinxsidebar a:hover {
     color: #0095C4;
 }
 
@@ -114,10 +116,6 @@ div.sphinxsidebarwrapper > h3:first-child {
 
 div.sphinxsidebarwrapper > ul > li > ul > li {
     margin-bottom: 0.4em;
-}
-
-div.sphinxsidebar a:hover {
-    color: #0095C4;
 }
 
 form.inline-search input,
@@ -241,10 +239,6 @@ div.footer {
     text-align: right;
     width: auto;
     margin-right: 10px;
-}
-
-div.footer a:hover {
-    color: #0095C4;
 }
 
 .refcount {

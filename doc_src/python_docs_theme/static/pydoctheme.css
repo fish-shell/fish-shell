@@ -344,7 +344,7 @@ kbd {
 
 @media (prefers-color-scheme: dark) {
     body {
-        background: linear-gradient(to top, #171f2f 0%,#03131a 100%);
+        background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
     }
     div#fmain {
         color: #DDD;

@@ -634,7 +634,7 @@ img.delete_icon {
 
 @media (prefers-color-scheme: dark) {
     body {
-        background: linear-gradient(to top, #272f4f 0%,#03133a 100%);
+        background: linear-gradient(to top, #171f2f 0%,#03131a 100%);
         color: #DDD;
     }
 
@@ -645,11 +645,11 @@ img.delete_icon {
         background-color: black;
     }
     .selected_tab {
-        background-color: #151525;
+        background-color: #202028;
     }
 
     #tab_contents {
-        background-color: #151525;
+        background-color: #202028;
     }
     .detail, .selected_master_elem {
         background-color: black;

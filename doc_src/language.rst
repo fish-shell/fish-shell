@@ -909,7 +909,7 @@ If you want to set something in config.fish, or set something in a function and 
        set -g fish_cursor_visual underscore
     end
 
-    # Set my language (also :ref:`exported <variables-export>`):
+    # Set my language
     set -gx LANG de_DE.UTF-8
 
 If you want to set some personal customization, universal variables are nice::

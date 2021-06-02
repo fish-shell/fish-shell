@@ -636,3 +636,31 @@ img.delete_icon {
         margin-bottom: 0;
     }
 }
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(to top, #272f4f 0%,#03133a 100%);
+        color: #DDD;
+    }
+
+    div#ancestor {
+        box-shadow: 0 0 5px 1px #000;
+    }
+    .tab {
+        background-color: black;
+    }
+    .selected_tab {
+        background-color: #151525;
+    }
+
+    #tab_contents {
+        background-color: #151525;
+    }
+    .detail, .selected_master_elem {
+        background-color: black;
+    }
+    input {
+        background-color: #222;
+        color: #AAA;
+    }
+}

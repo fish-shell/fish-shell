@@ -27,6 +27,7 @@ div.related {
     padding: 0.5em 0;
     border-top: 1px solid #ccc;
     margin-top: 0;
+    background-color: inherit;
 }
 
 div.section {
@@ -89,6 +90,11 @@ div.sphinxsidebar::-webkit-scrollbar-thumb {
 
 div.documentwrapper {
     float: none;
+}
+
+div.document, div.body {
+    background-color: inherit;
+    color: inherit;
 }
 
 div#searchbox {
@@ -250,7 +256,7 @@ div.footer a:hover {
 }
 
 .highlight {
-    background: #FFF !important;
+    background: #FFF;
 }
 
 dl > dt span ~ em {

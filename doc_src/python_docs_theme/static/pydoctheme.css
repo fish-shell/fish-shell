@@ -1,5 +1,9 @@
 @import url("classic.css");
 
+:root {
+  color-scheme: light dark; /* both supported */
+}
+
 html {
     background: none;
     min-height: 100%;
@@ -341,4 +345,66 @@ kbd {
 .footnote, .footnote-reference {
     background-color: #ddddea;
     font-size: 90%;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(to top, #272f4f 0%,#03133a 100%);
+  }
+    div#fmain {
+        color: #DDD;
+        background-color: #151525;
+        box-shadow: 0 0 5px 1px #000;
+    }
+
+    div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
+        background-color: inherit;
+        color: inherit;
+    }
+
+    .footnote, .footnote-reference {
+        background-color: #101020;
+    }
+
+    div.sphinxsidebar a, div.footer {
+        color: #BBB;
+    }
+
+    div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3 {
+        color: #AAA;
+    }
+    .highlight {
+        background: #000;
+    }
+    kbd {
+        background-color: #111;
+        border: 1px solid #444;
+        box-shadow: 0.1em 0.1em 0.2em rgba(100,100,100,0.1);
+        color: #FFF;
+    }
+    table.docutils th {
+        background-color: #222;
+    }
+
+    table.docutils td {
+        background-color: #111;
+    }
+    input {
+        background-color: #222;
+        color: #AAA;
+    }
+
+    div.body a {
+        color: #2092da;
+    }
+    dt:target, span.highlighted {
+        background-color: #404060;
+    }
+    table.docutils {
+        border: 1px solid #222;
+    }
+
+    table.docutils td, table.docutils th {
+        border: 1px solid #222 !important;
+    }
 }

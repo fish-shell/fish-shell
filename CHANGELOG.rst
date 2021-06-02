@@ -58,7 +58,8 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Pasting in Vi mode puts text in the right place in normal mode (:issue:`7847`).
-- Vi mode's ``u`` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, ``C-r`` is bound to ``redo`` instead of ``history-search-backward``, following Vim (:issue:`7908`).
+- Vi mode's :kbd:`u` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, :kbd:`Control-R` is bound to ``redo`` instead of ``history-search-backward``, following Vim (:issue:`7908`).
+- The :kbd:`Control-Space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
 
 Improved prompts
@@ -80,6 +81,8 @@ Completions
 
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - Completion defined with ``complete -p`` now also work when the commandline uses a relative path to the command (:issue:`6001`).
+- The ``--force-files`` option to ``complete`` works for bare arguments, not just options (:issue:`7920`).
+- Completion descriptions for functions don't include the function definition, making them more concise (:issue:`7911`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

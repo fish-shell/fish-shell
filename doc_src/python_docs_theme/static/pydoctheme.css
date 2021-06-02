@@ -343,12 +343,12 @@ kbd {
 }
 
 @media (prefers-color-scheme: dark) {
-  body {
-    background: linear-gradient(to top, #272f4f 0%,#03133a 100%);
-  }
+    body {
+        background: linear-gradient(to top, #171f2f 0%,#03131a 100%);
+    }
     div#fmain {
         color: #DDD;
-        background-color: #151525;
+        background-color: #202028;
         box-shadow: 0 0 5px 1px #000;
     }
 
@@ -362,7 +362,7 @@ kbd {
     }
 
     div.sphinxsidebar a, div.footer {
-        color: #BBB;
+        color: #CCC;
     }
 
     div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3 {

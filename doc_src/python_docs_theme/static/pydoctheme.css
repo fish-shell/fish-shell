@@ -61,7 +61,6 @@ form.inline-search input[type="submit"] {
 }
 
 div.sphinxsidebar {
-    background-color: #eeeefa;
     border-right: 1px solid #ccc;
     border-radius: 0px;
     line-height: 130%;
@@ -180,8 +179,8 @@ div.body a:hover {
 tt, code, pre {
     font-family: monospace, sans-serif;
     font-size: 96.5%;
-    /* Older sphinx versions set a color here, we need to unset it so we inherit from the outer div.highlight */
-    background-color: unset;
+    /* Older sphinx versions set a color here, we need to inherit it from the outer div.highlight */
+    background-color: inherit;
 }
 
 div.body tt, div.body code {

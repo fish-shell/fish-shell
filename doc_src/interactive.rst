@@ -357,6 +357,18 @@ Visual mode
 
 - :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`C` enter :ref:`command mode <vi-mode-command>`.
 
+- :kbd:`c` and :kbd:`s` remove the selection and switch to insert mode
+
+- :kbd:`d` and :kbd:`x` remove the selection and switch to normal mode
+
+- :kbd:`X` removes the entire line and switches to normal mode
+
+- :kbd:`y` copies the selection and switches to normal mode
+
+- :kbd:`~` toggles the case (upper/lower) on the selection and switches to normal mode
+
+- :kbd:`"*y` copies the selection to the clipboard and switches to normal mode
+
 .. _custom-binds:
 
 Custom bindings

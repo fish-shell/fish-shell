@@ -59,6 +59,8 @@ New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Pasting in Vi mode puts text in the right place in normal mode (:issue:`7847`).
 - Vi mode's :kbd:`u` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, :kbd:`Control-R` is bound to ``redo`` instead of ``history-search-backward``, following Vim (:issue:`7908`).
+- :kbd:`s` in vi visual mode now does the same thing as :kbd:`c` (:issue:`8039`).
+- The binding for :kbd:`"*y` now uses ``fish_clipboard_copy``, causing it to support more than just ``xsel``.
 - The :kbd:`Control-Space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
 

@@ -77,11 +77,6 @@ code {
 /* This may be placed directly inside a tab, to prevent its contents from growing vertically. */
 .height_limiter {
     display: flex;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
     flex-direction: column;
 }
 

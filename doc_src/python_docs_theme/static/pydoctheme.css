@@ -66,7 +66,7 @@ form.inline-search input[type="submit"] {
 div.sphinxsidebar {
     border-right: 1px solid #ccc;
     border-radius: 0px;
-    line-height: 130%;
+    line-height: 150%;
     font-size: smaller;
     margin-left: 0;
     float: left;
@@ -107,7 +107,7 @@ div#searchbox {
 }
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
-    margin-top: 1.5em;
+    margin-top: 1em;
 }
 
 div.sphinxsidebarwrapper > h3:first-child {
@@ -261,6 +261,7 @@ dl > dt span ~ em {
    - the sidebar, the gradient background, ... */
 @media screen and (max-width: 700px) {
     div.sphinxsidebar {
+        font-size: 16px;
         width: 100%;
         height: auto;
         position: relative;

@@ -118,6 +118,10 @@ div.sphinxsidebarwrapper > ul > li > ul > li {
     margin-bottom: 0.4em;
 }
 
+ul li.toctree-l1 {
+    line-height: 150%;
+}
+
 form.inline-search input,
 div.sphinxsidebar input {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;

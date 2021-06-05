@@ -452,6 +452,7 @@ code {
 
 .color_scheme_choice_container {
     padding: 5px;
+    flex-grow: 1;
 }
 
 .fake_cursor {
@@ -617,11 +618,15 @@ img.delete_icon {
     cursor: default;
 }
 
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 800px) {
     /* On small screens remove the margins to leave more for the actual content */
     body {
         width: 100%;
         margin: 0 0 0 0;
+    }
+
+    #ancestor {
+        width: 100%;
     }
 
     #parent {

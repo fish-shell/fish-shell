@@ -34,26 +34,21 @@ Scripting improvements
 
 Interactive improvements
 -------------------------
-- When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
 - Commands entered before the previous command finishes will now be properly syntax highlighted.
 - fish now automatically creates ``config.fish`` and the configuration directories in ``$XDG_CONFIG_HOME/fish`` (by default ``~/.config/fish``) if they do not already exist (:issue:`7402`).
-- ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
-- ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 - ``$SHLVL`` is no longer incremented in non-interactive shells. This means it won't be set to values larger than 1 just because your environment happens to run some scripts in $SHELL in its startup path (:issue:`7864`).
 - fish no longer rings the bell when flashing the command line. The flashing should already be enough notification and the bell can be annoying (:issue:`7875`).
-- The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
 - ``fish --help`` is more helpful if the documentation isn't installed (:issue:`7824`).
 - ``funced`` won't include an entry on where a function is defined, thanks to the new ``functions --no-details`` option (:issue:`7879`).
-- The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__fish_git_prompt_status_order`` (:issue:`7926`).
 - Variable ``fish_killring`` containing entries from killring is now available (:issue:`7445`).
 - ``fish --private`` prints a note on private mode on startup even if ``$fish_greeting`` is an empty list (:issue:`7974`).
 - fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and SMB. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
 - ``wait`` and ``on-process-exit`` work correctly with jobs that have already exited (:issue:`7210`).
-- Completion scripts are now loaded when calling a command via a relative path (like ``./git``) (:issue:`6001`, :issue:`7992`).
 - ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects $LESS and uses a better default value (:issue:`7997`).
 - ls output is colorized on OpenBSD if colorls utility is installed (:issue:`8035`)
 - The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
 - Further robustness improvements to the bash history import (:issue:`7874`).
+- The web-based configuration and documentation now feature a dark mode if the browser requests it (:issue:`8043`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -63,6 +58,9 @@ New or improved bindings
 - The binding for :kbd:`"*y` now uses ``fish_clipboard_copy``, causing it to support more than just ``xsel``.
 - The :kbd:`Control-Space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
+- The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
+- ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
+- ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -73,6 +71,7 @@ Improved prompts
   (Because prompts are copied into the user's ~/.config/fish/functions/, existing installations keep whatever prompt they picked)
 - A new ``prompt_login`` helper function to describe the kind of "login" (user@host and chroot status) for use in prompts. This replaces the old "debian chroot" prompt and has been added to the default and terlar prompts (:issue:`7932`).
 - The prompt picker now shows and installs right prompts (:issue:`7930`).
+- The git prompt now has the same symbol order in normal and "informative" mode, and it's customizable via ``$__fish_git_prompt_status_order`` (:issue:`7926`).
 - ``fish_config`` gained a ``prompt`` subcommand to show and pick from the sample prompts directly in the terminal, instead of having to open a webbrowser. For example ``fish_config prompt choose default`` loads the default prompt in the current session (:issue:`7958`).
 
 Completions
@@ -85,6 +84,9 @@ Completions
 - Completion defined with ``complete -p`` now also work when the commandline uses a relative path to the command (:issue:`6001`).
 - The ``--force-files`` option to ``complete`` works for bare arguments, not just options (:issue:`7920`).
 - Completion descriptions for functions don't include the function definition, making them more concise (:issue:`7911`).
+- The ``kill`` completions no longer error on msys2 (:issue:`8046`).
+- Completion scripts are now loaded when calling a command via a relative path (like ``./git``) (:issue:`6001`, :issue:`7992`).
+- When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

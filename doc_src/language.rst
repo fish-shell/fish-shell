@@ -12,15 +12,17 @@ For interactive features see :ref:`Interactive use <interactive>`.
 Syntax overview
 ---------------
 
-Shells like fish are used by giving them commands. Every fish command follows the same basic syntax. A command is executed by writing the name of the command followed by any arguments. For example::
+Shells like fish are used by giving them commands. A command is executed by writing the name of the command followed by any arguments. For example::
 
     echo hello world
 
-This calls the :ref:`echo <cmd-echo>` command. ``echo`` writes its arguments to the screen. In the example above, the output is ``hello world``. Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
+This calls the :ref:`echo <cmd-echo>` command. ``echo`` writes its arguments to the screen. In this example the output is ``hello world``.
+
+Everything in fish is done with commands. There are commands for repeating other commands, commands for assigning variables, commands for treating a group of commands as a single command, etc. All of these commands follow the same basic syntax.
 
 To learn more about the ``echo`` command, read its manual page by typing ``man echo``. ``man`` is a command for displaying a manual page on a given topic. It takes the name of the manual page to display as an argument. There are manual pages for almost every command. There are also manual pages for many other things, such as system libraries and important files.
 
-Every program on your computer can be used as a command in fish. If the program file is located in one of the PATH_ directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
+Every program on your computer can be used as a command in fish. If the program file is located in one of the :ref:`PATH <PATH>` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
 
 Here is a list of some useful commands:
 

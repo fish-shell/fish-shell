@@ -64,7 +64,7 @@ static const wcstring locale_variables[] = {
     L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
     L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
     L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
-    L"LOCPATH"};
+    L"fish_allow_singlebyte_locale", L"LOCPATH"};
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
@@ -564,7 +564,11 @@ static void init_locale(const environment_t &vars) {
     // Try to get a multibyte-capable encoding
     // A "C" locale is broken for our purposes - any wchar functions will break on it.
     // So we try *really really really hard* to not have one.
-    if (MB_CUR_MAX == 1) {
+    bool fix_locale = true;
+    if (auto allow_c = vars.get(L"fish_allow_singlebyte_locale")) {
+        fix_locale = allow_c.missing_or_empty() ? true : !bool_from_string(allow_c->as_string());
+    }
+    if (fix_locale && MB_CUR_MAX == 1) {
         FLOGF(env_locale, L"Have singlebyte locale, trying to fix");
         for (auto loc : utf8_locales) {
             setlocale(LC_CTYPE, loc);

@@ -49,6 +49,7 @@ Interactive improvements
 - The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
 - Further robustness improvements to the bash history import (:issue:`7874`).
 - The web-based configuration and documentation now feature a dark mode if the browser requests it (:issue:`8043`).
+- fish will now try harder to acquire a utf8-capable encoding locale (``LC_CTYPE``), even if the locale variables are set to ``C``. This only affects fish internally and e.g. fixes output in misconfigured systems. To allow a C locale, set ``$fish_allow_singlebyte_locale`` to 1 (:issue:`8031`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

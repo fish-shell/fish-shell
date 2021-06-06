@@ -1409,6 +1409,7 @@ The locale variables are: ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``
 
 The most common way to set the locale to use a command like ``set -gx LANG en_GB.utf8``, which sets the current locale to be the English language, as used in Great Britain, using the UTF-8 character set. That way any program that requires one setting differently can easily override just that and doesn't have to resort to LC_ALL. For a list of available locales on your system, try ``locale -a``.
 
+Because it needs to handle output that might include multibyte characters (like e.g. emojis), fish will try to set its own internal LC_CTYPE to one that is UTF8-capable even if given an effective LC_CTYPE of "C" (the default). This prevents issues with e.g. filenames given in autosuggestions even if the user started fish with LC_ALL=C. To turn this handling off, set ``fish_allow_singlebyte_locale`` to "1".
 
 .. _builtin-overview:
 

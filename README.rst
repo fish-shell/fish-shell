@@ -188,6 +188,19 @@ You can open it with Xcode, or run the following to build and install in
 The install directory can be changed using the
 ``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.
 
+Build options
+~~~~~~~~~~~~~
+
+In addition to the normal cmake build options (like ``CMAKE_INSTALL_PREFIX``), fish has some other options available to customize it.
+
+- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when sphinx isn't installed.
+- INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
+- FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
+- MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
+- WITH_GETTEXT=ON|OFF - whether to build with gettext support for translations.
+
+Note that fish does *not* support static linking and will attempt to error out if it detects it.
+
 Help, it didn’t build!
 ~~~~~~~~~~~~~~~~~~~~~~
 

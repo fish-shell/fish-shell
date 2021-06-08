@@ -460,28 +460,48 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     end
 
     if test -z "$branch"
-        if not set branch (command git symbolic-ref HEAD 2>/dev/null)
-            set detached yes
-            set branch (switch "$__fish_git_prompt_describe_style"
-						case contains
-							command git describe --contains HEAD
-						case branch
-							command git describe --contains --all HEAD
-						case describe
-							command git describe HEAD
-						case default '*'
-							command git describe --tags --exact-match HEAD
-						end 2>/dev/null)
-            if test $status -ne 0
-                # Shorten the sha ourselves to 8 characters - this should be good for most repositories,
-                # and even for large ones it should be good for most commits
-                if set -q sha
-                    set branch (string match -r '^.{8}' -- $sha)…
-                else
-                    set branch unknown
+        set -l cache $HOME/.cache/fish/
+        if test -n "$XDG_CACHE_HOME"
+            set cache $XDG_CACHE_HOME/fish
+        end
+        mkdir -p $cache
+        set -l head_file (realpath $git_dir/HEAD)
+        set -l cache_file $cache/git_prompt_branch.(string escape --style=var $head_file)
+
+        set -l rel_age 0
+        if test -r $cache_file
+            set rel_age (math (stat -c '%Y' $cache_file) - (stat -c '%Y' $head_file))
+        end
+        # TODO invalidate cache on __fish_git_prompt_describe_style change
+        if test $rel_age -le 0
+                if not set branch (command git symbolic-ref HEAD 2>/dev/null)
+                    set detached yes
+                    set branch (switch "$__fish_git_prompt_describe_style"
+                                case contains
+                                    command git describe --contains HEAD
+                                case branch
+                                    command git describe --contains --all HEAD
+                                case describe
+                                    command git describe HEAD
+                                case default '*'
+                                    command git describe --tags --exact-match HEAD
+                                end 2>/dev/null)
+                    if test $status -ne 0
+                        # Shorten the sha ourselves to 8 characters - this should be good for most repositories,
+                        # and even for large ones it should be good for most commits
+                        if set -q sha
+                            set branch (string match -r '^.{8}' -- $sha)…
+                        else
+                            set branch unknown
+                        end
+                    end
+                    set branch "($branch)"
                 end
-            end
-            set branch "($branch)"
+                echo (string escape --style=var $branch) $detached >$cache_file
+        else
+            set -l parts (string split " " (cat $cache_file))
+            set branch (string unescape --style=var $parts[1])
+            set detached $parts[2]
         end
     end
 

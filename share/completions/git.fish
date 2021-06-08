@@ -170,7 +170,9 @@ function __fish_git_files
     # (don't use --ignored=no because that was only added in git 2.16, from Jan 2018.
     set -q ignored; and set -a status_opt --ignored
 
-    set -q untracked; and set -a status_opt -unormal
+    # If we're looking for untracked files, we give untracked files even inside untracked directories.
+    # This makes it nicer if e.g. you're in an untracked directory and want to just add one file.
+    set -q untracked; and set -a status_opt -uall
     or set -a status_opt -uno
 
     # We need to set status.relativePaths to true because the porcelain v2 format still honors that,

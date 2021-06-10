@@ -139,7 +139,7 @@ div.sphinxsidebar input[type=text] {
 }
 
 div.body {
-    padding: 0 0 0 1.2em;
+    padding: 10px 0 0 1.2em;
     min-width: 150px;
 }
 
@@ -364,6 +364,18 @@ kbd {
 
     .footnote, .footnote-reference {
         background-color: #101020;
+    }
+
+    div.sphinxsidebar {
+        border-right: 1px solid #666;
+    }
+
+    div.related:first-child {
+        border-bottom: 1px solid #666;
+    }
+
+    div.related {
+        border-top: 1px solid #666;
     }
 
     div.sphinxsidebar a, div.footer {

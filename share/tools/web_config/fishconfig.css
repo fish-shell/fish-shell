@@ -648,9 +648,11 @@ img.delete_icon {
     }
     .tab {
         background-color: black;
+        border: 1px solid #222;
     }
     .selected_tab {
         background-color: #202028;
+        border-bottom: none;
     }
 
     #tab_contents {

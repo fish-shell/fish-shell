@@ -1244,9 +1244,6 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             }
 
             if (res <= max_val) {
-                // Prepend internal sep so this does not get treated as part of a variable.
-                // See #7969.
-                if (unescape_special) result->push_back(INTERNAL_SEPARATOR);
                 result_char_or_none =
                     static_cast<wchar_t>((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
             } else {

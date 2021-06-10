@@ -78,17 +78,3 @@ echo $list # CHECK: 2 1 3
 set -l list 1 2 3
 set list[2..] $list[-1..2]
 echo $list # CHECK: 1 3 2
-
-# Regression test for #7969.
-set fo shorty
-set foo A B C
-echo $foo[1]
-# CHECK: A
-echo $foo\1331\135
-# CHECK: A[1] B[1] C[1]
-echo $foo\x5b1\x5d
-# CHECK: A[1] B[1] C[1]
-echo $foo\1331\135
-# CHECK: A[1] B[1] C[1]
-echo $fo\157
-# CHECK: shortyo

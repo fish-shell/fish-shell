@@ -353,6 +353,7 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
 
 /// Return the internal color code representing the specified color.
 /// TODO: This code should be refactored to enable sharing with builtin_set_color.
+///       In particular, the argument parsing still isn't fully capable.
 rgb_color_t parse_color(const env_var_t &var, bool is_background) {
     bool is_bold = false;
     bool is_underline = false;
@@ -366,17 +367,28 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
     // wcslen is not available as constexpr
     size_t prefix_len = wcslen(prefix);
 
+    bool next_is_background = false;
     wcstring color_name;
     for (const wcstring &next : var.as_list()) {
         color_name.clear();
         if (is_background) {
-            // Look for something like "--background=red".
-            if (string_prefixes_string(prefix, next)) {
+            if (color_name.empty() && next_is_background) {
+                color_name = next;
+                next_is_background = false;
+            } else if (string_prefixes_string(prefix, next)) {
+                // Look for something like "--background=red".
                 color_name = wcstring(next, prefix_len);
-            }
-            // Reverse should be meaningful in either context
-            if (next == L"--reverse" || next == L"-r") {
+            } else if (next == L"--background" || next == L"-b") {
+                // Without argument attached the next token is the color
+                // - if it's another option it's an error.
+                next_is_background = true;
+            } else if (next == L"--reverse" || next == L"-r") {
+                // Reverse should be meaningful in either context
                 is_reverse = true;
+            } else if (string_prefixes_string(L"-b", next)) {
+                // Look for something like "-bred".
+                // Yes, that length is hardcoded.
+                color_name = wcstring(next, 2);
             }
         } else {
             if (next == L"--bold" || next == L"-o")

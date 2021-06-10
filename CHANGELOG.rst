@@ -6,10 +6,6 @@ Notable improvements and fixes
 - ``fish_config`` gained a ``prompt`` subcommand to show and pick from the sample prompts directly in the terminal, instead of having to open a webbrowser. For example ``fish_config prompt choose default`` loads the default prompt in the current session (:issue:`7958`).
 - The documentation has been reorganized to be easier to understand (:issue:`7773`).
 
-Syntax changes and new commands
--------------------------------
-- Empty variable names are no longer allowed.
-
 Deprecations and removed features
 ---------------------------------
 - The ``$fish_history`` value "default" is no longer special. It used to be treated the same as "fish" (:issue:`7650`).
@@ -19,7 +15,7 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - ``math`` gained new functions ``log2`` (like the documentation claimed), ``max`` and ``min`` (:issue:`7856`). ``math`` functions can be used without the parentheses (eg ``math sin 2 + 6``), and functions have the lowest precedence in the order of operations (:issue:`7877`).
-- Shebang (``#!``) lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a binary safety check, fish will re-invoke it using ``/bin/sh`` (:issue:`7802`).
+- Shebang (``#!``) lines are no longer required within shell scripts, improving support for scripts with concatenated binary contents. If a file fails to execute and passes a (rudimentary) binary safety check, fish will re-invoke it using ``/bin/sh`` (:issue:`7802`).
 - Exit codes are better aligned with bash. A failed exec now reports ``$status`` of 127 if the file is not found, and 126 if it is not executable.
 - ``echo`` no longer writes its output one byte at a time, improving performance and allowing use with linux' special API files (``/proc``, ``/sys`` and such) (:issue:`7836`).
 - fish should now better handle ``cd`` on filesystems with broken ``stat(3)`` responses (:issue:`7577`).
@@ -33,6 +29,7 @@ Scripting improvements
 - ``process-exit`` event handlers now receive the same value as ``$status`` in all cases, instead of receiving -1 when the exit was due to a signal.
 - ``process-exit`` event handlers for pid 0 also received ``JOB_EXIT`` events; this has been fixed.
 - ``job-exit`` event handlers may now be created with any of the pids from the job. The handler is passed the last pid in the job as its second argument, instead of the process group.
+- Trying to set an empty variable name with ``set`` no longer works. These already could not be used in variable expansions.
 
 Interactive improvements
 -------------------------
@@ -51,8 +48,9 @@ Interactive improvements
 - ``ls`` output is colorized on OpenBSD if colorls utility is installed (:issue:`8035`)
 - The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
 - Further robustness improvements to the bash history import (:issue:`7874`).
-- - fish now tries to find a Unicode-aware locale for encoding (``LC_CTYPE``) if started without any locale information, improving the display of emoji and other non-ASCII text on misconfigured systems (:issue:`8031`). To allow a C locale, set the variable ``fish_allow_singlebyte_locale`` to 1.
+- fish now tries to find a Unicode-aware locale for encoding (``LC_CTYPE``) if started without any locale information, improving the display of emoji and other non-ASCII text on misconfigured systems (:issue:`8031`). To allow a C locale, set the variable ``fish_allow_singlebyte_locale`` to 1.
 - The Web-based configuration and documentation now feature a dark mode if the browser requests it (:issue:`8043`).
+- Color variables can now also be given like ``--background red`` and ``-b red``, not just ``--background=red`` (:issue:`8053`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

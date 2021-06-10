@@ -47,6 +47,14 @@ code {
     cursor: pointer;
 }
 
+.tab:hover,
+#tab_contents .master_element:hover,
+.color_scheme_choice_container:hover,
+.prompt_choices_list > .ng-scope:hover
+{
+    background-color: #DDE;
+}
+
 #tab_parent :first-child {
     border-top-left-radius: 8px;
     border-left: none;
@@ -56,7 +64,7 @@ code {
     border-top-right-radius: 8px;
 }
 
-.selected_tab {
+.selected_tab, .selected_tab:hover {
     background-color: #eeeefa;
     border-bottom: none;
 }
@@ -537,7 +545,7 @@ img.delete_icon {
 .save_button:hover,
 .customize_theme_button:hover,
 .generic_button:hover {
-    border-color: rgba(71, 71, 71, 0.9);
+    border-color: rgba(171, 171, 171, 0.9);
 }
 
 .button_highlight {
@@ -650,7 +658,15 @@ img.delete_icon {
         background-color: black;
         border: 1px solid #222;
     }
-    .selected_tab {
+    .tab:hover,
+    #tab_contents .master_element:hover,
+    .color_scheme_choice_container:hover,
+    .prompt_choices_list > .ng-scope:hover
+    {
+        background-color: #223;
+    }
+
+    .selected_tab, .selected_tab:hover {
         background-color: #202028;
         border-bottom: none;
     }

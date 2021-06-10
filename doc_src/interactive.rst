@@ -89,7 +89,7 @@ To customize the syntax highlighting, you can set the environment variables list
 Syntax highlighting variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The ``--bold`` or ``-b`` switches accepted by ``set_color`` are also accepted.
+The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
 
 
 Example: to make errors highlighted and red, use::

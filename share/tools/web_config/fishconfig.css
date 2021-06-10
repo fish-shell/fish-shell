@@ -657,6 +657,7 @@ img.delete_icon {
     .tab {
         background-color: black;
         border: 1px solid #222;
+        border-top: none;
     }
     .tab:hover,
     #tab_contents .master_element:hover,

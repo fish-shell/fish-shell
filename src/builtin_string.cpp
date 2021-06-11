@@ -1527,8 +1527,8 @@ static int string_split0(parser_t &parser, io_streams_t &streams, int argc, cons
 
 static int string_collect(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
+    opts.allow_empty_valid = true;
     opts.no_trim_newlines_valid = true;
-    opts.no_empty_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -1549,9 +1549,9 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, con
 
     // If we haven't printed anything and "no_empty" is set,
     // print something empty. Helps with empty ellision:
-    // echo (true | string collect --no-empty)"bar"
+    // echo (true | string collect --allow-empty)"bar"
     // prints "bar".
-    if (opts.no_empty && appended == 0) {
+    if (opts.allow_empty && appended == 0) {
         streams.out.append_with_separation(L"", 0, separation_type_t::explicitly);
     }
 

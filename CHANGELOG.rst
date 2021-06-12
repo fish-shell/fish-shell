@@ -177,6 +177,7 @@ Deprecations and removed features
 - The ``$fish_history`` value "default" is no longer special. It used to be treated the same as "fish" (:issue:`7650`).
 - Redirection to standard error with the ``^`` character has been disabled by default. It can be turned back on using the ``stderr-nocaret`` feature flag, but will eventually be disabled completely (:issue:`7105`).
 - Specifying an initial tab to ``fish_config`` now only works with ``fish_config browse`` (e.g. ``fish_config browse variables``), otherwise it would interfere with the new ``prompt`` subcommand (see below) (:issue:`7958`).
+- Abbreviations created before fish 3.0 are no longer migrated. If you are upgrading from fish 2.7.1 or earlier, you will need to recreate your abbreviations. (:issue:`7317`).
 
 Scripting improvements
 ----------------------

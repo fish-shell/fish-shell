@@ -51,6 +51,7 @@ Interactive improvements
 - fish now tries to find a Unicode-aware locale for encoding (``LC_CTYPE``) if started without any locale information, improving the display of emoji and other non-ASCII text on misconfigured systems (:issue:`8031`). To allow a C locale, set the variable ``fish_allow_singlebyte_locale`` to 1.
 - The Web-based configuration and documentation now feature a dark mode if the browser requests it (:issue:`8043`).
 - Color variables can now also be given like ``--background red`` and ``-b red``, not just ``--background=red`` (:issue:`8053`).
+- ``exit`` run within ``fish_prompt`` now exits properly (:issue:`8033`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

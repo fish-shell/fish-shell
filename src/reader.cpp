@@ -1313,6 +1313,10 @@ void reader_data_t::exec_prompt() {
     // may still be output on the line from the previous command (#2499) and we need our PROMPT_SP
     // hack to work.
     reader_write_title(L"", parser(), false);
+
+    // Some prompt may have requested an exit (#8033).
+    this->exit_loop_requested |= parser().libdata().exit_current_script;
+    parser().libdata().exit_current_script = false;
 }
 
 void reader_init() {

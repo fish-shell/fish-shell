@@ -8,16 +8,6 @@ set -g IFS \n\ \t
 set -qg __fish_added_user_paths
 or set -g __fish_added_user_paths
 
-# For one-off upgrades of the fish version, see __fish_config_interactive.fish
-if not set -q __fish_initialized
-    set -U __fish_initialized 0
-    if set -q __fish_init_2_39_8
-        set __fish_initialized 2398
-    else if set -q __fish_init_2_3_0
-        set __fish_initialized 2300
-    end
-end
-
 #
 # Create the default command_not_found handler
 #

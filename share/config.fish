@@ -144,19 +144,6 @@ end
 # in UTF-8 (with non-ASCII characters).
 __fish_set_locale
 
-# Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax.
-# This needs to be in share/config.fish because __fish_config_interactive is called after sourcing
-# config.fish, which might contain abbr calls.
-if test $__fish_initialized -lt 2300
-    if set -q fish_user_abbreviations
-        set -l fab
-        for abbr in $fish_user_abbreviations
-            set -a fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abbr)
-        end
-        set fish_user_abbreviations $fab
-    end
-end
-
 #
 # Some things should only be done for login terminals
 # This used to be in etc/config.fish - keep it here to keep the semantics

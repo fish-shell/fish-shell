@@ -254,7 +254,7 @@ tok_t tokenizer_t::read_string() {
         is_first = false;
     }
 
-    if ((!this->accept_unfinished) && (mode != tok_modes::regular_text)) {
+    if (!this->accept_unfinished && (mode != tok_modes::regular_text)) {
         if (mode & tok_modes::char_escape) {
             return this->call_error(tokenizer_error_t::unterminated_escape, buff_start,
                                     this->token_cursor - 1, 1);

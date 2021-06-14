@@ -119,7 +119,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
 
     for (pos = const_cast<wchar_t *>(in); *pos; pos++) {
         if (!escaped) {
-            if (std::wcschr(L"\'\"", *pos)) {
+            if (std::wcschr(L"'\"", *pos)) {
                 wchar_t *q_end = quote_end(pos);
                 if (q_end && *q_end) {
                     pos = q_end;

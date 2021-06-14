@@ -19,6 +19,8 @@
 #include "common.h"
 #include "maybe.h"
 
+class autoclose_fd_t;
+
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
 /// POSIX (hooray).
 DIR *wopendir(const wcstring &name);
@@ -155,6 +157,8 @@ struct file_id_t {
 
     static file_id_t from_stat(const struct stat &buf);
 
+    wcstring dump() const;
+
    private:
     int compare_file_id(const file_id_t &rhs) const;
 };
@@ -184,6 +188,7 @@ struct hash<file_id_t> {
 #endif
 
 file_id_t file_id_for_fd(int fd);
+file_id_t file_id_for_fd(const autoclose_fd_t &fd);
 file_id_t file_id_for_path(const wcstring &path);
 file_id_t file_id_for_path(const std::string &path);
 

@@ -1572,7 +1572,7 @@ complete -f -c git -n '__fish_git_using_command restore' -l overlay -d 'Never re
 complete -f -c git -n '__fish_git_using_command restore' -l no-overlay -d 'Remove files when restoring (default)'
 complete -f -c git -n '__fish_git_using_command restore; and not contains -- --staged (commandline -opc)' -a '(__fish_git_files modified deleted unmerged)'
 complete -f -c git -n '__fish_git_using_command restore; and contains -- --staged (commandline -opc)' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
-complete -f -c git -n '__fish_git_using_command restore; and __fish_contains_opt -s s source' -a '(git ls-files)'
+complete -F -c git -n '__fish_git_using_command restore; and __fish_contains_opt -s s source'
 # switch options
 complete -f -c git -n __fish_git_needs_command -a switch -d 'Switch to a branch'
 complete -k -f -c git -n '__fish_git_using_command switch' -a '(__fish_git_local_branches)'

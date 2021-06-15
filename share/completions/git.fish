@@ -1545,7 +1545,9 @@ complete -f -c git -n "__fish_git_using_command reflog; and not __fish_seen_subc
 
 ### reset
 complete -c git -n __fish_git_needs_command -a reset -d 'Reset current HEAD to the specified state'
-complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
+complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset the index and the working tree'
+complete -f -c git -n '__fish_git_using_command reset' -l soft -d 'Reset head without touching the index or the working tree'
+complete -f -c git -n '__fish_git_using_command reset' -l mixed -d 'Reset the index but not the working tree'
 complete -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
 # reset can either undo changes to versioned modified files,
 # or remove files from the staging area.

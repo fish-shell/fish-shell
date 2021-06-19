@@ -34,7 +34,20 @@ complete -c mvn -r -f -o b -l builder -d "The id of the build strategy to use."
 complete -c mvn -f -o C -l strict-checksums -d "Fail the build if checksums don't match"
 complete -c mvn -f -o c -l lax-checksums -d "Warn if checksums don't match"
 complete -c mvn -f -o cpu -l check-plugin-updates -d "Ineffective, only kept for backward compatibility"
+
+function __fish_mvn_complete_definition
+    set -l current_token (commandline -t)
+    set -l previous_token (commandline -opc)[-1]
+    string match -qr -- '^(-D|--define\b)' $current_token $previous_token
+    or return
+    set -l keyval (string split --max=1 -- = $current_token)
+    or return
+    # Use normal file completion for the value.
+    printf -- "$keyval[1]=%s\n" (complete -C "__fish_command_without_completions $keyval[2]")
+end
+
 complete -c mvn -f -o D -l define -d "Define a system property"
+complete -c mvn -f -a "(__fish_mvn_complete_definition)"
 complete -c mvn -f -o e -l errors -d "Produce execution error messages"
 complete -c mvn -f -o emp -l encrypt-master-password -d "Encrypt master security password"
 complete -c mvn -f -o ep -l encrypt-password -d "Encrypt server password"

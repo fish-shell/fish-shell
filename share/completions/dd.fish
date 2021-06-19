@@ -10,14 +10,8 @@ function __fish_complete_dd -d 'Complete dd operands'
         case 'if=*' 'of=*'
             string replace = ' ' -- $operand_string | read -l operand value
 
-            for entry in $value*
-                # if $entry is a directory, append a '/'
-                if test -d $entry
-                    echo $operand"="$entry/
-                else
-                    echo $operand"="$entry
-                end
-            end
+            # Use normal file completions.
+            printf "$operand=%s\n" (complete -C "__fish_command_without_completions $value")
 
         case 'iflag=*' 'oflag=*'
             string replace = ' ' -- $operand_string | read -l operand complete

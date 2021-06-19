@@ -12,54 +12,52 @@ function __fish_config_interactive -d "Initializations that should be performed 
     set -g __fish_config_interactive_done
     set -g __fish_active_key_bindings
 
-    # usage: __init_uvar VARIABLE VALUES...
-    function __init_uvar -d "Sets a universal variable if it's not already set"
-        if not set --query $argv[1]
-            set --universal $argv
-        end
+    # usage: __init_var VARIABLE VALUES...
+    function __init_var -d "Sets a global variable if it's not already set"
+        set --query $argv[1] || set --global $argv
     end
 
     # Regular syntax highlighting colors
-    __init_uvar fish_color_normal normal
-    __init_uvar fish_color_command 005fd7
-    __init_uvar fish_color_param 00afff
-    __init_uvar fish_color_redirection 00afff
-    __init_uvar fish_color_comment 990000
-    __init_uvar fish_color_error ff0000
-    __init_uvar fish_color_escape 00a6b2
-    __init_uvar fish_color_operator 00a6b2
-    __init_uvar fish_color_end 009900
-    __init_uvar fish_color_quote 999900
-    __init_uvar fish_color_autosuggestion 555 brblack
-    __init_uvar fish_color_user brgreen
-    __init_uvar fish_color_host normal
-    __init_uvar fish_color_host_remote yellow
-    __init_uvar fish_color_valid_path --underline
-    __init_uvar fish_color_status red
+    __init_var fish_color_normal normal
+    __init_var fish_color_command 005fd7
+    __init_var fish_color_param 00afff
+    __init_var fish_color_redirection 00afff
+    __init_var fish_color_comment 990000
+    __init_var fish_color_error ff0000
+    __init_var fish_color_escape 00a6b2
+    __init_var fish_color_operator 00a6b2
+    __init_var fish_color_end 009900
+    __init_var fish_color_quote 999900
+    __init_var fish_color_autosuggestion 555 brblack
+    __init_var fish_color_user brgreen
+    __init_var fish_color_host normal
+    __init_var fish_color_host_remote yellow
+    __init_var fish_color_valid_path --underline
+    __init_var fish_color_status red
 
-    __init_uvar fish_color_cwd green
-    __init_uvar fish_color_cwd_root red
+    __init_var fish_color_cwd green
+    __init_var fish_color_cwd_root red
 
     # Background color for search matches
-    __init_uvar fish_color_search_match bryellow --background=brblack
+    __init_var fish_color_search_match bryellow --background=brblack
 
     # Background color for selections
-    __init_uvar fish_color_selection white --bold --background=brblack
+    __init_var fish_color_selection white --bold --background=brblack
 
     # XXX fish_color_cancel was added in 2.6, but this was added to post-2.3 initialization
     # when 2.4 and 2.5 were already released
-    __init_uvar fish_color_cancel -r
+    __init_var fish_color_cancel -r
 
     # Pager colors
-    __init_uvar fish_pager_color_prefix normal --bold --underline
-    __init_uvar fish_pager_color_completion
-    __init_uvar fish_pager_color_description B3A06D yellow
-    __init_uvar fish_pager_color_progress brwhite --background=cyan
+    __init_var fish_pager_color_prefix normal --bold --underline
+    __init_var fish_pager_color_completion
+    __init_var fish_pager_color_description B3A06D yellow
+    __init_var fish_pager_color_progress brwhite --background=cyan
 
     #
     # Directory history colors
     #
-    __init_uvar fish_color_history_current --bold
+    __init_var fish_color_history_current --bold
 
     #
     # Generate man page completions if not present.
@@ -125,7 +123,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
         # Make sure some key bindings are set
-        __init_uvar fish_key_bindings fish_default_key_bindings
+        __init_var fish_key_bindings fish_default_key_bindings
 
         # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value

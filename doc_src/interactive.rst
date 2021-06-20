@@ -104,7 +104,7 @@ Variable                                                   Meaning
 ==========================================                 =====================================================================
 ``fish_color_normal``                                      default color
 ``fish_color_command``                                     commands like echo
-``fish_color_keyword``                                     keywords like if - this falls back on command color if unset
+``fish_color_keyword``                                     keywords like if - this falls back on the command color if unset
 ``fish_color_quote``                                       quoted text like "abc"
 ``fish_color_redirection``                                 IO redirections like >/dev/null
 ``fish_color_end``                                         process separators like ';' and '&'
@@ -122,6 +122,8 @@ Variable                                                   Meaning
 ``fish_color_cancel``                                      the '^C' indicator on a canceled command
 ``fish_color_search_match``                                history search matches and selected pager items (background only)
 ==========================================                 =====================================================================
+
+If a variable isn't set, fish usually tries ``$fish_color_normal``, except for ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
 
 .. _variables-color-pager:
 
@@ -161,6 +163,8 @@ Variable                                                   Meaning
 ``fish_pager_color_secondary_completion``                  suffix of every second unselected completion
 ``fish_pager_color_secondary_description``                 description of every second unselected completion
 ==========================================                 ===========================================================
+
+When the secondary or selected variables aren't set, the normal variables are used, except for ``$fish_pager_color_selected_background``, where the background of ``$fish_color_search_match`` is tried first.
 
 .. _abbreviations:
 

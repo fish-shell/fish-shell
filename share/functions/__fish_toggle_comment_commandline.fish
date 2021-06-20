@@ -10,7 +10,7 @@
 function __fish_toggle_comment_commandline --description 'Comment/uncomment the current command'
     set -l cmdlines (commandline -b)
     if test "$cmdlines" = ""
-        history search -p "#" -z | read -z cmdlines
+        set cmdlines (history search -p "#" --max=1)
     end
     set -l cmdlines (printf '%s\n' '#'$cmdlines | string replace -r '^##' '')
     commandline -r $cmdlines

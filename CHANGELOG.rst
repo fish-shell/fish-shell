@@ -1,6 +1,9 @@
 fish 3.3.0 (released ???)
 =========================
 
+..
+   (Don't changelog: 8014, 8010, 8009, 8001, 7996, 7990, 7966, 7965, 7962, 7960, 4023, 7882, 7946, 7942, 7940, 7928, 7924, 7586, 7829, 7796, 7839, 7843, 7859, 7860, 7861, 7867, 7891, 7881, 7876, 7872, 7907, 7916, 7931, 7933, 7935, 7936, 7952, 7976, 7987, 7999,  8006, 8004, 8016, 8021, 8030, 8034, 7980, 8049)
+
 Notable improvements and fixes
 ------------------------------
 - ``fish_config`` gained a ``prompt`` subcommand to show and pick from the sample prompts directly in the terminal, instead of having to open a webbrowser. For example ``fish_config prompt choose default`` loads the default prompt in the current session (:issue:`7958`).
@@ -27,9 +30,9 @@ Scripting improvements
 - When universal variables are unavailable for some reason, setting a universal variable now sets a global variable instead (:issue:`7921`).
 - ``$last_pid`` now contains the process ID of the last process in the pipeline, allowing it to be used in scripts (:issue:`5036`, :issue:`5832`, :issue:`7721`). Previously, this value contained the process group ID, but in scripts this was the same as the running fish's process ID.
 - ``process-exit`` event handlers now receive the same value as ``$status`` in all cases, instead of receiving -1 when the exit was due to a signal.
-- ``process-exit`` event handlers for pid 0 also received ``JOB_EXIT`` events; this has been fixed.
-- ``job-exit`` event handlers may now be created with any of the pids from the job. The handler is passed the last pid in the job as its second argument, instead of the process group.
-- Trying to set an empty variable name with ``set`` no longer works. These already could not be used in variable expansions.
+- ``process-exit`` event handlers for PID 0 also received ``JOB_EXIT`` events; this has been fixed.
+- ``job-exit`` event handlers may now be created with any of the PIDs from the job. The handler is passed the last PID in the job as its second argument, instead of the process group.
+- Trying to set an empty variable name with ``set`` no longer works (these variables could not be used in expansions anyway).
 
 Interactive improvements
 -------------------------
@@ -41,9 +44,9 @@ Interactive improvements
 - ``funced`` won't include an entry on where a function is defined, thanks to the new ``functions --no-details`` option (:issue:`7879`).
 - A new variable, ``fish_killring``, containing entries from the killring, is now available (:issue:`7445`).
 - ``fish --private`` prints a note on private mode on startup even if ``$fish_greeting`` is an empty list (:issue:`7974`).
-- fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and SMB. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
+- fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and Samba mounts. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
 - ``wait`` and ``on-process-exit`` work correctly with jobs that have already exited (:issue:`7210`).
-- ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects $LESS and uses a better default value (:issue:`7997`).
+- ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects the ``LESS`` environment varialbe, and if not set, uses better default pager settings (:issue:`7997`).
 - Errors from ``alias`` are now printed to standard error, matching other builtins and functions (:issue:`7925`).
 - ``ls`` output is colorized on OpenBSD if colorls utility is installed (:issue:`8035`)
 - The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
@@ -57,8 +60,8 @@ New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Pasting in Vi mode puts text in the right place in normal mode (:issue:`7847`).
 - Vi mode's :kbd:`u` is bound to ``undo`` instead of ``history-search-backward``, following GNU readline's behavior. Similarly, :kbd:`Control-R` is bound to ``redo`` instead of ``history-search-backward``, following Vim (:issue:`7908`).
-- :kbd:`s` in vi visual mode now does the same thing as :kbd:`c` (:issue:`8039`).
-- The binding for :kbd:`"*y` now uses ``fish_clipboard_copy``, causing it to support more than just ``xsel``.
+- :kbd:`s` in Vi visual mode now does the same thing as :kbd:`c` (:issue:`8039`).
+- The binding for :kbd:`"*y` now uses ``fish_clipboard_copy``, allowing it to support more than just ``xsel``.
 - The :kbd:`Control-Space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
 - The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
@@ -79,12 +82,13 @@ Completions
 - Added completions for:
 
   - ``firewall-cmd`` (:issue:`7900`)
+  - ``sv`` (:issue:`8069`)
 
-- Improved lots of completions!
+- Improvements to plenty of completions!
 - Commands that wrap ``cd`` (using ``complete --wraps cd``) get the same completions as ``cd`` (:issue:`4693`).
 - The ``--force-files`` option to ``complete`` works for bare arguments, not just options (:issue:`7920`).
 - Completion descriptions for functions don't include the function definition, making them more concise (:issue:`7911`).
-- The ``kill`` completions no longer error on msys2 (:issue:`8046`).
+- The ``kill`` completions no longer error on MSYS2 (:issue:`8046`).
 - Completion scripts are now loaded when calling a command via a relative path (like ``./git``) (:issue:`6001`, :issue:`7992`).
 - When there are multiple completion candidates, fish inserts their shared prefix. This prefix was computed in a case-insensitive way, resulting in wrong case in the completion pager. This was fixed by only inserting prefixes with matching case (:issue:`7744`).
 
@@ -97,6 +101,7 @@ Improved terminal support
 - The default prompt no longer produces errors when used with a dumb terminal (:issue:`7904`).
 - Terminal size variables are updated for window size change signal handlers (``SIGWINCH``).
 - Pasting within a multi-line command using a terminal that supports bracketed paste works correctly, instead of producing an error (:issue:`7782`).
+- ``set_color`` produces an error when used with invalid arguments, rather than empty output which interacts badly with Cartesian product expansion.
 
 For distributors
 ----------------

@@ -72,7 +72,7 @@ int function_exists(const wcstring &cmd, parser_t &parser);
 void function_load(const wcstring &cmd, parser_t &parser);
 
 /// Returns true if the function with the name name exists, without triggering autoload.
-int function_exists_no_autoload(const wcstring &cmd);
+bool function_exists_no_autoload(const wcstring &cmd);
 
 /// Returns all function names.
 ///

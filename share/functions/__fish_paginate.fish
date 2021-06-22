@@ -10,7 +10,7 @@ function __fish_paginate -d "Paginate the current command using the users defaul
     end
 
     if commandline -j | not string match -q -r "$cmd *\$"
-        commandline -aj " &| $cmd;"
+        commandline -aj " &| $cmd"
     end
 
 end

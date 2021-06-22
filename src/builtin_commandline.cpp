@@ -372,25 +372,6 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         buffer_part = STRING_MODE;
     }
 
-    if (cursor_mode) {
-        if (argc - w.woptind) {
-            long new_pos = fish_wcstol(argv[w.woptind]);
-            if (errno) {
-                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]);
-                builtin_print_error_trailer(parser, streams.err, cmd);
-            }
-
-            current_buffer = reader_get_buffer();
-            new_pos =
-                std::max(0L, std::min(new_pos, static_cast<long>(std::wcslen(current_buffer))));
-            reader_set_buffer(current_buffer, static_cast<size_t>(new_pos));
-        } else {
-            streams.out.append_format(L"%lu\n",
-                                      static_cast<unsigned long>(reader_get_cursor_pos()));
-        }
-        return STATUS_CMD_OK;
-    }
-
     if (line_mode) {
         size_t pos = reader_get_cursor_pos();
         const wchar_t *buff = reader_get_buffer();
@@ -429,6 +410,25 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
         default: {
             DIE("unexpected buffer_part");
         }
+    }
+
+    if (cursor_mode) {
+        if (argc - w.woptind) {
+            long new_pos = fish_wcstol(argv[w.woptind]);
+            if (errno) {
+                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]);
+                builtin_print_error_trailer(parser, streams.err, cmd);
+            }
+
+            current_buffer = reader_get_buffer();
+            new_pos =
+                std::max(0L, std::min(new_pos, static_cast<long>(std::wcslen(current_buffer))));
+            reader_set_buffer(current_buffer, static_cast<size_t>(new_pos));
+        } else {
+            streams.out.append_format(L"%lu\n",
+                                      static_cast<unsigned long>(reader_get_cursor_pos()));
+        }
+        return STATUS_CMD_OK;
     }
 
     int arg_count = argc - w.woptind;

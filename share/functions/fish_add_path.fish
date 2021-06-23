@@ -29,7 +29,10 @@ function fish_add_path --description "Add paths to the PATH"
     end
 
     set -l var fish_user_paths
-    set -q _flag_path; and set var PATH
+    set -q _flag_path
+    and set var PATH
+    # $PATH should be global
+    and set scope -g
     set -l mode $_flag_prepend $_flag_append
     set -q mode[1]; or set mode -p
 

@@ -217,6 +217,10 @@ The following functions are included as normal functions, but are particularly u
 
 - ``fish_clipboard_paste``, paste the current selection from the system clipboard before the cursor
 
+- ``fish_commandline_append``, append the argument to the command-line. If the command-line already ends with the argument, this removes the suffix instead. Starts with the last command from history if the command-line is empty.
+
+- ``fish_commandline_prepend``, prepend the argument to the command-line. If the command-line already starts with the argument, this removes the prefix instead. Starts with the last command from history if the command-line is empty.
+
 Examples
 --------
 

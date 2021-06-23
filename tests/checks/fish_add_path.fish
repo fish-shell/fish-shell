@@ -48,7 +48,7 @@ string replace -- $tmpdir '' $fish_user_paths | string join ' '
 set -l oldpath "$PATH"
 fish_add_path -nP $tmpdir/etc | string replace -- $tmpdir ''
 # Should print a set command to prepend /etc to $PATH, but not actually do it
-# CHECK: set PATH /etc{{.*}}
+# CHECK: set -g PATH /etc{{.*}}
 
 # Confirm that $PATH didn't change.
 test "$oldpath" = "$PATH"
@@ -56,6 +56,6 @@ or echo "PATH CHANGED!!!" >&2
 
 # See that moving multiple arguments removes the correct ones - #7776
 PATH=$tmpdir/{bin,etc,link,sbin} fish_add_path -nPpm $tmpdir/{link,sbin} | string replace -a $tmpdir ''
-# CHECK: set PATH /link /sbin /bin /etc
+# CHECK: set -g PATH /link /sbin /bin /etc
 
 exit 0

@@ -65,7 +65,8 @@ New or improved bindings
 - The :kbd:`Control-Space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
 - The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
-- ``__fish_prepend_sudo`` now toggles sudo even when it took the commandline from history instead of only adding it.
+- The binding for :kbd:`Alt-S` now toggles sudo even when it took the commandline from history instead of only adding it.
+- The new interactive functions ``fish_commandline_prepend`` and ``fish_commandline_prepend`` allow to toggle a prefix/suffix on the commandline. (:issue:`7905`).
 - ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 
 Improved prompts

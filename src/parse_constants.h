@@ -279,4 +279,8 @@ enum class pipeline_position_t {
 #define ERROR_TIME_BACKGROUND \
     _(L"'time' is not supported for background jobs. Consider using 'command time'.")
 
+/// Error issued on { echo; echo }.
+#define ERROR_NO_BRACE_GROUPING \
+    _(L"'{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'")
+
 #endif

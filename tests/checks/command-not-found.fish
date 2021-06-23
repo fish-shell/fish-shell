@@ -21,4 +21,10 @@ $fish -C 'functions --erase fish_command_not_found' -c 'nonexistent-command appl
 #CHECKERR: nonexistent-command apple friday
 #CHECKERR: ^
 
+{ echo; echo }
+# CHECKERR: {{.*}}: Unknown command: '{ echo; echo }'
+# CHECKERR: {{.*}}: '{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'
+# CHECKERR: { echo; echo }
+# CHECKERR: ^
+
 exit 0

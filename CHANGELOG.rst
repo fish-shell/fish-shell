@@ -55,6 +55,7 @@ Interactive improvements
 - The Web-based configuration and documentation now feature a dark mode if the browser requests it (:issue:`8043`).
 - Color variables can now also be given like ``--background red`` and ``-b red``, not just ``--background=red`` (:issue:`8053`).
 - ``exit`` run within ``fish_prompt`` now exits properly (:issue:`8033`).
+- When attempting to execute the unsupported POSIX-style brace command group (``{ ... }``) fish will suggest its equivalent ``begin; ...; end`` commands (:issue:`6415`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -779,6 +779,10 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         }
     }
 
+    if (!cmd_str.empty() && cmd_str.at(0) == L'{') {
+        error.append(ERROR_NO_BRACE_GROUPING);
+    }
+
     // Here we want to report an error (so it shows a backtrace).
     // If the handler printed text, that's already shown, so error will be empty.
     return this->report_error(STATUS_CMD_UNKNOWN, statement, error.c_str());

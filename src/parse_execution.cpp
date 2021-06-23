@@ -732,57 +732,56 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
     if (err_code != ENOENT) {
         return this->report_error(STATUS_NOT_EXECUTABLE, statement,
                                   _(L"The file '%ls' is not executable by this user"), cmd);
-    } else {
-        // Handle unrecognized commands with standard command not found handler that can make better
-        // error messages.
-        wcstring_list_t event_args;
-        {
-            ast_args_list_t args = get_argument_nodes(statement.args_or_redirs);
-            end_execution_reason_t arg_result =
-                this->expand_arguments_from_nodes(args, &event_args, failglob);
-
-            if (arg_result != end_execution_reason_t::ok) {
-                return arg_result;
-            }
-
-            event_args.insert(event_args.begin(), cmd_str);
-        }
-
-        wcstring buffer;
-        wcstring error;
-
-        // Redirect to stderr
-        auto io = io_chain_t{};
-        io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}},
-                             L"");
-
-        if (function_exists(L"fish_command_not_found", *parser)) {
-            buffer = L"fish_command_not_found";
-            for (const wcstring &arg : event_args) {
-                buffer.push_back(L' ');
-                buffer.append(escape_string(arg, ESCAPE_ALL));
-            }
-            auto prev_statuses = parser->get_last_statuses();
-
-            event_t event(event_type_t::generic);
-            event.desc.str_param1 = L"fish_command_not_found";
-            block_t *b = parser->push_block(block_t::event_block(event));
-            parser->eval(buffer, io);
-            parser->pop_block(b);
-            parser->set_last_statuses(std::move(prev_statuses));
-        } else {
-            // If we have no handler, just print it as a normal error.
-            error = _(L"Unknown command:");
-            if (!event_args.empty()) {
-                error.push_back(L' ');
-                error.append(escape_string(event_args[0], ESCAPE_ALL));
-            }
-        }
-
-        // Here we want to report an error (so it shows a backtrace).
-        // If the handler printed text, that's already shown, so error will be empty.
-        return this->report_error(STATUS_CMD_UNKNOWN, statement, error.c_str());
     }
+
+    // Handle unrecognized commands with standard command not found handler that can make better
+    // error messages.
+    wcstring_list_t event_args;
+    {
+        ast_args_list_t args = get_argument_nodes(statement.args_or_redirs);
+        end_execution_reason_t arg_result =
+            this->expand_arguments_from_nodes(args, &event_args, failglob);
+
+        if (arg_result != end_execution_reason_t::ok) {
+            return arg_result;
+        }
+
+        event_args.insert(event_args.begin(), cmd_str);
+    }
+
+    wcstring buffer;
+    wcstring error;
+
+    // Redirect to stderr
+    auto io = io_chain_t{};
+    io.append_from_specs({redirection_spec_t{STDOUT_FILENO, redirection_mode_t::fd, L"2"}}, L"");
+
+    if (function_exists(L"fish_command_not_found", *parser)) {
+        buffer = L"fish_command_not_found";
+        for (const wcstring &arg : event_args) {
+            buffer.push_back(L' ');
+            buffer.append(escape_string(arg, ESCAPE_ALL));
+        }
+        auto prev_statuses = parser->get_last_statuses();
+
+        event_t event(event_type_t::generic);
+        event.desc.str_param1 = L"fish_command_not_found";
+        block_t *b = parser->push_block(block_t::event_block(event));
+        parser->eval(buffer, io);
+        parser->pop_block(b);
+        parser->set_last_statuses(std::move(prev_statuses));
+    } else {
+        // If we have no handler, just print it as a normal error.
+        error = _(L"Unknown command:");
+        if (!event_args.empty()) {
+            error.push_back(L' ');
+            error.append(escape_string(event_args[0], ESCAPE_ALL));
+        }
+    }
+
+    // Here we want to report an error (so it shows a backtrace).
+    // If the handler printed text, that's already shown, so error will be empty.
+    return this->report_error(STATUS_CMD_UNKNOWN, statement, error.c_str());
 }
 
 end_execution_reason_t parse_execution_context_t::expand_command(

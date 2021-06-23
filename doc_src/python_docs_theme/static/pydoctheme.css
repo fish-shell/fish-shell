@@ -195,6 +195,11 @@ tt, code, pre {
     background-color: inherit;
 }
 
+pre, div[class*="highlight-"] {
+    /* For some reason sphinx since 3.1.2 sets "clear: both" here, which breaks in interesting ways */
+    clear: unset;
+}
+
 div.body tt, div.body code {
     border-radius: 3px;
 }

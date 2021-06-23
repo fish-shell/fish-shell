@@ -21,7 +21,7 @@ With ``CMD`` specified, the command line buffer is erased and replaced with the 
 
 The following options are available:
 
-- ``-C`` or ``--cursor`` set or get the current cursor position, not the contents of the buffer. If no argument is given, the current cursor position is printed, otherwise the argument is interpreted as the new cursor position.
+- ``-C`` or ``--cursor`` set or get the current cursor position, not the contents of the buffer. If no argument is given, the current cursor position is printed, otherwise the argument is interpreted as the new cursor position. If one of the options ``-j``, ``-p`` or ``-t`` is given, the position is relative to the respective substring instead of the entire command line buffer.
 
 - ``-f`` or ``--function`` causes any additional arguments to be interpreted as input functions, and puts them into the queue, so that they will be read before any additional actual key presses are. This option cannot be combined with any other option. See :ref:`bind <cmd-bind>` for a list of input functions.
 

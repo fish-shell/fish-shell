@@ -2,7 +2,7 @@ fish 3.3.0 (released ???)
 =========================
 
 ..
-   (Don't changelog: 8014, 8010, 8009, 8001, 7996, 7990, 7966, 7965, 7962, 7960, 4023, 7882, 7946, 7942, 7940, 7928, 7924, 7586, 7829, 7796, 7839, 7843, 7859, 7860, 7861, 7867, 7891, 7881, 7876, 7872, 7907, 7916, 7931, 7933, 7935, 7936, 7952, 7976, 7987, 7999,  8006, 8004, 8016, 8021, 8030, 8034, 7980, 8049)
+   (Don't changelog: 8014, 8010, 8009, 8001, 7996, 7990, 7966, 7965, 7962, 7960, 4023, 7882, 7946, 7942, 7940, 7928, 7924, 7586, 7829, 7796, 7839, 7843, 7859, 7860, 7861, 7867, 7891, 7881, 7876, 7872, 7907, 7916, 7931, 7933, 7935, 7936, 7952, 7976, 7987, 7999,  8006, 8004, 8016, 8021, 8030, 8034, 7980, 8049, 8061, 8062, 8081, 8076)
 
 Notable improvements and fixes
 ------------------------------
@@ -33,6 +33,7 @@ Scripting improvements
 - ``process-exit`` event handlers for PID 0 also received ``JOB_EXIT`` events; this has been fixed.
 - ``job-exit`` event handlers may now be created with any of the PIDs from the job. The handler is passed the last PID in the job as its second argument, instead of the process group.
 - Trying to set an empty variable name with ``set`` no longer works (these variables could not be used in expansions anyway).
+- ``fish_add_path`` handles an undefined ``PATH`` environment variable correctly (:issue:`8082`).
 
 Interactive improvements
 -------------------------
@@ -46,7 +47,7 @@ Interactive improvements
 - ``fish --private`` prints a note on private mode on startup even if ``$fish_greeting`` is an empty list (:issue:`7974`).
 - fish no longer attempts to lock history or universal variable files on remote filesystems, including NFS and Samba mounts. In rare cases, updates to these files may be dropped if separate fish instances modify them simultaneously. (:issue:`7968`).
 - ``wait`` and ``on-process-exit`` work correctly with jobs that have already exited (:issue:`7210`).
-- ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects the ``LESS`` environment varialbe, and if not set, uses better default pager settings (:issue:`7997`).
+- ``__fish_print_help`` (used for ``--help`` output for fish's builtins) now respects the ``LESS`` environment variable, and if not set, uses better default pager settings (:issue:`7997`).
 - Errors from ``alias`` are now printed to standard error, matching other builtins and functions (:issue:`7925`).
 - ``ls`` output is colorized on OpenBSD if colorls utility is installed (:issue:`8035`)
 - The default pager color looks better in terminals with light backgrounds (:issue:`3412`).
@@ -66,8 +67,8 @@ New or improved bindings
 - The :kbd:`Control-Space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
 - The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
-- The binding for :kbd:`Alt-S` now toggles sudo even when it took the commandline from history instead of only adding it.
-- The new interactive functions ``fish_commandline_prepend`` and ``fish_commandline_prepend`` allow to toggle a prefix/suffix on the commandline. (:issue:`7905`).
+- The binding for :kbd:`Alt-S` now toggles whether ``sudo`` is prepended, even when it took the commandline from history instead of only adding it.
+- The new functions ``fish_commandline_prepend`` and ``fish_commandline_append`` allow toggling the presence of a prefix/suffix on the current commandline. (:issue:`7905`).
 - ``backward-kill-path-component`` :kbd:`Control-W`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
 
 Improved prompts

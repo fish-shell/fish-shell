@@ -1,4 +1,7 @@
 #RUN: %fish %s
+# OpenBSD doesn't do hex numbers in str/wcstod (like C99 requires).
+# So let's skip this.
+#REQUIRES: test "$(uname)" != OpenBSD
 # Validate basic expressions
 math 3 / 2
 # CHECK: 1.5

@@ -5,10 +5,15 @@ status line-number
 
 # Check status fish-path
 # No output expected on success
-set status_fish_path (realpath (status fish-path))
-set env_fish_path (realpath $FISH_PATH)
-test "$status_fish_path" = "$env_fish_path"
-or echo "Fish path disagreement: $status_fish_path vs $env_fish_path"
+#
+# argv[0] on OpenBSD is just the filename, not the path
+# That means fish-path is unsupportable there.
+if not contains (uname) OpenBSD
+    set status_fish_path (realpath (status fish-path))
+    set env_fish_path (realpath $FISH_PATH)
+    test "$status_fish_path" = "$env_fish_path"
+    or echo "Fish path disagreement: $status_fish_path vs $env_fish_path"
+end
 
 # Check is-block
 status is-block

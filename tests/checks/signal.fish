@@ -36,7 +36,8 @@ end
 echo "command false:"
 command false
 # CHECK: command false:
-# CHECK: PROCESS_EXIT 1
+# (Solaris' false exits with 255, not 1)
+# CHECK: PROCESS_EXIT {{1|255}}
 # CHECK: JOB_EXIT 0
 
 echo "command true:"
@@ -48,7 +49,7 @@ command true
 echo "command false | true:"
 command false | command true
 # CHECK: command false | true:
-# CHECK: PROCESS_EXIT 1
+# CHECK: PROCESS_EXIT {{1|255}}
 # CHECK: PROCESS_EXIT 0
 # CHECK: JOB_EXIT 0
 

@@ -35,4 +35,5 @@ sleep .1
 function waiter --on-process-exit $pid
     echo exited $argv
 end
-# CHECK: exited PROCESS_EXIT {{\d+}} 1
+# (Solaris' false exits with 255, not 1)
+# CHECK: exited PROCESS_EXIT {{\d+}} {{1|255}}

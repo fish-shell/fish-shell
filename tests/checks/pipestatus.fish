@@ -18,13 +18,13 @@ echo $pipestatus : $status
 # Note: On some systems `command false` fails with 255, not 1. We allow both.
 command false | command false | command false
 echo $pipestatus : $status
-#CHECK: {{1|255}} {{1|255}} {{1|255}} : 1
+#CHECK: {{1|255}} {{1|255}} {{1|255}} : {{1|255}}
 command true | command true | command true
 echo $pipestatus : $status
 #CHECK: 0 0 0 : 0
 command false | command true | command false
 echo $pipestatus : $status
-#CHECK: {{1|255}} 0 {{1|255}} : 1
+#CHECK: {{1|255}} 0 {{1|255}} : {{1|255}}
 command true | command false | command true
 echo $pipestatus : $status
 #CHECK: 0 {{1|255}} 0 : 0
@@ -38,7 +38,7 @@ echo $pipestatus : $status
 #CHECK: 0 0 0 : 0
 false | command true | command false
 echo $pipestatus : $status
-#CHECK: 1 0 {{1|255}} : 1
+#CHECK: 1 0 {{1|255}} : {{1|255}}
 true | false | command true
 echo $pipestatus : $status
 #CHECK: 0 1 0 : 0
@@ -64,7 +64,7 @@ echo $pipestatus : $status
 #CHECK: 0 : 0
 command false
 echo $pipestatus : $status
-#CHECK: {{1|255}} : 1
+#CHECK: {{1|255}} : {{1|255}}
 sh -c 'exit 4'
 echo $pipestatus : $status
 #CHECK: 4 : 4

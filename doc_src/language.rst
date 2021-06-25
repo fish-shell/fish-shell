@@ -1274,7 +1274,7 @@ Fish also provides additional information through the values of certain environm
 
 - ``PWD``, the current working directory.
 
-- ``pipestatus``, a list of exit statuses of all processes that made up the last executed pipe.
+- ``pipestatus``, a list of exit statuses of all processes that made up the last executed pipe. See :ref:`exit status <variables-status>`.
 
 - ``SHLVL``, the level of nesting of shells. Fish increments this in interactive shells, otherwise it simply passes it along.
 
@@ -1303,11 +1303,11 @@ Fish stores the exit status of the last process in the last job to exit in the `
 
 If fish encounters a problem while executing a command, the status variable may also be set to a specific value:
 
-- 0 is generally the exit status of fish commands if they successfully performed the requested operation.
+- 0 is generally the exit status of commands if they successfully performed the requested operation.
 
-- 1 is generally the exit status of fish commands if they failed to perform the requested operation.
+- 1 is generally the exit status of commands if they failed to perform the requested operation.
 
-- 121 is generally the exit status of fish commands if they were supplied with invalid arguments.
+- 121 is generally the exit status of commands if they were supplied with invalid arguments.
 
 - 123 means that the command was not executed because the command name contained invalid characters.
 
@@ -1320,6 +1320,19 @@ If fish encounters a problem while executing a command, the status variable may 
 - 127 means that no function, builtin or command with the given name could be located.
 
 If a process exits through a signal, the exit status will be 128 plus the number of the signal.
+
+The status can be negated with :ref:`not <cmd-not>` (or ``!``), which is useful in a :ref:`condition <conditions>`. This turns a status of 0 into 1 and any non-zero status into 0.
+
+There is also ``$pipestatus``, which is a list of all ``status`` values of processes in a pipe. One difference is that :ref:`not <cmd-not>` applies to ``$status``, but not ``$pipestatus``, because it loses information.
+
+For example::
+
+  not cat file | grep -q fish
+  echo status is: $status pipestatus is $pipestatus
+
+Here ``$status`` reflects the status of ``grep``, which returns 0 if it found something, negated with ``not`` (so 1 if it found something, 0 otherwise). ``$pipestatus`` reflects the status of ``cat`` (which returns non-zero for example when it couldn't find the file) and ``grep``, without the negation.
+
+So if both ``cat`` and ``grep`` succeeded, ``$status`` would be 1 because of the ``not``, and ``$pipestatus`` would be 0 and 0.
 
 .. _variables-locale:
 

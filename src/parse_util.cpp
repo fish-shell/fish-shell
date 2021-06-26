@@ -489,7 +489,7 @@ wcstring parse_util_unescape_wildcards(const wcstring &str) {
 static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
     size_t i = 0;
     wchar_t res = 0;
-    const wchar_t *const cmd = cmd_str.c_str();
+    const wchar_t *cmd = cmd_str.c_str();
 
     while (true) {
         if (!cmd[i]) break;
@@ -501,7 +501,6 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
         } else {
             if (cmd[i] == L'\'' || cmd[i] == L'\"') {
                 const wchar_t *end = quote_end(&cmd[i], cmd[i]);
-                // std::fwprintf( stderr, L"Jump %d\n",  end-cmd );
                 if ((end == nullptr) || (!*end) || (end > cmd + len)) {
                     res = cmd[i];
                     break;
@@ -515,47 +514,15 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
     return res;
 }
 
-void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote,
-                                   size_t *offset, token_type_t *out_type) {
-    size_t prev_pos = 0;
-    wchar_t last_quote = L'\0';
-
+wchar_t parse_util_get_quote_type(const wcstring &cmd, size_t pos) {
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
     while (auto token = tok.next()) {
-        if (token->offset > pos) break;
-
-        if (token->type == token_type_t::string)
-            last_quote = get_quote(tok.text_of(*token), pos - token->offset);
-
-        if (out_type != nullptr) *out_type = token->type;
-
-        prev_pos = token->offset;
-    }
-
-    wchar_t *cmd_tmp = wcsdup(cmd.c_str());
-    cmd_tmp[pos] = 0;
-    size_t cmdlen = pos;
-    bool finished = cmdlen != 0;
-    if (finished) {
-        finished = (quote == nullptr);
-        if (finished && std::wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1])) {
-            finished = cmdlen > 1 && cmd_tmp[cmdlen - 2] == L'\\';
+        if (token->type == token_type_t::string &&
+            token->location_in_or_at_end_of_source_range(pos)) {
+            return get_quote(tok.text_of(*token), pos - token->offset);
         }
     }
-
-    if (quote) *quote = last_quote;
-
-    if (offset != nullptr) {
-        if (finished) {
-            while ((cmd_tmp[prev_pos] != 0) && (std::wcschr(L";|", cmd_tmp[prev_pos]) != nullptr))
-                prev_pos++;
-            *offset = prev_pos;
-        } else {
-            *offset = pos;
-        }
-    }
-
-    free(cmd_tmp);
+    return L'\0';
 }
 
 wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote, bool no_tilde) {

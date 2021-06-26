@@ -1592,9 +1592,9 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         // Find the last quote in the token to complete. By parsing only the string inside any
         // command substitution, we prevent the tokenizer from treating the entire command
         // substitution as one token.
-        parse_util_get_parameter_info(
+        quote = parse_util_get_quote_type(
             command_line.substr(cmdsub_offset, (cmdsub_end - cmdsub_begin)),
-            cursor_pos - cmdsub_offset, &quote, nullptr, nullptr);
+            cursor_pos - cmdsub_offset);
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
         // modify the command line, then delete the trailing quote so that we can insert within

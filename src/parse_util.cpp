@@ -42,12 +42,6 @@
 /// Maximum length of a variable name to show in error reports before truncation
 static constexpr int var_err_len = 16;
 
-/// Types of brackets we can find.
-enum class bracket_type_t {
-    cmdsub,  // like (...)
-    slice,   // like [...]
-};
-
 int parse_util_lineno(const wchar_t *str, size_t offset) {
     if (!str) return 0;
 
@@ -110,11 +104,8 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
     return off + line_offset;
 }
 
-static int parse_util_locate_brackets_of_type(const wchar_t *in, const wchar_t **begin,
-                                              const wchar_t **end, bracket_type_t type,
-                                              bool allow_incomplete, bool *is_quoted = nullptr) {
-    const wchar_t open_type = (type == bracket_type_t::cmdsub ? L'(' : L'[');
-    const wchar_t close_type = (type == bracket_type_t::cmdsub ? L')' : L']');
+static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, const wchar_t **end,
+                                    bool allow_incomplete, bool *is_quoted) {
     bool escaped = false;
     bool syntax_error = false;
     int paran_count = 0;
@@ -128,7 +119,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, const wchar_t *
             if (*pos == L'\'' || *pos == L'"') {
                 const wchar_t *q_end = quote_end(pos, *pos);
                 if (q_end && *q_end) {
-                    if (open_type == L'(' && *q_end == L'$') {
+                    if (*q_end == L'$') {
                         quoted_cmdsubs.push_back(paran_count);
                         // We want to report if the outermost comand substitution between
                         // paran_begin..paran_end is quoted.
@@ -139,13 +130,13 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, const wchar_t *
                     break;
                 }
             } else {
-                if (*pos == open_type) {
+                if (*pos == L'(') {
                     if ((paran_count == 0) && (paran_begin == nullptr)) {
                         paran_begin = pos;
                     }
 
                     paran_count++;
-                } else if (*pos == close_type) {
+                } else if (*pos == L')') {
                     paran_count--;
 
                     if ((paran_count == 0) && (paran_end == nullptr)) {
@@ -159,8 +150,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, const wchar_t *
                     }
 
                     // Check if the ) did complete a quoted command substituion.
-                    if (open_type == L'(' && !quoted_cmdsubs.empty() &&
-                        quoted_cmdsubs.back() == paran_count) {
+                    if (!quoted_cmdsubs.empty() && quoted_cmdsubs.back() == paran_count) {
                         quoted_cmdsubs.pop_back();
                         // Quoted command substitutions temporarily close double quotes.
                         // In "foo$(bar)baz$(qux)"
@@ -250,10 +240,10 @@ long parse_util_slice_length(const wchar_t *in) {
     return -1;
 }
 
-static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_cursor_offset,
-                                            wcstring *out_contents, size_t *out_start,
-                                            size_t *out_end, bracket_type_t type,
-                                            bool accept_incomplete, bool *out_is_quoted) {
+
+int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
+                                     wcstring *out_contents, size_t *out_start, size_t *out_end,
+                                     bool accept_incomplete, bool *out_is_quoted) {
     // Clear the return values.
     if (out_contents != nullptr) out_contents->clear();
     *out_start = 0;
@@ -268,9 +258,9 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
                          *valid_range_end = buff + str.size();
     const wchar_t *bracket_range_begin = nullptr;
     const wchar_t *bracket_range_end = nullptr;
-    int ret = parse_util_locate_brackets_of_type(valid_range_start, &bracket_range_begin,
-                                                 &bracket_range_end, type, accept_incomplete,
-                                                 out_is_quoted);
+
+    int ret = parse_util_locate_cmdsub(valid_range_start, &bracket_range_begin, &bracket_range_end,
+                                       accept_incomplete, out_is_quoted);
     if (ret <= 0) {
         return ret;
     }
@@ -298,14 +288,6 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
     return ret;
 }
 
-int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
-                                     wcstring *out_contents, size_t *out_start, size_t *out_end,
-                                     bool accept_incomplete, bool *out_is_quoted) {
-    return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start,
-                                            out_end, bracket_type_t::cmdsub, accept_incomplete,
-                                            out_is_quoted);
-}
-
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
                                 const wchar_t **b) {
     assert(buff && "Null buffer");
@@ -319,8 +301,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
     const wchar_t *pos = buff;
     for (;;) {
         const wchar_t *begin = nullptr, *end = nullptr;
-        if (parse_util_locate_brackets_of_type(pos, &begin, &end, bracket_type_t::cmdsub, true) <=
-            0) {
+        if (parse_util_locate_cmdsub(pos, &begin, &end, true, nullptr) <= 0) {
             // No subshell found, all done.
             break;
         }

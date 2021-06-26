@@ -501,7 +501,7 @@ void append_format(wcstring &str, const wchar_t *format, ...) {
     va_end(va);
 }
 
-wchar_t *quote_end(const wchar_t *pos, wchar_t quote) {
+const wchar_t *quote_end(const wchar_t *pos, wchar_t quote) {
     while (true) {
         pos++;
 
@@ -515,7 +515,7 @@ wchar_t *quote_end(const wchar_t *pos, wchar_t quote) {
                 // Command substitutions also end a double quoted string.  This is how we
                 // support command substitutions inside double quotes.
                 (quote == L'"' && *pos == L'$' && *(pos + 1) == L'(')) {
-                return const_cast<wchar_t *>(pos);
+                return pos;
             }
         }
     }

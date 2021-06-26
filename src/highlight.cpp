@@ -512,7 +512,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     // Handle a slice, up to dollar_count of them. Note that we currently don't do any validation of
     // the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
     for (size_t slice_count = 0; slice_count < dollar_count && in[idx] == L'['; slice_count++) {
-        wchar_t *slice_begin = nullptr, *slice_end = nullptr;
+        const wchar_t *slice_begin = nullptr, *slice_end = nullptr;
         int located = parse_util_locate_slice(in + idx, &slice_begin, &slice_end, false);
         if (located == 1) {
             size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;

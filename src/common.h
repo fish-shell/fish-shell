@@ -445,7 +445,7 @@ std::unique_ptr<T> make_unique(Args &&...args) {
 ///
 /// \param pos the position of the opening quote.
 /// \param quote the quote to use, usually pointed to by \c pos.
-wchar_t *quote_end(const wchar_t *pos, wchar_t quote);
+const wchar_t *quote_end(const wchar_t *pos, wchar_t quote);
 
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.

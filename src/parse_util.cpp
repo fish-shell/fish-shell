@@ -208,10 +208,46 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, const wchar_t *
     return 1;
 }
 
-int parse_util_locate_slice(const wchar_t *in, const wchar_t **begin, const wchar_t **end,
-                            bool accept_incomplete) {
-    return parse_util_locate_brackets_of_type(in, begin, end, bracket_type_t::slice,
-                                              accept_incomplete);
+long parse_util_slice_length(const wchar_t *in) {
+    assert(in && "null parameter");
+    const wchar_t openc = L'[';
+    const wchar_t closec = L']';
+    bool escaped = false;
+
+    // Check for initial opening [
+    if (*in != openc) return 0;
+    int bracket_count = 1;
+
+    assert(in && "null parameter");
+    for (const wchar_t *pos = in + 1; *pos; pos++) {
+        if (!escaped) {
+            if (*pos == L'\'' || *pos == L'"') {
+                const wchar_t *q_end = quote_end(pos, *pos);
+                if (q_end && *q_end) {
+                    pos = q_end;
+                } else {
+                    break;
+                }
+            } else {
+                if (*pos == openc) {
+                    bracket_count++;
+                } else if (*pos == closec) {
+                    bracket_count--;
+                    if (bracket_count == 0) {
+                        // pos points at the closing ], so add 1.
+                        return pos - in + 1;
+                    }
+                }
+            }
+        }
+        if (*pos == '\\') {
+            escaped = !escaped;
+        } else {
+            escaped = false;
+        }
+    }
+    assert(bracket_count > 0 && "Should have unclosed brackets");
+    return -1;
 }
 
 static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_cursor_offset,

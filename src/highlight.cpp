@@ -511,20 +511,18 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
 
     // Handle a slice, up to dollar_count of them. Note that we currently don't do any validation of
     // the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
-    for (size_t slice_count = 0; slice_count < dollar_count && in[idx] == L'['; slice_count++) {
-        const wchar_t *slice_begin = nullptr, *slice_end = nullptr;
-        int located = parse_util_locate_slice(in + idx, &slice_begin, &slice_end, false);
-        if (located == 1) {
-            size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
-            assert(slice_end_idx > slice_begin_idx);
-            colors[slice_begin_idx] = highlight_role_t::operat;
-            colors[slice_end_idx] = highlight_role_t::operat;
-            idx = slice_end_idx + 1;
-        } else if (located == 0) {
+    for (size_t slice_count = 0; slice_count < dollar_count; slice_count++) {
+        long slice_len = parse_util_slice_length(in + idx);
+        if (slice_len > 0) {
+            size_t slice_ulen = static_cast<size_t>(slice_len);
+            colors[idx] = highlight_role_t::operat;
+            colors[idx + slice_ulen - 1] = highlight_role_t::operat;
+            idx += slice_ulen;
+        } else if (slice_len == 0) {
             // not a slice
             break;
         } else {
-            assert(located < 0);
+            assert(slice_len < 0);
             // Syntax error. Normally the entire token is colored red for us, but inside a
             // double-quoted string that doesn't happen. As such, color the variable + the slice
             // start red. Coloring any more than that looks bad, unless we're willing to try and

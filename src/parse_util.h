@@ -14,9 +14,10 @@ namespace ast {
 struct argument_t;
 }
 
-/// Same as parse_util_locate_cmdsubst, but handles square brackets [ ].
-int parse_util_locate_slice(const wchar_t *in, const wchar_t **begin, const wchar_t **end,
-                            bool accept_incomplete);
+/// Handles slices: the square brackets in an expression like $foo[5..4]
+/// \return the length of the slice starting at \p in, or 0 if there is no slice, or -1 on error.
+/// This never accepts incomplete slices.
+long parse_util_slice_length(const wchar_t *in);
 
 /// Alternative API. Iterate over command substitutions.
 ///

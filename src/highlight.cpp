@@ -904,7 +904,7 @@ void highlighter_t::color_as_argument(const ast::node_t &node) {
         // Highlight it recursively.
         highlighter_t cmdsub_highlighter(cmdsub_contents, this->ctx, this->working_directory,
                                          this->io_ok);
-        const color_array_t &subcolors = cmdsub_highlighter.highlight();
+        color_array_t subcolors = cmdsub_highlighter.highlight();
 
         // Copy out the subcolors back into our array.
         assert(subcolors.size() == cmdsub_contents.size());

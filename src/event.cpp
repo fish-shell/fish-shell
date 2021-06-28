@@ -428,7 +428,7 @@ void event_print(io_streams_t &streams, const wcstring &type_filter) {
                   }
                   switch (d1.type) {
                       case event_type_t::signal:
-                          return d1.signal < d2.signal;
+                          return d1.param1.signal < d2.param1.signal;
                       case event_type_t::process_exit:
                           return d1.param1.pid < d2.param1.pid;
                       case event_type_t::job_exit:

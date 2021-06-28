@@ -1321,7 +1321,7 @@ If fish encounters a problem while executing a command, the status variable may 
 
 If a process exits through a signal, the exit status will be 128 plus the number of the signal.
 
-The status can be negated with :ref:`not <cmd-not>` (or ``!``), which is useful in a :ref:`condition <conditions>`. This turns a status of 0 into 1 and any non-zero status into 0.
+The status can be negated with :ref:`not <cmd-not>` (or ``!``), which is useful in a :ref:`condition <syntax-conditional>`. This turns a status of 0 into 1 and any non-zero status into 0.
 
 There is also ``$pipestatus``, which is a list of all ``status`` values of processes in a pipe. One difference is that :ref:`not <cmd-not>` applies to ``$status``, but not ``$pipestatus``, because it loses information.
 

@@ -56,10 +56,6 @@ endif()
 
 # Get threads.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-# FindThreads < 3.4.0 doesn't work for C++-only projects
-if(CMAKE_VERSION VERSION_LESS 3.4.0)
-    enable_language(C)
-endif()
 find_package(Threads REQUIRED)
 
 # Detect WSL. Does not match against native Windows/WIN32.

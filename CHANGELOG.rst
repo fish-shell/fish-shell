@@ -27,7 +27,7 @@ Improved terminal support
 
 For distributors
 ----------------
-- *This placeholder silences a sphinx doc warning, so the last section is not empty.*
+- The minimum version of CMake required to build fish was raised to 3.5.0.
 
 --------------
  

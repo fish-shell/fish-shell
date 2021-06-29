@@ -6,6 +6,7 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
+- A new feature flag ``ampersand-nobg`` makes ``&`` only act as background operator if followed by a separating character. In combination with ``qmark-noglob`` this allows to write some URLS without quoting. (:issue:`7991`)
 
 Scripting improvements
 ----------------------

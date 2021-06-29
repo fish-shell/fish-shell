@@ -4,10 +4,11 @@ fish 3.4.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 - Complimenting the ``prompt`` command in 3.3.0, ``fish_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a webbrowser. For example ``fish_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`). The current theme can be saved with ``fish_config theme dump`` and custom themes can be added by saving them in ``~/.config/fish/themes/``.
-- fish's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results. (:issue:`159`).
+- fish's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results (:issue:`159`).
 
 Deprecations and removed features
 ---------------------------------
+- A new feature flag ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob`` this allows to write some URLs without quoting or escaping (:issue:`7991`)
 
 Scripting improvements
 ----------------------

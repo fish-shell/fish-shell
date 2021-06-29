@@ -47,6 +47,10 @@ NOTARIZE_UUID=$(xcrun altool --notarize-app \
 test -z "$NOTARIZE_UUID" && cat "$LOGFILE" && die "Could not get RequestUUID"
 echo "RequestUUID: $NOTARIZE_UUID"
 
+# notarization-info doesn't always know about our request immediately.
+echo "Giving notarization-info a chance to catch up..."
+sleep 15
+
 success=0
 for i in $(seq 20); do
     echo "Checking progress..."

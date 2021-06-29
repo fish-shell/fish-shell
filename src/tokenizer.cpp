@@ -98,7 +98,7 @@ tok_t::tok_t(token_type_t type) : type(type) {}
 /// Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the
 /// first character. Hash (#) starts a comment if it's the first character in a token; otherwise it
 /// is considered a string character. See issue #953.
-static bool tok_is_string_character(wchar_t c, bool is_first) {
+static bool tok_is_string_character(wchar_t c, bool is_first, maybe_t<wchar_t> next) {
     switch (c) {
         case L'\0':
         case L' ':
@@ -108,10 +108,15 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
         case L';':
         case L'\r':
         case L'<':
-        case L'>':
-        case L'&': {
+        case L'>': {
             // Unconditional separators.
             return false;
+        }
+        case L'&': {
+            if (!feature_test(features_t::ampersand_nobg_in_token)) return false;
+            bool next_is_string = next && tok_is_string_character(*next, false, none());
+            // Unlike in other shells, '&' is not special if followed by a string character.
+            return next_is_string;
         }
         case L'^': {
             // Conditional separator.
@@ -259,7 +264,8 @@ tok_t tokenizer_t::read_string() {
                 }
                 break;
             }
-        } else if (mode == tok_modes::regular_text && !tok_is_string_character(c, is_first)) {
+        } else if (mode == tok_modes::regular_text &&
+                   !tok_is_string_character(c, is_first, this->token_cursor[1])) {
             break;
         }
 
@@ -764,7 +770,7 @@ bool move_word_state_machine_t::is_path_component_character(wchar_t c) {
     // Always treat separators as first. All this does is ensure that we treat ^ as a string
     // character instead of as stderr redirection, which I hypothesize is usually what is
     // desired.
-    return tok_is_string_character(c, true) && !std::wcschr(L"/={,}'\":@", c);
+    return tok_is_string_character(c, true, none()) && !std::wcschr(L"/={,}'\":@", c);
 }
 
 bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {

@@ -22,6 +22,9 @@ class features_t {
         /// Whether string replace -r double-unescapes the replacement.
         string_replace_backslash,
 
+        /// Whether "&" is not-special if followed by a word character.
+        ampersand_nobg_in_token,
+
         /// The number of flags.
         flag_count
     };

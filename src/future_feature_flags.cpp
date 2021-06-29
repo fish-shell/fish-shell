@@ -20,6 +20,8 @@ const features_t::metadata_t features_t::metadata[features_t::flag_count] = {
     {qmark_noglob, L"qmark-noglob", L"3.0", L"? no longer globs", false},
     {string_replace_backslash, L"regex-easyesc", L"3.1", L"string replace -r needs fewer \\'s",
      false},
+    {ampersand_nobg_in_token, L"ampersand-nobg-in-token", L"3.4",
+     L"& only backgrounds if followed by a separating character", false},
 };
 
 const struct features_t::metadata_t *features_t::metadata_for(const wchar_t *name) {

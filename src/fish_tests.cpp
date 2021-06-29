@@ -2773,6 +2773,7 @@ static void test_word_motion() {
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^a^ bcd^");
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"a^b^ cde^");
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^ab^ cde^");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"^ab^&cd^ ^& ^e^ f^&");
 
     test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^^a-b-c^ d-e-f");
     test_1_word_motion(word_motion_right, move_word_style_whitespace, L"^a-b-c^\n d-e-f^ ");
@@ -5197,6 +5198,15 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"foo&bar", highlight_role_t::param},
+        {L"foo", highlight_role_t::param, /*nospace=*/true},
+        {L"&", highlight_role_t::statement_terminator},
+        {L"echo", highlight_role_t::command},
+        {L"&>", highlight_role_t::redirection},
+    });
+
+    highlight_tests.push_back({
         {L"if command", highlight_role_t::keyword},
         {L"ls", highlight_role_t::command},
         {L"; ", highlight_role_t::statement_terminator},
@@ -5489,6 +5499,8 @@ static void test_highlighting() {
     highlight_tests.push_back({{L"$EMPTY_VARIABLE", highlight_role_t::error}});
     highlight_tests.push_back({{L"\"$EMPTY_VARIABLE\"", highlight_role_t::error}});
 
+    const auto saved_flags = fish_features();
+    mutable_fish_features().set(features_t::ampersand_nobg_in_token, true);
     for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
         wcstring text;
@@ -5523,6 +5535,7 @@ static void test_highlighting() {
             }
         }
     }
+    mutable_fish_features() = saved_flags;
     vars.remove(L"VARIABLE_IN_COMMAND", ENV_DEFAULT);
     vars.remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
 }

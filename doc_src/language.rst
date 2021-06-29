@@ -233,6 +233,8 @@ These listed jobs can be removed with the :ref:`disown <cmd-disown>` command.
 
 At the moment, functions cannot be started in the background. Functions that are stopped and then restarted in the background using the :ref:`bg <cmd-bg>` command will not execute correctly.
 
+If the ``&`` character is followed by a non-separating character, it is not interpreted as background operator. Separating characters are whitespace and the characters ``;<>&|``.
+
 .. _syntax-function:
 
 Functions
@@ -1393,14 +1395,16 @@ Feature flags are how fish stages changes that might break scripts. Breaking cha
 You can see the current list of features via ``status features``::
 
     > status features
-    stderr-nocaret  on     3.0      ^ no longer redirects stderr
-    qmark-noglob    off    3.0      ? no longer globs
-    regex-easyesc   off    3.1      string replace -r needs fewer \\'s
+    stderr-nocaret          on  3.0 ^ no longer redirects stderr
+    qmark-noglob            off 3.0 ? no longer globs
+    regex-easyesc           off 3.1 string replace -r needs fewer \\'s
+    ampersand-nobg-in-token off 3.4 & only backgrounds if followed by a separating character
 
 There are two breaking changes in fish 3.0: caret ``^`` no longer redirects stderr, and question mark ``?`` is no longer a glob.
 
 There is one breaking change in fish 3.1: ``string replace -r`` does a superfluous round of escaping for the replacement, so escaping backslashes would look like ``string replace -ra '([ab])' '\\\\\\\$1' a``. This flag removes that if turned on, so ``'\\\\$1'`` is enough.
 
+There is one breaking change in fish 3.4: in ``echo https://example.com/?q=hello&qq=goodbye`` the ``&`` is no longer interpreted as backgrounding operator.
 
 These changes are off by default. They can be enabled on a per session basis::
 

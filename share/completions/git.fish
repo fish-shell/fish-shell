@@ -1104,7 +1104,11 @@ complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the 
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
-complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached staged' -a '(__fish_git_files modified deleted modified-staged-deleted)'
+complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached staged' -a '(
+    set -l kinds modified
+    contains -- -- (commandline -opc) && set -a kinds deleted modified-staged-deleted
+    __fish_git_files $kinds
+)'
 complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cached staged' -fa '(__fish_git_files all-staged)'
 
 ### Function to list available tools for git difftool and mergetool
@@ -1121,7 +1125,11 @@ end
 complete -c git -n __fish_git_needs_command -a difftool -d 'Open diffs in a visual tool'
 complete -c git -n '__fish_git_using_command difftool; and not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command difftool' -l cached -d 'Visually show diff of changes in the index'
-complete -f -c git -n '__fish_git_using_command difftool' -a '(__fish_git_files modified deleted modified-staged-deleted)'
+complete -f -c git -n '__fish_git_using_command difftool' -a '(
+    set -l kinds modified
+    contains -- -- (commandline -opc) && set -a kinds deleted modified-staged-deleted
+    __fish_git_files $kinds
+)'
 complete -f -c git -n '__fish_git_using_command difftool' -s g -l gui -d 'Use `diff.guitool` instead of `diff.tool`'
 complete -f -c git -n '__fish_git_using_command difftool' -s d -l dir-diff -d 'Perform a full-directory diff'
 complete -c git -n '__fish_git_using_command difftool' -l prompt -d 'Prompt before each invocation of the diff tool'

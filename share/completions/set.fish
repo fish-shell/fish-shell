@@ -66,35 +66,35 @@ end
 #
 
 # Regular switches, set only accepts these before the variable name,
-# so we need to test using __fish_is_first_token
+# so we need to test using "fish_is_nth_token 1"
 
-complete -c set -n __fish_is_first_token -s e -l erase -d "Erase variable"
-complete -c set -n __fish_is_first_token -s x -l export -d "Export variable to subprocess"
-complete -c set -n __fish_is_first_token -s u -l unexport -d "Do not export variable to subprocess"
-complete -c set -n __fish_is_first_token -s g -l global -d "Make variable scope global"
-complete -c set -n __fish_is_first_token -s l -l local -d "Make variable scope local"
-complete -c set -n __fish_is_first_token -s U -l universal -d "Share variable persistently across sessions"
-complete -c set -n __fish_is_first_token -s q -l query -d "Test if variable is defined"
-complete -c set -n __fish_is_first_token -s h -l help -d "Display help and exit"
-complete -c set -n __fish_is_first_token -s n -l names -d "List the names of the variables, but not their value"
-complete -c set -n __fish_is_first_token -s a -l append -d "Append value to a list"
-complete -c set -n __fish_is_first_token -s p -l prepend -d "Prepend value to a list"
-complete -c set -n __fish_is_first_token -s S -l show -d "Show variable"
-complete -c set -n __fish_is_first_token -l path -d "Make variable as a path variable"
-complete -c set -n __fish_is_first_token -l unpath -d "Make variable not as a path variable"
+complete -c set -n "fish_is_nth_token 1" -s e -l erase -d "Erase variable"
+complete -c set -n "fish_is_nth_token 1" -s x -l export -d "Export variable to subprocess"
+complete -c set -n "fish_is_nth_token 1" -s u -l unexport -d "Do not export variable to subprocess"
+complete -c set -n "fish_is_nth_token 1" -s g -l global -d "Make variable scope global"
+complete -c set -n "fish_is_nth_token 1" -s l -l local -d "Make variable scope local"
+complete -c set -n "fish_is_nth_token 1" -s U -l universal -d "Share variable persistently across sessions"
+complete -c set -n "fish_is_nth_token 1" -s q -l query -d "Test if variable is defined"
+complete -c set -n "fish_is_nth_token 1" -s h -l help -d "Display help and exit"
+complete -c set -n "fish_is_nth_token 1" -s n -l names -d "List the names of the variables, but not their value"
+complete -c set -n "fish_is_nth_token 1" -s a -l append -d "Append value to a list"
+complete -c set -n "fish_is_nth_token 1" -s p -l prepend -d "Prepend value to a list"
+complete -c set -n "fish_is_nth_token 1" -s S -l show -d "Show variable"
+complete -c set -n "fish_is_nth_token 1" -l path -d "Make variable as a path variable"
+complete -c set -n "fish_is_nth_token 1" -l unpath -d "Make variable not as a path variable"
 
 #TODO: add CPP code to generate list of read-only variables and exclude them from the following completions
 
 # Complete using preexisting variable names
-complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
-complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"
-complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -U | string match -rv '^__' | string replace ' ' \t'Universal Variable: ')"
+complete -c set -n '"fish_is_nth_token 1"; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
+complete -c set -n '"fish_is_nth_token 1"; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"
+complete -c set -n '"fish_is_nth_token 1"; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -U | string match -rv '^__' | string replace ' ' \t'Universal Variable: ')"
 # Complete some fish configuration variables even if they aren't set.
-complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase' -x -a "(__fish_set_special_vars)"
+complete -c set -n '"fish_is_nth_token 1"; and not __fish_seen_argument -s e -l erase' -x -a "(__fish_set_special_vars)"
 # Complete scope-specific variables
-complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s l -l local' -x -a "(set -l | string replace ' ' \t'Local Variable: ')"
-complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s g -l global' -x -a "(set -g | string replace ' ' \t'Global Variable: ')"
-complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s U -l universal' -x -a "(set -U | string replace ' ' \t'Universal Variable: ')"
+complete -c set -n '"fish_is_nth_token 1"; and __fish_seen_argument -s l -l local' -x -a "(set -l | string replace ' ' \t'Local Variable: ')"
+complete -c set -n '"fish_is_nth_token 1"; and __fish_seen_argument -s g -l global' -x -a "(set -g | string replace ' ' \t'Global Variable: ')"
+complete -c set -n '"fish_is_nth_token 1"; and __fish_seen_argument -s U -l universal' -x -a "(set -U | string replace ' ' \t'Universal Variable: ')"
 
 # Complete using preexisting variable names for `set --erase`
 complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -g | string replace ' ' \tGlobal\ Variable:\ )"

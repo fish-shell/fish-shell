@@ -16,8 +16,8 @@ complete -c python -o vv -d "Even more verbose mode"
 complete -c python -s V -l version -d "Display version and exit"
 complete -c python -s W -x -d "Warning control" -a "ignore default all module once error"
 complete -c python -s x -d 'Skip first line of source, allowing use of non-Unix forms of #!cmd'
-complete -c python -f -n __fish_is_first_token -k -a "(__fish_complete_suffix .py)"
-complete -c python -f -n __fish_is_first_token -a - -d 'Read program from stdin'
+complete -c python -f -n "fish_is_nth_token 1" -k -a "(__fish_complete_suffix .py)"
+complete -c python -f -n "fish_is_nth_token 1" -a - -d 'Read program from stdin'
 
 # Version-specific completions
 # We have to detect this at runtime because pyenv etc can change

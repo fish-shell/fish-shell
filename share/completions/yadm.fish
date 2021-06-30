@@ -128,4 +128,4 @@ complete -f -c yadm -n "__fish_yadm_using_command config" -l unset -a '(__fish_y
 complete -f -c yadm -n "__fish_yadm_using_command config" -l unset-all -a '(__fish_yadm_config_keys)' -d 'Remove matching variables'
 
 # If no argument is specified for `config`, it's as if --get was used
-complete -f -c yadm -n "__fish_yadm_using_command config; and __fish_is_token_n 3" -a '(__fish_yadm_config_keys)'
+complete -f -c yadm -n "__fish_yadm_using_command config; and fish_is_nth_token 3" -a '(__fish_yadm_config_keys)'

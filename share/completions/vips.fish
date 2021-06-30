@@ -18,7 +18,7 @@ complete -c vips -l vips-config -d 'Print libvips config'
 complete -c vips -l vips-pipe-read-limit -d 'Pipe read limit (bytes)'
 
 # Operations
-complete -c vips -n __fish_is_first_token -xa "(__fish_vips_ops)"
+complete -c vips -n "fish_is_nth_token 1" -xa "(__fish_vips_ops)"
 
 function __fish_vips_ops
     vips -l | string match -rv _base | string replace -rf '^\s*\S+ \((.+?)\), +(\S.*?)(?:\s*[,(].*)?$' '$1\t$2'

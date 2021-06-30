@@ -61916,7 +61916,7 @@ msgstr ""
 msgid "Check if the current directory is a git repository"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_is_token_n.fish:1
+#: /tmp/fish/implicit/share/functions/fish_is_nth_token.fish:1
 msgid "Test if current token is on Nth place"
 msgstr ""
 

@@ -49,4 +49,4 @@ complete -c meson -l cross-file -r -d "File describing cross-compilation environ
 complete -c meson -l wrap-mode -xa 'WrapMode.{default,nofallback,nodownload,forcefallback}' -d "Special wrap mode to use"
 
 # final parameter
-complete -c meson -n __fish_is_first_token -xa '(__fish_complete_directories)'
+complete -c meson -n "fish_is_nth_token 1" -xa '(__fish_complete_directories)'

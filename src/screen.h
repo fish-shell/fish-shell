@@ -295,4 +295,5 @@ class layout_cache_t : noncopyable_t {
     friend void test_layout_cache();
 };
 
+maybe_t<size_t> escape_code_length(const wchar_t *code);
 #endif

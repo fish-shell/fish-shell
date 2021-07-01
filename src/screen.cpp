@@ -247,13 +247,11 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 /// Returns the number of characters in the escape code starting at 'code'. We only handle sequences
 /// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize
 /// the escape sequence based on querying terminfo and other heuristics.
-size_t layout_cache_t::escape_code_length(const wchar_t *code) {
+maybe_t<size_t> escape_code_length(const wchar_t *code) {
     assert(code != nullptr);
     if (*code != L'\x1B') return 0;
 
-    size_t esc_seq_len = this->find_escape_code(code);
-    if (esc_seq_len) return esc_seq_len;
-
+    size_t esc_seq_len = 0;
     bool found = is_color_escape_seq(code, &esc_seq_len);
     if (!found) found = is_visual_escape_seq(code, &esc_seq_len);
     if (!found) found = is_screen_name_escape_seq(code, &esc_seq_len);
@@ -261,7 +259,21 @@ size_t layout_cache_t::escape_code_length(const wchar_t *code) {
     if (!found) found = is_three_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
-    if (found) this->add_escape_code(wcstring(code, esc_seq_len));
+    return esc_seq_len;
+}
+
+size_t layout_cache_t::escape_code_length(const wchar_t *code) {
+    assert(code != nullptr);
+    if (*code != L'\x1B') return 0;
+
+    size_t esc_seq_len = this->find_escape_code(code);
+    if (esc_seq_len) return esc_seq_len;
+
+    auto found = ::escape_code_length(code);
+    if (found) {
+        this->add_escape_code(wcstring(code, *found));
+        esc_seq_len = *found;
+    }
     return esc_seq_len;
 }
 

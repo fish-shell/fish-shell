@@ -162,6 +162,7 @@ struct options_t {  //!OCLINT(too many fields)
     bool no_trim_newlines_valid = false;
     bool fields_valid = false;
     bool allow_empty_valid = false;
+    bool visible_valid = false;
     bool width_valid = false;
 
     bool all = false;
@@ -180,6 +181,7 @@ struct options_t {  //!OCLINT(too many fields)
     bool no_empty = false;
     bool no_trim_newlines = false;
     bool allow_empty = false;
+    bool visible = false;
 
     long count = 0;
     long length = 0;
@@ -505,6 +507,16 @@ static int handle_flag_v(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_V(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->visible_valid) {
+        opts->visible = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 static int handle_flag_w(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     long width = 0;
@@ -539,6 +551,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->ignore_case_valid) short_opts.append(L"i");
     if (opts->index_valid) short_opts.append(L"n");
     if (opts->invert_valid) short_opts.append(L"v");
+    if (opts->visible_valid) short_opts.append(L"V");
     if (opts->left_valid) short_opts.append(L"l");
     if (opts->length_valid) short_opts.append(L"l:");
     if (opts->max_valid) short_opts.append(L"m:");
@@ -570,6 +583,7 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"ignore-case", no_argument, nullptr, 'i'},
                                               {L"index", no_argument, nullptr, 'n'},
                                               {L"invert", no_argument, nullptr, 'v'},
+                                              {L"visible", no_argument, nullptr, 'V'},
                                               {L"left", no_argument, nullptr, 'l'},
                                               {L"length", required_argument, nullptr, 'l'},
                                               {L"max", required_argument, nullptr, 'm'},
@@ -591,7 +605,7 @@ static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'g', handle_flag_g}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
+    {'V', handle_flag_V}, {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, const wchar_t **argv,
@@ -741,6 +755,7 @@ static int string_join0(parser_t &parser, io_streams_t &streams, int argc, const
 static int string_length(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     opts.quiet_valid = true;
+    opts.visible_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -748,7 +763,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
     int nnonempty = 0;
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        size_t n = arg->length();
+        size_t n = opts.visible ? width_without_escapes(*arg) : arg->length();
         if (n > 0) {
             nnonempty++;
         }

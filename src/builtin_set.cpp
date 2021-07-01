@@ -77,9 +77,6 @@ static const struct woption long_options[] = {
 #define BUILTIN_SET_UVAR_ERR \
     _(L"%ls: Universal variable '%ls' is shadowed by the global variable of the same name.\n")
 
-// Test if the specified variable should be subject to path validation.
-static int is_path_variable(const wcstring &env) { return env == L"PATH" || env == L"CDPATH"; }
-
 static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
@@ -247,64 +244,6 @@ static int check_global_scope_exists(const wchar_t *cmd, const set_cmd_opts_t &o
     return STATUS_CMD_OK;
 }
 
-// Validate the given path `list`. If there are any entries referring to invalid directories which
-// contain a colon, then complain. Return true if any path element was valid, false if not.
-static bool validate_path_warning_on_colons(const wchar_t *cmd,
-                                            const wcstring &key,  //!OCLINT(npath complexity)
-                                            const wcstring_list_t &list, io_streams_t &streams,
-                                            const environment_t &vars) {
-    // Always allow setting an empty value.
-    if (list.empty()) return true;
-
-    bool any_success = false;
-
-    // Don't bother validating (or complaining about) values that are already present. When
-    // determining already-present values, use ENV_DEFAULT instead of the passed-in scope because
-    // in:
-    //
-    //   set -l PATH stuff $PATH
-    //
-    // where we are temporarily shadowing a variable, we want to compare against the shadowed value,
-    // not the (missing) local value. Also don't bother to complain about relative paths, which
-    // don't start with /.
-    const auto existing_variable = vars.get(key, ENV_DEFAULT);
-    const wcstring_list_t &existing_values =
-        existing_variable ? existing_variable->as_list() : wcstring_list_t{};
-
-    for (const wcstring &dir : list) {
-        if (!string_prefixes_string(L"/", dir) || contains(existing_values, dir)) {
-            any_success = true;
-            continue;
-        }
-
-        const wchar_t *colon = std::wcschr(dir.c_str(), L':');
-        bool looks_like_colon_sep = colon && colon[1];
-        if (!looks_like_colon_sep && any_success) {
-            // Once we have one valid entry, skip the remaining ones unless we might warn.
-            continue;
-        }
-        struct stat buff;
-        bool valid = true;
-        if (wstat(dir, &buff) == -1) {
-            valid = false;
-        } else if (!S_ISDIR(buff.st_mode)) {
-            errno = ENOTDIR;
-            valid = false;
-        } else if (waccess(dir, X_OK) == -1) {
-            valid = false;
-        }
-        if (valid) {
-            any_success = true;
-        } else if (looks_like_colon_sep) {
-            streams.err.append_format(BUILTIN_SET_PATH_ERROR, cmd, key.c_str(), dir.c_str(),
-                                      std::strerror(errno));
-            streams.err.append_format(BUILTIN_SET_PATH_HINT, cmd, key.c_str(), key.c_str(),
-                                      std::wcschr(dir.c_str(), L':') + 1);
-        }
-    }
-    return any_success;
-}
-
 static void handle_env_return(int retval, const wchar_t *cmd, const wcstring &key,
                               io_streams_t &streams) {
     switch (retval) {
@@ -344,10 +283,6 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wcstring &ke
 static int env_set_reporting_errors(const wchar_t *cmd, const wcstring &key, int scope,
                                     wcstring_list_t list, io_streams_t &streams, env_stack_t &vars,
                                     std::vector<event_t> *evts) {
-    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams, vars)) {
-        return STATUS_CMD_ERROR;
-    }
-
     int retval = vars.set(key, scope | ENV_USER, std::move(list), evts);
     handle_env_return(retval, cmd, key, streams);
 

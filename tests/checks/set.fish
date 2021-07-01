@@ -715,3 +715,13 @@ set --show ""
 #CHECKERR: set --show ""
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
+
+# Test path splitting
+begin
+    set -l PATH /usr/local/bin:/usr/bin
+    echo $PATH
+    # CHECK: /usr/local/bin /usr/bin
+    set -l CDPATH .:/usr
+    echo $CDPATH
+    # CHECK: . /usr
+end

@@ -321,22 +321,22 @@ dl > dt span ~ em {
 
 .sphinxsidebar ul.current > li.current { font-weight: bold }
 
-.gray { color: #555555 }
-.purple { color: #551a8b }
-.red { color: #FF0000 }
+.gray { color: #777 }
+.purple { color: #551a8b; font-weight: bold; }
+.red { color: #FF0000; }
 
 /* Color based on the Name.Function (.nf) class from pygments.css. */
 .command { color: #005fd7 }
 
 /* Color based on the Name.Constant (.no) class from pygments.css. */
-.param { color: #00afff }
+.param { color: #00bfff }
 
 /* Color based on the Name.Constant (.no) class from pygments.css. */
 /* Used for underlining file paths in interactive code examples. */
 .param-valid-path { color: #00afff; text-decoration: underline }
 
 /* Color based on the Generic.Prompt (.gp) class from pygments.css. */
-.prompt { color: #8f5902 }
+.prompt { color: #8f7902 }
 
 kbd {
   background-color: #f9f9f9;
@@ -388,7 +388,7 @@ kbd {
     }
 
     div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3 {
-        color: #AAA;
+        color: #BBB;
     }
     .highlight {
         background: #000;
@@ -408,12 +408,9 @@ kbd {
     }
     input {
         background-color: #222;
-        color: #AAA;
+        color: #BBB;
     }
 
-    div.body a {
-        color: #2092da;
-    }
     dt:target, span.highlighted {
         background-color: #404060;
     }
@@ -424,4 +421,13 @@ kbd {
     table.docutils td, table.docutils th {
         border: 1px solid #222 !important;
     }
+    div.body a {
+        color: #2092fa;
+    }
+    div.footer a {
+        color: #BBB;
+    }
+    
+    /* Color based on the Name.Function (.nf) class from pygments.css. */
+    .command { color: #008fd7 }
 }

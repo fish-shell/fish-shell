@@ -31,6 +31,7 @@
 #include "parse_util.h"
 #include "parser.h"
 #include "pcre2.h"
+#include "screen.h"
 #include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wildcard.h"
@@ -197,6 +198,32 @@ struct options_t {  //!OCLINT(too many fields)
 
     escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
 };
+
+static size_t width_without_escapes(wcstring ins) {
+    ssize_t width = 0;
+    // TODO: this is the same as fish_wcwidth_min_0 from screen.cpp
+    // Make that reusable (and add a wcswidth version).
+    for (auto c : ins) {
+        auto w = fish_wcwidth(c);
+        if (w > 0) width += w;
+    }
+
+    // Go to all escape characters, measure escape sequence,
+    // subtract its min-0-width.
+    size_t pos = 0;
+    while ((pos = ins.find('\x1B', pos)) != std::string::npos) {
+        auto len = escape_code_length(ins.c_str() + pos);
+        if (len) {
+            auto sub = ins.substr(pos, *len);
+            for (auto c : sub) {
+                auto w = fish_wcwidth(c);
+                if (w > 0) width -= w;
+            }
+        }
+        pos++;
+    }
+    return width;
+}
 
 /// This handles the `--style=xxx` flag.
 static int handle_flag_1(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
@@ -1227,7 +1254,7 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, const w
     arg_iterator_t aiter_width(argv, optind, streams);
     while (const wcstring *arg = aiter_width.nextstr()) {
         wcstring input_string = *arg;
-        ssize_t width = fish_wcswidth(input_string);
+        ssize_t width = width_without_escapes(input_string);
         if (width > max_width) max_width = width;
         inputs.push_back(std::move(input_string));
     }
@@ -1235,7 +1262,7 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, const w
     ssize_t pad_width = max_width > opts.width ? max_width : opts.width;
     for (auto &input : inputs) {
         wcstring padded;
-        ssize_t padded_width = fish_wcswidth(input);
+        ssize_t padded_width = width_without_escapes(input);
         if (pad_width >= padded_width) {
             ssize_t pad = (pad_width - padded_width) / pad_char_width;
             ssize_t remaining_width = (pad_width - padded_width) % pad_char_width;

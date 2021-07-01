@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #include "maybe.h"
-#if HAVE_SPAWN_H
+#ifdef HAVE_SPAWN_H
 #include <spawn.h>
 #endif
 #ifndef FISH_USE_POSIX_SPAWN
@@ -53,7 +53,7 @@ pid_t execute_fork();
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
 
-#ifdef FISH_USE_POSIX_SPAWN
+#if FISH_USE_POSIX_SPAWN
 /// A RAII type which wraps up posix_spawn's data structures.
 class posix_spawner_t {
    public:

@@ -190,7 +190,6 @@ div.body a:hover {
 
 tt, code, pre {
     font-family: monospace, sans-serif;
-    font-size: 96.5%;
     /* Older sphinx versions set a color here, we need to inherit it from the outer div.highlight */
     background-color: inherit;
 }
@@ -430,4 +429,9 @@ kbd {
     
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
+
+    /* The table background on fishfish Beta r1 */
+    th, dl.field-list > dt {
+        background-color: #121;
+    }
 }

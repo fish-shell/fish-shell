@@ -400,11 +400,11 @@ Unlike other shells, fish does not split command substitutions on any whitespace
     -lgobject-2.0
     -lglib-2.0
 
-If you need a command substitutions output as one argument, without any splits, use ``string collect``::
+If you need a command substitutions output as one argument, without any splits, use quoted command substitution::
 
     > echo "first line
     second line" > myfile
-    > set myfile (cat myfile | string collect)
+    > set myfile "$(cat myfile)"
     > printf '|%s|' $myfile
     |first line
     second line|

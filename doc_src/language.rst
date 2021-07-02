@@ -569,6 +569,8 @@ The output of a command (or an entire :ref:`pipeline <pipes>`) can be used as th
 
 When you write a command in parenthesis like ``outercommand (innercommand)``, the ``innercommand`` will be executed first. Its output will be taken and each line given as a separate argument to ``outercommand``, which will then be executed. [#]_
 
+A command substitution can have a dollar sign before the opening parenthesis like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines.
+
 If the output is piped to :ref:`string split or string split0 <cmd-string-split>` as the last step, those splits are used as they appear instead of splitting lines.
 
 The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :ref:`set <cmd-set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
@@ -588,7 +590,7 @@ Examples::
 
     # Set the ``data`` variable to the contents of 'data.txt'
     # without splitting it into a list.
-    begin; set -l IFS; set data (cat data.txt); end
+    set data "$(cat data.txt)"
 
     # Set ``$data`` to the contents of data, splitting on NUL-bytes.
     set data (cat data | string split0)

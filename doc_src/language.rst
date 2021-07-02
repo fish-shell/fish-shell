@@ -573,7 +573,7 @@ If the output is piped to :ref:`string split or string split0 <cmd-string-split>
 
 The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :ref:`set <cmd-set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
 
-Only part of the output can be used, see :ref:`index range expansion <expand-index-range>` for details.
+To use only part of the output, refer to :ref:`index range expansion <expand-index-range>`.
 
 Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :ref:`read <cmd-read>` command.
 

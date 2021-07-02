@@ -106,12 +106,13 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
 
 static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin, wchar_t **end,
                                               bool allow_incomplete, wchar_t open_type,
-                                              wchar_t close_type) {
+                                              wchar_t close_type, bool *is_quoted = nullptr) {
     // open_type is typically ( or [, and close type is the corresponding value.
     wchar_t *pos;
     bool escaped = false;
     bool syntax_error = false;
     int paran_count = 0;
+    std::vector<int> quoted_cmdsubs;
 
     wchar_t *paran_begin = nullptr, *paran_end = nullptr;
 
@@ -120,8 +121,14 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     for (pos = const_cast<wchar_t *>(in); *pos; pos++) {
         if (!escaped) {
             if (std::wcschr(L"'\"", *pos)) {
-                wchar_t *q_end = quote_end(pos);
+                wchar_t *q_end = quote_end(pos, *pos);
                 if (q_end && *q_end) {
+                    if (open_type == L'(' && *q_end == L'$') {
+                        quoted_cmdsubs.push_back(paran_count);
+                        // We want to report if the outermost comand substitution between
+                        // paran_begin..paran_end is quoted.
+                        if (paran_count == 0 && is_quoted) *is_quoted = true;
+                    }
                     pos = q_end;
                 } else {
                     break;
@@ -144,6 +151,25 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                     if (paran_count < 0) {
                         syntax_error = true;
                         break;
+                    }
+
+                    // Check if the ) did complete a quoted command substituion.
+                    if (open_type == L'(' && !quoted_cmdsubs.empty() &&
+                        quoted_cmdsubs.back() == paran_count) {
+                        quoted_cmdsubs.pop_back();
+                        // Quoted command substitutions temporarily close double quotes.
+                        // In "foo$(bar)baz$(qux)"
+                        // We are here ^
+                        // After the ) in a quoted command substitution, we need to act as if
+                        // there was an invisible double quote.
+                        wchar_t *q_end = quote_end(pos, L'"');
+                        if (q_end && *q_end) {  // Found a valid closing quote.
+                            // Stop at $(qux), which is another quoted command substitution.
+                            if (*q_end == L'$') quoted_cmdsubs.push_back(paran_count);
+                            pos = q_end;
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
@@ -185,7 +211,8 @@ int parse_util_locate_slice(const wchar_t *in, wchar_t **begin, wchar_t **end,
 static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_cursor_offset,
                                             wcstring *out_contents, size_t *out_start,
                                             size_t *out_end, bool accept_incomplete,
-                                            wchar_t open_type, wchar_t close_type) {
+                                            wchar_t open_type, wchar_t close_type,
+                                            bool *out_is_quoted) {
     // Clear the return values.
     if (out_contents != nullptr) out_contents->clear();
     *out_start = 0;
@@ -201,7 +228,7 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
     wchar_t *bracket_range_begin = nullptr, *bracket_range_end = nullptr;
     int ret = parse_util_locate_brackets_of_type(valid_range_start, &bracket_range_begin,
                                                  &bracket_range_end, accept_incomplete, open_type,
-                                                 close_type);
+                                                 close_type, out_is_quoted);
     if (ret <= 0) {
         return ret;
     }
@@ -231,9 +258,9 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
 
 int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
                                      wcstring *out_contents, size_t *out_start, size_t *out_end,
-                                     bool accept_incomplete) {
+                                     bool accept_incomplete, bool *out_is_quoted) {
     return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start,
-                                            out_end, accept_incomplete, L'(', L')');
+                                            out_end, accept_incomplete, L'(', L')', out_is_quoted);
 }
 
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
@@ -465,7 +492,7 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
             i++;
         } else {
             if (cmd[i] == L'\'' || cmd[i] == L'\"') {
-                const wchar_t *end = quote_end(&cmd[i]);
+                const wchar_t *end = quote_end(&cmd[i], cmd[i]);
                 // std::fwprintf( stderr, L"Jump %d\n",  end-cmd );
                 if ((end == nullptr) || (!*end) || (end > cmd + len)) {
                     res = cmd[i];
@@ -1046,7 +1073,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
 
         wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
         if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
-            !valid_var_name_char(next_char)) {
+            next_char != '(' && !valid_var_name_char(next_char)) {
             err = 1;
             if (out_errors) {
                 // We have something like $$$^....  Back up until we reach the first $.

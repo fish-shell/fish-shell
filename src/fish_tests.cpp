@@ -4654,6 +4654,8 @@ void history_tests_t::test_history_formats() {
         // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
         const wchar_t *expected[] = {L"EOF",
                                      L"sleep 123",
+                                     L"posix_cmd_sub $(is supported but only splits on newlines)",
+                                     L"posix_cmd_sub \"$(is supported)\"",
                                      L"a && echo valid construct",
                                      L"final line",
                                      L"echo supsup",
@@ -5102,8 +5104,7 @@ static void test_error_messages() {
                        {L"echo $", ERROR_NO_VAR_NAME},
                        {L"echo foo\"$\"bar", ERROR_NO_VAR_NAME},
                        {L"echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME},
-                       {L"echo foo $ bar", ERROR_NO_VAR_NAME},
-                       {L"echo foo$(foo)bar", ERROR_BAD_VAR_SUBCOMMAND1}};
+                       {L"echo foo $ bar", ERROR_NO_VAR_NAME}};
 
     parse_error_list_t errors;
     for (const auto &test : error_tests) {
@@ -5192,6 +5193,12 @@ static void test_highlighting() {
         {L")", highlight_role_t::operat},
         {L"|", highlight_role_t::statement_terminator},
         {L"cat", highlight_role_t::command},
+    });
+    highlight_tests.push_back({
+        {L"true", highlight_role_t::command},
+        {L"$(", highlight_role_t::operat},
+        {L"true", highlight_role_t::command},
+        {L")", highlight_role_t::operat},
     });
     highlight_tests.push_back({
         {L"true", highlight_role_t::command},

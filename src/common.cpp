@@ -1390,8 +1390,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 }
                 case L'$': {
                     if (unescape_special) {
-                        to_append_or_none = VARIABLE_EXPAND;
-                        vars_or_seps.push_back(input_position);
+                        bool is_cmdsub =
+                            input_position + 1 < input_len && input[input_position + 1] == L'(';
+                        if (!is_cmdsub) {
+                            to_append_or_none = VARIABLE_EXPAND;
+                            vars_or_seps.push_back(input_position);
+                        }
                     }
                     break;
                 }

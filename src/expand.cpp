@@ -761,7 +761,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             wcstring whole_item;
             whole_item.reserve(paren_begin + 1 + sub_item2.size() + 1 +
                                tail_item.completion.size());
-            whole_item.append(input, 0, paren_begin);
+            whole_item.append(input, 0, paren_begin - have_dollar);
             whole_item.push_back(INTERNAL_SEPARATOR);
             whole_item.append(sub_item2);
             whole_item.push_back(INTERNAL_SEPARATOR);

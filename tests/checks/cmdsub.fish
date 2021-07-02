@@ -1,5 +1,8 @@
 #RUN: %fish %s
 
+echo $(echo 1\n2)
+# CHECK: 1 2
+
 # Command substitution inside double quotes strips trailing newline.
 echo "a$(echo b)c"
 # CHECK: abc

@@ -915,26 +915,6 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
             break;
         }
-        case '(': {
-            // e.g.: 'echo "foo$(bar)baz"
-            // Try to determine what's in the parens.
-            wcstring token_after_parens;
-            wcstring paren_text;
-            size_t open_parens = dollar_pos + 1, cmdsub_start = 0, cmdsub_end = 0;
-            if (parse_util_locate_cmdsubst_range(token, &open_parens, &paren_text, &cmdsub_start,
-                                                 &cmdsub_end, true) > 0) {
-                token_after_parens = tok_first(paren_text);
-            }
-
-            // Make sure we always show something.
-            if (token_after_parens.empty()) {
-                token_after_parens = get_ellipsis_str();
-            }
-
-            append_syntax_error(errors, global_dollar_pos, ERROR_BAD_VAR_SUBCOMMAND1,
-                                truncate(token_after_parens, var_err_len).c_str());
-            break;
-        }
         case L'\0': {
             append_syntax_error(errors, global_dollar_pos, ERROR_NO_VAR_NAME);
             break;
@@ -958,39 +938,6 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
 
     // We should have appended exactly one error.
     assert(errors->size() == start_error_count + 1);
-}
-
-/// Detect cases like $(abc). Given an arg like foo(bar), let arg_src be foo and cmdsubst_src be
-/// bar. If arg ends with VARIABLE_EXPAND, then report an error.
-static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offset,
-                                                            const wcstring &arg_src,
-                                                            const wcstring &cmdsubst_src,
-                                                            parse_error_list_t *out_errors) {
-    parser_test_error_bits_t result_bits = 0;
-    wcstring unescaped_arg_src;
-
-    if (!unescape_string(arg_src, &unescaped_arg_src, UNESCAPE_SPECIAL) ||
-        unescaped_arg_src.empty()) {
-        return result_bits;
-    }
-
-    wchar_t last = unescaped_arg_src.at(unescaped_arg_src.size() - 1);
-    if (last == VARIABLE_EXPAND) {
-        result_bits |= PARSER_TEST_ERROR;
-        if (out_errors != nullptr) {
-            wcstring subcommand_first_token = tok_first(cmdsubst_src);
-            if (subcommand_first_token.empty()) {
-                // e.g. $(). Report somthing.
-                subcommand_first_token = get_ellipsis_str();
-            }
-            append_syntax_error(
-                out_errors,
-                arg_src_offset + arg_src.size() - 1,  // global position of the dollar
-                ERROR_BAD_VAR_SUBCOMMAND1, truncate(subcommand_first_token, var_err_len).c_str());
-        }
-    }
-
-    return result_bits;
 }
 
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
@@ -1038,15 +985,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
 
                 if (out_errors != nullptr) {
                     out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
-
-                    // Hackish. Take this opportunity to report $(...) errors. We do this because
-                    // after we've replaced with internal separators, we can't distinguish between
-                    // "" and (), and also we no longer have the source of the command substitution.
-                    // As an optimization, this is only necessary if the last character is a $.
-                    if (paren_begin > 0 && arg_src.at(paren_begin - 1) == L'$') {
-                        err |= detect_dollar_cmdsub_errors(
-                            source_start, arg_src.substr(0, paren_begin), subst, out_errors);
-                    }
                 }
                 break;
             }

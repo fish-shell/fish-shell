@@ -15,7 +15,8 @@ backticks `are not allowed`
 a && echo valid construct
 [[ x = y ]] && echo double brackets not allowed
 (( 1 = 2 )) && echo double parens not allowed
-posix_cmd_sub $(is not supported)
+posix_cmd_sub "$(is supported)"
+posix_cmd_sub $(is supported but only splits on newlines)
 sleep 123
 /** # see issue 7407
 jq <<"EOF"

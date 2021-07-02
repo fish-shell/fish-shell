@@ -501,9 +501,7 @@ void append_format(wcstring &str, const wchar_t *format, ...) {
     va_end(va);
 }
 
-wchar_t *quote_end(const wchar_t *pos) {
-    wchar_t c = *pos;
-
+wchar_t *quote_end(const wchar_t *pos, wchar_t quote) {
     while (true) {
         pos++;
 
@@ -513,7 +511,10 @@ wchar_t *quote_end(const wchar_t *pos) {
             pos++;
             if (!*pos) return nullptr;
         } else {
-            if (*pos == c) {
+            if (*pos == quote ||
+                // Command substitutions also end a double quoted string.  This is how we
+                // support command substitutions inside double quotes.
+                (quote == L'"' && *pos == L'$' && *(pos + 1) == L'(')) {
                 return const_cast<wchar_t *>(pos);
             }
         }
@@ -852,6 +853,22 @@ static bool unescape_string_var(const wchar_t *in, wcstring *out) {
 
     *out = str2wcstring(result);
     return true;
+}
+
+wcstring escape_string_for_double_quotes(wcstring in) {
+    // We need to escape backslashes, double quotes, and dollars only.
+    wcstring result = std::move(in);
+    size_t idx = result.size();
+    while (idx--) {
+        switch (result[idx]) {
+            case L'\\':
+            case L'$':
+            case L'"':
+                result.insert(idx, 1, L'\\');
+                break;
+        }
+    }
+    return result;
 }
 
 /// Escape a string in a fashion suitable for using in fish script. Store the result in out_str.

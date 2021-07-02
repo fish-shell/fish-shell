@@ -494,6 +494,9 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
         wchar_t next = in[idx + 1];
         if (next == L'$' || valid_var_name_char(next)) {
             colors[idx] = highlight_role_t::operat;
+        } else if (next == L'(') {
+            colors[idx] = highlight_role_t::operat;
+            return idx + 1;
         } else {
             colors[idx] = highlight_role_t::error;
         }

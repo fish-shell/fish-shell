@@ -620,8 +620,9 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
     size_t paren_end = 0;
     wcstring subcmd;
 
+    bool is_quoted = false;
     switch (parse_util_locate_cmdsubst_range(input, &cursor, &subcmd, &paren_begin, &paren_end,
-                                             false)) {
+                                             false, &is_quoted)) {
         case -1: {
             append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Mismatched parenthesis");
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
@@ -639,6 +640,8 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             DIE("unhandled parse_ret value");
         }
     }
+
+    bool have_dollar = paren_begin > 0 && input.at(paren_begin - 1) == L'$';
 
     wcstring_list_t sub_res;
     int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.job_group, sub_res);
@@ -702,12 +705,56 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
     // Recursively call ourselves to expand any remaining command substitutions. The result of this
     // recursive call using the tail of the string is inserted into the tail_expand array list
     completion_receiver_t tail_expand_recv = out->subreceiver();
-    expand_cmdsubst(input.substr(tail_begin), ctx, &tail_expand_recv,
+    wcstring tail = input.substr(tail_begin);
+    // A command substitution inside double quotes magically closes the quoted string.
+    // Reopen the quotes just after the command substitution.
+    if (is_quoted) {
+        tail.insert(0, L"\"");
+    }
+    expand_cmdsubst(std::move(tail), ctx, &tail_expand_recv,
                     errors);  // TODO: offset error locations
     completion_list_t tail_expand = tail_expand_recv.take();
 
     // Combine the result of the current command substitution with the result of the recursive tail
     // expansion.
+
+    if (is_quoted) {
+        // Awkwardly reconstruct the command output.
+        size_t approx_size = 0;
+        for (const wcstring &sub_item : sub_res) {
+            approx_size += sub_item.size() + 1;
+        }
+        wcstring sub_res_joined;
+        sub_res_joined.reserve(approx_size);
+        for (size_t i = 0; i < sub_res.size(); i++) {
+            sub_res_joined.append(escape_string_for_double_quotes(std::move(sub_res.at(i))));
+            sub_res_joined.push_back(L'\n');
+        }
+        // Mimic POSIX shells by stripping all trailing newlines.
+        if (!sub_res_joined.empty()) {
+            size_t i;
+            for (i = sub_res_joined.size(); i > 0; i--) {
+                if (sub_res_joined[i - 1] != L'\n') break;
+            }
+            sub_res_joined.erase(i);
+        }
+        // Instead of performing cartesian product expansion, we directly insert the command
+        // substitution output into the current expansion results.
+        for (const completion_t &tail_item : tail_expand) {
+            wcstring whole_item;
+            whole_item.reserve(paren_begin + 1 + sub_res_joined.size() + 1 +
+                               tail_item.completion.size());
+            whole_item.append(input, 0, paren_begin - have_dollar);
+            whole_item.append(sub_res_joined);
+            whole_item.append(tail_item.completion.substr(const_strlen(L"\"")));
+            if (!out->add(std::move(whole_item))) {
+                return append_overflow_error(errors);
+            }
+        }
+
+        return expand_result_t::ok;
+    }
+
     for (const wcstring &sub_item : sub_res) {
         wcstring sub_item2 = escape_string(sub_item, ESCAPE_ALL);
         for (const completion_t &tail_item : tail_expand) {

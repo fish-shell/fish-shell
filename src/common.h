@@ -441,11 +441,11 @@ std::unique_ptr<T> make_unique(Args &&...args) {
 }
 #endif
 
-/// This functions returns the end of the quoted substring beginning at \c in. The type of quoting
-/// character is detemrined by examining \c in. Returns 0 on error.
+/// This functions returns the end of the quoted substring beginning at \c pos. Returns 0 on error.
 ///
-/// \param in the position of the opening quote.
-wchar_t *quote_end(const wchar_t *pos);
+/// \param pos the position of the opening quote.
+/// \param quote the quote to use, usually pointed to by \c pos.
+wchar_t *quote_end(const wchar_t *pos, wchar_t quote);
 
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.
@@ -472,6 +472,10 @@ wcstring escape_string(const wchar_t *in, escape_flags_t flags,
                        escape_string_style_t style = STRING_STYLE_SCRIPT);
 wcstring escape_string(const wcstring &in, escape_flags_t flags,
                        escape_string_style_t style = STRING_STYLE_SCRIPT);
+
+/// Escape a string so that it may be inserted into a double-quoted string.
+/// This permits ownership transfer.
+wcstring escape_string_for_double_quotes(wcstring in);
 
 /// \return a string representation suitable for debugging (not for presenting to the user). This
 /// replaces non-ASCII characters with either tokens like <BRACE_SEP> or <\xfdd7>. No other escapes

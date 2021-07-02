@@ -523,7 +523,7 @@ After a command has been executed, it is remembered in the history list. Any dup
 
 By pressing :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
-History searches are case-insensitive unless the search string contains an uppercase character, and they can be aborted by pressing the escape key.
+History searches are case-insensitive unless the search string contains an uppercase character. You can stop a search to edit your search string by pressing :kbd:`Esc` or :kbd:`Page Down`.
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history.
 

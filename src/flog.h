@@ -164,6 +164,15 @@ class logger_t {
 
     // Log outside of the usual flog usage.
     void log_extra(const wchar_t *s) { log1(s); }
+
+    // Variant of flogf which is async safe. This is intended to be used after fork().
+    static void flogf_async_safe(const char *category, const char *fmt,
+                                 const char *param1 = nullptr, const char *param2 = nullptr,
+                                 const char *param3 = nullptr, const char *param4 = nullptr,
+                                 const char *param5 = nullptr, const char *param6 = nullptr,
+                                 const char *param7 = nullptr, const char *param8 = nullptr,
+                                 const char *param9 = nullptr, const char *param10 = nullptr,
+                                 const char *param11 = nullptr, const char *param12 = nullptr);
 };
 
 extern owning_lock<logger_t> g_logger;
@@ -205,6 +214,17 @@ void log_extra_to_flog_file(const wcstring &s);
                 flog_details::category_list_t::g_instance->wht, __VA_ARGS__); \
             errno = old_errno;                                                \
         }                                                                     \
+    } while (0)
+
+/// Variant of FLOG which is safe to use after fork().
+/// Only %s specifiers are supported.
+#define FLOGF_SAFE(wht, ...)                                             \
+    do {                                                                 \
+        if (flog_details::category_list_t::g_instance->wht.enabled) {    \
+            auto old_errno = errno;                                      \
+            flog_details::logger_t::flogf_async_safe(#wht, __VA_ARGS__); \
+            errno = old_errno;                                           \
+        }                                                                \
     } while (0)
 
 #endif

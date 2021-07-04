@@ -20,6 +20,10 @@ namespace flog_details {
 /// This is not modified after initialization.
 static std::vector<category_t *> s_all_categories;
 
+/// The fd underlying the flog output file.
+/// This is separated out for flogf_async_safe.
+static int s_flog_file_fd{STDERR_FILENO};
+
 /// When a category is instantiated it adds itself to the 'all' list.
 category_t::category_t(const wchar_t *name, const wchar_t *desc, bool enabled)
     : name(name), description(desc), enabled(enabled) {
@@ -85,6 +89,52 @@ void logger_t::log_fmt(const category_t &cat, const char *fmt, ...) {
     log_fmt(cat, L"%s", buff.get());
 }
 
+inline void async_safe_write_str(const char *s, size_t len = std::string::npos) {
+    if (s_flog_file_fd < 0) return;
+    if (len == std::string::npos) len = std::strlen(s);
+    ignore_result(write(s_flog_file_fd, s, len));
+}
+
+// static
+void logger_t::flogf_async_safe(const char *category, const char *fmt, const char *param1,
+                                const char *param2, const char *param3, const char *param4,
+                                const char *param5, const char *param6, const char *param7,
+                                const char *param8, const char *param9, const char *param10,
+                                const char *param11, const char *param12) {
+    const char *const params[] = {param1, param2, param3, param4,  param5,  param6,
+                                  param7, param8, param9, param10, param11, param12};
+    const size_t max_params = sizeof params / sizeof *params;
+
+    // Can't call fwprintf, that may allocate memory.
+    // Just call write() over and over.
+    async_safe_write_str(category);
+    async_safe_write_str(": ");
+
+    size_t param_idx = 0;
+    const char *cursor = fmt;
+    while (*cursor != '\0') {
+        const char *end = std::strchr(cursor, '%');
+        if (end == nullptr) end = cursor + std::strlen(cursor);
+        if (end > cursor) async_safe_write_str(cursor, end - cursor);
+        if (end[0] == '%' && end[1] == 's') {
+            // Handle a format string.
+            const char *param = (param_idx < max_params ? params[param_idx++] : nullptr);
+            if (!param) param = "(null)";
+            async_safe_write_str(param);
+            cursor = end + 2;
+        } else if (end[0] == '\0') {
+            // Must be at the end of the string.
+            cursor = end;
+        } else {
+            // Some other format specifier, just skip it.
+            cursor = end + 1;
+        }
+    }
+
+    // We always append a newline.
+    async_safe_write_str("\n");
+}
+
 }  // namespace flog_details
 
 using namespace flog_details;
@@ -117,7 +167,11 @@ void activate_flog_categories_by_pattern(const wcstring &inwc) {
     }
 }
 
-void set_flog_output_file(FILE *f) { g_logger.acquire()->set_file(f); }
+void set_flog_output_file(FILE *f) {
+    assert(f && "Null file");
+    g_logger.acquire()->set_file(f);
+    s_flog_file_fd = fileno(f);
+}
 
 void log_extra_to_flog_file(const wcstring &s) { g_logger.acquire()->log_extra(s.c_str()); }
 

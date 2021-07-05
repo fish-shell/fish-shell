@@ -2,7 +2,12 @@
 #REQUIRES: command -v tmux
 
 # Isolated tmux.
-set -g tmpdir (mktemp -d)
+# Note $XDG_CONFIG_HOME typically has a leading double-dot,
+# so our uvars file will leak across runs; therefore
+# descend more deeply into the tmpdir.
+set -g tmpdir (mktemp -d)/inner1/inner2/
+mkdir -p $tmpdir
+
 set -g tmux tmux -S $tmpdir/.tmux-socket -f /dev/null
 
 set -g sleep sleep .1

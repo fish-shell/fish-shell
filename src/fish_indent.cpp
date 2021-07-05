@@ -922,17 +922,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'd': {
-                char *end;
-                long tmp;
-
-                errno = 0;
-                tmp = strtol(optarg, &end, 10);
-
-                if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
-                    debug_level = static_cast<int>(tmp);
-                } else {
-                    activate_flog_categories_by_pattern(str2wcstring(optarg));
-                }
+                activate_flog_categories_by_pattern(str2wcstring(optarg));
                 for (auto cat : get_flog_categories()) {
                     if (cat->enabled) {
                         std::fwprintf(stdout, L"Debug enabled for category: %ls\n", cat->name);

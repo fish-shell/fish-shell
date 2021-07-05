@@ -47,14 +47,10 @@ set -g fish_use_posix_spawn 1
 echo $status
 rm file.fish
 #CHECK: 126
-#CHECKERR: Failed {{.*}}
-#CHECKERR: exec: {{.*}}
-#CHECKERR: {{.*}}
+#CHECKERR: exec: {{.*}}{{.*}}
 
 #CHECK: 126
-#CHECKERR: Failed {{.*}}
 #CHECKERR: exec: {{.*}}
-#CHECKERR: {{.*}}
 
 
 # On to NUL bytes.
@@ -70,25 +66,17 @@ echo -n -e 'true\x00' >file
 sleep 0.1
 runfile
 #CHECK: 126
-#CHECKERR: Failed {{.*}}
 #CHECKERR: exec: {{.*}}
-#CHECKERR: {{.*}}
 
 #CHECK: 126
-#CHECKERR: Failed {{.*}}
 #CHECKERR: exec: {{.*}}
-#CHECKERR: {{.*}}
 
 # Doesn't meet our heuristic as there is no lowercase before newline.
 echo -n -e 'NOPE\n\x00' >file
 sleep 0.1
 runfile
 #CHECK: 126
-#CHECKERR: Failed {{.*}}
 #CHECKERR: exec: {{.*}}
-#CHECKERR: {{.*}}
 
 #CHECK: 126
-#CHECKERR: Failed {{.*}}
 #CHECKERR: exec: {{.*}}
-#CHECKERR: {{.*}}

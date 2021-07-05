@@ -163,31 +163,6 @@ using job_id_t = int;
 /// Every job has a unique positive value for this.
 using internal_job_id_t = uint64_t;
 
-/// Issue a debug message with printf-style string formating and automatic line breaking. The string
-/// will begin with the string \c program_name, followed by a colon and a whitespace.
-///
-/// Because debug is often called to tell the user about an error, before using wperror to give a
-/// specific error message, debug will never ever modify the value of errno.
-///
-/// \param level the priority of the message. Lower number means higher priority. Messages with a
-/// priority_number higher than \c debug_level will be ignored..
-/// \param msg the message format string.
-///
-/// Example:
-///
-/// <code>debug( 1, L"Pi = %.3f", M_PI );</code>
-///
-/// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
-/// program_name is 'fish'.
-[[gnu::noinline, gnu::format(printf, 2, 3)]] void debug_impl(int level, const char *msg, ...);
-[[gnu::noinline]] void debug_impl(int level, const wchar_t *msg, ...);
-
-/// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
-/// it will not be printed.
-extern std::atomic<int> debug_level;
-
-inline bool should_debug(int level) { return level <= debug_level.load(std::memory_order_relaxed); }
-
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 [[noreturn]] void exit_without_destructors(int code);
 
@@ -339,16 +314,6 @@ wcstring format_size(long long sz);
 
 /// Version of format_size that does not allocate memory.
 void format_size_safe(char buff[128], unsigned long long sz);
-
-/// Our crappier versions of debug which is guaranteed to not allocate any memory, or do anything
-/// other than call write(). This is useful after a call to fork() with threads.
-void debug_safe(int level, const char *msg, const char *param1 = nullptr,
-                const char *param2 = nullptr, const char *param3 = nullptr,
-                const char *param4 = nullptr, const char *param5 = nullptr,
-                const char *param6 = nullptr, const char *param7 = nullptr,
-                const char *param8 = nullptr, const char *param9 = nullptr,
-                const char *param10 = nullptr, const char *param11 = nullptr,
-                const char *param12 = nullptr);
 
 /// Writes out a long safely.
 void format_long_safe(char buff[64], long val);

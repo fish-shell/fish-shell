@@ -58,6 +58,8 @@ class category_list_t {
 
     category_t event{L"event", L"Firing events"};
 
+    category_t exec{L"exec", L"Errors reported by exec (on by default)", true};
+
     category_t exec_job_status{L"exec-job-status", L"Jobs changing status"};
 
     category_t exec_job_exec{L"exec-job-exec", L"Jobs being executed"};
@@ -180,7 +182,7 @@ extern owning_lock<logger_t> g_logger;
 }  // namespace flog_details
 
 /// Set the active flog categories according to the given wildcard \p wc.
-void activate_flog_categories_by_pattern(const wcstring &wc);
+void activate_flog_categories_by_pattern(wcstring wc);
 
 /// Set the file that flog should output to.
 /// flog does not close this file.

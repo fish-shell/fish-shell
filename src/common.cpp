@@ -87,8 +87,8 @@ static relaxed_atomic_t<wchar_t> obfuscation_read_char;
 wchar_t get_obfuscation_read_char() { return obfuscation_read_char; }
 
 bool g_profiling_active = false;
+
 const wchar_t *program_name;
-std::atomic<int> debug_level{1};  // default maximum debug output level (errors and warnings)
 
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
@@ -606,48 +606,6 @@ static void debug_shared(const wchar_t level, const wcstring &msg) {
         std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", level, program_name, current_pid,
                       msg.c_str());
     }
-}
-
-void debug_safe(int level, const char *msg, const char *param1, const char *param2,
-                const char *param3, const char *param4, const char *param5, const char *param6,
-                const char *param7, const char *param8, const char *param9, const char *param10,
-                const char *param11, const char *param12) {
-    const char *const params[] = {param1, param2, param3, param4,  param5,  param6,
-                                  param7, param8, param9, param10, param11, param12};
-    if (!msg) return;
-
-    // Can't call fwprintf, that may allocate memory Just call write() over and over.
-    if (level > debug_level) return;
-    int errno_old = errno;
-
-    size_t param_idx = 0;
-    const char *cursor = msg;
-    while (*cursor != '\0') {
-        const char *end = std::strchr(cursor, '%');
-        if (end == nullptr) end = cursor + std::strlen(cursor);
-
-        ignore_result(write(STDERR_FILENO, cursor, end - cursor));
-
-        if (end[0] == '%' && end[1] == 's') {
-            // Handle a format string.
-            assert(param_idx < sizeof params / sizeof *params);
-            const char *format = params[param_idx++];
-            if (!format) format = "(null)";
-            ignore_result(write(STDERR_FILENO, format, std::strlen(format)));
-            cursor = end + 2;
-        } else if (end[0] == '\0') {
-            // Must be at the end of the string.
-            cursor = end;
-        } else {
-            // Some other format specifier, just skip it.
-            cursor = end + 1;
-        }
-    }
-
-    // We always append a newline.
-    ignore_result(write(STDERR_FILENO, "\n", 1));
-
-    errno = errno_old;
 }
 
 // Careful to not negate LLONG_MIN.

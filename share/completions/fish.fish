@@ -6,7 +6,7 @@ complete -c fish -s n -l no-execute -d "Only parse input, do not execute"
 complete -c fish -s i -l interactive -d "Run in interactive mode"
 complete -c fish -s l -l login -d "Run as a login shell"
 complete -c fish -s p -l profile -d "Output profiling information (excluding startup) to a file" -r
-complete -c fish -s p -l profile-startup -d "Output startup profiling information to a file" -r
+complete -c fish -l profile-startup -d "Output startup profiling information to a file" -r
 complete -c fish -s d -l debug -d "Specify debug categories" -x -a "(fish --print-debug-categories | string replace ' ' \t)"
 complete -c fish -s o -l debug-output -d "Where to direct debug output to" -rF
 complete -c fish -s D -l debug-stack-frames -d "Show specified # of frames with debug output" -x -a "(seq 128)\t\n"

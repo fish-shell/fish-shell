@@ -98,6 +98,21 @@ end
 
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
+    # Deduplicate $fish_user_paths
+    # This should help with people appending to it in config.fish
+    set -l new_user_path
+    for path in (string split : -- $fish_user_paths)
+        if not contains -- $path $new_user_path
+            set -a new_user_path $path
+        end
+    end
+
+    if test (count $new_user_path) -lt (count $fish_user_paths)
+        # This will end up calling us again, so we return
+        set fish_user_paths $new_user_path
+        return
+    end
+
     set -l local_path $PATH
 
     for x in $__fish_added_user_paths

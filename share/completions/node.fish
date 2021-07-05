@@ -109,6 +109,8 @@ complete -c node -l trace_opt_stats -d 'trace lazy optimization statistics. type
 complete -c node -l opt -d 'use adaptive optimizations. type: bool default: true'
 complete -c node -l always_opt -d 'always try to optimize functions. type: bool default: false'
 complete -c node -l prepare_always_opt -d 'prepare for turning on always opt. type: bool default: false'
+complete -c node -l sparkplug -d 'use non-optimizing sparkplug compiler. type: bool default: false'
+complete -c node -l always_sparkplug -d 'always use non-optimizing sparkplug compiler. type: bool default: false'
 complete -c node -l trace_deopt -d 'trace deoptimization. type: bool default: false'
 complete -c node -l min_preparse_length -d 'minimum length for automatic enable preparsing. type: int default: 1024'
 complete -c node -l always_full_compiler -d 'try to use the dedicated run-once backend for all code. type: bool default: false'

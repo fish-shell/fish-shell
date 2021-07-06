@@ -1,39 +1,5 @@
-fish 3.4.0 (released ???)
-=========================
-
-Notable improvements and fixes
-------------------------------
-
-Deprecations and removed features
----------------------------------
-
-Scripting improvements
-----------------------
-
-Interactive improvements
-------------------------
-
-New or improved bindings
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Improved prompts
-^^^^^^^^^^^^^^^^
-
-Completions
-^^^^^^^^^^^
-
-Improved terminal support
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For distributors
-----------------
-- *This placeholder silences a sphinx doc warning, so the last section is not empty.*
-
---------------
- 
 fish 3.3.0 (released June 28, 2021)
 ===================================
-
 
 Notable improvements and fixes
 ------------------------------

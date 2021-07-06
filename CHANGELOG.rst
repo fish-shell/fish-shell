@@ -1,4 +1,4 @@
-fish 3.3.1 (released July XX, 2021)
+fish 3.3.1 (released July 6, 2021)
 ==================================
 
 This release of fish fixes the following problems identified in fish 3.3.0:
@@ -9,6 +9,8 @@ This release of fish fixes the following problems identified in fish 3.3.0:
 - fish builds correctly on platforms that do not have a ``spawn.h`` header, such as old versions of OS X (:issue:`8097`).
 
 A number of improvements to the documentation, and fixes for completions, are included as well.
+
+If you are upgrading from version 3.2.2 or before, please also review the release notes for 3.3.0 (included below).
 
 --------------
  

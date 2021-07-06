@@ -30,7 +30,23 @@ For distributors
 - The minimum version of CMake required to build fish was raised to 3.5.0.
 
 --------------
- 
+
+fish 3.3.1 (released July 6, 2021)
+==================================
+
+This release of fish fixes the following problems identified in fish 3.3.0:
+
+- The prompt and command line are redrawn correctly in response to universal variable changes (:issue:`8088`).
+- A superfluous error that was produced when setting the ``PATH`` or ``CDPATH`` environment variables to include colon-delimited components that do not exist was removed (:issue:`8095`).
+- The Vi mode indicator in the prompt is repainted correctly after :kbd:`Ctrl-C` cancels the current command (:issue:`8103`).
+- fish builds correctly on platforms that do not have a ``spawn.h`` header, such as old versions of OS X (:issue:`8097`).
+
+A number of improvements to the documentation, and fixes for completions, are included as well.
+
+If you are upgrading from version 3.2.2 or before, please also review the release notes for 3.3.0 (included below).
+
+--------------
+
 fish 3.3.0 (released June 28, 2021)
 ===================================
 

@@ -97,10 +97,13 @@ maybe_t<int> builtin_return(parser_t &parser, io_streams_t &streams, const wchar
         }
     }
 
+    // If we're not in a function, exit the current script,
+    // but not an interactive shell.
     if (!has_function_block) {
-        streams.err.append_format(_(L"%ls: Not inside of function\n"), cmd);
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_CMD_ERROR;
+        if (!parser.libdata().is_interactive) {
+            parser.libdata().exit_current_script = true;
+        }
+        return retval;
     }
 
     // Mark a return in the libdata.

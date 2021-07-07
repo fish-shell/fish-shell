@@ -22,6 +22,9 @@ Improved prompts
 
 Completions
 ^^^^^^^^^^^
+- Added completions for:
+  - ``black`` (:issue:`8123`)
+
 - Improvements to many completions.
 
 Improved terminal support

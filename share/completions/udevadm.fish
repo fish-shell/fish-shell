@@ -1,5 +1,5 @@
 set -l commands info trigger settle control monitor test test-builtin
-complete -c udevadm -n __fish_is_first_token -xa "$commands"
+complete -c udevadm -n "fish_is_nth_token 1" -xa "$commands"
 
 complete -c udevadm -s h -l help -d "Show help"
 complete -c udevadm -s V -l version -d "Show version info"

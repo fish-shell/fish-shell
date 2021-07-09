@@ -941,7 +941,23 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else:
             with open(path) as f:
                 out = f.read()
+        extrainfo = {}
         for line in out.split("\n"):
+            # Ignore empty lines
+            if not line: continue
+            # Lines starting with "#" can contain metadata.
+            if line.startswith("#"):
+                if not ":" in line: continue
+                key, value = line.split(":", maxsplit=1)
+                key = key.strip("# '")
+                value = value.strip(" '\"")
+                # Only use keys we know
+                if not key in ["name", "preferred_background", "url"]: continue
+                if key == "preferred_background":
+                    if not value in named_colors and not value.startswith("#"):
+                        value = "#" + value
+                extrainfo[key] = value
+
 
             for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(1, 2)]
@@ -960,7 +976,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             color_desc = descriptions.get(color_name, "")
             result.append([color_name, color_desc, parse_color("")])
 
-        return result
+        return result, extrainfo
 
     def do_get_functions(self):
         out, err = run_fish_cmd("functions")
@@ -1297,15 +1313,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # Construct our colorschemes.
             # Add the current scheme first, then the default.
             # The rest in alphabetical order.
-            output = [{ "theme": "Current", "colors": self.do_get_colors()},
-                      { "theme": "fish default", "colors": self.do_get_colors("themes/fish default.theme")}]
+            curcolors, curinfo = self.do_get_colors()
+            defcolors, definfo = self.do_get_colors("themes/fish default.theme")
+            curinfo.update({ "theme": "Current", "colors": curcolors})
+            definfo.update({ "theme": "fish default", "colors": defcolors})
+            output = [curinfo, definfo]
             paths = sorted(glob.iglob("themes/*.theme"), key=str.casefold)
             for p in paths:
                 # Strip ".theme" suffix and path
                 theme = os.path.basename(p)[:-6]
                 if any(theme == d["theme"] for d in output): continue
-                out = self.do_get_colors(p)
-                output.append({ "theme": theme, "colors": out})
+                out, outinfo = self.do_get_colors(p)
+                outinfo.update({ "theme": theme, "colors": out })
+                output.append(outinfo)
             print(len(output))
         elif p == "/functions/":
             output = self.do_get_functions()

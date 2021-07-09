@@ -81,14 +81,30 @@ controllers.controller("colorsController", function($scope, $http) {
     /* Array of FishColorSchemes */
     $scope.colorSchemes = [];
 
+    isValidColor = function(col) {
+        // Check if preferred_background is actually a valid color
+        var s = new Option().style;
+        s.color = col;
+        return !!s.color;
+    }
+
     $scope.getThemes = function() {
         $http.get("colors/").then(function(arg) {
             for (var scheme of arg.data) {
                 var currentScheme = { "name": "Current", "colors":[], "preferred_background": "black" };
                 currentScheme["name"] = scheme["theme"];
                 var data = scheme["colors"];
+                if (scheme["preferred_background"]) {
+                    if (isValidColor(scheme["preferred_background"])) {
+                        currentScheme["preferred_background"] = scheme["preferred_background"];
+                    }
+                }
+                if (scheme["url"]) currentScheme["url"] = scheme["url"];
+
                 for (var i in data) {
-                    currentScheme[data[i].name] = data[i].color;
+                    if (isValidColor(data[i].color)) {
+                        currentScheme[data[i].name] = data[i].color;
+                    }
                 }
                 $scope.colorSchemes.push(currentScheme);
             }

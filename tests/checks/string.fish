@@ -667,6 +667,18 @@ string collect -N '' >/dev/null; and echo unexpected success; or echo expected f
 string collect \n\n >/dev/null; and echo unexpected success; or echo expected failure
 # CHECK: expected failure
 
+echo "foo"(true | string collect --allow-empty)"bar"
+# CHECK: foobar
+test -z (string collect)
+and echo Nothing
+# CHECK: Nothing
+test -n (string collect)
+and echo Something
+# CHECK: Something
+test -n (string collect -a)
+or echo No, actually nothing
+# CHECK: No, actually nothing
+
 # string collect in functions
 # This function outputs some newline-separated content, and some
 # explicitly un-separated content.

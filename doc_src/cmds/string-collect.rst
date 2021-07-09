@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    string collect [(-N | --no-trim-newlines)] [STRING...]
+    string collect [(-a | --allow-empty)] [(-N | --no-trim-newlines)] [STRING...]
 
 .. END SYNOPSIS
 
@@ -22,6 +22,8 @@ Description
 If invoked with multiple arguments instead of input, ``string collect`` preserves each argument separately, where the number of output arguments is equal to the number of arguments given to ``string collect``.
 
 Any trailing newlines on the input are trimmed, just as with ``"$(cmd)"`` substitution in sh. ``--no-trim-newlines`` can be used to disable this behavior, which may be useful when running a command such as ``set contents (cat filename | string collect -N)``.
+
+With ``--allow-empty``, ``string collect`` always prints one (empty) argument. This can be used to prevent an argument from disappearing.
 
 .. END DESCRIPTION
 
@@ -42,5 +44,8 @@ Examples
     two
     three
     "
+
+    >_ echo foo(true | string collect --allow-empty)bar
+    foobar
 
 .. END EXAMPLES

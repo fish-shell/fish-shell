@@ -880,7 +880,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def write_to_wfile(self, txt):
         self.wfile.write(txt.encode("utf-8"))
 
-    def do_get_colors(self):
+    def do_get_colors(self, path=None):
+        """ Read the colors from a .theme file or the current shell config (if no path has been given) """
         # Looks for fish_color_*.
         # Returns an array of lists [color_name, color_description, color_value]
         result = []
@@ -934,7 +935,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             "cancel": "The ^C cancel indicator",
         }
 
-        out, err = run_fish_cmd("set -L")
+        # If we don't have a path, we get the current theme.
+        if not path:
+            out, err = run_fish_cmd("set -L")
+        else:
+            with open(path) as f:
+                out = f.read()
         for line in out.split("\n"):
 
             for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
@@ -1288,7 +1294,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.path = p
 
         if p == "/colors/":
-            output = self.do_get_colors()
+            # Construct our colorschemes.
+            # Add the current scheme first, then the default.
+            # The rest in alphabetical order.
+            output = [{ "theme": "Current", "colors": self.do_get_colors()},
+                      { "theme": "fish default", "colors": self.do_get_colors("themes/fish default.theme")}]
+            paths = sorted(glob.iglob("themes/*.theme"), key=str.casefold)
+            for p in paths:
+                # Strip ".theme" suffix and path
+                theme = os.path.basename(p)[:-6]
+                if any(theme == d["theme"] for d in output): continue
+                out = self.do_get_colors(p)
+                output.append({ "theme": theme, "colors": out})
+            print(len(output))
         elif p == "/functions/":
             output = self.do_get_functions()
         elif p == "/variables/":

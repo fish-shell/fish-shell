@@ -79,34 +79,20 @@ controllers.controller("colorsController", function($scope, $http) {
     $scope.sampleTerminalBackgroundColors = ['white', '#' + solarized.base3, '#300', '#003', '#' + solarized.base03, '#232323', '#'+nord.nord0, 'black'];
 
     /* Array of FishColorSchemes */
-    $scope.colorSchemes = [
-        color_scheme_fish_default,
-        color_scheme_ayu_light,
-        color_scheme_ayu_dark,
-        color_scheme_ayu_mirage,
-        color_scheme_solarized_light,
-        color_scheme_solarized_dark,
-        color_scheme_tomorrow,
-        color_scheme_tomorrow_night,
-        color_scheme_tomorrow_night_bright,
-        color_scheme_nord,
-        color_scheme_base16_default_dark,
-        color_scheme_base16_default_light,
-        color_scheme_base16_eighties
-    ];
-    for (var i=0; i < additional_color_schemes.length; i++)
-        $scope.colorSchemes.push(additional_color_schemes[i])
+    $scope.colorSchemes = [];
 
-
-    $scope.getCurrentTheme = function() {
+    $scope.getThemes = function() {
         $http.get("colors/").then(function(arg) {
-            var currentScheme = { "name": "Current", "colors":[], "preferred_background": "black" };
-            var data = arg.data
-            for (var i in data) {
-                currentScheme[data[i].name] = data[i].color;
+            for (var scheme of arg.data) {
+                var currentScheme = { "name": "Current", "colors":[], "preferred_background": "black" };
+                currentScheme["name"] = scheme["theme"];
+                var data = scheme["colors"];
+                for (var i in data) {
+                    currentScheme[data[i].name] = data[i].color;
+                }
+                $scope.colorSchemes.push(currentScheme);
             }
-            $scope.colorSchemes.splice(0, 0, currentScheme);
-            $scope.changeSelectedColorScheme(currentScheme);
+            $scope.changeSelectedColorScheme($scope.colorSchemes[0]);
         })};
 
 	$scope.saveThemeButtonTitle = "Set Theme";
@@ -173,7 +159,7 @@ controllers.controller("colorsController", function($scope, $http) {
         })
     };
 
-    $scope.getCurrentTheme();
+    $scope.getThemes();
 });
 
 controllers.controller("promptController", function($scope, $http) {

@@ -143,6 +143,10 @@ controllers.controller("colorsController", function($scope, $http) {
                             "fish_pager_color_progress"
                            ];
         var remaining = settingNames.length;
+        postdata = {
+            "theme" : $scope.selectedColorScheme["name"],
+            "colors": [],
+        }
         for (name of settingNames) {
             var selected;
             // Skip colors undefined in the current theme
@@ -157,17 +161,16 @@ controllers.controller("colorsController", function($scope, $http) {
             } else {
                 selected = $scope.selectedColorScheme[name];
             }
-            var postData = "what=" + name + "&color=" + selected + "&background_color=&bold=&underline=&dim=&reverse=&italics=";
-            $http.post("set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).then(function(arg) {
-            	if (arg.status == 200) {
-            		remaining -= 1;
-            		if (remaining == 0) {
-            			/* All styles set! */
-            			$scope.saveThemeButtonTitle = "Theme Set!";
-            		}
-            	}
-            })
+            postdata.colors.push({
+                "what" : name,
+                "color" : selected,
+            });
         }
+        $http.post("set_color/", postdata, { headers: {'Content-Type': 'application/json'} }).then(function(arg) {
+            if (arg.status == 200) {
+            	$scope.saveThemeButtonTitle = "Theme Set!";
+            }
+        })
     };
 
     $scope.getCurrentTheme();

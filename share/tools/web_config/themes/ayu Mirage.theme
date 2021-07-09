@@ -1,3 +1,7 @@
+# name: ayu Mirage
+# url: 'https://github.com/dempfi/ayu'
+# preferred_background: 1F2430
+
 fish_color_normal CBCCC6
 fish_color_command 5CCFE6
 fish_color_quote BAE67E

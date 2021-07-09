@@ -1,3 +1,7 @@
+# name: ayu Light
+# url: 'https://github.com/dempfi/ayu'
+# preferred_background: FAFAFA
+
 fish_color_normal 575F66
 fish_color_command 55B4D4
 fish_color_quote 86B300

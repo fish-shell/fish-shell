@@ -1,3 +1,7 @@
+# name: 'Tomorrow Night'
+# preferred_background: 232323
+# url: 'https://github.com/chriskempson/tomorrow-theme'
+
 fish_color_normal normal
 fish_color_command b294bb
 fish_color_quote b5bd68

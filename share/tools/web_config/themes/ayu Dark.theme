@@ -1,3 +1,7 @@
+# name: ayu Dark
+# url: 'https://github.com/dempfi/ayu'
+# preferred_background: 0A0E14
+
 fish_color_normal B3B1AD
 fish_color_command 39BAE6
 fish_color_quote C2D94C

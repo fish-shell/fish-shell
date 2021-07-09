@@ -1,3 +1,7 @@
+# name: 'Base16 Eighties'
+# preferred_background: 2d2d2d
+# url: 'https://github.com/chriskempson/base16-default-schemes'
+
 fish_color_normal normal
 fish_color_command 99cc99
 fish_color_quote ffcc66

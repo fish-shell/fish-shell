@@ -1,3 +1,7 @@
+# name: Nord
+# preferred_background: 2e3440
+# url: https://www.nordtheme.com
+
 fish_color_normal normal
 fish_color_command 81a1c1
 fish_color_quote a3be8c

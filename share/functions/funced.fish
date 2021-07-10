@@ -107,7 +107,7 @@ function funced --description 'Edit function definition'
                 end
             end
 
-            if not source $tmpname
+            if not source <$tmpname
                 # Failed to source the function file. Prompt to try again.
                 echo # add a line between the parse error and the prompt
                 set -l repeat

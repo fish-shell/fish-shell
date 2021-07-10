@@ -41,6 +41,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "fds.h"
 #include "fish_version.h"
 #include "flog.h"
+#include "future_feature_flags.h"
 #include "highlight.h"
 #include "operation_context.h"
 #include "output.h"
@@ -852,6 +853,12 @@ int main(int argc, char *argv[]) {
     // (e.g., "# -*- coding: <encoding-name> -*-").
     setlocale(LC_ALL, "");
     env_init();
+
+    if (auto features_var = env_stack_t::globals().get(L"fish_features")) {
+        for (const wcstring &s : features_var->as_list()) {
+            mutable_fish_features().set_from_string(s);
+        }
+    }
 
     // Types of output we support.
     enum {

@@ -593,16 +593,30 @@ end
 # So instead, we store the aliases in global variables, named after the alias, containing the command.
 # This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
 #                                                  but a command can be aliased multiple times)
-git config -z --get-regexp 'alias\..*' | while read -lz alias command _
-    # If the command starts with a "!", it's a shell command, run with /bin/sh,
-    # or any other shell defined at git's build time.
-    #
-    # We can't do anything with them, and we run git-config again for listing aliases,
-    # so we skip them here.
-    string match -q '!*' -- $command; and continue
+git config -z --get-regexp 'alias\..*' | while read -lz alias cmdline
+    set -l command (__fish_git_aliased_command $cmdline)
+    string match -q --regex '\w+' -- $command; or continue
     # Git aliases can contain chars that variable names can't - escape them.
     set -l alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command
+end
+
+# Approximately duplicates the logic from https://github.com/git/git/blob/d486ca60a51c9cb1fe068803c3f540724e95e83a/contrib/completion/git-completion.bash#L1130
+# The Git script also finds aliases that reference other aliases via a loop but this is fine for a PoC
+function __fish_git_aliased_command
+    for word in (string split ' ' -- $argv)
+        switch $word
+            case !gitk gitk
+                echo "gitk"
+                return
+            # Adding " to the list
+            case '!*' '-*' '*=*' git '()' '{' : '\'*' '"*'
+                continue
+            case '*'
+                echo $word
+                return
+        end
+    end
 end
 
 function __fish_git_using_command

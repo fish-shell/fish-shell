@@ -9,6 +9,7 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
+- ``string collect`` supports a new ``--allow-empty`` option, which will output one empty argument in a command substitution that has no output (:issue:`8054`). This allows commands like ``test -n (echo -n | string collect --allow-empty)`` to work more reliably.
 
 Interactive improvements
 ------------------------
@@ -21,9 +22,11 @@ Improved prompts
 
 Completions
 ^^^^^^^^^^^
+- Improvements to many completions.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
 
 For distributors
 ----------------

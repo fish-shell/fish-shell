@@ -9,6 +9,6 @@ complete fish_config -n "__fish_seen_subcommand_from prompt; and not __fish_seen
     -a list -d 'List all available prompts'
 complete fish_config -n "__fish_seen_subcommand_from prompt; and not __fish_seen_subcommand_from $prompt_commands" \
     -a save -d 'Save the current or given prompt to ~/.config/fish'
-complete fish_config -n '__fish_seen_subcommand_from prompt; and __fish_seen_subcommand_from choose save show' -a '(prompt list)'
+complete fish_config -n '__fish_seen_subcommand_from prompt; and __fish_seen_subcommand_from choose save show' -a '(fish_config prompt list)'
 
 complete fish_config -n '__fish_use_subcommand' -a browse -d 'Open the web-based UI'

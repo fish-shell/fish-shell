@@ -37,7 +37,7 @@ The following options are available:
   "``%self``" can be specified as an alias for ``$fish_pid``, and the function will be run when the
   current fish instance exits.
 
-- ``-s`` or ``--on-signal SIGSPEC`` tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a signal number, or the signal name, such as SIGHUP (or just HUP).
+- ``-s`` or ``--on-signal SIGSPEC`` tells fish to run this function when the signal ``SIGSPEC`` is delivered. ``SIGSPEC`` can be a signal number, or the signal name, such as ``SIGHUP`` (or just ``HUP``). Note that the signal must have been delivered to fish; for example, :kbd:`Ctrl-C` sends ``SIGINT`` to the foreground process group, which will not be fish if you are running another command at the time.
 
 - ``-S`` or ``--no-scope-shadowing`` allows the function to access the variables of calling functions. Normally, any variables inside the function that have the same name as variables from the calling function are "shadowed", and their contents are independent of the calling function.
   It's important to note that this does not capture referenced variables or the scope at the time of function declaration! At this time, fish does not have any concept of closures, and variable lifetimes are never extended. In other words, by using ``--no-scope-shadowing`` the scope of the function each time it is run is shared with the scope it was *called* from rather than the scope it was *defined* in.

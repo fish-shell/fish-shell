@@ -329,6 +329,10 @@ void inputter_t::prepare_to_select() /* override */ {
 }
 
 void inputter_t::select_interrupted() /* override */ {
+    // Readline commands may be bound to \cc which also sets the cancel flag.
+    // See #6937, #8125.
+    signal_clear_cancel();
+
     // Fire any pending events and reap stray processes, including printing exit status messages.
     auto &parser = *this->parser_;
     event_fire_delayed(parser);

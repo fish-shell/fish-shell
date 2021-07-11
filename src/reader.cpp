@@ -2943,8 +2943,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 set_command_line_and_position(&command_line, L"", 0);
                 s_reset_abandoning_line(&screen, termsize_last().width - command_line.size());
 
-                // Post fish_cancel, allowing it to fire.
-                signal_clear_cancel();
+                // Post fish_cancel.
                 event_fire_generic(parser(), L"fish_cancel");
             }
             break;
@@ -3976,10 +3975,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                 }
                 history_search.reset();
             }
-
-            // Readline commands may be bound to \cc which also sets the cancel flag.
-            // See #6937.
-            signal_clear_cancel();
 
             rls.last_cmd = readline_cmd;
         } else {

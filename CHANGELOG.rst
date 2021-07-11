@@ -13,6 +13,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+Vi mode cursors are now set properly after control-C. (:issue:`8125`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

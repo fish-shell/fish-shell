@@ -23,7 +23,10 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+
   - ``black`` (:issue:`8123`)
+  - Angular's ``ng`` (:issue:`8111`)
+  - ``zef`` (:issue:`8114`)
 
 - Improvements to many completions.
 

@@ -881,7 +881,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.wfile.write(txt.encode("utf-8"))
 
     def do_get_colors(self, path=None):
-        """ Read the colors from a .theme file or the current shell config (if no path has been given) """
+        """ Read the colors from a .theme file in path, or the current shell if no path has been given """
         # Looks for fish_color_*.
         # Returns an array of lists [color_name, color_description, color_value]
         result = []
@@ -952,9 +952,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 key = key.strip("# '")
                 value = value.strip(" '\"")
                 # Only use keys we know
-                if not key in ["name", "preferred_background", "url"]: continue
+                if not key in ("name", "preferred_background", "url"): continue
                 if key == "preferred_background":
-                    if not value in named_colors and not value.startswith("#"):
+                    if value not in named_colors and not value.startswith("#"):
                         value = "#" + value
                 extrainfo[key] = value
 
@@ -1320,13 +1320,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = [curinfo, definfo]
             paths = sorted(glob.iglob("themes/*.theme"), key=str.casefold)
             for p in paths:
-                # Strip ".theme" suffix and path
-                theme = os.path.basename(p)[:-6]
+                theme = os.path.splitext(os.path.basename(p))[0]
                 if any(theme == d["theme"] for d in output): continue
                 out, outinfo = self.do_get_colors(p)
                 outinfo.update({ "theme": theme, "colors": out })
                 output.append(outinfo)
-            print(len(output))
         elif p == "/functions/":
             output = self.do_get_functions()
         elif p == "/variables/":

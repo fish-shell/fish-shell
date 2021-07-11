@@ -880,7 +880,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def write_to_wfile(self, txt):
         self.wfile.write(txt.encode("utf-8"))
 
-    def do_get_colors(self):
+    def do_get_colors(self, path=None):
+        """ Read the colors from a .theme file in path, or the current shell if no path has been given """
         # Looks for fish_color_*.
         # Returns an array of lists [color_name, color_description, color_value]
         result = []
@@ -934,8 +935,29 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             "cancel": "The ^C cancel indicator",
         }
 
-        out, err = run_fish_cmd("set -L")
+        # If we don't have a path, we get the current theme.
+        if not path:
+            out, err = run_fish_cmd("set -L")
+        else:
+            with open(path) as f:
+                out = f.read()
+        extrainfo = {}
         for line in out.split("\n"):
+            # Ignore empty lines
+            if not line: continue
+            # Lines starting with "#" can contain metadata.
+            if line.startswith("#"):
+                if not ":" in line: continue
+                key, value = line.split(":", maxsplit=1)
+                key = key.strip("# '")
+                value = value.strip(" '\"")
+                # Only use keys we know
+                if not key in ("name", "preferred_background", "url"): continue
+                if key == "preferred_background":
+                    if value not in named_colors and not value.startswith("#"):
+                        value = "#" + value
+                extrainfo[key] = value
+
 
             for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(1, 2)]
@@ -954,7 +976,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             color_desc = descriptions.get(color_name, "")
             result.append([color_name, color_desc, parse_color("")])
 
-        return result
+        return result, extrainfo
 
     def do_get_functions(self):
         out, err = run_fish_cmd("functions")
@@ -1075,9 +1097,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return out
 
     def do_set_color_for_variable(
-        self, name, color, background_color, bold, underline, italics, dim, reverse
+        self, name, color
     ):
         "Sets a color for a fish color name, like 'autosuggestion'"
+        if not name:
+            raise ValueError
         if not color:
             color = "normal"
         varname = "fish_color_" + name
@@ -1087,20 +1111,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             varname = name
         # TODO: Check if the varname is allowable.
         command = "set -U " + varname
-        if color:
-            command += " " + color
-        if background_color:
-            command += " --background=" + background_color
-        if bold:
-            command += " --bold"
-        if underline:
-            command += " --underline"
-        if italics:
-            command += " --italics"
-        if dim:
-            command += " --dim"
-        if reverse:
-            command += " --reverse"
+        command += " " + color
 
         out, err = run_fish_cmd(command)
         return out
@@ -1299,7 +1310,21 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.path = p
 
         if p == "/colors/":
-            output = self.do_get_colors()
+            # Construct our colorschemes.
+            # Add the current scheme first, then the default.
+            # The rest in alphabetical order.
+            curcolors, curinfo = self.do_get_colors()
+            defcolors, definfo = self.do_get_colors("themes/fish default.theme")
+            curinfo.update({ "theme": "Current", "colors": curcolors})
+            definfo.update({ "theme": "fish default", "colors": defcolors})
+            output = [curinfo, definfo]
+            paths = sorted(glob.iglob("themes/*.theme"), key=str.casefold)
+            for p in paths:
+                theme = os.path.splitext(os.path.basename(p))[0]
+                if any(theme == d["theme"] for d in output): continue
+                out, outinfo = self.do_get_colors(p)
+                outinfo.update({ "theme": theme, "colors": out })
+                output.append(outinfo)
         elif p == "/functions/":
             output = self.do_get_functions()
         elif p == "/variables/":
@@ -1368,27 +1393,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             postvars = {}
 
         if p == "/set_color/":
-            what = postvars.get("what")
-            color = postvars.get("color")
-            background_color = postvars.get("background_color")
-            bold = postvars.get("bold")
-            italics = postvars.get("italics")
-            reverse = postvars.get("reverse")
-            dim = postvars.get("dim")
-            underline = postvars.get("underline")
+            print("# Colorscheme: " + postvars.get("theme"))
+            for item in postvars.get("colors"):
+                what = item.get("what")
+                color = item.get("color")
 
-            if what:
-                # Not sure why we get lists here?
-                output = self.do_set_color_for_variable(
-                    what[0],
-                    color[0],
-                    background_color[0],
-                    parse_bool(bold[0]),
-                    parse_bool(underline[0]),
-                    parse_bool(italics[0]),
-                    parse_bool(dim[0]),
-                    parse_bool(reverse[0]),
-                )
+                if what:
+                    output = self.do_set_color_for_variable(
+                        what,
+                        color,
+                    )
             else:
                 output = "Bad request"
         elif p == "/get_function/":

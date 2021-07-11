@@ -79,34 +79,36 @@ controllers.controller("colorsController", function($scope, $http) {
     $scope.sampleTerminalBackgroundColors = ['white', '#' + solarized.base3, '#300', '#003', '#' + solarized.base03, '#232323', '#'+nord.nord0, 'black'];
 
     /* Array of FishColorSchemes */
-    $scope.colorSchemes = [
-        color_scheme_fish_default,
-        color_scheme_ayu_light,
-        color_scheme_ayu_dark,
-        color_scheme_ayu_mirage,
-        color_scheme_solarized_light,
-        color_scheme_solarized_dark,
-        color_scheme_tomorrow,
-        color_scheme_tomorrow_night,
-        color_scheme_tomorrow_night_bright,
-        color_scheme_nord,
-        color_scheme_base16_default_dark,
-        color_scheme_base16_default_light,
-        color_scheme_base16_eighties
-    ];
-    for (var i=0; i < additional_color_schemes.length; i++)
-        $scope.colorSchemes.push(additional_color_schemes[i])
+    $scope.colorSchemes = [];
 
+    isValidColor = function(col) {
+        // Check if preferred_background is actually a valid color
+        var s = new Option().style;
+        s.color = col;
+        return !!s.color;
+    }
 
-    $scope.getCurrentTheme = function() {
+    $scope.getThemes = function() {
         $http.get("colors/").then(function(arg) {
-            var currentScheme = { "name": "Current", "colors":[], "preferred_background": "black" };
-            var data = arg.data
-            for (var i in data) {
-                currentScheme[data[i].name] = data[i].color;
+            for (var scheme of arg.data) {
+                var currentScheme = { "name": "Current", "colors":[], "preferred_background": "black" };
+                currentScheme["name"] = scheme["theme"];
+                var data = scheme["colors"];
+                if (scheme["preferred_background"]) {
+                    if (isValidColor(scheme["preferred_background"])) {
+                        currentScheme["preferred_background"] = scheme["preferred_background"];
+                    }
+                }
+                if (scheme["url"]) currentScheme["url"] = scheme["url"];
+
+                for (var i in data) {
+                    if (isValidColor(data[i].color)) {
+                        currentScheme[data[i].name] = data[i].color;
+                    }
+                }
+                $scope.colorSchemes.push(currentScheme);
             }
-            $scope.colorSchemes.splice(0, 0, currentScheme);
-            $scope.changeSelectedColorScheme(currentScheme);
+            $scope.changeSelectedColorScheme($scope.colorSchemes[0]);
         })};
 
 	$scope.saveThemeButtonTitle = "Set Theme";
@@ -143,6 +145,10 @@ controllers.controller("colorsController", function($scope, $http) {
                             "fish_pager_color_progress"
                            ];
         var remaining = settingNames.length;
+        postdata = {
+            "theme" : $scope.selectedColorScheme["name"],
+            "colors": [],
+        }
         for (name of settingNames) {
             var selected;
             // Skip colors undefined in the current theme
@@ -157,20 +163,19 @@ controllers.controller("colorsController", function($scope, $http) {
             } else {
                 selected = $scope.selectedColorScheme[name];
             }
-            var postData = "what=" + name + "&color=" + selected + "&background_color=&bold=&underline=&dim=&reverse=&italics=";
-            $http.post("set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).then(function(arg) {
-            	if (arg.status == 200) {
-            		remaining -= 1;
-            		if (remaining == 0) {
-            			/* All styles set! */
-            			$scope.saveThemeButtonTitle = "Theme Set!";
-            		}
-            	}
-            })
+            postdata.colors.push({
+                "what" : name,
+                "color" : selected,
+            });
         }
+        $http.post("set_color/", postdata, { headers: {'Content-Type': 'application/json'} }).then(function(arg) {
+            if (arg.status == 200) {
+            	$scope.saveThemeButtonTitle = "Theme Set!";
+            }
+        })
     };
 
-    $scope.getCurrentTheme();
+    $scope.getThemes();
 });
 
 controllers.controller("promptController", function($scope, $http) {

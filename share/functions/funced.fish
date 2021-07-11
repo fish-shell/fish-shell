@@ -83,10 +83,16 @@ function funced --description 'Edit function definition'
     or return 1
     set -l tmpname $tmpdir/$funcname.fish
 
-    if functions -q -- $funcname
-        functions -- $funcname >$tmpname
-    else
+    set -l writepath
+
+    if not functions -q -- $funcname
         echo $init >$tmpname
+    else if functions --details -- $funcname | string match --invert --regex '^(?:-|stdin)$'
+        set writepath (functions --details -- $funcname)
+        # Use cat here rather than cp to avoid copying permissions
+        cat "$writepath" >$tmpname
+    else
+        functions -- $funcname >$tmpname
     end
 
     # Repeatedly edit until it either parses successfully, or the user cancels
@@ -124,6 +130,26 @@ function funced --description 'Edit function definition'
                     continue
                 end
                 echo (_ "Cancelled function editing")
+            else if test -n "$writepath"
+                if set -q _flag_save
+                    # try to write the file back
+                    # cp preserves existing permissions, though it might overwrite the owner
+                    if not cp $tmpname "$writepath" 2>&1
+                        echo (_ "Saving to original location failed; saving to user configuration instead.")
+                        set writepath $__fish_config_dir/functions/(basename "$writepath")
+                        if not cp $tmpname "$writepath"
+                            echo (_ "Saving to user configuration failed. Changes will be lost when fish is closed.")
+                        else
+                            # read it back again - this ensures that the output of `functions --details` is correct
+                            source "$writepath"
+                        end
+                    else
+                        # read it back again - this ensures that the output of `functions --details` is correct
+                        source "$writepath"
+                    end
+                else
+                    echo (_ "Warning: file containing function was edited but not saved. Changes will be lost when fish is closed.")
+                end
             else if set -q _flag_save
                 funcsave $funcname
             end

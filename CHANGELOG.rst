@@ -13,6 +13,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

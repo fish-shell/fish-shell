@@ -1392,6 +1392,18 @@ complete -c git -n '__fish_git_using_command ls-files' -l abbrev -d 'Show only a
 complete -c git -n '__fish_git_using_command ls-files' -l debug -d 'After each line that describes a file, add more data about its cache entry'
 complete -c git -n '__fish_git_using_command ls-files' -l eol -d 'Show <eolinfo> and <eolattr> of files'
 
+### maintenance
+complete -f -c git -n __fish_git_needs_command -a maintenance -d 'Run tasks to optimize Git repository data'
+complete -f -c git -n '__fish_git_using_command maintenance' -a register -d 'Initialize Git config vars for maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -a run -d 'Run one or more maintenance tasks'
+complete -f -c git -n '__fish_git_using_command maintenance' -a start -d 'Start maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -a stop -d 'Halt background maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -a unregister -d 'Remove repository from background maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -l quiet -d 'Supress logs'
+complete -x -c git -n '__fish_git_using_command maintenance' -l task -a 'commit-graph prefetch gc loose-objects incremental-repack pack-refs' -d 'Tasks to run'
+complete -f -c git -n '__fish_git_using_command maintenance' -l auto -d 'Run maintenance only when necessary'
+complete -f -c git -n '__fish_git_using_command maintenance' -l schedule -d 'Run maintenance on certain intervals'
+
 ### merge
 complete -f -c git -n __fish_git_needs_command -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)'
@@ -1868,6 +1880,7 @@ complete -f -c git -n '__fish_git_using_command help' -a grep -d 'Print lines ma
 complete -f -c git -n '__fish_git_using_command help' -a init -d 'Create an empty git repository or reinitialize an existing one'
 complete -f -c git -n '__fish_git_using_command help' -a log -d 'Show commit logs'
 complete -f -c git -n '__fish_git_using_command help' -a ls-files -d 'Show information about files in the index and the working tree'
+complete -f -c git -n '__fish_git_using_command help' -a maintenance -d 'Run tasks to optimize Git repository data'
 complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command help' -a merge-base -d 'Find as good common ancestors as possible for a merge'
 complete -f -c git -n '__fish_git_using_command help' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'

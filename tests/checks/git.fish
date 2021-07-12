@@ -36,6 +36,10 @@ touch foo
 complete -C'git add '
 #CHECK: foo	Untracked file
 
+git config alias.s status
+complete 'git s --s'
+# CHECK --short
+
 # Note: We can't rely on the initial branch because that might be
 # "master", or it could be changed to something else in future!
 git checkout -b newbranch >/dev/null 2>&1

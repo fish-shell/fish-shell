@@ -42,8 +42,12 @@ send("set -e MODE_CHANGES\r")
 expect_prompt()
 
 timeout = 0.15
+
 if "CI" in os.environ:
-    timeout = 1.0
+    # This doesn't work under tsan.
+    import sys
+    print("SKIPPING the last of bind_mode_events.py")
+    sys.exit(0)
 
 # Put some text on the command line and then go back to normal mode.
 send("echo stuff")

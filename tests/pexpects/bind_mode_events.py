@@ -45,10 +45,10 @@ expect_prompt()
 send("echo stuff")
 sp.expect_str("echo stuff")
 send("\033")
-sleep(0.050)
+sleep(0.150)
 
 os.kill(sp.spawn.pid, signal.SIGINT)
-sleep(0.050)
+sleep(0.150)
 
 # We should be back in insert mode now.
 send("echo mode changes: $MODE_CHANGES\r")

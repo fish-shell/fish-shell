@@ -41,14 +41,18 @@ expect_prompt("\r\nmode changes: default insert default insert\r\n")
 send("set -e MODE_CHANGES\r")
 expect_prompt()
 
+timeout = 0.15
+if "CI" in os.environ:
+    timeout = 1.0
+
 # Put some text on the command line and then go back to normal mode.
 send("echo stuff")
 sp.expect_str("echo stuff")
 send("\033")
-sleep(0.150)
+sleep(timeout)
 
 os.kill(sp.spawn.pid, signal.SIGINT)
-sleep(0.150)
+sleep(timeout)
 
 # We should be back in insert mode now.
 send("echo mode changes: $MODE_CHANGES\r")

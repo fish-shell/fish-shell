@@ -514,7 +514,7 @@ function __fish_git_needs_rev_files
     # This definitely works with `git show` to retrieve a copy of a file as it exists
     # in the index of revision $rev, it should be updated to include others as they
     # are identified.
-    __fish_git_using_command show; and string match -r ".+:" -- (commandline -ot)
+    __fish_git_using_command show; and string match -r "^[^-].*:" -- (commandline -ot)
 end
 
 function __fish_git_ranges

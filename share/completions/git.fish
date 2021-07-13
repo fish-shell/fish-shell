@@ -1461,6 +1461,34 @@ complete -c git -n '__fish_git_using_command mergetool' -s O -d 'Process files i
 complete -c git -n __fish_git_needs_command -a mv -d 'Move or rename a file, a directory, or a symlink'
 # TODO options
 
+### notes
+set -l notescommands add copy append edit show merge remove # list prune get-ref
+complete -c git -n __fish_git_needs_command -a notes -d 'Add or inspect object notes'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a list -d 'List notes for given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a add -d 'Add notes for a given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a copy -d 'Copy notes from object1 to object2'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a append -d 'Append to the notes of existing object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a edit -d 'Edit notes for a given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a show -d 'Show notes for given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a merge -d 'Merge the given notes ref to current notes ref'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a remove -d 'Remove notes for given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a prune -d 'Remove notes for non-existing/unreachable objects'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a get-ref -d 'Print current notes ref'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from $notescommands" -ka '(__fish_git_commits)'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add copy" -s f -l force -d 'Overwrite existing notes'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append edit" -l allow-empty -d 'Allow empty note'
+complete -r -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s F -l file -d 'Read note message from file'
+complete -x -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s m -l message -d 'Use this note message'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s C -l reuse-message -a '(__fish_git_commits)' -d 'Copy note from object'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s c -l reedit-message -a '(__fish_git_commits)' -d 'Copy and edit note from object'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from copy remove" -l stdin -d 'Read object names from stdin'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge remove prune" -s v -l verbose -d 'Be more verbose'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge remove prune" -s q -l quiet -d 'Operate quietly'
+complete -x -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge " -s s -l strategy -a 'manual ours theirs union cat_sort_uniq' -d 'Merge strategy to use to resolve conflicts'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge" -l commit -d 'Finalize git notes merge'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge" -l abort -d 'Abort git notes merge'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from remove" -l ignore-missing -d 'Do not throw error on deleting non-existing object note'
+
 ### prune
 complete -f -c git -n __fish_git_needs_command -a prune -d 'Prune all unreachable objects from the object database'
 # TODO options
@@ -1885,6 +1913,7 @@ complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or m
 complete -f -c git -n '__fish_git_using_command help' -a merge-base -d 'Find as good common ancestors as possible for a merge'
 complete -f -c git -n '__fish_git_using_command help' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
 complete -f -c git -n '__fish_git_using_command help' -a mv -d 'Move or rename a file, a directory, or a symlink'
+complete -f -c git -n '__fish_git_using_command help' -a notes -d 'Add or inspect object notes'
 complete -f -c git -n '__fish_git_using_command help' -a prune -d 'Prune all unreachable objects from the object database'
 complete -f -c git -n '__fish_git_using_command help' -a pull -d 'Fetch from and merge with another repository or a local branch'
 complete -f -c git -n '__fish_git_using_command help' -a push -d 'Update remote refs along with associated objects'

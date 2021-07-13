@@ -239,3 +239,5 @@ epub_exclude_files = ["search.html"]
 
 # Disable smart-quotes to prevent double dashes from becoming emdashes.
 smartquotes = False
+
+linkcheck_ignore = [r'https://github.com/fish-shell/fish-shell/issues/\d+']

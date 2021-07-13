@@ -135,19 +135,14 @@ html_sidebars = {"**": ["globaltoc.html", "searchbox.html", "localtoc.html"]}
 
 # -- Options for LaTeX output ------------------------------------------------
 
+# The default font is "GNU FreeSans" or something which I've never heard of.
+# Make this something that might actually be installed.
 latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
+    'fontpkg': r'''
+    \setmainfont{Noto Serif}
+    \setsansfont{Noto Sans}
+    \setmonofont{Noto Sans Mono}
+    ''',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -163,6 +158,9 @@ latex_documents = [
     )
 ]
 
+# The default pdflatex doesn't handle unicode.
+# Switch to an engine that does (why pdflatex still exists and is still the default? I don't know)
+latex_engine = 'xelatex'
 
 # -- Options for manual page output ------------------------------------------
 

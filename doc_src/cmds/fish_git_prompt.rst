@@ -72,10 +72,8 @@ A number of variables set characters and color used as indicators. Many of these
 - ``$__fish_git_prompt_color_bare`` - the color to use for a bare repository - one without a working tree
 - ``$__fish_git_prompt_color_merging`` - the color when a merge/rebase/revert/bisect or cherry-pick is in progress
 
-Some variables are only used in some modes, like when informative status is enabled:
-
-- ``$__fish_git_prompt_char_cleanstate`` (✔) - the character to be used when nothing else applies
-- ``$__fish_git_prompt_color_cleanstate``
+- ``$__fish_git_prompt_char_cleanstate`` (✔ in informative mode) - the character to be used when nothing else applies
+- ``$__fish_git_prompt_color_cleanstate`` (no default)
 
 Variables used with ``showdirtystate``:
 
@@ -107,8 +105,10 @@ Variables used with ``showupstream`` (also implied by informative status):
 
 Colors used with ``showcolorhints``:
 
-- ``$__fish_git_prompt_color_branch`` (green) - the color of the branch
+- ``$__fish_git_prompt_color_branch`` (green) - the color of the branch if nothing else applies
 - ``$__fish_git_prompt_color_branch_detached`` (red) the color of the branch if it's detached (e.g. a commit is checked out)
+- ``$__fish_git_prompt_color_branch_dirty`` (no default) the color of the branch if it's dirty and not detached
+- ``$__fish_git_prompt_color_branch_staged`` (no default) the color of the branch if it just has something staged and is otherwise clean
 - ``$__fish_git_prompt_color_flags`` (--bold blue) - the default color for dirty/staged/stashed/untracked state
 
 Note that all colors can also have a corresponding ``_done`` color. For example, the contents of ``$__fish_git_prompt_color_upstream_done`` is printed right _after_ the upstream.

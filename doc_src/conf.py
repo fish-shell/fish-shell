@@ -16,11 +16,6 @@ from docutils import nodes, utils
 # -- Helper functions --------------------------------------------------------
 
 
-def strip_ext(path):
-    """ Remove the extension from a path. """
-    return os.path.splitext(path)[0]
-
-
 # A :issue: role to link to github issues.
 # Used like :issue:`2364`
 def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None):
@@ -90,18 +85,6 @@ version = release.rsplit(".", 1)[0]
 
 # -- General configuration ---------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = '1.0'
-
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
-extensions = []
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
-
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
@@ -139,17 +122,6 @@ html_theme = "python_docs_theme"
 # Don't add a weird "_sources" directory
 html_copy_source = False
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#
-# html_theme_options = {}
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ["_static"]
-
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
@@ -159,12 +131,6 @@ html_copy_source = False
 # 'searchbox.html']``.
 #
 html_sidebars = {"**": ["globaltoc.html", "searchbox.html", "localtoc.html"]}
-
-
-# -- Options for HTMLHelp output ---------------------------------------------
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "fish-shelldoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -233,7 +199,7 @@ man_pages = [
     ("faq", "fish-faq", "fish-shell faq", [author], 1),
 ]
 for path in sorted(glob.glob("cmds/*")):
-    docname = strip_ext(path)
+    docname = os.path.splitext(path)[0]
     cmd = os.path.basename(docname)
     man_pages.append((docname, cmd, get_command_description(path, cmd), "", 1))
 

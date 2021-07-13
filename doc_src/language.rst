@@ -1,7 +1,7 @@
 .. _language:
 
 The fish language
-*****************
+=================
 
 This document is a comprehensive overview of fish's scripting language.
 

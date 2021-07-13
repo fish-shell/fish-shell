@@ -1,7 +1,7 @@
 .. _fish_for_bash_users:
 
 Fish for bash users
-###################
+===================
 
 This is to give you a quick overview if you come from bash (or to a lesser extent other shells like zsh or ksh) and want to know how fish differs. Fish is intentionally not POSIX-compatible and as such some of the things you are used to work differently.
 

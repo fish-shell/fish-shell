@@ -1,7 +1,7 @@
 .. _interactive:
 
 Interactive use
-***************
+===============
 
 Fish prides itself on being really nice to use interactively. That's down to a few features we'll explain in the next few sections.
 

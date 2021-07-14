@@ -183,10 +183,3 @@ If you have an improvement for fish, you can submit it via the GitHub page.
              design
              relnotes
              license
-
-.. only:: builder_latex
-
-   .. include:: tutorial.rst
-   .. include:: interactive.rst
-   .. include:: language.rst
-   .. include:: fish_for_bash_users.rst

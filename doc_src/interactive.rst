@@ -313,6 +313,8 @@ Some bindings are common across Emacs and Vi mode, because they aren't text edit
 Emacs mode commands
 -------------------
 
+To enable emacs mode, use ``fish_default_key_bindings``. This is also the default.
+
 - :kbd:`Home` or :kbd:`Control`\ +\ :kbd:`A` moves the cursor to the beginning of the line.
 
 - :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` accepts the autosuggestion.
@@ -347,6 +349,8 @@ Vi mode commands
 ----------------
 
 Vi mode allows for the use of Vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
+
+To enable vi mode, use ``fish_vi_key_bindings``.
 
 It is also possible to add all emacs-mode bindings to vi-mode by using something like::
 

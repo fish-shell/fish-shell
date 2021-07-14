@@ -3,6 +3,7 @@ fish 3.4.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
+- Complimenting the ``prompt`` command in 3.3.0, ``fish_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a webbrowser. For example ``fish_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`).
 
 Deprecations and removed features
 ---------------------------------

@@ -1392,6 +1392,18 @@ complete -c git -n '__fish_git_using_command ls-files' -l abbrev -d 'Show only a
 complete -c git -n '__fish_git_using_command ls-files' -l debug -d 'After each line that describes a file, add more data about its cache entry'
 complete -c git -n '__fish_git_using_command ls-files' -l eol -d 'Show <eolinfo> and <eolattr> of files'
 
+### mailinfo
+complete -f -c git -n __fish_git_needs_command -a mailinfo -d 'Extracts patch and authorship from a single e-mail message'
+complete -f -c git -n '__fish_git_using_command mailinfo' -s k -d 'Do not remove email cruft'
+complete -f -c git -n '__fish_git_using_command mailinfo' -s b -d 'Limit stripping of pair brackets'
+complete -f -c git -n '__fish_git_using_command mailinfo' -s u -d 'Do not reencode author name and email'
+complete -x -c git -n '__fish_git_using_command mailinfo' -l encoding -d 'Re-encode to given charset'
+complete -f -c git -n '__fish_git_using_command mailinfo' -s n -d 'Disable all charset re-encoding of metadata'
+complete -f -c git -n '__fish_git_using_command mailinfo' -s m -l message-id -d 'Copy message id to the end of commit message'
+complete -f -c git -n '__fish_git_using_command mailinfo' -l scissors -d 'Remove everything above scissor line'
+complete -f -c git -n '__fish_git_using_command mailinfo' -l no-scissors -d 'Ignore scissor lines'
+complete -x -c git -n '__fish_git_using_command mailinfo' -l quoted-cr -a 'nowarn warn strip' -d 'Action when processed email message end with CRLF instead of LF'
+
 ### maintenance
 complete -f -c git -n __fish_git_needs_command -a maintenance -d 'Run tasks to optimize Git repository data'
 complete -f -c git -n '__fish_git_using_command maintenance' -a register -d 'Initialize Git config vars for maintenance'
@@ -1913,6 +1925,7 @@ complete -f -c git -n '__fish_git_using_command help' -a grep -d 'Print lines ma
 complete -f -c git -n '__fish_git_using_command help' -a init -d 'Create an empty git repository or reinitialize an existing one'
 complete -f -c git -n '__fish_git_using_command help' -a log -d 'Show commit logs'
 complete -f -c git -n '__fish_git_using_command help' -a ls-files -d 'Show information about files in the index and the working tree'
+complete -f -c git -n '__fish_git_using_command help' -a mailinfo -d 'Extracts patch and authorship from a single e-mail message'
 complete -f -c git -n '__fish_git_using_command help' -a maintenance -d 'Run tasks to optimize Git repository data'
 complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command help' -a merge-base -d 'Find as good common ancestors as possible for a merge'

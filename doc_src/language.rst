@@ -289,9 +289,8 @@ There are a few important things that need to be noted about aliases:
 
 - If the alias has the same name as the aliased command, you need to prefix the call to the program with ``command`` to tell fish that the function should not call itself, but rather a command with the same name. If you forget to do so, the function would call itself until the end of time. Usually fish is smart enough to figure this out and will refrain from doing so (which is hopefully in your interest).
 
-- Autoloading isn't applicable to aliases. Since, by definition, the function is created at the time the alias command is executed. You cannot autoload aliases.
 
-To easily create a function of this form, you can use the :ref:`alias <cmd-alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a function wrapper like this.
+To easily create a function of this form, you can use the :ref:`alias <cmd-alias>` command. Unlike other shells, this just makes functions - fish has no separate concept of an "alias", we just use the word for a function wrapper like this. :ref:`alias <cmd-alias>` immediately creates a function. Consider using ``alias --save`` or :ref:`funcsave <cmd-funcsave>` to save the created function into an autoload file instead of recreating the alias each time.
 
 For an alternative, try :ref:`abbreviations <abbreviations>`. These are words that are expanded while you type, instead of being actual functions inside the shell.
 

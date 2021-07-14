@@ -1318,7 +1318,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             curinfo.update({ "theme": "Current", "colors": curcolors})
             definfo.update({ "theme": "fish default", "colors": defcolors})
             output = [curinfo, definfo]
-            paths = sorted(glob.iglob("themes/*.theme"), key=str.casefold)
+
+            confighome = os.environ["XDG_CONFIG_HOME"] if "XDG_CONFIG_HOME" in os.environ else os.path.expanduser("~")
+            paths = list(glob.iglob(os.path.join(confighome, "fish", "themes/*.theme")))
+            paths.extend(list(glob.iglob("themes/*.theme")))
+            paths.sort(key=str.casefold)
+
             for p in paths:
                 theme = os.path.splitext(os.path.basename(p))[0]
                 if any(theme == d["theme"] for d in output): continue

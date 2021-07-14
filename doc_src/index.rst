@@ -165,21 +165,19 @@ If you have an improvement for fish, you can submit it via the GitHub page.
 
 .. _other_pages:
 
-.. only:: not builder_latex
-
-          Other help pages
-          ================
-          .. toctree::
-             :maxdepth: 1
-
-             self
-             faq
-             interactive
-             language
-             commands
-             fish_for_bash_users
-             tutorial
-             completions
-             design
-             relnotes
-             license
+Other help pages
+================
+.. toctree::
+   :maxdepth: 1
+              
+   self
+   faq
+   interactive
+   language
+   commands
+   fish_for_bash_users
+   tutorial
+   completions
+   design
+   relnotes
+   license

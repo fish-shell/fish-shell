@@ -104,7 +104,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["latex"]
+exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -150,12 +150,12 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (
-        "latex",
+        master_doc,
         "fish-shell.tex",
         "fish-shell Documentation",
         "fish-shell developers",
         "manual",
-    )
+    ),
 ]
 
 # The default pdflatex doesn't handle unicode.

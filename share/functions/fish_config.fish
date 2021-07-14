@@ -198,6 +198,15 @@ function fish_config --description "Launch fish's web based configuration"
                     end
 
                 case choose save
+                    if set -q argv[2]
+                        echo "Too many arguments" >&2
+                        return 1
+                    end
+                    if not set -q argv[1]
+                        echo "Too few arguments" >&2
+                        return 1
+                    end
+
                     set -l files $dir/$argv[1].theme
                     set -l file
 

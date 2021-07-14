@@ -17,7 +17,7 @@ cd $tmpdir
 set -g tmux tmux -S .tmux-socket -f /dev/null
 
 set -g sleep sleep .1
-set -q CI && set sleep sleep 1
+set -q CI && set sleep sleep 10
 
 while set -e prompt_var
 end

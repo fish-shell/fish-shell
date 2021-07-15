@@ -200,7 +200,7 @@ static constexpr named_color_t named_colors[] = {
     {L"purple", 5, {0x80, 0x00, 0x80}, true},      {L"red", 1, {0x80, 0x00, 0x00}, false},
     {L"white", 7, {0xC0, 0xC0, 0xC0}, false},      {L"yellow", 3, {0x80, 0x80, 0x00}, false},
 };
-ASSERT_SORT_ORDER(named_colors, .name);
+ASSERT_SORTED_BY_NAME(named_colors);
 
 wcstring_list_t rgb_color_t::named_color_names() {
     wcstring_list_t result;

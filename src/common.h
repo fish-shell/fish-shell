@@ -710,20 +710,13 @@ constexpr size_t const_strlen(const T (&val)[N], size_t last_checked_idx = N,
                               val[last_checked_idx - 1] ? first_nul_idx : last_checked_idx - 1);
 }
 
-/// Compile-time assertion of alphabetical sort of array `array`, by specified
-/// parameter `accessor`. This is only a macro because constexpr lambdas (to
-/// specify the accessor for the sort key) are C++17 and up.
-#define ASSERT_SORT_ORDER(array, accessor)                                                \
-    struct verify_##array##_sort_t {                                                      \
-        template <class T, size_t N>                                                      \
-        constexpr static bool validate(T (&vals)[N], size_t idx = 0) {                    \
-            return (idx == (((sizeof(array) / sizeof(vals[0]))) - 1))                     \
-                       ? true                                                             \
-                       : const_strcmp(vals[idx] accessor, vals[idx + 1] accessor) <= 0 && \
-                             verify_##array##_sort_t::validate<T, N>(vals, idx + 1);      \
-        }                                                                                 \
-    };                                                                                    \
-    static_assert(verify_##array##_sort_t::validate(array),                               \
-                  #array " members not in asciibetical order!");
+/// \return true if the array \p vals is sorted by its name property.
+template <typename T, size_t N>
+constexpr bool is_sorted_by_name(const T (&vals)[N], size_t idx = 1) {
+    return idx >= N ? true
+                    : (const_strcmp(vals[idx - 1].name, vals[idx].name) <= 0 &&
+                       is_sorted_by_name(vals, idx + 1));
+}
+#define ASSERT_SORTED_BY_NAME(x) static_assert(is_sorted_by_name(x), #x " not sorted by name")
 
 #endif  // FISH_COMMON_H

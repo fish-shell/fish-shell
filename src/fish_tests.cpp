@@ -1698,12 +1698,28 @@ static void test_const_strcmp() {
     static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
 }
 
+static void test_is_sorted_by_name() {
+    struct named_t {
+        const wchar_t *name;
+    };
+
+    static constexpr named_t sorted[] = {
+        {L"a"}, {L"aa"}, {L"aaa"}, {L"aaa"}, {L"aaa"}, {L"aazz"}, {L"aazzzz"},
+    };
+    static_assert(is_sorted_by_name(sorted), "is_sorted_by_name failure");
+    static constexpr named_t not_sorted[] = {
+        {L"a"}, {L"aa"}, {L"aaa"}, {L"q"}, {L"aazz"}, {L"aazz"}, {L"aazz"}, {L"aazzzz"},
+    };
+    static_assert(!is_sorted_by_name(not_sorted), "is_sorted_by_name failure");
+}
+
 static void test_utility_functions() {
     say(L"Testing utility functions");
     test_wcsfilecmp();
     test_parse_util_cmdsubst_extent();
     test_const_strlen();
     test_const_strcmp();
+    test_is_sorted_by_name();
 }
 
 // UTF8 tests taken from Alexey Vatchenko's utf8 library. See http://www.bsdua.org/libbsdua.html.

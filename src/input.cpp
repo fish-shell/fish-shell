@@ -165,7 +165,7 @@ static constexpr const input_function_metadata_t input_function_metadata[] = {
     {L"yank-pop", readline_cmd_t::yank_pop},
 };
 
-ASSERT_SORT_ORDER(input_function_metadata, .name);
+ASSERT_SORTED_BY_NAME(input_function_metadata);
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
                   input_function_count,
               "input_function_metadata size mismatch with input_common. Did you forget to update "

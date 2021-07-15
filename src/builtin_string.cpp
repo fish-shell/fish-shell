@@ -1783,7 +1783,7 @@ static constexpr const struct string_subcommand {
     {L"sub", &string_sub},         {L"trim", &string_trim},     {L"unescape", &string_unescape},
     {L"upper", &string_upper},
 };
-ASSERT_SORT_ORDER(string_subcommands, .name);
+ASSERT_SORTED_BY_NAME(string_subcommands);
 
 /// The string builtin, for manipulating strings.
 maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {

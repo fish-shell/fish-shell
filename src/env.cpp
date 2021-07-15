@@ -107,7 +107,7 @@ static constexpr const electric_var_t electric_variables[] = {
     {L"umask", electric_var_t::fcomputed},
     {L"version", electric_var_t::freadonly},
 };
-ASSERT_SORT_ORDER(electric_variables, .name);
+ASSERT_SORTED_BY_NAME(electric_variables);
 
 const electric_var_t *electric_var_t::for_name(const wchar_t *name) {
     auto begin = std::begin(electric_variables);

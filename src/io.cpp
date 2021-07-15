@@ -76,7 +76,6 @@ ssize_t io_buffer_t::read_once(int fd, acquired_lock<separated_buffer_t> &buffer
 }
 
 void io_buffer_t::begin_filling(autoclose_fd_t fd) {
-    ASSERT_IS_MAIN_THREAD();
     assert(!fillthread_running() && "Already have a fillthread");
 
     // We want to fill buffer_ by reading from fd. fd is the read end of a pipe; the write end is

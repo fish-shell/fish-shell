@@ -253,7 +253,6 @@ int thread_pool_t::perform(void_function_t &&func, bool cant_wait) {
 }
 
 void iothread_perform_impl(void_function_t &&func, bool cant_wait) {
-    ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
     s_io_thread_pool.perform(std::move(func), cant_wait);
 }

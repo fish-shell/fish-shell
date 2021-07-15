@@ -857,7 +857,6 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
 }
 
 bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq) {
-    ASSERT_IS_MAIN_THREAD();
     assert(s_input_initialized);
     for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
         if (name == m.name) {

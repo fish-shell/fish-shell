@@ -479,7 +479,6 @@ bool completer_t::condition_test(const wcstring &condition) {
         return false;
     }
 
-    ASSERT_IS_MAIN_THREAD();
     bool test_res;
     auto cached_entry = condition_cache.find(condition);
     if (cached_entry == condition_cache.end()) {

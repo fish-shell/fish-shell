@@ -26,23 +26,24 @@ enum {
     ENV_DEFAULT = 0,
     /// Flag for local (to the current block) variable.
     ENV_LOCAL = 1 << 0,
+    ENV_FUNCTION = 1 << 1,
     /// Flag for global variable.
-    ENV_GLOBAL = 1 << 1,
+    ENV_GLOBAL = 1 << 2,
     /// Flag for universal variable.
-    ENV_UNIVERSAL = 1 << 2,
+    ENV_UNIVERSAL = 1 << 3,
     /// Flag for exported (to commands) variable.
-    ENV_EXPORT = 1 << 3,
+    ENV_EXPORT = 1 << 4,
     /// Flag for unexported variable.
-    ENV_UNEXPORT = 1 << 4,
+    ENV_UNEXPORT = 1 << 5,
     /// Flag to mark a variable as a path variable.
-    ENV_PATHVAR = 1 << 5,
+    ENV_PATHVAR = 1 << 6,
     /// Flag to unmark a variable as a path variable.
-    ENV_UNPATHVAR = 1 << 6,
+    ENV_UNPATHVAR = 1 << 7,
     /// Flag for variable update request from the user. All variable changes that are made directly
     /// by the user, such as those from the `read` and `set` builtin must have this flag set. It
     /// serves one purpose: to indicate that an error should be returned if the user is attempting
     /// to modify a var that should not be modified by direct user action; e.g., a read-only var.
-    ENV_USER = 1 << 7,
+    ENV_USER = 1 << 8,
 };
 typedef uint32_t env_mode_flags_t;
 

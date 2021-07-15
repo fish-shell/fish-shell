@@ -469,8 +469,9 @@ struct query_t {
     // Whether any scopes were specified.
     bool has_scope;
 
-    // Whether to search local, global, universal scopes.
+    // Whether to search local, function, global, universal scopes.
     bool local;
+    bool function;
     bool global;
     bool universal;
 
@@ -490,8 +491,9 @@ struct query_t {
     bool user;
 
     explicit query_t(env_mode_flags_t mode) {
-        has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
+        has_scope = mode & (ENV_LOCAL | ENV_FUNCTION | ENV_GLOBAL | ENV_UNIVERSAL);
         local = !has_scope || (mode & ENV_LOCAL);
+        function = !has_scope || (mode & ENV_FUNCTION);
         global = !has_scope || (mode & ENV_GLOBAL);
         universal = !has_scope || (mode & ENV_UNIVERSAL);
 
@@ -1193,6 +1195,14 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
         } else if (query.local) {
             assert(locals_ != globals_ && "Locals should not be globals");
             set_in_node(locals_, key, std::move(val), flags);
+        } else if (query.function) {
+            // "Function" scope is the same as the unspecified scope.
+            // Either the topmost local scope of the nearest function,
+            // or global scope if no function exists.
+            auto node = resolve_unspecified_scope();
+            assert(node && "Should always resolve some scope");
+            set_in_node(node, key, std::move(val), flags);
+            result.global_modified = (node == globals_);
         } else {
             DIE("Unknown scope");
         }

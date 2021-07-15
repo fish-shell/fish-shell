@@ -725,3 +725,68 @@ begin
     echo $CDPATH
     # CHECK: . /usr
 end
+
+# Function scope:
+set -f actuallyglobal "this one is global"
+set -qg actuallyglobal
+and echo "Yep, it's global"
+# CHECK: Yep, it's global
+set -S actuallyglobal
+#CHECK: $actuallyglobal: set in global scope, unexported, with 1 elements
+#CHECK: $actuallyglobal[1]: |this one is global|
+
+# Blocks aren't functions, "function" scope is still global:
+begin
+    set -f stillglobal "as global as the moon is wet"
+    echo $stillglobal
+    # CHECK: as global as the moon is wet
+end
+set -S stillglobal
+#CHECK: $stillglobal: set in global scope, unexported, with 1 elements
+#CHECK: $stillglobal[1]: |as global as the moon is wet|
+
+function test-function-scope
+    set -f funcvar "function"
+    echo $funcvar
+    # CHECK: function
+    set -S funcvar
+    #CHECK: $funcvar: set in local scope, unexported, with 1 elements
+    #CHECK: $funcvar[1]: |function|
+    begin
+        set -l funcvar "block"
+        echo $funcvar
+        # CHECK: block
+        set -S funcvar
+        #CHECK: $funcvar: set in local scope, unexported, with 1 elements
+        #CHECK: $funcvar[1]: |block|
+    end
+    echo $funcvar
+    # CHECK: function
+
+    begin
+        set -f funcvar2 "function from block"
+        echo $funcvar2
+        # CHECK: function from block
+        set -S funcvar2
+        #CHECK: $funcvar2: set in local scope, unexported, with 1 elements
+        #CHECK: $funcvar2[1]: |function from block|
+    end
+    echo $funcvar2
+    # CHECK: function from block
+    set -S funcvar2
+    #CHECK: $funcvar2: set in local scope, unexported, with 1 elements
+    #CHECK: $funcvar2[1]: |function from block|
+
+    set -l fruit banana
+    if true
+        set -f fruit orange
+    end
+    echo $fruit #orange
+    # function scope *is* the outermost local scope,
+    # so that `set -f` altered the same funcvariable as that `set -l` outside!
+    # CHECK: orange
+end
+        
+test-function-scope
+echo $funcvar $funcvar2
+# CHECK:

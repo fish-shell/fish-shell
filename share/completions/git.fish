@@ -1087,6 +1087,36 @@ complete -f -c git -n __fish_git_needs_command -a count-objects -d 'Count unpack
 complete -f -c git -n '__fish_git_using_command count-objects' -s v -l verbose -d 'Be verbose'
 complete -f -c git -n '__fish_git_using_command count-objects' -s H -l human-readable -d 'Print in human readable format'
 
+### daemon
+complete -c git -n __fish_git_needs_command -a daemon -d 'A really simple server for git repositories'
+complete -f -c git -n '__fish_git_using_command daemon' -l strict-paths -d 'Match paths exactly'
+complete -F -c git -n '__fish_git_using_command daemon' -l base-path -d 'Git Root'
+complete -f -c git -n '__fish_git_using_command daemon' -l base-path-relaxed -d 'Relax base-path'
+complete -F -c git -n '__fish_git_using_command daemon' -l interpolated-path -d 'Interpolated path template'
+complete -f -c git -n '__fish_git_using_command daemon' -l export-all -d 'Allow pulling from all directories'
+complete -f -c git -n '__fish_git_using_command daemon' -l inetd -d 'Run as inetd service'
+complete -x -c git -n '__fish_git_using_command daemon' -l listen -d 'Listen on this IP'
+complete -x -c git -n '__fish_git_using_command daemon' -l port -d 'Listen on this port'
+complete -x -c git -n '__fish_git_using_command daemon' -l init-timeout -d 'Connection timeout'
+complete -x -c git -n '__fish_git_using_command daemon' -l timeout -d 'Timeout for each request'
+complete -x -c git -n '__fish_git_using_command daemon' -l max-connections -d 'Maximum parallel clients'
+complete -f -c git -n '__fish_git_using_command daemon' -l syslog -d '--log-destination=syslog'
+complete -x -c git -n '__fish_git_using_command daemon' -l log-destination -a 'stderr syslog none' -d 'Log destination'
+complete -x -c git -n '__fish_git_using_command daemon' -l user-path -d 'Allow ~user notation to be used'
+complete -f -c git -n '__fish_git_using_command daemon' -l verbose -d 'Log all details'
+complete -f -c git -n '__fish_git_using_command daemon' -l reuseaddr -d 'Reuse address when binding to listening server'
+complete -f -c git -n '__fish_git_using_command daemon' -l detach -d 'Detach from shell'
+complete -x -c git -n '__fish_git_using_command daemon' -l reuseaddr -d 'Save the process id in file'
+complete -x -c git -n '__fish_git_using_command daemon' -l user -d 'Change daemon\'s uid'
+complete -x -c git -n '__fish_git_using_command daemon' -l group -d 'Change daemon\'s gid'
+complete -x -c git -n '__fish_git_using_command daemon' -l enable -a 'upload-pack upload-archive recieve-pack' -d 'Enable service'
+complete -x -c git -n '__fish_git_using_command daemon' -l disable -a 'upload-pack upload-archive recieve-pack' -d 'Disable service'
+complete -x -c git -n '__fish_git_using_command daemon' -l allow-override -a 'upload-pack upload-archive recieve-pack' -d 'Allow overriding site-wide default per repository configuration'
+complete -x -c git -n '__fish_git_using_command daemon' -l forbid-override -a 'upload-pack upload-archive recieve-pack' -d 'Forbid overriding site-wide drfault per repository configuration'
+complete -f -c git -n '__fish_git_using_command daemon' -l informative-errors -d 'Report more verbose errors to clients'
+complete -f -c git -n '__fish_git_using_command daemon' -l no-informative-errors -d 'Report less verbose errors to clients'
+complete -x -c git -n '__fish_git_using_command daemon' -l access-hook -d 'Hook to run whenever a client connects'
+
 ### describe
 complete -c git -n __fish_git_needs_command -a describe -d 'Give an object a human readable name based on an available ref'
 complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_tags)' -d Tag
@@ -1362,6 +1392,18 @@ complete -c git -n '__fish_git_using_command ls-files' -l abbrev -d 'Show only a
 complete -c git -n '__fish_git_using_command ls-files' -l debug -d 'After each line that describes a file, add more data about its cache entry'
 complete -c git -n '__fish_git_using_command ls-files' -l eol -d 'Show <eolinfo> and <eolattr> of files'
 
+### maintenance
+complete -f -c git -n __fish_git_needs_command -a maintenance -d 'Run tasks to optimize Git repository data'
+complete -f -c git -n '__fish_git_using_command maintenance' -a register -d 'Initialize Git config vars for maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -a run -d 'Run one or more maintenance tasks'
+complete -f -c git -n '__fish_git_using_command maintenance' -a start -d 'Start maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -a stop -d 'Halt background maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -a unregister -d 'Remove repository from background maintenance'
+complete -f -c git -n '__fish_git_using_command maintenance' -l quiet -d 'Supress logs'
+complete -x -c git -n '__fish_git_using_command maintenance' -l task -a 'commit-graph prefetch gc loose-objects incremental-repack pack-refs' -d 'Tasks to run'
+complete -f -c git -n '__fish_git_using_command maintenance' -l auto -d 'Run maintenance only when necessary'
+complete -f -c git -n '__fish_git_using_command maintenance' -l schedule -d 'Run maintenance on certain intervals'
+
 ### merge
 complete -f -c git -n __fish_git_needs_command -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)'
@@ -1418,6 +1460,34 @@ complete -c git -n '__fish_git_using_command mergetool' -s O -d 'Process files i
 ### mv
 complete -c git -n __fish_git_needs_command -a mv -d 'Move or rename a file, a directory, or a symlink'
 # TODO options
+
+### notes
+set -l notescommands add copy append edit show merge remove # list prune get-ref
+complete -c git -n __fish_git_needs_command -a notes -d 'Add or inspect object notes'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a list -d 'List notes for given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a add -d 'Add notes for a given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a copy -d 'Copy notes from object1 to object2'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a append -d 'Append to the notes of existing object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a edit -d 'Edit notes for a given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a show -d 'Show notes for given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a merge -d 'Merge the given notes ref to current notes ref'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a remove -d 'Remove notes for given object'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a prune -d 'Remove notes for non-existing/unreachable objects'
+complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a get-ref -d 'Print current notes ref'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from $notescommands" -ka '(__fish_git_commits)'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add copy" -s f -l force -d 'Overwrite existing notes'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append edit" -l allow-empty -d 'Allow empty note'
+complete -r -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s F -l file -d 'Read note message from file'
+complete -x -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s m -l message -d 'Use this note message'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s C -l reuse-message -a '(__fish_git_commits)' -d 'Copy note from object'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s c -l reedit-message -a '(__fish_git_commits)' -d 'Copy and edit note from object'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from copy remove" -l stdin -d 'Read object names from stdin'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge remove prune" -s v -l verbose -d 'Be more verbose'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge remove prune" -s q -l quiet -d 'Operate quietly'
+complete -x -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge " -s s -l strategy -a 'manual ours theirs union cat_sort_uniq' -d 'Merge strategy to use to resolve conflicts'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge" -l commit -d 'Finalize git notes merge'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge" -l abort -d 'Abort git notes merge'
+complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from remove" -l ignore-missing -d 'Do not throw error on deleting non-existing object note'
 
 ### prune
 complete -f -c git -n __fish_git_needs_command -a prune -d 'Prune all unreachable objects from the object database'
@@ -1631,6 +1701,11 @@ complete -f -c git -n '__fish_git_using_command status' -s u -l untracked-files 
 complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x -a 'none untracked dirty all' -d 'Ignore changes to submodules'
 # TODO options
 
+### stripspace
+complete -f -c git -n __fish_git_needs_command -a stripspace -d 'Remove unnecessary whitespace'
+complete -f -c git -n '__fish_git_using_command stripspace' -s s -l strip-comments -d 'Strip all lines starting with comment character'
+complete -f -c git -n '__fish_git_using_command stripspace' -s c -l comment-lines -d 'Prepend comment character to each line'
+
 ### tag
 complete -f -c git -n __fish_git_needs_command -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
 complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | string match -r -v \'^-\')) -eq 3' -a '(__fish_git_branches)'
@@ -1828,6 +1903,7 @@ complete -f -c git -n '__fish_git_using_command help' -a config -d 'Set and read
 complete -f -c git -n '__fish_git_using_command help' -a count-objects -d 'Count unpacked number of objects and their disk consumption'
 complete -f -c git -n '__fish_git_using_command help' -a describe -d 'Give an object a human-readable name'
 complete -f -c git -n '__fish_git_using_command help' -a diff -d 'Show changes between commits, commit and working tree, etc'
+complete -f -c git -n '__fish_git_using_command help' -a daemon -d 'A really simple server for Git repositories'
 complete -f -c git -n '__fish_git_using_command help' -a difftool -d 'Open diffs in a visual tool'
 complete -f -c git -n '__fish_git_using_command help' -a fetch -d 'Download objects and refs from another repository'
 complete -f -c git -n '__fish_git_using_command help' -a filter-branch -d 'Rewrite branches'
@@ -1837,10 +1913,12 @@ complete -f -c git -n '__fish_git_using_command help' -a grep -d 'Print lines ma
 complete -f -c git -n '__fish_git_using_command help' -a init -d 'Create an empty git repository or reinitialize an existing one'
 complete -f -c git -n '__fish_git_using_command help' -a log -d 'Show commit logs'
 complete -f -c git -n '__fish_git_using_command help' -a ls-files -d 'Show information about files in the index and the working tree'
+complete -f -c git -n '__fish_git_using_command help' -a maintenance -d 'Run tasks to optimize Git repository data'
 complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command help' -a merge-base -d 'Find as good common ancestors as possible for a merge'
 complete -f -c git -n '__fish_git_using_command help' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
 complete -f -c git -n '__fish_git_using_command help' -a mv -d 'Move or rename a file, a directory, or a symlink'
+complete -f -c git -n '__fish_git_using_command help' -a notes -d 'Add or inspect object notes'
 complete -f -c git -n '__fish_git_using_command help' -a prune -d 'Prune all unreachable objects from the object database'
 complete -f -c git -n '__fish_git_using_command help' -a pull -d 'Fetch from and merge with another repository or a local branch'
 complete -f -c git -n '__fish_git_using_command help' -a push -d 'Update remote refs along with associated objects'
@@ -1858,6 +1936,7 @@ complete -f -c git -n '__fish_git_using_command help' -a show-branch -d 'Shows t
 complete -f -c git -n '__fish_git_using_command help' -a stash -d 'Stash away changes'
 complete -f -c git -n '__fish_git_using_command help' -a status -d 'Show the working tree status'
 complete -f -c git -n '__fish_git_using_command help' -a submodule -d 'Initialize, update or inspect submodules'
+complete -f -c git -n '__fish_git_using_command help' -a stripspace -d 'Remove unnecessary whitespace'
 complete -f -c git -n '__fish_git_using_command help' -a switch -d 'Switch to a branch'
 complete -f -c git -n '__fish_git_using_command help' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
 complete -f -c git -n '__fish_git_using_command help' -a whatchanged -d 'Show logs with difference each commit introduces'

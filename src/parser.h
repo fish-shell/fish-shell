@@ -282,10 +282,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Adds a job to the beginning of the job list.
     void job_add(shared_ptr<job_t> job);
 
-    /// Returns the name of the currently evaluated function if we are currently evaluating a
-    /// function, null otherwise. This is tested by moving down the block-scope-stack, checking
-    /// every block if it is of type FUNCTION_CALL.
-    const wchar_t *is_function() const;
+    /// \return whether we are currently evaluating a function.
+    bool is_function() const;
 
     /// Create a parser.
     parser_t();
@@ -394,7 +392,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     static const wchar_t *get_block_desc(block_type_t block);
 
     /// Return the function name for the specified stack frame. Default is one (current frame).
-    const wchar_t *get_function_name(int level = 1);
+    maybe_t<wcstring> get_function_name(int level = 1);
 
     /// Promotes a job to the front of the list.
     void job_promote(job_t *job);

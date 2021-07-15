@@ -412,26 +412,19 @@ wcstring parser_t::stack_trace() const {
     return trace;
 }
 
-/// Returns the name of the currently evaluated function if we are currently evaluating a function,
-/// NULL otherwise. This is tested by moving down the block-scope-stack, checking every block if it
-/// is of type FUNCTION_CALL. If the caller doesn't specify a starting position in the stack we
-/// begin with the current block.
-const wchar_t *parser_t::is_function() const {
+bool parser_t::is_function() const {
     for (const auto &b : block_list) {
         if (b.is_function_call()) {
-            return b.function_name.c_str();
+            return true;
         } else if (b.type() == block_type_t::source) {
-            // If a function sources a file, obviously that function's offset doesn't
-            // contribute.
+            // If a function sources a file, don't descend further.
             break;
         }
     }
-    return nullptr;
+    return false;
 }
 
-/// Return the function name for the specified stack frame. Default is zero (current frame).
-/// The special value zero means the function frame immediately above the closest breakpoint frame.
-const wchar_t *parser_t::get_function_name(int level) {
+maybe_t<wcstring> parser_t::get_function_name(int level) {
     if (level == 0) {
         // Return the function name for the level preceding the most recent breakpoint. If there
         // isn't one return the function name for the current level.
@@ -441,13 +434,10 @@ const wchar_t *parser_t::get_function_name(int level) {
             if (b.type() == block_type_t::breakpoint) {
                 found_breakpoint = true;
             } else if (found_breakpoint && b.is_function_call()) {
-                return b.function_name.c_str();
+                return b.function_name;
             }
         }
-        return nullptr;  // couldn't find a breakpoint frame
-    } else if (level == 1) {
-        // Return the function name for the current level.
-        return this->is_function();
+        return none();  // couldn't find a breakpoint frame
     }
 
     // Level 1 is the topmost function call. Level 2 is its caller. Etc.
@@ -456,11 +446,15 @@ const wchar_t *parser_t::get_function_name(int level) {
         if (b.is_function_call()) {
             funcs_seen++;
             if (funcs_seen == level) {
-                return b.function_name.c_str();
+                return b.function_name;
             }
+        } else if (b.type() == block_type_t::source && level == 1) {
+            // Historical: If we want the topmost function, but we are really in a file sourced by a
+            // function, don't consider ourselves to be in a function.
+            break;
         }
     }
-    return nullptr;  // couldn't find that function level
+    return none();
 }
 
 int parser_t::get_lineno() const {

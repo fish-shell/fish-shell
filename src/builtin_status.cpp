@@ -381,10 +381,8 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
         }
         case STATUS_FUNCTION: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            const wchar_t *fn = parser.get_function_name(opts.level);
-
-            if (!fn) fn = _(L"Not a function");
-            streams.out.append_format(L"%ls\n", fn);
+            maybe_t<wcstring> fn = parser.get_function_name(opts.level);
+            streams.out.append_format(L"%ls\n", fn ? fn->c_str() : _(L"Not a function"));
             break;
         }
         case STATUS_LINE_NUMBER: {

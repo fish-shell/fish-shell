@@ -433,10 +433,11 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     if (opts.name.empty()) {
         // If no name has been given, we default to the function name.
         // If any error happens, the backtrace will show which argparse it was.
-        const wchar_t *fn = parser.get_function_name(1);
-
-        if (!fn) fn = L"argparse";
-        opts.name = fn;
+        if (maybe_t<wcstring> fn = parser.get_function_name(1)) {
+            opts.name = fn.acquire();
+        } else {
+            opts.name = L"argparse";
+        }
     }
 
     *optind = w.woptind;

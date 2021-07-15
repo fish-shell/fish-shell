@@ -1,5 +1,5 @@
 set -l commands info trigger settle control monitor test test-builtin
-complete -c udevadm -n __fish_is_first_token -xa "$commands"
+complete -c udevadm -n "fish_is_nth_token 1" -xa "$commands"
 
 complete -c udevadm -s h -l help -d "Show help"
 complete -c udevadm -s V -l version -d "Show version info"
@@ -59,4 +59,4 @@ complete -c udevadm -n '__fish_seen_subcommand_from test' -s a -l action -d "Set
 complete -c udevadm -n '__fish_seen_subcommand_from test' -s N -l resolve-names -d "When to resolve names" -xa "early late never"
 
 # udevadm test-builtin
-complete -c udevadm -n '__fish_seen_subcommand_from test-builtin; and __fish_is_nth_token 2' -xa "blkid\t'Filesystem and partition probing' btrfs\t'btrfs volume management' hwdb\t'Hardware database' input_id\t'Input device properties' keyboard\t'Keybord scan code to key mapping' kmod\t'Kernel module loader' net_id\t'Network device properties' net_setup_link\t'Configure network link' path_id\t'Compose persistent device path' usb_id\t'USB device properties' uaccess\t'Manage device node user ACL'"
+complete -c udevadm -n '__fish_seen_subcommand_from test-builtin; and fish_is_nth_token 2' -xa "blkid\t'Filesystem and partition probing' btrfs\t'btrfs volume management' hwdb\t'Hardware database' input_id\t'Input device properties' keyboard\t'Keybord scan code to key mapping' kmod\t'Kernel module loader' net_id\t'Network device properties' net_setup_link\t'Configure network link' path_id\t'Compose persistent device path' usb_id\t'USB device properties' uaccess\t'Manage device node user ACL'"

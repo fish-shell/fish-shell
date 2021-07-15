@@ -1671,10 +1671,39 @@ static void test_wcsfilecmp() {
     }
 }
 
+static void test_const_strlen() {
+    do_test(const_strlen("") == 0);
+    do_test(const_strlen(L"") == 0);
+    do_test(const_strlen("\0") == 0);
+    do_test(const_strlen(L"\0") == 0);
+    do_test(const_strlen("\0abc") == 0);
+    do_test(const_strlen(L"\0abc") == 0);
+    do_test(const_strlen("x") == 1);
+    do_test(const_strlen(L"x") == 1);
+    do_test(const_strlen("abc") == 3);
+    do_test(const_strlen(L"abc") == 3);
+    do_test(const_strlen("abc\0def") == 3);
+    do_test(const_strlen(L"abc\0def") == 3);
+    do_test(const_strlen("abcdef\0") == 6);
+    do_test(const_strlen(L"abcdef\0") == 6);
+    static_assert(const_strlen("hello") == 5, "const_strlen failure");
+}
+
+static void test_const_strcmp() {
+    static_assert(const_strcmp("", "a") < 0, "const_strcmp failure");
+    static_assert(const_strcmp("a", "a") == 0, "const_strcmp failure");
+    static_assert(const_strcmp("a", "") > 0, "const_strcmp failure");
+    static_assert(const_strcmp("aa", "a") > 0, "const_strcmp failure");
+    static_assert(const_strcmp("a", "aa") < 0, "const_strcmp failure");
+    static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
+}
+
 static void test_utility_functions() {
     say(L"Testing utility functions");
     test_wcsfilecmp();
     test_parse_util_cmdsubst_extent();
+    test_const_strlen();
+    test_const_strcmp();
 }
 
 // UTF8 tests taken from Alexey Vatchenko's utf8 library. See http://www.bsdua.org/libbsdua.html.

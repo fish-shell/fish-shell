@@ -1975,13 +1975,3 @@ bool is_console_session() {
     return console_session;
 }
 
-static_assert(const_strcmp("", "a") < 0, "const_strcmp failure");
-static_assert(const_strcmp("a", "a") == 0, "const_strcmp failure");
-static_assert(const_strcmp("a", "") > 0, "const_strcmp failure");
-static_assert(const_strcmp("aa", "a") > 0, "const_strcmp failure");
-static_assert(const_strcmp("a", "aa") < 0, "const_strcmp failure");
-static_assert(const_strcmp("b", "aa") > 0, "const_strcmp failure");
-
-static_assert(const_strlen("") == 0, "const_strlen failure");
-static_assert(const_strlen("a") == 1, "const_strlen failure");
-static_assert(const_strlen("hello") == 5, "const_strlen failure");

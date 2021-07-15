@@ -416,9 +416,8 @@ wcstring parser_t::stack_trace() const {
 /// NULL otherwise. This is tested by moving down the block-scope-stack, checking every block if it
 /// is of type FUNCTION_CALL. If the caller doesn't specify a starting position in the stack we
 /// begin with the current block.
-const wchar_t *parser_t::is_function(size_t idx) const {
-    for (size_t block_idx = idx; block_idx < block_list.size(); block_idx++) {
-        const block_t &b = block_list[block_idx];
+const wchar_t *parser_t::is_function() const {
+    for (const auto &b : block_list) {
         if (b.is_function_call()) {
             return b.function_name.c_str();
         } else if (b.type() == block_type_t::source) {

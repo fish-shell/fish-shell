@@ -285,7 +285,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Returns the name of the currently evaluated function if we are currently evaluating a
     /// function, null otherwise. This is tested by moving down the block-scope-stack, checking
     /// every block if it is of type FUNCTION_CALL.
-    const wchar_t *is_function(size_t idx = 0) const;
+    const wchar_t *is_function() const;
 
     /// Create a parser.
     parser_t();

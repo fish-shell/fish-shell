@@ -1547,7 +1547,10 @@ complete -c git -n '__fish_git_using_command mergetool' -s O -d 'Process files i
 
 ### mv
 complete -c git -n __fish_git_needs_command -a mv -d 'Move or rename a file, a directory, or a symlink'
-# TODO options
+complete -f -c git -n '__fish_git_using_command mv' -s f -l force -d 'Force rename/moving even if target exists'
+complete -f -c git -n '__fish_git_using_command mv' -s k -d 'Skip rename/move which can lead to error'
+complete -f -c git -n '__fish_git_using_command mv' -s n -l dry-run -d 'Only show what would happen'
+complete -f -c git -n '__fish_git_using_command mv' -s v -l verbose -d 'Report names of files as they are changed'
 
 ### notes
 set -l notescommands add copy append edit show merge remove # list prune get-ref

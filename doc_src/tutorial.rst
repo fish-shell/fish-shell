@@ -43,6 +43,10 @@ If you have a strong understanding of other shells, and want to know what fish d
 
 Or, if you want a quick overview over the differences to other shells like Bash, see :ref:`Fish For Bash Users <fish_for_bash_users>`.
 
+For the full, detailed description of how to use fish interactively, see :ref:`Interactive Use <interactive>`.
+
+For a comprehensive description of fish's scripting language, see :ref:`The Fish Language<language>`.
+
 Running Commands
 ----------------
 
@@ -262,7 +266,7 @@ Unlike other shells, variables are not further split after substitution::
     Mister Noodle
 
 
-In bash, this would have created two directories "Mister" and "Noodle". In fish, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to ``mkdir``, spaces and all. Other shells use the term "arrays", rather than lists.
+In bash, this would have created two directories "Mister" and "Noodle". In fish, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to ``mkdir``, spaces and all.
 
 You can erase (or "delete") a variable with ``-e`` or ``--erase``
 

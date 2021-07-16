@@ -13,6 +13,12 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``realpath``.
+          To see the documentation on the ``realpath`` command you might have,
+          use ``command man realpath``.
+
 ``realpath`` resolves a path to its absolute path.
 
 fish provides a ``realpath`` builtin as a fallback for systems where there is no ``realpath`` command, your OS might provide a version with more features.

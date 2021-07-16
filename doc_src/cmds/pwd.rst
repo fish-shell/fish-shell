@@ -14,6 +14,12 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``pwd``.
+          To see the documentation on the ``pwd`` command you might have,
+          use ``command man pwd``.
+
 ``pwd`` outputs (prints) the current working directory.
 
 The following options are available:

@@ -15,6 +15,12 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``test``.
+          To see the documentation on the ``test`` command you might have,
+          use ``command man test``.
+
 Tests the expression given and sets the exit status to 0 if true, and 1 if false. An expression is made up of one or more operators and their arguments.
 
 The first form (``test``) is preferred. For compatibility with other shells, the second form is available: a matching pair of square brackets (``[ [EXPRESSION ] ]``).

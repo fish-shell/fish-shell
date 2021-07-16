@@ -12,7 +12,7 @@ Many things are similar - they both fundamentally expand commandlines to execute
 Command substitutions
 ---------------------
 
-Fish spells command substitutions as ``(command)`` instead of ``$(command)`` (or ```command```).
+Fish spells command substitutions as ``$(command)`` or ``(command)``, but not ```command```.
 
 In addition, it only splits them on newlines instead of $IFS. If you want to split on something else, use :ref:`string split <cmd-string-split>`, :ref:`string split0 <cmd-string-split>` or :ref:`string collect <cmd-string-collect>`. If those are used as the last command in a command substitution the splits they create are carried over. So::
 

@@ -372,9 +372,9 @@ For more, see :ref:`Lists <variables-lists>`.
 Command Substitutions
 ---------------------
 
-Command substitutions use the output of one command as an argument to another. Unlike other shells, fish does not use backticks `` for command substitutions. Instead, it uses parentheses::
+Command substitutions use the output of one command as an argument to another. Unlike other shells, fish does not use backticks `` for command substitutions. Instead, it uses parentheses with or without a dollar::
 
-    > echo In (pwd), running (uname)
+    > echo In (pwd), running $(uname)
     In /home/tutorial, running FreeBSD
 
 A common idiom is to capture the output of a command in a variable::
@@ -383,9 +383,9 @@ A common idiom is to capture the output of a command in a variable::
     > echo $os
     Linux
 
-Command substitutions are not expanded within quotes. Instead, you can temporarily close the quotes, add the command substitution, and reopen them, all in the same argument::
+Command substitutions without a dollar are not expanded within quotes, so the version with a dollar is simpler::
 
-    > touch "testing_"(date +%s)".txt"
+    > touch "testing_$(date +%s).txt"
     > ls *.txt
     testing_1360099791.txt
 

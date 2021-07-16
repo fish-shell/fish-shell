@@ -1039,8 +1039,35 @@ complete -f -c git -n '__fish_git_using_command checkout' -l ours -d 'Keep unmer
 # TODO options
 
 ### apply
-complete -f -c git -n __fish_git_needs_command -a apply -d 'Apply a patch on a git index file and a working tree'
-# TODO options
+complete -F -c git -n __fish_git_needs_command -a apply -d 'Apply a patch on a git index file and a working tree'
+complete -f -c git -n '__fish_git_using_command apply' -l stat -d 'Output diff stat'
+complete -f -c git -n '__fish_git_using_command apply' -l numstat -d 'Show number of additions and deletions'
+complete -f -c git -n '__fish_git_using_command apply' -l summary -d 'Output a condensed summary'
+complete -f -c git -n '__fish_git_using_command apply' -l check -d 'Just check if the patches can be applied'
+complete -f -c git -n '__fish_git_using_command apply' -l index -d 'Apply patch to index and working tree'
+complete -f -c git -n '__fish_git_using_command apply' -l cached -d 'Apply patch to index'
+complete -f -c git -n '__fish_git_using_command apply' -l intent-to-add -d 'Add entry for file in index with no content'
+complete -f -c git -n '__fish_git_using_command apply' -s 3 -l 3way -d 'Attempt a 3 way merge on conflicts'
+complete -F -c git -n '__fish_git_using_command apply' -l build-fake-ancestor -d 'Build a temporary index containing these blobs'
+complete -f -c git -n '__fish_git_using_command apply' -s R -l reverse -d 'Apply the patch in reverse'
+complete -f -c git -n '__fish_git_using_command apply' -l reject -d 'Leave rejected hunks in *.rej files'
+complete -f -c git -n '__fish_git_using_command apply; and __fish_contains_opt numstat' -s z -d 'Do not munge pathnames'
+complete -x -c git -n '__fish_git_using_command apply' -s p -d 'Remove n leading path components'
+complete -x -c git -n '__fish_git_using_command apply' -s C -d 'Ensure n that lines of surrounding context match'
+complete -f -c git -n '__fish_git_using_command apply' -l unidiff-zero -d 'Do not break on diffs generated using --unified=0'
+complete -f -c git -n '__fish_git_needs_command apply' -l apply -d 'Always apply patches'
+complete -f -c git -n '__fish_git_using_command apply' -l no-add -d 'Ignore additions made by patches'
+complete -f -c git -n '__fish_git_using_command apply' -l allow-binary-replacement -l binary -d 'Also patch binaries'
+complete -F -c git -n '__fish_git_using_command apply' -l exclude -d 'Dont apply changes to files matching given pattern'
+complete -F -c git -n '__fish_git_using_command apply' -l include -d 'Apply changes to files matching given pattern'
+complete -f -c git -n '__fish_git_using_command apply' -l ignore-space-change -l ignore-whitespace -d 'Ignore whitespace change in context lines'
+complete -x -c git -n '__fish_git_using_command apply' -l whitespace -a 'nowarn warn fix error error-all' -d 'Action to take when there are whitespace errors'
+complete -f -c git -n '__fish_git_using_command apply' -l inaccurate-eof -d 'Workaround for some versionw of diff not detecting new line at end of file'
+complete -f -c git -n '__fish_git_using_command apply' -s v -l verbose -d 'Report progress to stderr'
+complete -f -c git -n '__fish_git_using_command apply' -l recount -d 'Do not trust the line counts in the hunk headers'
+complete -F -c git -n '__fish_git_using_command apply' -l directort -d 'Prepend <root> to all filenames'
+complete -f -c git -n '__fish_git_using_command apply' -l unsafe-paths -d 'Allow patches that work outside working area'
+
 
 ### archive
 complete -f -c git -n __fish_git_needs_command -a archive -d 'Create an archive of files from a named tree'

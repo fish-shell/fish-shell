@@ -1444,6 +1444,15 @@ complete -f -c git -n '__fish_git_using_command mailinfo' -l scissors -d 'Remove
 complete -f -c git -n '__fish_git_using_command mailinfo' -l no-scissors -d 'Ignore scissor lines'
 complete -x -c git -n '__fish_git_using_command mailinfo' -l quoted-cr -a 'nowarn warn strip' -d 'Action when processed email message end with CRLF instead of LF'
 
+### mailsplit
+complete -F -c git -n __fish_git_needs_command -a mailsplit -d 'Simple UNIX mbox splitter program'
+complete -F -c git -n '__fish_git_using_command mailsplit' -s o -d 'Directory to place individual messages'
+complete -f -c git -n '__fish_git_using_command mailsplit' -s b -d 'Treat files not starting with From line as single mail message'
+complete -x -c git -n '__fish_git_using_command mailsplit' -s d -d 'File name prefix digit precision'
+complete -x -c git -n '__fish_git_using_command mailsplit' -s f -d 'Skip first n numbers'
+complete -f -c git -n '__fish_git_using_command mailsplit' -l keep-cr -d 'Do not remove \\r from lines starting with \\n\\r'
+complete -f -c git -n '__fish_git_using_command mailsplit' -l mboxrd -d 'Input is of mboxrd form'
+
 ### maintenance
 complete -f -c git -n __fish_git_needs_command -a maintenance -d 'Run tasks to optimize Git repository data'
 complete -f -c git -n '__fish_git_using_command maintenance' -a register -d 'Initialize Git config vars for maintenance'
@@ -1967,6 +1976,7 @@ complete -f -c git -n '__fish_git_using_command help' -a init -d 'Create an empt
 complete -f -c git -n '__fish_git_using_command help' -a log -d 'Show commit logs'
 complete -f -c git -n '__fish_git_using_command help' -a ls-files -d 'Show information about files in the index and the working tree'
 complete -f -c git -n '__fish_git_using_command help' -a mailinfo -d 'Extracts patch and authorship from a single e-mail message'
+complete -f -c git -n '__fish_git_using_command help' -a mailsplit -d 'Simple UNIX mbox splitter program'
 complete -f -c git -n '__fish_git_using_command help' -a maintenance -d 'Run tasks to optimize Git repository data'
 complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command help' -a merge-base -d 'Find as good common ancestors as possible for a merge'

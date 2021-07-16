@@ -12,6 +12,7 @@ Scripting improvements
 ----------------------
 - fish's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results. (:issue:`159`).
 - ``string collect`` supports a new ``--allow-empty`` option, which will output one empty argument in a command substitution that has no output (:issue:`8054`). This allows commands like ``test -n (echo -n | string collect --allow-empty)`` to work more reliably.
+- ``string match`` gained a ``--groups-only`` option, which makes it only output capturing groups, excluding the full match. This allows ``string match`` to do simple transformations (:issue:`6056`).
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
 
 Interactive improvements

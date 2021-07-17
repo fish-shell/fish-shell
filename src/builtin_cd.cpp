@@ -46,6 +46,15 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
         dir_in = maybe_dir_in->as_string();
     }
 
+    if (dir_in.empty()) {
+        streams.err.append_format(_(L"%ls: Empty directory '%ls' does not exist\n"), cmd,
+                                  dir_in.c_str());
+
+        if (!parser.is_interactive()) streams.err.append(parser.current_line());
+
+        return STATUS_CMD_ERROR;
+    }
+
     wcstring pwd = parser.vars().get_pwd_slash();
     auto dirs = path_apply_cdpath(dir_in, pwd, parser.vars());
     if (dirs.empty()) {

@@ -218,3 +218,13 @@ __fish_test_thrash_cd |
 __fish_test_thrash_cd |
 __fish_test_thrash_cd |
 __fish_test_thrash_cd
+
+cd ""
+# CHECKERR: cd: Empty directory '' does not exist
+# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: builtin cd $argv
+# CHECKERR: ^
+# CHECKERR: in function 'cd' with arguments '""'
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+echo $status
+# CHECK: 1

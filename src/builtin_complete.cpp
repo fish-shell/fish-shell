@@ -124,8 +124,6 @@ static void builtin_complete_print(const wcstring &cmd, io_streams_t &streams, p
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 // complete.cpp for any heavy lifting.
 maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
-    ASSERT_IS_MAIN_THREAD();
-
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     completion_mode_t result_mode{};

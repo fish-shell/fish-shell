@@ -136,7 +136,6 @@ void io_buffer_t::begin_filling(autoclose_fd_t fd) {
 
 separated_buffer_t io_buffer_t::complete_background_fillthread_and_take_buffer() {
     // Mark that our fillthread is done, then wake it up.
-    ASSERT_IS_MAIN_THREAD();
     assert(fillthread_running() && "Should have a fillthread");
     assert(this->item_id_ > 0 && "Should have a valid item ID");
     shutdown_fillthread_ = true;

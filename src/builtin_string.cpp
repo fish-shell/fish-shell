@@ -221,8 +221,13 @@ static size_t width_without_escapes(wcstring ins) {
                 auto w = fish_wcwidth(c);
                 if (w > 0) width -= w;
             }
+            // Move us forward behind the escape code,
+            // it might include a second escape!
+            // E.g. SGR0 ("reset") is \e\(B\e\[m in xterm.
+            pos += *len - 1;
+        } else {
+            pos++;
         }
-        pos++;
     }
     return width;
 }

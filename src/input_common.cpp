@@ -98,9 +98,7 @@ static readb_result_t readb(int in_fd) {
         // This may come about through readability, or through a call to poll().
         if ((fdset.test(notifier_fd) && notifier.notification_fd_became_readable(notifier_fd)) ||
             notifier.poll()) {
-            if (env_universal_barrier()) {
-                return readb_uvar_notified;
-            }
+            return readb_uvar_notified;
         }
 
         // Check stdin.

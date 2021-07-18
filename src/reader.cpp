@@ -2353,8 +2353,6 @@ void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
 
 /// Sets the command line contents, without clearing the pager.
 void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, bool transient) {
-    // Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use
-    // operator= with a pointer to our interior, so use an intermediate.
     size_t command_line_len = b.size();
     if (transient) {
         if (command_line_has_transient_edit) {
@@ -2362,7 +2360,7 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
         }
         command_line_has_transient_edit = true;
     }
-    replace_substring(&command_line, 0, command_line.size(), wcstring(b));
+    replace_substring(&command_line, 0, command_line.size(), b);
     command_line_changed(&command_line);
 
     // Don't set a position past the command line length.

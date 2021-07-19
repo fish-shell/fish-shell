@@ -14,8 +14,8 @@ set(bindir ${CMAKE_INSTALL_BINDIR})
 set(sysconfdir ${CMAKE_INSTALL_SYSCONFDIR})
 set(mandir ${CMAKE_INSTALL_MANDIR})
 
-set(rel_datadir ${CMAKE_INSTALL_DATADIR})
 set(datadir ${CMAKE_INSTALL_FULL_DATADIR})
+file(RELATIVE_PATH rel_datadir ${CMAKE_INSTALL_PREFIX} ${datadir})
 
 set(docdir ${CMAKE_INSTALL_DOCDIR})
 

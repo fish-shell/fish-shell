@@ -95,7 +95,7 @@ int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent) {
             FLOGF_SAFE(proc_pgroup, "setpgid(2) returned EPERM. Retrying");
             continue;
         }
-#ifdef __BSD__
+#if defined(__BSD__) || defined(__APPLE__)
         // POSIX.1 doesn't specify that zombie processes are required to be considered extant and/or
         // children of the parent for purposes of setpgid(2). In particular, FreeBSD (at least up to
         // 12.2) does not consider a child that has already forked, exec'd, and exited to "exist"

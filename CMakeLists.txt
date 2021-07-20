@@ -59,15 +59,22 @@ add_compile_options(-fno-exceptions)
 # Prefer lld or the gold linker because they don't emit useless warnings about sys_nerr and
 # _sys_errlist. They're also faster (significantly so in the case of lld).
 if (UNIX)
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=lld -Wl,--version
-        ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
-    if ("${LD_VERSION}" MATCHES "LLD ")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
-    elseif (NOT APPLE)
+    option(FISH_LINK_PREFER_LLD "Prefer lld linker" ON)
+    option(FISH_LINK_PREFER_GOLD "Prefer gold linker" ON)
+    if (FISH_LINK_PREFER_LLD)
+        execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=lld -Wl,--version
+            ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
+        if ("${LD_VERSION}" MATCHES "LLD ")
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+            set(FISH_LINK_LINKER_FOUND TRUE)
+        endif()
+    endif()
+    if (NOT FISH_LINK_LINKER_FOUND AND NOT APPLE AND FISH_LINK_PREFER_GOLD)
         execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version
             ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
         if ("${LD_VERSION}" MATCHES "GNU gold")
             set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+            set(FISH_LINK_LINKER_FOUND TRUE)
         endif()
     endif()
 endif()

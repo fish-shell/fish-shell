@@ -729,7 +729,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
             return none();
         }
 
-        std::shared_ptr<history_t> history = reader_get_history();
+        std::shared_ptr<history_t> history = commandline_get_state().history;
         if (!history) {
             history = history_t::with_name(history_session_id(*this));
         }

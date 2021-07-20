@@ -216,7 +216,7 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
 
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
-    std::shared_ptr<history_t> history = reader_get_history();
+    std::shared_ptr<history_t> history = commandline_get_state().history;
     if (!history) history = history_t::with_name(history_session_id(parser.vars()));
 
     // If a history command hasn't already been specified via a flag check the first word.

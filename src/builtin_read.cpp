@@ -223,7 +223,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     // Keep in-memory history only.
     reader_push(parser, wcstring{}, std::move(conf));
 
-    reader_set_buffer(commandline, std::wcslen(commandline));
+    commandline_set_buffer(commandline, std::wcslen(commandline));
     scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
 
     event_fire_generic(parser, L"fish_read");

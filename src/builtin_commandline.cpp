@@ -80,7 +80,7 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
         }
     }
     out.append(end);
-    reader_set_buffer(out, out_pos);
+    commandline_set_buffer(out, out_pos);
 }
 
 /// Output the specified selection.
@@ -125,13 +125,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
 maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
-    // Pointer to what the commandline builtin considers to be the current contents of the command
-    // line buffer.
-    const wchar_t *current_buffer = nullptr;
-
-    // What the commandline builtin considers to be the current cursor position.
-    auto current_cursor_pos = static_cast<size_t>(-1);
-
+    const commandline_state_t rstate = commandline_get_state();
     const wchar_t *cmd = argv[0];
     int buffer_part = 0;
     bool cut_at_cursor = false;
@@ -149,30 +143,9 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     bool search_mode = false;
     bool paging_mode = false;
     const wchar_t *begin = nullptr, *end = nullptr;
+    const wchar_t *override_buffer = nullptr;
 
     const auto &ld = parser.libdata();
-    wcstring transient_commandline;
-    if (!ld.transient_commandlines.empty()) {
-        transient_commandline = ld.transient_commandlines.back();
-        current_buffer = transient_commandline.c_str();
-        current_cursor_pos = transient_commandline.size();
-    } else {
-        current_buffer = reader_get_buffer();
-        current_cursor_pos = reader_get_cursor_pos();
-    }
-
-    if (!current_buffer) {
-        if (is_interactive_session()) {
-            // Prompt change requested while we don't have a prompt, most probably while reading the
-            // init files. Just ignore it.
-            return STATUS_CMD_ERROR;
-        }
-
-        streams.err.append(argv[0]);
-        streams.err.append(L": Can not set commandline in non-interactive mode\n");
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_CMD_ERROR;
-    }
 
     static const wchar_t *const short_options = L":abijpctforhI:CLSsP";
     static const struct woption long_options[] = {{L"append", no_argument, nullptr, 'a'},
@@ -239,8 +212,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 break;
             }
             case 'I': {
-                current_buffer = w.woptarg;
-                current_cursor_pos = std::wcslen(w.woptarg);
+                override_buffer = w.woptarg;
                 break;
             }
             case 'C': {
@@ -328,10 +300,9 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if (selection_mode) {
-        size_t start, len;
-        const wchar_t *buffer = reader_get_buffer();
-        if (reader_get_selection(&start, &len)) {
-            streams.out.append(buffer + start, len);
+        if (rstate.selection) {
+            streams.out.append(rstate.text.c_str() + rstate.selection->start,
+                               rstate.selection->length);
         }
         return STATUS_CMD_OK;
     }
@@ -375,19 +346,42 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if (line_mode) {
-        size_t pos = reader_get_cursor_pos();
-        const wchar_t *buff = reader_get_buffer();
-        streams.out.append_format(L"%lu\n",
-                                  static_cast<unsigned long>(parse_util_lineno(buff, pos)));
+        streams.out.append_format(L"%d\n",
+                                  parse_util_lineno(rstate.text.c_str(), rstate.cursor_pos));
         return STATUS_CMD_OK;
     }
 
     if (search_mode) {
-        return reader_is_in_search_mode() ? 0 : 1;
+        return commandline_get_state().search_mode ? 0 : 1;
     }
 
     if (paging_mode) {
-        return reader_has_pager_contents() ? 0 : 1;
+        return commandline_get_state().pager_mode ? 0 : 1;
+    }
+
+    // At this point we have (nearly) exhausted the options which always operate on the true command
+    // line. Now we respect the possibility of a transient command line due to evaluating a wrapped
+    // completion. Don't do this in cursor_mode: it makes no sense to move the cursor based on a
+    // transient commandline.
+    const wchar_t *current_buffer = nullptr;
+    size_t current_cursor_pos{0};
+    wcstring transient;
+    if (!ld.transient_commandlines.empty() && !cursor_mode) {
+        transient = ld.transient_commandlines.back();
+        current_buffer = transient.c_str();
+        current_cursor_pos = transient.size();
+    } else if (rstate.initialized) {
+        current_buffer = rstate.text.c_str();
+        current_cursor_pos = rstate.cursor_pos;
+    } else {
+        // There is no command line, either because we are not interactive, or because we are
+        // interactive and are still reading init files (in which case we silently ignore this).
+        if (!is_interactive_session()) {
+            streams.err.append(cmd);
+            streams.err.append(L": Can not set commandline in non-interactive mode\n");
+            builtin_print_error_trailer(parser, streams.err, cmd);
+        }
+        return STATUS_CMD_ERROR;
     }
 
     switch (buffer_part) {
@@ -422,12 +416,11 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 builtin_print_error_trailer(parser, streams.err, cmd);
             }
 
-            current_buffer = reader_get_buffer();
             new_pos =
                 std::max(0L, std::min(new_pos, static_cast<long>(std::wcslen(current_buffer))));
-            reader_set_buffer(current_buffer, static_cast<size_t>(new_pos));
+            commandline_set_buffer(current_buffer, static_cast<size_t>(new_pos));
         } else {
-            size_t pos = reader_get_cursor_pos() - (begin - current_buffer);
+            size_t pos = current_cursor_pos - (begin - current_buffer);
             streams.out.append_format(L"%lu\n", static_cast<unsigned long>(pos));
         }
         return STATUS_CMD_OK;

@@ -30,3 +30,9 @@ expect_prompt()
 
 sendline("echo foo")
 expect_prompt("foo")
+
+# commandline is empty when a command is executed.
+sendline("set what (commandline)")
+expect_prompt()
+sendline('echo "<$what>"')
+expect_prompt("<>")

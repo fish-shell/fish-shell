@@ -165,28 +165,6 @@ void reader_schedule_prompt_repaint();
 class char_event_t;
 void reader_queue_ch(const char_event_t &ch);
 
-/// Get the string of character currently entered into the command buffer, or 0 if interactive mode
-/// is uninitialized.
-const wchar_t *reader_get_buffer();
-
-/// Returns the current reader's history.
-std::shared_ptr<history_t> reader_get_history();
-
-/// Set the string of characters in the command buffer, as well as the cursor position.
-///
-/// \param b the new buffer value
-/// \param p the cursor position. If \c p is larger than the length of the command line, the cursor
-/// is placed on the last character.
-void reader_set_buffer(const wcstring &b, size_t p = -1);
-
-/// Get the current cursor position in the command line. If interactive mode is uninitialized,
-/// return (size_t)-1.
-size_t reader_get_cursor_pos();
-
-/// Get the current selection range in the command line. Returns false if there is no active
-/// selection, true otherwise.
-bool reader_get_selection(size_t *start, size_t *len);
-
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set. In practice this will return 0 or SIGINT.
 int reader_test_and_clear_interrupted();
@@ -254,12 +232,6 @@ void reader_handle_sigint();
 /// TODO: this doesn't belong in reader.
 bool check_cancel_from_fish_signal();
 
-/// Test whether the interactive reader is in search mode.
-bool reader_is_in_search_mode();
-
-/// Test whether the interactive reader has visible pager contents.
-bool reader_has_pager_contents();
-
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 /// Exposed for testing purposes only.
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
@@ -274,6 +246,24 @@ maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, s
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only);
+
+/// Snapshotted state from the reader.
+struct commandline_state_t {
+    wcstring text;                         // command line text, or empty if not interactive
+    size_t cursor_pos{0};                  // position of the cursor, may be as large as text.size()
+    maybe_t<source_range_t> selection{};   // visual selection, or none if none
+    std::shared_ptr<history_t> history{};  // current reader history, or null if not interactive
+    bool pager_mode{false};                // pager is visible
+    bool search_mode{false};               // pager is visible and search is active
+    bool initialized{false};               // if false, the reader has not yet been entered
+};
+
+/// Get the command line state. This may be fetched on a background thread.
+commandline_state_t commandline_get_state();
+
+/// Set the command line text and position. This may be called on a background thread; the reader
+/// will pick it up when it is done executing.
+void commandline_set_buffer(wcstring text, size_t cursor_pos = -1);
 
 /// Return the current interactive reads loop count. Useful for determining how many commands have
 /// been executed between invocations of code.

@@ -56,22 +56,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra \
 # Disable exception handling.
 add_compile_options(-fno-exceptions)
 
-# Prefer lld or the gold linker because they don't emit useless warnings about sys_nerr and
-# _sys_errlist. They're also faster (significantly so in the case of lld).
-if (UNIX)
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=lld -Wl,--version
-        ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
-    if ("${LD_VERSION}" MATCHES "LLD ")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
-    elseif (NOT APPLE)
-        execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version
-            ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
-        if ("${LD_VERSION}" MATCHES "GNU gold")
-            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
-        endif()
-    endif()
-endif()
-
 # Hide the CMake Rules directories in Xcode projects.
 source_group("CMake Rules" REGULAR_EXPRESSION "^$")
 

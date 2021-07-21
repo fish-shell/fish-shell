@@ -1196,13 +1196,21 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
             assert(locals_ != globals_ && "Locals should not be globals");
             set_in_node(locals_, key, std::move(val), flags);
         } else if (query.function) {
-            // "Function" scope is the same as the unspecified scope.
+            // "Function" scope is:
             // Either the topmost local scope of the nearest function,
-            // or global scope if no function exists.
-            auto node = resolve_unspecified_scope();
-            assert(node && "Should always resolve some scope");
+            // or the top-level local scope if no function exists.
+            //
+            // This is distinct from the unspecified scope,
+            // which is the global scope if no function exists.
+            auto node = locals_;
+            while (node->next) {
+                node = node->next;
+                // The first node that introduces a new scope is ours.
+                // If this doesn't happen, we go on until we've reached the
+                // topmost local scope.
+                if (node->new_scope) break;
+            }
             set_in_node(node, key, std::move(val), flags);
-            result.global_modified = (node == globals_);
         } else {
             DIE("Unknown scope");
         }

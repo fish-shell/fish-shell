@@ -727,23 +727,23 @@ begin
 end
 
 # Function scope:
-set -f actuallyglobal "this one is global"
-set -qg actuallyglobal
-and echo "Yep, it's global"
-# CHECK: Yep, it's global
-set -S actuallyglobal
-#CHECK: $actuallyglobal: set in global scope, unexported, with 1 elements
-#CHECK: $actuallyglobal[1]: |this one is global|
+set -f actuallystilllocal "this one is still local"
+set -ql actuallystilllocal
+and echo "Yep, it's local"
+# CHECK: Yep, it's local
+set -S actuallystilllocal
+#CHECK: $actuallystilllocal: set in local scope, unexported, with 1 elements
+#CHECK: $actuallystilllocal[1]: |this one is still local|
 
-# Blocks aren't functions, "function" scope is still global:
+# Blocks aren't functions, "function" scope is still top-level local:
 begin
-    set -f stillglobal "as global as the moon is wet"
-    echo $stillglobal
-    # CHECK: as global as the moon is wet
+    set -f stilllocal "as local as the moon is wet"
+    echo $stilllocal
+    # CHECK: as local as the moon is wet
 end
-set -S stillglobal
-#CHECK: $stillglobal: set in global scope, unexported, with 1 elements
-#CHECK: $stillglobal[1]: |as global as the moon is wet|
+set -S stilllocal
+#CHECK: $stilllocal: set in local scope, unexported, with 1 elements
+#CHECK: $stilllocal[1]: |as local as the moon is wet|
 
 function test-function-scope
     set -f funcvar "function"

@@ -15,7 +15,7 @@ $fish -c 'echo foo; return 2; echo bar'
 echo $status
 # CHECK: 2
 
-$fish -c 'echo interactive-foo; return 69; echo interactive-bar'
+$fish -ic 'echo interactive-foo; return 69; echo interactive-bar'
 # CHECK: interactive-foo
 # but not bar
 echo $status

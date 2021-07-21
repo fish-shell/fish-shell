@@ -235,9 +235,6 @@ enum class pipeline_position_t {
 /// Error when using continue outside of loop.
 #define INVALID_CONTINUE_ERR_MSG _(L"'continue' while not inside of loop")
 
-/// Error when using return builtin outside of function definition.
-#define INVALID_RETURN_ERR_MSG _(L"'return' outside of function definition")
-
 // Error messages. The number is a reminder of how many format specifiers are contained.
 
 /// Error for $^.

@@ -1141,25 +1141,6 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
                 append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
         }
 
-        // Check that we don't return from outside a function. But we allow it if it's
-        // 'return --help'.
-        if (!errored && command == L"return" && !first_arg_is_help) {
-            // See if we are in a function.
-            bool found_function = false;
-            for (const node_t *cursor = &dst; cursor != nullptr; cursor = cursor->parent) {
-                if (const auto *bs = cursor->try_as<block_statement_t>()) {
-                    if (bs->header->type == type_t::function_header) {
-                        found_function = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!found_function) {
-                errored = append_syntax_error(parse_errors, source_start, INVALID_RETURN_ERR_MSG);
-            }
-        }
-
         // Check that we don't break or continue from outside a loop.
         if (!errored && (command == L"break" || command == L"continue") && !first_arg_is_help) {
             // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,

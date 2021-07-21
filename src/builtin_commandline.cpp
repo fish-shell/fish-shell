@@ -212,6 +212,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                 break;
             }
             case 'I': {
+                // A historical, undocumented feature. TODO: consider removing this.
                 override_buffer = w.woptarg;
                 break;
             }
@@ -366,7 +367,10 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     const wchar_t *current_buffer = nullptr;
     size_t current_cursor_pos{0};
     wcstring transient;
-    if (!ld.transient_commandlines.empty() && !cursor_mode) {
+    if (override_buffer) {
+        current_buffer = override_buffer;
+        current_cursor_pos = std::wcslen(current_buffer);
+    } else if (!ld.transient_commandlines.empty() && !cursor_mode) {
         transient = ld.transient_commandlines.back();
         current_buffer = transient.c_str();
         current_cursor_pos = transient.size();

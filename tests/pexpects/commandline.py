@@ -36,3 +36,8 @@ sendline("set what (commandline)")
 expect_prompt()
 sendline('echo "<$what>"')
 expect_prompt("<>")
+
+# Test for undocumented -I flag.
+# TODO: consider removing.
+sendline("commandline -I foo")
+expect_prompt("foo")

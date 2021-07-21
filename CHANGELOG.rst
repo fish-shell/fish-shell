@@ -33,6 +33,7 @@ Completions
   - Angular's ``ng`` (:issue:`8111`)
   - ``zef`` (:issue:`8114`)
   - ``rakudo`` (:issue:`8113`)
+  - ``az`` (:issue:`8141`)
 
 - Improvements to many completions.
 

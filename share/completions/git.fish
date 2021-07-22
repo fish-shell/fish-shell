@@ -985,7 +985,7 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_files modif
 # TODO options
 
 ### am
-complete -F -c git -n __fish_git_needs_command -a am -d 'Apply a series of patches from a mailbox'
+complete -c git -n __fish_git_needs_command -a am -d 'Apply a series of patches from a mailbox'
 complete -f -c git -n '__fish_git_using_command am' -s s -l signoff -d 'Add a Signed-off-By trailer to commit message'
 complete -f -c git -n '__fish_git_using_command am' -l keep-non-patch -d 'Only strip bracket pairs containing \'PATCH\''
 complete -f -c git -n '__fish_git_using_command am' -l no-keep-cr -d 'Override am.keepcr to false'
@@ -1032,7 +1032,7 @@ complete -f -c git -n '__fish_git_using_command checkout' -l ours -d 'Keep unmer
 # TODO options
 
 ### apply
-complete -F -c git -n __fish_git_needs_command -a apply -d 'Apply a patch on a git index file and a working tree'
+complete -c git -n __fish_git_needs_command -a apply -d 'Apply a patch on a git index file and a working tree'
 complete -f -c git -n '__fish_git_using_command apply' -l numstat -d 'Show number of additions and deletions'
 complete -f -c git -n '__fish_git_using_command apply' -l summary -d 'Output a condensed summary'
 complete -f -c git -n '__fish_git_using_command apply' -l check -d 'Just check if the patches can be applied'
@@ -1464,7 +1464,7 @@ complete -f -c git -n '__fish_git_using_command mailinfo' -l no-scissors -d 'Ign
 complete -x -c git -n '__fish_git_using_command mailinfo' -l quoted-cr -a 'nowarn warn strip' -d 'Action when processed email message end with CRLF instead of LF'
 
 ### mailsplit
-complete -F -c git -n __fish_git_needs_command -a mailsplit -d 'Simple UNIX mbox splitter program'
+complete -c git -n __fish_git_needs_command -a mailsplit -d 'Simple UNIX mbox splitter program'
 complete -F -c git -n '__fish_git_using_command mailsplit' -s o -d 'Directory to place individual messages'
 complete -f -c git -n '__fish_git_using_command mailsplit' -s b -d 'Treat files not starting with From line as single mail message'
 complete -x -c git -n '__fish_git_using_command mailsplit' -s d -d 'File name prefix digit precision'

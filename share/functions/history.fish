@@ -89,9 +89,7 @@ function history --description "display or manipulate interactive command histor
                 and echo $PAGER | read -at pager
 
                 # If the user hasn't preconfigured less with the $LESS environment variable,
-                # we do so to have it behave like cat if output fits on one screen. Prevent the
-                # screen from clearing on quit, so there is something to see if it exits.
-                # These are two of the options `git` sets through $LESS before starting the pager.
+                # we do so to have it behave like cat if output fits on one screen.
                 not set -qx LESS
                 and set -x LESS --quit-if-one-screen
                 not set -qx LV # ask the pager lv not to strip colors

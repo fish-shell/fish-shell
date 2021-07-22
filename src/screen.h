@@ -219,7 +219,7 @@ struct prompt_layout_t {
 };
 
 // Maintain a mapping of escape sequences to their widths for fast lookup.
-class layout_cache_t {
+class layout_cache_t : noncopyable_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings, ordered
     // lexicographically.
@@ -283,9 +283,6 @@ class layout_cache_t {
     static layout_cache_t shared;
 
     layout_cache_t() = default;
-    layout_cache_t(const layout_cache_t &) = delete;
-    void operator=(const layout_cache_t &) = delete;
-
    private:
     // Add a cache entry.
     void add_prompt_layout(prompt_cache_entry_t entry);

@@ -21,20 +21,15 @@
 template <class Derived, class Contents>
 class lru_cache_t {
     struct lru_node_t;
-    struct lru_link_t {
-        // Our doubly linked list
-        // The base class is used for the mouth only
+    struct lru_link_t : noncopyable_t {
+        // Our doubly linked list.
+        // The base class is used for the mouth only.
         lru_link_t *prev = nullptr;
         lru_link_t *next = nullptr;
     };
 
     // The node type in our LRU cache
     struct lru_node_t : public lru_link_t {
-        // No copying
-        lru_node_t(const lru_node_t &) = delete;
-        lru_node_t &operator=(const lru_node_t &) = delete;
-        lru_node_t(lru_node_t &&) = default;
-
         // Our key in the map. This is owned by the map itself.
         const wcstring *key = nullptr;
 

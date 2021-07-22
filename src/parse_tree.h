@@ -60,17 +60,12 @@ class ast_t;
 }
 
 /// A type wrapping up a parse tree and the original source behind it.
-struct parsed_source_t {
+struct parsed_source_t : noncopyable_t, nonmovable_t {
     wcstring src;
     ast::ast_t ast;
 
     parsed_source_t(wcstring &&s, ast::ast_t &&ast);
     ~parsed_source_t();
-
-    parsed_source_t(const parsed_source_t &) = delete;
-    void operator=(const parsed_source_t &) = delete;
-    parsed_source_t(parsed_source_t &&) = delete;
-    parsed_source_t &operator=(parsed_source_t &&) = delete;
 };
 
 /// Return a shared pointer to parsed_source_t, or null on failure.

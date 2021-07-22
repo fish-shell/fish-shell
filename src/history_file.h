@@ -9,6 +9,7 @@
 #include <ctime>
 #include <memory>
 
+#include "common.h"
 #include "maybe.h"
 
 class history_item_t;
@@ -18,7 +19,7 @@ class history_tests_t;
 enum history_file_type_t { history_type_fish_2_0, history_type_fish_1_x };
 
 /// history_file_contents_t holds the read-only contents of a file.
-class history_file_contents_t {
+class history_file_contents_t : noncopyable_t, nonmovable_t {
    public:
     /// Construct a history file contents from a file descriptor. The file descriptor is not closed.
     static std::unique_ptr<history_file_contents_t> create(int fd);
@@ -74,9 +75,6 @@ class history_file_contents_t {
     // Try to infer the file type to populate type_.
     // \return true on success, false on error.
     bool infer_file_type();
-
-    history_file_contents_t(history_file_contents_t &&) = delete;
-    void operator=(history_file_contents_t &&) = delete;
 };
 
 /// Append a history item to a buffer, in preparation for outputting it to the history file.

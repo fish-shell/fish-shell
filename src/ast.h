@@ -215,7 +215,7 @@ void accept_field_visitor(FieldVisitor &v, bool reverse, Field &field, Rest &...
 
 /// node_t is the base node of all AST nodes.
 /// It is not a template: it is possible to work concretely with this type.
-struct node_t {
+struct node_t : noncopyable_t {
     /// The parent node, or null if this is root.
     const node_t *parent{nullptr};
 
@@ -226,12 +226,6 @@ struct node_t {
     const category_t category;
 
     constexpr explicit node_t(type_t t, category_t c) : type(t), category(c) {}
-
-    /// Disallow copying, etc.
-    node_t(const node_t &) = delete;
-    node_t(node_t &&) = delete;
-    void operator=(const node_t &) = delete;
-    void operator=(node_t &&) = delete;
 
     /// Cast to a concrete node type, aborting on failure.
     /// Example usage:
@@ -349,8 +343,9 @@ struct leaf_t : public node_t {
 };
 
 // A simple fixed-size array, possibly empty.
+// Disallow moving as we own a raw pointer.
 template <type_t ListType, typename ContentsNode>
-struct list_t : public node_t {
+struct list_t : public node_t, nonmovable_t {
     static constexpr type_t AstType = ListType;
     static constexpr category_t Category = category_t::list;
 
@@ -404,10 +399,6 @@ struct list_t : public node_t {
 
     list_t() : node_t(ListType, Category) {}
     ~list_t() { delete[] contents; }
-
-    // Disallow moving as we own a raw pointer.
-    list_t(list_t &&) = delete;
-    void operator=(list_t &&) = delete;
 };
 
 // Fully define all list types, as they are very uniform.
@@ -825,7 +816,7 @@ union_ptr_t<Nodes...>::union_ptr_t(std::unique_ptr<Node> n) : contents(n.release
  * };
  */
 template <typename NodeVisitor>
-class node_visitation_t {
+class node_visitation_t : noncopyable_t {
    public:
     explicit node_visitation_t(NodeVisitor &v, bool reverse = false) : v_(v), reverse_(reverse) {}
 
@@ -890,13 +881,6 @@ class node_visitation_t {
     void will_visit_fields_of(node_t &) {}
     void did_visit_fields_of(node_t &) {}
 
-    node_visitation_t(node_visitation_t &&) = default;
-
-    // We cannot be copied.
-    node_visitation_t(const node_visitation_t &) = delete;
-    void operator=(const node_visitation_t &) = delete;
-    void operator=(node_visitation_t &&) = delete;
-
    private:
     // Our adapted visitor.
     NodeVisitor &v_;
@@ -959,7 +943,7 @@ class traversal_t {
 };
 
 /// The ast type itself.
-class ast_t {
+class ast_t : noncopyable_t {
    public:
     using source_range_list_t = std::vector<source_range_t>;
 
@@ -1036,8 +1020,6 @@ class ast_t {
 
     ast_t(ast_t &&) = default;
     ast_t &operator=(ast_t &&) = default;
-    ast_t(const ast_t &) = delete;
-    void operator=(const ast_t &) = delete;
 
    private:
     ast_t() = default;

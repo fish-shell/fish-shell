@@ -87,11 +87,7 @@ struct tok_t {
 };
 
 /// The tokenizer struct.
-class tokenizer_t {
-    // No copying, etc.
-    tokenizer_t(const tokenizer_t &) = delete;
-    void operator=(const tokenizer_t &) = delete;
-
+class tokenizer_t : noncopyable_t {
     /// A pointer into the original string, showing where the next token begins.
     const wchar_t *token_cursor;
     /// The start of the original string.

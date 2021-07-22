@@ -821,7 +821,7 @@ static void test_fd_monitor() {
     say(L"Testing fd_monitor");
 
     // Helper to make an item which counts how many times its callback is invoked.
-    struct item_maker_t {
+    struct item_maker_t : public noncopyable_t {
         std::atomic<bool> did_timeout{false};
         std::atomic<size_t> length_read{0};
         std::atomic<size_t> pokes{0};
@@ -857,8 +857,6 @@ static void test_fd_monitor() {
             };
             item = fd_monitor_item_t(std::move(pipes.read), std::move(callback), timeout_usec);
         }
-
-        item_maker_t(const item_maker_t &) = delete;
 
         // Write 42 bytes to our write end.
         void write42() const {

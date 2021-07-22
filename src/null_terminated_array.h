@@ -17,7 +17,7 @@
 /// subject to the small-string optimization. This means that pointers will be left dangling if any
 /// input string is deallocated *or moved*. This class should only be used in transient calls.
 template <typename T>
-class null_terminated_array_t {
+class null_terminated_array_t : noncopyable_t, nonmovable_t {
    public:
     /// \return the list of pointers, appropriate for envp or argv.
     /// Note this returns a mutable array of const strings. The caller may rearrange the strings but
@@ -36,12 +36,6 @@ class null_terminated_array_t {
         }
         pointers_.push_back(nullptr);
     }
-
-    // Because this class holds unowned pointers, it should not be copied or moved.
-    null_terminated_array_t(const null_terminated_array_t &) = delete;
-    null_terminated_array_t(null_terminated_array_t &&) = delete;
-    void operator=(const null_terminated_array_t &) = delete;
-    void operator=(null_terminated_array_t &&) = delete;
 
    private:
     std::vector<const T *> pointers_{};

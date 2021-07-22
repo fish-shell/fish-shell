@@ -96,7 +96,7 @@ static void unescape_yaml_fish_2_0(std::string *str) {
 }
 
 // A type wrapping up a region allocated via mmap().
-struct history_file_contents_t::mmap_region_t {
+struct history_file_contents_t::mmap_region_t : noncopyable_t, nonmovable_t {
     void *const ptr;
     const size_t len;
 
@@ -128,11 +128,6 @@ struct history_file_contents_t::mmap_region_t {
         if (ptr == MAP_FAILED) return nullptr;
         return make_unique<mmap_region_t>(ptr, len);
     }
-
-    mmap_region_t(mmap_region_t &&rhs) = delete;
-    void operator=(mmap_region_t &&rhs) = delete;
-    mmap_region_t(const mmap_region_t &) = delete;
-    void operator=(const mmap_region_t &) = delete;
 };
 
 history_file_contents_t::~history_file_contents_t() = default;

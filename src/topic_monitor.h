@@ -171,7 +171,7 @@ class binary_semaphore_t {
 ///   up. If if failed, then either a post() call updated the status values (so perhaps there is a
 ///   new topic post) or some other thread won the race and called wait() on the semaphore. Here our
 ///   thread will wait on the data_notifier_ queue.
-class topic_monitor_t {
+class topic_monitor_t : noncopyable_t, nonmovable_t {
    private:
     using topic_bitmask_t = uint8_t;
 
@@ -235,12 +235,6 @@ class topic_monitor_t {
    public:
     topic_monitor_t();
     ~topic_monitor_t();
-
-    /// topic_monitors should not be copied, and there should be no reason to move one.
-    void operator=(const topic_monitor_t &) = delete;
-    topic_monitor_t(const topic_monitor_t &) = delete;
-    void operator=(topic_monitor_t &&) = delete;
-    topic_monitor_t(topic_monitor_t &&) = delete;
 
     /// The principal topic_monitor. This may be fetched from a signal handler.
     static topic_monitor_t &principal();

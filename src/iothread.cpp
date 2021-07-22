@@ -44,19 +44,12 @@
 
 using void_function_t = std::function<void()>;
 
-struct work_request_t {
+struct work_request_t : noncopyable_t {
     void_function_t handler;
-
     explicit work_request_t(void_function_t &&f) : handler(std::move(f)) {}
-
-    // Move-only
-    work_request_t &operator=(const work_request_t &) = delete;
-    work_request_t &operator=(work_request_t &&) = default;
-    work_request_t(const work_request_t &) = delete;
-    work_request_t(work_request_t &&) = default;
 };
 
-struct thread_pool_t {
+struct thread_pool_t : noncopyable_t, nonmovable_t {
     struct data_t {
         /// The queue of outstanding, unclaimed requests.
         std::queue<work_request_t> request_queue{};
@@ -108,12 +101,6 @@ struct thread_pool_t {
 
     /// Attempt to spawn a new pthread.
     bool spawn() const;
-
-    /// No copying or moving.
-    thread_pool_t(const thread_pool_t &) = delete;
-    thread_pool_t(thread_pool_t &&) = delete;
-    void operator=(const thread_pool_t &) = delete;
-    void operator=(thread_pool_t &&) = delete;
 };
 
 /// The thread pool for "iothreads" which are used to lift I/O off of the main thread.
@@ -122,7 +109,7 @@ struct thread_pool_t {
 static thread_pool_t &s_io_thread_pool = *(new thread_pool_t(1, IO_MAX_THREADS));
 
 /// A queue of "things to do on the main thread."
-struct main_thread_queue_t {
+struct main_thread_queue_t : noncopyable_t {
     // Functions to invoke as the completion callback from debounce.
     std::vector<void_function_t> completions;
 
@@ -143,8 +130,6 @@ struct main_thread_queue_t {
     main_thread_queue_t() = default;
     main_thread_queue_t(main_thread_queue_t &&) = default;
     main_thread_queue_t &operator=(main_thread_queue_t &&) = default;
-    main_thread_queue_t(const main_thread_queue_t &) = delete;
-    void operator=(const main_thread_queue_t &) = delete;
 };
 static owning_lock<main_thread_queue_t> s_main_thread_queue;
 

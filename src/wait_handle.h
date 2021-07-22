@@ -41,7 +41,7 @@ using wait_handle_ref_t = std::shared_ptr<wait_handle_t>;
 
 /// Support for storing a list of wait handles, with a max limit set at initialization.
 /// Note this class is not safe for concurrent access.
-class wait_handle_store_t {
+class wait_handle_store_t : noncopyable_t {
    public:
     // Our wait handles are arranged in a linked list for its iterator invalidation semantics: we
     // may remove one without needing to update the map from pid -> handle.
@@ -71,10 +71,6 @@ class wait_handle_store_t {
 
     /// Convenience to return the size, for testing.
     size_t size() const { return handles_.size(); }
-
-    /// No copying allowed.
-    wait_handle_store_t(const wait_handle_store_t &) = delete;
-    void operator=(const wait_handle_store_t &) = delete;
 
    private:
     using list_node_t = typename wait_handle_list_t::iterator;

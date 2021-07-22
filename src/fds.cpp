@@ -10,7 +10,6 @@
 
 #include <cstring>
 
-#include "common.h"
 #include "flog.h"
 #include "wutil.h"
 

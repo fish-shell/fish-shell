@@ -49,7 +49,7 @@ struct redirection_spec_t {
 using redirection_spec_list_t = std::vector<redirection_spec_t>;
 
 /// A class representing a sequence of basic redirections.
-class dup2_list_t {
+class dup2_list_t : noncopyable_t {
    public:
     /// A type that represents the action dup2(src, target).
     /// If target is negative, this represents close(src).
@@ -58,6 +58,24 @@ class dup2_list_t {
         int src;
         int target;
     };
+
+    dup2_list_t() = default;
+    dup2_list_t(dup2_list_t &&) = default;
+    dup2_list_t &operator=(dup2_list_t &&) = default;
+    ~dup2_list_t();
+
+    /// \return the list of dup2 actions.
+    const std::vector<action_t> &get_actions() const { return actions_; }
+
+    /// Produce a dup_fd_list_t from an io_chain. This may not be called before fork().
+    /// The result contains the list of fd actions (dup2 and close), as well as the list
+    /// of fds opened.
+    static dup2_list_t resolve_chain(const io_chain_t &);
+
+    /// \return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
+    /// For example, if target fd is 1, and we have a dup2 chain 5->3 and 3->1, then we will
+    /// return 5. If the target is not referenced in the chain, returns target.
+    int fd_for_target_fd(int target) const;
 
    private:
     /// The list of actions.
@@ -76,31 +94,6 @@ class dup2_list_t {
         assert(fd >= 0 && "Invalid fd in add_close");
         actions_.push_back(action_t{fd, -1});
     }
-
-    dup2_list_t() = default;
-
-   public:
-    ~dup2_list_t();
-
-    /// Disable copying.
-    dup2_list_t(const dup2_list_t &) = delete;
-    void operator=(const dup2_list_t &) = delete;
-
-    dup2_list_t(dup2_list_t &&) = default;
-    dup2_list_t &operator=(dup2_list_t &&) = default;
-
-    /// \return the list of dup2 actions.
-    const std::vector<action_t> &get_actions() const { return actions_; }
-
-    /// Produce a dup_fd_list_t from an io_chain. This may not be called before fork().
-    /// The result contains the list of fd actions (dup2 and close), as well as the list
-    /// of fds opened.
-    static dup2_list_t resolve_chain(const io_chain_t &);
-
-    /// \return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
-    /// For example, if target fd is 1, and we have a dup2 chain 5->3 and 3->1, then we will
-    /// return 5. If the target is not referenced in the chain, returns target.
-    int fd_for_target_fd(int target) const;
 };
 
 #endif

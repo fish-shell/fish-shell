@@ -38,7 +38,7 @@ enum class separation_type_t {
 
 /// A separated_buffer_t contains a list of elements, some of which may be separated explicitly and
 /// others which must be separated further by the user (e.g. via IFS).
-class separated_buffer_t {
+class separated_buffer_t : noncopyable_t {
    public:
     struct element_t {
         std::string contents;
@@ -50,11 +50,7 @@ class separated_buffer_t {
         bool is_explicitly_separated() const { return separation == separation_type_t::explicitly; }
     };
 
-    /// separated_buffer_t may not be copied.
-    separated_buffer_t(const separated_buffer_t &) = delete;
-    void operator=(const separated_buffer_t &) = delete;
-
-    /// We may be moved.
+    /// We not be copied but may be moved.
     /// Note this leaves the moved-from value in a bogus state until clear() is called on it.
     separated_buffer_t(separated_buffer_t &&) = default;
     separated_buffer_t &operator=(separated_buffer_t &&) = default;
@@ -163,11 +159,7 @@ class separated_buffer_t {
 enum class io_mode_t { file, pipe, fd, close, bufferfill };
 
 /// Represents an FD redirection.
-class io_data_t {
-    // No assignment or copying allowed.
-    io_data_t(const io_data_t &rhs) = delete;
-    void operator=(const io_data_t &rhs) = delete;
-
+class io_data_t : noncopyable_t, nonmovable_t {
    protected:
     io_data_t(io_mode_t m, int fd, int source_fd) : io_mode(m), fd(fd), source_fd(source_fd) {}
 
@@ -358,7 +350,7 @@ class io_chain_t : public std::vector<io_data_ref_t> {
 
 /// Base class representing the output that a builtin can generate.
 /// This has various subclasses depending on the ultimate output destination.
-class output_stream_t {
+class output_stream_t : noncopyable_t, nonmovable_t {
    public:
     /// Required override point. The output stream receives a string \p s with \p amt chars.
     virtual void append(const wchar_t *s, size_t amt) = 0;
@@ -400,10 +392,6 @@ class output_stream_t {
     }
 
     void append_formatv(const wchar_t *format, va_list va) { append(vformat_string(format, va)); }
-
-    // No copying.
-    output_stream_t(const output_stream_t &s) = delete;
-    void operator=(const output_stream_t &s) = delete;
 
     output_stream_t() = default;
     virtual ~output_stream_t() = default;
@@ -463,7 +451,7 @@ class buffered_output_stream_t final : public output_stream_t {
     std::shared_ptr<io_buffer_t> buffer_;
 };
 
-struct io_streams_t {
+struct io_streams_t : noncopyable_t {
     // Streams for out and err.
     output_stream_t &out;
     output_stream_t &err;
@@ -494,10 +482,6 @@ struct io_streams_t {
     // share pgid.
     // FIXME: this is awkwardly placed.
     std::shared_ptr<job_group_t> job_group{};
-
-    // io_streams_t cannot be copied.
-    io_streams_t(const io_streams_t &) = delete;
-    void operator=(const io_streams_t &) = delete;
 
     io_streams_t(output_stream_t &out, output_stream_t &err) : out(out), err(err) {}
 };

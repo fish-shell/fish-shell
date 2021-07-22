@@ -547,7 +547,7 @@ class env_node_t {
 }  // namespace
 
 using env_node_ref_t = std::shared_ptr<env_node_t>;
-class env_scoped_impl_t : public environment_t {
+class env_scoped_impl_t : public environment_t, noncopyable_t {
     /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
     /// different fish internal processes.
     struct perproc_data_t {
@@ -572,11 +572,6 @@ class env_scoped_impl_t : public environment_t {
     ~env_scoped_impl_t() override = default;
 
     std::shared_ptr<owning_null_terminated_array_t> export_array();
-
-    env_scoped_impl_t(env_scoped_impl_t &&) = delete;
-    env_scoped_impl_t(const env_scoped_impl_t &) = delete;
-    void operator=(env_scoped_impl_t &&) = delete;
-    void operator=(const env_scoped_impl_t &) = delete;
 
    protected:
     // A linked list of scopes.

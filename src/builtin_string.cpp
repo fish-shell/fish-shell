@@ -813,7 +813,7 @@ static wcstring pcre2_strerror(int err_code) {
     return buf;
 }
 
-struct compiled_regex_t {
+struct compiled_regex_t : noncopyable_t {
     pcre2_code *code{nullptr};
     pcre2_match_data *match{nullptr};
 
@@ -918,9 +918,6 @@ struct compiled_regex_t {
     }
 
     bool is_valid() const { return this->valid_; }
-
-    compiled_regex_t(const compiled_regex_t &) = delete;
-    void operator=(const compiled_regex_t &) = delete;
 
    private:
     bool valid_{false};

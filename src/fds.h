@@ -13,9 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "common.h"
 #include "maybe.h"
-
-using wcstring = std::wstring;
 
 /// Pipe redirection error message.
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
@@ -25,7 +24,7 @@ using wcstring = std::wstring;
 extern const int k_first_high_fd;
 
 /// A helper class for managing and automatically closing a file descriptor.
-class autoclose_fd_t {
+class autoclose_fd_t : noncopyable_t {
     int fd_;
 
    public:
@@ -52,8 +51,6 @@ class autoclose_fd_t {
     // \return if this has a valid fd.
     bool valid() const { return fd_ >= 0; }
 
-    autoclose_fd_t(const autoclose_fd_t &) = delete;
-    void operator=(const autoclose_fd_t &) = delete;
     autoclose_fd_t(autoclose_fd_t &&rhs) : fd_(rhs.fd_) { rhs.fd_ = -1; }
 
     void operator=(autoclose_fd_t &&rhs) {

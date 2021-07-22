@@ -238,6 +238,21 @@ extern const wcstring g_empty_string;
 /// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
+/// An empty struct which may be embedded (or inherited from) to prevent copying.
+struct [[gnu::unused]] noncopyable_t {
+    noncopyable_t() = default;
+    noncopyable_t(noncopyable_t &&) = default;
+    noncopyable_t &operator=(noncopyable_t &&) = default;
+    noncopyable_t(const noncopyable_t &) = delete;
+    noncopyable_t &operator=(const noncopyable_t &) = delete;
+};
+
+struct [[gnu::unused]] nonmovable_t {
+    nonmovable_t() = default;
+    nonmovable_t(nonmovable_t &&) = delete;
+    nonmovable_t &operator=(nonmovable_t &&) = delete;
+};
+
 /// Test if a collection contains a value.
 template <typename Col, typename T2>
 bool contains(const Col &col, const T2 &val) {
@@ -332,7 +347,7 @@ using scoped_lock = std::lock_guard<std::mutex>;
 //   name.acquire().value = "derp"
 //
 template <typename Data>
-class acquired_lock {
+class acquired_lock : noncopyable_t {
     template <typename T>
     friend class owning_lock;
 
@@ -346,12 +361,6 @@ class acquired_lock {
     Data *value;
 
    public:
-    // No copying, move construction only
-    acquired_lock &operator=(const acquired_lock &) = delete;
-    acquired_lock(const acquired_lock &) = delete;
-    acquired_lock(acquired_lock &&) = default;
-    acquired_lock &operator=(acquired_lock &&) = default;
-
     Data *operator->() { return value; }
     const Data *operator->() const { return value; }
     Data &operator*() { return *value; }

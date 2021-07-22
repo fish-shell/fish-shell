@@ -128,17 +128,10 @@ typedef std::deque<history_item_t> history_item_list_t;
 
 struct history_impl_t;
 
-class history_t {
+class history_t : noncopyable_t, nonmovable_t {
     friend class history_tests_t;
     struct impl_wrapper_t;
     const std::unique_ptr<impl_wrapper_t> wrap_;
-
-    // No copying or moving.
-    history_t() = delete;
-    history_t(const history_t &) = delete;
-    history_t(history_t &&) = delete;
-    history_t &operator=(const history_t &) = delete;
-    history_t &operator=(history_t &&) = delete;
 
     acquired_lock<history_impl_t> impl();
     acquired_lock<const history_impl_t> impl() const;

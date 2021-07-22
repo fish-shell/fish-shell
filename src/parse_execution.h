@@ -33,7 +33,7 @@ enum class end_execution_reason_t {
     error,
 };
 
-class parse_execution_context_t {
+class parse_execution_context_t : noncopyable_t {
    private:
     parsed_source_ref_t pstree;
     parser_t *const parser;
@@ -50,10 +50,6 @@ class parse_execution_context_t {
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     io_chain_t block_io{};
-
-    // No copying allowed.
-    parse_execution_context_t(const parse_execution_context_t &) = delete;
-    parse_execution_context_t &operator=(const parse_execution_context_t &) = delete;
 
     // Check to see if we should end execution.
     // \return the eval result to end with, or none() to continue on.

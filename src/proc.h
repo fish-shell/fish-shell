@@ -198,7 +198,7 @@ enum { INVALID_PID = -2 };
 /// If the process is of type process_type_t::function, argv is the argument vector, and argv[0] is
 /// the name of the shellscript function.
 class parser_t;
-class process_t {
+class process_t : noncopyable_t {
    public:
     process_t();
 
@@ -283,10 +283,6 @@ class process_t {
     /// Number of jiffies spent in process at last cpu time check.
     unsigned long last_jiffies{0};
 
-    // No copying.
-    process_t(const process_t &rhs) = delete;
-    void operator=(const process_t &rhs) = delete;
-
    private:
     wcstring_list_t argv_;
     redirection_spec_list_t proc_redirection_specs_;
@@ -299,7 +295,7 @@ using process_ptr_t = std::unique_ptr<process_t>;
 using process_list_t = std::vector<process_ptr_t>;
 
 /// A struct representing a job. A job is a pipeline of one or more processes.
-class job_t {
+class job_t : noncopyable_t {
    public:
     /// A set of jobs properties. These are immutable: they do not change for the lifetime of the
     /// job.
@@ -330,10 +326,6 @@ class job_t {
     /// The original command which led to the creation of this job. It is used for displaying
     /// messages about job status on the terminal.
     const wcstring command_str;
-
-    // No copying.
-    job_t(const job_t &rhs) = delete;
-    void operator=(const job_t &) = delete;
 
    public:
     job_t(const properties_t &props, wcstring command_str);

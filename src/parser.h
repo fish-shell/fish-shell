@@ -230,7 +230,7 @@ struct eval_res_t {
     /// If set, there was an error that should be considered a failed expansion, such as
     /// command-not-found. For example, `touch (not-a-command)` will not invoke 'touch' because
     /// command-not-found will mark break_expand.
-    bool break_expand;
+    bool break_expand{false};
 
     /// If set, no commands were executed and there we no errors.
     bool was_empty{false};
@@ -306,9 +306,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \param job_group if set, the job group to give to spawned jobs.
     /// \param block_type The type of block to push on the block stack, which must be either 'top'
     /// or 'subst'.
-    /// \param break_expand If not null, return by reference whether the error ought to be an expand
-    /// error. This includes nested expand errors, and command-not-found.
-    ///
     /// \return the result of evaluation.
     eval_res_t eval(const wcstring &cmd, const io_chain_t &io,
                     const job_group_ref_t &job_group = {},

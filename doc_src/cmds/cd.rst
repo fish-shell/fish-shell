@@ -14,11 +14,11 @@ Description
 -----------
 ``cd`` changes the current working directory.
 
-If ``DIRECTORY`` is supplied, it will become the new directory. If no parameter is given, the contents of the ``HOME`` environment variable will be used.
+If ``DIRECTORY`` is given, it will become the new directory. If no parameter is given, the ``$HOME`` environment variable will be used.
 
-If ``DIRECTORY`` is a relative path, the paths found in the ``CDPATH`` list will be tried as prefixes for the specified path, in addition to $PWD.
+If ``DIRECTORY`` is a relative path, all the paths in the ``$CDPATH`` will be tried as prefixes for it, in addition to ``$PWD``. It is recommended to keep ``.`` as the first element of ``$CDPATH``, or ``$PWD`` will be tried last.
 
-Note that the shell will attempt to change directory without requiring ``cd`` if the name of a directory is provided (starting with ``.``, ``/`` or ``~``, or ending with ``/``).
+Fish will also try to change directory if given a command that looks like a directory (starting with ``.``, ``/`` or ``~``, or ending with ``/``), without explicitly requiring ``cd``.
 
 Fish also ships a wrapper function around the builtin ``cd`` that understands ``cd -`` as changing to the previous directory. See also :ref:`prevd <cmd-prevd>`. This wrapper function maintains a history of the 25 most recently visited directories in the ``$dirprev`` and ``$dirnext`` global variables. If you make those universal variables your ``cd`` history is shared among all fish instances.
 

@@ -322,6 +322,8 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         auto cdpath = ctx.vars.get(L"CDPATH");
         wcstring_list_t pathsv =
             cdpath.missing_or_empty() ? wcstring_list_t{L"."} : cdpath->as_list();
+        // The current $PWD is always valid.
+        pathsv.push_back(L".");
 
         for (auto next_path : pathsv) {
             if (next_path.empty()) next_path = L".";

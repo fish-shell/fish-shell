@@ -1079,9 +1079,9 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
                 if (auto paths_var = ctx.vars.get(for_cd ? L"CDPATH" : L"PATH")) {
                     paths = paths_var->as_list();
                 }
-                if (paths.empty()) {
-                    paths.emplace_back(for_cd ? L"." : L"");
-                }
+
+                // The current directory is always valid.
+                paths.emplace_back(for_cd ? L"." : L"");
                 for (const wcstring &next_path : paths) {
                     effective_working_dirs.push_back(
                         path_apply_working_directory(next_path, working_dir));

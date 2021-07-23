@@ -163,6 +163,11 @@ mkdir -p cdpath-dir/nonexistent
 mkdir -p cdpath-dir/file
 set CDPATH $PWD/cdpath-dir $old_cdpath
 
+# See that the completions also check the current directory
+complete -C'cd ' | string match -q cdpath-dir/
+and echo cdpath-dir is in
+# CHECK: cdpath-dir is in
+
 # A different directory with the same name that is first in $CDPATH works.
 cd bad-perms
 cd $old_path

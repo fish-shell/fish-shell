@@ -6,12 +6,10 @@ function fish_clipboard_copy
         printf '%s' $cmdline | pbcopy
     else if set -q WAYLAND_DISPLAY; and type -q wl-copy
         printf '%s' $cmdline | wl-copy
-    else if type -q xsel
-        # Silence error so no error message shows up
-        # if e.g. X isn't running.
-        printf '%s' $cmdline | xsel --clipboard 2>/dev/null
-    else if type -q xclip
-        printf '%s' $cmdline | xclip -selection clipboard 2>/dev/null
+    else if set -q DISPLAY; and type -q xsel
+        printf '%s' $cmdline | xsel --clipboard
+    else if set -q DISPLAY; and type -q xclip
+        printf '%s' $cmdline | xclip -selection clipboard
     else if type -q clip.exe
         printf '%s' $cmdline | clip.exe
     end

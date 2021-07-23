@@ -745,6 +745,8 @@ set -S stilllocal
 #CHECK: $stilllocal: set in local scope, unexported, with 1 elements
 #CHECK: $stilllocal[1]: |as local as the moon is wet|
 
+set -g globalvar global
+
 function test-function-scope
     set -f funcvar "function"
     echo $funcvar
@@ -785,6 +787,13 @@ function test-function-scope
     # function scope *is* the outermost local scope,
     # so that `set -f` altered the same funcvariable as that `set -l` outside!
     # CHECK: orange
+
+    set -f globalvar function
+    set -S globalvar
+    #CHECK: $globalvar: set in local scope, unexported, with 1 elements
+    #CHECK: $globalvar[1]: |function|
+    #CHECK: $globalvar: set in global scope, unexported, with 1 elements
+    #CHECK: $globalvar[1]: |global|
 end
         
 test-function-scope

@@ -91,8 +91,16 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     # One of these is alt+backspace.
     bind --preset $argv \e\x7f backward-kill-word
     bind --preset $argv \e\b backward-kill-word
-    bind --preset $argv \eb backward-word
-    bind --preset $argv \ef forward-word
+    if not test "$TERM_PROGRAM" = Apple_Terminal
+        bind --preset $argv \eb backward-word
+        bind --preset $argv \ef forward-word
+    else
+        # Terminal.app sends \eb for alt+left, \ef for alt+right.
+        # Yeah.
+        bind --preset $argv \eb prevd-or-backward-word
+        bind --preset $argv \ef nextd-or-forward-word
+    end
+
     bind --preset $argv \e\< beginning-of-buffer
     bind --preset $argv \e\> end-of-buffer
 

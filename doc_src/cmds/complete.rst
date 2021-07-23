@@ -80,6 +80,8 @@ When ``-a`` or ``--arguments`` is specified in conjunction with long, short, or 
 
 Command substitutions found in ``ARGUMENTS`` should return a newline-separated list of arguments, and each argument may optionally have a tab character followed by the argument description. Description given this way override a description given with ``-d`` or ``--description``.
 
+Descriptions given with ``--description`` are also used to group options given with ``-s``, ``-o`` or ``-l``. Options with the same (non-empty) description will be listed as one candidate, and one of them will be picked. If the description is empty or no description was given this is skipped.
+
 The ``-w`` or ``--wraps`` options causes the specified command to inherit completions from another command, "wrapping" the other command. The wrapping command can also have additional completions. A command can wrap multiple commands, and wrapping is transitive: if A wraps B, and B wraps C, then A automatically inherits all of C's completions. Wrapping can be removed using the ``-e`` or ``--erase`` options. Wrapping only works for completions specified with ``-c`` or ``--command`` and are ignored when specifying completions with ``-p`` or ``--path``.
 
 When erasing completions, it is possible to either erase all completions for a specific command by specifying ``complete -c COMMAND -e``, or by specifying a specific completion option to delete.

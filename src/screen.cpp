@@ -740,10 +740,10 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         s_move(scr, 0, 0);
         size_t start = 0;
         for (const size_t line_break : left_prompt_layout.line_breaks) {
+            s_write_str(scr, left_prompt.substr(start, line_break - start));
             if (clr_eol) {
                 s_write_mbs(scr, clr_eol);
             }
-            s_write_str(scr, left_prompt.substr(start, line_break - start));
             start = line_break;
         }
         s_write_str(scr, left_prompt.substr(start));

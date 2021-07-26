@@ -219,3 +219,9 @@ math pow 2, cos -pi
 # i.e. 4
 math pow 2 x cos'(-pi)', 2
 # CHECK: 4
+
+# This used to take ages, see #8170.
+# If this test hangs, that's reintroduced!
+math 'ncr(0/0, 1)'
+# CHECKERR: math: Error: Result is infinite
+# CHECKERR: 'ncr(0/0, 1)'

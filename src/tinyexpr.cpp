@@ -156,6 +156,8 @@ static double fac(double a) { /* simplest version of fac */
 }
 
 static double ncr(double n, double r) {
+    // Doing this for NAN takes ages - just return the result right away.
+    if (std::isnan(n)) return INFINITY;
     if (n < 0.0 || r < 0.0 || n < r) return NAN;
     if (n > UINT_MAX || r > UINT_MAX) return INFINITY;
     unsigned long int un = static_cast<unsigned int>(n), ur = static_cast<unsigned int>(r), i;

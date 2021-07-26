@@ -50,7 +50,6 @@ enum {
     TE_FUNCTION0,
     TE_FUNCTION1,
     TE_FUNCTION2,
-    TE_FUNCTION3,
     TOK_NULL,
     TOK_ERROR,
     TOK_END,
@@ -62,28 +61,32 @@ enum {
 };
 
 static int get_arity(const int type) {
-    if (type == TE_FUNCTION3) return 3;
     if (type == TE_FUNCTION2) return 2;
     if (type == TE_FUNCTION1) return 1;
     return 0;
 }
 
-typedef struct te_expr {
+struct te_expr_t {
     int type;
     union {
         double value;
-        void *function;
+        te_fun0 fun0;
+        te_fun1 fun1;
+        te_fun2 fun2;
     };
-    te_expr *parameters[];
-} te_expr;
+    te_expr_t *parameters[];
+};
 
-using te_builtin = struct {
+struct te_builtin {
     const wchar_t *name;
     void *address;
     int type;
 };
 
-using state = struct {
+struct state {
+    explicit state(const wchar_t *expr) : start{expr}, next{expr} { next_token(); }
+    te_expr_t *expr();
+
     union {
         double value;
         void *function;
@@ -91,28 +94,25 @@ using state = struct {
     const wchar_t *start;
     const wchar_t *next;
     int type;
-    te_error_type_t error;
+    te_error_type_t error{TE_ERROR_NONE};
+
+   private:
+    void next_token();
+
+    te_expr_t *power();
+    te_expr_t *base();
+    te_expr_t *factor();
+    te_expr_t *term();
 };
 
-/* Parses the input expression. */
-/* Returns NULL on error. */
-te_expr *te_compile(const wchar_t *expression, te_error_t *error);
-
-/* Evaluates the expression. */
-double te_eval(const te_expr *n);
-
-/* Frees the expression. */
-/* This is safe to call on NULL pointers. */
-void te_free(te_expr *n);
-
 // TODO: That move there? Ouch. Replace with a proper class with a constructor.
-#define NEW_EXPR(type, ...) new_expr((type), std::move((const te_expr *[]){__VA_ARGS__}))
+#define NEW_EXPR(type, ...) new_expr((type), std::move((const te_expr_t *[]){__VA_ARGS__}))
 
-static te_expr *new_expr(const int type, const te_expr *parameters[]) {
+static te_expr_t *new_expr(const int type, const te_expr_t *parameters[]) {
     const int arity = get_arity(type);
-    const int psize = sizeof(te_expr *) * arity;
-    const int size = sizeof(te_expr) + psize;
-    auto ret = static_cast<te_expr *>(malloc(size));
+    const int psize = sizeof(te_expr_t *) * arity;
+    const int size = sizeof(te_expr_t) + psize;
+    auto ret = static_cast<te_expr_t *>(malloc(size));
     // This sets float to 0, which depends on the implementation.
     // We rely on IEEE-754 floats anyway, so it's okay.
     std::memset(ret, 0, size);
@@ -123,7 +123,11 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
     return ret;
 }
 
-static void te_free_parameters(te_expr *n) {
+/* Frees the expression. */
+/* This is safe to call on NULL pointers. */
+static void te_free(te_expr_t *n);
+
+static void te_free_parameters(te_expr_t *n) {
     if (!n) return;
     int arity = get_arity(n->type);
     // Free all parameters from the back to the front.
@@ -133,7 +137,7 @@ static void te_free_parameters(te_expr *n) {
     }
 }
 
-void te_free(te_expr *n) {
+static void te_free(te_expr_t *n) {
     if (!n) return;
     te_free_parameters(n);
     free(n);
@@ -261,86 +265,84 @@ static constexpr double divide(double a, double b) {
 
 static constexpr double negate(double a) { return -a; }
 
-static void next_token(state *s) {
-    s->type = TOK_NULL;
+void state::next_token() {
+    type = TOK_NULL;
 
     do {
-        if (!*s->next) {
-            s->type = TOK_END;
+        if (!*next) {
+            type = TOK_END;
             return;
         }
 
         /* Try reading a number. */
-        if ((s->next[0] >= '0' && s->next[0] <= '9') || s->next[0] == '.') {
-            s->value = fish_wcstod(s->next, const_cast<wchar_t **>(&s->next));
-            s->type = TOK_NUMBER;
+        if ((next[0] >= '0' && next[0] <= '9') || next[0] == '.') {
+            value = fish_wcstod(next, const_cast<wchar_t **>(&next));
+            type = TOK_NUMBER;
         } else {
             /* Look for a function call. */
             // But not when it's an "x" followed by whitespace
             // - that's the alternative multiplication operator.
-            if (s->next[0] >= 'a' && s->next[0] <= 'z' &&
-                !(s->next[0] == 'x' && isspace(s->next[1]))) {
+            if (next[0] >= 'a' && next[0] <= 'z' && !(next[0] == 'x' && isspace(next[1]))) {
                 const wchar_t *start;
-                start = s->next;
-                while ((s->next[0] >= 'a' && s->next[0] <= 'z') ||
-                       (s->next[0] >= '0' && s->next[0] <= '9') || (s->next[0] == '_'))
-                    s->next++;
+                start = next;
+                while ((next[0] >= 'a' && next[0] <= 'z') || (next[0] >= '0' && next[0] <= '9') ||
+                       (next[0] == '_'))
+                    next++;
 
-                const te_builtin *var = find_builtin(start, s->next - start);
+                const te_builtin *var = find_builtin(start, next - start);
 
                 if (var) {
                     switch (var->type) {
                         case TE_FUNCTION0:
                         case TE_FUNCTION1:
                         case TE_FUNCTION2:
-                        case TE_FUNCTION3:
-                            s->type = var->type;
-                            s->function = var->address;
+                            type = var->type;
+                            function = var->address;
                             break;
                     }
-                } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
+                } else if (type != TOK_ERROR || error == TE_ERROR_UNKNOWN) {
                     // Our error is more specific, so it takes precedence.
-                    s->type = TOK_ERROR;
-                    s->error = TE_ERROR_UNKNOWN_FUNCTION;
+                    type = TOK_ERROR;
+                    error = TE_ERROR_UNKNOWN_FUNCTION;
                 }
             } else {
                 /* Look for an operator or special character. */
-                switch (s->next++[0]) {
+                switch (next++[0]) {
                     // The "te_fun2" casts are necessary to pick the right overload.
                     case '+':
-                        s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(add));
+                        type = TOK_INFIX;
+                        function = reinterpret_cast<void *>(static_cast<te_fun2>(add));
                         break;
                     case '-':
-                        s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(sub));
+                        type = TOK_INFIX;
+                        function = reinterpret_cast<void *>(static_cast<te_fun2>(sub));
                         break;
                     case 'x':
                     case '*':
                         // We've already checked for whitespace above.
-                        s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(mul));
+                        type = TOK_INFIX;
+                        function = reinterpret_cast<void *>(static_cast<te_fun2>(mul));
                         break;
                     case '/':
-                        s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(divide));
+                        type = TOK_INFIX;
+                        function = reinterpret_cast<void *>(static_cast<te_fun2>(divide));
                         break;
                     case '^':
-                        s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(pow));
+                        type = TOK_INFIX;
+                        function = reinterpret_cast<void *>(static_cast<te_fun2>(pow));
                         break;
                     case '%':
-                        s->type = TOK_INFIX;
-                        s->function = reinterpret_cast<void *>(static_cast<te_fun2>(fmod));
+                        type = TOK_INFIX;
+                        function = reinterpret_cast<void *>(static_cast<te_fun2>(fmod));
                         break;
                     case '(':
-                        s->type = TOK_OPEN;
+                        type = TOK_OPEN;
                         break;
                     case ')':
-                        s->type = TOK_CLOSE;
+                        type = TOK_CLOSE;
                         break;
                     case ',':
-                        s->type = TOK_SEP;
+                        type = TOK_SEP;
                         break;
                     case ' ':
                     case '\t':
@@ -353,126 +355,122 @@ static void next_token(state *s) {
                     case '&':
                     case '|':
                     case '!':
-                        s->type = TOK_ERROR;
-                        s->error = TE_ERROR_LOGICAL_OPERATOR;
+                        type = TOK_ERROR;
+                        error = TE_ERROR_LOGICAL_OPERATOR;
                         break;
                     default:
-                        s->type = TOK_ERROR;
-                        s->error = TE_ERROR_MISSING_OPERATOR;
+                        type = TOK_ERROR;
+                        error = TE_ERROR_MISSING_OPERATOR;
                         break;
                 }
             }
         }
-    } while (s->type == TOK_NULL);
+    } while (type == TOK_NULL);
 }
 
-static te_expr *expr(state *s);
-static te_expr *power(state *s);
-
-static te_expr *base(state *s) {
+te_expr_t *state::base() {
     /* <base>      =    <constant> | <function-0> {"(" ")"} | <function-1> <power> |
      * <function-X> "(" <expr> {"," <expr>} ")" | "(" <list> ")" */
-    te_expr *ret;
+    te_expr_t *ret;
     int arity;
 
-    auto previous = s->start;
-    auto next = s->next;
-    switch (s->type) {
+    auto previous = start;
+    auto next = this->next;
+    switch (type) {
         case TOK_NUMBER:
             ret = new_expr(TE_CONSTANT, nullptr);
-            ret->value = s->value;
-            next_token(s);
-            if (s->type == TOK_NUMBER || s->type == TE_FUNCTION0) {
+            ret->value = value;
+            next_token();
+            if (type == TOK_NUMBER || type == TE_FUNCTION0) {
                 // Two numbers after each other:
                 // math '5 2'
                 // math '3 pi'
                 // (of course 3 pi could also be interpreted as 3 x pi)
-                s->type = TOK_ERROR;
-                s->error = TE_ERROR_MISSING_OPERATOR;
+                type = TOK_ERROR;
+                error = TE_ERROR_MISSING_OPERATOR;
                 // The error should be given *between*
                 // the last two tokens.
                 // Since these are two separate numbers there is at least
                 // one space between.
-                s->start = previous;
-                s->next = next + 1;
+                start = previous;
+                this->next = next + 1;
             }
             break;
 
         case TE_FUNCTION0:
-            ret = new_expr(s->type, nullptr);
-            ret->function = s->function;
-            next_token(s);
-            if (s->type == TOK_OPEN) {
-                next_token(s);
-                if (s->type == TOK_CLOSE) {
-                    next_token(s);
-                } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
-                    s->type = TOK_ERROR;
-                    s->error = TE_ERROR_MISSING_CLOSING_PAREN;
+            ret = new_expr(type, nullptr);
+            ret->fun0 = reinterpret_cast<te_fun0>(function);
+            next_token();
+            if (type == TOK_OPEN) {
+                next_token();
+                if (type == TOK_CLOSE) {
+                    next_token();
+                } else if (type != TOK_ERROR || error == TE_ERROR_UNKNOWN) {
+                    type = TOK_ERROR;
+                    error = TE_ERROR_MISSING_CLOSING_PAREN;
                 }
             }
             break;
 
         case TE_FUNCTION1:
-        case TE_FUNCTION2:
-        case TE_FUNCTION3: {
-            arity = get_arity(s->type);
+        case TE_FUNCTION2: {
+            arity = get_arity(type);
 
-            ret = new_expr(s->type, nullptr);
-            ret->function = s->function;
-            next_token(s);
+            ret = new_expr(type, nullptr);
+            ret->fun0 = reinterpret_cast<te_fun0>(function);
+            next_token();
 
             bool have_open = false;
-            if (s->type == TOK_OPEN) {
+            if (type == TOK_OPEN) {
                 // If we *have* an opening parenthesis,
                 // we need to consume it and
                 // expect a closing one.
                 have_open = true;
-                next_token(s);
+                next_token();
             }
 
             int i;
             for (i = 0; i < arity; i++) {
-                ret->parameters[i] = expr(s);
-                if (s->type != TOK_SEP) {
+                ret->parameters[i] = expr();
+                if (type != TOK_SEP) {
                     break;
                 }
-                next_token(s);
+                next_token();
             }
 
             if (!have_open && i == arity - 1) {
                 break;
             }
 
-            if (have_open && s->type == TOK_CLOSE && i == arity - 1) {
+            if (have_open && type == TOK_CLOSE && i == arity - 1) {
                 // We have an opening and a closing paren, consume the closing one and done.
-                next_token(s);
-            } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNEXPECTED_TOKEN) {
+                next_token();
+            } else if (type != TOK_ERROR || error == TE_ERROR_UNEXPECTED_TOKEN) {
                 // If we had the right number of arguments, we're missing a closing paren.
-                if (have_open && i == arity - 1 && s->type != TOK_ERROR) {
-                    s->error = TE_ERROR_MISSING_CLOSING_PAREN;
+                if (have_open && i == arity - 1 && type != TOK_ERROR) {
+                    error = TE_ERROR_MISSING_CLOSING_PAREN;
                 } else {
                     // Otherwise we complain about the number of arguments *first*,
                     // a closing parenthesis should be more obvious.
-                    s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
+                    error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 }
-                s->type = TOK_ERROR;
+                type = TOK_ERROR;
             }
 
             break;
         }
 
         case TOK_OPEN:
-            next_token(s);
-            ret = expr(s);
-            if (s->type == TOK_CLOSE) {
-                next_token(s);
-            } else if (s->type != TOK_ERROR && s->type != TOK_END && s->error == TE_ERROR_NONE) {
-                s->type = TOK_ERROR;
-                s->error = TE_ERROR_TOO_MANY_ARGS;
-            } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
-                s->type = TOK_ERROR;
-                s->error = TE_ERROR_MISSING_CLOSING_PAREN;
+            next_token();
+            ret = expr();
+            if (type == TOK_CLOSE) {
+                next_token();
+            } else if (type != TOK_ERROR && type != TOK_END && error == TE_ERROR_NONE) {
+                type = TOK_ERROR;
+                error = TE_ERROR_TOO_MANY_ARGS;
+            } else if (type != TOK_ERROR || error == TE_ERROR_UNKNOWN) {
+                type = TOK_ERROR;
+                error = TE_ERROR_MISSING_CLOSING_PAREN;
             }
             break;
 
@@ -483,15 +481,15 @@ static te_expr *base(state *s) {
             // Instead of introducing another error, just call it
             // "too few args".
             ret = new_expr(0, nullptr);
-            s->type = TOK_ERROR;
-            s->error = TE_ERROR_TOO_FEW_ARGS;
+            type = TOK_ERROR;
+            error = TE_ERROR_TOO_FEW_ARGS;
             ret->value = NAN;
             break;
         default:
             ret = new_expr(0, nullptr);
-            if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
-                s->type = TOK_ERROR;
-                s->error = TE_ERROR_UNEXPECTED_TOKEN;
+            if (type != TOK_ERROR || error == TE_ERROR_UNKNOWN) {
+                type = TOK_ERROR;
+                error = TE_ERROR_UNEXPECTED_TOKEN;
             }
             ret->value = NAN;
             break;
@@ -500,46 +498,45 @@ static te_expr *base(state *s) {
     return ret;
 }
 
-static te_expr *power(state *s) {
+te_expr_t *state::power() {
     /* <power>     =    {("-" | "+")} <base> */
     int sign = 1;
-    while (s->type == TOK_INFIX && (s->function == add || s->function == sub)) {
-        if (s->function == sub) sign = -sign;
-        next_token(s);
+    while (type == TOK_INFIX && (function == add || function == sub)) {
+        if (function == sub) sign = -sign;
+        next_token();
     }
 
-    te_expr *ret;
+    te_expr_t *ret;
 
     if (sign == 1) {
-        ret = base(s);
+        ret = base();
     } else {
-        ret = NEW_EXPR(TE_FUNCTION1, base(s));
-        ret->function = reinterpret_cast<void *>(negate);
+        ret = NEW_EXPR(TE_FUNCTION1, base());
+        ret->fun1 = negate;
     }
 
     return ret;
 }
 
-static te_expr *factor(state *s) {
+te_expr_t *state::factor() {
     /* <factor>    =    <power> {"^" <power>} */
-    te_expr *ret = power(s);
+    te_expr_t *ret = power();
 
-    te_expr *insertion = nullptr;
+    te_expr_t *insertion = nullptr;
 
-    while (s->type == TOK_INFIX &&
-           (s->function == reinterpret_cast<void *>(static_cast<te_fun2>(pow)))) {
-        auto t = reinterpret_cast<te_fun2>(s->function);
-        next_token(s);
+    while (type == TOK_INFIX && (function == reinterpret_cast<void *>(static_cast<te_fun2>(pow)))) {
+        auto t = reinterpret_cast<te_fun2>(function);
+        next_token();
 
         if (insertion) {
             /* Make exponentiation go right-to-left. */
-            te_expr *insert = NEW_EXPR(TE_FUNCTION2, insertion->parameters[1], power(s));
-            insert->function = reinterpret_cast<void *>(t);
+            te_expr_t *insert = NEW_EXPR(TE_FUNCTION2, insertion->parameters[1], power());
+            insert->fun2 = t;
             insertion->parameters[1] = insert;
             insertion = insert;
         } else {
-            ret = NEW_EXPR(TE_FUNCTION2, ret, power(s));
-            ret->function = reinterpret_cast<void *>(t);
+            ret = NEW_EXPR(TE_FUNCTION2, ret, power());
+            ret->fun2 = t;
             insertion = ret;
         }
     }
@@ -547,63 +544,60 @@ static te_expr *factor(state *s) {
     return ret;
 }
 
-static te_expr *term(state *s) {
+te_expr_t *state::term() {
     /* <term>      =    <factor> {("*" | "/" | "%") <factor>} */
-    te_expr *ret = factor(s);
+    te_expr_t *ret = factor();
 
-    while (s->type == TOK_INFIX &&
-           (s->function == reinterpret_cast<void *>(static_cast<te_fun2>(mul)) ||
-            s->function == reinterpret_cast<void *>(static_cast<te_fun2>(divide)) ||
-            s->function == reinterpret_cast<void *>(static_cast<te_fun2>(fmod)))) {
-        auto t = reinterpret_cast<te_fun2>(s->function);
-        next_token(s);
-        ret = NEW_EXPR(TE_FUNCTION2, ret, factor(s));
-        ret->function = reinterpret_cast<void *>(t);
+    while (type == TOK_INFIX &&
+           (function == reinterpret_cast<void *>(static_cast<te_fun2>(mul)) ||
+            function == reinterpret_cast<void *>(static_cast<te_fun2>(divide)) ||
+            function == reinterpret_cast<void *>(static_cast<te_fun2>(fmod)))) {
+        auto t = reinterpret_cast<te_fun2>(function);
+        next_token();
+        ret = NEW_EXPR(TE_FUNCTION2, ret, factor());
+        ret->fun2 = t;
     }
 
     return ret;
 }
 
-static te_expr *expr(state *s) {
+te_expr_t *state::expr() {
     /* <expr>      =    <term> {("+" | "-") <term>} */
-    te_expr *ret = term(s);
+    te_expr_t *ret = term();
 
-    while (s->type == TOK_INFIX && (s->function == add || s->function == sub)) {
-        auto t = reinterpret_cast<te_fun2>(s->function);
-        next_token(s);
-        ret = NEW_EXPR(TE_FUNCTION2, ret, term(s));
-        ret->function = reinterpret_cast<void *>(t);
+    while (type == TOK_INFIX && (function == add || function == sub)) {
+        auto t = reinterpret_cast<te_fun2>(function);
+        next_token();
+        ret = NEW_EXPR(TE_FUNCTION2, ret, term());
+        ret->fun2 = t;
     }
 
     return ret;
 }
 
-#define TE_FUN(...) ((double (*)(__VA_ARGS__))n->function)
 #define M(e) te_eval(n->parameters[e])
 
-double te_eval(const te_expr *n) {
+/* Evaluates the expression. */
+static double te_eval(const te_expr_t *n) {
     if (!n) return NAN;
 
     switch (n->type) {
         case TE_CONSTANT:
             return n->value;
         case TE_FUNCTION0:
-            return TE_FUN(void)();
+            return n->fun0();
         case TE_FUNCTION1:
-            return TE_FUN(double)(M(0));
+            return n->fun1(M(0));
         case TE_FUNCTION2:
-            return TE_FUN(double, double)(M(0), M(1));
-        case TE_FUNCTION3:
-            return TE_FUN(double, double, double)(M(0), M(1), M(2));
+            return n->fun2(M(0), M(1));
         default:
             return NAN;
     }
 }
 
-#undef TE_FUN
 #undef M
 
-static void optimize(te_expr *n) {
+static void optimize(te_expr_t *n) {
     /* Evaluates as much as possible. */
     if (!n || n->type == TE_CONSTANT) return;
 
@@ -623,13 +617,12 @@ static void optimize(te_expr *n) {
     }
 }
 
-te_expr *te_compile(const wchar_t *expression, te_error_t *error) {
-    state s;
-    s.start = s.next = expression;
-    s.error = TE_ERROR_NONE;
+/* Parses the input expression. */
+/* Returns NULL on error. */
+static te_expr_t *te_compile(const wchar_t *expression, te_error_t *error) {
+    state s{expression};
 
-    next_token(&s);
-    te_expr *root = expr(&s);
+    te_expr_t *root = s.expr();
 
     if (s.type != TOK_END) {
         te_free(root);
@@ -652,7 +645,7 @@ te_expr *te_compile(const wchar_t *expression, te_error_t *error) {
 }
 
 double te_interp(const wchar_t *expression, te_error_t *error) {
-    te_expr *n = te_compile(expression, error);
+    te_expr_t *n = te_compile(expression, error);
     double ret;
     if (n) {
         ret = te_eval(n);

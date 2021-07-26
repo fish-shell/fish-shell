@@ -279,6 +279,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \return whether we are currently evaluating a function.
     bool is_function() const;
 
+    /// \return whether we are currently evaluating a command substitution.
+    bool is_command_substitution() const;
+
     /// Create a parser.
     parser_t();
     parser_t(std::shared_ptr<env_stack_t> vars);

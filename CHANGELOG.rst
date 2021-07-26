@@ -29,6 +29,7 @@ Deprecations and removed features
 
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
 - ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are almost certainly buggy (:issue:`8214`).
+- Command substitutions no longer respect job control, instead running inside fish's own process group. This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
 
 Scripting improvements
 ----------------------

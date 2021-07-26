@@ -1342,10 +1342,12 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     const auto &ld = parser->libdata();
 
     auto job_control_mode = get_job_control_mode();
+    // Run all command substitutions in our pgroup.
     bool wants_job_control =
-        (job_control_mode == job_control_t::all) ||
-        ((job_control_mode == job_control_t::interactive) && parser->is_interactive()) ||
-        (ctx.job_group && ctx.job_group->wants_job_control());
+        !parser->is_command_substitution() &&
+        ((job_control_mode == job_control_t::all) ||
+         ((job_control_mode == job_control_t::interactive) && parser->is_interactive()) ||
+         (ctx.job_group && ctx.job_group->wants_job_control()));
 
     job_t::properties_t props{};
     props.initial_background = job_node.bg.has_value();

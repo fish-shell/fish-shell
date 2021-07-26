@@ -398,6 +398,18 @@ bool parser_t::is_breakpoint() const {
     return false;
 }
 
+bool parser_t::is_command_substitution() const {
+    for (const auto &b : block_list) {
+        if (b.type() == block_type_t::subst) {
+            return true;
+        } else if (b.type() == block_type_t::source) {
+            // If a function sources a file, don't descend further.
+            break;
+        }
+    }
+    return false;
+}
+
 maybe_t<wcstring> parser_t::get_function_name(int level) {
     if (level == 0) {
         // Return the function name for the level preceding the most recent breakpoint. If there

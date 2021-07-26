@@ -425,7 +425,10 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     init_input();
 
     // Complain about invalid config paths.
-    path_emit_config_directory_messages(vars);
+    // HACK: Assume the defaults are correct (in practice this is only --no-config anyway).
+    if (!default_paths) {
+        path_emit_config_directory_messages(vars);
+    }
 
     // Initialize our uvars if requested.
     if (!do_uvars) {

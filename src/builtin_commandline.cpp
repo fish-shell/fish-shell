@@ -394,9 +394,9 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if (is_valid) {
-        if (rstate.text.empty()) return 1;
+        if (!*current_buffer) return 1;
         parser_test_error_bits_t res =
-            parse_util_detect_errors(rstate.text, NULL, false /* do not accept incomplete */);
+            parse_util_detect_errors(current_buffer, NULL, false /* do not accept incomplete */);
         return res & PARSER_TEST_ERROR ? 1 : 0;
     }
 

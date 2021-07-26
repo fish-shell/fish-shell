@@ -9,6 +9,7 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 - A new feature flag ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob`` this allows to write some URLs without quoting or escaping (:issue:`7991`)
+- Command substitutions no longer respect job control, instead running inside fish's own process group. This more closely matches other shells, and improves control-C reliability inside a command substitution.
 
 Scripting improvements
 ----------------------

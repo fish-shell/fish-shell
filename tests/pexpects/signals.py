@@ -19,6 +19,13 @@ import sys
 
 expect_prompt()
 
+# Verify that SIGINT inside a command sub cancels it.
+# Negate the pid to send to the pgroup (which should include sleep).
+sendline("while true; echo (sleep 1000); end")
+sleep(0.5)
+os.kill(-sp.spawn.pid, signal.SIGINT)
+expect_prompt()
+
 sendline("sleep 10 &")
 expect_prompt()
 

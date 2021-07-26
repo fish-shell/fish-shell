@@ -360,6 +360,12 @@ The other conditionals use the :ref:`exit status <variables-status>` of a comman
 
 Unlike programming languages you might know, :ref:`if <cmd-if>` doesn't take a *condition*, it takes a *command*. If that command returned a successful :ref:`exit status <variables-status>` (that's 0), the ``if`` branch is taken, otherwise the :ref:`else <cmd-else>` branch.
 
+To check a condition, there is the :ref:`test <cmd-test>` command::
+
+  if test 5 -gt 2
+      echo Yes, five is greater than two
+  end
+
 Some examples::
 
   # Just see if the file contains the string "fish" anywhere.

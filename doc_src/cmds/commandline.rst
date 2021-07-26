@@ -61,7 +61,7 @@ The following options output metadata about the commandline state:
 
 - ``-P`` or ``--paging-mode`` evaluates to true if the commandline is showing pager contents, such as tab completions
 
-- ``--is-complete`` returns true when the commandline is syntactically complete, i.e. would be executed when the ``execute`` bind function is called.
+- ``--is-valid`` returns true when the commandline is syntactically valid and complete. If it is, it would be executed when the ``execute`` bind function is called.
 
 Example
 -------

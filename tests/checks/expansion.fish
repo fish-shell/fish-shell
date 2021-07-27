@@ -306,12 +306,10 @@ $fish -c 'echo {'
 #CHECKERR: fish: Unexpected end of string, incomplete parameter expansion
 #CHECKERR: echo {
 #CHECKERR: ^
-#CHECKERR: 
 $fish -c 'echo {}}'
 #CHECKERR: fish: Unexpected '}' for unopened brace expansion
 #CHECKERR: echo {}}
 #CHECKERR: ^
-#CHECKERR: 
 $fish -c 'command (asd)'
 #CHECKERR: fish: Command substitutions not allowed
 #CHECKERR: command (asd)

@@ -51,6 +51,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "intern.h"
 #include "io.h"
 #include "parser.h"
+#include "parse_util.h"
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
@@ -255,7 +256,25 @@ static int run_command_list(parser_t &parser, std::vector<std::string> *cmds,
                             const io_chain_t &io) {
     for (const auto &cmd : *cmds) {
         wcstring cmd_wcs = str2wcstring(cmd);
-        parser.eval(cmd_wcs, io);
+        // Parse into an ast and detect errors.
+        parse_error_list_t errors;
+        auto ast = ast::ast_t::parse(cmd_wcs, parse_flag_none, &errors);
+        bool errored = ast.errored();
+        if (!errored) {
+            errored = parse_util_detect_errors(ast, cmd_wcs, &errors);
+        }
+        if (!errored) {
+            // Construct a parsed source ref.
+            // Be careful to transfer ownership, this could be a very large string.
+            parsed_source_ref_t ps = std::make_shared<parsed_source_t>(std::move(cmd_wcs), std::move(ast));
+            parser.eval(ps, io);
+        } else {
+            wcstring sb;
+            parser.get_backtrace(cmd_wcs, errors, sb);
+            std::fwprintf(stderr, L"%ls", sb.c_str());
+            // Note: We do not return here because that's how it historically worked.
+            // return 1;
+        }
     }
 
     return 0;

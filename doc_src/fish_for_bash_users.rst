@@ -87,7 +87,7 @@ will not match any files.
 
 There are no options to control globbing so it always behaves like that.
 
-See :ref:`Wildcards <wildcard>` for more.
+See :ref:`Wildcards <expand-wildcard>` for more.
 
 Quoting
 -------

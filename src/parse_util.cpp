@@ -44,7 +44,9 @@ static constexpr int var_err_len = 16;
 
 int parse_util_lineno(const wcstring &str, size_t offset) {
     // Return the line number of position offset, starting with 1.
-    if (str.empty()) return 0;
+    if (str.empty()) {
+        return 1;
+    }
 
     auto end = offset > str.length() ? str.end() : str.begin() + offset;
     return std::count(str.begin(), end, L'\n') + 1;

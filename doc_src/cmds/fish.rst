@@ -29,6 +29,8 @@ The following options are available:
 
 - ``-l`` or ``--login`` specify that fish is to run as a login shell
 
+- ``-N`` or ``--no-config`` do not read configuration files
+
 - ``-n`` or ``--no-execute`` do not execute any commands, only perform syntax checking
 
 - ``-p`` or ``--profile=PROFILE_FILE`` when fish exits, output timing information on all executed commands to the specified file. This excludes time spent starting up and reading the configuration.

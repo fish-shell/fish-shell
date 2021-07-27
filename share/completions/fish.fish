@@ -2,6 +2,7 @@ complete -c fish -s c -l command -d "Run specified command instead of interactiv
 complete -c fish -s C -l init-command -d "Run specified command before session" -x -a "(__fish_complete_command)"
 complete -c fish -s h -l help -d "Display help and exit"
 complete -c fish -s v -l version -d "Display version and exit"
+complete -c fish -s N -l no-config -d "Do not read configuration files"
 complete -c fish -s n -l no-execute -d "Only parse input, do not execute"
 complete -c fish -s i -l interactive -d "Run in interactive mode"
 complete -c fish -s l -l login -d "Run as a login shell"

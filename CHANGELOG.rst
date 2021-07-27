@@ -9,6 +9,7 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 - A new feature flag ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob`` this allows to write some URLs without quoting or escaping (:issue:`7991`)
+- ``$status`` (and only ``$status``) is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`).
 
 Scripting improvements
 ----------------------
@@ -16,6 +17,7 @@ Scripting improvements
 - ``string match`` gained a ``--groups-only`` option, which makes it only output capturing groups, excluding the full match. This allows ``string match`` to do simple transformations (:issue:`6056`).
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside of functions. In scripts it does the same thing as :ref:`exit <cmd-exit>`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
+- An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`).
 
 Interactive improvements
 ------------------------

@@ -1406,7 +1406,7 @@ There is one breaking change in fish 3.1: ``string replace -r`` does a superfluo
 
 There is one breaking change in fish 3.4: in ``echo https://example.com/?q=hello&qq=goodbye`` the ``&`` is no longer interpreted as backgrounding operator.
 
-These changes are off by default. They can be enabled on a per session basis::
+These changes are introduced off by default. They can be enabled on a per session basis::
 
     > fish --features qmark-noglob,stderr-nocaret
 
@@ -1421,6 +1421,10 @@ Features will only be set on startup, so this variable will only take effect if 
 You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob".
 
 Prefixing a feature with ``no-`` turns it off instead.
+
+Currently, the following features are enabled by default:
+
+- stderr-nocaret - ``^`` no longer redirects stderr, use ``2>``. Enabled by default in fish 3.3.0.
 
 .. _event:
 

@@ -69,6 +69,8 @@ Specific elements of a list can be selected::
 
   echo $list[5..7]
 
+See :ref:`Shell variables <variables>` for more.
+
 .. [#] zsh also does not perform word splitting by default (the SH_WORD_SPLIT option controls this)
 
 Wildcards (globs)
@@ -85,6 +87,8 @@ will not match any files.
 
 There are no options to control globbing so it always behaves like that.
 
+See :ref:`Wildcards <wildcard>` for more.
+
 Quoting
 -------
 
@@ -95,6 +99,8 @@ There is no ``$''``, instead the sequences that would transform are transformed 
   > echo a\nb
   a
   b
+
+See :ref:`Quotes <quotes>` for more.
 
 String manipulation
 -------------------
@@ -302,7 +308,7 @@ The pipe will simply be run in the same process, so ``while read`` loops can set
     echo $VAR # will print VAL
     jobs # will show "baz"
 
-Subshells are also frequently confused with :ref:`command substitutions <bash-command-substitutions>`, which bash writes as ```command``` or ``$(command)`` and fish writes as ``(command)``. Bash also *uses* subshells to implement them.
+Subshells are also frequently confused with :ref:`command substitutions <bash-command-substitutions>`, which bash writes as ```command``` or ``$(command)`` and fish writes as ``$(command)`` or ``(command)``. Bash also *uses* subshells to implement them.
 
 The isolation can usually be achieved by just scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can always use ``fish -c 'your code here'`` to do so explicitly.
 

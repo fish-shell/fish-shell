@@ -2,7 +2,7 @@
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
-send, sendline, sleep, expect_prompt = sp.send, sp.sendline, sp.sleep, sp.expect_prompt
+send, sendline, sleep, expect_prompt, expect_str = sp.send, sp.sendline, sp.sleep, sp.expect_prompt, sp.expect_str
 expect_prompt()
 
 sendline("bind '~' 'handle_tilde'")
@@ -41,3 +41,9 @@ expect_prompt("<>")
 # TODO: consider removing.
 sendline("commandline -I foo")
 expect_prompt("foo")
+
+# See that the commandline is updated immediately inside completions.
+sendline("complete -c foo -xa '(commandline)'")
+expect_prompt()
+send("foo bar \t")
+expect_str("foo bar foo\ bar\ ")

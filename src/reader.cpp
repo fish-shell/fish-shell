@@ -3115,6 +3115,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // up to the end of the token we're completing.
                 const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
+                // Ensure that `commandline` inside the completions gets the current state.
+                update_commandline_state();
+
                 // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                 completion_request_flags_t complete_flags = {completion_request_t::descriptions,
                                                              completion_request_t::fuzzy_match};

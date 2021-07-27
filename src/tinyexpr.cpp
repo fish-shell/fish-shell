@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cwchar>
 #include <iterator>
 #include <vector>
 
@@ -38,14 +39,16 @@
 #include "wutil.h"
 
 struct te_fun_t {
+    using fn_va = double (*)(const std::vector<double> &);
     using fn_2 = double (*)(double, double);
     using fn_1 = double (*)(double);
     using fn_0 = double (*)();
 
     te_fun_t(double val) : type_{CONSTANT}, arity_{0}, value{val} {}
-    te_fun_t(fn_0 fn) : type_{FUNCTION}, arity_{0}, fun0{fn} {}
-    te_fun_t(fn_1 fn) : type_{FUNCTION}, arity_{1}, fun1{fn} {}
-    te_fun_t(fn_2 fn) : type_{FUNCTION}, arity_{2}, fun2{fn} {}
+    te_fun_t(fn_0 fn) : type_{FN_FIXED}, arity_{0}, fun0{fn} {}
+    te_fun_t(fn_1 fn) : type_{FN_FIXED}, arity_{1}, fun1{fn} {}
+    te_fun_t(fn_2 fn) : type_{FN_FIXED}, arity_{2}, fun2{fn} {}
+    te_fun_t(fn_va fn) : type_{FN_VARIADIC}, arity_{-1}, fun_va{fn} {}
 
     bool operator==(fn_2 fn) const { return arity_ == 2 && fun2 == fn; }
 
@@ -62,6 +65,7 @@ struct te_fun_t {
     }
 
     double operator()(const std::vector<double> &args) const {
+        if (type_ == FN_VARIADIC) return fun_va(args);
         if (arity_ != static_cast<int>(args.size())) return NAN;
         switch (arity_) {
             case 0:
@@ -77,14 +81,17 @@ struct te_fun_t {
    private:
     enum {
         CONSTANT,
-        FUNCTION,
+        FN_FIXED,
+        FN_VARIADIC,
     } type_;
     int arity_;
+
     union {
         double value;
         fn_0 fun0;
         fn_1 fun1;
         fn_2 fun2;
+        fn_va fun_va;
     };
 };
 
@@ -405,7 +412,7 @@ double state::base() {
 
             std::vector<double> parameters;
             int i;
-            for (i = 0; i < arity; i++) {
+            for (i = 0; arity < 0 || i < arity; i++) {
                 parameters.push_back(expr());
                 if (type_ != TOK_SEP) {
                     break;
@@ -413,24 +420,25 @@ double state::base() {
                 next_token();
             }
 
-            if (!have_open && i == arity - 1) {
-                return fn(parameters);
-            }
-
-            if (have_open && type_ == TOK_CLOSE && i == arity - 1) {
-                // We have an opening and a closing paren, consume the closing one and done.
-                next_token();
-                return fn(parameters);
+            if (arity < 0 || i == arity - 1) {
+                if (!have_open) {
+                    return fn(parameters);
+                }
+                if (type_ == TOK_CLOSE) {
+                    // We have an opening and a closing paren, consume the closing one and done.
+                    next_token();
+                    return fn(parameters);
+                }
+                if (type_ != TOK_ERROR) {
+                    // If we had the right number of arguments, we're missing a closing paren.
+                    error_ = TE_ERROR_MISSING_CLOSING_PAREN;
+                    type_ = TOK_ERROR;
+                }
             }
             if (type_ != TOK_ERROR || error_ == TE_ERROR_UNEXPECTED_TOKEN) {
-                // If we had the right number of arguments, we're missing a closing paren.
-                if (have_open && i == arity - 1 && type_ != TOK_ERROR) {
-                    error_ = TE_ERROR_MISSING_CLOSING_PAREN;
-                } else {
-                    // Otherwise we complain about the number of arguments *first*,
-                    // a closing parenthesis should be more obvious.
-                    error_ = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
-                }
+                // Otherwise we complain about the number of arguments *first*,
+                // a closing parenthesis should be more obvious.
+                error_ = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 type_ = TOK_ERROR;
             }
             break;
@@ -486,12 +494,10 @@ double state::power() {
 double state::factor() {
     /* <factor>    =    <power> {"^" <power>} */
     auto ret = power();
-
     if (type_ == TOK_INFIX && current_ == pow) {
         next_token();
         ret = pow(ret, factor());
     }
-
     return ret;
 }
 

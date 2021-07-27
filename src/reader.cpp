@@ -3573,7 +3573,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 else
                     line_new = line_old + 1;
 
-                int line_count = parse_util_lineno(el->text().c_str(), el->size()) - 1;
+                int line_count = parse_util_lineno(el->text(), el->size()) - 1;
 
                 if (line_new >= 0 && line_new <= line_count) {
                     auto indents = parse_util_compute_indents(el->text());

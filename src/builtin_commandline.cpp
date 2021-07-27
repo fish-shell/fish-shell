@@ -348,7 +348,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     if (line_mode) {
         streams.out.append_format(L"%d\n",
-                                  parse_util_lineno(rstate.text.c_str(), rstate.cursor_pos));
+                                  parse_util_lineno(rstate.text, rstate.cursor_pos));
         return STATUS_CMD_OK;
     }
 

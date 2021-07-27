@@ -42,51 +42,31 @@
 /// Maximum length of a variable name to show in error reports before truncation
 static constexpr int var_err_len = 16;
 
-int parse_util_lineno(const wchar_t *str, size_t offset) {
-    if (!str) return 0;
+int parse_util_lineno(const wcstring &str, size_t offset) {
+    // Return the line number of position offset, starting with 1.
+    if (str.empty()) return 0;
 
-    int res = 1;
-    for (size_t i = 0; i < offset && str[i] != L'\0'; i++) {
-        if (str[i] == L'\n') {
-            res++;
-        }
-    }
-    return res;
+    auto end = offset > str.length() ? str.end() : str.begin() + offset;
+    return std::count(str.begin(), end, L'\n') + 1;
 }
 
 int parse_util_get_line_from_offset(const wcstring &str, size_t pos) {
-    const wchar_t *buff = str.c_str();
-    int count = 0;
-    for (size_t i = 0; i < pos; i++) {
-        if (!buff[i]) {
-            return -1;
-        }
-
-        if (buff[i] == L'\n') {
-            count++;
-        }
-    }
-    return count;
+    // Return the line pos is on, or -1 if it's after the end.
+    if (str.length() > pos) return -1;
+    return std::count(str.begin() + pos, str.end(), L'\n');
 }
 
 size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
-    const wchar_t *buff = str.c_str();
-    size_t i;
-    int count = 0;
-
+    // Return the first position on line X, counting from 0.
     if (line < 0) return static_cast<size_t>(-1);
     if (line == 0) return 0;
 
-    for (i = 0;; i++) {
-        if (!buff[i]) return static_cast<size_t>(-1);
-
-        if (buff[i] == L'\n') {
-            count++;
-            if (count == line) {
-                return i + 1;
-            }
-        }
+    ssize_t i = 0;
+    while (auto pos = str.find(L'\n')) {
+        i++;
+        if (i == line) return pos + 1;
     }
+    return static_cast<size_t>(-1);
 }
 
 size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {

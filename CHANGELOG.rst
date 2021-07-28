@@ -9,7 +9,7 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 - A new feature flag ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob`` this allows to write some URLs without quoting or escaping (:issue:`7991`)
-- ``$status`` (and only ``$status``) is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`).
+- ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`).
 
 Scripting improvements
 ----------------------
@@ -38,13 +38,14 @@ Completions
 - Added completions for:
 
   - ``black`` (:issue:`8123`)
+  - ``gping`` (:issue:`8181`)
   - Angular's ``ng`` (:issue:`8111`)
   - ``zef`` (:issue:`8114`)
   - ``rakudo`` (:issue:`8113`)
   - ``az`` (:issue:`8141`)
   - ``qmk`` (:issue:`8180`)
 
-- Improvements to many completions.
+- Improvements to many completions, especially for ``git`` subcommands (:issue:`8134`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

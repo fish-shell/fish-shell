@@ -1,4 +1,4 @@
-# Completion for gping
+# Completion for https://github.com/orf/gping
 
 complete -x -c gping -d "Ping, but with a graph"
 complete -x -c gping -l cmd -d "Graph execution time for this command"

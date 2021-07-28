@@ -512,7 +512,9 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
     wcstring_list_t vals = var->as_list();
     streams.out.append_format(_(L"$%ls: set in %ls scope, %ls,%ls with %d elements\n"), var_name,
                               scope_name, exportv, pathvarv, vals.size());
-    if (var->read_only()) {
+    // HACK: PWD can be set, depending on how you ask.
+    // For our purposes it's read-only.
+    if (var->read_only() || wcscmp(var_name, L"PWD") == 0) {
         streams.out.append(_(L"Variable is read-only\n"));
     }
 

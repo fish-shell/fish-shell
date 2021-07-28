@@ -667,6 +667,12 @@ set -S status
 #CHECK: Variable is read-only
 #CHECK: $status[1]: |0|
 
+# PWD is also read-only.
+set -S PWD
+#CHECK: $PWD: set in global scope, exported, with 1 elements
+#CHECK: Variable is read-only
+#CHECK: $PWD[1]: |{{.*}}|
+
 set -ql history
 echo $status
 #CHECK: 1

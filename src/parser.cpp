@@ -136,10 +136,6 @@ block_t *parser_t::push_block(block_t &&block) {
         new_current.src_filename = intern(filename);
     }
 
-    if (type == block_type_t::breakpoint) {
-        libdata().is_breakpoint = true;
-    }
-
     if (new_current.type() != block_type_t::top) {
         bool shadow = (type == block_type_t::function_call);
         vars().push(shadow);
@@ -161,16 +157,6 @@ void parser_t::pop_block(const block_t *expected) {
     block_list.pop_front();
 
     if (old.wants_pop_env) vars().pop();
-
-    // Are we still in a breakpoint?
-    bool new_is_breakpoint = false;
-    for (const auto &b : block_list) {
-        if (b.type() == block_type_t::breakpoint) {
-            new_is_breakpoint = true;
-            break;
-        }
-    }
-    libdata().is_breakpoint = new_is_breakpoint;
 }
 
 const wchar_t *parser_t::get_block_desc(block_type_t block) {
@@ -413,6 +399,15 @@ bool parser_t::is_block() const {
     // Note historically this has descended into 'source', unlike 'is_function'.
     for (const auto &b : block_list) {
         if (b.type() != block_type_t::top && b.type() != block_type_t::subst) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool parser_t::is_breakpoint() const {
+    for (const auto &b : block_list) {
+        if (b.type() == block_type_t::breakpoint) {
             return true;
         }
     }

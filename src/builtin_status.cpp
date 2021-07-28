@@ -414,7 +414,7 @@ maybe_t<int> builtin_status(parser_t &parser, io_streams_t &streams, const wchar
         }
         case STATUS_IS_BREAKPOINT: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = parser.libdata().is_breakpoint ? 0 : 1;
+            retval = parser.is_breakpoint() ? 0 : 1;
             break;
         }
         case STATUS_IS_LOGIN: {

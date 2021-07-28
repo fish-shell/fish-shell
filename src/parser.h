@@ -169,9 +169,6 @@ struct library_data_t {
     /// Whether we are running a subshell command.
     bool is_subshell{false};
 
-    /// Whether we are running due to a `breakpoint` command.
-    bool is_breakpoint{false};
-
     /// Whether we are running an event handler. This is not a bool because we keep count of the
     /// event nesting level.
     int is_event{0};
@@ -340,6 +337,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \return whether we are currently evaluating a "block" such as an if statement.
     /// This supports 'status is-block'.
     bool is_block() const;
+
+    /// \return whether we have a breakpoint block.
+    bool is_breakpoint() const;
 
     /// Returns the block at the given index. 0 corresponds to the innermost block. Returns nullptr
     /// when idx is at or equal to the number of blocks.

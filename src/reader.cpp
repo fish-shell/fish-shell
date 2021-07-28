@@ -2747,7 +2747,7 @@ static int read_i(parser_t &parser) {
     conf.autosuggest_ok = true;
     conf.expand_abbrev_ok = true;
 
-    if (parser.libdata().is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
+    if (parser.is_breakpoint() && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
         conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME;
         conf.right_prompt_cmd = wcstring{};
     } else {

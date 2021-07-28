@@ -33,11 +33,11 @@ With ``--show``, ``set`` will describe the given variable names, explaining how 
 
 The following options control variable scope:
 
-- ``-l`` or ``--local`` forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
+- ``-f`` or ``--function`` scopes the variable to the currently executing function. It is erased when the function ends.
 
-- ``-f`` or ``--function`` makes the variable local to the current *function*. This is the same as defining it with ``--local`` outside of a block like ``begin`` or ``for``. When used outside of a function, it uses the top-level local scope instead.
+- ``-l`` or ``--local`` scopes the variable to the currently executing block. It is erased when the block ends. Outside of a block, this is the same as ``--function``.
 
-- ``-g`` or ``--global`` causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
+- ``-g`` or ``--global`` causes the specified shell variable to be given a global scope. Global variables don't disappear and are available to all functions running in the same shell. They can even be modified.
 
 - ``-U`` or ``--universal`` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current user's fish instances on the current computer, and will be preserved across restarts of the shell.
 

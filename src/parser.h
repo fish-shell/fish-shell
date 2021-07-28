@@ -349,9 +349,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Return the list of blocks. The first block is at the top.
     const std::deque<block_t> &blocks() const { return block_list; }
 
-    /// Returns the current (innermost) block.
-    block_t *current_block();
-
     /// Get the list of jobs.
     job_list_t &jobs() { return job_list; }
     const job_list_t &jobs() const { return job_list; }
@@ -380,7 +377,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     int set_empty_var_and_fire(const wcstring &key, env_mode_flags_t mode);
 
     /// Pushes a new block. Returns a pointer to the block, stored in the parser. The pointer is
-    /// valid until the call to pop_block()
+    /// valid until the call to pop_block().
     block_t *push_block(block_t &&b);
 
     /// Remove the outermost block, asserting it's the given one.

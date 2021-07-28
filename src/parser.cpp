@@ -123,40 +123,26 @@ int parser_t::set_empty_var_and_fire(const wcstring &key, env_mode_flags_t mode)
     return set_var_and_fire(key, mode, wcstring_list_t{});
 }
 
-// Given a new-allocated block, push it onto our block list, acquiring ownership.
 block_t *parser_t::push_block(block_t &&block) {
-    block_t new_current{block};
-    const enum block_type_t type = new_current.type();
-    new_current.src_lineno = parser_t::get_lineno();
-
-    wcstring func = new_current.function_name;
-
-    const wchar_t *filename = parser_t::current_filename();
-    if (filename != nullptr) {
-        new_current.src_filename = intern(filename);
-    }
-
-    if (new_current.type() != block_type_t::top) {
-        bool shadow = (type == block_type_t::function_call);
-        vars().push(shadow);
-        new_current.wants_pop_env = true;
+    block.src_lineno = parser_t::get_lineno();
+    block.src_filename = parser_t::current_filename();
+    if (block.type() != block_type_t::top) {
+        bool new_scope = (block.type() == block_type_t::function_call);
+        vars().push(new_scope);
+        block.wants_pop_env = true;
     }
 
     // Push it onto our list and return a pointer to it.
     // Note that deques do not move their contents so this is safe.
-    this->block_list.push_front(std::move(new_current));
+    this->block_list.push_front(std::move(block));
     return &this->block_list.front();
 }
 
 void parser_t::pop_block(const block_t *expected) {
-    assert(expected == this->current_block());
-    assert(!block_list.empty() && "empty block list");
-
-    // Acquire ownership out of the block list.
-    block_t old = block_list.front();
-    block_list.pop_front();
-
-    if (old.wants_pop_env) vars().pop();
+    assert(expected && expected == &this->block_list.at(0) && "Unexpected block");
+    bool pop_env = expected->wants_pop_env;
+    block_list.pop_front();  // beware, this deallocates 'expected'.
+    if (pop_env) vars().pop();
 }
 
 const wchar_t *parser_t::get_block_desc(block_type_t block) {
@@ -199,8 +185,6 @@ const block_t *parser_t::block_at_index(size_t idx) const {
 block_t *parser_t::block_at_index(size_t idx) {
     return idx < block_list.size() ? &block_list[idx] : nullptr;
 }
-
-block_t *parser_t::current_block() { return block_at_index(0); }
 
 /// Print profiling information to the specified stream.
 static void print_profile(const std::deque<profile_item_t> &items, FILE *out) {

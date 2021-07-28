@@ -664,6 +664,7 @@ env | string match -e __fish_test_universal_exported_var
 # so they should only be shown in global scope.
 set -S status
 #CHECK: $status: set in global scope, unexported, with 1 elements
+#CHECK: Variable is read-only
 #CHECK: $status[1]: |0|
 
 set -ql history

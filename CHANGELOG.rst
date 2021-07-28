@@ -38,6 +38,7 @@ Completions
   - ``zef`` (:issue:`8114`)
   - ``rakudo`` (:issue:`8113`)
   - ``az`` (:issue:`8141`)
+  - ``qmk`` (:issue:`8180`)
 
 - Improvements to many completions.
 

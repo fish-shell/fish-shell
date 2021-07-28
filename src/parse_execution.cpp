@@ -1350,7 +1350,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
     job_t::properties_t props{};
     props.initial_background = job_node.bg.has_value();
     props.skip_notification =
-        ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
+        ld.is_subshell || parser->is_block() || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
     props.job_control = wants_job_control;
     props.wants_timing = job_node_wants_timing(job_node);

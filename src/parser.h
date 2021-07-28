@@ -169,9 +169,6 @@ struct library_data_t {
     /// Whether we are running a subshell command.
     bool is_subshell{false};
 
-    /// Whether we are running a block of commands.
-    bool is_block{false};
-
     /// Whether we are running due to a `breakpoint` command.
     bool is_breakpoint{false};
 
@@ -339,6 +336,10 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Returns the current line number.
     int get_lineno() const;
+
+    /// \return whether we are currently evaluating a "block" such as an if statement.
+    /// This supports 'status is-block'.
+    bool is_block() const;
 
     /// Returns the block at the given index. 0 corresponds to the innermost block. Returns nullptr
     /// when idx is at or equal to the number of blocks.

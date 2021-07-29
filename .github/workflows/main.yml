@@ -13,6 +13,8 @@ jobs:
       run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
         sudo pip3 install pexpect
+        # Generate a locale that uses a comma as decimal separator.
+        sudo locale-gen fr_FR.UTF-8
     - name: cmake
       env:
           # Some warnings upgraded to errors to match Open Build Service platforms

@@ -87,6 +87,31 @@ string pad -c_ --width 5 longer-than-width-param x
 string pad -c ab -w4 .
 # CHECKERR: string pad: Padding should be a character 'ab'
 
+# Visible length. Let's start off simple, colors are ignored:
+string length --visible (set_color red)abc
+# CHECK: 3
+begin
+    set -l fish_emoji_width 2
+    # This should print the emoji width
+    string length --visible . 🐟
+    # CHECK: 1
+    # CHECK: 2
+    set -l fish_emoji_width 1
+    string length --visible . 🐟
+    # CHECK: 1
+    # CHECK: 1
+end
+
+# Only the longest run between carriage returns is kept because the rest is overwritten.
+string length --visible (set_color normal)abcdef\rfooba(set_color red)raaa
+# (foobaraaa)
+# CHECK: 9
+
+# Visible length is *always* split by line
+string length --visible a(set_color blue)b\ncde
+# CHECK: 2
+# CHECK: 3
+
 string sub --length 2 abcde
 # CHECK: ab
 

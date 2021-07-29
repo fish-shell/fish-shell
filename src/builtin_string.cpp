@@ -768,15 +768,37 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
     int nnonempty = 0;
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        size_t n = opts.visible ? width_without_escapes(*arg) : arg->length();
-        if (n > 0) {
-            nnonempty++;
-        }
-        if (!opts.quiet) {
-            streams.out.append(to_string(n));
-            streams.out.append(L'\n');
-        } else if (nnonempty > 0) {
-            return STATUS_CMD_OK;
+        if (opts.visible) {
+            // Visible length only makes sense line-wise.
+            for (auto &line : split_string(*arg, L'\n')) {
+                size_t max = 0;
+                // Carriage-return returns us to the beginning,
+                // the longest string stays.
+                for (auto &reset : split_string(line, L'\r')) {
+                    size_t n = width_without_escapes(reset);
+                    if (n > max) max = n;
+                }
+                if (max > 0) {
+                    nnonempty++;
+                }
+                if (!opts.quiet) {
+                    streams.out.append(to_string(max));
+                    streams.out.append(L'\n');
+                } else if (nnonempty > 0) {
+                    return STATUS_CMD_OK;
+                }
+            }
+        } else {
+            size_t n = arg->length();
+            if (n > 0) {
+                nnonempty++;
+            }
+            if (!opts.quiet) {
+                streams.out.append(to_string(n));
+                streams.out.append(L'\n');
+            } else if (nnonempty > 0) {
+                return STATUS_CMD_OK;
+            }
         }
     }
 

@@ -52,3 +52,19 @@ t 5,2
 # CHECKERR: in function 't' with arguments '5,2'
 # CHECKERR: called on line {{\d+}} of file {{.*}}test.fish
 
+if command -q locale
+    # Try to get a comma-using locale.
+    # We have a cheesy list hardcoded, and try to get it in the spelling
+    # that "locale" uses.
+    set -l locales (locale -a)
+    set -l use
+    for locale in de_de fr_fr nl_NL pt_BR
+        set use (string match -ri "$locale.utf.?8" -- $locales)
+        and break
+    end
+    if set -q use[1]
+        set -gx LC_ALL $use
+        # This should succeed without output
+        test 42.5 -gt 37.2
+    end
+end

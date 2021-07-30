@@ -76,7 +76,7 @@ function __fish_complete_nmap_script
         set -g __fish_nmap_script_completion_cache_time (date +"%s")
         set -g __fish_nmap_script_completion_cache ""
         set -l cmd
-        for l in (nmap --script-help all|grep -A2 -B1 Categories:|grep -v '^\\(--\\|Categories:\\|https:\\)')
+        for l in (nmap --script-help all 2> /dev/null | grep -A2 -B1 Categories: | grep -v '^\\(--\\|Categories:\\|https:\\)')
             if string match -q -v --regex "^ " $l
                 set cmd $l
             else

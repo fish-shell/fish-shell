@@ -514,7 +514,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
                               scope_name, exportv, pathvarv, vals.size());
     // HACK: PWD can be set, depending on how you ask.
     // For our purposes it's read-only.
-    if (var->read_only() || wcscmp(var_name, L"PWD") == 0) {
+    if (env_var_t::flags_for(var_name) & env_var_t::flag_read_only) {
         streams.out.append(_(L"Variable is read-only\n"));
     }
 

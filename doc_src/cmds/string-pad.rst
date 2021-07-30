@@ -17,7 +17,9 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string pad`` extends each STRING to the given width by adding CHAR to the left.
+``string pad`` extends each STRING to the given visible width by adding CHAR to the left. That means the width of all visible characters added together, excluding escape sequences and accounting for $fish_emoji_width and $fish_ambiguous_width. It is the amount of columns in a terminal the STRING occupies.
+
+The escape sequences reflect what *fish* knows about, and how it computes its output. Your terminal might support more escapes, or not support escape sequences that fish knows about.
 
 If ``-r`` or ``--right`` is given, add the padding after a string.
 
@@ -51,5 +53,7 @@ See Also
 --------
 
 - The :ref:`printf <cmd-printf>` command can do simple padding, for example ``printf %10s\n`` works like ``string pad -w10``.
+
+- :ref:`string length <cmd-string-length>` with the ``--visible`` option can be used to show what fish thinks the width is.
 
 .. END EXAMPLES

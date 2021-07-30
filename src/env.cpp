@@ -1054,8 +1054,7 @@ void env_stack_impl_t::set_in_node(const env_node_ref_t &node, const wcstring &k
 
     var = var.setting_vals(std::move(val))
               .setting_exports(res_exports)
-              .setting_pathvar(res_pathvar)
-              .setting_read_only(is_read_only(key));
+              .setting_pathvar(res_pathvar);
 
     // Perhaps mark that this node contains an exported variable, or shadows an exported variable.
     // If so regenerate the export list.

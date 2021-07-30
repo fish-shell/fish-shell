@@ -128,7 +128,6 @@ class env_var_t {
     env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
 
     bool empty() const { return vals_->empty() || (vals_->size() == 1 && vals_->front().empty()); }
-    bool read_only() const { return flags_ & flag_read_only; }
     bool exports() const { return flags_ & flag_export; }
     bool is_pathvar() const { return flags_ & flag_pathvar; }
     env_var_flags_t get_flags() const { return flags_; }
@@ -161,16 +160,6 @@ class env_var_t {
             flags |= flag_pathvar;
         } else {
             flags &= ~flag_pathvar;
-        }
-        return env_var_t{vals_, flags};
-    }
-
-    env_var_t setting_read_only(bool read_only) const {
-        env_var_flags_t flags = flags_;
-        if (read_only) {
-            flags |= flag_read_only;
-        } else {
-            flags &= ~flag_read_only;
         }
         return env_var_t{vals_, flags};
     }

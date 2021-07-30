@@ -447,7 +447,7 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     }
 
     auto var = parser->vars().get(for_var_name, ENV_DEFAULT);
-    if (var && var->read_only()) {
+    if (env_var_t::flags_for(for_var_name.c_str()) & env_var_t::flag_read_only) {
         return report_error(STATUS_INVALID_ARGS, header.var_name,
                             L"You cannot use read-only variable '%ls' in a for loop",
                             for_var_name.c_str());

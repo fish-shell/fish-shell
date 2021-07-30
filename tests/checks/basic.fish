@@ -500,3 +500,11 @@ echo banana
 # This used to be a parse error - #7685.
 echo (echo hello\\)
 # CHECK: hello\
+
+# Should fail because $PWD is read-only.
+for PWD in foo bar
+    true
+end
+# CHECKERR: {{.*}}/basic.fish (line {{\d+}}): You cannot use read-only variable 'PWD' in a for loop
+# CHECKERR: for PWD in foo bar
+# CHECKERR: ^

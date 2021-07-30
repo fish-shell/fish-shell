@@ -1,6 +1,7 @@
 # completion for zypper
 
 set -g __fish_zypper_all_commands shell sh repos lr addrepo ar removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc services ls addservice as modifyservice ms removeservice rs refresh-services refs install in remove rm verify ve source-install si install-new-recommends inr update up list-updates lu patch list-patches lp dist-upgrade dup patch-check pchk search se info if patch-info pattern-info product-info patches pch packages pa patterns pt products pd what-provides wp addlock al removelock rl locks ll cleanlocks cl locales lloc addlocale aloc removelocale rloc versioncmp vcmp targetos tos licenses download source-download needs-rebooting ps
+set -g __fish_zypper_subcommands (zypper -q subcommand | string split ', ')
 set -g __fish_zypper_pkg_commands install in remove rm info if addlock al removelock rl source-install si update up download
 set -g __fish_zypper_repo_commands repos lr removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc packages pa patches pch patterns pt products pd
 set -g __fish_zypper_file_commands install in addrepo ar
@@ -21,7 +22,7 @@ function __fish_zypper_cmd_in_array
 end
 
 function __fish_zypper_no_subcommand
-    not __fish_zypper_cmd_in_array $__fish_zypper_all_commands
+    not __fish_zypper_cmd_in_array $__fish_zypper_all_commands $__fish_zypper_subcommands
 end
 
 function __fish_zypper_use_pkg
@@ -161,6 +162,7 @@ complete -f -n __fish_zypper_no_subcommand -c zypper -a ps -d 'List running proc
 #  Subcommands:
 
 complete -f -n __fish_zypper_no_subcommand -c zypper -a subcommand -d 'Lists available subcommands'
+complete -f -n __fish_zypper_no_subcommand -c zypper -a "$__fish_zypper_subcommands"
 
 # Global Options:
 

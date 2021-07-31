@@ -112,10 +112,12 @@ export suppress_color
 # Source test util functions at startup
 fish_init_cmd="${fish_init_cmd} && source ${TESTS_ROOT}/test_util.fish";
 
-# Run the test script, but don't exec so we can do cleanup after it succeeds/fails
-env HOME="$homedir" "${BUILD_ROOT}/test/root/bin/fish" \
+# Run the test script, but don't exec so we can do cleanup after it succeeds/fails. Each test is
+# launched directly within its TMPDIR, so that the fish tests themselves do not need to refer to
+# TMPDIR (to ensure their output as displayed in case of failure by littlecheck is reproducible).
+(cd $TMPDIR; env HOME="$homedir" "${BUILD_ROOT}/test/root/bin/fish" \
     --init-command "${fish_init_cmd}" \
-    "$fish_script" "$script_args"
+    "$fish_script" "$script_args")
 test_status="$?"
 
 rm -rf "$homedir"

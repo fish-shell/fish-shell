@@ -6,9 +6,9 @@ set fish (builtin realpath $fish)
 
 # Isolated tmux. tmux can't handle session sockets in paths that are too long, and macOS has a very
 # long $TMPDIR, so use a relative path - except macOS doesn't have `realpath --relative-to`...
-# We have a unique TMPDIR assigned by the test driver, so this will work so long as `tmux` is only
-# invoked from the same PWD.
-set tmpdir (command mktemp -d $TMPDIR/tmp.XXXXXXXX)
+# We are cd'd into a unique temp dir created/assigned by the test driver, so this will work so long
+# as `tmux` is only invoked from the same PWD.
+set tmpdir (command mktemp -d ./tmp.XXXXXXXX)
 cd $tmpdir
 set -g tmux tmux -S ./.tmux-socket -f /dev/null
 

@@ -42,12 +42,12 @@ end
 # Simple function tests
 
 function foo
-    echo >$TMPDIR/fish_foo.txt $argv
+    echo >./fish_foo.txt $argv
 end
 
 foo hello
 
-cat $TMPDIR/fish_foo.txt |read foo
+cat ./fish_foo.txt |read foo
 
 if test $foo = hello;
   echo Test 2 pass
@@ -327,10 +327,10 @@ type -q -f fish_test_type_zzz ; echo $status
 
 # ensure that builtins that produce no output can still truncate files
 # (bug PCA almost reintroduced!)
-echo abc > $TMPDIR/file_truncation_test.txt
-cat $TMPDIR/file_truncation_test.txt
-echo -n > $TMPDIR/file_truncation_test.txt
-cat $TMPDIR/file_truncation_test.txt
+echo abc > ./file_truncation_test.txt
+cat ./file_truncation_test.txt
+echo -n > ./file_truncation_test.txt
+cat ./file_truncation_test.txt
 #CHECK: abc
 
 # Test events.

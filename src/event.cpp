@@ -527,20 +527,20 @@ event_t event_t::process_exit(pid_t pid, int status) {
 }
 
 // static
-event_t event_t::job_exit(pid_t pid, internal_job_id_t jid) {
+event_t event_t::job_exit(pid_t pgid, internal_job_id_t jid) {
     event_t evt{event_type_t::job_exit};
-    evt.desc.param1.jobspec = {pid, jid};
+    evt.desc.param1.jobspec = {pgid, jid};
     evt.arguments.reserve(3);
     evt.arguments.push_back(L"JOB_EXIT");
-    evt.arguments.push_back(to_string(pid));
+    evt.arguments.push_back(to_string(pgid));
     evt.arguments.push_back(L"0");  // historical
     return evt;
 }
 
 // static
-event_t event_t::caller_exit(uint64_t caller_id, int job_id) {
+event_t event_t::caller_exit(uint64_t internal_job_id, int job_id) {
     event_t evt{event_type_t::caller_exit};
-    evt.desc.param1.caller_id = caller_id;
+    evt.desc.param1.caller_id = internal_job_id;
     evt.arguments.reserve(3);
     evt.arguments.push_back(L"JOB_EXIT");
     evt.arguments.push_back(to_string(job_id));

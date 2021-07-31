@@ -97,6 +97,14 @@ configure_file(build_tools/pexpect_helper.py pexpect_helper.py COPYONLY)
 # your binaries actually being built before `make test` is executed (requiring `make all` first),
 # and the only dependency a test can have is on another test. So we make building fish and
 # `fish_tests` prerequisites to our entire top-level `test` target.
+function(add_test_target NAME)
+  add_custom_target("test_${NAME}"
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^${NAME}$$"
+    DEPENDS fish_tests tests_buildroot_target
+    USES_TERMINAL
+  )
+endfunction()
+
 add_custom_target(tests_buildroot_target
                   # Make the directory in which to run tests:
                   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
@@ -110,14 +118,6 @@ add_custom_target(tests_buildroot_target
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
                           ${TEST_ROOT_DIR}
                   DEPENDS fish fish_test_helper)
-
-function(add_test_target NAME)
-  add_custom_target(${NAME}
-    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^${NAME}$$"
-    DEPENDS fish_tests tests_buildroot_target
-    USES_TERMINAL
-  )
-endfunction()
 
 foreach(LTEST ${LOW_LEVEL_TESTS})
   add_test(

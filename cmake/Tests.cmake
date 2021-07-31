@@ -17,24 +17,17 @@ fish_link_deps_and_sign(fish_tests)
 # The "test" directory.
 set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)
 
-# HACK: CMake is a configuration tool, not a build system. However, until CMake adds a way to
-# dynamically discover tests, our options are either this or resorting to sed/awk to parse the low
-# level tests source file to get the list of individual tests. Or to split each test into its own
-# source file.
-execute_process(
-  COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_SOURCE_DIR}/src/fish_tests.cpp
-                            -o ${CMAKE_BINARY_DIR}/fish_tests_list
-                            -I ${CMAKE_CURRENT_BINARY_DIR} # for config.h
-                            -lpthread
-                            # Strip actual dependency on fish code
-                            -Wl,-undefined,dynamic_lookup,--unresolved-symbols=ignore-all
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-execute_process(
-  COMMAND ./fish_tests_list --list
-  OUTPUT_FILE low_level_tests.txt
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+# CMake doesn't really support dynamic test discovery where a test harness is executed to list the
+# tests it contains, making fish_tests.cpp's tests opaque to CMake (whereas littlecheck tests can be
+# enumerated from the filesystem). We used to compile fish_tests.cpp without linking against
+# anything (-Wl,-undefined,dynamic_lookup,--unresolved-symbols=ignore-all) to get it to print its
+# tests at configuration time, but that's a little too much dark CMake magic.
+#
+# We now identify tests by checking against a magic regex that's #define'd as a no-op C-side.
+file(READ "${CMAKE_SOURCE_DIR}/src/fish_tests.cpp" FISH_TESTS_CPP)
+string(REGEX MATCHALL "TEST_GROUP\\( *\"([^\"]+)\"" "LOW_LEVEL_TESTS" "${FISH_TESTS_CPP}")
+string(REGEX REPLACE "TEST_GROUP\\( *\"([^\"]+)\"" "\\1" "LOW_LEVEL_TESTS" "${LOW_LEVEL_TESTS}")
+list(REMOVE_DUPLICATES LOW_LEVEL_TESTS)
 
 # The directory into which fish is installed.
 set(TEST_INSTALL_DIR ${TEST_DIR}/buildroot)
@@ -75,37 +68,6 @@ add_custom_target(tests_buildroot_target
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
                           ${TEST_ROOT_DIR}
                   DEPENDS fish fish_test_helper)
-
-if(NOT FISH_IN_TREE_BUILD)
-  # We need to symlink share/functions for the tests.
-  # This should be simplified.
-  add_custom_target(symlink_functions
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ${CMAKE_CURRENT_SOURCE_DIR}/share/functions
-            ${CMAKE_CURRENT_BINARY_DIR}/share/functions)
-  add_dependencies(tests_buildroot_target symlink_functions)
-else()
-  add_custom_target(symlink_functions)
-endif()
-
-# Prep the environment for running the unit tests.
-add_custom_target(test_prep
-    # Add directories hard-coded into the tests
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/data
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/data
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/temp
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/temp
-
-    # Add the XDG_* directories
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_data
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_data
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_config
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_config
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/xdg_runtime
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}/xdg_runtime
-
-    DEPENDS tests_buildroot_target tests_dir
-    USES_TERMINAL)
 
 foreach(LTEST ${LOW_LEVEL_TESTS})
   add_test(

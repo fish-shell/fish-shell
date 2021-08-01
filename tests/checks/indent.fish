@@ -416,3 +416,19 @@ echo "\
 a=1 \\
     a=2 echo" | $fish_indent --check
 echo $status #CHECK: 0
+
+echo 'first-word\\
+ second-word' | $fish_indent
+# CHECK: first-word \
+# CHECK: {{^}}    second-word
+
+echo 'begin
+    first-indented-word\\
+        second-indented-word' | $fish_indent
+# CHECK: begin
+# CHECK: {{^}}    first-indented-word \
+# CHECK: {{^}}        second-indented-word
+
+echo 'multiline-\\
+-word' | $fish_indent --check
+echo $status #CHECK: 0

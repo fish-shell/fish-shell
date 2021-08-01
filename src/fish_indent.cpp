@@ -550,7 +550,28 @@ struct pretty_printer_t {
 
     template <type_t Type>
     void emit_node_text(const leaf_t<Type> &node) {
-        emit_text(node.range, gap_text_flags_before_node(node));
+        source_range_t range = node.range;
+
+        // Weird special-case: a token may end in an escaped newline. Notably, the newline is
+        // not part of the following gap text, handle indentation here (#8197).
+        bool ends_with_escaped_nl = node.range.length >= 2 &&
+                                    source.at(node.range.end() - 2) == L'\\' &&
+                                    source.at(node.range.end() - 1) == L'\n';
+        if (ends_with_escaped_nl) {
+            range = {range.start, range.length - 2};
+        }
+
+        emit_text(range, gap_text_flags_before_node(node));
+
+        if (ends_with_escaped_nl) {
+            // By convention, escaped newlines are preceded with a space.
+            output.append(L" \\\n");
+            // TODO Maybe check "allow_escaped_newlines" and use the precomputed indents.
+            // The cases where this matters are probably very rare.
+            current_indent++;
+            emit_space_or_indent();
+            current_indent--;
+        }
     }
 
     // Emit one newline.

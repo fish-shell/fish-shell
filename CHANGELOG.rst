@@ -18,6 +18,7 @@ Scripting improvements
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside of functions. In scripts it does the same thing as :ref:`exit <cmd-exit>`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`).
+- ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 
 Interactive improvements
 ------------------------

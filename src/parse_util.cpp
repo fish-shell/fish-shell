@@ -54,8 +54,8 @@ int parse_util_lineno(const wcstring &str, size_t offset) {
 
 int parse_util_get_line_from_offset(const wcstring &str, size_t pos) {
     // Return the line pos is on, or -1 if it's after the end.
-    if (str.length() > pos) return -1;
-    return std::count(str.begin() + pos, str.end(), L'\n');
+    if (pos > str.length()) return -1;
+    return std::count(str.begin(), str.begin() + pos, L'\n');
 }
 
 size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
@@ -63,10 +63,11 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
     if (line < 0) return static_cast<size_t>(-1);
     if (line == 0) return 0;
 
-    ssize_t i = 0;
-    while (auto pos = str.find(L'\n')) {
-        i++;
-        if (i == line) return pos + 1;
+    size_t pos = -1;
+    int count = 0;
+    while ((pos = str.find(L'\n', pos + 1)) != wcstring::npos) {
+        count++;
+        if (count == line) return pos + 1;
     }
     return static_cast<size_t>(-1);
 }
@@ -221,7 +222,6 @@ long parse_util_slice_length(const wchar_t *in) {
     assert(bracket_count > 0 && "Should have unclosed brackets");
     return -1;
 }
-
 
 int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
                                      wcstring *out_contents, size_t *out_start, size_t *out_end,
@@ -1112,8 +1112,9 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     const wcstring &com = dst.command.source(buff_src, storage);
     if (com == L"$status") {
         parse_error_offset_source_start(parse_errors, source_start);
-        errored = append_syntax_error(parse_errors, source_start,
-                                      _(L"$status is not valid as a command. See `help conditions`"));
+        errored =
+            append_syntax_error(parse_errors, source_start,
+                                _(L"$status is not valid as a command. See `help conditions`"));
     }
 
     const wcstring &unexp_command = dst.command.source(buff_src, storage);

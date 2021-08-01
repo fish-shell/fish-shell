@@ -529,7 +529,7 @@ By pressing :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓`, a history s
 
 History searches are case-insensitive unless the search string contains an uppercase character. You can stop a search to edit your search string by pressing :kbd:`Esc` or :kbd:`Page Down`.
 
-Prefixing the commandline with a space will prevent the entire line from being stored in the history.
+Prefixing the commandline with a space will prevent the entire line from being stored in the history. It will still be available for recall until the next command is executed, but will not be stored on disk. This is to allow you to fix misspellings and such.
 
 The command history is stored in the file ``~/.local/share/fish/fish_history`` (or
 ``$XDG_DATA_HOME/fish/fish_history`` if that variable is set) by default. However, you can set the

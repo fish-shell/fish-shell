@@ -33,6 +33,7 @@ struct set_cmd_opts_t {
     bool print_help = false;
     bool show = false;
     bool local = false;
+    bool function = false;
     bool global = false;
     bool exportv = false;
     bool erase = false;
@@ -57,9 +58,10 @@ enum {
 // Variables used for parsing the argument list. This command is atypical in using the "+"
 // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
 // we stop scanning for flags when the first non-flag argument is seen.
-static const wchar_t *const short_options = L"+:LSUaeghlnpqux";
+static const wchar_t *const short_options = L"+:LSUaefghlnpqux";
 static const struct woption long_options[] = {
     {L"export", no_argument, nullptr, 'x'},    {L"global", no_argument, nullptr, 'g'},
+    {L"function", no_argument, nullptr, 'f'},
     {L"local", no_argument, nullptr, 'l'},     {L"erase", no_argument, nullptr, 'e'},
     {L"names", no_argument, nullptr, 'n'},     {L"unexport", no_argument, nullptr, 'u'},
     {L"universal", no_argument, nullptr, 'U'}, {L"long", no_argument, nullptr, 'L'},
@@ -92,6 +94,10 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
             case 'e': {
                 opts.erase = true;
                 opts.preserve_failure_exit_status = false;
+                break;
+            }
+            case 'f': {
+                opts.function = true;
                 break;
             }
             case 'g': {
@@ -185,7 +191,7 @@ static int validate_cmd_opts(const wchar_t *cmd,
     }
 
     // Variables can only have one scope.
-    if (opts.local + opts.global + opts.universal > 1) {
+    if (opts.local + opts.function + opts.global + opts.universal > 1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -214,7 +220,7 @@ static int validate_cmd_opts(const wchar_t *cmd,
 
     // The --show flag cannot be combined with any other flag.
     if (opts.show &&
-        (opts.local || opts.global || opts.erase || opts.list || opts.exportv || opts.universal)) {
+        (opts.local || opts.function || opts.global || opts.erase || opts.list || opts.exportv || opts.universal)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -393,6 +399,7 @@ static wcstring_list_t erased_at_indexes(wcstring_list_t input, std::vector<long
 static env_mode_flags_t compute_scope(const set_cmd_opts_t &opts) {
     int scope = ENV_USER;
     if (opts.local) scope |= ENV_LOCAL;
+    if (opts.function) scope |= ENV_FUNCTION;
     if (opts.global) scope |= ENV_GLOBAL;
     if (opts.exportv) scope |= ENV_EXPORT;
     if (opts.unexport) scope |= ENV_UNEXPORT;

@@ -732,3 +732,77 @@ begin
     echo $CDPATH
     # CHECK: . /usr
 end
+
+# Function scope:
+set -f actuallystilllocal "this one is still local"
+set -ql actuallystilllocal
+and echo "Yep, it's local"
+# CHECK: Yep, it's local
+set -S actuallystilllocal
+#CHECK: $actuallystilllocal: set in local scope, unexported, with 1 elements
+#CHECK: $actuallystilllocal[1]: |this one is still local|
+
+# Blocks aren't functions, "function" scope is still top-level local:
+begin
+    set -f stilllocal "as local as the moon is wet"
+    echo $stilllocal
+    # CHECK: as local as the moon is wet
+end
+set -S stilllocal
+#CHECK: $stilllocal: set in local scope, unexported, with 1 elements
+#CHECK: $stilllocal[1]: |as local as the moon is wet|
+
+set -g globalvar global
+
+function test-function-scope
+    set -f funcvar "function"
+    echo $funcvar
+    # CHECK: function
+    set -S funcvar
+    #CHECK: $funcvar: set in local scope, unexported, with 1 elements
+    #CHECK: $funcvar[1]: |function|
+    begin
+        set -l funcvar "block"
+        echo $funcvar
+        # CHECK: block
+        set -S funcvar
+        #CHECK: $funcvar: set in local scope, unexported, with 1 elements
+        #CHECK: $funcvar[1]: |block|
+    end
+    echo $funcvar
+    # CHECK: function
+
+    begin
+        set -f funcvar2 "function from block"
+        echo $funcvar2
+        # CHECK: function from block
+        set -S funcvar2
+        #CHECK: $funcvar2: set in local scope, unexported, with 1 elements
+        #CHECK: $funcvar2[1]: |function from block|
+    end
+    echo $funcvar2
+    # CHECK: function from block
+    set -S funcvar2
+    #CHECK: $funcvar2: set in local scope, unexported, with 1 elements
+    #CHECK: $funcvar2[1]: |function from block|
+
+    set -l fruit banana
+    if true
+        set -f fruit orange
+    end
+    echo $fruit #orange
+    # function scope *is* the outermost local scope,
+    # so that `set -f` altered the same funcvariable as that `set -l` outside!
+    # CHECK: orange
+
+    set -f globalvar function
+    set -S globalvar
+    #CHECK: $globalvar: set in local scope, unexported, with 1 elements
+    #CHECK: $globalvar[1]: |function|
+    #CHECK: $globalvar: set in global scope, unexported, with 1 elements
+    #CHECK: $globalvar[1]: |global|
+end
+        
+test-function-scope
+echo $funcvar $funcvar2
+# CHECK:

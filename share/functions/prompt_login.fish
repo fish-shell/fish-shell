@@ -3,7 +3,7 @@ function prompt_login --description "Print a description of the user and host su
         set -g __fish_machine
         set -l debian_chroot $debian_chroot
 
-        if  test -r /etc/debian_chroot
+        if test -r /etc/debian_chroot
             set debian_chroot (cat /etc/debian_chroot)
         end
 

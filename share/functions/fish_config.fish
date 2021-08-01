@@ -36,7 +36,7 @@ function fish_config --description "Launch fish's web based configuration"
         echo No such subcommand: $cmd >&2
         return 1
     end
-        
+
     switch $cmd
         case prompt
             # prompt - for prompt switching
@@ -67,7 +67,7 @@ function fish_config --description "Launch fish's web based configuration"
                         if functions -q fish_right_prompt;
                         echo right prompt: (false; fish_right_prompt)
                     end' $p
-                    echo
+                        echo
                     end
                 case list ''
                     string replace -r '.*/([^/]*).fish$' '$1' $prompt_dir/*.fish
@@ -248,7 +248,7 @@ function fish_config --description "Launch fish's web based configuration"
                         # permanently remove the globals.
                         set $scope $toks
                         set have_color 1
-                    end < $file
+                    end <$file
 
                     # Return true if we changed at least one color
                     test $have_color -eq 1

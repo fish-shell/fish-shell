@@ -73,6 +73,11 @@ class autoload_file_cache_t {
 };
 
 maybe_t<autoloadable_file_t> autoload_file_cache_t::locate_file(const wcstring &cmd) const {
+    // If the command is empty or starts with NULL (i.e. is empty as a path)
+    // we'd try to source the *directory*, which exists.
+    // So instead ignore these here.
+    if (cmd.empty()) return none();
+    if (cmd[0] == L'\0') return none();
     // Re-use the storage for path.
     wcstring path;
     for (const wcstring &dir : dirs()) {

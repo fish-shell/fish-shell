@@ -38,6 +38,10 @@ const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
+    // Unix paths can't include a NULL-byte, that's the separator.
+    // If we let this through, we'd end up checking up to the NULL,
+    // so we'd get the wrong path.
+    if (cmd.find(L'\0') != wcstring::npos) return false;
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {

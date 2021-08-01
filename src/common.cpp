@@ -1877,7 +1877,9 @@ bool valid_var_name(const wchar_t *str) {
 bool valid_func_name(const wcstring &str) {
     if (str.empty()) return false;
     if (str.at(0) == L'-') return false;
+    // A function name needs to be a valid path, so no / and no NULL.
     if (str.find_first_of(L'/') != wcstring::npos) return false;
+    if (str.find_first_of(L'\0') != wcstring::npos) return false;
     return true;
 }
 

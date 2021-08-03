@@ -71,6 +71,7 @@ end
 complete -c set -n "fish_is_nth_token 1" -s e -l erase -d "Erase variable"
 complete -c set -n "fish_is_nth_token 1" -s x -l export -d "Export variable to subprocess"
 complete -c set -n "fish_is_nth_token 1" -s u -l unexport -d "Do not export variable to subprocess"
+complete -c set -n "fish_is_nth_token 1" -s f -l function -d "Make variable scope function"
 complete -c set -n "fish_is_nth_token 1" -s g -l global -d "Make variable scope global"
 complete -c set -n "fish_is_nth_token 1" -s l -l local -d "Make variable scope local"
 complete -c set -n "fish_is_nth_token 1" -s U -l universal -d "Share variable persistently across sessions"

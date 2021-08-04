@@ -10,6 +10,7 @@ set -l sysver (uname -sr | string match -r "(Darwin) (\d\d)"\.)
 
 if test $status -eq 0 -a (count $sysver) -eq 3
     and test $sysver[2] = Darwin -a $sysver[3] -ge 19
+    and test -x /usr/libexec/makewhatis
 
     set -l dir
     if test -n "$XDG_CACHE_HOME"

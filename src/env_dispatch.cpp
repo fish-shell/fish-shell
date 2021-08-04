@@ -599,6 +599,12 @@ static void init_locale(const environment_t &vars) {
             FLOGF(env_locale, L"Failed to fix locale");
         }
     }
+    // We *always* use a C-locale for numbers,
+    // because we always want "." except for in printf.
+    setlocale(LC_NUMERIC, "C");
+
+    // See that we regenerate our special locale for numbers.
+    fish_invalidate_numeric_locale();
 
     fish_setlocale();
     FLOGF(env_locale, L"init_locale() setlocale(): '%s'", locale);

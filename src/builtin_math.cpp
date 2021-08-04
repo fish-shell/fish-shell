@@ -228,15 +228,6 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
 
     int retval = STATUS_CMD_OK;
     te_error_t error;
-    // Switch locale while computing stuff.
-    // This means that the "." is always the radix character,
-    // so numbers work the same across locales.
-    //
-    // TODO: Technically this is only needed for *output* currently,
-    // because we already use wcstod_l while computing,
-    // but we can't have math print numbers that it won't then also read.
-    char *saved_locale = strdup(setlocale(LC_NUMERIC, nullptr));
-    setlocale(LC_NUMERIC, "C");
     double v = te_interp(expression.c_str(), &error);
 
     if (error.position == 0) {
@@ -266,8 +257,6 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
         streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ", L"^");
         retval = STATUS_CMD_ERROR;
     }
-    setlocale(LC_NUMERIC, saved_locale);
-    free(saved_locale);
     return retval;
 }
 

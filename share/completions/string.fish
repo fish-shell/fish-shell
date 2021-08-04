@@ -6,6 +6,7 @@ complete -f -c string -n "test (count (commandline -opc)) -ge 2; and not contain
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a lower
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a upper
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a length
+complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] length" -s v -l visible -d "Use the visible width, excluding escape sequences"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a sub
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sub" -s s -l start -xa "(seq 1 10)"
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sub" -s e -l end -xa "(seq 1 10)"

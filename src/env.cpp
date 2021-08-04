@@ -1251,6 +1251,13 @@ mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
             result.global_modified = true;
         } else if (query.local) {
             result.status = remove_from_chain(locals_, key) ? ENV_OK : ENV_NOT_FOUND;
+        } else if (query.function) {
+            auto node = locals_;
+            while (node->next) {
+                node = node->next;
+                if (node->new_scope) break;
+            }
+            result.status = remove_from_chain(node, key) ? ENV_OK : ENV_NOT_FOUND;
         } else {
             DIE("Unknown scope");
         }

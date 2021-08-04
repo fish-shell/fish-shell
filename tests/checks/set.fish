@@ -806,3 +806,17 @@ end
 test-function-scope
 echo $funcvar $funcvar2
 # CHECK:
+
+function erase-funcvar
+    set -l banana 1
+    begin
+        set -l banana 2
+        set -ef banana
+        echo $banana
+        # CHECK: 2
+    end
+    echo $banana
+    # CHECK:
+end
+
+erase-funcvar

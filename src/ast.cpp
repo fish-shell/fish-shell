@@ -232,33 +232,33 @@ static std::pair<source_range_t, const wchar_t *> find_block_open_keyword(const 
                 break;
             case type_t::for_header: {
                 const auto *h = cursor->as<for_header_t>();
-                return std::make_pair(h->kw_for.range, L"for loop");
+                return {h->kw_for.range, L"for loop"};
             }
             case type_t::while_header: {
                 const auto *h = cursor->as<while_header_t>();
-                return std::make_pair(h->kw_while.range, L"while loop");
+                return {h->kw_while.range, L"while loop"};
             }
             case type_t::function_header: {
                 const auto *h = cursor->as<function_header_t>();
-                return std::make_pair(h->kw_function.range, L"function definition");
+                return {h->kw_function.range, L"function definition"};
             }
             case type_t::begin_header: {
                 const auto *h = cursor->as<begin_header_t>();
-                return std::make_pair(h->kw_begin.range, L"begin");
+                return {h->kw_begin.range, L"begin"};
             }
             case type_t::if_statement: {
                 const auto *h = cursor->as<if_statement_t>();
-                return std::make_pair(h->if_clause.kw_if.range, L"if statement");
+                return {h->if_clause.kw_if.range, L"if statement"};
             }
             case type_t::switch_statement: {
                 const auto *h = cursor->as<switch_statement_t>();
-                return std::make_pair(h->kw_switch.range, L"switch statement");
+                return {h->kw_switch.range, L"switch statement"};
             }
             default:
-                return std::make_pair(source_range_t{}, nullptr);
+                return {source_range_t{}, nullptr};
         }
     }
-    return std::make_pair(source_range_t{}, nullptr);
+    return {source_range_t{}, nullptr};
 }
 
 /// \return the decoration for this statement.

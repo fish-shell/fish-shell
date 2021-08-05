@@ -387,7 +387,7 @@ rgb_color_t highlight_color_resolver_t::resolve_spec(const highlight_spec_t &hig
                                                      bool is_background,
                                                      const environment_t &vars) {
     auto &cache = is_background ? bg_cache_ : fg_cache_;
-    auto p = cache.insert(std::make_pair(highlight, rgb_color_t{}));
+    auto p = cache.emplace(highlight, rgb_color_t{});
     auto iter = p.first;
     bool did_insert = p.second;
     if (did_insert) {

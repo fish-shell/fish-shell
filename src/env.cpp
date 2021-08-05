@@ -682,9 +682,9 @@ std::shared_ptr<owning_null_terminated_array_t> env_scoped_impl_t::create_export
         assert(var && "Variable should be present in uvars");
         // Note that std::map::insert does NOT overwrite a value already in the map,
         // which we depend on here.
-        // Note: Using std::move around make_pair prevents the compiler from implementing
+        // Note: Using std::move around emplace prevents the compiler from implementing
         // copy elision.
-        vals.insert(std::make_pair(key, std::move(*var)));
+        vals.emplace(key, std::move(*var));
     }
 
     // Dorky way to add our single exported computed variable.

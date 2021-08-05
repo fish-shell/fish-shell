@@ -701,7 +701,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
         // And once again I make sure the first character is uppercased because I like it that
         // way, and I get to decide these things.
         val.at(0) = towupper(val.at(0));
-        lookup.insert(std::make_pair(std::move(key), std::move(val)));
+        lookup.emplace(std::move(key), std::move(val));
     }
 
     // Then do a lookup on every completion and if a match is found, change to the new

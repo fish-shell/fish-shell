@@ -21,8 +21,14 @@ die() {
 
 # To keep things sane and to make error messages comprehensible, do not use relative paths anywhere
 # in this script. Instead, make all paths relative to one of these or $homedir."
-TESTS_ROOT="$(realpath "$(dirname "$0")")"
-BUILD_ROOT="$(realpath "${TESTS_ROOT}/..")"
+TESTS_ROOT="$(dirname "$0")"
+BUILD_ROOT="${TESTS_ROOT}/.."
+
+# macOS (still!) doesn't have `readlink -f` or `realpath`. That's OK, this is just for aesthetics.
+if command -v realpath 1>/dev/null 2>/dev/null; then
+    TESTS_ROOT="$(realpath --no-symlinks "${TESTS_ROOT}")"
+    BUILD_ROOT="$(realpath --no-symlinks "${BUILD_ROOT}")"
+fi
 
 if ! test -z "$__fish_is_running_tests"; then
     echo "Recursive test invocation detected!" 1>&2

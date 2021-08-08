@@ -4341,6 +4341,11 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count, siz
 }
 
 void history_tests_t::test_history_races() {
+    // This always fails under WSL
+    if (is_windows_subsystem_for_linux()) {
+        return;
+    }
+
     say(L"Testing history race conditions");
 
     // It appears TSAN and ASAN's allocators do not release their locks properly in atfork, so
@@ -6772,8 +6777,12 @@ void list_tests() {
 
 /// Main test.
 int main(int argc, char **argv) {
-    UNUSED(argc);
     setlocale(LC_ALL, "");
+
+    if (argc >= 2 && std::strcmp(argv[1], "--list") == 0) {
+        list_tests();
+        return 0;
+    }
 
     // Look for the file tests/test.fish. We expect to run in a directory containing that file.
     // If we don't find it, walk up the directory hierarchy until we do, or error.
@@ -6819,103 +6828,11 @@ int main(int argc, char **argv) {
     // Set PWD from getcwd - fixes #5599
     env_stack_t::principal().set_pwd_from_getcwd();
 
-    if (should_test_function("utility_functions")) test_utility_functions();
-    if (should_test_function("string_split")) test_split_string_tok();
-    if (should_test_function("wwrite_to_fd")) test_wwrite_to_fd();
-    if (should_test_function("env_vars")) test_env_vars();
-    if (should_test_function("env")) test_env_snapshot();
-    if (should_test_function("str_to_num")) test_str_to_num();
-    if (should_test_function("enum")) test_enum_set();
-    if (should_test_function("enum")) test_enum_array();
-    if (should_test_function("highlighting")) test_highlighting();
-    if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
-    if (should_test_function("new_parser_fuzzing"))
-        test_new_parser_fuzzing();  // fuzzing is expensive
-    if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
-    if (should_test_function("new_parser_ad_hoc")) test_new_parser_ad_hoc();
-    if (should_test_function("new_parser_errors")) test_new_parser_errors();
-    if (should_test_function("error_messages")) test_error_messages();
-    if (should_test_function("escape")) test_unescape_sane();
-    if (should_test_function("escape")) test_escape_crazy();
-    if (should_test_function("escape")) test_escape_quotes();
-    if (should_test_function("format")) test_format();
-    if (should_test_function("convert")) test_convert();
-    if (should_test_function("convert")) test_convert_private_use();
-    if (should_test_function("convert_ascii")) test_convert_ascii();
-    if (should_test_function("perf_convert_ascii", false)) perf_convert_ascii();
-    if (should_test_function("convert_nulls")) test_convert_nulls();
-    if (should_test_function("tokenizer")) test_tokenizer();
-    if (should_test_function("fd_monitor")) test_fd_monitor();
-    if (should_test_function("iothread")) test_iothread();
-    if (should_test_function("pthread")) test_pthread();
-    if (should_test_function("debounce")) test_debounce();
-    if (should_test_function("debounce")) test_debounce_timeout();
-    if (should_test_function("parser")) test_parser();
-    if (should_test_function("cancellation")) test_cancellation();
-    if (should_test_function("indents")) test_indents();
-    if (should_test_function("utf8")) test_utf8();
-    if (should_test_function("feature_flags")) test_feature_flags();
-    if (should_test_function("escape_sequences")) test_escape_sequences();
-    if (should_test_function("pcre2_escape")) test_pcre2_escape();
-    if (should_test_function("lru")) test_lru();
-    if (should_test_function("expand")) test_expand();
-    if (should_test_function("expand")) test_expand_overflow();
-    if (should_test_function("fuzzy_match")) test_fuzzy_match();
-    if (should_test_function("ifind")) test_ifind();
-    if (should_test_function("ifind_fuzzy")) test_ifind_fuzzy();
-    if (should_test_function("abbreviations")) test_abbreviations();
-    if (should_test_function("test")) test_test();
-    if (should_test_function("wcstod")) test_wcstod();
-    if (should_test_function("dup2s")) test_dup2s();
-    if (should_test_function("dup2s")) test_dup2s_fd_for_target_fd();
-    if (should_test_function("path")) test_path();
-    if (should_test_function("pager_navigation")) test_pager_navigation();
-    if (should_test_function("pager_layout")) test_pager_layout();
-    if (should_test_function("word_motion")) test_word_motion();
-    if (should_test_function("is_potential_path")) test_is_potential_path();
-    if (should_test_function("colors")) test_colors();
-    if (should_test_function("complete")) test_complete();
-    if (should_test_function("autoload")) test_autoload();
-    if (should_test_function("input")) test_input();
-    if (should_test_function("line_iterator")) test_line_iterator();
-    if (should_test_function("undo")) test_undo();
-    if (should_test_function("universal")) test_universal();
-    if (should_test_function("universal")) test_universal_output();
-    if (should_test_function("universal")) test_universal_parsing();
-    if (should_test_function("universal")) test_universal_parsing_legacy();
-    if (should_test_function("universal")) test_universal_callbacks();
-    if (should_test_function("universal")) test_universal_formats();
-    if (should_test_function("universal")) test_universal_ok_to_save();
-    if (should_test_function("notifiers")) test_universal_notifiers();
-    if (should_test_function("wait_handles")) test_wait_handles();
-    if (should_test_function("completion_insertions")) test_completion_insertions();
-    if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
-    if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
-    if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
-    if (should_test_function("history")) history_tests_t::test_history();
-    if (should_test_function("history_merge")) history_tests_t::test_history_merge();
-    if (should_test_function("history_paths")) history_tests_t::test_history_path_detection();
-    if (!is_windows_subsystem_for_linux()) {
-        // this test always fails under WSL
-        if (should_test_function("history_races")) history_tests_t::test_history_races();
+    for (const auto &test : s_tests) {
+        if (should_test_function(test.group)) {
+            test.test();
+        }
     }
-    if (should_test_function("history_formats")) history_tests_t::test_history_formats();
-    if (should_test_function("string")) test_string();
-    if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
-    if (should_test_function("maybe")) test_maybe();
-    if (should_test_function("layout_cache")) test_layout_cache();
-    if (should_test_function("prompt")) test_prompt_truncation();
-    if (should_test_function("normalize")) test_normalize_path();
-    if (should_test_function("dirname")) test_dirname_basename();
-    if (should_test_function("topics")) test_topic_monitor();
-    if (should_test_function("topics")) test_topic_monitor_torture();
-    if (should_test_function("pipes")) test_pipes();
-    if (should_test_function("fd_event")) test_fd_event_signaller();
-    if (should_test_function("timer_format")) test_timer_format();
-    // history_tests_t::test_history_speed();
-
-    if (should_test_function("termsize")) termsize_tester_t::test();
-    if (should_test_function("killring")) test_killring();
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");

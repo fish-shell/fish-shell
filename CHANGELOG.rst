@@ -31,6 +31,7 @@ New or improved bindings
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
+- The ``prompt_pwd`` helper function learned a ``--full-length-dirs N`` option to keep the last N directory components unshortened. In addition the number of characters to shorten each component should be shortened to can now be given as ``-d N`` or ``--dir-length N``. (:issue:`8208`)
 
 Completions
 ^^^^^^^^^^^

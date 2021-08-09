@@ -59,7 +59,7 @@ The following other options are available:
 
 - ``-e`` or ``--erase`` causes the specified shell variables to be erased
 
-- ``-q`` or ``--query`` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined, or 255 if more than 255 variables are not defined.
+- ``-q`` or ``--query`` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined, up to a maximum of 255. If no variable was given, it also returns 255.
 
 - ``-n`` or ``--names``: List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
 

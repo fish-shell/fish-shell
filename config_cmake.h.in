@@ -156,6 +156,9 @@
 /* Define if xlocale.h is required for locale_t or wide character support */
 #cmakedefine HAVE_XLOCALE_H 1
 
+/* Define if uselocale is available */
+#cmakedefine HAVE_USELOCALE 1
+
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE
 # define _DARWIN_USE_64_BIT_INODE 1

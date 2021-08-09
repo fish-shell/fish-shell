@@ -146,6 +146,8 @@ endif()
 list(APPEND WCSTOD_L_INCLUDES "wchar.h")
 check_cxx_symbol_exists(wcstod_l "${WCSTOD_L_INCLUDES}" HAVE_WCSTOD_L)
 
+check_cxx_symbol_exists(uselocale locale.h HAVE_USELOCALE)
+
 cmake_push_check_state()
 set(CMAKE_EXTRA_INCLUDE_FILES termios.h sys/ioctl.h)
 check_type_size("struct winsize" STRUCT_WINSIZE LANGUAGE CXX)

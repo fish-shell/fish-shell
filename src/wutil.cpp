@@ -547,8 +547,9 @@ void fish_invalidate_numeric_locale() {
 
 locale_t fish_numeric_locale() {
     // The current locale, except LC_NUMERIC isn't forced to C.
-    static locale_t loc;
+    static locale_t loc = 0;
     if (!fish_numeric_locale_is_valid) {
+        if (loc != 0) freelocale(loc);
         auto cur = duplocale(LC_GLOBAL_LOCALE);
         loc = newlocale(LC_NUMERIC_MASK, "", cur);
         fish_numeric_locale_is_valid = true;

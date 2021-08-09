@@ -466,6 +466,10 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     int retval = 0;
     env_mode_flags_t scope = compute_scope(opts);
 
+    // No variables given, this is an error.
+    // 255 is the maximum return code we allow.
+    if (argc == 0) return 255;
+
     for (int i = 0; i < argc; i++) {
         auto split = split_var_and_indexes(argv[i], scope, parser.vars(), streams);
         if (!split) {

@@ -820,3 +820,11 @@ function erase-funcvar
 end
 
 erase-funcvar
+
+set --query $this_is_not_set
+echo $status
+# CHECK: 255
+
+set --query
+echo $status
+# CHECK: 255

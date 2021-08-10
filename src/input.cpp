@@ -360,9 +360,8 @@ wchar_t inputter_t::function_pop_arg() {
 
 void inputter_t::function_push_args(readline_cmd_t code) {
     int arity = input_function_arity(code);
-    // Use a thread-local to prevent constant heap thrashing in the main input loop
-    static FISH_THREAD_LOCAL std::vector<char_event_t> skipped;
-    skipped.clear();
+    assert(event_storage_.empty() && "event_storage_ should be empty");
+    auto &skipped = event_storage_;
 
     for (int i = 0; i < arity; i++) {
         // Skip and queue up any function codes. See issue #2357.
@@ -380,6 +379,7 @@ void inputter_t::function_push_args(readline_cmd_t code) {
 
     // Push the function codes back into the input stream.
     this->insert_front(skipped.begin(), skipped.end());
+    event_storage_.clear();
 }
 
 /// Perform the action of the specified binding. allow_commands controls whether fish commands
@@ -664,10 +664,8 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
 /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
 /// readline function.
 char_event_t inputter_t::read_characters_no_readline() {
-    // Use a thread-local vector to prevent repeated heap allocation, as this is called in the main
-    // input loop.
-    static FISH_THREAD_LOCAL std::vector<char_event_t> saved_events;
-    saved_events.clear();
+    assert(event_storage_.empty() && "saved_events_storage should be empty");
+    auto &saved_events = event_storage_;
 
     char_event_t evt_to_return{0};
     for (;;) {
@@ -682,6 +680,7 @@ char_event_t inputter_t::read_characters_no_readline() {
 
     // Restore any readline functions
     this->insert_front(saved_events.cbegin(), saved_events.cend());
+    event_storage_.clear();
     return evt_to_return;
 }
 

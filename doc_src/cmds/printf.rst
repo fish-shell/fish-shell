@@ -103,4 +103,4 @@ See Also
 
 Footnotes
 ---------
-.. [#] (in fact while fish's ``echo`` supports ``--``, POSIX forbids it, so other implementations can't be used if the input contains anything starting with ``-``)
+.. [#] In fact, while fish's ``echo`` supports ``--``, POSIX forbids it, so other implementations can't be used if the input contains anything starting with ``-``.

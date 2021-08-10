@@ -24,7 +24,8 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-Vi mode cursors are now set properly after control-C. (:issue:`8125`).
+- vi mode cursors are now set properly after control-C. (:issue:`8125`).
+- vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

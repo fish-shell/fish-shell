@@ -1067,7 +1067,34 @@ complete -f -c git -n __fish_git_needs_command -a archive -d 'Create an archive 
 
 ### bisect
 complete -f -c git -n __fish_git_needs_command -a bisect -d 'Find the change that introduced a bug by binary search'
-# TODO options
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_prev_arg_in bisect' -xa "
+start\t'Start a new bisect session'
+bad\t'Mark a commit as bad'
+new\t'Mark a commit as new'
+good\t'Mark a commit as good'
+old\t'Mark a commit as old'
+terms\t'Show terms used for new/old states'
+skip\t'Skip some commits'
+reset\t'Exit a bisect session and reset HEAD'
+visualize\t'See remaining commits in gitk'
+replay\t'Replay a bisect log file'
+log\t'Record a bisect log file'
+run\t'Bisect automaically with the given command as discriminator'
+help\t'Print a synopsis of all commands'
+"
+complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --' -F
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l term-new -l term-bad -x -d 'Use another term instead of new/bad'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l term-old -l term-good -x -d 'Use another term instead of old/good'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l no-checkout -d 'Do not checkout tree, only update BISECT_HEAD'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l first-parent -d 'On merge commits, follow only the first parent commit'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start; and not contains -- -- (commandline -opc)' -a '(__fish_git_refs)'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from bad new good old' -a '(__fish_git_refs)'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from terms' -l --term-good -d 'Print the term for the old state'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from terms' -l --term-bad -d 'Print the term for the new state'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from skip' -a '(__fish_git_ranges)'
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from reset' -a '(__fish_git_refs)'
+complete -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from replay' -F
+complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from run' -xa '(__fish_complete_subcommand --fcs-skip=3)'
 
 ### branch
 complete -f -c git -n __fish_git_needs_command -a branch -d 'List, create, or delete branches'
@@ -2070,10 +2097,6 @@ complete -f -c git -n '__fish_git_using_command config' -l name-only -d 'Show va
 complete -f -c git -n '__fish_git_using_command config' -l includes -d 'Respect include directives'
 complete -f -c git -n '__fish_git_using_command config' -l show-origin -d 'Show origin of configuration'
 complete -f -c git -n '__fish_git_using_command config; and __fish_seen_argument get' -l default -d 'Use default value when missing entry'
-
-complete -c git -n '__fish_prev_arg_in bisect' -xa "help start bad good new old terms skip next reset visualize view replay log run"
-complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --' -F
-
 
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n __fish_git_needs_command -a '(__fish_git_custom_commands)' -d 'Custom command'

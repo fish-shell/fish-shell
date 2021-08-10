@@ -166,6 +166,9 @@ function funced --description 'Edit function definition'
                 end
             else if set -q _flag_save
                 funcsave $funcname
+            else
+                printf (_ "Run funcsave %s to save this function to the configuration directory.") $funcname
+                echo
             end
         end
         break

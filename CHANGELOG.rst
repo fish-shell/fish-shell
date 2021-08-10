@@ -28,6 +28,7 @@ Interactive improvements
 ------------------------
 - vi mode cursors are now set properly after control-C. (:issue:`8125`).
 - vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
+- ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

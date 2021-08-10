@@ -83,10 +83,16 @@ function funced --description 'Edit function definition'
     or return 1
     set -l tmpname $tmpdir/$funcname.fish
 
-    if functions -q -- $funcname
-        functions -- $funcname >$tmpname
-    else
+    set -l writepath
+
+    if not functions -q -- $funcname
         echo $init >$tmpname
+    else if functions --details -- $funcname | string match --invert --quiet --regex '^(?:-|stdin)$'
+        set writepath (functions --details -- $funcname)
+        # Use cat here rather than cp to avoid copying permissions
+        cat "$writepath" >$tmpname
+    else
+        functions -- $funcname >$tmpname
     end
 
     # Repeatedly edit until it either parses successfully, or the user cancels
@@ -113,7 +119,7 @@ function funced --description 'Edit function definition'
                 # Failed to source the function file. Prompt to try again.
                 echo # add a line between the parse error and the prompt
                 set -l repeat
-                set -l prompt (_ 'Edit the file again\? [Y/n]')
+                set -l prompt (_ 'Edit the file again? [Y/n]')
                 read -p "echo $prompt\  " response
                 if test -z "$response"
                     or contains $response {Y,y}{E,e,}{S,s,}
@@ -124,6 +130,40 @@ function funced --description 'Edit function definition'
                     continue
                 end
                 echo (_ "Cancelled function editing")
+            else if test -n "$writepath"
+                if not set -q _flag_save
+                    echo (_ "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed.")
+                    set -l prompt (printf (_ 'Save function to %s? [Y/n]') "$writepath")
+                    read --prompt-str "$prompt " response
+                    if test -z "$response"
+                        or contains $response {Y,y}{E,e,}{S,s,}
+                        set _flag_save 1
+                    else if not contains $response {N,n}{O,o,}
+                        echo "I don't understand '$response', assuming 'Yes'"
+                        set _flag_save 1
+                    end
+                end
+                if set -q _flag_save
+                    # try to write the file back
+                    # cp preserves existing permissions, though it might overwrite the owner
+                    if cp $tmpname "$writepath" 2>&1
+                        printf (_ "Function saved to %s") "$writepath"
+                        echo
+                        # read it back again - this ensures that the output of `functions --details` is correct
+                        source "$writepath"
+                    else
+                        echo (_ "Saving to original location failed; saving to user configuration instead.")
+                        set writepath $__fish_config_dir/functions/(basename "$writepath")
+                        if cp $tmpname "$writepath"
+                            printf (_ "Function saved to %s") "$writepath"
+                            echo
+                            # read it back again - this ensures that the output of `functions --details` is correct
+                            source "$writepath"
+                        else
+                            echo (_ "Saving to user configuration failed. Changes may be lost when fish is closed.")
+                        end
+                    end
+                end
             else if set -q _flag_save
                 funcsave $funcname
             end

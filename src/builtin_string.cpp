@@ -210,8 +210,8 @@ static size_t width_without_escapes(wcstring ins) {
         if (w > 0) width += w;
     }
 
-    // Go to all escape characters, measure escape sequence,
-    // subtract its min-0-width.
+    // ANSI escape sequences like \e\[31m contain printable characters. Subtract their width
+    // because they are not rendered.
     size_t pos = 0;
     while ((pos = ins.find('\x1B', pos)) != std::string::npos) {
         auto len = escape_code_length(ins.c_str() + pos);
@@ -608,9 +608,10 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
-    {'f', handle_flag_f}, {'g', handle_flag_g}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
-    {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
-    {'V', handle_flag_V}, {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
+    {'f', handle_flag_f}, {'g', handle_flag_g}, {'i', handle_flag_i}, {'l', handle_flag_l},
+    {'m', handle_flag_m}, {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r},
+    {'s', handle_flag_s}, {'V', handle_flag_V}, {'v', handle_flag_v}, {'w', handle_flag_w},
+    {1, handle_flag_1}};
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
 static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, const wchar_t **argv,
@@ -772,8 +773,8 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
             // Visible length only makes sense line-wise.
             for (auto &line : split_string(*arg, L'\n')) {
                 size_t max = 0;
-                // Carriage-return returns us to the beginning,
-                // the longest string stays.
+                // Carriage-return returns us to the beginning. The longest substring without
+                // carriage-return determines the overall width.
                 for (auto &reset : split_string(line, L'\r')) {
                     size_t n = width_without_escapes(reset);
                     if (n > max) max = n;

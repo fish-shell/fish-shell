@@ -1,7 +1,4 @@
 function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowing
-    # Pass --commandline to complete the remainder of the arguments instead of the commandline.
-    # Other args are considered flags to the supercommand that require an option.
-
     # How many non-option tokens we skip in the input commandline before completing the subcommand
     # Usually 1; for ssh 2.
     set -l skip_next 1
@@ -12,7 +9,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
         switch $arg
             case '--fcs-skip=*'
                 set skip_next (string split = -- $arg)[2]
-            case --commandline
+            case --commandline # --commandline means to use our arguments instead of the commandline.
                 set subcommand $argv
                 set -e argv
                 break

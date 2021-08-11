@@ -32,7 +32,9 @@ $tmux new-session -x 80 -y 10 -d $fish -C '
         commandline -f repaint
     end
 '
-
+# Set the correct permissions for the newly created socket to allow future connections.
+# This is required at least under WSL or else each invocation will return a permissions error.
+chmod 777 .tmux-socket
 $sleep # Let fish draw a prompt.
 
 $tmux capture-pane -p

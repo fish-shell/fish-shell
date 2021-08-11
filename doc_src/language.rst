@@ -462,16 +462,6 @@ When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk")
 
 - ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the ``qmark-noglob`` :ref:`feature flag<featureflags>`, so ``?`` will just be an ordinary character.
 
-Other shells, such as zsh, have a much richer glob syntax, like ``**(.)`` to only match regular files. Fish does not. Instead of reinventing the wheel, use programs like ``find`` to look for files. For example::
-
-    function ff --description 'Like ** but only returns plain files.'
-        # This also ignores .git directories.
-        find . \( -name .git -type d -prune \) -o -type f | \
-            sed -n -e '/^\.\/\.git$/n' -e 's/^\.\///p'
-    end
-
-You would then use it in place of ``**`` like this, ``my_prog (ff)``, to pass only regular files in or below $PWD to ``my_prog``. [#]_
-
 Wildcard matches are sorted case insensitively. When sorting matches containing numbers, they are naturally sorted, so that the strings '1' '5' and '12' would be sorted like 1, 5, 12.
 
 Hidden files (where the name begins with a dot) are not considered when wildcarding unless the wildcard string has a dot in that place.
@@ -479,8 +469,6 @@ Hidden files (where the name begins with a dot) are not considered when wildcard
 Examples:
 
 - ``a*`` matches any files beginning with an 'a' in the current directory.
-
-- ``???`` matches any file in the current directory whose name is exactly three characters long.
 
 - ``**`` matches any files and directories in the current directory and all of its subdirectories.
 

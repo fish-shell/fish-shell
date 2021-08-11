@@ -499,6 +499,10 @@ Examples::
         ls $foos
     end
 
+Unlike bash (by default), fish will not pass on the literal glob character if no match was found, so for a command like ``apt install`` that does the matching itself, you need to add quotes::
+
+    apt install "ncurses-*"
+
 .. [#] Technically, unix allows filenames with newlines, and this splits the ``find`` output on newlines. If you want to avoid that, use find's ``-print0`` option and :ref:`string split0<cmd-string-split0>`.
 
 .. _expand-variable:

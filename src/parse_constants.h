@@ -224,7 +224,7 @@ enum class pipeline_position_t {
 #define ILLEGAL_FD_ERR_MSG _(L"Illegal file descriptor in redirection '%ls'")
 
 /// Error message for wildcards with no matches.
-#define WILDCARD_ERR_MSG _(L"No matches for wildcard '%ls'. See `help expand`.")
+#define WILDCARD_ERR_MSG _(L"No matches for wildcard '%ls'. See `help wildcards-globbing`.")
 
 /// Error message when an expansion produces too many results, e.g. `echo /**`.
 #define EXPAND_OVERFLOW_ERR_MSG _(L"Too many items produced by '%ls'.")

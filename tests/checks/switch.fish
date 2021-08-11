@@ -88,7 +88,7 @@ switch $smurf
     case "*"
         echo Test 2 fail
 end
-#CHECKERR: {{.*}}switch.fish (line {{\d+}}): No matches for wildcard '*ee*'. See `help expand`.
+#CHECKERR: {{.*}}switch.fish (line {{\d+}}): No matches for wildcard '*ee*'. See `help wildcards-globbing`.
 #CHECKERR: case *ee*
 #CHECKERR: ^
 #CHECK: Test 2 pass

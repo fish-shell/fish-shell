@@ -164,6 +164,26 @@ div.body pre {
     border: 1px solid #ac9;
 }
 
+div.highlight {
+    /* For the button to be positionable inside us */
+    position: relative;
+}
+
+div.highlight pre {
+    padding: 10px;
+}
+
+pre button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    opacity: 0;
+}
+
+div.highlight pre:hover > button {
+    opacity: 1;
+}
+
 div.body div.admonition, div.body div.impl-detail {
     border-radius: 3px;
 }

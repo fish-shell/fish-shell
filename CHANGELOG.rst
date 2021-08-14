@@ -22,6 +22,7 @@ Scripting improvements
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped. (:issue:`565`, :issue:`8145`).
 - ``string pad`` now excludes escape sequences like colors that fish knows about, and a new ``--visible`` flag to ``string length`` makes it use that kind of visible width. This is useful to get the number of terminal cells an already colored string would occupy, like in a prompt. (:issue:`8182`, :issue:`7784`, :issue:`4012`)
+- ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This is enough to implement transient prompts in a slightly awkward way (:issue:`8142`).
 
 Interactive improvements
 ------------------------

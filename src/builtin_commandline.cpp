@@ -142,6 +142,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     bool line_mode = false;
     bool search_mode = false;
     bool paging_mode = false;
+    bool is_valid = false;
     const wchar_t *begin = nullptr, *end = nullptr;
     const wchar_t *override_buffer = nullptr;
 
@@ -165,6 +166,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                                                   {L"line", no_argument, nullptr, 'L'},
                                                   {L"search-mode", no_argument, nullptr, 'S'},
                                                   {L"paging-mode", no_argument, nullptr, 'P'},
+                                                  {L"is-valid", no_argument, nullptr, 1},
                                                   {nullptr, 0, nullptr, 0}};
 
     int opt;
@@ -234,6 +236,10 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             }
             case 'P': {
                 paging_mode = true;
+                break;
+            }
+            case 1: {
+                is_valid = true;
                 break;
             }
             case 'h': {
@@ -385,6 +391,18 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             builtin_print_error_trailer(parser, streams.err, cmd);
         }
         return STATUS_CMD_ERROR;
+    }
+
+    if (is_valid) {
+        if (!*current_buffer) return 1;
+        parser_test_error_bits_t res =
+            parse_util_detect_errors(current_buffer,
+                                     NULL,
+                                     true /* accept incomplete so we can tell the difference */);
+        if (res & PARSER_TEST_INCOMPLETE) {
+            return 2;
+        }
+        return res & PARSER_TEST_ERROR ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }
 
     switch (buffer_part) {

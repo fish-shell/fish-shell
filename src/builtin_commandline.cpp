@@ -396,8 +396,13 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     if (is_valid) {
         if (!*current_buffer) return 1;
         parser_test_error_bits_t res =
-            parse_util_detect_errors(current_buffer, NULL, false /* do not accept incomplete */);
-        return res & PARSER_TEST_ERROR ? 1 : 0;
+            parse_util_detect_errors(current_buffer,
+                                     NULL,
+                                     true /* accept incomplete so we can tell the difference */);
+        if (res & PARSER_TEST_INCOMPLETE) {
+            return 2;
+        }
+        return res & PARSER_TEST_ERROR ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }
 
     switch (buffer_part) {

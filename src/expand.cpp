@@ -174,33 +174,27 @@ wcstring expand_escape_string(const wcstring &el) {
     return buff;
 }
 
+enum class parse_slice_error_t {
+    none,
+    zero_index,
+    invalid_index,
+};
+
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.
-static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx,
-                          size_t array_size) {
+static size_t parse_slice(const wchar_t * const in, wchar_t ** const end_ptr,
+        std::vector<long> &idx, size_t array_size, parse_slice_error_t * const error) {
     const long size = static_cast<long>(array_size);
     size_t pos = 1;  // skip past the opening square brace
 
-    int zero_index = -1;
-    bool literal_zero_index = true;
+    *error = parse_slice_error_t::none;
 
     while (true) {
         while (iswspace(in[pos]) || (in[pos] == INTERNAL_SEPARATOR)) pos++;
         if (in[pos] == L']') {
             pos++;
             break;
-        }
-
-        // Explicitly refuse $foo[0] as valid syntax, regardless of whether or not we're going
-        // to show an error if the index ultimately evaluates to zero. This will help newcomers
-        // to fish avoid a common off-by-one error. See #4862.
-        if (literal_zero_index) {
-            if (in[pos] == L'0') {
-                zero_index = pos;
-            } else {
-                literal_zero_index = false;
-            }
         }
 
         const wchar_t *end;
@@ -216,6 +210,13 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
                 // We don't test `*end` as is typically done because we expect it to not be the null
                 // char. Ignore the case of errno==-1 because it means the end char wasn't the null
                 // char.
+                *error = parse_slice_error_t::invalid_index;
+                return pos;
+            } else if (tmp == 0) {
+                // Explicitly refuse $foo[0] as valid syntax, regardless of whether or not we're going
+                // to show an error if the index ultimately evaluates to zero. This will help newcomers
+                // to fish avoid a common off-by-one error. See #4862.
+                *error = parse_slice_error_t::zero_index;
                 return pos;
             }
         }
@@ -238,6 +239,10 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
                 tmp1 = fish_wcstol(&in[pos], &end);
                 // Ignore the case of errno==-1 because it means the end char wasn't the null char.
                 if (errno > 0) {
+                    *error = parse_slice_error_t::invalid_index;
+                    return pos;
+                } else if (tmp1 == 0) {
+                    *error = parse_slice_error_t::zero_index;
                     return pos;
                 }
             }
@@ -268,12 +273,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             continue;
         }
 
-        literal_zero_index = literal_zero_index && tmp == 0;
         idx.push_back(i1);
-    }
-
-    if (literal_zero_index && zero_index != -1) {
-        return zero_index;
     }
 
     if (end_ptr) {
@@ -385,14 +385,20 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
         } else if (history) {
             effective_val_count = history->size();
         }
-        size_t bad_pos =
-            parse_slice(in + slice_start, &slice_end, var_idx_list, effective_val_count);
+        parse_slice_error_t parse_error;
+        size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, effective_val_count, &parse_error);
         if (bad_pos != 0) {
-            if (in[slice_start + bad_pos] == L'0') {
-                append_syntax_error(errors, slice_start + bad_pos,
-                                    L"array indices start at 1, not 0.");
-            } else {
-                append_syntax_error(errors, slice_start + bad_pos, L"Invalid index value");
+            switch (parse_error) {
+                case parse_slice_error_t::none:
+                    assert(false && "bad_pos != 0 but parse_slice_error_t::none!");
+                    break;
+                case parse_slice_error_t::zero_index:
+                    append_syntax_error(errors, slice_start + bad_pos,
+                                        L"array indices start at 1, not 0.");
+                    break;
+                case parse_slice_error_t::invalid_index:
+                    append_syntax_error(errors, slice_start + bad_pos, L"Invalid index value");
+                    break;
             }
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
@@ -679,13 +685,20 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
         std::vector<long> slice_idx;
         const wchar_t *const slice_begin = in + tail_begin;
         wchar_t *slice_end = nullptr;
-        size_t bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
+        parse_slice_error_t parse_error;
+        size_t bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size(), &parse_error);
         if (bad_pos != 0) {
-            if (slice_begin[bad_pos] == L'0') {
-                append_syntax_error(errors, slice_begin - in + bad_pos,
-                                    L"array indices start at 1, not 0.");
-            } else {
-                append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
+            switch (parse_error) {
+                case parse_slice_error_t::none:
+                    assert(false && "bad_pos != 0 but parse_slice_error_t::none!");
+                    break;
+                case parse_slice_error_t::zero_index:
+                    append_syntax_error(errors, slice_begin - in + bad_pos,
+                                        L"array indices start at 1, not 0.");
+                    break;
+                case parse_slice_error_t::invalid_index:
+                    append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
+                    break;
             }
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }

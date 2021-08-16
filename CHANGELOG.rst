@@ -8,7 +8,7 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
-- A new feature flag ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob`` this allows to write some URLs without quoting or escaping (:issue:`7991`)
+- A new feature flag, ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob``, this allows entering most URLs at the command line without quoting or escaping (:issue:`7991`).
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`).
 - ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are likely to be bugs (:issue:`8214`).
 
@@ -26,9 +26,10 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-- vi mode cursors are now set properly after control-C. (:issue:`8125`).
-- vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
+- Vi mode cursors are now set properly after control-C. (:issue:`8125`).
+- Vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
+- ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -49,11 +50,12 @@ Completions
   - ``az`` (:issue:`8141`)
   - ``qmk`` (:issue:`8180`)
 
-- Improvements to many completions, especially for ``git`` subcommands (:issue:`8134`).
+- Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
+- Directory history navigation works out of the box with Apple Terminal's default key settings (:issue:`2330`).
 
 For distributors
 ----------------

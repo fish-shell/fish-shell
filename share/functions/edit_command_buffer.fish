@@ -2,7 +2,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     set -l f (mktemp)
     or return 1
     if set -q f[1]
-        mv $f $f.fish
+        command mv $f $f.fish
         set f $f.fish
     else
         # We should never execute this block but better to be paranoid.
@@ -11,7 +11,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         else
             set f /tmp/fish.$fish_pid.fish
         end
-        touch $f
+        command touch $f
         or return 1
     end
 

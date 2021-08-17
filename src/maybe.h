@@ -2,6 +2,7 @@
 #define FISH_MAYBE_H
 
 #include <cassert>
+#include <new>
 #include <type_traits>
 #include <utility>
 

@@ -329,7 +329,7 @@ void iothread_perform_on_main(const void_function_t &func) {
         wait_until_done.set_value();
     };
     // Append it. Ensure we don't hold the lock after.
-    s_main_thread_queue.acquire()->requests.push_back(std::move(handler));
+    s_main_thread_queue.acquire()->requests.emplace_back(std::move(handler));
 
     // Tell the signaller and then wait until our future is set.
     get_notify_signaller().post();

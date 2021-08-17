@@ -80,7 +80,7 @@ class debounce_t {
 
     /// One-argument form with no completion.
     /// The result is a token which is only of interest to the tests.
-    uint64_t perform(std::function<void()> func);
+    uint64_t perform(std::function<void()> handler);
 
     explicit debounce_t(long timeout_msec = 0);
     ~debounce_t();

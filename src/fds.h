@@ -130,7 +130,7 @@ class fd_event_signaller_t {
     /// If an event is signalled, consume it; otherwise return.
     /// This does not block.
     /// This retries on EINTR.
-    bool try_consume();
+    bool try_consume() const;
 
     /// Mark that an event has been received. This may be coalesced.
     /// This retries on EINTR.

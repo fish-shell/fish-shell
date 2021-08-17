@@ -824,7 +824,7 @@ class highlighter_t {
     void visit(const ast::variable_assignment_t &varas);
     void visit(const ast::semi_nl_t &semi_nl);
     void visit(const ast::decorated_statement_t &stmt);
-    void visit(const ast::block_statement_t &header);
+    void visit(const ast::block_statement_t &block);
 
     // Visit an argument, perhaps knowing that our command is cd.
     void visit(const ast::argument_t &arg, bool cmd_is_cd = false);

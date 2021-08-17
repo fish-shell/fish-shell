@@ -2065,8 +2065,8 @@ static void test_lru() {
 struct test_environment_t : public environment_t {
     std::map<wcstring, wcstring> vars;
 
-    virtual maybe_t<env_var_t> get(const wcstring &key,
-                                   env_mode_flags_t mode = ENV_DEFAULT) const override {
+    maybe_t<env_var_t> get(const wcstring &key,
+                           env_mode_flags_t mode = ENV_DEFAULT) const override {
         UNUSED(mode);
         auto iter = vars.find(key);
         if (iter != vars.end()) {
@@ -2087,8 +2087,8 @@ struct test_environment_t : public environment_t {
 
 /// A test environment that knows about PWD.
 struct pwd_environment_t : public test_environment_t {
-    virtual maybe_t<env_var_t> get(const wcstring &key,
-                                   env_mode_flags_t mode = ENV_DEFAULT) const override {
+    maybe_t<env_var_t> get(const wcstring &key,
+                           env_mode_flags_t mode = ENV_DEFAULT) const override {
         if (key == L"PWD") {
             return env_var_t{wgetcwd(), 0};
         }

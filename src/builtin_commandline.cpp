@@ -395,10 +395,8 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     if (is_valid) {
         if (!*current_buffer) return 1;
-        parser_test_error_bits_t res =
-            parse_util_detect_errors(current_buffer,
-                                     NULL,
-                                     true /* accept incomplete so we can tell the difference */);
+        parser_test_error_bits_t res = parse_util_detect_errors(
+            current_buffer, nullptr, true /* accept incomplete so we can tell the difference */);
         if (res & PARSER_TEST_INCOMPLETE) {
             return 2;
         }

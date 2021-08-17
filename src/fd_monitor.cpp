@@ -199,7 +199,7 @@ void fd_monitor_t::run_in_background() {
     }
 }
 
-void fd_monitor_t::poke_in_background(const poke_list_t &pokelist) {
+void fd_monitor_t::poke_in_background(poke_list_t pokelist) {
     ASSERT_IS_BACKGROUND_THREAD();
     auto poker = [&pokelist](fd_monitor_item_t &item) {
         int fd = item.fd.fd();

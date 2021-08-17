@@ -381,7 +381,7 @@ class output_stream_t : noncopyable_t, nonmovable_t {
     void push_back(wchar_t c) { append(c); }
 
     // Append data from a narrow buffer, widening it.
-    void append_narrow_buffer(const separated_buffer_t &buffer);
+    void append_narrow_buffer(separated_buffer_t buffer);
 
     /// Append a format string.
     void append_format(const wchar_t *format, ...) {

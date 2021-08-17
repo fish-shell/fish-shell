@@ -3,18 +3,36 @@ fish 3.4.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
+- fish's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results (:issue:`159`)::
+
+    foo (bar | string collect)
+    # can now be written as
+    foo "$(bar)"
+
+    # and
+
+    foo (bar)
+    # can now be written as
+    foo $(bar)
+    # this will still split on newlines only.
+
 - Complimenting the ``prompt`` command in 3.3.0, ``fish_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a webbrowser. For example ``fish_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`). The current theme can be saved with ``fish_config theme dump`` and custom themes can be added by saving them in ``~/.config/fish/themes/``.
-- fish's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results (:issue:`159`).
 
 Deprecations and removed features
 ---------------------------------
-- A new feature flag, ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob``, this allows entering most URLs at the command line without quoting or escaping (:issue:`7991`).
-- ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`).
-- ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are likely to be bugs (:issue:`8214`).
+- A new feature flag, ``ampersand-nobg-in-token`` makes ``&`` only act as background operator if followed by a separator. In combination with ``qmark-noglob``, this allows entering most URLs at the command line without quoting or escaping (:issue:`7991`). For example::
+
+    > echo foo&bar # will print "foo&bar", instead of running "echo foo" in the background and executing "bar"
+    > echo foo & bar # will still run "echo foo" in the background and then run "bar"
+    # with both ampersand-nobg-in-token and qmark-noglob, this argument has no special characters anymore
+    > open https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=youtu.be
+
+- ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
+- ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are almost certainly buggy (:issue:`8214`).
 
 Scripting improvements
 ----------------------
-- ``string collect`` supports a new ``--allow-empty`` option, which will output one empty argument in a command substitution that has no output (:issue:`8054`). This allows commands like ``test -n (echo -n | string collect --allow-empty)`` to work more reliably.
+- ``string collect`` supports a new ``--allow-empty`` option, which will output one empty argument in a command substitution that has no output (:issue:`8054`). This allows commands like ``test -n (echo -n | string collect --allow-empty)`` to work more reliably. Note this can also be written as ``test -n "$(echo -n)"`` (see above).
 - ``string match`` gained a ``--groups-only`` option, which makes it only output capturing groups, excluding the full match. This allows ``string match`` to do simple transformations (:issue:`6056`)::
 
     > string match -r --groups-only '(.*)fish' 'catfish' 'twofish' 'blue fish' | string escape
@@ -24,7 +42,7 @@ Scripting improvements
 
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside of functions. In scripts it does the same thing as :ref:`exit <cmd-exit>`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
-- An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`).
+- An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks like e.g. ``exec`` not being allowed in a pipeline and ``$$`` not being a valid variable. Most of these would have triggered an assert or other error before.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped. (:issue:`565`, :issue:`8145`)::
 

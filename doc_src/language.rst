@@ -1417,11 +1417,13 @@ You can see the current list of features via ``status features``::
     regex-easyesc           off 3.1 string replace -r needs fewer \\'s
     ampersand-nobg-in-token off 3.4 & only backgrounds if followed by a separating character
 
-There are two breaking changes in fish 3.0: caret ``^`` no longer redirects stderr, and question mark ``?`` is no longer a glob.
+Here is what they mean:
 
-There is one breaking change in fish 3.1: ``string replace -r`` does a superfluous round of escaping for the replacement, so escaping backslashes would look like ``string replace -ra '([ab])' '\\\\\\\$1' a``. This flag removes that if turned on, so ``'\\\\$1'`` is enough.
+- ``stderr-nocaret`` was introduced in fish 3.0 (and made the default in 3.3). It makes ``^`` an ordinary character instead of denoting an stderr redirection, to make dealing with quoting and such easier. Use ``2>`` instead.
+- ``qmark-noglob`` was also introduced in fish 3.0. It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
+- ``regex-easyesy`` was introduced in 3.1. It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` cals if you use this anywhere.
+- ``ampersand-nobg-in-token`` was introduced in fish 3.4. It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
 
-There is one breaking change in fish 3.4: in ``echo https://example.com/?q=hello&qq=goodbye`` the ``&`` is no longer interpreted as backgrounding operator.
 
 These changes are introduced off by default. They can be enabled on a per session basis::
 
@@ -1437,7 +1439,9 @@ Features will only be set on startup, so this variable will only take effect if 
 
 You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob".
 
-Prefixing a feature with ``no-`` turns it off instead.
+Prefixing a feature with ``no-`` turns it off instead. E.g. to reenable the ``^`` redirection::
+
+  set -Ua fish_features no-stderr-nocaret
 
 Currently, the following features are enabled by default:
 

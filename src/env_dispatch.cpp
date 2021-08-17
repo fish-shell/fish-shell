@@ -175,10 +175,9 @@ static void guess_emoji_width(const environment_t &vars) {
         g_guessed_fish_emoji_width = 2;
         FLOGF(term_support, "default emoji width: 2 for %ls", term.c_str());
     } else if (term == L"iTerm.app") {
-        // iTerm2 defaults to Unicode 8 sizes.
-        // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
-        g_guessed_fish_emoji_width = 1;
-        FLOGF(term_support, "default emoji width: 1");
+        // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12.
+        g_guessed_fish_emoji_width = 2;
+        FLOGF(term_support, "default emoji width for iTerm: 2");
     } else {
         // Default to whatever system wcwidth says to U+1F603,
         // but only if it's at least 1.

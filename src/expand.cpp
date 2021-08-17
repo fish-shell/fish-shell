@@ -739,8 +739,8 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
         }
         wcstring sub_res_joined;
         sub_res_joined.reserve(approx_size);
-        for (size_t i = 0; i < sub_res.size(); i++) {
-            sub_res_joined.append(escape_string_for_double_quotes(std::move(sub_res.at(i))));
+        for (const wcstring &line : sub_res) {
+            sub_res_joined.append(escape_string_for_double_quotes(std::move(line)));
             sub_res_joined.push_back(L'\n');
         }
         // Mimic POSIX shells by stripping all trailing newlines.

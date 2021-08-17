@@ -4089,13 +4089,13 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     std::unique_ptr<universal_notifier_t> notifiers[notifier_count];
 
     // Populate array of notifiers.
-    for (size_t i = 0; i < notifier_count; i++) {
-        notifiers[i] = universal_notifier_t::new_notifier_for_strategy(strategy, UVARS_TEST_PATH);
+    for (auto &notifier : notifiers) {
+        notifier = universal_notifier_t::new_notifier_for_strategy(strategy, UVARS_TEST_PATH);
     }
 
     // Nobody should poll yet.
-    for (size_t i = 0; i < notifier_count; i++) {
-        if (poll_notifier(notifiers[i])) {
+    for (const auto &notifier : notifiers) {
+        if (poll_notifier(notifier)) {
             err(L"Universal variable notifier polled true before any changes, with strategy %d",
                 (int)strategy);
         }
@@ -4139,15 +4139,15 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
             // Have to clean up the posted one first, so that the others see the pipe become no
             // longer readable.
             poll_notifier(notifiers[post_idx]);
-            for (size_t i = 0; i < notifier_count; i++) {
-                poll_notifier(notifiers[i]);
+            for (const auto &notifier : notifiers) {
+                poll_notifier(notifier);
             }
         }
     }
 
     // Nobody should poll now.
-    for (size_t i = 0; i < notifier_count; i++) {
-        if (poll_notifier(notifiers[i])) {
+    for (const auto &notifier : notifiers) {
+        if (poll_notifier(notifier)) {
             err(L"Universal variable notifier polled true after all changes, with strategy %d",
                 (int)strategy);
         }

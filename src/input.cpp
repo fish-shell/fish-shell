@@ -896,7 +896,7 @@ wcstring_list_t input_terminfo_get_names(bool skip_null) {
         if (skip_null && !m.seq) {
             continue;
         }
-        result.push_back(wcstring(m.name));
+        result.emplace_back(m.name);
     }
     return result;
 }

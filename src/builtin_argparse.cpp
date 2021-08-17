@@ -521,7 +521,7 @@ static int validate_and_store_implicit_int(parser_t &parser, const argparse_cmd_
 
     // It's a valid integer so store it and return success.
     opt_spec->vals.clear();
-    opt_spec->vals.push_back(wcstring(val));
+    opt_spec->vals.emplace_back(val);
     opt_spec->num_seen++;
     w.nextchar = nullptr;
     return STATUS_CMD_OK;

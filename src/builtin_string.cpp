@@ -1112,7 +1112,7 @@ class pcre2_matcher_t final : public string_matcher_t {
                 // resulting array, and unfortunately fish doesn't support empty/null members so
                 // we're going to have to use an empty string as the sentinel value.
                 if (!value_found && all_flag_) {
-                    vals.push_back(wcstring{});
+                    vals.emplace_back();
                 }
             }
         }

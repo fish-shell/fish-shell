@@ -56,7 +56,7 @@ class outputter_t {
     bool write_color(rgb_color_t color, bool is_fg);
 
     /// Set the foreground and background color.
-    void set_color(rgb_color_t c, rgb_color_t c2);
+    void set_color(rgb_color_t fg, rgb_color_t bg);
 
     /// Write a wide character to the receiver.
     void writech(wchar_t ch) { writestr(&ch, 1); }

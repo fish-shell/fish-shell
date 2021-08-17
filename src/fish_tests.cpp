@@ -6217,7 +6217,7 @@ void test_prompt_truncation() {
 
     /// Helper to return 'layout' formatted as a string for easy comparison.
     auto format_layout = [&] {
-        wcstring line_breaks = L"";
+        wcstring line_breaks;
         bool first = true;
         for (const size_t line_break : layout.line_breaks) {
             if (!first) {

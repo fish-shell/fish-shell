@@ -100,7 +100,7 @@ fd_event_signaller_t::fd_event_signaller_t() {
 int fd_event_signaller_t::write_fd() const { return write_.fd(); }
 #endif
 
-bool fd_event_signaller_t::try_consume() {
+bool fd_event_signaller_t::try_consume() const {
     // If we are using eventfd, we want to read a single uint64.
     // If we are using pipes, read a lot; note this may leave data on the pipe if post has been
     // called many more times. In no case do we care about the data which is read.

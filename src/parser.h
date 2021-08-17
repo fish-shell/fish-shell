@@ -269,10 +269,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// to profile_items). deque does not move items on reallocation.
     std::deque<profile_item_t> profile_items;
 
-    // No copying allowed.
-    parser_t(const parser_t &);
-    parser_t &operator=(const parser_t &);
-
     /// Adds a job to the beginning of the job list.
     void job_add(shared_ptr<job_t> job);
 
@@ -290,6 +286,10 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     static std::shared_ptr<parser_t> principal;
 
    public:
+    // No copying allowed.
+    parser_t(const parser_t &) = delete;
+    parser_t &operator=(const parser_t &) = delete;
+
     /// Get the "principal" parser, whatever that is.
     static parser_t &principal_parser();
 

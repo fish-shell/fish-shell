@@ -722,8 +722,8 @@ static launch_result_t exec_block_or_func_process(parser_t &parser, const std::s
 
 static proc_performer_t get_performer_for_builtin(
     process_t *p, job_t *job, const io_chain_t &io_chain,
-    const std::shared_ptr<output_stream_t> output_stream,
-    const std::shared_ptr<output_stream_t> errput_stream) {
+    const std::shared_ptr<output_stream_t> &output_stream,
+    const std::shared_ptr<output_stream_t> &errput_stream) {
     assert(p->type == process_type_t::builtin && "Process must be a builtin");
 
     // Determine if we have a "direct" redirection for stdin.

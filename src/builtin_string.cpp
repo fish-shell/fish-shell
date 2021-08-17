@@ -201,7 +201,7 @@ struct options_t {  //!OCLINT(too many fields)
     escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
 };
 
-static size_t width_without_escapes(wcstring ins) {
+static size_t width_without_escapes(const wcstring &ins) {
     ssize_t width = 0;
     // TODO: this is the same as fish_wcwidth_min_0 from screen.cpp
     // Make that reusable (and add a wcswidth version).

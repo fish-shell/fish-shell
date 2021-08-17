@@ -171,7 +171,7 @@ static bool pushd(const char *path) {
         err(L"getcwd() from pushd() failed: errno = %d", errno);
         return false;
     }
-    pushed_dirs.push_back(cwd);
+    pushed_dirs.emplace_back(cwd);
 
     // We might need to create the directory. We don't care if this fails due to the directory
     // already being present.
@@ -2099,7 +2099,7 @@ struct pwd_environment_t : public test_environment_t {
         auto res = test_environment_t::get_names(flags);
         res.clear();
         if (std::count(res.begin(), res.end(), L"PWD") == 0) {
-            res.push_back(L"PWD");
+            res.emplace_back(L"PWD");
         }
         return res;
     }
@@ -5508,7 +5508,7 @@ static void test_highlighting() {
         for (const highlight_component_t &comp : components) {
             if (!text.empty() && !comp.nospace) {
                 text.push_back(L' ');
-                expected_colors.push_back(highlight_spec_t{});
+                expected_colors.emplace_back();
             }
             text.append(comp.txt);
             expected_colors.resize(text.size(), comp.color);

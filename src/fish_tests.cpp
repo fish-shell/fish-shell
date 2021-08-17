@@ -1991,7 +1991,7 @@ class test_lru_t : public lru_cache_t<test_lru_t, int> {
 
     std::vector<value_type> evicted;
 
-    void entry_was_evicted(const wcstring &key, int val) { evicted.push_back({key, val}); }
+    void entry_was_evicted(const wcstring &key, int val) { evicted.emplace_back(key, val); }
 
     std::vector<value_type> values() const {
         std::vector<value_type> result;
@@ -2020,12 +2020,12 @@ static void test_lru() {
     for (int i = 0; i < total_nodes; i++) {
         do_test(cache.size() == size_t(std::min(i, 16)));
         do_test(cache.values() == expected_values);
-        if (i < 4) expected_evicted.push_back({to_string(i), i});
+        if (i < 4) expected_evicted.emplace_back(to_string(i), i);
         // Adding the node the first time should work, and subsequent times should fail.
         do_test(cache.insert(to_string(i), i));
         do_test(!cache.insert(to_string(i), i + 1));
 
-        expected_values.push_back({to_string(i), i});
+        expected_values.emplace_back(to_string(i), i);
         while (expected_values.size() > test_lru_t::test_capacity) {
             expected_values.erase(expected_values.begin());
         }
@@ -2135,7 +2135,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
 
     va_start(va, flags);
     while ((arg = va_arg(va, wchar_t *)) != NULL) {
-        expected.push_back(wcstring(arg));
+        expected.emplace_back(arg);
     }
     va_end(va);
 
@@ -5078,7 +5078,7 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
 
         // Don't return empty strings.
         if (next_specifier > cursor) {
-            result.push_back(wcstring(cursor, next_specifier - cursor));
+            result.emplace_back(cursor, next_specifier - cursor);
         }
 
         // Walk over the format specifier (if any).

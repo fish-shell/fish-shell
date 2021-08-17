@@ -2806,7 +2806,7 @@ static int read_i(parser_t &parser) {
     }
 
     // If we are the last reader, then kill remaining jobs before exiting.
-    if (reader_data_stack.size() == 0) {
+    if (reader_data_stack.empty()) {
         // Send the exit event and then commit to not executing any more fish script.
         s_exit_state = exit_state_t::running_handlers;
         event_fire_generic(parser, L"fish_exit");
@@ -2992,7 +2992,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::cancel_commandline: {
-            if (command_line.size()) {
+            if (!command_line.empty()) {
                 outputter_t &outp = outputter_t::stdoutput();
                 // Move cursor to the end of the line.
                 update_buff_pos(&command_line, command_line.size());

@@ -1539,7 +1539,7 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
     int retval = parse_opts(&opts, &optind, is_split0 ? 0 : 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    if (opts.fields.size() < 1 && opts.allow_empty) {
+    if (opts.fields.empty() && opts.allow_empty) {
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
                                   _(L"--allow-empty is only valid with --fields"));
         return STATUS_INVALID_ARGS;
@@ -1584,7 +1584,7 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
                 // Remove the last element if it is empty.
                 if (splits.back().empty()) splits.pop_back();
             }
-            if (opts.fields.size() > 0) {
+            if (!opts.fields.empty()) {
                 // Print nothing and return error if any of the supplied
                 // fields do not exist, unless `--allow-empty` is used.
                 if (!opts.allow_empty) {

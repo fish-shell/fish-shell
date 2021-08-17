@@ -68,33 +68,6 @@ printf '%e\n' "2,34" # should fail
 # CHECK: 2.000000e+00
 # CHECKERR: 2,34: value not completely converted
 
-# Try to use one of several locales that use a comma as the decimal mark
-# rather than the period used in english speaking locales. If we don't find
-# one installed we simply don't run this test.
-#
-# musl currently does not have a `locale` command, so we also skip it then.
-set -l locales (command -sq locale; and locale -a)
-set -l acceptable_locales bg_BG de_DE es_ES fr_FR ru_RU
-set -l numeric_locale
-for locale in {$acceptable_locales}.{UTF-8,UTF8}
-    if string match -i -q $locale $locales
-        set numeric_locale $locale
-        break
-    end
-end
-
-# OpenBSD's wcstod does not honor LC_NUMERIC, meaning this feature is broken there.
-if set -q numeric_locale[1]; and test (uname) != OpenBSD
-    set -x LC_NUMERIC $numeric_locale
-    printf '%e\n' "3,45" # should succeed, output should be 3,450000e+00
-    printf '%e\n' "4.56" # should succeed, output should be 4,560000e+00
-else
-    echo '3,450000e+00'
-    echo '4,560000e+00'
-end
-# CHECK: 3,450000e+00
-# CHECK: 4,560000e+00
-
 # Verify long long ints are handled correctly. See issue #3352.
 printf 'long hex1 %x\n' 498216206234
 # CHECK: long hex1 73ffffff9a

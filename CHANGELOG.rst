@@ -15,13 +15,33 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - ``string collect`` supports a new ``--allow-empty`` option, which will output one empty argument in a command substitution that has no output (:issue:`8054`). This allows commands like ``test -n (echo -n | string collect --allow-empty)`` to work more reliably.
-- ``string match`` gained a ``--groups-only`` option, which makes it only output capturing groups, excluding the full match. This allows ``string match`` to do simple transformations (:issue:`6056`).
+- ``string match`` gained a ``--groups-only`` option, which makes it only output capturing groups, excluding the full match. This allows ``string match`` to do simple transformations (:issue:`6056`)::
+
+    > string match -r --groups-only '(.*)fish' 'catfish' 'twofish' 'blue fish' | string escape
+    cat
+    two
+    'blue '
+
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside of functions. In scripts it does the same thing as :ref:`exit <cmd-exit>`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`).
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
-- ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped. (:issue:`565`, :issue:`8145`).
-- ``string pad`` now excludes escape sequences like colors that fish knows about, and a new ``--visible`` flag to ``string length`` makes it use that kind of visible width. This is useful to get the number of terminal cells an already colored string would occupy, like in a prompt. (:issue:`8182`, :issue:`7784`, :issue:`4012`)
+- ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped. (:issue:`565`, :issue:`8145`)::
+
+    function demostration
+        if true
+            set --function foo bar
+            set --local baz banana
+        end
+        echo $foo # prints "bar" because $foo is still valid
+        echo $baz # prints nothing because $baz went out of scope
+    end
+
+- ``string pad`` now excludes escape sequences like colors that fish knows about, and a new ``--visible`` flag to ``string length`` makes it use that kind of visible width. This is useful to get the number of terminal cells an already colored string would occupy, like in a prompt. (:issue:`8182`, :issue:`7784`, :issue:`4012`)::
+
+    > string length --visible (set_color red)foo
+    3
+
 - ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This is enough to implement transient prompts in a slightly awkward way (:issue:`8142`).
 
 Interactive improvements
@@ -36,7 +56,10 @@ New or improved bindings
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
-- The ``prompt_pwd`` helper function learned a ``--full-length-dirs N`` option to keep the last N directory components unshortened. In addition the number of characters to shorten each component should be shortened to can now be given as ``-d N`` or ``--dir-length N``. (:issue:`8208`)
+- The ``prompt_pwd`` helper function learned a ``--full-length-dirs N`` option to keep the last N directory components unshortened. In addition the number of characters to shorten each component should be shortened to can now be given as ``-d N`` or ``--dir-length N``. (:issue:`8208`)::
+
+    > prompt_pwd --full-length-dirs 2 -d 1 ~/dev/fish-shell/share/tools/web_config
+    ~/d/f/s/tools/web_config
 
 Completions
 ^^^^^^^^^^^
@@ -56,6 +79,7 @@ Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
 - Directory history navigation works out of the box with Apple Terminal's default key settings (:issue:`2330`).
+- Fish now defaults $fish_emoji_width to 2 (the post Unicode 9 value) for iTerm 2 (:issue:`8200`).
 
 For distributors
 ----------------

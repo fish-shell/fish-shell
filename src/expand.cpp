@@ -963,13 +963,13 @@ class expander_t {
     /// An expansion stage is a member function pointer.
     /// It accepts the input string (transferring ownership) and returns the list of output
     /// completions by reference. It may return an error, which halts expansion.
-    using stage_t = expand_result_t (expander_t::*)(wcstring, completion_receiver_t *);
+    using stage_t = expand_result_t (expander_t::*)(wcstring &&, completion_receiver_t *);
 
-    expand_result_t stage_cmdsubst(wcstring input, completion_receiver_t *out);
-    expand_result_t stage_variables(wcstring input, completion_receiver_t *out);
-    expand_result_t stage_braces(wcstring input, completion_receiver_t *out);
-    expand_result_t stage_home_and_self(wcstring input, completion_receiver_t *out);
-    expand_result_t stage_wildcards(wcstring path_to_expand, completion_receiver_t *out);
+    expand_result_t stage_cmdsubst(wcstring &&input, completion_receiver_t *out);
+    expand_result_t stage_variables(wcstring &&input, completion_receiver_t *out);
+    expand_result_t stage_braces(wcstring &&input, completion_receiver_t *out);
+    expand_result_t stage_home_and_self(wcstring &&input, completion_receiver_t *out);
+    expand_result_t stage_wildcards(wcstring &&path_to_expand, completion_receiver_t *out);
 
     expander_t(const operation_context_t &ctx, expand_flags_t flags, parse_error_list_t *errors)
         : ctx(ctx), flags(flags), errors(errors) {}
@@ -980,7 +980,7 @@ class expander_t {
                                          parse_error_list_t *errors);
 };
 
-expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t *out) {
+expand_result_t expander_t::stage_cmdsubst(wcstring &&input, completion_receiver_t *out) {
     if (flags & expand_flag::skip_cmdsubst) {
         size_t cur = 0, start = 0, end;
         switch (parse_util_locate_cmdsubst_range(input, &cur, nullptr, &start, &end, true)) {
@@ -1002,7 +1002,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t
     }
 }
 
-expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_t *out) {
+expand_result_t expander_t::stage_variables(wcstring &&input, completion_receiver_t *out) {
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.
     wcstring next;
@@ -1024,11 +1024,11 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_
     }
 }
 
-expand_result_t expander_t::stage_braces(wcstring input, completion_receiver_t *out) {
+expand_result_t expander_t::stage_braces(wcstring &&input, completion_receiver_t *out) {
     return expand_braces(std::move(input), flags, out, errors);
 }
 
-expand_result_t expander_t::stage_home_and_self(wcstring input, completion_receiver_t *out) {
+expand_result_t expander_t::stage_home_and_self(wcstring &&input, completion_receiver_t *out) {
     if (!(flags & expand_flag::skip_home_directories)) {
         expand_home_directory(input, ctx.vars);
     }
@@ -1039,7 +1039,7 @@ expand_result_t expander_t::stage_home_and_self(wcstring input, completion_recei
     return expand_result_t::ok;
 }
 
-expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_receiver_t *out) {
+expand_result_t expander_t::stage_wildcards(wcstring &&path_to_expand, completion_receiver_t *out) {
     expand_result_t result = expand_result_t::ok;
 
     remove_internal_separator(&path_to_expand, flags & expand_flag::skip_wildcards);

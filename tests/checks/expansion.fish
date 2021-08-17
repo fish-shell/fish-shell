@@ -222,6 +222,19 @@ expansion $foo[4..-2]
 set -l foo a
 expansion $foo[2..-1]
 #CHECK: 0
+expansion $foo[0]
+#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): array indices start at 1, not 0.
+#CHECKERR: expansion $foo[0]
+#CHECKERR: ^
+# see https://github.com/fish-shell/fish-shell/issues/8213
+expansion $foo[1..0]
+#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): array indices start at 1, not 0.
+#CHECKERR: expansion $foo[1..0]
+#CHECKERR: ^
+expansion $foo[-0]
+#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): array indices start at 1, not 0.
+#CHECKERR: expansion $foo[-0]
+#CHECKERR: ^
 
 echo "$foo[d]"
 #CHECKERR: {{.*}}expansion.fish (line {{\d+}}): Invalid index value

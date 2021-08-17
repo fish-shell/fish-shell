@@ -179,13 +179,11 @@ class universal_notifier_t {
         strategy_named_pipe,
     };
 
+    universal_notifier_t(const universal_notifier_t &) = delete;
+    universal_notifier_t &operator=(const universal_notifier_t &) = delete;
+
    protected:
     universal_notifier_t();
-
-   private:
-    // No copying.
-    universal_notifier_t &operator=(const universal_notifier_t &);
-    universal_notifier_t(const universal_notifier_t &x);
 
    public:
     static notifier_strategy_t resolve_default_strategy();

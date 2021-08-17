@@ -105,8 +105,7 @@ bool path_is_executable(const std::string &path) {
         if (errno != EACCES) wperror(L" stat");
         return false;
     }
-    if (!S_ISREG(buff.st_mode)) return false;
-    return true;
+    return S_ISREG(buff.st_mode);
 }
 
 /// \return 1 if the path is remote, 0 if local, -1 if unknown.

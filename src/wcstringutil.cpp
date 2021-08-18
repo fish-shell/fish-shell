@@ -182,13 +182,12 @@ maybe_t<string_fuzzy_match_t> string_fuzzy_match_t::try_create(const wcstring &s
     }
 
     // substr samecase
-    size_t location;
-    if ((location = match_against.find(string)) != wcstring::npos) {
+    if (match_against.find(string) != wcstring::npos) {
         return string_fuzzy_match_t{contain_type_t::substr, case_fold_t::samecase};
     }
 
     // substr icase
-    if ((location = ifind(match_against, string, true /* fuzzy */)) != wcstring::npos) {
+    if (ifind(match_against, string, true /* fuzzy */) != wcstring::npos) {
         return string_fuzzy_match_t{contain_type_t::substr, get_case_fold()};
     }
 

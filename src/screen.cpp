@@ -249,7 +249,7 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 /// the escape sequence based on querying terminfo and other heuristics.
 maybe_t<size_t> escape_code_length(const wchar_t *code) {
     assert(code != nullptr);
-    if (*code != L'\x1B') return 0;
+    if (*code != L'\x1B') return none();
 
     size_t esc_seq_len = 0;
     bool found = is_color_escape_seq(code, &esc_seq_len);
@@ -259,7 +259,8 @@ maybe_t<size_t> escape_code_length(const wchar_t *code) {
     if (!found) found = is_three_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
-    return esc_seq_len;
+
+    return found ? maybe_t<size_t>{esc_seq_len} : none();
 }
 
 size_t layout_cache_t::escape_code_length(const wchar_t *code) {

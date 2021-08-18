@@ -29,7 +29,7 @@ Deprecations and removed features
 
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
 - ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are almost certainly buggy (:issue:`8214`).
-- Command substitutions no longer respect job control, instead running inside fish's own process group. This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
+- Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
 
 Scripting improvements
 ----------------------
@@ -47,7 +47,7 @@ Scripting improvements
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped. (:issue:`565`, :issue:`8145`)::
 
-    function demostration
+    function demonstration
         if true
             set --function foo bar
             set --local baz banana
@@ -61,7 +61,8 @@ Scripting improvements
     > string length --visible (set_color red)foo
     3
 
-- ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This is enough to implement transient prompts in a slightly awkward way (:issue:`8142`).
+- ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This will allow a basic implementation of transient prompts (:issue:`8142`).
+- List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
 
 Interactive improvements
 ------------------------
@@ -69,6 +70,7 @@ Interactive improvements
 - Vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
 - ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
+- ``cd ""`` no longer crashes fish (:issue:`8147`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -93,16 +95,18 @@ Completions
   - ``qmk`` (:issue:`8180`)
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
+- The ``fish_is_nth_token`` function, which is particularly useful in completions for identifying the token number within the command line, replaces various internal functions to do the same (:issue:`8008`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
 - Directory history navigation works out of the box with Apple Terminal's default key settings (:issue:`2330`).
-- Fish now defaults $fish_emoji_width to 2 (the post Unicode 9 value) for iTerm 2 (:issue:`8200`).
+- fish now assumes Unicode 9+ widths for emoji under iTerm 2 (:issue:`8200`).
 
 For distributors
 ----------------
 - The minimum version of CMake required to build fish was raised to 3.5.0.
+- The CMake installation supports absolute paths for ``CMAKE_INSTALL_DATADIR`` (:issue:`8150`).
 
 --------------
 

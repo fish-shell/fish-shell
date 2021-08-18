@@ -27,8 +27,8 @@ end
 
 complete -c apt -f
 
-complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_apt_packages | head -n 250 | sort)'
-complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_apt_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)' -d Package
+complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_apt_packages | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250 | sort)'
+complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_apt_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)'
 complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -a '(__fish_complete_suffix .deb)'
 
 complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-recommends

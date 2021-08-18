@@ -1076,12 +1076,15 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
             }
             pipe_next_read = std::move(pipes->read);
             proc_pipes.write = std::move(pipes->write);
-        }
 
-        // Save any deferred process for last.
-        if (p == deferred_process) {
-            deferred_pipes = std::move(proc_pipes);
-            continue;
+            // Save any deferred process for last. By definition, the deferred process can never be
+            // the last process in the job, so it's safe to nest this in the outer
+            // `if (!p->is_last_in_job)` block, which makes it clear that `proc_next_read` will
+            // always be assigned when we `continue` the loop.
+            if (p == deferred_process) {
+                deferred_pipes = std::move(proc_pipes);
+                continue;
+            }
         }
 
         // Regular process.

@@ -1002,6 +1002,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t
     }
 }
 
+// We pass by value to match other stages. NOLINTNEXTLINE(performance-unnecessary-value-param)
 expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_t *out) {
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.

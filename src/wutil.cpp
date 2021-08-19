@@ -207,24 +207,6 @@ static inline void safe_append(char *buffer, const char *s, size_t buffsize) {
     std::strncat(buffer, s, buffsize - std::strlen(buffer) - 1);
 }
 
-void safe_perror(const char *message) {
-    // Note we cannot use strerror, because on Linux it uses gettext, which is not safe.
-    int err = errno;
-
-    char buff[384];
-    buff[0] = '\0';
-
-    if (message) {
-        safe_append(buff, message, sizeof buff);
-        safe_append(buff, ": ", sizeof buff);
-    }
-    safe_append(buff, safe_strerror(err), sizeof buff);
-    safe_append(buff, "\n", sizeof buff);
-
-    ignore_result(write(STDERR_FILENO, buff, std::strlen(buff)));
-    errno = err;
-}
-
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,
 /// wrealpath() returns none() and errno is likely set.
 maybe_t<wcstring> wrealpath(const wcstring &pathname) {

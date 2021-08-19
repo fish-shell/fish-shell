@@ -68,7 +68,30 @@ void report_setpgid_error(int err, bool is_parent, pid_t desired_pgid, const job
     }
 
     errno = err;
-    safe_perror("setpgid");
+    switch (errno) {
+        case EACCES: {
+            FLOGF_SAFE(error, "setpgid: Process %s has already exec'd", pid_buff);
+            break;
+        }
+        case EINVAL: {
+            FLOGF_SAFE(error, "setpgid: pgid %s unsupported", getpgid_buff);
+            break;
+        }
+        case EPERM: {
+            FLOGF_SAFE(error, "setpgid: Process %s is a session leader or pgid %s does not match", pid_buff, getpgid_buff);
+            break;
+        }
+        case ESRCH: {
+            FLOGF_SAFE(error, "setpgid: Process id %d does not match", pid_buff);
+            break;
+        }
+        default: {
+            char errno_buff[64];
+            format_long_safe(errno_buff, errno);
+            FLOGF_SAFE(error, "setpgid: Unknown error number %s", errno_buff);
+            break;
+        }
+    }
 }
 
 int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent) {
@@ -200,7 +223,26 @@ pid_t execute_fork() {
         }
     }
 
-    safe_perror("fork");
+    // These are all the errno numbers for fork() I can find.
+    // Also ENOSYS, but I doubt anyone is running
+    // fish on a platform without an MMU.
+    switch (errno) {
+        case EAGAIN: {
+            // We should have retried these already?
+            FLOGF_SAFE(error, "fork: Out of resources. Check RLIMIT_NPROC and pid_max.");
+            break;
+        }
+        case ENOMEM: {
+            FLOGF_SAFE(error, "fork: Out of memory.");
+            break;
+        }
+        default: {
+            char errno_buff[64];
+            format_long_safe(errno_buff, errno);
+            FLOGF_SAFE(error, "setpgid: Unknown error number %s", errno_buff);
+            break;
+        }
+    }
     FATAL_EXIT();
     return 0;
 }

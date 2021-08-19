@@ -370,12 +370,11 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         }
 
         case ENOEXEC: {
-            const char *err_text = safe_strerror(err);
             FLOGF_SAFE(
                 exec,
-                "%s. The file '%s' is marked as an executable but could not be run by the "
+                "The file '%s' is marked as an executable but could not be run by the "
                 "operating system.",
-                err_text, actual_cmd);
+                actual_cmd);
             break;
         }
 
@@ -415,10 +414,31 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             FLOGF_SAFE(exec, "Out of memory");
             break;
         }
-
+        case EACCES: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': The file could not be accessed.", actual_cmd);
+            break;
+        }
+        case ETXTBSY: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': File is currently open for writing.", actual_cmd);
+            break;
+        }
+        case ELOOP: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many layers of symbolic links.", actual_cmd);
+            break;
+        }
+        case EINVAL: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Unsupported format.", actual_cmd);
+            break;
+        }
+        case ENOTDIR: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': A path component is not a directory.", actual_cmd);
+            break;
+        }
+        
         default: {
-            const char *err = safe_strerror(errno);
-            FLOGF_SAFE(exec, "%s", err);
+            char errnum_buff[64];
+            format_long_safe(errnum_buff, err);
+            FLOGF_SAFE(exec, "Failed to execute process '%s', unknown error number %d", actual_cmd, errnum_buff);
             break;
         }
     }

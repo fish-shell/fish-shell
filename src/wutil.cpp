@@ -207,44 +207,6 @@ static inline void safe_append(char *buffer, const char *s, size_t buffsize) {
     std::strncat(buffer, s, buffsize - std::strlen(buffer) - 1);
 }
 
-// In general, strerror is not async-safe, and therefore we cannot use it directly. So instead we
-// have to grub through sys_nerr and sys_errlist directly On GNU toolchain, this will produce a
-// deprecation warning from the linker (!!), which appears impossible to suppress!
-const char *safe_strerror(int err) {
-#if defined(__UCLIBC__)
-    // uClibc does not have sys_errlist, however, its strerror is believed to be async-safe.
-    // See issue #808.
-    return std::strerror(err);
-#elif defined(HAVE__SYS__ERRS) || defined(HAVE_SYS_ERRLIST)
-#ifdef HAVE_SYS_ERRLIST
-    if (err >= 0 && err < sys_nerr && sys_errlist[err] != nullptr) {
-        return sys_errlist[err];
-    }
-#elif defined(HAVE__SYS__ERRS)
-    extern const char _sys_errs[];
-    extern const int _sys_index[];
-    extern int _sys_num_err;
-
-    if (err >= 0 && err < _sys_num_err) {
-        return &_sys_errs[_sys_index[err]];
-    }
-#endif  // either HAVE__SYS__ERRS or HAVE_SYS_ERRLIST
-#endif  // defined(HAVE__SYS__ERRS) || defined(HAVE_SYS_ERRLIST)
-
-    int saved_err = errno;
-    static char buff[384];  // use a shared buffer for this case
-    char errnum_buff[64];
-    format_long_safe(errnum_buff, err);
-
-    buff[0] = '\0';
-    safe_append(buff, "unknown error (errno was ", sizeof buff);
-    safe_append(buff, errnum_buff, sizeof buff);
-    safe_append(buff, ")", sizeof buff);
-
-    errno = saved_err;
-    return buff;
-}
-
 void safe_perror(const char *message) {
     // Note we cannot use strerror, because on Linux it uses gettext, which is not safe.
     int err = errno;

@@ -239,7 +239,7 @@ pid_t execute_fork() {
         default: {
             char errno_buff[64];
             format_long_safe(errno_buff, errno);
-            FLOGF_SAFE(error, "setpgid: Unknown error number %s", errno_buff);
+            FLOGF_SAFE(error, "fork: Unknown error number %s", errno_buff);
             break;
         }
     }

@@ -98,9 +98,9 @@ expect_prompt("echo start1; builtin history; echo end1\r\n")
 # ==========
 # Delete a single command we recently ran.
 sendline("history delete -e -C 'echo hello'")
-expect_str("history delete -e -C 'echo hello'\r\n")
+expect_prompt("history delete -e -C 'echo hello'\r\n")
 sendline("echo count hello (history search -e -C 'echo hello' | wc -l | string trim)")
-expect_re("count hello 0\r\n")
+expect_prompt("count hello 0\r\n")
 
 # ==========
 # Interactively delete one of multiple matched commands. This verifies that we
@@ -115,30 +115,44 @@ expect_re(
 )
 expect_re("Delete which entries\? >")
 sendline("1")
-expect_re('Deleting history entry 1: "echo hello AGAIN"\r\n')
+expect_prompt('Deleting history entry 1: "echo hello AGAIN"\r\n')
 
 # Verify that the deleted history entry is gone and the other one that matched
 # the prefix search above is still there.
 sendline(
     "echo count AGAIN (history search -e -C 'echo hello AGAIN' | wc -l | string trim)"
 )
-expect_re("count AGAIN 0\r\n")
+expect_prompt("count AGAIN 0\r\n")
 
 sendline(
     "echo count again (history search -e -C 'echo hello again' | wc -l | string trim)"
 )
-expect_re("count again 1\r\n")
+expect_prompt("count again 1\r\n")
 
 # Verify that the $history var has the expected content.
 sendline("echo history2=$history\[2\]")
-expect_re("history2=echo count AGAIN .*\r\n")
+expect_prompt("history2=echo count AGAIN .*\r\n")
 
 # Verify that history search is case-insensitive by default
 sendline("echo term")
-expect_str("term")
+expect_prompt("term")
 sendline("echo TERM")
-expect_str("TERM")
+expect_prompt("TERM")
 sendline("echo banana")
-expect_str("banana")
+expect_prompt("banana")
 send("ter\x1b[A")  # up-arrow
 expect_re("echo TERM")
+sendline("")
+expect_prompt("TERM")
+
+# Check that leading space makes an ephemeral item
+sendline(" echo ephemeral")
+expect_prompt("ephemeral")
+send("\x1b[A") # up-arrow
+expect_re(" echo ephemeral")
+sendline("")
+expect_prompt("ephemeral")
+sendline(" ")
+expect_prompt()
+send("\x1b[A")
+expect_re("echo TERM") # not ephemeral!

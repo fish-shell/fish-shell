@@ -3351,23 +3351,25 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     text.pop_back();
                 }
 
-                if (!text.empty() && history && !conf.in_silent_mode) {
-                    // Remove ephemeral items.
+                if (history && !conf.in_silent_mode) {
+                    // Remove ephemeral items - even if the text is empty
                     history->remove_ephemeral_items();
 
-                    // Mark this item as ephemeral if there is a leading space (#615).
-                    history_persistence_mode_t mode;
-                    if (text.front() == L' ') {
-                        // Leading spaces are ephemeral (#615).
-                        mode = history_persistence_mode_t::ephemeral;
-                    } else if (in_private_mode(vars)) {
-                        // Private mode means in-memory only.
-                        mode = history_persistence_mode_t::memory;
-                    } else {
-                        mode = history_persistence_mode_t::disk;
+                    if (!text.empty()) {
+                        // Mark this item as ephemeral if there is a leading space (#615).
+                        history_persistence_mode_t mode;
+                        if (text.front() == L' ') {
+                            // Leading spaces are ephemeral (#615).
+                            mode = history_persistence_mode_t::ephemeral;
+                        } else if (in_private_mode(vars)) {
+                            // Private mode means in-memory only.
+                            mode = history_persistence_mode_t::memory;
+                        } else {
+                            mode = history_persistence_mode_t::disk;
+                        }
+                        history_t::add_pending_with_file_detection(history, text, vars.snapshot(),
+                                                                   mode);
                     }
-                    history_t::add_pending_with_file_detection(history, text, vars.snapshot(),
-                                                               mode);
                 }
 
                 rls.finished = true;

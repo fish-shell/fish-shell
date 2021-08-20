@@ -203,10 +203,6 @@ int make_fd_blocking(int fd) {
     return err == -1 ? errno : 0;
 }
 
-static inline void safe_append(char *buffer, const char *s, size_t buffsize) {
-    std::strncat(buffer, s, buffsize - std::strlen(buffer) - 1);
-}
-
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,
 /// wrealpath() returns none() and errno is likely set.
 maybe_t<wcstring> wrealpath(const wcstring &pathname) {

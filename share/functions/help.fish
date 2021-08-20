@@ -113,43 +113,41 @@ function help --description 'Show help for the fish shell'
 
     # HACK: Hardcode all section titles for each page.
     # This could possibly be automated.
+    set -l faqpages frequently-asked-questions what-is-the-equivalent-to-this-thing-from-bash-or-other-shells \
+        how-do-i-set-or-clear-an-environment-variable how-do-i-check-whether-a-variable-is-defined \
+        how-do-i-check-whether-a-variable-is-not-empty why-doesn-t-set-ux-exported-universal-variables-seem-to-work \
+        how-do-i-run-a-command-every-login-what-s-fish-s-equivalent-to-bashrc-or-profile how-do-i-set-my-prompt \
+        why-does-my-prompt-show-a-i how-do-i-customize-my-syntax-highlighting-colors how-do-i-change-the-greeting-message \
+        i-m-seeing-weird-output-before-each-prompt-when-using-screen-what-s-wrong how-do-i-run-a-command-from-history \
+        why-doesn-t-history-substitution-etc-work how-do-i-run-a-subcommand-the-backtick-doesn-t-work \
+        my-command-pkg-config-gives-its-output-as-a-single-long-string how-do-i-get-the-exit-status-of-a-command \
+        my-command-prints-no-matches-for-wildcard-but-works-in-bash \
+        i-accidentally-entered-a-directory-path-and-fish-changed-directory-what-happened \
+        how-can-i-use-as-a-shortcut-for-cd the-open-command-doesn-t-work why-won-t-ssh-scp-rsync-connect-properly-when-fish-is-my-login-shell \
+        i-m-getting-weird-graphical-glitches-a-staircase-effect-ghost-characters-cursor-in-the-wrong-position \
+        how-do-i-make-fish-my-default-shell uninstalling-fish where-can-i-find-extra-tools-for-fish
+    set -l for_bash_pages fish-for-bash-users command-substitutions variables wildcards-globs quoting \
+        string-manipulation special-variables process-substitution heredocs test-test arithmetic-expansion prompts \
+        blocks-and-loops subshells builtins-and-other-commands
+    set -l interactivepages interactive-use help autosuggestions tab-completion syntax-highlighting \
+        syntax-highlighting-variables pager-color-variables abbreviations programmable-title \
+        programmable-prompt configurable-greeting private-mode command-line-editor shared-bindings \
+        emacs-mode-commands vi-mode-commands command-mode insert-mode visual-mode custom-bindings \
+        copy-and-paste-kill-ring multiline-editing searchable-command-history navigating-directories directory-stack
+    set -l langpages the-fish-language syntax-overview terminology quotes escaping-characters \
+        input-output-redirection piping job-control functions defining-aliases autoloading-functions comments \
+        conditions loops-and-blocks parameter-expansion wildcards-globbing variable-expansion command-substitution \
+        brace-expansion combining-lists-cartesian-product index-range-expansion home-directory-expansion \
+        combining-different-expansions shell-variables variable-scope overriding-variables-for-a-single-command \
+        more-on-universal-variables variable-scope-for-functions exporting-variables lists argument-handling \
+        path-variables special-variables the-status-variable locale-variables builtin-commands \
+        shell-variable-and-function-names future-feature-flags event-handlers debugging-fish-scripts
+    set -l tutpages tutorial why-fish getting-started learning-fish running-commands getting-help \
+        syntax-highlighting wildcards pipes-and-redirections autosuggestions tab-completions variables \
+        exports-shell-variables lists command-substitutions separating-commands-semicolon exit-status \
+        combiners-and-or-not conditionals-if-else-switch functions loops prompt path startup-where-s-bashrc \
+        autoloading-functions universal-variables switching-to-fish ready-for-more
 
-    # All sections in "language.html"
-    set -l langpages argument-handling autoloading-functions brace-expansion \
-        builtin-commands combining-different-expansions combining-lists-cartesian-product \
-        command-substitution comments conditions defining-aliases escaping-characters expand exporting-variables \
-        functions home-directory-expansion index-range-expansion input-output-redirection job-control lists \
-        loops-and-blocks more-on-universal-variables overriding-variables-for-a-single-command pager-color-variables \
-        path-variables piping quotes shell-variable-and-function-names \
-        shell-variables special-variables syntax-highlighting-variables syntax-overview \
-        terminology the-fish-language the-status-variable variable-expansion \
-        variable-scope variable-scope-for-functions variables-locale wildcards-globbing
-
-    # All sections in "interactive.html"
-    set -l interactivepages abbreviations autosuggestions command-line-editor configurable-greeting \
-        copy-and-paste-kill-ring custom-bindings directory-stack emacs-mode-commands \
-        help interactive-use multiline-editing navigating-directories private-mode \
-        programmable-prompt programmable-title searchable-command-history shared-bindings \
-        syntax-highlighting tab-completion vi-mode-command vi-mode-commands \
-        vi-mode-insert vi-mode-visual
-
-    set -l for_bash_pages arithmetic-expansion blocks-and-loops builtins-and-other-commands \
-        command-substitutions fish-for-bash-users heredocs process-substitution prompts \
-        quoting special-variables string-manipulation test-test variables wildcards-globs
-
-    set -l faqpages frequently-asked-questions how-can-i-use-as-a-shortcut-for-cd \
-        how-do-i-change-the-greeting-message how-do-i-check-whether-a-variable-is-defined \
-        how-do-i-check-whether-a-variable-is-not-empty how-do-i-customize-my-syntax-highlighting-colors \
-        how-do-i-get-the-exit-status-of-a-command how-do-i-make-fish-my-default-shell \
-        how-do-i-run-a-command-every-login-what-s-fish-s-equivalent-to-bashrc-or-profile how-do-i-run-a-command-from-history \
-        how-do-i-run-a-subcommand-the-backtick-doesn-t-work how-do-i-set-my-prompt \
-        how-do-i-set-or-clear-an-environment-variable i-accidentally-entered-a-directory-path-and-fish-changed-directory-what-happened \
-        i-m-getting-weird-graphical-glitches-a-staircase-effect-ghost-characters i-m-seeing-weird-output-before-each-prompt-when-using-screen-what-s-wrong \
-        my-command-pkg-config-gives-its-output-as-a-single-long-string my-command-prints-no-matches-for-wildcard-but-works-in-bash \
-        the-open-command-doesn-t-work uninstalling-fish \
-        what-is-the-equivalent-to-this-thing-from-bash-or-other-shells where-can-i-find-extra-tools-for-fish \
-        why-does-my-prompt-show-a-i why-doesn-t-history-substitution-etc-work \
-        why-doesn-t-set-ux-exported-universal-variables-seem-to-work why-won-t-ssh-scp-rsync-connect-properly-when-fish-is-my-login-shell
 
 
     set -l fish_help_page
@@ -185,6 +183,8 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "language.html#$fish_help_item"
         case $interactivepages
             set fish_help_page "interactive.html#$fish_help_item"
+        case $tutpages
+            set fish_help_page "tutorial.html#$fish_help_item"
         case ''
             set fish_help_page "index.html"
         case "*"

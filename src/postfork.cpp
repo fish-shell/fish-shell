@@ -480,7 +480,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         default: {
             char errnum_buff[64];
             format_long_safe(errnum_buff, err);
-            FLOGF_SAFE(exec, "Failed to execute process '%s', unknown error number %d", actual_cmd, errnum_buff);
+            FLOGF_SAFE(exec, "Failed to execute process '%s', unknown error number %s", actual_cmd, errnum_buff);
             break;
         }
     }

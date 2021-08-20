@@ -68,7 +68,30 @@ void report_setpgid_error(int err, bool is_parent, pid_t desired_pgid, const job
     }
 
     errno = err;
-    safe_perror("setpgid");
+    switch (errno) {
+        case EACCES: {
+            FLOGF_SAFE(error, "setpgid: Process %s has already exec'd", pid_buff);
+            break;
+        }
+        case EINVAL: {
+            FLOGF_SAFE(error, "setpgid: pgid %s unsupported", getpgid_buff);
+            break;
+        }
+        case EPERM: {
+            FLOGF_SAFE(error, "setpgid: Process %s is a session leader or pgid %s does not match", pid_buff, getpgid_buff);
+            break;
+        }
+        case ESRCH: {
+            FLOGF_SAFE(error, "setpgid: Process ID %s does not match", pid_buff);
+            break;
+        }
+        default: {
+            char errno_buff[64];
+            format_long_safe(errno_buff, errno);
+            FLOGF_SAFE(error, "setpgid: Unknown error number %s", errno_buff);
+            break;
+        }
+    }
 }
 
 int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent) {
@@ -200,7 +223,26 @@ pid_t execute_fork() {
         }
     }
 
-    safe_perror("fork");
+    // These are all the errno numbers for fork() I can find.
+    // Also ENOSYS, but I doubt anyone is running
+    // fish on a platform without an MMU.
+    switch (errno) {
+        case EAGAIN: {
+            // We should have retried these already?
+            FLOGF_SAFE(error, "fork: Out of resources. Check RLIMIT_NPROC and pid_max.");
+            break;
+        }
+        case ENOMEM: {
+            FLOGF_SAFE(error, "fork: Out of memory.");
+            break;
+        }
+        default: {
+            char errno_buff[64];
+            format_long_safe(errno_buff, errno);
+            FLOGF_SAFE(error, "fork: Unknown error number %s", errno_buff);
+            break;
+        }
+    }
     FATAL_EXIT();
     return 0;
 }
@@ -370,12 +412,11 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         }
 
         case ENOEXEC: {
-            const char *err_text = safe_strerror(err);
             FLOGF_SAFE(
                 exec,
-                "%s. The file '%s' is marked as an executable but could not be run by the "
+                "The file '%s' is marked as an executable but could not be run by the "
                 "operating system.",
-                err_text, actual_cmd);
+                actual_cmd);
             break;
         }
 
@@ -415,10 +456,51 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             FLOGF_SAFE(exec, "Out of memory");
             break;
         }
-
+        case EACCES: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': The file could not be accessed.", actual_cmd);
+            break;
+        }
+        case ETXTBSY: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': File is currently open for writing.", actual_cmd);
+            break;
+        }
+        case ELOOP: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many layers of symbolic links. Maybe a loop?", actual_cmd);
+            break;
+        }
+        case EINVAL: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Unsupported format.", actual_cmd);
+            break;
+        }
+        case EISDIR: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': File is a directory.", actual_cmd);
+            break;
+        }
+        case ENOTDIR: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': A path component is not a directory.", actual_cmd);
+            break;
+        }
+        
+        case EMFILE: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files in this process.", actual_cmd);
+            break;
+        }
+        case ENFILE: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files on the system.", actual_cmd);
+            break;
+        }
+        case ENAMETOOLONG: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Name is too long.", actual_cmd);
+            break;
+        }
+        case EPERM: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': No permission. Either suid/sgid is forbidden or you lack capabilities.", actual_cmd);
+            break;
+        }
         default: {
-            const char *err = safe_strerror(errno);
-            FLOGF_SAFE(exec, "%s", err);
+            char errnum_buff[64];
+            format_long_safe(errnum_buff, err);
+            FLOGF_SAFE(exec, "Failed to execute process '%s', unknown error number %s", actual_cmd, errnum_buff);
             break;
         }
     }

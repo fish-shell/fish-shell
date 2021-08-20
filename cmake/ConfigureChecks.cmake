@@ -108,7 +108,6 @@ check_struct_has_member("struct stat" st_mtimespec.tv_nsec "sys/stat.h"
     HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC LANGUAGE CXX)
 check_struct_has_member("struct stat" st_mtim.tv_nsec "sys/stat.h" HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC
     LANGUAGE CXX)
-check_cxx_symbol_exists(sys_errlist stdio.h HAVE_SYS_ERRLIST)
 check_include_file_cxx(sys/ioctl.h HAVE_SYS_IOCTL_H)
 check_include_file_cxx(sys/select.h HAVE_SYS_SELECT_H)
 check_include_files("sys/types.h;sys/sysctl.h" HAVE_SYS_SYSCTL_H)
@@ -142,8 +141,6 @@ if(HAVE_XLOCALE_H)
 endif()
 list(APPEND WCSTOD_L_INCLUDES "wchar.h")
 check_cxx_symbol_exists(wcstod_l "${WCSTOD_L_INCLUDES}" HAVE_WCSTOD_L)
-
-check_cxx_symbol_exists(_sys_errs stdlib.h HAVE__SYS__ERRS)
 
 cmake_push_check_state()
 set(CMAKE_EXTRA_INCLUDE_FILES termios.h sys/ioctl.h)

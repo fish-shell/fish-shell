@@ -556,7 +556,7 @@ static void init_curses(const environment_t &vars) {
     curses_initialized = true;
 }
 
-static const char *utf8_locales[] = {
+static constexpr const char *utf8_locales[] = {
     "C.UTF-8",
     "en_US.UTF-8",
     "en_GB.UTF-8",

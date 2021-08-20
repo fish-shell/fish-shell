@@ -82,7 +82,7 @@ void report_setpgid_error(int err, bool is_parent, pid_t desired_pgid, const job
             break;
         }
         case ESRCH: {
-            FLOGF_SAFE(error, "setpgid: Process id %d does not match", pid_buff);
+            FLOGF_SAFE(error, "setpgid: Process ID %s does not match", pid_buff);
             break;
         }
         default: {
@@ -465,18 +465,35 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             break;
         }
         case ELOOP: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many layers of symbolic links.", actual_cmd);
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many layers of symbolic links. Maybe a loop?", actual_cmd);
             break;
         }
         case EINVAL: {
             FLOGF_SAFE(exec, "Failed to execute process '%s': Unsupported format.", actual_cmd);
             break;
         }
+        case EISDIR:
         case ENOTDIR: {
             FLOGF_SAFE(exec, "Failed to execute process '%s': A path component is not a directory.", actual_cmd);
             break;
         }
         
+        case EMFILE: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files in this process.", actual_cmd);
+            break;
+        }
+        case ENFILE: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files on the system.", actual_cmd);
+            break;
+        }
+        case ENAMETOOLONG: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Name is too long.", actual_cmd);
+            break;
+        }
+        case EPERM: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': No permission. Either suid/sgid is forbidden or you lack capabilities.", actual_cmd);
+            break;
+        }
         default: {
             char errnum_buff[64];
             format_long_safe(errnum_buff, err);

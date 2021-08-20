@@ -472,7 +472,10 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             FLOGF_SAFE(exec, "Failed to execute process '%s': Unsupported format.", actual_cmd);
             break;
         }
-        case EISDIR:
+        case EISDIR: {
+            FLOGF_SAFE(exec, "Failed to execute process '%s': File is a directory.", actual_cmd);
+            break;
+        }
         case ENOTDIR: {
             FLOGF_SAFE(exec, "Failed to execute process '%s': A path component is not a directory.", actual_cmd);
             break;

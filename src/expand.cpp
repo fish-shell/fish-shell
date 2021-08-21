@@ -588,11 +588,7 @@ static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags,
             size_t item_len = pos - item_begin;
             wcstring item = wcstring(item_begin, item_len);
             item = trim(item, (const wchar_t[]){BRACE_SPACE, L'\0'});
-            for (auto &c : item) {
-                if (c == BRACE_SPACE) {
-                    c = ' ';
-                }
-            }
+            std::replace(item.begin(), item.end(), char(BRACE_SPACE), ' ');
 
             wcstring whole_item;
             whole_item.reserve(tot_len + item_len + 2);
@@ -1010,11 +1006,7 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_
     unescape_string(input, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
 
     if (flags & expand_flag::skip_variables) {
-        for (auto &i : next) {
-            if (i == VARIABLE_EXPAND) {
-                i = L'$';
-            }
-        }
+        std::replace(next.begin(), next.end(), wchar_t(VARIABLE_EXPAND), L'$');
         if (!out->add(std::move(next))) {
             return append_overflow_error(errors);
         }

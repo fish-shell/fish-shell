@@ -6,7 +6,7 @@ complete -f -c string -n "test (count (commandline -opc)) -ge 2; and not contain
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a lower
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a upper
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a length
-complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] length" -s v -l visible -d "Use the visible width, excluding escape sequences"
+complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] length" -s V -l visible -d "Use the visible width, excluding escape sequences"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a sub
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sub" -s s -l start -xa "(seq 1 10)"
 complete -x -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] sub" -s e -l end -xa "(seq 1 10)"
@@ -19,6 +19,7 @@ complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string matc
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr split0\?\$ -- (commandline -opc)[2]' -s n -l no-empty -d "Empty results excluded"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a collect
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr collect\$ -- (commandline -opc)[2]' -s N -l no-trim-newlines -d "Don't trim trailing newlines"
+complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr collect\$ -- (commandline -opc)[2]' -s a -l allow-empty -d "Always print empty argument"
 
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a join
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a join0
@@ -38,6 +39,7 @@ complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a match
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] match" -s n -l index -d "Report index, length of match"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] match" -s v -l invert -d "Report only non-matches"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] match" -s e -l entire -d "Show entire matching lines"
+complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] match" -s g -l groups-only -d "Only report capturing groups"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a replace
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] replace" -s f -l filter -d "Report only actual replacements"
 # All replace options are also valid for match

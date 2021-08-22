@@ -87,6 +87,7 @@ Completions
 - Added completions for:
 
   - ``black`` (:issue:`8123`)
+  - ``exif`` (:issue:`8246`)
   - ``gping`` (:issue:`8181`)
   - Angular's ``ng`` (:issue:`8111`)
   - ``zef`` (:issue:`8114`)

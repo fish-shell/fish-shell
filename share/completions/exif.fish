@@ -1,22 +1,7 @@
-function __get_target_files
-  set param_args (string split ', ' -- (string trim (string replace -fr "=\w+.*" '' -- (exif --help))))
-  set tokens (commandline -po)[2..]
-  set current_token 1
-  while test "$current_token" -le (count $tokens)
-    if contains -- $tokens[$current_token] $param_args
-      set -e tokens[$current_token]
-      set -e tokens[$current_token]
-    else if string match -- '-*' $tokens[$current_token]
-      set -e tokens[$current_token]
-    else
-      set current_token (math $current_token + 1)
-    end
-  end
-  echo $tokens
-end
-
 function __get_target_files_tags
-  string trim (string split -m1 ' ' (string replace -r '(\s+[-*]){5}' '' (string replace -fr '^(?!EXIF)' '' (exif --list-tags (__get_target_files)))))
+  for target in (string match -v -- '-*' (commandline -po)[2..])
+    string replace -f '*' '' (exif --list-tags "$target" 2> /dev/null)[2..] | string replace -r '(\s+-){4}' '' | string split -m1 ' '  | string trim
+  end
 end
 
 function __get_potential_targets

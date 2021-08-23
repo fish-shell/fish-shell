@@ -5,7 +5,7 @@ function __get_target_files_tags
 end
 
 function __get_potential_targets
-  set matching_files (commandline -t)*
+  set -l matching_files (commandline -t)*
   for file in $matching_files
     if test -d "$file"
       echo "$file/"
@@ -22,6 +22,8 @@ end
 complete -c exif -f -a "(__get_potential_targets)" -n "__token_begins_with_arg"
 
 for line in (exif --help)
+  set -l parts
+  set -l short
   if string match -r '^\s+-[\w\|\?],\s--(\w|-|=)+\s+.*$' "$line"
     set parts (string split ', ' -- (string trim "$line"))
     set short (string replace -r '^-' '' -- "$parts[1]")
@@ -32,8 +34,8 @@ for line in (exif --help)
     continue
   end
 
-  set long (string replace -r '^--' '' -- "$parts[1]")
-  set description (string trim "$parts[2]")
+  set -l long (string replace -r '^--' '' -- "$parts[1]")
+  set -l description (string trim "$parts[2]")
 
   if string match -r '[\w-]+=[\w]' "$long"
     set sub_parts (string split -nm 1 '=' "$long")
@@ -57,7 +59,7 @@ for line in (exif --help)
         else
           complete -c exif -l "$long" -d "$description" -F
         end
-      case "string"
+      case "*"
         if test -n "$short"
           complete -c exif -s "$short" -l "$long" -d "$description" -x
         else

@@ -51,10 +51,12 @@ if ls --version >/dev/null 2>/dev/null
     complete -c ls -l hide -r -d "Do not list implied entries matching specified shell pattern"
     complete -c ls -s I -l ignore -r -d "Skip entries matching pattern"
     complete -c ls -l indicator-style -x -a "none classify file-type" -d "Append filetype indicator"
+    complete -c ls -l lcontext -d "Display security context"
     complete -c ls -s N -l literal -d "Print raw entry names"
     complete -c ls -s o -d "Long format without groups"
     complete -c ls -s Q -l quote-name -d "Enclose entry in quotes"
     complete -c ls -l quoting-style -x -a "literal locale shell shell-always c escape" -d "Select quoting style"
+    complete -c ls -l scontext -d "Display only security context and file name"
     complete -c ls -l si -d "Human readable sizes, powers of 1000"
     complete -c ls -l show-control-chars -d "Non-graphic characters printed as-is"
     complete -c ls -l sort -x -d "Sort criteria" -a "
@@ -84,6 +86,7 @@ if ls --version >/dev/null 2>/dev/null
     complete -c ls -s Z -l context -d "Display security context so it fits on most displays"
     complete -c ls -l help -d "Display help and exit"
     complete -c ls -l version -d "Display version and exit"
+
 else
     ####              ls on eunichs                  ####
     # From latest checked-in man pages as of Nov 2018.

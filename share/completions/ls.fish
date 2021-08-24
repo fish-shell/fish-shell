@@ -30,6 +30,7 @@ if ls --version >/dev/null 2>/dev/null
     complete -c ls -s d -l directory -d "List directories, not their content"
     complete -c ls -s h -l human-readable -d "Human readable sizes"
     complete -c ls -s i -l inode -d "Print inode number of files"
+    complete -c ls -s l -d "Long listing format"
     complete -c ls -s n -l numeric-uid-gid -d "Long format, numeric UIDs and GIDs"
     complete -c ls -s p -l file-type -d "Append filetype indicator"
     complete -c ls -s q -l hide-control-chars -d "Replace non-graphic characters with '?'"

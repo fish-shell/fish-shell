@@ -252,13 +252,15 @@ maybe_t<size_t> escape_code_length(const wchar_t *code) {
     if (*code != L'\x1B') return none();
 
     size_t esc_seq_len = 0;
-    bool found = is_color_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_visual_escape_seq(code, &esc_seq_len);
+    bool found = is_visual_escape_seq(code, &esc_seq_len);
     if (!found) found = is_screen_name_escape_seq(code, &esc_seq_len);
     if (!found) found = is_osc_escape_seq(code, &esc_seq_len);
     if (!found) found = is_three_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
+    // Colors are the hardest to match, so we try last.
+    // (also tparm is *slow*, we should try to find a better replacement)
+    if (!found) found = is_color_escape_seq(code, &esc_seq_len);
 
     return found ? maybe_t<size_t>{esc_seq_len} : none();
 }

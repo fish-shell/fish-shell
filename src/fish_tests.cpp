@@ -1705,6 +1705,18 @@ static void test_is_sorted_by_name() {
         {L"a"}, {L"aa"}, {L"aaa"}, {L"aaa"}, {L"aaa"}, {L"aazz"}, {L"aazzzz"},
     };
     static_assert(is_sorted_by_name(sorted), "is_sorted_by_name failure");
+    do_test(get_by_sorted_name(L"", sorted) == nullptr);
+    do_test(get_by_sorted_name(L"nope", sorted) == nullptr);
+    do_test(get_by_sorted_name(L"aaaaaaaaaaa", sorted) == nullptr);
+    wcstring last;
+    for (const auto &v : sorted) {
+        // We have multiple items with the same name; only test the first.
+        if (last != v.name) {
+            last = v.name;
+            do_test(get_by_sorted_name(last, sorted) == &v);
+        }
+    }
+
     static constexpr named_t not_sorted[] = {
         {L"a"}, {L"aa"}, {L"aaa"}, {L"q"}, {L"aazz"}, {L"aazz"}, {L"aazz"}, {L"aazzzz"},
     };

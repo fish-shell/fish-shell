@@ -920,16 +920,8 @@ const wcstring_list_t &input_function_get_names() {
 maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name) {
     // `input_function_metadata` is required to be kept in asciibetical order, making it OK to do
     // a binary search for the matching name.
-    constexpr auto end = &input_function_metadata[0] + input_function_count;
-    auto result = std::lower_bound(
-        &input_function_metadata[0], end,
-        input_function_metadata_t{name.data(), static_cast<readline_cmd_t>(-1)},
-        [&](const input_function_metadata_t &lhs, const input_function_metadata_t &rhs) {
-            return wcscmp(lhs.name, rhs.name) < 0;
-        });
-
-    if (result != end && result->name[0] && name == result->name) {
-        return result->code;
+    if (const input_function_metadata_t *md = get_by_sorted_name(name, input_function_metadata)) {
+        return md->code;
     }
     return none();
 }

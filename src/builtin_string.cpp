@@ -1896,18 +1896,8 @@ maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, const wchar
     }
 
     const wchar_t *subcmd_name = argv[1];
-
-    static auto begin = std::begin(string_subcommands);
-    static auto end = std::end(string_subcommands);
-    string_subcommand search{subcmd_name, nullptr};
-    auto binsearch = std::lower_bound(
-        begin, end, search, [&](const string_subcommand &cmd1, const string_subcommand &cmd2) {
-            return wcscmp(cmd1.name, cmd2.name) < 0;
-        });
-    const string_subcommand *subcmd = nullptr;
-    if (binsearch != end && wcscmp(subcmd_name, binsearch->name) == 0) subcmd = &*binsearch;
-
-    if (subcmd == nullptr) {
+    const auto *subcmd = get_by_sorted_name(subcmd_name, string_subcommands);
+    if (!subcmd) {
         streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name);
         builtin_print_error_trailer(parser, streams.err, L"string");
         return STATUS_INVALID_ARGS;

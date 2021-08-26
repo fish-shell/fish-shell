@@ -354,7 +354,7 @@ maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, const wcha
 // Data about all the builtin commands in fish.
 // Functions that are bound to builtin_generic are handled directly by the parser.
 // NOTE: These must be kept in sorted order!
-static const builtin_data_t builtin_datas[] = {
+static constexpr builtin_data_t builtin_datas[] = {
     {L".", &builtin_source, N_(L"Evaluate contents of file")},
     {L":", &builtin_true, N_(L"Return a successful result")},
     {L"[", &builtin_test, N_(L"Test a condition")},
@@ -417,6 +417,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},
     {L"while", &builtin_generic, N_(L"Perform a command multiple times")},
 };
+ASSERT_SORTED_BY_NAME(builtin_datas);
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
 
@@ -429,21 +430,13 @@ static const builtin_data_t builtin_datas[] = {
 ///    Pointer to a builtin_data_t
 ///
 static const builtin_data_t *builtin_lookup(const wcstring &name) {
-    const builtin_data_t *array_end = builtin_datas + BUILTIN_COUNT;
-    const builtin_data_t *found = std::lower_bound(builtin_datas, array_end, name);
-    if (found != array_end && name == found->name) {
-        return found;
-    }
-    return nullptr;
+    return get_by_sorted_name(name.c_str(), builtin_datas);
 }
 
 /// Initialize builtin data.
 void builtin_init() {
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {
-        const wchar_t *name = builtin_datas[i].name;
-        intern_static(name);
-        assert((i == 0 || std::wcscmp(builtin_datas[i - 1].name, name) < 0) &&
-               "builtins are not sorted alphabetically");
+        intern_static(builtin_datas[i].name);
     }
 }
 

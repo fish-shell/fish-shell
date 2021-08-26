@@ -110,18 +110,7 @@ static constexpr const electric_var_t electric_variables[] = {
 ASSERT_SORTED_BY_NAME(electric_variables);
 
 const electric_var_t *electric_var_t::for_name(const wchar_t *name) {
-    auto begin = std::begin(electric_variables);
-    auto end = std::end(electric_variables);
-
-    electric_var_t search{name, 0};
-    auto binsearch = std::lower_bound(begin, end, search,
-                                      [&](const electric_var_t &v1, const electric_var_t &v2) {
-                                          return wcscmp(v1.name, v2.name) < 0;
-                                      });
-    if (binsearch != end && wcscmp(name, binsearch->name) == 0) {
-        return &*binsearch;
-    }
-    return nullptr;
+    return get_by_sorted_name(name, electric_variables);
 }
 
 const electric_var_t *electric_var_t::for_name(const wcstring &name) {

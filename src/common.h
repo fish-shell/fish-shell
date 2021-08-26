@@ -724,4 +724,22 @@ constexpr bool is_sorted_by_name(const T (&vals)[N], size_t idx = 1) {
 }
 #define ASSERT_SORTED_BY_NAME(x) static_assert(is_sorted_by_name(x), #x " not sorted by name")
 
+/// \return a pointer to the first entry with the given name, assuming the entries are sorted by
+/// name. \return nullptr if not found.
+template <typename T, size_t N>
+const T *get_by_sorted_name(const wchar_t *name, const T (&vals)[N]) {
+    assert(name && "Null name");
+    auto is_less = [](const T &v, const wchar_t *n) -> bool { return std::wcscmp(v.name, n) < 0; };
+    auto where = std::lower_bound(std::begin(vals), std::end(vals), name, is_less);
+    if (where != std::end(vals) && std::wcscmp(where->name, name) == 0) {
+        return &*where;
+    }
+    return nullptr;
+}
+
+template <typename T, size_t N>
+const T *get_by_sorted_name(const wcstring &name, const T (&vals)[N]) {
+    return get_by_sorted_name(name.c_str(), vals);
+}
+
 #endif  // FISH_COMMON_H

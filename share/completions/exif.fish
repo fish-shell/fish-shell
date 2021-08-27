@@ -12,6 +12,10 @@ function __fish_exif_potential_targets
             echo $file
         else if eval "exif \"$file\"" &> /dev/null
             echo $file
+        else if ! eval "test -e \"$file\""
+            if exif $file &> /dev/null
+                echo $file
+            end
         end
     end
 end

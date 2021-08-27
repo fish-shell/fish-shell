@@ -509,9 +509,9 @@ job_list_t jobs_requiring_warning_on_exit(const parser_t &parser);
 /// jobs_requiring_warning_on_exit().
 void print_exit_warning_for_jobs(const job_list_t &jobs);
 
-/// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This
+/// Use the procfs filesystem to look up how many jiffies of cpu time was used by a given pid. This
 /// function is only available on systems with the procfs file entry 'stat', i.e. Linux.
-unsigned long proc_get_jiffies(process_t *p);
+unsigned long proc_get_jiffies(pid_t inpid);
 
 /// Update process time usage for all processes by calling the proc_get_jiffies function for every
 /// process of every job.

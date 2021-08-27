@@ -724,9 +724,8 @@ bool job_reap(parser_t &parser, bool allow_interactive) {
 }
 
 /// Get the CPU time for the specified process.
-unsigned long proc_get_jiffies(process_t *p) {
-    if (!have_proc_stat()) return 0;
-    if (p->pid <= 0) return 0;
+unsigned long proc_get_jiffies(pid_t inpid) {
+    if (inpid <= 0 || !have_proc_stat()) return 0;
 
     char state;
     int pid, ppid, pgrp, session, tty_nr, tpgid, exit_signal, processor;
@@ -739,7 +738,7 @@ unsigned long proc_get_jiffies(process_t *p) {
     /// Maximum length of a /proc/[PID]/stat filename.
     constexpr size_t FN_SIZE = 256;
     char fn[FN_SIZE];
-    std::snprintf(fn, FN_SIZE, "/proc/%d/stat", p->pid);
+    std::snprintf(fn, FN_SIZE, "/proc/%d/stat", inpid);
     // Don't use autoclose_fd here, we will fdopen() and then fclose() instead.
     int fd = open_cloexec(fn, O_RDONLY);
     if (fd < 0) return 0;
@@ -767,7 +766,7 @@ void proc_update_jiffies(parser_t &parser) {
     for (const auto &job : parser.jobs()) {
         for (process_ptr_t &p : job->processes) {
             gettimeofday(&p->last_time, nullptr);
-            p->last_jiffies = proc_get_jiffies(p.get());
+            p->last_jiffies = proc_get_jiffies(p->pid);
         }
     }
 }

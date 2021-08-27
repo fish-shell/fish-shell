@@ -34,7 +34,7 @@ static int cpu_use(const job_t *j) {
         struct timeval t;
         unsigned long jiffies;
         gettimeofday(&t, nullptr);
-        jiffies = proc_get_jiffies(p.get());
+        jiffies = proc_get_jiffies(p->pid);
 
         double t1 = 1000000.0 * p->last_time.tv_sec + p->last_time.tv_usec;
         double t2 = 1000000.0 * t.tv_sec + t.tv_usec;

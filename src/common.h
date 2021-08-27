@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -516,7 +517,8 @@ void bugreport();
 
 /// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
 /// the gettimeofday function and will have the same precision as that function.
-double timef();
+using timepoint_t = double;
+timepoint_t timef();
 
 /// Call the following function early in main to set the main thread. This is our replacement for
 /// pthread_main_np().

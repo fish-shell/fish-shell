@@ -1723,13 +1723,10 @@ void format_size_safe(char buff[128], unsigned long long sz) {
     }
 }
 
-/// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
-/// the gettimeofday function and will have the same precision as that function.
 double timef() {
     struct timeval tv;
     assert_with_errno(gettimeofday(&tv, nullptr) != -1);
-    // return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
-    return static_cast<double>(tv.tv_sec) + 1e-6 * tv.tv_usec;
+    return static_cast<timepoint_t>(tv.tv_sec) + 1e-6 * tv.tv_usec;
 }
 
 void exit_without_destructors(int code) { _exit(code); }

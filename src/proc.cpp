@@ -765,7 +765,7 @@ unsigned long proc_get_jiffies(pid_t inpid) {
 void proc_update_jiffies(parser_t &parser) {
     for (const auto &job : parser.jobs()) {
         for (process_ptr_t &p : job->processes) {
-            gettimeofday(&p->last_time, nullptr);
+            p->last_time = timef();
             p->last_jiffies = proc_get_jiffies(p->pid);
         }
     }

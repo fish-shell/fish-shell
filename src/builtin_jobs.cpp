@@ -29,24 +29,13 @@ enum {
 /// Calculates the cpu usage (in percent) of the specified job.
 static int cpu_use(const job_t *j) {
     double u = 0;
-
     for (const process_ptr_t &p : j->processes) {
-        struct timeval t;
-        unsigned long jiffies;
-        gettimeofday(&t, nullptr);
-        jiffies = proc_get_jiffies(p->pid);
-
-        double t1 = 1000000.0 * p->last_time.tv_sec + p->last_time.tv_usec;
-        double t2 = 1000000.0 * t.tv_sec + t.tv_usec;
-
-        // Check for a race condition that can cause negative CPU usage to be reported (#7066)
-        unsigned long cached_last_jiffies = p->last_jiffies;
-        if (t2 < t1 || jiffies < cached_last_jiffies) {
-            continue;
+        timepoint_t now = timef();
+        unsigned long jiffies = proc_get_jiffies(p->pid);
+        double since = now - p->last_time;
+        if (since > 0 && jiffies > p->last_jiffies) {
+            u += (jiffies - p->last_jiffies) / since;
         }
-
-        // std::fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n", t1, t2, jiffies, p->last_jiffies );
-        u += (static_cast<double>(jiffies - cached_last_jiffies)) / (t2 - t1);
     }
     return u * 1000000;
 }

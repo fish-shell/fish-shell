@@ -277,8 +277,8 @@ class process_t : noncopyable_t {
     /// Reported status value.
     proc_status_t status{};
 
-    /// Last time of cpu time check.
-    struct timeval last_time {};
+    /// Last time of cpu time check, in seconds (per timef).
+    timepoint_t last_time{0};
 
     /// Number of jiffies spent in process at last cpu time check.
     unsigned long last_jiffies{0};

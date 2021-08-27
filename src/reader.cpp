@@ -2408,23 +2408,9 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
     history_search.reset();
 }
 
-static void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
-    time_t secs = after->tv_sec - before->tv_sec;
-    suseconds_t usecs = after->tv_usec - before->tv_usec;
-
-    if (after->tv_usec < before->tv_usec) {
-        usecs += 1000000;
-        secs -= 1;
-    }
-
-    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, std::to_wstring((secs * 1000) + (usecs / 1000)));
-}
-
 /// Run the specified command with the correct terminal modes, and while taking care to perform job
 /// notification, set the title, etc.
 static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
-    struct timeval time_before, time_after;
-
     wcstring ft = tok_command(cmd);
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
@@ -2435,16 +2421,18 @@ static eval_res_t reader_run_command(parser_t &parser, const wcstring &cmd) {
     outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
     term_donate();
 
-    gettimeofday(&time_before, nullptr);
-
+    timepoint_t time_before = timef();
     auto eval_res = parser.eval(cmd, io_chain_t{});
     job_reap(parser, true);
 
-    gettimeofday(&time_after, nullptr);
-
     // update the execution duration iff a command is requested for execution
     // issue - #4926
-    if (!ft.empty()) set_env_cmd_duration(&time_after, &time_before, parser.vars());
+    if (!ft.empty()) {
+        timepoint_t time_after = timef();
+        double duration = time_after - time_before;
+        long duration_ms = std::round(duration * 1000);
+        parser.vars().set_one(ENV_CMD_DURATION, ENV_UNEXPORT, to_string(duration_ms));
+    }
 
     term_steal();
 

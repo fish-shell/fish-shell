@@ -5,11 +5,12 @@ function __fish_exif_target_file_tags
 end
 
 function __fish_exif_potential_targets
-    set -l matching_files (commandline -t)*
+    set -l token (commandline -t)
+    set -l matching_files (complete -C "__fish_command_without_completions $token")
     for file in $matching_files
-        if test -d $file
-            echo $file/
-        else if exif $file &>/dev/null
+        if eval "test -d \"$file\""
+            echo $file
+        else if eval "exif \"$file\"" &> /dev/null
             echo $file
         end
     end

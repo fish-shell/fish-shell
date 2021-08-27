@@ -1,25 +1,25 @@
-function __get_target_files_tags
+function __fish_exif_target_file_tags
   for target in (string match -v -- '-*' (commandline -po)[2..])
     string replace -f '*' '' (exif --list-tags "$target" 2> /dev/null)[2..] | string replace -r '(\s+-){4}' '' | string split -m1 ' '  | string trim
   end
 end
 
-function __get_potential_targets
+function __fish_exif_potential_targets
   set -l matching_files (commandline -t)*
   for file in $matching_files
-    if test -d "$file"
-      echo "$file/"
-    else if exif "$file" &> /dev/null
-      echo "$file"
+    if test -d $file
+      echo $file/
+    else if exif $file &> /dev/null
+      echo $file
     end
   end
 end
 
-function __token_begins_with_arg
+function __fish_exif_token_begins_with_arg
   not string match -- '-*' (commandline -t)
 end
 
-complete -c exif -f -a "(__get_potential_targets)" -n "__token_begins_with_arg"
+complete -c exif -f -a "(__fish_exif_potential_targets)" -n "__fish_exif_token_begins_with_arg"
 
 for line in (exif --help)
   set -l parts
@@ -42,35 +42,15 @@ for line in (exif --help)
     set long "$sub_parts[1]"
     switch (string lower "$sub_parts[2]")
       case "tag"
-        if test -n "$short"
-          complete -c exif -s "$short" -l "$long" -d "$description" -x -a "(__get_target_files_tags)"
-        else
-          complete -c exif -l "$long" -d "$description" -x -a "(__get_target_files_tags)"
-        end
+        complete -c exif -s$short -l $long -d "$description" -x -a "(__fish_exif_target_file_tags)"
       case "ifd"
-        if test -n "$short"
-          complete -c exif -s "$short" -l "$long" -d "$description" -x -a "0 1 EXIF GPS Interoperability"
-        else
-          complete -c exif -l "$long" -d "$description" -x -a "0 1 EXIF GPS Interoperability"
-        end
+        complete -c exif -s$short -l $long -d "$description" -x -a "0 1 EXIF GPS Interoperability"
       case "file"
-        if test -n "$short"
-          complete -c exif -s "$short" -l "$long" -d "$description" -F
-        else
-          complete -c exif -l "$long" -d "$description" -F
-        end
+        complete -c exif -s$short -l $long -d "$description" -F
       case "*"
-        if test -n "$short"
-          complete -c exif -s "$short" -l "$long" -d "$description" -x
-        else
-          complete -c exif -l "$long" -d "$description" -x
-        end
+        complete -c exif -s$short -l $long -d "$description" -x
     end
   else
-    if test -n "$short"
-      complete -c exif -s "$short" -l "$long" -d "$description"
-    else
-      complete -c exif -l "$long" -d "$description"
-    end
+    complete -c exif -s$short -l $long -d "$description"
   end
 end

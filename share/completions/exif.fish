@@ -22,23 +22,21 @@ end
 complete -c exif -f -a "(__fish_exif_potential_targets)" -n __fish_exif_token_begins_with_arg
 
 for line in (exif --help)
-    set -l parts
     set -l short
-    if string match -r '^\s+-[\w\|\?],\s--(\w|-|=)+\s+.*$' "$line"
-        set parts (string split ', ' -- (string trim "$line"))
-        set short (string replace -r '^-' '' -- "$parts[1]")
-        set parts (string split -nm 1 ' ' -- "$parts[2]")
-    else if string match -r '^\s+--(\w|-|=)+\s+.*$' "$line"
-        set parts (string split -nm 1 ' ' -- (string trim "$line"))
+    set -l long
+    set -l description
+    if set -l matches (string match -r '^\s+-([\w?]),\s--([\w=-]+)\s+(.*)$' "$line")
+        set short $matches[2]
+        set long $matches[3]
+        set description $matches[4]
+    else if set -l matches (string match -r '^\s+--([\w=-]+)\s+(.*)$' "$line")
+        set long $matches[2]
+        set description $matches[3]
     else
         continue
     end
 
-    set -l long (string replace -r '^--' '' -- "$parts[1]")
-    set -l description (string trim "$parts[2]")
-
-    if string match -r '[\w-]+=[\w]' "$long"
-        set sub_parts (string split -nm 1 '=' "$long")
+    if set -l sub_parts (string split -n --max 1 '=' $long)
         set long "$sub_parts[1]"
         switch (string lower "$sub_parts[2]")
             case tag

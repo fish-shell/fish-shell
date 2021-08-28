@@ -892,7 +892,7 @@ Example:
 
 There are a few possible uses for different scopes.
 
-Typically inside funcions you should use local scope::
+Typically inside functions you should use local scope::
 
     function something
         set -l file /path/to/my/file

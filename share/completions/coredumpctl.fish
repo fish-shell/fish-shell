@@ -1,10 +1,10 @@
 set -l commands list info dump debug
 
 complete -c coredumpctl -f
-complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -d 'List available coredumps'
-complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -d 'Show detailed information about coredump(s)'
-complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -d 'Print first matching coredump to stdout'
-complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -d 'Start a debugger for the first matching coredump'
+complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -a list -d 'List available coredumps'
+complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -a info -d 'Show detailed information about coredump(s)'
+complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -a dump -d 'Print first matching coredump to stdout'
+complete -c coredumpctl -n "not __fish_seen_subcommand_from $commands" -a debug -d 'Start a debugger for the first matching coredump'
 
 complete -c coredumpctl -s h -l help -d 'Show this help'
 complete -c coredumpctl -l version -d 'Print version string'

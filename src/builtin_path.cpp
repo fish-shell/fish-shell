@@ -1,0 +1,644 @@
+// Implementation of the string builtin.
+#include "config.h"  // IWYU pragma: keep
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <glob.h>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "builtin.h"
+#include "common.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "io.h"
+#include "wcstringutil.h"
+#include "wgetopt.h"
+#include "wutil.h"  // IWYU pragma: keep
+
+// How many bytes we read() at once.
+// Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
+// This should be about the size of a line.
+#define PATH_CHUNK_SIZE 128
+
+static void path_error(io_streams_t &streams, const wchar_t *fmt, ...) {
+    streams.err.append(L"path ");
+    va_list va;
+    va_start(va, fmt);
+    streams.err.append_formatv(fmt, va);
+    va_end(va);
+}
+
+static void path_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *subcmd,
+                                  const wchar_t *opt) {
+    path_error(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
+    builtin_print_error_trailer(parser, streams.err, L"path");
+}
+
+// We read from stdin if we are the second or later process in a pipeline.
+static bool path_args_from_stdin(const io_streams_t &streams) {
+    return streams.stdin_is_directly_redirected;
+}
+
+static const wchar_t *path_get_arg_argv(int *argidx, const wchar_t *const *argv) {
+    return argv && argv[*argidx] ? argv[(*argidx)++] : nullptr;
+}
+
+// A helper type for extracting arguments from either argv or stdin.
+namespace {
+class arg_iterator_t {
+    // The list of arguments passed to the string builtin.
+    const wchar_t *const *argv_;
+    // If using argv, index of the next argument to return.
+    int argidx_;
+    // If not using argv, a string to store bytes that have been read but not yet returned.
+    std::string buffer_;
+    // The char to split on when reading from stdin.
+    const char split_;
+    // Backing storage for the next() string.
+    wcstring storage_;
+    const io_streams_t &streams_;
+
+    /// Reads the next argument from stdin, returning true if an argument was produced and false if
+    /// not. On true, the string is stored in storage_.
+    bool get_arg_stdin() {
+        assert(path_args_from_stdin(streams_) && "should not be reading from stdin");
+        assert(streams_.stdin_fd >= 0 && "should have a valid fd");
+        // Read in chunks from fd until buffer has a line (or the end if split_ is unset).
+        size_t pos;
+        while ((pos = buffer_.find(split_)) == std::string::npos) {
+            char buf[PATH_CHUNK_SIZE];
+            long n = read_blocked(streams_.stdin_fd, buf, PATH_CHUNK_SIZE);
+            if (n == 0) {
+                // If we still have buffer contents, flush them,
+                // in case there was no trailing sep.
+                if (buffer_.empty()) return false;
+                storage_ = str2wcstring(buffer_);
+                buffer_.clear();
+                return true;
+            }
+            if (n == -1) {
+                // Some error happened. We can't do anything about it,
+                // so ignore it.
+                // (read_blocked already retries for EAGAIN and EINTR)
+                storage_ = str2wcstring(buffer_);
+                buffer_.clear();
+                return false;
+            }
+            buffer_.append(buf, n);
+        }
+
+        // Split the buffer on the sep and return the first part.
+        storage_ = str2wcstring(buffer_, pos);
+        buffer_.erase(0, pos + 1);
+        return true;
+    }
+
+   public:
+    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams,
+                   char split = '\n')
+        : argv_(argv), argidx_(argidx), split_(split), streams_(streams) {}
+
+    const wcstring *nextstr() {
+        if (path_args_from_stdin(streams_)) {
+            return get_arg_stdin() ? &storage_ : nullptr;
+        }
+        if (auto arg = path_get_arg_argv(&argidx_, argv_)) {
+            storage_ = arg;
+            return &storage_;
+        } else {
+            return nullptr;
+        }
+    }
+};
+}  // namespace
+
+enum {
+    TYPE_BLOCK = 1 << 0,  /// A block device
+    TYPE_DIR = 1 << 1,    /// A directory
+    TYPE_FILE = 1 << 2,     /// A regular file
+    TYPE_LINK = 1 << 3,  /// A link
+    TYPE_CHAR = 1 << 4,  /// A character device
+    TYPE_FIFO = 1 << 5,  /// A fifo
+    TYPE_SOCK = 1 << 6,  /// A socket
+};
+typedef uint32_t path_type_flags_t;
+
+enum {
+    PERM_READ = 1 << 0,
+    PERM_WRITE = 1 << 1,
+    PERM_EXEC = 1 << 2,
+    PERM_SUID = 1 << 3,
+    PERM_SGID = 1 << 4,
+    PERM_STICKY = 1 << 5,
+    PERM_USER = 1 << 6,
+    PERM_GROUP = 1 << 7,
+};
+typedef uint32_t path_perm_flags_t;
+
+// This is used by the string subcommands to communicate with the option parser which flags are
+// valid and get the result of parsing the command for flags.
+struct options_t {  //!OCLINT(too many fields)
+    bool perm_valid = false;
+    bool type_valid = false;
+
+    bool null_in = false;
+    bool null_out = false;
+
+    bool quiet = false;
+
+    bool have_type = false;
+    path_type_flags_t type = 0;
+
+    bool have_perm = false;
+    // Whether we need to check a special permission like suid.
+    bool have_special_perm = false;
+    path_perm_flags_t perm = 0;
+};
+
+static void path_out(io_streams_t &streams, const options_t &opts, const wcstring &str) {
+    if (!opts.quiet) {
+        if (!opts.null_out) {
+            streams.out.append_with_separation(str,
+                                               separation_type_t::explicitly);
+        } else {
+            streams.out.append(str);
+            streams.out.push_back(L'\0');
+        }
+    }
+}
+
+static int handle_flag_q(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    UNUSED(argv);
+    UNUSED(parser);
+    UNUSED(streams);
+    UNUSED(w);
+    opts->quiet = true;
+    return STATUS_CMD_OK;
+}
+
+static int handle_flag_z(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    UNUSED(argv);
+    UNUSED(parser);
+    UNUSED(streams);
+    UNUSED(w);
+    opts->null_in = true;
+    return STATUS_CMD_OK;
+}
+
+static int handle_flag_Z(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    UNUSED(argv);
+    UNUSED(parser);
+    UNUSED(streams);
+    UNUSED(w);
+    opts->null_out = true;
+    return STATUS_CMD_OK;
+}
+
+static int handle_flag_t(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->type_valid) {
+        if (!opts->have_type) opts->type = 0;
+        opts->have_type = true;
+        wcstring_list_t types = split_string_tok(w.woptarg, L",");
+        for (auto t : types) {
+            if (t == L"file") {
+                opts->type |= TYPE_FILE;
+            } else if (t == L"dir") {
+                opts->type |= TYPE_DIR;
+            } else if (t == L"block") {
+                opts->type |= TYPE_BLOCK;
+            } else if (t == L"char") {
+                opts->type |= TYPE_CHAR;
+            } else if (t == L"fifo") {
+                opts->type |= TYPE_FIFO;
+            } else if (t == L"socket") {
+                opts->type |= TYPE_SOCK;
+            } else if (t == L"link") {
+                opts->type |= TYPE_LINK;
+            } else {
+                path_error(streams, _(L"%ls: Invalid type '%ls'"), L"path", t.c_str());
+                return STATUS_INVALID_ARGS;
+            }
+        }
+        return STATUS_CMD_OK;
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+
+static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->perm_valid) {
+        if (!opts->have_perm) opts->perm = 0;
+        opts->have_perm = true;
+        wcstring_list_t perms = split_string_tok(w.woptarg, L",");
+        for (auto p : perms) {
+            if (p == L"read") {
+                opts->perm |= PERM_READ;
+            } else if (p == L"write") {
+                opts->perm |= PERM_WRITE;
+            } else if (p == L"exec") {
+                opts->perm |= PERM_EXEC;
+            } else if (p == L"suid") {
+                opts->perm |= PERM_SUID;
+                opts->have_special_perm = true;
+            } else if (p == L"sgid") {
+                opts->perm |= PERM_SGID;
+                opts->have_special_perm = true;
+            } else if (p == L"sticky") {
+                opts->perm |= PERM_STICKY;
+                opts->have_special_perm = true;
+            } else if (p == L"user") {
+                opts->perm |= PERM_USER;
+                opts->have_special_perm = true;
+            } else if (p == L"group") {
+                opts->perm |= PERM_GROUP;
+                opts->have_special_perm = true;
+            } else {
+                path_error(streams, _(L"%ls: Invalid permission '%ls'"), L"path", p.c_str());
+                return STATUS_INVALID_ARGS;
+            }
+        }
+        return STATUS_CMD_OK;
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+/// This constructs the wgetopt() short options string based on which arguments are valid for the
+/// subcommand. We have to do this because many short flags have multiple meanings and may or may
+/// not require an argument depending on the meaning.
+static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath complexity)
+    // All commands accept -z, -Z and -q
+    wcstring short_opts(L":zZq");
+    if (opts->perm_valid) short_opts.append(L"p:");
+    if (opts->type_valid) short_opts.append(L"t:");
+    return short_opts;
+}
+
+// Note that several long flags share the same short flag. That is okay. The caller is expected
+// to indicate that a max of one of the long flags sharing a short flag is valid.
+// Remember: adjust share/completions/string.fish when `string` options change
+static const struct woption long_options[] = {
+                                              {L"quiet", no_argument, nullptr, 'q'},
+                                              {L"null-input", no_argument, nullptr, 'z'},
+                                              {L"null-output", no_argument, nullptr, 'Z'},
+                                              {L"perm", required_argument, nullptr, 'p'},
+                                              {L"type", required_argument, nullptr, 't'},
+                                              {nullptr, 0, nullptr, 0}};
+
+static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function = {
+    {'q', handle_flag_q},
+    {'z', handle_flag_z}, {'Z', handle_flag_Z},
+    {'t', handle_flag_t}, {'p', handle_flag_p},
+};
+
+/// Parse the arguments for flags recognized by a specific string subcommand.
+static int parse_opts(options_t *opts, int *optind, int argc, const wchar_t **argv,
+                      parser_t &parser, io_streams_t &streams) {
+    const wchar_t *cmd = argv[0];
+    wcstring short_opts = construct_short_opts(opts);
+    const wchar_t *short_options = short_opts.c_str();
+    int opt;
+    wgetopter_t w;
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
+        auto fn = flag_to_function.find(opt);
+        if (fn != flag_to_function.end()) {
+            int retval = fn->second(argv, parser, streams, w, opts);
+            if (retval != STATUS_CMD_OK) return retval;
+        } else if (opt == ':') {
+            streams.err.append(L"path ");  // clone of string_error
+            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
+                                     false /* print_hints */);
+            return STATUS_INVALID_ARGS;
+        } else if (opt == '?') {
+            path_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+            return STATUS_INVALID_ARGS;
+        } else {
+            DIE("unexpected retval from wgetopt_long");
+        }
+    }
+
+    *optind = w.woptind;
+
+    // At this point we should not have optional args and be reading args from stdin.
+    if (path_args_from_stdin(streams) && argc > *optind) {
+        path_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    return STATUS_CMD_OK;
+}
+
+static int path_transform(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv,
+                            wcstring (*func)(wcstring)) {
+    options_t opts;
+    int optind;
+    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    while (const wcstring *arg = aiter.nextstr()) {
+        wcstring transformed(*arg);
+        // Empty paths make no sense, but e.g. wbasename returns true for them.
+        if (arg->empty()) continue;
+        transformed = func(*arg);
+        if (transformed != *arg) {
+            n_transformed++;
+            // Return okay if path wasn't already in this form
+            // TODO: Is that correct?
+            if (opts.quiet) return STATUS_CMD_OK;
+        }
+        path_out(streams, opts, transformed);
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+
+static int path_base(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    return path_transform(parser, streams, argc, argv, wbasename);
+}
+
+static int path_dir(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    return path_transform(parser, streams, argc, argv, wdirname);
+}
+
+// Not a constref because this must have the same type as wdirname.
+// cppcheck-suppress passedByValue
+static wcstring normalize_helper(wcstring path) {
+    return normalize_path(path, false);
+}
+
+static bool filter_path(options_t opts, const wcstring &path) {
+    // TODO: Add moar stuff:
+    // fifos, sockets, size greater than zero, setuid, ...
+    // Nothing to check, file existence is checked elsewhere.
+    if (!opts.have_type && !opts.have_perm) return true;
+
+    if (opts.have_type) {
+        bool type_ok = false;
+        struct stat buf;
+        if (opts.type & TYPE_LINK) {
+            auto lret = !lwstat(path, &buf);
+            type_ok = lret && S_ISLNK(buf.st_mode);
+        }
+
+        auto ret = !wstat(path, &buf);
+        if (!ret) {
+            // Does not exist
+            return false;
+        }
+        if (!type_ok && opts.type & TYPE_FILE && S_ISREG(buf.st_mode)) {
+            type_ok = true;
+        }
+        if (!type_ok && opts.type & TYPE_DIR && S_ISDIR(buf.st_mode)) {
+            type_ok = true;
+        }
+        if (!type_ok && opts.type & TYPE_BLOCK && S_ISBLK(buf.st_mode)) {
+            type_ok = true;
+        }
+        if (!type_ok && opts.type & TYPE_CHAR && S_ISCHR(buf.st_mode)) {
+            type_ok = true;
+        }
+        if (!type_ok && opts.type & TYPE_FIFO && S_ISFIFO(buf.st_mode)) {
+            type_ok = true;
+        }
+        if (!type_ok && opts.type & TYPE_SOCK && S_ISSOCK(buf.st_mode)) {
+            type_ok = true;
+        }
+        if (!type_ok) return false;
+    }
+    if (opts.have_perm) {
+        int amode = 0;
+        if (opts.perm & PERM_READ) amode |= R_OK;
+        if (opts.perm & PERM_WRITE) amode |= W_OK;
+        if (opts.perm & PERM_EXEC) amode |= X_OK;
+        // access returns 0 on success,
+        // -1 on failure. Yes, C can't even keep its bools straight.
+        if (waccess(path, amode)) return false;
+
+        // Permissions that require special handling
+        if (opts.have_special_perm) {
+            struct stat buf;
+            auto ret = !wstat(path, &buf);
+            if (!ret) {
+                // Does not exist, WTF?
+                return false;
+            }
+
+            if (opts.perm & PERM_SUID && !(S_ISUID & buf.st_mode)) return false;
+            if (opts.perm & PERM_SGID && !(S_ISGID & buf.st_mode)) return false;
+            if (opts.perm & PERM_USER && !(geteuid() == buf.st_uid)) return false;
+            if (opts.perm & PERM_GROUP && !(getegid() == buf.st_gid)) return false;
+            if (opts.perm & PERM_STICKY && !(S_ISVTX & buf.st_mode)) return false;
+        }
+    }
+
+    // No filters failed.
+    return true;
+}
+
+static int path_normalize(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    return path_transform(parser, streams, argc, argv, normalize_helper);
+}
+
+static maybe_t<size_t> find_extension (const wcstring &path) {
+        // The extension belongs to the basename,
+        // if there is a "." before the last component it doesn't matter.
+        // e.g. ~/.config/fish/conf.d/foo
+        // does not have an extension! The ".d" here is not a file extension for "foo".
+        // And "~/.config" doesn't have an extension either - the ".config" is the filename.
+        wcstring filename = wbasename(path);
+
+        // "." and ".." aren't really *files* and therefore don't have an extension.
+        if (filename == L"." || filename == L"..") return none();
+
+        // If we don't have a "." or the "." is the first in the filename,
+        // we do not have an extension
+        size_t pos = filename.find_last_of(L".");
+        if (pos == wcstring::npos || pos == 0) {
+            return none();
+        }
+
+        // Convert pos back to what it would be in the original path.
+        return pos + path.size() - filename.size();
+}
+
+static int path_extension(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    options_t opts;
+    int optind;
+    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    while (const wcstring *arg = aiter.nextstr()) {
+        auto pos = find_extension(*arg);
+
+        if (!pos) continue;
+
+        // This ends up being empty if the filename ends with ".".
+        // That's arguably correct.
+        //
+        // So we print an empty string but return true,
+        // because there *is* an extension, it just happens to be empty.
+        wcstring ext = arg->substr(*pos + 1);
+        if (opts.quiet && !ext.empty()) {
+            return STATUS_CMD_OK;
+        }
+        path_out(streams, opts, ext);
+        n_transformed++;
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int path_strip_extension(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    options_t opts;
+    int optind;
+    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    while (const wcstring *arg = aiter.nextstr()) {
+        auto pos = find_extension(*arg);
+
+        if (!pos) {
+            path_out(streams, opts, *arg);
+            continue;
+        }
+
+        // This ends up being empty if the filename ends with ".".
+        // That's arguably correct.
+        //
+        // So we print an empty string but return true,
+        // because there *is* an extension, it just happens to be empty.
+        wcstring ext = arg->substr(0, *pos);
+        if (opts.quiet && !ext.empty()) {
+            // Return 0 if we *had* an extension
+            return STATUS_CMD_OK;
+        }
+        path_out(streams, opts, ext);
+        n_transformed++;
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int path_real(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    options_t opts;
+    int optind;
+    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    while (const wcstring *arg = aiter.nextstr()) {
+        auto real = wrealpath(*arg);
+
+        if (!real) {
+            continue;
+        }
+
+        // Return 0 if we found a realpath.
+        if (opts.quiet) {
+            return STATUS_CMD_OK;
+        }
+        path_out(streams, opts, *real);
+        n_transformed++;
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+
+// `path filter`
+// All strings are taken to be filenames, and if they match the type/perms/etc (and exist!)
+// they are passed along.
+static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    options_t opts;
+    opts.type_valid = true;
+    opts.perm_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    int n_transformed = 0;
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    while (const wcstring *arg = aiter.nextstr()) {
+        if (filter_path(opts, *arg)) {
+            // If we don't have filters, check if it exists.
+            // (for match this is done by the glob already)
+            if (!opts.have_type && !opts.have_perm) {
+                if (waccess(*arg, F_OK)) continue;
+            }
+
+            path_out(streams, opts, *arg);
+            n_transformed++;
+            if (opts.quiet) return STATUS_CMD_OK;
+        }
+    }
+
+    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+// Keep sorted alphabetically
+static constexpr const struct path_subcommand {
+    const wchar_t *name;
+    int (*handler)(parser_t &, io_streams_t &, int argc,  //!OCLINT(unused param)
+                   const wchar_t **argv);                 //!OCLINT(unused param)
+} path_subcommands[] = {
+    // TODO: Which operations do we want?
+    // TODO: "base" or "basename"?
+    {L"base", &path_base},
+    {L"dir", &path_dir},
+    {L"extension", &path_extension},
+    {L"filter", &path_filter},
+    {L"normalize", &path_normalize},
+    {L"real", &path_real},
+    {L"strip-extension", &path_strip_extension},
+};
+ASSERT_SORTED_BY_NAME(path_subcommands);
+
+/// The string builtin, for manipulating strings.
+maybe_t<int> builtin_path(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+    const wchar_t *cmd = argv[0];
+    int argc = builtin_count_args(argv);
+    if (argc <= 1) {
+        streams.err.append_format(BUILTIN_ERR_MISSING_SUBCMD, cmd);
+        builtin_print_error_trailer(parser, streams.err, L"path");
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (std::wcscmp(argv[1], L"-h") == 0 || std::wcscmp(argv[1], L"--help") == 0) {
+        builtin_print_help(parser, streams, L"path");
+        return STATUS_CMD_OK;
+    }
+
+    const wchar_t *subcmd_name = argv[1];
+    const auto *subcmd = get_by_sorted_name(subcmd_name, path_subcommands);
+    if (!subcmd) {
+        streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name);
+        builtin_print_error_trailer(parser, streams.err, L"path");
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (argc >= 3 && (std::wcscmp(argv[2], L"-h") == 0 || std::wcscmp(argv[2], L"--help") == 0)) {
+        wcstring path_dash_subcommand = wcstring(argv[0]) + L"-" + subcmd_name;
+        builtin_print_help(parser, streams, path_dash_subcommand.c_str());
+        return STATUS_CMD_OK;
+    }
+    argc--;
+    argv++;
+    return subcmd->handler(parser, streams, argc, argv);
+}

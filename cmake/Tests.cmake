@@ -36,7 +36,7 @@ endif()
 add_custom_target(test
   COMMAND env CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
-          --output-on-failure
+          --output-on-failure --progress
   DEPENDS fish_tests tests_buildroot_target
   USES_TERMINAL
 )

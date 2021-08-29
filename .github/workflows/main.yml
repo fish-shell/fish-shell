@@ -2,6 +2,9 @@ name: C/C++ CI
 
 on: [push, pull_request]
 
+env:
+  CTEST_PARALLEL_LEVEL: "1"
+
 jobs:
   ubuntu:
 

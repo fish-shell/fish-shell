@@ -1,9 +1,7 @@
-#RUN: %fish -C 'set -g fish %fish' %s
+# Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
+# RUN: env HOME="$(mktemp -d)" XDG_CONFIG_HOME="$(mktemp -d)" %fish -C 'set -g fish %fish' %s
 
-set -gx XDG_CONFIG_HOME (mktemp -d)
-set -gx XDG_DATA_HOME $XDG_CONFIG_HOME
 mkdir -p $XDG_CONFIG_HOME/fish
-
 
 # fish_variables
 set -l target_file $XDG_CONFIG_HOME/fish/target_fish_variables

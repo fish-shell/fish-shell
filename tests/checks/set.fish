@@ -1,4 +1,5 @@
-# RUN: env XDG_CONFIG_HOME="$(mktemp -d)" FISH=%fish %fish %s
+# Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
+# RUN: env FISH=%fish HOME="$(mktemp -d)" XDG_CONFIG_HOME="$(mktemp -d)" %fish %s
 # Environment variable tests
 
 # Test if variables can be properly set
@@ -476,7 +477,7 @@ echo "global-vs-universal 4: $__fish_test_global_vs_universal"
 
 set -e -U __fish_test_global_vs_universal
 echo "global-vs-universal 5: $__fish_test_global_vs_universal"
-# CHECK: global-vs-universal 5: 
+# CHECK: global-vs-universal 5:
 
 # Export local variables from all parent scopes (issue #6153).
 function func
@@ -711,14 +712,14 @@ true
 
 set "" foo
 #CHECKERR: set: Variable name '' is not valid. See `help identifiers`.
-#CHECKERR: {{.*}}set.fish (line {{\d+}}): 
+#CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set "" foo
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
 
 set --show ""
 #CHECKERR: set: Variable name '' is not valid. See `help identifiers`.
-#CHECKERR: {{.*}}set.fish (line {{\d+}}): 
+#CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set --show ""
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
@@ -802,7 +803,7 @@ function test-function-scope
     #CHECK: $globalvar: set in global scope, unexported, with 1 elements
     #CHECK: $globalvar[1]: |global|
 end
-        
+
 test-function-scope
 echo $funcvar $funcvar2
 # CHECK:

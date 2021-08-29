@@ -1,8 +1,6 @@
-# Interactive tests using `expect`
+#! /bin/echo "interactive.fish must be run via the test driver!"
 #
-# There is no shebang line because you shouldn't be running this by hand. You
-# should be running it via `make test` to ensure the environment is properly
-# setup.
+# Interactive tests using `pexpect`
 
 # Set this var to modify behavior of the code being tests. Such as avoiding running
 # `fish_update_completions` when running tests.
@@ -11,29 +9,22 @@ set -gx FISH_UNIT_TESTS_RUNNING 1
 # Change to directory containing this script
 cd (status dirname)
 
-# These env vars should not be inherited from the user environment because they can affect the
-# behavior of the tests. So either remove them or set them to a known value.
-# See also tests/test.fish.
-set -gx TERM xterm
-set -e ITERM_PROFILE
-
 # Test files specified on commandline, or all pexpect files.
-if set -q argv[1]
-    set pexpect_files_to_test pexpects/$argv.py
+if set -q argv[1] && test -n "$argv[1]"
+    set pexpect_files_to_test pexpects/$argv
 else if set -q FISH_PEXPECT_FILES
     set pexpect_files_to_test (string replace -r '^.*/(?=pexpects/)' '' -- $FISH_PEXPECT_FILES)
 else
+    say -o cyan "Testing interactive functionality"
     set pexpect_files_to_test pexpects/*.py
 end
 
-source test_util.fish (status -f) $argv
-or exit
+source test_util.fish || exit
 cat interactive.config >>$XDG_CONFIG_HOME/fish/config.fish
 
-say -o cyan "Testing interactive functionality"
 function test_pexpect_file
     set -l file $argv[1]
-    echo -n "Testing file $file ... "
+    echo -n "Testing file $file:"
 
     begin
         set starttime (timestamp)
@@ -77,7 +68,11 @@ end
 
 set failed (count $failed)
 if test $failed -eq 0
-    say green "All interactive tests completed successfully"
+    if test (count $pexpect_files_to_test) -gt 1
+        say green "All interactive tests completed successfully"
+    else
+        say green "$pexpect_files_to_test completed successfully"
+    end
     exit 0
 else
     set plural (test $failed -eq 1; or echo s)

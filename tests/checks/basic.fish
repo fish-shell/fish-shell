@@ -3,6 +3,10 @@
 # Test function, loops, conditionals and some basic elements
 #
 
+# The test driver always starts each test in its own temporary directory, but to make it easier to
+# run this test directly for whatever reason:
+set -g tmpdir (mktemp -d)
+
 # Comments in odd places don't cause problems
 for i in 1 2 # Comment on same line as command
 # Comment inside loop
@@ -42,12 +46,12 @@ end
 # Simple function tests
 
 function foo
-    echo >../test/temp/fish_foo.txt $argv
+    echo > $tmpdir/fish_foo.txt $argv
 end
 
 foo hello
 
-cat ../test/temp/fish_foo.txt |read foo
+cat $tmpdir/fish_foo.txt |read foo
 
 if test $foo = hello;
   echo Test 2 pass
@@ -297,7 +301,7 @@ else if test -n "def"
 else if not_a_valid_command but it should be OK because a previous branch was taken
 	echo "epsilon 5.3"
 else if test ! -n "abc"
-	echo "epsilon 5.4"	
+	echo "epsilon 5.4"
 end
 #CHECK: epsilon5.2
 
@@ -327,10 +331,10 @@ type -q -f fish_test_type_zzz ; echo $status
 
 # ensure that builtins that produce no output can still truncate files
 # (bug PCA almost reintroduced!)
-echo abc > ../test/temp/file_truncation_test.txt
-cat ../test/temp/file_truncation_test.txt
-echo -n > ../test/temp/file_truncation_test.txt
-cat ../test/temp/file_truncation_test.txt
+echo abc > $tmpdir/file_truncation_test.txt
+cat $tmpdir/file_truncation_test.txt
+echo -n > $tmpdir/file_truncation_test.txt
+cat $tmpdir/file_truncation_test.txt
 #CHECK: abc
 
 # Test events.

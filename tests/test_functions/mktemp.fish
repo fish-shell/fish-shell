@@ -52,19 +52,16 @@ function mktemp
     # So let's outlaw them anywhere besides the end.
     # Similarly GNU mktemp requires at least 3 X's, BSD mktemp requires none. Let's require 3.
     begin
-        set -l chars (string split '' -- $template)
-        set -l found_x
-        for c in $chars
-            if test $c = X
-                set found_x $found_x X
-            else if set -q found_x[1]
-                echo 'mktemp: X\'s may only occur at the end of the template' >&2
-                _mktemp_help >&2
-                exit 1
-            end
+        # Look for at least three Xs that are not the end of the template
+        if string match -rq -- 'XXX[^X].*$' "$template"
+            echo "mktemp: X's may only occur at the end of the template '$template'" >&2
+            _mktemp_help >&2
+            exit 1
         end
-        if test (count $found_x) -lt 3
-            echo "mktemp: too few X's in template '$template'" >&2
+
+        # Look for too few X incidences at the end of the template
+        if ! string match -rq -- 'XXX$' "$template"
+            echo "mktemp: too few trailing X's in template '$template'" >&2
             _mktemp_usage >&2
             exit 1
         end

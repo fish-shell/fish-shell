@@ -60,15 +60,16 @@ foo $tmpdir/bar
 cat $tmpdir/bar
 # CHECK: foo
 
-rm -Rf $tmpdir
-
 # Verify that we can turn stderr into stdout and then pipe it
 # Note that the order here has historically been unspecified - 'errput' could conceivably appear before 'output'.
 begin
     echo output
     echo errput 1>&2
-end 2>&1 | sort | tee ../test/temp/tee_test.txt
-cat ../test/temp/tee_test.txt
+end 2>&1 | sort | tee $tmpdir/tee_test.txt
+cat $tmpdir/tee_test.txt
+
+rm -Rf $tmpdir
+
 #CHECK: errput
 #CHECK: output
 #CHECK: errput

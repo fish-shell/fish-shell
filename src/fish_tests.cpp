@@ -103,8 +103,7 @@ static bool should_test_function(const char *func_name, bool default_on = true) 
         result = default_on;
     } else {
         for (size_t i = 0; s_arguments[i] != nullptr; i++) {
-            if (!std::strncmp(func_name, s_arguments[i], std::strlen(s_arguments[i]))) {
-                // Prefix match.
+            if (!std::strcmp(func_name, s_arguments[i])) {
                 result = true;
                 break;
             }
@@ -4341,6 +4340,11 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count, siz
 }
 
 void history_tests_t::test_history_races() {
+    // This always fails under WSL
+    if (is_windows_subsystem_for_linux()) {
+        return;
+    }
+
     say(L"Testing history race conditions");
 
     // It appears TSAN and ASAN's allocators do not release their locks properly in atfork, so
@@ -6647,10 +6651,137 @@ void termsize_tester_t::test() {
     do_test(ts2.updating(parser) == *stubby_termsize);
 }
 
+// typedef void (test_entry_point_t)();
+using test_entry_point_t = void (*)();
+struct test_t {
+    const char *group;
+    std::function<void()> test;
+    bool opt_in = false;
+
+    test_t(const char *group, test_entry_point_t test, bool opt_in = false)
+        : group(group), test(test), opt_in(opt_in) {}
+};
+
+struct test_comparator_t {
+    // template<typename T=test_t>
+    int operator()(const test_t &lhs, const test_t &rhs) { return strcmp(lhs.group, rhs.group); }
+};
+
+// This magic string is required for CMake to pick up the list of tests
+#define TEST_GROUP(x) x
+static const test_t s_tests[]{
+    {TEST_GROUP("utility_functions"), test_utility_functions},
+    {TEST_GROUP("string_split"), test_split_string_tok},
+    {TEST_GROUP("wwrite_to_fd"), test_wwrite_to_fd},
+    {TEST_GROUP("env_vars"), test_env_vars},
+    {TEST_GROUP("env"), test_env_snapshot},
+    {TEST_GROUP("str_to_num"), test_str_to_num},
+    {TEST_GROUP("enum"), test_enum_set},
+    {TEST_GROUP("enum"), test_enum_array},
+    {TEST_GROUP("highlighting"), test_highlighting},
+    {TEST_GROUP("new_parser_ll2"), test_new_parser_ll2},
+    {TEST_GROUP("new_parser_fuzzing"), test_new_parser_fuzzing},
+    {TEST_GROUP("new_parser_correctness"), test_new_parser_correctness},
+    {TEST_GROUP("new_parser_ad_hoc"), test_new_parser_ad_hoc},
+    {TEST_GROUP("new_parser_errors"), test_new_parser_errors},
+    {TEST_GROUP("error_messages"), test_error_messages},
+    {TEST_GROUP("escape"), test_unescape_sane},
+    {TEST_GROUP("escape"), test_escape_crazy},
+    {TEST_GROUP("escape"), test_escape_quotes},
+    {TEST_GROUP("format"), test_format},
+    {TEST_GROUP("convert"), test_convert},
+    {TEST_GROUP("convert"), test_convert_private_use},
+    {TEST_GROUP("convert_ascii"), test_convert_ascii},
+    {TEST_GROUP("perf_convert_ascii"), perf_convert_ascii, true},
+    {TEST_GROUP("convert_nulls"), test_convert_nulls},
+    {TEST_GROUP("tokenizer"), test_tokenizer},
+    {TEST_GROUP("fd_monitor"), test_fd_monitor},
+    {TEST_GROUP("iothread"), test_iothread},
+    {TEST_GROUP("pthread"), test_pthread},
+    {TEST_GROUP("debounce"), test_debounce},
+    {TEST_GROUP("debounce"), test_debounce_timeout},
+    {TEST_GROUP("parser"), test_parser},
+    {TEST_GROUP("cancellation"), test_cancellation},
+    {TEST_GROUP("indents"), test_indents},
+    {TEST_GROUP("utf8"), test_utf8},
+    {TEST_GROUP("feature_flags"), test_feature_flags},
+    {TEST_GROUP("escape_sequences"), test_escape_sequences},
+    {TEST_GROUP("pcre2_escape"), test_pcre2_escape},
+    {TEST_GROUP("lru"), test_lru},
+    {TEST_GROUP("expand"), test_expand},
+    {TEST_GROUP("expand"), test_expand_overflow},
+    {TEST_GROUP("fuzzy_match"), test_fuzzy_match},
+    {TEST_GROUP("ifind"), test_ifind},
+    {TEST_GROUP("ifind_fuzzy"), test_ifind_fuzzy},
+    {TEST_GROUP("abbreviations"), test_abbreviations},
+    {TEST_GROUP("builtin_test"), test_test},
+    {TEST_GROUP("wcstod"), test_wcstod},
+    {TEST_GROUP("dup2s"), test_dup2s},
+    {TEST_GROUP("dup2s"), test_dup2s_fd_for_target_fd},
+    {TEST_GROUP("path"), test_path},
+    {TEST_GROUP("pager_navigation"), test_pager_navigation},
+    {TEST_GROUP("pager_layout"), test_pager_layout},
+    {TEST_GROUP("word_motion"), test_word_motion},
+    {TEST_GROUP("is_potential_path"), test_is_potential_path},
+    {TEST_GROUP("colors"), test_colors},
+    {TEST_GROUP("complete"), test_complete},
+    {TEST_GROUP("autoload"), test_autoload},
+    {TEST_GROUP("input"), test_input},
+    {TEST_GROUP("line_iterator"), test_line_iterator},
+    {TEST_GROUP("undo"), test_undo},
+    {TEST_GROUP("universal"), test_universal},
+    {TEST_GROUP("universal"), test_universal_output},
+    {TEST_GROUP("universal"), test_universal_parsing},
+    {TEST_GROUP("universal"), test_universal_parsing_legacy},
+    {TEST_GROUP("universal"), test_universal_callbacks},
+    {TEST_GROUP("universal"), test_universal_formats},
+    {TEST_GROUP("universal"), test_universal_ok_to_save},
+    {TEST_GROUP("notifiers"), test_universal_notifiers},
+    {TEST_GROUP("wait_handles"), test_wait_handles},
+    {TEST_GROUP("completion_insertions"), test_completion_insertions},
+    {TEST_GROUP("autosuggestion_ignores"), test_autosuggestion_ignores},
+    {TEST_GROUP("autosuggestion_combining"), test_autosuggestion_combining},
+    {TEST_GROUP("autosuggest_suggest_special"), test_autosuggest_suggest_special},
+    {TEST_GROUP("history"), history_tests_t::test_history},
+    {TEST_GROUP("history_merge"), history_tests_t::test_history_merge},
+    {TEST_GROUP("history_paths"), history_tests_t::test_history_path_detection},
+    {TEST_GROUP("history_races"), history_tests_t::test_history_races},
+    {TEST_GROUP("history_formats"), history_tests_t::test_history_formats},
+    {TEST_GROUP("string"), test_string},
+    {TEST_GROUP("illegal_command_exit_code"), test_illegal_command_exit_code},
+    {TEST_GROUP("maybe"), test_maybe},
+    {TEST_GROUP("layout_cache"), test_layout_cache},
+    {TEST_GROUP("prompt"), test_prompt_truncation},
+    {TEST_GROUP("normalize"), test_normalize_path},
+    {TEST_GROUP("dirname"), test_dirname_basename},
+    {TEST_GROUP("topics"), test_topic_monitor},
+    {TEST_GROUP("topics"), test_topic_monitor_torture},
+    {TEST_GROUP("pipes"), test_pipes},
+    {TEST_GROUP("fd_event"), test_fd_event_signaller},
+    {TEST_GROUP("timer_format"), test_timer_format},
+    {TEST_GROUP("termsize"), termsize_tester_t::test},
+    {TEST_GROUP("killring"), test_killring},
+};
+
+void list_tests() {
+    std::set<std::string> groups;
+    for (const auto &test : s_tests) {
+        groups.insert(test.group);
+    }
+
+    for (const auto &group : groups) {
+        std::fprintf(stdout, "%s\n", group.c_str());
+    }
+}
+
 /// Main test.
 int main(int argc, char **argv) {
-    UNUSED(argc);
     setlocale(LC_ALL, "");
+
+    if (argc >= 2 && std::strcmp(argv[1], "--list") == 0) {
+        list_tests();
+        return 0;
+    }
 
     // Look for the file tests/test.fish. We expect to run in a directory containing that file.
     // If we don't find it, walk up the directory hierarchy until we do, or error.
@@ -6696,103 +6827,11 @@ int main(int argc, char **argv) {
     // Set PWD from getcwd - fixes #5599
     env_stack_t::principal().set_pwd_from_getcwd();
 
-    if (should_test_function("utility_functions")) test_utility_functions();
-    if (should_test_function("string_split")) test_split_string_tok();
-    if (should_test_function("wwrite_to_fd")) test_wwrite_to_fd();
-    if (should_test_function("env_vars")) test_env_vars();
-    if (should_test_function("env")) test_env_snapshot();
-    if (should_test_function("str_to_num")) test_str_to_num();
-    if (should_test_function("enum")) test_enum_set();
-    if (should_test_function("enum")) test_enum_array();
-    if (should_test_function("highlighting")) test_highlighting();
-    if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
-    if (should_test_function("new_parser_fuzzing"))
-        test_new_parser_fuzzing();  // fuzzing is expensive
-    if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
-    if (should_test_function("new_parser_ad_hoc")) test_new_parser_ad_hoc();
-    if (should_test_function("new_parser_errors")) test_new_parser_errors();
-    if (should_test_function("error_messages")) test_error_messages();
-    if (should_test_function("escape")) test_unescape_sane();
-    if (should_test_function("escape")) test_escape_crazy();
-    if (should_test_function("escape")) test_escape_quotes();
-    if (should_test_function("format")) test_format();
-    if (should_test_function("convert")) test_convert();
-    if (should_test_function("convert")) test_convert_private_use();
-    if (should_test_function("convert_ascii")) test_convert_ascii();
-    if (should_test_function("perf_convert_ascii", false)) perf_convert_ascii();
-    if (should_test_function("convert_nulls")) test_convert_nulls();
-    if (should_test_function("tokenizer")) test_tokenizer();
-    if (should_test_function("fd_monitor")) test_fd_monitor();
-    if (should_test_function("iothread")) test_iothread();
-    if (should_test_function("pthread")) test_pthread();
-    if (should_test_function("debounce")) test_debounce();
-    if (should_test_function("debounce")) test_debounce_timeout();
-    if (should_test_function("parser")) test_parser();
-    if (should_test_function("cancellation")) test_cancellation();
-    if (should_test_function("indents")) test_indents();
-    if (should_test_function("utf8")) test_utf8();
-    if (should_test_function("feature_flags")) test_feature_flags();
-    if (should_test_function("escape_sequences")) test_escape_sequences();
-    if (should_test_function("pcre2_escape")) test_pcre2_escape();
-    if (should_test_function("lru")) test_lru();
-    if (should_test_function("expand")) test_expand();
-    if (should_test_function("expand")) test_expand_overflow();
-    if (should_test_function("fuzzy_match")) test_fuzzy_match();
-    if (should_test_function("ifind")) test_ifind();
-    if (should_test_function("ifind_fuzzy")) test_ifind_fuzzy();
-    if (should_test_function("abbreviations")) test_abbreviations();
-    if (should_test_function("test")) test_test();
-    if (should_test_function("wcstod")) test_wcstod();
-    if (should_test_function("dup2s")) test_dup2s();
-    if (should_test_function("dup2s")) test_dup2s_fd_for_target_fd();
-    if (should_test_function("path")) test_path();
-    if (should_test_function("pager_navigation")) test_pager_navigation();
-    if (should_test_function("pager_layout")) test_pager_layout();
-    if (should_test_function("word_motion")) test_word_motion();
-    if (should_test_function("is_potential_path")) test_is_potential_path();
-    if (should_test_function("colors")) test_colors();
-    if (should_test_function("complete")) test_complete();
-    if (should_test_function("autoload")) test_autoload();
-    if (should_test_function("input")) test_input();
-    if (should_test_function("line_iterator")) test_line_iterator();
-    if (should_test_function("undo")) test_undo();
-    if (should_test_function("universal")) test_universal();
-    if (should_test_function("universal")) test_universal_output();
-    if (should_test_function("universal")) test_universal_parsing();
-    if (should_test_function("universal")) test_universal_parsing_legacy();
-    if (should_test_function("universal")) test_universal_callbacks();
-    if (should_test_function("universal")) test_universal_formats();
-    if (should_test_function("universal")) test_universal_ok_to_save();
-    if (should_test_function("notifiers")) test_universal_notifiers();
-    if (should_test_function("wait_handles")) test_wait_handles();
-    if (should_test_function("completion_insertions")) test_completion_insertions();
-    if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
-    if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
-    if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
-    if (should_test_function("history")) history_tests_t::test_history();
-    if (should_test_function("history_merge")) history_tests_t::test_history_merge();
-    if (should_test_function("history_paths")) history_tests_t::test_history_path_detection();
-    if (!is_windows_subsystem_for_linux()) {
-        // this test always fails under WSL
-        if (should_test_function("history_races")) history_tests_t::test_history_races();
+    for (const auto &test : s_tests) {
+        if (should_test_function(test.group)) {
+            test.test();
+        }
     }
-    if (should_test_function("history_formats")) history_tests_t::test_history_formats();
-    if (should_test_function("string")) test_string();
-    if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
-    if (should_test_function("maybe")) test_maybe();
-    if (should_test_function("layout_cache")) test_layout_cache();
-    if (should_test_function("prompt")) test_prompt_truncation();
-    if (should_test_function("normalize")) test_normalize_path();
-    if (should_test_function("dirname")) test_dirname_basename();
-    if (should_test_function("topics")) test_topic_monitor();
-    if (should_test_function("topics")) test_topic_monitor_torture();
-    if (should_test_function("pipes")) test_pipes();
-    if (should_test_function("fd_event")) test_fd_event_signaller();
-    if (should_test_function("timer_format")) test_timer_format();
-    // history_tests_t::test_history_speed();
-
-    if (should_test_function("termsize")) termsize_tester_t::test();
-    if (should_test_function("killring")) test_killring();
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");

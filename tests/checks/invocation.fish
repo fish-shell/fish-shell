@@ -90,3 +90,7 @@ $fish --no-config -c 'echo $$ oh no syntax error' -c 'echo this works'
 # CHECKERR: fish: $$ is not the pid. In fish, please use $fish_pid.
 # CHECKERR: echo $$ oh no syntax error
 # CHECKERR: ^
+
+$fish --no-config .
+# CHECKERR: error: Unable to read input file: Is a directory
+# CHECKERR: warning: Error while reading file .

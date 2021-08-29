@@ -4227,6 +4227,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
                 FLOGF(error, _(L"Unable to read input file: %s"), strerror(err));
                 // Reset buffer on error. We won't evaluate incomplete files.
                 fd_contents.clear();
+                return 1;
             }
         }
     }

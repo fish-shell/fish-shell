@@ -19,7 +19,7 @@ if not contains (uname) SunOS
     ps -o ppid,stat
 else
     ps -o ppid,s
-end | string match -e $fish_pid | string match 'Z*'
+end | string match -e $fish_pid | string match '*Z*'
 
 # Verify disown can be used with last_pid, even if it is separate from the pgroup.
 # This should silently succeed.

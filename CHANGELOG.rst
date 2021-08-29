@@ -63,6 +63,9 @@ Scripting improvements
 
 - ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This will allow a basic implementation of transient prompts (:issue:`8142`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
+- Running ``fish`` with a directory instead of a script as argument (e.g. ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
+- ``help`` now knows which section is in which document again (:issue:`8245`).
+- Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish. This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
 
 Interactive improvements
 ------------------------
@@ -71,6 +74,7 @@ Interactive improvements
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
 - ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
 - ``cd ""`` no longer crashes fish (:issue:`8147`).
+- Running a commandline consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -103,6 +107,11 @@ Improved terminal support
 - Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
 - Directory history navigation works out of the box with Apple Terminal's default key settings (:issue:`2330`).
 - fish now assumes Unicode 9+ widths for emoji under iTerm 2 (:issue:`8200`).
+
+Other improvements
+------------------------------
+- Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests. (:issue:`7851`)
+- The html version of the documentation now includes copy buttons for any code if javascript is available (:issue:`8218`).
 
 For distributors
 ----------------

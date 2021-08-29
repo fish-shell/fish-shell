@@ -73,7 +73,7 @@ else
 end
 
 set -l real_path (builtin realpath -s .)
-set -l expected_real_path (pwd) # Logical working directory.
+set -l expected_real_path (pwd -P) # Physical working directory.
 if test "$real_path" = "$expected_real_path"
     echo "relative path correctly handled"
     # CHECK: relative path correctly handled

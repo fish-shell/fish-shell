@@ -1,4 +1,5 @@
-# RUN: env FISH=%fish %fish %s
+# Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
+# RUN: env FISH=%fish HOME="$(mktemp -d)" XDG_CONFIG_HOME="$(mktemp -d)" %fish %s
 # Environment variable tests
 
 # Test if variables can be properly set
@@ -802,7 +803,7 @@ function test-function-scope
     #CHECK: $globalvar: set in global scope, unexported, with 1 elements
     #CHECK: $globalvar[1]: |global|
 end
-        
+
 test-function-scope
 echo $funcvar $funcvar2
 # CHECK:

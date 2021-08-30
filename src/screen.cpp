@@ -105,21 +105,40 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
     // so we can just handle them here.
     static const wchar_t *tmux_seq = L"Ptmux;";
     static const size_t tmux_seq_len = std::wcslen(tmux_seq);
+    bool is_tmux = false;
     if (code[1] != L'k') {
-        if (wcsncmp(&code[1], tmux_seq, tmux_seq_len) != 0) {
+        if (wcsncmp(&code[1], tmux_seq, tmux_seq_len) == 0) {
+            is_tmux = true;
+        } else {
             return false;
         }
     }
     const wchar_t *const screen_name_end_sentinel = L"\x1B\\";
-    const wchar_t *screen_name_end = std::wcsstr(&code[2], screen_name_end_sentinel);
-    if (screen_name_end == nullptr) {
-        // Consider just <esc>k to be the code.
-        // (note: for the tmux sequence this is broken, but since we have no idea...)
-        *resulting_length = 2;
-    } else {
-        const wchar_t *escape_sequence_end =
-            screen_name_end + std::wcslen(screen_name_end_sentinel);
-        *resulting_length = escape_sequence_end - code;
+    size_t offset = 2;
+    while (true) {
+        const wchar_t *screen_name_end = std::wcsstr(&code[offset], screen_name_end_sentinel);
+        if (screen_name_end == nullptr) {
+            // Consider just <esc>k to be the code.
+            // (note: for the tmux sequence this is broken, but since we have no idea...)
+            *resulting_length = 2;
+            break;
+        } else {
+            // The tmux sequence requires that all escapes in the payload sequence
+            // be doubled. So if we have \e\e\\ that's still not the end.
+            if (is_tmux) {
+                size_t esc_count = 0;
+                const wchar_t *i = screen_name_end;
+                while (i > code && *(i - 1) == L'\x1B' && --i) esc_count++;
+                if (esc_count % 2 == 1) {
+                    offset=screen_name_end - code + 1;
+                    continue;
+                }
+            }
+            const wchar_t *escape_sequence_end =
+                screen_name_end + std::wcslen(screen_name_end_sentinel);
+            *resulting_length = escape_sequence_end - code;
+            break;
+        }
     }
     return true;
 }

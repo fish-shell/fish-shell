@@ -101,13 +101,20 @@ static bool allow_soft_wrap() {
 
 /// Does this look like the escape sequence for setting a screen name?
 static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_length) {
+    // Tmux escapes start with `\ePtmux;` and end also in `\e\\`,
+    // so we can just handle them here.
+    static const wchar_t *tmux_seq = L"Ptmux;";
+    static const size_t tmux_seq_len = std::wcslen(tmux_seq);
     if (code[1] != L'k') {
-        return false;
+        if (wcsncmp(&code[1], tmux_seq, tmux_seq_len) != 0) {
+            return false;
+        }
     }
     const wchar_t *const screen_name_end_sentinel = L"\x1B\\";
     const wchar_t *screen_name_end = std::wcsstr(&code[2], screen_name_end_sentinel);
     if (screen_name_end == nullptr) {
         // Consider just <esc>k to be the code.
+        // (note: for the tmux sequence this is broken, but since we have no idea...)
         *resulting_length = 2;
     } else {
         const wchar_t *escape_sequence_end =

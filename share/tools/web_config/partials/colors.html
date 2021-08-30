@@ -65,7 +65,11 @@ fish cannot change the background color of your terminal. Refer to your terminal
         	  ng-mouseenter="csHoveredType = 'error'"
         	  ng-mouseleave="csHoveredType = false"
               data-ng-style="{ 'color': interpret_color(selectedColorScheme.error)}"
-              ng-click="selectColorSetting('error')">'Errors are the portals to discovery</span>
+              ng-click="selectColorSetting('error')">'</span><span ng-class="{cs_clickable: customizationActive, cs_editing: csEditingType == 'quote'}"
+        	  ng-mouseenter="csHoveredType = 'quote'"
+        	  ng-mouseleave="csHoveredType = false"
+              data-ng-style="{ 'color': interpret_color(selectedColorScheme.quote)}"
+              ng-click="selectColorSetting('quote')">Errors are the portals to discovery</span>
 
         <br>
 

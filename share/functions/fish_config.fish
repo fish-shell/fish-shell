@@ -162,7 +162,7 @@ function fish_config --description "Launch fish's web based configuration"
                     set_color normal
                     echo -ns (set_color $fish_color_command) echo
                     echo -ns (set_color normal) ' '
-                    echo -s (set_color $fish_color_error) "'Errors are the portal to discovery"
+                    echo -s (set_color $fish_color_error) "'" (set_color $fish_color_quote) "Errors are the portal to discovery"
                     set_color normal
                     echo -ns (set_color $fish_color_command) Th
                     set_color normal

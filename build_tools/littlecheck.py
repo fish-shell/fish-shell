@@ -688,6 +688,13 @@ def get_argparse():
         help="Show the files to be checked",
         default=False,
     )
+    parser.add_argument(
+        "--force-color",
+        action="store_true",
+        dest="force_color",
+        help="Force usage of color even if not connected to a terminal",
+        default=False,
+    )
     parser.add_argument("file", nargs="+", help="File to check")
     return parser
 
@@ -702,7 +709,7 @@ def main():
     failed = False
     skip_count = 0
     config = Config()
-    config.colorize = sys.stdout.isatty()
+    config.colorize = args.force_color or sys.stdout.isatty()
     config.progress = args.progress
     fields = config.colors()
 

@@ -30,8 +30,12 @@ set -g python (__fish_anypython)
 set -l skipped 0
 set -l failed 0
 if set -q files_to_test[1]
+    set -l force_color
+    test "$FISH_FORCE_COLOR" = 1
+    and set force_color --force-color
+
     $python -S ../littlecheck.py \
-        --progress \
+        --progress $force_color \
         -s fish=../test/root/bin/fish \
         -s fish_test_helper=../test/root/bin/fish_test_helper \
         $files_to_test

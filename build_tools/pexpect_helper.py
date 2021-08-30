@@ -143,7 +143,7 @@ class SpawnedProc(object):
         if name not in env:
             raise ValueError("'%s' variable not found in environment" % name)
         exe_path = env.get(name)
-        self.colorize = sys.stdout.isatty()
+        self.colorize = sys.stdout.isatty() or env.get("FISH_FORCE_COLOR", "0") == "1"
         self.messages = []
         self.start_time = None
         self.spawn = pexpect.spawn(exe_path, env=env, encoding="utf-8", timeout=timeout, **kwargs)

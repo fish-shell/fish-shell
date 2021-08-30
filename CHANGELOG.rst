@@ -29,7 +29,6 @@ Deprecations and removed features
 
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
 - ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are almost certainly buggy (:issue:`8214`).
-- Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
 
 Scripting improvements
 ----------------------
@@ -75,6 +74,7 @@ Interactive improvements
 - ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
 - ``cd ""`` no longer crashes fish (:issue:`8147`).
 - Running a commandline consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
+- Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -107,6 +107,7 @@ Improved terminal support
 - Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
 - Directory history navigation works out of the box with Apple Terminal's default key settings (:issue:`2330`).
 - fish now assumes Unicode 9+ widths for emoji under iTerm 2 (:issue:`8200`).
+- fish's escape sequence removal now also knows Tmux' wrapped escapes.
 
 Other improvements
 ------------------------------

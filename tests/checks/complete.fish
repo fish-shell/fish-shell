@@ -403,7 +403,6 @@ rm -r $dir
 
 set -l dir (mktemp -d)
 cd $dir
-cd -
 
 : >command-not-in-path
 chmod +x command-not-in-path
@@ -426,4 +425,5 @@ begin
     # CHECK: custom-completions
 end
 
+cd -
 rm -r $dir

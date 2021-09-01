@@ -16,7 +16,7 @@ Fish also has man pages for its commands, and translates the help pages to man p
 
 Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the :ref:`fg <cmd-fg>` builtin, either type ``fg -h`` or ``help fg``.
 
-This page can be viewed via ``help index`` (or just ``help``) or ``man fish-doc``. The tutorial can be viewed with ``help tutorial`` or ``man fish-tutorial``.
+The main page can be viewed via ``help index`` (or just ``help``) or ``man fish-doc``. The tutorial can be viewed with ``help tutorial`` or ``man fish-tutorial``.
 
 .. _autosuggestions:
 
@@ -79,9 +79,6 @@ Detected errors include:
 - Incorrect use of output redirects
 - Mismatched parenthesis
 
-
-When the cursor is over a parenthesis or a quote, fish also highlights its matching quote or parenthesis.
-
 To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
 
 .. _variables-color:
@@ -105,15 +102,15 @@ Variable                                                   Meaning
 ``fish_color_normal``                                      default color
 ``fish_color_command``                                     commands like echo
 ``fish_color_keyword``                                     keywords like if - this falls back on the command color if unset
-``fish_color_quote``                                       quoted text like "abc"
+``fish_color_quote``                                       quoted text like ``"abc"``
 ``fish_color_redirection``                                 IO redirections like >/dev/null
-``fish_color_end``                                         process separators like ';' and '&'
+``fish_color_end``                                         process separators like ``;`` and ``&``
 ``fish_color_error``                                       syntax errors
 ``fish_color_param``                                       ordinary command parameters
 ``fish_color_comment``                                     comments like '# important'
 ``fish_color_selection``                                   selected text in vi visual mode
-``fish_color_operator``                                    parameter expansion operators like '*' and '~'
-``fish_color_escape``                                      character escapes like '\n' and '\x70'
+``fish_color_operator``                                    parameter expansion operators like ``*`` and ``~``
+``fish_color_escape``                                      character escapes like ``\n`` and ``\x70``
 ``fish_color_autosuggestion``                              autosuggestions (the proposed rest of a command)
 ``fish_color_cwd``                                         the current working directory in the default prompt
 ``fish_color_user``                                        the username in the default prompt

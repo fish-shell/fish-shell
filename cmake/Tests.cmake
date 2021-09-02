@@ -72,7 +72,9 @@ set(TEST_ROOT_DIR ${TEST_DIR}/root)
 if(NOT FISH_IN_TREE_BUILD)
   add_custom_target(funcs_dir)
   add_custom_command(TARGET funcs_dir
-                       COMMAND mkdir -p ${CMAKE_BINARY_DIR}/share && ln -sf
+    COMMAND mkdir -p ${CMAKE_BINARY_DIR}/share
+    # Don't run ln twice or it will create a new link in the link.
+    COMMAND test -e ${CMAKE_BINARY_DIR}/share/functions || ln -sf
                           ${CMAKE_SOURCE_DIR}/share/functions/ ${CMAKE_BINARY_DIR}/share/functions
                        COMMENT "Symlinking fish functions to binary dir"
                        VERBATIM)

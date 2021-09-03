@@ -93,6 +93,7 @@ controllers.controller("colorsController", function($scope, $http) {
             for (var scheme of arg.data) {
                 var currentScheme = { "name": "Current", "colors":[], "preferred_background": "black" };
                 currentScheme["name"] = scheme["theme"];
+                if (scheme["name"]) currentScheme["name"] = scheme["name"];
                 var data = scheme["colors"];
                 if (scheme["preferred_background"]) {
                     if (isValidColor(scheme["preferred_background"])) {

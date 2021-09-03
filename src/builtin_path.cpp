@@ -143,10 +143,10 @@ typedef uint32_t path_perm_flags_t;
 struct options_t {  //!OCLINT(too many fields)
     bool perm_valid = false;
     bool type_valid = false;
+    bool invert_valid = false;
 
     bool null_in = false;
     bool null_out = false;
-
     bool quiet = false;
 
     bool have_type = false;
@@ -156,6 +156,9 @@ struct options_t {  //!OCLINT(too many fields)
     // Whether we need to check a special permission like suid.
     bool have_special_perm = false;
     path_perm_flags_t perm = 0;
+
+    bool invert = false;
+
 };
 
 static void path_out(io_streams_t &streams, const options_t &opts, const wcstring &str) {
@@ -272,6 +275,16 @@ static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_v(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->invert_valid) {
+        opts->invert = true;
+        return STATUS_CMD_OK;
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 /// This constructs the wgetopt() short options string based on which arguments are valid for the
 /// subcommand. We have to do this because many short flags have multiple meanings and may or may
 /// not require an argument depending on the meaning.
@@ -280,6 +293,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     wcstring short_opts(L":zZq");
     if (opts->perm_valid) short_opts.append(L"p:");
     if (opts->type_valid) short_opts.append(L"t:");
+    if (opts->invert_valid) short_opts.append(L"v");
     return short_opts;
 }
 
@@ -292,10 +306,11 @@ static const struct woption long_options[] = {
                                               {L"null-output", no_argument, nullptr, 'Z'},
                                               {L"perm", required_argument, nullptr, 'p'},
                                               {L"type", required_argument, nullptr, 't'},
+                                              {L"invert", required_argument, nullptr, 't'},
                                               {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function = {
-    {'q', handle_flag_q},
+    {'q', handle_flag_q}, {'v', handle_flag_v},
     {'z', handle_flag_z}, {'Z', handle_flag_Z},
     {'t', handle_flag_t}, {'p', handle_flag_p},
 };
@@ -562,13 +577,13 @@ static int path_real(parser_t &parser, io_streams_t &streams, int argc, const wc
 }
 
 
-// `path filter`
 // All strings are taken to be filenames, and if they match the type/perms/etc (and exist!)
 // they are passed along.
 static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     opts.type_valid = true;
     opts.perm_valid = true;
+    opts.invert_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -576,11 +591,11 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
     int n_transformed = 0;
     arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
     while (const wcstring *arg = aiter.nextstr()) {
-        if (filter_path(opts, *arg)) {
+        if ((!opts.invert || (!opts.have_perm && !opts.have_type)) && filter_path(opts, *arg)) {
             // If we don't have filters, check if it exists.
             // (for match this is done by the glob already)
             if (!opts.have_type && !opts.have_perm) {
-                if (waccess(*arg, F_OK)) continue;
+                if (!(!waccess(*arg, F_OK) ^ opts.invert)) continue;
             }
 
             path_out(streams, opts, *arg);

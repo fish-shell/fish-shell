@@ -11,7 +11,7 @@ Synopsis
     path base [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path dir  [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
-    path filter [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path filter [(-z | --null-in)] [(-Z | --null-out)] [(-v | --invert)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
     path normalize [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path real [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path strip-extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
@@ -138,6 +138,8 @@ The available filters are:
 Note that the path needs to be *any* of the given types, but have *all* of the given permissions. The filter options can either be given as multiple options, or comma-separated - ``path filter -t dir,file`` or ``path filter --type dir --type file`` are equivalent.
 
 And if your operating system doesn't support a "sticky" bit, checking for it will always be false, so no path will pass.
+
+With ``--invert``, the meaning of the filtering is inverted - any path that wouldn't pass (including by not existing) passes, and any path that would pass fails.
 
 It returns 0 if at least one path passed the filter.
 

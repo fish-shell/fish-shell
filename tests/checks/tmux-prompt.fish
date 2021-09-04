@@ -8,6 +8,15 @@ set -g isolated_tmux_fish_extra_args -C '
     end
 '
 
+# Start it up and loop a bit, until we get an initial prompt.
+isolated-tmux
+for i in seq 10
+    if string match -q '*prompt*' (isolated-tmux capture-pane -p)
+        break
+    end
+    sleep .5
+end
+
 isolated-tmux capture-pane -p
 # CHECK: prompt 0> <>
 

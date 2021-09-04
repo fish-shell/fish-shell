@@ -294,7 +294,7 @@ This includes things like:
 
     (foo; bar) | baz
     # when it should really have been:
-    { foo; bar } | baz
+    { foo; bar; } | baz
     # becomes
     begin; foo; bar; end | baz
 

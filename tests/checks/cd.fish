@@ -233,3 +233,27 @@ cd ""
 # CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
 echo $status
 # CHECK: 1
+
+ln -s no/such/directory broken-symbolic-link
+begin
+    set -lx CDPATH
+    cd broken-symbolic-link
+end
+# CHECKERR: cd: '{{.*}}/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'
+# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: builtin cd $argv
+# CHECKERR: ^
+# CHECKERR: in function 'cd' with arguments 'broken-symbolic-link'
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+
+# Make sure that "broken symlink" is reported over "no such file or directory".
+begin
+    set -lx CDPATH other
+    cd broken-symbolic-link
+end
+# CHECKERR: cd: '{{.*}}/broken-symbolic-link' is a broken symbolic link to 'no/such/directory'
+# CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
+# CHECKERR: builtin cd $argv
+# CHECKERR: ^
+# CHECKERR: in function 'cd' with arguments 'broken-symbolic-link'
+# CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish

@@ -43,6 +43,9 @@ void wperror(const wchar_t *s);
 /// Wide character version of getcwd().
 wcstring wgetcwd();
 
+/// Wide character version of readlink().
+maybe_t<wcstring> wreadlink(const wcstring &file_name);
+
 /// Wide character version of realpath function.
 /// \returns the canonicalized path, or none if the path is invalid.
 maybe_t<wcstring> wrealpath(const wcstring &pathname);

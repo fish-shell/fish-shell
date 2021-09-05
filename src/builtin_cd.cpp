@@ -68,6 +68,7 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
 
     errno = 0;
     auto best_errno = errno;
+    wcstring broken_symlink, broken_symlink_target;
 
     for (const auto &dir : dirs) {
         wcstring norm_dir = normalize_path(dir);
@@ -83,7 +84,12 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
             // - if in another directory there was a *file* by the correct name
             // we prefer *that* error because it's more specific
             if (errno == ENOENT) {
-                if (!best_errno) best_errno = errno;
+                maybe_t<wcstring> tmp;
+                if (broken_symlink.empty() && (tmp = wreadlink(norm_dir))) {
+                    broken_symlink = norm_dir;
+                    broken_symlink_target = std::move(*tmp);
+                } else if (!best_errno)
+                    best_errno = errno;
                 continue;
             } else if (errno == ENOTDIR) {
                 best_errno = errno;
@@ -105,11 +111,12 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
 
     if (best_errno == ENOTDIR) {
         streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
+    } else if (!broken_symlink.empty()) {
+        streams.err.append_format(_(L"%ls: '%ls' is a broken symbolic link to '%ls'\n"), cmd,
+                                  broken_symlink.c_str(), broken_symlink_target.c_str());
     } else if (best_errno == ENOENT) {
         streams.err.append_format(_(L"%ls: The directory '%ls' does not exist\n"), cmd,
                                   dir_in.c_str());
-    } else if (best_errno == EROTTEN) {
-        streams.err.append_format(_(L"%ls: '%ls' is a rotten symlink\n"), cmd, dir_in.c_str());
     } else if (best_errno == EACCES) {
         streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), cmd, dir_in.c_str());
     } else {

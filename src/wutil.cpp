@@ -203,6 +203,29 @@ int make_fd_blocking(int fd) {
     return err == -1 ? errno : 0;
 }
 
+maybe_t<wcstring> wreadlink(const wcstring &file_name) {
+    struct stat buf;
+    if (lwstat(file_name, &buf) == -1) {
+        return none();
+    }
+    ssize_t bufsize = buf.st_size + 1;
+    char target_buf[bufsize];
+    const std::string tmp = wcs2string(file_name);
+    ssize_t nbytes = readlink(tmp.c_str(), target_buf, bufsize);
+    if (nbytes == -1) {
+        wperror(L"readlink");
+        return none();
+    }
+    // The link might have been modified after our call to lstat.  If the link now points to a path
+    // that's longer than the original one, we can't read everything in our buffer.  Simply give
+    // up. We don't need to report an error since our only caller will already fall back to ENOENT.
+    if (nbytes == bufsize) {
+        return none();
+    }
+
+    return str2wcstring(target_buf, nbytes);
+}
+
 /// Wide character realpath. The last path component does not need to be valid. If an error occurs,
 /// wrealpath() returns none() and errno is likely set.
 maybe_t<wcstring> wrealpath(const wcstring &pathname) {

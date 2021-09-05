@@ -66,6 +66,7 @@ Scripting improvements
 - ``help`` now knows which section is in which document again (:issue:`8245`).
 - Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish. This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
 - The ``realpath`` builtin now also squashes leading slashes with the ``--no-symlinks`` option (:issue:`8281`).
+- When trying to ``cd`` to a dangling (broken) symbolic link, fish will print an error noting that the target is a broken link (:issue:`8264`).
 
 Interactive improvements
 ------------------------

@@ -117,7 +117,7 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
     } else if (best_errno == ENOENT) {
         streams.err.append_format(_(L"%ls: The directory '%ls' does not exist\n"), cmd,
                                   dir_in.c_str());
-    } else if (best_errno == EACCES) {
+    } else if (best_errno == EACCES || best_errno == EPERM) {
         streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), cmd, dir_in.c_str());
     } else {
         errno = best_errno;

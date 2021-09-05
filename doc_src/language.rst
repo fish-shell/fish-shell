@@ -1437,7 +1437,7 @@ or opted into globally for a user::
 
 Features will only be set on startup, so this variable will only take effect if it is universal or exported.
 
-You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob".
+You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob". Instead of a version, the special group ``all`` enables all features.
 
 Prefixing a feature with ``no-`` turns it off instead. E.g. to reenable the ``^`` redirection::
 

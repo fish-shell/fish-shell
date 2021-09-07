@@ -121,6 +121,14 @@ add_custom_target(tests_buildroot_target
                           ${TEST_ROOT_DIR}
                   DEPENDS fish fish_test_helper)
 
+# CMake less than 3.9.0 "fully supports" setting an exit code to denote a skipped test, but then
+# it just goes ahead and reports it as failed. Really?
+if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
+  set(CMAKE_SKIPPED_HACK "env" "CMAKE_SKIPPED_HACK=1")
+else()
+  set(CMAKE_SKIPPED_HACK)
+endif()
+
 foreach(LTEST ${LOW_LEVEL_TESTS})
   add_test(
     NAME ${LTEST}
@@ -137,7 +145,7 @@ foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
   get_filename_component(CHECK ${CHECK} NAME_WE)
   add_test(NAME ${CHECK_NAME}
-    COMMAND sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
+    COMMAND ${CMAKE_SKIPPED_HACK} sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
                ${CMAKE_CURRENT_BINARY_DIR}/tests/test.fish ${CHECK}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
@@ -149,7 +157,7 @@ FILE(GLOB PEXPECTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/pexpects/*.py)
 foreach(PEXPECT ${PEXPECTS})
   get_filename_component(PEXPECT ${PEXPECT} NAME)
   add_test(NAME ${PEXPECT}
-    COMMAND sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
+    COMMAND ${CMAKE_SKIPPED_HACK} sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
       ${CMAKE_CURRENT_BINARY_DIR}/tests/interactive.fish ${PEXPECT}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )

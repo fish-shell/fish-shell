@@ -35,7 +35,7 @@ if(POLICY CMP0037)
 endif()
 add_custom_target(test
   COMMAND env CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL} FISH_FORCE_COLOR=1
-          ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
+          ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
   DEPENDS fish_tests tests_buildroot_target
   USES_TERMINAL
@@ -124,7 +124,8 @@ add_custom_target(tests_buildroot_target
 foreach(LTEST ${LOW_LEVEL_TESTS})
   add_test(
     NAME ${LTEST}
-    COMMAND ${CMAKE_BINARY_DIR}/fish_tests ${LTEST}
+    COMMAND sh ${CMAKE_CURRENT_BINARY_DIR}/tests/test_env.sh
+               ${CMAKE_BINARY_DIR}/fish_tests ${LTEST}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
   set_tests_properties(${LTEST} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})

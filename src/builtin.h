@@ -23,9 +23,6 @@ struct builtin_data_t {
     maybe_t<int> (*func)(parser_t &parser, io_streams_t &streams, const wchar_t **argv);
     // Description of what the builtin does.
     const wchar_t *desc;
-
-    bool operator<(const wcstring &) const;
-    bool operator<(const builtin_data_t *) const;
 };
 
 /// The default prompt for the read command.

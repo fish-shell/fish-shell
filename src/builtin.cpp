@@ -80,14 +80,6 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-bool builtin_data_t::operator<(const wcstring &other) const {
-    return std::wcscmp(this->name, other.c_str()) < 0;
-}
-
-bool builtin_data_t::operator<(const builtin_data_t *other) const {
-    return std::wcscmp(this->name, other->name) < 0;
-}
-
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
     int argc;

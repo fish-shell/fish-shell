@@ -63,7 +63,7 @@ Add a new abbreviation where ``gco`` will be replaced with ``git checkout`` glob
 
     abbr -a -U l less
 
-Add a new abbreviation where ``l`` will be replaced with ``less`` universal so all shells. Note that you omit the ``-U`` since it is the default.
+Add a new abbreviation where ``l`` will be replaced with ``less`` universal to all shells. Note that you omit the ``-U`` since it is the default.
 
 
 

@@ -95,6 +95,15 @@ else
     echo "failure nonexistent-file-relative-to-a-symlink: $real_path != $expected_real_path" >&2
 end
 
+# We remove leading slashes even with "-s".
+# This is how GNU realpath -s behaves, and also e.g.
+# how bash normalizes its $PWD.
+builtin realpath -s ///bin
+# CHECK: /bin
+
+builtin realpath -s //bin
+# CHECK: /bin
+
 # A path with two symlinks, first to a directory, second to a file, is correctly resolved.
 ln -fs fish $XDG_DATA_HOME/fish-symlink2
 touch $XDG_DATA_HOME/fish/real_file

@@ -281,10 +281,12 @@ wcstring normalize_path(const wcstring &path, bool allow_leading_double_slashes)
         }
     }
     wcstring result = join_strings(new_comps, sep);
-    // Prepend one or two leading slashes.
-    // Two slashes are preserved. Three+ slashes are collapsed to one. (!)
-    result.insert(0, allow_leading_double_slashes && leading_slashes > 2 ? 1 : leading_slashes,
-                  sep);
+    // If we don't allow leading double slashes, collapse them to 1 if there are any.
+    int numslashes = leading_slashes > 0 ? 1 : 0;
+    // If we do, prepend one or two leading slashes.
+    // Yes, three+ slashes are collapsed to one. (!)
+    if (allow_leading_double_slashes && leading_slashes == 2) numslashes = 2;
+    result.insert(0, numslashes, sep);
     // Ensure ./ normalizes to . and not empty.
     if (result.empty()) result.push_back(L'.');
     return result;

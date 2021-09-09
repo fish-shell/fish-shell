@@ -65,6 +65,7 @@ Scripting improvements
 - Running ``fish`` with a directory instead of a script as argument (e.g. ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
 - ``help`` now knows which section is in which document again (:issue:`8245`).
 - Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish. This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
+- The ``realpath`` builtin now also squashes leading slashes with the ``--no-symlinks`` option (:issue:`8281`).
 
 Interactive improvements
 ------------------------

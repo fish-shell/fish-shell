@@ -108,7 +108,8 @@ Improved terminal support
 - Dynamic terminal titles are enabled on WezTerm (:issue:`8121`).
 - Directory history navigation works out of the box with Apple Terminal's default key settings (:issue:`2330`).
 - fish now assumes Unicode 9+ widths for emoji under iTerm 2 (:issue:`8200`).
-- fish's escape sequence removal now also knows Tmux' wrapped escapes.
+- Skin-tone emoji modifiers (U+1F3FB through U+1F3FF) are now measured as width 0 (:issue:`8275`).
+- fish's escape sequence removal now also knows Tmux's wrapped escapes.
 
 Other improvements
 ------------------------------

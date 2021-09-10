@@ -427,8 +427,8 @@ static const builtin_data_t *builtin_lookup(const wcstring &name) {
 
 /// Initialize builtin data.
 void builtin_init() {
-    for (size_t i = 0; i < BUILTIN_COUNT; i++) {
-        intern_static(builtin_datas[i].name);
+    for (const auto &builtin_data : builtin_datas) {
+        intern_static(builtin_data.name);
     }
 }
 

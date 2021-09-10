@@ -586,7 +586,7 @@ double te_eval(const te_expr *n) {
 
 static void optimize(te_expr *n) {
     /* Evaluates as much as possible. */
-    if (n->type == TE_CONSTANT) return;
+    if (!n || n->type == TE_CONSTANT) return;
 
     const int arity = get_arity(n->type);
     bool known = true;

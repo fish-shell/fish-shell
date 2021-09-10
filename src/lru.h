@@ -101,7 +101,7 @@ class lru_cache_t {
 
     // CRTP callback for when a node is evicted.
     // Clients can implement this
-    void entry_was_evicted(wcstring key, Contents value) {
+    void entry_was_evicted(const wcstring &key, Contents value) {
         UNUSED(key);
         UNUSED(value);
     }

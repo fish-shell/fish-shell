@@ -170,7 +170,7 @@ maybe_t<work_request_t> thread_pool_t::dequeue_work_or_commit_to_exit() {
     return result;
 }
 
-static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
+static intptr_t this_thread() { return (intptr_t)pthread_self(); }
 
 void *thread_pool_t::run() {
     while (auto req = dequeue_work_or_commit_to_exit()) {
@@ -358,7 +358,7 @@ bool make_detached_pthread(void *(*func)(void *), void *param) {
     int err = pthread_create(&thread, nullptr, func, param);
     if (err == 0) {
         // Success, return the thread.
-        FLOGF(iothread, "pthread %p spawned", (void *)(intptr_t)thread);
+        FLOGF(iothread, "pthread %p spawned", (intptr_t)thread);
         DIE_ON_FAILURE(pthread_detach(thread));
     } else {
         perror("pthread_create");

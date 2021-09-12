@@ -70,7 +70,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     if test $editor_status -eq 0 -a -s $f
         # Set the command to the output of the edited command and move the cursor to the
         # end of the edited command.
-        commandline -r -- (cat $f)
+        commandline -r -- (command cat $f)
         commandline -C 999999
     else
         echo

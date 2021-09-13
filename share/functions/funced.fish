@@ -101,7 +101,7 @@ function funced --description 'Edit function definition'
     while true
         set -l checksum (__funced_md5 "$tmpname")
 
-        if not eval $editor $tmpname
+        if not $editor_cmd $tmpname
             echo (_ "Editing failed or was cancelled")
         else
             # Verify the checksum (if present) to detect potential problems

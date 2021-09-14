@@ -21,13 +21,13 @@ Description
 
 ``path`` performs operations on paths.
 
-PATH arguments are taken from the command line unless standard input is connected to a pipe or a file, in which case they are read from standard input, one PATH per line. It is an error to supply PATH arguments on the command line and on standard input.
+PATH arguments are taken from the command line unless standard input is connected to a pipe or a file, in which case they are read from standard input, one PATH per line. It is an error to supply PATH arguments on both the command line and on standard input.
 
-Arguments beginning with ``-`` are normally interpreted as switches; ``--`` causes the following arguments not to be treated as switches even if they begin with ``-``. Switches and required arguments are recognized only on the command line.
+Arguments starting with ``-`` are normally interpreted as switches; ``--`` causes the following arguments not to be treated as switches even if they begin with ``-``. Switches and required arguments are recognized only on the command line.
 
 All subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
 
-All subcommands also accept a ``-z`` or ``--null-in`` switch, which makes them accept arguments from stdin separated with NULL-bytes. Since paths on uni can't contain NULL, that makes it possible to handle all possible paths and read input from e.g. ``find -print0``. If arguments are given on the commandline this has no effect.
+All subcommands also accept a ``-z`` or ``--null-in`` switch, which makes them accept arguments from stdin separated with NULL-bytes. Since Unix paths can't contain NULL, that makes it possible to handle all possible paths and read input from e.g. ``find -print0``. If arguments are given on the commandline this has no effect.
 
 All subcommands also accept a ``-Z`` or ``--null-out`` switch, which makes them print output separated with NULL instead of newlines. This is for further processing, e.g. passing to another ``path`` with ``--null-in``, or ``xargs -0``. This is not recommended when the output goes to the terminal or a command substitution.
 
@@ -44,7 +44,7 @@ The following subcommands are available.
 
     path base [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path base`` returns the basename for the given path. This is the part after the last "/", discounting trailing slashes. In other words, it is the part that is not the dirname (discounting superfluous slashes).
+``path base`` returns the last path component of the given path, by removing the directory prefix and removing trailing slashes. In other words, it is the part that is not the dirname.
 
 It returns 0 if there was a basename, i.e. if the path wasn't empty or just slashes.
 
@@ -94,7 +94,7 @@ Examples
 
     path extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path extension`` returns the extension for the given path. This is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and nothing is printed.
+``path extension`` returns the extension of the given path. This is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and nothing is printed.
 
 If the filename ends in a ".", the extension is empty, so an empty line will be printed.
 
@@ -127,7 +127,7 @@ Examples
 
     path filter [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
 
-``path filter`` returns all of the given paths that match the checks it was given. In all cases, the paths need to exist, nonexistent paths are always filtered.
+``path filter`` returns all of the given paths that match the given checks. In all cases, the paths need to exist, nonexistent paths are always filtered.
 
 The available filters are:
 

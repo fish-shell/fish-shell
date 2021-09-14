@@ -1,5 +1,11 @@
 # vim: set ts=4 sw=4 tw=100 et:
-# POSIX sh test driver to reduce dependency on fish in tests
+
+# POSIX sh test driver to reduce dependency on fish in tests.
+# Executes the specified *fish script* with the provided arguments, after setting up a clean test
+# environment (see `test_env.sh`) and then importing the fish-related helper functions and
+# performing some state initialization required by the various fish tests. Each payload script is
+# executed in its own environment, this script waits for fish to exit then cleans up the target
+# environment and bubbles up the fish exit code.
 
 # macOS has really weird default IFS behavior that splits output in random places, and the trailing
 # backspace is to prevent \n from being gobbled up by the subshell output substitution.
@@ -11,6 +17,8 @@ IFS="$(printf "\n\b")"
 fish_script="$1"
 shift 1
 script_args="${@}"
+# Prevent $@ from persisting to sourced commands
+shift $# 2>/dev/null
 
 die() {
     if test "$#" -ge 0; then
@@ -20,7 +28,7 @@ die() {
 }
 
 # To keep things sane and to make error messages comprehensible, do not use relative paths anywhere
-# in this script. Instead, make all paths relative to one of these or $homedir."
+# in this script. Instead, make all paths relative to one of these or the new $HOME ($homedir)."
 TESTS_ROOT="$(dirname "$0")"
 BUILD_ROOT="${TESTS_ROOT}/.."
 
@@ -35,30 +43,8 @@ if ! test -z "$__fish_is_running_tests"; then
     exit 10
 fi
 
-# Set up a test environment and re-run the original script. We do not share environments
-# whatsoever between tests, so each test driver run sets up a new profile altogether.
-
-# macOS 10.10 requires an explicit template for `mktemp` and will create the folder in the
-# current directory unless told otherwise. Linux isn't guaranteed to have $TMPDIR set.
-homedir="$(mktemp -d 2>/dev/null || mktemp -d "${TMPDIR}tmp.XXXXXXXXXX")"
-
-XDG_DATA_HOME="$homedir/xdg_data_home"
-export XDG_DATA_HOME
-mkdir -p $XDG_DATA_HOME/fish || die
-
-XDG_CONFIG_HOME="$homedir/xdg_config_home"
-export XDG_CONFIG_HOME
-mkdir -p $XDG_CONFIG_HOME/fish || die
-
-XDG_RUNTIME_DIR="$homedir/xdg_runtime_dir"
-export XDG_CONFIG_HOME
-mkdir -p $XDG_RUNTIME_DIR/fish || die
-
-# Create a temp/scratch directory for tests to use, if they want (tests shouldn't write to a
-# shared temp folder).
-TMPDIR="$homedir/temp"
-mkdir ${TMPDIR}
-export TMPDIR
+# Set up the test environment. Does not change the current working directory.
+. ${TESTS_ROOT}/test_env.sh
 
 # These are used read-only so it's OK to symlink instead of copy
 rm -f "$XDG_CONFIG_HOME/fish/functions"
@@ -71,37 +57,6 @@ fish_init_cmd="set fish_function_path ${XDG_CONFIG_HOME}/fish/functions ${BUILD_
 __fish_is_running_tests="$homedir"
 export __fish_is_running_tests
 
-# Set locale information for consistent tests. Fish should work with a lot of locales but the
-# tests assume an english UTF-8 locale unless they explicitly override this default. We do not
-# want the users locale to affect the tests since they might, for example, change the wording of
-# logged messages.
-#
-# TODO: set LANG to en_US.UTF-8 so we test the locale message conversions (i.e., gettext).
-unset LANGUAGE
-# Remove "LC_" env vars from the test environment
-for key in $(env | grep -E "^LC_"| grep -oE "^[^=]+"); do
-    unset "$key"
-done
-# Set the desired lang/locale tests are hard-coded against
-export LANG="C"
-export LC_CTYPE="en_US.UTF-8"
-
-# These env vars should not be inherited from the user environment because they can affect the
-# behavior of the tests. So either remove them or set them to a known value.
-# See also tests/interactive.fish.
-export TERM=xterm
-unset COLORTERM
-unset INSIDE_EMACS
-unset ITERM_PROFILE
-unset KONSOLE_PROFILE_NAME
-unset KONSOLE_VERSION
-unset PANTHEON_TERMINAL_ID
-unset TERM_PROGRAM
-unset TERM_PROGRAM_VERSION
-unset VTE_VERSION
-unset WT_PROFILE_ID
-unset XTERM_VERSION
-
 # Set a marker to indicate whether colored output should be suppressed (used in `test_util.fish`)
 suppress_color=""
 if ! tty 0>&1 > /dev/null; then
@@ -112,13 +67,22 @@ export suppress_color
 # Source test util functions at startup
 fish_init_cmd="${fish_init_cmd} && source ${TESTS_ROOT}/test_util.fish";
 
-# Run the test script, but don't exec so we can do cleanup after it succeeds/fails. Each test is
+# Run the test script, but don't exec so we can clean up after it succeeds/fails. Each test is
 # launched directly within its TMPDIR, so that the fish tests themselves do not need to refer to
 # TMPDIR (to ensure their output as displayed in case of failure by littlecheck is reproducible).
 (cd $TMPDIR; env HOME="$homedir" "${BUILD_ROOT}/test/root/bin/fish" \
     --init-command "${fish_init_cmd}" \
     "$fish_script" "$script_args")
 test_status="$?"
+
+# CMake less than 3.9.0 "fully supports" setting an exit code to denote a skipped test, but then
+# it just goes ahead and reports them as failed anyway. Really?
+if test -n $CMAKE_SKIPPED_HACK; then
+    if test $test_status -eq 125; then
+        echo "Overriding SKIPPED return code from test" 1>&2
+        test_status=0
+    fi
+fi
 
 rm -rf "$homedir"
 exit "$test_status"

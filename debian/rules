@@ -11,6 +11,11 @@ export DH_VERBOSE=1
 override_dh_auto_configure:
 	dh_auto_configure --buildsystem=cmake --parallel
 
+# On CMake 3.5 (and possibly 3.6), the test target does not pick up its dependencies properly
+# Build fish_tests/tests_buildroot_target by hand (remove this once Ubuntu Xenial is out of support)
+override_dh_auto_build:
+	dh_auto_build -- all fish_tests tests_buildroot_target
+
 override_dh_installdocs:
 	dh_installdocs --link-doc=fish
 

@@ -314,8 +314,8 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Remember: adjust share/completions/string.fish when `string` options change
 static const struct woption long_options[] = {
                                               {L"quiet", no_argument, nullptr, 'q'},
-                                              {L"null-input", no_argument, nullptr, 'z'},
-                                              {L"null-output", no_argument, nullptr, 'Z'},
+                                              {L"null-in", no_argument, nullptr, 'z'},
+                                              {L"null-out", no_argument, nullptr, 'Z'},
                                               {L"perm", required_argument, nullptr, 'p'},
                                               {L"type", required_argument, nullptr, 't'},
                                               {L"invert", required_argument, nullptr, 't'},

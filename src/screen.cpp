@@ -432,6 +432,8 @@ prompt_layout_t layout_cache_t::calc_prompt_layout(const wcstring &prompt_str,
         if (endc) {
             if (endc == L'\n' || endc == L'\f') {
                 layout.line_breaks.push_back(trunc_prompt.size());
+                // If the prompt ends in a new line, that's one empy last line.
+                if (run_end == prompt_str.size() - 1) layout.last_line_width = 0;
             }
             trunc_prompt.push_back(endc);
             run_start = run_end + 1;

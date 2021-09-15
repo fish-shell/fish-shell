@@ -19,9 +19,9 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // How many bytes we read() at once.
-// Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
-// This should be about the size of a line.
-#define PATH_CHUNK_SIZE 128
+// We use PATH_MAX here so we always get at least one path,
+// and so we can automatically detect NULL-separated input.
+#define PATH_CHUNK_SIZE PATH_MAX
 
 static void path_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"path ");
@@ -55,8 +55,13 @@ class arg_iterator_t {
     int argidx_;
     // If not using argv, a string to store bytes that have been read but not yet returned.
     std::string buffer_;
-    // The char to split on when reading from stdin.
-    const char split_;
+    // Whether we have found a char to split on yet, when reading from stdin.
+    // If explicitly passed, we will always split on NULL,
+    // if not we will split on NULL if the first PATH_MAX chunk includes one,
+    // or '\n' otherwise.
+    bool have_split_;
+    // The char we have decided to split on when reading from stdin.
+    char split_{'\0'};
     // Backing storage for the next() string.
     wcstring storage_;
     const io_streams_t &streams_;
@@ -68,7 +73,7 @@ class arg_iterator_t {
         assert(streams_.stdin_fd >= 0 && "should have a valid fd");
         // Read in chunks from fd until buffer has a line (or the end if split_ is unset).
         size_t pos;
-        while ((pos = buffer_.find(split_)) == std::string::npos) {
+        while (!have_split_ || (pos = buffer_.find(split_)) == std::string::npos) {
             char buf[PATH_CHUNK_SIZE];
             long n = read_blocked(streams_.stdin_fd, buf, PATH_CHUNK_SIZE);
             if (n == 0) {
@@ -88,6 +93,14 @@ class arg_iterator_t {
                 return false;
             }
             buffer_.append(buf, n);
+            if (!have_split_) {
+                if (buffer_.find('\0') != std::string::npos) {
+                    split_ = '\0';
+                } else {
+                    split_ = '\n';
+                }
+                have_split_ = true;
+            }
         }
 
         // Split the buffer on the sep and return the first part.
@@ -97,9 +110,8 @@ class arg_iterator_t {
     }
 
    public:
-    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams,
-                   char split = '\n')
-        : argv_(argv), argidx_(argidx), split_(split), streams_(streams) {}
+    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams, bool split_null)
+        : argv_(argv), argidx_(argidx), have_split_(split_null), streams_(streams) {}
 
     const wcstring *nextstr() {
         if (path_args_from_stdin(streams_)) {
@@ -360,7 +372,7 @@ static int path_transform(parser_t &parser, io_streams_t &streams, int argc, con
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
         wcstring transformed(*arg);
         // Empty paths make no sense, but e.g. wbasename returns true for them.
@@ -495,7 +507,7 @@ static int path_extension(parser_t &parser, io_streams_t &streams, int argc, con
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
         auto pos = find_extension(*arg);
 
@@ -524,7 +536,7 @@ static int path_strip_extension(parser_t &parser, io_streams_t &streams, int arg
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
         auto pos = find_extension(*arg);
 
@@ -557,7 +569,7 @@ static int path_real(parser_t &parser, io_streams_t &streams, int argc, const wc
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
         auto real = wrealpath(*arg);
 
@@ -589,7 +601,7 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
-    arg_iterator_t aiter(argv, optind, streams, opts.null_in ? '\0' : '\n');
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
         if ((!opts.invert || (!opts.have_perm && !opts.have_type)) && filter_path(opts, *arg)) {
             // If we don't have filters, check if it exists.

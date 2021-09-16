@@ -119,13 +119,21 @@ function __fish_print_help --description "Print help message for the specified f
             not isatty stdout
             and set pager cat # cannot use a builtin here
             # similar to man, but add -F to quit paging when the help output is brief (#6227)
+            # Also set -X for less < v530, see #8157.
+            set -l lessopts isRF
+            if test "$(less --version | string match -rg 'less (\d+)')" -lt 530 2>/dev/null
+                set lessopts "$lessopts"X
+            end
+
             not set -qx LESS
-            and set -xl LESS isRF
+            and set -xl LESS $lessopts
+
             # less options:
             # -i (--ignore-case) search case-insensitively, like man
             # -s (--squeeze-blank-lines) not strictly necessary since we already do that above
             # -R (--RAW-CONTROL-CHARS) to display colors and such
             # -F (--quit-if-one-screen) to maintain the non-paging behavior for small outputs
+            # -X (--no-init) do not clear the screen, necessary for less < v530 or else short output is dropped
             $pager
         end
 end

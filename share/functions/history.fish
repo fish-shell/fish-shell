@@ -90,8 +90,13 @@ function history --description "display or manipulate interactive command histor
 
                 # If the user hasn't preconfigured less with the $LESS environment variable,
                 # we do so to have it behave like cat if output fits on one screen.
-                not set -qx LESS
-                and set -x LESS --quit-if-one-screen
+                if not set -qx LESS
+                    set -x LESS --quit-if-one-screen
+                    # Also set --no-init for less < v530, see #8157.
+                    if test "$(less --version | string match -rg 'less (\d+)')" -lt 530 2>/dev/null
+                        set -x LESS $LESS --no-init
+                    end
+                end
                 not set -qx LV # ask the pager lv not to strip colors
                 and set -x LV -c
 

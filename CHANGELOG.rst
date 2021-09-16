@@ -78,6 +78,7 @@ Interactive improvements
 - ``cd ""`` no longer crashes fish (:issue:`8147`).
 - Running a commandline consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
 - Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
+- ``history`` and ``__fish_print_help`` now properly support ``less`` before version 530, including the version that ships with macOS. (:issue:`8157`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1303,10 +1303,10 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
     size_t drain_amount{0};
 
     // We "flash" the pipe to make it briefly readable, for this many usec.
-    static constexpr long long k_flash_duration_usec = 1e5;
+    static constexpr long long k_flash_duration_usec = 1e4;
 
     // If the pipe remains readable for this many usec, we drain it.
-    static constexpr long long k_readable_too_long_duration_usec = 5e6;
+    static constexpr long long k_readable_too_long_duration_usec = 1e6;
 
     /// \return the name of a state.
     static const char *state_name(state_t s) {

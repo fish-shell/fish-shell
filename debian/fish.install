@@ -1,1 +1,3 @@
 debian/tmp/usr/bin
+debian/tmp/etc
+debian/tmp/usr/share

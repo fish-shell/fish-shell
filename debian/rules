@@ -16,9 +16,6 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh_auto_build -- all fish_tests tests_buildroot_target
 
-override_dh_installdocs:
-	dh_installdocs --link-doc=fish
-
 # Still needed until all platforms have debhelper 9.20151219
 # Consider transitioning https://wiki.debian.org/DebugPackage
 override_dh_strip:

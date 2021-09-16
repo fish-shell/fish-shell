@@ -13,26 +13,15 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, fish-common (= ${source:Version}), passwd (>= 4.0.3-10), gettext-base, man-db
+Depends: ${shlibs:Depends}, ${misc:Depends}, passwd (>= 4.0.3-10), gettext-base, man-db,
+ python3 (>=3.5)
+Conflicts: fish-common
 Recommends: xsel (>=1.2.0)
+Suggests: xdg-utils
 Description: friendly interactive shell
  Fish is a command-line shell for modern systems, focusing on user-friendliness,
  sensibility and discoverability in interactive use. The syntax is simple, but
  not POSIX compliant.
-
-Package: fish-common
-Architecture: all
-Multi-Arch: foreign
-Depends: ${misc:Depends}
-Recommends: fish, python3 (>= 3.5)
-Suggests: xdg-utils
-Replaces: fish (<= 2.1.1.dfsg-2)
-Description: friendly interactive shell (architecture-independent files)
- Fish is a command-line shell for modern systems, focusing on user-friendliness,
- sensibility and discoverability in interactive use. The syntax is simple, but
- not POSIX compliant.
- .
- This package contains the common fish files shared by all architectures.
 
 Package: fish-dbg
 Architecture: any

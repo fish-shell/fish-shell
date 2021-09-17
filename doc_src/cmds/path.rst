@@ -27,7 +27,7 @@ Arguments starting with ``-`` are normally interpreted as switches; ``--`` cause
 
 All subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
 
-All subcommands also accept a ``-Z`` or ``--null-out`` switch, which makes them print output separated with NULL instead of newlines. This is for further processing, e.g. passing to another ``path`` with ``--null-in``, or ``xargs -0``. This is not recommended when the output goes to the terminal or a command substitution.
+All subcommands also accept a ``-Z`` or ``--null-out`` switch, which makes them print output separated with NULL instead of newlines. This is for further processing, e.g. passing to another ``path``, or ``xargs -0``. This is not recommended when the output goes to the terminal or a command substitution.
 
 All subcommands also accept a ``-z`` or ``--null-in`` switch, which makes them accept arguments from stdin separated with NULL-bytes. Since Unix paths can't contain NULL, that makes it possible to handle all possible paths and read input from e.g. ``find -print0``. If arguments are given on the commandline this has no effect. This should mostly be unnecessary since ``path`` automatically starts splitting on NULL if one appears in the first PATH_MAX bytes, PATH_MAX being the operating system's maximum length for a path plus a NULL byte.
 
@@ -44,7 +44,7 @@ The following subcommands are available.
 
     path base [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path base`` returns the last path component of the given path, by removing the directory prefix and removing trailing slashes. In other words, it is the part that is not the dirname.
+``path base`` returns the last path component of the given path, by removing the directory prefix and removing trailing slashes. In other words, it is the part that is not the dirname. For files you might call it the "filename".
 
 It returns 0 if there was a basename, i.e. if the path wasn't empty or just slashes.
 
@@ -61,6 +61,14 @@ Examples
 
    >_ path base /usr/bin/
    bin
+
+   >_ path base /usr/bin/*
+   # This prints all files in /usr/bin/
+   # A selection:
+   cp
+   fish
+   grep
+   rm
 
 "dir" subcommand
 --------------------
@@ -131,7 +139,7 @@ Examples
 
 The available filters are:
 
-- ``-t`` or ``--type`` with the options: "dir", "file", "link", "block", "char", "fifo", "socket" and "link", in which case the path needs to be a directory, file, link, block device, character device, named pipe, socket or symbolic link, respectively.
+- ``-t`` or ``--type`` with the options: "dir", "file", "link", "block", "char", "fifo" and "socket", in which case the path needs to be a directory, file, link, block device, character device, named pipe or socket, respectively.
 
 - ``-p`` or ``--perm`` with the options: "read", "write", and "exec", as well as "suid", "sgid", "sticky", "user" (referring to the path owner) and "group" (referring to the path's group), in which case the path needs to have all of the given permissions for the current user.
 
@@ -197,7 +205,7 @@ Examples
 
     path real [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path normalize`` returns the normalized, physical versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
+``path real`` returns the normalized, physical versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
 
 It is the same as ``realpath``, as it creates the "real", canonical version of the path. As such it can't operate on nonexistent paths.
 
@@ -229,7 +237,7 @@ Examples
 
 ::
 
-   >_ path strip.extension ./foo.mp4
+   >_ path strip-extension ./foo.mp4
    ./foo
 
    >_ path strip-extension ../banana
@@ -240,11 +248,11 @@ Examples
    /home/alfa/.config
    # status 1
 
-   >_ path extension ~/.config.d
+   >_ path strip-extension ~/.config.d
    /home/alfa/.config
    # status 0
 
-   >_ path extension ~/.config.
+   >_ path strip-extension ~/.config.
    /home/alfa/.config
    # status 0
    
@@ -256,7 +264,7 @@ Combining ``path``
 This is why
 
 - ``path``'s output is automatically split by fish if it goes into a command substitution, so just doing ``(path ...)`` handles all paths, even those containing newlines, correctly
-- ``path`` has ``--null-in`` to handle null-delimited input, and ``--null-out`` to pass on null-delimited output
+- ``path`` has ``--null-in`` to handle null-delimited input (typically automatically detected!), and ``--null-out`` to pass on null-delimited output
 
 Some examples of combining ``path``::
 
@@ -265,6 +273,8 @@ Some examples of combining ``path``::
 
   # The same thing, but using find (note -maxdepth needs to come first or find will scream)
   # (this also depends on your particular version of find)
+  # Note the `-z` is unnecessary for any sensible version of find - if `path` sees a NULL,
+  # it will split on NULL automatically.
   find . -maxdepth 1 -type f -executable -print0 | path real -z
 
   set -l paths (path filter -p exec $PATH/fish -Z | path real)

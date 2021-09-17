@@ -981,7 +981,8 @@ bool get_hostname_identifier(wcstring &result) {
     if (gethostname(hostname, sizeof(hostname)) == 0) {
         result.assign(str2wcstring(hostname));
         result.assign(truncate(result, HOSTNAME_LEN));
-        success = true;
+        // Don't return an empty hostname, we may attempt to open a directory instead.
+        success = !result.empty();
     }
     return success;
 }

@@ -145,7 +145,7 @@ The available filters are:
 
 Note that the path needs to be *any* of the given types, but have *all* of the given permissions. The filter options can either be given as multiple options, or comma-separated - ``path filter -t dir,file`` or ``path filter --type dir --type file`` are equivalent.
 
-And if your operating system doesn't support a "sticky" bit, checking for it will always be false, so no path will pass.
+If your operating system doesn't support a "sticky" bit, that check will always be false, so no path will pass.
 
 With ``--invert``, the meaning of the filtering is inverted - any path that wouldn't pass (including by not existing) passes, and any path that would pass fails.
 

@@ -15,8 +15,3 @@ override_dh_auto_configure:
 # Build fish_tests/tests_buildroot_target by hand (remove this once Ubuntu Xenial is out of support)
 override_dh_auto_build:
 	dh_auto_build -- all fish_tests tests_buildroot_target
-
-# Still needed until all platforms have debhelper 9.20151219
-# Consider transitioning https://wiki.debian.org/DebugPackage
-override_dh_strip:
-	dh_strip --dbg-package=fish-dbg

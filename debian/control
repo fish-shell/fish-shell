@@ -23,14 +23,3 @@ Description: friendly interactive shell
  Fish is a command-line shell for modern systems, focusing on user-friendliness,
  sensibility and discoverability in interactive use. The syntax is simple, but
  not POSIX compliant.
-
-Package: fish-dbg
-Architecture: any
-Section: debug
-Depends: fish (= ${binary:Version}), ${misc:Depends}
-Description: debugging symbols for friendly interactive shell
- Fish is a command-line shell for modern systems, focusing on user-friendliness,
- sensibility and discoverability in interactive use. The syntax is simple, but
- not POSIX compliant.
- .
- This package contains the debugging symbols for fish.

@@ -101,21 +101,21 @@ bool wildcard_has(const wcstring &str, bool internal) {
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match) {
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
-    if (leading_dots_fail_to_match && str[0] == L'.' &&
-        (str[1] == L'\0' || (str[1] == L'.' && str[2] == L'\0'))) {
+    if (leading_dots_fail_to_match && (str == L"." || str == L"..")) {
         // The string is '.' or '..' so the only possible match is an exact match.
         return str == wc;
     }
 
     // Near Linear implementation as proposed here https://research.swtch.com/glob.
+    const wchar_t *const str_start = str.c_str();
     const wchar_t *wc_x = wc.c_str();
-    const wchar_t *str_x = str.c_str();
+    const wchar_t *str_x = str_start;
     const wchar_t *restart_wc_x = wc.c_str();
-    const wchar_t *restart_str_x = str.c_str();
+    const wchar_t *restart_str_x = str_start;
 
     bool restart_is_out_of_str = false;
     for (; *wc_x != 0 || *str_x != 0;) {
-        bool is_first = (str_x == str);
+        bool is_first = (str_x == str_start);
         if (*wc_x != 0) {
             if (*wc_x == ANY_STRING || *wc_x == ANY_STRING_RECURSIVE) {
                 // Ignore hidden file

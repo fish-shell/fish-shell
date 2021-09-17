@@ -415,8 +415,7 @@ static bool filter_path(options_t opts, const wcstring &path) {
         bool type_ok = false;
         struct stat buf;
         if (opts.type & TYPE_LINK) {
-            auto lret = !lwstat(path, &buf);
-            type_ok = lret && S_ISLNK(buf.st_mode);
+            type_ok = !lwstat(path, &buf) && S_ISLNK(buf.st_mode);
         }
 
         auto ret = !wstat(path, &buf);
@@ -513,11 +512,6 @@ static int path_extension(parser_t &parser, io_streams_t &streams, int argc, con
 
         if (!pos) continue;
 
-        // This ends up being empty if the filename ends with ".".
-        // That's arguably correct.
-        //
-        // So we print an empty string but return true,
-        // because there *is* an extension, it just happens to be empty.
         wcstring ext = arg->substr(*pos + 1);
         if (opts.quiet && !ext.empty()) {
             return STATUS_CMD_OK;
@@ -607,7 +601,8 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
             // If we don't have filters, check if it exists.
             // (for match this is done by the glob already)
             if (!opts.have_type && !opts.have_perm) {
-                if (!(!waccess(*arg, F_OK) ^ opts.invert)) continue;
+                bool ok = !waccess(*arg, F_OK);
+                if (ok == opts.invert) continue;
             }
 
             path_out(streams, opts, *arg);

@@ -102,6 +102,7 @@ Completions
   - ``rakudo`` (:issue:`8113`)
   - ``az`` (:issue:`8141`)
   - ``qmk`` (:issue:`8180`)
+  - ``cpupower``
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - The ``fish_is_nth_token`` function, which is particularly useful in completions for identifying the token number within the command line, replaces various internal functions to do the same (:issue:`8008`).

@@ -4204,8 +4204,22 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
 /// highlighting. This is used for reading scripts and init files.
 /// The file is not closed.
 static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
+    struct stat buf {};
+    if (fstat(fd, &buf) == -1) {
+        int err = errno;
+        FLOGF(error, _(L"Unable to read input file: %s"), strerror(err));
+        return 1;
+    }
+
+    /* FreeBSD allows read() on directories. Error explicitly in that case. */
+    if (buf.st_mode & S_IFDIR) {
+        FLOGF(error, _(L"Unable to read input file: %s"), strerror(EISDIR));
+        return 1;
+    }
+
     // Read all data into a std::string.
     std::string fd_contents;
+    fd_contents.reserve(buf.st_size);
     for (;;) {
         char buff[4096];
         ssize_t amt = read(fd, buff, sizeof buff);

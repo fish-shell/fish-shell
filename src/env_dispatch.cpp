@@ -271,6 +271,11 @@ const char *gnu_get_libc_version();
 // Disallow posix_spawn entirely on glibc <= 2.24.
 // See #8021.
 static bool allow_use_posix_spawn() {
+    // OpenBSD's posix_spawn returns status 127, instead of erroring with ENOEXEC, when faced with a
+    // shebangless script. Disable posix_spawn on OpenBSD.
+#if defined(__OpenBSD__)
+    return false;
+#endif
     bool result = true;
     // uClibc defines __GLIBC__.
 #if defined(__GLIBC__) && !defined(__UCLIBC__)

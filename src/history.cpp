@@ -1319,7 +1319,15 @@ struct history_t::impl_wrapper_t {
 void history_impl_t::resolve_pending() { this->has_pending_item = false; }
 
 bool history_t::chaos_mode = false;
+
+/* OpenBSD's mmap is not synchronized with other file operations. In particular it appears we may
+ * write() a file, fsync() it, close it, mmap() it, and call msync(), and we still may not see the
+ * newly written data. Just don't try mmap here. */
+#if defined(__OpenBSD__)
+bool history_t::never_mmap = true;
+#else
 bool history_t::never_mmap = false;
+#endif
 
 history_t::history_t(wcstring name) : wrap_(make_unique<impl_wrapper_t>(std::move(name))) {}
 

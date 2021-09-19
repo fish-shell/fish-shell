@@ -16,6 +16,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 11)
 set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
 
+# Generate Xcode schemas (but not for tests).
+set(CMAKE_XCODE_GENERATE_SCHEME 1)
+
 # Use the default flags (#6296) but remove -DNDEBUG so that asserts remain enabled.
 string(REPLACE "-DNDEBUG" ""
   CMAKE_CXX_FLAGS_RELWITHDEBINFO

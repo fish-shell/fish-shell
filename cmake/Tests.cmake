@@ -95,6 +95,9 @@ configure_file(build_tools/littlecheck.py littlecheck.py COPYONLY)
 # Copy pexpect_helper.py
 configure_file(build_tools/pexpect_helper.py pexpect_helper.py COPYONLY)
 
+# Suppress generating Xcode schemes for all tests, there's too many.
+set(CMAKE_XCODE_GENERATE_SCHEME 0)
+
 # CMake being CMake, you can't just add a DEPENDS argument to add_test to make it depend on any of
 # your binaries actually being built before `make test` is executed (requiring `make all` first),
 # and the only dependency a test can have is on another test. So we make building fish and

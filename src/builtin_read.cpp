@@ -4,6 +4,7 @@
 #include "builtin_read.h"
 
 #include <unistd.h>
+#include <termios.h>
 
 #include <algorithm>
 #include <cerrno>
@@ -30,7 +31,6 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "termios.h"
 #include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep

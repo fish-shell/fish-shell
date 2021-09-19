@@ -35,15 +35,13 @@ function __fish_complete_man
         __fish_apropos $token 2>/dev/null | awk '
                 BEGIN { FS="[\t ]- "; OFS="\t"; }
                 # BSD/Darwin
-                /^[^( \t]+\('$section'\)/ {
-                  split($1, pages, ", ");
+                /^[^( \t]+(, [^( \t]+)*\('$section'\)/ {
+                  paren = index($1, "(");
+                  sect = substr($1, paren + 1, length($1) - paren - 1);
+                  aliases = substr($1, 1, paren - 1)
+                  split(aliases, pages, ", ");
                   for (i in pages) {
-                    page = pages[i];
-                    sub(/[ \t]+/, "", page);
-                    paren = index(page, "(");
-                    name = substr(page, 1, paren - 1);
-                    sect = substr(page, paren + 1, length(page) - paren - 1);
-                    print name, sect ": " $2;
+                    print pages[i], sect ": " $2
                   }
                 }
                 # man-db

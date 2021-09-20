@@ -549,7 +549,7 @@ static maybe_t<size_t> find_extension (const wcstring &path) {
 
         // If we don't have a "." or the "." is the first in the filename,
         // we do not have an extension
-        size_t pos = filename.find_last_of(L".");
+        size_t pos = filename.find_last_of(L'.');
         if (pos == wcstring::npos || pos == 0) {
             return none();
         }

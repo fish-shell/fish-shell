@@ -287,6 +287,56 @@ static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_perms(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                             const wgetopter_t &w, options_t *opts, path_perm_flags_t perm ) {
+    if (opts->perm_valid) {
+        if (!opts->have_perm) opts->perm = 0;
+        opts->have_perm = true;
+        opts->perm |= perm;
+        return STATUS_CMD_OK;
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_r(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    return handle_flag_perms(argv, parser, streams, w, opts, PERM_READ);
+}
+static int handle_flag_w(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    return handle_flag_perms(argv, parser, streams, w, opts, PERM_WRITE);
+}
+static int handle_flag_x(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    return handle_flag_perms(argv, parser, streams, w, opts, PERM_EXEC);
+}
+
+static int handle_flag_types(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                             const wgetopter_t &w, options_t *opts, path_type_flags_t type) {
+    if (opts->type_valid) {
+        if (!opts->have_type) opts->type = 0;
+        opts->have_type = true;
+        opts->type |= type;
+        return STATUS_CMD_OK;
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
+static int handle_flag_f(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    return handle_flag_types(argv, parser, streams, w, opts, TYPE_FILE);
+}
+static int handle_flag_l(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    return handle_flag_types(argv, parser, streams, w, opts, TYPE_LINK);
+}
+static int handle_flag_d(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    return handle_flag_types(argv, parser, streams, w, opts, TYPE_DIR);
+}
+
 static int handle_flag_v(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->invert_valid) {
@@ -303,8 +353,14 @@ static int handle_flag_v(const wchar_t **argv, parser_t &parser, io_streams_t &s
 static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath complexity)
     // All commands accept -z, -Z and -q
     wcstring short_opts(L":zZq");
-    if (opts->perm_valid) short_opts.append(L"p:");
-    if (opts->type_valid) short_opts.append(L"t:");
+    if (opts->perm_valid) {
+        short_opts.append(L"p:");
+        short_opts.append(L"rwx");
+    }
+    if (opts->type_valid) {
+        short_opts.append(L"t:");
+        short_opts.append(L"fld");
+    }
     if (opts->invert_valid) short_opts.append(L"v");
     return short_opts;
 }
@@ -325,6 +381,9 @@ static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function
     {'q', handle_flag_q}, {'v', handle_flag_v},
     {'z', handle_flag_z}, {'Z', handle_flag_Z},
     {'t', handle_flag_t}, {'p', handle_flag_p},
+    {'r', handle_flag_r}, {'w', handle_flag_w},
+    {'x', handle_flag_x}, {'f', handle_flag_f},
+    {'l', handle_flag_l}, {'d', handle_flag_d},
 };
 
 /// Parse the arguments for flags recognized by a specific string subcommand.

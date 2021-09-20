@@ -140,8 +140,10 @@ Examples
 The available filters are:
 
 - ``-t`` or ``--type`` with the options: "dir", "file", "link", "block", "char", "fifo" and "socket", in which case the path needs to be a directory, file, link, block device, character device, named pipe or socket, respectively.
+- ``-d``, ``-f`` and ``-l`` are short for ``--type=dir``, ``--type=file`` and ``--type=link``, respectively.
 
 - ``-p`` or ``--perm`` with the options: "read", "write", and "exec", as well as "suid", "sgid", "sticky", "user" (referring to the path owner) and "group" (referring to the path's group), in which case the path needs to have all of the given permissions for the current user.
+- ``-r``, ``-w`` and ``-x`` are short for ``--perm=read``, ``--perm=write`` and ``--perm=exec``, respectively.
 
 Note that the path needs to be *any* of the given types, but have *all* of the given permissions. The filter options can either be given as multiple options, or comma-separated - ``path filter -t dir,file`` or ``path filter --type dir --type file`` are equivalent.
 
@@ -170,6 +172,11 @@ Examples
    #
    # $HOME is a directory and both writable and executable, typically.
    # So it passes.
+   /home/me
+
+   >_ path filter -fdxw /usr/bin/fish /home/me
+   # This is the same as above: "-f" is "--type=file", "-d" is "--type=dir",
+   # "-x" is short for "--perm=exec" and "-w" short for "--perm=write"!
    /home/me
    
 "normalize" subcommand

@@ -8,6 +8,9 @@ if(NOT CTEST_PARALLEL_LEVEL)
   set(CTEST_PARALLEL_LEVEL ${CORES})
 endif()
 
+# Put in a tests folder to reduce the top level targets in IDEs.
+set(CMAKE_FOLDER tests)
+
 # We will use 125 as a reserved exit code to indicate that a test has been skipped, i.e. it did not
 # pass but it should not be considered a failed test run, either.
 set(SKIP_RETURN_CODE 125)

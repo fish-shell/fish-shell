@@ -12,6 +12,7 @@ Synopsis
     path dir  [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path filter [(-z | --null-in)] [(-Z | --null-out)] [(-v | --invert)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path is [(-z | --null-in)] [(-Z | --null-out)] [(-v | --invert)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
     path normalize [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path real [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
     path strip-extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
@@ -179,6 +180,27 @@ Examples
    # "-x" is short for "--perm=exec" and "-w" short for "--perm=write"!
    /home/me
    
+"is" subcommand
+--------------------
+
+::
+
+    path is [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+
+``path is`` is short for ``path filter -q``. It returns true if any of the given files passes the filter.
+
+Examples
+^^^^^^^^
+
+::
+
+   >_ path is /usr/bin /usr/argagagji
+   # /usr/bin exists, so this returns a status of 0 (true).
+   >_ path is /usr/argagagji
+   # /usr/argagagji does not, so this returns a status of 1 (false).
+   >_ path is -fx /bin/sh
+   # /bin/sh is usually an executable file, so this returns true.
+
 "normalize" subcommand
 -----------------------
 

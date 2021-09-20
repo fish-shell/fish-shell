@@ -644,7 +644,7 @@ static int path_real(parser_t &parser, io_streams_t &streams, int argc, const wc
 
 // All strings are taken to be filenames, and if they match the type/perms/etc (and exist!)
 // they are passed along.
-static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv, bool is_is) {
     options_t opts;
     opts.type_valid = true;
     opts.perm_valid = true;
@@ -652,6 +652,8 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
     int optind;
     int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
+    // If we have been invoked as "path is", which is "path filter -q".
+    if (is_is) opts.quiet = true;
 
     int n_transformed = 0;
     arg_iterator_t aiter(argv, optind, streams, opts.null_in);
@@ -673,6 +675,14 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    return path_filter(parser, streams, argc, argv, false /* is_is */);
+}
+
+static int path_is(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    return path_filter(parser, streams, argc, argv, true /* is_is */);
+}
+
 // Keep sorted alphabetically
 static constexpr const struct path_subcommand {
     const wchar_t *name;
@@ -685,6 +695,7 @@ static constexpr const struct path_subcommand {
     {L"dir", &path_dir},
     {L"extension", &path_extension},
     {L"filter", &path_filter},
+    {L"is", &path_is},
     {L"normalize", &path_normalize},
     {L"real", &path_real},
     {L"strip-extension", &path_strip_extension},

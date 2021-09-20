@@ -1,4 +1,4 @@
-// Implementation of the string builtin.
+// Implementation of the path builtin.
 #include "config.h"  // IWYU pragma: keep
 
 #include <sys/stat.h>
@@ -49,7 +49,7 @@ static const wchar_t *path_get_arg_argv(int *argidx, const wchar_t *const *argv)
 // A helper type for extracting arguments from either argv or stdin.
 namespace {
 class arg_iterator_t {
-    // The list of arguments passed to the string builtin.
+    // The list of arguments passed to this builtin.
     const wchar_t *const *argv_;
     // If using argv, index of the next argument to return.
     int argidx_;
@@ -150,7 +150,7 @@ enum {
 };
 typedef uint32_t path_perm_flags_t;
 
-// This is used by the string subcommands to communicate with the option parser which flags are
+// This is used by the subcommands to communicate with the option parser which flags are
 // valid and get the result of parsing the command for flags.
 struct options_t {  //!OCLINT(too many fields)
     bool perm_valid = false;
@@ -367,7 +367,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
-// Remember: adjust share/completions/string.fish when `string` options change
+// Remember: adjust the completions in share/completions/ when options change
 static const struct woption long_options[] = {
                                               {L"quiet", no_argument, nullptr, 'q'},
                                               {L"null-in", no_argument, nullptr, 'z'},
@@ -400,7 +400,7 @@ static int parse_opts(options_t *opts, int *optind, int argc, const wchar_t **ar
             int retval = fn->second(argv, parser, streams, w, opts);
             if (retval != STATUS_CMD_OK) return retval;
         } else if (opt == ':') {
-            streams.err.append(L"path ");  // clone of string_error
+            streams.err.append(L"path ");
             builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
                                      false /* print_hints */);
             return STATUS_INVALID_ARGS;
@@ -599,10 +599,8 @@ static int path_strip_extension(parser_t &parser, io_streams_t &streams, int arg
         }
 
         // This ends up being empty if the filename ends with ".".
-        // That's arguably correct.
-        //
-        // So we print an empty string but return true,
-        // because there *is* an extension, it just happens to be empty.
+        // That's arguably correct, and results in an empty string,
+        // if we print anything.
         wcstring ext = arg->substr(0, *pos);
         if (opts.quiet && !ext.empty()) {
             // Return 0 if we *had* an extension
@@ -702,7 +700,7 @@ static constexpr const struct path_subcommand {
 };
 ASSERT_SORTED_BY_NAME(path_subcommands);
 
-/// The string builtin, for manipulating strings.
+/// The path builtin, for handling paths.
 maybe_t<int> builtin_path(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);

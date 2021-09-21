@@ -361,7 +361,7 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
         // Note reader_get_history may return null, if we are running non-interactively (e.g. from
         // web_config).
         if (is_main_thread()) {
-            history = history_t::with_name(history_session_id(env_stack_t::principal()));
+            history = history_t::with_name(history_session_id(vars));
         }
     } else if (var_name != wcstring{VARIABLE_EXPAND_EMPTY}) {
         var = vars.get(var_name);

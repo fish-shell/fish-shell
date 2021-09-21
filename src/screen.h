@@ -136,6 +136,76 @@ class screen_t {
    public:
     screen_t();
 
+    /// This is the main function for the screen output library. It is used to define the desired
+    /// contents of the screen. The screen command will use its knowledge of the current contents of
+    /// the screen in order to render the desired output using as few terminal commands as possible.
+    ///
+    /// \param left_prompt the prompt to prepend to the command line
+    /// \param right_prompt the right prompt, or NULL if none
+    /// \param commandline the command line
+    /// \param explicit_len the number of characters of the "explicit" (non-autosuggestion) portion
+    /// of the command line \param colors the colors to use for the comand line \param indent the
+    /// indent to use for the command line \param cursor_pos where the cursor is \param pager the
+    /// pager to render below the command line \param page_rendering to cache the current pager view
+    /// \param cursor_is_within_pager whether the position is within the pager line (first line)
+    void write(const wcstring &left_prompt, const wcstring &right_prompt,
+               const wcstring &commandline, size_t explicit_len,
+               const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
+               size_t cursor_pos, pager_t &pager, page_rendering_t &page_rendering,
+               bool cursor_is_within_pager);
+
+    /// Resets the screen buffer's internal knowledge about the contents of the screen,
+    /// optionally repainting the prompt as well.
+    /// This function assumes that the current line is still valid.
+    void reset_line(bool repaint_prompt = false);
+
+    /// Resets the screen buffer's internal knowldge about the contents of the screen,
+    /// abandoning the current line and going to the next line.
+    /// If clear_to_eos is set,
+    /// The screen width must be provided for the PROMPT_SP hack.
+    void reset_abandoning_line(int screen_width);
+
+    /// Stat stdout and stderr and save result as the current timestamp.
+    /// This is used to avoid reacting to changes that we ourselves made to the screen.
+    void save_status();
+
+    /// \return whether we believe the cursor is wrapped onto the last line, and that line is
+    /// otherwise empty. This includes both soft and hard wrapping.
+    bool cursor_is_wrapped_to_own_line() const;
+
+    /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
+    bool autosuggestion_is_truncated{false};
+
+   private:
+    /// Appends a character to the end of the line that the output cursor is on. This function
+    /// automatically handles linebreaks and lines longer than the screen width.
+    void desired_append_char(wchar_t b, highlight_spec_t c, int indent, size_t prompt_width,
+                             size_t bwidth);
+
+    /// Stat stdout and stderr and compare result to previous result in reader_save_status. Repaint
+    /// if modification time has changed.
+    void check_status();
+
+    /// Write the bytes needed to move screen cursor to the specified position to the specified
+    /// buffer. The actual_cursor field of the specified screen_t will be updated.
+    ///
+    /// \param new_x the new x position
+    /// \param new_y the new y position
+    void move(int new_x, int new_y);
+
+    /// Convert a wide character to a multibyte string and append it to the buffer.
+    void write_char(wchar_t c, size_t width);
+
+    /// Send the specified string through tputs and append the output to the screen's outputter.
+    void write_mbs(const char *s);
+
+    /// Convert a wide string to a multibyte string and append it to the buffer.
+    void write_str(const wchar_t *s);
+    void write_str(const wcstring &s);
+
+    /// Update the cursor as if soft wrapping had been performed.
+    bool handle_soft_wrap(int x, int y);
+
     /// The internal representation of the desired screen contents.
     screen_data_t desired{};
     /// The internal representation of the actual screen contents.
@@ -146,8 +216,6 @@ class screen_t {
     size_t last_right_prompt_width{0};
     /// If we support soft wrapping, we can output to this location without any cursor motion.
     maybe_t<screen_data_t::cursor_t> soft_wrap_location{};
-    /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
-    bool autosuggestion_is_truncated{false};
     /// This flag is set to true when there is reason to suspect that the parts of the screen lines
     /// where the actual content is not filled in may be non-empty. This means that a clr_eol
     /// command has to be sent to the terminal at the end of each line, including
@@ -167,46 +235,11 @@ class screen_t {
     /// \return the outputter for this screen.
     outputter_t &outp() { return outp_; }
 
-    /// \return whether we believe the cursor is wrapped onto the last line, and that line is
-    /// otherwise empty. This includes both soft and hard wrapping.
-    bool cursor_is_wrapped_to_own_line() const;
+    /// Update the screen to match the desired output.
+    void update(const wcstring &left_prompt, const wcstring &right_prompt);
+
+    class scoped_buffer_t;
 };
-
-/// This is the main function for the screen putput library. It is used to define the desired
-/// contents of the screen. The screen command will use its knowledge of the current contents of the
-/// screen in order to render the desired output using as few terminal commands as possible.
-///
-/// \param s the screen on which to write
-/// \param left_prompt the prompt to prepend to the command line
-/// \param right_prompt the right prompt, or NULL if none
-/// \param commandline the command line
-/// \param explicit_len the number of characters of the "explicit" (non-autosuggestion) portion of
-/// the command line
-/// \param colors the colors to use for the comand line
-/// \param indent the indent to use for the command line
-/// \param cursor_pos where the cursor is
-/// \param pager the pager to render below the command line
-/// \param page_rendering to cache the current pager view
-/// \param cursor_is_within_pager whether the position is within the pager line (first line)
-void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
-             const wcstring &commandline, size_t explicit_len,
-             const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
-             size_t cursor_pos, pager_t &pager, page_rendering_t &page_rendering,
-             bool cursor_is_within_pager);
-
-/// Resets the screen buffer's internal knowledge about the contents of the screen,
-/// optionally repainting the prompt as well.
-/// This function assumes that the current line is still valid.
-void s_reset_line(screen_t *s, bool repaint_prompt = false);
-
-/// Resets the screen buffer's internal knowldge about the contents of the screen,
-/// abandoning the current line and going to the next line.
-/// If clear_to_eos is set,
-/// The screen width must be provided for the PROMPT_SP hack.
-void s_reset_abandoning_line(screen_t *s, int screen_width);
-
-/// Stat stdout and stderr and save result as the current timestamp.
-void s_save_status(screen_t *s);
 
 /// Issues an immediate clr_eos.
 void screen_force_clear_to_end();

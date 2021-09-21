@@ -1092,9 +1092,9 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
     indents.resize(full_line.size(), 0);
 
     // Prepend the mode prompt to the left prompt.
-    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
-            cmd_line->size(), colors, indents, data.position, pager, current_page_rendering,
-            data.focused_on_pager);
+    screen.write(mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
+                 cmd_line->size(), colors, indents, data.position, pager, current_page_rendering,
+                 data.focused_on_pager);
 }
 
 /// Internal helper function for handling killing parts of text.
@@ -2618,7 +2618,7 @@ void reader_pop() {
         reader_interactive_destroy();
         *commandline_state_snapshot() = commandline_state_t{};
     } else {
-        s_reset_abandoning_line(&new_reader->screen, termsize_last().width);
+        new_reader->screen.reset_abandoning_line(termsize_last().width);
         new_reader->update_commandline_state();
     }
 }
@@ -3000,7 +3000,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 outp.push_back('\n');
 
                 set_command_line_and_position(&command_line, L"", 0);
-                s_reset_abandoning_line(&screen, termsize_last().width - command_line.size());
+                screen.reset_abandoning_line(termsize_last().width - command_line.size());
 
                 // Post fish_cancel.
                 event_fire_generic(parser(), L"fish_cancel");
@@ -3038,7 +3038,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             parser().libdata().is_repaint = true;
             exec_mode_prompt();
             if (!mode_prompt_buff.empty()) {
-                s_reset_line(&screen, true /* redraw prompt */);
+                screen.reset_line(true /* redraw prompt */);
                 if (this->is_repaint_needed()) this->layout_and_repaint(L"mode");
                 parser().libdata().is_repaint = false;
                 break;
@@ -3050,7 +3050,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::repaint: {
             parser().libdata().is_repaint = true;
             exec_prompt();
-            s_reset_line(&screen, true /* redraw prompt */);
+            screen.reset_line(true /* redraw prompt */);
             this->layout_and_repaint(L"readline");
             force_exec_prompt_and_repaint = false;
             parser().libdata().is_repaint = false;
@@ -3370,7 +3370,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // already be printed, all we need to do is repaint.
                 wcstring_list_t argv(1, el->text());
                 event_fire_generic(parser(), L"fish_posterror", &argv);
-                s_reset_abandoning_line(&screen, termsize_last().width);
+                screen.reset_abandoning_line(termsize_last().width);
             }
             break;
         }
@@ -3950,7 +3950,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     //
     // I can't see a good way around this.
     if (!first_prompt) {
-        s_reset_abandoning_line(&screen, termsize_last().width);
+        screen.reset_abandoning_line(termsize_last().width);
     }
     first_prompt = false;
 

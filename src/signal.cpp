@@ -2,12 +2,13 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <signal.h>
 #include <stdio.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
 #include <pthread.h>
+
+#include <csignal>
 
 #include "common.h"
 #include "event.h"

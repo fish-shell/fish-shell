@@ -121,7 +121,7 @@ class enum_iter_t {
             return *this;
         }
 
-        iterator_t operator++(int) {
+        const iterator_t operator++(int) {
             auto res = *this;
             v_ += 1;
             return res;

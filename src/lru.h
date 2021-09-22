@@ -270,7 +270,7 @@ class lru_cache_t {
         const lru_link_t *node;
 
        public:
-        typedef std::pair<const wcstring &, const Contents &> value_type;
+        using value_type = std::pair<const wcstring &, const Contents &>;
 
         explicit iterator(const lru_link_t *val) : node(val) {}
         void operator++() { node = node->prev; }

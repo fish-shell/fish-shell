@@ -54,9 +54,9 @@ int fish_mkstemp_cloexec(char *);
 /// expects a int (*func)(int) as its last parameter. tputs_arg_t is defined to always be what tputs
 /// expects. Hopefully.
 #if defined(NCURSES_VERSION) || defined(__NetBSD__)
-typedef int tputs_arg_t;
+using tputs_arg_t = int;
 #else
-typedef char tputs_arg_t;
+using tputs_arg_t = char;
 #endif
 
 #ifndef HAVE_WINSIZE

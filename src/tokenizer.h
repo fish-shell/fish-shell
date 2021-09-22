@@ -37,7 +37,7 @@ enum class token_type_t {
 /// Make an effort to continue after an error.
 #define TOK_CONTINUE_AFTER_ERROR 8
 
-typedef unsigned int tok_flags_t;
+using tok_flags_t = unsigned int;
 
 enum class tokenizer_error_t {
     none,

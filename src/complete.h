@@ -46,7 +46,7 @@ enum {
     /// This completion looks to have the same string as an existing argument.
     COMPLETE_DUPLICATES_ARGUMENT = 1 << 7
 };
-typedef int complete_flags_t;
+using complete_flags_t = int;
 
 /// std::function which accepts a completion string and returns its description.
 using description_func_t = std::function<wcstring(const wcstring &)>;

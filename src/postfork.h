@@ -55,7 +55,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
 
 #if FISH_USE_POSIX_SPAWN
 /// A RAII type which wraps up posix_spawn's data structures.
-class posix_spawner_t : noncopyable_t, nonmovable_t {
+class posix_spawner_t : maybe_detail::noncopyable_t, maybe_detail::noncopyable_t {
    public:
     /// Attempt to construct from a job and dup2 list.
     /// The caller must check the error function, as this may fail.

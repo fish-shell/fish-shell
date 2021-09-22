@@ -123,7 +123,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background);
 
 /// Sets what colors are supported.
 enum { color_support_term256 = 1 << 0, color_support_term24bit = 1 << 1 };
-typedef unsigned int color_support_t;
+using color_support_t = unsigned int;
 color_support_t output_get_color_support();
 void output_set_color_support(color_support_t val);
 

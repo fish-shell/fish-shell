@@ -158,7 +158,7 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
         ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO));
     }
     auto res = parser.eval(cmd, ios);
-    if (res.status.exit_code() == 2) {
+    if (res.status.normal_exited() && res.status.exit_code() == 2) {
         streams.err.append_format(BUILTIN_ERR_MISSING_HELP, name_esc.c_str(), name_esc.c_str());
     }
 }

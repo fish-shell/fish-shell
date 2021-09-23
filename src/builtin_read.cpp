@@ -57,11 +57,12 @@ struct read_cmd_opts_t {
     bool one_line = false;
 };
 
-static const wchar_t *const short_options = L":ac:d:ghiLln:p:sStuxzP:UR:L";
+static const wchar_t *const short_options = L":ac:d:fghiLln:p:sStuxzP:UR:L";
 static const struct woption long_options[] = {{L"array", no_argument, nullptr, 'a'},
                                               {L"command", required_argument, nullptr, 'c'},
                                               {L"delimiter", required_argument, nullptr, 'd'},
                                               {L"export", no_argument, nullptr, 'x'},
+                                              {L"function", no_argument, nullptr, 'f'},
                                               {L"global", no_argument, nullptr, 'g'},
                                               {L"help", no_argument, nullptr, 'h'},
                                               {L"line", no_argument, nullptr, 'L'},
@@ -104,6 +105,10 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                                             L"use -s or --silent instead.\n"),
                                           cmd);
                 return STATUS_INVALID_ARGS;
+            }
+            case L'f': {
+                opts.place |= ENV_FUNCTION;
+                break;
             }
             case L'g': {
                 opts.place |= ENV_GLOBAL;
@@ -385,7 +390,7 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
         return STATUS_INVALID_ARGS;
     }
 
-    if ((opts.place & ENV_LOCAL ? 1 : 0) + (opts.place & ENV_GLOBAL ? 1 : 0) +
+    if ((opts.place & ENV_LOCAL ? 1 : 0) + (opts.place & ENV_FUNCTION ? 1 : 0) + (opts.place & ENV_GLOBAL ? 1 : 0) +
             (opts.place & ENV_UNIVERSAL ? 1 : 0) >
         1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);

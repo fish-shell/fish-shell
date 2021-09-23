@@ -25,7 +25,9 @@ The following options are available:
 
 - ``-s`` or ``--silent`` masks characters written to the terminal, replacing them with asterisks. This is useful for reading things like passwords or other sensitive information.
 
-- ``-l`` or ``--local`` makes the variables local.
+- ``-f`` or ``--function`` scopes the variable to the currently executing function. It is erased when the function ends.
+
+- ``-l`` or ``--local`` scopes the variable to the currently executing block. It is erased when the block ends. Outside of a block, this is the same as ``--function``.
 
 - ``-n NCHARS`` or ``--nchars=NCHARS`` makes ``read`` return after reading NCHARS characters or the end of
   the line, whichever comes first.

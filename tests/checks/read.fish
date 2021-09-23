@@ -345,3 +345,22 @@ echo c $c
 # CHECK: a 'afoo barb'
 # CHECK: b
 # CHECK: c
+
+function function-scoped-read
+    echo foo | read --function skamtebord
+    set -S skamtebord
+    begin
+        echo bar | read skamtebord
+        echo baz | read -f craaab
+    end
+    set -S skamtebord
+    set -S craaab
+end
+
+function-scoped-read
+# CHECK: $skamtebord: set in local scope, unexported, with 1 elements
+# CHECK: $skamtebord[1]: |foo|
+# CHECK: $skamtebord: set in local scope, unexported, with 1 elements
+# CHECK: $skamtebord[1]: |bar|
+# CHECK: $craaab: set in local scope, unexported, with 1 elements
+# CHECK: $craaab[1]: |baz|

@@ -247,8 +247,11 @@ function __fish_git_files
                         set file "$line[9..-1]"
                         set desc $deleted_desc
                     end
-                case "1 AM*"
+                case "1 AM*" "1 AT*"
                     # Added files with additional modifications
+                    # ("T" is type-changed. As of git 2.33 this appears to be undocumented.
+                    # it happens when e.g. a file is replaced with a symlink.
+                    # For our purposes it's the same as modified)
                     if set -ql added
                         set file "$line[9..-1]"
                         set desc $added_desc
@@ -261,7 +264,7 @@ function __fish_git_files
                     set -ql untracked
                     and set file "$line[9..-1]"
                     and set desc $untracked_desc
-                case '1 .M*'
+                case '1 .M*' '1 .T*'
                     # Modified
                     # From the docs: "Ordinary changed entries have the following format:"
                     # "1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>"

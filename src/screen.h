@@ -151,8 +151,8 @@ class screen_t {
     void write(const wcstring &left_prompt, const wcstring &right_prompt,
                const wcstring &commandline, size_t explicit_len,
                const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
-               size_t cursor_pos, pager_t &pager, page_rendering_t &page_rendering,
-               bool cursor_is_within_pager);
+               size_t cursor_pos, const environment_t &vars, pager_t &pager,
+               page_rendering_t &page_rendering, bool cursor_is_within_pager);
 
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
     /// optionally repainting the prompt as well.
@@ -236,7 +236,8 @@ class screen_t {
     outputter_t &outp() { return outp_; }
 
     /// Update the screen to match the desired output.
-    void update(const wcstring &left_prompt, const wcstring &right_prompt);
+    void update(const wcstring &left_prompt, const wcstring &right_prompt,
+                const environment_t &vars);
 
     class scoped_buffer_t;
 };

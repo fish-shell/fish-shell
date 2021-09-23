@@ -717,10 +717,8 @@ bool screen_t::handle_soft_wrap(int x, int y) {
 }
 
 /// Update the screen to match the desired output.
-void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt) {
-    // TODO: this should be passed in.
-    const environment_t &vars = env_stack_t::principal();
-
+void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
+                      const environment_t &vars) {
     // Helper function to set a resolved color, using the caching resolver.
     highlight_color_resolver_t color_resolver{};
     auto set_color = [&](highlight_spec_t c) {
@@ -1145,8 +1143,8 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
                      const wcstring &commandline, size_t explicit_len,
                      const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
-                     size_t cursor_pos, pager_t &pager, page_rendering_t &page_rendering,
-                     bool cursor_is_within_pager) {
+                     size_t cursor_pos, const environment_t &vars, pager_t &pager,
+                     page_rendering_t &page_rendering, bool cursor_is_within_pager) {
     termsize_t curr_termsize = termsize_last();
     int screen_width = curr_termsize.width;
     static relaxed_atomic_t<uint32_t> s_repaints{0};
@@ -1236,7 +1234,7 @@ void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
     // Append pager_data (none if empty).
     this->desired.append_lines(page_rendering.screen_data);
 
-    this->update(layout.left_prompt, layout.right_prompt);
+    this->update(layout.left_prompt, layout.right_prompt, vars);
     this->save_status();
 }
 

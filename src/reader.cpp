@@ -1093,8 +1093,8 @@ void reader_data_t::paint_layout(const wchar_t *reason) {
 
     // Prepend the mode prompt to the left prompt.
     screen.write(mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
-                 cmd_line->size(), colors, indents, data.position, pager, current_page_rendering,
-                 data.focused_on_pager);
+                 cmd_line->size(), colors, indents, data.position, parser().vars(), pager,
+                 current_page_rendering, data.focused_on_pager);
 }
 
 /// Internal helper function for handling killing parts of text.

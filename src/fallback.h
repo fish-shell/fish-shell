@@ -50,10 +50,9 @@ int fish_mkstemp_cloexec(char *);
 #define WCHAR_MAX INT_MAX
 #endif
 
-/// Under curses, tputs expects an int (*func)(char) as its last parameter, but in ncurses, tputs
-/// expects a int (*func)(int) as its last parameter. tputs_arg_t is defined to always be what tputs
-/// expects. Hopefully.
-#if defined(NCURSES_VERSION) || defined(__NetBSD__)
+/// Both ncurses and NetBSD curses expect an int (*func)(int) as the last parameter for tputs.
+/// Apparently OpenIndiana's curses still uses int (*func)(char) here.
+#if TPUTS_USES_INT_ARG
 using tputs_arg_t = int;
 #else
 using tputs_arg_t = char;

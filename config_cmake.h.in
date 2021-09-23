@@ -148,6 +148,9 @@
 /* Use a variadic tparm on NetBSD curses. */
 #cmakedefine TPARM_VARARGS 1
 
+/* The parameter type for the last tputs parameter */
+#cmakedefine TPUTS_USES_INT_ARG 1
+
 /* Define to 1 if tparm accepts a fixed amount of parameters. */
 #cmakedefine TPARM_SOLARIS_KLUDGE 1
 

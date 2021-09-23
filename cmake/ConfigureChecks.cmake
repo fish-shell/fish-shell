@@ -168,9 +168,9 @@ elseif(HAVE_NCURSES_TERM_H)
   set(TPARM_INCLUDES "${TPARM_INCLUDES}#include <ncurses/term.h>\n")
 endif()
 
-# Solaris and X/Open-conforming systems have a fixed-args tparm
 cmake_push_check_state()
 list(APPEND CMAKE_REQUIRED_LIBRARIES ${CURSES_LIBRARY})
+# Solaris and X/Open-conforming systems have a fixed-args tparm
 check_cxx_source_compiles("
 #define TPARM_VARARGS
 ${TPARM_INCLUDES}
@@ -180,6 +180,23 @@ int main () {
 }
 "
   TPARM_TAKES_VARARGS
+)
+
+
+# Check if tputs needs a function reading an int or char.
+# The only curses I can find that needs a char is OpenIndiana.
+check_cxx_source_compiles("
+#include <curses.h>
+#include <term.h>
+
+static int writer(int b) {
+    return b;
+}
+
+int main() {
+    return tputs(\"foo\", 5, writer);
+}"
+TPUTS_USES_INT_ARG
 )
 
 if(TPARM_TAKES_VARARGS)

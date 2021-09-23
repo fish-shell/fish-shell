@@ -11,8 +11,10 @@ Synopsis
     path base GENERAL_OPTIONS [PATH...]
     path dir GENERAL_OPTIONS  [PATH...]
     path extension GENERAL_OPTIONS [PATH...]
-    path filter GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
-    path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path filter GENERAL_OPTIONS [(-v | --invert)] \
+        [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE] \
+        [(-p | --perm) PERMISSION] [PATH...]
     path normalize GENERAL_OPTIONS [PATH...]
     path real GENERAL_OPTIONS [PATH...]
     path strip-extension GENERAL_OPTIONS [PATH...]
@@ -156,6 +158,8 @@ With ``--invert``, the meaning of the filtering is inverted - any path that woul
 
 It returns 0 if at least one path passed the filter.
 
+``path is`` is shorthand for ``path filter -q``, i.e. just checking without producing output, see :ref:`The is subcommand <cmd-path-is>`.
+
 Examples
 ^^^^^^^^
 
@@ -182,6 +186,8 @@ Examples
    # "-x" is short for "--perm=exec" and "-w" short for "--perm=write"!
    /home/me
    
+.. _cmd-path-is:
+
 "is" subcommand
 --------------------
 
@@ -189,7 +195,9 @@ Examples
 
     path is [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
 
-``path is`` is short for ``path filter -q``. It returns true if any of the given files passes the filter.
+``path is`` is short for ``path filter -q``. It returns true if any of the given files passes the filter, but does not produce any output.
+
+``--quiet`` can still be passed for compatibility but is redundant. The options are the same as for ``path filter``.
 
 Examples
 ^^^^^^^^
@@ -197,9 +205,9 @@ Examples
 ::
 
    >_ path is /usr/bin /usr/argagagji
-   # /usr/bin exists, so this returns a status of 0 (true).
+   # /usr/bin exists, so this returns a status of 0 (true). It prints nothing.
    >_ path is /usr/argagagji
-   # /usr/argagagji does not, so this returns a status of 1 (false).
+   # /usr/argagagji does not, so this returns a status of 1 (false). It also prints nothing.
    >_ path is -fx /bin/sh
    # /bin/sh is usually an executable file, so this returns true.
 

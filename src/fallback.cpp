@@ -221,17 +221,12 @@ int killpg(int pgr, int sig) {
 int g_fish_ambiguous_width = 1;
 
 // Width of emoji characters.
-int g_fish_emoji_width = 0;
-
 // 1 is the typical emoji width in Unicode 8.
-int g_guessed_fish_emoji_width = 1;
+int g_fish_emoji_width = 1;
 
 static int fish_get_emoji_width(wchar_t c) {
     (void)c;
-    // Respect an explicit value. If we don't have one, use the guessed value. Do not try to fall
-    // back to wcwidth(), it's hopeless.
-    if (g_fish_emoji_width > 0) return g_fish_emoji_width;
-    return g_guessed_fish_emoji_width;
+    return g_fish_emoji_width;
 }
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is

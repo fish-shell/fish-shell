@@ -149,11 +149,11 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
     tzset();
 }
 
-/// Update the value of g_guessed_fish_emoji_width
+/// Update the value of g_fish_emoji_width
 static void guess_emoji_width(const environment_t &vars) {
     if (auto width_str = vars.get(L"fish_emoji_width")) {
         int new_width = fish_wcstol(width_str->as_string().c_str());
-        g_fish_emoji_width = std::max(0, new_width);
+        g_fish_emoji_width = std::min(2,std::max(1, new_width));
         FLOGF(term_support, "'fish_emoji_width' preference: %d, overwriting default",
               g_fish_emoji_width);
         return;
@@ -172,18 +172,18 @@ static void guess_emoji_width(const environment_t &vars) {
 
     if (term == L"Apple_Terminal" && version >= 400) {
         // Apple Terminal on High Sierra
-        g_guessed_fish_emoji_width = 2;
+        g_fish_emoji_width = 2;
         FLOGF(term_support, "default emoji width: 2 for %ls", term.c_str());
     } else if (term == L"iTerm.app") {
         // iTerm2 now defaults to Unicode 9 sizes for anything after macOS 10.12.
-        g_guessed_fish_emoji_width = 2;
+        g_fish_emoji_width = 2;
         FLOGF(term_support, "default emoji width for iTerm: 2");
     } else {
         // Default to whatever system wcwidth says to U+1F603,
-        // but only if it's at least 1.
+        // but only if it's at least 1 and at most 2.
         int w = wcwidth(L'😃');
-        g_guessed_fish_emoji_width = w > 0 ? w : 1;
-        FLOGF(term_support, "default emoji width: %d", g_guessed_fish_emoji_width);
+        g_fish_emoji_width = std::min(2,std::max(1, w));
+        FLOGF(term_support, "default emoji width: %d", g_fish_emoji_width);
     }
 }
 

@@ -21,9 +21,6 @@ extern int g_fish_ambiguous_width;
 /// painful this is. A value of 0 means to use the guessed value.
 extern int g_fish_emoji_width;
 
-/// The guessed value of the emoji width based on TERM.
-extern int g_guessed_fish_emoji_width;
-
 /// fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if
 /// the system one is busted.
 int fish_wcwidth(wchar_t wc);

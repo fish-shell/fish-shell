@@ -8,14 +8,16 @@ Synopsis
 
 ::
 
-    path base [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
-    path dir  [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
-    path extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
-    path filter [(-z | --null-in)] [(-Z | --null-out)] [(-v | --invert)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
-    path is [(-z | --null-in)] [(-Z | --null-out)] [(-v | --invert)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
-    path normalize [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
-    path real [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
-    path strip-extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path base GENERAL_OPTIONS [PATH...]
+    path dir GENERAL_OPTIONS  [PATH...]
+    path extension GENERAL_OPTIONS [PATH...]
+    path filter GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path normalize GENERAL_OPTIONS [PATH...]
+    path real GENERAL_OPTIONS [PATH...]
+    path strip-extension GENERAL_OPTIONS [PATH...]
+
+    GENERAL_OPTIONS := [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)]
 
 Description
 -----------

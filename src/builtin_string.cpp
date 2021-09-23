@@ -203,11 +203,13 @@ struct options_t {  //!OCLINT(too many fields)
 
 static size_t width_without_escapes(const wcstring &ins) {
     ssize_t width = 0;
-    // TODO: this is the same as fish_wcwidth_min_0 from screen.cpp
-    // Make that reusable (and add a wcswidth version).
     for (auto c : ins) {
-        auto w = fish_wcwidth(c);
-        if (w > 0) width += w;
+        auto w = fish_wcwidth_visible(c);
+        // We assume that this string is on its own line,
+        // in which case a backslash can't bring us below 0.
+        if (w > 0 || width > 0) {
+            width += w;
+        }
     }
 
     // ANSI escape sequences like \e\[31m contain printable characters. Subtract their width
@@ -218,8 +220,8 @@ static size_t width_without_escapes(const wcstring &ins) {
         if (len) {
             auto sub = ins.substr(pos, *len);
             for (auto c : sub) {
-                auto w = fish_wcwidth(c);
-                if (w > 0) width -= w;
+                auto w = fish_wcwidth_visible(c);
+                width -= w;
             }
             // Move us forward behind the escape code,
             // it might include a second escape!

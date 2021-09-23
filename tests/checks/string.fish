@@ -112,6 +112,23 @@ string length --visible a(set_color blue)b\ncde
 # CHECK: 2
 # CHECK: 3
 
+# Backslashes and visible length:
+# It can't move us before the start of the line.
+string length --visible \b
+# CHECK: 0
+
+# It can't move us before the start of the line.
+string length --visible \bf
+# CHECK: 1
+
+# But it does erase chars before.
+string length --visible \bf\b
+# CHECK: 0
+
+# Never move past 0.
+string length --visible \bf\b\b\b\b\b
+# CHECK: 0
+
 string sub --length 2 abcde
 # CHECK: ab
 

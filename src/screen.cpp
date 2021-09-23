@@ -81,13 +81,14 @@ static size_t next_tab_stop(size_t current_line_width) {
     return ((current_line_width / tab_width) + 1) * tab_width;
 }
 
-/// Like fish_wcwidth, but returns 0 for control characters instead of -1.
-static int fish_wcwidth_min_0(wchar_t widechar) { return std::max(0, fish_wcwidth(widechar)); }
-
 int line_t::wcswidth_min_0(size_t max) const {
     int result = 0;
     for (size_t idx = 0, end = std::min(max, text.size()); idx < end; idx++) {
-        result += fish_wcwidth_min_0(text[idx].character);
+        auto w = fish_wcwidth_visible(text[idx].character);
+        // A backspace at the start of the line does nothing.
+        if (w > 0 || result > 0) {
+            result += w;
+        }
     }
     return result;
 }
@@ -351,7 +352,11 @@ static size_t measure_run_from(const wchar_t *input, size_t start, size_t *out_e
             width = next_tab_stop(width);
         } else {
             // Ordinary char. Add its width with care to ignore control chars which have width -1.
-            width += fish_wcwidth_min_0(input[idx]);
+            auto w = fish_wcwidth_visible(input[idx]);
+            // A backspace at the start of the line does nothing.
+            if (w != -1 || width > 0) {
+               width += w;
+            }
         }
     }
     if (out_end) *out_end = idx;
@@ -389,7 +394,7 @@ static void truncate_run(wcstring *run, size_t desired_width, size_t *width,
             curr_width = measure_run_from(run->c_str(), 0, nullptr, cache);
             idx = 0;
         } else {
-            size_t char_width = fish_wcwidth_min_0(c);
+            size_t char_width = fish_wcwidth_visible(c);
             curr_width -= std::min(curr_width, char_width);
             run->erase(idx, 1);
         }
@@ -856,7 +861,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Skip over skip_remaining width worth of characters.
         size_t j = 0;
         for (; j < o_line.size(); j++) {
-            size_t width = fish_wcwidth_min_0(o_line.char_at(j));
+            size_t width = fish_wcwidth_visible(o_line.char_at(j));
             if (skip_remaining < width) break;
             skip_remaining -= width;
             current_width += width;
@@ -864,7 +869,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
         // Skip over zero-width characters (e.g. combining marks at the end of the prompt).
         for (; j < o_line.size(); j++) {
-            int width = fish_wcwidth_min_0(o_line.char_at(j));
+            int width = fish_wcwidth_visible(o_line.char_at(j));
             if (width > 0) break;
         }
 
@@ -888,7 +893,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             perform_any_impending_soft_wrap(scr, current_width, static_cast<int>(i));
             s_move(scr, current_width, static_cast<int>(i));
             set_color(o_line.color_at(j));
-            auto width = fish_wcwidth_min_0(o_line.char_at(j));
+            auto width = fish_wcwidth_visible(o_line.char_at(j));
             s_write_char(scr, o_line.char_at(j), width);
             current_width += width;
         }
@@ -1035,7 +1040,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
             multiline = true;
             break;
         } else {
-            first_line_width += fish_wcwidth_min_0(c);
+            first_line_width += fish_wcwidth_visible(c);
         }
     }
     const size_t first_command_line_width = first_line_width;
@@ -1050,7 +1055,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
         autosuggest_truncated_widths.reserve(1 + autosuggestion_str.size());
         for (size_t i = 0; autosuggestion[i] != L'\0'; i++) {
             autosuggest_truncated_widths.push_back(autosuggest_total_width);
-            autosuggest_total_width += fish_wcwidth_min_0(autosuggestion[i]);
+            autosuggest_total_width += fish_wcwidth_visible(autosuggestion[i]);
         }
     }
 
@@ -1219,7 +1224,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
         }
         s_desired_append_char(s, effective_commandline.at(i), colors[i], indent[i],
                               first_line_prompt_space,
-                              fish_wcwidth_min_0(effective_commandline.at(i)));
+                              fish_wcwidth_visible(effective_commandline.at(i)));
     }
 
     // Cursor may have been at the end too.

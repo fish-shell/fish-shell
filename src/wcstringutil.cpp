@@ -310,3 +310,20 @@ wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
 void wcs2string_bad_char(wchar_t wc) {
     FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", wc);
 }
+
+int fish_wcwidth_visible(wchar_t widechar) {
+    if (widechar == L'\b') return -1;
+    return std::max(0, fish_wcwidth(widechar));
+}
+
+int fish_wcswidth_visible(const wcstring &str) {
+    size_t res = 0;
+    for (wchar_t ch : str) {
+        if (ch == L'\b') {
+            res += -1;
+        } else {
+            res += std::max(0, fish_wcwidth(ch));
+        }
+    }
+    return res;
+}

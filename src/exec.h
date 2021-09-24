@@ -35,9 +35,6 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &output
 int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser,
                              const job_group_ref_t &job_group, wcstring_list_t &outputs);
 
-/// Loops over close until the syscall was run without being interrupted.
-void exec_close(int fd);
-
 /// Add signals that should be masked for external processes in this job.
 bool blocked_signals_for_job(const job_t &job, sigset_t *sigmask);
 

@@ -1,14 +1,7 @@
-function isolated-tmux --inherit-variable tmpdir
+function isolated-tmux-start
     set -l tmpdir (mktemp -d)
     cd $tmpdir
 
-    set -g sleep sleep .1
-    set -q CI && set sleep sleep 1
-
-    # Evil hack - override ourselves, so we only run initialization once.
-    # We could do this outside the function, but then initialization is done too early for a
-    # command that wants to set $isolated_tmux_fish_extra_args first, like
-    #   fish -C 'source tests/test_functions/isolated-tmux.fish' tests/checks/tmux-prompt.fish
     function isolated-tmux --inherit-variable tmpdir
         # tmux can't handle session sockets in paths that are too long, and macOS has a very long
         # $TMPDIR, so use a relative path - except macOS doesn't have `realpath --relative-to`...
@@ -26,6 +19,12 @@ function isolated-tmux --inherit-variable tmpdir
         rm -r $tmpdir
     end
 
+    function tmux-sleep
+        set -q CI
+        and sleep 1
+        or sleep .1
+    end
+
     set -l fish (status fish-path)
     isolated-tmux new-session -x 80 -y 10 -d $fish -C '
         # This is similar to "tests/interactive.config".
@@ -37,9 +36,12 @@ function isolated-tmux --inherit-variable tmpdir
     # Set the correct permissions for the newly created socket to allow future connections.
     # This is required at least under WSL or else each invocation will return a permissions error.
     chmod 777 .tmux-socket
-    $sleep # Let fish draw a prompt.
 
-    if set -q argv[1]
-        isolated-tmux $argv
+    # Loop a bit, until we get an initial prompt.
+    for i in seq 25
+        if string match -q '*prompt*' (isolated-tmux capture-pane -p)
+            break
+        end
+        sleep .2
     end
 end

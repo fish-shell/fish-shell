@@ -138,7 +138,9 @@ as fish's :ref:`source <cmd-source>` can read from stdin.
 Heredocs
 --------
 
-Fish does not have ``<<EOF`` "heredocs". Instead of::
+Fish does not have ``<<EOF`` "heredocs". Instead of
+
+.. code-block:: sh
 
   cat <<EOF
   some string
@@ -154,7 +156,56 @@ or::
   echo "some string
   some more string"
 
+  # or if you want the quotes on separate lines:
+
+  echo "\
+  some string
+  some more string\
+  "
+
 Quotes are followed across newlines.
+
+What "heredocs" do is:
+
+1. Read/interpret the string, with special rules, up to the terminator. [#]_
+2. Write the resulting string to a temporary file.
+3. Start the command the heredoc is attached to with that file as stdin.
+
+This means it is essentially the same as just reading from a pipe, so::
+
+  echo "foo" | cat
+
+is mostly the same as
+
+.. code-block:: sh
+
+  cat <<EOF
+  foo
+  EOF
+
+Just like with heredocs, the command has to be prepared to read from stdin. Sometimes this requires special options to be used, often giving a filename of ``-`` turns it on.
+
+For example::
+
+  echo "xterm
+  rxvt-unicode" | pacman --remove -
+
+  # is the same as (the `-` makes pacman read arguments from stdin)
+  pacman --remove xterm rxvt-unicode
+
+and could be written in other shells as
+
+.. code-block:: sh
+
+  # This "-" is still necessary, because the heredoc is *also* passed over stdin!
+  pacman --remove - << EOF
+  xterm
+  rxvt-unicode
+  EOF
+  
+So heredocs really are just minor syntactical sugar that introduces a lot of special rules, which is why fish doesn't have them. Pipes are a core concept, and are simpler and compose nicer.
+
+.. [#] For example, the "EOF" is just a convention, the terminator can be an arbitrary string, something like "THISISTHEEND" also works. And using ``<<-`` trims leading *tab* characters (but not other whitespace), so you can indent the lines, but only with tabs. Substitutions (variables, commands) are done on the heredoc by default, but not if the terminator is quoted: ``cat << "EOF"``.
 
 Test (``test``, ``[``, ``[[``)
 ------------------------------
@@ -164,7 +215,8 @@ Fish has a POSIX-compatible ``test`` or ``[`` builtin. There is no ``[[`` and ``
 ``set -q`` can be used to determine if a variable exists or has a certain number of elements (``set -q foo[2]``).
 
 Arithmetic Expansion
----------------------
+--------------------
+-
 
 Fish does not have ``$((i+1))`` arithmetic expansion, computation is handled by :ref:`math <cmd-math>`::
 

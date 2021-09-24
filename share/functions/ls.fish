@@ -61,5 +61,5 @@ function ls --description "List contents of directory"
     test "$TERM_PROGRAM" = Apple_Terminal
     and set -lx CLICOLOR 1
 
-    command $__fish_ls_command $__fish_ls_color_opt $argv
+    command $__fish_ls_command $__fish_ls_color_opt $opt $argv
 end

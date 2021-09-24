@@ -216,7 +216,6 @@ Fish has a POSIX-compatible ``test`` or ``[`` builtin. There is no ``[[`` and ``
 
 Arithmetic Expansion
 --------------------
--
 
 Fish does not have ``$((i+1))`` arithmetic expansion, computation is handled by :ref:`math <cmd-math>`::
 
@@ -226,6 +225,11 @@ It can handle floating point numbers::
 
   > math 5 / 2
   2.5
+
+And also hase some functions, like for trigonometry::
+
+  > math cos 2 x pi
+  1
 
 Prompts
 -------

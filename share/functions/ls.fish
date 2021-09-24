@@ -59,7 +59,7 @@ function ls --description "List contents of directory"
     # We don't set $COLORTERM because that should be set to
     # "truecolor" or similar and we don't want to specify that here.
     test "$TERM_PROGRAM" = Apple_Terminal
-    and set -fx CLICOLOR 1
+    and set -lx CLICOLOR 1
 
     command $__fish_ls_command $__fish_ls_color_opt $argv
 end

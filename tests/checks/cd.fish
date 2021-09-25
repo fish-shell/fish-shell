@@ -234,6 +234,7 @@ cd ""
 echo $status
 # CHECK: 1
 
+cd (mktemp -d)
 ln -s no/such/directory broken-symbolic-link
 begin
     set -lx CDPATH

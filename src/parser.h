@@ -283,7 +283,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     parser_t(std::shared_ptr<env_stack_t> vars);
 
     /// The main parser.
-    static std::shared_ptr<parser_t> principal;
+    static const std::shared_ptr<parser_t> principal;
 
    public:
     // No copying allowed.

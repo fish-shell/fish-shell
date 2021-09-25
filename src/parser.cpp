@@ -97,7 +97,7 @@ parser_t::parser_t() : parser_t(env_stack_t::principal_ref()) {}
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;
 
-std::shared_ptr<parser_t> parser_t::principal{new parser_t()};
+const std::shared_ptr<parser_t> parser_t::principal{new parser_t()};
 
 parser_t &parser_t::principal_parser() {
     ASSERT_IS_MAIN_THREAD();

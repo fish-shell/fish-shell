@@ -19,6 +19,7 @@ add_custom_target(sphinx-docs
     mkdir -p ${SPHINX_HTML_DIR}/_static/
     COMMAND env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
         ${SPHINX_EXECUTABLE}
+        -j auto
         -q -b html
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_CACHE_DIR}"
@@ -31,6 +32,7 @@ add_custom_target(sphinx-docs
 add_custom_target(sphinx-manpages
     env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
         ${SPHINX_EXECUTABLE}
+        -j auto
         -q -b man
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_CACHE_DIR}"

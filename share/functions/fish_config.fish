@@ -82,17 +82,22 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
 
-                    set -l have 0
+                    set -l have
                     for f in $prompt_dir/$argv[1].fish
                         if test -f $f
                             source $f
-                            set have 1
+                            set have $f
                             break
                         end
                     end
-                    if test $have -eq 0
+                    if not set -q have[1]
                         echo "No such prompt: '$argv[1]'" >&2
                         return 1
+                    end
+
+                    # Erase the right prompt if it didn't have any.
+                    if functions -q fish_right_prompt; and test (functions --details fish_right_prompt) !=  $have[1]
+                        functions --erase fish_right_prompt
                     end
                 case save
                     read -P"Overwrite prompt? [y/N]" -l yesno
@@ -100,16 +105,16 @@ function fish_config --description "Launch fish's web based configuration"
                         echo Overwriting
                         cp $__fish_config_dir/functions/fish_prompt.fish{,.bak}
 
+                        set -l have
                         if set -q argv[1]
-                            set -l have 0
                             for f in $prompt_dir/$argv[1].fish
                                 if test -f $f
-                                    set have 1
+                                    set have $f
                                     source $f
                                     or return 2
                                 end
                             end
-                            if test $have -eq 0
+                            if not set -q have[1]
                                 echo "No such prompt: '$argv[1]'" >&2
                                 return 1
                             end
@@ -118,8 +123,15 @@ function fish_config --description "Launch fish's web based configuration"
                         funcsave fish_prompt
                         or return
 
-                        functions -q fish_right_prompt
-                        and funcsave fish_right_prompt
+                        if functions -q fish_right_prompt; and test (functions --details fish_right_prompt) =  $have[1]
+                            # We just read a right prompt, save it.
+                            funcsave fish_right_prompt
+                        else if test -e "$__fish_config_dir/functions/fish_right_prompt.fish"; and test (functions --details fish_right_prompt) != "$have[1]"
+                            # We used to have a right prompt, overwrite it with an empty one.
+                            function fish_right_prompt
+                            end
+                            funcsave fish_right_prompt
+                        end
 
                         return
                     else

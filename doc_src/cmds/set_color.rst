@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``set_color`` is used to control the color and styling of text in the terminal. ``VALUE`` describes that styling. It's a reserved color name like *red* or a RGB color value given as 3 or 6 hexadecimal digits ("F27" or "FF2277"). A special keyword *normal* resets text formatting to terminal defaults.
+``set_color`` is used to control the color and styling of text in the terminal. ``VALUE`` describes that styling. It can be a reserved color name like *red* or a RGB color value given as 3 or 6 hexadecimal digits ("F27" or "FF2277"). A special keyword *normal* resets text formatting to terminal defaults.
 
 Valid colors include:
 

@@ -10,15 +10,14 @@
 // Least-recently-used cache class.
 //
 // This a map from wcstring to Contents, that will evict entries when the count exceeds the maximum.
-// It uses CRTP to inform clients when entries are evicted. This uses the classic LRU cache
-// structure: a dictionary mapping keys to nodes, where the nodes also form a linked list. Our
-// linked list is circular and has a sentinel node (the "mouth" - picture a snake swallowing its
-// tail). This simplifies the logic: no pointer is ever NULL! It also works well with C++'s iterator
-// since the sentinel node is a natural value for end(). Our nodes also have the unusual property of
-// having a "back pointer": they store an iterator to the entry in the map containing the node. This
-// allows us, given a node, to immediately locate the node and its key in the dictionary. This
-// allows us to avoid duplicating the key in the node.
-template <class Derived, class Contents>
+// This uses the classic LRU cache structure: a dictionary mapping keys to nodes, where the nodes
+// also form a linked list. Our linked list is circular and has a sentinel node (the "mouth" -
+// picture a snake swallowing its tail). This simplifies the logic: no pointer is ever NULL! It also
+// works well with C++'s iterator since the sentinel node is a natural value for end(). Our nodes
+// also have the unusual property of having a "back pointer": they store an iterator to the entry in
+// the map containing the node. This allows us, given a node, to immediately locate the node and its
+// key in the dictionary. This allows us to avoid duplicating the key in the node.
+template <class Contents>
 class lru_cache_t {
     struct lru_node_t;
     struct lru_link_t : noncopyable_t {
@@ -80,17 +79,8 @@ class lru_cache_t {
         node->prev->next = node->next;
         node->next->prev = node->prev;
 
-        // Pull out our key and value
-        // Note we copy the key in case the map needs it to erase the node
-        wcstring key = *node->key;
-        Contents value(std::move(node->value));
-
         // Remove us from the map. This deallocates node!
         node_map.erase(iter);
-
-        // Tell ourselves what we did
-        Derived *dthis = static_cast<Derived *>(this);
-        dthis->entry_was_evicted(std::move(key), std::move(value));
     }
 
     // Evicts the last node
@@ -99,12 +89,6 @@ class lru_cache_t {
         evict_node(static_cast<lru_node_t *>(mouth.prev));
     }
 
-    // CRTP callback for when a node is evicted.
-    // Clients can implement this
-    void entry_was_evicted(const wcstring &key, Contents value) {
-        UNUSED(key);
-        UNUSED(value);
-    }
 
     // Implementation of merge step for mergesort.
     // Given two singly linked lists left and right, and a binary func F implementing less-than,

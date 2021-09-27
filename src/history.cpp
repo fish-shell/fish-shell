@@ -125,10 +125,9 @@ maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &s
 
 }  // anonymous namespace
 
-class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item_t> {
+class history_lru_cache_t : public lru_cache_t<history_item_t> {
    public:
-    explicit history_lru_cache_t(size_t max)
-        : lru_cache_t<history_lru_cache_t, history_item_t>(max) {}
+    explicit history_lru_cache_t(size_t max) : lru_cache_t<history_item_t>(max) {}
 
     /// Function to add a history item.
     void add_item(history_item_t item) {

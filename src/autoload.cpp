@@ -35,7 +35,7 @@ class autoload_file_cache_t {
 
     /// Our LRU cache of checks that were misses.
     /// The key is the command, the  value is the time of the check.
-    struct misses_lru_cache_t : public lru_cache_t<misses_lru_cache_t, timestamp_t> {};
+    using misses_lru_cache_t = lru_cache_t<timestamp_t>;
     misses_lru_cache_t misses_cache_;
 
     /// The set of files that we have returned to the caller, along with the time of the check.

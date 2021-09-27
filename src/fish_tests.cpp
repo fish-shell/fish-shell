@@ -1995,16 +1995,12 @@ static void test_escape_sequences() {
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
 }
 
-class test_lru_t : public lru_cache_t<test_lru_t, int> {
+class test_lru_t : public lru_cache_t<int> {
    public:
     static constexpr size_t test_capacity = 16;
     using value_type = std::pair<wcstring, int>;
 
-    test_lru_t() : lru_cache_t<test_lru_t, int>(test_capacity) {}
-
-    std::vector<value_type> evicted;
-
-    void entry_was_evicted(const wcstring &key, int val) { evicted.emplace_back(key, val); }
+    test_lru_t() : lru_cache_t<int>(test_capacity) {}
 
     std::vector<value_type> values() const {
         std::vector<value_type> result;
@@ -2044,7 +2040,6 @@ static void test_lru() {
         }
         cache.check_sanity();
     }
-    do_test(cache.evicted == expected_evicted);
     do_test(cache.values() == expected_values);
     cache.check_sanity();
 
@@ -2071,7 +2066,7 @@ static void test_lru() {
     }
 
     cache.evict_all_nodes();
-    do_test(cache.evicted.size() == size_t(total_nodes));
+    do_test(cache.size() == 0);
 }
 
 /// An environment built around an std::map.

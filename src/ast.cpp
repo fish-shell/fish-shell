@@ -104,8 +104,11 @@ static parse_token_type_t parse_token_type_from_tokenizer_token(
 /// A token stream generates a sequence of parser tokens, permitting arbitrary lookahead.
 class token_stream_t {
    public:
-    explicit token_stream_t(const wcstring &src, parse_tree_flags_t flags)
-        : src_(src), tok_(src_.c_str(), tokenizer_flags_from_parse_flags(flags)) {}
+    explicit token_stream_t(const wcstring &src, parse_tree_flags_t flags,
+                            std::vector<source_range_t> &comments)
+        : src_(src),
+          tok_(src_.c_str(), tokenizer_flags_from_parse_flags(flags)),
+          comment_ranges(comments) {}
 
     /// \return the token at the given index, without popping it. If the token stream is exhausted,
     /// it will have parse_token_type_t::terminate. idx = 0 means the next token, idx = 1 means the
@@ -133,10 +136,6 @@ class token_stream_t {
 
     /// Provide the orignal source code.
     const wcstring &source() const { return src_; }
-
-    /// Any comment nodes are collected here.
-    /// These are only collected if parse_flag_include_comments is set.
-    std::vector<source_range_t> comment_ranges;
 
    private:
     // Helper to mask our circular buffer.
@@ -210,6 +209,10 @@ class token_stream_t {
 
     // The tokenizer to generate new tokens.
     tokenizer_t tok_;
+
+    /// Any comment nodes are collected here.
+    /// These are only collected if parse_flag_include_comments is set.
+    std::vector<source_range_t> &comment_ranges;
 
     // Temporary storage.
     wcstring storage_;
@@ -317,6 +320,7 @@ wcstring node_t::describe() const {
 template <bool B, typename T = void>
 using enable_if_t = typename std::enable_if<B, T>::type;
 
+namespace {
 struct source_range_visitor_t {
     template <typename Node>
     enable_if_t<Node::Category == category_t::leaf> visit(const Node &node) {
@@ -346,6 +350,7 @@ struct source_range_visitor_t {
     // Whether any node was found to be unsourced.
     bool any_unsourced{false};
 };
+}
 
 maybe_t<source_range_t> node_t::try_source_range() const {
     source_range_visitor_t v;
@@ -387,39 +392,20 @@ static wcstring token_types_user_presentable_description(
     return res;
 }
 
-class ast_t::populator_t {
+namespace {
+using namespace ast;
+
+struct populator_t {
     template <typename T>
     using unique_ptr = std::unique_ptr<T>;
 
-   public:
-    // Populate \p ast from \p src and \p flags, returning errors (if not null).
-    populator_t(ast_t *ast, const wcstring &src, parse_tree_flags_t flags, type_t top_type,
+    // Construct from a source, flags, top type, and out_errors, which may be null.
+    populator_t(const wcstring &src, parse_tree_flags_t flags, type_t top_type,
                 parse_error_list_t *out_errors)
-        : ast_(ast),
-          flags_(flags),
-          tokens_(src, flags),
+        : flags_(flags),
+          tokens_(src, flags, extras_.comments),
           top_type_(top_type),
-          out_errors_(out_errors) {
-        assert((top_type == type_t::job_list || top_type == type_t::freestanding_argument_list) &&
-               "Invalid top type");
-        if (top_type == type_t::job_list) {
-            unique_ptr<job_list_t> list = allocate<job_list_t>();
-            this->populate_list(*list, true /* exhaust_stream */);
-            this->ast_->top_.reset(list.release());
-        } else {
-            unique_ptr<freestanding_argument_list_t> list =
-                allocate<freestanding_argument_list_t>();
-            this->populate_list(list->arguments, true /* exhaust_stream */);
-            this->ast_->top_.reset(list.release());
-        }
-        // Chomp trailing extras, etc.
-        chomp_extras(type_t::job_list);
-
-        // Acquire any comments.
-        this->ast_->extras_.comments = std::move(tokens_.comment_ranges);
-
-        assert(this->ast_->top_ && "Should have parsed a node");
-    }
+          out_errors_(out_errors) {}
 
     // Given a node type, allocate it and invoke its default constructor.
     // \return the resulting Node pointer. It is never null.
@@ -602,7 +588,7 @@ class ast_t::populator_t {
                 auto tok = this->tokens_.pop();
                 // Perhaps save this extra semi.
                 if (flags_ & parse_flag_show_extra_semis) {
-                    ast_->extras_.semis.push_back(tok.range());
+                    extras_.semis.push_back(tok.range());
                 }
             } else {
                 break;
@@ -619,7 +605,7 @@ class ast_t::populator_t {
     /// Report an error based on \p fmt for the source range \p range.
     void parse_error_impl(source_range_t range, parse_error_code_t code, const wchar_t *fmt,
                           va_list va) {
-        ast_->any_error_ = true;
+        any_error_ = true;
 
         // Ignore additional parse errors while unwinding.
         // These may come about e.g. from `true | and`.
@@ -629,7 +615,7 @@ class ast_t::populator_t {
         FLOGF(ast_construction, L"%*sparse error - begin unwinding", spaces(), "");
         // TODO: can store this conditionally dependent on flags.
         if (range.start != SOURCE_OFFSET_INVALID) {
-            ast_->extras_.errors.push_back(range);
+            extras_.errors.push_back(range);
         }
 
         if (out_errors_) {
@@ -902,7 +888,7 @@ class ast_t::populator_t {
                      type != parse_token_type_t::end;
                      type = peek_type()) {
                     parse_token_t tok = tokens_.pop();
-                    ast_->extras_.errors.push_back(tok.range());
+                    extras_.errors.push_back(tok.range());
                     FLOGF(ast_construction, L"%*schomping range %u-%u", spaces(), "",
                           tok.source_start, tok.source_length);
                 }
@@ -1235,9 +1221,6 @@ class ast_t::populator_t {
         visit_stack_.pop_back();
     }
 
-    // The ast which we are populating.
-    ast_t *const ast_;
-
     // Flags controlling parsing.
     parse_tree_flags_t flags_{};
 
@@ -1251,12 +1234,19 @@ class ast_t::populator_t {
     // If set, we are unwinding due to error recovery.
     bool unwinding_{false};
 
+    // If set, we have encountered an error.
+    bool any_error_{false};
+
+    // Extra stuff like comment ranges.
+    ast_t::extras_t extras_{};
+
     // A stack containing the nodes whose fields we are visiting.
     std::vector<const node_t *> visit_stack_{};
 
     // If non-null, populate with errors.
     parse_error_list_t *out_errors_{};
 };
+}  // namespace
 
 // Set the parent fields of all nodes in the tree rooted at \p node.
 static void set_parents(const node_t *top) {
@@ -1277,11 +1267,27 @@ static void set_parents(const node_t *top) {
 
 // static
 ast_t ast_t::parse_from_top(const wcstring &src, parse_tree_flags_t parse_flags,
-                            parse_error_list_t *out_errors, type_t top) {
+                            parse_error_list_t *out_errors, type_t top_type) {
+    assert((top_type == type_t::job_list || top_type == type_t::freestanding_argument_list) &&
+           "Invalid top type");
     ast_t ast;
 
-    // Populate our ast.
-    populator_t pop(&ast, src, parse_flags, top, out_errors);
+    populator_t pops(src, parse_flags, top_type, out_errors);
+    if (top_type == type_t::job_list) {
+        std::unique_ptr<job_list_t> list = pops.allocate<job_list_t>();
+        pops.populate_list(*list, true /* exhaust_stream */);
+        ast.top_.reset(list.release());
+    } else {
+        std::unique_ptr<freestanding_argument_list_t> list =
+            pops.allocate<freestanding_argument_list_t>();
+        pops.populate_list(list->arguments, true /* exhaust_stream */);
+        ast.top_.reset(list.release());
+    }
+    // Chomp trailing extras, etc.
+    pops.chomp_extras(type_t::job_list);
+
+    ast.any_error_ = pops.any_error_;
+    ast.extras_ = std::move(pops.extras_);
 
     // Set all parent nodes.
     // It turns out to be more convenient to do this after the parse phase.

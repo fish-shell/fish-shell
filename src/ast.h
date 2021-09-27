@@ -1026,7 +1026,7 @@ class ast_t : noncopyable_t {
 
     // Shared parsing code that takes the top type.
     static ast_t parse_from_top(const wcstring &src, parse_tree_flags_t parse_flags,
-                                parse_error_list_t *out_errors, type_t top);
+                                parse_error_list_t *out_errors, type_t top_type);
 
     // The top node.
     // Its type depends on what was requested to parse.
@@ -1037,9 +1037,6 @@ class ast_t : noncopyable_t {
 
     /// Extra fields.
     extras_t extras_{};
-
-    class populator_t;
-    friend populator_t;
 };
 
 }  // namespace ast

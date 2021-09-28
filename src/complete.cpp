@@ -88,6 +88,7 @@ static const wcstring &C_(const wcstring &s) { return s; }
 /// If option is non-empty, it specifies a switch for the command. If \c comp is also not empty, it
 /// contains a list of non-switch arguments that may only follow directly after the specified
 /// switch.
+namespace {
 struct complete_entry_opt_t {
     // Text of the option (like 'foo').
     wcstring option;
@@ -164,6 +165,7 @@ bool completion_entry_t::remove_option(const wcstring &option, complete_option_t
     }
     return this->options.empty();
 }
+}  // namespace
 
 /// Set of all completion entries.
 namespace std {

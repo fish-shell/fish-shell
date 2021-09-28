@@ -332,6 +332,7 @@ static int create_directory(const wcstring &d) {
     return ok ? 0 : -1;
 }
 
+namespace {
 /// The following type wraps up a user's "base" directories, corresponding (conceptually if not
 /// actually) to XDG spec.
 struct base_directory_t {
@@ -342,6 +343,7 @@ struct base_directory_t {
 
     bool success() const { return err == 0; }
 };
+}  // namespace
 
 /// Attempt to get a base directory, creating it if necessary. If a variable named \p xdg_var is
 /// set, use that directory; otherwise use the path \p non_xdg_homepath rooted in $HOME. \return the

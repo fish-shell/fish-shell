@@ -213,7 +213,7 @@ uint32_t string_fuzzy_match_t::rank() const {
 }
 
 template <bool Fuzzy, typename T>
-size_t ifind_impl(const T &haystack, const T &needle) {
+static size_t ifind_impl(const T &haystack, const T &needle) {
     using char_t = typename T::value_type;
     std::locale locale;
 

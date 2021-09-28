@@ -522,11 +522,34 @@ struct highlight_result_t {
     wcstring text;
 };
 
+/// readline_loop_state_t encapsulates the state used in a readline loop.
+/// It is always stack allocated transient. This state should not be "publicly visible"; public
+/// state should be in reader_data_t.
+struct readline_loop_state_t {
+    /// The last command that was executed.
+    maybe_t<readline_cmd_t> last_cmd{};
+
+    /// If the last command was a yank, the length of yanking that occurred.
+    size_t yank_len{0};
+
+    /// If the last "complete" readline command has inserted text into the command line.
+    bool complete_did_insert{true};
+
+    /// List of completions.
+    completion_list_t comp;
+
+    /// Whether the loop has finished, due to reaching the character limit or through executing a
+    /// command.
+    bool finished{false};
+
+    /// Maximum number of characters to read.
+    size_t nchars{std::numeric_limits<size_t>::max()};
+};
+
 }  // namespace
 
-struct readline_loop_state_t;
-
 /// Data wrapping up the visual selection.
+namespace {
 struct selection_data_t {
     /// The position of the cursor when selection was initiated.
     size_t begin{0};
@@ -573,6 +596,7 @@ struct layout_data_t {
     wcstring mode_prompt_buff{};
     wcstring right_prompt_buff{};
 };
+}  // namespace
 
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
@@ -2847,30 +2871,6 @@ static bool event_is_normal_char(const char_event_t &evt) {
     auto c = evt.get_char();
     return !fish_reserved_codepoint(c) && c > 31 && c != 127;
 }
-
-/// readline_loop_state_t encapsulates the state used in a readline loop.
-/// It is always stack allocated transient. This state should not be "publicly visible"; public
-/// state should be in reader_data_t.
-struct readline_loop_state_t {
-    /// The last command that was executed.
-    maybe_t<readline_cmd_t> last_cmd{};
-
-    /// If the last command was a yank, the length of yanking that occurred.
-    size_t yank_len{0};
-
-    /// If the last "complete" readline command has inserted text into the command line.
-    bool complete_did_insert{true};
-
-    /// List of completions.
-    completion_list_t comp;
-
-    /// Whether the loop has finished, due to reaching the character limit or through executing a
-    /// command.
-    bool finished{false};
-
-    /// Maximum number of characters to read.
-    size_t nchars{std::numeric_limits<size_t>::max()};
-};
 
 std::shared_ptr<history_t> reader_get_history() {
     ASSERT_IS_MAIN_THREAD();

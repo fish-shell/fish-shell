@@ -46,15 +46,17 @@
 /// The number of characters to indent new blocks.
 #define INDENT_STEP 4u
 
-/// RAII class to begin and end buffering around stdoutput().
-class screen_t::scoped_buffer_t {
-    screen_t &screen_;
+/// RAII class to begin and end buffering around an outputter.
+namespace {
+class scoped_buffer_t : noncopyable_t, nonmovable_t {
+    outputter_t &outp_;
 
    public:
-    explicit scoped_buffer_t(screen_t &s) : screen_(s) { screen_.outp().begin_buffering(); }
+    explicit scoped_buffer_t(outputter_t &outp) : outp_(outp) { outp_.begin_buffering(); }
 
-    ~scoped_buffer_t() { screen_.outp().end_buffering(); }
+    ~scoped_buffer_t() { outp_.end_buffering(); }
 };
+}  // namespace
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
 // Note this is deliberately exported so that init_curses can clear it.
@@ -564,7 +566,7 @@ void screen_t::desired_append_char(wchar_t b, highlight_spec_t c, int indent, si
 void screen_t::move(int new_x, int new_y) {
     if (this->actual.cursor.x == new_x && this->actual.cursor.y == new_y) return;
 
-    const scoped_buffer_t buffering(*this);
+    const scoped_buffer_t buffering(outp());
 
     // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We
     // don't know! We can fix it up though.
@@ -644,7 +646,7 @@ void screen_t::move(int new_x, int new_y) {
 
 /// Convert a wide character to a multibyte string and append it to the buffer.
 void screen_t::write_char(wchar_t c, size_t width) {
-    scoped_buffer_t outp(*this);
+    scoped_buffer_t buffering(outp());
     this->actual.cursor.x += width;
     this->outp().writech(c);
     if (this->actual.cursor.x == this->actual.screen_width && allow_soft_wrap()) {
@@ -727,7 +729,7 @@ void screen_t::update(const wcstring &left_prompt, const wcstring &right_prompt,
     };
 
     layout_cache_t &cached_layouts = layout_cache_t::shared;
-    const scoped_buffer_t buffering(*this);
+    const scoped_buffer_t buffering(outp());
 
     // Determine size of left and right prompt. Note these have already been truncated.
     const prompt_layout_t left_prompt_layout = cached_layouts.calc_prompt_layout(left_prompt);
@@ -961,6 +963,7 @@ static bool is_dumb() {
     return !cursor_up || !cursor_down || !cursor_left || !cursor_right;
 }
 
+namespace {
 struct screen_layout_t {
     // The left prompt that we're going to use.
     wcstring left_prompt;
@@ -971,6 +974,7 @@ struct screen_layout_t {
     // The autosuggestion.
     wcstring autosuggestion;
 };
+}  // namespace
 
 // Given a vector whose indexes are offsets and whose values are the widths of the string if
 // truncated at that offset, return the offset that fits in the given width. Returns

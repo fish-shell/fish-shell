@@ -1003,6 +1003,7 @@ static wcstring get_machine_identifier() {
     return result;
 }
 
+namespace {
 class universal_notifier_shmem_poller_t final : public universal_notifier_t {
 #ifdef __CYGWIN__
     // This is what our shared memory looks like. Everything here is stored in network byte order
@@ -1490,6 +1491,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
     }
 #endif
 };
+}  // namespace
 
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy() {
 #ifdef FISH_NOTIFYD_AVAILABLE

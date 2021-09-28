@@ -771,6 +771,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 }
 
+namespace {
 /// Syntax highlighter helper.
 class highlighter_t {
     // The string we're highlighting. Note this is a reference memmber variable (to avoid copying)!
@@ -805,8 +806,6 @@ class highlighter_t {
     void color_node(const ast::node_t &node, highlight_spec_t color);
     // Colors a range with a given color.
     void color_range(source_range_t range, highlight_spec_t color);
-    // return whether a plain statement is 'cd'.
-    bool is_cd(const ast::decorated_statement_t &stmt) const;
 
     /// \return a substring of our buffer.
     wcstring get_source(source_range_t r) const;
@@ -939,14 +938,6 @@ static bool range_is_potential_path(const wcstring &src, const source_range_t &r
         result = is_potential_path(token, working_directory_list, ctx, PATH_EXPAND_TILDE);
     }
     return result;
-}
-
-bool highlighter_t::is_cd(const ast::decorated_statement_t &stmt) const {
-    wcstring cmd_str;
-    if (this->io_ok && statement_get_expanded_command(this->buff, stmt, ctx, &cmd_str)) {
-        return cmd_str == L"cd";
-    }
-    return false;
 }
 
 void highlighter_t::visit(const ast::keyword_base_t &kw) {
@@ -1243,51 +1234,6 @@ void highlighter_t::visit(const ast::redirection_t &redir) {
     }
 }
 
-/// Determine if a command is valid.
-static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
-                             const wcstring &working_directory, const environment_t &vars) {
-    // Determine which types we check, based on the decoration.
-    bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,
-         implicit_cd_ok = true;
-    if (decoration == statement_decoration_t::command ||
-        decoration == statement_decoration_t::exec) {
-        builtin_ok = false;
-        function_ok = false;
-        abbreviation_ok = false;
-        command_ok = true;
-        implicit_cd_ok = false;
-    } else if (decoration == statement_decoration_t::builtin) {
-        builtin_ok = true;
-        function_ok = false;
-        abbreviation_ok = false;
-        command_ok = false;
-        implicit_cd_ok = false;
-    }
-
-    // Check them.
-    bool is_valid = false;
-
-    // Builtins
-    if (!is_valid && builtin_ok) is_valid = builtin_exists(cmd);
-
-    // Functions
-    if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd);
-
-    // Abbreviations
-    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
-
-    // Regular commands
-    if (!is_valid && command_ok) is_valid = path_get_path(cmd, nullptr, vars);
-
-    // Implicit cd
-    if (!is_valid && implicit_cd_ok) {
-        is_valid = path_as_implicit_cd(cmd, working_directory, vars).has_value();
-    }
-
-    // Return what we got.
-    return is_valid;
-}
-
 highlighter_t::color_array_t highlighter_t::highlight() {
     // If we are doing I/O, we must be in a background thread.
     if (io_ok) {
@@ -1336,6 +1282,52 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     }
 
     return std::move(color_array);
+}
+}  // namespace
+
+/// Determine if a command is valid.
+static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t decoration,
+                             const wcstring &working_directory, const environment_t &vars) {
+    // Determine which types we check, based on the decoration.
+    bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,
+         implicit_cd_ok = true;
+    if (decoration == statement_decoration_t::command ||
+        decoration == statement_decoration_t::exec) {
+        builtin_ok = false;
+        function_ok = false;
+        abbreviation_ok = false;
+        command_ok = true;
+        implicit_cd_ok = false;
+    } else if (decoration == statement_decoration_t::builtin) {
+        builtin_ok = true;
+        function_ok = false;
+        abbreviation_ok = false;
+        command_ok = false;
+        implicit_cd_ok = false;
+    }
+
+    // Check them.
+    bool is_valid = false;
+
+    // Builtins
+    if (!is_valid && builtin_ok) is_valid = builtin_exists(cmd);
+
+    // Functions
+    if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd);
+
+    // Abbreviations
+    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
+
+    // Regular commands
+    if (!is_valid && command_ok) is_valid = path_get_path(cmd, nullptr, vars);
+
+    // Implicit cd
+    if (!is_valid && implicit_cd_ok) {
+        is_valid = path_as_implicit_cd(cmd, working_directory, vars).has_value();
+    }
+
+    // Return what we got.
+    return is_valid;
 }
 
 std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors,

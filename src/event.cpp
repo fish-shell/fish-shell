@@ -25,6 +25,7 @@
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+namespace {
 class pending_signals_t {
     static constexpr size_t SIGNAL_COUNT = NSIG;
 
@@ -83,6 +84,7 @@ class pending_signals_t {
         return result;
     }
 };
+}  // namespace
 
 static pending_signals_t s_pending_signals;
 

@@ -177,6 +177,7 @@ static wcstring resolve_description(const wcstring &full_completion, wcstring *c
     return wcstring{};
 }
 
+namespace {
 // A transient parameter pack needed by wildcard_complete.
 struct wc_complete_pack_t {
     const wcstring &orig;                 // the original string, transient
@@ -185,6 +186,7 @@ struct wc_complete_pack_t {
     wc_complete_pack_t(const wcstring &str, const description_func_t &df, expand_flags_t fl)
         : orig(str), desc_func(df), expand_flags(fl) {}
 };
+}  // namespace
 
 // Weirdly specific and non-reusable helper function that makes its one call site much clearer.
 static bool has_prefix_match(const completion_receiver_t *comps, size_t first) {
@@ -526,6 +528,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
            wildcard_result_t::match;
 }
 
+namespace {
 class wildcard_expander_t {
     // A function to call to check cancellation.
     cancel_checker_t cancel_checker;
@@ -975,6 +978,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         }
     }
 }
+}  // namespace
 
 wildcard_result_t wildcard_expand_string(const wcstring &wc, const wcstring &working_directory,
                                          expand_flags_t flags,

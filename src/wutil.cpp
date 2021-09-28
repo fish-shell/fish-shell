@@ -771,7 +771,7 @@ wcstring file_id_t::dump() const {
 }
 
 template <typename T>
-int compare(T a, T b) {
+static int compare(T a, T b) {
     if (a < b) {
         return -1;
     } else if (a > b) {

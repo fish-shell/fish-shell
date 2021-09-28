@@ -39,7 +39,7 @@ using comp_info_list_t = std::vector<comp_t>;
 /// Text we use for the search field.
 #define SEARCH_FIELD_PROMPT _(L"search: ")
 
-inline bool selection_direction_is_cardinal(selection_motion_t dir) {
+static inline bool selection_direction_is_cardinal(selection_motion_t dir) {
     switch (dir) {
         case selection_motion_t::north:
         case selection_motion_t::east:

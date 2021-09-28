@@ -44,6 +44,7 @@
 
 using void_function_t = std::function<void()>;
 
+namespace {
 struct work_request_t : noncopyable_t {
     void_function_t handler;
     explicit work_request_t(void_function_t &&f) : handler(std::move(f)) {}
@@ -236,6 +237,7 @@ int thread_pool_t::perform(void_function_t &&func, bool cant_wait) {
     }
     return local_thread_count;
 }
+}  // namespace
 
 void iothread_perform_impl(void_function_t &&func, bool cant_wait) {
     ASSERT_IS_NOT_FORKED_CHILD();

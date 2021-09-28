@@ -71,6 +71,7 @@ static relaxed_atomic_bool_t s_uvar_scope_is_global{false};
 
 bool env_universal_barrier() { return env_stack_t::principal().universal_barrier(); }
 
+namespace {
 struct electric_var_t {
     enum {
         freadonly = 1 << 0,  // May not be modified by the user.
@@ -116,6 +117,7 @@ const electric_var_t *electric_var_t::for_name(const wchar_t *name) {
 const electric_var_t *electric_var_t::for_name(const wcstring &name) {
     return electric_var_t::for_name(name.c_str());
 }
+}  // namespace
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *key) {
@@ -866,6 +868,7 @@ std::shared_ptr<environment_t> env_scoped_impl_t::snapshot() const {
 }
 
 // A struct that wraps up the result of setting or removing a variable.
+namespace {
 struct mod_result_t {
     // The publicly visible status of the set call.
     int status{ENV_OK};
@@ -878,6 +881,7 @@ struct mod_result_t {
 
     explicit mod_result_t(int status) : status(status) {}
 };
+}  // namespace
 
 /// A mutable subclass of env_scoped_impl_t.
 class env_stack_impl_t final : public env_scoped_impl_t {

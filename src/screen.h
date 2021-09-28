@@ -131,8 +131,6 @@ class outputter_t;
 
 /// The class representing the current and desired screen contents.
 class screen_t {
-    outputter_t &outp_;
-
    public:
     screen_t();
 
@@ -206,6 +204,9 @@ class screen_t {
     /// Update the cursor as if soft wrapping had been performed.
     bool handle_soft_wrap(int x, int y);
 
+    /// Receiver for our output.
+    outputter_t &outp_;
+
     /// The internal representation of the desired screen contents.
     screen_data_t desired{};
     /// The internal representation of the actual screen contents.
@@ -238,8 +239,6 @@ class screen_t {
     /// Update the screen to match the desired output.
     void update(const wcstring &left_prompt, const wcstring &right_prompt,
                 const environment_t &vars);
-
-    class scoped_buffer_t;
 };
 
 /// Issues an immediate clr_eos.

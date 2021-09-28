@@ -33,6 +33,7 @@
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+namespace {
 class function_info_t {
    public:
     /// Immutable properties of the function.
@@ -87,6 +88,7 @@ bool function_set_t::allow_autoload(const wcstring &name) const {
     bool is_tombstoned = autoload_tombstones.count(name) > 0;
     return !has_explicit_func && !is_tombstoned;
 }
+}  // namespace
 
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded.

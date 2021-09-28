@@ -1111,7 +1111,6 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     // We see this surprisingly regularly.
     const wcstring &com = dst.command.source(buff_src, storage);
     if (com == L"$status") {
-        parse_error_offset_source_start(parse_errors, source_start);
         errored =
             append_syntax_error(parse_errors, source_start,
                                 _(L"$status is not valid as a command. See `help conditions`"));

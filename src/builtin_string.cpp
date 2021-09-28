@@ -42,6 +42,8 @@
 // This should be about the size of a line.
 #define STRING_CHUNK_SIZE 128
 
+namespace {
+
 static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {
     streams.err.append(L"string ");
     va_list va;
@@ -66,7 +68,6 @@ static const wchar_t *string_get_arg_argv(int *argidx, const wchar_t *const *arg
 }
 
 // A helper type for extracting arguments from either argv or stdin.
-namespace {
 class arg_iterator_t {
     // The list of arguments passed to the string builtin.
     const wchar_t *const *argv_;
@@ -132,7 +133,6 @@ class arg_iterator_t {
         }
     }
 };
-}  // namespace
 
 // This is used by the string subcommands to communicate with the option parser which flags are
 // valid and get the result of parsing the command for flags.
@@ -808,6 +808,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, cons
     return nnonempty > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+namespace {
 class string_matcher_t {
    protected:
     const options_t opts;
@@ -1210,6 +1211,7 @@ class pcre2_matcher_t final : public string_matcher_t {
 
     bool is_valid() const override { return regex.is_valid(); }
 };
+}  // namespace
 
 static int string_match(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     const wchar_t *cmd = argv[0];
@@ -1881,6 +1883,7 @@ static constexpr const struct string_subcommand {
     {L"upper", &string_upper},
 };
 ASSERT_SORTED_BY_NAME(string_subcommands);
+}  // namespace
 
 /// The string builtin, for manipulating strings.
 maybe_t<int> builtin_string(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {

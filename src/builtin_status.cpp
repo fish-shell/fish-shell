@@ -95,6 +95,7 @@ static maybe_t<job_control_t> job_control_str_to_mode(const wchar_t *mode, const
     return none();
 }
 
+namespace {
 struct status_cmd_opts_t {
     int level{1};
     maybe_t<job_control_t> new_job_control_mode{};
@@ -102,6 +103,7 @@ struct status_cmd_opts_t {
     status_cmd_t status_cmd{STATUS_UNDEF};
     bool print_help{false};
 };
+}  // namespace
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
 /// the non-flag subcommand form. While these flags are deprecated they must be supported at

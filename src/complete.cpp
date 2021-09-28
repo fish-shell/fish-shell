@@ -88,7 +88,7 @@ static const wcstring &C_(const wcstring &s) { return s; }
 /// If option is non-empty, it specifies a switch for the command. If \c comp is also not empty, it
 /// contains a list of non-switch arguments that may only follow directly after the specified
 /// switch.
-using complete_entry_opt_t = struct complete_entry_opt {
+struct complete_entry_opt_t {
     // Text of the option (like 'foo').
     wcstring option;
     // Type of the option: args-oly, short, single_long, or double_long.
@@ -139,15 +139,31 @@ class completion_entry_t {
     const unsigned int order;
 
     /// Getters for option list.
-    const option_list_t &get_options() const;
+    const option_list_t &get_options() const { return options; }
 
     /// Adds or removes an option.
-    void add_option(const complete_entry_opt_t &opt);
+    void add_option(const complete_entry_opt_t &opt) { options.push_front(opt); }
     bool remove_option(const wcstring &option, complete_option_type_t type);
 
     completion_entry_t(wcstring c, bool type)
         : cmd(std::move(c)), cmd_is_path(type), order(++k_complete_order) {}
 };
+
+/// Remove all completion options in the specified entry that match the specified short / long
+/// option strings. Returns true if it is now empty and should be deleted, false if it's not empty.
+/// Must be called while locked.
+bool completion_entry_t::remove_option(const wcstring &option, complete_option_type_t type) {
+    auto iter = this->options.begin();
+    while (iter != this->options.end()) {
+        if (iter->option == option && iter->type == type) {
+            iter = this->options.erase(iter);
+        } else {
+            // Just go to the next one.
+            ++iter;
+        }
+    }
+    return this->options.empty();
+}
 
 /// Set of all completion entries.
 namespace std {
@@ -164,6 +180,7 @@ struct equal_to<completion_entry_t> {
         return c1.cmd == c2.cmd;
     }
 };
+
 }  // namespace std
 using completion_entry_set_t = std::unordered_set<completion_entry_t>;
 static owning_lock<completion_entry_set_t> s_completion_set;
@@ -177,10 +194,6 @@ static bool compare_completions_by_order(const completion_entry_t &p1,
                                          const completion_entry_t &p2) {
     return p1.order < p2.order;
 }
-
-void completion_entry_t::add_option(const complete_entry_opt_t &opt) { options.push_front(opt); }
-
-const option_list_t &completion_entry_t::get_options() const { return options; }
 
 description_func_t const_desc(const wcstring &s) {
     return [=](const wcstring &ignored) {
@@ -343,6 +356,7 @@ void completions_sort_and_prioritize(completion_list_t *comps, completion_reques
     }
 }
 
+namespace {
 /// Class representing an attempt to compute completions.
 class completer_t {
     /// The operation context for this completion.
@@ -461,12 +475,6 @@ class completer_t {
 // Autoloader for completions.
 static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_path")};
 
-/// Create a new completion entry.
-void append_completion(completion_list_t *completions, wcstring comp, wcstring desc,
-                       complete_flags_t flags, string_fuzzy_match_t match) {
-    completions->emplace_back(std::move(comp), std::move(desc), match, flags);
-}
-
 /// Test if the specified script returns zero. The result is cached, so that if multiple completions
 /// use the same condition, it needs only be evaluated once. condition_cache_clear must be called
 /// after a completion run to make sure that there are no stale completions.
@@ -502,71 +510,6 @@ static completion_entry_t &complete_get_exact_entry(completion_entry_set_t &comp
     // do not change any field that matters to ordering - affecting order without telling std::set
     // invalidates its internal state.
     return const_cast<completion_entry_t &>(*ins.first);
-}
-
-void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
-                  complete_option_type_t option_type, completion_mode_t result_mode,
-                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
-                  complete_flags_t flags) {
-    assert(cmd && "Null command");
-    // option should be empty iff the option type is arguments only.
-    assert(option.empty() == (option_type == option_type_args_only));
-
-    // Lock the lock that allows us to edit the completion entry list.
-    auto completion_set = s_completion_set.acquire();
-    completion_entry_t &c = complete_get_exact_entry(*completion_set, cmd, cmd_is_path);
-
-    // Create our new option.
-    complete_entry_opt_t opt;
-    opt.option = option;
-    opt.type = option_type;
-    opt.result_mode = result_mode;
-
-    if (comp) opt.comp = comp;
-    if (condition) opt.condition = condition;
-    if (desc) opt.desc = desc;
-    opt.flags = flags;
-
-    c.add_option(opt);
-}
-
-/// Remove all completion options in the specified entry that match the specified short / long
-/// option strings. Returns true if it is now empty and should be deleted, false if it's not empty.
-/// Must be called while locked.
-bool completion_entry_t::remove_option(const wcstring &option, complete_option_type_t type) {
-    auto iter = this->options.begin();
-    while (iter != this->options.end()) {
-        if (iter->option == option && iter->type == type) {
-            iter = this->options.erase(iter);
-        } else {
-            // Just go to the next one.
-            ++iter;
-        }
-    }
-    return this->options.empty();
-}
-
-void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
-                     complete_option_type_t type) {
-    auto completion_set = s_completion_set.acquire();
-
-    completion_entry_t tmp_entry(cmd, cmd_is_path);
-    auto iter = completion_set->find(tmp_entry);
-    if (iter != completion_set->end()) {
-        // const_cast: See SET_ELEMENTS_ARE_IMMUTABLE.
-        auto &entry = const_cast<completion_entry_t &>(*iter);
-
-        bool delete_it = entry.remove_option(option, type);
-        if (delete_it) {
-            completion_set->erase(iter);
-        }
-    }
-}
-
-void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
-    auto completion_set = s_completion_set.acquire();
-    completion_entry_t tmp_entry(cmd, cmd_is_path);
-    completion_set->erase(tmp_entry);
 }
 
 /// Find the full path and commandname from a command string 'str'.
@@ -1758,6 +1701,63 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
 
     // Lastly mark any completions that appear to already be present in arguments.
     mark_completions_duplicating_arguments(cmdline, current_token, tokens);
+}
+
+}  // namespace
+
+/// Create a new completion entry.
+void append_completion(completion_list_t *completions, wcstring comp, wcstring desc,
+                       complete_flags_t flags, string_fuzzy_match_t match) {
+    completions->emplace_back(std::move(comp), std::move(desc), match, flags);
+}
+
+void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
+                  complete_option_type_t option_type, completion_mode_t result_mode,
+                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
+                  complete_flags_t flags) {
+    assert(cmd && "Null command");
+    // option should be empty iff the option type is arguments only.
+    assert(option.empty() == (option_type == option_type_args_only));
+
+    // Lock the lock that allows us to edit the completion entry list.
+    auto completion_set = s_completion_set.acquire();
+    completion_entry_t &c = complete_get_exact_entry(*completion_set, cmd, cmd_is_path);
+
+    // Create our new option.
+    complete_entry_opt_t opt;
+    opt.option = option;
+    opt.type = option_type;
+    opt.result_mode = result_mode;
+
+    if (comp) opt.comp = comp;
+    if (condition) opt.condition = condition;
+    if (desc) opt.desc = desc;
+    opt.flags = flags;
+
+    c.add_option(opt);
+}
+
+void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
+                     complete_option_type_t type) {
+    auto completion_set = s_completion_set.acquire();
+
+    completion_entry_t tmp_entry(cmd, cmd_is_path);
+    auto iter = completion_set->find(tmp_entry);
+    if (iter != completion_set->end()) {
+        // const_cast: See SET_ELEMENTS_ARE_IMMUTABLE.
+        auto &entry = const_cast<completion_entry_t &>(*iter);
+
+        bool delete_it = entry.remove_option(option, type);
+        if (delete_it) {
+            completion_set->erase(iter);
+        }
+    }
+}
+
+void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
+    auto completion_set = s_completion_set.acquire();
+    completion_entry_t tmp_entry(cmd, cmd_is_path);
+    completion_set->erase(tmp_entry);
 }
 
 completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_flags_t flags,

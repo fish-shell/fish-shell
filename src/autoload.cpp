@@ -16,6 +16,7 @@
 static const int kAutoloadStalenessInterval = 15;
 
 /// Represents a file that we might want to autoload.
+namespace {
 struct autoloadable_file_t {
     /// The path to the file.
     wcstring path;
@@ -23,6 +24,7 @@ struct autoloadable_file_t {
     /// The metadata for the file.
     file_id_t file_id;
 };
+}  // namespace
 
 /// Class representing a cache of files that may be autoloaded.
 /// This is responsible for performing cached accesses to a set of paths.

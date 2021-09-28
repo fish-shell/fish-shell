@@ -26,6 +26,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+namespace {
 struct function_cmd_opts_t {
     bool print_help = false;
     bool shadow_scope = true;
@@ -35,6 +36,7 @@ struct function_cmd_opts_t {
     wcstring_list_t inherit_vars;
     wcstring_list_t wrap_targets;
 };
+}  // namespace
 
 // This command is atypical in using the "-" (RETURN_IN_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.

@@ -242,7 +242,7 @@ bool is_windows_subsystem_for_linux() {
 /// alignment must be a power of 2 and in range [1, 64].
 /// This is intended to return the end point of the "unaligned prefix" of a vectorized loop.
 template <size_t Align>
-inline const char *align_start(const char *start, size_t len) {
+static inline const char *align_start(const char *start, size_t len) {
     static_assert(Align >= 1 && Align <= 64, "Alignment must be in range [1, 64]");
     static_assert((Align & (Align - 1)) == 0, "Alignment must be power of 2");
     uintptr_t startu = reinterpret_cast<uintptr_t>(start);
@@ -262,7 +262,7 @@ inline const char *align_start(const char *start, size_t len) {
 /// If there is no such pointer, return \p start.
 /// This is intended to be the start point of the "unaligned suffix" of a vectorized loop.
 template <size_t Align>
-inline const char *align_end(const char *start, size_t len) {
+static inline const char *align_end(const char *start, size_t len) {
     static_assert(Align >= 1 && Align <= 64, "Alignment must be in range [1, 64]");
     static_assert((Align & (Align - 1)) == 0, "Alignment must be power of 2");
     // How much do we have to subtract to align it? Its value, mod Align.
@@ -617,7 +617,7 @@ static unsigned long long absolute_value(long long x) {
 }
 
 template <typename CharT>
-void format_safe_impl(CharT *buff, size_t size, unsigned long long val) {
+static void format_safe_impl(CharT *buff, size_t size, unsigned long long val) {
     size_t idx = 0;
     if (val == 0) {
         buff[idx++] = '0';

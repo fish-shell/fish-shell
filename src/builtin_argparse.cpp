@@ -31,6 +31,7 @@ static const wcstring var_name_prefix = L"_flag_";
 
 #define BUILTIN_ERR_INVALID_OPT_SPEC _(L"%ls: Invalid option spec '%ls' at char '%lc'\n")
 
+namespace {
 struct option_spec_t {
     wchar_t short_flag;
     wcstring long_flag;
@@ -58,6 +59,7 @@ struct argparse_cmd_opts_t {
     std::unordered_map<wcstring, wchar_t> long_to_short_flag;
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
 };
+}  // namespace
 
 static const wchar_t *const short_options = L"+:hn:six:N:X:";
 static const struct woption long_options[] = {

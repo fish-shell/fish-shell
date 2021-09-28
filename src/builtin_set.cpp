@@ -295,6 +295,7 @@ static int env_set_reporting_errors(const wchar_t *cmd, const wcstring &key, int
     return retval;
 }
 
+namespace {
 /// A helper type returned by split_var_and_indexes.
 struct split_var_t {
     wcstring varname;             // name of the variable
@@ -304,6 +305,7 @@ struct split_var_t {
     /// \return the number of elements in our variable, or 0 if missing.
     long varsize() const { return var ? static_cast<long>(var->as_list().size()) : 0L; }
 };
+}  // namespace
 
 /// Extract indexes from an argument of the form `var_name[index1 index2...]`.
 /// The argument \p arg is split into a variable name and list of indexes, which is returned by

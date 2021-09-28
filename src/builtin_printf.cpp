@@ -71,6 +71,7 @@
 
 class parser_t;
 
+namespace {
 struct builtin_printf_state_t {
     // Out and err streams. Note this is a captured reference!
     io_streams_t &streams;
@@ -100,9 +101,9 @@ struct builtin_printf_state_t {
     void print_esc_char(wchar_t c);
 
     void append_output(wchar_t c);
-    void append_output(const wchar_t *c);
     void append_format_output(const wchar_t *fmt, ...);
 };
+}  // namespace
 
 static bool is_octal_digit(wchar_t c) { return iswdigit(c) && c < L'8'; }
 
@@ -235,13 +236,6 @@ void builtin_printf_state_t::append_output(wchar_t c) {
     if (early_exit) return;
 
     streams.out.push_back(c);
-}
-
-void builtin_printf_state_t::append_output(const wchar_t *c) {
-    // Don't output if we're done.
-    if (early_exit) return;
-
-    streams.out.append(c);
 }
 
 void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...) {

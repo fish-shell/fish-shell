@@ -35,6 +35,7 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+namespace {
 struct read_cmd_opts_t {
     bool print_help = false;
     int place = ENV_USER;
@@ -56,6 +57,7 @@ struct read_cmd_opts_t {
     int nchars = 0;
     bool one_line = false;
 };
+}  // namespace
 
 static const wchar_t *const short_options = L":ac:d:fghiLln:p:sStuxzP:UR:L";
 static const struct woption long_options[] = {{L"array", no_argument, nullptr, 'a'},

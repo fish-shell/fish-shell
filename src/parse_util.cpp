@@ -1118,13 +1118,14 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 
     const wcstring &unexp_command = dst.command.source(buff_src, storage);
     if (!unexp_command.empty()) {
-        wcstring command;
         // Check that we can expand the command.
+        // Make a new error list so we can fix the offset for just those, then append later.
+        wcstring command;
+        parse_error_list_t new_errors;
         if (expand_to_command_and_args(unexp_command, operation_context_t::empty(), &command,
-                                       nullptr, parse_errors,
+                                       nullptr, &new_errors,
                                        true /* skip wildcards */) == expand_result_t::error) {
             errored = true;
-            parse_error_offset_source_start(parse_errors, source_start);
         }
 
         // Check that pipes are sound.
@@ -1173,6 +1174,11 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
                 errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
                                               unexp_command.c_str());
             }
+        }
+
+        if (parse_errors) {
+            parse_error_offset_source_start(&new_errors, source_start);
+            vec_append(*parse_errors, std::move(new_errors));
         }
     }
     return errored;

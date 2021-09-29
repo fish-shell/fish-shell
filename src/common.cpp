@@ -1780,7 +1780,7 @@ void restore_term_foreground_process_group_for_exit() {
 bool is_main_thread() { return thread_id() == 1; }
 
 void assert_is_main_thread(const char *who) {
-    if (!is_main_thread() && !thread_asserts_cfg_for_testing) {
+    if (!likely(is_main_thread()) && !unlikely(thread_asserts_cfg_for_testing)) {
         FLOGF(error, L"%s called off of main thread.", who);
         FLOGF(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
@@ -1788,7 +1788,7 @@ void assert_is_main_thread(const char *who) {
 }
 
 void assert_is_not_forked_child(const char *who) {
-    if (is_forked_child()) {
+    if (unlikely(is_forked_child())) {
         FLOGF(error, L"%s called in a forked child.", who);
         FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
@@ -1796,7 +1796,7 @@ void assert_is_not_forked_child(const char *who) {
 }
 
 void assert_is_background_thread(const char *who) {
-    if (is_main_thread() && !thread_asserts_cfg_for_testing) {
+    if (unlikely(is_main_thread()) && !unlikely(thread_asserts_cfg_for_testing)) {
         FLOGF(error, L"%s called on the main thread (may block!).", who);
         FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
@@ -1806,7 +1806,7 @@ void assert_is_background_thread(const char *who) {
 void assert_is_locked(std::mutex &mutex, const char *who, const char *caller) {
     // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
     // actually locked; fortunately we are checking the opposite so we're safe.
-    if (mutex.try_lock()) {
+    if (unlikely(mutex.try_lock())) {
         FLOGF(error, L"%s is not locked when it should be in '%s'", who, caller);
         FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
@@ -1843,7 +1843,7 @@ void redirect_tty_output() {
 
 /// Display a failed assertion message, dump a stack trace if possible, then die.
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
-    if (error) {
+    if (unlikely(error)) {
         FLOGF(error, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
               std::strerror(error));
     } else {

@@ -222,7 +222,7 @@ extern const wcstring g_empty_string;
 #define DIE_ON_FAILURE(e)                                  \
     do {                                                   \
         int status = e;                                    \
-        if (status != 0) {                                 \
+        if (unlikely(status != 0)) {                                 \
             __fish_assert(#e, __FILE__, __LINE__, status); \
         }                                                  \
     } while (0)
@@ -307,6 +307,15 @@ void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver);
 // Check if we are running in the test mode, where we should suppress error output
 #define TESTS_PROGRAM_NAME L"(ignore)"
 bool should_suppress_stderr_for_tests();
+
+/// Branch prediction hints. Idea borrowed from Linux kernel. Just used for asserts.
+#if __has_builtin(__builtin_expect)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif
 
 void assert_is_main_thread(const char *who);
 #define ASSERT_IS_MAIN_THREAD_TRAMPOLINE(x) assert_is_main_thread(x)

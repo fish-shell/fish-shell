@@ -19,9 +19,6 @@ set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
 # Generate Xcode schemas (but not for tests).
 set(CMAKE_XCODE_GENERATE_SCHEME 1)
 
-# Use the default flags (#6296) but undefine NDEBUG so that asserts remain enabled.
-add_definitions(-UNDEBUG)
-
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to default '${DEFAULT_BUILD_TYPE}'")
     set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")

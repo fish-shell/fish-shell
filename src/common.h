@@ -309,13 +309,8 @@ void wcs2string_appending(const wchar_t *in, size_t len, std::string *receiver);
 bool should_suppress_stderr_for_tests();
 
 /// Branch prediction hints. Idea borrowed from Linux kernel. Just used for asserts.
-#if __has_builtin(__builtin_expect)
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
-#else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#endif
 
 void assert_is_main_thread(const char *who);
 #define ASSERT_IS_MAIN_THREAD_TRAMPOLINE(x) assert_is_main_thread(x)

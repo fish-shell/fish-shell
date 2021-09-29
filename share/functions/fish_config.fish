@@ -96,7 +96,7 @@ function fish_config --description "Launch fish's web based configuration"
                     end
 
                     # Erase the right prompt if it didn't have any.
-                    if functions -q fish_right_prompt; and test (functions --details fish_right_prompt) !=  $have[1]
+                    if functions -q fish_right_prompt; and test (functions --details fish_right_prompt) != $have[1]
                         functions --erase fish_right_prompt
                     end
                 case save
@@ -123,16 +123,7 @@ function fish_config --description "Launch fish's web based configuration"
                         funcsave fish_prompt
                         or return
 
-                        if functions -q fish_right_prompt; and test (functions --details fish_right_prompt) =  $have[1]
-                            # We just read a right prompt, save it.
-                            funcsave fish_right_prompt
-                        else if test -e "$__fish_config_dir/functions/fish_right_prompt.fish"; and test (functions --details fish_right_prompt) != "$have[1]"
-                            # We used to have a right prompt, overwrite it with an empty one.
-                            function fish_right_prompt
-                            end
-                            funcsave fish_right_prompt
-                        end
-
+                        funcsave fish_right_prompt
                         return
                     else
                         echo Not overwriting

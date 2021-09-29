@@ -1,5 +1,5 @@
 function funcsave --description "Save the current definition of all specified functions to file"
-    set -l q options h/help d/directory=
+    set -l options q h/help d/directory=
     argparse -n funcsave $options -- $argv
     or return
 

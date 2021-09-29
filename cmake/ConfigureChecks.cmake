@@ -83,7 +83,6 @@ check_cxx_symbol_exists(flock sys/file.h HAVE_FLOCK)
 # futimens is new in OS X 10.13 but is a weak symbol.
 # Don't assume it exists just because we can link - it may be null.
 check_cxx_symbol_exists(futimens sys/stat.h HAVE_FUTIMENS)
-check_cxx_symbol_exists(futimes sys/time.h HAVE_FUTIMES)
 check_cxx_symbol_exists(getifaddrs ifaddrs.h HAVE_GETIFADDRS)
 check_cxx_symbol_exists(getpwent pwd.h HAVE_GETPWENT)
 check_cxx_symbol_exists(getrusage sys/resource.h HAVE_GETRUSAGE)

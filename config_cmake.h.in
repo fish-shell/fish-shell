@@ -25,9 +25,6 @@
 /* Define to 1 if you have the `futimens' function. */
 #cmakedefine HAVE_FUTIMENS 1
 
-/* Define to 1 if you have the `futimes' function. */
-#cmakedefine HAVE_FUTIMES 1
-
 /* Define to 1 if you have the `getifaddrs' function. */
 #cmakedefine HAVE_GETIFADDRS 1
 

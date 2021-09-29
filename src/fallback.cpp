@@ -182,13 +182,6 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
 }
 #endif
 
-#ifndef HAVE_FUTIMES
-int futimes(int fd, const struct timeval *times) {
-    errno = ENOSYS;
-    return -1;
-}
-#endif
-
 #if HAVE_GETTEXT
 char *fish_gettext(const char *msgid) { return gettext(msgid); }
 

@@ -122,10 +122,6 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
 #endif
 
-#ifndef HAVE_FUTIMES
-int futimes(int fd, const struct timeval *times);
-#endif
-
 // autoconf may fail to detect gettext (645), so don't define a function call gettext or we'll get
 // build errors.
 

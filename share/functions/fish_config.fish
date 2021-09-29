@@ -123,7 +123,7 @@ function fish_config --description "Launch fish's web based configuration"
                         funcsave fish_prompt
                         or return
 
-                        funcsave fish_right_prompt
+                        funcsave fish_right_prompt 2>/dev/null
                         return
                     else
                         echo Not overwriting

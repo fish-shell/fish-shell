@@ -62,6 +62,13 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
             if (retval || *a == 0 || *b == 0) break;
         }
 
+        // Fast path: Skip towupper.
+        if (*a == *b) {
+            a++;
+            b++;
+            continue;
+        }
+
         wint_t al = towupper(*a);
         wint_t bl = towupper(*b);
         // Sort dashes after Z - see #5634
@@ -113,6 +120,13 @@ int wcsfilecmp_glob(const wchar_t *a, const wchar_t *b) {
             // If we know the strings aren't logically equal or we've reached the end of one or both
             // strings we can stop iterating over the chars in each string.
             if (retval || *a == 0 || *b == 0) break;
+        }
+
+        // Fast path: Skip towlower.
+        if (*a == *b) {
+            a++;
+            b++;
+            continue;
         }
 
         wint_t al = towlower(*a);

@@ -35,17 +35,16 @@ if (CMAKE_GENERATOR STREQUAL "Ninja" AND
     ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9) OR
      (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5) OR
      (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)))
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always")
+      add_compile_options(-fdiagnostics-color=always)
 endif()
 
 # Enable a whole bunch of warnings, but turn off:
 # - comment because we use a bunch of those, and they're not really all that harmful.
 # - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-comment -Wno-address")
+add_compile_options(-Wall -Wextra -Wno-comment -Wno-address)
 
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wunused-template -Wunused-local-typedef -Wunused-macros")
+  add_compile_options(-Wunused-template -Wunused-local-typedef -Wunused-macros)
 endif()
 
 # Disable exception handling.

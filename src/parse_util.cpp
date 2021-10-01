@@ -1189,8 +1189,7 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 static bool detect_errors_in_block_redirection_list(
     const ast::argument_or_redirection_list_t &args_or_redirs, parse_error_list_t *out_errors) {
     if (const auto *first_arg = get_first_arg(args_or_redirs)) {
-        return append_syntax_error(out_errors, first_arg->source_range().start,
-                                   BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+        return append_syntax_error(out_errors, first_arg->source_range().start, END_ARG_ERR_MSG);
     }
     return false;
 }

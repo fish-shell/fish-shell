@@ -12,6 +12,7 @@
 
 #include "builtin.h"
 #include "common.h"
+#include "enum_map.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "history.h"
 #include "io.h"

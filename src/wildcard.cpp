@@ -761,6 +761,7 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
                                                       const wchar_t *wc_remainder,
                                                       const wcstring &prefix) {
     wcstring name_str;
+    int dir_fd = dirfd(base_dir_fp);
     while (!interrupted_or_overflowed() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
         // Note that it's critical we ignore leading dots here, else we may descend into . and ..
         if (!wildcard_match(name_str, wc_segment, true)) {
@@ -768,9 +769,9 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
             continue;
         }
 
-        wcstring full_path = base_dir + name_str;
+        std::string narrow = wcs2string(name_str);
         struct stat buf;
-        if (0 != wstat(full_path, &buf) || !S_ISDIR(buf.st_mode)) {
+        if (0 != fstatat(dir_fd, narrow.c_str(), &buf, 0) || !S_ISDIR(buf.st_mode)) {
             // We either can't stat it, or we did but it's not a directory.
             continue;
         }
@@ -783,6 +784,7 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
 
         // We made it through. Perform normal wildcard expansion on this new directory, starting at
         // our tail_wc, which includes the ANY_STRING_RECURSIVE guy.
+        wcstring full_path = base_dir + name_str;
         full_path.push_back(L'/');
         this->expand(full_path, wc_remainder, prefix + wc_segment + L'/');
 
@@ -803,6 +805,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
     // Mark that we are fuzzy for the duration of this function
     const scoped_push<bool> scoped_fuzzy(&this->has_fuzzy_ancestor, true);
 
+    int dir_fd = dirfd(base_dir_fp);
     while (!interrupted_or_overflowed() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
         // Don't bother with . and ..
         if (name_str == L"." || name_str == L"..") {
@@ -814,10 +817,12 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
         const maybe_t<string_fuzzy_match_t> match = string_fuzzy_match_string(wc_segment, name_str);
         if (!match || match->is_samecase_exact()) continue;
 
-        wcstring new_full_path = base_dir + name_str;
-        new_full_path.push_back(L'/');
+        std::string narrow = wcs2string(name_str);
         struct stat buf;
-        if (0 != wstat(new_full_path, &buf) || !S_ISDIR(buf.st_mode)) {
+        // Because we receive the path from readdir, we can assume it's
+        // not an absolute path, and because we skip ".." above
+        // we know it's not above the dir.
+        if (0 != fstatat(dir_fd, narrow.c_str(), &buf, 0) || !S_ISDIR(buf.st_mode)) {
             /* We either can't stat it, or we did but it's not a directory */
             continue;
         }
@@ -827,6 +832,9 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
         // wildcards ("literal") and we are doing fuzzy expansion, which means we replace the
         // segment with files found through fuzzy matching.
         const wcstring child_prefix = prefix + name_str + L'/';
+
+        wcstring new_full_path = base_dir + name_str;
+        new_full_path.push_back(L'/');
 
         // Ok, this directory matches. Recurse to it. Then mark each resulting completion as fuzzy.
         const size_t before = this->resolved_completions->size();

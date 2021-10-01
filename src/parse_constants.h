@@ -211,9 +211,6 @@ enum class pipeline_position_t {
     _(L"The function call stack limit has been exceeded. Do you have an accidental infinite " \
       L"loop?")
 
-/// Error message when encountering an illegal command name.
-#define ILLEGAL_CMD_ERR_MSG _(L"Illegal command name '%ls'")
-
 /// Error message when encountering an unknown builtin name.
 #define UNKNOWN_BUILTIN_ERR_MSG _(L"Unknown builtin '%ls'")
 
@@ -225,9 +222,6 @@ enum class pipeline_position_t {
 
 /// Error message for wildcards with no matches.
 #define WILDCARD_ERR_MSG _(L"No matches for wildcard '%ls'. See `help wildcards-globbing`.")
-
-/// Error message when an expansion produces too many results, e.g. `echo /**`.
-#define EXPAND_OVERFLOW_ERR_MSG _(L"Too many items produced by '%ls'.")
 
 /// Error when using break outside of loop.
 #define INVALID_BREAK_ERR_MSG _(L"'break' while not inside of loop")

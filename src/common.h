@@ -56,9 +56,6 @@ typedef std::vector<wcstring> wcstring_list_t;
 
 struct termsize_t;
 
-// Maximum number of bytes used by a single utf-8 character.
-#define MAX_UTF8_BYTES 6
-
 // Highest legal ASCII value.
 #define ASCII_MAX 127u
 
@@ -70,9 +67,6 @@ struct termsize_t;
 
 // Unicode BOM value.
 #define UTF8_BOM_WCHAR 0xFEFFu
-
-// Unicode replacement character.
-#define REPLACEMENT_WCHAR 0xFFFDu
 
 // Use Unicode "noncharacters" for internal characters as much as we can. This
 // gives us 32 "characters" for internal use that we can guarantee should not

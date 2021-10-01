@@ -104,6 +104,8 @@ Completions
   - ``qmk`` (:issue:`8180`)
   - ``cpupower``
   - ``dart``
+  - ``sbcl``
+  - ``roswell``
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Add missing completions for the ``-p`` option of ``xbps-query``.

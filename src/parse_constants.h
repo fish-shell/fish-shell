@@ -5,6 +5,7 @@
 #include "config.h"
 
 #include "common.h"
+#include "enum_map.h"
 
 #define PARSER_DIE()                   \
     do {                               \

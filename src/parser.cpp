@@ -32,9 +32,6 @@
 
 class io_chain_t;
 
-/// Error for evaluating in illegal scope.
-#define INVALID_SCOPE_ERR_MSG _(L"Tried to evaluate commands using invalid block type '%ls'")
-
 /// While block description.
 #define WHILE_BLOCK N_(L"'while' block")
 

@@ -37,8 +37,6 @@
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-#define CURSOR_POSITION_INVALID static_cast<size_t>(-1)
-
 static const wchar_t *get_highlight_var_name(highlight_role_t role) {
     switch (role) {
         case highlight_role_t::normal:

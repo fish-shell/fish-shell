@@ -71,8 +71,6 @@ static const struct woption long_options[] = {
     {L"help", no_argument, nullptr, 'h'},      {nullptr, 0, nullptr, 0}};
 
 // Hint for invalid path operation with a colon.
-#define BUILTIN_SET_PATH_ERROR _(L"%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n")
-#define BUILTIN_SET_PATH_HINT _(L"%ls: Did you mean 'set %ls $%ls %ls'?\n")
 #define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: You provided %d indexes but %d values\n")
 #define BUILTIN_SET_ERASE_NO_VAR _(L"%ls: Erase needs a variable name\n")
 #define BUILTIN_SET_ARRAY_BOUNDS_ERR _(L"%ls: Array index out of bounds\n")

@@ -58,7 +58,6 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
     {parse_token_type_t::terminate, L"parse_token_type_t::terminate"},
     {parse_token_type_t::invalid, L"parse_token_type_t::invalid"},
     {parse_token_type_t::invalid, nullptr}};
-#define token_enum_map_len (sizeof token_enum_map / sizeof *token_enum_map)
 
 // IMPORTANT: If the following enum is modified you must update the corresponding keyword_enum_map
 // array below.

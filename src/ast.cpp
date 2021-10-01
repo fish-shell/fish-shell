@@ -1080,13 +1080,6 @@ struct populator_t {
         node.accept(*this);
     }
 
-    template <typename Node>
-    void visit_pointer_field(Node *&node) {
-        // This field is a pointer embedding of an ast node.
-        // Allocate and populate it.
-        node = allocate_visit<Node>();
-    }
-
     // Overload for token fields.
     template <parse_token_type_t... TokTypes>
     void visit_node_field(token_t<TokTypes...> &token) {

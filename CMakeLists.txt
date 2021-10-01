@@ -42,8 +42,11 @@ endif()
 # Enable a whole bunch of warnings, but turn off:
 # - comment because we use a bunch of those, and they're not really all that harmful.
 # - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-comment -Wno-address -Wunused-template \
-  -Wunused-function -Wunused-local-typedef -Wunused-lambda-capture -Wunused-macros -Wunused-variable")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-comment -Wno-address")
+
+if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wunused-template -Wunused-local-typedef -Wunused-macros")
+endif()
 
 # Disable exception handling.
 add_compile_options(-fno-exceptions)

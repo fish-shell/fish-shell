@@ -709,9 +709,13 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
         // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
         // platforms we tend to notice the file has changed due to a different inode (or file size!)
         //
+        // The current time within the Linux kernel is cached, and generally only updated on a timer
+        // interrupt. So if the timer interrupt is running at 10 milliseconds, the cached time will
+        // only be updated once every 10 milliseconds.
+        //
         // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
         // unlikely to affect users.
-#if HAVE_CLOCK_GETTIME && HAVE_FUTIMENS
+#if defined(UVAR_FILE_SET_MTIME_HACK)
         struct timespec times[2] = {};
         times[0].tv_nsec = UTIME_OMIT;  // don't change ctime
         if (0 == clock_gettime(CLOCK_REALTIME, &times[1])) {

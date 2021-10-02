@@ -74,15 +74,21 @@ include(CheckCXXSourceCompiles)
 include(CheckTypeSize)
 include(CMakePushCheckState)
 check_cxx_symbol_exists(backtrace_symbols execinfo.h HAVE_BACKTRACE_SYMBOLS)
-check_cxx_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
+
+# workaround for lousy mtime precision on a Linux kernel
+if (CMAKE_SYSTEM_NAME MATCHES "Linux|Android")
+    check_cxx_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
+    check_cxx_symbol_exists(futimens sys/stat.h HAVE_FUTIMENS)
+    if ((HAVE_CLOCK_GETTIME) AND (HAVE_FUTIMENS))
+        set(UVAR_FILE_SET_MTIME_HACK 1)
+    endif()
+endif()
+
 check_cxx_symbol_exists(ctermid_r stdio.h HAVE_CTERMID_R)
 check_struct_has_member("struct dirent" d_type dirent.h HAVE_STRUCT_DIRENT_D_TYPE LANGUAGE CXX)
 check_cxx_symbol_exists(dirfd "sys/types.h;dirent.h" HAVE_DIRFD)
 check_include_file_cxx(execinfo.h HAVE_EXECINFO_H)
 check_cxx_symbol_exists(flock sys/file.h HAVE_FLOCK)
-# futimens is new in OS X 10.13 but is a weak symbol.
-# Don't assume it exists just because we can link - it may be null.
-check_cxx_symbol_exists(futimens sys/stat.h HAVE_FUTIMENS)
 check_cxx_symbol_exists(getifaddrs ifaddrs.h HAVE_GETIFADDRS)
 check_cxx_symbol_exists(getpwent pwd.h HAVE_GETPWENT)
 check_cxx_symbol_exists(getrusage sys/resource.h HAVE_GETRUSAGE)
@@ -110,7 +116,6 @@ check_struct_has_member("struct stat" st_mtim.tv_nsec "sys/stat.h" HAVE_STRUCT_S
 check_include_file_cxx(sys/ioctl.h HAVE_SYS_IOCTL_H)
 check_include_file_cxx(sys/select.h HAVE_SYS_SELECT_H)
 check_include_files("sys/types.h;sys/sysctl.h" HAVE_SYS_SYSCTL_H)
-check_include_file_cxx(termios.h HAVE_TERMIOS_H) # Needed for TIOCGWINSZ
 
 check_cxx_symbol_exists(eventfd sys/eventfd.h HAVE_EVENTFD)
 check_cxx_symbol_exists(pipe2 unistd.h HAVE_PIPE2)

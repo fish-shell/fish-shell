@@ -4,9 +4,6 @@
 /* Define to 1 if compiled on WSL */
 #cmakedefine WSL 1
 
-/* Define to 1 if you have the `clock_gettime' function. */
-#cmakedefine HAVE_CLOCK_GETTIME 1
-
 /* Define to 1 if you have the `ctermid_r' function. */
 #cmakedefine HAVE_CTERMID_R 1
 
@@ -21,9 +18,6 @@
 
 /* Define to 1 if you have the `flock' function. */
 #cmakedefine HAVE_FLOCK 1
-
-/* Define to 1 if you have the `futimens' function. */
-#cmakedefine HAVE_FUTIMENS 1
 
 /* Define to 1 if you have the `getifaddrs' function. */
 #cmakedefine HAVE_GETIFADDRS 1
@@ -97,9 +91,6 @@
 /* Define to 1 if you have the <sys/sysctl.h> header file. */
 #cmakedefine HAVE_SYS_SYSCTL_H 1
 
-/* Define to 1 if you have the <termios.h> header file. */
-#cmakedefine HAVE_TERMIOS_H 1
-
 /* Define to 1 if you have the <term.h> header file. */
 #cmakedefine HAVE_TERM_H 1
 
@@ -129,6 +120,9 @@
 
 /* Define to 1 if std::make_unique is available. */
 #cmakedefine HAVE_STD__MAKE_UNIQUE 1
+
+/* Define to use clock_gettime and futimens to hack around Linux mtime issue */
+#cmakedefine UVAR_FILE_SET_MTIME_HACK 1
 
 /* Define to 1 to disable ncurses macros that conflict with the STL */
 #define NCURSES_NOMACROS 1

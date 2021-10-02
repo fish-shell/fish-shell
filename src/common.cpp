@@ -56,9 +56,10 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // Keep after "common.h"
-#ifdef __BSD__
+#ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
-#elif defined(__APPLE__)
+#endif
+#if defined(__APPLE__)
 #include <mach-o/dyld.h>
 #endif
 

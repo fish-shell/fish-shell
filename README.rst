@@ -242,3 +242,4 @@ issue <https://github.com/fish-shell/fish-shell/issues/new>`__.
 
 .. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/C/C++%20CI/badge.svg
    :target: https://github.com/fish-shell/fish-shell/actions
+   

@@ -55,7 +55,7 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
     int retval = 0;  // assume the strings will be equal
 
     while (*a && *b) {
-        if (*a >= L'0' && *a <= L'9' && *b >= L'0' && *b <= L'9') {
+        if (iswdigit(*a) && iswdigit(*b)) {
             retval = wcsfilecmp_leading_digits(&a, &b);
             // If we know the strings aren't logically equal or we've reached the end of one or both
             // strings we can stop iterating over the chars in each string.
@@ -115,7 +115,7 @@ int wcsfilecmp_glob(const wchar_t *a, const wchar_t *b) {
     int retval = 0;  // assume the strings will be equal
 
     while (*a && *b) {
-        if (*a >= L'0' && *a <= L'9' && *b >= L'0' && *b <= L'9') {
+        if (iswdigit(*a) && iswdigit(*b)) {
             retval = wcsfilecmp_leading_digits(&a, &b);
             // If we know the strings aren't logically equal or we've reached the end of one or both
             // strings we can stop iterating over the chars in each string.

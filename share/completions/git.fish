@@ -210,7 +210,7 @@ function __fish_git_files
                     set -ql renamed
                     and set file (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
                     and set desc $renamed_desc
-                case '2 RM*'
+                case '2 RM*' '2 RT*'
                     # Staged as renamed, with unstaged modifications (issue #6031)
                     set -ql renamed
                     or set -ql modified
@@ -272,11 +272,11 @@ function __fish_git_files
                     set -ql modified
                     and set file "$line[9..-1]"
                     and set desc $modified_desc
-                case '1 MD*'
+                case '1 MD*' '1 TD*'
                     set -ql modified_staged_deleted
                     and set file "$line[9..-1]"
                     and set desc $modified_staged_deleted_desc
-                case '1 M.*'
+                case '1 M.*' '1 T.*'
                     # If the character is first ("M."), then that means it's "our" change,
                     # which means it is staged.
                     # This is useless for many commands - e.g. `checkout` won't do anything with this.
@@ -284,7 +284,7 @@ function __fish_git_files
                     set -ql modified_staged
                     and set file "$line[9..-1]"
                     and set desc $staged_modified_desc
-                case '1 MM*'
+                case '1 MM*' '1 MT*' '1 TM*' '1 TT*'
                     # Staged-modified with unstaged modifications
                     # These need to be offered for both kinds of modified.
                     if set -ql modified

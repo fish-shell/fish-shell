@@ -19,7 +19,7 @@ function fish_prompt --description 'Write out the prompt'
     end
 
     # Write pipestatus
-    # If the status was carried over (e.g. after `set`), don't bold it.
+    # If the status was carried over (i.e. when no command is issued), don't bold it.
     set -l bold_flag --bold
     set -q __fish_prompt_status_generation; or set -g __fish_prompt_status_generation $status_generation
     if test $__fish_prompt_status_generation = $status_generation

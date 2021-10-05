@@ -34,3 +34,8 @@ complete -xc man -s p -d Preprocessors
 complete -c man -s t -d "Format for printing"
 complete -c man -s w -l path -d "Only print locations"
 complete -c man -s W -d "Only print locations"
+
+complete -c man -n 'string match -q -- "*/*" (commandline -t | string collect)' --force-files
+if echo | MANPAGER=cat command man -l - &>/dev/null
+    complete -c man -s l -l local-file -d "Local file" -r
+end

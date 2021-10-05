@@ -12,7 +12,7 @@ import subprocess
 output = subprocess.check_output(
     "nm --radix=d -g --demangle -l --print-size CMakeFiles/fishlib.dir/src/*.o",
     shell=True,
-    text=True,
+    universal_newlines=True,
 )
 files_by_name = {}  # Symbol to set of paths
 sizes_by_name = {}  # Symbol to set of int sizes
@@ -47,7 +47,7 @@ for name, sizes in sizes_by_name.items():
         print("\t\t%s" % filename)
 
 if odr_violations == 0:
-    print("No ODR violations found, hooray")
+    print("No ODR violations found, hooray\n")
 
 # Show potential weak symbols.
 suspicious_odrs = 0

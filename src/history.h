@@ -193,6 +193,9 @@ class history_t : noncopyable_t, nonmovable_t {
     // Irreversibly clears history.
     void clear();
 
+    // Irreversibly clears history for the current session.
+    void clear_session();
+
     // Populates from older location (in config path, rather than data path).
     void populate_from_config_path();
 

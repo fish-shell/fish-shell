@@ -62,13 +62,15 @@ function history --description "display or manipulate interactive command histor
         set hist_cmd search
     else if set -q _flag_merge
         set hist_cmd merge
+    else if set -q _flag_clear-session
+        set hist_cmd clear-session
     end
 
     # If a history command has not already been specified check the first non-flag argument for a
     # command. This allows the flags to appear before or after the subcommand.
     if not set -q hist_cmd[1]
         and set -q argv[1]
-        if contains $argv[1] search delete merge save clear
+        if contains $argv[1] search delete merge save clear clear-session
             set hist_cmd $argv[1]
             set -e argv[1]
         end
@@ -190,7 +192,12 @@ function history --description "display or manipulate interactive command histor
             else
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
+        case clear-session # clears only session
+            __fish_unexpected_hist_args $argv
+            and return 1
 
+            builtin history clear-session -- $argv
+            printf (_ "Command history for session cleared!\n")
         case '*'
             printf "%ls: unexpected subcommand '%ls'\n" $cmd $hist_cmd
             return 2

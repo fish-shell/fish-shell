@@ -332,6 +332,9 @@ struct history_impl_t {
     // Irreversibly clears history.
     void clear();
 
+    // Clears only session.
+    void clear_session();
+
     // Populates from older location ()in config path, rather than data path).
     void populate_from_config_path();
 
@@ -1073,6 +1076,15 @@ void history_impl_t::clear() {
     this->clear_file_state();
 }
 
+void history_impl_t::clear_session() {
+    for (size_t i = 0; i < new_items.size(); i++) {
+        deleted_items.insert(new_items.at(i).str());
+    }
+
+    new_items.clear();
+    first_unwritten_new_item_index = 0;
+}
+
 bool history_impl_t::is_default() const { return name == DFLT_FISH_HISTORY_SESSION_ID; }
 
 bool history_impl_t::is_empty() {
@@ -1490,6 +1502,8 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
 }
 
 void history_t::clear() { impl()->clear(); }
+
+void history_t::clear_session() { impl()->clear_session(); }
 
 void history_t::populate_from_config_path() { impl()->populate_from_config_path(); }
 

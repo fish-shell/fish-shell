@@ -17,18 +17,47 @@
 // Compare the strings to see if they begin with an integer that can be compared and return the
 // result of that comparison.
 static int wcsfilecmp_leading_digits(const wchar_t **a, const wchar_t **b) {
-    const wchar_t *a_end, *b_end;
+    const wchar_t *a1 = *a;
+    const wchar_t *b1 = *b;
 
-    long a_num = fish_wcstol(*a, &a_end, 10);
-    if (errno > 0) return 0;  // invalid number -- fallback to simple string compare
-    long b_num = fish_wcstol(*b, &b_end, 10);
-    if (errno > 0) return 0;  // invalid number -- fallback to simple string compare
+    // Ignore leading 0s.
+    while (*a1 == L'0') a1++;
+    while (*b1 == L'0') b1++;
 
-    if (a_num < b_num) return -1;
-    if (a_num > b_num) return 1;
-    *a = a_end;
-    *b = b_end;
-    return 0;
+    int ret = 0;
+
+    while (true) {
+        if (iswdigit(*a1) && iswdigit(*b1)) {
+            // We keep the cmp value for the
+            // first differing digit.
+            //
+            // If the numbers have the same length, that's the value.
+            if (ret == 0) {
+                // Comparing the string value is the same as numerical
+                // for wchar_t digits!
+                if (*a1 > *b1) ret = 1;
+                if (*b1 > *a1) ret = -1;
+            }
+        } else {
+            // We don't have negative numbers and we only allow ints,
+            // and we have already skipped leading zeroes,
+            // so the longer number is larger automatically.
+            if (iswdigit(*a1)) ret = 1;
+            if (iswdigit(*b1)) ret = -1;
+            break;
+        }
+        a1++;
+        b1++;
+    }
+
+    // For historical reasons, we skip trailing whitespace
+    // like fish_wcstol does!
+    // This is used in sorting globs, and that's supposed to be stable.
+    while (iswspace(*a1)) a1++;
+    while (iswspace(*b1)) b1++;
+    *a = a1;
+    *b = b1;
+    return ret;
 }
 
 /// Compare two strings, representing file names, using "natural" ordering. This means that letter

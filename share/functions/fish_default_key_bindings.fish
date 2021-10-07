@@ -69,7 +69,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 
     bind --preset $argv -k home beginning-of-line
     bind --preset $argv -k end end-of-line
-    bind --preset $argv \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
+    bind --preset $argv -k sdc backward-delete-char # shifted delete
 
     bind --preset $argv \ca beginning-of-line
     bind --preset $argv \ce end-of-line

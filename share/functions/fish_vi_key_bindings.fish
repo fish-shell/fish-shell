@@ -118,12 +118,11 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset e forward-single-char forward-word backward-char
     bind -s --preset E forward-bigword backward-char
 
-    # OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
     # Vi/Vim doesn't support these keys in insert mode but that seems silly so we do so anyway.
-    bind -s --preset -M insert -k home beginning-of-line 2>/dev/null
-    bind -s --preset -M default -k home beginning-of-line 2>/dev/null
-    bind -s --preset -M insert -k end end-of-line 2>/dev/null
-    bind -s --preset -M default -k end end-of-line 2>/dev/null
+    bind -s --preset -M insert -k home beginning-of-line
+    bind -s --preset -M default -k home beginning-of-line
+    bind -s --preset -M insert -k end end-of-line
+    bind -s --preset -M default -k end end-of-line
 
     # Vi moves the cursor back if, after deleting, it is at EOL.
     # To emulate that, move forward, then backward, which will be a NOP
@@ -140,8 +139,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M default \ch backward-char
     bind -s --preset -M insert \x7f backward-delete-char
     bind -s --preset -M default \x7f backward-char
-    bind -s --preset -M insert \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
-    bind -s --preset -M default \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
+    bind -s --preset -M insert -k sdc backward-delete-char # shifted delete
+    bind -s --preset -M default -k sdc backward-delete-char # shifted delete
 
     bind -s --preset dd kill-whole-line
     bind -s --preset D kill-line

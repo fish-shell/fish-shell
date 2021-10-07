@@ -64,11 +64,11 @@ Scripting improvements
 - ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This will allow a basic implementation of transient prompts (:issue:`8142`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
 - Running ``fish`` with a directory instead of a script as argument (e.g. ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
-- ``help`` now knows which section is in which document again (:issue:`8245`).
-- Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish. This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
+- Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
 - The ``realpath`` builtin now also squashes leading slashes with the ``--no-symlinks`` option (:issue:`8281`).
 - When trying to ``cd`` to a dangling (broken) symbolic link, fish will print an error noting that the target is a broken link (:issue:`8264`).
 - On MacOS terminals that are not granted permissions to access a folder, ``cd`` would print a spurious "rotten symlink" error, which has been corrected to "permission denied" (:issue:`8264`).
+- Performance improvements to globbing, especially on systems using glibc (by avoiding its slow iswalnum() function). In some cases (large directories with files with many numbers in the names) this almost doubles performance.
 
 Interactive improvements
 ------------------------
@@ -80,6 +80,7 @@ Interactive improvements
 - Running a commandline consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
 - Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
 - ``history`` and ``__fish_print_help`` now properly support ``less`` before version 530, including the version that ships with macOS. (:issue:`8157`).
+- ``help`` now knows which section is in which document again (:issue:`8245`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

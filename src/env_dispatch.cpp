@@ -379,21 +379,9 @@ static void update_fish_color_support(const environment_t &vars) {
         support_term256 = true;
         FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
     } else if (term.find(L"xterm") != wcstring::npos) {
-        // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
-        wcstring term_program;
-        if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
-        if (term_program == L"Apple_Terminal") {
-            auto tpv = vars.get(L"TERM_PROGRAM_VERSION");
-            if (tpv && fish_wcstod(tpv->as_string().c_str(), nullptr) > 299) {
-                // OS X Lion is version 299+, it has 256 color support (see github Wiki)
-                support_term256 = true;
-                FLOGF(term_support, L"256 color support enabled for TERM=%ls on Terminal.app",
-                      term.c_str());
-            }
-        } else {
-            support_term256 = true;
-            FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
-        }
+        // Assume that all 'xterm's can handle 25
+        support_term256 = true;
+        FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
     } else if (cur_term != nullptr) {
         // See if terminfo happens to identify 256 colors
         support_term256 = (max_colors >= 256);

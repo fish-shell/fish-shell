@@ -873,7 +873,7 @@ complete -c git -n '__fish_git_using_command diff show range-diff log' -s C -l f
 complete -c git -n '__fish_git_using_command diff show range-diff log' -s D -l irreversible-delete -d 'Omit the preimage for deletes'
 complete -c git -n '__fish_git_using_command diff show range-diff log' -s G -d "Look for differences where <regex> matches the patch's added/removed lines"
 complete -c git -n '__fish_git_using_command diff show range-diff log' -s M -l find-renames -d 'Detect and report renames'
-complete -c git -n '__fish_git_using_command diff show range-diff log' -s R -d 'Show differences from index or on-disk file to tree contents'
+complete -c git -n '__fish_git_using_command diff show range-diff log' -s R -d 'Swap inputs to create a reverse diff'
 complete -c git -n '__fish_git_using_command diff show range-diff log' -s S -d 'Look for differences that change the number of occurrences of the string'
 complete -c git -n '__fish_git_using_command diff show range-diff' -s W -l function-context -d 'Show whole surrounding functions of changes'
 complete -c git -n '__fish_git_using_command diff show range-diff' -s w -l ignore-all-space -d 'Ignore whitespace when comparing lines'

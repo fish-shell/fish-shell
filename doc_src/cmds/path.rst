@@ -12,8 +12,10 @@ Synopsis
     path dir GENERAL_OPTIONS  [PATH...]
     path extension GENERAL_OPTIONS [PATH...]
     path filter GENERAL_OPTIONS [(-v | --invert)] \
+        [-d] [-f] [-l] [-r] [-w] [-x] \
         [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
     path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE] \
+        [-d] [-f] [-l] [-r] [-w] [-x] \
         [(-p | --perm) PERMISSION] [PATH...]
     path normalize GENERAL_OPTIONS [PATH...]
     path real GENERAL_OPTIONS [PATH...]
@@ -94,11 +96,11 @@ Examples
    >_ path dir ./foo.mp4
    .
 
-   >_ path base ../banana
-   banana
+   >_ path dir ../banana
+   ..
 
-   >_ path base /usr/bin/
-   bin
+   >_ path dir /usr/bin/
+   /usr
 
 "extension" subcommand
 -----------------------
@@ -138,7 +140,9 @@ Examples
 
 ::
 
-    path filter [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path filter [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] \
+        [-d] [-f] [-l] [-r] [-w] [-x] \
+        [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
 
 ``path filter`` returns all of the given paths that match the given checks. In all cases, the paths need to exist, nonexistent paths are always filtered.
 
@@ -186,6 +190,9 @@ Examples
    # "-x" is short for "--perm=exec" and "-w" short for "--perm=write"!
    /home/me
    
+   >_ path filter -fx $PATH/*
+   # Prints all possible commands - the first entry of each name is what fish would execute!
+
 .. _cmd-path-is:
 
 "is" subcommand
@@ -193,7 +200,9 @@ Examples
 
 ::
 
-    path is [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+    path is [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] \
+        [-d] [-f] [-l] [-r] [-w] [-x] \
+        [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
 
 ``path is`` is short for ``path filter -q``. It returns true if any of the given files passes the filter, but does not produce any output.
 
@@ -265,7 +274,7 @@ Examples
 ::
     path strip-extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path strip-extension`` returns the given paths without the extension. This is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and the full path is printed.
+``path strip-extension`` returns the given paths without the extension. The extension is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and the full path is printed.
 
 This is, of course, the inverse of ``path extension``.
 

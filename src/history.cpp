@@ -211,6 +211,11 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     DIE("unexpected history_search_type_t value");
 }
 
+typedef struct  {
+    wcstring item_string; // the command issued
+    bool only_session; // If previous instances is to be remved
+} history_deleted_item_t;
+
 struct history_impl_t {
     // Add a new history item to the end. If pending is set, the item will not be returned by
     // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
@@ -240,7 +245,12 @@ struct history_impl_t {
     uint32_t disable_automatic_save_counter{0};
 
     // Deleted item contents.
-    std::unordered_set<wcstring> deleted_items{};
+    //std::unordered_set<history_deleted_item_t> deleted_items{};
+    // boolean describes if it should be deleted only in this session or in all
+    // (used in deduplication).
+    std::unordered_map<wcstring, bool> deleted_items{};
+
+    bool session_cleared{false};
 
     // The buffer containing the history file contents.
     std::unique_ptr<history_file_contents_t> file_contents{};
@@ -292,7 +302,7 @@ struct history_impl_t {
 
     // Attempts to rewrite the existing file to a target temporary file
     // Returns false on error, true on success
-    bool rewrite_to_temporary_file(int existing_fd, int dst_fd) const;
+    bool rewrite_to_temporary_file(int existing_fd, int dst_fd);
 
     // Saves history by rewriting the file.
     bool save_internal_via_rewrite();
@@ -456,7 +466,7 @@ void history_impl_t::save_unless_disabled() {
 // case-sensitive, matches.
 void history_impl_t::remove(const wcstring &str_to_remove) {
     // Add to our list of deleted items.
-    deleted_items.insert(str_to_remove);
+    deleted_items.insert(std::pair<wcstring, bool>(str_to_remove, false));
 
     size_t idx = new_items.size();
     while (idx--) {
@@ -708,7 +718,7 @@ void history_impl_t::remove_ephemeral_items() {
 // Given the fd of an existing history file, or -1 if none, write
 // a new history file to temp_fd. Returns true on success, false
 // on error
-bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
+bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) {
     // We are reading FROM existing_fd and writing TO dst_fd
     // dst_fd must be valid; existing_fd does not need to be
     assert(dst_fd >= 0);
@@ -724,17 +734,27 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
             // Try decoding an old item.
             history_item_t old_item = local_file->decode_item(*offset);
 
-            if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
-                continue;
+            // If old item is newer than session always erase if in deleted.
+            if (old_item.timestamp() > boundary_timestamp) {
+                if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
+                    continue;
+                }
+                lru.add_item(std::move(old_item));
+            } else {
+                // If old item is older and in deleted items don't erase if added by
+                // clear_session.
+                if (old_item.empty() || (deleted_items.count(old_item.str()) > 0 &&
+                                         !deleted_items.at(old_item.str()))) {
+                    continue;
+                }
+                // Add this old item.
+                lru.add_item(std::move(old_item));
             }
-            // Add this old item.
-            lru.add_item(std::move(old_item));
         }
     }
 
-    // Insert any unwritten new items
-    for (auto iter = new_items.cbegin() + this->first_unwritten_new_item_index;
-         iter != new_items.cend(); ++iter) {
+    // Insert all items in new_items
+    for (auto iter = new_items.cbegin(); iter != new_items.cend(); ++iter) {
         if (iter->should_write_to_disk()) {
             lru.add_item(*iter);
         }
@@ -762,6 +782,8 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     if (err) {
         FLOGF(history_file, L"Error %d when writing to temporary history file", err);
     }
+
+    session_cleared = false; //have handled clear-session
 
     return err == 0;
 }
@@ -868,7 +890,7 @@ bool history_impl_t::save_internal_via_rewrite() {
                 FLOGF(error, _(L"Error when renaming history file: %s"), error);
             }
 
-            // We did it
+            // We did ihttps://equmenia.se/kalender/regionstamma-equmenia-nord-2021/t
             done = true;
         }
     }
@@ -1077,12 +1099,13 @@ void history_impl_t::clear() {
 }
 
 void history_impl_t::clear_session() {
-    for (size_t i = 0; i < new_items.size(); i++) {
-        deleted_items.insert(new_items.at(i).str());
+    for (const auto &item : new_items) {
+        deleted_items.insert(std::pair<wcstring,bool>(item.str(), true));
     }
 
     new_items.clear();
     first_unwritten_new_item_index = 0;
+    session_cleared = true;
 }
 
 bool history_impl_t::is_default() const { return name == DFLT_FISH_HISTORY_SESSION_ID; }

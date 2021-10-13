@@ -781,8 +781,6 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) {
         FLOGF(history_file, L"Error %d when writing to temporary history file", err);
     }
 
-    session_cleared = false; //have handled clear-session
-
     return err == 0;
 }
 

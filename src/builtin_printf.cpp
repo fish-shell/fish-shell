@@ -751,6 +751,19 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar
         return STATUS_INVALID_ARGS;
     }
 
+#if defined(HAVE_USELOCALE)
+    // We use a locale-dependent LC_NUMERIC here,
+    // unlike the rest of fish (which uses LC_NUMERIC=C).
+    // Because we do output as well as wcstod (which would have wcstod_l),
+    // we need to set the locale here.
+    locale_t prev_locale = uselocale(fish_numeric_locale());
+#else
+    // NetBSD does not have uselocale,
+    // so the best we can do is setlocale.
+    auto prev_locale = setlocale(LC_NUMERIC, nullptr);
+    setlocale(LC_NUMERIC, "");
+#endif
+
     builtin_printf_state_t state(streams);
     int args_used;
     const wchar_t *format = argv[0];
@@ -762,5 +775,12 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar
         argc -= args_used;
         argv += args_used;
     } while (args_used > 0 && argc > 0 && !state.early_exit);
+
+#if defined(HAVE_USELOCALE)
+    uselocale(prev_locale);
+#else
+    setlocale(LC_NUMERIC, prev_locale);
+#endif
+
     return state.exit_code;
 }

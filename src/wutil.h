@@ -124,6 +124,9 @@ int fish_wcswidth(const wcstring &str);
 // returns an immortal locale_t corresponding to the C locale.
 locale_t fish_c_locale();
 
+void fish_invalidate_numeric_locale();
+locale_t fish_numeric_locale();
+
 int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
 long fish_wcstol(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
 long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);

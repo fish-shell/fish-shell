@@ -250,8 +250,6 @@ struct history_impl_t {
     // (used in deduplication).
     std::unordered_map<wcstring, bool> deleted_items{};
 
-    bool session_cleared{false};
-
     // The buffer containing the history file contents.
     std::unique_ptr<history_file_contents_t> file_contents{};
 
@@ -890,7 +888,6 @@ bool history_impl_t::save_internal_via_rewrite() {
                 FLOGF(error, _(L"Error when renaming history file: %s"), error);
             }
 
-            // We did ihttps://equmenia.se/kalender/regionstamma-equmenia-nord-2021/t
             done = true;
         }
     }
@@ -1105,7 +1102,6 @@ void history_impl_t::clear_session() {
 
     new_items.clear();
     first_unwritten_new_item_index = 0;
-    session_cleared = true;
 }
 
 bool history_impl_t::is_default() const { return name == DFLT_FISH_HISTORY_SESSION_ID; }

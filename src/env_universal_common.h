@@ -94,6 +94,7 @@ class env_universal_t {
    private:
     // Path that we save to. This is set in initialize(). If empty, initialize has not been called.
     wcstring vars_path_;
+    std::string narrow_vars_path_;
 
     // The table of variables.
     var_table_t vars;
@@ -120,6 +121,8 @@ class env_universal_t {
     bool initialized() const { return !vars_path_.empty(); }
 
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
+    bool load_from_path(const std::string &path, callback_data_list_t &callbacks);
+
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
     // Functions concerned with saving.

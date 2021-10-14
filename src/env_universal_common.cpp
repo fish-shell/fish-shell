@@ -391,6 +391,10 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
 }
 
 bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
+    return load_from_path(wcs2string(path), callbacks);
+}
+
+bool env_universal_t::load_from_path(const std::string &path, callback_data_list_t &callbacks) {
 
     // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
     // opening the file unnecessarily.
@@ -400,7 +404,7 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     }
 
     bool result = false;
-    autoclose_fd_t fd{wopen_cloexec(path, O_RDONLY)};
+    autoclose_fd_t fd{open_cloexec(path, O_RDONLY)};
     if (fd.valid()) {
         FLOGF(uvar_file, L"universal log reading from file");
         this->load_from_fd(fd.fd(), callbacks);
@@ -469,8 +473,9 @@ void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstri
     if (path.empty()) return;
     assert(!initialized() && "Already initialized");
     vars_path_ = std::move(path);
+    narrow_vars_path_ = wcs2string(vars_path_);
 
-    if (load_from_path(vars_path_, callbacks)) {
+    if (load_from_path(narrow_vars_path_, callbacks)) {
         // Successfully loaded from our normal path.
         return;
     }
@@ -639,7 +644,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // with fire anyways.
     // If we have no changes, just load.
     if (modified.empty()) {
-        this->load_from_path(vars_path_, callbacks);
+        this->load_from_path(narrow_vars_path_, callbacks);
         FLOGF(uvar_file, L"universal log no modifications");
         return false;
     }

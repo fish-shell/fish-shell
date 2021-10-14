@@ -111,6 +111,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 
     # term-specific special bindings
     switch "$TERM"
+        case 'st-256color'
+            bind --preset $argv \e\[P delete-char
         case 'rxvt*'
             bind --preset $argv \e\[8~ end-of-line
             bind --preset $argv \eOc forward-word

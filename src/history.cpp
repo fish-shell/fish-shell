@@ -751,8 +751,9 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) {
         }
     }
 
-    // Insert all items in new_items
-    for (auto iter = new_items.cbegin(); iter != new_items.cend(); ++iter) {
+    // Insert any unwritten new items
+    for (auto iter = new_items.cbegin() + this->first_unwritten_new_item_index;
+         iter != new_items.cend(); ++iter) {
         if (iter->should_write_to_disk()) {
             lru.add_item(*iter);
         }

@@ -211,11 +211,6 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     DIE("unexpected history_search_type_t value");
 }
 
-typedef struct  {
-    wcstring item_string; // the command issued
-    bool only_session; // If previous instances is to be remved
-} history_deleted_item_t;
-
 struct history_impl_t {
     // Add a new history item to the end. If pending is set, the item will not be returned by
     // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
@@ -245,8 +240,7 @@ struct history_impl_t {
     uint32_t disable_automatic_save_counter{0};
 
     // Deleted item contents.
-    //std::unordered_set<history_deleted_item_t> deleted_items{};
-    // boolean describes if it should be deleted only in this session or in all
+    // Boolean describes if it should be deleted only in this session or in all
     // (used in deduplication).
     std::unordered_map<wcstring, bool> deleted_items{};
 
@@ -300,7 +294,7 @@ struct history_impl_t {
 
     // Attempts to rewrite the existing file to a target temporary file
     // Returns false on error, true on success
-    bool rewrite_to_temporary_file(int existing_fd, int dst_fd);
+    bool rewrite_to_temporary_file(int existing_fd, int dst_fd) const;
 
     // Saves history by rewriting the file.
     bool save_internal_via_rewrite();
@@ -716,7 +710,7 @@ void history_impl_t::remove_ephemeral_items() {
 // Given the fd of an existing history file, or -1 if none, write
 // a new history file to temp_fd. Returns true on success, false
 // on error
-bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) {
+bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
     // We are reading FROM existing_fd and writing TO dst_fd
     // dst_fd must be valid; existing_fd does not need to be
     assert(dst_fd >= 0);
@@ -887,6 +881,7 @@ bool history_impl_t::save_internal_via_rewrite() {
                 FLOGF(error, _(L"Error when renaming history file: %s"), error);
             }
 
+            // We did it
             done = true;
         }
     }

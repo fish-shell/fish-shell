@@ -112,10 +112,11 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     # term-specific special bindings
     switch "$TERM"
         case 'st-256color'
-            # suckless and bash/zsh/fish have a different approach to how the terminal
-            # should be configured but the major effect is that delete doesn't work.
-            # just work around that for now
+            # suckless and bash/zsh/fish have a different approach to how the terminal should be configured;
+            # the major effect is that several keys do not work as intended.
+            # This is a workaround, there will be additions in he future.
             bind --preset $argv \e\[P delete-char
+            bind --preset $argv \e\[Z up-line
         case 'rxvt*'
             bind --preset $argv \e\[8~ end-of-line
             bind --preset $argv \eOc forward-word

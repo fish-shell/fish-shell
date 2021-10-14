@@ -5822,11 +5822,6 @@ static void test_string() {
         {{L"string", L"match", L"-r", L"(foo)\\Kbar", L"foobar", nullptr},
          STATUS_CMD_OK,
          L"bar\nfoo\n"},
-        {{L"string", L"match", L"-r", L"(?=ab\\K)", L"ab", nullptr}, STATUS_CMD_OK, L"\n"},
-        {{L"string", L"match", L"-r", L"(?=ab\\K)..(?=cd\\K)", L"abcd", nullptr},
-         STATUS_CMD_OK,
-         L"\n"},
-
         {{L"string", L"replace", nullptr}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"", nullptr}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"", L"", nullptr}, STATUS_CMD_ERROR, L""},

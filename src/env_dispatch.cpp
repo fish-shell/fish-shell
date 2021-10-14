@@ -280,7 +280,7 @@ static bool allow_use_posix_spawn() {
     // uClibc defines __GLIBC__.
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
     const char *version = gnu_get_libc_version();
-    result = version && strtod(version, nullptr) >= 2.24;
+    result = version && strtod_l(version, nullptr, fish_c_locale()) >= 2.24;
 #endif
     return result;
 }

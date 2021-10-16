@@ -268,8 +268,6 @@ extern "C" {
 const char *gnu_get_libc_version();
 }
 
-// Disallow posix_spawn entirely on glibc <= 2.24.
-// See #8021.
 static bool allow_use_posix_spawn() {
     // OpenBSD's posix_spawn returns status 127, instead of erroring with ENOEXEC, when faced with a
     // shebangless script. Disable posix_spawn on OpenBSD.
@@ -279,14 +277,17 @@ static bool allow_use_posix_spawn() {
     bool result = true;
     // uClibc defines __GLIBC__.
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
-    const char *version = gnu_get_libc_version();
-    result = version && strtod_l(version, nullptr, fish_c_locale()) >= 2.24;
+    // Disallow posix_spawn entirely on glibc < 2.24.
+    // See #8021.
+    if (!__GLIBC_PREREQ(2, 24)) {
+        result = false;
+    }
 #endif
     return result;
 }
 
 static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
-    // Note if the variable is missing or empty, we default to true.
+    // Note if the variable is missing or empty, we default to true if allowed.
     if (!allow_use_posix_spawn()) {
         g_use_posix_spawn = false;
     } else if (auto var = vars.get(L"fish_use_posix_spawn")) {

@@ -39,5 +39,11 @@ else()
   add_subdirectory(pcre2 EXCLUDE_FROM_ALL)
   set(PCRE2_INCLUDE_DIR ${CMAKE_BINARY_DIR}/pcre2)
   set(PCRE2_LIB pcre2-${PCRE2_WIDTH})
+
+  # Disable -Wunused-macros inside PCRE2, as it is noisy.
+  get_target_property(PCRE2_COMPILE_OPTIONS ${PCRE2_LIB} COMPILE_OPTIONS)
+  list(REMOVE_ITEM PCRE2_COMPILE_OPTIONS "-Wunused-macros")
+  set_property(TARGET ${PCRE2_LIB} PROPERTY COMPILE_OPTIONS ${PCRE2_COMPILE_OPTIONS})
+
 endif(FISH_USE_SYSTEM_PCRE2)
 include_directories(${PCRE2_INCLUDE_DIR})

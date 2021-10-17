@@ -40,4 +40,4 @@ productsign --sign "${MAC_PRODUCTSIGN_ID}" "$OUTPUT_PATH/fish-$VERSION.pkg" "$OU
 # Make the app
 { cd "$PKGDIR/build" && make -j 12 signed_fish_macapp && zip -r "$OUTPUT_PATH/fish-$VERSION.app.zip" fish.app; }
 
-rm -r "$PKGDIR"
+rm -rf "$PKGDIR"

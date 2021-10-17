@@ -87,6 +87,8 @@ The following special input functions are available:
 
 - ``backward-kill-word``, move the word to the left of the cursor to the killring. The "word" here is everything up to punctuation or whitespace.
 
+- ``backward-path-component``, move one path component to the left. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
+
 - ``backward-word``, move one word to the left
 
 - ``beginning-of-buffer``, moves to the beginning of the buffer, i.e. the start of the first line
@@ -133,6 +135,8 @@ The following special input functions are available:
 
 - ``forward-char``, move one character to the right
 
+- ``forward-path-component``, move one path component to the right. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
+
 - ``forward-single-char``, move one character to the right; if an autosuggestion is available, only take a single char from it
 
 - ``forward-word``, move one word to the right
@@ -156,6 +160,8 @@ The following special input functions are available:
 - ``repeat-jump`` and ``repeat-jump-reverse``, redo the last jump in the same/opposite direction
 
 - ``kill-bigword``, move the next whitespace-delimited word to the killring
+
+- ``kill-path-component``, move one path component to the right of the cursor to the killring. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
 
 - ``kill-line``, move everything from the cursor to the end of the line to the killring
 

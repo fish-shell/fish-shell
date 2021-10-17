@@ -85,6 +85,7 @@ Interactive improvements
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
+- New: ``forward-path-component``, ``backward-path-component``, and ``forward-kill-path-component`` to supplement the the existing existing ``backward-kill-path-component``. These do not have preset key bindings. (:issue:`2014`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

@@ -1461,6 +1461,8 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::end_of_line:
         case rl::forward_word:
         case rl::backward_word:
+        case rl::forward_path_component:
+        case rl::backward_path_component:
         case rl::forward_bigword:
         case rl::backward_bigword:
         case rl::delete_char:
@@ -1471,6 +1473,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::backward_kill_line:
         case rl::kill_whole_line:
         case rl::kill_word:
+        case rl::kill_path_component:
         case rl::kill_bigword:
         case rl::backward_kill_word:
         case rl::backward_kill_path_component:
@@ -3486,27 +3489,36 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::kill_word:
+        case rl::kill_path_component:
         case rl::kill_bigword: {
             // The "bigword" functions differ only in that they move to the next whitespace, not
             // punctuation.
-            auto move_style =
-                (c == rl::kill_word) ? move_word_style_punctuation : move_word_style_whitespace;
+            move_word_style_t move_style =
+                (c == rl::kill_bigword          ? move_word_style_whitespace
+                 : c == rl::kill_path_component ? move_word_style_path_components
+                                                         : move_word_style_punctuation);
             move_word(active_edit_line(), MOVE_DIR_RIGHT, true /* erase */, move_style,
                       rls.last_cmd != c /* same kill item if same movement */);
             break;
         }
         case rl::backward_word:
+        case rl::backward_path_component:
         case rl::backward_bigword: {
-            auto move_style =
-                (c == rl::backward_word) ? move_word_style_punctuation : move_word_style_whitespace;
+            move_word_style_t move_style =
+                (c == rl::backward_bigword          ? move_word_style_whitespace
+                 : c == rl::backward_path_component ? move_word_style_path_components
+                                                         : move_word_style_punctuation);
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
                       false);
             break;
         }
         case rl::forward_word:
+        case rl::forward_path_component:
         case rl::forward_bigword: {
-            auto move_style =
-                (c == rl::forward_word) ? move_word_style_punctuation : move_word_style_whitespace;
+            move_word_style_t move_style =
+                (c == rl::forward_bigword          ? move_word_style_whitespace
+                 : c == rl::forward_path_component ? move_word_style_path_components
+                                                         : move_word_style_punctuation);
             editable_line_t *el = active_edit_line();
             if (el->position() < el->size()) {
                 move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);

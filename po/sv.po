@@ -94,7 +94,7 @@ msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
 "control\n"
 msgstr ""
-"Kan inte skicka jobb %d, '%ls' till bakgrunden eftersom det inte använder "
+"%ls: Kan inte skicka jobb %d, '%ls' till bakgrunden eftersom det inte använder "
 "jobbkontrol\n"
 
 #: builtin.cpp:3649
@@ -483,7 +483,7 @@ msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
 "control\n"
 msgstr ""
-"Kan inte skicka jobb %d, '%ls' till förgrunden eftersom det inte använder "
+"%ls: Kan inte skicka jobb %d, '%ls' till förgrunden eftersom det inte använder "
 "jobbkontroll\n"
 
 #: src/builtin_function.cpp:68
@@ -665,7 +665,7 @@ msgstr "Saknad hexadecimalt nummer i Unicodeescapesekvens"
 #: builtin_printf.cpp:402
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
-msgstr "Unicodetecken utanför giltigt spann: \\%c%0+x"
+msgstr "Unicodetecken utanför giltigt spann: \\%c%0*x"
 
 #: builtin_printf.cpp:670
 #, c-format
@@ -58160,7 +58160,7 @@ msgstr "%ls: Värden kan inte anges vid radering\n"
 msgid ""
 "%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"
 msgstr ""
-"Varning: universellt definitionsområde valt, men global variable "
+"%ls: Varning: universellt definitionsområde valt, men global variable "
 "'%ls'existerar readn.\n"
 
 #: builtin_set_color.cpp:173
@@ -58259,7 +58259,7 @@ msgstr "%s: Beskrivning saknas för typ %s\n"
 #: mimedb.cpp:744
 #, c-format
 msgid "%s: Could not parse launcher string '%s'\n"
-msgstr "%s: Kunde inte tolka körsträng '%ls'\n"
+msgstr "%s: Kunde inte tolka körsträng '%s'\n"
 
 #: mimedb.cpp:780
 #, c-format
@@ -58791,7 +58791,7 @@ msgstr "Hjälp om parameterexpansion (Globbing)"
 #: share/completions/help.fish:27
 #, sh-format
 msgid "Help on variable expansion $VARNAME"
-msgstr "Hjälp om variabelexpansion $VARIABEL"
+msgstr "Hjälp om variabelexpansion $VARNAME"
 
 #: share/completions/help.fish:28
 msgid "Help on home directory expansion ~USER"

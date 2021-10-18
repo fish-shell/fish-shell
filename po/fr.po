@@ -920,7 +920,7 @@ msgstr "$%ls : paramétrée dans la portée %ls, %ls, avec %d éléments\n"
 #: src/builtin_set.cpp:554
 #, c-format
 msgid "$%ls[%d]: |%ls|\n"
-msgstr "$%ls[%d] : taille=%d valeur=|%ls|\n"
+msgstr "$%ls[%d] : |%ls|\n"
 
 #: src/builtin_set.cpp:578
 #, c-format

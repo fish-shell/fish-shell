@@ -38,6 +38,7 @@ if(POLICY CMP0037)
 endif()
 add_custom_target(test
   COMMAND env CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL} FISH_FORCE_COLOR=1
+          FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
   DEPENDS fish_tests tests_buildroot_target

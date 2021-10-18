@@ -25,49 +25,49 @@ msgid ""
 "circular dependency in the autoloading scripts, please remove it."
 msgstr ""
 "Konnte '%ls' nicht automatisch laden, weil es schon automatisch geladen "
-"wirdDies ist eine Abhängigkeitsschleife in den Skripten. Bitte entfernen sie "
-"es."
+"wird. Dies ist eine Abhängigkeitsschleife in den Skripten. Bitte entfernen sie "
+"sie."
 
 #: src/builtin_argparse.cpp:36
 #, c-format
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr ""
+msgstr "%ls: Ungültige Optionsbeschreibung '%ls' bei Zeichen '%lc'\n"
 
 #: src/builtin_argparse.cpp:129
 #, c-format
 msgid "%ls: Mutually exclusive flags '%ls' and `%ls` seen\n"
-msgstr ""
+msgstr "%ls: Paarweise exklusive Optionen '%ls' und '%ls' gesehen\n"
 
 #: src/builtin_argparse.cpp:160
 #, c-format
 msgid "%ls: exclusive flag string '%ls' is not valid\n"
-msgstr ""
+msgstr "%ls: Exklusive option '%ls' ist ungültig\n"
 
 #: src/builtin_argparse.cpp:176
 #, c-format
 msgid "%ls: exclusive flag '%ls' is not valid\n"
-msgstr ""
+msgstr "%ls: Exklusive option '%ls' ist ungültig\n"
 
 #: src/builtin_argparse.cpp:196
 #, c-format
 msgid ""
 "%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"
-msgstr ""
+msgstr "%ls: Implizite Zahloption '%lc' darf keine Modifizierer wie '%lc' haben\n"
 
 #: src/builtin_argparse.cpp:247
 #, c-format
 msgid "%ls: Short flag '#' must be followed by '-' and a long name\n"
-msgstr ""
+msgstr "%ls: Kurzoption '#' muss von einem '-' und Langnamen gefolgt werden\n"
 
 #: src/builtin_argparse.cpp:252 src/builtin_argparse.cpp:276
 #, c-format
 msgid "%ls: Implicit int flag '%lc' already defined\n"
-msgstr ""
+msgstr "%ls: Implizite Zahloption '%lc' ist schon definiert\n"
 
 #: src/builtin_argparse.cpp:298
 #, c-format
 msgid "%ls: An option spec must have a short flag letter\n"
-msgstr ""
+msgstr "%ls: Eine Optionsbeschreibung muss einen Kurzbuchstaben haben\n"
 
 #: src/builtin_argparse.cpp:305
 #, c-format

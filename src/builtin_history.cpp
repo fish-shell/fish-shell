@@ -21,12 +21,15 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE, HIST_UNDEF };
+enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE, HIST_UNDEF,
+    HIST_CLEAR_SESSION };
 
 // Must be sorted by string, not enum or random.
 static const enum_map<hist_cmd_t> hist_enum_map[] = {
-    {HIST_CLEAR, L"clear"}, {HIST_DELETE, L"delete"}, {HIST_MERGE, L"merge"},
-    {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, nullptr}};
+    {HIST_CLEAR, L"clear"}, {HIST_CLEAR_SESSION, L"clear-session"},
+    {HIST_DELETE, L"delete"}, {HIST_MERGE, L"merge"},
+    {HIST_SAVE, L"save"}, {HIST_SEARCH, L"search"},
+    {HIST_UNDEF, nullptr}, };
 
 struct history_cmd_opts_t {
     hist_cmd_t hist_cmd = HIST_UNDEF;
@@ -284,6 +287,15 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
                 break;
             }
             history->clear();
+            history->save();
+            break;
+        }
+        case HIST_CLEAR_SESSION: {
+            if (check_for_unexpected_hist_args(opts, cmd, args, streams)) {
+                status = STATUS_INVALID_ARGS;
+                break;
+            }
+            history->clear_session();
             history->save();
             break;
         }

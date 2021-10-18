@@ -30,12 +30,16 @@ builtin history --clear abc def
 # First with the history function.
 history clear --contains
 #CHECKERR: history: you cannot use any options with the clear command
+history clear-session --contains
+#CHECKERR: history: you cannot use any options with the clear-session command
 history merge -t
 #CHECKERR: history: you cannot use any options with the merge command
 history save xyz
 #CHECKERR: history: save expected 0 args, got 1
 history --prefix clear
 #CHECKERR: history: you cannot use any options with the clear command
+history --prefix clear-session
+#CHECKERR: history: you cannot use any options with the clear-session command
 history --show-time merge
 #CHECKERR: history: you cannot use any options with the merge command
 
@@ -47,10 +51,14 @@ builtin history save --prefix
 #CHECKERR: history: you cannot use any options with the save command
 builtin history clear --show-time
 #CHECKERR: history: you cannot use any options with the clear command
+builtin history clear-session --show-time
+#CHECKERR: history: you cannot use any options with the clear-session command
 builtin history merge xyz
 #CHECKERR: history merge: Expected 0 args, got 1
 builtin history clear abc def
 #CHECKERR: history clear: Expected 0 args, got 2
+builtin history clear-session abc def
+#CHECKERR: history clear-session: Expected 0 args, got 2
 builtin history --contains save
 #CHECKERR: history: you cannot use any options with the save command
 builtin history -t merge

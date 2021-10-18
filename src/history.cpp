@@ -240,7 +240,9 @@ struct history_impl_t {
     uint32_t disable_automatic_save_counter{0};
 
     // Deleted item contents.
-    std::unordered_set<wcstring> deleted_items{};
+    // Boolean describes if it should be deleted only in this session or in all
+    // (used in deduplication).
+    std::unordered_map<wcstring, bool> deleted_items{};
 
     // The buffer containing the history file contents.
     std::unique_ptr<history_file_contents_t> file_contents{};
@@ -331,6 +333,9 @@ struct history_impl_t {
 
     // Irreversibly clears history.
     void clear();
+
+    // Clears only session.
+    void clear_session();
 
     // Populates from older location ()in config path, rather than data path).
     void populate_from_config_path();
@@ -453,7 +458,7 @@ void history_impl_t::save_unless_disabled() {
 // case-sensitive, matches.
 void history_impl_t::remove(const wcstring &str_to_remove) {
     // Add to our list of deleted items.
-    deleted_items.insert(str_to_remove);
+    deleted_items.insert(std::pair<wcstring, bool>(str_to_remove, false));
 
     size_t idx = new_items.size();
     while (idx--) {
@@ -721,11 +726,22 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
             // Try decoding an old item.
             history_item_t old_item = local_file->decode_item(*offset);
 
-            if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
-                continue;
+            // If old item is newer than session always erase if in deleted.
+            if (old_item.timestamp() > boundary_timestamp) {
+                if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
+                    continue;
+                }
+                lru.add_item(std::move(old_item));
+            } else {
+                // If old item is older and in deleted items don't erase if added by
+                // clear_session.
+                if (old_item.empty() || (deleted_items.count(old_item.str()) > 0 &&
+                                         !deleted_items.at(old_item.str()))) {
+                    continue;
+                }
+                // Add this old item.
+                lru.add_item(std::move(old_item));
             }
-            // Add this old item.
-            lru.add_item(std::move(old_item));
         }
     }
 
@@ -1071,6 +1087,15 @@ void history_impl_t::clear() {
         wunlink(*filename);
     }
     this->clear_file_state();
+}
+
+void history_impl_t::clear_session() {
+    for (const auto &item : new_items) {
+        deleted_items.insert(std::pair<wcstring,bool>(item.str(), true));
+    }
+
+    new_items.clear();
+    first_unwritten_new_item_index = 0;
 }
 
 bool history_impl_t::is_default() const { return name == DFLT_FISH_HISTORY_SESSION_ID; }
@@ -1490,6 +1515,8 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
 }
 
 void history_t::clear() { impl()->clear(); }
+
+void history_t::clear_session() { impl()->clear_session(); }
 
 void history_t::populate_from_config_path() { impl()->populate_from_config_path(); }
 

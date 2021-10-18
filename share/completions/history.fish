@@ -1,5 +1,5 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
-set -l __fish_history_all_commands search delete save merge clear
+set -l __fish_history_all_commands search delete save merge clear clear-session
 
 complete -c history -s h -l help -d "Display help and exit"
 
@@ -33,3 +33,5 @@ complete -f -c history -n "not __fish_seen_subcommand_from $__fish_history_all_c
     -a merge -d "Incorporate history changes from other sessions"
 complete -f -c history -n "not __fish_seen_subcommand_from $__fish_history_all_commands" \
     -a clear -d "Clears history file"
+complete -f -c history -n "not __fish_seen_subcommand_from $__fish_history_all_commands" \
+    -a clear-session -d "Clears all history from the current session"

@@ -156,3 +156,25 @@ sendline(" ")
 expect_prompt()
 send("\x1b[A")
 expect_re("echo TERM") # not ephemeral!
+
+# Verify that clear-session works as expected
+# Note: This test depends on that history merge resets the session from history clear-sessions point of view.
+sendline("builtin history clear")
+expect_prompt()
+
+# create before history
+sendline("echo before1")
+expect_prompt()
+sendline("echo before2")
+expect_prompt()
+# "reset" session with history merge
+sendline("history merge")
+expect_prompt()
+# create after history
+sendline("echo after")
+expect_prompt()
+#clear session
+sendline("history clear-session")
+expect_prompt()
+sendline("history search --exact 'echo after' | cat")
+expect_prompt("\r\n")

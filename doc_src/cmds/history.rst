@@ -13,6 +13,7 @@ Synopsis
     history merge
     history save
     history clear
+    history clear-session
     history ( -h | --help )
 
 Description
@@ -31,6 +32,8 @@ The following operations (sub-commands) are available:
 - ``save`` immediately writes all changes to the history file. The shell automatically saves the history file; this option is provided for internal use and should not normally need to be used by the user.
 
 - ``clear`` clears the history file. A prompt is displayed before the history is erased asking you to confirm you really want to clear all history unless ``builtin history`` is used.
+
+- ``clear-session`` clears the history file from all activity of the current session. Note: If ``history merge`` or ``builtin history merge`` is run in a session only the history after this will be erased.
 
 The following options are available:
 

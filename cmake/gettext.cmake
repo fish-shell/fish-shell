@@ -1,4 +1,4 @@
-set(languages de en fr nb nn pl pt_BR sv zh_CN)
+set(languages de en fr pl pt_BR sv zh_CN)
 
 include(FeatureSummary)
 

@@ -1864,6 +1864,7 @@ Other significant changes
    -  ``sbt`` (:issue:`4347`)
    -  ``snap`` (:issue:`4215`)
    -  Sublime Text 3’s ``subl`` (:issue:`4277`)
+   -  Windows Subsystem for Linux (WSL)'s ``wslpath``
 
 -  Lots of improvements to completions.
 

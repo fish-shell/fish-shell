@@ -5548,10 +5548,18 @@ static void test_highlighting() {
             if (text.at(i) == L' ') continue;
 
             if (expected_colors.at(i) != colors.at(i)) {
+                // Make a fancy caret under the token
+                auto e_col = expected_colors.at(i);
+                auto a_col = colors.at(i);
+                auto j = i + 1;
+                while (j < colors.size() && expected_colors.at(j) == e_col && colors.at(j) == a_col) j++;
+                if (j == colors.size() - 1) j++;
                 const wcstring spaces(i, L' ');
-                err(L"Wrong color in test at index %lu in text (expected %#x, actual "
-                    L"%#x):\n%ls\n%ls^",
-                    i, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
+                const wcstring carets(j - i, L'^');
+                err(L"Wrong color in test at index %lu-%lu in text (expected %#x, actual "
+                    L"%#x):\n%ls\n%ls%ls",
+                    i, j - 1, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str(), carets.c_str());
+                i = j;
             }
         }
     }

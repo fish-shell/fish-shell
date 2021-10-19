@@ -28,6 +28,8 @@ switch (uname -s)
         complete -c dmesg -s t -l notime -f -d'Don\'t print timestamps'
         complete -c dmesg -s u -l userspace -f -d'Print userspace messages'
         complete -c dmesg -s V -l version -f -d'Show dmesg version'
+        complete -c dmesg -s w -l follow -f -d'Wait for new messages'
+        complete -c dmesg -s W -l follow-new -f -d'Wait and print only new messages'
         complete -c dmesg -s x -l decode -f -d'Decode facility & level numbers'
         exit 0 # done
         #

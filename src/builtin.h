@@ -94,7 +94,7 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
 int builtin_count_args(const wchar_t *const *argv);
 
 void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                            const wchar_t *opt);
+                            const wchar_t *opt, bool print_hints = true);
 
 void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                               const wchar_t *opt, bool print_hints = true);

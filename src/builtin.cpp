@@ -165,9 +165,11 @@ void builtin_print_help(parser_t &parser, const io_streams_t &streams, const wch
 
 /// Perform error reporting for encounter with unknown option.
 void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                            const wchar_t *opt) {
+                            const wchar_t *opt, bool print_hints) {
     streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, opt);
-    builtin_print_error_trailer(parser, streams.err, cmd);
+    if (print_hints) {
+        builtin_print_error_trailer(parser, streams.err, cmd);
+    }
 }
 
 /// Perform error reporting for encounter with missing argument.

@@ -1,4 +1,3 @@
-// Prototypes for functions for executing builtin_string functions.
 #ifndef FISH_BUILTIN_PATH_H
 #define FISH_BUILTIN_PATH_H
 

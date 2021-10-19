@@ -221,7 +221,7 @@ static int handle_flag_t(const wchar_t **argv, parser_t &parser, io_streams_t &s
         if (!opts->have_type) opts->type = 0;
         opts->have_type = true;
         wcstring_list_t types = split_string_tok(w.woptarg, L",");
-        for (auto t : types) {
+        for (const auto &t : types) {
             if (t == L"file") {
                 opts->type |= TYPE_FILE;
             } else if (t == L"dir") {
@@ -254,7 +254,7 @@ static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &s
         if (!opts->have_perm) opts->perm = 0;
         opts->have_perm = true;
         wcstring_list_t perms = split_string_tok(w.woptarg, L",");
-        for (auto p : perms) {
+        for (const auto &p : perms) {
             if (p == L"read") {
                 opts->perm |= PERM_READ;
             } else if (p == L"write") {
@@ -433,10 +433,9 @@ static int path_transform(parser_t &parser, io_streams_t &streams, int argc, con
     int n_transformed = 0;
     arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
-        wcstring transformed(*arg);
         // Empty paths make no sense, but e.g. wbasename returns true for them.
         if (arg->empty()) continue;
-        transformed = func(*arg);
+        wcstring transformed = func(*arg);
         if (transformed != *arg) {
             n_transformed++;
             // Return okay if path wasn't already in this form

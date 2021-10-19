@@ -37,6 +37,7 @@ ROLE_TO_TOKEN = {
     "keyword": Keyword,
     "statement_terminator": Punctuation,
     "param": Name.Constant,
+    "option": Name.Literal,
     "comment": Comment,
     "match": DEFAULT,
     "search_match": DEFAULT,

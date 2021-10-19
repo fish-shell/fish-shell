@@ -5244,8 +5244,8 @@ static void test_highlighting() {
 
     highlight_tests.push_back({
         {L"cd", highlight_role_t::command},
-        {L"--help", highlight_role_t::param},
-        {L"-h", highlight_role_t::param},
+        {L"--help", highlight_role_t::option},
+        {L"-h", highlight_role_t::option},
         {L"definitely_not_a_directory", highlight_role_t::error},
     });
 
@@ -5477,6 +5477,13 @@ static void test_highlighting() {
         {L"echo", highlight_role_t::command},
         {L"stuff", highlight_role_t::param},
         {L"# comment", highlight_role_t::comment},
+    });
+
+
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"--", highlight_role_t::option},
+        {L"-s", highlight_role_t::param},
     });
 
     // Overlong paths don't crash (#7837).

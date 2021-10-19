@@ -671,6 +671,7 @@ static const char *highlight_role_to_string(highlight_role_t role) {
         TEST_ROLE(keyword)
         TEST_ROLE(statement_terminator)
         TEST_ROLE(param)
+        TEST_ROLE(option)
         TEST_ROLE(comment)
         TEST_ROLE(search_match)
         TEST_ROLE(operat)
@@ -776,6 +777,9 @@ static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
         }
         case highlight_role_t::param: {
             return P(param);
+        }
+        case highlight_role_t::option: {
+            return P(option);
         }
         case highlight_role_t::comment: {
             return P(comment);

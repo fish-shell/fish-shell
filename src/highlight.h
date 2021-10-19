@@ -20,6 +20,7 @@ enum class highlight_role_t : uint8_t {
     keyword,
     statement_terminator,  // process separator
     param,                 // command parameter (argument)
+    option,                // argument starting with "-", up to a "--"
     comment,               // comment
     search_match,          // search match
     operat,                // operator

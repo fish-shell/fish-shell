@@ -51,6 +51,8 @@ static const wchar_t *get_highlight_var_name(highlight_role_t role) {
             return L"fish_color_end";
         case highlight_role_t::param:
             return L"fish_color_param";
+        case highlight_role_t::option:
+            return L"fish_color_option";
         case highlight_role_t::comment:
             return L"fish_color_comment";
         case highlight_role_t::search_match:
@@ -111,6 +113,8 @@ static highlight_role_t get_fallback(highlight_role_t role) {
             return highlight_role_t::command;
         case highlight_role_t::statement_terminator:
             return highlight_role_t::normal;
+        case highlight_role_t::option:
+            return highlight_role_t::param;
         case highlight_role_t::param:
             return highlight_role_t::normal;
         case highlight_role_t::comment:
@@ -539,7 +543,9 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
 static void color_string_internal(const wcstring &buffstr, highlight_spec_t base_color,
                                   std::vector<highlight_spec_t>::iterator colors) {
     // Clarify what we expect.
-    assert((base_color == highlight_role_t::param || base_color == highlight_role_t::command) &&
+    assert((base_color == highlight_role_t::param
+            || base_color == highlight_role_t::option
+            || base_color == highlight_role_t::command) &&
            "Unexpected base color");
     const size_t buff_len = buffstr.size();
     std::fill(colors, colors + buff_len, base_color);
@@ -799,7 +805,7 @@ class highlighter_t {
     // Color a command.
     void color_command(const ast::string_t &node);
     // Color a node as if it were an argument.
-    void color_as_argument(const ast::node_t &node);
+    void color_as_argument(const ast::node_t &node, bool options_allowed = true);
     // Colors the source range of a node with a given color.
     void color_node(const ast::node_t &node, highlight_spec_t color);
     // Colors a range with a given color.
@@ -824,7 +830,7 @@ class highlighter_t {
     void visit(const ast::block_statement_t &block);
 
     // Visit an argument, perhaps knowing that our command is cd.
-    void visit(const ast::argument_t &arg, bool cmd_is_cd = false);
+    void visit(const ast::argument_t &arg, bool cmd_is_cd = false, bool options_allowed = true);
 
     // Default implementation is to just visit children.
     void visit(const ast::node_t &node) { visit_children(node); }
@@ -867,7 +873,7 @@ void highlighter_t::color_command(const ast::string_t &node) {
 }
 
 // node does not necessarily have type symbol_argument here.
-void highlighter_t::color_as_argument(const ast::node_t &node) {
+    void highlighter_t::color_as_argument(const ast::node_t &node, bool options_allowed) {
     auto source_range = node.source_range();
     const wcstring arg_str = get_source(source_range);
 
@@ -876,7 +882,11 @@ void highlighter_t::color_as_argument(const ast::node_t &node) {
     const color_array_t::iterator arg_colors = color_array.begin() + arg_start;
 
     // Color this argument without concern for command substitutions.
-    color_string_internal(arg_str, highlight_role_t::param, arg_colors);
+    if (options_allowed && arg_str[0] == L'-') {
+        color_string_internal(arg_str, highlight_role_t::option, arg_colors);
+    } else {
+        color_string_internal(arg_str, highlight_role_t::param, arg_colors);
+    }
 
     // Now do command substitutions.
     size_t cmdsub_cursor = 0, cmdsub_start = 0, cmdsub_end = 0;
@@ -1001,8 +1011,8 @@ void highlighter_t::visit(const ast::semi_nl_t &semi_nl) {
     color_node(semi_nl, highlight_role_t::statement_terminator);
 }
 
-void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd) {
-    color_as_argument(arg);
+void highlighter_t::visit(const ast::argument_t &arg, bool cmd_is_cd, bool options_allowed) {
+    color_as_argument(arg, options_allowed);
     if (cmd_is_cd && io_ok) {
         // Mark this as an error if it's not 'help' and not a valid cd path.
         wcstring param = arg.source(this->buff);
@@ -1065,6 +1075,8 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
     // Except if our command is 'cd' we have special logic for how arguments are colored.
     bool is_cd = (expanded_cmd == L"cd");
     bool is_set = (expanded_cmd == L"set");
+    // If we have seen a "--" argument, color all options from then on as normal arguments.
+    bool have_dashdash = false;
     for (const ast::argument_or_redirection_t &v : stmt.args_or_redirs) {
         if (v.is_argument()) {
             if (is_set) {
@@ -1074,7 +1086,8 @@ void highlighter_t::visit(const ast::decorated_statement_t &stmt) {
                     is_set = false;
                 }
             }
-            this->visit(v.argument(), is_cd);
+            this->visit(v.argument(), is_cd, !have_dashdash);
+            if (v.argument().source(this->buff) == L"--") have_dashdash = true;
         } else {
             this->visit(v.redirection());
         }

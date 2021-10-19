@@ -107,6 +107,7 @@ Variable                                                   Meaning
 ``fish_color_end``                                         process separators like ``;`` and ``&``
 ``fish_color_error``                                       syntax errors
 ``fish_color_param``                                       ordinary command parameters
+``fish_color_option``                                      options starting with "-", up to the first "--" parameter
 ``fish_color_comment``                                     comments like '# important'
 ``fish_color_selection``                                   selected text in vi visual mode
 ``fish_color_operator``                                    parameter expansion operators like ``*`` and ``~``
@@ -120,7 +121,10 @@ Variable                                                   Meaning
 ``fish_color_search_match``                                history search matches and selected pager items (background only)
 ==========================================                 =====================================================================
 
-If a variable isn't set, fish usually tries ``$fish_color_normal``, except for ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
+If a variable isn't set, fish usually tries ``$fish_color_normal``, except for:
+
+- ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
+- ``$fish_color_option``, where it tries ``$fish_color_param`` first.
 
 .. _variables-color-pager:
 

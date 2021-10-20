@@ -56,7 +56,7 @@ complete
 # CHECK: complete --force-files t -l fileoption
 # CHECK: complete --no-files t -a '(t)'
 # CHECK: complete -p '/complete test/beta1' -s Z -d 'desc, desc'
-# CHECK: complete --requires-param 'complete test beta2' -d desc\ \'\ desc2\ \[ -a 'foo bar'
+# CHECK: complete --require-parameter 'complete test beta2' -d desc\ \'\ desc2\ \[ -a 'foo bar'
 # CHECK: complete --exclusive complete_test_beta2 -o test -n false
 # CHECK: complete {{.*}}
 # CHECK: complete {{.*}}

@@ -1804,7 +1804,7 @@ static wcstring completion2string(const complete_entry_opt_t &o, const wcstring 
     } else if (o.result_mode.force_files) {
         append_switch(out, L"force-files");
     } else if (o.result_mode.requires_param) {
-        append_switch(out, L"requires-param");
+        append_switch(out, L"require-parameter");
     }
 
     if (is_path)

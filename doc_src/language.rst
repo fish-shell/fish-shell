@@ -1244,13 +1244,13 @@ You can change the settings of fish by changing the values of certain variables.
 
 - ``fish_emoji_width`` controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
 
-- ``FISH_DEBUG`` and ``FISH_DEBUG_OUTPUT`` control what debug output fish generates and where it puts it, analogous to the ``--debug`` and ``--debug-output`` options. These have to be set on startup, via e.g. ``FISH_DEBUG='reader*' FISH_DEBUG_OUTPUT=/tmp/fishlog fish``.
+- ``fish_handle_reflow``, determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
+
+- ``fish_key_bindings``, the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.
 
 - ``fish_escape_delay_ms`` sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
 
-- ``fish_greeting``, the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :ref:`funced <cmd-funced>`
-
-- ``fish_handle_reflow``, determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
+- ``fish_greeting``, the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :ref:`funced <cmd-funced>`)
 
 - ``fish_history``, the current history session name. If set, all subsequent commands within an
   interactive fish session will be logged to a separate file identified by the value of the
@@ -1258,9 +1258,9 @@ You can change the settings of fish by changing the values of certain variables.
   empty string, history is not saved to disk (but is still available within the interactive
   session).
 
-- ``fish_key_bindings``, the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.
+- ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish or the ``FISH_DEBUG_OUTPUT`` variable. It goes to stderr by default.
 
-- ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish (stderr by default).
+- ``FISH_DEBUG`` and ``FISH_DEBUG_OUTPUT`` control what debug output fish generates and where it puts it, analogous to the ``--debug`` and ``--debug-output`` options. These have to be set on startup, via e.g. ``FISH_DEBUG='reader*' FISH_DEBUG_OUTPUT=/tmp/fishlog fish``.
 
 - ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.
 
@@ -1279,6 +1279,8 @@ Fish also provides additional information through the values of certain environm
 - ``COLUMNS`` and ``LINES``, the current size of the terminal in height and width. These values are only used by fish if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
 
 - ``fish_kill_signal``, the signal that terminated the last foreground job, or 0 if the job exited normally.
+
+- ``fish_killring``, a list of entries in fish's :ref:`kill ring <killring>` of cut text.
 
 - ``fish_pid``, the process ID (PID) of the shell.
 
@@ -1305,8 +1307,6 @@ Fish also provides additional information through the values of certain environm
 - ``USER``, the current username. This variable can be changed.
 
 - ``version``, the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
-
-- ``fish_killring``, list of entries in fish kill ring.
 
 As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables.
 

@@ -550,10 +550,12 @@ Navigating directories
 
 .. _directory-history:
 
-The current working directory can be displayed with the :ref:`pwd <cmd-pwd>` command, or the ``$PWD`` :ref:`special variable <variables-special>`.
+Navigating directories is usually done with the :ref:`cd <cmd-cd>` command, but fish offers some advanced features as well.
+
+The current working directory can be displayed with the :ref:`pwd <cmd-pwd>` command, or the ``$PWD`` :ref:`special variable <variables-special>`. Usually your prompt already does this.
 
 Directory history
------------------
+^^^^^^^^^^^^^^^^^
 
 Fish automatically keeps a trail of the recent visited directories with :ref:`cd <cmd-cd>` by storing this history in the ``dirprev`` and ``dirnext`` variables.
 
@@ -567,7 +569,7 @@ Several commands are provided to interact with this directory history:
 .. _directory-stack:
 
 Directory stack
----------------
+^^^^^^^^^^^^^^^
 
 Another set of commands, usually also available in other shells like bash, deal with the directory stack. Stack handling is not automatic and needs explicit calls of the following commands:
 

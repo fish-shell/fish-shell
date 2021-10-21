@@ -34,18 +34,12 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 namespace {
-class function_info_t {
-   public:
-    /// Immutable properties of the function.
-    function_properties_ref_t props;
-    explicit function_info_t(function_properties_ref_t props);
-};
 
 /// Type wrapping up the set of all functions.
 /// There's only one of these; it's managed by a lock.
 struct function_set_t {
     /// The map of all functions by name.
-    std::unordered_map<wcstring, function_info_t> funcs;
+    std::unordered_map<wcstring, function_properties_ref_t> funcs;
 
     /// Tombstones for functions that should no longer be autoloaded.
     std::unordered_set<wcstring> autoload_tombstones;
@@ -57,16 +51,10 @@ struct function_set_t {
     /// \return true if successful, false if it doesn't exist.
     bool remove(const wcstring &name);
 
-    /// Get the info for a function, or nullptr if none.
-    const function_info_t *get_info(const wcstring &name) const {
-        auto iter = funcs.find(name);
-        return iter == funcs.end() ? nullptr : &iter->second;
-    }
-
     /// Get the properties for a function, or nullptr if none.
     function_properties_ref_t get_props(const wcstring &name) const {
         auto iter = funcs.find(name);
-        return iter == funcs.end() ? nullptr : iter->second.props;
+        return iter == funcs.end() ? nullptr : iter->second;
     }
 
     /// \return true if we should allow autoloading a given function.
@@ -87,6 +75,12 @@ bool function_set_t::allow_autoload(const wcstring &name) const {
     return !has_explicit_func && !is_tombstoned;
 }
 }  // namespace
+
+/// \return a copy of some function props, in a new shared_ptr.
+std::shared_ptr<function_properties_t> copy_props(const function_properties_ref_t &props) {
+    assert(props && "Null props");
+    return std::make_shared<function_properties_t>(*props);
+}
 
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded.
@@ -142,8 +136,6 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     }
 }
 
-function_info_t::function_info_t(function_properties_ref_t props) : props(std::move(props)) {}
-
 void function_add(wcstring name, std::shared_ptr<function_properties_t> props) {
     ASSERT_IS_MAIN_THREAD();
     assert(props && "Null props");
@@ -161,18 +153,14 @@ void function_add(wcstring name, std::shared_ptr<function_properties_t> props) {
     props->is_autoload = funcset->autoloader.autoload_in_progress(name);
 
     // Create and store a new function.
-    auto ins = funcset->funcs.emplace(std::move(name), function_info_t(std::move(props)));
+    auto ins = funcset->funcs.emplace(std::move(name), std::move(props));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
 }
 
 function_properties_ref_t function_get_properties(const wcstring &name) {
     if (parser_keywords_is_reserved(name)) return nullptr;
-    auto funcset = function_set.acquire();
-    if (auto info = funcset->get_info(name)) {
-        return info->props;
-    }
-    return nullptr;
+    return function_set.acquire()->get_props(name);
 }
 
 int function_exists(const wcstring &cmd, parser_t &parser) {
@@ -197,7 +185,7 @@ bool function_exists_no_autoload(const wcstring &cmd) {
     auto funcset = function_set.acquire();
 
     // Check if we either have the function, or it could be autoloaded.
-    return funcset->get_info(cmd) || funcset->autoloader.can_autoload(cmd);
+    return funcset->get_props(cmd) || funcset->autoloader.can_autoload(cmd);
 }
 
 bool function_set_t::remove(const wcstring &name) {
@@ -216,12 +204,11 @@ void function_remove(const wcstring &name) {
 }
 
 bool function_get_definition(const wcstring &name, wcstring &out_definition) {
-    const auto funcset = function_set.acquire();
-    const function_info_t *func = funcset->get_info(name);
-    if (!func || !func->props) return false;
+    auto props = function_get_properties(name);
+    if (!props) return false;
+
     // We want to preserve comments that the AST attaches to the header (#5285).
     // Take everything from the end of the header to the 'end' keyword.
-    const auto &props = func->props;
     auto header_src = props->func_node->header->try_source_range();
     auto end_kw_src = props->func_node->end.try_source_range();
     if (header_src && end_kw_src) {
@@ -249,31 +236,29 @@ void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &par
     if (iter != funcset->funcs.end()) {
         // Note the description is immutable, as it may be accessed on another thread, so we copy
         // the properties to modify it.
-        auto new_props = std::make_shared<function_properties_t>(*iter->second.props);
+        auto new_props = copy_props(iter->second);
         new_props->description = desc;
-        iter->second.props = new_props;
+        iter->second = new_props;
     }
 }
 
 bool function_copy(const wcstring &name, const wcstring &new_name) {
     auto funcset = function_set.acquire();
-    auto iter = funcset->funcs.find(name);
-    if (iter == funcset->funcs.end()) {
+    auto props = funcset->get_props(name);
+    if (!props) {
         // No such function.
         return false;
     }
-    const function_info_t &src_func = iter->second;
-
     // Copy the function's props.
     // This new instance of the function shouldn't be tied to the definition file of the
     // original, so clear the filename, etc.
-    auto new_props = std::make_shared<function_properties_t>(*src_func.props);
+    auto new_props = copy_props(props);
     new_props->is_autoload = false;
     new_props->definition_file = nullptr;
 
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
-    funcset->funcs.emplace(new_name, function_info_t(new_props));
+    funcset->funcs.emplace(new_name, std::move(new_props));
     return true;
 }
 
@@ -308,16 +293,15 @@ bool function_is_autoloaded(const wcstring &name) {
 }
 
 int function_get_definition_lineno(const wcstring &name) {
-    const auto funcset = function_set.acquire();
-    const function_info_t *func = funcset->get_info(name);
-    if (!func) return -1;
+    const auto props = function_set.acquire()->get_props(name);
+    if (!props) return -1;
     // return one plus the number of newlines at offsets less than the start of our function's
     // statement (which includes the header).
     // TODO: merge with line_offset_of_character_at_offset?
-    auto source_range = func->props->func_node->try_source_range();
+    auto source_range = props->func_node->try_source_range();
     assert(source_range && "Function has no source range");
     uint32_t func_start = source_range->start;
-    const wcstring &source = func->props->parsed_source->src;
+    const wcstring &source = props->parsed_source->src;
     assert(func_start <= source.size() && "function start out of bounds");
     return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
 }
@@ -329,7 +313,7 @@ void function_invalidate_path() {
     auto funcset = function_set.acquire();
     wcstring_list_t autoloadees;
     for (const auto &kv : funcset->funcs) {
-        if (kv.second.props->is_autoload) {
+        if (kv.second->is_autoload) {
             autoloadees.push_back(kv.first);
         }
     }

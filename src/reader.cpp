@@ -603,7 +603,7 @@ struct layout_data_t {
 class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
    public:
     /// Configuration for the reader.
-    const reader_config_t conf;
+    reader_config_t conf;
     /// The parser being used.
     std::shared_ptr<parser_t> parser_ref;
     /// String containing the whole current commandline.
@@ -2609,6 +2609,18 @@ void reader_change_history(const wcstring &name) {
         data->history->save();
         data->history = history_t::with_name(name);
         commandline_state_snapshot()->history = data->history;
+    }
+}
+
+void reader_set_autosuggestion_enabled(bool enable) {
+    // We don't need to _change_ if we're not initialized yet.
+    reader_data_t *data = current_data_or_null();
+    if (data) {
+        if (data->conf.autosuggest_ok != enable) {
+            data->conf.autosuggest_ok = enable;
+            data->force_exec_prompt_and_repaint = true;
+            data->inputter.queue_char(readline_cmd_t::repaint);
+        }
     }
 }
 

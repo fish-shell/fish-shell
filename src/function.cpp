@@ -38,10 +38,7 @@ class function_info_t {
    public:
     /// Immutable properties of the function.
     function_properties_ref_t props;
-    /// Function description. This may be changed after the function is created.
-    wcstring description;
-
-    function_info_t(function_properties_ref_t props, wcstring desc);
+    explicit function_info_t(function_properties_ref_t props);
 };
 
 /// Type wrapping up the set of all functions.
@@ -145,11 +142,9 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     }
 }
 
-function_info_t::function_info_t(function_properties_ref_t props, wcstring desc)
-    : props(std::move(props)), description(std::move(desc)) {}
+function_info_t::function_info_t(function_properties_ref_t props) : props(std::move(props)) {}
 
-void function_add(wcstring name, wcstring description,
-                  std::shared_ptr<function_properties_t> props) {
+void function_add(wcstring name, std::shared_ptr<function_properties_t> props) {
     ASSERT_IS_MAIN_THREAD();
     assert(props && "Null props");
     auto funcset = function_set.acquire();
@@ -166,13 +161,12 @@ void function_add(wcstring name, wcstring description,
     props->is_autoload = funcset->autoloader.autoload_in_progress(name);
 
     // Create and store a new function.
-    auto ins = funcset->funcs.emplace(std::move(name),
-                                      function_info_t(std::move(props), std::move(description)));
+    auto ins = funcset->funcs.emplace(std::move(name), function_info_t(std::move(props)));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
 }
 
-std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name) {
+function_properties_ref_t function_get_properties(const wcstring &name) {
     if (parser_keywords_is_reserved(name)) return nullptr;
     auto funcset = function_set.acquire();
     if (auto info = funcset->get_info(name)) {
@@ -240,10 +234,8 @@ bool function_get_definition(const wcstring &name, wcstring &out_definition) {
 }
 
 bool function_get_desc(const wcstring &name, wcstring &out_desc) {
-    const auto funcset = function_set.acquire();
-    const function_info_t *func = funcset->get_info(name);
-    if (func && !func->description.empty()) {
-        out_desc = _(func->description.c_str());
+    if (auto props = function_get_properties(name)) {
+        out_desc = _(props->description.c_str());
         return true;
     }
     return false;
@@ -255,7 +247,11 @@ void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &par
     auto funcset = function_set.acquire();
     auto iter = funcset->funcs.find(name);
     if (iter != funcset->funcs.end()) {
-        iter->second.description = desc;
+        // Note the description is immutable, as it may be accessed on another thread, so we copy
+        // the properties to modify it.
+        auto new_props = std::make_shared<function_properties_t>(*iter->second.props);
+        new_props->description = desc;
+        iter->second.props = new_props;
     }
 }
 
@@ -277,7 +273,7 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
 
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
-    funcset->funcs.emplace(new_name, function_info_t(new_props, src_func.description));
+    funcset->funcs.emplace(new_name, function_info_t(new_props));
     return true;
 }
 

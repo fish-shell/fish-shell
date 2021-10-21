@@ -31,6 +31,9 @@ struct function_properties_t {
     /// List of all named arguments for this function.
     wcstring_list_t named_arguments;
 
+    /// Description of the function.
+    wcstring description;
+
     /// Mapping of all variables that were inherited from the function definition scope to their
     /// values.
     std::map<wcstring, wcstring_list_t> inherit_vars;
@@ -49,8 +52,7 @@ struct function_properties_t {
 using function_properties_ref_t = std::shared_ptr<const function_properties_t>;
 
 /// Add a function. This may mutate \p props to set is_autoload.
-void function_add(wcstring name, wcstring description,
-                  std::shared_ptr<function_properties_t> props);
+void function_add(wcstring name, std::shared_ptr<function_properties_t> props);
 
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);

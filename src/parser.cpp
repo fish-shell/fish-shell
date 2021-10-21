@@ -451,7 +451,8 @@ int parser_t::get_lineno() const {
 const wchar_t *parser_t::current_filename() const {
     for (const auto &b : block_list) {
         if (b.is_function_call()) {
-            return function_get_definition_file(b.function_name);
+            auto props = function_get_props(b.function_name);
+            return props ? props->definition_file : nullptr;
         } else if (b.type() == block_type_t::source) {
             return b.sourced_file;
         }

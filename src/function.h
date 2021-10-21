@@ -47,6 +47,17 @@ struct function_properties_t {
     /// The file from which the function was created (intern'd string), or nullptr if not from a
     /// file.
     const wchar_t *definition_file{};
+
+    /// \return the description, localized via _.
+    const wchar_t *localized_description() const;
+
+    /// \return the line number where the definition of the specified function started.
+    int definition_lineno() const;
+
+    /// \return a definition of the function, annotated with properties like event handlers and wrap
+    /// targets. This is to support the 'functions' builtin.
+    /// Note callers must provide the function name, since the function does not know its own name.
+    wcstring annotated_definition(const wcstring &name) const;
 };
 
 using function_properties_ref_t = std::shared_ptr<const function_properties_t>;
@@ -60,49 +71,25 @@ void function_remove(const wcstring &name);
 /// \return the properties for a function, or nullptr if none. This does not trigger autoloading.
 function_properties_ref_t function_get_props(const wcstring &name);
 
-/// Returns by reference the definition of the function with the name \c name. Returns true if
-/// successful, false if no function with the given name exists.
-/// This does not trigger autoloading.
-bool function_get_definition(const wcstring &name, wcstring &out_definition);
-
-/// Returns by reference the description of the function with the name \c name. Returns true if the
-/// function exists and has a nonempty description, false if it does not.
-/// This does not trigger autoloading.
-bool function_get_desc(const wcstring &name, wcstring &out_desc);
+/// \return the properties for a function, or nullptr if none, perhaps triggering autoloading.
+function_properties_ref_t function_get_props_autoload(const wcstring &name, parser_t &parser);
 
 /// Sets the description of the function with the name \c name.
+/// This triggers autoloading.
 void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &parser);
 
-/// Returns true if the function with the name name exists.
+/// Returns true if the function named \p cmd exists.
 /// This may autoload.
-int function_exists(const wcstring &cmd, parser_t &parser);
+bool function_exists(const wcstring &cmd, parser_t &parser);
 
-/// Attempts to load a function if not yet loaded. This is used by the completion machinery.
-void function_load(const wcstring &cmd, parser_t &parser);
-
-/// Returns true if the function with the name name exists, without triggering autoload.
+/// Returns true if the function \p cmd either is loaded, or exists on disk in an autoload
+/// directory.
 bool function_exists_no_autoload(const wcstring &cmd);
 
 /// Returns all function names.
 ///
 /// \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore.
 wcstring_list_t function_get_names(int get_hidden);
-
-/// Returns true if the function was autoloaded.
-bool function_is_autoloaded(const wcstring &name);
-
-/// Returns tha absolute path of the file where the specified function was defined. Returns 0 if the
-/// file was defined on the commandline.
-///
-/// This function does not autoload functions, it will only work on functions that have already been
-/// defined.
-///
-/// This returns an intern'd string.
-const wchar_t *function_get_definition_file(const wcstring &name);
-
-/// Returns the linenumber where the definition of the specified function started.
-/// This does not trigger autoloading.
-int function_get_definition_lineno(const wcstring &name);
 
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.
@@ -111,5 +98,4 @@ bool function_copy(const wcstring &name, const wcstring &new_name);
 /// Observes that fish_function_path has changed.
 void function_invalidate_path();
 
-wcstring functions_def(const wcstring &name);
 #endif

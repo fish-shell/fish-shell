@@ -125,11 +125,13 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
         int found = 0;
         const wchar_t *name = argv[idx];
         // Functions
-        if (!opts.force_path && !opts.no_functions && function_exists(name, parser)) {
+        function_properties_ref_t func{};
+        if (!opts.force_path && !opts.no_functions &&
+            (func = function_get_props_autoload(name, parser))) {
             ++found;
             res = true;
             if (!opts.query && !opts.type) {
-                auto path = function_get_definition_file(name);
+                auto path = func->definition_file;
                 if (opts.path) {
                     if (path) {
                         streams.out.append(path);
@@ -140,9 +142,9 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
                     streams.out.append(_(L" with definition"));
                     streams.out.append(L"\n");
                     // Function path
-                    wcstring def = functions_def(name);
+                    wcstring def = func->annotated_definition(name);
                     if (path) {
-                        int line_number = function_get_definition_lineno(name);
+                        int line_number = func->definition_lineno();
                         wcstring comment;
                         if (std::wcscmp(path, L"-") != 0) {
                             append_format(comment, L"# Defined in %ls @ line %d\n", path,
@@ -165,7 +167,7 @@ maybe_t<int> builtin_type(parser_t &parser, io_streams_t &streams, const wchar_t
                     }
                 } else {
                     streams.out.append_format(_(L"%ls is a function"), name);
-                    auto path = function_get_definition_file(name);
+                    auto path = func->definition_file;
                     if (path) {
                         streams.out.append_format(_(L" (defined in %ls)"), path);
                     }

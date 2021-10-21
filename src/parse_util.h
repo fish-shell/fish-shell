@@ -78,7 +78,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
                              const wchar_t **tok_end, const wchar_t **prev_begin,
                              const wchar_t **prev_end);
 
-/// Get the linenumber at the specified character offset.
+/// Get the line number at the specified character offset.
 int parse_util_lineno(const wcstring &str, size_t offset);
 
 /// Calculate the line number of the specified cursor position.

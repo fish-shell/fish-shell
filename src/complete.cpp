@@ -660,9 +660,10 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
 
 /// Returns a description for the specified function, or an empty string if none.
 static wcstring complete_function_desc(const wcstring &fn) {
-    wcstring result;
-    function_get_desc(fn, result);
-    return result;
+    if (auto props = function_get_props(fn)) {
+        return props->description;
+    }
+    return wcstring{};
 }
 
 /// Complete the specified command name. Search for executables in the path, executables defined
@@ -854,7 +855,7 @@ static void complete_load(const wcstring &name) {
     // We have to load this as a function, since it may define a --wraps or signature.
     // See issue #2466.
     auto &parser = parser_t::principal_parser();
-    function_load(name, parser);
+    function_get_props_autoload(name, parser);
 
     // It's important to NOT hold the lock around completion loading.
     // We need to take the lock to decide what to load, drop it to perform the load, then reacquire

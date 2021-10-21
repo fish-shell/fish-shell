@@ -135,7 +135,7 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
     return STATUS_CMD_OK;
 }
 
-static int report_function_metadata(const wchar_t *funcname, bool verbose, io_streams_t &streams,
+static int report_function_metadata(const wcstring &funcname, bool verbose, io_streams_t &streams,
                                     parser_t &parser, bool metadata_as_comments) {
     const wchar_t *path = L"n/a";
     const wchar_t *autoloaded = L"n/a";
@@ -143,18 +143,16 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     wcstring description = L"n/a";
     int line_number = 0;
 
-    if (function_exists(funcname, parser)) {
-        auto props = function_get_props(funcname);
-        path = function_get_definition_file(funcname);
+    if (auto props = function_get_props_autoload(funcname, parser)) {
+        path = props->definition_file;
         if (path) {
-            autoloaded = function_is_autoloaded(funcname) ? L"autoloaded" : L"not-autoloaded";
-            line_number = function_get_definition_lineno(funcname);
+            autoloaded = props->is_autoload ? L"autoloaded" : L"not-autoloaded";
+            line_number = props->definition_lineno();
         } else {
             path = L"stdin";
         }
         shadows_scope = props->shadow_scope ? L"scope-shadowing" : L"no-scope-shadowing";
-        function_get_desc(funcname, description);
-        description = escape_string(description, ESCAPE_NO_QUOTED);
+        description = escape_string(props->description, ESCAPE_NO_QUOTED);
     }
 
     if (metadata_as_comments) {
@@ -347,16 +345,17 @@ maybe_t<int> builtin_functions(parser_t &parser, io_streams_t &streams, const wc
 
     int res = STATUS_CMD_OK;
     for (int i = optind; i < argc; i++) {
-        if (!function_exists(argv[i], parser)) {
+        wcstring funcname = argv[i];
+        auto func = function_get_props_autoload(argv[i], parser);
+        if (!func) {
             res++;
         } else {
             if (!opts.query) {
                 if (i != optind) streams.out.append(L"\n");
-                const wchar_t *funcname = argv[i];
                 if (!opts.no_metadata) {
                     report_function_metadata(funcname, opts.verbose, streams, parser, true);
                 }
-                wcstring def = functions_def(funcname);
+                wcstring def = func->annotated_definition(funcname);
 
                 if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                     std::vector<highlight_spec_t> colors;

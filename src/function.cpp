@@ -163,20 +163,17 @@ function_properties_ref_t function_get_props(const wcstring &name) {
     return function_set.acquire()->get_props(name);
 }
 
-int function_exists(const wcstring &cmd, parser_t &parser) {
+function_properties_ref_t function_get_props_autoload(const wcstring &name, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
-    if (!valid_func_name(cmd)) return false;
-    if (parser_keywords_is_reserved(cmd)) return 0;
-    try_autoload(cmd, parser);
-    auto funcset = function_set.acquire();
-    return funcset->funcs.find(cmd) != funcset->funcs.end();
+    if (parser_keywords_is_reserved(name)) return nullptr;
+    try_autoload(name, parser);
+    return function_get_props(name);
 }
 
-void function_load(const wcstring &cmd, parser_t &parser) {
+bool function_exists(const wcstring &cmd, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
-    if (!parser_keywords_is_reserved(cmd)) {
-        try_autoload(cmd, parser);
-    }
+    if (!valid_func_name(cmd)) return false;
+    return function_get_props_autoload(cmd, parser) != nullptr;
 }
 
 bool function_exists_no_autoload(const wcstring &cmd) {
@@ -203,29 +200,19 @@ void function_remove(const wcstring &name) {
     funcset->autoload_tombstones.insert(name);
 }
 
-bool function_get_definition(const wcstring &name, wcstring &out_definition) {
-    auto props = function_get_props(name);
-    if (!props) return false;
-
+// \return the body of a function (everything after the header, up to but not including the 'end').
+static wcstring get_function_body_source(const function_properties_t &props) {
     // We want to preserve comments that the AST attaches to the header (#5285).
     // Take everything from the end of the header to the 'end' keyword.
-    auto header_src = props->func_node->header->try_source_range();
-    auto end_kw_src = props->func_node->end.try_source_range();
+    auto header_src = props.func_node->header->try_source_range();
+    auto end_kw_src = props.func_node->end.try_source_range();
     if (header_src && end_kw_src) {
         uint32_t body_start = header_src->start + header_src->length;
         uint32_t body_end = end_kw_src->start;
         assert(body_start <= body_end && "end keyword should come after header");
-        out_definition = wcstring(props->parsed_source->src, body_start, body_end - body_start);
+        return wcstring(props.parsed_source->src, body_start, body_end - body_start);
     }
-    return true;
-}
-
-bool function_get_desc(const wcstring &name, wcstring &out_desc) {
-    if (auto props = function_get_props(name)) {
-        out_desc = _(props->description.c_str());
-        return true;
-    }
-    return false;
+    return wcstring{};
 }
 
 void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &parser) {
@@ -278,34 +265,6 @@ wcstring_list_t function_get_names(int get_hidden) {
     return wcstring_list_t(names.begin(), names.end());
 }
 
-const wchar_t *function_get_definition_file(const wcstring &name) {
-    if (auto func = function_get_props(name)) {
-        return func->definition_file;
-    }
-    return nullptr;
-}
-
-bool function_is_autoloaded(const wcstring &name) {
-    if (auto func = function_get_props(name)) {
-        return func->is_autoload;
-    }
-    return false;
-}
-
-int function_get_definition_lineno(const wcstring &name) {
-    const auto props = function_set.acquire()->get_props(name);
-    if (!props) return -1;
-    // return one plus the number of newlines at offsets less than the start of our function's
-    // statement (which includes the header).
-    // TODO: merge with line_offset_of_character_at_offset?
-    auto source_range = props->func_node->try_source_range();
-    assert(source_range && "Function has no source range");
-    uint32_t func_start = source_range->start;
-    const wcstring &source = props->parsed_source->src;
-    assert(func_start <= source.size() && "function start out of bounds");
-    return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
-}
-
 void function_invalidate_path() {
     // Remove all autoloaded functions and update the autoload path.
     // Note we don't want to risk removal during iteration; we expect this to be called
@@ -323,13 +282,10 @@ void function_invalidate_path() {
     funcset->autoloader.clear();
 }
 
-/// Return a definition of the specified function. Used by the functions builtin.
-wcstring functions_def(const wcstring &name) {
-    assert(!name.empty() && "Empty name");
+wcstring function_properties_t::annotated_definition(const wcstring &name) const {
     wcstring out;
-    wcstring desc, def;
-    function_get_desc(name, desc);
-    function_get_definition(name, def);
+    wcstring desc = this->localized_description();
+    wcstring def = get_function_body_source(*this);
     std::vector<std::shared_ptr<event_handler_t>> ev = event_get_function_handlers(name);
 
     out.append(L"function ");
@@ -353,9 +309,7 @@ wcstring functions_def(const wcstring &name) {
         out.append(esc_desc);
     }
 
-    auto props = function_get_props(name);
-    assert(props && "Should have function properties");
-    if (!props->shadow_scope) {
+    if (!this->shadow_scope) {
         out.append(L" --no-scope-shadowing");
     }
 
@@ -393,7 +347,7 @@ wcstring functions_def(const wcstring &name) {
         }
     }
 
-    const wcstring_list_t &named = props->named_arguments;
+    const wcstring_list_t &named = this->named_arguments;
     if (!named.empty()) {
         append_format(out, L" --argument");
         for (const auto &name : named) {
@@ -408,7 +362,7 @@ wcstring functions_def(const wcstring &name) {
     }
 
     // Output any inherited variables as `set -l` lines.
-    for (const auto &kv : props->inherit_vars) {
+    for (const auto &kv : this->inherit_vars) {
         // We don't know what indentation style the function uses,
         // so we do what fish_indent would.
         append_format(out, L"\n    set -l %ls", kv.first.c_str());
@@ -427,4 +381,21 @@ wcstring functions_def(const wcstring &name) {
     }
     out.append(L"end\n");
     return out;
+}
+
+const wchar_t *function_properties_t::localized_description() const {
+    if (description.empty()) return L"";
+    return _(description.c_str());
+}
+
+int function_properties_t::definition_lineno() const {
+    // return one plus the number of newlines at offsets less than the start of our function's
+    // statement (which includes the header).
+    // TODO: merge with line_offset_of_character_at_offset?
+    auto source_range = func_node->try_source_range();
+    assert(source_range && "Function has no source range");
+    uint32_t func_start = source_range->start;
+    const wcstring &source = parsed_source->src;
+    assert(func_start <= source.size() && "function start out of bounds");
+    return 1 + std::count(source.begin(), source.begin() + func_start, L'\n');
 }

@@ -234,6 +234,14 @@ static void handle_fish_history_change(const env_stack_t &vars) {
     reader_change_history(history_session_id(vars));
 }
 
+static void handle_autosuggestion_change(const env_stack_t &vars) {
+    bool enabled = true;
+    if (auto val = vars.get(L"fish_autosuggestion_enabled")) {
+        if (val->as_string() == L"0") enabled = false;
+    }
+    reader_set_autosuggestion_enabled(enabled);
+}
+
 static void handle_function_path_change(const env_stack_t &vars) {
     UNUSED(vars);
     function_invalidate_path();
@@ -335,6 +343,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_function_path", handle_function_path_change);
     var_dispatch_table->add(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
+    var_dispatch_table->add(L"fish_autosuggestion_enabled", handle_autosuggestion_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
     var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
 

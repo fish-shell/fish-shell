@@ -57,8 +57,8 @@ void function_add(wcstring name, std::shared_ptr<function_properties_t> props);
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);
 
-/// Returns the properties for a function, or nullptr if none. This does not trigger autoloading.
-function_properties_ref_t function_get_properties(const wcstring &name);
+/// \return the properties for a function, or nullptr if none. This does not trigger autoloading.
+function_properties_ref_t function_get_props(const wcstring &name);
 
 /// Returns by reference the definition of the function with the name \c name. Returns true if
 /// successful, false if no function with the given name exists.

@@ -158,7 +158,7 @@ void function_add(wcstring name, std::shared_ptr<function_properties_t> props) {
     (void)ins;
 }
 
-function_properties_ref_t function_get_properties(const wcstring &name) {
+function_properties_ref_t function_get_props(const wcstring &name) {
     if (parser_keywords_is_reserved(name)) return nullptr;
     return function_set.acquire()->get_props(name);
 }
@@ -204,7 +204,7 @@ void function_remove(const wcstring &name) {
 }
 
 bool function_get_definition(const wcstring &name, wcstring &out_definition) {
-    auto props = function_get_properties(name);
+    auto props = function_get_props(name);
     if (!props) return false;
 
     // We want to preserve comments that the AST attaches to the header (#5285).
@@ -221,7 +221,7 @@ bool function_get_definition(const wcstring &name, wcstring &out_definition) {
 }
 
 bool function_get_desc(const wcstring &name, wcstring &out_desc) {
-    if (auto props = function_get_properties(name)) {
+    if (auto props = function_get_props(name)) {
         out_desc = _(props->description.c_str());
         return true;
     }
@@ -279,14 +279,14 @@ wcstring_list_t function_get_names(int get_hidden) {
 }
 
 const wchar_t *function_get_definition_file(const wcstring &name) {
-    if (auto func = function_get_properties(name)) {
+    if (auto func = function_get_props(name)) {
         return func->definition_file;
     }
     return nullptr;
 }
 
 bool function_is_autoloaded(const wcstring &name) {
-    if (auto func = function_get_properties(name)) {
+    if (auto func = function_get_props(name)) {
         return func->is_autoload;
     }
     return false;
@@ -353,7 +353,7 @@ wcstring functions_def(const wcstring &name) {
         out.append(esc_desc);
     }
 
-    auto props = function_get_properties(name);
+    auto props = function_get_props(name);
     assert(props && "Should have function properties");
     if (!props->shadow_scope) {
         out.append(L" --no-scope-shadowing");

@@ -144,7 +144,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     int line_number = 0;
 
     if (function_exists(funcname, parser)) {
-        auto props = function_get_properties(funcname);
+        auto props = function_get_props(funcname);
         path = function_get_definition_file(funcname);
         if (path) {
             autoloaded = function_is_autoloaded(funcname) ? L"autoloaded" : L"not-autoloaded";

@@ -657,7 +657,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         };
     } else {
         assert(p->type == process_type_t::function);
-        auto props = function_get_properties(p->argv0());
+        auto props = function_get_props(p->argv0());
         if (!props) {
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return proc_performer_t{};

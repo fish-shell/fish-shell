@@ -154,6 +154,7 @@ function_info_t::function_info_t(function_properties_ref_t props, wcstring desc,
 void function_add(wcstring name, wcstring description, function_properties_ref_t props,
                   const wchar_t *filename) {
     ASSERT_IS_MAIN_THREAD();
+    assert(props && "Null props");
     auto funcset = function_set.acquire();
 
     // Historical check. TODO: rationalize this.

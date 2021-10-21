@@ -3132,9 +3132,25 @@ static void test_autoload() {
     autoload_tester_t::run_test();
 }
 
+// Construct function properties for testing.
+static std::shared_ptr<function_properties_t> make_test_func_props() {
+    auto ret = std::make_shared<function_properties_t>();
+    ret->parsed_source = parse_source(L"function stuff; end", parse_flag_none, nullptr);
+    assert(ret->parsed_source && "Failed to parse");
+    for (const auto &node : ret->parsed_source->ast) {
+        if (const auto *s = node.try_as<ast::block_statement_t>()) {
+            ret->func_node = s;
+            break;
+        }
+    }
+    assert(ret->func_node && "Unable to find block statement");
+    return ret;
+}
+
 static void test_complete() {
     say(L"Testing complete");
 
+    auto func_props = make_test_func_props();
     struct test_complete_vars_t : environment_t {
         wcstring_list_t get_names(int flags) const override {
             UNUSED(flags);
@@ -3255,9 +3271,7 @@ static void test_complete() {
 #endif
 
     // Add a function and test completing it in various ways.
-    // Note we're depending on function_add not complaining when given missing parsed_source /
-    // body_node.
-    function_add(L"scuttlebutt", {}, nullptr, {});
+    function_add(L"scuttlebutt", {}, func_props, {});
 
     // Complete a function name.
     completions = do_complete(L"echo (scuttlebut", {});
@@ -3347,7 +3361,7 @@ static void test_complete() {
 
     // Test abbreviations.
     auto &pvars = parser_t::principal_parser().vars();
-    function_add(L"testabbrsonetwothreefour", {}, nullptr, {});
+    function_add(L"testabbrsonetwothreefour", {}, func_props, {});
     int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
     completions = complete(L"testabbrsonetwothree", {}, parser->context());
     do_test(ret == 0);

@@ -3271,7 +3271,7 @@ static void test_complete() {
 #endif
 
     // Add a function and test completing it in various ways.
-    function_add(L"scuttlebutt", {}, func_props, {});
+    function_add(L"scuttlebutt", {}, func_props);
 
     // Complete a function name.
     completions = do_complete(L"echo (scuttlebut", {});
@@ -3361,7 +3361,7 @@ static void test_complete() {
 
     // Test abbreviations.
     auto &pvars = parser_t::principal_parser().vars();
-    function_add(L"testabbrsonetwothreefour", {}, func_props, {});
+    function_add(L"testabbrsonetwothreefour", {}, func_props);
     int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
     completions = complete(L"testabbrsonetwothree", {}, parser->context());
     do_test(ret == 0);

@@ -271,6 +271,7 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
     props->named_arguments = std::move(opts.named_arguments);
     props->parsed_source = source;
     props->func_node = &func_node;
+    props->definition_file = parser.libdata().current_filename;
 
     // Populate inherit_vars.
     for (const wcstring &name : opts.inherit_vars) {
@@ -280,7 +281,7 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
     }
 
     // Add the function itself.
-    function_add(function_name, opts.description, props, parser.libdata().current_filename);
+    function_add(function_name, opts.description, props);
 
     // Handle wrap targets by creating the appropriate completions.
     for (const wcstring &wt : opts.wrap_targets) {

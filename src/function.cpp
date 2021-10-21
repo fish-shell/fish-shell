@@ -40,13 +40,10 @@ class function_info_t {
     function_properties_ref_t props;
     /// Function description. This may be changed after the function is created.
     wcstring description;
-    /// File where this function was defined (intern'd string).
-    const wchar_t *const definition_file;
     /// Flag for specifying that this function was automatically loaded.
     const bool is_autoload;
 
-    function_info_t(function_properties_ref_t props, wcstring desc, const wchar_t *def_file,
-                    bool autoload);
+    function_info_t(function_properties_ref_t props, wcstring desc, bool autoload);
 };
 
 /// Type wrapping up the set of all functions.
@@ -144,15 +141,10 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     }
 }
 
-function_info_t::function_info_t(function_properties_ref_t props, wcstring desc,
-                                 const wchar_t *def_file, bool autoload)
-    : props(std::move(props)),
-      description(std::move(desc)),
-      definition_file(intern(def_file)),
-      is_autoload(autoload) {}
+function_info_t::function_info_t(function_properties_ref_t props, wcstring desc, bool autoload)
+    : props(std::move(props)), description(std::move(desc)), is_autoload(autoload) {}
 
-void function_add(wcstring name, wcstring description, function_properties_ref_t props,
-                  const wchar_t *filename) {
+void function_add(wcstring name, wcstring description, function_properties_ref_t props) {
     ASSERT_IS_MAIN_THREAD();
     assert(props && "Null props");
     auto funcset = function_set.acquire();
@@ -170,8 +162,7 @@ void function_add(wcstring name, wcstring description, function_properties_ref_t
 
     // Create and store a new function.
     auto ins = funcset->funcs.emplace(
-        std::move(name),
-        function_info_t(std::move(props), std::move(description), filename, is_autoload));
+        std::move(name), function_info_t(std::move(props), std::move(description), is_autoload));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
 }
@@ -276,8 +267,7 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
     // original, so pass NULL filename, etc.
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
-    funcset->funcs.emplace(new_name,
-                           function_info_t(src_func.props, src_func.description, nullptr, false));
+    funcset->funcs.emplace(new_name, function_info_t(src_func.props, src_func.description, false));
     return true;
 }
 
@@ -298,9 +288,10 @@ wcstring_list_t function_get_names(int get_hidden) {
 }
 
 const wchar_t *function_get_definition_file(const wcstring &name) {
-    const auto funcset = function_set.acquire();
-    const function_info_t *func = funcset->get_info(name);
-    return func ? func->definition_file : nullptr;
+    if (auto func = function_get_properties(name)) {
+        return func->definition_file;
+    }
+    return nullptr;
 }
 
 bool function_is_autoloaded(const wcstring &name) {

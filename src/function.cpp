@@ -40,10 +40,8 @@ class function_info_t {
     function_properties_ref_t props;
     /// Function description. This may be changed after the function is created.
     wcstring description;
-    /// Flag for specifying that this function was automatically loaded.
-    const bool is_autoload;
 
-    function_info_t(function_properties_ref_t props, wcstring desc, bool autoload);
+    function_info_t(function_properties_ref_t props, wcstring desc);
 };
 
 /// Type wrapping up the set of all functions.
@@ -68,6 +66,12 @@ struct function_set_t {
         return iter == funcs.end() ? nullptr : &iter->second;
     }
 
+    /// Get the properties for a function, or nullptr if none.
+    function_properties_ref_t get_props(const wcstring &name) const {
+        auto iter = funcs.find(name);
+        return iter == funcs.end() ? nullptr : iter->second.props;
+    }
+
     /// \return true if we should allow autoloading a given function.
     bool allow_autoload(const wcstring &name) const;
 
@@ -80,8 +84,8 @@ static owning_lock<function_set_t> function_set;
 bool function_set_t::allow_autoload(const wcstring &name) const {
     // Prohibit autoloading if we have a non-autoload (explicit) function, or if the function is
     // tombstoned.
-    auto info = get_info(name);
-    bool has_explicit_func = info && !info->is_autoload;
+    auto props = get_props(name);
+    bool has_explicit_func = props && !props->is_autoload;
     bool is_tombstoned = autoload_tombstones.count(name) > 0;
     return !has_explicit_func && !is_tombstoned;
 }
@@ -141,10 +145,11 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     }
 }
 
-function_info_t::function_info_t(function_properties_ref_t props, wcstring desc, bool autoload)
-    : props(std::move(props)), description(std::move(desc)), is_autoload(autoload) {}
+function_info_t::function_info_t(function_properties_ref_t props, wcstring desc)
+    : props(std::move(props)), description(std::move(desc)) {}
 
-void function_add(wcstring name, wcstring description, function_properties_ref_t props) {
+void function_add(wcstring name, wcstring description,
+                  std::shared_ptr<function_properties_t> props) {
     ASSERT_IS_MAIN_THREAD();
     assert(props && "Null props");
     auto funcset = function_set.acquire();
@@ -158,11 +163,11 @@ void function_add(wcstring name, wcstring description, function_properties_ref_t
     funcset->remove(name);
 
     // Check if this is a function that we are autoloading.
-    bool is_autoload = funcset->autoloader.autoload_in_progress(name);
+    props->is_autoload = funcset->autoloader.autoload_in_progress(name);
 
     // Create and store a new function.
-    auto ins = funcset->funcs.emplace(
-        std::move(name), function_info_t(std::move(props), std::move(description), is_autoload));
+    auto ins = funcset->funcs.emplace(std::move(name),
+                                      function_info_t(std::move(props), std::move(description)));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
 }
@@ -263,11 +268,16 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
     }
     const function_info_t &src_func = iter->second;
 
+    // Copy the function's props.
     // This new instance of the function shouldn't be tied to the definition file of the
-    // original, so pass NULL filename, etc.
+    // original, so clear the filename, etc.
+    auto new_props = std::make_shared<function_properties_t>(*src_func.props);
+    new_props->is_autoload = false;
+    new_props->definition_file = nullptr;
+
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
-    funcset->funcs.emplace(new_name, function_info_t(src_func.props, src_func.description, false));
+    funcset->funcs.emplace(new_name, function_info_t(new_props, src_func.description));
     return true;
 }
 
@@ -295,9 +305,10 @@ const wchar_t *function_get_definition_file(const wcstring &name) {
 }
 
 bool function_is_autoloaded(const wcstring &name) {
-    const auto funcset = function_set.acquire();
-    const function_info_t *func = funcset->get_info(name);
-    return func ? func->is_autoload : false;
+    if (auto func = function_get_properties(name)) {
+        return func->is_autoload;
+    }
+    return false;
 }
 
 int function_get_definition_lineno(const wcstring &name) {
@@ -322,7 +333,7 @@ void function_invalidate_path() {
     auto funcset = function_set.acquire();
     wcstring_list_t autoloadees;
     for (const auto &kv : funcset->funcs) {
-        if (kv.second.is_autoload) {
+        if (kv.second.props->is_autoload) {
             autoloadees.push_back(kv.first);
         }
     }

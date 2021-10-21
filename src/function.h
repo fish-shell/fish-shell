@@ -38,6 +38,9 @@ struct function_properties_t {
     /// Set to true if invoking this function shadows the variables of the underlying function.
     bool shadow_scope{true};
 
+    /// Whether the function was autoloaded.
+    bool is_autoload{false};
+
     /// The file from which the function was created (intern'd string), or nullptr if not from a
     /// file.
     const wchar_t *definition_file{};
@@ -45,8 +48,9 @@ struct function_properties_t {
 
 using function_properties_ref_t = std::shared_ptr<const function_properties_t>;
 
-/// Add a function.
-void function_add(wcstring name, wcstring description, function_properties_ref_t props);
+/// Add a function. This may mutate \p props to set is_autoload.
+void function_add(wcstring name, wcstring description,
+                  std::shared_ptr<function_properties_t> props);
 
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);

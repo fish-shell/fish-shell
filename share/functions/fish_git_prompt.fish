@@ -604,51 +604,35 @@ function __fish_git_prompt_validate_colors --description "fish_git_prompt helper
 
 end
 
-set -l varargs
-for var in repaint describe_style show_informative_status use_informative_chars showdirtystate showstashstate showuntrackedfiles showupstream
-    set -a varargs --on-variable __fish_git_prompt_$var
-end
-function __fish_git_prompt_reset $varargs --description "Event handler, resets prompt when functionality changes"
+function __fish_git_prompt_reset -a type -a op -a var --description "Event handler, resets prompt when functionality changes" \
+--on-variable=__fish_git_prompt_{repaint,describe_style,show_informative_status,use_informative_chars,showdirtystate,showstashstate,showuntrackedfiles,showupstream}
     if status --is-interactive
-        if contains -- $argv[3] __fish_git_prompt_show_informative_status __fish_git_prompt_use_informative_chars
+        if contains -- $var __fish_git_prompt_show_informative_status __fish_git_prompt_use_informative_chars
             # Clear characters that have different defaults with/without informative status
-            for name in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind
-                set -e ___fish_git_prompt_char_$name
-            end
+            set -e ___fish_git_prompt_char_{name,cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind}
             # Clear init so we reset the chars next time.
             set -e ___fish_git_prompt_init
         end
     end
 end
 
-set -l varargs
-for var in '' _prefix _suffix _bare _merging _cleanstate _invalidstate _upstream _flags _branch _dirtystate _stagedstate _branch_detached _stashstate _untrackedfiles
-    set -a varargs --on-variable __fish_git_prompt_color$var
-end
-set -a varargs --on-variable __fish_git_prompt_showcolorhints
-function __fish_git_prompt_reset_color $varargs --description "Event handler, resets prompt when any color changes"
+function __fish_git_prompt_reset_color -a type -a op -a var --description "Event handler, resets prompt when any color changes" \
+--on-variable=__fish_git_prompt_color{'',_prefix,_suffix,_bare,_merging,_cleanstate,_invalidstate,_upstream,_flags,_branch,_dirtystate,_stagedstate,_branch_detached,_stashstate,_untrackedfiles} --on-variable=__fish_git_prompt_showcolorhints
     if status --is-interactive
-        set -e ___fish_git_prompt_init
-        set -l var $argv[3]
         set -e _$var
         set -e _{$var}_done
-        if test $var = __fish_git_prompt_color -o $var = __fish_git_prompt_color_flags -o $var = __fish_git_prompt_showcolorhints
+        set -e ___fish_git_prompt_init
+        if contains -- $var __fish_git_prompt_color __fish_git_prompt_color_flags __fish_git_prompt_showcolorhints
             # reset all the other colors too
-            for name in prefix suffix bare merging branch dirtystate stagedstate invalidstate stashstate untrackedfiles upstream flags
-                set -e ___fish_git_prompt_color_$name
-                set -e ___fish_git_prompt_color_{$name}_done
-            end
+            set -e ___fish_git_prompt_color_{prefix,suffix,bare,merging,branch,dirtystate,stagedstate,invalidstate,stashstate,untrackedfiles,upstream,flags}{,_done}
         end
     end
 end
 
-set -l varargs
-for var in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind upstream_diverged upstream_equal upstream_prefix
-    set -a varargs --on-variable __fish_git_prompt_char_$var
-end
-function __fish_git_prompt_reset_char $varargs --description "Event handler, resets prompt when any char changes"
+function __fish_git_prompt_reset_char -a type -a op -a var --description "Event handler, resets prompt when any char changes" \
+--on-variable=__fish_git_prompt_char_{cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind,upstream_diverged,upstream_equal,upstream_prefix}
     if status --is-interactive
         set -e ___fish_git_prompt_init
-        set -e _$argv[3]
+        set -e _$var
     end
 end

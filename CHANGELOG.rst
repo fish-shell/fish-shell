@@ -111,6 +111,7 @@ Completions
   - ``sbcl``
   - ``roswell``
   - ``clasp``
+  -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Add missing completions for the ``-p`` option of ``xbps-query``.
@@ -1866,7 +1867,6 @@ Other significant changes
    -  ``sbt`` (:issue:`4347`)
    -  ``snap`` (:issue:`4215`)
    -  Sublime Text 3’s ``subl`` (:issue:`4277`)
-   -  Windows Subsystem for Linux (WSL)'s ``wslpath``
 
 -  Lots of improvements to completions.
 

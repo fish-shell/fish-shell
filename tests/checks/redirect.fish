@@ -48,17 +48,20 @@ echo -n 2>$tmpdir/file.txt
 test -f $tmpdir/file.txt && echo "File exists" || echo "File does not exist"
 #CHECK: File exists
 
-function foo
+rm $tmpdir/file.txt
+
+function redir_to_argv1
     if set -q argv[1]
-        foo >$argv[1]
+        redir_to_argv1 >$argv[1]
     end
     echo foo
 end
 
-foo $tmpdir/bar
+redir_to_argv1 $tmpdir/bar
 # CHECK: foo
 cat $tmpdir/bar
 # CHECK: foo
+rm $tmpdir/bar
 
 # Verify that we can turn stderr into stdout and then pipe it
 # Note that the order here has historically been unspecified - 'errput' could conceivably appear before 'output'.
@@ -68,7 +71,8 @@ begin
 end 2>&1 | sort | tee $tmpdir/tee_test.txt
 cat $tmpdir/tee_test.txt
 
-rm -Rf $tmpdir
+rm $tmpdir/tee_test.txt
+rmdir $tmpdir
 
 #CHECK: errput
 #CHECK: output
@@ -101,7 +105,14 @@ echo $status
 read abc <&-
 #CHECKERR: read: stdin is closed
 
+# This one should output nothing.
+echo derp >&-
 
+# Redirection to 0, 1, 2 should always work. We don't test 0 since writing to stdin is weird and unpredictable.
+echo hooray1 >&1
+echo hooray2 >&2
+#CHECK: hooray1
+#CHECKERR: hooray2
 
 # "Verify that pipes don't conflict with fd redirections"
 # This code is very similar to eval. We go over a bunch of fads

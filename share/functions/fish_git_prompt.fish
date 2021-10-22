@@ -77,6 +77,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
                 echo $svn_upstream[-1] | read -l __ svn_upstream __
                 set svn_upstream (string replace -r '@.*' '' -- $svn_upstream)
                 set -l cur_prefix
+
                 for i in (seq (count $svn_remote))
                     set -l remote $svn_remote[$i]
                     set -l mod_upstream (string replace "$remote" "" -- $svn_upstream)
@@ -214,23 +215,29 @@ function fish_git_prompt --description "Prompt function for Git"
     # That means if neither is set, this stays empty.
     #
     # So "!= true" or "!= false" are useful tests if you want to do something by default.
-    set -l informative (command git config --bool bash.showInformativeStatus)
-
-    set -l dirty (command git config --bool bash.showDirtyState)
-    if not set -q dirty[1]
-        set -q __fish_git_prompt_showdirtystate
-        and set dirty true
+    set -l informative
+    set -l dirty
+    set -l untracked
+    command git config -z --get-regexp 'bash\.(showInformativeStatus|showDirtyState|showUntrackedFiles)' 2>/dev/null | while read -lz key value
+        switch $key
+            case bash.showinformativestatus
+                set informative $value
+            case bash.showdirtystate
+                set dirty $value
+            case bash.showuntrackedfiles
+                set untracked $value
+        end
     end
-    # If we don't print these, there is no need to compute them.
-    # Note: For now, staged and dirty are coupled.
-    contains dirtystate $__fish_git_prompt_status_order
-    or contains stagedstate $__fish_git_prompt_status_order
-    or set dirty false
 
-    set -l untracked (command git config --bool bash.showUntrackedFiles)
-    if not set -q untracked[1]
-        set -q __fish_git_prompt_showuntrackedfiles
-        and set untracked true
+    # If we don't print these, there is no need to compute them. Note: For now, staged and dirty are coupled.
+    if not set -q dirty[1] && set -q __fish_git_prompt_showdirtystate
+        set dirty true
+    end
+    contains dirtystate $__fish_git_prompt_status_order || contains stagedstate $__fish_git_prompt_status_order
+    and set dirty false
+
+    if not set -q untracked[1] && set -q __fish_git_prompt_showuntrackedfiles
+        set untracked true
     end
     contains untrackedfiles $__fish_git_prompt_status_order
     or set untracked false
@@ -310,7 +317,6 @@ function fish_git_prompt --description "Prompt function for Git"
     if test -n "$b"
         set b "$branch_color$b$branch_done"
     end
-
     if test -n "$c"
         set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
     end

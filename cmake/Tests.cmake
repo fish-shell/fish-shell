@@ -117,7 +117,7 @@ endfunction()
 add_custom_target(tests_buildroot_target
                   # Make the directory in which to run tests:
                   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
-                  COMMAND DESTDIR=${TEST_INSTALL_DIR} ${CMAKE_COMMAND}
+                  COMMAND env DESTDIR=${TEST_INSTALL_DIR} ${CMAKE_COMMAND}
                           --build ${CMAKE_CURRENT_BINARY_DIR} --target install
                   # Put fish_test_helper there too:
                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/fish_test_helper

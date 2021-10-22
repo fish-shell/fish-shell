@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 # Originally from the git sources (GIT-VERSION-GEN)
 # Presumably (C) Junio C Hamano <junkio@cox.net>
 # Reused under GPL v2.0
@@ -28,11 +28,11 @@ fi
 
 # Set the output directory as either the first param or cwd.
 test -n "$1" && OUTPUT_DIR=$1/ || OUTPUT_DIR=
-FBVF=${OUTPUT_DIR}FISH-BUILD-VERSION-FILE
+FBVF="${OUTPUT_DIR}FISH-BUILD-VERSION-FILE"
 
-if test -r $FBVF
+if test -r "$FBVF"
 then
-	VC=$(grep -v '^#' $FBVF | tr -d '"' | sed -e 's/^FISH_BUILD_VERSION=//')
+	VC=$(grep -v '^#' "$FBVF" | tr -d '"' | sed -e 's/^FISH_BUILD_VERSION=//')
 else
 	VC="unset"
 fi
@@ -41,7 +41,7 @@ fi
 # It looks like FISH_BUILD_VERSION="2.7.1-621-ga2f065e6"
 test "$VN" = "$VC" || {
 	echo >&2 "FISH_BUILD_VERSION=$VN"
-	echo "FISH_BUILD_VERSION=\"$VN\"" >${FBVF}
+	echo "FISH_BUILD_VERSION=\"$VN\"" >"$FBVF"
 }
 
 # Output the fish-build-version-witness.txt

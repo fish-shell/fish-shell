@@ -112,6 +112,15 @@ This tells you that there exists a file that starts with ``somefi``, which is us
 
 These colors, and many more, can be changed by running ``fish_config``, or by modifying :ref:`color variables <variables-color>` directly.
 
+For example, if you want to disable (almost) all coloring::
+
+  fish_config theme choose none
+
+This picks the "none" theme. To see all themes::
+
+  fish_config theme show
+
+Just running ``fish_config`` will open up a browser interface that allows you to pick from the available themes.
 
 Wildcards
 ---------
@@ -194,6 +203,10 @@ And history too. Type a command once, and you can re-summon it by just typing a 
 
 
 To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control`\ +\ :kbd:`F`. To accept a single word of the autosuggestion, :kbd:`Alt`\ +\ :kbd:`→` (right arrow). If the autosuggestion is not what you want, just ignore it.
+
+If you don't like autosuggestions, you can disable them by setting ``$fish_autosuggestion_enabled`` to 0::
+
+  set -g fish_autosuggestion_enabled 0
 
 Tab Completions
 ---------------

@@ -29,6 +29,9 @@ To accept the autosuggestion (replacing the command line contents), press :kbd:`
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
+If you don't like autosuggestions, you can disable them by setting ``$fish_autosuggestion_enabled`` to 0::
+
+  set -g fish_autosuggestion_enabled 0
 
 .. _tab-completion:
 
@@ -80,6 +83,16 @@ Detected errors include:
 - Mismatched parenthesis
 
 To customize the syntax highlighting, you can set the environment variables listed in the :ref:`Variables for changing highlighting colors <variables-color>` section.
+
+Fish also provides pre-made color themes you can pick with :ref:`fish_config <cmd-fish_config>`. Running just ``fish_config`` opens a browser interface, or you can use ``fish_config theme`` in the terminal.
+
+For example, to disable nearly all coloring::
+
+  fish_config theme choose none
+
+Or, to see all themes, right in your terminal::
+
+  fish_config theme show
 
 .. _variables-color:
 

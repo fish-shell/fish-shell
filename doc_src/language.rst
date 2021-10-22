@@ -1244,6 +1244,8 @@ You can change the settings of fish by changing the values of certain variables.
 
 - ``fish_emoji_width`` controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
 
+- ``fish_autosuggestion_enabled`` controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.
+
 - ``fish_handle_reflow``, determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
 
 - ``fish_key_bindings``, the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.

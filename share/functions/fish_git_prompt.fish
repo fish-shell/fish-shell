@@ -234,7 +234,7 @@ function fish_git_prompt --description "Prompt function for Git"
         set dirty true
     end
     contains dirtystate $__fish_git_prompt_status_order || contains stagedstate $__fish_git_prompt_status_order
-    and set dirty false
+    or set dirty false
 
     if not set -q untracked[1] && set -q __fish_git_prompt_showuntrackedfiles
         set untracked true

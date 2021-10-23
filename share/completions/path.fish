@@ -1,10 +1,10 @@
 # Completion for builtin path
 # This follows a strict command-then-options approach, so we can just test the number of tokens
 complete -f -c path -n "test (count (commandline -opc)) -le 2" -s h -l help -d "Display help and exit"
-complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a base -d 'Give basename for given paths'
-complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a dir -d 'Give dirname for given paths'
+complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a basename -d 'Give basename for given paths'
+complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a dirname -d 'Give dirname for given paths'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a extension -d 'Give extension for given paths'
-complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a strip-extension -d 'Remove extension for given paths'
+complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a change-extension -d 'Change extension for given paths'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a normalize -d 'Normalize given paths (remove ./, resolve ../ against other components..)'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a real -d 'Normalize given paths and resolve symlinks'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a filter -d 'Print paths that match a filter'

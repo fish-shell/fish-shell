@@ -449,11 +449,11 @@ static int path_transform(parser_t &parser, io_streams_t &streams, int argc, con
 }
 
 
-static int path_base(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+static int path_basename(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     return path_transform(parser, streams, argc, argv, wbasename);
 }
 
-static int path_dir(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+static int path_dirname(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     return path_transform(parser, streams, argc, argv, wdirname);
 }
 
@@ -687,9 +687,8 @@ static constexpr const struct path_subcommand {
                    const wchar_t **argv);                 //!OCLINT(unused param)
 } path_subcommands[] = {
     // TODO: Which operations do we want?
-    // TODO: "base" or "basename"?
-    {L"base", &path_base},
-    {L"dir", &path_dir},
+    {L"basename", &path_basename},
+    {L"dirname", &path_dirname},
     {L"extension", &path_extension},
     {L"filter", &path_filter},
     {L"is", &path_is},

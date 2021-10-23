@@ -893,8 +893,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         // from expanding the command, followed by the argument nodes themselves. E.g. if the
         // command is '$gco foo' and $gco is git checkout.
         cmd_args.push_back(cmd);
-        cmd_args.insert(cmd_args.end(), args_from_cmd_expansion.begin(),
-                        args_from_cmd_expansion.end());
+        vec_append(cmd_args, std::move(args_from_cmd_expansion));
 
         ast_args_list_t arg_nodes = get_argument_nodes(statement.args_or_redirs);
         end_execution_reason_t arg_result =

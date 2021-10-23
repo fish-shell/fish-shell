@@ -46,8 +46,9 @@ export XDG_CONFIG_HOME
 mkdir -p $XDG_CONFIG_HOME/fish || die
 
 XDG_RUNTIME_DIR="$homedir/xdg_runtime_dir"
-export XDG_CONFIG_HOME
+export XDG_RUNTIME_DIR
 mkdir -p $XDG_RUNTIME_DIR/fish || die
+chmod 700 "$XDG_RUNTIME_DIR"
 
 # Create a temp/scratch directory for tests to use, if they want (tests shouldn't write to a
 # shared temp folder).

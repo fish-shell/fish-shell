@@ -19,7 +19,7 @@ Synopsis
         [(-p | --perm) PERMISSION] [PATH...]
     path normalize GENERAL_OPTIONS [PATH...]
     path real GENERAL_OPTIONS [PATH...]
-    path strip-extension GENERAL_OPTIONS [PATH...]
+    path change-extension GENERAL_OPTIONS EXTENSION [PATH...]
 
     GENERAL_OPTIONS := [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)]
 
@@ -268,39 +268,39 @@ Examples
    # sh here is bash (on an Archlinux system)
    /usr/bin/bash
     
-"strip-extension" subcommand
-----------------------------
+"change-extension" subcommand
+-----------------------------
 
 ::
-    path strip-extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path change-extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] EXTENSION [PATH...]
 
-``path strip-extension`` returns the given paths without the extension. The extension is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and the full path is printed.
+``path change-extension`` returns the given paths, with their extension changed to the given new extension. The extension is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no previous extension and the new one is simply added.
 
-This is, of course, the inverse of ``path extension``.
+If the extension is empty, any previous extension is stripped, along with the ".". This is, of course, the inverse of ``path extension``.
 
-It returns 0 if there was an extension.
+It returns 0 if it was given any paths.
 
 Examples
 ^^^^^^^^
 
 ::
 
-   >_ path strip-extension ./foo.mp4
-   ./foo
+   >_ path change-extension mp4 ./foo.wmv
+   ./foo.mp4
 
-   >_ path strip-extension ../banana
+   >_ path change-extension '' ../banana
    ../banana
    # but status 1, because there was no extension.
 
-   >_ path strip-extension ~/.config
+   >_ path change-extension '' ~/.config
    /home/alfa/.config
    # status 1
 
-   >_ path strip-extension ~/.config.d
+   >_ path change-extension '' ~/.config.d
    /home/alfa/.config
    # status 0
 
-   >_ path strip-extension ~/.config.
+   >_ path change-extension '' ~/.config.
    /home/alfa/.config
    # status 0
    

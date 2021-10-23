@@ -171,6 +171,7 @@ struct options_t {  //!OCLINT(too many fields)
 
     bool invert = false;
 
+    const wchar_t *arg1 = nullptr;
 };
 
 static void path_out(io_streams_t &streams, const options_t &opts, const wcstring &str) {
@@ -387,7 +388,7 @@ static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function
 };
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
-static int parse_opts(options_t *opts, int *optind, int argc, const wchar_t **argv,
+static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, const wchar_t **argv,
                       parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = argv[0];
     wcstring short_opts = construct_short_opts(opts);
@@ -414,6 +415,15 @@ static int parse_opts(options_t *opts, int *optind, int argc, const wchar_t **ar
 
     *optind = w.woptind;
 
+    if (n_req_args) {
+        assert(n_req_args == 1);
+        opts->arg1 = path_get_arg_argv(optind, argv);
+        if (!opts->arg1 && n_req_args == 1) {
+            path_error(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            return STATUS_INVALID_ARGS;
+        }
+    }
+
     // At this point we should not have optional args and be reading args from stdin.
     if (path_args_from_stdin(streams) && argc > *optind) {
         path_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
@@ -427,7 +437,7 @@ static int path_transform(parser_t &parser, io_streams_t &streams, int argc, con
                             wcstring (*func)(wcstring)) {
     options_t opts;
     int optind;
-    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
@@ -560,7 +570,7 @@ static maybe_t<size_t> find_extension (const wcstring &path) {
 static int path_extension(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     int optind;
-    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
@@ -581,10 +591,10 @@ static int path_extension(parser_t &parser, io_streams_t &streams, int argc, con
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
-static int path_strip_extension(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+static int path_change_extension(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     int optind;
-    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
@@ -592,18 +602,18 @@ static int path_strip_extension(parser_t &parser, io_streams_t &streams, int arg
     while (const wcstring *arg = aiter.nextstr()) {
         auto pos = find_extension(*arg);
 
+        wcstring ext;
         if (!pos) {
-            path_out(streams, opts, *arg);
-            continue;
+            ext = *arg;
+        } else {
+            ext = arg->substr(0, *pos);
         }
 
-        // This ends up being empty if the filename ends with ".".
-        // That's arguably correct, and results in an empty string,
-        // if we print anything.
-        wcstring ext = arg->substr(0, *pos);
-        if (opts.quiet && !ext.empty()) {
-            // Return 0 if we *had* an extension
-            return STATUS_CMD_OK;
+        // Only add on the extension "." if we have something.
+        // That way specifying an empty extension strips it.
+        if (*opts.arg1) {
+            ext.push_back(L'.');
+            ext.append(opts.arg1);
         }
         path_out(streams, opts, ext);
         n_transformed++;
@@ -615,7 +625,7 @@ static int path_strip_extension(parser_t &parser, io_streams_t &streams, int arg
 static int path_real(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     int optind;
-    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     int n_transformed = 0;
@@ -647,7 +657,7 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
     opts.perm_valid = true;
     opts.invert_valid = true;
     int optind;
-    int retval = parse_opts(&opts, &optind, argc, argv, parser, streams);
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
     // If we have been invoked as "path is", which is "path filter -q".
     if (is_is) opts.quiet = true;
@@ -688,13 +698,13 @@ static constexpr const struct path_subcommand {
 } path_subcommands[] = {
     // TODO: Which operations do we want?
     {L"basename", &path_basename},
+    {L"change-extension", &path_change_extension},
     {L"dirname", &path_dirname},
     {L"extension", &path_extension},
     {L"filter", &path_filter},
     {L"is", &path_is},
     {L"normalize", &path_normalize},
     {L"real", &path_real},
-    {L"strip-extension", &path_strip_extension},
 };
 ASSERT_SORTED_BY_NAME(path_subcommands);
 

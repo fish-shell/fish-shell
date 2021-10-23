@@ -47,14 +47,14 @@ echo $status
 # CHECK: 
 # CHECK: 0
 
-path strip-extension ./foo.mp4
+path change-extension '' ./foo.mp4
 # CHECK: ./foo
-path strip-extension ../banana
+path change-extension '' ../banana
 # CHECK: ../banana
 # but status 1, because there was no extension.
 echo $status
 # CHECK: 1
-path strip-extension ~/.config
+path change-extension '' ~/.config
 # CHECK: {{.*}}/.config
 echo $status
 # CHECK: 1

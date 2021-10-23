@@ -143,6 +143,8 @@ function help --description 'Show help for the fish shell'
             set fish_help_page relnotes.html
         case completions
             set fish_help_page completions.html
+        case commands
+            set fish_help_page commands.html
         case faq
             set fish_help_page faq.html
         case fish-for-bash-users

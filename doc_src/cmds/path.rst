@@ -8,8 +8,8 @@ Synopsis
 
 ::
 
-    path base GENERAL_OPTIONS [PATH...]
-    path dir GENERAL_OPTIONS  [PATH...]
+    path basename GENERAL_OPTIONS [PATH...]
+    path dirname GENERAL_OPTIONS  [PATH...]
     path extension GENERAL_OPTIONS [PATH...]
     path filter GENERAL_OPTIONS [(-v | --invert)] \
         [-d] [-f] [-l] [-r] [-w] [-x] \
@@ -42,16 +42,16 @@ Some subcommands operate on the paths as strings and so work on nonexistent path
 
 The following subcommands are available.
 
-.. _cmd-path-base:
+.. _cmd-path-basename:
 
-"base" subcommand
---------------------
+"basename" subcommand
+---------------------
 
 ::
 
-    path base [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path basename [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path base`` returns the last path component of the given path, by removing the directory prefix and removing trailing slashes. In other words, it is the part that is not the dirname. For files you might call it the "filename".
+``path basename`` returns the last path component of the given path, by removing the directory prefix and removing trailing slashes. In other words, it is the part that is not the dirname. For files you might call it the "filename".
 
 It returns 0 if there was a basename, i.e. if the path wasn't empty or just slashes.
 
@@ -60,16 +60,16 @@ Examples
 
 ::
 
-   >_ path base ./foo.mp4
+   >_ path basename ./foo.mp4
    foo.mp4
 
-   >_ path base ../banana
+   >_ path basename ../banana
    banana
 
-   >_ path base /usr/bin/
+   >_ path basename /usr/bin/
    bin
 
-   >_ path base /usr/bin/*
+   >_ path basename /usr/bin/*
    # This prints all files in /usr/bin/
    # A selection:
    cp
@@ -77,14 +77,14 @@ Examples
    grep
    rm
 
-"dir" subcommand
+"dirname" subcommand
 --------------------
 
 ::
 
-    path dir [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path dirname [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path dir`` returns the dirname for the given path. This is the part before the last "/", discounting trailing slashes. In other words, it is the part that is not the basename (discounting superfluous slashes).
+``path dirname`` returns the dirname for the given path. This is the part before the last "/", discounting trailing slashes. In other words, it is the part that is not the basename (discounting superfluous slashes).
 
 It returns 0 if there was a dirname, i.e. if the path wasn't empty or just slashes.
 
@@ -93,13 +93,13 @@ Examples
 
 ::
 
-   >_ path dir ./foo.mp4
+   >_ path dirname ./foo.mp4
    .
 
-   >_ path dir ../banana
+   >_ path dirname ../banana
    ..
 
-   >_ path dir /usr/bin/
+   >_ path dirname /usr/bin/
    /usr
 
 "extension" subcommand

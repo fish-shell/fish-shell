@@ -59,17 +59,17 @@ path strip-extension ~/.config
 echo $status
 # CHECK: 1
 
-path base ./foo.mp4
+path basename ./foo.mp4
 # CHECK: foo.mp4
-path base ../banana
+path basename ../banana
 # CHECK: banana
-path base /usr/bin/
+path basename /usr/bin/
 # CHECK: bin
-path dir ./foo.mp4
+path dirname ./foo.mp4
 # CHECK: .
-path base ../banana
+path basename ../banana
 # CHECK: banana
-path base /usr/bin/
+path basename /usr/bin/
 # CHECK: bin
 
 cd $TMPDIR

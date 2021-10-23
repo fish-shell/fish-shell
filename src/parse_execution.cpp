@@ -911,7 +911,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
 
     // Populate the process.
     proc->type = process_type;
-    proc->set_argv(cmd_args);
+    proc->set_argv(std::move(cmd_args));
     proc->set_redirection_specs(std::move(redirections));
     proc->actual_cmd = std::move(path_to_external_command);
     return end_execution_reason_t::ok;

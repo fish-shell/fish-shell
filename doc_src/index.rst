@@ -20,8 +20,8 @@ Some of the special features of fish are:
 
 This page explains how to install and set up fish and where to get more information.
 
-Further Reading
-===============
+Where to go?
+============
 
 If this is your first time using fish, see the :ref:`tutorial <tutorial>`.
 
@@ -30,6 +30,8 @@ If you are already familiar with other shells like bash and want to see the scri
 For a comprehensive overview of fish's scripting language, see :ref:`The Fish Language <language>`.
 
 For information on using fish interactively, see :ref:`Interactive use <interactive>`.
+
+If you need to install fish first, read on, the rest of this document will tell you how to get, install and configure fish.
 
 Installation and Start
 ======================
@@ -102,34 +104,17 @@ For a script written in another language, just replace ``/bin/bash`` with the in
 
 This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
 
-.. _configuration:
 
-Configuration files
-====================
+Where to add configuration
+==========================
 
-When fish is started, it reads and runs its configuration files. Where these are depends on build configuration and environment variables.
+If you have any configuration you want to store, simply write it to a file called ``~/.config/fish/config.fish``.
 
-The main file is ``~/.config/fish/config.fish`` (or more precisely ``$XDG_CONFIG_HOME/fish/config.fish``).
+If you want to split it up, you can also use files named something.fish in ``~/.config/fish/conf.d/``. Fish will automatically load these on startup, in order, before config.fish.
 
-Configuration files are run in the following order:
+These files are read on the startup of every shell, whether it's interactive or a login shell or not. Use ``status --is-interactive`` and ``status --is-login`` to only do things for interactive shells or login shells.
 
-- Configuration snippets (named ``*.fish``) in the directories:
-
-  - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
-  - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d/``)
-  - Directories for others to ship configuration snippets for their software. Fish searches the directories in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_conf.d`` directory; if that is not defined, the default is ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``, unless your distribution customized this.
-
-  If there are multiple files with the same name in these directories, only the first will be executed.
-  They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
-
-- System-wide configuration files, where administrators can include initialization for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__fish_sysconf_dir`` (usually ``/etc/fish/config.fish``).
-- User configuration, usually in ``~/.config/fish/config.fish`` (controlled by the ``XDG_CONFIG_HOME`` environment variable, and accessible as ``$__fish_config_dir``).
-
-``~/.config/fish/config.fish`` is sourced *after* the snippets. This is so you can copy snippets and override some of their behavior.
-
-These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command ``status --is-interactive`` to determine if the shell is interactive. If you want to run a command only when using a login shell, use ``status --is-login`` instead. This will speed up the starting of non-interactive or non-login shells.
-
-If you are developing another program, you may want to add configuration for all users of fish on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells won't benefit from the fish-specific configuration. However, if they are required, you can install them to the "vendor" configuration directory. As this path may vary from system to system, ``pkg-config`` should be used to discover it: ``pkg-config --variable confdir fish``.
+This is a simplified answer for ordinary users, if you are a sysadmin or a developer who wants a program to integrate with fish, see :ref:`configuration` for the full scoop.
 
 Examples:
 

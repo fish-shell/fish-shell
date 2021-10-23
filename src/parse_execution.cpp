@@ -908,9 +908,6 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         if (reason != end_execution_reason_t::ok) {
             return reason;
         }
-
-        // Determine the process type.
-        process_type = process_type_for_command(statement, cmd);
     }
 
     // Populate the process.

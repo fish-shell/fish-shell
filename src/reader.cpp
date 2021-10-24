@@ -2872,12 +2872,6 @@ static bool event_is_normal_char(const char_event_t &evt) {
     return !fish_reserved_codepoint(c) && c > 31 && c != 127;
 }
 
-std::shared_ptr<history_t> reader_get_history() {
-    ASSERT_IS_MAIN_THREAD();
-    reader_data_t *data = current_data_or_null();
-    return data ? data->history : nullptr;
-}
-
 /// Run a sequence of commands from an input binding.
 void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
     auto last_statuses = parser().get_last_statuses();

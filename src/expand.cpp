@@ -358,8 +358,6 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
     std::shared_ptr<history_t> history{};
     maybe_t<env_var_t> var{};
     if (var_name == L"history") {
-        // Note reader_get_history may return null, if we are running non-interactively (e.g. from
-        // web_config).
         if (is_main_thread()) {
             history = history_t::with_name(history_session_id(vars));
         }

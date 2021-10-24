@@ -51,13 +51,13 @@ path change-extension '' ./foo.mp4
 # CHECK: ./foo
 path change-extension '' ../banana
 # CHECK: ../banana
-# but status 1, because there was no extension.
+# still status 0, because there was an argument
 echo $status
-# CHECK: 1
+# CHECK: 0
 path change-extension '' ~/.config
 # CHECK: {{.*}}/.config
 echo $status
-# CHECK: 1
+# CHECK: 0
 
 path basename ./foo.mp4
 # CHECK: foo.mp4

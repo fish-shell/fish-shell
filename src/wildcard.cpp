@@ -38,7 +38,7 @@
 /// Description for block device.
 #define COMPLETE_BLOCK_DESC _(L"Block device")
 /// Description for fifo buffer.
-#define COMPLETE_FIFO_DESC _(L"fifo")
+#define COMPLETE_FIFO_DESC _(L"Fifo")
 /// Description for symlink.
 #define COMPLETE_SYMLINK_DESC _(L"Symbolic link")
 /// Description for symlink.
@@ -509,14 +509,14 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     // Compute the description.
     wcstring desc;
     if (expand_flags & expand_flag::gen_descriptions) {
-        if (file_size >= 0)
-            desc = format_size(file_size);
-        if (!desc.empty()) {
-            desc.append(L", ");
-            desc.append(file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno));
+        desc = file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
+
+        if (file_size >= 0) {
+            if (!desc.empty()) desc.append(L", ");
+            desc.append(format_size(file_size));
         }
     }
-    
+
     // Append a / if this is a directory. Note this requirement may be the only reason we have to
     // call stat() in some cases.
     auto desc_func = const_desc(desc);

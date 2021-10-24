@@ -135,6 +135,8 @@ Examples
    >_ path extension ~/.config.
    # one empty line, status 0
    
+.. _cmd-path-filter:
+
 "filter" subcommand
 --------------------
 
@@ -145,6 +147,8 @@ Examples
         [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
 
 ``path filter`` returns all of the given paths that match the given checks. In all cases, the paths need to exist, nonexistent paths are always filtered.
+
+This is useful when you have a list of paths that you need to check. To match a list of paths against a glob pattern, see :ref:`path match <cmd-path-match>`. To run a glob pattern to generate paths, see :ref:`path expand <cmd-path-expand>`.
 
 The available filters are:
 
@@ -263,6 +267,7 @@ Examples
 ^^^^^^^^
 
 ::
+
    >_ path real /bin//sh
    # The "//" is squashed, and /bin is resolved if your system links it to /usr/bin.
    # sh here is bash (on an Archlinux system)
@@ -272,7 +277,9 @@ Examples
 -----------------------------
 
 ::
-    path change-extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] EXTENSION [PATH...]
+
+    path change-extension [(-z | --null-in)] [(-Z | --null-out)] \
+        [(-q | --quiet)] EXTENSION [PATH...]
 
 ``path change-extension`` returns the given paths, with their extension changed to the given new extension. The extension is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no previous extension and the new one is simply added.
 

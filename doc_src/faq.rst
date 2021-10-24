@@ -126,23 +126,6 @@ Or if you prefer not to use a universal variable, use::
 
 in config.fish.
 
-I'm seeing weird output before each prompt when using screen. What's wrong?
----------------------------------------------------------------------------
-Quick answer:
-
-Run the following command in fish::
-
-    function fish_title; end; funcsave fish_title
-
-
-Problem solved!
-
-The long answer:
-
-Fish is trying to set the titlebar message of your terminal. While screen itself supports this feature, your terminal does not. Unfortunately, when the underlying terminal doesn't support setting the titlebar, screen simply passes through the escape codes and text to the underlying terminal instead of ignoring them. It is impossible to detect and resolve this problem from inside fish since fish has no way of knowing what the underlying terminal type is. For now, the only way to fix this is to unset the titlebar message, as suggested above.
-
-Note that fish has a default titlebar message, which will be used if the fish_title function is undefined. So simply unsetting the fish_title function will not work.
-
 How do I run a command from history?
 ------------------------------------
 Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control`\ +\ :kbd:`P` (up) and :kbd:`Control`\ +\ :kbd:`N` (down). See :ref:`Searchable command history <history-search>` for more information.
@@ -286,12 +269,6 @@ This is similar to bash's "failglob" option.
 I accidentally entered a directory path and fish changed directory. What happened?
 ----------------------------------------------------------------------------------
 If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
-
-How can I use ``-`` as a shortcut for ``cd -``?
------------------------------------------------
-In fish versions prior to 2.5.0 it was possible to create a function named ``-`` that would do ``cd -``. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation::
-
-    abbr -a -- - 'cd -'
 
 The open command doesn't work.
 ------------------------------

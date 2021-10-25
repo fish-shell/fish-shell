@@ -271,6 +271,7 @@ static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &strea
     }
 
     // Paranoia: ensure we have a real loop.
+    // This is checked in the AST but we may be invoked dynamically, e.g. just via "eval break".
     bool has_loop = false;
     for (const auto &b : parser.blocks()) {
         if (b.type() == block_type_t::while_block || b.type() == block_type_t::for_block) {

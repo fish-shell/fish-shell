@@ -406,6 +406,34 @@ while contains $i a
 end
 #CHECK: Doop
 
+# break and continue may be dynamically invoked.
+set dyn_break break
+set dyn_continue continue
+
+while true
+    $dyn_break
+    echo "I should be unreachable"
+end
+
+for foo in 1 2 3
+    $dyn_continue
+    echo "I should be unreachable"
+end
+
+# Check that these error correctly.
+# Simplify __fish_print_help, as it's noisy.
+function __fish_print_help
+    echo $argv[2..]
+end
+$dyn_break
+eval break
+#CHECKERR: break: Not inside of loop
+#CHECKERR: break: Not inside of loop
+$dyn_continue
+eval continue
+#CHECKERR: continue: Not inside of loop
+#CHECKERR: continue: Not inside of loop
+
 # Test implicit cd. This should do nothing.
 ./
 

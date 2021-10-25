@@ -243,7 +243,7 @@ static maybe_t<int> builtin_count(parser_t &parser, io_streams_t &streams, const
                 return STATUS_CMD_ERROR;
             }
             for (int i = 0; i < n; i++) {
-                if (buf[i] == L'\n') {
+                if (buf[i] == '\n') {
                     argc++;
                 }
             }

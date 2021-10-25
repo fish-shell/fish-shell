@@ -16,12 +16,11 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Helper for builtin_disown.
-static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &streams, job_t *j) {
-    if (j == nullptr) {
-        streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg");
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
-    }
+static void disown_job(const wchar_t *cmd, io_streams_t &streams, job_t *j) {
+    assert(j && "Null job");
+
+    // Nothing to do if already disowned.
+    if (j->flags().disown_requested) return;
 
     // Stopped disowned jobs must be manually signaled; explain how to do so.
     auto pgid = j->get_pgid();
@@ -37,8 +36,6 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
     // Instead, we set a flag and the parser removes the job from the jobs list later.
     j->mut_flags().disown_requested = true;
     add_disowned_job(j);
-
-    return STATUS_CMD_OK;
 }
 
 /// Builtin for removing jobs from the job list.
@@ -70,13 +67,14 @@ maybe_t<int> builtin_disown(parser_t &parser, io_streams_t &streams, const wchar
         }
 
         if (job) {
-            retval = disown_job(cmd, parser, streams, job);
+            disown_job(cmd, streams, job);
+            retval = STATUS_CMD_OK;
         } else {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
             retval = STATUS_CMD_ERROR;
         }
     } else {
-        std::set<job_t *> jobs;
+        std::vector<job_t *> jobs;
 
         // If one argument is not a valid pid (i.e. integer >= 0), fail without disowning anything,
         // but still print errors for all of them.
@@ -90,7 +88,7 @@ maybe_t<int> builtin_disown(parser_t &parser, io_streams_t &streams, const wchar
                 retval = STATUS_INVALID_ARGS;
             } else {
                 if (job_t *j = parser.job_get_from_pid(pid)) {
-                    jobs.insert(j);
+                    jobs.push_back(j);
                 } else {
                     streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), cmd, pid);
                 }
@@ -100,9 +98,9 @@ maybe_t<int> builtin_disown(parser_t &parser, io_streams_t &streams, const wchar
             return retval;
         }
 
-        // Disown all target jobs
-        for (const auto &j : jobs) {
-            retval |= disown_job(cmd, parser, streams, j);
+        // Disown all target jobs.
+        for (job_t *j : jobs) {
+            disown_job(cmd, streams, j);
         }
     }
 

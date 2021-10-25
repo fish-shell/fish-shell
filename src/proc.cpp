@@ -344,7 +344,7 @@ bool job_t::has_external_proc() const {
 static owning_lock<std::vector<pid_t>> s_disowned_pids;
 
 void add_disowned_job(const job_t *j) {
-    if (j == nullptr) return;
+    assert(j && "Null job");
 
     // Never add our own (or an invalid) pgid as it is not unique to only
     // one job, and may result in a deadlock if we attempt the wait.

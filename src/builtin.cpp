@@ -270,21 +270,6 @@ static maybe_t<int> builtin_break_continue(parser_t &parser, io_streams_t &strea
         return STATUS_INVALID_ARGS;
     }
 
-    // Paranoia: ensure we have a real loop.
-    bool has_loop = false;
-    for (const auto &b : parser.blocks()) {
-        if (b.type() == block_type_t::while_block || b.type() == block_type_t::for_block) {
-            has_loop = true;
-            break;
-        }
-        if (b.is_function_call()) break;
-    }
-    if (!has_loop) {
-        wcstring error_message = format_string(_(L"%ls: Not inside of loop\n"), argv[0]);
-        builtin_print_help(parser, streams, argv[0], &error_message);
-        return STATUS_CMD_ERROR;
-    }
-
     // Mark the status in the libdata.
     parser.libdata().loop_status = is_break ? loop_status_t::breaks : loop_status_t::continues;
     return STATUS_CMD_OK;

@@ -102,10 +102,9 @@ parser_t &parser_t::principal_parser() {
 }
 
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
-    std::vector<event_t> events;
-    int res = vars().set(key, mode, std::move(vals), &events);
-    for (const auto &evt : events) {
-        event_fire(*this, evt);
+    int res = vars().set(key, mode, std::move(vals), nullptr);
+    if (res == ENV_OK) {
+        event_fire(*this, event_t::variable_set(key));
     }
     return res;
 }

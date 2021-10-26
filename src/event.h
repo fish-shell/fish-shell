@@ -107,6 +107,10 @@ struct event_t {
 
     /// Create an event_type_t::variable event.
     static event_t variable(wcstring name, wcstring_list_t args);
+    /// Create an event_type_t::variable event with the args for erasing a variable.
+    static event_t variable_erase(wcstring name);
+    /// Create an event_type_t::variable event with the args for setting a variable.
+    static event_t variable_set(wcstring name);
 
     /// Create a PROCESS_EXIT event.
     static event_t process_exit(pid_t pid, int status);

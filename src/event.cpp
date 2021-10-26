@@ -518,6 +518,16 @@ event_t event_t::variable(wcstring name, wcstring_list_t args) {
 }
 
 // static
+event_t event_t::variable_erase(wcstring name) {
+    return event_t::variable(name, {L"VARIABLE", L"ERASE", name});
+}
+
+// static
+event_t event_t::variable_set(wcstring name) {
+    return event_t::variable(name, {L"VARIABLE", L"SET", name});
+}
+
+// static
 event_t event_t::process_exit(pid_t pid, int status) {
     event_t evt{event_type_t::process_exit};
     evt.desc.param1.pid = pid;

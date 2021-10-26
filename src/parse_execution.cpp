@@ -457,13 +457,15 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
                             L"You cannot use read-only variable '%ls' in a for loop",
                             for_var_name.c_str());
     }
+
+    // We fire the same event over and over again, just construct it once.
+    event_t evt = event_t::variable_set(for_var_name);
+    auto &vars = parser->vars();
     int retval;
-    if (var) {
-        retval = parser->set_var_and_fire(for_var_name, ENV_LOCAL | ENV_USER, var->as_list());
-    } else {
-        retval = parser->set_empty_var_and_fire(for_var_name, ENV_LOCAL | ENV_USER);
-    }
+    retval = vars.set(for_var_name, ENV_LOCAL | ENV_USER, var ? var->as_list() : wcstring_list_t{});
     assert(retval == ENV_OK);
+    // TODO: For historical reasons we fire here as well, I'm not sure that makes sense?
+    event_fire(*parser, evt);
 
     trace_if_enabled(*parser, L"for", arguments);
     block_t *fb = parser->push_block(block_t::for_block());
@@ -475,9 +477,10 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
             break;
         }
 
-        int retval = parser->set_var_and_fire(for_var_name, ENV_DEFAULT | ENV_USER, val);
+        retval = vars.set(for_var_name, ENV_DEFAULT | ENV_USER, {val});
         assert(retval == ENV_OK && "for loop variable should have been successfully set");
         (void)retval;
+        event_fire(*parser, evt);
 
         auto &ld = parser->libdata();
         ld.loop_status = loop_status_t::normals;

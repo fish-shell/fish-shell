@@ -1322,8 +1322,7 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
 
 wcstring_list_t env_stack_t::get_names(int flags) const { return acquire_impl()->get_names(flags); }
 
-int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals,
-                     std::vector<event_t> *out_events) {
+int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
     // Historical behavior.
     if (vals.size() == 1 && (key == L"PWD" || key == L"HOME")) {
         path_make_canonical(vals.front());
@@ -1345,9 +1344,6 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
         if (ret.global_modified || is_principal()) {
             env_dispatch_var_change(key, *this);
         }
-        if (out_events) {
-            out_events->push_back(event_t::variable(key, {L"VARIABLE", L"SET", key}));
-        }
     }
     // If the principal stack modified universal variables, then post a barrier.
     if (ret.uvar_modified && is_principal()) {
@@ -1356,27 +1352,22 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
     return ret.status;
 }
 
-int env_stack_t::set_one(const wcstring &key, env_mode_flags_t mode, wcstring val,
-                         std::vector<event_t> *out_events) {
+int env_stack_t::set_one(const wcstring &key, env_mode_flags_t mode, wcstring val) {
     wcstring_list_t vals;
     vals.push_back(std::move(val));
-    return set(key, mode, std::move(vals), out_events);
+    return set(key, mode, std::move(vals));
 }
 
-int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode,
-                           std::vector<event_t> *out_events) {
-    return set(key, mode, {}, out_events);
+int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode) {
+    return set(key, mode, {});
 }
 
-int env_stack_t::remove(const wcstring &key, int mode, std::vector<event_t> *out_events) {
+int env_stack_t::remove(const wcstring &key, int mode) {
     mod_result_t ret = acquire_impl()->remove(key, mode);
     if (ret.status == ENV_OK) {
         if (ret.global_modified || is_principal()) {
             // Important to not hold the lock here.
             env_dispatch_var_change(key, *this);
-        }
-        if (out_events) {
-            out_events->push_back(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
         }
     }
     if (ret.uvar_modified && is_principal()) {

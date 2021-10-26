@@ -231,18 +231,13 @@ class env_stack_t final : public environment_t {
     wcstring_list_t get_names(int flags) const override;
 
     /// Sets the variable with the specified name to the given values.
-    /// If \p out_events is supplied, populate it with any events generated through setting the
-    /// variable.
-    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals,
-            std::vector<event_t> *out_events = nullptr);
+    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
 
     /// Sets the variable with the specified name to a single value.
-    int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val,
-                std::vector<event_t> *out_events = nullptr);
+    int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
 
     /// Sets the variable with the specified name to no values.
-    int set_empty(const wcstring &key, env_mode_flags_t mode,
-                  std::vector<event_t> *out_events = nullptr);
+    int set_empty(const wcstring &key, env_mode_flags_t mode);
 
     /// Update the PWD variable based on the result of getcwd.
     void set_pwd_from_getcwd();
@@ -253,11 +248,9 @@ class env_stack_t final : public environment_t {
     /// \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If
     /// this is a user request, read-only variables can not be removed. The mode may also specify
     /// the scope of the variable that should be erased.
-    /// \param out_events if non-null, populate it with any events generated from removing this
-    /// variable.
     ///
     /// \return zero if the variable existed, and non-zero if the variable did not exist
-    int remove(const wcstring &key, int mode, std::vector<event_t> *out_events = nullptr);
+    int remove(const wcstring &key, int mode);
 
     /// Push the variable stack. Used for implementing local variables for functions and for-loops.
     void push(bool new_scope);

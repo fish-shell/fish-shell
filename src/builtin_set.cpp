@@ -604,7 +604,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
         int retval = STATUS_CMD_OK;
         if (split->indexes.empty()) {  // unset the var
-            retval = parser.vars().remove(split->varname, scope, nullptr);
+            retval = parser.vars().remove(split->varname, scope);
             // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
             // but do not emit any errors at the console as a compromise between user
             // friendliness and correctness.

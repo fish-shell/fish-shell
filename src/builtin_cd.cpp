@@ -101,11 +101,7 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
         }
 
         parser.libdata().cwd_fd = std::make_shared<const autoclose_fd_t>(std::move(dir_fd));
-        std::vector<event_t> evts;
-        parser.vars().set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(norm_dir), &evts);
-        for (const auto &evt : evts) {
-            event_fire(parser, evt);
-        }
+        parser.set_var_and_fire(L"PWD", ENV_EXPORT | ENV_GLOBAL, {norm_dir});
         return STATUS_CMD_OK;
     }
 

@@ -285,9 +285,9 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wcstring &ke
 /// Call vars.set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
 static int env_set_reporting_errors(const wchar_t *cmd, const wcstring &key, int scope,
-                                    wcstring_list_t list, io_streams_t &streams, env_stack_t &vars,
-                                    std::vector<event_t> *evts) {
-    int retval = vars.set(key, scope | ENV_USER, std::move(list), evts);
+                                    wcstring_list_t list, io_streams_t &streams, parser_t &parser) {
+    int retval = parser.set_var_and_fire(key, scope | ENV_USER, std::move(list));
+    // If this returned OK, the parser already fired the event.
     handle_env_return(retval, cmd, key, streams);
 
     return retval;
@@ -603,25 +603,22 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         }
 
         int retval = STATUS_CMD_OK;
-        std::vector<event_t> evts;
         if (split->indexes.empty()) {  // unset the var
-            retval = parser.vars().remove(split->varname, scope, &evts);
+            retval = parser.vars().remove(split->varname, scope, nullptr);
             // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
             // but do not emit any errors at the console as a compromise between user
             // friendliness and correctness.
             if (retval != ENV_NOT_FOUND) {
                 handle_env_return(retval, cmd, split->varname, streams);
             }
+            if (retval == ENV_OK) {
+                event_fire(parser, event_t::variable_erase(split->varname));
+            }
         } else {  // remove just the specified indexes of the var
             if (!split->var) return STATUS_CMD_ERROR;
             wcstring_list_t result = erased_at_indexes(split->var->as_list(), split->indexes);
             retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(result),
-                                              streams, parser.vars(), &evts);
-        }
-
-        // Fire any events.
-        for (const auto &evt : evts) {
-            event_fire(parser, evt);
+                                              streams, parser);
         }
 
         // Set $status to the last error value.
@@ -758,12 +755,8 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, c
 
     bool have_shadowing_global = check_global_scope_exists(cmd, opts, split->varname, streams, parser);
     // Set the value back in the variable stack and fire any events.
-    std::vector<event_t> evts;
     int retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(new_values),
-                                          streams, parser.vars(), &evts);
-    for (const auto &evt : evts) {
-        event_fire(parser, evt);
-    }
+                                          streams, parser);
 
     if (retval != STATUS_CMD_OK) return retval;
     return have_shadowing_global;

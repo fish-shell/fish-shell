@@ -237,7 +237,9 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ["search.html"]
 
-# Disable smart-quotes to prevent double dashes from becoming emdashes.
-smartquotes = False
+# Enable smart-quotes
+# default action is 'qDe': quotes, Dashes, ellipsis. Skip dashes for --options
+smartquotes = True
+smartquotes_action = 'qe'
 
 linkcheck_ignore = [r'https://github.com/fish-shell/fish-shell/issues/\d+']

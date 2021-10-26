@@ -127,6 +127,8 @@ begin
     end
     set --show loop_var
 end
+#CHECK: $loop_var: set in local scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: |c|
 
 set -g loop_var global_val
 function loop_test
@@ -139,6 +141,8 @@ function loop_test
 end
 loop_test
 set --show loop_var
+#CHECK: $loop_var: set in local scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: |b|
 
 begin
     set -l loop_var
@@ -147,10 +151,6 @@ begin
     set --show loop_var
 end
 set --show loop_var
-#CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: |c|
-#CHECK: $loop_var: set in local scope, unexported, with 1 elements
-#CHECK: $loop_var[1]: |b|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements
 #CHECK: $loop_var[1]: |global_val|
 #CHECK: $loop_var: set in global scope, unexported, with 1 elements

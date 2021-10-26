@@ -438,6 +438,11 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
                             FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
     }
 
+    if (!valid_var_name(for_var_name)) {
+        return report_error(STATUS_INVALID_ARGS, header.var_name, BUILTIN_ERR_VARNAME, L"for",
+                            for_var_name.c_str());
+    }
+
     // Get the contents to iterate over.
     wcstring_list_t arguments;
     ast_args_list_t arg_nodes = get_argument_nodes(header.args);
@@ -459,11 +464,6 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
         retval = parser->set_empty_var_and_fire(for_var_name, ENV_LOCAL | ENV_USER);
     }
     assert(retval == ENV_OK);
-
-    if (!valid_var_name(for_var_name)) {
-        return report_error(STATUS_INVALID_ARGS, header.var_name, BUILTIN_ERR_VARNAME, L"for",
-                            for_var_name.c_str());
-    }
 
     trace_if_enabled(*parser, L"for", arguments);
     block_t *fb = parser->push_block(block_t::for_block());

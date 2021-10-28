@@ -356,7 +356,7 @@ bool make_detached_pthread(void *(*func)(void *), void *param) {
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
     // extant requests. So we can ignore failure with some confidence.
-    pthread_t thread = nullptr;
+    pthread_t thread = 0;
     int err = pthread_create(&thread, nullptr, func, param);
     if (err == 0) {
         // Success, return the thread.

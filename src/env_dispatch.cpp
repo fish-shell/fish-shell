@@ -53,6 +53,7 @@
 #include "reader.h"
 #include "screen.h"
 #include "termsize.h"
+#include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 #define DEFAULT_TERM1 "ansi"
@@ -311,6 +312,10 @@ static void handle_read_limit_change(const environment_t &vars) {
     }
 }
 
+static void handle_fish_trace(const environment_t &vars) {
+    trace_set_enabled(!vars.get(L"fish_trace").missing_or_empty());
+}
+
 /// Populate the dispatch table used by `env_dispatch_var_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
 /// Note this returns a new-allocated value that we expect to leak.
@@ -337,6 +342,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
     var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
+    var_dispatch_table->add(L"fish_trace", handle_fish_trace);
 
     // This std::move is required to avoid a build error on old versions of libc++ (#5801),
     // but it causes a different warning under newer versions of GCC (observed under GCC 9.3.0,
@@ -359,6 +365,7 @@ static void run_inits(const environment_t &vars) {
     update_wait_on_escape_ms(vars);
     handle_read_limit_change(vars);
     handle_fish_use_posix_spawn_change(vars);
+    handle_fish_trace(vars);
 }
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).

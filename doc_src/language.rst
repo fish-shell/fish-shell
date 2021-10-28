@@ -540,6 +540,27 @@ Outside of double quotes, variables will expand to as many arguments as they hav
 
 If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`cartesian product <cartesian-product>` section for more information.
 
+Unlike other shells, fish doesn't do what is known as "Word Splitting". Once a variable is set to a particular set of elements, those elements expand as themselves. They aren't split on spaces or newlines or anything::
+
+  > set foo one\nthing
+  > echo $foo
+  one
+  thing
+  > printf '|%s|\n' $foo
+  |one
+  thing|
+
+That means quoting isn't the absolute necessity it is in other shells. Most of the time, not quoting a variable is correct. The exception is when you need to ensure that the variable is passed as one element, even if it might be unset or have multiple elements. This happens often with :ref:`test <cmd-test>`::
+
+  set -l foo one two three
+  test -n $foo
+  # prints an error that it got too many arguments, because it was executed like
+  test -n one two three
+
+  test -n "$foo"
+  # works, because it was executed like
+  test -n "one two three"
+
 The ``$`` symbol can also be used multiple times, as a kind of "dereference" operator (the ``*`` in C or C++), like in the following code::
 
     set foo a b c

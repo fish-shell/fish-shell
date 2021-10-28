@@ -123,3 +123,10 @@ emit bar
 command true &
 set -l truepid $last_pid
 test $truepid != $fish_pid || echo true has same pid as fish
+
+# Job exit events work even after the job has exited!
+sleep .5
+function thud --on-job-exit $truepid
+    echo "thud called"
+end
+# CHECK: thud called

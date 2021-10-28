@@ -491,8 +491,6 @@ Unlike bash (by default), fish will not pass on the literal glob character if no
 
     apt install "ncurses-*"
 
-.. [#] Technically, unix allows filenames with newlines, and this splits the ``find`` output on newlines. If you want to avoid that, use find's ``-print0`` option and :ref:`string split0<cmd-string-split0>`.
-
 .. _expand-variable:
 
 Variable expansion
@@ -534,6 +532,9 @@ The latter syntax ``{$WORD}`` is a special case of :ref:`brace expansion <expand
 
 If $WORD here is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
 
+Quoting variables
+'''''''''''''''''
+
 Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (`:`) instead [#]_.
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
@@ -561,6 +562,11 @@ That means quoting isn't the absolute necessity it is in other shells. Most of t
   # works, because it was executed like
   test -n "one two three"
 
+.. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
+
+Derefencing variables
+'''''''''''''''''''''
+
 The ``$`` symbol can also be used multiple times, as a kind of "dereference" operator (the ``*`` in C or C++), like in the following code::
 
     set foo a b c
@@ -577,8 +583,6 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
 ``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
 
 When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1..-1][5]`` (take all elements of ``$foo``, use them as variable names, then give the fifth element of those).
-
-.. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
 
 .. _expand-command-substitution:
 
@@ -620,7 +624,7 @@ Sometimes you want to pass the output of a command to another command that only 
 
     grep fish myanimallist1 | wc -l
 
-but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells [#]_ allow this via ``foo <(bar) <(baz)``, and fish uses the :ref:`psub <cmd-psub>` command::
+but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells allow this via ``foo <(bar) <(baz)``, and fish uses the :ref:`psub <cmd-psub>` command::
 
     # Compare just the lines containing "fish" in two files:
     diff -u (grep fish myanimallist1 | psub) (grep fish myanimallist2 | psub)
@@ -628,7 +632,6 @@ but if you need multiple or the command doesn't read from standard input, "proce
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
 
 .. [#] Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :ref:`string split <cmd-string-split>` instead.
-.. [#] Bash and Zsh at least, though it is a POSIX extension
 
 .. _expand-brace:
 

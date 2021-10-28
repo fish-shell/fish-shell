@@ -555,7 +555,7 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
 
 ``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``.
 
-When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1][5]`` (take the first element of ``$foo``, use it as a variable name, then give the fifth element of that).
+When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1..-1][5]`` (take all elements of ``$foo``, use them as variable names, then give the fifth element of those).
 
 .. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
 

@@ -70,6 +70,7 @@ Scripting improvements
 - When trying to ``cd`` to a dangling (broken) symbolic link, fish will print an error noting that the target is a broken link (:issue:`8264`).
 - On MacOS terminals that are not granted permissions to access a folder, ``cd`` would print a spurious "rotten symlink" error, which has been corrected to "permission denied" (:issue:`8264`).
 - Performance improvements to globbing, especially on systems using glibc (by avoiding its slow iswalnum() function). In some cases (large directories with files with many numbers in the names) this almost doubles performance.
+- Since fish 3.0, for-loops would trigger a variable handler an additional time before the loop was entered. This has been corrected (:issue:`8384`).
 
 Interactive improvements
 ------------------------

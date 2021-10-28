@@ -32,3 +32,14 @@ begin
 end
 echo $k
 # CHECK: global
+
+function foo --on-variable foo
+    echo foo set
+end
+
+for foo in 1 2 3
+    true
+end
+# CHECK: foo set
+# CHECK: foo set
+# CHECK: foo set

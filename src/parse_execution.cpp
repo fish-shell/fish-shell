@@ -458,17 +458,16 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
                             for_var_name.c_str());
     }
 
-    // We fire the same event over and over again, just construct it once.
-    event_t evt = event_t::variable_set(for_var_name);
     auto &vars = parser->vars();
     int retval;
     retval = vars.set(for_var_name, ENV_LOCAL | ENV_USER, var ? var->as_list() : wcstring_list_t{});
     assert(retval == ENV_OK);
-    // TODO: For historical reasons we fire here as well, I'm not sure that makes sense?
-    event_fire(*parser, evt);
 
     trace_if_enabled(*parser, L"for", arguments);
     block_t *fb = parser->push_block(block_t::for_block());
+
+    // We fire the same event over and over again, just construct it once.
+    event_t evt = event_t::variable_set(for_var_name);
 
     // Now drive the for loop.
     for (const wcstring &val : arguments) {

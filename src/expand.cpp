@@ -1001,20 +1001,22 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_receiver_t
 expand_result_t expander_t::stage_variables(wcstring input, completion_receiver_t *out) {
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.
-    unescape_string_in_place(&input, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
+    wcstring next;
+    unescape_string(input, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
 
     if (flags & expand_flag::skip_variables) {
-        for (auto &i : input) {
+        for (auto &i : next) {
             if (i == VARIABLE_EXPAND) {
                 i = L'$';
             }
         }
-        if (!out->add(std::move(input))) {
+        if (!out->add(std::move(next))) {
             return append_overflow_error(errors);
         }
         return expand_result_t::ok;
     } else {
-        return expand_variables(std::move(input), out, input.size(), ctx.vars, errors);
+        size_t size = next.size();
+        return expand_variables(std::move(next), out, size, ctx.vars, errors);
     }
 }
 

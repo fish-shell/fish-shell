@@ -751,11 +751,12 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar
         return STATUS_INVALID_ARGS;
     }
 
-#if defined(HAVE_USELOCALE)
+#if defined(HAVE_USELOCALE) || defined(__GLIBC__)
     // We use a locale-dependent LC_NUMERIC here,
     // unlike the rest of fish (which uses LC_NUMERIC=C).
     // Because we do output as well as wcstod (which would have wcstod_l),
     // we need to set the locale here.
+    // (glibc has uselocale since 2.3, but our configure checks fail us)
     locale_t prev_locale = uselocale(fish_numeric_locale());
 #else
     // NetBSD does not have uselocale,
@@ -776,7 +777,7 @@ maybe_t<int> builtin_printf(parser_t &parser, io_streams_t &streams, const wchar
         argv += args_used;
     } while (args_used > 0 && argc > 0 && !state.early_exit);
 
-#if defined(HAVE_USELOCALE)
+#if defined(HAVE_USELOCALE) || defined(__GLIBC__)
     uselocale(prev_locale);
 #else
     setlocale(LC_NUMERIC, prev_locale);

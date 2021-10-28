@@ -295,12 +295,13 @@ bool process_t::is_internal() const {
     return true;
 }
 
-wait_handle_ref_t process_t::get_wait_handle(bool create) {
+wait_handle_ref_t process_t::make_wait_handle(internal_job_id_t jid) {
     if (type != process_type_t::external || pid <= 0) {
+        // Not waitable.
         return nullptr;
     }
-    if (!wait_handle_ && create) {
-        wait_handle_ = std::make_shared<wait_handle_t>(this->pid, wbasename(this->actual_cmd));
+    if (!wait_handle_) {
+        wait_handle_ = std::make_shared<wait_handle_t>(this->pid, jid, wbasename(this->actual_cmd));
     }
     return wait_handle_;
 }
@@ -602,15 +603,14 @@ static void save_wait_handle_for_completed_job(const shared_ptr<job_t> &job,
     // Are we a background job?
     if (!job->is_foreground()) {
         for (auto &proc : job->processes) {
-            store.add(proc->get_wait_handle(true));
+            store.add(proc->make_wait_handle(job->internal_job_id));
         }
     }
 
     // Mark all wait handles as complete (but don't create just for this).
     for (auto &proc : job->processes) {
-        if (wait_handle_ref_t wh = proc->get_wait_handle(false /* create */)) {
+        if (wait_handle_ref_t wh = proc->get_wait_handle()) {
             wh->status = proc->status.status_value();
-            wh->internal_job_id = job->internal_job_id;
             wh->completed = true;
         }
     }

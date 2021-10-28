@@ -50,7 +50,7 @@ static bool find_wait_handles(pid_t pid, const wchar_t *proc_name, const parser_
         // We want to set 'matched' to true if we could have matched, even if the job was stopped.
         bool provide_handle = can_wait_on_job(j);
         for (const auto &proc : j->processes) {
-            auto wh = proc->get_wait_handle();
+            auto wh = proc->make_wait_handle(j->internal_job_id);
             if (wait_handle_matches(pid, proc_name, wh)) {
                 matched = true;
                 if (provide_handle) handles->push_back(std::move(wh));
@@ -71,7 +71,7 @@ static std::vector<wait_handle_ref_t> get_all_wait_handles(const parser_t &parse
     for (const auto &j : parser.jobs()) {
         if (!can_wait_on_job(j)) continue;
         for (const auto &proc : j->processes) {
-            if (auto wh = proc->get_wait_handle()) {
+            if (auto wh = proc->make_wait_handle(j->internal_job_id)) {
                 result.push_back(std::move(wh));
             }
         }

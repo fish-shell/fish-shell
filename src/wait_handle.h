@@ -17,19 +17,19 @@
 /// The bits of a job necessary to support 'wait' and '--on-process-exit'.
 /// This may outlive the job.
 struct wait_handle_t {
-    /// Construct from a pid and base name.
-    wait_handle_t(pid_t pid, wcstring name) : pid(pid), base_name(std::move(name)) {}
+    /// Construct from a pid, job id, and base name.
+    wait_handle_t(pid_t pid, internal_job_id_t jid, wcstring name)
+        : pid(pid), internal_job_id(jid), base_name(std::move(name)) {}
 
     /// The pid of this process.
-    pid_t pid{};
+    const pid_t pid{};
 
     /// The internal job id of the job which contained this process.
-    /// This is initially 0; it is set when the job is completed.
-    internal_job_id_t internal_job_id{};
+    const internal_job_id_t internal_job_id{};
 
     /// The "base name" of this process.
     /// For example if the process is "/bin/sleep" then this will be 'sleep'.
-    wcstring base_name{};
+    const wcstring base_name{};
 
     /// The value appropriate for populating $status, if completed.
     int status{0};

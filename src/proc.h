@@ -249,9 +249,13 @@ class process_t : noncopyable_t {
     /// \return whether this process type is internal (block, function, or builtin).
     bool is_internal() const;
 
-    /// \return the wait handle for the process, creating it if \p create is set.
-    /// This will return nullptr if the process does not have a pid (i.e. is not external).
-    wait_handle_ref_t get_wait_handle(bool create = true);
+    /// \return the wait handle for the process, if it exists.
+    wait_handle_ref_t get_wait_handle() { return wait_handle_; }
+
+    /// Create a wait handle for the process.
+    /// As a process does not know its job id, we pass it in.
+    /// Note this will return null if the process is not waitable (has no pid).
+    wait_handle_ref_t make_wait_handle(internal_job_id_t jid);
 
     /// Actual command to pass to exec in case of process_type_t::external or process_type_t::exec.
     wcstring actual_cmd;

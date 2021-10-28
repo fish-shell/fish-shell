@@ -3453,8 +3453,8 @@ static void test_wait_handles() {
     do_test(whs.get_by_pid(5) == nullptr);
 
     // Duplicate pids drop oldest.
-    whs.add(std::make_shared<wait_handle_t>(5, L"first"));
-    whs.add(std::make_shared<wait_handle_t>(5, L"second"));
+    whs.add(std::make_shared<wait_handle_t>(5, 0, L"first"));
+    whs.add(std::make_shared<wait_handle_t>(5, 0, L"second"));
     do_test(whs.size() == 1);
     do_test(whs.get_by_pid(5)->base_name == L"second");
 
@@ -3464,11 +3464,11 @@ static void test_wait_handles() {
     do_test(whs.size() == 0);
 
     // Test evicting oldest.
-    whs.add(std::make_shared<wait_handle_t>(1, L"1"));
-    whs.add(std::make_shared<wait_handle_t>(2, L"2"));
-    whs.add(std::make_shared<wait_handle_t>(3, L"3"));
-    whs.add(std::make_shared<wait_handle_t>(4, L"4"));
-    whs.add(std::make_shared<wait_handle_t>(5, L"5"));
+    whs.add(std::make_shared<wait_handle_t>(1, 0, L"1"));
+    whs.add(std::make_shared<wait_handle_t>(2, 0, L"2"));
+    whs.add(std::make_shared<wait_handle_t>(3, 0, L"3"));
+    whs.add(std::make_shared<wait_handle_t>(4, 0, L"4"));
+    whs.add(std::make_shared<wait_handle_t>(5, 0, L"5"));
     do_test(whs.size() == 4);
     auto start = whs.get_list().begin();
     do_test(std::next(start, 0)->get()->base_name == L"5");

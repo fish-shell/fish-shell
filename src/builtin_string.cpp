@@ -1673,7 +1673,7 @@ static wcstring wcsrepeat(const wcstring &to_repeat, size_t count) {
 // Helper function to abstract the repeat until logic from string_repeat
 // returns the to_repeat string, repeated until max char has been reached.
 static wcstring wcsrepeat_until(const wcstring &to_repeat, size_t max) {
-    if (to_repeat.length() == 0) return wcstring();
+    if (to_repeat.length() == 0) return {};
     size_t count = max / to_repeat.length();
     size_t mod = max % to_repeat.length();
 

@@ -104,61 +104,41 @@ static const wchar_t *get_highlight_var_name(highlight_role_t role) {
 static highlight_role_t get_fallback(highlight_role_t role) {
     switch (role) {
         case highlight_role_t::normal:
-            return highlight_role_t::normal;
         case highlight_role_t::error:
-            return highlight_role_t::normal;
         case highlight_role_t::command:
+        case highlight_role_t::statement_terminator:
+        case highlight_role_t::param:
+        case highlight_role_t::search_match:
+        case highlight_role_t::comment:
+        case highlight_role_t::operat:
+        case highlight_role_t::escape:
+        case highlight_role_t::quote:
+        case highlight_role_t::redirection:
+        case highlight_role_t::autosuggestion:
+        case highlight_role_t::selection:
+        case highlight_role_t::pager_progress:
+        case highlight_role_t::pager_background:
+        case highlight_role_t::pager_prefix:
+        case highlight_role_t::pager_completion:
+        case highlight_role_t::pager_description:
             return highlight_role_t::normal;
         case highlight_role_t::keyword:
             return highlight_role_t::command;
-        case highlight_role_t::statement_terminator:
-            return highlight_role_t::normal;
         case highlight_role_t::option:
             return highlight_role_t::param;
-        case highlight_role_t::param:
-            return highlight_role_t::normal;
-        case highlight_role_t::comment:
-            return highlight_role_t::normal;
-        case highlight_role_t::search_match:
-            return highlight_role_t::normal;
-        case highlight_role_t::operat:
-            return highlight_role_t::normal;
-        case highlight_role_t::escape:
-            return highlight_role_t::normal;
-        case highlight_role_t::quote:
-            return highlight_role_t::normal;
-        case highlight_role_t::redirection:
-            return highlight_role_t::normal;
-        case highlight_role_t::autosuggestion:
-            return highlight_role_t::normal;
-        case highlight_role_t::selection:
-            return highlight_role_t::normal;
-        case highlight_role_t::pager_progress:
-            return highlight_role_t::normal;
-        case highlight_role_t::pager_background:
-            return highlight_role_t::normal;
-        case highlight_role_t::pager_prefix:
-            return highlight_role_t::normal;
-        case highlight_role_t::pager_completion:
-            return highlight_role_t::normal;
-        case highlight_role_t::pager_description:
-            return highlight_role_t::normal;
         case highlight_role_t::pager_secondary_background:
             return highlight_role_t::pager_background;
         case highlight_role_t::pager_secondary_prefix:
+        case highlight_role_t::pager_selected_prefix:
             return highlight_role_t::pager_prefix;
         case highlight_role_t::pager_secondary_completion:
+        case highlight_role_t::pager_selected_completion:
             return highlight_role_t::pager_completion;
         case highlight_role_t::pager_secondary_description:
+        case highlight_role_t::pager_selected_description:
             return highlight_role_t::pager_description;
         case highlight_role_t::pager_selected_background:
             return highlight_role_t::search_match;
-        case highlight_role_t::pager_selected_prefix:
-            return highlight_role_t::pager_prefix;
-        case highlight_role_t::pager_selected_completion:
-            return highlight_role_t::pager_completion;
-        case highlight_role_t::pager_selected_description:
-            return highlight_role_t::pager_description;
     }
     DIE("invalid highlight role");
 }
@@ -175,7 +155,7 @@ static bool fs_is_case_insensitive(const wcstring &path, int fd,
     bool result = false;
 #ifdef _PC_CASE_SENSITIVE
     // Try the cache first.
-    case_sensitivity_cache_t::iterator cache = case_sensitivity_cache.find(path);
+    auto cache = case_sensitivity_cache.find(path);
     if (cache != case_sensitivity_cache.end()) {
         /* Use the cached value */
         result = cache->second;
@@ -518,7 +498,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     for (size_t slice_count = 0; slice_count < dollar_count; slice_count++) {
         long slice_len = parse_util_slice_length(in + idx);
         if (slice_len > 0) {
-            size_t slice_ulen = static_cast<size_t>(slice_len);
+            auto slice_ulen = static_cast<size_t>(slice_len);
             colors[idx] = highlight_role_t::operat;
             colors[idx + slice_ulen - 1] = highlight_role_t::operat;
             idx += slice_ulen;
@@ -1276,7 +1256,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     // Underline every valid path.
     if (io_ok) {
         for (const ast::node_t &node : ast) {
-            const ast::argument_t *arg = node.try_as<ast::argument_t>();
+            const auto arg = node.try_as<ast::argument_t>();
             if (!arg || arg->unsourced) continue;
             if (ctx.check_cancel()) break;
             if (range_is_potential_path(buff, arg->range, ctx, working_directory)) {

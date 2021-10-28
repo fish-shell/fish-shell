@@ -137,7 +137,7 @@ static owning_lock<main_thread_queue_t> s_main_thread_queue;
 /// \return the signaller for completions and main thread requests.
 static fd_event_signaller_t &get_notify_signaller() {
     // Leaked to avoid shutdown dtors.
-    static fd_event_signaller_t *s_signaller = new fd_event_signaller_t();
+    static auto s_signaller = new fd_event_signaller_t();
     return *s_signaller;
 }
 
@@ -356,7 +356,7 @@ bool make_detached_pthread(void *(*func)(void *), void *param) {
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
     // extant requests. So we can ignore failure with some confidence.
-    pthread_t thread = 0;
+    pthread_t thread = nullptr;
     int err = pthread_create(&thread, nullptr, func, param);
     if (err == 0) {
         // Success, return the thread.

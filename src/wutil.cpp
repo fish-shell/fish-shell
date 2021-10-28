@@ -464,7 +464,7 @@ ssize_t wwrite_to_fd(const wchar_t *input, size_t input_len, int fd) {
             ssize_t samt = write(fd, cursor, remaining);
             if (samt < 0) return false;
             total_written += samt;
-            size_t amt = static_cast<size_t>(samt);
+            auto amt = static_cast<size_t>(samt);
             assert(amt <= remaining && "Wrote more than requested");
             remaining -= amt;
             cursor += amt;
@@ -547,9 +547,9 @@ void fish_invalidate_numeric_locale() {
 
 locale_t fish_numeric_locale() {
     // The current locale, except LC_NUMERIC isn't forced to C.
-    static locale_t loc = 0;
+    static locale_t loc = nullptr;
     if (!fish_numeric_locale_is_valid) {
-        if (loc != 0) freelocale(loc);
+        if (loc != nullptr) freelocale(loc);
         auto cur = duplocale(LC_GLOBAL_LOCALE);
         loc = newlocale(LC_NUMERIC_MASK, "", cur);
         fish_numeric_locale_is_valid = true;

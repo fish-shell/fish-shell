@@ -263,7 +263,6 @@ int fish_wcwidth(wchar_t wc) {
             // Fall back to system wcwidth in this case.
             return wcwidth(wc);
         case widechar_ambiguous:
-            return g_fish_ambiguous_width;
         case widechar_private_use:
             // TR11: "All private-use characters are by default classified as Ambiguous".
             return g_fish_ambiguous_width;

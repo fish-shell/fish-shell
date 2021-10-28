@@ -683,7 +683,7 @@ static wcstring_list_t new_var_values_by_index(const split_var_t &split, int arg
         long lidx = split.indexes.at(i);
         assert(lidx >= 1 && "idx should have been verified in range already");
         // Convert from 1-based to 0-based.
-        size_t idx = static_cast<size_t>(lidx - 1);
+        auto idx = static_cast<size_t>(lidx - 1);
         // Extend as needed with empty strings.
         if (idx >= result.size()) result.resize(idx + 1);
         result.at(idx) = argv[i];

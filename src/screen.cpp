@@ -522,7 +522,7 @@ void screen_t::desired_append_char(wchar_t b, highlight_spec_t c, int indent, si
         this->desired.line(this->desired.cursor.y).is_soft_wrapped = false;
         int line_no = ++this->desired.cursor.y;
         this->desired.cursor.x = 0;
-        size_t indentation = prompt_width + indent * INDENT_STEP;
+        size_t indentation = prompt_width + static_cast<size_t>(indent) * INDENT_STEP;
         line_t &line = this->desired.line(line_no);
         line.indentation = indentation;
         for (size_t i = 0; i < indentation; i++) {

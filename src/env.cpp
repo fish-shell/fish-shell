@@ -61,8 +61,7 @@ bool term_has_xn = false;
 /// This is typically initialized in env_init(), and is considered empty before then.
 static acquired_lock<env_universal_t> uvars() {
     // Leaked to avoid shutdown dtor registration.
-    static owning_lock<env_universal_t> *const s_universal_variables =
-        new owning_lock<env_universal_t>();
+    static auto const s_universal_variables = new owning_lock<env_universal_t>();
     return s_universal_variables->acquire();
 }
 
@@ -843,7 +842,7 @@ wcstring_list_t env_scoped_impl_t::get_names(int flags) const {
         names.insert(uni_list.begin(), uni_list.end());
     }
 
-    return wcstring_list_t(names.begin(), names.end());
+    return {names.begin(), names.end()};
 }
 
 /// Recursive helper to snapshot a series of nodes.

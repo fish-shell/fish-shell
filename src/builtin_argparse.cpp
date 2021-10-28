@@ -330,7 +330,7 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
     // A counter to give short chars to long-only options because getopt needs that.
     // Luckily we have wgetopt so we can use wchars - this is one of the private use areas so we
     // have 6400 options available.
-    wchar_t counter = static_cast<wchar_t>(0xE000);
+    auto counter = static_cast<wchar_t>(0xE000);
 
     while (true) {
         if (std::wcscmp(L"--", argv[*optind]) == 0) {

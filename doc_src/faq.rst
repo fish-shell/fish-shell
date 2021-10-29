@@ -73,6 +73,14 @@ How do I run a command every login? What's fish's equivalent to .bashrc or .prof
 ------------------------------------------------------------------------------------
 Edit the file ``~/.config/fish/config.fish`` [#]_, creating it if it does not exist (Note the leading period).
 
+Unlike .bashrc and .profile, this file is always read, even in non-interactive or login shells.
+
+To do something only in interactive shells, check ``status is-interactive`` like::
+
+  if status is-interactive
+      # use the coolbeans theme
+      fish_config theme choose coolbeans
+  end
 
 .. [#] The "~/.config" part of this can be set via $XDG_CONFIG_HOME, that's just the default.
 
@@ -90,6 +98,15 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
 
 You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
 
+Or you can use fish_config from the commandline::
+
+  > fish_config prompt show
+  # displays all the prompts fish ships with
+  > fish_config prompt choose disco
+  # loads the disco prompt in the current shell
+  > fish_config prompt save
+  # makes the change permanent
+
 If you want to modify your existing prompt, you can use :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` like::
 
   >_ funced fish_prompt
@@ -106,13 +123,22 @@ Why does my prompt show a ``[I]``?
 
 That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
 
-If you haven't activated vi mode on purpose, you might have installed a third-party theme that does it.
+If you haven't activated vi mode on purpose, you might have installed a third-party theme or plugin that does it.
 
 If you want to change or disable this display, modify the ``fish_mode_prompt`` function, for instance via :ref:`funced <cmd-funced>`.
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
 Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the :ref:`fish_color family of environment variables <variables-color>`.
+
+You can also use ``fish_config`` on the commandline, like::
+
+  > fish_config theme show
+  # to demonstrate all the colorschemes
+  > fish_config theme choose coolbeans
+  # to load the "coolbeans" theme
+  > fish_config theme save
+  # to make the change permanent
 
 How do I change the greeting message?
 -------------------------------------
@@ -158,6 +184,7 @@ How do I run a subcommand? The backtick doesn't work!
         echo $i
     end
 
+It also supports the familiar ``$()`` syntax, even in quotes. Backticks are not supported because they are discouraged even in POSIX shells. They nest poorly and are hard to tell from single quotes (``''``).
 
 My command (pkg-config) gives its output as a single long string?
 -----------------------------------------------------------------
@@ -167,19 +194,18 @@ That means if you run
 
 ::
 
-    echo x(printf '%s ' a b c)x
+    count (printf '%s ' a b c)
 
 
-It will print ``xa b c x``, because the "a b c " is used in one piece. But if you do
+It will print ``1``, because the "a b c " is used in one piece. But if you do
 
 ::
 
-    echo x(printf '%s\n' a b c)x
+    count (printf '%s\n' a b c)
 
+it will print ``3``, because it gave ``count`` the arguments "a", "b" and "c" separately.
 
-it will print ``xax xbx xcx``.
-
-In the overwhelming majority of cases, splitting on spaces is unwanted, so this is an improvement.
+In the overwhelming majority of cases, splitting on spaces is unwanted, so this is an improvement. This is why you hear about problems with filenames with spaces, after all.
 
 However sometimes, especially with ``pkg-config`` and related tools, splitting on spaces is needed.
 
@@ -191,7 +217,7 @@ The ``-n`` is so empty elements are removed like POSIX shells would do.
 
 How do I get the exit status of a command?
 ------------------------------------------
-Use the ``$status`` variable. This replaces the ``$?`` variable used in some other shells.
+Use the ``$status`` variable. This replaces the ``$?`` variable used in other shells.
 
 ::
 
@@ -215,7 +241,7 @@ Or if you just want to do one command in case the first succeeded or failed, use
     somecommand
     or someothercommand
 
-See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
+See the :ref:`Conditions <syntax-conditional>` and the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
 
 My command prints "No matches for wildcard" but works in bash
 -------------------------------------------------------------
@@ -268,7 +294,7 @@ This is similar to bash's "failglob" option.
 
 I accidentally entered a directory path and fish changed directory. What happened?
 ----------------------------------------------------------------------------------
-If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
+If fish is unable to locate a command with a given name, and it starts with ``.``, ``/`` or ``~``, fish will test if a directory of that name exists. If it does, it assumes that you want to change your directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
 
 The open command doesn't work.
 ------------------------------

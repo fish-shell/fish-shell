@@ -1429,7 +1429,7 @@ Other things have other restrictions. For instance what is allowed for file name
 .. _configuration:
 
 Configuration files
-====================
+-------------------
 
 When fish is started, it reads and runs its configuration files. Where these are depends on build configuration and environment variables.
 

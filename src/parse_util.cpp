@@ -230,6 +230,7 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     if (out_contents != nullptr) out_contents->clear();
     *out_start = 0;
     *out_end = str.size();
+    bool cmdsub_is_quoted = false;
 
     // Nothing to do if the offset is at or past the end of the string.
     if (*inout_cursor_offset >= str.size()) return 0;
@@ -242,7 +243,7 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     const wchar_t *bracket_range_end = nullptr;
 
     int ret = parse_util_locate_cmdsub(valid_range_start, &bracket_range_begin, &bracket_range_end,
-                                       accept_incomplete, out_is_quoted);
+                                       accept_incomplete, &cmdsub_is_quoted);
     if (ret <= 0) {
         return ret;
     }
@@ -263,10 +264,26 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     // Return the start and end.
     *out_start = bracket_range_begin - buff;
     *out_end = bracket_range_end - buff;
+    if (out_is_quoted) *out_is_quoted = cmdsub_is_quoted;
 
     // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
     // overflow is not likely.
     *inout_cursor_offset = 1 + *out_end;
+
+    // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
+    // overflow is not likely.
+    *inout_cursor_offset = 1 + *out_end;
+    if (cmdsub_is_quoted && *bracket_range_end) {
+        // We are usually called in a loop, to process all command substitutions in this string.
+        // If we just located a quoted cmdsub like $(A) inside "$(A)B"(C), the B part is also
+        // quoted but the naïve next caller wouldn't know. Since next caller only cares about
+        // the next command substitution - (C) - and not about the B part, just advance the
+        // cursor to the closing quote.
+        const wchar_t *q_end = quote_end(bracket_range_end, L'"');
+        assert(q_end && "expect balanced quotes");
+        *inout_cursor_offset = 1 + q_end - buff;
+    }
+
     return ret;
 }
 

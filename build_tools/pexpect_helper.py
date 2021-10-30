@@ -268,16 +268,11 @@ class SpawnedProc(object):
         print("{CYAN}Escaped buffer:{RESET}".format(**colors))
         print(escape(self.spawn.before))
         print("")
-        if sys.stdout.isatty():
-            print(
-                "{CYAN}When written to the tty, this looks like:{RESET}".format(
-                    **colors
-                )
-            )
-            print("{CYAN}<-------{RESET}".format(**colors))
-            sys.stdout.write(self.spawn.before)
-            sys.stdout.flush()
-            print("{RESET}\n{CYAN}------->{RESET}".format(**colors))
+        print("{CYAN}When written to the tty, this looks like:{RESET}".format(**colors))
+        print("{CYAN}<-------{RESET}".format(**colors))
+        sys.stdout.write(self.spawn.before)
+        sys.stdout.flush()
+        print("{RESET}\n{CYAN}------->{RESET}".format(**colors))
 
         print("")
 

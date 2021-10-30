@@ -28,8 +28,9 @@ TIMEOUT_SECS = 5
 
 UNEXPECTED_SUCCESS = object()
 
+
 def get_prompt_re(counter):
-    """ Return a regular expression for matching a with a given prompt counter. """
+    """Return a regular expression for matching a with a given prompt counter."""
     return re.compile(
         r"""(?:\r\n?|^)   # beginning of line
             (?:\x1b[\d\[KB(m]*)* # optional colors
@@ -44,7 +45,7 @@ def get_prompt_re(counter):
 
 
 def get_callsite():
-    """ Return a triple (filename, line_number, line_text) of the call site location. """
+    """Return a triple (filename, line_number, line_text) of the call site location."""
     callstack = inspect.getouterframes(inspect.currentframe())
     for f in callstack:
         if inspect.getmodule(f.frame) is not Message.MODULE:
@@ -53,7 +54,7 @@ def get_callsite():
 
 
 def escape(s):
-    """ Escape the string 's' to make it human-understandable. """
+    """Escape the string 's' to make it human-understandable."""
     res = []
     for c in s:
         if c == "\n":
@@ -70,7 +71,7 @@ def escape(s):
 
 
 def pexpect_error_type(err):
-    """ Return a human-readable description of a pexpect error type. """
+    """Return a human-readable description of a pexpect error type."""
     if isinstance(err, pexpect.EOF):
         return "EOF"
     elif isinstance(err, pexpect.TIMEOUT):
@@ -100,7 +101,7 @@ class Message(object):
     MODULE = sys.modules[__name__]
 
     def __init__(self, dir, text, when):
-        """ Construct from a direction, message text and timestamp. """
+        """Construct from a direction, message text and timestamp."""
         self.dir = dir
         self.filename, self.lineno, _ = get_callsite()
         self.text = text
@@ -108,12 +109,12 @@ class Message(object):
 
     @staticmethod
     def sent_input(text, when):
-        """ Return an input message with the given text. """
+        """Return an input message with the given text."""
         return Message(Message.DIR_INPUT, text, when)
 
     @staticmethod
     def received_output(text, when):
-        """ Return a output message with the given text. """
+        """Return a output message with the given text."""
         return Message(Message.DIR_OUTPUT, text, when)
 
 
@@ -129,7 +130,9 @@ class SpawnedProc(object):
             function to ensure that each printed prompt is distinct.
     """
 
-    def __init__(self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy(), **kwargs):
+    def __init__(
+        self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy(), **kwargs
+    ):
         """Construct from a name, timeout, and environment.
 
         Args:
@@ -146,12 +149,14 @@ class SpawnedProc(object):
         self.colorize = sys.stdout.isatty() or env.get("FISH_FORCE_COLOR", "0") == "1"
         self.messages = []
         self.start_time = None
-        self.spawn = pexpect.spawn(exe_path, env=env, encoding="utf-8", timeout=timeout, **kwargs)
+        self.spawn = pexpect.spawn(
+            exe_path, env=env, encoding="utf-8", timeout=timeout, **kwargs
+        )
         self.spawn.delaybeforesend = None
         self.prompt_counter = 0
 
     def time_since_first_message(self):
-        """ Return a delta in seconds since the first message, or 0 if this is the first. """
+        """Return a delta in seconds since the first message, or 0 if this is the first."""
         now = time.monotonic()
         if not self.start_time:
             self.start_time = now
@@ -207,7 +212,7 @@ class SpawnedProc(object):
             self.report_exception_and_exit(pat_desc, unmatched, err)
 
     def expect_str(self, s, **kwargs):
-        """ Cover over expect_re() which accepts a literal string. """
+        """Cover over expect_re() which accepts a literal string."""
         return self.expect_re(re.escape(s), **kwargs)
 
     def expect_prompt(self, *args, increment=True, **kwargs):
@@ -305,14 +310,14 @@ class SpawnedProc(object):
         sys.exit(1)
 
     def sleep(self, secs):
-        """ Cover over time.sleep(). """
+        """Cover over time.sleep()."""
         time.sleep(secs)
 
     def colors(self):
-        """ Return a dictionary mapping color names to ANSI escapes """
+        """Return a dictionary mapping color names to ANSI escapes"""
 
         def ansic(n):
-            """ Return either an ANSI escape sequence for a color, or empty string. """
+            """Return either an ANSI escape sequence for a color, or empty string."""
             return "\033[%dm" % n if self.colorize else ""
 
         return {

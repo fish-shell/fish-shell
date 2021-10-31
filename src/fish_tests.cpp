@@ -5296,6 +5296,14 @@ static void test_highlighting() {
         {L"after\"", highlight_role_t::quote},
         {L"param2", highlight_role_t::param},
     });
+    highlight_tests.push_back({
+        {L"true", highlight_role_t::command},
+        {L"\"", highlight_role_t::error},
+        {L"unclosed quote", highlight_role_t::quote},
+        {L"$(", highlight_role_t::operat},
+        {L"true", highlight_role_t::command},
+        {L")", highlight_role_t::operat},
+    });
 
     // Redirections substitutions.
     highlight_tests.push_back({

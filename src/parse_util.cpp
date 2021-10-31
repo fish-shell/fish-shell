@@ -275,9 +275,16 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
         // quoted but the naïve next caller wouldn't know. Since next caller only cares about
         // the next command substitution - (C) - and not about the B part, just advance the
         // cursor to the closing quote.
-        const wchar_t *q_end = quote_end(bracket_range_end, L'"');
-        assert(q_end && "expect balanced quotes");
-        *inout_cursor_offset = 1 + q_end - buff;
+        if (auto *q_end = quote_end(bracket_range_end, L'"')) {
+            *inout_cursor_offset = 1 + q_end - buff;
+        } else {
+            if (accept_incomplete) {
+                // We want to skip quoted text, so if there is no closing quote, skip to the end.
+                *inout_cursor_offset = bracket_range_end + std::wcslen(bracket_range_end) - buff;
+            } else {
+                return -1;
+            }
+        }
     }
 
     return ret;

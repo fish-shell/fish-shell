@@ -101,7 +101,7 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
 
 void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wchar_t *cmd);
 
-void builtin_wperror(const wchar_t *s, io_streams_t &streams);
+void builtin_wperror(const wchar_t *program_name, io_streams_t &streams);
 
 struct help_only_cmd_opts_t {
     bool print_help = false;

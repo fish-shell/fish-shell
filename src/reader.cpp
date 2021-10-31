@@ -930,7 +930,7 @@ void term_copy_modes() {
 }
 
 /// Grab control of terminal.
-void term_steal() {
+static void term_steal() {
     term_copy_modes();
     while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
@@ -4184,7 +4184,7 @@ void reader_queue_ch(const char_event_t &ch) {
 }
 
 /// Sets the command line contents, clearing the pager.
-void reader_set_buffer(const wcstring &b, size_t pos) {
+static void reader_set_buffer(const wcstring &b, size_t pos) {
     reader_data_t *data = current_data_or_null();
     if (!data) return;
 

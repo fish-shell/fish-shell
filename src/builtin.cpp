@@ -93,10 +93,10 @@ int builtin_count_args(const wchar_t *const *argv) {
 
 /// This function works like wperror, but it prints its result into the streams.err string instead
 /// to stderr. Used by the builtin commands.
-void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
+void builtin_wperror(const wchar_t *program_name, io_streams_t &streams) {
     char *err = std::strerror(errno);
-    if (s != nullptr) {
-        streams.err.append(s);
+    if (program_name != nullptr) {
+        streams.err.append(program_name);
         streams.err.append(L": ");
     }
     if (err != nullptr) {
@@ -319,21 +319,21 @@ static maybe_t<int> builtin_breakpoint(parser_t &parser, io_streams_t &streams,
     return parser.get_last_status();
 }
 
-maybe_t<int> builtin_true(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+static maybe_t<int> builtin_true(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     UNUSED(argv);
     return STATUS_CMD_OK;
 }
 
-maybe_t<int> builtin_false(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+static maybe_t<int> builtin_false(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     UNUSED(argv);
     return STATUS_CMD_ERROR;
 }
 
-maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
+static maybe_t<int> builtin_gettext(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
     for (int i = 1; i < builtin_count_args(argv); i++) {

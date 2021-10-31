@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "builtin.h"
+#include "builtin_set.h"
 #include "common.h"
 #include "env.h"
 #include "expand.h"
@@ -313,7 +314,7 @@ struct split_var_t {
 /// Returns:
 ///   a split var on success, none() on error, in which case an error will have been printed.
 ///   If no index is found, this leaves indexes empty.
-maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_flags_t mode,
+static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_flags_t mode,
                                            const environment_t &vars, io_streams_t &streams) {
     split_var_t res{};
     const wchar_t *open_bracket = std::wcschr(arg, L'[');

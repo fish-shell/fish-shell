@@ -109,7 +109,7 @@ const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_t::kw_excla
 #define keyword_enum_map_len (sizeof keyword_enum_map / sizeof *keyword_enum_map)
 
 // Statement decorations like 'command' or 'exec'.
-enum class statement_decoration_t {
+enum class statement_decoration_t : uint8_t {
     none,
     command,
     builtin,
@@ -117,7 +117,7 @@ enum class statement_decoration_t {
 };
 
 // Parse error code list.
-enum parse_error_code_t {
+enum parse_error_code_t : uint8_t {
     parse_error_none,
 
     // Matching values from enum parser_error.
@@ -159,10 +159,10 @@ enum {
     /// Indicate that extra semis should be generated.
     parse_flag_show_extra_semis = 1 << 5,
 };
-typedef unsigned int parse_tree_flags_t;
+using parse_tree_flags_t = uint8_t;
 
 enum { PARSER_TEST_ERROR = 1, PARSER_TEST_INCOMPLETE = 2 };
-typedef unsigned int parser_test_error_bits_t;
+using parser_test_error_bits_t = uint8_t;
 
 struct parse_error_t {
     /// Text of the error.
@@ -193,7 +193,7 @@ wcstring token_type_user_presentable_description(parse_token_type_t type,
 void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 
 // The location of a pipeline.
-enum class pipeline_position_t {
+enum class pipeline_position_t : uint8_t {
     none,       // not part of a pipeline
     first,      // first command in a pipeline
     subsequent  // second or further command in a pipeline

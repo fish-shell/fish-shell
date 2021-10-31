@@ -98,7 +98,7 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
     return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
-bool path_is_executable(const std::string &path) {
+static bool path_is_executable(const std::string &path) {
     if (access(path.c_str(), X_OK)) return false;
     struct stat buff;
     if (stat(path.c_str(), &buff) == -1) {
@@ -221,11 +221,11 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
     assert(!wd.empty() && wd.back() == L'/');
     auto paths = path_apply_cdpath(dir, wd, env_vars);
 
-    for (const wcstring &dir : paths) {
+    for (const wcstring &a_dir : paths) {
         struct stat buf;
-        if (wstat(dir, &buf) == 0) {
+        if (wstat(a_dir, &buf) == 0) {
             if (S_ISDIR(buf.st_mode)) {
-                return dir;
+                return a_dir;
             }
             err = ENOTDIR;
         }

@@ -24,7 +24,7 @@
 #include "wait_handle.h"
 
 /// Types of processes.
-enum class process_type_t {
+enum class process_type_t : uint8_t {
     /// A regular external command.
     external,
     /// A builtin command.
@@ -37,7 +37,7 @@ enum class process_type_t {
     exec,
 };
 
-enum class job_control_t {
+enum class job_control_t : uint8_t {
     all,
     interactive,
     none,

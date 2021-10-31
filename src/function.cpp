@@ -77,7 +77,7 @@ bool function_set_t::allow_autoload(const wcstring &name) const {
 }  // namespace
 
 /// \return a copy of some function props, in a new shared_ptr.
-std::shared_ptr<function_properties_t> copy_props(const function_properties_ref_t &props) {
+static std::shared_ptr<function_properties_t> copy_props(const function_properties_ref_t &props) {
     assert(props && "Null props");
     return std::make_shared<function_properties_t>(*props);
 }

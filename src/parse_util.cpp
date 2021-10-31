@@ -269,10 +269,6 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
     // overflow is not likely.
     *inout_cursor_offset = 1 + *out_end;
-
-    // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
-    // overflow is not likely.
-    *inout_cursor_offset = 1 + *out_end;
     if (cmdsub_is_quoted && *bracket_range_end) {
         // We are usually called in a loop, to process all command substitutions in this string.
         // If we just located a quoted cmdsub like $(A) inside "$(A)B"(C), the B part is also

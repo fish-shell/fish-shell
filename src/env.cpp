@@ -252,7 +252,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // (See issue #2784).
     wcstring key, val;
     const char *const *envp = environ;
-    size_t i = 0;
+    int i = 0;
     while (envp && envp[i]) i++;
     while (i--) {
         const wcstring key_and_val = str2wcstring(envp[i]);  // like foo=bar
@@ -1216,7 +1216,7 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
         result.uvar_modified = true;
     } else {
         // Unspecified scope with no existing variables.
-        auto node = resolve_unspecified_scope();
+        node = resolve_unspecified_scope();
         assert(node && "Should always resolve some scope");
         set_in_node(node, key, std::move(val), flags);
         result.global_modified = (node == globals_);

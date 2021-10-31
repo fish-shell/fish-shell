@@ -99,6 +99,7 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
+  - ``istioctl`` (:issue:`8343`)
   - ``black`` (:issue:`8123`)
   - ``exif`` (:issue:`8246`)
   - ``gping`` (:issue:`8181`)

@@ -4183,17 +4183,6 @@ void reader_queue_ch(const char_event_t &ch) {
     }
 }
 
-/// Sets the command line contents, clearing the pager.
-static void reader_set_buffer(const wcstring &b, size_t pos) {
-    reader_data_t *data = current_data_or_null();
-    if (!data) return;
-
-    data->pager.clear();
-    data->set_buffer_maintaining_pager(b, pos);
-    data->reset_loop_state = true;
-}
-
-
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax
 /// highlighting. This is used for reading scripts and init files.
 /// The file is not closed.

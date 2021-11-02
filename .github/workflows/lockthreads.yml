@@ -2,8 +2,11 @@ name: 'Lock threads'
 
 on:
   schedule:
-    - cron: '0 18 * * *'
-
+    - cron: '0 18 * * 1'
+#            │ │  │ │ │
+#   min 0-59 ┘ │  │ │ └ weekday 0-6
+#    hour 0-23 ┘  │ └ month 1-12
+#                 └ day 1-31
 jobs:
   lock:
     runs-on: ubuntu-latest
@@ -13,4 +16,4 @@ jobs:
           github-token: ${{ github.token }}
           issue-lock-inactive-days: '365'
           pr-lock-inactive-days: '365'
-          issue-exclude-labels: 'question, needs more info'
+          issue-exclude-labels: 'question, needs more info, RFC, enhancement'

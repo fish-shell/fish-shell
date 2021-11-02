@@ -84,6 +84,7 @@ Interactive improvements
 - ``history`` and ``__fish_print_help`` now properly support ``less`` before version 530, including the version that ships with macOS. (:issue:`8157`).
 - ``help`` now knows which section is in which document again (:issue:`8245`).
 - fish's highlighter will now color options (starting with ``-`` or ``--``) with the color given in the new $fish_color_option, up to the first ``--``. It falls back on $fish_color_param, so nothing changes for existing setups (:issue:`8292`).
+- Autosuggestions can now be turned off by setting ``$fish_enable_autosuggestion`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, e.g. to distinguish autosuggestions from the actual commandline. (:issue:`8376`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

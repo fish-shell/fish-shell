@@ -16,4 +16,4 @@ jobs:
           github-token: ${{ github.token }}
           issue-lock-inactive-days: '365'
           pr-lock-inactive-days: '365'
-          issue-exclude-labels: 'question, needs more info, RFC, enhancement'
+          issue-exclude-labels: 'question, needs more info'

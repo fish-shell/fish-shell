@@ -57,7 +57,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 } else {
                     opts.scale = fish_wcstoi(w.woptarg);
                     if (errno || opts.scale < 0 || opts.scale > 15) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid scale value\n"),
+                        streams.err.append_format(_(L"%ls: %ls: invalid scale value\n"),
                                                   cmd, w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
@@ -72,7 +72,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 } else {
                     opts.base = fish_wcstoi(w.woptarg);
                     if (errno || (opts.base != 8 && opts.base != 16)) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid base value\n"), cmd,
+                        streams.err.append_format(_(L"%ls: %ls: invalid base value\n"), cmd,
                                                   w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
@@ -99,8 +99,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
         }
     }
     if (opts.have_scale && opts.scale != 0 && opts.base != 10) {
-        streams.err.append_format(
-            _(L"%ls: Bases other than 10 can only do scale=0 output currently\n"), cmd, w.woptarg);
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, L"non-zero scale value only valid for base 10");
         return STATUS_INVALID_ARGS;
     }
 
@@ -157,7 +156,7 @@ static const wchar_t *math_get_arg(int *argidx, const wchar_t **argv, wcstring *
 }
 
 static const wchar_t *math_describe_error(const te_error_t &error) {
-    if (error.position == 0) return L"NO ERROR?!?";
+    if (error.position == 0) return L"NO ERROR";
 
     switch (error.type) {
         case TE_ERROR_NONE:
@@ -286,7 +285,7 @@ maybe_t<int> builtin_math(parser_t &parser, io_streams_t &streams, const wchar_t
     }
 
     if (expression.empty()) {
-        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, L"math", 1, 0);
+        streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0);
         return STATUS_CMD_ERROR;
     }
     return evaluate_expression(cmd, parser, streams, opts, expression);

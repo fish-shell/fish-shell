@@ -257,9 +257,7 @@ bool builtin_bind_t::insert(int optind, int argc, const wchar_t **argv, io_strea
     } else {
         // Inserting both on the other hand makes no sense.
         if (opts->have_preset && opts->have_user) {
-            streams.err.append_format(
-                BUILTIN_ERR_COMBO2, cmd,
-                L"--preset and --user can not be used together when inserting bindings.");
+            streams.err.append_format(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd, L"--preset", "--user");
             return true;
         }
     }

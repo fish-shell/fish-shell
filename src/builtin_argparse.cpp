@@ -110,7 +110,7 @@ static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
                             std::swap(flag1, flag2);
                         }
                         streams.err.append_format(
-                            _(L"%ls: Mutually exclusive flags '%ls' and `%ls` seen\n"),
+                            _(L"%ls: %ls %ls: options cannot be used together\n"),
                             opts.name.c_str(), flag1.c_str(), flag2.c_str());
                         return STATUS_CMD_ERROR;
                     }

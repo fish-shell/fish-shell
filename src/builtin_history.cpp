@@ -68,13 +68,9 @@ static const struct woption long_options[] = {{L"prefix", no_argument, nullptr, 
 static bool set_hist_cmd(const wchar_t *cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
                          io_streams_t &streams) {
     if (*hist_cmd != HIST_UNDEF) {
-        wchar_t err_text[1024];
-        const wchar_t *subcmd_str1 = enum_to_str(*hist_cmd, hist_enum_map);
-        const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, hist_enum_map);
-        std::swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                      _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
-                      subcmd_str2);
-        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
+        streams.err.append_format(BUILTIN_ERR_COMBO2_EXCLUSIVE, cmd,
+                                  enum_to_str(*hist_cmd, hist_enum_map),
+                                  enum_to_str(sub_cmd, hist_enum_map));
         return false;
     }
 
@@ -86,7 +82,7 @@ static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const
                                            const wcstring_list_t &args, io_streams_t &streams) {
     if (opts.history_search_type_defined || opts.show_time_format || opts.null_terminate) {
         const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
-        streams.err.append_format(_(L"%ls: you cannot use any options with the %ls command\n"), cmd,
+        streams.err.append_format(_(L"%ls: %ls: subcommand takes no options\n"), cmd,
                                   subcmd_str);
         return true;
     }

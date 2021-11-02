@@ -81,7 +81,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     opts.named_arguments.push_back(w.woptarg);
                     break;
                 } else {
-                    streams.err.append_format(_(L"%ls: Unexpected positional argument '%ls'"), cmd,
+                    streams.err.append_format(_(L"%ls: %ls: unexpected positional argument"), cmd,
                                               w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
@@ -121,7 +121,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                         parser.libdata().is_subshell ? parser.libdata().caller_id : 0;
                     if (caller_id == 0) {
                         streams.err.append_format(
-                            _(L"%ls: Cannot find calling job for event handler"), cmd);
+                            _(L"%ls: calling job for event handler not found"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
                     e.type = event_type_t::caller_exit;
@@ -132,7 +132,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 } else {
                     pid_t pid = fish_wcstoi(w.woptarg);
                     if (errno || pid < 0) {
-                        streams.err.append_format(_(L"%ls: Invalid process id '%ls'"), cmd,
+                        streams.err.append_format(_(L"%ls: %ls: invalid process id"), cmd,
                                                   w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
@@ -194,20 +194,20 @@ static int validate_function_name(int argc, const wchar_t *const *argv, wcstring
                                   const wchar_t *cmd, io_streams_t &streams) {
     if (argc < 2) {
         // This is currently impossible but let's be paranoid.
-        streams.err.append_format(_(L"%ls: Expected function name"), cmd);
+        streams.err.append_format(_(L"%ls: function name required"), cmd);
         return STATUS_INVALID_ARGS;
     }
 
     function_name = argv[1];
     if (!valid_func_name(function_name)) {
-        streams.err.append_format(_(L"%ls: Illegal function name '%ls'"), cmd,
+        streams.err.append_format(_(L"%ls: %ls: invalid function name"), cmd,
                                   function_name.c_str());
         return STATUS_INVALID_ARGS;
     }
 
     if (parser_keywords_is_reserved(function_name)) {
         streams.err.append_format(
-            _(L"%ls: The name '%ls' is reserved, and cannot be used as a function name"), cmd,
+            _(L"%ls: %ls: cannot use reserved keyword as function name"), cmd,
             function_name.c_str());
         return STATUS_INVALID_ARGS;
     }
@@ -259,7 +259,7 @@ maybe_t<int> builtin_function(parser_t &parser, io_streams_t &streams,
                 opts.named_arguments.push_back(argv[i]);
             }
         } else {
-            streams.err.append_format(_(L"%ls: Unexpected positional argument '%ls'"), cmd,
+            streams.err.append_format(_(L"%ls: %ls: unexpected positional argument"), cmd,
                                       argv[optind]);
             return STATUS_INVALID_ARGS;
         }

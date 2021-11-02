@@ -29,54 +29,55 @@ struct builtin_data_t {
 #define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""
 
 /// Error message on missing argument.
-#define BUILTIN_ERR_MISSING _(L"%ls: Expected argument for option %ls\n")
+#define BUILTIN_ERR_MISSING _(L"%ls: %ls: option requires an argument\n")
 
 /// Error message on missing man page.
 #define BUILTIN_ERR_MISSING_HELP                                                                  \
-    _(L"fish: Missing man page for '%ls'. Did you install the documentation?\n`help '%ls'` will " \
-      L"open the online version.\n")
+    _(L"fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will " \
+      L"show an online version\n")
 
 /// Error message on invalid combination of options.
-#define BUILTIN_ERR_COMBO _(L"%ls: Invalid combination of options\n")
+#define BUILTIN_ERR_COMBO _(L"%ls: invalid option combination\n")
 
 /// Error message on invalid combination of options.
-#define BUILTIN_ERR_COMBO2 _(L"%ls: Invalid combination of options,\n%ls\n")
+#define BUILTIN_ERR_COMBO2 _(L"%ls: invalid option combination, %ls\n")
+#define BUILTIN_ERR_COMBO2_EXCLUSIVE _(L"%ls: %ls %ls: options cannot be used together\n")
 
 /// Error message on multiple scope levels for variables.
 #define BUILTIN_ERR_GLOCAL \
-    _(L"%ls: Variable scope can only be one of universal, global and local\n")
+    _(L"%ls: scope can be only one of: universal function global local\n")
 
 /// Error message for specifying both export and unexport to set/read.
-#define BUILTIN_ERR_EXPUNEXP _(L"%ls: Variable can't be both exported and unexported\n")
+#define BUILTIN_ERR_EXPUNEXP _(L"%ls: cannot both export and unexport\n")
 
 /// Error message for unknown switch.
-#define BUILTIN_ERR_UNKNOWN _(L"%ls: Unknown option '%ls'\n")
+#define BUILTIN_ERR_UNKNOWN _(L"%ls: %ls: unknown option\n")
 
 /// Error message for unexpected args.
-#define BUILTIN_ERR_ARG_COUNT0 _(L"%ls: Expected an argument\n")
-#define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: Expected %d args, got %d\n")
-#define BUILTIN_ERR_ARG_COUNT2 _(L"%ls %ls: Expected %d args, got %d\n")
-#define BUILTIN_ERR_MIN_ARG_COUNT1 _(L"%ls: Expected at least %d args, got %d\n")
-#define BUILTIN_ERR_MAX_ARG_COUNT1 _(L"%ls: Expected at most %d args, got %d\n")
+#define BUILTIN_ERR_ARG_COUNT0 _(L"%ls: missing argument\n")
+#define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: expected %d arguments; got %d\n")
+#define BUILTIN_ERR_ARG_COUNT2 _(L"%ls: %ls: expected %d arguments; got %d\n")
+#define BUILTIN_ERR_MIN_ARG_COUNT1 _(L"%ls: expected >= %d arguments; got %d\n")
+#define BUILTIN_ERR_MAX_ARG_COUNT1 _(L"%ls: expected <= %d arguments; got %d\n")
 
 /// Error message for invalid variable name.
-#define BUILTIN_ERR_VARNAME _(L"%ls: Variable name '%ls' is not valid. See `help identifiers`.\n")
+#define BUILTIN_ERR_VARNAME _(L"%ls: %ls: invalid variable. See `help identifiers`\n")
 
 /// Error message for invalid bind mode name.
-#define BUILTIN_ERR_BIND_MODE _(L"%ls: mode name '%ls' is not valid. See `help identifiers`.\n")
+#define BUILTIN_ERR_BIND_MODE _(L"%ls: %ls: invalid mode. See `help identifiers`\n")
 
 /// Error message when too many arguments are supplied to a builtin.
-#define BUILTIN_ERR_TOO_MANY_ARGUMENTS _(L"%ls: Too many arguments\n")
+#define BUILTIN_ERR_TOO_MANY_ARGUMENTS _(L"%ls: too many arguments\n")
 
 /// Error message when integer expected
-#define BUILTIN_ERR_NOT_NUMBER _(L"%ls: Argument '%ls' is not a valid integer\n")
+#define BUILTIN_ERR_NOT_NUMBER _(L"%ls: %ls: invalid integer\n")
 
 /// Command that requires a subcommand was invoked without a recognized subcommand.
-#define BUILTIN_ERR_MISSING_SUBCMD _(L"%ls: Expected a subcommand to follow the command\n")
-#define BUILTIN_ERR_INVALID_SUBCMD _(L"%ls: Subcommand '%ls' is not valid\n")
+#define BUILTIN_ERR_MISSING_SUBCMD _(L"%ls: missing subcommand\n")
+#define BUILTIN_ERR_INVALID_SUBCMD _(L"%ls: %ls: invalid subcommand\n")
 
 /// The send stuff to foreground message.
-#define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
+#define FG_MSG _(L"Send job %d (%ls) to foreground\n")
 
 void builtin_init();
 bool builtin_exists(const wcstring &cmd);

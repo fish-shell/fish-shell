@@ -392,7 +392,7 @@ static const base_directory_t &get_config_directory() {
 void path_emit_config_directory_messages(env_stack_t &vars) {
     const auto &data = get_data_directory();
     if (!data.success()) {
-        maybe_issue_path_warning(L"data", _(L"Your history will not be saved."), data.used_xdg,
+        maybe_issue_path_warning(L"data", _(L"can not save history"), data.used_xdg,
                                  L"XDG_DATA_HOME", data.path, data.err, vars);
     }
     if (data.is_remote > 0) {
@@ -401,7 +401,7 @@ void path_emit_config_directory_messages(env_stack_t &vars) {
 
     const auto &config = get_config_directory();
     if (!config.success()) {
-        maybe_issue_path_warning(L"config", _(L"Your personal settings will not be saved."),
+        maybe_issue_path_warning(L"config", _(L"can not save universal variables or functions"),
                                  config.used_xdg, L"XDG_CONFIG_HOME", config.path, config.err,
                                  vars);
     }

@@ -44,7 +44,7 @@ class pending_signals_t {
 
     /// No copying.
     pending_signals_t(const pending_signals_t &) = delete;
-    pending_signals_t& operator=(const pending_signals_t &) = delete;
+    pending_signals_t &operator=(const pending_signals_t &) = delete;
 
     /// Mark a signal as pending. This may be called from a signal handler.
     /// We expect only one signal handler to execute at once.
@@ -252,7 +252,8 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
     };
     std::vector<firing_handler_t> fire;
     {
-        for (const auto &handler : *s_event_handlers.acquire()) {
+        auto event_handlers = s_event_handlers.acquire();
+        for (const auto &handler : *event_handlers) {
             // Check if this event is a match.
             bool only_once = false;
             if (!handler_matches(*handler, event, only_once)) {

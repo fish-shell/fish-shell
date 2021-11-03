@@ -120,23 +120,15 @@ bool job_t::is_completed() const {
     return true;
 }
 
-bool job_t::should_report_process_exits() const {
-    // This implements the behavior of process exit events only being sent for jobs containing an
-    // external process. Bizarrely the process exit event is for the pgroup leader which may be fish
-    // itself.
-    // TODO: rationalize this.
+bool job_t::posts_job_exit_events() const {
     // If we never got a pgid then we never launched the external process, so don't report it.
-    if (!this->get_pgid()) {
-        return false;
-    }
+    if (!this->get_pgid()) return false;
 
     // Only report root job exits.
     // For example in `ls | begin ; cat ; end` we don't need to report the cat sub-job.
-    if (!flags().is_group_root) {
-        return false;
-    }
+    if (!flags().is_group_root) return false;
 
-    // Return whether we have an external process.
+    // Only jobs with external processes post job_exit events.
     return this->has_external_proc();
 }
 
@@ -489,35 +481,148 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     reap_disowned_pids();
 }
 
-/// Call the fish_job_summary function with the given args.
-static void call_job_summary(parser_t &parser, const wcstring_list_t &args) {
-    wcstring buffer = wcstring(L"fish_job_summary");
-    for (const wcstring &arg : args) {
-        buffer.push_back(L' ');
-        buffer.append(escape_string(arg, ESCAPE_ALL));
+/// Given a job that has completed, generate job_exit, process_exit, and caller_exit events.
+static void generate_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
+    // Generate proc and job exit events, except for jobs originating in event handlers.
+    if (!j->from_event_handler()) {
+        // process_exit events.
+        for (const auto &proc : j->processes) {
+            if (proc->pid > 0) {
+                out_evts->push_back(event_t::process_exit(proc->pid, proc->status.status_value()));
+            }
+        }
+
+        // job_exit events.
+        if (j->posts_job_exit_events()) {
+            if (auto last_pid = j->get_last_pid()) {
+                out_evts->push_back(event_t::job_exit(*last_pid, j->internal_job_id));
+            }
+        }
     }
-    event_t event(event_type_t::generic);
-    event.desc.str_param1 = L"fish_job_summary";
-
-    auto prev_statuses = parser.get_last_statuses();
-
-    block_t *b = parser.push_block(block_t::event_block(event));
-    parser.eval(buffer, io_chain_t());
-    parser.pop_block(b);
-
-    parser.set_last_statuses(std::move(prev_statuses));
+    // Generate caller_exit events.
+    out_evts->push_back(event_t::caller_exit(j->internal_job_id, j->job_id()));
 }
 
-/// Format information about job status for the user to look at.
-using job_status_t = enum { JOB_STOPPED, JOB_ENDED };
-static void print_job_status(parser_t &parser, const job_t *j, job_status_t status) {
-    wcstring_list_t args = {
-        to_string(j->job_id()),
-        to_string(static_cast<int>(j->is_foreground())),
-        j->command(),
-        status == JOB_STOPPED ? L"STOPPED" : L"ENDED",
-    };
-    call_job_summary(parser, args);
+/// \return whether to emit a fish_job_summary call for a process.
+static bool proc_wants_summary(const shared_ptr<job_t> &j, const process_ptr_t &p) {
+    // Are we completed with a pid?
+    if (!p->completed || !p->pid) return false;
+
+    // Did we die due to a signal other than SIGPIPE?
+    auto s = p->status;
+    if (!s.signal_exited() || s.signal_code() == SIGPIPE) return false;
+
+    // Does the job want to suppress notifications?
+    // Note we always report crashes.
+    if (j->skip_notification() && !contains(crashsignals, s.signal_code())) return false;
+
+    return true;
+}
+
+/// \return whether to emit a fish_job_summary call for a job as a whole. We may also emit this for
+/// its individual processes.
+static bool job_wants_summary(const shared_ptr<job_t> &j) {
+    // Did we already print a status message?
+    if (j->flags().notified) return false;
+
+    // Do we just skip notifications?
+    if (j->skip_notification()) return false;
+
+    // Do we have a single process which will also report? If so then that suffices for us.
+    if (j->processes.size() == 1 && proc_wants_summary(j, j->processes.front())) return false;
+
+    // Are we foreground?
+    // The idea here is to not print status messages for jobs that execute in the foreground (i.e.
+    // without & and without being `bg`).
+    if (j->is_foreground()) return false;
+
+    return true;
+}
+
+/// \return whether we want to emit a fish_job_summary call for a job or any of its processes.
+bool job_or_proc_wants_summary(const shared_ptr<job_t> &j) {
+    if (job_wants_summary(j)) return true;
+    for (const auto &p : j->processes) {
+        if (proc_wants_summary(j, p)) return true;
+    }
+    return false;
+}
+
+/// Invoke the fish_job_summary function by executing the given command.
+static void call_job_summary(parser_t &parser, const wcstring &cmd) {
+    event_t event(event_type_t::generic);
+    event.desc.str_param1 = L"fish_job_summary";
+    block_t *b = parser.push_block(block_t::event_block(event));
+    auto saved_status = parser.get_last_statuses();
+    parser.eval(cmd, io_chain_t());
+    parser.set_last_statuses(saved_status);
+    parser.pop_block(b);
+}
+
+// \return a command which invokes fish_job_summary.
+// The process pointer may be null, in which case it represents the entire job.
+// Note this implements the arguments which fish_job_summary expects.
+wcstring summary_command(const job_ref_t &j, const process_ptr_t &p = nullptr) {
+    wcstring buffer = L"fish_job_summary";
+
+    // Job id.
+    append_format(buffer, L" %d", j->job_id());
+
+    // 1 if foreground, 0 if background.
+    append_format(buffer, L" %d", static_cast<int>(j->is_foreground()));
+
+    // Command.
+    buffer.push_back(L' ');
+    buffer.append(escape_string(j->command(), ESCAPE_ALL));
+
+    if (!p) {
+        // No process, we are summarizing the whole job.
+        buffer.append(j->is_stopped() ? L" STOPPED" : L" ENDED");
+    } else {
+        // We are summarizing a process which exited with a signal.
+        // Arguments are the signal name and description.
+        int sig = p->status.signal_code();
+        buffer.push_back(L' ');
+        buffer.append(escape_string(sig2wcs(sig), ESCAPE_ALL));
+
+        buffer.push_back(L' ');
+        buffer.append(escape_string(signal_get_desc(sig), ESCAPE_ALL));
+
+        // If we have multiple processes, we also append the pid and argv.
+        if (j->processes.size() > 1) {
+            append_format(buffer, L" %d", p->pid);
+
+            buffer.push_back(L' ');
+            buffer.append(escape_string(p->argv0(), ESCAPE_ALL));
+        }
+    }
+    return buffer;
+}
+
+// Summarize a list of jobs, by emitting calls to fish_job_summary.
+// Note the given list must NOT be the parser's own job list, since the call to fish_job_summary
+// could modify it.
+static bool summarize_jobs(parser_t &parser, const std::vector<job_ref_t> &jobs) {
+    if (jobs.empty()) return false;
+
+    for (const auto &j : jobs) {
+        if (j->is_stopped()) {
+            call_job_summary(parser, summary_command(j));
+        } else {
+            // Completed job.
+            for (const auto &p : j->processes) {
+                if (proc_wants_summary(j, p)) {
+                    call_job_summary(parser, summary_command(j, p));
+                }
+            }
+
+            // Overall status for the job.
+            if (job_wants_summary(j)) {
+                call_job_summary(parser, summary_command(j));
+            }
+        }
+    }
+    return true;
 }
 
 /// Remove all disowned jobs whose job chain is fully constructed (that is, do not erase disowned
@@ -532,67 +637,6 @@ static void remove_disowned_jobs(job_list_t &jobs) {
             ++iter;
         }
     }
-}
-
-/// Given a a process in a job, print the status message for the process as appropriate, and then
-/// mark the status code so we don't print again. Populate any events into \p exit_events.
-/// \return true if we printed a status message, false if not.
-static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
-                                     std::vector<event_t> *exit_events) {
-    if (p->marked_exit_event || !p->completed || !p->pid) {
-        return false;
-    }
-    p->marked_exit_event = true;
-    auto s = p->status;
-
-    // Add an exit event if the process did not come from a job handler.
-    if (!j->from_event_handler()) {
-        exit_events->push_back(event_t::process_exit(p->pid, s.status_value()));
-    }
-
-    // Ignore SIGPIPE. We issue it ourselves to the pipe writer when the pipe reader dies.
-    if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
-        return false;
-    }
-
-    int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
-    if (proc_is_job) j->mut_flags().notified = true;
-
-    // Handle signals other than SIGPIPE.
-    // Always report crashes.
-    if (j->skip_notification() && !contains(crashsignals, s.signal_code())) {
-        return false;
-    }
-
-    wcstring_list_t args;
-    args.reserve(proc_is_job ? 5 : 7);
-    args.push_back(to_string(j->job_id()));
-    args.push_back(to_string(static_cast<int>(j->is_foreground())));
-    args.push_back(j->command());
-    args.push_back(sig2wcs(s.signal_code()));
-    args.push_back(signal_get_desc(s.signal_code()));
-    if (!proc_is_job) {
-        args.push_back(to_string(p->pid));
-        args.push_back(p->argv0());
-    }
-    call_job_summary(parser, args);
-    return true;
-}
-
-/// \return whether this job wants a status message printed when it stops or completes.
-static bool job_wants_message(const shared_ptr<job_t> &j) {
-    // Did we already print a status message?
-    if (j->flags().notified) return false;
-
-    // Do we just skip notifications?
-    if (j->skip_notification()) return false;
-
-    // Are we foreground?
-    // The idea here is to not print status messages for jobs that execute in the foreground (i.e.
-    // without & and without being `bg`).
-    if (j->is_foreground()) return false;
-
-    return true;
 }
 
 /// Given that a job has completed, check if it may be wait'ed on; if so add it to the wait handle
@@ -620,15 +664,13 @@ static void save_wait_handle_for_completed_job(const shared_ptr<job_t> &job,
 /// \return whether something was printed.
 static bool process_clean_after_marking(parser_t &parser, bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    bool printed = false;
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
     if (parser.libdata().is_cleaning_procs) {
         return false;
     }
-    parser.libdata().is_cleaning_procs = true;
-    const cleanup_t cleanup([&] { parser.libdata().is_cleaning_procs = false; });
+    const scoped_push<bool> cleaning(&parser.libdata().is_cleaning_procs, true);
 
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)
@@ -641,64 +683,48 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     // complete.
     std::vector<event_t> exit_events;
 
-    // A helper to indicate if we should process a job.
+    // Defer processing under-construction jobs or jobs that want a message when we are not
+    // interactive.
     auto should_process_job = [=](const shared_ptr<job_t> &j) {
         // Do not attempt to process jobs which are not yet constructed.
         // Do not attempt to process jobs that need to print a status message,
         // unless we are interactive, in which case printing is OK.
-        return j->is_constructed() && (interactive || !job_wants_message(j));
+        return j->is_constructed() && (interactive || !job_or_proc_wants_summary(j));
     };
 
-    // Print status messages for completed or stopped jobs.
+    // The list of jobs to summarize. Some of these jobs are completed and are removed from the
+    // parser's job list, others are stopped and remain in the list.
+    std::vector<job_ref_t> jobs_to_summarize;
+
+    // Handle stopped jobs. These stay in our list.
     for (const auto &j : parser.jobs()) {
-        if (!should_process_job(j)) continue;
-
-        // Clean processes within the job.
-        // Note this may print the message on behalf of the job, affecting the result of
-        // job_wants_message().
-        for (process_ptr_t &p : j->processes) {
-            if (try_clean_process_in_job(parser, p.get(), j.get(), &exit_events)) {
-                printed = true;
-            }
-        }
-
-        // Print the message if we need to.
-        if (job_wants_message(j) && (j->is_completed() || j->is_stopped())) {
-            print_job_status(parser, j.get(), j->is_completed() ? JOB_ENDED : JOB_STOPPED);
+        if (!j->is_completed() && j->is_stopped() && should_process_job(j) &&
+            job_wants_summary(j)) {
             j->mut_flags().notified = true;
-            printed = true;
-        }
-
-        // Prepare events for completed jobs
-        if (j->is_completed()) {
-            // If this job already came from an event handler,
-            // don't create an event or it's easy to get an infinite loop.
-            if (!j->from_event_handler() && j->should_report_process_exits()) {
-                if (auto last_pid = j->get_last_pid()) {
-                    exit_events.push_back(event_t::job_exit(*last_pid, j->internal_job_id));
-                }
-            }
-            // Caller exit events we still create, which anecdotally fixes `source (thing | psub)`
-            // inside event handlers. This seems benign since this event is barely used (basically
-            // only psub), and it seems hard to construct an infinite loop with it.
-            exit_events.push_back(event_t::caller_exit(j->internal_job_id, j->job_id()));
+            jobs_to_summarize.push_back(j);
         }
     }
 
-    // Remove completed jobs.
-    // Do this before calling out to user code in the event handler below, to ensure an event
-    // handler doesn't remove jobs on our behalf.
-    auto &jobs = parser.jobs();
-    for (auto iter = jobs.begin(); iter != jobs.end();) {
-        const shared_ptr<job_t> &j = *iter;
-        if (should_process_job(j) && j->is_completed()) {
-            // If this job finished in the background, we have to remember to wait on it.
-            save_wait_handle_for_completed_job(j, parser.get_wait_handles());
-            iter = jobs.erase(iter);
-        } else {
+    // Remove completed, processable jobs from our job list.
+    for (auto iter = parser.jobs().begin(); iter != parser.jobs().end();) {
+        const job_ref_t &j = *iter;
+        if (!should_process_job(j) || !j->is_completed()) {
             ++iter;
+            continue;
         }
+        // We are committed to removing this job.
+        // Remember it for summary later, generate exit events, maybe save its wait handle if it
+        // finished in the background.
+        if (job_or_proc_wants_summary(j)) jobs_to_summarize.push_back(j);
+        generate_exit_events(j, &exit_events);
+        save_wait_handle_for_completed_job(j, parser.get_wait_handles());
+
+        // Remove it.
+        iter = parser.jobs().erase(iter);
     }
+
+    // Emit calls to fish_job_summary.
+    bool printed = summarize_jobs(parser, jobs_to_summarize);
 
     // Post pending exit events.
     for (const auto &evt : exit_events) {

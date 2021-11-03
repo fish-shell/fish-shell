@@ -458,9 +458,8 @@ class job_t : noncopyable_t {
     /// \return whether this job's group is in the foreground.
     bool is_foreground() const;
 
-    /// \return whether we should report process exit events.
-    /// This implements some historical behavior which has not been justified.
-    bool should_report_process_exits() const;
+    /// \return whether we should post job_exit events.
+    bool posts_job_exit_events() const;
 
     /// \return whether this job and its parent chain are fully constructed.
     bool job_chain_is_fully_constructed() const;
@@ -478,6 +477,7 @@ class job_t : noncopyable_t {
     /// \returns the statuses for this job.
     maybe_t<statuses_t> get_statuses() const;
 };
+using job_ref_t = std::shared_ptr<job_t>;
 
 /// Whether this shell is attached to a tty.
 bool is_interactive_session();
@@ -494,7 +494,7 @@ bool no_exec();
 void mark_no_exec();
 
 // List of jobs.
-typedef std::deque<shared_ptr<job_t>> job_list_t;
+using job_list_t = std::deque<job_ref_t>;
 
 /// The current job control mode.
 ///

@@ -536,10 +536,10 @@ static void remove_disowned_jobs(job_list_t &jobs) {
 /// \return true if we printed a status message, false if not.
 static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
                                      std::vector<event_t> *exit_events) {
-    if (!p->completed || !p->pid) {
+    if (p->marked_exit_event || !p->completed || !p->pid) {
         return false;
     }
-
+    p->marked_exit_event = true;
     auto s = p->status;
 
     // Add an exit event if the process did not come from a job handler.
@@ -573,9 +573,6 @@ static bool try_clean_process_in_job(parser_t &parser, process_t *p, job_t *j,
         args.push_back(p->argv0());
     }
     call_job_summary(parser, args);
-    // Clear status so it is not reported more than once.
-    // TODO: this seems like a clumsy way to ensure that.
-    p->status = proc_status_t::from_exit_code(0);
     return true;
 }
 

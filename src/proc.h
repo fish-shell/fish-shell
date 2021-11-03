@@ -278,6 +278,9 @@ class process_t : noncopyable_t {
     /// True if process has stopped.
     bool stopped{false};
 
+    /// Set once we have generated (or decided not to generate) a process_exit event.
+    bool marked_exit_event{false};
+
     /// Reported status value.
     proc_status_t status{};
 

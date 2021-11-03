@@ -109,6 +109,37 @@ String manipulation
 
 Fish does not have ``${foo%bar}``, ``${foo#bar}`` and ``${foo/bar/baz}``. Instead string manipulation is done by the :ref:`string <cmd-string>` builtin.
 
+For example, to replace "bar" with "baz"::
+
+  > string replace bar baz "bar luhrmann"
+  baz luhrmann
+
+It can also split strings::
+
+  > string split "," "foo,bar"
+  foo
+  bar
+
+Match regular expressions as a replacement for ``grep``::
+
+  > echo bababa | string match -r 'aba$'
+  aba
+
+Pad strings to a given width, with arbitrary characters::
+
+  > string pad -c x -w 20 "foo"
+  xxxxxxxxxxxxxxxxxfoo
+
+Make strings lower/uppercase::
+
+  > string lower Foo
+  foo
+
+  > string upper Foo
+  FOO
+
+repeat strings, trim strings, escape strings or print a string's length or width (in terminal cells).
+
 Special variables
 -----------------
 

@@ -96,17 +96,20 @@ void set_job_control_mode(job_control_t mode) {
 
 void proc_init() { signal_set_handlers_once(false); }
 
-/// Return true if all processes in the job have stopped or completed.
+/// Return true if all processes in the job are stopped or completed, and there is at least one
+/// stopped process.
 bool job_t::is_stopped() const {
+    bool has_stopped = false;
     for (const process_ptr_t &p : processes) {
         if (!p->completed && !p->stopped) {
             return false;
         }
+        has_stopped |= p->stopped;
     }
-    return true;
+    return has_stopped;
 }
 
-/// Return true if the last processes in the job has completed.
+/// Return true if all processes in the job have completed.
 bool job_t::is_completed() const {
     assert(!processes.empty());
     for (const process_ptr_t &p : processes) {

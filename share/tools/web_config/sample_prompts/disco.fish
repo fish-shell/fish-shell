@@ -14,12 +14,19 @@ function fish_prompt
     fish_is_root_user; and set delim "#"
 
     set -l cwd (set_color $fish_color_cwd)
-    if command -sq sha256sum
+    if command -sq cksum
         # randomized cwd color
-        set -l shas (pwd -P | sha256sum | string sub -l 6 | string match -ra ..)
-        # Increase color a bit so we don't get super dark colors.
+        # We hash the physical PWD and turn that into a color. That means directories (usually) get different colors,
+        # but every directory always gets the same color. It's deterministic.
+        # We use cksum because 1. it's fast, 2. it's in POSIX, so it should be available everywhere.
+        set -l shas (pwd -P | cksum | string split -f1 ' ' | math --base=hex | string sub -s 3 | string match -ra ..) 0 0 0
+        # We get a fourth byte, just distribute it among the others.
+        # Also increase the value a bit so we don't get super dark colors.
         # Really we want some contrast to the background (assuming black).
-        set -l col (for f in $shas; math --base=hex "min(255, 0x$f + 0x30)"; end | string replace 0x '' | string pad -c 0 -w 2 | string join "")
+        set -l smear 0x30
+        set -q shas[4]
+        and set smear (math 0x$shas[4] / 3 + 0x30)
+        set -l col (for f in $shas[1..3]; math --base=hex "min(255, 0x$f + $smear)"; end | string replace 0x '' | string pad -c 0 -w 2 | string join "")
 
         set cwd (set_color $col)
     end

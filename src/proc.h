@@ -278,9 +278,6 @@ class process_t : noncopyable_t {
     /// True if process has stopped.
     bool stopped{false};
 
-    /// Set once we have generated (or decided not to generate) a process_exit event.
-    bool marked_exit_event{false};
-
     /// Reported status value.
     proc_status_t status{};
 
@@ -402,8 +399,8 @@ class job_t : noncopyable_t {
         /// forked, etc.
         bool constructed{false};
 
-        /// Whether the user has been told about stopped job.
-        bool notified{false};
+        /// Whether the user has been notified that this job is stopped (if it is).
+        bool notified_of_stop{false};
 
         /// Whether the exit status should be negated. This flag can only be set by the not builtin.
         bool negate{false};

@@ -440,7 +440,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                 j->group->set_is_foreground(false);
             }
             if (status.continued()) {
-                j->mut_flags().notified = false;
+                j->mut_flags().notified_of_stop = false;
             }
             if (status.normal_exited() || status.signal_exited()) {
                 FLOGF(proc_reap_external, "Reaped external process '%ls' (pid %d, status %d)",
@@ -522,9 +522,6 @@ static bool proc_wants_summary(const shared_ptr<job_t> &j, const process_ptr_t &
 /// \return whether to emit a fish_job_summary call for a job as a whole. We may also emit this for
 /// its individual processes.
 static bool job_wants_summary(const shared_ptr<job_t> &j) {
-    // Did we already print a status message?
-    if (j->flags().notified) return false;
-
     // Do we just skip notifications?
     if (j->skip_notification()) return false;
 
@@ -698,9 +695,9 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
     // Handle stopped jobs. These stay in our list.
     for (const auto &j : parser.jobs()) {
-        if (!j->is_completed() && j->is_stopped() && should_process_job(j) &&
+        if (j->is_stopped() && !j->flags().notified_of_stop && should_process_job(j) &&
             job_wants_summary(j)) {
-            j->mut_flags().notified = true;
+            j->mut_flags().notified_of_stop = true;
             jobs_to_summarize.push_back(j);
         }
     }
@@ -993,7 +990,7 @@ job_id_t job_t::job_id() const { return group->get_id(); }
 void job_t::continue_job(parser_t &parser, bool in_foreground) {
     // Put job first in the job list.
     parser.job_promote(this);
-    mut_flags().notified = false;
+    mut_flags().notified_of_stop = false;
 
     int pgid = -2;
     if (auto tmp = get_pgid()) pgid = *tmp;

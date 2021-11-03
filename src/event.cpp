@@ -224,6 +224,15 @@ event_handler_list_t event_get_function_handlers(const wcstring &name) {
     return result;
 }
 
+enum_set_t<event_type_t> event_get_handled_types() {
+    enum_set_t<event_type_t> result{};
+    auto handlers = s_event_handlers.acquire();
+    for (const shared_ptr<event_handler_t> &eh : *handlers) {
+        result.set(eh->desc.type);
+    }
+    return result;
+}
+
 bool event_is_signal_observed(int sig) {
     // We are in a signal handler! Don't allocate memory, etc.
     bool result = false;

@@ -482,25 +482,28 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
 }
 
 /// Given a job that has completed, generate job_exit, process_exit, and caller_exit events.
-static void generate_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
+static void generate_exit_events(const job_ref_t &j, const enum_set_t<event_type_t> handled,
+                                 std::vector<event_t> *out_evts) {
     // Generate proc and job exit events, except for jobs originating in event handlers.
-    if (!j->from_event_handler()) {
-        // process_exit events.
+    if (handled.get(event_type_t::process_exit) && !j->from_event_handler()) {
         for (const auto &proc : j->processes) {
             if (proc->pid > 0) {
                 out_evts->push_back(event_t::process_exit(proc->pid, proc->status.status_value()));
             }
         }
+    }
 
-        // job_exit events.
-        if (j->posts_job_exit_events()) {
-            if (auto last_pid = j->get_last_pid()) {
-                out_evts->push_back(event_t::job_exit(*last_pid, j->internal_job_id));
-            }
+    if (handled.get(event_type_t::job_exit) && !j->from_event_handler() &&
+        j->posts_job_exit_events()) {
+        if (auto last_pid = j->get_last_pid()) {
+            out_evts->push_back(event_t::job_exit(*last_pid, j->internal_job_id));
         }
     }
+
     // Generate caller_exit events.
-    out_evts->push_back(event_t::caller_exit(j->internal_job_id, j->job_id()));
+    if (handled.get(event_type_t::caller_exit)) {
+        out_evts->push_back(event_t::caller_exit(j->internal_job_id, j->job_id()));
+    }
 }
 
 /// \return whether to emit a fish_job_summary call for a process.
@@ -680,6 +683,11 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     // complete.
     std::vector<event_t> exit_events;
 
+    // Figure out which event types have handlers, so we can avoid the cost of creating events that
+    // are unhandled. In principle, an event handler could add a handler for another event type,
+    // which won't receive it. We ignore that possibility.
+    const enum_set_t<event_type_t> handled_event_types = event_get_handled_types();
+
     // Defer processing under-construction jobs or jobs that want a message when we are not
     // interactive.
     auto should_process_job = [=](const shared_ptr<job_t> &j) {
@@ -713,7 +721,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         // Remember it for summary later, generate exit events, maybe save its wait handle if it
         // finished in the background.
         if (job_or_proc_wants_summary(j)) jobs_to_summarize.push_back(j);
-        generate_exit_events(j, &exit_events);
+        generate_exit_events(j, handled_event_types, &exit_events);
         save_wait_handle_for_completed_job(j, parser.get_wait_handles());
 
         // Remove it.
@@ -724,8 +732,13 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     bool printed = summarize_jobs(parser, jobs_to_summarize);
 
     // Post pending exit events.
-    for (const auto &evt : exit_events) {
-        event_fire(parser, evt);
+    // If we have none, still give any other pending events (e.g. from signals) a chance to run.
+    if (exit_events.empty()) {
+        event_fire_delayed(parser);
+    } else {
+        for (const auto &evt : exit_events) {
+            event_fire(parser, evt);
+        }
     }
 
     if (printed) {

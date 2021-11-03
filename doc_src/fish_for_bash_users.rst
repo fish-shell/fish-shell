@@ -73,6 +73,8 @@ See :ref:`Shell variables <variables>` for more.
 
 .. [#] zsh also does not perform word splitting by default (the SH_WORD_SPLIT option controls this)
 
+.. _bash-globs:
+
 Wildcards (globs)
 -----------------
 
@@ -221,15 +223,21 @@ Fish does not have ``$((i+1))`` arithmetic expansion, computation is handled by 
 
   math $i + 1
 
-It can handle floating point numbers::
+Unlike bash's arithmetic, it can handle floating point numbers::
 
   > math 5 / 2
   2.5
 
-And also hase some functions, like for trigonometry::
+And also has some functions, like for trigonometry::
 
   > math cos 2 x pi
   1
+
+You can pass arguments to ``math`` separately like above or in quotes. Because fish uses ``()`` parentheses for :ref:`command substitutions <bash-command-substitutions>`, quoting is needed if you want to use them in your expression::
+
+  > math '(5 + 2) * 4'
+
+Both ``*`` and ``x`` are valid ways to spell multiplication, but ``*`` needs to be quoted because it looks like a :ref:`glob <bash-globs>`.
 
 Prompts
 -------

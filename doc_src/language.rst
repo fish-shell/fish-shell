@@ -564,8 +564,8 @@ That means quoting isn't the absolute necessity it is in other shells. Most of t
 
 .. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
 
-Derefencing variables
-'''''''''''''''''''''
+Dereferencing variables
+'''''''''''''''''''''''
 
 The ``$`` symbol can also be used multiple times, as a kind of "dereference" operator (the ``*`` in C or C++), like in the following code::
 

@@ -487,7 +487,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     if (expand_flags & expand_flag::gen_descriptions) {
         desc = file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
 
-        if (!is_directory && file_size >= 0) {
+        if (!is_directory && !is_executable && file_size >= 0) {
             if (!desc.empty()) desc.append(L", ");
             desc.append(format_size(file_size));
         }

@@ -10,9 +10,9 @@
 #include "expand.h"
 
 /// Description for generic executable.
-#define COMPLETE_EXEC_DESC _(L"executable")
+#define COMPLETE_EXEC_DESC _(L"command")
 /// Description for link to executable.
-#define COMPLETE_EXEC_LINK_DESC _(L"executable link")
+#define COMPLETE_EXEC_LINK_DESC _(L"command link")
 /// Description for character device.
 #define COMPLETE_CHAR_DESC _(L"char device")
 /// Description for block device.

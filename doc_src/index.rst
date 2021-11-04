@@ -94,7 +94,8 @@ Shebang Line
 
 Because shell scripts are written in many different languages, they need to carry information about which interpreter should be used to execute them. For this, they are expected to have a first line, the shebang line, which names the interpreter executable.
 
-A script written in ``bash`` would need a first line like this::
+A script written in ``bash`` would need a first line like this:
+::
 
     #!/bin/bash
 

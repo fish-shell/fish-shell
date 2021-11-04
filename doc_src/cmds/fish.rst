@@ -22,7 +22,7 @@ The :ref:`tutorial <tutorial>` is available as HTML via ``help tutorial`` or in 
 The following options are available:
 
 - ``-c`` or ``--command=COMMANDS`` evaluate the specified commands instead of reading from the commandline, passing any additional positional arguments via :envvar:`$argv`.
-  Note that, unlike other shells, the first argument is *not* the name of the program (``$0``), but simply the first normal argument.
+  Note that, unlike other shells, the first argument is *not* the name of the program (:envvar:`$0`), but simply the first normal argument.
 
 - ``-C`` or ``--init-command=COMMANDS`` evaluate the specified commands after reading the configuration, before running the command specified by ``-c`` or reading interactive input.
 
@@ -38,17 +38,17 @@ The following options are available:
 
 - ``-n`` or ``--no-execute`` do not execute any commands, only perform syntax checking
 
-- ``-p`` or ``--profile=PROFILE_FILE`` when fish exits, output timing information on all executed commands to the specified file. This excludes time spent starting up and reading the configuration.
+- ``-p`` or ``--profile=PROFILE_FILE`` when :command:`fish` exits, output timing information on all executed commands to the specified file. This excludes time spent starting up and reading the configuration.
 
 - ``--profile-startup=PROFILE_FILE`` will write timing information for fish's startup to the specified file. This is useful to profile your configuration.
 
 - ``-P`` or ``--private`` enables :ref:`private mode <private-mode>`, so fish will not access old or store new history.
 
-- ``--print-rusage-self`` when fish exits, output stats from getrusage
+- ``--print-rusage-self`` when :command:`fish` exits, output stats from getrusage.
 
 - ``--print-debug-categories`` outputs the list of debug categories, and then exits.
 
-- ``-v`` or ``--version`` display version and exit
+- ``-v`` or ``--version`` display version and exit.
 
 - ``-f`` or ``--features=FEATURES`` enables one or more :ref:`feature flags <featureflags>` (separated by a comma).
   These are how fish stages changes that might break scripts.

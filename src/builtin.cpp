@@ -176,9 +176,14 @@ void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar
 void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                               const wchar_t *opt, bool print_hints) {
     if (opt[0] == L'-' && opt[1] != L'-') {
+        // if c in -qc '-qc' is missing the argument, now opt is just 'c'
         opt += std::wcslen(opt) - 1;
+        // now prepend - to output -c
+        streams.err.append_format(BUILTIN_ERR_MISSING, cmd, wcstring(L"-").append(opt).c_str());
     }
-    streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
+    else
+        streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
+
     if (print_hints) {
         builtin_print_error_trailer(parser, streams.err, cmd);
     }

@@ -25,32 +25,8 @@
 #include "path.h"
 #include "reader.h"
 #include "wcstringutil.h"
+#include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-/// Description for generic executable.
-#define COMPLETE_EXEC_DESC _(L"Executable")
-/// Description for link to executable.
-#define COMPLETE_EXEC_LINK_DESC _(L"Executable link")
-/// Description for regular file.
-#define COMPLETE_FILE_DESC _(L"File")
-/// Description for character device.
-#define COMPLETE_CHAR_DESC _(L"Character device")
-/// Description for block device.
-#define COMPLETE_BLOCK_DESC _(L"Block device")
-/// Description for fifo buffer.
-#define COMPLETE_FIFO_DESC _(L"Fifo")
-/// Description for symlink.
-#define COMPLETE_SYMLINK_DESC _(L"Symbolic link")
-/// Description for symlink.
-#define COMPLETE_DIRECTORY_SYMLINK_DESC _(L"Symbolic link to directory")
-/// Description for Rotten symlink.
-#define COMPLETE_ROTTEN_SYMLINK_DESC _(L"Rotten symbolic link")
-/// Description for symlink loop.
-#define COMPLETE_LOOP_SYMLINK_DESC _(L"Symbolic link loop")
-/// Description for socket files.
-#define COMPLETE_SOCKET_DESC _(L"Socket")
-/// Description for directories.
-#define COMPLETE_DIRECTORY_DESC _(L"Directory")
 
 /// Finds an internal (ANY_STRING, etc.) style wildcard, or wcstring::npos.
 static size_t wildcard_find(const wchar_t *wc) {
@@ -511,7 +487,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     if (expand_flags & expand_flag::gen_descriptions) {
         desc = file_get_desc(lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
 
-        if (file_size >= 0) {
+        if (!is_directory && file_size >= 0) {
             if (!desc.empty()) desc.append(L", ");
             desc.append(format_size(file_size));
         }

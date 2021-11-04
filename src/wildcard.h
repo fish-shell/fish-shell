@@ -9,6 +9,31 @@
 #include "complete.h"
 #include "expand.h"
 
+/// Description for generic executable.
+#define COMPLETE_EXEC_DESC _(L"executable")
+/// Description for link to executable.
+#define COMPLETE_EXEC_LINK_DESC _(L"executable link")
+/// Description for character device.
+#define COMPLETE_CHAR_DESC _(L"char device")
+/// Description for block device.
+#define COMPLETE_BLOCK_DESC _(L"block device")
+/// Description for fifo buffer.
+#define COMPLETE_FIFO_DESC _(L"fifo")
+/// Description for fifo buffer.
+#define COMPLETE_FILE_DESC _(L"file")
+/// Description for symlink.
+#define COMPLETE_SYMLINK_DESC _(L"symlink")
+/// Description for symlink.
+#define COMPLETE_DIRECTORY_SYMLINK_DESC _(L"dir symlink")
+/// Description for Rotten symlink.
+#define COMPLETE_ROTTEN_SYMLINK_DESC _(L"rotten symlink")
+/// Description for symlink loop.
+#define COMPLETE_LOOP_SYMLINK_DESC _(L"symlink loop")
+/// Description for socket files.
+#define COMPLETE_SOCKET_DESC _(L"socket")
+/// Description for directories.
+#define COMPLETE_DIRECTORY_DESC _(L"directory")
+
 // Enumeration of all wildcard types.
 enum {
     /// Character representing any character except '/' (slash).

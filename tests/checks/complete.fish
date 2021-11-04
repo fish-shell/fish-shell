@@ -295,13 +295,13 @@ if begin
     # set dir (realpath --relative-to="$PWD" (mktemp -d XXXXXXXX))
     set dir (basename (mktemp -d XXXXXXXX))
     mkdir -p $dir
-    if complete -C$dir | grep "^$dir/.*Directory" >/dev/null
+    if complete -C$dir | string match -r "^$dir/.*dir" >/dev/null
         echo "implicit cd complete works"
     else
         echo "no implicit cd complete"
     end
     #CHECK: implicit cd complete works
-    if complete -C"command $dir" | grep "^$dir/.*Directory" >/dev/null
+    if complete -C"command $dir" | string match -r "^$dir/.*dir" >/dev/null
         echo "implicit cd complete after 'command'"
     else
         echo "no implicit cd complete after 'command'"
@@ -310,7 +310,7 @@ if begin
     popd
     if begin
             set -l PATH $PWD/test6.tmp.dir $PATH 2>/dev/null
-            complete -C$dir | grep "^$dir/.*Directory" >/dev/null
+            complete -C$dir | string match -r "^$dir/.*dir" >/dev/null
         end
         echo "incorrect implicit cd from PATH"
     else

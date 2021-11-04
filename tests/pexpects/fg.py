@@ -33,7 +33,7 @@ expect_str("bar")
 
 expect_prompt()
 sendline("fg")
-expect_str("Send job 1, (" + testproc + ") to foreground")
+expect_str("Send job 1 '" + testproc + "' to foreground")
 sleep(0.2)
 sendline("set -l foo bar; echo $foo")
 expect_str("")
@@ -66,7 +66,7 @@ sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 
 # Ensure we can do it again.
-sendline("sleep 4")
+sendline("sleep 4   ")
 sleep(0.2)
 send("\x1A")
 sleep(0.1)

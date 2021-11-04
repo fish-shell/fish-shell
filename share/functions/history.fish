@@ -8,7 +8,7 @@ function __fish_unexpected_hist_args --no-scope-shadowing
         return 0
     end
     if set -q argv[1]
-        printf (_ "%ls: %ls: expected %d arguments; got %d") $cmd $hist_cmd 0 (count $argv) >&2
+        printf (_ "%ls: %ls: expected %d arguments; got %d\n") $cmd $hist_cmd 0 (count $argv) >&2
         return 0
     end
     return 1

@@ -60,7 +60,7 @@ function name1 -a arg1 arg2
 end
 function -a arg1 arg2 name2
 end
-#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Illegal function name '-a'
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: -a: invalid function name
 #CHECKERR: function -a arg1 arg2 name2
 #CHECKERR: ^
 function name3 --argument-names arg1 arg2
@@ -69,12 +69,12 @@ function name3 --argument-names arg1 arg2
 end
 function --argument-names arg1 arg2 name4
 end
-#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Illegal function name '--argument-names'
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: --argument-names: invalid function name
 #CHECKERR: function --argument-names arg1 arg2 name4
 #CHECKERR: ^
 function name5 abc --argument-names def
 end
-#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: Unexpected positional argument 'abc'
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: abc: unexpected positional argument
 #CHECKERR: function name5 abc --argument-names def
 #CHECKERR: ^
 functions -q name1; and echo "Function name1 found"
@@ -108,7 +108,7 @@ test "$name3[3..-1]" = "$name3a[3..-1]"; and echo "3 = 3a"
 function test
     echo banana
 end
-#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: The name 'test' is reserved, and cannot be used as a function name
+#CHECKERR: {{.*}}checks/function.fish (line {{\d+}}): function: test: cannot use reserved keyword as function name
 #CHECKERR: function test
 #CHECKERR: ^
 

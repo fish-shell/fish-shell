@@ -14,7 +14,7 @@ emit linenumber
 # CHECK: 8
 
 type --nonexistent-option-so-we-get-a-backtrace
-# CHECKERR: type: Unknown option '--nonexistent-option-so-we-get-a-backtrace'
+# CHECKERR: type: --nonexistent-option-so-we-get-a-backtrace: unknown option
 
 function line-number
     status line-number

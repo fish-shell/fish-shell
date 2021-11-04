@@ -130,9 +130,10 @@ not math '2 + 2 4'
 # CHECKERR: '2 + 2 4'
 # CHECKERR:        ^
 not math
-# CHECKERR: math: Expected at least 1 args, got 0
+# CHECKERR: math: expected >= 1 arguments; got 0
 not math -s 12
-# CHECKERR: math: Expected at least 1 args, got 0
+# CHECKERR: math: expected >= 1 arguments; got 0
+# XXX FIXME these two should be just "missing argument" errors, the count is not helpful
 not math 2^999999
 # CHECKERR: math: Error: Result is infinite
 # CHECKERR: '2^999999'
@@ -190,7 +191,7 @@ math --base hex 12 + 0x50
 math --base octal --scale=0 55
 # CHECK: 067
 math --base notabase
-# CHECKERR: math: 'notabase' is not a valid base value
+# CHECKERR: math: notabase: invalid base value
 echo $status
 # CHECK: 2
 

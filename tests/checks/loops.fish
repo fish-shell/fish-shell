@@ -107,17 +107,19 @@ echo "while true; end" | $fish --no-execute
 for status in a b c
     echo $status
 end
-#CHECKERR: {{.*}}loops.fish (line {{\d+}}): You cannot use read-only variable 'status' in a for loop
+#CHECKERR: {{.*}}loops.fish (line {{\d+}}): for: status: cannot overwrite read-only variable
 #CHECKERR: for status in a b c
 #CHECKERR: ^
+# XXX FIXME this should point at `status`
 
 # "That goes for non-electric ones as well (#5548)"
 for hostname in a b c
     echo $hostname
 end
-#CHECKERR: {{.*}}loops.fish (line {{\d+}}): You cannot use read-only variable 'hostname' in a for loop
+#CHECKERR: {{.*}}loops.fish (line {{\d+}}): for: hostname: cannot overwrite read-only variable
 #CHECKERR: for hostname in a b c
 #CHECKERR: ^
+# XXX FIXME this should point at `for`
 
 # For loop control vars available outside the for block
 begin

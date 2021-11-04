@@ -113,34 +113,40 @@ echo comment after conjunction
 
 # --help works
 builtin and --help >/dev/null
-# CHECKERR: fish: Missing man page {{.*}}
-# CHECKERR: `help '{{.*}}'` will open the online version.
+# CHECKERR: fish: and: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help and` will show an online version
 echo $status
 and --help >/dev/null
-# CHECKERR: fish: Missing man page {{.*}}
-# CHECKERR: `help '{{.*}}'` will open the online version.
+# CHECKERR: fish: and: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help and` will show an online version
 echo $status
 # CHECK: 0
 # CHECK: 0
 
 builtin or --help >/dev/null
-# CHECKERR: fish: Missing man page {{.*}}
-# CHECKERR: `help '{{.*}}'` will open the online version.
+# CHECKERR: fish: or: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help or` will show an online version
 echo $status
 or --help >/dev/null
-# CHECKERR: fish: Missing man page {{.*}}
-# CHECKERR: `help '{{.*}}'` will open the online version.
+# CHECKERR: fish: or: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help or` will show an online version
 echo $status
 # CHECK: 0
 # CHECK: 0
 
 builtin not --help >/dev/null
-# CHECKERR: fish: Missing man page {{.*}}
-# CHECKERR: `help '{{.*}}'` will open the online version.
+# CHECKERR: fish: not: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help not` will show an online version
 echo $status
 not --help >/dev/null
-# CHECKERR: fish: Missing man page {{.*}}
-# CHECKERR: `help '{{.*}}'` will open the online version.
+# CHECKERR: fish: not: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help not` will show an online version
 echo $status
 # CHECK: 0
 # CHECK: 0

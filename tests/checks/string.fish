@@ -481,16 +481,16 @@ string repeat -m-1 foo; and echo "exit 0"
 # CHECKERR: string repeat: Invalid max value '-1'
 
 string repeat -n notanumber foo; and echo "exit 0"
-# CHECKERR: string repeat: Argument 'notanumber' is not a valid integer
+# CHECKERR: string repeat: notanumber: invalid integer
 
 string repeat -m notanumber foo; and echo "exit 0"
-# CHECKERR: string repeat: Argument 'notanumber' is not a valid integer
+# CHECKERR: string repeat: notanumber: invalid integer
 
 echo stdin | string repeat -n1 "and arg"; and echo "exit 0"
-# CHECKERR: string repeat: Too many arguments
+# CHECKERR: string repeat: too many arguments
 
 string repeat -n; and echo "exit 0"
-# CHECKERR: string repeat: Expected argument for option n
+# CHECKERR: string repeat: -n: option requires an argument
 
 # FIXME: Also triggers usage
 # string repeat -l fakearg
@@ -761,7 +761,7 @@ echo $status
 function string
     builtin string $argv
 end
-# CHECKERR: checks/string.fish (line {{\d+}}): function: The name 'string' is reserved, and cannot be used as a function name
+# CHECKERR: checks/string.fish (line {{\d+}}): function: string: cannot use reserved keyword as function name
 # CHECKERR: function string
 # CHECKERR: ^
 

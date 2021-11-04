@@ -6,63 +6,62 @@
 
 # First with the history function.
 history --search --merge
-#CHECKERR: history: Mutually exclusive flags 'merge' and `search` seen
+#CHECKERR: history: merge search: options cannot be used together
 history --clear --contains
-#CHECKERR: history: you cannot use any options with the clear command
+#CHECKERR: history: clear: subcommand takes no options
 history --merge -t
-#CHECKERR: history: you cannot use any options with the merge command
+#CHECKERR: history: merge: subcommand takes no options
 history --save xyz
-#CHECKERR: history: save expected 0 args, got 1
+#CHECKERR: history: save: expected 0 arguments; got 1
 
 # Now with the history builtin.
 builtin history --save --prefix
-#CHECKERR: history: you cannot use any options with the save command
+#CHECKERR: history: save: subcommand takes no options
 builtin history --clear --show-time
-#CHECKERR: history: you cannot use any options with the clear command
+#CHECKERR: history: clear: subcommand takes no options
 builtin history --merge xyz
-#CHECKERR: history merge: Expected 0 args, got 1
+#CHECKERR: history: merge: expected 0 arguments; got 1
 builtin history --clear abc def
-#CHECKERR: history clear: Expected 0 args, got 2
+#CHECKERR: history: clear: expected 0 arguments; got 2
 
 # Now using the preferred subcommand form. Note that we support flags before
 # or after the subcommand name so test both variants.
 
 # First with the history function.
 history clear --contains
-#CHECKERR: history: you cannot use any options with the clear command
+#CHECKERR: history: clear: subcommand takes no options
 history clear-session --contains
-#CHECKERR: history: you cannot use any options with the clear-session command
+#CHECKERR: history: clear-session: subcommand takes no options
 history merge -t
-#CHECKERR: history: you cannot use any options with the merge command
+#CHECKERR: history: merge: subcommand takes no options
 history save xyz
-#CHECKERR: history: save expected 0 args, got 1
+#CHECKERR: history: save: expected 0 arguments; got 1
 history --prefix clear
-#CHECKERR: history: you cannot use any options with the clear command
+#CHECKERR: history: clear: subcommand takes no options
 history --prefix clear-session
-#CHECKERR: history: you cannot use any options with the clear-session command
+#CHECKERR: history: clear-session: subcommand takes no options
 history --show-time merge
-#CHECKERR: history: you cannot use any options with the merge command
+#CHECKERR: history: merge: subcommand takes no options
 
 # Now with the history builtin.
 builtin history --search --merge
-#CHECKERR: history: Invalid combination of options,
-#CHECKERR: you cannot do both 'search' and 'merge' in the same invocation
+#CHECKERR: history: search merge: options cannot be used together
 builtin history save --prefix
-#CHECKERR: history: you cannot use any options with the save command
+#CHECKERR: history: save: subcommand takes no options
 builtin history clear --show-time
-#CHECKERR: history: you cannot use any options with the clear command
+#CHECKERR: history: clear: subcommand takes no options
 builtin history clear-session --show-time
-#CHECKERR: history: you cannot use any options with the clear-session command
+#CHECKERR: history: clear-session: subcommand takes no options
 builtin history merge xyz
-#CHECKERR: history merge: Expected 0 args, got 1
+#CHECKERR: history: merge: expected 0 arguments; got 1
 builtin history clear abc def
-#CHECKERR: history clear: Expected 0 args, got 2
+#CHECKERR: history: clear: expected 0 arguments; got 2
 builtin history clear-session abc def
-#CHECKERR: history clear-session: Expected 0 args, got 2
+#CHECKERR: history: clear-session: expected 0 arguments; got 2
 builtin history --contains save
-#CHECKERR: history: you cannot use any options with the save command
+#CHECKERR: history: save: subcommand takes no options
 builtin history -t merge
-#CHECKERR: history: you cannot use any options with the merge command
+#CHECKERR: history: merge: subcommand takes no options
 
 # Now do a history command that should succeed so we exit with a zero,
 # success, status.

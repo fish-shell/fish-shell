@@ -451,11 +451,9 @@ env | grep __fish_empty_uvar
 for a,b in y 1 z 3
     echo $a,$b
 end
-# CHECKERR: {{.*}} for: Variable name 'a,b' is not valid. See `help identifiers`.
-# CHECKERR:
+# CHECKERR: {{.*}} for: a,b: invalid variable. See `help identifiers`
 # CHECKERR: for a,b in y 1 z 3
 # CHECKERR:     ^
-
 
 # Global vs Universal Unspecified Scopes
 set -U __fish_test_global_vs_universal universal
@@ -512,7 +510,7 @@ sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'globa
 
 # Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
-#CHECKERR: set: Variable name 'argle bargle' is not valid. See `help identifiers`.
+#CHECKERR: set: argle bargle: invalid variable. See `help identifiers`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set --show 'argle bargle'
 #CHECKERR: ^
@@ -711,14 +709,14 @@ echo $status
 true
 
 set "" foo
-#CHECKERR: set: Variable name '' is not valid. See `help identifiers`.
+#CHECKERR: set: : invalid variable. See `help identifiers`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set "" foo
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
 
 set --show ""
-#CHECKERR: set: Variable name '' is not valid. See `help identifiers`.
+#CHECKERR: set: : invalid variable. See `help identifiers`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set --show ""
 #CHECKERR: ^

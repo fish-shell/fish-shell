@@ -6,9 +6,9 @@ read
 
 # Read with -a and anything other than exactly on var name is an error
 read -a
-#CHECKERR: read: Expected 1 args, got 0
+#CHECKERR: read: expected 1 arguments; got 0
 read --array v1 v2
-#CHECKERR: read: Expected 1 args, got 2
+#CHECKERR: read: expected 1 arguments; got 2
 read --list v1
 
 # Verify correct behavior of subcommands and splitting of input.

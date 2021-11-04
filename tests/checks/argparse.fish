@@ -66,16 +66,16 @@ argparse h-help=x
 # --max-args and --min-args work
 begin
     argparse --name min-max --min-args 1 h/help --
-    #CHECKERR: min-max: Expected at least 1 args, got 0
+    #CHECKERR: min-max: expected >= 1 arguments; got 0
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2
     argparse --name min-max --min-args 1 --max-args 3 h/help -- --help arg1 arg2 arg3
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2 -h arg3 arg4
-    #CHECKERR: min-max: Expected at most 3 args, got 4
+    #CHECKERR: min-max: expected <= 3 arguments; got 4
     argparse --name min-max --max-args 1 h/help --
     argparse --name min-max --max-args 1 h/help -- arg1
     argparse --name min-max --max-args 1 h/help -- arg1 arg2
-    #CHECKERR: min-max: Expected at most 1 args, got 2
+    #CHECKERR: min-max: expected <= 1 arguments; got 2
 end
 
 # Invalid \"#-val\" spec
@@ -91,7 +91,7 @@ end
 # Invalid arg in the face of a \"#-val\" spec
 begin
     argparse '#-val' -- abc -x def
-    # CHECKERR: argparse: Unknown option '-x'
+    # CHECKERR: argparse: -x: unknown option
 end
 
 # Defining a short flag more than once
@@ -305,7 +305,7 @@ function notargparse
     argparse a/alpha -- --banana
 end
 notargparse
-# CHECKERR: notargparse: Unknown option '--banana'
+# CHECKERR: notargparse: --banana: unknown option
 
 true
 
@@ -400,10 +400,10 @@ end
 
 # #6483 - error messages for missing arguments
 argparse -n foo q r/required= -- foo -qr
-# CHECKERR: foo: Expected argument for option r
+# CHECKERR: foo: -r: option requires an argument
 
 argparse r/required= -- foo --required
-# CHECKERR: argparse: Expected argument for option --required
+# CHECKERR: argparse: --required: option requires an argument
 
 ### The fish_opt wrapper:
 # No args is an error
@@ -422,17 +422,18 @@ and echo unexpected status $status
 # A required and optional arg makes no sense
 fish_opt -s h -l help -r --optional-val
 and echo unexpected status $status
-#CHECKERR: fish_opt: Mutually exclusive flags 'o/optional-val' and `r/required-val` seen
+#CHECKERR: fish_opt: o/optional-val r/required-val: options cannot be used together
+# XXX FIXME the error should output -r and --optional-val: what the user used
 
 # A repeated and optional arg makes no sense
 fish_opt -s h -l help --multiple-vals --optional-val
 and echo unexpected status $status
-#CHECKERR: fish_opt: Mutually exclusive flags 'multiple-vals' and `o/optional-val` seen
+#CHECKERR: fish_opt: multiple-vals o/optional-val: options cannot be used together
 
 # An unexpected arg not associated with a flag is an error
 fish_opt -s h -l help hello
 and echo unexpected status $status
-#CHECKERR: fish_opt: Expected at most 0 args, got 1
+#CHECKERR: fish_opt: expected <= 0 arguments; got 1
 
 # Now verify that valid combinations of options produces the correct output.
 

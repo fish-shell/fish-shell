@@ -5,10 +5,11 @@
 
 # Verify that an invalid bind mode is rejected. >&2
 bind -m 'bad bind mode' \cX true
-# CHECKERR: bind: mode name 'bad bind mode' is not valid. See `help identifiers`.
+# CHECKERR: bind: bad bind mode: invalid mode. See `help identifiers`
+
 # Verify that an invalid bind mode target is rejected. >&2
 bind -M bind-mode \cX true
-# CHECKERR: bind: mode name 'bind-mode' is not valid. See `help identifiers`.
+# CHECKERR: bind: bind-mode: invalid mode. See `help identifiers`
 # CHECKERR: bind: No binding found for sequence '\t'
 
 # This should succeed and result in a success, zero, status.

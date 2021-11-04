@@ -537,6 +537,7 @@ echo (echo hello\\)
 for PWD in foo bar
     true
 end
-# CHECKERR: {{.*}}/basic.fish (line {{\d+}}): You cannot use read-only variable 'PWD' in a for loop
+# CHECKERR: {{.*}}/basic.fish (line {{\d+}}): for: PWD: cannot overwrite read-only variable
 # CHECKERR: for PWD in foo bar
 # CHECKERR: ^
+# XXX FIXME carat should point at PWD

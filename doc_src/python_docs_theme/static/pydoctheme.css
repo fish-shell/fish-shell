@@ -123,7 +123,7 @@ div.sphinxsidebarwrapper > ul > li > ul > li {
 }
 
 ul li.toctree-l1 {
-    line-height: 150%;
+    line-height: 170%;
 }
 
 form.inline-search input,
@@ -144,7 +144,7 @@ div.body {
 }
 
 div.body p {
-    line-height: 140%;
+    line-height: 170%;
 }
 
 div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
@@ -288,7 +288,7 @@ div.footer {
 }
 
 #synopsis p {
-    font-size:  12pt;
+    font-size: 12pt;
 }
 
 dl.envvar, dl.describe {

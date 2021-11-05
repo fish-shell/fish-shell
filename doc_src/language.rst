@@ -891,7 +891,7 @@ So you set a variable with ``set``, and use it with a ``$`` and the name.
 
 .. _variables-scope:
 
-Variable scope
+Variable Scope
 ^^^^^^^^^^^^^^
 
 There are four kinds of variables in fish: universal, global, function and local variables.
@@ -1256,11 +1256,27 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. _PATH:
 
-- ``PATH``, a list of directories in which to search for commands
+.. envvar:: PATH
 
-- ``CDPATH``, a list of directories in which the :ref:`cd <cmd-cd>` builtin looks for a new directory.
+   A list of directories in which to search for commands
 
-- The locale variables ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
+.. envvar:: CDPATH
+   
+   A list of directories in which the :ref:`cd <cmd-cd>` builtin looks for a new directory.
+
+.. envvar:: FISH_DEBUG
+
+   Controls which debug categories :command:`fish` enables for output, analogous to the ``--debug`` option.
+
+.. envvar:: FISH_DEBUG_OUTPUT
+
+   Specifies a file to direct debug output to.
+
+.. describe:: Locale Variables
+
+   The locale variables :envvar:`CDPATH`, :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_CTYPE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
+
+.. seealso:: Others include:
 
 - A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See :ref:`Variables for changing highlighting colors <variables-color>` for more information.
 
@@ -1285,8 +1301,6 @@ You can change the settings of fish by changing the values of certain variables.
   session).
 
 - ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish or the ``FISH_DEBUG_OUTPUT`` variable. It goes to stderr by default.
-
-- ``FISH_DEBUG`` and ``FISH_DEBUG_OUTPUT`` control what debug output fish generates and where it puts it, analogous to the ``--debug`` and ``--debug-output`` options. These have to be set on startup, via e.g. ``FISH_DEBUG='reader*' FISH_DEBUG_OUTPUT=/tmp/fishlog fish``.
 
 - ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.
 
@@ -1382,16 +1396,42 @@ So if both ``cat`` and ``grep`` succeeded, ``$status`` would be 1 because of the
 
 .. _variables-locale:
 
-Locale variables
+Locale Variables
 ^^^^^^^^^^^^^^^^
 
-The "locale" of a program is its set of language and regional settings. In UNIX, there are a few separate variables to control separate things - ``LC_CTYPE`` defines the text encoding while ``LC_TIME`` defines the time format.
+The "locale" of a program is its set of language and regional settings that depend on language and cultural convention. In UNIX, these are made up of several categories. For example, :envvar:`LC_CTYPE` defines character classification and case conversion, while :envvar:`LC_TIME` defines the time formats.
 
-The locale variables are: ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``,  ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME``. These variables work as follows: ``LC_ALL`` forces all the aspects of the locale to the specified value. If ``LC_ALL`` is set, all other locale variables will be ignored (this is typically not recommended!). The other ``LC_`` variables set the specified aspect of the locale information. ``LANG`` is a fallback value, it will be used if none of the ``LC_`` variables are specified.
+.. envvar:: LANG
 
-The most common way to set the locale to use a command like ``set -gx LANG en_GB.utf8``, which sets the current locale to be the English language, as used in Great Britain, using the UTF-8 character set. That way any program that requires one setting differently can easily override just that and doesn't have to resort to LC_ALL. For a list of available locales on your system, try ``locale -a``.
+   This is the typpical environment variable for specifying a locale. A user may set this variable to express the language they speak, their region, and a character encoding. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
 
-Because it needs to handle output that might include multibyte characters (like e.g. emojis), fish will try to set its own internal LC_CTYPE to one that is UTF8-capable even if given an effective LC_CTYPE of "C" (the default). This prevents issues with e.g. filenames given in autosuggestions even if the user started fish with LC_ALL=C. To turn this handling off, set ``fish_allow_singlebyte_locale`` to "1".
+.. envvar:: LC_ALL
+   
+   Overrides the :envvar:`LANG` environment variable and the values of the other ``LC_*`` variables.
+
+.. envvar:: LC_COLLATE
+
+   Specifies the locale to use for the ``LC_COLATE`` category. This determines the rules about equivilance of cases and alphabetical ordering: collation.
+
+.. envvar:: LC_CTYPE
+
+   Specifies the locale to use for the ``LC_CTYPE`` category, which determines classification rules, like if the type of character is an alpha, digit, and so on.
+
+.. envvar:: LC_MESSAGES
+
+   ``LC_MESSAGES`` determines the language in which messages are diisplayed.
+
+.. envvar:: LC_MONETARY
+   
+   Determines currency, how it is formated, and the symbols used.
+
+.. envvar:: LC_NUMERIC
+
+   Sets the locale for formatting numbers.
+
+.. envvar:: LC_TIME
+
+   Sets the locale for formatting dates and times.
 
 .. _builtin-overview:
 

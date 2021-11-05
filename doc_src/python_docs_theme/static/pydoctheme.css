@@ -208,11 +208,13 @@ div.body a:hover {
     color: #00B0E4;
 }
 
-tt, code, pre {
-    font-family: monospace, sans-serif;
-    /* Older sphinx versions set a color here, we need to inherit it from the outer div.highlight */
+tr, code, pre {
     background-color: inherit;
 }
+
+tt, code, pre, dl > dt span ~ em, #synopsis p, dl.envvar .pre, dl.describe .pre {
+    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
+}}
 
 pre, div[class*="highlight-"] {
     /* For some reason sphinx since 3.1.2 sets "clear: both" here, which breaks in interesting ways */
@@ -285,13 +287,14 @@ div.footer {
     background: #FFF;
 }
 
-dl > dt span ~ em {
-    font-family: monospace, sans-serif;
+#synopsis p {
+    font-size:  12pt;
 }
 
-#synopsis p {
-    font-family: monospace, sans-serif;
-    font-size:  12pt;
+dl.envvar, dl.describe {
+    font-size: 11pt;
+    font-weight: normal !important;
+
 }
 
 /* On screens that are less than 700px wide remove anything non-essential

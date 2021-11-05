@@ -21,8 +21,8 @@ The :ref:`tutorial <tutorial>` is available as HTML via ``help tutorial`` or in 
 
 The following options are available:
 
-- ``-c`` or ``--command=COMMANDS`` evaluate the specified commands instead of reading from the commandline, passing any additional positional arguments via :envvar:`$argv`.
-  Note that, unlike other shells, the first argument is *not* the name of the program (:envvar:`$0`), but simply the first normal argument.
+- ``-c`` or ``--command=COMMANDS`` evaluate the specified commands instead of reading from the commandline, passing any additional positional arguments via ``$argv``.
+  Note that, unlike other shells, the first argument is *not* the name of the program ``$0``, but simply the first normal argument.
 
 - ``-C`` or ``--init-command=COMMANDS`` evaluate the specified commands after reading the configuration, before running the command specified by ``-c`` or reading interactive input.
 
@@ -77,8 +77,8 @@ Debug messages output to stderr by default. Note that if ``fish_trace`` is set, 
 ::
 
     > fish --debug='complete,*history*' --debug-output=/tmp/fish.log --init-command='set fish_trace on'
-
-These options can also be changed via the :envvar:`$FISH_DEBUG` and :envvar:`$FISH_DEBUG_OUTPUT` variables.
+    
+These options can also be changed via the :envvar:`FISH_DEBUG` and :envvar:`FISH_DEBUG_OUTPUT` variables.
 The categories enabled via ``--debug`` are *added* to the ones enabled by $FISH_DEBUG, so they can be disabled by prefixing them with ``-`` (``reader-*,-ast*`` enables reader debugging and disables ast debugging).
 
-The file given in ``--debug-output`` takes precedence over the file in :envvar:`$FISH_DEBUG_OUTPUT`.
+The file given in ``--debug-output`` takes precedence over the file in :envvar:`FISH_DEBUG_OUTPUT`.

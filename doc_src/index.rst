@@ -4,11 +4,9 @@
 Introduction
 ************
 
-This is the documentation for **fish**, the **f**\ riendly **i**\ nteractive **sh**\ ell.
+This is the documentation for :command:`fish`, the **f**\ riendly **i**\ nteractive **sh**\ ell.
 
 A shell is a program that helps you operate your computer by starting other programs. fish offers a command-line interface focused on usability and interactive use.
-
-Unlike other shells, fish does not follow the POSIX standard, but still uses roughly the same model.
 
 Some of the special features of fish are:
 
@@ -33,10 +31,10 @@ For information on using fish interactively, see :ref:`Interactive use <interact
 
 If you need to install fish first, read on, the rest of this document will tell you how to get, install and configure fish.
 
-Installation and Start
-======================
+Installation
+============
 
-This section describes how to install, uninstall, start, and exit the fish shell. It also explains how to make fish the default shell.
+This section describes how to install, uninstall, start, and exit :command:`fish`. It also explains how to make fish the default shell.
 
 Installation
 ------------
@@ -50,29 +48,13 @@ Starting and Exiting
 
 Once fish has been installed, open a terminal. If fish is not the default shell:
 
-- Type ``fish`` to start a fish shell::
+- Type :command:`fish` to start a shell::
 
     > fish
 
-- Type ``exit`` to exit a fish shell::
+- Type :command:`exit` to end the session::
 
     > exit
-
-Executing Bash
---------------
-
-If fish is your default shell and you want to copy commands from the internet that are written in bash (the default shell on most systems), you can proceed in one of the following two ways:
-
-- Use the ``bash`` command with the ``-c`` switch to read from a string::
-
-    > bash -c 'some bash command'
-
-- Use ``bash`` without a switch to open a bash shell you can use and ``exit`` afterward::
-
-    > bash
-    $ some bash command
-    $ exit
-    > _
 
 Default Shell
 -------------
@@ -94,7 +76,7 @@ Shebang Line
 
 Because shell scripts are written in many different languages, they need to carry information about which interpreter should be used to execute them. For this, they are expected to have a first line, the shebang line, which names the interpreter executable.
 
-A script written in ``bash`` would need a first line like this:
+A script written in :command:`bash` would need a first line like this:
 ::
 
     #!/bin/bash
@@ -105,30 +87,27 @@ For a script written in another language, just replace ``/bin/bash`` with the in
 
 This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ``fish /path/to/script``, a shebang is not required (but it doesn't hurt!).
 
+Configuration
+=============
 
-Where to add configuration
-==========================
+To store configuration write it to a file called ``~/.config/fish/config.fish``.
 
-If you have any configuration you want to store, simply write it to a file called ``~/.config/fish/config.fish``.
+``.fish`` scripts in ``~/.config/fish/conf.d/`` are also automatically executed before ``config.fish``.
 
-If you want to split it up, you can also use files named something.fish in ``~/.config/fish/conf.d/``. Fish will automatically load these on startup, in order, before config.fish.
-
-These files are read on the startup of every shell, whether it's interactive or a login shell or not. Use ``status --is-interactive`` and ``status --is-login`` to only do things for interactive shells or login shells.
-
-This is a simplified answer for ordinary users, if you are a sysadmin or a developer who wants a program to integrate with fish, see :ref:`configuration` for the full scoop.
+These files are read on the startup of every shell, whether interactive and/or if they're login shells. Use ``status --is-interactive`` and ``status --is-login`` to discriminate.
 
 Examples:
+---------
 
-If you want to add the directory ``~/linux/bin`` to your PATH variable when using a login shell, add this to your ``~/.config/fish/config.fish`` file::
+To add ``~/linux/bin`` to PATH variable when using a login shell, add this to ``~/.config/fish/config.fish`` file::
 
     if status --is-login
         set -gx PATH $PATH ~/linux/bin
     end
 
-(alternatively use :ref:`fish_add_path <cmd-fish_add_path>` like ``fish_add_path ~/linux/bin``, which only adds the path if it isn't included yet)
+This is just an exmaple; using :ref:`fish_add_path <cmd-fish_add_path>` e.g. ``fish_add_path ~/linux/bin`` which only adds the path if it isn't included yet is easier.
 
-If you want to run a set of commands when fish exits, use an :ref:`event handler <event>` that is triggered by the exit of the shell::
-
+To run commands on exit, use an :ref:`event handler <event>` that is triggered by the exit of the shell::
 
     function on_exit --on-event fish_exit
         echo fish is now exiting
@@ -136,10 +115,8 @@ If you want to run a set of commands when fish exits, use an :ref:`event handler
 
 .. _more-help:
 
-Further help and development
-============================
-
-If you have a question not answered by this documentation, there are several avenues for help:
+Resources
+=========
 
 - The `GitHub page <https://github.com/fish-shell/fish-shell/>`_
 

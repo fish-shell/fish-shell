@@ -77,7 +77,7 @@ Debug messages output to stderr by default. Note that if ``fish_trace`` is set, 
 ::
 
     > fish --debug='complete,*history*' --debug-output=/tmp/fish.log --init-command='set fish_trace on'
-    
+
 These options can also be changed via the :envvar:`FISH_DEBUG` and :envvar:`FISH_DEBUG_OUTPUT` variables.
 The categories enabled via ``--debug`` are *added* to the ones enabled by $FISH_DEBUG, so they can be disabled by prefixing them with ``-`` (``reader-*,-ast*`` enables reader debugging and disables ast debugging).
 

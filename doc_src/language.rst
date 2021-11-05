@@ -1254,11 +1254,9 @@ Special variables
 
 You can change the settings of fish by changing the values of certain variables.
 
-.. _PATH:
-
 .. envvar:: PATH
 
-   A list of directories in which to search for commands
+   A list of directories in which to search for commands.
 
 .. envvar:: CDPATH
    
@@ -1274,7 +1272,7 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. describe:: Locale Variables
 
-   The locale variables :envvar:`CDPATH`, :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_CTYPE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
+   The locale variables :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_CTYPE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
 
 .. seealso:: Others include:
 

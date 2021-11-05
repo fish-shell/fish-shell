@@ -181,20 +181,20 @@ man_make_section_directory = False
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "fish-doc", "fish-shell Documentation", [author], 1),
-    ("tutorial", "fish-tutorial", "fish-shell tutorial", [author], 1),
-    ("language", "fish-language", "The fish language", [author], 1),
-    ("interactive", "fish-interactive", "Using fish interactively", [author], 1),
-    ("relnotes", "fish-releasenotes", "fish-shell release notes", [author], 1),
-    ("completions", "fish-completions", "Writing fish completions", [author], 1),
+    (master_doc, "fish-doc", "", [author], 1),
+    ("tutorial", "fish-tutorial", "", [author], 1),
+    ("language", "fish-language", "", [author], 1),
+    ("interactive", "fish-interactive", "", [author], 1),
+    ("relnotes", "fish-releasenotes", "", [author], 1),
+    ("completions", "fish-completions", "", [author], 1),
     (
         "fish_for_bash_users",
         "fish-for-bash-users",
-        "A quick fish primer for those coming from bash",
+        "",
         [author],
         1,
     ),
-    ("faq", "fish-faq", "fish-shell faq", [author], 1),
+    ("faq", "fish-faq", "", [author], 1),
 ]
 for path in sorted(glob.glob("cmds/*")):
     docname = os.path.splitext(path)[0]

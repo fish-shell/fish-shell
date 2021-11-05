@@ -26,7 +26,7 @@ The following options are available:
 
 - ``-t`` or ``--type`` prints ``function``, ``builtin``, or ``file`` if ``NAME`` is a shell function, builtin, or disk file, respectively.
 
-- ``-p`` or ``--path`` prints the path to ``NAME`` if ``NAME`` resolves to an executable file in :ref:`$PATH <PATH>`, the path to the script containing the definition of the function ``NAME`` if ``NAME`` resolves to a function loaded from a file on disk (i.e. not interactively defined at the prompt), or nothing otherwise.
+- ``-p`` or ``--path`` prints the path to ``NAME`` if ``NAME`` resolves to an executable file in :ref:``$PATH <PATH>``, the path to the script containing the definition of the function ``NAME`` if ``NAME`` resolves to a function loaded from a file on disk (i.e. not interactively defined at the prompt), or nothing otherwise.
 
 - ``-P`` or ``--force-path`` returns the path to the executable file ``NAME``, presuming ``NAME`` is found in ``$PATH``, or nothing otherwise. ``--force-path`` explicitly resolves only the path to executable files in ``$PATH``, regardless of whether ``$NAME`` is shadowed by a function or builtin with the same name.
 

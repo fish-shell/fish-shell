@@ -22,7 +22,7 @@ Everything in fish is done with commands. There are commands for repeating other
 
 To learn more about the ``echo`` command, read its manual page by typing ``man echo``. ``man`` is a command for displaying a manual page on a given topic. It takes the name of the manual page to display as an argument. There are manual pages for almost every command. There are also manual pages for many other things, such as system libraries and important files.
 
-Every program on your computer can be used as a command in fish. If the program file is located in one of the :ref:`PATH <PATH>` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
+Every program on your computer can be used as a command in fish. If the program file is located in one of the :ref:``PATH <PATH>`` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
 
 Here is a list of some useful commands:
 
@@ -740,7 +740,7 @@ This can be quite useful. For example, if you want to go through all the files i
 
     for file in $PATH/*
 
-Because :ref:`$PATH <path>` is a list, this expands to all the files in all the directories in it. And if there are no directories in $PATH, the right answer here is to expand to no files.
+Because :ref:``$PATH <path>`` is a list, this expands to all the files in all the directories in it. And if there are no directories in $PATH, the right answer here is to expand to no files.
 
 .. _expand-index-range:
 
@@ -1054,7 +1054,7 @@ Exporting variables
 
 Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like $LESS or $GOPATH, but also for variables that contain general system settings like $PATH or $LANGUAGE. If an external command needs to know a variable, it needs to be exported.
 
-This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :ref:`$PATH <PATH>` and :ref:`locale variables <variables-locale>`.
+This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :ref:``$PATH <PATH>`` and :ref:`locale variables <variables-locale>`.
 
 Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are identical to the scoping rules for variables:
 
@@ -1259,7 +1259,7 @@ You can change the settings of fish by changing the values of certain variables.
    A list of directories in which to search for commands.
 
 .. envvar:: CDPATH
-   
+
    A list of directories in which the :ref:`cd <cmd-cd>` builtin looks for a new directory.
 
 .. envvar:: FISH_DEBUG
@@ -1404,7 +1404,7 @@ The "locale" of a program is its set of language and regional settings that depe
    This is the typpical environment variable for specifying a locale. A user may set this variable to express the language they speak, their region, and a character encoding. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
 
 .. envvar:: LC_ALL
-   
+
    Overrides the :envvar:`LANG` environment variable and the values of the other ``LC_*`` variables.
 
 .. envvar:: LC_COLLATE
@@ -1420,7 +1420,7 @@ The "locale" of a program is its set of language and regional settings that depe
    ``LC_MESSAGES`` determines the language in which messages are diisplayed.
 
 .. envvar:: LC_MONETARY
-   
+
    Determines currency, how it is formated, and the symbols used.
 
 .. envvar:: LC_NUMERIC

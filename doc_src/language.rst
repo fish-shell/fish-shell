@@ -22,7 +22,7 @@ Everything in fish is done with commands. There are commands for repeating other
 
 To learn more about the ``echo`` command, read its manual page by typing ``man echo``. ``man`` is a command for displaying a manual page on a given topic. It takes the name of the manual page to display as an argument. There are manual pages for almost every command. There are also manual pages for many other things, such as system libraries and important files.
 
-Every program on your computer can be used as a command in fish. If the program file is located in one of the :ref:`PATH <PATH>` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
+Every program on your computer can be used as a command in fish. If the program file is located in one of the :envvar:`PATH` directories, you can just type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) is required.
 
 Here is a list of some useful commands:
 
@@ -721,7 +721,6 @@ Sometimes this may be unwanted, especially that tokens can disappear after expan
 This also happens after :ref:`command substitution <expand-command-substitution>`. To avoid tokens disappearing there, make the inner command return a trailing newline, or store the output in a variable and double-quote it.
 
 E.g.
-
 ::
 
     >_ set b 1 2 3
@@ -736,11 +735,12 @@ E.g.
     # so this is `''banana`
     banana
 
-This can be quite useful. For example, if you want to go through all the files in all the directories in $PATH, use::
+This can be quite useful. For example, if you want to go through all the files in all the directories in :envvar:`PATH`, use
+::
 
     for file in $PATH/*
 
-Because :ref:`$PATH <path>` is a list, this expands to all the files in all the directories in it. And if there are no directories in $PATH, the right answer here is to expand to no files.
+Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in $:envvar:`PATH`, the right answer here is to expand to no files.
 
 .. _expand-index-range:
 
@@ -1052,9 +1052,9 @@ For example::
 Exporting variables
 ^^^^^^^^^^^^^^^^^^^
 
-Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like $LESS or $GOPATH, but also for variables that contain general system settings like $PATH or $LANGUAGE. If an external command needs to know a variable, it needs to be exported.
+Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like ``LESS`` or ``GOPATH``, but also for variables that contain general system settings like ``PATH`` or ``LANGUAGE``. If an external command needs to know a variable, it needs to be exported.
 
-This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :ref:`$PATH <PATH>` and :ref:`locale variables <variables-locale>`.
+This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :envvar:`PATH ` and :ref:`locale variables <variables-locale>`.
 
 Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are identical to the scoping rules for variables:
 
@@ -1106,7 +1106,7 @@ If you don't use any brackets, all the elements of the list will be passed to th
         echo $i is in the path
     end
 
-This goes over every directory in $PATH separately and prints a line saying it is in the path.
+This goes over every directory in :envvar:`PATH` separately and prints a line saying it is in the path.
 
 To create a variable ``smurf``, containing the items ``blue`` and ``small``, simply write::
 
@@ -1154,7 +1154,7 @@ When a list is exported as an environment variable, it is either space or colon 
     smurf=blue small
     smurf_PATH=forest:mushroom
 
-Fish automatically creates lists from all environment variables whose name ends in PATH (like $PATH, $CDPATH or $MANPATH), by splitting them on colons. Other variables are not automatically split.
+Fish automatically creates lists from all environment variables whose name ends in ``PATH`` (like $:envvar:`PATH`, $:envvar:`CDPATH` or $:envvar:`MANPATH`), by splitting them on colons. Other variables are not automatically split.
 
 Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
 
@@ -1230,7 +1230,7 @@ The options will be *removed* from $argv, so $argv[2] is the second *positional*
 PATH variables
 ^^^^^^^^^^^^^^
 
-Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in "PATH" (case-sensitive) become PATH variables.
+Path variables are a special kind of variable used to support colon-delimited path lists including :envvar:`PATH`, :envvar:`CDPATH`, :envvar:`MANPATH`, :envvar:`PYTHONPATH`, etc. All variables that end in "PATH" (case-sensitive) become PATH variables.
 
 PATH variables act as normal lists, except they are implicitly joined and split on colons.
 
@@ -1298,9 +1298,9 @@ You can change the settings of fish by changing the values of certain variables.
   empty string, history is not saved to disk (but is still available within the interactive
   session).
 
-- ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish or the ``FISH_DEBUG_OUTPUT`` variable. It goes to stderr by default.
+- ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
 
-- ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.
+- ``fish_user_paths``, a list of directories that are prepended to :envvar:`PATH`. This can be a universal variable.
 
 - ``umask``, the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.
 

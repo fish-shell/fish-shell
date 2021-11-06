@@ -48,26 +48,8 @@ jobs:
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
-        # queries: ./path/to/local/query, your-org/your-repo/queries@main
-
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-   
+        # queries: ./path/to/local/query, your-org/your-repo/queries@main   
     - run: |
-    on: [push, pull_request]
-
-env:
-  CTEST_PARALLEL_LEVEL: "1"
-
-jobs:
-  ubuntu:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install deps
-      run: |
         sudo apt install gettext libncurses5-dev libpcre2-dev python3-pip tmux
         sudo pip3 install pexpect
         # Generate a locale that uses a comma as decimal separator.

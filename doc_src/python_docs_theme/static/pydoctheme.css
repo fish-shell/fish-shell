@@ -374,6 +374,12 @@ kbd {
   padding: 0.1em 0.3em;
 }
 
+.internal.reference:link {
+    text-decoration: underline;
+}
+.std-envvar::before {
+    content: "$";
+}
 .footnote, .footnote-reference {
     background-color: #ddddea;
     font-size: 90%;

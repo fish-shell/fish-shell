@@ -1,4 +1,5 @@
-.. _language:
+
+f.. _language:
 
 The fish language
 =================
@@ -743,7 +744,7 @@ This can be quite useful. For example, if you want to go through all the files i
 
     for file in $PATH/*
 
-Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in $:envvar:`PATH`, the right answer here is to expand to no files.
+Because :envvar:`PATH` is a list, this expands to all the files in all the directories in it. And if there are no directories in :envvar:`PATH`, the right answer here is to expand to no files.
 
 .. _expand-index-range:
 
@@ -1157,7 +1158,7 @@ When a list is exported as an environment variable, it is either space or colon 
     smurf=blue small
     smurf_PATH=forest:mushroom
 
-Fish automatically creates lists from all environment variables whose name ends in ``PATH`` (like $:envvar:`PATH`, $:envvar:`CDPATH` or $:envvar:`MANPATH`), by splitting them on colons. Other variables are not automatically split.
+Fish automatically creates lists from all environment variables whose name ends in ``PATH`` (like :envvar:`PATH`, :envvar:`CDPATH` or :envvar:`MANPATH`), by splitting them on colons. Other variables are not automatically split.
 
 Lists can be inspected with the :ref:`count <cmd-count>` or the :ref:`contains <cmd-contains>` commands::
 

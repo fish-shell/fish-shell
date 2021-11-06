@@ -1,5 +1,5 @@
 
-f.. _language:
+.. _language:
 
 The fish language
 =================
@@ -161,17 +161,14 @@ Most programs use three input/output (I/O) streams:
 
 Each stream has a number called the file descriptor (FD): 0 for stdin, 1 for stdout, and 2 for stderr.
 
-A stream's destination may be changed with a *redirection*. For example, ``echo hello > output.txt``, redirects the standard output of the ``echo`` command to a text file.
+The destination of a stream can be changed using something called *redirection*. For example, ``echo hello > output.txt``, redirects the standard output of the ``echo`` command to a text file.
 
-- ``<SOURCE_FILE`` reads standard input from a file.
-- ``>DESTINATION`` writes standard output to a file.
-- ``2>DESTINATION`` writes standard error to a file. [#]_
-- ``>>DESTINATION`` appends standard output to a file.
-- ``2>>DESTINATION`` appends standard error to a file.
-- ``>?DESTINATION`` writes standard output to a file, or prints an error if the file already exists.
-- ``2>?DESTINATION`` writes standard error to a file, or prints an error if the file already exists.
-
-Append and noclobber combined (like ``>>?``) behaves the same as ``>?``, because new files are initially empty.
+- To read standard input from a file, use ``<SOURCE_FILE``.
+- To write standard output to a file, use ``>DESTINATION``.
+- To write standard error to a file, use ``2>DESTINATION``. [#]_
+- To append standard output to a file, use ``>>DESTINATION_FILE``.
+- To append standard error to a file, use ``2>>DESTINATION_FILE``.
+- To not overwrite ("clobber") an existing file, use ``>?DESTINATION`` or ``2>?DESTINATION``. This is known as the "noclobber" redirection.
 
 ``DESTINATION`` can be one of the following:
 

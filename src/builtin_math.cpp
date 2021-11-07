@@ -188,10 +188,10 @@ static const wchar_t *math_describe_error(const te_error_t &error) {
 static wcstring format_double(double v, const math_cmd_opts_t &opts) {
     if (opts.base == 16) {
         v = trunc(v);
-        return format_string(L"0x%x", (long)v);
+        return format_string(L"0x%x", (unsigned int)v);
     } else if (opts.base == 8) {
         v = trunc(v);
-        return format_string(L"0%o", (long)v);
+        return format_string(L"0%o", (unsigned int)v);
     }
 
     // As a special-case, a scale of 0 means to truncate to an integer

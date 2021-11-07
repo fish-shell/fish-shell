@@ -14,3 +14,16 @@ complete -c mono -l debugger-agent -a 'address loglevel logfile server setpgid s
 complete -c mono -l profile -d 'Use profiler module'
 complete -c mono -l trace -d 'Trace expression'
 complete -c mono -l jitmap -d 'Generate JIT method map in /tmp/perf-PID.map'
+
+complete -c mono -l config -F -d 'Use config'
+complete -c mono -s v -l verbose -d 'Increase verbosity level'
+complete -c mono -l runtime -f -d 'Use runtime version'
+complete -c mono -l optimize -a 'abcrem all aot branch cfold cmov deadce consprop copyprop
+  fcmov float32 gshared inline intrins linears leaf loop peephole precomp sched shared
+  sse2 tailc' -f -d 'Use optimizations'
+complete -c mono -l attach -a 'disable' -f -d 'Specify attach agent options'
+complete -c mono -l llvm -d 'Use LLVM'
+complete -c mono -l nollvm -d 'Don\'t use LLVM'
+complete -c mono -l gc -a 'sgen boehm' -f -d 'Specify garbage collector'
+complete -c mono -l handlers -d 'Use custom handlers'
+complete -c mono -l aot-path -f -d 'Add directories for AOT image search'

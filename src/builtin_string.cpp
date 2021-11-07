@@ -911,7 +911,7 @@ struct compiled_regex_t : noncopyable_t {
             string_error(streams, _(L"%ls: Regular expression compile error: %ls\n"), argv0,
                          pcre2_strerror(err_code).c_str());
             string_error(streams, L"%ls: %ls\n", argv0, pattern.c_str());
-            string_error(streams, L"%ls: %*ls\n", argv0, err_offset, L"^");
+            string_error(streams, L"%ls: %*ls\n", argv0, static_cast<int>(err_offset), L"^");
             return;
         }
 

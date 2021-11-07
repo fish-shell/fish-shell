@@ -72,7 +72,7 @@ static void print(int resource, int hard, io_streams_t &streams) {
     if (l == RLIM_INFINITY)
         streams.out.append(L"unlimited\n");
     else
-        streams.out.append_format(L"%d\n", l / get_multiplier(resource));
+        streams.out.append_format(L"%lu\n", l / get_multiplier(resource));
 }
 
 /// Print values of all resource limits.
@@ -101,7 +101,7 @@ static void print_all(int hard, io_streams_t &streams) {
         if (l == RLIM_INFINITY) {
             streams.out.append(L"unlimited\n");
         } else {
-            streams.out.append_format(L"%d\n", l / get_multiplier(resource_arr[i].resource));
+            streams.out.append_format(L"%lu\n", l / get_multiplier(resource_arr[i].resource));
         }
     }
 }

@@ -147,10 +147,9 @@ static bool set_status_cmd(const wchar_t *cmd, status_cmd_opts_t &opts, status_c
 
 /// Print the features and their values.
 static void print_features(io_streams_t &streams) {
-    size_t max_len = std::numeric_limits<size_t>::min();
-    for (const auto &md : features_t::metadata) {
-        max_len = std::max(max_len, wcslen(md.name));
-    }
+    auto max_len = std::numeric_limits<int>::min();
+    for (const auto &md : features_t::metadata)
+        max_len = std::max(max_len, static_cast<int>(wcslen(md.name)));
     for (const auto &md : features_t::metadata) {
         int set = feature_test(md.flag);
         streams.out.append_format(L"%-*ls%-3s %ls %ls\n", max_len + 1, md.name, set ? "on" : "off",

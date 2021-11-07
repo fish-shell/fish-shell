@@ -106,7 +106,6 @@ int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #define dirfd(d) (d->d_fd)
 #endif
 #endif
-#endif
 
 #ifndef HAVE_WCSNDUP
 /// Fallback for wcsndup function. Returns a copy of \c in, truncated to a maximum length of \c c.
@@ -167,3 +166,5 @@ double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
 }
 #define wcstod_l(x, y, z) fish_compat::wcstod_l(x, y, z)
 #endif
+
+#endif // FISH_FALLBACK_H

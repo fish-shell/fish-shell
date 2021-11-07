@@ -214,7 +214,7 @@ tr, code, pre {
 
 tt, code, pre, dl > dt span ~ em, #synopsis p, dl.envvar .pre, dl.describe .pre {
     font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
-}}
+}
 
 pre, div[class*="highlight-"] {
     /* For some reason sphinx since 3.1.2 sets "clear: both" here, which breaks in interesting ways */
@@ -374,6 +374,12 @@ kbd {
   padding: 0.1em 0.3em;
 }
 
+.internal.reference:link {
+    text-decoration: underline;
+}
+.std-envvar::before {
+    content: "$";
+}
 .footnote, .footnote-reference {
     background-color: #ddddea;
     font-size: 90%;

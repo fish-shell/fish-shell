@@ -1,0 +1,8 @@
+name: "CodeQL config"
+queries:
+  - uses: security-and-quality
+paths-ignore:
+  - share/tools/web_config/js/angular.js
+  - share/tools/web_config/js/angular-route.js
+  - share/tools/web_config/js/angular-sanitize.js
+  - pcre2/

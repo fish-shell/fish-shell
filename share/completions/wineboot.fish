@@ -1,0 +1,8 @@
+complete -c wine -s h -l help -d 'Show help and exit'
+complete -c wine -s e -l end-session -d 'End the current session cleanly'
+complete -c wine -s f -l force -d 'Force exit for processes that don\'t exit cleanly'
+complete -c wine -s i -l init -d 'Perform initialization for first Wine instance'
+complete -c wine -s k -l kill -d 'Kill running processes without any cleanup'
+complete -c wine -s r -l restart -d 'Restart only, don\'t do normal startup operations'
+complete -c wine -s s -l shutdown -d 'Shutdown only, don\'t reboot'
+complete -c wine -s u -l update -d 'Update the wineprefix directory'

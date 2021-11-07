@@ -1,5 +1,5 @@
 complete -c mono -s h -l help -d 'Show help and exit'
-complete -c mono -s V -l version -d 'Show version and exit'
+complete -c mono -s V -l version -a 'number' -f -d 'Show version and exit'
 
 complete -c mono -l aot -a 'asmonly bind-to-runtime-version data-outfile direct-icalls
   direct-pinvoke dwarfdebug full hybrid llvm llvmonly llvmopts llvmllc mcpu dedup-include
@@ -15,7 +15,7 @@ complete -c mono -l profile -d 'Use profiler module'
 complete -c mono -l trace -d 'Trace expression'
 complete -c mono -l jitmap -d 'Generate JIT method map in /tmp/perf-PID.map'
 
-complete -c mono -l config -F -d 'Use config'
+complete -c mono -l config -F -r -d 'Use config'
 complete -c mono -s v -l verbose -d 'Increase verbosity level'
 complete -c mono -l runtime -f -d 'Use runtime version'
 complete -c mono -l optimize -a 'abcrem all aot branch cfold cmov deadce consprop copyprop

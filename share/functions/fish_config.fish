@@ -245,10 +245,11 @@ function fish_config --description "Launch fish's web based configuration"
                         string match -rq '^fish_(?:pager_)?color.*$' -- $toks[1]
                         or continue
 
-                        # Note: This can warn about global variables shadowing the universal
-                        # versions we create.
-                        # We want that warning to go through, because we *can't*
-                        # permanently remove the globals.
+                        # If we're supposed to set universally, remove any shadowing globals,
+                        # so the change takes effect immediately (and there's no warning).
+                        if test x"$scope" = x-U; and set -qg $toks[1]
+                            set -eg $toks[1]
+                        end
                         set $scope $toks
                         set have_color 1
                     end <$file

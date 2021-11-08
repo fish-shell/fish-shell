@@ -132,6 +132,7 @@ Improved terminal support
 - fish now assumes Unicode 9+ widths for emoji under iTerm 2 (:issue:`8200`).
 - Skin-tone emoji modifiers (U+1F3FB through U+1F3FF) are now measured as width 0 (:issue:`8275`).
 - fish's escape sequence removal now also knows Tmux's wrapped escapes.
+- Vi cursor shaping and $PWD reporting is now also enabled on foot (:issue:`8422`).
 
 Other improvements
 ------------------------------

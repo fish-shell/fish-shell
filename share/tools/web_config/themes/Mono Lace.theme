@@ -27,3 +27,4 @@ fish_pager_color_completion normal
 fish_pager_color_progress brwhite --background=cyan
 fish_pager_color_description B3A06D yellow
 fish_color_option 303030
+fish_color_keyword 000000

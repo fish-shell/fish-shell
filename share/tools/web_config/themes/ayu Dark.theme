@@ -28,3 +28,4 @@ fish_pager_color_description B3A06D yellow
 fish_pager_color_prefix normal --bold --underline
 fish_pager_color_progress brwhite --background=cyan
 fish_color_option B3B1AD
+fish_color_keyword 39BAE6

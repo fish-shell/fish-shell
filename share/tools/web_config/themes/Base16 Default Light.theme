@@ -28,3 +28,4 @@ fish_pager_color_completion normal
 fish_pager_color_prefix normal --bold --underline
 fish_pager_color_progress brwhite --background=cyan
 fish_color_option 383838
+fish_color_keyword a1b56c

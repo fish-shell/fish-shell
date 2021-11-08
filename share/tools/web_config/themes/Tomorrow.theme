@@ -28,3 +28,4 @@ fish_color_cancel -r
 fish_pager_color_prefix normal --bold --underline
 fish_pager_color_progress brwhite --background=cyan
 fish_color_option 4271ae
+fish_color_keyword 8959a8

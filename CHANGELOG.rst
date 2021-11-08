@@ -71,6 +71,7 @@ Scripting improvements
 - On MacOS terminals that are not granted permissions to access a folder, ``cd`` would print a spurious "rotten symlink" error, which has been corrected to "permission denied" (:issue:`8264`).
 - Performance improvements to globbing, especially on systems using glibc (by avoiding its slow iswalnum() function). In some cases (large directories with files with many numbers in the names) this almost doubles performance.
 - Since fish 3.0, for-loops would trigger a variable handler an additional time before the loop was entered. This has been corrected (:issue:`8384`).
+- ``math`` now correctly prints negative values and values larger than ``2**31`` when in hex or octal bases (:issue:`8417`).
 
 Interactive improvements
 ------------------------

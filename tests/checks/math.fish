@@ -188,6 +188,22 @@ math -bhex 16 x 2
 # CHECK: 0x20
 math --base hex 12 + 0x50
 # CHECK: 0x5c
+math --base hex 0
+# CHECK: 0x0
+math --base hex -1
+# CHECK: -0x1
+math --base hex -15
+# CHECK: -0xf
+math --base hex 'pow(2,40)'
+# CHECK: 0x10000000000
+math --base octal 0
+# CHECK: 0
+math --base octal -1
+# CHECK: -01
+math --base octal -15
+# CHECK: -017
+math --base octal 'pow(2,40)'
+# CHECK: 020000000000000
 math --base octal --scale=0 55
 # CHECK: 067
 math --base notabase

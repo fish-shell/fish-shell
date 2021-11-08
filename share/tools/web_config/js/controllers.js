@@ -156,11 +156,7 @@ controllers.controller("colorsController", function($scope, $http) {
             // js is dumb - the empty string is false,
             // but we want that to mean unsetting a var.
             if (!$scope.selectedColorScheme[name] && $scope.selectedColorScheme[name] !== '') {
-                // Fall back onto the defaut colorscheme.
-                selected = color_scheme_fish_default[name];
-                if (!selected && selected !== '') {
-                    selected = '';
-                }
+                selected = '';
             } else {
                 selected = $scope.selectedColorScheme[name];
             }

@@ -27,3 +27,4 @@ fish_pager_color_completion green
 fish_pager_color_description B3A06D
 fish_pager_color_prefix cyan --underline
 fish_pager_color_progress brwhite --background=cyan
+fish_color_option 657b83

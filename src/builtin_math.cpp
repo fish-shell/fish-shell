@@ -57,8 +57,8 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 } else {
                     opts.scale = fish_wcstoi(w.woptarg);
                     if (errno || opts.scale < 0 || opts.scale > 15) {
-                        streams.err.append_format(_(L"%ls: %ls: invalid scale value\n"),
-                                                  cmd, w.woptarg);
+                        streams.err.append_format(_(L"%ls: %ls: invalid scale value\n"), cmd,
+                                                  w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
                 }
@@ -99,7 +99,8 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
         }
     }
     if (opts.have_scale && opts.scale != 0 && opts.base != 10) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, L"non-zero scale value only valid for base 10");
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  L"non-zero scale value only valid for base 10");
         return STATUS_INVALID_ARGS;
     }
 
@@ -188,10 +189,13 @@ static const wchar_t *math_describe_error(const te_error_t &error) {
 static wcstring format_double(double v, const math_cmd_opts_t &opts) {
     if (opts.base == 16) {
         v = trunc(v);
-        return format_string(L"0x%x", (unsigned int)v);
+        const char *mneg = (v < 0.0 ? "-" : "");
+        return format_string(L"%s0x%llx", mneg, (long long)std::fabs(v));
     } else if (opts.base == 8) {
         v = trunc(v);
-        return format_string(L"0%o", (unsigned int)v);
+        if (v == 0.0) return L"0";  // not 00
+        const char *mneg = (v < 0.0 ? "-" : "");
+        return format_string(L"%s0%llo", mneg, (long long)std::fabs(v));
     }
 
     // As a special-case, a scale of 0 means to truncate to an integer
@@ -239,7 +243,7 @@ static int evaluate_expression(const wchar_t *cmd, const parser_t &parser, io_st
             error_message = L"Result is infinite";
         } else if (std::isnan(v)) {
             error_message = L"Result is not a number";
-        } else if (std::abs(v) >= kMaximumContiguousInteger) {
+        } else if (std::fabs(v) >= kMaximumContiguousInteger) {
             error_message = L"Result magnitude is too large";
         }
         if (error_message) {

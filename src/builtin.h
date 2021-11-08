@@ -32,7 +32,7 @@ struct builtin_data_t {
 #define BUILTIN_ERR_MISSING _(L"%ls: %ls: option requires an argument\n")
 
 /// Error message on missing man page.
-#define BUILTIN_ERR_MISSING_HELP                                                                  \
+#define BUILTIN_ERR_MISSING_HELP                                                            \
     _(L"fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will " \
       L"show an online version\n")
 
@@ -44,8 +44,7 @@ struct builtin_data_t {
 #define BUILTIN_ERR_COMBO2_EXCLUSIVE _(L"%ls: %ls %ls: options cannot be used together\n")
 
 /// Error message on multiple scope levels for variables.
-#define BUILTIN_ERR_GLOCAL \
-    _(L"%ls: scope can be only one of: universal function global local\n")
+#define BUILTIN_ERR_GLOCAL _(L"%ls: scope can be only one of: universal function global local\n")
 
 /// Error message for specifying both export and unexport to set/read.
 #define BUILTIN_ERR_EXPUNEXP _(L"%ls: cannot both export and unexport\n")

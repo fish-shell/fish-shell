@@ -89,7 +89,6 @@ class lru_cache_t {
         evict_node(static_cast<lru_node_t *>(mouth.prev));
     }
 
-
     // Implementation of merge step for mergesort.
     // Given two singly linked lists left and right, and a binary func F implementing less-than,
     // return the list in sorted order.

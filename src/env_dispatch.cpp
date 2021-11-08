@@ -61,11 +61,23 @@
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
-static const wcstring locale_variables[] = {
-    L"LANG",     L"LANGUAGE",          L"LC_ALL",         L"LC_ADDRESS",   L"LC_COLLATE",
-    L"LC_CTYPE", L"LC_IDENTIFICATION", L"LC_MEASUREMENT", L"LC_MESSAGES",  L"LC_MONETARY",
-    L"LC_NAME",  L"LC_NUMERIC",        L"LC_PAPER",       L"LC_TELEPHONE", L"LC_TIME",
-    L"fish_allow_singlebyte_locale", L"LOCPATH"};
+static const wcstring locale_variables[] = {L"LANG",
+                                            L"LANGUAGE",
+                                            L"LC_ALL",
+                                            L"LC_ADDRESS",
+                                            L"LC_COLLATE",
+                                            L"LC_CTYPE",
+                                            L"LC_IDENTIFICATION",
+                                            L"LC_MEASUREMENT",
+                                            L"LC_MESSAGES",
+                                            L"LC_MONETARY",
+                                            L"LC_NAME",
+                                            L"LC_NUMERIC",
+                                            L"LC_PAPER",
+                                            L"LC_TELEPHONE",
+                                            L"LC_TIME",
+                                            L"fish_allow_singlebyte_locale",
+                                            L"LOCPATH"};
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
@@ -154,7 +166,7 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
 static void guess_emoji_width(const environment_t &vars) {
     if (auto width_str = vars.get(L"fish_emoji_width")) {
         int new_width = fish_wcstol(width_str->as_string().c_str());
-        g_fish_emoji_width = std::min(2,std::max(1, new_width));
+        g_fish_emoji_width = std::min(2, std::max(1, new_width));
         FLOGF(term_support, "'fish_emoji_width' preference: %d, overwriting default",
               g_fish_emoji_width);
         return;
@@ -183,7 +195,7 @@ static void guess_emoji_width(const environment_t &vars) {
         // Default to whatever system wcwidth says to U+1F603,
         // but only if it's at least 1 and at most 2.
         int w = wcwidth(L'😃');
-        g_fish_emoji_width = std::min(2,std::max(1, w));
+        g_fish_emoji_width = std::min(2, std::max(1, w));
         FLOGF(term_support, "default emoji width: %d", g_fish_emoji_width);
     }
 }
@@ -495,9 +507,8 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// One situation in which this breaks down is with screen, since screen supports setting the
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-static const wchar_t *const title_terms[] = {L"xterm",  L"screen", L"tmux",
-                                             L"nxterm", L"rxvt",   L"alacritty",
-                                             L"wezterm"};
+static const wchar_t *const title_terms[] = {L"xterm", L"screen",    L"tmux",   L"nxterm",
+                                             L"rxvt",  L"alacritty", L"wezterm"};
 static bool does_term_support_setting_title(const environment_t &vars) {
     const auto term_var = vars.get(L"TERM");
     if (term_var.missing_or_empty()) return false;
@@ -567,12 +578,7 @@ static void init_curses(const environment_t &vars) {
 }
 
 static constexpr const char *utf8_locales[] = {
-    "C.UTF-8",
-    "en_US.UTF-8",
-    "en_GB.UTF-8",
-    "de_DE.UTF-8",
-    "C.utf8",
-    "UTF-8",
+    "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
 };
 
 /// Initialize the locale subsystem.

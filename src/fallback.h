@@ -167,4 +167,4 @@ double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
 #define wcstod_l(x, y, z) fish_compat::wcstod_l(x, y, z)
 #endif
 
-#endif // FISH_FALLBACK_H
+#endif  // FISH_FALLBACK_H

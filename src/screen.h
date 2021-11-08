@@ -316,6 +316,7 @@ class layout_cache_t : noncopyable_t {
     static layout_cache_t shared;
 
     layout_cache_t() = default;
+
    private:
     // Add a cache entry.
     void add_prompt_layout(prompt_cache_entry_t entry);

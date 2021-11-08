@@ -21,15 +21,23 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE, HIST_UNDEF,
-    HIST_CLEAR_SESSION };
+enum hist_cmd_t {
+    HIST_SEARCH = 1,
+    HIST_DELETE,
+    HIST_CLEAR,
+    HIST_MERGE,
+    HIST_SAVE,
+    HIST_UNDEF,
+    HIST_CLEAR_SESSION
+};
 
 // Must be sorted by string, not enum or random.
 static const enum_map<hist_cmd_t> hist_enum_map[] = {
-    {HIST_CLEAR, L"clear"}, {HIST_CLEAR_SESSION, L"clear-session"},
+    {HIST_CLEAR, L"clear"},   {HIST_CLEAR_SESSION, L"clear-session"},
     {HIST_DELETE, L"delete"}, {HIST_MERGE, L"merge"},
-    {HIST_SAVE, L"save"}, {HIST_SEARCH, L"search"},
-    {HIST_UNDEF, nullptr}, };
+    {HIST_SAVE, L"save"},     {HIST_SEARCH, L"search"},
+    {HIST_UNDEF, nullptr},
+};
 
 struct history_cmd_opts_t {
     hist_cmd_t hist_cmd = HIST_UNDEF;
@@ -82,8 +90,7 @@ static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const
                                            const wcstring_list_t &args, io_streams_t &streams) {
     if (opts.history_search_type_defined || opts.show_time_format || opts.null_terminate) {
         const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
-        streams.err.append_format(_(L"%ls: %ls: subcommand takes no options\n"), cmd,
-                                  subcmd_str);
+        streams.err.append_format(_(L"%ls: %ls: subcommand takes no options\n"), cmd, subcmd_str);
         return true;
     }
     if (!args.empty()) {

@@ -1,6 +1,8 @@
 // Functions used for implementing the set builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_set.h"
+
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -17,7 +19,6 @@
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_set.h"
 #include "common.h"
 #include "env.h"
 #include "expand.h"
@@ -60,16 +61,23 @@ enum {
 // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
 // we stop scanning for flags when the first non-flag argument is seen.
 static const wchar_t *const short_options = L"+:LSUaefghlnpqux";
-static const struct woption long_options[] = {
-    {L"export", no_argument, nullptr, 'x'},    {L"global", no_argument, nullptr, 'g'},
-    {L"function", no_argument, nullptr, 'f'},
-    {L"local", no_argument, nullptr, 'l'},     {L"erase", no_argument, nullptr, 'e'},
-    {L"names", no_argument, nullptr, 'n'},     {L"unexport", no_argument, nullptr, 'u'},
-    {L"universal", no_argument, nullptr, 'U'}, {L"long", no_argument, nullptr, 'L'},
-    {L"query", no_argument, nullptr, 'q'},     {L"show", no_argument, nullptr, 'S'},
-    {L"append", no_argument, nullptr, 'a'},    {L"prepend", no_argument, nullptr, 'p'},
-    {L"path", no_argument, nullptr, opt_path}, {L"unpath", no_argument, nullptr, opt_unpath},
-    {L"help", no_argument, nullptr, 'h'},      {nullptr, 0, nullptr, 0}};
+static const struct woption long_options[] = {{L"export", no_argument, nullptr, 'x'},
+                                              {L"global", no_argument, nullptr, 'g'},
+                                              {L"function", no_argument, nullptr, 'f'},
+                                              {L"local", no_argument, nullptr, 'l'},
+                                              {L"erase", no_argument, nullptr, 'e'},
+                                              {L"names", no_argument, nullptr, 'n'},
+                                              {L"unexport", no_argument, nullptr, 'u'},
+                                              {L"universal", no_argument, nullptr, 'U'},
+                                              {L"long", no_argument, nullptr, 'L'},
+                                              {L"query", no_argument, nullptr, 'q'},
+                                              {L"show", no_argument, nullptr, 'S'},
+                                              {L"append", no_argument, nullptr, 'a'},
+                                              {L"prepend", no_argument, nullptr, 'p'},
+                                              {L"path", no_argument, nullptr, opt_path},
+                                              {L"unpath", no_argument, nullptr, opt_unpath},
+                                              {L"help", no_argument, nullptr, 'h'},
+                                              {nullptr, 0, nullptr, 0}};
 
 // Hint for invalid path operation with a colon.
 #define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: You provided %d indexes but %d values\n")
@@ -218,8 +226,8 @@ static int validate_cmd_opts(const wchar_t *cmd,
     }
 
     // The --show flag cannot be combined with any other flag.
-    if (opts.show &&
-        (opts.local || opts.function || opts.global || opts.erase || opts.list || opts.exportv || opts.universal)) {
+    if (opts.show && (opts.local || opts.function || opts.global || opts.erase || opts.list ||
+                      opts.exportv || opts.universal)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -315,7 +323,8 @@ struct split_var_t {
 ///   a split var on success, none() on error, in which case an error will have been printed.
 ///   If no index is found, this leaves indexes empty.
 static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_flags_t mode,
-                                           const environment_t &vars, io_streams_t &streams) {
+                                                  const environment_t &vars,
+                                                  io_streams_t &streams) {
     split_var_t res{};
     const wchar_t *open_bracket = std::wcschr(arg, L'[');
     size_t varname_len = open_bracket ? open_bracket - arg : wcslen(arg);
@@ -754,7 +763,8 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, c
         new_values = new_var_values_by_index(*split, argc, argv);
     }
 
-    bool have_shadowing_global = check_global_scope_exists(cmd, opts, split->varname, streams, parser);
+    bool have_shadowing_global =
+        check_global_scope_exists(cmd, opts, split->varname, streams, parser);
     // Set the value back in the variable stack and fire any events.
     int retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(new_values),
                                           streams, parser);

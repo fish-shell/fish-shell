@@ -131,7 +131,7 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
                 const wchar_t *i = screen_name_end;
                 while (i > code && *(i - 1) == L'\x1B' && --i) esc_count++;
                 if (esc_count % 2 == 1) {
-                    offset=screen_name_end - code + 1;
+                    offset = screen_name_end - code + 1;
                     continue;
                 }
             }
@@ -355,7 +355,7 @@ static size_t measure_run_from(const wchar_t *input, size_t start, size_t *out_e
             auto w = fish_wcwidth_visible(input[idx]);
             // A backspace at the start of the line does nothing.
             if (w != -1 || width > 0) {
-               width += w;
+                width += w;
             }
         }
     }

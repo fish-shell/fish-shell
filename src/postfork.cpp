@@ -78,7 +78,8 @@ void report_setpgid_error(int err, bool is_parent, pid_t desired_pgid, const job
             break;
         }
         case EPERM: {
-            FLOGF_SAFE(error, "setpgid: Process %s is a session leader or pgid %s does not match", pid_buff, getpgid_buff);
+            FLOGF_SAFE(error, "setpgid: Process %s is a session leader or pgid %s does not match",
+                       pid_buff, getpgid_buff);
             break;
         }
         case ESRCH: {
@@ -412,11 +413,10 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         }
 
         case ENOEXEC: {
-            FLOGF_SAFE(
-                exec,
-                "The file '%s' is marked as an executable but could not be run by the "
-                "operating system.",
-                actual_cmd);
+            FLOGF_SAFE(exec,
+                       "The file '%s' is marked as an executable but could not be run by the "
+                       "operating system.",
+                       actual_cmd);
             break;
         }
 
@@ -457,15 +457,20 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             break;
         }
         case EACCES: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': The file could not be accessed.", actual_cmd);
+            FLOGF_SAFE(exec, "Failed to execute process '%s': The file could not be accessed.",
+                       actual_cmd);
             break;
         }
         case ETXTBSY: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': File is currently open for writing.", actual_cmd);
+            FLOGF_SAFE(exec, "Failed to execute process '%s': File is currently open for writing.",
+                       actual_cmd);
             break;
         }
         case ELOOP: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many layers of symbolic links. Maybe a loop?", actual_cmd);
+            FLOGF_SAFE(
+                exec,
+                "Failed to execute process '%s': Too many layers of symbolic links. Maybe a loop?",
+                actual_cmd);
             break;
         }
         case EINVAL: {
@@ -477,16 +482,19 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             break;
         }
         case ENOTDIR: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': A path component is not a directory.", actual_cmd);
+            FLOGF_SAFE(exec, "Failed to execute process '%s': A path component is not a directory.",
+                       actual_cmd);
             break;
         }
-        
+
         case EMFILE: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files in this process.", actual_cmd);
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files in this process.",
+                       actual_cmd);
             break;
         }
         case ENFILE: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files on the system.", actual_cmd);
+            FLOGF_SAFE(exec, "Failed to execute process '%s': Too many open files on the system.",
+                       actual_cmd);
             break;
         }
         case ENAMETOOLONG: {
@@ -494,13 +502,17 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             break;
         }
         case EPERM: {
-            FLOGF_SAFE(exec, "Failed to execute process '%s': No permission. Either suid/sgid is forbidden or you lack capabilities.", actual_cmd);
+            FLOGF_SAFE(exec,
+                       "Failed to execute process '%s': No permission. Either suid/sgid is "
+                       "forbidden or you lack capabilities.",
+                       actual_cmd);
             break;
         }
         default: {
             char errnum_buff[64];
             format_long_safe(errnum_buff, err);
-            FLOGF_SAFE(exec, "Failed to execute process '%s', unknown error number %s", actual_cmd, errnum_buff);
+            FLOGF_SAFE(exec, "Failed to execute process '%s', unknown error number %s", actual_cmd,
+                       errnum_buff);
             break;
         }
     }

@@ -8,9 +8,7 @@
 
 static bool do_trace = false;
 
-void trace_set_enabled(bool do_enable) {
-    do_trace = do_enable;
-}
+void trace_set_enabled(bool do_enable) { do_trace = do_enable; }
 
 bool trace_enabled(const parser_t &parser) {
     const auto &ld = parser.libdata();

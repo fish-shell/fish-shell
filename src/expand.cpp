@@ -183,8 +183,8 @@ enum class parse_slice_error_t {
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.
-static size_t parse_slice(const wchar_t * const in, wchar_t ** const end_ptr,
-        std::vector<long> &idx, size_t array_size, parse_slice_error_t * const error) {
+static size_t parse_slice(const wchar_t *const in, wchar_t **const end_ptr, std::vector<long> &idx,
+                          size_t array_size, parse_slice_error_t *const error) {
     const long size = static_cast<long>(array_size);
     size_t pos = 1;  // skip past the opening square brace
 
@@ -213,9 +213,9 @@ static size_t parse_slice(const wchar_t * const in, wchar_t ** const end_ptr,
                 *error = parse_slice_error_t::invalid_index;
                 return pos;
             } else if (tmp == 0) {
-                // Explicitly refuse $foo[0] as valid syntax, regardless of whether or not we're going
-                // to show an error if the index ultimately evaluates to zero. This will help newcomers
-                // to fish avoid a common off-by-one error. See #4862.
+                // Explicitly refuse $foo[0] as valid syntax, regardless of whether or not we're
+                // going to show an error if the index ultimately evaluates to zero. This will help
+                // newcomers to fish avoid a common off-by-one error. See #4862.
                 *error = parse_slice_error_t::zero_index;
                 return pos;
             }
@@ -384,7 +384,8 @@ static expand_result_t expand_variables(wcstring instr, completion_receiver_t *o
             effective_val_count = history->size();
         }
         parse_slice_error_t parse_error;
-        size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, effective_val_count, &parse_error);
+        size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list,
+                                     effective_val_count, &parse_error);
         if (bad_pos != 0) {
             switch (parse_error) {
                 case parse_slice_error_t::none:
@@ -684,7 +685,8 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
         const wchar_t *const slice_begin = in + tail_begin;
         wchar_t *slice_end = nullptr;
         parse_slice_error_t parse_error;
-        size_t bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size(), &parse_error);
+        size_t bad_pos =
+            parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size(), &parse_error);
         if (bad_pos != 0) {
             switch (parse_error) {
                 case parse_slice_error_t::none:

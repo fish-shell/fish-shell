@@ -297,8 +297,10 @@ class line_iterator_t {
 /// Like fish_wcwidth, but returns 0 for characters with no real width instead of -1.
 int fish_wcwidth_visible(wchar_t widechar);
 
-/// The same, but for all chars. Note that this only makes sense if the string has an arbitrary long prefix - backslashes can move the cursor *before* the string.
+/// The same, but for all chars. Note that this only makes sense if the string has an arbitrary long
+/// prefix - backslashes can move the cursor *before* the string.
 ///
-/// In typical usage, you probably want to wrap wcwidth_visible to accumulate the width, but never go below 0.
+/// In typical usage, you probably want to wrap wcwidth_visible to accumulate the width, but never
+/// go below 0.
 int fish_wcswidth_visible(const wcstring &str);
 #endif

@@ -350,7 +350,7 @@ struct source_range_visitor_t {
     // Whether any node was found to be unsourced.
     bool any_unsourced{false};
 };
-}
+}  // namespace
 
 maybe_t<source_range_t> node_t::try_source_range() const {
     source_range_visitor_t v;

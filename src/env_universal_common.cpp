@@ -395,7 +395,6 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
 }
 
 bool env_universal_t::load_from_path(const std::string &path, callback_data_list_t &callbacks) {
-
     // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
     // opening the file unnecessarily.
     if (last_read_file != kInvalidFileID && file_id_for_path(path) == last_read_file) {

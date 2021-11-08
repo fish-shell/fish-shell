@@ -5,8 +5,8 @@
 #include <cstring>
 #include <cwchar>
 
-#include "maybe.h"
 #include "io.h"
+#include "maybe.h"
 
 class parser_t;
 

@@ -122,7 +122,6 @@ maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &s
     return result;
 }
 
-
 }  // anonymous namespace
 
 class history_lru_cache_t : public lru_cache_t<history_item_t> {
@@ -1091,7 +1090,7 @@ void history_impl_t::clear() {
 
 void history_impl_t::clear_session() {
     for (const auto &item : new_items) {
-        deleted_items.insert(std::pair<wcstring,bool>(item.str(), true));
+        deleted_items.insert(std::pair<wcstring, bool>(item.str(), true));
     }
 
     new_items.clear();

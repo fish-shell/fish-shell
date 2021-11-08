@@ -216,7 +216,7 @@ extern const wcstring g_empty_string;
 #define DIE_ON_FAILURE(e)                                  \
     do {                                                   \
         int status = e;                                    \
-        if (unlikely(status != 0)) {                                 \
+        if (unlikely(status != 0)) {                       \
             __fish_assert(#e, __FILE__, __LINE__, status); \
         }                                                  \
     } while (0)
@@ -702,8 +702,7 @@ const T *get_by_sorted_name(const wcstring &name, const T (&vals)[N]) {
 /// As established in 1ab81ab90d1a408702e11f081fdaaafa30636c31, iswdigit() is very slow under glibc,
 /// and does nothing more than establish whether or not the single specified character is in the
 /// range ('0','9').
-__attribute__((always_inline))
-bool inline iswdigit(const wchar_t c) {
+__attribute__((always_inline)) bool inline iswdigit(const wchar_t c) {
     return c >= L'0' && c <= L'9';
 }
 

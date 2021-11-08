@@ -5507,7 +5507,6 @@ static void test_highlighting() {
         {L"# comment", highlight_role_t::comment},
     });
 
-
     highlight_tests.push_back({
         {L"echo", highlight_role_t::command},
         {L"--", highlight_role_t::option},
@@ -5580,13 +5579,15 @@ static void test_highlighting() {
                 auto e_col = expected_colors.at(i);
                 auto a_col = colors.at(i);
                 auto j = i + 1;
-                while (j < colors.size() && expected_colors.at(j) == e_col && colors.at(j) == a_col) j++;
+                while (j < colors.size() && expected_colors.at(j) == e_col && colors.at(j) == a_col)
+                    j++;
                 if (j == colors.size() - 1) j++;
                 const wcstring spaces(i, L' ');
                 const wcstring carets(j - i, L'^');
                 err(L"Wrong color in test at index %lu-%lu in text (expected %#x, actual "
                     L"%#x):\n%ls\n%ls%ls",
-                    i, j - 1, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str(), carets.c_str());
+                    i, j - 1, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str(),
+                    carets.c_str());
                 i = j;
             }
         }

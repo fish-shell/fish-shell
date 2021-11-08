@@ -2630,7 +2630,7 @@ static std::shared_ptr<reader_data_t> reader_push_ret(parser_t &parser,
                                                       const wcstring &history_name,
                                                       reader_config_t &&conf) {
     std::shared_ptr<history_t> hist = history_t::with_name(history_name);
-    hist->resolve_pending(); // see #6892
+    hist->resolve_pending();  // see #6892
     auto data = std::make_shared<reader_data_t>(parser.shared(), hist, std::move(conf));
     reader_data_stack.push_back(data);
     data->command_line_changed(&data->command_line);
@@ -4160,7 +4160,6 @@ bool reader_data_t::jump(jump_direction_t dir, jump_precision_t precision, edita
 }
 
 maybe_t<wcstring> reader_readline(int nchars) { return current_data()->readline(nchars); }
-
 
 int reader_reading_interrupted() {
     int res = reader_test_and_clear_interrupted();

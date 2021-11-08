@@ -50,8 +50,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "history.h"
 #include "intern.h"
 #include "io.h"
-#include "parser.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
@@ -266,7 +266,8 @@ static int run_command_list(parser_t &parser, std::vector<std::string> *cmds,
         if (!errored) {
             // Construct a parsed source ref.
             // Be careful to transfer ownership, this could be a very large string.
-            parsed_source_ref_t ps = std::make_shared<parsed_source_t>(std::move(cmd_wcs), std::move(ast));
+            parsed_source_ref_t ps =
+                std::make_shared<parsed_source_t>(std::move(cmd_wcs), std::move(ast));
             parser.eval(ps, io);
         } else {
             wcstring sb;

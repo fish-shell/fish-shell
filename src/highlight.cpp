@@ -523,9 +523,8 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
 static void color_string_internal(const wcstring &buffstr, highlight_spec_t base_color,
                                   std::vector<highlight_spec_t>::iterator colors) {
     // Clarify what we expect.
-    assert((base_color == highlight_role_t::param
-            || base_color == highlight_role_t::option
-            || base_color == highlight_role_t::command) &&
+    assert((base_color == highlight_role_t::param || base_color == highlight_role_t::option ||
+            base_color == highlight_role_t::command) &&
            "Unexpected base color");
     const size_t buff_len = buffstr.size();
     std::fill(colors, colors + buff_len, base_color);
@@ -853,7 +852,7 @@ void highlighter_t::color_command(const ast::string_t &node) {
 }
 
 // node does not necessarily have type symbol_argument here.
-    void highlighter_t::color_as_argument(const ast::node_t &node, bool options_allowed) {
+void highlighter_t::color_as_argument(const ast::node_t &node, bool options_allowed) {
     auto source_range = node.source_range();
     const wcstring arg_str = get_source(source_range);
 

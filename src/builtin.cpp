@@ -180,8 +180,7 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
         opt += std::wcslen(opt) - 1;
         // now prepend - to output -c
         streams.err.append_format(BUILTIN_ERR_MISSING, cmd, wcstring(L"-").append(opt).c_str());
-    }
-    else
+    } else
         streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
 
     if (print_hints) {

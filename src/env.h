@@ -81,7 +81,8 @@ struct statuses_t {
 };
 
 /// Initialize environment variable data.
-void env_init(const struct config_paths_t *paths = nullptr, bool do_uvars = true, bool default_paths = false);
+void env_init(const struct config_paths_t *paths = nullptr, bool do_uvars = true,
+              bool default_paths = false);
 
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.

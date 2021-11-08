@@ -1974,4 +1974,3 @@ bool is_console_session() {
     }();
     return console_session;
 }
-

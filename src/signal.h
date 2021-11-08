@@ -2,8 +2,8 @@
 #ifndef FISH_SIGNALH
 #define FISH_SIGNALH
 
-#include <cstdint>
 #include <csignal>
+#include <cstdint>
 
 /// Get the integer signal value representing the specified signal, or -1 of no signal was found.
 int wcs2sig(const wchar_t *str);

@@ -541,9 +541,7 @@ locale_t fish_c_locale() {
 
 static bool fish_numeric_locale_is_valid = false;
 
-void fish_invalidate_numeric_locale() {
-    fish_numeric_locale_is_valid = false;
-}
+void fish_invalidate_numeric_locale() { fish_numeric_locale_is_valid = false; }
 
 locale_t fish_numeric_locale() {
     // The current locale, except LC_NUMERIC isn't forced to C.
@@ -747,9 +745,7 @@ file_id_t file_id_for_fd(int fd) {
     return result;
 }
 
-file_id_t file_id_for_fd(const autoclose_fd_t &fd) {
-    return file_id_for_fd(fd.fd());
-}
+file_id_t file_id_for_fd(const autoclose_fd_t &fd) { return file_id_for_fd(fd.fd()); }
 
 file_id_t file_id_for_path(const wcstring &path) {
     file_id_t result = kInvalidFileID;
@@ -772,7 +768,6 @@ file_id_t file_id_for_path(const std::string &path) {
 bool file_id_t::operator==(const file_id_t &rhs) const { return this->compare_file_id(rhs) == 0; }
 
 bool file_id_t::operator!=(const file_id_t &rhs) const { return !(*this == rhs); }
-
 
 wcstring file_id_t::dump() const {
     using llong = long long;

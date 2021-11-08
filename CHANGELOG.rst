@@ -116,6 +116,10 @@ Completions
   - ``roswell``
   - ``clasp``
   -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
+  -  Various wine tools (:issue:`8411`)
+  -  mono (:issue:`8415`)
+  -  elvish (:issue:`8416`)
+  -  pabcnet_clear (:issue:`8421`)
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Add missing completions for the ``-p`` option of ``xbps-query``.

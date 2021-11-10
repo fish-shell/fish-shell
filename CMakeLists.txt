@@ -57,9 +57,9 @@ add_definitions(-UNDEBUG)
 source_group("CMake Rules" REGULAR_EXPRESSION "^$")
 
 # Put source and header files at top level under targets.
-source_group("Source Files" REGULAR_EXPRESSION "^$")
-source_group("Header Files" REGULAR_EXPRESSION "^$")
-source_group("Builtins" REGULAR_EXPRESSION "builtin_.*")
+source_group("Source Files" REGULAR_EXPRESSION ".*\\.cpp")
+source_group("Header Files" REGULAR_EXPRESSION ".*\\.h")
+source_group("Builtins" "builtins/")
 
 # Support folders.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -85,19 +85,19 @@ endif()
 
 # All objects that the system needs to build fish, except fish.cpp
 set(FISH_SRCS
-    src/ast.cpp src/autoload.cpp src/builtin.cpp src/builtin_argparse.cpp
-    src/builtin_bg.cpp src/builtin_bind.cpp src/builtin_block.cpp
-    src/builtin_builtin.cpp src/builtin_cd.cpp src/builtin_command.cpp
-    src/builtin_commandline.cpp src/builtin_complete.cpp src/builtin_contains.cpp
-    src/builtin_disown.cpp src/builtin_echo.cpp src/builtin_emit.cpp
-    src/builtin_eval.cpp src/builtin_exit.cpp src/builtin_fg.cpp
-    src/builtin_function.cpp src/builtin_functions.cpp src/builtin_history.cpp
-    src/builtin_jobs.cpp src/builtin_math.cpp src/builtin_printf.cpp
-    src/builtin_pwd.cpp src/builtin_random.cpp src/builtin_read.cpp
-    src/builtin_realpath.cpp src/builtin_return.cpp src/builtin_set.cpp
-    src/builtin_set_color.cpp src/builtin_source.cpp src/builtin_status.cpp
-    src/builtin_string.cpp src/builtin_test.cpp src/builtin_type.cpp src/builtin_ulimit.cpp
-    src/builtin_wait.cpp src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
+    src/ast.cpp src/autoload.cpp src/builtin.cpp src/builtins/argparse.cpp
+    src/builtins/bg.cpp src/builtins/bind.cpp src/builtins/block.cpp
+    src/builtins/builtin.cpp src/builtins/cd.cpp src/builtins/command.cpp
+    src/builtins/commandline.cpp src/builtins/complete.cpp src/builtins/contains.cpp
+    src/builtins/disown.cpp src/builtins/echo.cpp src/builtins/emit.cpp
+    src/builtins/eval.cpp src/builtins/exit.cpp src/builtins/fg.cpp
+    src/builtins/function.cpp src/builtins/functions.cpp src/builtins/history.cpp
+    src/builtins/jobs.cpp src/builtins/math.cpp src/builtins/printf.cpp
+    src/builtins/pwd.cpp src/builtins/random.cpp src/builtins/read.cpp
+    src/builtins/realpath.cpp src/builtins/return.cpp src/builtins/set.cpp
+    src/builtins/set_color.cpp src/builtins/source.cpp src/builtins/status.cpp
+    src/builtins/string.cpp src/builtins/test.cpp src/builtins/type.cpp src/builtins/ulimit.cpp
+    src/builtins/wait.cpp src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
     src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp src/exec.cpp
     src/expand.cpp src/fallback.cpp src/fd_monitor.cpp src/fish_version.cpp
     src/flog.cpp src/function.cpp src/future_feature_flags.cpp src/highlight.cpp

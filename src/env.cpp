@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#include "builtin_bind.h"
+#include "builtins/bind.h"
 #include "common.h"
 #include "env_dispatch.h"
 #include "env_universal_common.h"

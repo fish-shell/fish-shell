@@ -6748,7 +6748,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("ifind"), test_ifind},
     {TEST_GROUP("ifind_fuzzy"), test_ifind_fuzzy},
     {TEST_GROUP("abbreviations"), test_abbreviations},
-    {TEST_GROUP("builtin_test"), test_test},
+    {TEST_GROUP("builtins/test"), test_test},
     {TEST_GROUP("wcstod"), test_wcstod},
     {TEST_GROUP("dup2s"), test_dup2s},
     {TEST_GROUP("dup2s"), test_dup2s_fd_for_target_fd},

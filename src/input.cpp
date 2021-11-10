@@ -597,6 +597,7 @@ maybe_t<input_mapping_t> inputter_t::find_mapping(event_queue_peeker_t *peeker) 
     const input_mapping_t *generic = nullptr;
     const auto &vars = parser_->vars();
     const wcstring bind_mode = input_get_bind_mode(vars);
+    const input_mapping_t *escape = nullptr;
 
     auto ml = input_mappings()->all_mappings();
     for (const auto &m : *ml) {
@@ -611,10 +612,25 @@ maybe_t<input_mapping_t> inputter_t::find_mapping(event_queue_peeker_t *peeker) 
         }
 
         if (try_peek_sequence(peeker, m.seq)) {
-            return m;
+            // A binding for just escape should also be deferred
+            // so escape sequences take precedence.
+            if (m.seq == L"\x1B") {
+                if (!escape) {
+                    escape = &m;
+                }
+            } else {
+                return m;
+            }
         }
         peeker->restart();
     }
+
+    if (escape) {
+        // We need to reconsume the escape.
+        peeker->next();
+        return *escape;
+    }
+
     return generic ? maybe_t<input_mapping_t>(*generic) : none();
 }
 

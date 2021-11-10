@@ -319,6 +319,17 @@ send("\x07")  # ctrl-g, kill bigword
 sendline("echo")
 expect_prompt("\nb c d")
 
+# Test that overriding the escape binding works
+# and does not inhibit other escape sequences (up-arrow in this case).
+sendline("bind \\x1b 'echo foo'")
+expect_prompt()
+send("\x1b")
+expect_str("foo")
+send("\x1b[A")
+expect_str("bind \\x1b 'echo foo'")
+sendline("")
+expect_prompt()
+
 send("    a b c d\x01")  # ctrl-a, move back to the beginning of the line
 send("\x07")  # ctrl-g, kill bigword
 sendline("echo")

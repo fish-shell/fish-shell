@@ -1,11 +1,11 @@
-function __fish_seen_argument
+function __fish_seen_argument --description 'Check whether argument used'
     argparse 's/short=+' 'o/old=+' 'l/long=+' -- $argv
 
-    set -l cmd (commandline -co)
+    set -l cmd (commandline -poc)
     set -e cmd[1]
     for t in $cmd
         for s in $_flag_s
-            if string match -qr "^-[A-z0-9]*"$s"[A-z0-9]*\$" -- $t
+            if string match -qr "^-[A-z0-9]*$s[A-z0-9]*\$" -- $t
                 return 0
             end
         end

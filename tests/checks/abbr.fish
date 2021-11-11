@@ -94,3 +94,15 @@ abbr --add --global __abbr14 bbbbbbbbbbbbb
 abbr --erase __abbr13 __abbr14
 abbr | grep __abbr13
 abbr | grep __abbr14
+
+abbr -q banana
+echo $status
+# CHECK: 1
+
+abbr -q __abbr8 banana
+echo $status
+# CHECK: 0
+
+abbr -q banana __abbr8 foobar
+echo $status
+# CHECK: 0

@@ -59,7 +59,7 @@ function abbr --description "Manage abbreviations"
         # We return 0 if any arg exists, whereas `set -q` returns the number of undefined arguments.
         # But we should be consistent with `type -q` and `command -q`.
         for var in $escaped
-            set -q $escaped; and return 0
+            set -q $var; and return 0
         end
         return 1
     else

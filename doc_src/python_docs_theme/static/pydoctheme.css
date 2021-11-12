@@ -212,7 +212,7 @@ tr, code, pre {
     background-color: inherit;
 }
 
-tt, code, pre, dl > dt span ~ em, #synopsis p, dl.envvar .pre, dl.describe .pre {
+tt, code, pre, dl > dt span ~ em, #synopsis p {
     font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
 }
 
@@ -383,6 +383,14 @@ kbd {
 .footnote, .footnote-reference {
     background-color: #ddddea;
     font-size: 90%;
+}
+
+.sig-name {
+    font-size: unset;
+}
+
+.sig, dl.envvar {
+    font-family: unset;
 }
 
 @media (prefers-color-scheme: dark) {

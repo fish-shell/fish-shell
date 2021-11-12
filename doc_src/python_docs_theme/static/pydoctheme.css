@@ -374,7 +374,8 @@ kbd {
   padding: 0.1em 0.3em;
 }
 
-.internal.reference:link {
+div.body .internal.reference:link {
+    /* Underline links in the body of the text */
     text-decoration: underline;
 }
 .std-envvar::before {

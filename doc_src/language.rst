@@ -1055,7 +1055,7 @@ Exporting variables
 
 Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like ``LESS`` or ``GOPATH``, but also for variables that contain general system settings like ``PATH`` or ``LANGUAGE``. If an external command needs to know a variable, it needs to be exported.
 
-This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :envvar:`PATH ` and :ref:`locale variables <variables-locale>`.
+This also applies to fish - when it starts up, it receives environment variables from its parent (usually the terminal). These typically include system configuration like :envvar:`PATH` and :ref:`locale variables <variables-locale>`.
 
 Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are identical to the scoping rules for variables:
 

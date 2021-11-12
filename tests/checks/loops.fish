@@ -32,6 +32,32 @@ early_return
 echo "Early Return: $status"
 #CHECK: Early Return: 2
 
+false
+for never_runs_means_success in
+end
+echo $status
+#CHECK: 0
+
+for true_then_false in true false
+    $true_then_false
+end
+echo $status
+#CHECK: 1
+
+false
+for x in status_from_outside status_from_loop_body
+    echo $status
+    #CHECK: 1
+    #CHECK: 0
+end
+
+# Unlike POSIX shells, we allow empty loop bodies.
+false
+for empty_loop_body_preserves_status in 1 2
+end
+echo $status
+#CHECK: 1
+
 function set_status
     return $argv[1]
 end

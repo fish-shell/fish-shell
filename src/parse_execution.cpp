@@ -464,6 +464,15 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
 
     trace_if_enabled(*parser, L"for", arguments);
     block_t *fb = parser->push_block(block_t::for_block());
+    cleanup_t scope([&]() {
+        parser->pop_block(fb);
+        trace_if_enabled(*parser, L"end for");
+    });
+
+    if (arguments.empty()) {
+        parser->set_last_statuses(statuses_t::just(EXIT_SUCCESS));
+        return end_execution_reason_t::ok;
+    }
 
     // We fire the same event over and over again, just construct it once.
     event_t evt = event_t::variable_set(for_var_name);
@@ -494,8 +503,6 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
         }
     }
 
-    parser->pop_block(fb);
-    trace_if_enabled(*parser, L"end for");
     return ret;
 }
 

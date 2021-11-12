@@ -1,4 +1,4 @@
-.. _cmd-fish_add_path:
+.. program::fish_add_path
 
 fish_add_path - add to the path
 ==============================================================

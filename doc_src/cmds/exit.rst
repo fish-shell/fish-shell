@@ -1,4 +1,4 @@
-.. program::exit:
+.. program::exit
 
 exit - exit the shell
 =====================

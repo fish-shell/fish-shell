@@ -12,6 +12,12 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``realpath``.
+          To see the documentation on the ``realpath`` command you might have,
+          use ``command man realpath``.
+
 :program:`realpath` follows all symbolic links encountered for the provided :envvar:`PATH`, printing the absolute path resolved. :ref:`fish <cmd-fish>` provides a :command:`realpath`-alike builtin intended to be enrich systems where no such command is installed by default.
 
 If a :command:`realpath` command exists, that will be preferred.

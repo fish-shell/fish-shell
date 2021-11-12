@@ -1,3 +1,4 @@
+.. _cmd-fish_indent:
 .. program::fish_indent
 
 fish_indent - indenter and prettifier
@@ -28,7 +29,7 @@ The following options are available:
 
 - ``--html`` outputs HTML, which supports syntax highlighting if the appropriate CSS is defined. The CSS class names are the same as the variable names, such as ``fish_color_command``.
 
-- ``-d`` or ``--debug=DEBUG_CATEGORIES`` enable debug output and specify a pattern for matching debug categories. See :ref:`Debugging <debugging-fish>` in :program:`fish` (1) for details.
+- ``-d`` or ``--debug=DEBUG_CATEGORIES`` enable debug output and specify a pattern for matching debug categories. See :ref:`Debugging <debugging-fish>` in :ref:`fish <cmd-fish>` (1) for details.
 
 - ``-o`` or ``--debug-output=DEBUG_FILE`` specify a file path to receive the debug output, including categories and ``fish_trace``. The default is stderr.
 

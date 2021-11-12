@@ -1,3 +1,4 @@
+.. _cmd-fish_add_path:
 .. program::fish_add_path
 
 fish_add_path - add to the path
@@ -18,7 +19,7 @@ Description
 
 It is (by default) safe to use :program:`fish_add_path` in config.fish, or it can be used once, interactively, and the paths will stay in future because of :ref:`universal variables <variables-universal>`. This is a "do what I mean" style command, if you need more control, consider modifying the variable yourself.
 
-Components are normalized by :program:`realpath`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a component already exists, it is not added again and stays in the same place unless the ``--move`` switch is given.
+Components are normalized by :ref:`realpath <cmd-realpath>`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a component already exists, it is not added again and stays in the same place unless the ``--move`` switch is given.
 
 Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given (if $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to $PATH, so they still stay ahead of the system paths).
 

@@ -17,6 +17,24 @@ Notable improvements and fixes
     # this will still split on newlines only.
 
 - Complimenting the ``prompt`` command in 3.3.0, ``fish_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a webbrowser. For example ``fish_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`). The current theme can be saved with ``fish_config theme dump`` and custom themes can be added by saving them in ``~/.config/fish/themes/``.
+- ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped (:issue:`565`, :issue:`8145`)::
+
+    function demonstration
+        if true
+            set --function foo bar
+            set --local baz banana
+        end
+        echo $foo # prints "bar" because $foo is still valid
+        echo $baz # prints nothing because $baz went out of scope
+    end
+
+- ``string pad`` now excludes escape sequences like colors that fish knows about, and a new ``--visible`` flag to ``string length`` makes it use that kind of visible width. This is useful to get the number of terminal cells an already colored string would occupy, like in a prompt. (:issue:`8182`, :issue:`7784`, :issue:`4012`)::
+
+    > string length --visible (set_color red)foo
+    3
+
+- Performance improvements to globbing, especially on systems using glibc (by avoiding its slow iswalnum() function). In some cases (large directories with files with many numbers in the names) this almost doubles performance.
+- Autosuggestions can now be turned off by setting ``$fish_autosuggestion_enabled`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, e.g. to distinguish autosuggestions from the actual commandline. (:issue:`8376`)
 
 Deprecations and removed features
 ---------------------------------
@@ -30,6 +48,7 @@ Deprecations and removed features
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
 - ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are almost certainly buggy (:issue:`8214`).
 - Mac OS X 10.9 is no longer supported. The minimum Mac version is now 10.10 "Yosemite."
+- ``_`` is now a reserved keyword (:issue:`8342`).
 
 Scripting improvements
 ----------------------
@@ -45,23 +64,6 @@ Scripting improvements
 - ``return`` can now be used outside of functions. In scripts it does the same thing as :program:`cmd`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks like e.g. ``exec`` not being allowed in a pipeline and ``$$`` not being a valid variable. Most of these would have triggered an assert or other error before.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
-- ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped (:issue:`565`, :issue:`8145`)::
-
-    function demonstration
-        if true
-            set --function foo bar
-            set --local baz banana
-        end
-        echo $foo # prints "bar" because $foo is still valid
-        echo $baz # prints nothing because $baz went out of scope
-    end
-
-- ``_`` is now a reserved keyword (:issue:`8342`).
-- ``string pad`` now excludes escape sequences like colors that fish knows about, and a new ``--visible`` flag to ``string length`` makes it use that kind of visible width. This is useful to get the number of terminal cells an already colored string would occupy, like in a prompt. (:issue:`8182`, :issue:`7784`, :issue:`4012`)::
-
-    > string length --visible (set_color red)foo
-    3
-
 - ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This will allow a basic implementation of transient prompts (:issue:`8142`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
 - Running ``fish`` with a directory instead of a script as argument (e.g. ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
@@ -69,23 +71,21 @@ Scripting improvements
 - The ``realpath`` builtin now also squashes leading slashes with the ``--no-symlinks`` option (:issue:`8281`).
 - When trying to ``cd`` to a dangling (broken) symbolic link, fish will print an error noting that the target is a broken link (:issue:`8264`).
 - On MacOS terminals that are not granted permissions to access a folder, ``cd`` would print a spurious "rotten symlink" error, which has been corrected to "permission denied" (:issue:`8264`).
-- Performance improvements to globbing, especially on systems using glibc (by avoiding its slow iswalnum() function). In some cases (large directories with files with many numbers in the names) this almost doubles performance.
 - Since fish 3.0, for-loops would trigger a variable handler an additional time before the loop was entered. This has been corrected (:issue:`8384`).
 - ``math`` now correctly prints negative values and values larger than ``2**31`` when in hex or octal bases (:issue:`8417`).
+- ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
+- ``cd ""`` no longer crashes fish (:issue:`8147`).
 
 Interactive improvements
 ------------------------
 - Vi mode cursors are now set properly after control-C. (:issue:`8125`).
 - Vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
-- ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
-- ``cd ""`` no longer crashes fish (:issue:`8147`).
 - Running a commandline consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
 - Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
 - ``history`` and ``__fish_print_help`` now properly support ``less`` before version 530, including the version that ships with macOS. (:issue:`8157`).
 - ``help`` now knows which section is in which document again (:issue:`8245`).
 - fish's highlighter will now color options (starting with ``-`` or ``--``) with the color given in the new $fish_color_option, up to the first ``--``. It falls back on $fish_color_param, so nothing changes for existing setups (:issue:`8292`).
-- Autosuggestions can now be turned off by setting ``$fish_enable_autosuggestion`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, e.g. to distinguish autosuggestions from the actual commandline. (:issue:`8376`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

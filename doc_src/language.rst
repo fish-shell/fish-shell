@@ -1465,7 +1465,7 @@ The "locale" of a program is its set of language and regional settings that depe
 
 .. envvar:: LANG
 
-   This is the typpical environment variable for specifying a locale. A user may set this variable to express the language they speak, their region, and a character encoding. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
+   This is the typical environment variable for specifying a locale. A user may set this variable to express the language they speak, their region, and a character encoding. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
 
 .. envvar:: LC_ALL
    

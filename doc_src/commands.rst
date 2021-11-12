@@ -16,7 +16,7 @@ Core language keywords that make up the syntax, like
 - :ref:`for <cmd-for>` and :ref:`while <cmd-while>` for loops.
 - :ref:`break <cmd-break>` and :ref:`continue <cmd-continue>` to control loops.
 - :ref:`function <cmd-function>` to define functions.
-- :ref:`return <cmd-return>` to return a status from a function.
+- :program:`return` to return a status from a function.
 - :ref:`begin <cmd-begin>` to begin a block and :ref:`end <cmd-end>` to end any block (including ifs and loops).
 - :ref:`and <cmd-and>`, :ref:`or <cmd-or>` and :ref:`not <cmd-not>` to combine commands logically.
 - :ref:`switch <cmd-switch>` and :ref:`case <cmd-case>` to make multiple blocks depending on the value of a variable.
@@ -81,7 +81,7 @@ Helper commands
 
 fish also ships some things as external commands so they can be easily called from elsewhere.
 
-This includes :ref:`fish_indent <cmd-fish_indent>` to format fish code and :ref:`fish_key_reader <cmd-fish_key_reader>` to show you what escape sequence a keypress produces.
+This includes :program:`fish_indent` to format fish code and :ref:`fish_key_reader <cmd-fish_key_reader>` to show you what escape sequence a keypress produces.
 
 The full list
 ^^^^^^^^^^^^^

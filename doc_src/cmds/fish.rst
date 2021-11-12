@@ -1,4 +1,4 @@
-.. _cmd-fish:
+.. program::fish
 
 fish - the friendly interactive shell
 =====================================

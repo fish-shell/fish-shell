@@ -1275,78 +1275,140 @@ You can change the settings of fish by changing the values of certain variables.
 
    The locale variables :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_CTYPE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
 
+.. describe:: Color variables
 
-Other variables include:
+   A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See :ref:`Variables for changing highlighting colors <variables-color>` for more information.
 
-- A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See :ref:`Variables for changing highlighting colors <variables-color>` for more information.
+.. envvar:: fish_ambiguous_width
 
-- ``fish_ambiguous_width`` controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal renders these characters as single-width (typical), or 2 if double-width.
+   controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_emoji_width`` controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
+.. envvar:: fish_emoji_width
 
-- ``fish_autosuggestion_enabled`` controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.
+   controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It should usually be auto-detected.
 
-- ``fish_handle_reflow``, determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
+.. envvar:: fish_autosuggestion_enabled
 
-- ``fish_key_bindings``, the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.
+   controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.
 
-- ``fish_escape_delay_ms`` sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
+.. envvar:: fish_handle_reflow
 
-- ``fish_greeting``, the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :ref:`funced <cmd-funced>`)
+   determines whether fish should try to repaint the commandline when the terminal resizes. In terminals that reflow text this should be disabled. Set it to 1 to enable, anything else to disable.
 
-- ``fish_history``, the current history session name. If set, all subsequent commands within an
-  interactive fish session will be logged to a separate file identified by the value of the
-  variable. If unset, the default session name "fish" is used. If set to an
-  empty string, history is not saved to disk (but is still available within the interactive
-  session).
+.. envvar:: fish_key_bindings
 
-- ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to ``set -x`` in bash. The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
+   the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.
 
-- ``fish_user_paths``, a list of directories that are prepended to :envvar:`PATH`. This can be a universal variable.
+.. envvar:: fish_escape_delay_ms
 
-- ``umask``, the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.
+   sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
 
-- ``BROWSER``, your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
+.. envvar:: fish_greeting
+
+   the greeting message printed on startup. This is printed by a function of the same name that can be overridden for more complicated changes (see :ref:`funced <cmd-funced>`)
+
+.. envvar:: fish_history
+
+   the current history session name. If set, all subsequent commands within an
+   interactive fish session will be logged to a separate file identified by the value of the
+   variable. If unset, the default session name "fish" is used. If set to an
+   empty string, history is not saved to disk (but is still available within the interactive
+   session).
+
+.. envvar:: fish_trace
+
+   if set and not empty, will cause fish to print commands before they execute, similar to ``set -x``
+   in bash. The trace is printed to the path given by the `--debug-output` option to fish or the :envvar:`FISH_DEBUG_OUTPUT` variable. It goes to stderr by default.
+
+.. envvar:: fish_user_paths
+
+   a list of directories that are prepended to :envvar:`PATH`. This can be a universal variable.
+
+.. envvar:: umask
+
+   the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.
+
+.. envvar:: BROWSER
+
+   your preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
 Fish also provides additional information through the values of certain environment variables. Most of these variables are read-only and their value can't be changed with ``set``.
 
-- ``_``, the name of the currently running command (though this is deprecated, and the use of ``status current-command`` is preferred).
+.. envvar:: _
 
-- ``argv``, a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed.
+   the name of the currently running command (though this is deprecated, and the use of ``status current-command`` is preferred).
 
-- ``CMD_DURATION``, the runtime of the last command in milliseconds.
+.. envvar:: argv
 
-- ``COLUMNS`` and ``LINES``, the current size of the terminal in height and width. These values are only used by fish if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
+   a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed.
 
-- ``fish_kill_signal``, the signal that terminated the last foreground job, or 0 if the job exited normally.
+.. envvar:: CMD_DURATION
 
-- ``fish_killring``, a list of entries in fish's :ref:`kill ring <killring>` of cut text.
+   the runtime of the last command in milliseconds.
 
-- ``fish_pid``, the process ID (PID) of the shell.
+.. describe:: COLUMNS and LINES
 
-- ``history``, a list containing the last commands that were entered.
+   the current size of the terminal in height and width. These values are only used by fish if the operating system does not report the size of the terminal. Both variables must be set in that case otherwise a default of 80x24 will be used. They are updated when the window size changes.
 
-- ``HOME``, the user's home directory. This variable can be changed.
+.. envvar:: fish_kill_signal
 
-- ``hostname``, the machine's hostname.
+   the signal that terminated the last foreground job, or 0 if the job exited normally.
 
-- ``IFS``, the internal field separator that is used for word splitting with the :ref:`read <cmd-read>` builtin. Setting this to the empty string will also disable line splitting in :ref:`command substitution <expand-command-substitution>`. This variable can be changed.
+.. envvar:: fish_killring
 
-- ``last_pid``, the process ID (PID) of the last background process.
+   a list of entries in fish's :ref:`kill ring <killring>` of cut text.
 
-- ``PWD``, the current working directory.
+.. envvar:: fish_pid
 
-- ``pipestatus``, a list of exit statuses of all processes that made up the last executed pipe. See :ref:`exit status <variables-status>`.
+   the process ID (PID) of the shell.
 
-- ``SHLVL``, the level of nesting of shells. Fish increments this in interactive shells, otherwise it simply passes it along.
+.. envvar:: history
 
-- ``status``, the :ref:`exit status <variables-status>` of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
+   a list containing the last commands that were entered.
 
-- ``status_generation``, the "generation" count of ``$status``. This will be incremented only when the previous command produced an explicit status. (For example, background jobs will not increment this).
+.. ENVVAR:: HOME
 
-- ``USER``, the current username. This variable can be changed.
+   the user's home directory. This variable can be changed.
 
-- ``version``, the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
+.. envvar:: hostname
+
+   the machine's hostname.
+
+.. ENVVAR:: IFS
+
+   the internal field separator that is used for word splitting with the :ref:`read <cmd-read>` builtin. Setting this to the empty string will also disable line splitting in :ref:`command substitution <expand-command-substitution>`. This variable can be changed.
+
+.. envvar:: last_pid
+
+   the process ID (PID) of the last background process.
+
+.. ENVVAR:: PWD
+
+   the current working directory.
+
+.. envvar:: pipestatus
+
+   a list of exit statuses of all processes that made up the last executed pipe. See :ref:`exit status <variables-status>`.
+
+.. ENVVAR:: SHLVL
+
+   the level of nesting of shells. Fish increments this in interactive shells, otherwise it simply passes it along.
+
+.. envvar:: status
+
+   the :ref:`exit status <variables-status>` of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
+
+.. envvar:: status_generation
+
+   the "generation" count of ``$status``. This will be incremented only when the previous command produced an explicit status. (For example, background jobs will not increment this).
+
+.. ENVVAR:: USER
+
+   the current username. This variable can be changed.
+
+.. envvar:: version
+
+   the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).
 
 As a convention, an uppercase name is usually used for exported variables, while lowercase variables are not exported. (``CMD_DURATION`` is an exception for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables.
 

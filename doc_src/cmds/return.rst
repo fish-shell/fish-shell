@@ -1,4 +1,4 @@
-.. proggram::return:
+.. program::return:
 
 return - stop the current inner function
 ========================================

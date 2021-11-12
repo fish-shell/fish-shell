@@ -11,6 +11,7 @@ Synopsis
 Description
 -----------
 
-``exit`` is a special builtin that causes the shell to exit. If ``code`` is specified, the exit status is the eight least significant bits of ``n``. Otherwise, the exit status will be that of the last command executed. 
+``exit`` is a special builtin that causes the shell to exit. Either 255 or the *code* supplied is used, whichever is lesser.
+Otherwise, the exit status will be that of the last command executed.
 
 If exit is called while sourcing a file (using the :program:`source` builtin) the rest of the file will be skipped, but the shell itself will not exit.

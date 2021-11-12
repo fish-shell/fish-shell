@@ -1275,7 +1275,8 @@ You can change the settings of fish by changing the values of certain variables.
 
    The locale variables :envvar:`LANG`, :envvar:`LC_ALL`, :envvar:`LC_COLLATE`, :envvar:`LC_CTYPE`, :envvar:`LC_MESSAGES`, :envvar:`LC_MONETARY`, :envvar:`LC_NUMERIC`, and :envvar:`LANG` set the language option for the shell and subprograms. See the section :ref:`Locale variables <variables-locale>` for more information.
 
-.. seealso:: Others include:
+
+Other variables include:
 
 - A number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See :ref:`Variables for changing highlighting colors <variables-color>` for more information.
 

@@ -65,8 +65,8 @@ static acquired_lock<env_universal_t> uvars() {
     return s_universal_variables->acquire();
 }
 
-/// Whether we were launched with no_config; in this case setting a uvar instead sets a global.
-static relaxed_atomic_bool_t s_uvar_scope_is_global{false};
+/// Whether we were launched with no_config; in this case universal variables are not persisted.
+static relaxed_atomic_bool_t s_ignore_uvars{false};
 
 bool env_universal_barrier() { return env_stack_t::principal().universal_barrier(); }
 
@@ -422,7 +422,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
 
     // Initialize our uvars if requested.
     if (!do_uvars) {
-        s_uvar_scope_is_global = true;
+        s_ignore_uvars = true;
     } else {
         // Set up universal variables using the default path.
         callback_data_list_t callbacks;
@@ -1174,10 +1174,10 @@ mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
         // The user requested a particular scope.
         //
         // If we don't have uvars, fall back to using globals
-        if (query.universal && !s_uvar_scope_is_global) {
+        if (query.universal && !s_ignore_uvars) {
             set_universal(key, std::move(val), query);
             result.uvar_modified = true;
-        } else if (query.global || (query.universal && s_uvar_scope_is_global)) {
+        } else if (query.global || (query.universal && s_ignore_uvars)) {
             set_in_node(globals_, key, std::move(val), flags);
             result.global_modified = true;
         } else if (query.local) {
@@ -1271,7 +1271,7 @@ bool env_stack_t::universal_barrier() {
     if (!is_principal()) return false;
 
     ASSERT_IS_MAIN_THREAD();
-    if (s_uvar_scope_is_global) return false;
+    if (s_ignore_uvars) return false;
 
     callback_data_list_t callbacks;
     bool changed = uvars()->sync(callbacks);

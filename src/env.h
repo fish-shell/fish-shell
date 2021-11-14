@@ -29,7 +29,8 @@ enum {
     ENV_FUNCTION = 1 << 1,
     /// Flag for global variable.
     ENV_GLOBAL = 1 << 2,
-    /// Flag for universal variable.
+    /// Flag for universal variable. When setting or removing, this requires that ENV_GLOBAL also be
+    /// set, as only global variables may be universal.
     ENV_UNIVERSAL = 1 << 3,
     /// Flag for exported (to commands) variable.
     ENV_EXPORT = 1 << 4,

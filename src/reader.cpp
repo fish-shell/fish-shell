@@ -2612,10 +2612,18 @@ void reader_change_history(const wcstring &name) {
     }
 }
 
-void reader_set_autosuggestion_enabled(bool enable) {
+static bool check_autosuggestion_enabled(const env_stack_t &vars) {
+    if (auto val = vars.get(L"fish_autosuggestion_enabled")) {
+        return val->as_string() != L"0";
+    }
+    return true;
+}
+
+void reader_set_autosuggestion_enabled(const env_stack_t &vars) {
     // We don't need to _change_ if we're not initialized yet.
     reader_data_t *data = current_data_or_null();
     if (data) {
+        bool enable = check_autosuggestion_enabled(vars);
         if (data->conf.autosuggest_ok != enable) {
             data->conf.autosuggest_ok = enable;
             data->force_exec_prompt_and_repaint = true;
@@ -2768,7 +2776,7 @@ static int read_i(parser_t &parser) {
     conf.complete_ok = true;
     conf.highlight_ok = true;
     conf.syntax_check_ok = true;
-    conf.autosuggest_ok = true;
+    conf.autosuggest_ok = check_autosuggestion_enabled(parser.vars());
     conf.expand_abbrev_ok = true;
 
     if (parser.is_breakpoint() && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {

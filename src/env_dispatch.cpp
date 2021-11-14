@@ -247,12 +247,8 @@ static void handle_fish_history_change(const env_stack_t &vars) {
     reader_change_history(history_session_id(vars));
 }
 
-static void handle_autosuggestion_change(const env_stack_t &vars) {
-    bool enabled = true;
-    if (auto val = vars.get(L"fish_autosuggestion_enabled")) {
-        if (val->as_string() == L"0") enabled = false;
-    }
-    reader_set_autosuggestion_enabled(enabled);
+void handle_autosuggestion_change(const env_stack_t &vars) {
+    reader_set_autosuggestion_enabled(vars);
 }
 
 static void handle_function_path_change(const env_stack_t &vars) {

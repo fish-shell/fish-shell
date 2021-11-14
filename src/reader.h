@@ -149,8 +149,8 @@ void restore_term_mode();
 /// Change the history file for the current command reading context.
 void reader_change_history(const wcstring &name);
 
-/// Enable or disable autosuggestions.
-void reader_set_autosuggestion_enabled(bool enable);
+/// Enable or disable autosuggestions based on the associated variable.
+void reader_set_autosuggestion_enabled(const env_stack_t &vars);
 
 /// Write the title to the titlebar. This function is called just before a new application starts
 /// executing and just after it finishes.

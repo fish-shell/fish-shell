@@ -258,45 +258,23 @@ maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     return none();
 }
 
-maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &name) const {
-    auto where = vars.find(name);
-    if (where != vars.end()) {
-        return where->second.get_flags();
-    }
-    return none();
-}
-
 void env_universal_t::set(const wcstring &key, const env_var_t &var) {
     bool new_entry = vars.count(key) == 0;
     env_var_t &entry = vars[key];
     if (new_entry || entry != var) {
         entry = var;
         this->modified.insert(key);
-        if (entry.exports()) export_generation += 1;
     }
 }
 
 bool env_universal_t::remove(const wcstring &key) {
     auto iter = this->vars.find(key);
     if (iter != this->vars.end()) {
-        if (iter->second.exports()) export_generation += 1;
         this->vars.erase(iter);
         this->modified.insert(key);
         return true;
     }
     return false;
-}
-
-wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const {
-    wcstring_list_t result;
-    for (const auto &kv : vars) {
-        const wcstring &key = kv.first;
-        const env_var_t &var = kv.second;
-        if ((var.exports() && show_exported) || (!var.exports() && show_unexported)) {
-            result.push_back(key);
-        }
-    }
-    return result;
 }
 
 // Given a variable table, generate callbacks representing the difference between our vars and the
@@ -314,7 +292,6 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
         // If the value is not present in new_vars, it has been erased.
         if (new_vars.count(key) == 0) {
             callbacks.push_back(callback_data_t(key, none()));
-            if (kv.second.exports()) export_generation += 1;
         }
     }
 
@@ -334,9 +311,6 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
         bool old_exports = (existing != this->vars.end() && existing->second.exports());
         bool export_changed = (old_exports != new_entry.exports());
         bool value_changed = existing != this->vars.end() && existing->second != new_entry;
-        if (export_changed || value_changed) {
-            export_generation += 1;
-        }
         if (existing == this->vars.end() || export_changed || value_changed) {
             // Value is set for the first time, or has changed.
             callbacks.push_back(callback_data_t(key, new_entry));
@@ -865,8 +839,8 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
         FLOGF(warning, PARSE_ERR, msg);
         return;
     }
-    // Parse out flags.
-    env_var_t::env_var_flags_t flags = 0;
+    // Parse out flags. Of course we are always universal.
+    env_var_t::env_var_flags_t flags = env_var_t::flag_universal;
     for (;;) {
         cursor = skip_spaces(cursor);
         if (*cursor != L'-') break;
@@ -895,7 +869,7 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
 
     if (cursor[0] == L'#') return;
 
-    env_var_t::env_var_flags_t flags = 0;
+    env_var_t::env_var_flags_t flags = env_var_t::flag_universal;
     if (match(&cursor, f2x::SET_EXPORT)) {
         flags |= env_var_t::flag_export;
     } else if (match(&cursor, f2x::SET)) {

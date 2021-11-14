@@ -46,17 +46,11 @@ class env_universal_t {
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;
 
-    // \return flags from the variable with the given name.
-    maybe_t<env_var_t::env_var_flags_t> get_flags(const wcstring &name) const;
-
     // Sets a variable.
     void set(const wcstring &key, const env_var_t &var);
 
     // Removes a variable. Returns true if it was found, false if not.
     bool remove(const wcstring &key);
-
-    // Gets variable names.
-    wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
 
     /// Get a view on the universal variable table.
     const var_table_t &get_table() const { return vars; }
@@ -88,9 +82,6 @@ class env_universal_t {
     /// Exposed for testing only.
     bool is_ok_to_save() const { return ok_to_save; }
 
-    /// Access the export generation.
-    uint64_t get_export_generation() const { return export_generation; }
-
    private:
     // Path that we save to. This is set in initialize(). If empty, initialize has not been called.
     wcstring vars_path_;
@@ -102,9 +93,6 @@ class env_universal_t {
     // Keys that have been modified, and need to be written. A value here that is not present in
     // vars indicates a deleted value.
     std::unordered_set<wcstring> modified;
-
-    // A generation count which is incremented every time an exported variable is modified.
-    uint64_t export_generation{1};
 
     // Whether it's OK to save. This may be set to false if we discover that a future version of
     // fish wrote the uvars contents.

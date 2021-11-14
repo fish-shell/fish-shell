@@ -3906,7 +3906,8 @@ static void test_universal() {
             if (j == 0) {
                 expected_val = none();
             } else {
-                expected_val = env_var_t(format_string(L"val_%d_%d", i, j), 0);
+                expected_val =
+                    env_var_t(format_string(L"val_%d_%d", i, j), env_var_t::flag_universal);
             }
             const maybe_t<env_var_t> var = uvars.get(key);
             if (j == 0) assert(!expected_val);
@@ -3957,15 +3958,17 @@ static void test_universal_parsing() {
         "SETUVAR --export --path varD:ValD1\n"
         "SETUVAR --path --path varE:ValE1\\x1eValE2\n";
 
-    const env_var_t::env_var_flags_t flag_export = env_var_t::flag_export;
-    const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
+    const auto flag_export = env_var_t::flag_export;
+    const auto flag_pathvar = env_var_t::flag_pathvar;
+    const auto flag_universal = env_var_t::flag_universal;
 
     var_table_t vars;
-    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
-    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
-    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
-    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
-    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, flag_universal);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export | flag_universal);
+    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, flag_universal);
+    vars[L"varD"] =
+        env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar | flag_universal);
+    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar | flag_universal);
 
     var_table_t parsed_vars;
     env_universal_t::populate_variables(input, &parsed_vars);
@@ -3980,8 +3983,9 @@ static void test_universal_parsing_legacy() {
         "SET_EXPORT varB:ValB1\n";
 
     var_table_t vars;
-    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
-    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, env_var_t::flag_export);
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, env_var_t::flag_universal);
+    vars[L"varB"] =
+        env_var_t(wcstring_list_t{L"ValB1"}, env_var_t::flag_export | env_var_t::flag_universal);
 
     var_table_t parsed_vars;
     env_universal_t::populate_variables(input, &parsed_vars);

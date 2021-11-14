@@ -30,7 +30,7 @@ enum {
     /// Flag for global variable.
     ENV_GLOBAL = 1 << 2,
     /// Flag for universal variable. When setting or removing, this requires that ENV_GLOBAL also be
-    /// set, as only global variables may be universal.
+    /// set, as only global variables may be universal. Note this is a flag, not a scope
     ENV_UNIVERSAL = 1 << 3,
     /// Flag for exported (to commands) variable.
     ENV_EXPORT = 1 << 4,
@@ -108,9 +108,10 @@ class env_var_t {
 
    public:
     enum {
-        flag_export = 1 << 0,     // whether the variable is exported
-        flag_read_only = 1 << 1,  // whether the variable is read only
-        flag_pathvar = 1 << 2,    // whether the variable is a path variable
+        flag_export = 1 << 0,     // set if exported
+        flag_read_only = 1 << 1,  // set if read only
+        flag_pathvar = 1 << 2,    // set if a path variable
+        flag_universal = 1 << 3,  // set if universal
     };
 
     // Constructors.
@@ -132,6 +133,7 @@ class env_var_t {
 
     bool empty() const { return vals_->empty() || (vals_->size() == 1 && vals_->front().empty()); }
     bool exports() const { return flags_ & flag_export; }
+    bool universal() const { return flags_ & flag_universal; }
     bool is_pathvar() const { return flags_ & flag_pathvar; }
     env_var_flags_t get_flags() const { return flags_; }
 
@@ -142,29 +144,14 @@ class env_var_t {
     /// \return the character used when delimiting quoted expansion.
     wchar_t get_delimiter() const;
 
-    /// \return a copy of this variable with new values.
-    env_var_t setting_vals(wcstring_list_t vals) const {
-        return env_var_t{std::move(vals), flags_};
-    }
-
-    env_var_t setting_exports(bool exportv) const {
+    /// \return a copy of this variable with new values, setting some flags.
+    env_var_t clone_with(wcstring_list_t vals, bool exports, bool pathvar, bool universal) const {
+        // Helper to set a flag value to a new value.
         env_var_flags_t flags = flags_;
-        if (exportv) {
-            flags |= flag_export;
-        } else {
-            flags &= ~flag_export;
-        }
-        return env_var_t{vals_, flags};
-    }
-
-    env_var_t setting_pathvar(bool pathvar) const {
-        env_var_flags_t flags = flags_;
-        if (pathvar) {
-            flags |= flag_pathvar;
-        } else {
-            flags &= ~flag_pathvar;
-        }
-        return env_var_t{vals_, flags};
+        flags = (exports ? (flags | flag_export) : (flags & ~flag_export));
+        flags = (pathvar ? (flags | flag_pathvar) : (flags & ~flag_pathvar));
+        flags = (universal ? (flags | flag_universal) : (flags & ~flag_universal));
+        return env_var_t{std::move(vals), flags};
     }
 
     static env_var_flags_t flags_for(const wchar_t *name);
@@ -259,6 +246,9 @@ class env_stack_t final : public environment_t {
 
     /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
     void pop();
+
+    /// Import universal variables. This is called on startup by env_init.
+    void import_universals();
 
     /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
     /// \return true if something changed, false otherwise.

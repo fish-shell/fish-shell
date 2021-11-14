@@ -207,7 +207,6 @@ functions -e watch_foo
 # test erasing variables without a specified scope
 
 set -g test16res
-set -U __fish_test_universal_variables_variable_foo universal
 set -g __fish_test_universal_variables_variable_foo global
 
 begin
@@ -242,13 +241,13 @@ begin
     test16
     set test16res $test16res $__fish_test_universal_variables_variable_foo
 end
-# CHECK: count:5 content:[functionblock function global universal blocklocal]
+# CHECK: count:4 content:[functionblock function global blocklocal]
 
 set -q __fish_test_universal_variables_variable_foo
 and echo __fish_test_universal_variables_variable_foo should set after test16 outer begin..end
 
 echo count:(count $test16res) "content:[$test16res]"
-if test (count $test16res) = 5 -a "$test16res" = "functionblock function global universal blocklocal"
+if test (count $test16res) = 4 -a "$test16res" = "functionblock function global blocklocal"
     echo Test 16 pass
 else
     echo Test 16 fail
@@ -322,6 +321,35 @@ echo $var # should be "bar"
 
 # clear for other shells
 set -eU __fish_test_universal_variables_variable_foo
+
+# Universal variables are global.
+function uvar_setter
+    set -U testu should_be_global
+end
+uvar_setter
+set --show testu
+# CHECK: $testu: set in global scope, unexported, universal, with 1 elements
+# CHECK: $testu[1]: |should_be_global|
+set -e testu
+
+# Universal variables must be global.
+set --universal --local abc def
+# CHECKERR: set: only global variables can be universal
+#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: set --universal --local abc def
+#CHECKERR: ^
+#CHECKERR: (Type 'help set' for related documentation)
+
+set --universal --function abc def
+# CHECKERR: set: only global variables can be universal
+#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: set --universal --function abc def
+#CHECKERR: ^
+#CHECKERR: (Type 'help set' for related documentation)
+
+# Global + universal is fine.
+set --universal --global abc def
+set -e abc
 
 # Test behavior of universals on startup (#1526)
 echo Testing Universal Startup
@@ -455,28 +483,6 @@ end
 # CHECKERR: for a,b in y 1 z 3
 # CHECKERR:     ^
 
-# Global vs Universal Unspecified Scopes
-set -U __fish_test_global_vs_universal universal
-echo "global-vs-universal 1: $__fish_test_global_vs_universal"
-# CHECK: global-vs-universal 1: universal
-
-set -g __fish_test_global_vs_universal global
-echo "global-vs-universal 2: $__fish_test_global_vs_universal"
-# CHECK: global-vs-universal 2: global
-
-
-set __fish_test_global_vs_universal global2
-echo "global-vs-universal 3: $__fish_test_global_vs_universal"
-# CHECK: global-vs-universal 3: global2
-
-set -e -g __fish_test_global_vs_universal
-echo "global-vs-universal 4: $__fish_test_global_vs_universal"
-# CHECK: global-vs-universal 4: universal
-
-set -e -U __fish_test_global_vs_universal
-echo "global-vs-universal 5: $__fish_test_global_vs_universal"
-# CHECK: global-vs-universal 5:
-
 # Export local variables from all parent scopes (issue #6153).
 function func
     echo $local
@@ -500,13 +506,12 @@ while set -q EDITOR
     set -e EDITOR
 end
 set -Ux EDITOR emacs -nw
-# CHECK: $EDITOR: set in universal scope, exported, with 2 elements
 $FISH -c 'set -S EDITOR' | string match -r -e 'global|universal'
+# CHECK: $EDITOR: set in global scope, exported, universal, with 2 elements
 
-# When the variable has been changed outside of fish we accept it.
-# CHECK: $EDITOR: set in global scope, exported, with 1 elements
-# CHECK: $EDITOR: set in universal scope, exported, with 2 elements
+# Universal variables trump environment variables.
 sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'global|universal'
+# CHECK: $EDITOR: set in global scope, exported, universal, with 2 elements
 
 # Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
@@ -524,8 +529,9 @@ set --show semiempty
 
 set -U var1 hello
 set --show var1
-#CHECK: $var1: set in universal scope, unexported, with 1 elements
+#CHECK: $var1: set in global scope, unexported, universal, with 1 elements
 #CHECK: $var1[1]: |hello|
+set -e var1
 
 set -l var1
 set -g var1 goodbye "and don't come back"
@@ -534,8 +540,6 @@ set --show var1
 #CHECK: $var1: set in global scope, unexported, with 2 elements
 #CHECK: $var1[1]: |goodbye|
 #CHECK: $var1[2]: |and don\'t come back|
-#CHECK: $var1: set in universal scope, unexported, with 1 elements
-#CHECK: $var1[1]: |hello|
 
 set -g var2
 set --show _unset_var var2
@@ -678,7 +682,7 @@ echo $status
 
 set --path newvariable foo
 set -S newvariable
-#CHECK: $newvariable: set in global scope, unexported, a path variable with 1 elements
+#CHECK: $newvariable: set in global scope, unexported, a path variable, with 1 elements
 #CHECK: $newvariable[1]: |foo|
 
 set foo foo
@@ -754,14 +758,14 @@ set -S stilllocal
 set -g globalvar global
 
 function test-function-scope
-    set -f funcvar "function"
+    set -f funcvar function
     echo $funcvar
     # CHECK: function
     set -S funcvar
     #CHECK: $funcvar: set in local scope, unexported, with 1 elements
     #CHECK: $funcvar[1]: |function|
     begin
-        set -l funcvar "block"
+        set -l funcvar block
         echo $funcvar
         # CHECK: block
         set -S funcvar

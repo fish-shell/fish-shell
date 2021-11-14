@@ -200,11 +200,10 @@ function __fish_abbr_show --no-scope-shadowing
         if set -ql $abbr_var_name
             printf 'abbr -a %s -- %s %s\n' -l $abbr_name $abbr_val
         end
-        if set -qg $abbr_var_name
-            printf 'abbr -a %s -- %s %s\n' -g $abbr_name $abbr_val
-        end
         if set -qU $abbr_var_name
             printf 'abbr -a %s -- %s %s\n' -U $abbr_name $abbr_val
+        else if set -qg $abbr_var_name
+            printf 'abbr -a %s -- %s %s\n' -g $abbr_name $abbr_val
         end
     end
 end

@@ -393,7 +393,21 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     }
 
     if ((opts.place & ENV_LOCAL ? 1 : 0) + (opts.place & ENV_FUNCTION ? 1 : 0) +
-            (opts.place & ENV_GLOBAL ? 1 : 0) + (opts.place & ENV_UNIVERSAL ? 1 : 0) >
+            (opts.place & ENV_GLOBAL ? 1 : 0) >
+        1) {
+        streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if ((opts.place & ENV_LOCAL || opts.place & ENV_FUNCTION) && opts.place & ENV_UNIVERSAL) {
+        streams.err.append_format(BUILTIN_ERR_NONGLOBAL_UVAR, cmd);
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if ((opts.place & ENV_LOCAL ? 1 : 0) + (opts.place & ENV_FUNCTION ? 1 : 0) +
+            (opts.place & ENV_GLOBAL ? 1 : 0) >
         1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);

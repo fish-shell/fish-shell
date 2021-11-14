@@ -44,7 +44,10 @@ struct builtin_data_t {
 #define BUILTIN_ERR_COMBO2_EXCLUSIVE _(L"%ls: %ls %ls: options cannot be used together\n")
 
 /// Error message on multiple scope levels for variables.
-#define BUILTIN_ERR_GLOCAL _(L"%ls: scope can be only one of: universal function global local\n")
+#define BUILTIN_ERR_GLOCAL _(L"%ls: scope can be only one of function, global, local\n")
+
+/// Error message when combining universal flag with non-global scopes.
+#define BUILTIN_ERR_NONGLOBAL_UVAR _(L"%ls: only global variables can be universal\n")
 
 /// Error message for specifying both export and unexport to set/read.
 #define BUILTIN_ERR_EXPUNEXP _(L"%ls: cannot both export and unexport\n")

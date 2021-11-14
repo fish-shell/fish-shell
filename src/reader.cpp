@@ -3325,7 +3325,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
                 // This command is valid, but an abbreviation may make it invalid. If so, we
                 // will have to test again.
-                if (expand_abbreviation_as_necessary(1)) {
+                if (expand_abbreviation_as_necessary(0)) {
                     // Trigger syntax highlighting as we are likely about to execute this command.
                     this->super_highlight_me_plenty();
                     if (conf.syntax_check_ok) {

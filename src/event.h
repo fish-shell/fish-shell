@@ -111,8 +111,6 @@ struct event_t {
 
     explicit event_t(event_type_t t) : desc(t) {}
 
-    /// Create an event_type_t::variable event.
-    static event_t variable(wcstring name, wcstring_list_t args);
     /// Create an event_type_t::variable event with the args for erasing a variable.
     static event_t variable_erase(wcstring name);
     /// Create an event_type_t::variable event with the args for setting a variable.

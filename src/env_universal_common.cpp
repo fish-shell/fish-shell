@@ -339,7 +339,7 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
         }
         if (existing == this->vars.end() || export_changed || value_changed) {
             // Value is set for the first time, or has changed.
-            callbacks.push_back(callback_data_t(key, new_entry.as_string()));
+            callbacks.push_back(callback_data_t(key, new_entry));
         }
     }
 }

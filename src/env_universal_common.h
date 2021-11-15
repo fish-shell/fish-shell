@@ -20,10 +20,10 @@ struct callback_data_t {
     wcstring key;
 
     // The value of the variable, or none if it is erased.
-    maybe_t<wcstring> val;
+    maybe_t<env_var_t> val;
 
     /// Construct from a key and maybe a value.
-    callback_data_t(wcstring k, maybe_t<wcstring> v) : key(std::move(k)), val(std::move(v)) {}
+    callback_data_t(wcstring k, maybe_t<env_var_t> v) : key(std::move(k)), val(std::move(v)) {}
 
     /// \return whether this callback represents an erased variable.
     bool is_erase() const { return !val.has_value(); }

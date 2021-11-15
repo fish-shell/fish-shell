@@ -209,20 +209,16 @@ void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
     s_var_dispatch_table->dispatch(key, vars);
 }
 
-/// Universal variable callback function. This function makes sure the proper events are triggered
-/// when an event occurs.
-static void universal_callback(env_stack_t *stack, const callback_data_t &cb) {
-    const wchar_t *op = cb.is_erase() ? L"ERASE" : L"SET";
-
-    env_dispatch_var_change(cb.key, *stack);
-
-    // TODO: eliminate this principal_parser. Need to rationalize how multiple threads work here.
-    event_fire(parser_t::principal_parser(), event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));
-}
-
+// Trigger events due to a universal variable changing.
 void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &callbacks) {
     for (const callback_data_t &cb : callbacks) {
-        universal_callback(stack, cb);
+        env_dispatch_var_change(cb.key, *stack);
+
+        // TODO: eliminate this principal_parser. Need to rationalize how multiple threads work
+        // here.
+        event_t evt =
+            cb.is_erase() ? event_t::variable_erase(cb.key) : event_t::variable_set(cb.key);
+        event_fire(parser_t::principal_parser(), evt);
     }
 }
 

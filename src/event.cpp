@@ -520,21 +520,19 @@ event_description_t event_description_t::generic(wcstring str) {
 }
 
 // static
-event_t event_t::variable(wcstring name, wcstring_list_t args) {
+event_t event_t::variable_erase(wcstring name) {
     event_t evt{event_type_t::variable};
+    evt.arguments = {L"VARIABLE", L"ERASE", name};
     evt.desc.str_param1 = std::move(name);
-    evt.arguments = std::move(args);
     return evt;
 }
 
 // static
-event_t event_t::variable_erase(wcstring name) {
-    return event_t::variable(name, {L"VARIABLE", L"ERASE", name});
-}
-
-// static
 event_t event_t::variable_set(wcstring name) {
-    return event_t::variable(name, {L"VARIABLE", L"SET", name});
+    event_t evt{event_type_t::variable};
+    evt.arguments = {L"VARIABLE", L"SET", name};
+    evt.desc.str_param1 = std::move(name);
+    return evt;
 }
 
 // static

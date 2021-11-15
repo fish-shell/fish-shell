@@ -39,9 +39,9 @@ The following options control variable scope:
 
 - ``-g`` or ``--global`` causes the specified shell variable to be given a global scope. Global variables don't disappear and are available to all functions running in the same shell. They can even be modified.
 
-- ``-U`` or ``--universal`` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current user's fish instances on the current computer, and will be preserved across restarts of the shell.
-
 These options control additional variable options:
+
+- ``-U`` or ``--universal`` causes the specified shell variable to be a universal global. This causes the variable's value to be shared between all the current user's fish instances on the current computer, and will be preserved across restarts of the shell. Note the ``--universal`` option implies ``--global``.
 
 - ``-x`` or ``--export`` causes the specified shell variable to be exported to child processes (making it an "environment variable")
 
@@ -74,11 +74,11 @@ If the variable name is one or more list elements, such as ``PATH[1 3 7]``, only
 
 The scoping rules when creating or updating a variable are:
 
-- Variables may be explicitly set to universal, global or local. Variables with the same name in different scopes will not be changed.
+- Variables may be explicitly set to global, function, or local. Variables with the same name in different scopes will not be changed.
 
-- If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
+- If a variable is not explicitly set to be either global, function, or local, but has been previously defined, the previous variable scope is used.
 
-- If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+- If a variable is not explicitly set to be either global, function, or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
 
 
 The exporting rules when creating or updating a variable are identical to the scoping rules for variables:
@@ -89,8 +89,7 @@ The exporting rules when creating or updating a variable are identical to the sc
 
 - If a variable is not explicitly set to be either exported or unexported and has never before been defined, the variable will not be exported.
 
-
-In query mode, the scope to be examined can be specified.
+In query mode, the scope to be examined can be specified. The ``-U`` / ``--universal`` flag may also be passed, to test if a variable has the universal property. Note that universal variables are always global.
 
 In erase mode, if variable indices are specified, only the specified slices of the list variable will be erased.
 

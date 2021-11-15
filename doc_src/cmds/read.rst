@@ -44,7 +44,7 @@ The following options are available:
 
 - ``-u`` or ``--unexport`` prevents the variables from being exported to child processes (default behaviour).
 
-- ``-U`` or ``--universal`` causes the specified shell variable to be made universal.
+- ``-U`` or ``--universal`` causes the specified shell variable to be made a universal global.
 
 - ``-x`` or ``--export`` exports the variables to child processes.
 

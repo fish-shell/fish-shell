@@ -51,24 +51,6 @@ Alternatively, use ``test -n "$var"``, but remember that **the variable must be 
 If you want to know if a variable has *no elements*, use ``set -q var[1]``.
 
 
-Why doesn't ``set -Ux`` (exported universal variables) seem to work?
---------------------------------------------------------------------
-A global variable of the same name already exists.
-
-Environment variables such as ``EDITOR`` or ``TZ`` can be set universally using ``set -Ux``.  However, if
-there is an environment variable already set before fish starts (such as by login scripts or system
-administrators), it is imported into fish as a global variable. The :ref:`variable scopes <variables-scope>` are searched from the "inside out", which
-means that local variables are checked first, followed by global variables, and finally universal
-variables.
-
-This means that the global value takes precedence over the universal value.
-
-To avoid this problem, consider changing the setting which fish inherits. If this is not possible,
-add a statement to your :ref:`configuration file <configuration>` (usually
-``~/.config/fish/config.fish``)::
-
-    set -gx EDITOR vim
-
 How do I run a command every login? What's fish's equivalent to .bashrc or .profile?
 ------------------------------------------------------------------------------------
 Edit the file ``~/.config/fish/config.fish`` [#]_, creating it if it does not exist (Note the leading period).

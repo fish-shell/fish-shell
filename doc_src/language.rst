@@ -895,14 +895,13 @@ So you set a variable with ``set``, and use it with a ``$`` and the name.
 Variable Scope
 ^^^^^^^^^^^^^^
 
-There are four kinds of variables in fish: universal, global, function and local variables.
+There are three kinds of variables in fish: global, function and local variables.
 
-- Universal variables are shared between all fish sessions a user is running on one computer.
-- Global variables are specific to the current fish session, and will never be erased unless explicitly requested by using ``set -e``.
+- Global variables are shared among all blocks and functions, and will never be erased unless explicitly requested by using ``set -e``.
 - Function variables are specific to the currently executing function. They are erased ("go out of scope") when the current function ends. Outside of a function, they don't go out of scope.
 - Local variables are specific to the current block of commands, and automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``. Outside of a block, this is the same as the function scope.
 
-Variables can be explicitly set to be universal with the ``-U`` or ``--universal`` switch, global with ``-g`` or ``--global``, function-scoped with ``-f`` or ``--function`` and local to the current block with ``-l`` or ``--local``.  The scoping rules when creating or updating a variable are:
+Variables can be explicitly set to be global with ``-g`` or ``--global``, function-scoped with ``-f`` or ``--function`` and local to the current block with ``-l`` or ``--local``.  The scoping rules when creating or updating a variable are:
 
 - When a scope is explicitly given, it will be used. If a variable of the same name exists in a different scope, that variable will not be changed.
 
@@ -910,7 +909,7 @@ Variables can be explicitly set to be universal with the ``-U`` or ``--universal
 
 - When no scope is given and no variable of that name exists, the variable is created in function scope if inside a function, or global scope if no function is executing.
 
-There can be many variables with the same name, but different scopes. When you :ref:`use a variable <expand-variable>`, the smallest scoped variable of that name will be used. If a local variable exists, it will be used instead of the global or universal variable of the same name.
+There can be many variables with the same name, but different scopes. When you :ref:`use a variable <expand-variable>`, the smallest scoped variable of that name will be used. If a local variable exists, it will be used instead of the global or function variable of the same name.
 
 
 Example:
@@ -951,10 +950,6 @@ If you want to set something in config.fish, or set something in a function and 
     # Set my language
     set -gx LANG de_DE.UTF-8
 
-If you want to set some personal customization, universal variables are nice::
-
-     # Typically you'd run this interactively, fish takes care of keeping it.
-     set -U fish_color_autosuggestion 555
 
 Here is an example of local vs function-scoped variables::
 
@@ -976,6 +971,21 @@ Here is an example of local vs function-scoped variables::
   end
 
 When in doubt, use function-scoped variables. When you need to make a variable accessible everywhere, make it global. When you need to persistently store configuration, make it universal. When you want to use a variable only in a short block, make it local.
+
+.. _variables-universal:
+
+Global variables may also be marked as universal, with the ``-U`` or ``--universal`` switch. Universal global variables are shared among all fish sessions running on the same computer. When a universal variable is modified, the change affects other running sessions, as well as future sessions, even after reboots.
+
+When setting a universal global variable, you may omit the ``--global`` switch for convenience. Sometimes these variables are referred to as simply "universal variables;" however "universal" is not a separate scope: all universal variables are global.
+
+Universal variables are convenient for personal customization::
+
+     # Typically you'd run this interactively, fish takes care of keeping it.
+     set -U fish_color_cwd blue
+
+Note after running this command, the color of the current working directory will instantly change to blue even in other sessions.
+
+:ref:`Universal variables <variables-universal>` are stored in the file ``.config/fish/fish_variables``. Do not append to universal variables in :ref:`config.fish <configuration>`, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
 
 .. _variables-override:
 
@@ -1007,20 +1017,6 @@ Or with a :ref:`glob <expand-wildcard>`::
 Unlike other shells, this does *not* inhibit any lookup (aliases or similar). Calling a command after setting a variable override will result in the exact same command being run.
 
 This syntax is supported since fish 3.1.
-
-.. _variables-universal:
-
-More on universal variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Universal variables are variables that are shared between all the user's fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
-
-To see universal variables in action, start two fish sessions side by side, and issue the following command in one of them ``set fish_color_cwd blue``. Since ``fish_color_cwd`` is a universal variable, the color of the current working directory listing in the prompt will instantly change to blue on both terminals.
-
-:ref:`Universal variables <variables-universal>` are stored in the file ``.config/fish/fish_variables``. Do not edit this file directly, as your edits may be overwritten. Edit the variables through fish scripts or by using fish interactively instead.
-
-Do not append to universal variables in :ref:`config.fish <configuration>`, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
-
 
 .. _variables-functions:
 

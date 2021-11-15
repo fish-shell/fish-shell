@@ -42,7 +42,7 @@ The following options are available:
 In addition, when adding or renaming abbreviations:
 
 - ``-g`` or ``--global`` to use a global variable.
-- ``-U`` or ``--universal`` to use a universal variable (default).
+- ``-U`` or ``--universal`` to make a global universal variable (default).
 
 See the "Internals" section for more on them.
 
@@ -91,11 +91,9 @@ Import the abbreviations defined on another_host over SSH.
 
 Internals
 ---------
-Each abbreviation is stored in its own global or universal variable. The name consists of the prefix ``_fish_abbr_`` followed by the WORD after being transformed by ``string escape style=var``. The WORD cannot contain a space but all other characters are legal.
+Each abbreviation is stored in its own global variable. The name consists of the prefix ``_fish_abbr_`` followed by the WORD after being transformed by ``string escape style=var``. The WORD cannot contain a space but all other characters are legal.
 
-Defining an abbreviation with global scope is slightly faster than universal scope (which is the default). But in general you'll only want to use the global scope when defining abbreviations in a startup script like ``~/.config/fish/config.fish`` like this:
-
-
+To define an abbreviation in a startup script like ``~/.config/fish/config.fish``, do not make them universal:
 
 ::
 

@@ -104,7 +104,8 @@ The following optional features also have specific requirements:
    ``wl-copy``/``wl-paste`` or ``pbcopy``/``pbpaste`` utilities
 -  full completions for ``yarn`` and ``npm`` require the
    ``all-the-package-names`` NPM module
--  ``colorls`` is used, if its installed, to add color when running ``ls``
+-  ``colorls`` is used, if installed, to add color when running ``ls`` on platforms
+   that do not have color support (such as OpenBSD)
 
 Switching to fish
 ~~~~~~~~~~~~~~~~~

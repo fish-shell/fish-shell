@@ -5525,6 +5525,13 @@ static void test_highlighting() {
         {L"=", highlight_role_t::operat, ns},
     });
 
+    // Highlighting works across escaped line breaks (#8444).
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"$FISH_\\\n", highlight_role_t::operat},
+        {L"VERSION", highlight_role_t::operat, ns},
+    });
+
     auto &vars = parser_t::principal_parser().vars();
     // Verify variables and wildcards in commands using /bin/cat.
     vars.set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});

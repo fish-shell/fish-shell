@@ -489,8 +489,16 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     }
 
     // Handle a sequence of variable characters.
-    while (valid_var_name_char(in[idx])) {
-        colors[idx++] = highlight_role_t::operat;
+    // It may contain an escaped newline - see #8444.
+    for (;;) {
+        if (valid_var_name_char(in[idx])) {
+            colors[idx++] = highlight_role_t::operat;
+        } else if (in[idx] == L'\\' && in[idx + 1] == L'\n') {
+            colors[idx++] = highlight_role_t::operat;
+            colors[idx++] = highlight_role_t::operat;
+        } else {
+            break;
+        }
     }
 
     // Handle a slice, up to dollar_count of them. Note that we currently don't do any validation of

@@ -12,17 +12,9 @@ for x in bench b build rustc t test
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l test -a "(cargo test --test 2>&1 | string replace -rf '^\s+' '')"
 end
 
-function __list_cargo_examples
-    if not test -d ./examples
-        return
-    end
-
-    find ./examples -mindepth 1 -maxdepth 1 -type f -name "*.rs" -or -type d \
-        | string replace -r './examples/(.*?)(?:.rs)?$' '$1'
-end
 for x in bench b build r run rustc t test
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -a "(cargo run --bin 2>&1 | string replace -rf '^\s+' '')"
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -a "(__list_cargo_examples)"
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -a "(cargo run --example 2>&1 | string replace -rf '^\s+' '')"
 end
 
 function __fish_cargo_packages

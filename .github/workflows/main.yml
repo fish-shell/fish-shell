@@ -1,6 +1,12 @@
 name: C/C++ CI
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - 'share/**'
+  pull_request:
+    paths-ignore:
+      - 'share/**'
 
 env:
   CTEST_PARALLEL_LEVEL: "1"

@@ -268,6 +268,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # in vim (and maybe in vi), <BS> deletes the changes
     # but this binding just move cursor backward, not delete the changes
     bind -s --preset -M replace -k backspace backward-char
+    
+    #
+    # increment or decrement numbers with ctrl+x ctrl+a
+    #
+    bind -s --preset -M default \ca vi_inc
+    bind -s --preset -M default \cx vi_dec
 
     #
     # visual mode

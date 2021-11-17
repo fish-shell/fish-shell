@@ -4874,7 +4874,7 @@ static void test_new_parser_fuzzing() {
         if (log_it) std::fwprintf(stderr, L"done (%lu)\n", permutation);
     }
     double end = timef();
-    if (log_it) say(L"All fuzzed in %f seconds!", end - start);
+    if (log_it) say(L"All fuzzed in %.2f seconds!", end - start);
 }
 
 // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns

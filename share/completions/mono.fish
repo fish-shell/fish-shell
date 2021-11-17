@@ -113,4 +113,4 @@ complete --command mono --long-option response --description 'Provide a response
 complete --command mono --long-option runtime --arguments '(mono --version)' --no-files --description 'Override autodetected Mono version'
 complete --command mono --long-option server --description 'Configure the virtual machine to be better suited for server operations'
 complete --command mono --long-option use-map-jit --description 'Instructs Mono to generate code using MAP_JIT on MacOS'
-complete --command mono --long-option verify-all --description 'Verifie mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
+complete --command mono --long-option verify-all --description 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'

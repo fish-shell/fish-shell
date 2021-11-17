@@ -114,3 +114,13 @@ complete --command mono --long-option runtime --arguments '(mono --version)' --n
 complete --command mono --long-option server --description 'Configure the virtual machine to be better suited for server operations'
 complete --command mono --long-option use-map-jit --description 'Instructs Mono to generate code using MAP_JIT on MacOS'
 complete --command mono --long-option verify-all --description 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
+
+complete --command mono --long-option debug --arguments '(__complete_mono , \'casts\tProduce a detailed error when throwing a InvalidCastException\'\\
+  \'mdb-optimizations\tDisable some JIT optimizations which are usually only disabled when running inside the debugger\'\\
+  \'gdb\tGenerate and register debugging information with gdb\')'\
+  --no-files --description 'Turn on the debugging mode in the runtime'
+
+complete --command mono --long-option profile --description 'Load a profiler module with the given arguments'
+complete --command mono --long-option trace --description 'Show method names as they are invoked'
+complete --command mono --long-option no-x86-stack-align --description 'Don\'t align stack frames on the x86 architecture'
+complete --command mono --long-option jitmap --description 'Generate a JIT method map in a /tmp/perf-PID.map file'

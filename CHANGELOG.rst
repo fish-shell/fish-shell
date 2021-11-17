@@ -157,7 +157,7 @@ Completions
   - ``istioctl`` (:issue:`8343`)
   - ``kmutil``
   - ``matlab`` (:issue:`8505`)
-  - ``mono`` (:issue:`8415`)
+  - ``mono`` (:issue:`8415`) and related tools ``csharp``, ``gacutil``, ``gendarme``, ``ikdasm``, ``ilasm``, ``mkbundle``, ``monodis``, ``monop``, ``sqlsharp`` and ``xsp``.
   -  Angular's ``ng`` (:issue:`8111`)
   - ``nodeenv`` (:issue:`8533`)
   - ``octave`` (:issue:`8505`)

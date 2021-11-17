@@ -10,13 +10,13 @@
 #include <utility>
 #include <vector>
 
-#include "builtin.h"
-#include "common.h"
-#include "fallback.h"  // IWYU pragma: keep
-#include "io.h"
-#include "wcstringutil.h"
-#include "wgetopt.h"
-#include "wutil.h"  // IWYU pragma: keep
+#include "../builtin.h"
+#include "../common.h"
+#include "../fallback.h"  // IWYU pragma: keep
+#include "../io.h"
+#include "../wcstringutil.h"
+#include "../wgetopt.h"
+#include "../wutil.h"  // IWYU pragma: keep
 
 // How many bytes we read() at once.
 // We use PATH_MAX here so we always get at least one path,

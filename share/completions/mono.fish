@@ -7,6 +7,11 @@ function __complete_mono --description 'Internal completion function for appendi
   end
 end
 
+function __is_darwin --description 'Check whether OS is Mac OS'
+  test "$(uname)" = 'Darwin'
+  return $status
+end
+
 complete --command mono --short-option h --long-option help --description 'Show help and exit'
 complete --command mono --short-option V --long-option version --arguments 'number' --no-files --description 'Show version and exit'
 
@@ -78,7 +83,7 @@ complete --command mono --long-option assembly-loader --arguments 'boehm\tBoehm 
 complete --command mono --long-option gc --arguments 'boehm\tBoehm sgen\tSGen' --no-files --description 'Select the Garbage Collector engine for Mono to use'
 complete --command mono --long-option gc-debug --no-files --description 'Command line equivalent of the MONO_GC_DEBUG environment variable'
 complete --command mono --long-option gc-params --no-files --description 'Command line equivalent of the MONO_GC_PARAMS environment variable'
-complete --command mono --long-option arch --arguments '32\t"32 bit" 64\t"64 bit"' --no-files --description 'Select the bitness of the Mono binary used, if available'
+__is_darwin && complete --command mono --long-option arch --arguments '32\t"32 bit" 64\t"64 bit"' --no-files --description 'Select the bitness of the Mono binary used, if available'
 complete --command mono --long-option interpreter --description 'Use Mono interpreter to execute a given assembly'
 complete --command mono --long-option hybrid-aot --description 'Run assemblies that have been stripped of IL'
 complete --command mono --long-option llvm --description 'Use the LLVM optimization and code generation engine to JIT or AOT compile'

@@ -1,0 +1,29 @@
+complete --command xsp --long-option help --description 'Show help and exit'
+complete --command xsp --long-option version --description 'Show version and exit'
+
+complete --command xsp --long-option address --require-parameter --no-files --description 'Set the IP address to listen on'
+complete --command xsp --long-option port --require-parameter --no-files --description 'Change the default port where the XSP server will listen to requests'
+complete --command xsp --long-option backlog --require-parameter --no-files --description 'The backlog of connections to set on the listener socket'
+complete --command xsp --long-option minThreads --require-parameter --no-files --description 'The minimum number of threads the threadpool allocates'
+complete --command xsp --long-option filename --require-parameter --description 'The unix socket file name to listen on'
+complete --command xsp --long-option root --require-parameter --description 'The root directory for XSP'
+complete --command xsp --long-option appconfigfile --require-parameter --description 'Add application definitions from the XML configuration file'
+complete --command xsp --long-option appconfigdir --require-parameter --description 'Add application definitions from all XML files found in the specified directory'
+complete --command xsp --long-option applications --require-parameter --description 'A comma separated list of virtual directory and real directory for all the applications we want to manage with this server'
+complete --command xsp --long-option master --no-files --require-parameter --description 'Use this instance by mod_mono to create ASP.NET applications on demand'
+complete --command xsp --long-option no-hidden --no-files --require-parameter --description 'Do not protect hidden files/directories from being accessed by clients'
+complete --command xsp --long-option https --no-files --require-parameter --description 'Enable HTTPS support on the server'
+complete --command xsp --long-option https-client-accept --no-files --require-parameter --description 'Like --https enable HTTPS support on the server'
+complete --command xsp --long-option https-client-require --no-files --require-parameter --description 'Like --https enable HTTPS support on the server'
+complete --command xsp --long-option p12file --require-parameter --description 'Use to specify the PKCS#12 file to use'
+complete --command xsp --long-option cert --require-parameter --description 'Used to specify the server X.509 certificate file'
+complete --command xsp --long-option pkpwd --require-parameter --description 'Use password to decote the private key'
+
+complete --command mono --long-option protocol --arguments '(__complete_mono , \'Default\tAuto-detect the client protocol and adjust the server protocol accordingly\'\\
+  \'Tls\tTls protocol\'\\
+  \'Ssl3\Ssl3 protocol\')'\
+  --no-files --description 'Specify which protocols are available for encrypting the communications'
+
+complete --command xsp --long-option terminate --require-parameter --description 'Gracefully terminates a running mod-mono-server instance'
+complete --command xsp --long-option verbose --require-parameter --description 'Prints extra messages'
+complete --command xsp --long-option pidfile --require-parameter --description 'Writes the xsp4 PID to the specified file'

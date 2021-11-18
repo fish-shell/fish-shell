@@ -10,6 +10,7 @@ end
 complete --command mono --short-option h --long-option help --description 'Show help and exit'
 complete --command mono --short-option V --long-option version --arguments 'number' --no-files --description 'Show version and exit'
 
+# Runtime options
 complete --command mono --long-option aot --arguments '(__complete_mono , \'asmonly\tInstruct the AOT compiler to output assembly code instead of an object file\'\\
   \'bind-to-runtime-version\tForce the generated AOT files to be bound to the runtime version of the compiling Mono\'\\
   \'data-outfile\tInstruct the AOT code generator to output certain data constructs into a separate file\'\\
@@ -115,6 +116,7 @@ complete --command mono --long-option server --description 'Configure the virtua
 complete --command mono --long-option use-map-jit --description 'Instructs Mono to generate code using MAP_JIT on MacOS'
 complete --command mono --long-option verify-all --description 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
 
+# Development options
 complete --command mono --long-option debug --arguments '(__complete_mono , \'casts\tProduce a detailed error when throwing a InvalidCastException\'\\
   \'mdb-optimizations\tDisable some JIT optimizations which are usually only disabled when running inside the debugger\'\\
   \'gdb\tGenerate and register debugging information with gdb\')'\

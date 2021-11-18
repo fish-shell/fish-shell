@@ -1,0 +1,10 @@
+complete --command ilasm --long-option help --description 'Show help and exit'
+complete --command ilasm --long-option version --description 'Show version and exit'
+
+complete --command ilasm --old-option 'output:' --require-parameter --description 'Specify the output file name'
+complete --command ilasm --old-option exe --description 'Generate an exe'
+complete --command ilasm --old-option scan_only --description 'Just scan the IL code and display tokens'
+complete --command ilasm --old-option show_tokens --description 'Show tokens as they are parsed'
+complete --command ilasm --old-option show_method_def --description 'Display method information when a method is defined'
+complete --command ilasm --old-option show_method_ref --description 'Display method information when a method is referenced'
+complete --command ilasm --old-option 'key:' --description 'Strongname (sign) the output assembly using the key pair'

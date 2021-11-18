@@ -126,3 +126,15 @@ complete --command mono --long-option profile --description 'Load a profiler mod
 complete --command mono --long-option trace --description 'Show method names as they are invoked'
 complete --command mono --long-option no-x86-stack-align --description 'Don\'t align stack frames on the x86 architecture'
 complete --command mono --long-option jitmap --description 'Generate a JIT method map in a /tmp/perf-PID.map file'
+
+# JIT maintainer options
+complete --command mono --long-option bisect --no-files --description 'This flag is used by the automatic optimization bug bisector'
+complete --command mono --long-option break --no-files --description 'Insert a breakpoint before the method whose name is \'method\' (namespace.class:methodname)'
+complete --command mono --long-option breakonex --no-files --description 'Insert a breakpoint on exceptions'
+complete --command mono --long-option compile --no-files --description 'Compiles a method (namespace.name:methodname)'
+complete --command mono --long-option compile-all --description 'Compiles all the methods in an assembly'
+complete --command mono --long-option graph --arguments 'cfg\t"Control Flow Graph (CFG)" dtree\t"Dominator Tree" code\t"CFG showing code" ssa\t"CFG showing code after SSA translation" optcode\t"CFG showing code after IR optimizations"' --no-files --description 'Generate a postscript file with a graph with the details about the specified method'
+complete --command mono --long-option ncompile --description 'Instruct the runtime on the number of times that the method(-s) specified by --compile/--compile-all to be compiled'
+complete --command mono --long-option stats --description 'Display information about the work done by the runtime during the execution of an application'
+complete --command mono --long-option wapi --arguments 'hps\t"Delete the global semaphore" semdel\t"List the currently used handles"' --no-files --description 'Perform maintenance of the process shared data'
+complete --command mono --short-option v --long-option verbose --description 'Increase the verbosity level'

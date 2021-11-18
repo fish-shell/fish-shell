@@ -4,7 +4,7 @@
 # https://github.com/0rax/fish-bd
 #
 
-complete -c bd -A -f
+complete -c bd -f
 
 complete -c bd -s c -d "Classic mode: goes back to the first directory named as the string"
 complete -c bd -s s -d "Seems mode: goes back to the first directory containing string"

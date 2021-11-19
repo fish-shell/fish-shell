@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <cstring>
@@ -236,8 +237,32 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                     if ((oflags & O_EXCL) && (errno == EEXIST)) {
                         FLOGF(warning, NOCLOB_ERROR, spec.target.c_str());
                     } else {
-                        FLOGF(warning, FILE_ERROR, spec.target.c_str());
-                        if (should_flog(warning)) wperror(L"open");
+                        if (should_flog(warning)) {
+                            FLOGF(warning, FILE_ERROR, spec.target.c_str());
+                            auto err = errno;
+                            // If the error is that the file doesn't exist
+                            // or there's a non-directory component,
+                            // find the first problematic component for a better message.
+                            if (err == ENOENT || err == ENOTDIR) {
+                                auto dname = spec.target;
+                                struct stat buf;
+
+                                while (!dname.empty()) {
+                                    auto next = wdirname(dname);
+                                    if (!wstat(next, &buf)) {
+                                        if (!S_ISDIR(buf.st_mode)) {
+                                            FLOGF(warning, _(L"Path '%ls' is not a directory"), next.c_str());
+                                        } else {
+                                            FLOGF(warning, _(L"Path '%ls' does not exist"), dname.c_str());
+                                        }
+                                        break;
+                                    }
+                                    dname = next;
+                                }
+                            } else {
+                                wperror(L"open");
+                            }
+                        }
                     }
                     // If opening a file fails, insert a closed FD instead of the file redirection
                     // and return false. This lets execution potentially recover and at least gives

@@ -262,7 +262,7 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
             this->fatal_error(_(L"%ls: expected a numeric value"), s);
         } else {
             // This isn't entirely fatal - the value should still be printed.
-            this->nonfatal_error(_(L"%ls: value not completely converted"), s);
+            this->nonfatal_error(_(L"%ls: value not completely converted (can't convert '%ls')"), s, end);
         }
     }
 }

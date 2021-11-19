@@ -412,7 +412,7 @@ static const wchar_t *file_get_desc(int lstat_res, const struct stat &lbuf, int 
             return COMPLETE_SYMLINK_DESC;
         }
 
-        if (err == ENOENT) return COMPLETE_ROTTEN_SYMLINK_DESC;
+        if (err == ENOENT) return COMPLETE_BROKEN_SYMLINK_DESC;
         if (err == ELOOP) return COMPLETE_LOOP_SYMLINK_DESC;
         // On unknown errors we do nothing. The file will be given the default 'File'
         // description or one based on the suffix.
@@ -453,7 +453,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
             stat_res = wstat(filepath, &stat_buf);
 
             if (stat_res < 0) {
-                // In order to differentiate between e.g. rotten symlinks and symlink loops, we also
+                // In order to differentiate between e.g. broken symlinks and symlink loops, we also
                 // need to know the error status of wstat.
                 stat_errno = errno;
             }

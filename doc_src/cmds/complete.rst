@@ -66,7 +66,7 @@ Command specific tab-completions in ``fish`` are based on the notion of options 
 
 - Short options, like ``-a``. Short options are a single character long, are preceded by a single hyphen and can be grouped together (like ``-la``, which is equivalent to ``-l -a``). Option arguments may be specified in the following parameter (``-w 32``) or by appending the option with the value (``-w32``).
 
-- Old style long options, like ``-Wall`` or ``-name``. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter (``-ao null``).
+- Old style long options, like ``-Wall`` or ``-name``. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter (``-ao null``) or after a ``=`` (``-ao=null``).
 
 - GNU style long options, like ``--colors``. GNU style long options can be more than one character long, are preceded by two hyphens, and can't be grouped together. Option arguments may be specified in the following parameter (``--quoting-style shell``) or after a ``=`` (``--quoting-style=shell``).
 

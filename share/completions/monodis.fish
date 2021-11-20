@@ -1,10 +1,12 @@
 complete --command monodis --short-option h --long-option help --description 'Show help'
 
+# Options
 complete --command monodis --long-option output --description 'Redirect stdout to file'
 complete --command monodis --long-option mscorlib --description 'Use \'mscorlib\' as the assembly name for non-corlib assemblies'
 complete --command monodis --long-option show-method-tokens --description 'Show tokens for disassembled methods'
 complete --command monodis --long-option show-tokens --description 'Show tokens for strings, types, methods, fields, ...'
 
+# Options to display metadata tables
 complete --command monodis --long-option assembly --description 'Include Assembly table contents'
 complete --command monodis --long-option assemblyref --description 'Include AssemblyRef table contents'
 complete --command monodis --long-option classlayout --description 'Include ClassLayout table contents'

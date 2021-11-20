@@ -12,10 +12,10 @@ function __is_darwin --description 'Check whether OS is Mac OS'
   return $status
 end
 
-complete --command mono --short-option h --long-option help --description 'Show help and exit'
-complete --command mono --short-option V --long-option version --arguments 'number' --no-files --description 'Show version and exit'
-
 # Runtime options
+complete --command mono --short-option h --long-option help --description 'Show help'
+complete --command mono --short-option V --long-option version --arguments 'number' --no-files --description 'Show version'
+
 complete --command mono --long-option aot --arguments '(__complete_mono , \'asmonly\tInstruct the AOT compiler to output assembly code instead of an object file\'\\
   \'bind-to-runtime-version\tForce the generated AOT files to be bound to the runtime version of the compiling Mono\'\\
   \'data-outfile\tInstruct the AOT code generator to output certain data constructs into a separate file\'\\
@@ -61,11 +61,11 @@ complete --command mono --long-option aot --arguments '(__complete_mono , \'asmo
   \'no-opt\tInstruct the AOT compiler tot no call opt when compiling with LLVM\')'\
   --no-files --description 'Precompile CIL code to native code'
 
-complete --command mono --long-option aot-path --description 'List of additional directories to search for AOT images'
+complete --command mono --long-option aot-path --description 'Show additional directories to search for AOT images'
 complete --command mono --long-option apply-bindings --description 'Apply the assembly bindings from the specified configuration file when running the AOT compiler'
-complete --command mono --long-option assembly-loader --arguments 'strict\t"Check that the public key token, culture and version of a candidate assembly matches the requested strong name" legacy\t"Allow candidate as long as the name matches"' --no-files --description 'Specify assembly loader mode'
-complete --command mono --long-option attach --arguments='disable' --no-files --description 'Disable which disables the attach functionality'
-complete --command mono --long-option config --description 'Load the specified configuration file instead of the default one(s)'
+complete --command mono --long-option assembly-loader --arguments 'strict\t"Check that the public key token, culture and version of a candidate assembly matches the requested strong name" legacy\t"Allow candidate as long as the name matches"' --no-files --description 'Use assembly loader mode'
+complete --command mono --long-option attach --arguments='disable' --no-files --description 'Disable the attach functionality'
+complete --command mono --long-option config --description 'Read configuration from file instead of using default one'
 
 complete --command mono --long-option debugger-agent --arguments '(__complete_mono , \'address\tSpecify the IP address where your debugger client is listening to\'\\
   \'loglevel\tSpecify the diagnostics log level for\'\\
@@ -74,20 +74,19 @@ complete --command mono --long-option debugger-agent --arguments '(__complete_mo
   \'setpgid\tIf set to yes, Mono will call setpgid(0, 0) on startup\'\\
   \'suspend\tSuspend the vm on startup until it connects successfully to a debugger front end\'\\
   \'transport\tSpecify the transport that the debugger will use to communicate\')'\
-  --no-files --description 'Instruct the Mono runtime to start a debugging agent inside the Mono runtime and connect it to a client user interface'
+  --no-files --description 'Use a debugging agent inside the Mono runtime and connect it to a client user interface'
 
 complete --command mono --long-option desktop --description 'Configure the virtual machine to be better suited for desktop applications'
-complete --command mono --long-option full-aot --description 'Instruct the Mono runtime to not generate any code at runtime and depend exclusively on the code generated from using mono --aot=full previously'
+complete --command mono --long-option full-aot --description 'Prevent from generation any code at runtime and depend exclusively on the code generated from using mono --aot=full previously'
 complete --command mono --long-option full-aot-interp --description 'Same as --full-aot with fallback to the interpreter'
-complete --command mono --long-option assembly-loader --arguments 'boehm\tBoehm legacy\tSGen' --no-files --description 'Select the Garbage Collector engine for Mono to use'
-complete --command mono --long-option gc --arguments 'boehm\tBoehm sgen\tSGen' --no-files --description 'Select the Garbage Collector engine for Mono to use'
-complete --command mono --long-option gc-debug --no-files --description 'Command line equivalent of the MONO_GC_DEBUG environment variable'
-complete --command mono --long-option gc-params --no-files --description 'Command line equivalent of the MONO_GC_PARAMS environment variable'
-__is_darwin && complete --command mono --long-option arch --arguments '32\t"32 bit" 64\t"64 bit"' --no-files --description 'Select the bitness of the Mono binary used, if available'
+complete --command mono --long-option gc --arguments 'boehm\tBoehm sgen\tSGen' --no-files --description 'Use the Garbage Collector engine'
+complete --command mono --long-option gc-debug --no-files --description 'Specify MONO_GC_DEBUG environment variable value'
+complete --command mono --long-option gc-params --no-files --description 'Specify MONO_GC_PARAMS environment variable value'
+__is_darwin && complete --command mono --long-option arch --arguments '32\t"32 bit" 64\t"64 bit"' --no-files --description 'Use the bitness of the Mono binary used, if available'
 complete --command mono --long-option interpreter --description 'Use Mono interpreter to execute a given assembly'
 complete --command mono --long-option hybrid-aot --description 'Run assemblies that have been stripped of IL'
 complete --command mono --long-option llvm --description 'Use the LLVM optimization and code generation engine to JIT or AOT compile'
-complete --command mono --long-option ffast-math --description 'Allow Mono and LLVM to apply aggressive floating point optimizations'
+complete --command mono --long-option ffast-math --description 'Use Mono and LLVM aggressive floating point optimizations'
 
 complete --command mono --short-option o --long-option optimize --arguments '(__complete_mono , \'abcrem\tArray bound checks removal\'\\
   \'all\tTurn on all optimizations\'\\
@@ -113,21 +112,21 @@ complete --command mono --short-option o --long-option optimize --arguments '(__
   \'sse2\tSSE2 instructions on x86 [arch-dependency]\'\\
   \'tailc\tTail recursion and tail calls\'\\
   \'transport\tSpecify the transport that the debugger will use to communicate\')'\
-  --no-files --description 'Instruct the Mono runtime to start a debugging agent inside the Mono runtime and connect it to a client user interface'
+  --no-files --description 'Use optimizations'
 
-complete --command mono --long-option response --description 'Provide a response file'
-complete --command mono --long-option runtime --arguments '(mono --version)' --no-files --description 'Override autodetected Mono version'
-complete --command mono --long-option server --description 'Configure the virtual machine to be better suited for server operations'
-complete --command mono --long-option use-map-jit --description 'Instructs Mono to generate code using MAP_JIT on MacOS'
+complete --command mono --long-option response --description 'Use a response file'
+complete --command mono --long-option runtime --arguments '(mono --version)' --no-files --description 'Use Mono version'
+complete --command mono --long-option server --description 'Optimize the virtual machine to be better suited for server operations'
+complete --command mono --long-option use-map-jit --description 'Generate code using MAP_JIT on MacOS'
 complete --command mono --long-option verify-all --description 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
 
 # Development options
 complete --command mono --long-option debug --arguments '(__complete_mono , \'casts\tProduce a detailed error when throwing a InvalidCastException\'\\
   \'mdb-optimizations\tDisable some JIT optimizations which are usually only disabled when running inside the debugger\'\\
   \'gdb\tGenerate and register debugging information with gdb\')'\
-  --no-files --description 'Turn on the debugging mode in the runtime'
+  --no-files --description 'Use the debugging mode in the runtime'
 
-complete --command mono --long-option profile --description 'Load a profiler module with the given arguments'
+complete --command mono --long-option profile --description 'Use a profiler module with the given arguments'
 complete --command mono --long-option trace --description 'Show method names as they are invoked'
 complete --command mono --long-option no-x86-stack-align --description 'Don\'t align stack frames on the x86 architecture'
 complete --command mono --long-option jitmap --description 'Generate a JIT method map in a /tmp/perf-PID.map file'
@@ -135,11 +134,11 @@ complete --command mono --long-option jitmap --description 'Generate a JIT metho
 # JIT maintainer options
 complete --command mono --long-option bisect --no-files --description 'This flag is used by the automatic optimization bug bisector'
 complete --command mono --long-option break --no-files --description 'Insert a breakpoint before the method whose name is \'method\' (namespace.class:methodname)'
-complete --command mono --long-option breakonex --no-files --description 'Insert a breakpoint on exceptions'
-complete --command mono --long-option compile --no-files --description 'Compiles a method (namespace.name:methodname)'
-complete --command mono --long-option compile-all --description 'Compiles all the methods in an assembly'
+complete --command mono --long-option breakonex --no-files --description 'Use a breakpoint on exceptions'
+complete --command mono --long-option compile --no-files --description 'Compile a method (namespace.name:methodname)'
+complete --command mono --long-option compile-all --description 'Compile all the methods in an assembly'
 complete --command mono --long-option graph --arguments 'cfg\t"Control Flow Graph (CFG)" dtree\t"Dominator Tree" code\t"CFG showing code" ssa\t"CFG showing code after SSA translation" optcode\t"CFG showing code after IR optimizations"' --no-files --description 'Generate a postscript file with a graph with the details about the specified method'
 complete --command mono --long-option ncompile --description 'Instruct the runtime on the number of times that the method(-s) specified by --compile/--compile-all to be compiled'
 complete --command mono --long-option stats --description 'Display information about the work done by the runtime during the execution of an application'
 complete --command mono --long-option wapi --arguments 'hps\t"Delete the global semaphore" semdel\t"List the currently used handles"' --no-files --description 'Perform maintenance of the process shared data'
-complete --command mono --short-option v --long-option verbose --description 'Increase the verbosity level'
+complete --command mono --short-option v --long-option verbose --description 'Show more messages'

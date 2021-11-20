@@ -1,6 +1,6 @@
+# Options
 complete --command monodis --short-option h --long-option help --description 'Show help'
 
-# Options
 complete --command monodis --long-option output --description 'Redirect stdout to file'
 complete --command monodis --long-option mscorlib --description 'Use \'mscorlib\' as the assembly name for non-corlib assemblies'
 complete --command monodis --long-option show-method-tokens --description 'Show tokens for disassembled methods'

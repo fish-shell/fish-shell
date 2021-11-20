@@ -1,0 +1,13 @@
+complete --command gendarme --long-option version --description 'Show version'
+
+complete --command gendarme --long-option config --require-parameter --description 'Use config file'
+complete --command gendarme --long-option set --no-files --require-parameter --description 'Use rule set from config file'
+complete --command gendarme --long-option xml --require-parameter --description 'Convert stdout to XML and redirect to file'
+complete --command gendarme --long-option xml --require-parameter --description 'Convert stdout to HTML and redirect to file'
+complete --command gendarme --long-option console --description 'Show the defects on stdout'
+complete --command gendarme --long-option ignore --require-parameter --description 'Exclude the defects from file'
+complete --command gendarme --long-option limit --no-files --require-parameter --description 'Specify defect limit'
+complete --command gendarme --long-option severity --no-files --require-parameter --arguments 'all audit audit+ low low+ low- medium medium+ medium- high high+ high- critical critical-' --description 'Filter the reported defects to include the specified severity levels'
+complete --command gendarme --long-option confidence --no-files --require-parameter --arguments 'all low low+ normal normal+ normal- high high+ high- total total-' --description 'Filter the reported defects to include the specified confidence levels'
+complete --command gendarme --long-option quiet  --description 'Discard stdout'
+complete --command gendarme --short-option v --long-option verbose  --description 'Show more messages'

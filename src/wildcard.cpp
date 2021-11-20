@@ -736,16 +736,16 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
                                                       const wcstring &wc_segment,
                                                       const wchar_t *wc_remainder,
                                                       const wcstring &prefix) {
-    wcstring name_str;
+    std::string narrow;
     int dir_fd = dirfd(base_dir_fp);
-    while (!interrupted_or_overflowed() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
+    while (!interrupted_or_overflowed() && readdir_for_dirs(base_dir_fp, &narrow)) {
+        wcstring name_str = str2wcstring(narrow);
         // Note that it's critical we ignore leading dots here, else we may descend into . and ..
         if (!wildcard_match(name_str, wc_segment, true)) {
             // Doesn't match the wildcard for this segment, skip it.
             continue;
         }
 
-        std::string narrow = wcs2string(name_str);
         struct stat buf;
         if (0 != fstatat(dir_fd, narrow.c_str(), &buf, 0) || !S_ISDIR(buf.st_mode)) {
             // We either can't stat it, or we did but it's not a directory.
@@ -776,18 +776,19 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
                                                                         const wchar_t *wc_remainder,
                                                                         const wcstring &prefix) {
     // This only works with tab completions. Ordinary wildcard expansion should never go fuzzy.
-    wcstring name_str;
+    std::string narrow;
 
     // Mark that we are fuzzy for the duration of this function
     const scoped_push<bool> scoped_fuzzy(&this->has_fuzzy_ancestor, true);
 
     int dir_fd = dirfd(base_dir_fp);
-    while (!interrupted_or_overflowed() && wreaddir_for_dirs(base_dir_fp, &name_str)) {
+    while (!interrupted_or_overflowed() && readdir_for_dirs(base_dir_fp, &narrow)) {
         // Don't bother with . and ..
-        if (name_str == L"." || name_str == L"..") {
+        if (narrow == "." || narrow == "..") {
             continue;
         }
 
+        wcstring name_str = str2wcstring(narrow);
         // Skip cases that don't match or match exactly. The match-exactly case was handled directly
         // in expand().
         const maybe_t<string_fuzzy_match_t> match = string_fuzzy_match_string(wc_segment, name_str);

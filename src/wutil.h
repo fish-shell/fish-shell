@@ -71,7 +71,7 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, wcstring &out_na
 /// (i.e. the file is a symlink), then return it. Note that this does not guarantee that everything
 /// returned is a directory, it's just an optimization for cases where we would check for
 /// directories anyways.
-bool wreaddir_for_dirs(DIR *dir, wcstring *out_name);
+bool readdir_for_dirs(DIR *dir, std::string *out_name);
 
 /// Wide character version of dirname().
 std::wstring wdirname(std::wstring path);

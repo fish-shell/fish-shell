@@ -94,7 +94,7 @@ bool wreaddir(DIR *dir, wcstring &out_name) {
     return true;
 }
 
-bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
+bool readdir_for_dirs(DIR *dir, std::string *out_name) {
     struct dirent *result = nullptr;
     while (!result) {
         result = readdir(dir);
@@ -118,7 +118,7 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
     }
 
     if (result && out_name) {
-        *out_name = str2wcstring(result->d_name);
+        *out_name = result->d_name;
     }
     return result != nullptr;
 }

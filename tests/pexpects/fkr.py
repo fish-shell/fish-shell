@@ -18,7 +18,7 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
-sendline("exec $fish_key_reader -c")
+sendline("exec $fish_key_reader -c -V")
 
 # Do we get the expected startup prompt?
 expect_str("Press a key:")

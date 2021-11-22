@@ -487,15 +487,11 @@ The key sequence (the ``\cc``) here depends on your setup, in particular the ter
 
   > fish_key_reader # pressing control-c
   Press a key:
-              hex:    3  char: \cC
   Press [ctrl-C] again to exit
   bind \cC 'do something'
 
   > fish_key_reader # pressing the right-arrow
   Press a key:
-              hex:   1B  char: \c[  (or \e)
-  (  0.077 ms)  hex:   5B  char: [
-  (  0.037 ms)  hex:   43  char: C
   bind \e\[C 'do something'
 
 Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about.

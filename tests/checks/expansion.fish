@@ -40,6 +40,7 @@ echo \'{ hello , world }\'
 for phrase in {good\,,   beautiful ,morning}
     echo -n "$phrase "
 end | string trim
+echo
 for phrase in {goodbye\,,\ cruel\ ,world\n}
     echo -n $phrase
 end

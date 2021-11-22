@@ -77,6 +77,7 @@ Scripting improvements
 - ``cd ""`` no longer crashes fish (:issue:`8147`).
 - ``set --query`` can now query whether a variable is a pathvar via ``--path`` or ``--unpath`` (:issue:`8494`).
 - Tilde characters (``~``) produced by custom completions are no longer escaped when applied to the command line, making it easier to use the output of a recursive ``complete -C`` in completion scripts (:issue:`4570`).
+- Most ``string`` subcommands no longer print a final newline if such is missing from stdin (:issue:`3847`).
 
 Interactive improvements
 ------------------------

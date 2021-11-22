@@ -601,12 +601,12 @@ and echo uppercasing a uppercase string did not fail as expected
 
 # 'Check NUL'
 # Note: We do `string escape` at the end to make a `\0` literal visible.
-printf 'a\0b' | string escape
-printf 'a\0c' | string match -e a | string escape
-printf 'a\0d' | string split '' | string escape
-printf 'a\0b' | string match -r '.*b$' | string escape
-printf 'a\0b' | string replace b g | string escape
-printf 'a\0b' | string replace -r b g | string escape
+printf 'a\0b\n' | string escape
+printf 'a\0c\n' | string match -e a | string escape
+printf 'a\0d\n' | string split '' | string escape
+printf 'a\0b\n' | string match -r '.*b$' | string escape
+printf 'a\0b\n' | string replace b g | string escape
+printf 'a\0b\n' | string replace -r b g | string escape
 # TODO: These do not yet work!
 # printf 'a\0b' | string match '*b' | string escape
 # CHECK: a\x00b
@@ -797,3 +797,12 @@ echo "foo1x foo2x foo3x" | string match -arg 'foo(\d)x'
 # CHECK: 1
 # CHECK: 2
 # CHECK: 3
+
+# Most subcommands preserve missing newline (#3847).
+echo -n abc | string upper
+echo '<eol>'
+# CHECK: ABC<eol>
+printf \<
+printf my-password | string replace -ra . \*
+printf \>\n
+# CHECK: <***********>

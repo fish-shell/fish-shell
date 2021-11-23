@@ -2,9 +2,9 @@
 
 function __fish_snap_no_subcommand -d 'Test if snap has yet to be given the subcommand'
     for i in (commandline -opc)
-        if contains -- $i abort ack alias aliases buy changes connect disable disconnect download\
-            enable find get help info install interfaces known list login logout prefer refresh remove\
-            revert run set tasks try unalias version watch
+        if contains -- $i abort ack alias aliases buy changes connect disable disconnect download \
+                enable find get help info install interfaces known list login logout prefer refresh remove \
+                revert run set tasks try unalias version watch
             return 1
         end
     end
@@ -81,8 +81,8 @@ end
 
 function __fish_snap_no_assertion -d 'Check that no assertion type is used yet'
     for i in (commandline -opc)
-        if contains -- $i account account-key model serial snap-declaration snap-build snap-revision\
-            system-user validation
+        if contains -- $i account account-key model serial snap-declaration snap-build snap-revision \
+                system-user validation
             return 1
         end
     end
@@ -102,8 +102,8 @@ function __fish_snap_assertion
     set -l assertion $argv[1]
     set -e argv[1]
     complete -f -c snap -n '__fish_snap_using_subcommand known; and __fish_snap_no_assertion' -a $assertion
-    complete -f -c snap -n "__fish_snap_using_assertion $assertion" -a "(__fish_snap_filters $assertion)"\
-    -d Filter
+    complete -f -c snap -n "__fish_snap_using_assertion $assertion" -a "(__fish_snap_filters $assertion)" \
+        -d Filter
 end
 
 function __fish_snap_filters -d 'List assertion filters'

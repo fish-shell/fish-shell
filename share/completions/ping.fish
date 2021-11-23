@@ -79,7 +79,7 @@ switch $ping_version
         complete -c ping -s I -d "Source interface or IP address" -xa "(__fish_print_interfaces; __fish_print_addresses)"
         complete -c ping -s W -d "Seconds to wait for the first response" -x
         complete -c ping -s w -d "Seconds until ping exits" -x
-        complete -c ping -s q -d "Quiet"
+        complete -c ping -s q -d Quiet
         complete -c ping -s p -d "Payload pattern" -x
 
     case '*'

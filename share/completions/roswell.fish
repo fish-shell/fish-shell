@@ -1,17 +1,17 @@
 ### subcommands
-complete -f -c ros -n '__fish_use_subcommand' -xa run -d "Run repl"
-complete -f -c ros -n '__fish_use_subcommand' -xa install -d "Install a given implementation or a system for roswell environment"
-complete -f -c ros -n '__fish_use_subcommand' -xa update -d "Update installed systems."
-complete -f -c ros -n '__fish_use_subcommand' -xa build -d "Make executable from script."
-complete -f -c ros -n '__fish_use_subcommand' -xa use -d "Change default implementation."
-complete -f -c ros -n '__fish_use_subcommand' -xa init -d "Creates a new ros script, optionally based on a template."
-complete -f -c ros -n '__fish_use_subcommand' -xa fmt -d "Indent lisp source."
-complete -f -c ros -n '__fish_use_subcommand' -xa list -d "List Information"
-complete -f -c ros -n '__fish_use_subcommand' -xa template -d "Manage templates"
-complete -f -c ros -n '__fish_use_subcommand' -xa delete -d "Delete installed implementations"
-complete -f -c ros -n '__fish_use_subcommand' -xa config -d "Get and set options"
-complete -f -c ros -n '__fish_use_subcommand' -xa version -d "Show the roswell version information"
-complete -f -c ros -n '__fish_use_subcommand' -xa help -d "Use \"ros help [command]\" for more information about a command."
+complete -f -c ros -n __fish_use_subcommand -xa run -d "Run repl"
+complete -f -c ros -n __fish_use_subcommand -xa install -d "Install a given implementation or a system for roswell environment"
+complete -f -c ros -n __fish_use_subcommand -xa update -d "Update installed systems."
+complete -f -c ros -n __fish_use_subcommand -xa build -d "Make executable from script."
+complete -f -c ros -n __fish_use_subcommand -xa use -d "Change default implementation."
+complete -f -c ros -n __fish_use_subcommand -xa init -d "Creates a new ros script, optionally based on a template."
+complete -f -c ros -n __fish_use_subcommand -xa fmt -d "Indent lisp source."
+complete -f -c ros -n __fish_use_subcommand -xa list -d "List Information"
+complete -f -c ros -n __fish_use_subcommand -xa template -d "Manage templates"
+complete -f -c ros -n __fish_use_subcommand -xa delete -d "Delete installed implementations"
+complete -f -c ros -n __fish_use_subcommand -xa config -d "Get and set options"
+complete -f -c ros -n __fish_use_subcommand -xa version -d "Show the roswell version information"
+complete -f -c ros -n __fish_use_subcommand -xa help -d "Use \"ros help [command]\" for more information about a command."
 
 ### help
 set -l __roswell_helps "run install update build use init fmt list template delete config version"
@@ -49,7 +49,7 @@ complete -c ros -n '__fish_seen_subcommand_from run' -l write -d 'evaluate and w
 complete -c ros -n '__fish_seen_subcommand_from run' -s F -d 'evaluate FORM before dumping IMAGE'
 complete -c ros -n '__fish_seen_subcommand_from run' -l final -d 'evaluate FORM before dumping IMAGE'
 complete -c ros -n '__fish_seen_subcommand_from run' -a +R -d 'skip /etc/rosrc, ~/.roswell/init.lisp'
-complete -c ros -n '__fish_seen_subcommand_from run' -l "no-rc" -d 'skip /etc/rosrc, ~/.roswell/init.lisp'
+complete -c ros -n '__fish_seen_subcommand_from run' -l no-rc -d 'skip /etc/rosrc, ~/.roswell/init.lisp'
 complete -c ros -n '__fish_seen_subcommand_from run' -s A -d 'use new asdf'
 complete -c ros -n '__fish_seen_subcommand_from run' -l asdf -d 'use new asdf'
 complete -c ros -n '__fish_seen_subcommand_from run' -a +Q -d 'do not use quicklisp'

@@ -23,8 +23,8 @@ function __fish_hashcat_device_types --description "Get hashcat device types"
 3\t'FPGA, DSP, Co-Processor'"
 end
 
-complete -c hashcat -s m -l hash-type -xa "(__fish_hashcat_types)" -d "Hash-type"
-complete -c hashcat -s a -l attack-mode -d "Attack-mode" -xa "
+complete -c hashcat -s m -l hash-type -xa "(__fish_hashcat_types)" -d Hash-type
+complete -c hashcat -s a -l attack-mode -d Attack-mode -xa "
                                                 0\t'Straight'
                                                 1\t'Combination'
                                                 3\t'Brute-force'

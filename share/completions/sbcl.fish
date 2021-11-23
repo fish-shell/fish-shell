@@ -1,6 +1,6 @@
 complete -c sbcl -l help -d "Print this message and exit."
-complete -c sbcl -l version -d  "Print version information and exit."
-complete -c sbcl -l core -d  "Use the specified core file instead of the default."
+complete -c sbcl -l version -d "Print version information and exit."
+complete -c sbcl -l core -d "Use the specified core file instead of the default."
 complete -c sbcl -l dynamic-space-size -d "Size of reserved dynamic space in megabytes."
 complete -c sbcl -l control-stack-size -d "Size of reserved control stack in megabytes."
 complete -c sbcl -l tls-limit -d "Maximum number of thread-local symbols."

@@ -19,7 +19,7 @@ function __fish_print_firewalld_helpers --description "Print list of predefined 
 end
 
 function __fish_print_firewalld_protocols --description "Print list of protocols supported by firewalld"
-    string replace -f -r '^([[:alnum:]]\S*).*' '$1' < /etc/protocols
+    string replace -f -r '^([[:alnum:]]\S*).*' '$1' </etc/protocols
 end
 
 complete -c firewall-cmd -f

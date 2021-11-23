@@ -1,4 +1,4 @@
-set -g CONDITION '! __fish_seen_argument -s r --long required-val -s o --long optional-val'
+set --local CONDITION '! __fish_seen_argument -s r --long required-val -s o --long optional-val'
 
 complete -c fish_opt -f
 

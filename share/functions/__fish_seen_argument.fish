@@ -5,7 +5,7 @@ function __fish_seen_argument --description 'Check whether argument used'
     set -e cmd[1]
     for t in $cmd
         for s in $_flag_s
-            if string match -qr "^-[A-z0-9]*$s[A-z0-9]*\$" -- $t
+            if string match -qr "^-[A-z0-9]*"$s"[A-z0-9]*\$" -- $t
                 return 0
             end
         end

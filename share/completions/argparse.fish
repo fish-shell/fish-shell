@@ -1,12 +1,12 @@
-set --local CONDITION '! __fish_seen_argument -s r --long required-val -s o --long optional-val'
+set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'
 
-complete -c argparse -f
+complete --command argparse -f
 
-complete -c argparse -s h -l help -d 'Show help and exit'
+complete --command argparse --short-option h --long-option help --description 'Show help and exit'
 
-complete -c argparse -s n -l name -d 'Use function name'
-complete -c argparse -s x -l exclusive -d 'Specify mutually exclusive options'
-complete -c argparse -s N -l min-args -d 'Specify minimum non-option arg count'
-complete -c argparse -s X -l max-args -d 'Specify maximum non-option arg count'
-complete -c argparse -s i -l ignore-unknown -d 'Ignore unknown options'
-complete -c argparse -s s -l stop-nonopt -d 'Exit on subcommand'
+complete --command argparse --short-option n --long-option name --description 'Use function name'
+complete --command argparse --short-option x --long-option exclusive --description 'Specify mutually exclusive options'
+complete --command argparse --short-option N --long-option min-args --description 'Specify minimum non-option arg count'
+complete --command argparse --short-option X --long-option max-args --description 'Specify maximum non-option arg count'
+complete --command argparse --short-option i --long-option ignore-unknown --description 'Ignore unknown options'
+complete --command argparse --short-option s --long-option stop-nonopt --description 'Exit on subcommand'

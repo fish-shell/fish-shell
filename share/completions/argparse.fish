@@ -1,5 +1,4 @@
 function __argparse_find_option_specs --description 'Internal function to find all option specs'
-  set --local delimiter ','
   set --local cmd (commandline --tokenize)
   set --erase cmd[1]
 

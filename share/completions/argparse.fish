@@ -9,11 +9,13 @@ function __argparse_find_option_specs --description 'Internal function to find a
     set index (count $cmd)
   end
 
-  set --local remove_last false
   set --local specs
-  while test $index -gt 0; and not string match --quiet -- '-*' $cmd[$index]
-    if test $index -gt 1; and string match --regex --quiet -- '^(-x|--exclusive)$' $cmd[(math $index - 1)]
-      set remove_last true
+  while test $index -gt 0
+    and not string match --quiet -- '-*' $cmd[$index]
+    if test $index -gt 1
+      and string match --regex --quiet -- '^(-x|--exclusive)$' $cmd[(math $index - 1)]
+      and ! test -z (commandline --current-token)
+      break
     end
 
     if string match --quiet '*=*' $cmd[$index]
@@ -30,10 +32,6 @@ function __argparse_find_option_specs --description 'Internal function to find a
       set --append specs $cmd[$index]
     end
     set index (math $index - 1)
-  end
-
-  if test $remove_last = true
-    set --erase specs[(count $specs)]
   end
 
   echo -n $specs | string replace --regex --all ' ' '\n'

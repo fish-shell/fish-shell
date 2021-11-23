@@ -44,7 +44,7 @@ complete --command argparse --short-option h --long-option help --description 'S
 
 complete --command argparse --short-option n --long-option name --require-parameter --no-files --arguments '(functions --all | string replace ", " "\n")' --description 'Use function name'
 complete --command argparse --short-option x --long-option exclusive --no-files --require-parameter --arguments '(__fish_append "," (__argparse_find_option_specs))' --description 'Specify mutually exclusive options'
-complete --command argparse --short-option N --long-option min-args --no-files --description 'Specify minimum non-option argument count'
-complete --command argparse --short-option X --long-option max-args --no-files --description 'Specify maximum non-option argument count'
+complete --command argparse --short-option N --long-option min-args --no-files --require-parameter --description 'Specify minimum non-option argument count'
+complete --command argparse --short-option X --long-option max-args --no-files --require-parameter --description 'Specify maximum non-option argument count'
 complete --command argparse --short-option i --long-option ignore-unknown --description 'Ignore unknown options'
 complete --command argparse --short-option s --long-option stop-nonopt --description 'Exit on subcommand'

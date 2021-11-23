@@ -1,12 +1,12 @@
-set --local CONDITION '! __fish_seen_argument -s r --long required-val -s o --long optional-val'
+set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'
 
-complete -c fish_opt -f
+complete --command fish_opt --no-files
 
-complete -c fish_opt -s h -l help -d 'Show help and exit'
+complete --command fish_opt --short-option h --long-option help --description 'Show help'
 
-complete -c fish_opt -s s -l short -d 'Specifies short option'
-complete -c fish_opt -s l -l long -d 'Specifies long option'
-complete -c fish_opt -l longonly -d 'Use only long option'
-complete -c fish_opt -s o -l optional-val -n $CONDITION -d 'Don\'t require value'
-complete -c fish_opt -s r -l required-val -n $CONDITION  -d 'Require value'
-complete -c fish_opt -l multiple-vals -d 'Store all values'
+complete --command fish_opt --short-option s --long-option short --description 'Specify short option'
+complete --command fish_opt --short-option l --long-option long --description 'Specify long option'
+complete --command fish_opt --long-option longonly --description 'Use only long option'
+complete --command fish_opt --short-option o --long-option optional-val -n $CONDITION --description 'Don\'t require value'
+complete --command fish_opt --short-option r --long-option required-val -n $CONDITION  --description 'Require value'
+complete --command fish_opt --long-option multiple-vals --description 'Store all values'

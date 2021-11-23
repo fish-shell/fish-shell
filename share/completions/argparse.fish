@@ -1,6 +1,6 @@
 set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'
 
-complete --command argparse -f
+complete --command argparse --no-files
 
 complete --command argparse --short-option h --long-option help --description 'Show help'
 

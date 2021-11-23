@@ -18,7 +18,7 @@ function __fish_complete_eselect_action_options
     set -l cmdl (commandline -poc)
 
     # Alter further php completion
-    if [ (__fish_print_cmd_args_without_options)[2] = php ]
+    if test (__fish_print_cmd_args_without_options)[2] = php
         eselect php list-modules 2>/dev/null | string split " "
         return
     end
@@ -47,7 +47,7 @@ function __fish_complete_eselect_targets
     set -l cmdl (commandline -poc)
 
     # Disable further php completion
-    if [ (__fish_print_cmd_args_without_options)[2] = php ]
+    if test (__fish_print_cmd_args_without_options)[2] = php
         return
     end
 

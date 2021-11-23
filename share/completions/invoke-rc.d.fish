@@ -1,6 +1,6 @@
 function __fish_print_debian_services --description 'Prints services installed'
     for service in /etc/init.d/*
-        if [ -x $service ]
+        if test -x $service
             basename $service
         end
     end
@@ -8,7 +8,7 @@ end
 
 function __fish_invoke_rcd_has_service
     set -l tokens (commandline -opc)
-    if [ (count $tokens) -eq 2 ]
+    if test (count $tokens) -eq 2
         return 0
     else
         return 1

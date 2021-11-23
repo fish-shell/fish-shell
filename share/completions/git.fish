@@ -2129,7 +2129,7 @@ for file in $PATH/git-*
     and continue
 
     complete -C "git-$subcommand " >/dev/null
-    if [ (complete -c git-$subcommand | count) -gt 0 ]
+    if test (complete -c git-$subcommand | count) -gt 0
         complete -c git -f -n "__fish_git_using_command $subcommand" -a "(__fish_git_complete_custom_command $subcommand)"
     end
     set -a __fish_git_custom_commands_completion $subcommand

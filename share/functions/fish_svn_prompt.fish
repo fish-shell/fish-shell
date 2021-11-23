@@ -121,7 +121,7 @@ function fish_svn_prompt --description "Prompt function for svn"
         set -l column_status (printf '%s\n' $svn_status_lines | cut -c $col | sort -u | tr -d ' ')
 
         # check that the column status list does not only contain an empty element (if it does, this column is empty)
-        if [ (count $column_status) -gt 1 -o -n "$column_status[1]" ]
+        if test (count $column_status) -gt 1 -o -n "$column_status[1]"
 
             # parse the status flags for this column and create the formatting by calling out to the helper function
             set -l svn_status_flags (__fish_svn_prompt_parse_status $column_status)

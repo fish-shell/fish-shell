@@ -33,8 +33,8 @@ complete -c sbt -f -a '(string split "\n" "
     and not contains -- "client" (commandline -cpo)'
 
 # These cannot be combined with any other commands and require an argument
-complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a new -d 'Create a new sbt project from the given template'
-complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a client -d 'Connect to a server with an interactive sbt prompt'
+complete -c sbt -f -n 'test  (count (commandline -cpo)) = 1 ' -a new -d 'Create a new sbt project from the given template'
+complete -c sbt -f -n 'test  (count (commandline -cpo)) = 1 ' -a client -d 'Connect to a server with an interactive sbt prompt'
 
 
 ###########

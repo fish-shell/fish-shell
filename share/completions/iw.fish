@@ -208,7 +208,7 @@ function __fish_complete_iw
                         printf '%s\t%s\n' show "Show coalesce status" \
                             disable "Disable coalesce" \
                             enable "Enable coalesce"
-                    else if [ "$cmd[5]" = enable ] && not set -q cmd[6]
+                    else if test "$cmd[5]" = enable && not set -q cmd[6]
                         __fish_complete_path # Enable takes a config file
                     end
                 case hwsim

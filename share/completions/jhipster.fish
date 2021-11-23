@@ -4,7 +4,7 @@
 function __fish_prog_needs_command
     set -l cmd (commandline -opc)
     echo $cmd
-    if [ (count $cmd) -eq 1 ]
+    if test (count $cmd) -eq 1
         return 0
     end
     return 1

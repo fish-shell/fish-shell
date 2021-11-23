@@ -186,7 +186,7 @@ if status --is-login
 
             # Populate path according to config files
             for path_file in $argv[2] $argv[3]/*
-                if [ -f $path_file ]
+                if test -f $path_file
                     while read -l entry
                         if not contains -- $entry $result
                             test -n "$entry"
@@ -207,7 +207,7 @@ if status --is-login
         end
 
         __fish_macos_set_env PATH /etc/paths '/etc/paths.d'
-        if [ -n "$MANPATH" ]
+        if test -n "$MANPATH"
             __fish_macos_set_env MANPATH /etc/manpaths '/etc/manpaths.d'
         end
         functions -e __fish_macos_set_env
@@ -264,6 +264,6 @@ for file in $__fish_config_dir/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $
     set sourcelist $sourcelist $basename
     # Also skip non-files or unreadable files.
     # This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd).
-    [ -f $file -a -r $file ]
+    test -f $file -a -r $file
     and source $file
 end

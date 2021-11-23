@@ -35,7 +35,7 @@ else # BSD/macOS
     # netbsd:    cp [-R |   [H | L | P ]] [-fi ] [-pval    N] # -l: hard link instead of copy -N: don't copy file flags
     # dragonfly: cp [-R |   [H | L | P ]] [-fin] [-pvalx    ] # -x: don't traverse mount points
     # freebsd:   cp	[-R |   [H | L | P ]] [-fin] [-pvalxs   ] # -s: symlink instead of copy
-    if [ "$uname" = SunOS ] # annoying
+    if test "$uname" = SunOS # annoying
         complete -c cp -s r -d "Copy directories recursively"
         complete -c cp -s R -d "Like -r, but replicating pipes instead of reading pipes"
     else
@@ -51,26 +51,26 @@ else # BSD/macOS
     and complete -c cp -s n -d "Don't overwrite existing"
 
     complete -c cp -s p -d "Preserve attributes of source"
-    if [ "$uname" = SunOS ]
+    if test "$uname" = SunOS
         exit 0
     end
     complete -c cp -s v -d "Print filenames as they're copied"
-    if [ "$uname" = OpenBSD ]
+    if test "$uname" = OpenBSD
         exit 0
     end
     complete -c cp -s a -d "Archive mode (-pPR)"
-    if [ "$uname" = Darwin ]
+    if test "$uname" = Darwin
         complete -c cp -s c -d "Clone using clonefile(2)"
         complete -c cp -s X -d "Omit xattrs, resource forks"
         exit 0
     end
     complete -c cp -s l -d "Hard link instead of copying"
-    if [ "$uname" = NetBSD ]
+    if test "$uname" = NetBSD
         complete -c cp -s N -d "Don't copy file flags"
         exit 0
     end
     complete -c cp -s x -d "Don't traverse mount points"
-    if [ "$uname" = FreeBSD ]
+    if test "$uname" = FreeBSD
         complete -c cp -s s -d "Symlink instead of copying"
     end
 end

@@ -21,9 +21,9 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
         for target in $targets
             # Use [[:graph:]] and [[:print:]] to ignore ANSI escape code
             set -l tokens (string match -r '^\s([[:graph:]]+)(?:\s+([[:print:]]+))?' "$target")
-            if [ (count $tokens) -ge 3 ]
+            if test (count $tokens) -ge 3
                 echo $tokens[2]\t$tokens[3]
-            else if [ (count $tokens) -ge 2 ]
+            else if test (count $tokens) -ge 2
                 echo $tokens[2]
             end
         end
@@ -40,7 +40,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
         mkdir -p $cache_dir
 
         set -l cache_file $cache_dir/(__fish_md5 -s $buildfile)
-        if [ ! -s "$cache_file" ]
+        if test ! -s "$cache_file"
             # generate cache file if empty
             __parse_ant_targets_from_projecthelp $buildfile >$cache_file
         end
@@ -50,7 +50,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
 
     set -l tokens $argv
     set -l buildfile (realpath -eq $buildfile (__get_buildfile $tokens))
-    if [ $status -ne 0 ]
+    if test $status -ne 0
         return 1 # return nothing if buildfile does not exist
     end
 

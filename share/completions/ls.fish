@@ -138,10 +138,10 @@ else
     # -S in common, -f in common, -t in common
     # -c in common, -u in common
     ## These options are not standardized:
-    if [ "$uname" != OpenBSD ]
+    if test "$uname" != OpenBSD
         complete -c ls -s h -d "Human-readable sizes"
         complete -c ls -s b -d "C escapes for non-graphic characters"
-        if [ "$uname" = SunOS ]
+        if test "$uname" = SunOS
             complete -c ls -s e -d "Like -l, but fixed time format with seconds"
             complete -c ls -s @ -d "Like -l, but xattrs shown instead of ACLs"
             complete -c ls -s E -d "Like -l, but fixed time format with nanoseconds"

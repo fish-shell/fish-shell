@@ -1,7 +1,7 @@
 function __fish_composer_needs_command
     set -l cmd (commandline -opc)
 
-    if [ (count $cmd) -eq 1 ]
+    if test (count $cmd) -eq 1
         return 0
     end
 
@@ -11,8 +11,8 @@ end
 function __fish_composer_using_command
     set -l cmd (commandline -opc)
 
-    if [ (count $cmd) -gt 1 ]
-        if [ $argv[1] = $cmd[2] ]
+    if test (count $cmd) -gt 1
+        if test $argv[1] = $cmd[2]
             return 0
         end
     end

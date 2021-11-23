@@ -30,7 +30,7 @@ function funcsave --description "Save the current definition of all specified fu
         if functions -q -- $funcname
             functions --no-details -- $funcname >$funcpath
             and set -q _flag_quiet || printf (_ "%s: wrote %s\n") funcsave $funcpath
-        else if [ -w $funcpath ]
+        else if test -w $funcpath
             rm $funcpath
             and set -q _flag_quiet || printf (_ "%s: removed %s\n") funcsave $funcpath
         else

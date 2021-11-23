@@ -7,7 +7,7 @@ function __fish_mysql_query -a query
             set -a mysql_cmd -$flag $$flagvar
         end
     end
-    if [ -n "$_flag_p" ]
+    if test -n "$_flag_p"
         set -a mysql_cmd -p$_flag_p
     end
     echo $query | $mysql_cmd 2>/dev/null

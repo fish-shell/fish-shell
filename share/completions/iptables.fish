@@ -12,7 +12,7 @@ function __fish_iptables_current_table
             case "-*t*"
                 set next_is_table 0
             case "*"
-                if [ $next_is_table -eq 0 ]
+                if test $next_is_table -eq 0
                     echo $token
                     return 0
                 end
@@ -37,7 +37,7 @@ end
 
 function __fish_iptables_chains
     set -l table (__fish_iptables_current_table)
-    [ -z $table ]
+    test -z $table
     and set -l table "*"
     set -l prerouting "PREROUTING	For packets that are coming in"
     set -l input "INPUT	For packets destined to local sockets"

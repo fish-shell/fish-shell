@@ -204,4 +204,4 @@ complete -f -c npm -n __fish_npm_needs_command -a unpublish -d 'Remove a package
 complete -f -c npm -n __fish_npm_needs_command -a unstar -d 'Remove star from a package'
 complete -f -c npm -n __fish_npm_needs_command -a version -d 'Bump a package version'
 complete -f -c npm -n __fish_npm_needs_command -a whoami -d 'Display npm username'
-complete -f -c npm -n '__fish_seen_subcommand_from install; and not __fish_is_switch' -a "(__yarn_filtered_list_packages \"$npm_install\")"
+complete -f -c npm -n '__fish_seen_subcommand_from add i install; and not __fish_is_switch' -a "(__yarn_filtered_list_packages \"$npm_install\")"

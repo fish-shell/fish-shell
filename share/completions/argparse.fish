@@ -27,6 +27,8 @@ function __argparse_find_option_specs --description 'Internal function to find a
 
     if string match --quiet '*/*' $cmd[$index]
       set --append specs (string split '/' $cmd[$index])
+    else if string match --quiet '*#*' $cmd[$index]
+      set --append specs (string split '#' $cmd[$index])
     else
       set --append specs $cmd[$index]
     end

@@ -257,6 +257,7 @@ struct commandline_state_t {
     maybe_t<source_range_t> selection{};   // visual selection, or none if none
     std::shared_ptr<history_t> history{};  // current reader history, or null if not interactive
     bool pager_mode{false};                // pager is visible
+    bool pager_fully_disclosed{false};     // pager is showing all entries
     bool search_mode{false};               // pager is visible and search is active
     bool initialized{false};               // if false, the reader has not yet been entered
 };

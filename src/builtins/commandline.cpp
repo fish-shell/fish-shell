@@ -143,13 +143,14 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     bool line_mode = false;
     bool search_mode = false;
     bool paging_mode = false;
+    bool paging_full_mode = false;
     bool is_valid = false;
     const wchar_t *begin = nullptr, *end = nullptr;
     const wchar_t *override_buffer = nullptr;
 
     const auto &ld = parser.libdata();
 
-    static const wchar_t *const short_options = L":abijpctforhI:CLSsP";
+    static const wchar_t *const short_options = L":abijpctforhI:CLSsPF";
     static const struct woption long_options[] = {{L"append", no_argument, nullptr, 'a'},
                                                   {L"insert", no_argument, nullptr, 'i'},
                                                   {L"replace", no_argument, nullptr, 'r'},
@@ -167,6 +168,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                                                   {L"line", no_argument, nullptr, 'L'},
                                                   {L"search-mode", no_argument, nullptr, 'S'},
                                                   {L"paging-mode", no_argument, nullptr, 'P'},
+                                                  {L"paging-full-mode", no_argument, nullptr, 'F'},
                                                   {L"is-valid", no_argument, nullptr, 1},
                                                   {nullptr, 0, nullptr, 0}};
 
@@ -237,6 +239,10 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             }
             case 'P': {
                 paging_mode = true;
+                break;
+            }
+            case 'F': {
+                paging_full_mode = true;
                 break;
             }
             case 1: {
@@ -364,6 +370,10 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     if (paging_mode) {
         return commandline_get_state().pager_mode ? 0 : 1;
+    }
+
+    if (paging_full_mode) {
+        return commandline_get_state().pager_fully_disclosed ? 0 : 1;
     }
 
     // At this point we have (nearly) exhausted the options which always operate on the true command

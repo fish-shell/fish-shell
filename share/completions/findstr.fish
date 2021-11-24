@@ -7,7 +7,7 @@ function __findstr_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
   switch $current_token
     case '/a:*'
-      echo -e "0\tBlack
+      echo -e '0\tBlack
 1\tBlue
 2\tGreen
 3\tAqua
@@ -22,9 +22,9 @@ B\tLight aqua
 C\tLight red
 D\tLight purple
 E\tLight yellow
-F\tBright white" | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
+F\tBright white' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
     case '*'
-      echo -e "/b\tMatch at the beginning of the line
+      echo -e '/b\tMatch at the beginning of the line
 /e\tMatch at the end of the line
 /l\tUse literal strings
 /r\tUse regular expressions
@@ -43,7 +43,7 @@ F\tBright white" | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
 /g:\tRead literal search strings from file
 /d:\tSpecify the search list of directories
 /a:\tUse color attributes with two hexadecimal digits
-/?\tShow help"
+/?\tShow help'
   end
 end
 

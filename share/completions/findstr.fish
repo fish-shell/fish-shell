@@ -42,4 +42,4 @@ F\tBright white' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
   end
 end
 
-complete --command findstr --no-files --arguments "(__findstr_generate_args)"
+complete --command findstr --no-files --arguments '(__findstr_generate_args)'

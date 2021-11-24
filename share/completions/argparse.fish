@@ -17,6 +17,11 @@ function __argparse_find_option_specs --description 'Internal function to find a
       break
     end
 
+    if string match --quiet '*,*' $cmd[$index]
+      set index (math $index - 1)
+      continue
+    end
+
     if string match --quiet '*=*' $cmd[$index]
       set cmd[$index] (string replace --regex '=.*' '' $cmd[$index])
     else if string match --quiet '*=\?*' $cmd[$index]

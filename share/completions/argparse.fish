@@ -41,7 +41,7 @@ function __argparse_exclusive_generate_args --description 'Function to generate 
     set index (math $index - 1)
   end
 
-  set --local used_options (string split ',' $current_token)
+  set --local used_options (string split -- ',' $current_token)
   set --local unused_specifications
 
   for item in $specifications
@@ -52,8 +52,6 @@ function __argparse_exclusive_generate_args --description 'Function to generate 
 
   string join \n $unused_specifications
 end
-
-set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'
 
 complete --command argparse --no-files
 

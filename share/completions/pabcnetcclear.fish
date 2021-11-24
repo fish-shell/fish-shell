@@ -5,12 +5,12 @@ function __pabcnetcclear_generate_args --description 'Function to generate args'
       echo -e $current_token"0\tEnable generation
 $current_token"1"\tDisable generation"
     case '*'
-      echo -e "/Help\tDisplay help
-/H\tDisplay help
-/?\tDisplay help
-/Debug\tGenerate code debug info
-/output\tExecutable name
-/SearchDir\tAdd path to unit search directories"
+      echo -e "/Help\tShow help
+/H\tShow help
+/?\tShow help
+/Debug\tGenerate a code debug info
+/output\tSpecify an executable name
+/SearchDir\tSpecify a path to search units"
   end
 end
 

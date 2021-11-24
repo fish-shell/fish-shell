@@ -12,11 +12,6 @@ function __argparse_exclusive_generate_args --description 'Function to generate 
   set --local specifications
   while test $index -gt 0
     and not string match --quiet -- '-*' $all_tokens[$index]
-    if test $index -gt 1
-      and string match --regex --quiet -- '^(-x|--exclusive)$' $all_tokens[(math $index - 1)]
-      and not test -z $current_token
-      break
-    end
 
     if string match --quiet '*,*' $all_tokens[$index]
       set index (math $index - 1)
@@ -39,6 +34,16 @@ function __argparse_exclusive_generate_args --description 'Function to generate 
       set --append specifications $all_tokens[$index]
     end
     set index (math $index - 1)
+  end
+
+  if string match --quiet -- '-x*' $current_token
+    set current_token (string replace --regex -- '^-x' '' $current_token)
+  end
+
+  if test $index -gt 1
+    and string match --regex --quiet -- '^(-x|--exclusive)$' $all_tokens[(math $index - 1)]
+    and not test -z $current_token
+    set --erase specifications[(count $specifications)]
   end
 
   set --local used_options (string split -- ',' $current_token)

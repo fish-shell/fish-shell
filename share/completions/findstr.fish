@@ -1,8 +1,3 @@
-if test "$OSTYPE" != cygwin
-  and test "$OSTYPE" != msys
-  return
-end
-
 function __findstr_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
   switch $current_token

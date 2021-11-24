@@ -50,7 +50,7 @@ function __argparse_exclusive_generate_args --description 'Function to generate 
     end
   end
 
-  echo -n $unused_specifications | string replace --regex --all ' ' '\n'
+  string join \n $unused_specifications
 end
 
 set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'

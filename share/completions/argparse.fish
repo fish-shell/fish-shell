@@ -1,46 +1,56 @@
-function __argparse_find_option_specs --description 'Internal function to find all option specs'
-  set --local cmd (commandline --tokenize)
-  set --erase cmd[1]
+function __argparse_exclusive_generate_args --description 'Function to generate args for -x|--exclusive'
+  set --local all_tokens (commandline --tokenize)
+  set --erase all_tokens[1]
+  set --local current_token (commandline --current-token)
 
-  if set index (contains --index -- '--' $cmd)
+  if set index (contains --index -- '--' $all_tokens)
     set index (math $index - 1)
   else
-    set index (count $cmd)
+    set index (count $all_tokens)
   end
 
-  set --local specs
+  set --local specifications
   while test $index -gt 0
-    and not string match --quiet -- '-*' $cmd[$index]
+    and not string match --quiet -- '-*' $all_tokens[$index]
     if test $index -gt 1
-      and string match --regex --quiet -- '^(-x|--exclusive)$' $cmd[(math $index - 1)]
-      and ! test -z (commandline --current-token)
+      and string match --regex --quiet -- '^(-x|--exclusive)$' $all_tokens[(math $index - 1)]
+      and not test -z $current_token
       break
     end
 
-    if string match --quiet '*,*' $cmd[$index]
+    if string match --quiet '*,*' $all_tokens[$index]
       set index (math $index - 1)
       continue
     end
 
-    if string match --quiet '*=*' $cmd[$index]
-      set cmd[$index] (string replace --regex '=.*' '' $cmd[$index])
-    else if string match --quiet '*=\?*' $cmd[$index]
-      set cmd[$index] (string replace --regex '=\?.*' '' $cmd[$index])
-    else if string match --quiet '*=+*' $cmd[$index]
-      set cmd[$index] (string replace --regex '=\+*' '' $cmd[$index])
+    if string match --quiet '*=*' $all_tokens[$index]
+      set all_tokens[$index] (string replace --regex '=.*' '' $all_tokens[$index])
+    else if string match --quiet '*=\?*' $all_tokens[$index]
+      set all_tokens[$index] (string replace --regex '=\?.*' '' $all_tokens[$index])
+    else if string match --quiet '*=+*' $all_tokens[$index]
+      set all_tokens[$index] (string replace --regex '=\+*' '' $all_tokens[$index])
     end
 
-    if string match --quiet '*/*' $cmd[$index]
-      set --append specs (string split '/' $cmd[$index])
-    else if string match --quiet '*#*' $cmd[$index]
-      set --append specs (string split '#' $cmd[$index])
+    if string match --quiet '*/*' $all_tokens[$index]
+      set --append specifications (string split '/' $all_tokens[$index])
+    else if string match --quiet '*#*' $all_tokens[$index]
+      set --append specifications (string split '#' $all_tokens[$index])
     else
-      set --append specs $cmd[$index]
+      set --append specifications $all_tokens[$index]
     end
     set index (math $index - 1)
   end
 
-  echo -n $specs | string replace --regex --all ' ' '\n'
+  set --local used_options (string split ',' $current_token)
+  set --local unused_specifications
+
+  for item in $specifications
+    if not contains -- $item $used_options
+      set --append unused_specifications $item
+    end
+  end
+
+  echo -n $unused_specifications | string replace --regex --all ' ' '\n'
 end
 
 set --local CONDITION '! __fish_seen_argument --short r --long required-val --short o --long optional-val'
@@ -50,7 +60,7 @@ complete --command argparse --no-files
 complete --command argparse --short-option h --long-option help --description 'Show help'
 
 complete --command argparse --short-option n --long-option name --require-parameter --no-files --arguments '(functions --all | string replace ", " "\n")' --description 'Use function name'
-complete --command argparse --short-option x --long-option exclusive --no-files --require-parameter --arguments '(__fish_append "," (__argparse_find_option_specs))' --description 'Specify mutually exclusive options'
+complete --command argparse --short-option x --long-option exclusive --no-files --require-parameter --arguments '(__fish_append "," (__argparse_exclusive_generate_args))' --description 'Specify mutually exclusive options'
 complete --command argparse --short-option N --long-option min-args --no-files --require-parameter --description 'Specify minimum non-option argument count'
 complete --command argparse --short-option X --long-option max-args --no-files --require-parameter --description 'Specify maximum non-option argument count'
 complete --command argparse --short-option i --long-option ignore-unknown --description 'Ignore unknown options'

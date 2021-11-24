@@ -143,6 +143,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     bool line_mode = false;
     bool search_mode = false;
     bool paging_mode = false;
+    bool paging_full_mode = false;
     bool is_valid = false;
     const wchar_t *begin = nullptr, *end = nullptr;
     const wchar_t *override_buffer = nullptr;
@@ -167,6 +168,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                                                   {L"line", no_argument, nullptr, 'L'},
                                                   {L"search-mode", no_argument, nullptr, 'S'},
                                                   {L"paging-mode", no_argument, nullptr, 'P'},
+                                                  {L"paging-full-mode", no_argument, nullptr, 'F'},
                                                   {L"is-valid", no_argument, nullptr, 1},
                                                   {nullptr, 0, nullptr, 0}};
 
@@ -237,6 +239,10 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
             }
             case 'P': {
                 paging_mode = true;
+                break;
+            }
+            case 'F': {
+                paging_full_mode = true;
                 break;
             }
             case 1: {
@@ -323,7 +329,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if ((buffer_part || tokenize || cut_at_cursor) &&
-        (cursor_mode || line_mode || search_mode || paging_mode) &&
+        (cursor_mode || line_mode || search_mode || paging_mode || paging_full_mode) &&
         // Special case - we allow to get/set cursor position relative to the process/job/token.
         !(buffer_part && cursor_mode)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
@@ -364,6 +370,11 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     if (paging_mode) {
         return commandline_get_state().pager_mode ? 0 : 1;
+    }
+
+    if (paging_full_mode) {
+        auto state = commandline_get_state();
+        return (state.pager_mode && state.pager_fully_disclosed) ? 0 : 1;
     }
 
     // At this point we have (nearly) exhausted the options which always operate on the true command

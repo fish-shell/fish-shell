@@ -28,7 +28,7 @@ F\tBright white" | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
 /x\tMatch exactly
 /v\tInvert match
 /n\tPrint line numbers
-/m\tPrints only the file name with matching lines
+/m\tPrint only the file name with matching lines
 /o\tPrint character offset
 /p\tSkip files with non-printable characters
 /off\tDon\'t skip files that have the offline attribute set
@@ -37,7 +37,7 @@ F\tBright white" | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
 /c:\tSpecify a literal search string
 /g:\tRead literal search strings from file
 /d:\tSpecify the search list of directories
-/a:\tSpecify color attributes with two hexadecimal digits
+/a:\tUse color attributes with two hexadecimal digits
 /?\tShow help"
   end
 end

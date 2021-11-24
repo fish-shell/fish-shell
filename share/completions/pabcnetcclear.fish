@@ -8,7 +8,7 @@ $current_token"1"\tDisable generation"
       echo -e "/Help\tDisplay help
 /H\tDisplay help
 /?\tDisplay help
-/Debug\tGenerate code with optimizations
+/Debug\tGenerate code debug info
 /output\tExecutable name
 /SearchDir\tAdd path to unit search directories"
   end

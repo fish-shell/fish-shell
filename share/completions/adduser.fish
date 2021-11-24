@@ -15,7 +15,7 @@ complete -c adduser -l gid -d 'When creating a group, force the groupid to be th
 complete -c adduser -l group -d 'Create a group'
 complete -c adduser -l help -d 'Display brief instructions'
 complete -c adduser -l home -d 'Use specified directory as the user\'s home directory' -x -a '(__fish_complete_directories)'
-complete -c adduser -l shell -d 'Use shell as the user\'s login shell, rather than the default' -x -a '(cat /etc/shells)'
+complete -c adduser -l shell -d 'Use shell as the user\'s login shell, rather than the default' -x -a '(sed --quiet --regexp-extended "/\s+/!p" /etc/shells)'
 complete -c adduser -l ingroup -d 'Add the new user to GROUP instead of a usergroup or the default group' -x -a '(cut -d : -f 1 /etc/group)'
 complete -c adduser -l no-create-home -d 'Do not create the home directory'
 complete -c adduser -l quiet -d 'Suppress informational messages, only show warnings and errors'

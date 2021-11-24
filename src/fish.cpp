@@ -563,7 +563,8 @@ int main(int argc, char **argv) {
         const char *file = *(argv + (my_optind++));
         autoclose_fd_t fd(open_cloexec(file, O_RDONLY));
         if (!fd.valid()) {
-            perror(file);
+            FLOGF(error, _(L"Error reading script file '%s':"), file);
+            perror("error");
         } else {
             wcstring_list_t list;
             for (char **ptr = argv + my_optind; *ptr; ptr++) {

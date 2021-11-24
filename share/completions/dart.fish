@@ -6,15 +6,15 @@ complete -c dart -l enable-analytics -d "Enable analytics."
 complete -c dart -l disable-analytics -d "Disable analytics."
 
 # commands
-complete -f -c dart -n '__fish_use_subcommand' -xa analyze -d "Analyze Dart code in a directory."
-complete -f -c dart -n '__fish_use_subcommand' -xa compile -d "Compile Dart to various formats."
-complete -f -c dart -n '__fish_use_subcommand' -xa create -d "Create a new Dart project."
-complete -f -c dart -n '__fish_use_subcommand' -xa fix -d "Apply automated fixes to Dart source code."
-complete -f -c dart -n '__fish_use_subcommand' -xa format -d "Idiomatically format Dart source code."
-complete -f -c dart -n '__fish_use_subcommand' -xa migrate -d "Perform null safety migration on a project."
-complete -f -c dart -n '__fish_use_subcommand' -xa pub -d "Work with packages."
-complete -f -c dart -n '__fish_use_subcommand' -xa run -d "Run a Dart program."
-complete -f -c dart -n '__fish_use_subcommand' -xa test -d "Run tests for a project."
+complete -f -c dart -n __fish_use_subcommand -xa analyze -d "Analyze Dart code in a directory."
+complete -f -c dart -n __fish_use_subcommand -xa compile -d "Compile Dart to various formats."
+complete -f -c dart -n __fish_use_subcommand -xa create -d "Create a new Dart project."
+complete -f -c dart -n __fish_use_subcommand -xa fix -d "Apply automated fixes to Dart source code."
+complete -f -c dart -n __fish_use_subcommand -xa format -d "Idiomatically format Dart source code."
+complete -f -c dart -n __fish_use_subcommand -xa migrate -d "Perform null safety migration on a project."
+complete -f -c dart -n __fish_use_subcommand -xa pub -d "Work with packages."
+complete -f -c dart -n __fish_use_subcommand -xa run -d "Run a Dart program."
+complete -f -c dart -n __fish_use_subcommand -xa test -d "Run tests for a project."
 
 # analyze
 complete -c dart -n '__fish_seen_subcommand_from analyze' -l fatal-infos -d 'Treat info level issues as fatal.'

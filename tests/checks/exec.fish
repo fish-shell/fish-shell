@@ -1,12 +1,12 @@
 #RUN: %fish %s
 exec cat <nosuchfile
 #CHECKERR: warning: An error occurred while redirecting file 'nosuchfile'
-#CHECKERR: open: No such file or directory
+#CHECKERR: warning: Path 'nosuchfile' does not exist
 echo "failed: $status"
 #CHECK: failed: 1
 not exec cat <nosuchfile
 #CHECKERR: warning: An error occurred while redirecting file 'nosuchfile'
-#CHECKERR: open: No such file or directory
+#CHECKERR: warning: Path 'nosuchfile' does not exist
 echo "neg failed: $status"
 #CHECK: neg failed: 0
 

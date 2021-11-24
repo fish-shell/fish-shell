@@ -4,6 +4,7 @@
 
 #include <cstring>
 
+#include "common.h"
 #include "fds.h"
 #include "history.h"
 #include "path.h"

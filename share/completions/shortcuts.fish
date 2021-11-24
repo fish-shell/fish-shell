@@ -6,7 +6,7 @@
 
 # checking the path is as expected is about as far as we're going with validation
 if [ (command -v shortcuts) = /usr/bin/shortcuts ]
-	command shortcuts --generate-completion-script=fish | source
+    command shortcuts --generate-completion-script=fish | source
 end
 
 # output is like: 

@@ -181,24 +181,24 @@ command true > /not/a/valid/path
 echo $pipestatus : $status
 #CHECK: 1 : 1
 #CHECKERR: warning: An error occurred while redirecting file '/not/a/valid/path'
-#CHECKERR: open: No such file or directory
+#CHECKERR: warning: Path '/not' does not exist
 
 # Here the first process will launch, the second one will not.
 command true | command true | command true > /not/a/valid/path
 echo $pipestatus : $status
 #CHECK: 0 0 1 : 1
 #CHECKERR: warning: An error occurred while redirecting file '/not/a/valid/path'
-#CHECKERR: open: No such file or directory
+#CHECKERR: warning: Path '/not' does not exist
 
 # Pipeline breaks do not result in dangling jobs.
 command true | command cat > /not/a/valid/path ; jobs
 #CHECKERR: warning: An error occurred while redirecting file '/not/a/valid/path'
-#CHECKERR: open: No such file or directory
+#CHECKERR: warning: Path '/not' does not exist
 #CHECK: jobs: There are no jobs
 
 # Regression test for #7038
 cat /dev/zero | dd > /not/a/valid/path
 echo 'Not hung'
 #CHECKERR: warning: An error occurred while redirecting file '/not/a/valid/path'
-#CHECKERR: open: No such file or directory
+#CHECKERR: warning: Path '/not' does not exist
 #CHECK: Not hung

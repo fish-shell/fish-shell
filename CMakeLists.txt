@@ -83,9 +83,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
-# All objects that the system needs to build fish, except fish.cpp
-set(FISH_SRCS
-    src/ast.cpp src/autoload.cpp src/builtin.cpp src/builtins/argparse.cpp
+# List of sources for builtin functions.
+set(FISH_BUILTIN_SRCS
+    src/builtin.cpp src/builtins/argparse.cpp
     src/builtins/bg.cpp src/builtins/bind.cpp src/builtins/block.cpp
     src/builtins/builtin.cpp src/builtins/cd.cpp src/builtins/command.cpp
     src/builtins/commandline.cpp src/builtins/complete.cpp src/builtins/contains.cpp
@@ -97,7 +97,11 @@ set(FISH_SRCS
     src/builtins/realpath.cpp src/builtins/return.cpp src/builtins/set.cpp
     src/builtins/set_color.cpp src/builtins/source.cpp src/builtins/status.cpp
     src/builtins/string.cpp src/builtins/test.cpp src/builtins/type.cpp src/builtins/ulimit.cpp
-    src/builtins/wait.cpp src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
+    src/builtins/wait.cpp)
+
+# List of other sources.
+set(FISH_SRCS
+    src/ast.cpp src/autoload.cpp src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
     src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp src/exec.cpp
     src/expand.cpp src/fallback.cpp src/fd_monitor.cpp src/fish_version.cpp
     src/flog.cpp src/function.cpp src/future_feature_flags.cpp src/highlight.cpp
@@ -162,7 +166,7 @@ function(FISH_LINK_DEPS_AND_SIGN target)
 endfunction(FISH_LINK_DEPS_AND_SIGN)
 
 # Define libfish.a.
-add_library(fishlib STATIC ${FISH_SRCS})
+add_library(fishlib STATIC ${FISH_SRCS} ${FISH_BUILTIN_SRCS})
 target_sources(fishlib PRIVATE ${FISH_HEADERS})
 target_link_libraries(fishlib
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}

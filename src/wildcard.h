@@ -26,7 +26,7 @@
 /// Description for symlink.
 #define COMPLETE_DIRECTORY_SYMLINK_DESC _(L"dir symlink")
 /// Description for Rotten symlink.
-#define COMPLETE_ROTTEN_SYMLINK_DESC _(L"rotten symlink")
+#define COMPLETE_BROKEN_SYMLINK_DESC _(L"broken symlink")
 /// Description for symlink loop.
 #define COMPLETE_LOOP_SYMLINK_DESC _(L"symlink loop")
 /// Description for socket files.

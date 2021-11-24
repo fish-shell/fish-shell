@@ -1,7 +1,7 @@
 .. _cmd-while:
 
-while - perform a command multiple times
-========================================
+while - perform a set of commands multiple times
+================================================
 
 Synopsis
 --------

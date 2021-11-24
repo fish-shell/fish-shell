@@ -12,7 +12,7 @@ if sysctl -h >/dev/null 2>/dev/null
     complete -c sysctl -s N -l names -d 'Only print names'
     complete -c sysctl -s q -l quiet -d 'Be quiet when setting values'
     complete -c sysctl -s w -l write -d 'Write value'
-    complete -c sysctl -s p -l load -d 'Load in sysctl settings from the file specified or /etc/sysctl' 
+    complete -c sysctl -s p -l load -d 'Load in sysctl settings from the file specified or /etc/sysctl'
     complete -c sysctl -s a -l all -d 'Display all values currently available'
     complete -c sysctl -l deprecated -d 'Include deprecated parameters too'
     complete -c sysctl -s b -l binary -d 'Print value without new line'

@@ -7,8 +7,8 @@
 # EIX-SYNC
 complete -c eix-sync -s i -d "Ignore all previous options"
 complete -c eix-sync -s d -d "Only show differences to the previously saved database and exit"
-complete -c eix-sync -s s -xua '(__fish_print_users)@(__fish_print_hostnames):' -d "Sync via rsync from the given SERVER"
-complete -c eix-sync -s c -xua '(__fish_print_users)@(__fish_print_hostnames):' -d "Sync via rsync *to* the given CLIENT"
+complete -c eix-sync -s s -xa '(__fish_print_users)@(__fish_print_hostnames):' -d "Sync via rsync from the given SERVER"
+complete -c eix-sync -s c -xa '(__fish_print_users)@(__fish_print_hostnames):' -d "Sync via rsync *to* the given CLIENT"
 complete -c eix-sync -s U -d "Do not touch the database and omit the hooks after update-eix. (Implies -R)"
 complete -c eix-sync -s u -d "Update database only and show differences"
 complete -c eix-sync -s g -d "Do not call gensync (and the !commands in /etc/eix-sync.conf)"

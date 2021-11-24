@@ -14,8 +14,7 @@ set -g whitelist \
     # unclear what this is \
     l_constinit \
     # hacks to work around missing ncurses strings on mac \
-    sitm_esc ritm_esc dim_esc \
-
+    sitm_esc ritm_esc dim_esc
 
 # In our nm regex, we are interested in data (dD) and bss (bB) segments.
 set -g nm_regex '^([^ ]+) ([dDbB])'
@@ -24,8 +23,7 @@ set -l total_globals 0
 set -l boring_files \
     fish_key_reader.cpp.o \
     fish_tests.cpp.o \
-    fish_indent.cpp.o \
-
+    fish_indent.cpp.o
 
 # return if we should ignore the given symbol name
 function should_ignore

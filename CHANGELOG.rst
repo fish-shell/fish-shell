@@ -64,7 +64,7 @@ Scripting improvements
 - ``return`` can now be used outside of functions. In scripts it does the same thing as :program:`cmd`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks like e.g. ``exec`` not being allowed in a pipeline and ``$$`` not being a valid variable. Most of these would have triggered an assert or other error before.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
-- ``commandline`` gained a ``--is-valid`` option to check if the commandline is syntactically valid and complete. This will allow a basic implementation of transient prompts (:issue:`8142`).
+- ``commandline`` gained an ``--is-valid`` option to check if the commandline is syntactically valid and complete. This allows basic implementation of transient prompts (:issue:`8142`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
 - Running ``fish`` with a directory instead of a script as argument (e.g. ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
 - Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
@@ -78,7 +78,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-- Vi mode cursors are now set properly after control-C. (:issue:`8125`).
+- Vi mode cursors are now set properly after :kbd:`Control-C`. (:issue:`8125`).
 - Vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
 - Running a commandline consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
@@ -87,6 +87,7 @@ Interactive improvements
 - ``help`` now knows which section is in which document again (:issue:`8245`).
 - fish's highlighter will now color options (starting with ``-`` or ``--``) with the color given in the new $fish_color_option, up to the first ``--``. It falls back on $fish_color_param, so nothing changes for existing setups (:issue:`8292`).
 - When executing a command, abbreviations are no longer expanded when the cursor is separated from the command by spaces, making it easier to suppress abbreviation expansion of commands without arguments. (:issue:`8423`).
+- ``fish_key_reader``'s output was simplified. By default it now only prints a bind statement, the full per-character timing information can be gotten with a new ``--verbose`` switch. (:issue:`8467`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,6 +122,9 @@ Completions
   -  mono (:issue:`8415`)
   -  elvish (:issue:`8416`)
   -  pabcnet_clear (:issue:`8421`)
+  - ``ethtool``
+  - ``kmutil``
+  - ``shortcuts``
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Add missing completions for the ``-p`` option of ``xbps-query``.
@@ -138,7 +142,7 @@ Improved terminal support
 Other improvements
 ------------------------------
 - Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests. (:issue:`7851`)
-- The html version of the documentation now includes copy buttons for any code if javascript is available (:issue:`8218`).
+- The HTML version of the documentation now includes copy buttons for any code examples if JavaScript is available (:issue:`8218`).
 
 For distributors
 ----------------

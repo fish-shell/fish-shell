@@ -66,7 +66,7 @@ printf '%e\n' "1.23" # should succeed, output should be 1.230000e+00
 
 printf '%e\n' "2,34" # should fail
 # CHECK: 2.000000e+00
-# CHECKERR: 2,34: value not completely converted
+# CHECKERR: 2,34: value not completely converted (can't convert ',34')
 
 # Verify long long ints are handled correctly. See issue #3352.
 printf 'long hex1 %x\n' 498216206234
@@ -92,6 +92,6 @@ echo $status
 # Verify numeric conversion still happens even if it couldn't be fully converted
 printf '%d\n' 15.1
 # CHECK: 15
-# CHECKERR: 15.1: value not completely converted
+# CHECKERR: 15.1: value not completely converted (can't convert '.1')
 echo $status
 # CHECK: 1

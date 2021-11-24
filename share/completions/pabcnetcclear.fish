@@ -14,4 +14,4 @@ $current_token"1"\tDisable generation"
   end
 end
 
-complete --command pabcnetcclear --no-files --arguments "(__pabcnetcclear_generate_args)"
+complete --command pabcnetcclear --no-files --arguments '(__pabcnetcclear_generate_args)'

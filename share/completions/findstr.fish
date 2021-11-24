@@ -1,5 +1,5 @@
-if test "$OSTYPE" != 'cygwin'
-  and test "$OSTYPE" != 'msys'
+if test "$OSTYPE" != cygwin
+  and test "$OSTYPE" != msys
   return
 end
 

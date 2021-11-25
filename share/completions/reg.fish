@@ -14,10 +14,23 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
     return
   end
 
-  echo -e '/?\tShow help'
+  set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
   if __fish_seen_subcommand_from add
-    if not __fish_seen_argument --windows '/v' --windows '/ve'
+    if test "$previous_token" = '/t'
+      echo 'REG_SZ
+REG_MULTI_SZ
+REG_DWORD_BIG_ENDIAN
+REG_DWORD
+REG_BINARY
+REG_DWORD_LITTLE_ENDIAN
+REG_LINK
+REG_FULL_RESOURCE_DESCRIPTOR
+REG_EXPAND_SZ'
+      return
+    end
+
+    if not __fish_seen_argument --windows 'v' --windows 've'
       echo -e '/v\tSpecify the name of the add registry entry
 /ve\tSpecify that the added registry entry has a null value'
     end
@@ -25,41 +38,56 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
     echo -e '/t\tSpecify the type for the registry entry
 /s\tSpecify the character to be used to separate multiple instances of data
 /d\tSpecify the data for the new registry entry
-/f\tAdd the registry entry without prompting for confirmation'
+/f\tAdd the registry entry without prompting for confirmation
+/?\tShow help'
   else if __fish_seen_subcommand_from compare
-    if not __fish_seen_argument --windows '/v' --windows '/ve'
+    if not __fish_seen_argument --windows 'v' --windows 've'
       echo -e '/v\tSpecify the value name to compare under the subkey
 /ve\tSpecify that only entries that have a value name of null should be compared'
     end
 
-    if not __fish_seen_argument --windows '/oa' --windows '/od' --windows '/os' --windows '/on'
+    if not __fish_seen_argument --windows 'oa' --windows 'od' --windows 'os' --windows 'on'
       echo -e '/oa\tSpecify that all differences and matches are displayed
 /od\tSpecify that only differences are displayed
 /os\tSpecify that only matches are displayed
 /on\tSpecify that nothing is displayed'
     end
 
-    echo -e '/s\tSpecify the type for the registry entry'
+    echo -e '/s\tSpecify the type for the registry entry
+/?\tShow help'
   else if __fish_seen_subcommand_from copy
     echo -e '/s\tCopy all subkeys and entries under the specified subkey
-/f\tCopy the subkey without prompting for confirmation'
+/f\tCopy the subkey without prompting for confirmation
+/?\tShow help'
   else if __fish_seen_subcommand_from delete
-    if not __fish_seen_argument --windows '/v' --windows '/ve' --windows '/va'
+    if not __fish_seen_argument --windows 'v' --windows 've' --windows 'va'
       echo -e '/v\tDelete a specific entry under the subkey
 /ve\tSpecify that only entries that have no value will be deleted
 /va\tDelete all entries under the specified subkey'
     end
 
-    echo -e '/f\tDelete the existing registry subkey or entry without asking for confirmation'
+    echo -e '/f\tDelete the existing registry subkey or entry without asking for confirmation
+/?\tShow help'
   else if __fish_seen_subcommand_from export
-    echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation'
+    echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
+/?\tShow help'
   else if __fish_seen_subcommand_from query
-    if not __fish_seen_argument --windows '/v' --windows '/ve'
+    if test "$previous_token" = '/t'
+      echo 'REG_SZ
+REG_MULTI_SZ
+REG_EXPAND_SZ
+REG_DWORD
+REG_BINARY
+REG_NONE'
+      return
+    end
+
+    if not __fish_seen_argument --windows 'v' --windows 've'
       echo -e '/v\tSpecify the registry value name that is to be queried
 /ve\tRun a query for value names that are empty'
     end
 
-    if not __fish_seen_argument --windows '/k' --windows '/d'
+    if not __fish_seen_argument --windows 'k' --windows 'd'
       echo -e '/k\tSpecify to search in key names only
 /d\tSpecify to search in data only'
     end
@@ -69,9 +97,11 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
 /c\tSpecify that the query is case sensitive
 /e\tSpecify to return only exact matches
 /t\tSpecify registry types to search
-/z\tSpecify to include the numeric equivalent for the registry type in search results'
+/z\tSpecify to include the numeric equivalent for the registry type in search results
+/?\tShow help'
   else if __fish_seen_subcommand_from save
-    echo -e '/y\tOverwrite an existing file with the name filename without prompting for confirmation'
+    echo -e '/y\tOverwrite an existing file with the name filename without prompting for confirmation
+/?\tShow help'
   end
 end
 

@@ -1,2 +1,2 @@
-#RUN: %fish --features no-stderr-nocaret -c 'ls /abavojijsdfhdsjhfuihifoisj ^&1'
-# CHECK: {{ls|/abavojijsdfhdsjhfuihifoisj}}: {{.*}}
+#RUN: %fish --features no-stderr-nocaret -c 'cat /abavojijsdfhdsjhfuihifoisj ^&1'
+# CHECK: {{cat|/abavojijsdfhdsjhfuihifoisj}}: {{.*}}

@@ -272,8 +272,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     # increment or decrement numbers with ctrl+x ctrl+a
     #
-    bind -s --preset -M default \ca vi_inc
-    bind -s --preset -M default \cx vi_dec
+    bind -s --preset -M default \ca 'change_number increase'
+    bind -s --preset -M default \cx 'change_number decrease'
 
     #
     # visual mode

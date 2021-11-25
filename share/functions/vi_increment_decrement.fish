@@ -10,20 +10,21 @@ function change_number
     string match -qr '^[0-9]+$' $line_char
     or return
 
-    if [ $argv = 'increase' ]
+    if test "$argv[1]" = increase
         set new_num (math $line_char + 1)
-    else if [ $argv = 'decrease' ]
+    else if test "$argv[1]" = decrease
         set new_num (math $line_char - 1)
     end
 
     for x in (string split '' $current_buffer)
         if [ $num = $cursor_position ]
-            set new_string (echo $new_string$new_num | string collect)
+            set -l new_string "$new_string$new_num"
         else
-            set new_string (echo $new_string$x | string collect)
+            set -l new_string "$new_string$x"
         end
         set num (math $num + 1)
     end
+    
     commandline -r $new_string
     commandline -C $cursor_position
     commandline -f repaint

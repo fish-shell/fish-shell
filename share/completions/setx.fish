@@ -5,7 +5,7 @@ function __setx_generate_args --description 'Function to generate args'
 /d\tSpecify delimiters to be used in addition to the four built-in delimiters
 /?\tShow help'
 
-  if not __fish_seen_argument --windows '/a' --windows '/m' --windows '/x'
+  if not __fish_seen_argument --windows 'a' --windows 'm' --windows 'x'
     echo -e '/a\tSpecify absolute coordinates and offset as search parameters
 /m\tSpecify to set the variable in the system environment
 /x\tDisplay file coordinates, ignoring the /a, /r, and /d command-line options'

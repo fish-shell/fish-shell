@@ -128,11 +128,6 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "cmds/source.html"
         case globbing
             set fish_help_page "language.html#expand"
-        case (builtin -n) (__fish_print_commands)
-            # If the docs aren't installed, __fish_print_commands won't print anything
-            # Since we document all our builtins, check those at least.
-            # The alternative is to create this list at build time.
-            set fish_help_page "cmds/$fish_help_item.html"
         case 'completion-*'
             set fish_help_page "completions.html#$fish_help_item"
         case 'tut-*'
@@ -159,6 +154,11 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "interactive.html#$fish_help_item"
         case $tutpages
             set fish_help_page "tutorial.html#$fish_help_item"
+        case (builtin -n) (__fish_print_commands)
+            # If the docs aren't installed, __fish_print_commands won't print anything
+            # Since we document all our builtins, check those at least.
+            # The alternative is to create this list at build time.
+            set fish_help_page "cmds/$fish_help_item.html"
         case ''
             set fish_help_page "index.html"
         case "*"

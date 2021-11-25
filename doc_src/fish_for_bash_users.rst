@@ -23,12 +23,14 @@ will correctly handle all possible filenames.
 Variables
 ---------
 
-Fish sets and erases variables with :ref:`set <cmd-set>` instead of ``VAR=VAL`` and ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
+Fish sets and erases variables with :ref:`set <cmd-set>` instead of ``VAR=VAL`` and a variety of separate builtins like ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
 
-  # Define $PAGER global and exported, so this is like ``export PAGER=less``
+  # Define $PAGER global and exported,
+  # so this is like ``export PAGER=less``
   set -gx PAGER less
 
-  # Define $alocalvariable only locally - like ``local alocalvariable=foo``
+  # Define $alocalvariable only locally,
+  # like ``local alocalvariable=foo``
   set -l alocalvariable foo
 
 or to erase variables::
@@ -48,14 +50,16 @@ For instance, here's bash
 .. code-block:: sh
 
   > foo="bar baz"
-  > printf '"%s"\n' $foo # will print two lines, because we didn't double-quote, so the variable is split
+  > printf '"%s"\n' $foo
+  # will print two lines, because we didn't double-quote, so the variable is split
   "bar"
   "baz"
 
 And here is fish::
 
   > set foo "bar baz"
-  > printf '"%s"\n' $foo # foo was set as one element, so it will be passed as one element, so this is one line
+  > printf '"%s"\n' $foo
+  # foo was set as one element, so it will be passed as one element, so this is one line
   "bar baz"
 
 All variables are "arrays" (we use the term "lists"), and expanding a variable expands to all its elements, with each element as its own argument (like bash's ``"${var[@]}"``::

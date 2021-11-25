@@ -6,7 +6,7 @@ function __copy_generate_args --description 'Function to generate args'
 
   echo -e '/d\tAllow the encrypted files being copied to be saved as decrypted files at the destination
 /v\tVerify that new files are written correctly
-/n\tUses a short file name, if available
+/n\tUse a short file name, if available
 /y=\tHide prompts to confirm that you want to overwrite an existing destination file
 /-y\tShow prompts to confirm that you want to overwrite an existing destination file
 /z\tCopy networked files in restartable mode

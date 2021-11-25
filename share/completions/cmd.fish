@@ -31,8 +31,8 @@ off\tDisable delayed environment variable expansion' | awk -F '\t' "{ printf \"$
       echo -e '/c\tCarry out the command specified by string and then stop
 /k\tCarry out the command specified by string and continue
 /s\tModify the treatment of string after /c or /k
-/q\tDisable echo
-/d\tDisables execution of AutoRun commands
+/q\tTurn the echo off
+/d\tDisable execution of AutoRun commands
 /a\tFormat internal command output to a pipe or a file as ANSI
 /u\tFormat internal command output to a pipe or a file as Unicode
 /t\tSet the background and foreground color

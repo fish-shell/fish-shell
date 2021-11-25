@@ -1,1 +1,1 @@
-complete --command clean --no-files --arguments 'all\t"Set every sector on the disk to zero"'
+complete --command clean --no-files --arguments 'all\t"Specify that each and every sector on the disk is set to zero"'

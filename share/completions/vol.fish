@@ -3,7 +3,7 @@ function __vol_generate_args --description 'Function to generate args'
   switch $current_token
     case '/*'
       echo -e '/?\tShow help'
-    case "*"
+    case '*'
       wmic logicaldisk get name | tail --lines +2
   end
 end

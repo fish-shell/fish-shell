@@ -8,15 +8,15 @@ s\tSet the System file attribute
 h\tSet the Hidden file attribute
 i\tSet the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
     case '-*'
-      echo -e 'r\tUnset the Read-only file attribute
-a\tUnset the Archive file attribute
-s\tUnset the System file attribute
-h\tUnset the Hidden file attribute
-i\tUnset the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
+      echo -e 'r\tClear the Read-only file attribute
+a\tClear the Archive file attribute
+s\tClear the System file attribute
+h\tClear the Hidden file attribute
+i\tClear the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
     case '*'
-      echo -e '/s\tApply changes recursively
-/d\tApply changes only to directories
-/l\tApply changes to symbolic links and not their targets
+      echo -e '/s\tApply to matching files in the current directory and all of its subdirectories
+/d\tApply attrib and any command-line options to directories
+/l\tApply attrib and any command-line options to the Symbolic Link, rather than the target of it
 /?\tShow help'
   end
 end

@@ -1,34 +1,34 @@
 function __attributes_generate_args --description 'Function to generate args'
   if ! __fish_seen_subcommand_from disk volume
-    echo -e 'disk\tManipulate disk attributes
-volume\tManipulate volume attributes'
+    echo -e 'disk\tDisplay, set, or clear the attributes of a disk
+volume\tDisplay, set, or clear the attributes of a volume'
     return
   end
 
   if __fish_seen_subcommand_from disk
     if ! __fish_seen_subcommand_from set clear
-      echo -e 'set\tSet an attribute of the disk with focus
-clear\tUnset an attribute of the disk with focus'
+      echo -e 'set\tSet the specified attribute of the disk with focus
+clear\tClear the specified attribute of the disk with focus'
       return
     end
 
-    echo -e 'readonly\tUse readonly attribute
-noerr\tSuppress errors for DiskPart'
+    echo -e 'readonly\tSpecify that the disk is read-only
+noerr\tWhen an error is encountered, DiskPart continues to process commands'
     return
   end
 
   if __fish_seen_subcommand_from volume
     if ! __fish_seen_subcommand_from set clear
-      echo -e 'set\tSet an attribute of the volume with focus
-clear\tUnset an attribute of the disk volume focus'
+      echo -e 'set\tSet the specified attribute of the volume with focus
+clear\tClear the specified attribute of the volume with focus'
       return
     end
 
-    echo -e 'readonly\tUse readonly attribute
-readonly\tUse hidden attribute
-nodefaultdriveletter\tDon\'t use a drive letter by default
-shadowcopy\tSet volume type to shadow copy volume
-noerr\tSuppress errors for DiskPart'
+    echo -e 'readonly\tSpecify that the volume is read-only
+readonly\tSpecify that the volume is hidden
+nodefaultdriveletter\tSpecify that the volume does not receive a drive letter by default
+shadowcopy\tSpecify that the volume is a shadow copy volume
+noerr\tWhen an error is encountered, DiskPart continues to process commands'
     return
   end
 end

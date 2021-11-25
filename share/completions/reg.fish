@@ -14,8 +14,6 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
     return
   end
 
-  set --local current_token (commandline --current-token --cut-at-cursor)
-
   echo -e '/?\tShow help'
 
   if __fish_seen_subcommand_from add

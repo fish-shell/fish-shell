@@ -12,7 +12,7 @@ function __fish_seen_argument --description 'Check whether argument is used'
         end
 
         for o in $_flag_o
-            if string match --quiet -- "-$s" $t
+            if string match --quiet -- "-$o" $t
                 return 0
             end
         end

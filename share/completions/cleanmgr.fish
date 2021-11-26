@@ -2,7 +2,7 @@ function __cleanmgr_generate_args --description 'Function to generate args'
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
   if test "$previous_token" = '/d'
-    wmic logicaldisk get caption | sed --quiet '1b;/./p'
+    __fish_list_windows_drives
     return
   end
 

@@ -1,12 +1,12 @@
 function __attributes_generate_args --description 'Function to generate args'
-  if ! __fish_seen_subcommand_from disk volume
+  if not __fish_seen_subcommand_from disk volume
     echo -e 'disk\tDisplay, set, or clear the attributes of a disk
 volume\tDisplay, set, or clear the attributes of a volume'
     return
   end
 
   if __fish_seen_subcommand_from disk
-    if ! __fish_seen_subcommand_from set clear
+    if not __fish_seen_subcommand_from set clear
       echo -e 'set\tSet the specified attribute of the disk with focus
 clear\tClear the specified attribute of the disk with focus'
       return
@@ -18,7 +18,7 @@ noerr\tWhen an error is encountered, DiskPart continues to process commands'
   end
 
   if __fish_seen_subcommand_from volume
-    if ! __fish_seen_subcommand_from set clear
+    if not __fish_seen_subcommand_from set clear
       echo -e 'set\tSet the specified attribute of the volume with focus
 clear\tClear the specified attribute of the volume with focus'
       return

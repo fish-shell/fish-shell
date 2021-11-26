@@ -1,5 +1,6 @@
 function __attrib_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
+  
   switch $current_token
     case '+*'
       echo -e 'r\tSet the Read-only file attribute
@@ -21,7 +22,7 @@ i\tClear the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$curr
 /l\tApply attrib and any command-line options to the Symbolic Link, rather than the target of it
 /?\tShow help'
     case '*'
-      wmic logicaldisk get caption | sed --quiet '1b;/./p'
+      __fish_list_windows_drives
   end
 end
 

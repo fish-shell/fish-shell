@@ -9,13 +9,21 @@ function __schtasks_change_generate_args --argument-names previous_token
   end
 
   if string match --regex --quiet -- "$previous_token" '^/r?u$'
-    wmic useraccount get name | tail +2
+    __fish_list_windows_users
     return
   end
 
   if test "$previous_token" = '/rp'
     __fish_generate_password
     return
+  end
+
+  if __fish_seen_argument --windows 's'
+    echo -e '/u\tRun this command with the permissions of the specified user account'
+  end
+
+  if __fish_seen_argument --windows 'u'
+    echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
   if not __fish_seen_argument --windows 'et' --windows 'du'
@@ -30,8 +38,6 @@ function __schtasks_change_generate_args --argument-names previous_token
 
   echo -e '/tn\tIdentify the task to be changed
 /s\tSpecify the name or IP address of a remote computer
-/u\tRun this command with the permissions of the specified user account
-/p\tSpecify the password of the user account specified in the /u parameter
 /ru\tChange the user name under which the scheduled task has to run
 /rp\tSpecify a new password for the existing user account, or the user account specified by /ru
 /tr\tChange the program that the task runs
@@ -60,7 +66,7 @@ ONIDLE\tSpecify that the task runs whenever the system is idle for a specified p
   end
 
   if string match --regex --quiet -- "$previous_token" '^/r?u$'
-    wmic useraccount get name | tail +2
+    __fish_list_windows_users
     return
   end
 
@@ -82,6 +88,14 @@ ONIDLE\tSpecify that the task runs after the system is idle for the number of mi
     return
   end
 
+  if __fish_seen_argument --windows 's'
+    echo -e '/u\tRun this command with the permissions of the specified user account'
+  end
+
+  if __fish_seen_argument --windows 'u'
+    echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
+  end
+
   if not __fish_seen_argument --windows 'et' --windows 'du'
     echo -e '/et\tSpecify the time of day that a minute or hourly task schedule ends
 /du\tSpecify a maximum length of time for a minute or hourly schedule'
@@ -91,8 +105,6 @@ ONIDLE\tSpecify that the task runs after the system is idle for the number of mi
 /tn\tSpecify a name for the task
 /tr\tSpecify the program or command that the task runs
 /s\tSpecify the name or IP address of a remote computer
-/u\tRun this command with the permissions of the specified user account
-/p\tSpecify the password of the user account specified in the /u parameter
 /ru\tRun the task with permissions of the specified user account
 /rp\tSpecify a the password for the existing user account, or the user account specified by /ru
 /mo\tSpecify how often the task runs within its schedule type
@@ -117,15 +129,21 @@ function __schtasks_delete_generate_args --argument-names previous_token
   end
 
   if test "$previous_token" = '/u'
-    wmic useraccount get name | tail +2
+    __fish_list_windows_users
     return
+  end
+
+  if __fish_seen_argument --windows 's'
+    echo -e '/u\tRun this command with the permissions of the specified user account'
+  end
+
+  if __fish_seen_argument --windows 'u'
+    echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
   echo -e '/tn\tIdentify the task to be deleted
 /f\tSuppress the confirmation message
 /s\tSpecify the name or IP address of a remote computer
-/u\tRun this command with the permissions of the specified user account
-/p\tSpecify the password of the user account specified in the /u parameter
 /?\tShow help'
 end
 
@@ -136,14 +154,20 @@ function __schtasks_end_generate_args --argument-names previous_token
   end
 
   if test "$previous_token" = '/u'
-    wmic useraccount get name | tail +2
+    __fish_list_windows_users
     return
+  end
+
+  if __fish_seen_argument --windows 's'
+    echo -e '/u\tRun this command with the permissions of the specified user account'
+  end
+
+  if __fish_seen_argument --windows 'u'
+    echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
   echo -e '/tn\tIdentify the task that started the program
 /s\tSpecify the name or IP address of a remote computer
-/u\tRun this command with the permissions of the specified user account
-/p\tSpecify the password of the user account specified in the /u parameter
 /?\tShow help'
 end
 
@@ -156,16 +180,22 @@ CSV'
   end
 
   if test "$previous_token" = '/u'
-    wmic useraccount get name | tail +2
+    __fish_list_windows_users
     return
+  end
+
+  if __fish_seen_argument --windows 's'
+    echo -e '/u\tRun this command with the permissions of the specified user account'
+  end
+
+  if __fish_seen_argument --windows 'u'
+    echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
   echo -e '/fo\tSpecify the output format
 /nh\tRemove column headings from the table display
 /v\tAdd the advanced properties of the task to the display
 /s\tSpecify the name or IP address of a remote computer
-/u\tRun this command with the permissions of the specified user account
-/p\tSpecify the password of the user account specified in the /u parameter
 /?\tShow help'
 end
 
@@ -176,14 +206,20 @@ function __schtasks_run_generate_args --argument-names previous_token
   end
 
   if test "$previous_token" = '/u'
-    wmic useraccount get name | tail +2
+    __fish_list_windows_users
     return
+  end
+
+  if __fish_seen_argument --windows 's'
+    echo -e '/u\tRun this command with the permissions of the specified user account'
+  end
+
+  if __fish_seen_argument --windows 'u'
+    echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
   echo -e '/tn\tIdentify the task to start
 /s\tSpecify the name or IP address of a remote computer
-/u\tRun this command with the permissions of the specified user account
-/p\tSpecify the password of the user account specified in the /u parameter
 /?\tShow help'
 end
 

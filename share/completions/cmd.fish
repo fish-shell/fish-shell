@@ -1,5 +1,6 @@
 function __cmd_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
+  
   switch $current_token
     case '/t:*'
       echo -e '0\tBlack

@@ -1,5 +1,5 @@
 function __schtasks_list_tasks --description 'Helper function to list tasks'
-  schtasks | awk '/^=/ { show = 1; next } show { print $1 }'
+  schtasks /query /fo csv /nh | awk -F ',' '{ print $1 }'
 end
 
 function __schtasks_change_generate_args --argument-names previous_token

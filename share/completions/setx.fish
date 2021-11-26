@@ -6,6 +6,14 @@ function __setx_generate_args --description 'Function to generate args'
     return
   end
 
+  if __fish_seen_argument --windows 's'
+    echo -e '/u\tRun the script with the credentials of the specified user account'
+  end
+
+  if __fish_seen_argument --windows 'u'
+    echo -e '/p\tSpecify the password of the user account that is specified in the /u parameter'
+  end
+
   if not __fish_seen_argument --windows 'a' --windows 'r' --windows 'x'
     echo -e '/a\tSpecify absolute coordinates and offset as search parameters
 /r\tSpecify relative coordinates and offset from String as search parameters
@@ -17,8 +25,6 @@ function __setx_generate_args --description 'Function to generate args'
   end
 
   echo -e '/s\tSpecify the name or IP address of a remote computer
-/u\tRun the script with the credentials of the specified user account
-/p\tSpecify the password of the user account that is specified in the /u parameter
 /k\tSpecify that the variable is set based on information from a registry key
 /f\tSpecify the file that you want to use
 /d\tSpecify delimiters to be used in addition to the four built-in delimiters

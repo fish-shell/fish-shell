@@ -943,14 +943,18 @@ void highlighter_t::visit(const ast::keyword_base_t &kw) {
         case parse_keyword_t::kw_builtin:
         case parse_keyword_t::kw_case:
         case parse_keyword_t::kw_command:
+        case parse_keyword_t::kw_do:
+        case parse_keyword_t::kw_done:
         case parse_keyword_t::kw_else:
         case parse_keyword_t::kw_end:
         case parse_keyword_t::kw_exec:
+        case parse_keyword_t::kw_fi:
         case parse_keyword_t::kw_for:
         case parse_keyword_t::kw_function:
         case parse_keyword_t::kw_if:
         case parse_keyword_t::kw_in:
         case parse_keyword_t::kw_switch:
+        case parse_keyword_t::kw_then:
         case parse_keyword_t::kw_while:
             role = highlight_role_t::keyword;
             break;

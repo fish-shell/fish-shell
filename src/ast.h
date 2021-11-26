@@ -549,7 +549,10 @@ struct for_header_t final : public branch_t<type_t::for_header> {
     // newline or semicolon
     semi_nl_t semi_nl;
 
-    FIELDS(kw_for, var_name, kw_in, args, semi_nl)
+    // Optional `do` for compatibility with POSIX.
+    optional_t<keyword_t<parse_keyword_t::kw_do>> kw_do;
+
+    FIELDS(kw_for, var_name, kw_in, args, semi_nl, kw_do)
 };
 
 struct while_header_t final : public branch_t<type_t::while_header> {
@@ -559,7 +562,10 @@ struct while_header_t final : public branch_t<type_t::while_header> {
     job_conjunction_t condition{};
     andor_job_list_t andor_tail{};
 
-    FIELDS(kw_while, condition, andor_tail)
+    // Optional `do` for compatibility with POSIX.
+    optional_t<keyword_t<parse_keyword_t::kw_do>> kw_do;
+
+    FIELDS(kw_while, condition, andor_tail, kw_do)
 };
 
 struct function_header_t final : public branch_t<type_t::function_header> {
@@ -591,8 +597,8 @@ struct block_statement_t final : public branch_t<type_t::block_statement> {
     // List of jobs in this block.
     job_list_t jobs;
 
-    // The 'end' node.
-    keyword_t<parse_keyword_t::kw_end> end;
+    // The 'end/done' node.
+    keyword_t<parse_keyword_t::kw_end, parse_keyword_t::kw_done> end;
 
     // Arguments and redirections associated with the block.
     argument_or_redirection_list_t args_or_redirs;
@@ -608,13 +614,16 @@ struct if_clause_t final : public branch_t<type_t::if_clause> {
     // The 'if' condition.
     job_conjunction_t condition{};
 
+    // Optional `then` for compatibility with POSIX.
+    optional_t<keyword_t<parse_keyword_t::kw_then>> kw_then;
+
     // 'and/or' tail.
     andor_job_list_t andor_tail{};
 
     // The body to execute if the condition is true.
     job_list_t body;
 
-    FIELDS(kw_if, condition, andor_tail, body)
+    FIELDS(kw_if, condition, kw_then, andor_tail, body)
 };
 
 struct elseif_clause_t final : public branch_t<type_t::elseif_clause> {
@@ -646,8 +655,8 @@ struct if_statement_t final : public branch_t<type_t::if_statement> {
     // else part
     optional_t<else_clause_t> else_clause;
 
-    // literal end
-    keyword_t<parse_keyword_t::kw_end> end;
+    // literal end/fi
+    keyword_t<parse_keyword_t::kw_end, parse_keyword_t::kw_fi> end;
 
     // block args / redirs
     argument_or_redirection_list_t args_or_redirs;

@@ -705,11 +705,15 @@ struct populator_t {
         assert(this->top_type_ == type_t::job_list);
         switch (tok.type) {
             case parse_token_type_t::string:
-                // There are three keywords which end a job list.
+                // There are some keywords which end a job list.
                 switch (tok.keyword) {
                     case parse_keyword_t::kw_case:
                         this->parse_error(tok, parse_error_unbalancing_case,
                                           _(L"'case' builtin not inside of switch block"));
+                        break;
+                    case parse_keyword_t::kw_done:
+                        this->parse_error(tok, parse_error_unbalancing_end,
+                                          _(L"'done' outside of a block"));
                         break;
                     case parse_keyword_t::kw_end:
                         this->parse_error(tok, parse_error_unbalancing_end,
@@ -718,6 +722,10 @@ struct populator_t {
                     case parse_keyword_t::kw_else:
                         this->parse_error(tok, parse_error_unbalancing_else,
                                           _(L"'else' builtin not inside of if block"));
+                        break;
+                    case parse_keyword_t::kw_fi:
+                        this->parse_error(tok, parse_error_unbalancing_end,
+                                          _(L"'fi' outside of a block"));
                         break;
                     default:
                         internal_error(__FUNCTION__,
@@ -762,8 +770,10 @@ struct populator_t {
         if (token.type != parse_token_type_t::string) return false;
         switch (peek_token().keyword) {
             case parse_keyword_t::kw_case:
+            case parse_keyword_t::kw_done:
             case parse_keyword_t::kw_end:
             case parse_keyword_t::kw_else:
+            case parse_keyword_t::kw_fi:
                 // These end a job list.
                 return false;
             case parse_keyword_t::none:
@@ -822,6 +832,16 @@ struct populator_t {
         // Is it like `command --stuff` or `command` by itself?
         auto tok1 = peek_token(1);
         return tok1.type == parse_token_type_t::string && !tok1.is_dash_prefix_string();
+    }
+
+    bool can_parse(keyword_t<parse_keyword_t::kw_do> *) {
+        return keyword_t<parse_keyword_t::kw_do>::allows_keyword(peek_token(0).keyword) &&
+               !peek_token(1).is_dash_prefix_string();
+    }
+
+    bool can_parse(keyword_t<parse_keyword_t::kw_then> *) {
+        return keyword_t<parse_keyword_t::kw_then>::allows_keyword(peek_token(0).keyword) &&
+               !peek_token(1).is_dash_prefix_string();
     }
 
     bool can_parse(keyword_t<parse_keyword_t::kw_time> *) {
@@ -1013,7 +1033,9 @@ struct populator_t {
             case pkt::kw_switch:
                 return allocate_visit<switch_statement_t>();
 
+            case pkt::kw_done:
             case pkt::kw_end:
+            case pkt::kw_fi:
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
@@ -1135,7 +1157,7 @@ struct populator_t {
 
             // Special error reporting for keyword_t<kw_end>.
             std::array<parse_keyword_t, sizeof...(KWs)> allowed = {{KWs...}};
-            if (allowed.size() == 1 && allowed[0] == parse_keyword_t::kw_end) {
+            if (allowed.size() >= 1 && allowed[0] == parse_keyword_t::kw_end) {
                 assert(!visit_stack_.empty() && "Visit stack should not be empty");
                 auto p = find_block_open_keyword(visit_stack_.back());
                 source_range_t kw_range = p.first;

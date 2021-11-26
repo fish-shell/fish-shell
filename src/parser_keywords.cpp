@@ -17,15 +17,16 @@ static const wcstring skip_keywords[]{
 };
 
 static const wcstring subcommand_keywords[]{
-    L"and", L"begin", L"builtin", L"command", L"exec", L"if", L"not", L"or", L"time", L"while",
+    L"and", L"begin", L"builtin", L"command", L"do",   L"exec",
+    L"if",  L"not",   L"or",      L"then",    L"time", L"while",
 };
 
 static const string_set_t block_keywords = {L"for",      L"while",  L"if",
                                             L"function", L"switch", L"begin"};
 
 static const wcstring reserved_keywords[] = {
-    L"[",   L"_",    L"argparse", L"break", L"case",   L"continue", L"else",
-    L"end", L"read", L"return",   L"set",   L"status", L"string",   L"test",
+    L"[",   L"_",  L"argparse", L"break",  L"case", L"continue", L"do",     L"done", L"else",
+    L"end", L"fi", L"read",     L"return", L"set",  L"status",   L"string", L"test", L"then",
 };
 
 // The lists above are purposely implemented separately from the logic below, so that future

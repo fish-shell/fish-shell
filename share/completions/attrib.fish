@@ -14,15 +14,16 @@ a\tClear the Archive file attribute
 s\tClear the System file attribute
 h\tClear the Hidden file attribute
 i\tClear the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
-    case '/*'
+    case '*'
+      if __fish_seen_argument --windows 's'
+        echo -e '/d\tApply attrib and any command-line options to directories
+/l\tApply attrib and any command-line options to the Symbolic Link, rather than the target of it'
+      end
+
       echo -e '+\tSet the file attribute
 -\tClear the file attribute
 /s\tApply to matching files in the current directory and all of its subdirectories
-/d\tApply attrib and any command-line options to directories
-/l\tApply attrib and any command-line options to the Symbolic Link, rather than the target of it
 /?\tShow help'
-    case '*'
-      __fish_list_windows_drives
   end
 end
 

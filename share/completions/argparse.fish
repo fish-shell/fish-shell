@@ -1,4 +1,4 @@
-function __argparse_exclusive_generate_args --description 'Function to generate args for -x|--exclusive'
+function __argparse_exclusive_generate_args --description 'Helper function to list unused options'
   set --local all_tokens (commandline --tokenize)
   set --erase all_tokens[1]
   set --local current_token (commandline --current-token)
@@ -62,9 +62,16 @@ complete --command argparse --no-files
 
 complete --command argparse --short-option h --long-option help --description 'Show help'
 
-complete --command argparse --short-option n --long-option name --require-parameter --no-files --arguments '(functions --all | string replace ", " "\n")' --description 'Use function name'
-complete --command argparse --short-option x --long-option exclusive --no-files --require-parameter --arguments '(__fish_append "," (__argparse_exclusive_generate_args))' --description 'Specify mutually exclusive options'
-complete --command argparse --short-option N --long-option min-args --no-files --require-parameter --description 'Specify minimum non-option argument count'
-complete --command argparse --short-option X --long-option max-args --no-files --require-parameter --description 'Specify maximum non-option argument count'
-complete --command argparse --short-option i --long-option ignore-unknown --description 'Ignore unknown options'
-complete --command argparse --short-option s --long-option stop-nonopt --description 'Exit on subcommand'
+complete --command argparse --short-option n --long-option name --require-parameter --no-files \
+  --arguments '(functions --all | string replace ", " "\n")' --description 'Use function name'
+complete --command argparse --short-option x --long-option exclusive --no-files --require-parameter \
+  --arguments '(__fish_append "," (__argparse_exclusive_generate_args))' \
+  --description 'Specify mutually exclusive options'
+complete --command argparse --short-option N --long-option min-args --no-files --require-parameter \
+  --description 'Specify minimum non-option argument count'
+complete --command argparse --short-option X --long-option max-args --no-files --require-parameter \
+  --description 'Specify maximum non-option argument count'
+complete --command argparse --short-option i --long-option ignore-unknown \
+  --description 'Ignore unknown options'
+complete --command argparse --short-option s --long-option stop-nonopt \
+  --description 'Exit on subcommand'

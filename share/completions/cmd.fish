@@ -28,9 +28,12 @@ off\tDisable file and directory name completion' | awk -F '\t' "{ printf \"$curr
       echo -e 'on\tEnable delayed environment variable expansion
 off\tDisable delayed environment variable expansion' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
     case '*'
-      echo -e '/c\tCarry out the command specified by string and then stop
-/k\tCarry out the command specified by string and continue
-/s\tModify the treatment of string after /c or /k
+      if not __fish_seen_argument --windows 'c' --windows 'k'
+        echo -e '/c\tCarry out the command specified by string and then stop
+/k\tCarry out the command specified by string and continue'
+      end
+
+      echo -e '/s\tModify the treatment of string after /c or /k
 /q\tTurn the echo off
 /d\tDisable execution of AutoRun commands
 /a\tFormat internal command output to a pipe or a file as ANSI

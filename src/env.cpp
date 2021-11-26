@@ -509,6 +509,14 @@ struct query_t {
             return true;
         }
     }
+
+    bool pathvar_matches(const env_var_t &var) const {
+        if (has_pathvar_unpathvar) {
+            return var.is_pathvar() ? pathvar : unpathvar;
+        } else {
+            return true;
+        }
+    }
 };
 
 // Struct representing one level in the function variable stack.
@@ -802,6 +810,10 @@ maybe_t<env_var_t> env_scoped_impl_t::get(const wcstring &key, env_mode_flags_t 
     }
     // If the user requested only exported or unexported variables, enforce that here.
     if (result && !query.export_matches(*result)) {
+        result = none();
+    }
+    // Same for pathvars
+    if (result && !query.pathvar_matches(*result)) {
         result = none();
     }
     return result;

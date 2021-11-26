@@ -139,6 +139,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
     wcstring_list_t path;
     wcstring_list_t wrap_targets;
     bool preserve_order = false;
+    bool escape_tildes = true;
 
     static const wchar_t *const short_options = L":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk";
     static const struct woption long_options[] = {
@@ -249,6 +250,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
                 break;
             }
             case 'a': {
+                escape_tildes = false;
                 comp = w.woptarg;
                 assert(comp);
                 break;
@@ -420,6 +422,9 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         int flags = COMPLETE_AUTO_SPACE;
         if (preserve_order) {
             flags |= COMPLETE_DONT_SORT;
+        }
+        if (!escape_tildes) {
+            flags |= COMPLETE_DONT_ESCAPE_TILDES;
         }
 
         if (remove) {

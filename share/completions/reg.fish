@@ -37,7 +37,7 @@ function __reg_compare_generate_args --argument-names previous_token
 /on\tSpecify that nothing is displayed'
   end
 
-  echo -e '/s\tSpecify the type for the registry entry
+  echo -e '/s\tCompare all subkeys and entries recursively
 /?\tShow help'
 end
 

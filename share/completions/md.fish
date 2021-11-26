@@ -4,7 +4,7 @@ function __md_generate_args --description 'Function to generate args'
     case '/*'
       echo -e '/?\tShow help'
     case '*'
-      wmic logicaldisk get name | tail --lines +2
+      __fish_list_windows_drives
   end
 end
 

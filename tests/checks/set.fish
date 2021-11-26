@@ -415,9 +415,29 @@ set --unpath __fish_test_PATH $__fish_test_PATH
 echo "$__fish_test_path_not $__fish_test_PATH" $__fish_test_path_not $__fish_test_PATH
 # CHECK: a b c 1 2 3 a b c 1 2 3
 
+set -q --path __fish_test_PATH
+and echo __fish_test_PATH is a pathvar
+or echo __fish_test_PATH is not a pathvar
+# CHECK: __fish_test_PATH is not a pathvar
+
+set -q --unpath __fish_test_PATH
+and echo __fish_test_PATH is not a pathvar
+or echo __fish_test_PATH is not not a pathvar
+# CHECK: __fish_test_PATH is not a pathvar
+
 set --path __fish_test_path_not $__fish_test_path_not
 echo "$__fish_test_path_not $__fish_test_PATH" $__fish_test_path_not $__fish_test_PATH
 # CHECK: a:b:c 1 2 3 a b c 1 2 3
+
+set -q --path __fish_test_path_not
+and echo __fish_test_path_not is a pathvar
+or echo __fish_test_path_not is not a pathvar
+# CHECK: __fish_test_path_not is a pathvar
+
+set -q --unpath __fish_test_path_not
+and echo __fish_test_path_not is not a pathvar
+or echo __fish_test_path_not is not not a pathvar
+# CHECK: __fish_test_path_not is not not a pathvar
 
 set --path __fish_test_PATH $__fish_test_PATH
 echo "$__fish_test_path_not $__fish_test_PATH" $__fish_test_path_not $__fish_test_PATH

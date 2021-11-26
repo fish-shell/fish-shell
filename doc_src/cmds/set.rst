@@ -90,7 +90,7 @@ The exporting rules when creating or updating a variable are identical to the sc
 - If a variable is not explicitly set to be either exported or unexported and has never before been defined, the variable will not be exported.
 
 
-In query mode, the scope to be examined can be specified.
+In query mode, the scope to be examined can be specified. Whether the variable has to be a path variable or exported can also be specified.
 
 In erase mode, if variable indices are specified, only the specified slices of the list variable will be erased.
 

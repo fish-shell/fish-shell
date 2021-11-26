@@ -75,6 +75,7 @@ Scripting improvements
 - ``math`` now correctly prints negative values and values larger than ``2**31`` when in hex or octal bases (:issue:`8417`).
 - ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
 - ``cd ""`` no longer crashes fish (:issue:`8147`).
+- ``set --query`` can now query whether a variable is a pathvar via ``--path`` or ``--unpath`` (:issue:`8494`).
 
 Interactive improvements
 ------------------------

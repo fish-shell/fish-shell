@@ -418,6 +418,9 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         }
     } else {
         int flags = COMPLETE_AUTO_SPACE;
+        // HACK: Don't escape tildes because at the beginning of a token they probably mean
+        // $HOME, for example as produced by a recursive call to "complete -C".
+        flags |= COMPLETE_DONT_ESCAPE_TILDES;
         if (preserve_order) {
             flags |= COMPLETE_DONT_SORT;
         }

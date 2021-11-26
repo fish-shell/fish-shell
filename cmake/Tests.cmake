@@ -31,12 +31,8 @@ set(SKIP_RETURN_CODE 125)
 #    way to manually invoke test `foo` is to to manually run `ctest` and specify a regex matching
 #    `foo` as an argument, e.g. `ctest -R ^foo$`... which is really crazy.
 
-# Set a policy so CMake stops complaining when we use the target name "test"
-cmake_policy(PUSH)
-if(POLICY CMP0037)
-  cmake_policy(SET CMP0037 OLD)
-endif()
-add_custom_target(test
+# The top-level test target is "fish_run_tests".
+add_custom_target(fish_run_tests
   COMMAND env CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL} FISH_FORCE_COLOR=1
           FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
@@ -44,6 +40,14 @@ add_custom_target(test
   DEPENDS fish_tests tests_buildroot_target
   USES_TERMINAL
 )
+
+# If CMP0037 is available, also make an alias "test" target.
+# Note that this policy may not be available, in which case definining such a target silently fails.
+cmake_policy(PUSH)
+if(POLICY CMP0037)
+  cmake_policy(SET CMP0037 OLD)
+  add_custom_target(test DEPENDS fish_run_tests)
+endif()
 cmake_policy(POP)
 
 # Build the low-level tests code

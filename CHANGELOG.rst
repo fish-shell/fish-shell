@@ -33,6 +33,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- Tab (or any ``complete`` key binding) now prefer to expand wildcards instead of invoking completions, if there is a wildcard in the path component under the cursor (:issue:`954`).
 - The default command-not-found handler now reports a special error if there is a non-executable file (:issue:`8804`)
 - ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).

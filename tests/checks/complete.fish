@@ -410,6 +410,12 @@ complete -p $PWD/command-not-in-path -xa relative-path
 complete -C './command-not-in-path '
 # CHECK: relative-path
 
+# Expand variables and tildes in command.
+complete -C '$PWD/command-not-in-path '
+# CHECK: relative-path
+HOME=$PWD complete -C '~/command-not-in-path '
+# CHECK: relative-path
+
 # Non-canonical command path
 mkdir -p subdir
 : >subdir/command-in-subdir
@@ -427,3 +433,24 @@ end
 
 cd -
 rm -r $dir
+
+# Expand variables and tildes in command.
+complete cat -xa +pet
+set -l path_to_cat (command -v cat)
+complete -C '$path_to_cat '
+# CHECK: +pet
+HOME=$path_to_cat/.. complete -C '~/cat '
+# CHECK: +pet
+
+# Do not expand command substitutions.
+complete -C '(echo cat) ' | string match +pet
+# Give up if we expand to multiple arguments (we'd need to handle the arguments).
+complete -C '{cat,arg1,arg2} ' | string match +pet
+# Don't expand wildcards though we could.
+complete -C '$path_to_cat* ' | string match +pet
+
+# Also expand wrap targets.
+function crookshanks --wraps '$path_to_cat'
+end
+complete -C 'crookshanks '
+# CHECK: +pet

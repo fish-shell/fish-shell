@@ -1406,6 +1406,14 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     }
 }
 
+static bool expand_command_token(const operation_context_t &ctx, wcstring &cmd_tok) {
+    // TODO: we give up if the first token expands to more than one argument. We could handle
+    // that case by propagating arguments.
+    // Also we could expand wildcards.
+    return expand_one(cmd_tok, {expand_flag::skip_cmdsubst, expand_flag::skip_wildcards}, ctx,
+                      nullptr);
+}
+
 // Invoke command-specific completions given by \p arg_data.
 // Then, for each target wrapped by the given command, update the command
 // line with that target and invoke this recursively.
@@ -1445,6 +1453,7 @@ void completer_t::walk_wrap_chain(const wcstring &cmd, const wcstring &cmdline,
             } else {
                 wrapped_command_offset_in_wt = tok->offset;
                 wrapped_command = std::move(tok_src);
+                expand_command_token(ctx, wrapped_command);
                 break;
             }
         }
@@ -1670,15 +1679,15 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         source_range_t command_range = {static_cast<uint32_t>(cmd_tok.offset),
                                         static_cast<uint32_t>(cmd_tok.length)};
 
-        wcstring unesc_command;
+        wcstring exp_command = cmd_tok.get_source(cmdline);
         bool unescaped =
-            unescape_string(cmd_tok.get_source(cmdline), &unesc_command, UNESCAPE_DEFAULT) &&
+            expand_command_token(ctx, exp_command) &&
             unescape_string(previous_argument, &arg_data.previous_argument, UNESCAPE_DEFAULT) &&
             unescape_string(current_argument, &arg_data.current_argument, UNESCAPE_INCOMPLETE);
         if (unescaped) {
             // Have to walk over the command and its entire wrap chain. If any command
             // disables do_file, then they all do.
-            walk_wrap_chain(unesc_command, cmdline, command_range, &arg_data);
+            walk_wrap_chain(exp_command, cmdline, command_range, &arg_data);
             do_file = arg_data.do_file;
 
             // If we're autosuggesting, and the token is empty, don't do file suggestions.
@@ -1689,7 +1698,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
 
         // Hack. If we're cd, handle it specially (issue #1059, others).
         handle_as_special_cd =
-            (unesc_command == L"cd") || arg_data.visited_wrapped_commands.count(L"cd");
+            (exp_command == L"cd") || arg_data.visited_wrapped_commands.count(L"cd");
     }
 
     // Maybe apply variable assignments.

@@ -508,25 +508,37 @@ g_special_escapes_dict = None
 def get_special_ansi_escapes():
     global g_special_escapes_dict
     if g_special_escapes_dict is None:
-        import curses
+        try:
+            import curses
 
-        g_special_escapes_dict = {}
-        curses.setupterm()
+            g_special_escapes_dict = {}
+            curses.setupterm()
 
-        # Helper function to get a value for a tparm
-        def get_tparm(key):
-            val = None
-            key = curses.tigetstr(key)
-            if key:
-                val = curses.tparm(key)
-            if val:
-                val = val.decode("utf-8")
-            return val
+            # Helper function to get a value for a tparm
+            def get_tparm(key):
+                val = None
+                key = curses.tigetstr(key)
+                if key:
+                    val = curses.tparm(key)
+                if val:
+                    val = val.decode("utf-8")
+                return val
 
-        # Just a few for now
-        g_special_escapes_dict["exit_attribute_mode"] = get_tparm("sgr0")
-        g_special_escapes_dict["bold"] = get_tparm("bold")
-        g_special_escapes_dict["underline"] = get_tparm("smul")
+            # Just a few for now
+            g_special_escapes_dict["exit_attribute_mode"] = get_tparm("sgr0")
+            g_special_escapes_dict["bold"] = get_tparm("bold")
+            g_special_escapes_dict["underline"] = get_tparm("smul")
+        except ImportError:
+            print("WARNING: The python curses module is missing.")
+            print("WARNING: Falling back to xterm-256color settings.")
+            print("WARNING: Rebuild python with curses headers!")
+
+            g_special_escapes_dict = {
+                'exit_attribute_mode': '\x1b(B\x1b[m',
+                'bold': '\x1b[1m',
+                'underline': '\x1b[4m'
+            }
+            pass
 
     return g_special_escapes_dict
 

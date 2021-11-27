@@ -244,7 +244,9 @@ if test $status -ne 0
     echo the read of the max amount of data failed unexpectedly
 end
 if test (string length "$x") -ne $fish_read_limit
-    echo reading the max amount of data with --nchars failed the length test: (string length "$x") / $fish_read_limit
+    # See how much data 'yes' produced.
+    set yeslen (yes $line | dd bs=1024 count=(math "$fish_read_limit / 1024") 2>/dev/null | wc -c | tr -d " \t\n\r")
+    echo reading the max amount of data with --nchars failed the length test. read: (string length "$x"), limit: $fish_read_limit, yes produced: $yeslen
 end
 
 # Confirm reading non-interactively works -- \#4206 regression

@@ -767,6 +767,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// incorporating changes from the commandline builtin.
     void apply_commandline_state_changes();
 
+    /// Compute completions and update the pager and/or commandline as needed.
+    void compute_and_apply_completions(readline_cmd_t c, readline_loop_state_t &rls);
+
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
 
@@ -2773,6 +2776,68 @@ void reader_data_t::apply_commandline_state_changes() {
     }
 }
 
+void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loop_state_t &rls) {
+    assert((c == readline_cmd_t::complete || c == readline_cmd_t::complete_and_search) &&
+           "Invalid command");
+    editable_line_t *el = &command_line;
+
+    // Remove a trailing backslash. This may trigger an extra repaint, but this is
+    // rare.
+    if (is_backslashed(el->text(), el->position())) {
+        delete_char();
+    }
+
+    // Get the string; we have to do this after removing any trailing backslash.
+    const wchar_t *const buff = el->text().c_str();
+
+    // Figure out the extent of the command substitution surrounding the cursor.
+    // This is because we only look at the current command substitution to form
+    // completions - stuff happening outside of it is not interesting.
+    const wchar_t *cmdsub_begin, *cmdsub_end;
+    parse_util_cmdsubst_extent(buff, el->position(), &cmdsub_begin, &cmdsub_end);
+
+    // Figure out the extent of the token within the command substitution. Note we
+    // pass cmdsub_begin here, not buff.
+    const wchar_t *token_begin, *token_end;
+    parse_util_token_extent(cmdsub_begin, el->position() - (cmdsub_begin - buff), &token_begin,
+                            &token_end, nullptr, nullptr);
+
+    // Hack: the token may extend past the end of the command substitution, e.g. in
+    // (echo foo) the last token is 'foo)'. Don't let that happen.
+    if (token_end > cmdsub_end) token_end = cmdsub_end;
+
+    // Construct a copy of the string from the beginning of the command substitution
+    // up to the end of the token we're completing.
+    const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
+
+    // Ensure that `commandline` inside the completions gets the current state.
+    update_commandline_state();
+
+    completion_request_flags_t complete_flags = {completion_request_t::descriptions,
+                                                 completion_request_t::fuzzy_match};
+    rls.comp = complete(buffcpy, complete_flags, parser_ref->context());
+
+    // User-supplied completions may have changed the commandline - prevent buffer
+    // overflow.
+    if (token_begin > buff + el->text().size()) token_begin = buff + el->text().size();
+    if (token_end > buff + el->text().size()) token_end = buff + el->text().size();
+
+    // Munge our completions.
+    completions_sort_and_prioritize(&rls.comp);
+
+    // Record our cycle_command_line.
+    cycle_command_line = el->text();
+    cycle_cursor_pos = token_end - buff;
+
+    rls.complete_did_insert = handle_completions(rls.comp, token_begin - buff, token_end - buff);
+
+    // Show the search field if requested and if we printed a list of completions.
+    if (c == readline_cmd_t::complete_and_search && !rls.complete_did_insert && !pager.empty()) {
+        pager.set_search_field_shown(true);
+        select_completion_in_direction(selection_motion_t::next);
+    }
+}
+
 static relaxed_atomic_t<uint64_t> run_count{0};
 
 /// Returns the current interactive loop count
@@ -3090,9 +3155,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::complete:
         case rl::complete_and_search: {
             if (!conf.complete_ok) break;
-
-            // Use the command line only; it doesn't make sense to complete in any other line.
-            editable_line_t *el = &command_line;
             if (is_navigating_pager_contents() ||
                 (!rls.comp.empty() && !rls.complete_did_insert && rls.last_cmd == rl::complete)) {
                 // The user typed complete more than once in a row. If we are not yet fully
@@ -3105,63 +3167,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 }
             } else {
                 // Either the user hit tab only once, or we had no visible completion list.
-                // Remove a trailing backslash. This may trigger an extra repaint, but this is
-                // rare.
-                if (is_backslashed(el->text(), el->position())) {
-                    delete_char();
-                }
-
-                // Get the string; we have to do this after removing any trailing backslash.
-                const wchar_t *const buff = el->text().c_str();
-
-                // Figure out the extent of the command substitution surrounding the cursor.
-                // This is because we only look at the current command substitution to form
-                // completions - stuff happening outside of it is not interesting.
-                const wchar_t *cmdsub_begin, *cmdsub_end;
-                parse_util_cmdsubst_extent(buff, el->position(), &cmdsub_begin, &cmdsub_end);
-
-                // Figure out the extent of the token within the command substitution. Note we
-                // pass cmdsub_begin here, not buff.
-                const wchar_t *token_begin, *token_end;
-                parse_util_token_extent(cmdsub_begin, el->position() - (cmdsub_begin - buff),
-                                        &token_begin, &token_end, nullptr, nullptr);
-
-                // Hack: the token may extend past the end of the command substitution, e.g. in
-                // (echo foo) the last token is 'foo)'. Don't let that happen.
-                if (token_end > cmdsub_end) token_end = cmdsub_end;
-
-                // Construct a copy of the string from the beginning of the command substitution
-                // up to the end of the token we're completing.
-                const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
-
-                // Ensure that `commandline` inside the completions gets the current state.
-                update_commandline_state();
-
-                // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
-                completion_request_flags_t complete_flags = {completion_request_t::descriptions,
-                                                             completion_request_t::fuzzy_match};
-                rls.comp = complete(buffcpy, complete_flags, parser_ref->context());
-
-                // User-supplied completions may have changed the commandline - prevent buffer
-                // overflow.
-                if (token_begin > buff + el->text().size()) token_begin = buff + el->text().size();
-                if (token_end > buff + el->text().size()) token_end = buff + el->text().size();
-
-                // Munge our completions.
-                completions_sort_and_prioritize(&rls.comp);
-
-                // Record our cycle_command_line.
-                cycle_command_line = el->text();
-                cycle_cursor_pos = token_end - buff;
-
-                rls.complete_did_insert =
-                    handle_completions(rls.comp, token_begin - buff, token_end - buff);
-
-                // Show the search field if requested and if we printed a list of completions.
-                if (c == rl::complete_and_search && !rls.complete_did_insert && !pager.empty()) {
-                    pager.set_search_field_shown(true);
-                    select_completion_in_direction(selection_motion_t::next);
-                }
+                compute_and_apply_completions(c, rls);
             }
             break;
         }

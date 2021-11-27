@@ -89,6 +89,7 @@ Interactive improvements
 - fish's highlighter will now color options (starting with ``-`` or ``--``) with the color given in the new $fish_color_option, up to the first ``--``. It falls back on $fish_color_param, so nothing changes for existing setups (:issue:`8292`).
 - When executing a command, abbreviations are no longer expanded when the cursor is separated from the command by spaces, making it easier to suppress abbreviation expansion of commands without arguments. (:issue:`8423`).
 - ``fish_key_reader``'s output was simplified. By default it now only prints a bind statement, the full per-character timing information can be gotten with a new ``--verbose`` switch. (:issue:`8467`)
+- Custom completions are now also loaded for commands that contain tildes or variables like ``~/$bin/fish`` (:issue:`8442`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -29,4 +29,4 @@ fish_pager_color_description 666
 fish_pager_color_prefix '--underline'  '0AA'
 fish_pager_color_progress 0AA
 fish_pager_color_selected_background --background=333
-fish_color_option ccccff
+fish_color_option aaaaff

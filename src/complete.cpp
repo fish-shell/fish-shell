@@ -594,7 +594,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     // least two characters if we don't know the location of the whatis-database.
     if (cmd.length() < 2) return;
 
-    if (wildcard_has(cmd, false)) {
+    if (wildcard_has(cmd)) {
         return;
     }
 

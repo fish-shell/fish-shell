@@ -1041,7 +1041,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
     expand_result_t result = expand_result_t::ok;
 
     remove_internal_separator(&path_to_expand, flags & expand_flag::skip_wildcards);
-    const bool has_wildcard = wildcard_has(path_to_expand, true /* internal, i.e. ANY_STRING */);
+    const bool has_wildcard = wildcard_has_internal(path_to_expand);  // e.g. ANY_STRING
     const bool for_completions = flags & expand_flag::for_completions;
     const bool skip_wildcards = flags & expand_flag::skip_wildcards;
 

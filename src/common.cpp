@@ -1301,7 +1301,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
 }
 
 /// Returns the unescaped version of input_str into output_str (by reference). Returns true if
-/// successful. If false, the contents of output_str are undefined (!).
+/// successful. If false, the contents of output_str are unchanged.
 static bool unescape_string_internal(const wchar_t *const input, const size_t input_len,
                                      wcstring *output_str, unescape_flags_t flags) {
     // Set up result string, which we'll swap with the output on success.
@@ -1579,12 +1579,12 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
     return success;
 }
 
-bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
-                     escape_string_style_t style) {
+bool unescape_string(const wchar_t *input, size_t len, wcstring *output,
+                     unescape_flags_t escape_special, escape_string_style_t style) {
     bool success = false;
     switch (style) {
         case STRING_STYLE_SCRIPT: {
-            success = unescape_string_internal(input, std::wcslen(input), output, escape_special);
+            success = unescape_string_internal(input, len, output, escape_special);
             break;
         }
         case STRING_STYLE_URL: {
@@ -1605,30 +1605,14 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
     return success;
 }
 
+bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
+                     escape_string_style_t style) {
+    return unescape_string(input, std::wcslen(input), output, escape_special, style);
+}
+
 bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style) {
-    bool success = false;
-    switch (style) {
-        case STRING_STYLE_SCRIPT: {
-            success = unescape_string_internal(input.c_str(), input.size(), output, escape_special);
-            break;
-        }
-        case STRING_STYLE_URL: {
-            success = unescape_string_url(input.c_str(), output);
-            break;
-        }
-        case STRING_STYLE_VAR: {
-            success = unescape_string_var(input.c_str(), output);
-            break;
-        }
-        case STRING_STYLE_REGEX: {
-            // unescaping PCRE2 is not needed/supported, the PCRE2 engine is responsible for that
-            success = false;
-            break;
-        }
-    }
-    if (!success) output->clear();
-    return success;
+    return unescape_string(input.c_str(), input.size(), output, escape_special, style);
 }
 
 [[gnu::noinline]] void bugreport() {

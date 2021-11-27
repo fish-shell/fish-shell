@@ -38,34 +38,29 @@ static size_t wildcard_find(const wchar_t *wc) {
     return wcstring::npos;
 }
 
-/// Implementation of wildcard_has. Needs to take the length to handle embedded nulls (issue #1631).
-static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
-    assert(str != nullptr);
-    bool qmark_is_wild = !feature_test(features_t::qmark_noglob);
-    const wchar_t *end = str + len;
-    if (internal) {
-        for (; str < end; str++) {
-            if ((*str == ANY_CHAR) || (*str == ANY_STRING) || (*str == ANY_STRING_RECURSIVE))
-                return true;
-        }
-    } else {
-        wchar_t prev = 0;
-        for (; str < end; str++) {
-            if (((*str == L'*') || (*str == L'?' && qmark_is_wild)) && (prev != L'\\')) return true;
-            prev = *str;
+bool wildcard_has_internal(const wchar_t *s, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        wchar_t c = s[i];
+        if (c == ANY_CHAR || c == ANY_STRING || c == ANY_STRING_RECURSIVE) {
+            return true;
         }
     }
-
     return false;
 }
 
-bool wildcard_has(const wchar_t *str, bool internal) {
+// Note we want to handle embedded nulls (issue #1631).
+bool wildcard_has(const wchar_t *str, size_t len) {
     assert(str != nullptr);
-    return wildcard_has_impl(str, std::wcslen(str), internal);
-}
-
-bool wildcard_has(const wcstring &str, bool internal) {
-    return wildcard_has_impl(str.data(), str.size(), internal);
+    const wchar_t *end = str + len;
+    bool qmark_is_wild = !feature_test(features_t::qmark_noglob);
+    // Fast check for * or ?; if none there is no wildcard.
+    // Note some strings contain * but no wildcards, e.g. if they are quoted.
+    if (std::find(str, end, L'*') == end && (!qmark_is_wild || std::find(str, end, L'?') == end)) {
+        return false;
+    }
+    wcstring unescaped;
+    unescape_string(str, len, &unescaped, UNESCAPE_SPECIAL);
+    return wildcard_has_internal(unescaped);
 }
 
 /// Check whether the string str matches the wildcard string wc.
@@ -876,8 +871,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     const bool is_last_segment = (next_slash == nullptr);
     const size_t wc_segment_len = next_slash ? next_slash - wc : std::wcslen(wc);
     const wcstring wc_segment = wcstring(wc, wc_segment_len);
-    const bool segment_has_wildcards =
-        wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
+    const bool segment_has_wildcards = wildcard_has_internal(wc_segment);  // e.g. ANY_STRING.
     const wchar_t *const wc_remainder = next_slash ? next_slash + 1 : nullptr;
 
     if (wc_segment.empty()) {

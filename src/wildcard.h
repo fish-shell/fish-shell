@@ -86,9 +86,15 @@ wildcard_result_t wildcard_expand_string(const wcstring &wc, const wcstring &wor
 bool wildcard_match(const wcstring &str, const wcstring &wc,
                     bool leading_dots_fail_to_match = false);
 
-/// Check if the specified string contains wildcards.
-bool wildcard_has(const wcstring &, bool internal);
-bool wildcard_has(const wchar_t *, bool internal);
+// Check if the string has any unescaped wildcards (e.g. ANY_STRING).
+bool wildcard_has_internal(const wchar_t *s, size_t len);
+inline bool wildcard_has_internal(const wcstring &s) {
+    return wildcard_has_internal(s.c_str(), s.size());
+}
+
+/// Check if the specified string contains wildcards (e.g. *).
+bool wildcard_has(const wchar_t *s, size_t len);
+inline bool wildcard_has(const wcstring &s) { return wildcard_has(s.c_str(), s.size()); }
 
 /// Test wildcard completion.
 wildcard_result_t wildcard_complete(const wcstring &str, const wchar_t *wc,

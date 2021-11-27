@@ -3147,6 +3147,29 @@ static std::shared_ptr<function_properties_t> make_test_func_props() {
     return ret;
 }
 
+static void test_wildcards() {
+    say(L"Testing wildcards");
+    do_test(!wildcard_has(L""));
+    do_test(wildcard_has(L"*"));
+    do_test(!wildcard_has(L"\\*"));
+    do_test(!wildcard_has(L"\"*\""));
+
+    wcstring wc = L"foo*bar";
+    do_test(wildcard_has(wc) && !wildcard_has_internal(wc));
+    unescape_string_in_place(&wc, UNESCAPE_SPECIAL);
+    do_test(!wildcard_has(wc) && wildcard_has_internal(wc));
+
+    auto &feat = mutable_fish_features();
+    auto saved = feat.test(features_t::flag_t::qmark_noglob);
+    feat.set(features_t::flag_t::qmark_noglob, false);
+    do_test(wildcard_has(L"?"));
+    do_test(!wildcard_has(L"\\?"));
+    feat.set(features_t::flag_t::qmark_noglob, true);
+    do_test(!wildcard_has(L"?"));
+    do_test(!wildcard_has(L"\\?"));
+    feat.set(features_t::flag_t::qmark_noglob, saved);
+}
+
 static void test_complete() {
     say(L"Testing complete");
 
@@ -6765,6 +6788,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("word_motion"), test_word_motion},
     {TEST_GROUP("is_potential_path"), test_is_potential_path},
     {TEST_GROUP("colors"), test_colors},
+    {TEST_GROUP("wildcard"), test_wildcards},
     {TEST_GROUP("complete"), test_complete},
     {TEST_GROUP("autoload"), test_autoload},
     {TEST_GROUP("input"), test_input},

@@ -504,6 +504,10 @@ bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
 bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style = STRING_STYLE_SCRIPT);
 
+bool unescape_string(const wchar_t *input, size_t len, wcstring *output,
+                     unescape_flags_t escape_special,
+                     escape_string_style_t style = STRING_STYLE_SCRIPT);
+
 bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special,
                      escape_string_style_t style = STRING_STYLE_SCRIPT);
 

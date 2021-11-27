@@ -75,6 +75,7 @@
 #include "signal.h"
 #include "termsize.h"
 #include "tokenizer.h"
+#include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Name of the variable that tells how long it took, in milliseconds, for the previous
@@ -108,6 +109,10 @@
 /// readahead will only occur if new characters are available for reading, fish will never block for
 /// more input without repainting.
 static constexpr size_t READAHEAD_MAX = 256;
+
+/// When tab-completing with a wildcard, we expand the wildcard up to this many results.
+/// If expansion would exceed this many results, beep and do nothing.
+static const size_t TAB_COMPLETE_WILDCARD_MAX_EXPANSION = 256;
 
 /// A mode for calling the reader_kill function. In this mode, the new string is appended to the
 /// current contents of the kill buffer.
@@ -727,6 +732,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Access the parser.
     parser_t &parser() { return *parser_ref; }
+    const parser_t &parser() const { return *parser_ref; }
 
     reader_data_t(std::shared_ptr<parser_t> parser, std::shared_ptr<history_t> hist,
                   reader_config_t &&conf)
@@ -765,6 +771,10 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Compute completions and update the pager and/or commandline as needed.
     void compute_and_apply_completions(readline_cmd_t c, readline_loop_state_t &rls);
+
+    /// Expand a wildcard for the given token. This is used as part of tab completion.
+    /// \return expanded wildcards and the result of expansion.
+    expand_result_t expand_wildcard(wcstring wc, completion_list_t *out) const;
 
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
@@ -2762,6 +2772,21 @@ void reader_data_t::apply_commandline_state_changes() {
     }
 }
 
+expand_result_t reader_data_t::expand_wildcard(wcstring wc, completion_list_t *out) const {
+    // Have a low limit on the number of matches, otherwise we will overwhelm the command line.
+    operation_context_t ctx{nullptr, vars(), parser().cancel_checker(),
+                            TAB_COMPLETE_WILDCARD_MAX_EXPANSION};
+    // We do wildcards only.
+    expand_flags_t flags{expand_flag::skip_cmdsubst, expand_flag::skip_variables,
+                         expand_flag::preserve_home_tildes};
+    completion_list_t comps;
+    expand_result_t ret = expand_string(std::move(wc), &comps, flags, ctx);
+    if (ret == expand_result_t::ok) {
+        *out = std::move(comps);
+    }
+    return ret;
+}
+
 void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loop_state_t &rls) {
     assert((c == readline_cmd_t::complete || c == readline_cmd_t::complete_and_search) &&
            "Invalid command");
@@ -2791,6 +2816,44 @@ void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loo
     // Hack: the token may extend past the end of the command substitution, e.g. in
     // (echo foo) the last token is 'foo)'. Don't let that happen.
     if (token_end > cmdsub_end) token_end = cmdsub_end;
+
+    // Check if we have a wildcard within this string; if so we don't apply user completions but
+    // instead attempt to expand the wildcard.
+    if (wildcard_has(token_begin, token_end - token_begin)) {
+        rls.comp.clear();
+        rls.complete_did_insert = false;
+
+        completion_list_t expanded;
+        switch (expand_wildcard(wcstring(token_begin, token_end - token_begin), &expanded).result) {
+            case expand_result_t::ok: {
+                // Insert all matches (escaped) and a trailing space.
+                wcstring joined;
+                for (const auto &match : expanded) {
+                    if (match.flags & COMPLETE_DONT_ESCAPE) {
+                        joined.append(match.completion);
+                    } else {
+                        complete_flags_t tildeflag =
+                            (match.flags & COMPLETE_DONT_ESCAPE_TILDES) ? ESCAPE_NO_TILDE : 0;
+                        joined.append(escape_string(match.completion,
+                                                    ESCAPE_ALL | ESCAPE_NO_QUOTED | tildeflag));
+                    }
+                    joined.push_back(L' ');
+                }
+
+                size_t tok_off = static_cast<size_t>(token_begin - buff);
+                size_t tok_len = static_cast<size_t>(token_end - token_begin);
+                el->push_edit(edit_t{tok_off, tok_len, std::move(joined)});
+                break;
+            }
+            case expand_result_t::error:
+            case expand_result_t::wildcard_no_match:
+                flash();
+                break;
+            case expand_result_t::cancel:
+                break;
+        }
+        return;
+    }
 
     // Construct a copy of the string from the beginning of the command substitution
     // up to the end of the token we're completing.

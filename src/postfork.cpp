@@ -540,6 +540,9 @@ static char *get_interpreter(const char *command, char *buffer, size_t buff_size
         return buffer + 3;
     } else if (std::strncmp(buffer, "#!/", const_strlen("#!/")) == 0) {
         return buffer + 2;
+    } else if (std::strncmp(buffer, "#!", const_strlen("#!")) == 0) {
+        // Relative path, basically always an issue.
+        return buffer + 2;
     }
     return nullptr;
 };

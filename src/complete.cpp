@@ -670,11 +670,11 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
     completion_list_t possible_comp;
 
     // Append all possible executables
-    expand_result_t result =
-        expand_string(str_cmd, &this->completions,
-                      this->expand_flags() | expand_flag::special_for_command |
-                          expand_flag::for_completions | expand_flag::executables_only,
-                      ctx);
+    expand_result_t result = expand_string(
+        str_cmd, &this->completions,
+        this->expand_flags() | expand_flag::special_for_command | expand_flag::for_completions |
+            expand_flag::preserve_home_tildes | expand_flag::executables_only,
+        ctx);
     if (result == expand_result_t::cancel) {
         return;
     }
@@ -686,10 +686,10 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
     // updated with choices for the user.
     expand_result_t ignore =
         // Append all matching directories
-        expand_string(
-            str_cmd, &this->completions,
-            this->expand_flags() | expand_flag::for_completions | expand_flag::directories_only,
-            ctx);
+        expand_string(str_cmd, &this->completions,
+                      this->expand_flags() | expand_flag::for_completions |
+                          expand_flag::preserve_home_tildes | expand_flag::directories_only,
+                      ctx);
     UNUSED(ignore);
 
     if (str_cmd.empty() || (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')) {
@@ -1101,8 +1101,8 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
 void completer_t::complete_param_expand(const wcstring &str, bool do_file,
                                         bool handle_as_special_cd) {
     if (ctx.check_cancel()) return;
-    expand_flags_t flags =
-        this->expand_flags() | expand_flag::skip_cmdsubst | expand_flag::for_completions;
+    expand_flags_t flags = this->expand_flags() | expand_flag::skip_cmdsubst |
+                           expand_flag::for_completions | expand_flag::preserve_home_tildes;
 
     if (!do_file) flags |= expand_flag::skip_wildcards;
 

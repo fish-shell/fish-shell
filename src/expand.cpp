@@ -859,43 +859,6 @@ void expand_tilde(wcstring &input, const environment_t &vars) {
     }
 }
 
-static void unexpand_tildes(const wcstring &input, const environment_t &vars,
-                            completion_list_t *completions) {
-    // If input begins with tilde, then try to replace the corresponding string in each completion
-    // with the tilde. If it does not, there's nothing to do.
-    if (input.empty() || input.at(0) != L'~') return;
-
-    // We only operate on completions that replace their contents. If we don't have any, we're done.
-    // In particular, empty vectors are common.
-    bool has_candidate_completion = false;
-    for (const auto &completion : *completions) {
-        if (completion.flags & COMPLETE_REPLACES_TOKEN) {
-            has_candidate_completion = true;
-            break;
-        }
-    }
-    if (!has_candidate_completion) return;
-
-    size_t tail_idx;
-    wcstring username_with_tilde = L"~";
-    username_with_tilde.append(get_home_directory_name(input, &tail_idx));
-
-    // Expand username_with_tilde.
-    wcstring home = username_with_tilde;
-    expand_tilde(home, vars);
-
-    // Now for each completion that starts with home, replace it with the username_with_tilde.
-    for (auto &comp : *completions) {
-        if ((comp.flags & COMPLETE_REPLACES_TOKEN) &&
-            string_prefixes_string(home, comp.completion)) {
-            comp.completion.replace(0, home.size(), username_with_tilde);
-
-            // And mark that our tilde is literal, so it doesn't try to escape it.
-            comp.flags |= COMPLETE_DONT_ESCAPE_TILDES;
-        }
-    }
-}
-
 // If the given path contains the user's home directory, replace that with a tilde. We don't try to
 // be smart about case insensitivity, etc.
 wcstring replace_home_directory_with_tilde(const wcstring &str, const environment_t &vars) {
@@ -971,6 +934,10 @@ class expander_t {
 
     expander_t(const operation_context_t &ctx, expand_flags_t flags, parse_error_list_t *errors)
         : ctx(ctx), flags(flags), errors(errors) {}
+
+    // Given an original input string, if it starts with a tilde, "unexpand" the expanded home
+    // directory.  Note this may be just a tilde or a user name like ~foo/.
+    void unexpand_tildes(const wcstring &input, completion_list_t *completions) const;
 
    public:
     static expand_result_t expand_string(wcstring input, completion_receiver_t *out_completions,
@@ -1138,6 +1105,50 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
     return result;
 }
 
+void expander_t::unexpand_tildes(const wcstring &input, completion_list_t *completions) const {
+    // If input begins with tilde, then try to replace the corresponding string in each completion
+    // with the tilde. If it does not, there's nothing to do.
+    if (input.empty() || input.at(0) != L'~') return;
+
+    // This is a subtle kludge. We need to decide whether to unexpand tildes for all
+    // completions, or only those which replace their tokens. The problem is that we're sloppy
+    // about setting the COMPLETE_REPLACES_TOKEN flag, except when we're completing in the
+    // wildcard stage, because no other clients of string expansion care. Example:
+    //   HOME=/foo
+    //   mkdir ~/foo # makes /foo/foo
+    //   cd ~/<tab>
+    // Here we are likely to get a completion 'foo' which may match $HOME, but it extends its token
+    // instead of replacing it, so we don't modify it (it will just be appended to the original ~/).
+    //
+    // However if we are not completing, just expanding, then expansion just produces the full paths
+    // so we should unconditionally unexpand tildes.
+    bool only_replacers = bool(flags & expand_flag::for_completions);
+
+    // Helper to decide whether to process a completion.
+    auto should_process = [=](const completion_t &c) {
+        return only_replacers ? c.replaces_token() : true;
+    };
+
+    // Early out if none qualify.
+    if (std::none_of(completions->begin(), completions->end(), should_process)) return;
+
+    // Get the username_with_tilde (like ~bert) and expand it into a home directory.
+    size_t tail_idx;
+    wcstring username_with_tilde = L"~" + get_home_directory_name(input, &tail_idx);
+    wcstring home = username_with_tilde;
+    expand_tilde(home, ctx.vars);
+
+    // Now for each completion that starts with home, replace it with the username_with_tilde.
+    for (auto &comp : *completions) {
+        if (should_process(comp) && string_prefixes_string(home, comp.completion)) {
+            comp.completion.replace(0, home.size(), username_with_tilde);
+
+            // And mark that our tilde is literal, so it doesn't try to escape it.
+            comp.flags |= COMPLETE_DONT_ESCAPE_TILDES;
+        }
+    }
+}
+
 expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t *out_completions,
                                           expand_flags_t flags, const operation_context_t &ctx,
                                           parse_error_list_t *errors) {
@@ -1197,8 +1208,10 @@ expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t 
     }
 
     if (total_result == expand_result_t::ok) {
-        // Hack to un-expand tildes (see #647).
-        unexpand_tildes(input, ctx.vars, &completions);
+        // Unexpand tildes if we want to preserve them (see #647).
+        if (flags.get(expand_flag::preserve_home_tildes)) {
+            expand.unexpand_tildes(input, &completions);
+        }
         if (!out_completions->add_list(std::move(completions))) {
             total_result = append_overflow_error(errors);
         }

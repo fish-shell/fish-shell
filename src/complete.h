@@ -87,6 +87,9 @@ class completion_t {
     completion_t(completion_t &&) noexcept;
     completion_t &operator=(completion_t &&) noexcept;
 
+    /// \return whether this replaces its token.
+    bool replaces_token() const { return flags & COMPLETE_REPLACES_TOKEN; }
+
     /// \return the completion's match rank. Lower ranks are better completions.
     uint32_t rank() const { return match.rank(); }
 

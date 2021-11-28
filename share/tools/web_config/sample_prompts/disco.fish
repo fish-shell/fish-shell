@@ -66,7 +66,9 @@ function fish_right_prompt
     and set -g __fish_git_prompt_char_dirtystate \U1F4a9
     set -g __fish_git_prompt_char_untrackedfiles "?"
 
-    set -l vcs (fish_vcs_prompt 2>/dev/null)
+    # The git prompt's default format is ' (%s)'.
+    # We don't want the leading space.
+    set -l vcs (fish_vcs_prompt '(%s)' 2>/dev/null)
 
     set -l d (set_color brgrey)(date "+%R")(set_color normal)
 
@@ -82,6 +84,6 @@ function fish_right_prompt
     set -q VIRTUAL_ENV
     and set -l venv (string replace -r '.*/' '' -- "$VIRTUAL_ENV")
 
-    set_color reset
+    set_color normal
     string join " " -- $venv $duration $vcs $d
 end

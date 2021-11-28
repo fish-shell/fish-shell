@@ -87,6 +87,9 @@ class completion_t {
     completion_t(completion_t &&) noexcept;
     completion_t &operator=(completion_t &&) noexcept;
 
+    /// \return whether this replaces its token.
+    bool replaces_token() const { return flags & COMPLETE_REPLACES_TOKEN; }
+
     // Compare two completions. No operating overlaoding to make this always explicit (there's
     // potentially multiple ways to compare completions).
     //

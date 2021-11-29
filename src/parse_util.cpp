@@ -88,7 +88,7 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
 }
 
 static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, const wchar_t **end,
-                                    bool allow_incomplete, bool *is_quoted) {
+                                    bool allow_incomplete, bool *inout_is_quoted) {
     bool escaped = false;
     bool syntax_error = false;
     int paran_count = 0;
@@ -97,21 +97,31 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
     const wchar_t *paran_begin = nullptr, *paran_end = nullptr;
 
     assert(in && "null parameter");
-    for (const wchar_t *pos = in; *pos; pos++) {
+
+    const wchar_t *pos = in;
+    auto process_opening_quote = [&](wchar_t quote) -> bool /* ok */ {
+        const wchar_t *q_end = quote_end(pos, quote);
+        if (!q_end) return false;
+        if (*q_end == L'$') {
+            quoted_cmdsubs.push_back(paran_count);
+        }
+        // We want to report whether the outermost comand substitution between
+        // paran_begin..paran_end is quoted.
+        if (paran_count == 0 && inout_is_quoted) {
+            *inout_is_quoted = *q_end == L'$';
+        }
+        pos = q_end;
+        return true;
+    };
+
+    if (inout_is_quoted && *inout_is_quoted && *pos) {
+        if (!process_opening_quote(L'"')) pos += std::wcslen(pos);
+    }
+
+    for (; *pos; pos++) {
         if (!escaped) {
             if (*pos == L'\'' || *pos == L'"') {
-                const wchar_t *q_end = quote_end(pos, *pos);
-                if (q_end && *q_end) {
-                    if (*q_end == L'$') {
-                        quoted_cmdsubs.push_back(paran_count);
-                        // We want to report if the outermost comand substitution between
-                        // paran_begin..paran_end is quoted.
-                        if (paran_count == 0 && is_quoted) *is_quoted = true;
-                    }
-                    pos = q_end;
-                } else {
-                    break;
-                }
+                if (!process_opening_quote(*pos)) break;
             } else {
                 if (*pos == L'(') {
                     if ((paran_count == 0) && (paran_begin == nullptr)) {
@@ -225,12 +235,11 @@ long parse_util_slice_length(const wchar_t *in) {
 
 int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
                                      wcstring *out_contents, size_t *out_start, size_t *out_end,
-                                     bool accept_incomplete, bool *out_is_quoted) {
+                                     bool accept_incomplete, bool *inout_is_quoted) {
     // Clear the return values.
     if (out_contents != nullptr) out_contents->clear();
     *out_start = 0;
     *out_end = str.size();
-    bool cmdsub_is_quoted = false;
 
     // Nothing to do if the offset is at or past the end of the string.
     if (*inout_cursor_offset >= str.size()) return 0;
@@ -243,7 +252,7 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     const wchar_t *bracket_range_end = nullptr;
 
     int ret = parse_util_locate_cmdsub(valid_range_start, &bracket_range_begin, &bracket_range_end,
-                                       accept_incomplete, &cmdsub_is_quoted);
+                                       accept_incomplete, inout_is_quoted);
     if (ret <= 0) {
         return ret;
     }
@@ -264,28 +273,10 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     // Return the start and end.
     *out_start = bracket_range_begin - buff;
     *out_end = bracket_range_end - buff;
-    if (out_is_quoted) *out_is_quoted = cmdsub_is_quoted;
 
     // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
     // overflow is not likely.
     *inout_cursor_offset = 1 + *out_end;
-    if (cmdsub_is_quoted && *bracket_range_end) {
-        // We are usually called in a loop, to process all command substitutions in this string.
-        // If we just located a quoted cmdsub like $(A) inside "$(A)B"(C), the B part is also
-        // quoted but the naïve next caller wouldn't know. Since next caller only cares about
-        // the next command substitution - (C) - and not about the B part, just advance the
-        // cursor to the closing quote.
-        if (auto *q_end = quote_end(bracket_range_end, L'"')) {
-            *inout_cursor_offset = 1 + q_end - buff;
-        } else {
-            if (accept_incomplete) {
-                // We want to skip quoted text, so if there is no closing quote, skip to the end.
-                *inout_cursor_offset = bracket_range_end + std::wcslen(bracket_range_end) - buff;
-            } else {
-                return -1;
-            }
-        }
-    }
 
     return ret;
 }
@@ -950,11 +941,12 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
     wcstring subst;
 
     bool do_loop = true;
+    bool is_quoted = false;
     while (do_loop) {
         size_t paren_begin = 0;
         size_t paren_end = 0;
         switch (parse_util_locate_cmdsubst_range(arg_src, &cursor, &subst, &paren_begin, &paren_end,
-                                                 false)) {
+                                                 false, &is_quoted)) {
             case -1: {
                 err |= PARSER_TEST_ERROR;
                 if (out_errors) {

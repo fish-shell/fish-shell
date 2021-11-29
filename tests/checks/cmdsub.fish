@@ -57,3 +57,9 @@ echo "$(echo 1) ( $(echo 2)"
 
 echo "$(echo A)B$(echo C)D"(echo E)
 # CHECK: ABCDE
+
+echo "($(echo A)B$(echo C))"
+# CHECK: (ABC)
+
+echo "quoted1""quoted2"(echo unquoted3)"$(echo quoted4)_$(echo quoted5)"
+# CHECK: quoted1quoted2unquoted3quoted4_quoted5

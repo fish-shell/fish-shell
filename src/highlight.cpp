@@ -878,9 +878,10 @@ void highlighter_t::color_as_argument(const ast::node_t &node, bool options_allo
     // Now do command substitutions.
     size_t cmdsub_cursor = 0, cmdsub_start = 0, cmdsub_end = 0;
     wcstring cmdsub_contents;
+    bool is_quoted = false;
     while (parse_util_locate_cmdsubst_range(arg_str, &cmdsub_cursor, &cmdsub_contents,
                                             &cmdsub_start, &cmdsub_end,
-                                            true /* accept incomplete */) > 0) {
+                                            true /* accept incomplete */, &is_quoted) > 0) {
         // The cmdsub_start is the open paren. cmdsub_end is either the close paren or the end of
         // the string. cmdsub_contents extends from one past cmdsub_start to cmdsub_end.
         assert(cmdsub_end > cmdsub_start);

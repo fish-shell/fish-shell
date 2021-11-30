@@ -1,3 +1,8 @@
+function __mh_metric_check_no_text_html_json_opts
+  not __fish_seen_argument --long text --long html --long json
+  return $status
+end
+
 complete --command mh_metric --short-option h --long-option help --description 'Show help'
 complete --command mh_metric --short-option v --long-option version --description 'Show version'
 
@@ -10,7 +15,7 @@ complete --command mh_metric --long-option single --description 'Do not use mult
 complete --command mh_metric --long-option ignore-config \
   --description 'Ignore all miss_hit.cfg or .miss_hit files'
 complete --command mh_metric --long-option input-encoding --no-files --require-parameter \
-  --arguments 'cp1252' --description 'Change input encoding'
+  --arguments '(__fish_list_python_encodings)' --description 'Change input encoding'
 
 # Pragma options
 complete --command mh_metric --long-option ignore-pragmas \
@@ -26,12 +31,16 @@ complete --command mh_metric --long-option worst-offenders --no-files --require-
 complete --command mh_metric --long-option ci \
   --description 'Do not print any metrics report, only notify about violations'
 complete --command mh_metric --long-option text --require-parameter \
+  --condition '__mh_metric_check_no_text_html_json_opts' \
   --description 'Print plain-text metrics summary to the given file'
 complete --command mh_metric --long-option html --require-parameter \
+  --condition '__mh_metric_check_no_text_html_json_opts' \
   --description 'Write HTML metrics report to the file'
 complete --command mh_metric --long-option portable-html \
+  --condition '__fish_seen_argument --long html' \
   --description 'Use assets/stylesheets from the web instead of the local MISS_HIT install'
 complete --command mh_metric --long-option json --require-parameter \
+  --condition '__mh_metric_check_no_text_html_json_opts' \
   --description 'Create JSON metrics report in the given file'
 
 # Language options

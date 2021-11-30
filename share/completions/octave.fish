@@ -3,6 +3,11 @@ function __octave_check_no_gui_no_gui_opts
   return $status
 end
 
+function __octave_check_no_line_editing_no_line_editing_opts
+  not __fish_seen_argument --long line-editing --long no-line-editing
+  return $status
+end
+
 complete --command octave --short-option h --long-option help --description 'Show help'
 complete --command octave --short-option v --long-option version --description 'Show version'
 
@@ -31,6 +36,7 @@ complete --command octave --short-option i --long-option interactive \
   --description 'Force interactive behavior'
 complete --command octave --long-option jit-compiler --description 'Enable the JIT compiler'
 complete --command octave --long-option line-editing \
+  --condition '__octave_check_no_line_editing_no_line_editing_opts' \
   --description 'Force readline use for command-line editing'
 complete --command octave --long-option no-gui --condition '__octave_check_no_gui_no_gui_opts' \
   --description 'Disable the graphical user interface'
@@ -41,6 +47,7 @@ complete --command octave --long-option no-init-file \
 complete --command octave --long-option no-init-path \
   --description 'Don\'t initialize function search path'
 complete --command octave --long-option no-line-editing \
+  --condition '__octave_check_no_line_editing_no_line_editing_opts' \
   --description 'Don\'t use readline for command-line editing'
 complete --command octave --long-option no-site-file \
   --description 'Don\'t read the site-wide octaverc file'

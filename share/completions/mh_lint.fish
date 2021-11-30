@@ -1,3 +1,8 @@
+function __mh_lint_check_no_html_json_opts
+  not __fish_seen_argument --long html --long json
+  return $status
+end
+
 complete --command mh_lint --short-option h --long-option help --description 'Show help'
 complete --command mh_lint --short-option v --long-option version --description 'Show version'
 
@@ -10,7 +15,7 @@ complete --command mh_lint --long-option single --description 'Do not use multi-
 complete --command mh_lint --long-option ignore-config \
   --description 'Ignore all miss_hit.cfg or .miss_hit files'
 complete --command mh_lint --long-option input-encoding --no-files --require-parameter \
-  --arguments 'cp1252' --description 'Change input encoding'
+  --arguments '(__fish_list_python_encodings)' --description 'Change input encoding'
 
 # Pragma options
 complete --command mh_lint --long-option ignore-pragmas \
@@ -21,8 +26,11 @@ complete --command mh_lint --long-option ignore-justifications-with-tickets \
 # Output options
 complete --command mh_lint --long-option brief --description 'Don\'t show line-context on messages'
 complete --command mh_lint --long-option html \
-  --require-parameter --description 'Write report to given file as HTML'
-complete --command mh_lint --long-option json --require-parameter --description 'Produce JSON report'
+  --require-parameter --condition '__mh_lint_check_no_html_json_opts' \
+  --description 'Write report to given file as HTML'
+complete --command mh_lint --long-option json --require-parameter \
+  --condition '__mh_lint_check_no_html_json_opts' \
+  --description 'Produce JSON report'
 
 # Language options
 complete --command mh_lint --long-option octave --description 'Enable support for the Octave language'

@@ -48,8 +48,8 @@ and can be installed using the following commands:
 ::
 
    sudo apt-add-repository ppa:fish-shell/release-3
-   sudo apt-get update
-   sudo apt-get install fish
+   sudo apt update
+   sudo apt install fish
 
 Instructions for other distributions may be found at
 `fishshell.com <https://fishshell.com>`__.
@@ -212,7 +212,7 @@ On Debian or Ubuntu you want:
 
 ::
 
-   sudo apt-get install build-essential cmake ncurses-dev libncurses5-dev libpcre2-dev gettext
+   sudo apt install build-essential cmake ncurses-dev libncurses5-dev libpcre2-dev gettext
 
 On RedHat, CentOS, or Amazon EC2:
 

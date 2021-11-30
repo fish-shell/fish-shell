@@ -1,9 +1,19 @@
+function __matlab_check_no_desktop_nodesktop_opts
+  not __fish_seen_argument --old desktop --old nodesktop
+  return $status
+end
+
+function __matlab_check_no_batch_r_opts
+  not __fish_seen_argument --old batch --short r
+  return $status
+end
+
 complete --command matlab --short-option h --long-option help --description 'Show help'
 
 # Mode options
-complete --command matlab --old-option desktop \
+complete --command matlab --old-option desktop --condition '__matlab_check_no_desktop_nodesktop_opts' \
   --description 'Start MATLAB without a controlling terminal'
-complete --command matlab --old-option nodesktop \
+complete --command matlab --old-option nodesktop --condition '__matlab_check_no_desktop_nodesktop_opts' \
   --description 'Run the JVM software without opening the MATLAB desktop'
 complete --command matlab --old-option nojvm \
   --description 'Start MATLAB without the JVM software'
@@ -38,8 +48,10 @@ complete --command matlab --old-option debug \
 
 # Execute MATLAB script or function
 complete --command matlab --old-option batch --no-files --require-parameter \
+  --condition '__matlab_check_no_batch_r_opts' \
   --description 'Execute MATLAB script, statement, or function non-interactively'
 complete --command matlab --short-option r --no-files --require-parameter \
+  --condition '__matlab_check_no_batch_r_opts' \
   --description 'Execute the MATLAB statement'
 
 # Use single computational thread

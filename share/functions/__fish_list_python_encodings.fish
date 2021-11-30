@@ -1,15 +1,39 @@
 # https://stackoverflow.com/questions/1728376/get-a-list-of-all-the-encodings-python-can-encode-to
 
-function __fish_list_python_encodings --description 'Lists Python 3.7 encoding names'
+function __fish_list_python_encodings --description 'Lists Python encoding names'
+  set --local version (python3 --version | string replace --regex '.*\s(\d\.\d).*' '$1')
+  
+  if test $version -gt 3.0
+    echo 'iso8859_16'
+  end
+
+  if test $version -gt 3.1
+    echo 'cp720
+cp858'
+  end
+
+  if test $version -gt 3.2
+    echo 'cp65001'
+  end
+
+  if test $version -gt 3.3
+    echo 'cp273
+cp1125
+iso8859_11'
+  end
+
+  if test $version -gt 3.4
+    echo 'koi8_t
+kz1048'
+  end
+
   echo 'ascii
 big5
 big5hkscs
 cp037
-cp273
 cp424
 cp437
 cp500
-cp720
 cp737
 cp775
 cp850
@@ -17,7 +41,6 @@ cp852
 cp855
 cp856
 cp857
-cp858
 cp860
 cp861
 cp862
@@ -33,7 +56,6 @@ cp949
 cp950
 cp1006
 cp1026
-cp1125
 cp1140
 cp1250
 cp1251
@@ -44,7 +66,6 @@ cp1255
 cp1256
 cp1257
 cp1258
-cp65001
 euc_jp
 euc_jis_2004
 euc_jisx0213
@@ -70,16 +91,12 @@ iso8859_7
 iso8859_8
 iso8859_9
 iso8859_10
-iso8859_11
 iso8859_13
 iso8859_14
 iso8859_15
-iso8859_16
 johab
 koi8_r
-koi8_t
 koi8_u
-kz1048
 mac_cyrillic
 mac_greek
 mac_iceland

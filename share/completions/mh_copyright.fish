@@ -10,7 +10,7 @@ complete --command mh_copyright --long-option single --description 'Do not use m
 complete --command mh_copyright --long-option ignore-config \
   --description 'Ignore all miss_hit.cfg or .miss_hit files'
 complete --command mh_copyright --long-option input-encoding --no-files --require-parameter \
-  --arguments 'cp1252' --description 'Change input encoding'
+  --arguments '(__fish_list_python_encodings)' --description 'Change input encoding'
 complete --command mh_copyright --long-option process-slx \
   --description 'Style-check code inside SIMULINK models'
 
@@ -36,17 +36,19 @@ complete --command mh_copyright --long-option update-year \
   --description 'Update the end year in copyright notices for the primary copyright holder'
 complete --command mh_copyright --long-option merge \
   --description 'Merge all non-3rd party copyright notices into one for the primary copyright holder'
-complete --command mh_copyright --long-option change-entity  --no-files --require-parameter \
+complete --command mh_copyright --long-option change-entity --no-files --require-parameter \
   --description 'Change notices from the specified copyright holder into the primary copyright holder'
 complete --command mh_copyright --long-option add-notice \
   --description 'Add a copyright notice to files that do not have one yet'
-complete --command mh_copyright --long-option style --description ''
+complete --command mh_copyright --long-option style --no-files --require-parameter --arguments 'dynamic\t"Pick the existing style"
+c_first\t"Pick for MATLAB code"
+c_last\t"Pick for Octave code"' --description ''
 
 # Copyright data
 complete --command mh_copyright --long-option year --description 'Use the current year'
-complete --command mh_copyright --long-option primary-entity  --no-files --require-parameter \
+complete --command mh_copyright --long-option primary-entity --no-files --require-parameter \
   --description 'Specify the primary copyright entity'
-complete --command mh_copyright --long-option template-range  --no-files --require-parameter \
+complete --command mh_copyright --long-option template-range --no-files --require-parameter \
   --description 'Specify text template to use for a copyright notice with a year range'
-complete --command mh_copyright --long-option template  --no-files --require-parameter \
+complete --command mh_copyright --long-option template --no-files --require-parameter \
   --description 'Specify text template to use for a copyright notice with a single year'

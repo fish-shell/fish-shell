@@ -75,7 +75,7 @@ Scripting improvements
 - ``math`` now correctly prints negative values and values larger than ``2**31`` when in hex or octal bases (:issue:`8417`).
 - ``dirs`` always produces an exit status of 0, instead of sometimes returning 1 (:issue:`8211`).
 - ``cd ""`` no longer crashes fish (:issue:`8147`).
-- ``set --query`` can now query whether a variable is a pathvar via ``--path`` or ``--unpath`` (:issue:`8494`).
+- ``set --query`` can now query whether a variable is a path variable via ``--path`` or ``--unpath`` (:issue:`8494`).
 - Tilde characters (``~``) produced by custom completions are no longer escaped when applied to the command line, making it easier to use the output of a recursive ``complete -C`` in completion scripts (:issue:`4570`).
 
 Interactive improvements
@@ -89,7 +89,7 @@ Interactive improvements
 - ``help`` now knows which section is in which document again (:issue:`8245`).
 - fish's highlighter will now color options (starting with ``-`` or ``--``) with the color given in the new $fish_color_option, up to the first ``--``. It falls back on $fish_color_param, so nothing changes for existing setups (:issue:`8292`).
 - When executing a command, abbreviations are no longer expanded when the cursor is separated from the command by spaces, making it easier to suppress abbreviation expansion of commands without arguments. (:issue:`8423`).
-- ``fish_key_reader``'s output was simplified. By default it now only prints a bind statement, the full per-character timing information can be gotten with a new ``--verbose`` switch. (:issue:`8467`)
+- ``fish_key_reader``'s output was simplified. By default, it now only prints a bind statement. The previous per-character timing information can be seen with a new ``--verbose`` switch (:issue:`8467`).
 - Custom completions are now also loaded for commands that contain tildes or variables like ``~/$bin/fish`` (:issue:`8442`).
 
 New or improved bindings
@@ -106,28 +106,29 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
-  - ``istioctl`` (:issue:`8343`)
-  - ``black`` (:issue:`8123`)
-  - ``exif`` (:issue:`8246`)
-  - ``gping`` (:issue:`8181`)
-  - Angular's ``ng`` (:issue:`8111`)
-  - ``zef`` (:issue:`8114`)
-  - ``rakudo`` (:issue:`8113`)
   - ``az`` (:issue:`8141`)
-  - ``qmk`` (:issue:`8180`)
-  - ``cpupower``
-  - ``dart``
-  - ``sbcl``
-  - ``roswell``
+  - ``black`` (:issue:`8123`)
   - ``clasp``
-  -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
-  -  Various wine tools (:issue:`8411`)
-  -  mono (:issue:`8415`)
-  -  elvish (:issue:`8416`)
-  -  pabcnet_clear (:issue:`8421`)
+  - ``cpupower`` (:issue:`8302`)
+  - ``dart``
+  - ``elvish`` (:issue:`8416`)
   - ``ethtool``
+  - ``exif`` (:issue:`8246`)
+  - ``findstr`` (:issue:`8481`)
+  - ``gping`` (:issue:`8181`)
+  - ``istioctl`` (:issue:`8343`)
   - ``kmutil``
+  - ``mono`` (:issue:`8415`)
+  -  Angular's ``ng`` (:issue:`8111`)
+  - ``pabcnet_clear`` (:issue:`8421`)
+  - ``qmk`` (:issue:`8180`)
+  - ``rakudo`` (:issue:`8113`)
+  - ``roswell``
+  - ``sbcl``
   - ``shortcuts``
+  -  ``wine``, ``wineboot`` and ``winemaker`` (:issue:`8411`)
+  -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
+  - ``zef`` (:issue:`8114`)
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Add missing completions for the ``-p`` option of ``xbps-query``.

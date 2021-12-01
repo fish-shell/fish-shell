@@ -129,6 +129,18 @@ not math '2 + 2 4'
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: '2 + 2 4'
 # CHECKERR:        ^
+not math '(1 2)'
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: '(1 2)'
+# CHECKERR:     ^
+not math '(1 pi)'
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: '(1 pi)'
+# CHECKERR:      ^
+not math '(1 pow 1,2)'
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: '(1 pow 1,2)'
+# CHECKERR:       ^
 not math
 # CHECKERR: math: expected >= 1 arguments; got 0
 not math -s 12
@@ -181,6 +193,11 @@ math 'log(16'
 # CHECKERR: math: Error: Missing closing parenthesis
 # CHECKERR: 'log(16'
 # CHECKERR:       ^
+
+math '(2'
+# CHECKERR: math: Error: Missing closing parenthesis
+# CHECKERR: '(2'
+# CHECKERR:   ^
 
 math --base=16 255 / 15
 # CHECK: 0x11

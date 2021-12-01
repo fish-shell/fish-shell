@@ -1246,6 +1246,16 @@ PATH variables act as normal lists, except they are implicitly joined and split 
     echo "$MYPATH"
     # 1:2:3:4:5
 
+Path variables will also be exported in the colon form, so ``set -x MYPATH 1 2 3`` will have external commands see it as ``1:2:3``.
+
+::
+
+   > set -gx MYPATH /bin /usr/bin /sbin
+   > env | grep MYPATH
+   MYPATH=/bin:/usr/bin:/sbin
+
+This is for compatibility with other tools. Unix doesn't have variables with multiple elements, the closest thing it has are colon-lists like :envvar:`PATH`. For obvious reasons this means no element can contain a ``:``.
+
 Variables can be marked or unmarked as PATH variables via the ``--path`` and ``--unpath`` options to ``set``.
 
 .. _variables-special:

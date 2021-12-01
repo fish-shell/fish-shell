@@ -803,8 +803,6 @@ bool pager_t::is_navigating_contents() const {
     return selected_completion_idx != PAGER_SELECTION_NONE;
 }
 
-bool pager_t::get_fully_disclosed() const { return fully_disclosed; }
-
 void pager_t::set_fully_disclosed(bool flag) { fully_disclosed = flag; }
 
 const completion_t *pager_t::selected_completion(const page_rendering_t &rendering) const {

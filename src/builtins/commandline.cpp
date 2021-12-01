@@ -150,7 +150,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
 
     const auto &ld = parser.libdata();
 
-    static const wchar_t *const short_options = L":abijpctforhI:CLSsPF";
+    static const wchar_t *const short_options = L":abijpctforhI:CLSsP";
     static const struct woption long_options[] = {{L"append", no_argument, nullptr, 'a'},
                                                   {L"insert", no_argument, nullptr, 'i'},
                                                   {L"replace", no_argument, nullptr, 'r'},
@@ -329,7 +329,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if ((buffer_part || tokenize || cut_at_cursor) &&
-        (cursor_mode || line_mode || search_mode || paging_mode) &&
+        (cursor_mode || line_mode || search_mode || paging_mode || paging_full_mode) &&
         // Special case - we allow to get/set cursor position relative to the process/job/token.
         !(buffer_part && cursor_mode)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
@@ -373,7 +373,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
     }
 
     if (paging_full_mode) {
-        return commandline_get_state().pager_fully_disclosed ? 0 : 1;
+        return (commandline_get_state().pager_mode && commandline_get_state().pager_done) ? 0 : 1;
     }
 
     // At this point we have (nearly) exhausted the options which always operate on the true command

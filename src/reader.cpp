@@ -2741,7 +2741,7 @@ void reader_data_t::update_commandline_state() const {
     snapshot->history = this->history;
     snapshot->selection = this->get_selection();
     snapshot->pager_mode = !this->current_page_rendering.screen_data.empty();
-    snapshot->pager_fully_disclosed = this->pager.get_fully_disclosed();
+    snapshot->pager_done = !(this->current_page_rendering.remaining_to_disclose > 0);
     snapshot->search_mode = this->history_search.active();
     snapshot->initialized = true;
 }

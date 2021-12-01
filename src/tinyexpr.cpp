@@ -380,6 +380,14 @@ static te_expr *base(state *s) {
             ret = new_expr(TE_CONSTANT, nullptr);
             ret->value = s->value;
             next_token(s);
+            if (s->type == TOK_NUMBER || s->type == TE_FUNCTION0) {
+                // Two numbers after each other:
+                // math '5 2'
+                // math '3 pi'
+                // (of course 3 pi could also be interpreted as 3 x pi)
+                s->type = TOK_ERROR;
+                s->error = TE_ERROR_MISSING_OPERATOR;
+            }
             break;
 
         case TE_FUNCTION0:
@@ -623,10 +631,7 @@ te_expr *te_compile(const wchar_t *expression, te_error_t *error) {
                 error->type = s.error;
             } else {
                 // If we're not at the end but there's no error, then that means we have a
-                // superfluous token that we have no idea what to do with. This occurs in e.g. `2 +
-                // 2 4` - the "4" is just not part of the expression. We can report either "too many
-                // arguments" or "expected operator", but the operator should be reported between
-                // the "2" and the "4". So we report TOO_MANY_ARGS on the "4".
+                // superfluous token that we have no idea what to do with.
                 error->type = TE_ERROR_TOO_MANY_ARGS;
             }
         }

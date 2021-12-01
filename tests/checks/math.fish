@@ -126,17 +126,17 @@ not math 'sin()'
 # CHECKERR: 'sin()'
 # CHECKERR:      ^
 not math '2 + 2 4'
-# CHECKERR: math: Error: Too many arguments
+# CHECKERR: math: Error: Missing operator
 # CHECKERR: '2 + 2 4'
-# CHECKERR:        ^
+# CHECKERR:       ^
 not math '(1 2)'
-# CHECKERR: math: Error: Too many arguments
+# CHECKERR: math: Error: Missing operator
 # CHECKERR: '(1 2)'
-# CHECKERR:     ^
+# CHECKERR:    ^
 not math '(1 pi)'
-# CHECKERR: math: Error: Too many arguments
+# CHECKERR: math: Error: Missing operator
 # CHECKERR: '(1 pi)'
-# CHECKERR:      ^
+# CHECKERR:    ^
 not math '(1 pow 1,2)'
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: '(1 pow 1,2)'

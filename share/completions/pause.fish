@@ -1,1 +1,0 @@
-complete --command pause --no-files --arguments '/?\t"Show help"'

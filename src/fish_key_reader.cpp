@@ -260,7 +260,7 @@ static void process_input(bool continuous_mode, bool verbose) {
             output_bind_command(bind_chars);
         }
 
-        if (should_exit(wc)) {
+        if (continuous_mode && should_exit(wc)) {
             std::fwprintf(stderr, L"\nExiting at your request.\n");
             break;
         }

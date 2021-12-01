@@ -449,9 +449,9 @@ static te_expr *base(state *s) {
         case TOK_OPEN:
             next_token(s);
             ret = expr(s);
-            if (s->type == TOK_CLOSE)
+            if (s->type == TOK_CLOSE) {
                 next_token(s);
-            else if (s->type != TOK_ERROR && s->type != TOK_END && s->error == TE_ERROR_NONE) {
+            } else if (s->type != TOK_ERROR && s->type != TOK_END && s->error == TE_ERROR_NONE) {
                 s->type = TOK_ERROR;
                 s->error = TE_ERROR_TOO_MANY_ARGS;
             } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {

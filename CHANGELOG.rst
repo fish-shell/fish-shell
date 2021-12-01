@@ -106,11 +106,13 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
+  - Apple's ``shortcuts``
   - ``az`` (:issue:`8141`)
   - ``black`` (:issue:`8123`)
   - ``clasp``
   - ``cpupower`` (:issue:`8302`)
   - ``dart``
+  - ``dscacheutil``
   - ``elvish`` (:issue:`8416`)
   - ``ethtool``
   - ``exif`` (:issue:`8246`)
@@ -125,7 +127,6 @@ Completions
   - ``rakudo`` (:issue:`8113`)
   - ``roswell``
   - ``sbcl``
-  - ``shortcuts``
   -  ``wine``, ``wineboot`` and ``winemaker`` (:issue:`8411`)
   -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
   - ``zef`` (:issue:`8114`)

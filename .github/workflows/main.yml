@@ -1,4 +1,4 @@
-name: Test
+name: make test
 
 on: [push, pull_request]
 

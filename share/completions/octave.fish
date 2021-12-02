@@ -1,13 +1,3 @@
-function __octave_check_no_gui_no_gui_opts
-  not __fish_seen_argument --long gui --long no-gui
-  return $status
-end
-
-function __octave_check_no_line_editing_no_line_editing_opts
-  not __fish_seen_argument --long line-editing --long no-line-editing
-  return $status
-end
-
 complete --command octave --short-option h --long-option help --description 'Show help'
 complete --command octave --short-option v --long-option version --description 'Show version'
 
@@ -24,7 +14,8 @@ complete --command octave --long-option eval --no-files --require-parameter \
   --description 'Evaluate code'
 complete --command octave --long-option exec-path --require-parameter \
   --description 'Set path for executing subprograms'
-complete --command octave --long-option gui --condition '__octave_check_no_gui_no_gui_opts' \
+complete --command octave --long-option gui \
+  --condition 'not __fish_seen_argument --long gui --long no-gui --long no-line-editing' \
   --description 'Start the graphical user interface'
 complete --command octave --long-option image-path --require-parameter \
   --description 'Add path to head of image search path'
@@ -36,9 +27,10 @@ complete --command octave --short-option i --long-option interactive \
   --description 'Force interactive behavior'
 complete --command octave --long-option jit-compiler --description 'Enable the JIT compiler'
 complete --command octave --long-option line-editing \
-  --condition '__octave_check_no_line_editing_no_line_editing_opts' \
+  --condition 'not __fish_seen_argument --long line-editing --long no-line-editing' \
   --description 'Force readline use for command-line editing'
-complete --command octave --long-option no-gui --condition '__octave_check_no_gui_no_gui_opts' \
+complete --command octave --long-option no-gui \
+  --condition 'not __fish_seen_argument --long gui --long no-gui' \
   --description 'Disable the graphical user interface'
 complete --command octave --short-option H --long-option no-history \
   --description 'Don\'t save commands to the history list'
@@ -47,7 +39,7 @@ complete --command octave --long-option no-init-file \
 complete --command octave --long-option no-init-path \
   --description 'Don\'t initialize function search path'
 complete --command octave --long-option no-line-editing \
-  --condition '__octave_check_no_line_editing_no_line_editing_opts' \
+  --condition 'not __fish_seen_argument --long line-editing --long no-line-editing --long gui' \
   --description 'Don\'t use readline for command-line editing'
 complete --command octave --long-option no-site-file \
   --description 'Don\'t read the site-wide octaverc file'

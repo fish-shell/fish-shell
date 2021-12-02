@@ -1,3 +1,4 @@
+# Completion for: MATLAB R2021b
 function __fish_matlabcheck_no_desktop_nodesktop_opts
     not __fish_seen_argument --old desktop --old nodesktop
     return $status

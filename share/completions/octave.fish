@@ -1,3 +1,5 @@
+# Completion for: GNU Octave 5.2.0
+
 complete -c octave -x -a '(__fish_complete_suffix .m)'
 
 complete -c octave -s h -l help -d 'Show help'

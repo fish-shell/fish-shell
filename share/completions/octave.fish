@@ -1,3 +1,5 @@
+# Completion for: GNU Octave 5.2.0
+
 complete --command octave --short-option h --long-option help --description 'Show help'
 complete --command octave --short-option v --long-option version --description 'Show version'
 

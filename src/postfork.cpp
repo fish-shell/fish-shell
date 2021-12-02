@@ -350,7 +350,11 @@ maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char 
             std::vector<char *> argv2;
             char interp[] = _PATH_BSHELL;
             argv2.push_back(interp);
-            for (size_t i = 0; argv[i] != nullptr; i++) {
+            // The command to call should use the full path,
+            // not what we would pass as argv0.
+            std::string cmd2 = cmd;
+            argv2.push_back(&cmd2[0]);
+            for (size_t i = 1; argv[i] != nullptr; i++) {
                 argv2.push_back(argv[i]);
             }
             argv2.push_back(nullptr);

@@ -80,3 +80,13 @@ runfile
 
 #CHECK: 126
 #CHECKERR: exec: {{.*}}
+
+echo 'echo foo' >./-
+sleep 0.1
+chmod +x ./-
+set PATH ./ $PATH
+sleep 0.1
+-
+#CHECK: foo
+echo $status
+#CHECK: 0

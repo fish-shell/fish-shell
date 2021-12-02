@@ -1,5 +1,6 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
+#REQUIRES: test "$(uname)" != Darwin
 
 isolated-tmux-start
 

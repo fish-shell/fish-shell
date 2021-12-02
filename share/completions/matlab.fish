@@ -12,35 +12,35 @@ complete --command matlab --short-option h --long-option help --description 'Sho
 
 # Mode options
 complete --command matlab --old-option desktop --condition '__matlab_check_no_desktop_nodesktop_opts' \
-  --description 'Start MATLAB without a controlling terminal'
+  --description 'Start without a controlling terminal'
 complete --command matlab --old-option nodesktop --condition '__matlab_check_no_desktop_nodesktop_opts' \
-  --description 'Run the JVM software without opening the MATLAB desktop'
+  --description 'Run the JVM software without opening the desktop'
 complete --command matlab --old-option nojvm \
-  --description 'Start MATLAB without the JVM software'
+  --description 'Start without the JVM software'
 
 # Display options
 complete --command matlab --old-option noFigureWindows \
-  --description 'Disable the display of figure windows in MATLAB'
+  --description 'Disable the display of figure windows'
 complete --command matlab --old-option nosplash \
-  --description 'Do not display the splash screen during startup'
+  --description 'Don\'t display the splash screen during startup'
 complete --command matlab --old-option nodisplay \
-  --description 'Start the JVM software without starting the MATLAB desktop'
+  --description 'Start the JVM software without starting desktop'
 complete --command matlab --old-option display --no-files --require-parameter \
   --description 'Send X commands to X Window Server display xDisp'
 
 # Set initial working folder
-complete --command matlab --old-option sd --description 'Set the MATLAB folder'
+complete --command matlab --old-option sd --description 'Set the folder'
 complete --command matlab --old-option useStartupFolderPref \
-  --description 'Set the MATLAB folder to the value specified by the Initial working folder preference'
+  --description 'Change the folder to the Initial working folder preference'
 
 # Debugging options
 complete --command matlab --old-option logfile --description 'Copy Command Window output into filename'
 complete --command matlab --short-option n \
-  --description 'Display the final values of environment variables/arguments passed to the executable'
+  --description 'Display the environment variables/arguments passed to the executable'
 complete --command matlab --short-option e \
   --description 'Display all environment variables and their values to standard output'
 complete --command matlab --old-option Ddebugger --no-files --require-parameter \
-  --description 'Start MATLAB in debug mode'
+  --description 'Start in debug mode'
 complete --command matlab --old-option jdb --no-files --require-parameter \
   --description 'Enable use of the Java debugger'
 complete --command matlab --old-option debug \
@@ -49,14 +49,14 @@ complete --command matlab --old-option debug \
 # Execute MATLAB script or function
 complete --command matlab --old-option batch --no-files --require-parameter \
   --condition '__matlab_check_no_batch_r_opts' \
-  --description 'Execute MATLAB script, statement, or function non-interactively'
+  --description 'Execute script, statement, or function non-interactively'
 complete --command matlab --short-option r --no-files --require-parameter \
   --condition '__matlab_check_no_batch_r_opts' \
-  --description 'Execute the MATLAB statement'
+  --description 'Execute the statement'
 
 # Use single computational thread
 complete --command matlab --old-option singleCompThread \
-  --description 'Limit MATLAB to a single computational thread'
+  --description 'Limit to a single computational thread'
 
 # Disable searching custom Java class path
 complete --command matlab --old-option nouserjavapath \
@@ -64,7 +64,7 @@ complete --command matlab --old-option nouserjavapath \
 
 # OpenGL library options
 complete --command matlab --old-option softwareopengl \
-  --description 'Force MATLAB to start with software OpenGL libraries'
+  --description 'Force to start with software OpenGL libraries'
 complete --command matlab --old-option nosoftwareopengl \
   --description 'Disable auto-selection of OpenGL software'
 

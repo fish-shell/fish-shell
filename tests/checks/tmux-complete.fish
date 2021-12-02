@@ -1,6 +1,5 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
-#REQUIRES: test "$(uname)" != Darwin
 
 isolated-tmux-start
 
@@ -39,4 +38,4 @@ isolated-tmux capture-pane -p | sed -n '1p;$p'
 # Assert that we didn't change the command line.
 # CHECK: prompt 3> begin
 # Also ensure that the pager is actually fully disclosed.
-# CHECK: rows 1 to 6 of 10
+# CHECK: rows 1 to {{\d+}} of {{\d+}}

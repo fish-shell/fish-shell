@@ -565,7 +565,7 @@ struct selection_data_t {
     bool operator!=(const selection_data_t &rhs) const { return !(*this == rhs); }
 };
 
-/// A value-type struct representing a layout from which we can call to s_write().
+/// A value-type struct representing a layout that can be rendered.
 /// The intent is that everything we send to the screen is encapsulated in this struct.
 struct layout_data_t {
     /// Text of the command line.

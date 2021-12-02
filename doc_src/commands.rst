@@ -72,6 +72,7 @@ Some helper functions, often to give you information for use in your prompt:
 - :ref:`fish_status_to_signal <cmd-fish_status_to_signal>` to give a signal name from a return status.
 - :ref:`prompt_pwd <cmd-prompt_pwd>` to give the current directory in a nicely formatted and shortened way.
 - :ref:`prompt_login <cmd-prompt_login>` to describe the current login, with user and hostname, and to explain if you are in a chroot or connected via ssh.
+- :ref:`prompt_hostname <cmd-prompt_hostname>` to give the hostname, shortened for use in the prompt.
 - :ref:`fish_is_root_user <cmd-fish_is_root_user>` to check if the current user is an administrator user like root.
 - :ref:`fish_add_path <cmd-fish_add_path>` to easily add a path to $PATH.
 - :ref:`alias <cmd-alias>` to quickly define wrapper functions ("aliases").

@@ -27,7 +27,7 @@ complete --command matlab --old-option nosplash \
   --description 'Don\'t display the splash screen during startup'
 complete --command matlab --old-option nodisplay \
   --description 'Start the JVM software without starting desktop'
-complete --command matlab --old-option display --no-files --require-parameter \
+complete --command matlab --old-option display --exclusive \
   --description 'Send X commands to X Window Server display xDisp'
 
 # Set initial working folder
@@ -42,18 +42,19 @@ complete --command matlab --short-option n \
   --description 'Display the environment variables/arguments passed to the executable'
 complete --command matlab --short-option e \
   --description 'Display all environment variables and their values to standard output'
-complete --command matlab --old-option Ddebugger --no-files --require-parameter \
-  --description 'Start in debug mode'
-complete --command matlab --old-option jdb --no-files --require-parameter \
+complete --command matlab --short-option Dgdb --exclusive --description 'Start in debug mode'
+complete --command matlab --short-option Dlldb --exclusive --description 'Start in debug mode'
+complete --command matlab --short-option Ddbx --exclusive --description 'Start in debug mode'
+complete --command matlab --old-option jdb --exclusive \
   --description 'Enable use of the Java debugger'
 complete --command matlab --old-option debug \
   --description 'Display information for debugging X-based problems'
 
 # Execute MATLAB script or function
-complete --command matlab --old-option batch --no-files --require-parameter \
+complete --command matlab --old-option batch --exclusive \
   --condition '__matlab_check_no_batch_r_opts' \
   --description 'Execute script, statement, or function non-interactively'
-complete --command matlab --short-option r --no-files --require-parameter \
+complete --command matlab --short-option r --exclusive \
   --condition '__matlab_check_no_batch_r_opts' \
   --description 'Execute the statement'
 

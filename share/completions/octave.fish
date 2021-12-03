@@ -1,6 +1,6 @@
 # Completion for: GNU Octave 5.2.0
 
-complete --command octave --arguments '(__fish_complete_suffix .m)'
+complete --command octave --exclusive --arguments '(__fish_complete_suffix .m)'
 
 complete --command octave --short-option h --long-option help --description 'Show help'
 complete --command octave --short-option v --long-option version --description 'Show version'
@@ -14,7 +14,7 @@ complete --command octave --long-option doc-cache-file --require-parameter \
   --description 'Use doc cache file'
 complete --command octave --short-option x --long-option echo-commands \
   --description 'Echo commands as they are executed'
-complete --command octave --long-option eval --no-files --require-parameter \
+complete --command octave --long-option eval --exclusive \
   --description 'Evaluate code'
 complete --command octave --long-option exec-path --require-parameter \
   --description 'Set path for executing subprograms'

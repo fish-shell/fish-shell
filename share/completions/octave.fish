@@ -1,5 +1,7 @@
 # Completion for: GNU Octave 5.2.0
 
+complete --command octave --arguments '(__fish_complete_suffix .m)'
+
 complete --command octave --short-option h --long-option help --description 'Show help'
 complete --command octave --short-option v --long-option version --description 'Show version'
 
@@ -20,6 +22,7 @@ complete --command octave --long-option gui \
   --condition 'not __fish_seen_argument --long gui --long no-gui --long no-line-editing' \
   --description 'Start the graphical user interface'
 complete --command octave --long-option image-path --require-parameter \
+  --arguments '(.bmp .gif .jpg .jpeg .pbm .pcx .bgm .png .pnm .ppm .ras .tif .tiff .xwd)' \
   --description 'Add path to head of image search path'
 complete --command octave --long-option info-file --require-parameter \
   --description 'Use top-level info file'

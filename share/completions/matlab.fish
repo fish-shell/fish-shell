@@ -31,12 +31,13 @@ complete --command matlab --old-option display --no-files --require-parameter \
   --description 'Send X commands to X Window Server display xDisp'
 
 # Set initial working folder
-complete --command matlab --old-option sd --description 'Set the folder'
+complete --command matlab --old-option sd --require-parameter --description 'Set the folder'
 complete --command matlab --old-option useStartupFolderPref \
   --description 'Change the folder to the Initial working folder preference'
 
 # Debugging options
-complete --command matlab --old-option logfile --description 'Copy Command Window output into filename'
+complete --command matlab --old-option logfile --require-parameter \
+  --arguments '(__fish_complete_suffix .log)' --description 'Copy Command Window output into filename'
 complete --command matlab --short-option n \
   --description 'Display the environment variables/arguments passed to the executable'
 complete --command matlab --short-option e \

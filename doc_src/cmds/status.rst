@@ -54,7 +54,7 @@ The following operations (sub-commands) are available:
 
 - ``current-command`` prints the name of the currently-running function or command, like the deprecated ``_`` variable.
 
-- ``filename`` prints the filename of the currently running script. Also ``current-filename``, ``-f`` or ``--current-filename``. This depends on how the script was called - if it was called via a symlink, the symlink will be returned, and if the current script was received via ``source`` it will be ``-``.
+- ``filename`` prints the filename of the currently-running script. Also ``current-filename``, ``-f`` or ``--current-filename``. If the current script was called via a symlink, this will return the symlink. If the current script was received by piping into ``source``, then this will return ``-``.
 
 - ``basename`` prints just the filename of the running script, without any path-components before.
 

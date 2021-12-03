@@ -1,3 +1,5 @@
+# Completion for: PascalABC.NET 3.8.1 compiler
+
 function __pabcnetcclear_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
   switch $current_token

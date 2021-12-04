@@ -214,11 +214,11 @@ tok_t tokenizer_t::read_string() {
                 mode &= ~(tok_modes::subshell);
             }
             expecting.pop_back();
-            // Check if the ) did complete a quoted command substituion.
+            // Check if the ) completed a quoted command substitution.
             if (!quoted_cmdsubs.empty() && quoted_cmdsubs.back() == paran_offsets.size()) {
                 quoted_cmdsubs.pop_back();
-                // Quoted command substitutions temporarily close double quotes, after ),
-                // we need to act as if there was an invisible double quote.
+                // The "$(" part of a quoted command substitution closes double quotes. To keep
+                // quotes balanced, act as if there was an invisible double quote after the ")".
                 if (const wchar_t *error_loc = process_opening_quote(L'"')) {
                     if (!this->accept_unfinished) {
                         return this->call_error(tokenizer_error_t::unterminated_quote, buff_start,

@@ -91,6 +91,7 @@ Interactive improvements
 - When executing a command, abbreviations are no longer expanded when the cursor is separated from the command by spaces, making it easier to suppress abbreviation expansion of commands without arguments. (:issue:`8423`).
 - ``fish_key_reader``'s output was simplified. By default, it now only prints a bind statement. The previous per-character timing information can be seen with a new ``--verbose`` switch (:issue:`8467`).
 - Custom completions are now also loaded for commands that contain tildes or variables like ``~/$bin/fish`` (:issue:`8442`).
+- Some multiline commandlines would be shadowed by the completion pager if it fills the entire terminal. This has been corrected (:issue:`8509`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

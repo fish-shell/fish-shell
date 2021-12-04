@@ -1,3 +1,5 @@
+# Completion for: PascalABC.NET 3.8.1 compiler
+
 function __pabcnetcclear_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
   switch $current_token
@@ -10,7 +12,8 @@ $current_token"1"\tDisable generation"
 /?\tShow help
 /Debug\tGenerate a code debug info
 /output\tSpecify an executable name
-/SearchDir\tSpecify a path to search units"
+/SearchDir\tSpecify a path to search units
+/define\tDefine a symbol"
   end
 end
 

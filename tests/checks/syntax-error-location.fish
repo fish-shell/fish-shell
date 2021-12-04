@@ -22,3 +22,13 @@ echo '
 # CHECK: <fish: Command substitutions not allowed>
 # CHECK: <(true one)>
 # CHECK: <^>
+
+$fish -c 'echo "unfinished "(subshell' 2>| string replace -r '.*' '<$0>'
+# CHECK: <fish: Unexpected end of string, expecting ')'>
+# CHECK: <echo "unfinished "(subshell>
+# CHECK: <                  ^>
+
+$fish -c 'echo "unfinished "$(subshell' 2>| string replace -r '.*' '<$0>'
+# CHECK: <fish: Unexpected end of string, expecting ')'>
+# CHECK: <echo "unfinished "$(subshell>
+# CHECK: <                   ^>

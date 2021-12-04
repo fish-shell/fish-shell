@@ -182,6 +182,16 @@ class token_stream_t {
 
         assert(token.length <= SOURCE_OFFSET_INVALID);
         result.source_length = static_cast<source_offset_t>(token.length);
+
+        if (token.error != tokenizer_error_t::none) {
+            auto subtoken_offset = static_cast<source_offset_t>(token.error_offset_within_token);
+            // Skip invalid tokens that have a zero length, especially if they are at EOF.
+            if (subtoken_offset < result.source_length) {
+                result.source_start += subtoken_offset;
+                result.source_length -= subtoken_offset;
+            }
+        }
+
         return result;
     }
 

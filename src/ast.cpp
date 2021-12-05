@@ -707,6 +707,10 @@ struct populator_t {
             case parse_token_type_t::string:
                 // There are three keywords which end a job list.
                 switch (tok.keyword) {
+                    case parse_keyword_t::kw_case:
+                        this->parse_error(tok, parse_error_unbalancing_case,
+                                          _(L"'case' builtin not inside of switch block"));
+                        break;
                     case parse_keyword_t::kw_end:
                         this->parse_error(tok, parse_error_unbalancing_end,
                                           _(L"'end' outside of a block"));
@@ -714,10 +718,6 @@ struct populator_t {
                     case parse_keyword_t::kw_else:
                         this->parse_error(tok, parse_error_unbalancing_else,
                                           _(L"'else' builtin not inside of if block"));
-                        break;
-                    case parse_keyword_t::kw_case:
-                        this->parse_error(tok, parse_error_unbalancing_case,
-                                          _(L"'case' builtin not inside of switch block"));
                         break;
                     default:
                         internal_error(__FUNCTION__,
@@ -761,9 +761,9 @@ struct populator_t {
         const auto &token = peek_token();
         if (token.type != parse_token_type_t::string) return false;
         switch (peek_token().keyword) {
+            case parse_keyword_t::kw_case:
             case parse_keyword_t::kw_end:
             case parse_keyword_t::kw_else:
-            case parse_keyword_t::kw_case:
                 // These end a job list.
                 return false;
             case parse_keyword_t::none:

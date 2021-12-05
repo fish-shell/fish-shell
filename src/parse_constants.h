@@ -74,6 +74,7 @@ enum class parse_keyword_t : uint8_t {
     kw_command,
     kw_do,
     kw_done,
+    kw_elif,
     kw_else,
     kw_end,
     kw_exclam,
@@ -99,6 +100,7 @@ const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_t::kw_excla
                                                       {parse_keyword_t::kw_command, L"command"},
                                                       {parse_keyword_t::kw_done, L"do"},
                                                       {parse_keyword_t::kw_done, L"done"},
+                                                      {parse_keyword_t::kw_elif, L"elif"},
                                                       {parse_keyword_t::kw_else, L"else"},
                                                       {parse_keyword_t::kw_end, L"end"},
                                                       {parse_keyword_t::kw_exec, L"exec"},
@@ -143,6 +145,7 @@ enum parse_error_code_t : uint8_t {
     parse_error_tokenizer_other,
 
     parse_error_unbalancing_end,           // end outside of block
+    parse_error_unbalancing_elif,          // elif outside of if
     parse_error_unbalancing_else,          // else outside of if
     parse_error_unbalancing_case,          // case outside of switch
     parse_error_bare_variable_assignment,  // a=b without command

@@ -91,7 +91,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const ast::node_t &nod
         } break;
 
         case type_t::if_statement:
-            src_end = node.as<if_statement_t>()->if_clause.condition.job.source_range().end();
+            src_end = node.as<if_statement_t>()
+                          ->if_clause.condition_and_body.condition.job.source_range()
+                          .end();
             break;
 
         case type_t::switch_statement:
@@ -289,7 +291,7 @@ end_execution_reason_t parse_execution_context_t::run_if_statement(
     // We have a sequence of if clauses, with a final else, resulting in a single job list that we
     // execute.
     const job_list_t *job_list_to_execute = nullptr;
-    const if_clause_t *if_clause = &statement.if_clause;
+    const if_condition_and_body_t *if_clause = &statement.if_clause.condition_and_body;
 
     // Index of the *next* elseif_clause to test.
     const elseif_clause_list_t &elseif_clauses = statement.elseif_clauses;
@@ -325,7 +327,14 @@ end_execution_reason_t parse_execution_context_t::run_if_statement(
         const auto *elseif_clause = elseif_clauses.at(next_elseif_idx++);
         if (elseif_clause) {
             trace_if_enabled(*parser, L"else if");
-            if_clause = &elseif_clause->if_clause;
+            const node_t *node = elseif_clause->contents.get();
+            if (auto else_if = node->try_as<ast::elseif_clause_t>()) {
+                if_clause = &else_if->if_clause.condition_and_body;
+            } else if (auto elif = node->try_as<ast::elif_clause_t>()) {
+                if_clause = &elif->condition_and_body;
+            } else {
+                DIE("unreachable");
+            }
         } else {
             break;
         }

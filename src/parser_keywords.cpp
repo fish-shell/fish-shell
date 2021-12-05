@@ -25,8 +25,9 @@ static const string_set_t block_keywords = {L"for",      L"while",  L"if",
                                             L"function", L"switch", L"begin"};
 
 static const wcstring reserved_keywords[] = {
-    L"[",   L"_",  L"argparse", L"break",  L"case", L"continue", L"do",     L"done", L"else",
-    L"end", L"fi", L"read",     L"return", L"set",  L"status",   L"string", L"test", L"then",
+    L"[",    L"_",      L"argparse", L"break", L"case", L"continue", L"do",
+    L"done", L"elif",   L"else",     L"end",   L"fi",   L"read",     L"return",
+    L"set",  L"status", L"string",   L"test",  L"then",
 };
 
 // The lists above are purposely implemented separately from the logic below, so that future

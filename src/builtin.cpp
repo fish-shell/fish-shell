@@ -384,6 +384,8 @@ static constexpr builtin_data_t builtin_datas[] = {
      N_(L"Alternative to \"end\", to end a block of commands (included for compatibility with "
         L"POSIX)")},
     {L"echo", &builtin_echo, N_(L"Print arguments")},
+    {L"elif", &builtin_generic,
+     N_(L"Alternate form of \"else if\" (included for compatibility with POSIX)")},
     {L"else", &builtin_generic, N_(L"Evaluate block if condition is false")},
     {L"emit", &builtin_emit, N_(L"Emit an event")},
     {L"end", &builtin_generic, N_(L"End a block of commands")},

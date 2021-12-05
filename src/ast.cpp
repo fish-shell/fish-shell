@@ -719,6 +719,10 @@ struct populator_t {
                         this->parse_error(tok, parse_error_unbalancing_end,
                                           _(L"'end' outside of a block"));
                         break;
+                    case parse_keyword_t::kw_elif:
+                        this->parse_error(tok, parse_error_unbalancing_elif,
+                                          _(L"'elif' builtin not inside of if block"));
+                        break;
                     case parse_keyword_t::kw_else:
                         this->parse_error(tok, parse_error_unbalancing_else,
                                           _(L"'else' builtin not inside of if block"));
@@ -772,6 +776,7 @@ struct populator_t {
             case parse_keyword_t::kw_case:
             case parse_keyword_t::kw_done:
             case parse_keyword_t::kw_end:
+            case parse_keyword_t::kw_elif:
             case parse_keyword_t::kw_else:
             case parse_keyword_t::kw_fi:
                 // These end a job list.
@@ -874,6 +879,10 @@ struct populator_t {
     bool can_parse(elseif_clause_t *) {
         return peek_token(0).keyword == parse_keyword_t::kw_else &&
                peek_token(1).keyword == parse_keyword_t::kw_if;
+    }
+    bool can_parse(elif_clause_t *) { return peek_token(0).keyword == parse_keyword_t::kw_elif; }
+    bool can_parse(elif_or_elseif_clause_t *) {
+        return can_parse((elseif_clause_t *)nullptr) || can_parse((elseif_clause_t *)nullptr);
     }
 
     bool can_parse(else_clause_t *) { return peek_token().keyword == parse_keyword_t::kw_else; }
@@ -1034,6 +1043,7 @@ struct populator_t {
                 return allocate_visit<switch_statement_t>();
 
             case pkt::kw_done:
+            case pkt::kw_elif:
             case pkt::kw_end:
             case pkt::kw_fi:
                 // 'end' is forbidden as a command.
@@ -1061,6 +1071,18 @@ struct populator_t {
                 return allocate_visit<function_header_t>();
             case parse_keyword_t::kw_begin:
                 return allocate_visit<begin_header_t>();
+            default:
+                internal_error(__FUNCTION__, L"should not have descended into block_header");
+                DIE("Unreachable");
+        }
+    }
+
+    elif_or_elseif_clause_t::contents_ptr_t allocate_populate_elif_or_elseif() {
+        switch (peek_token().keyword) {
+            case parse_keyword_t::kw_elif:
+                return allocate_visit<elif_clause_t>();
+            case parse_keyword_t::kw_else:
+                return allocate_visit<elseif_clause_t>();
             default:
                 internal_error(__FUNCTION__, L"should not have descended into block_header");
                 DIE("Unreachable");
@@ -1229,6 +1251,11 @@ struct populator_t {
 
     void visit_union_field(block_statement_t::header_ptr_t &ptr) {
         ptr = this->allocate_populate_block_header();
+        assert(ptr && "Header pointer must never be null");
+    }
+
+    void visit_union_field(elif_or_elseif_clause_t::contents_ptr_t &ptr) {
+        ptr = this->allocate_populate_elif_or_elseif();
         assert(ptr && "Header pointer must never be null");
     }
 

@@ -945,6 +945,7 @@ void highlighter_t::visit(const ast::keyword_base_t &kw) {
         case parse_keyword_t::kw_command:
         case parse_keyword_t::kw_do:
         case parse_keyword_t::kw_done:
+        case parse_keyword_t::kw_elif:
         case parse_keyword_t::kw_else:
         case parse_keyword_t::kw_end:
         case parse_keyword_t::kw_exec:

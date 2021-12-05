@@ -616,7 +616,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
                 // Increment indents for conditions in headers (#1665).
                 case type_t::job_conjunction:
                     if (node.parent->type == type_t::while_header ||
-                        node.parent->type == type_t::if_clause) {
+                        node.parent->type == type_t::if_condition_and_body) {
                         inc = 1;
                         dec = 1;
                     }
@@ -1030,7 +1030,7 @@ static bool detect_errors_in_backgrounded_job(const ast::job_t &job,
     const job_conjunction_t *job_conj = job.parent->try_as<job_conjunction_t>();
     if (!job_conj) return false;
 
-    if (job_conj->parent->try_as<if_clause_t>()) {
+    if (job_conj->parent->try_as<if_condition_and_body_t>()) {
         errored = append_syntax_error(parse_errors, source_range->start,
                                       BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
     } else if (job_conj->parent->try_as<while_header_t>()) {

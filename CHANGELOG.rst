@@ -55,7 +55,7 @@ Deprecations and removed features
 - New special input functions ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace fish functions of the same names. The special input function ``delete-or-exit`` is no longer available as fish function (:issue:`8538`).
 - A newline/semicolon after an ``else`` statement is now optional, matching POSIX semantics.
 - fish learned the POSIX syntax of ``for``, ``while`` and ``if`` statements (:issue:`9999`).
-  - ``do``, ``done``, ``then`` and ``fi`` are now reserved words, and cannot be used as function or command names.
+  - ``do``, ``done``, ``then``, ``elif`` and ``fi`` are now reserved words, and cannot be used as function or command names.
 
 Scripting improvements
 ----------------------

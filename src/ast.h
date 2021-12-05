@@ -606,11 +606,7 @@ struct block_statement_t final : public branch_t<type_t::block_statement> {
     FIELDS(header, jobs, end, args_or_redirs)
 };
 
-// Represents an 'if', either as the first part of an if statement or after an 'else'.
-struct if_clause_t final : public branch_t<type_t::if_clause> {
-    // The 'if' keyword.
-    keyword_t<parse_keyword_t::kw_if> kw_if;
-
+struct if_condition_and_body_t final : public branch_t<type_t::if_condition_and_body> {
     // The 'if' condition.
     job_conjunction_t condition{};
 
@@ -623,9 +619,21 @@ struct if_clause_t final : public branch_t<type_t::if_clause> {
     // The body to execute if the condition is true.
     job_list_t body;
 
-    FIELDS(kw_if, condition, kw_then, andor_tail, body)
+    FIELDS(condition, kw_then, andor_tail, body)
 };
 
+// Represents an 'if', either as the first part of an if statement or after an 'else'.
+struct if_clause_t final : public branch_t<type_t::if_clause> {
+    // The 'if' keyword.
+    keyword_t<parse_keyword_t::kw_if> kw_if;
+
+    // The condition and body.
+    if_condition_and_body_t condition_and_body{};
+
+    FIELDS(kw_if, condition_and_body)
+};
+
+// Represents an 'else if',
 struct elseif_clause_t final : public branch_t<type_t::elseif_clause> {
     // The 'else' keyword.
     keyword_t<parse_keyword_t::kw_else> kw_else;
@@ -634,6 +642,25 @@ struct elseif_clause_t final : public branch_t<type_t::elseif_clause> {
     if_clause_t if_clause;
 
     FIELDS(kw_else, if_clause)
+};
+
+// Represents an 'elif',
+struct elif_clause_t final : public branch_t<type_t::elif_clause> {
+    // The 'else' keyword.
+    keyword_t<parse_keyword_t::kw_elif> kw_elif;
+
+    // The 'if' clause following it.
+    if_condition_and_body_t condition_and_body;
+
+    FIELDS(kw_elif, condition_and_body)
+};
+
+// Represents an 'else if' or "elif",
+struct elif_or_elseif_clause_t final : public branch_t<type_t::elif_or_elseif_clause> {
+    using contents_ptr_t = union_ptr_t<elseif_clause_t, elif_clause_t>;
+    contents_ptr_t contents{};
+
+    FIELDS(contents)
 };
 
 struct else_clause_t final : public branch_t<type_t::else_clause> {

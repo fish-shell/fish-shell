@@ -306,7 +306,7 @@ struct pretty_printer_t {
             // See if we have a condition and an andor_job_list.
             const optional_t<semi_nl_t> *condition = nullptr;
             const andor_job_list_t *andors = nullptr;
-            if (const auto *ifc = node.try_as<if_clause_t>()) {
+            if (const auto *ifc = node.try_as<if_condition_and_body_t>()) {
                 condition = &ifc->condition.semi_nl;
                 andors = &ifc->andor_tail;
             } else if (const auto *wc = node.try_as<while_header_t>()) {

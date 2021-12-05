@@ -44,8 +44,11 @@ ELEM(begin_header)
 
 ELEM(if_statement)
 ELEM(if_clause)
+ELEM(if_condition_and_body)
+ELEM(elif_clause)
 ELEM(elseif_clause)
-ELEMLIST(elseif_clause_list, elseif_clause)
+ELEM(elif_or_elseif_clause)
+ELEMLIST(elseif_clause_list, elif_or_elseif_clause)
 ELEM(else_clause)
 
 ELEM(switch_statement)

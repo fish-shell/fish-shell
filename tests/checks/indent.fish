@@ -432,3 +432,12 @@ echo 'begin
 echo 'multiline-\\
 -word' | $fish_indent --check
 echo $status #CHECK: 0
+
+# TODO: We should not force the line break.
+echo 'if true; then
+    echo body
+fi' | $fish_indent
+# CHECK: if true
+# CHECK: then
+# CHECK: {{    }}echo body
+# CHECK: fi

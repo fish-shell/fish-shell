@@ -8,8 +8,7 @@ Synopsis
 
 ::
 
-    fish_config
-    fish_config browse
+    fish_config [browse]
     fish_config prompt (choose | list | save | show)
     fish_config theme (choose | demo | dump | list | save | show)
 

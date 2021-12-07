@@ -128,6 +128,7 @@ Completions
   - ``kmutil``
   - ``mono`` (:issue:`8415`)
   -  Angular's ``ng`` (:issue:`8111`)
+  - ``nodeenv`` (:issue:`8533`)
   - ``pabcnet_clear`` (:issue:`8421`)
   - ``qmk`` (:issue:`8180`)
   - ``rakudo`` (:issue:`8113`)

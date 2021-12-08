@@ -52,6 +52,7 @@ Deprecations and removed features
 - ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are almost certainly buggy (:issue:`8214`).
 - Mac OS X 10.9 is no longer supported. The minimum Mac version is now 10.10 "Yosemite."
 - ``_`` is now a reserved keyword (:issue:`8342`).
+- New special input functions ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace fish functions of the same names. The special input function ``delete-or-exit`` is no longer available as fish function (:issue:`8538`).
 
 Scripting improvements
 ----------------------

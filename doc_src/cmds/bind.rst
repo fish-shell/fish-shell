@@ -227,11 +227,17 @@ The following special input functions are available:
 ``kill-word``
     move the next word to the killring
 
+``nextd-or-forward-word``
+    if the commandline is empty, then move forward in the directory history, otherwise move one word to the right
+
 ``or``
     only execute the next function if the previous succeeded (note: only some functions report success)
 
 ``pager-toggle-search``
     toggles the search field if the completions pager is visible.
+
+``prevd-or-backward-word``
+    if the commandline is empty, then move backward in the directory history, otherwise move one word to the left
 
 ``repaint``
     reexecutes the prompt functions and redraws the prompt (also ``force-repaint`` for backwards-compatibility)

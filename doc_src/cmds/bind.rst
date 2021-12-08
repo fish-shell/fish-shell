@@ -294,9 +294,6 @@ The following functions are included as normal functions, but are particularly u
 ``edit_command_buffer``
     open the visual editor (controlled by the :envvar:`VISUAL` or :envvar:`EDITOR` environment variables) with the current command-line contents
 
-``delete-or-exit``
-    quit the shell if the current command-line is empty, or delete the character under the cursor if not
-
 ``fish_clipboard_copy``
     copy the current selection to the system clipboard
 

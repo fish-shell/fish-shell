@@ -1462,6 +1462,8 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::backward_word:
         case rl::forward_bigword:
         case rl::backward_bigword:
+        case rl::nextd_or_forward_word:
+        case rl::prevd_or_backward_word:
         case rl::delete_char:
         case rl::backward_delete_char:
         case rl::kill_line:
@@ -3510,7 +3512,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::backward_word:
-        case rl::backward_bigword: {
+        case rl::backward_bigword:
+        case rl::prevd_or_backward_word: {
+            if (c == rl::prevd_or_backward_word && command_line.empty()) {
+                auto last_statuses = parser().get_last_statuses();
+                (void)parser().eval(L"prevd", io_chain_t{});
+                parser().set_last_statuses(std::move(last_statuses));
+                force_exec_prompt_and_repaint = true;
+                inputter.queue_char(readline_cmd_t::repaint);
+                break;
+            }
+
             auto move_style =
                 (c == rl::backward_word) ? move_word_style_punctuation : move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
@@ -3518,7 +3530,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::forward_word:
-        case rl::forward_bigword: {
+        case rl::forward_bigword:
+        case rl::nextd_or_forward_word: {
+            if (c == rl::nextd_or_forward_word && command_line.empty()) {
+                auto last_statuses = parser().get_last_statuses();
+                (void)parser().eval(L"nextd", io_chain_t{});
+                parser().set_last_statuses(std::move(last_statuses));
+                force_exec_prompt_and_repaint = true;
+                inputter.queue_char(readline_cmd_t::repaint);
+                break;
+            }
+
             auto move_style =
                 (c == rl::forward_word) ? move_word_style_punctuation : move_word_style_whitespace;
             editable_line_t *el = active_edit_line();

@@ -151,7 +151,7 @@ Improved terminal support
 - Vi cursor shaping and $PWD reporting is now also enabled on foot (:issue:`8422`).
 
 Other improvements
-------------------------------
+------------------
 - Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests. (:issue:`7851`)
 - The HTML version of the documentation now includes copy buttons for any code examples if JavaScript is available (:issue:`8218`).
 

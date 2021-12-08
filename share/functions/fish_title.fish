@@ -1,4 +1,4 @@
-function fish_title --argument-names command_override --desription 'Sets fish title'
+function fish_title --argument-names command_override --description 'Sets fish title'
     # emacs' "term" is basically the only term that can't handle it.
     if not set --query INSIDE_EMACS; or string match --quiet --invert '*,term:*' -- $INSIDE_EMACS
         # An override for the current command is passed as the first parameter.

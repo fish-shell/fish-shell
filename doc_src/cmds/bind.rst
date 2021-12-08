@@ -144,7 +144,7 @@ The following special input functions are available:
     delete one character to the right of the cursor
 
 ``delete-or-exit``
-    deletes one character to the right of the cursor or exits the shell if the commandline is empty.
+    delete one character to the right of the cursor, or exit the shell if the commandline is empty
 
 ``down-line``
     move down one line

@@ -501,7 +501,7 @@ void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstri
 void env_universal_t::initialize(callback_data_list_t &callbacks) {
     // Set do_flock to false immediately if the default variable path is on a remote filesystem.
     // See #7968.
-    if (path_get_config_is_remote() == 1) do_flock = false;
+    if (path_get_config_is_remote()) do_flock = false;
     this->initialize_at_path(callbacks, default_vars_path(), true /* migrate legacy */);
 }
 

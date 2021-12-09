@@ -108,13 +108,13 @@ static bool path_is_executable(const std::string &path) {
     return S_ISREG(buff.st_mode);
 }
 
-/// \return 1 if the path is remote, 0 if local, -1 if unknown.
-static int path_is_remote(const wcstring &path) {
+/// \return true if the path is remote, false if local, none() if unknown.
+static maybe_t<bool> path_is_remote(const wcstring &path) {
     std::string narrow = wcs2string(path);
 #if defined(__linux__)
     struct statfs buf {};
     if (statfs(narrow.c_str(), &buf) < 0) {
-        return -1;
+        return none();
     }
     // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
     // these are in varying headers. Simply hard code them.
@@ -124,23 +124,23 @@ static int path_is_remote(const wcstring &path) {
         case 0x517B:       // SMB_SUPER_MAGIC
         case 0xFE534D42U:  // SMB2_MAGIC_NUMBER - not in the manpage
         case 0xFF534D42U:  // CIFS_MAGIC_NUMBER
-            return 1;
+            return true;
         default:
             // Other FSes are assumed local.
-            return 0;
+            return false;
     }
 #elif defined(ST_LOCAL)
     // ST_LOCAL is a flag to statvfs, which is itself standardized.
     // In practice the only system to use this path is NetBSD.
     struct statvfs buf {};
-    if (statvfs(narrow.c_str(), &buf) < 0) return -1;
-    return (buf.f_flag & ST_LOCAL) ? 0 : 1;
+    if (statvfs(narrow.c_str(), &buf) < 0) return none();
+    return (buf.f_flag & ST_LOCAL) ? false : true;
 #elif defined(MNT_LOCAL)
     struct statfs buf {};
-    if (statfs(narrow.c_str(), &buf) < 0) return -1;
-    return (buf.f_flags & MNT_LOCAL) ? 0 : 1;
+    if (statfs(narrow.c_str(), &buf) < 0) return none();
+    return (buf.f_flags & MNT_LOCAL) ? false : true;
 #else
-    return -1;
+    return none();
 #endif
 }
 
@@ -337,11 +337,10 @@ namespace {
 /// actually) to XDG spec.
 struct base_directory_t {
     wcstring path{};       /// the path where we attempted to create the directory.
+    maybe_t<bool> is_remote{none};/// 1 if the directory is remote (e.g. NFS), 0 if local, -1 if unknown.
     int err{0};            /// the error code if creating the directory failed, or 0 on success.
-    int is_remote{-1};     /// 1 if the directory is remote (e.g. NFS), 0 if local, -1 if unknown.
-    bool used_xdg{false};  /// whether an XDG variable was used in resolving the directory.
-
     bool success() const { return err == 0; }
+    bool used_xdg{false};  /// whether an XDG variable was used in resolving the directory.
 };
 }  // namespace
 
@@ -395,7 +394,7 @@ void path_emit_config_directory_messages(env_stack_t &vars) {
         maybe_issue_path_warning(L"data", _(L"can not save history"), data.used_xdg,
                                  L"XDG_DATA_HOME", data.path, data.err, vars);
     }
-    if (data.is_remote > 0) {
+    if (data.is_remote) {
         FLOG(path, "data path appears to be on a network volume");
     }
 
@@ -405,7 +404,7 @@ void path_emit_config_directory_messages(env_stack_t &vars) {
                                  config.used_xdg, L"XDG_CONFIG_HOME", config.path, config.err,
                                  vars);
     }
-    if (config.is_remote > 0) {
+    if (config.is_remote) {
         FLOG(path, "config path appears to be on a network volume");
     }
 }
@@ -422,9 +421,9 @@ bool path_get_data(wcstring &path) {
     return dir.success();
 }
 
-int path_get_data_is_remote() { return get_data_directory().is_remote; }
+maybe_t<bool> path_get_data_is_remote() { return get_data_directory().is_remote; }
 
-int path_get_config_is_remote() { return get_config_directory().is_remote; }
+maybe_t<bool> path_get_config_is_remote() { return get_config_directory().is_remote; }
 
 void path_make_canonical(wcstring &path) {
     // Ignore trailing slashes, unless it's the first character.

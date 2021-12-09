@@ -27,11 +27,10 @@ bool path_get_config(wcstring &path);
 bool path_get_data(wcstring &path);
 
 /// \return if the data directory is remote (eg. NFS).
-/// -1 means unknown, 0 means known local, 1 means known remote.
-int path_get_data_is_remote();
+maybe_t<bool> path_get_data_is_remote();
 
 /// Like path_get_data_is_remote but for config directory.
-int path_get_config_is_remote();
+maybe_t<bool> path_get_config_is_remote();
 
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.

@@ -813,7 +813,7 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
 /// Returns 1 if the specified command is a builtin that may not be used in a pipeline.
 static const wchar_t *const forbidden_pipe_commands[] = {L"exec", L"case", L"break", L"return",
                                                          L"continue"};
-static int parser_is_pipe_forbidden(const wcstring &word) {
+static bool parser_is_pipe_forbidden(const wcstring &word) {
     return contains(forbidden_pipe_commands, word);
 }
 
@@ -1228,7 +1228,6 @@ parser_test_error_bits_t parse_util_detect_errors(const ast::ast_t &ast, const w
 
     // Expand all commands.
     // Verify 'or' and 'and' not used inside pipelines.
-    // Verify pipes via parser_is_pipe_forbidden.
     // Verify return only within a function.
     // Verify no variable expansions.
     wcstring storage;

@@ -109,9 +109,9 @@ Examples
 
     path extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path extension`` returns the extension of the given path. This is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and nothing is printed.
+``path extension`` returns the extension of the given path. This is the part after (and including) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and an empty line is printed.
 
-If the filename ends in a ".", the extension is empty, so an empty line will be printed.
+If the filename ends in a ".", only a "." is printed.
 
 It returns 0 if there was an extension.
 
@@ -121,19 +121,19 @@ Examples
 ::
 
    >_ path extension ./foo.mp4
-   mp4
+   .mp4
 
    >_ path extension ../banana
-   # nothing, status 1
+   # an empty line, status 1
 
    >_ path extension ~/.config
-   # nothing, status 1
+   # an empty line, status 1
 
    >_ path extension ~/.config.d
-   d
+   .d
 
    >_ path extension ~/.config.
-   # one empty line, status 0
+   .
    
 .. _cmd-path-filter:
 
@@ -281,9 +281,11 @@ Examples
     path change-extension [(-z | --null-in)] [(-Z | --null-out)] \
         [(-q | --quiet)] EXTENSION [PATH...]
 
-``path change-extension`` returns the given paths, with their extension changed to the given new extension. The extension is the part after (and excluding) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no previous extension and the new one is simply added.
+``path change-extension`` returns the given paths, with their extension changed to the given new extension. The extension is the part after (and including) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no previous extension and the new one is simply added.
 
 If the extension is empty, any previous extension is stripped, along with the ".". This is, of course, the inverse of ``path extension``.
+
+One leading dot on the extension is ignored, so ".mp3" and "mp3" are treated the same.
 
 It returns 0 if it was given any paths.
 
@@ -293,6 +295,9 @@ Examples
 ::
 
    >_ path change-extension mp4 ./foo.wmv
+   ./foo.mp4
+
+   >_ path change-extension .mp4 ./foo.wmv
    ./foo.mp4
 
    >_ path change-extension '' ../banana

@@ -6,10 +6,8 @@ builtin - run a builtin command
 Synopsis
 --------
 
-::
-
-    builtin [OPTIONS...] BUILTINNAME
-    builtin --query BUILTINNAMES...
+| ``builtin`` [*OPTIONS* ...] *BUILTINNAME*
+| ``builtin`` --query *BUILTINNAMES* ...
 
 Description
 -----------
@@ -18,14 +16,13 @@ Description
 
 The following parameters are available:
 
-- ``-n`` or ``--names`` List the names of all defined builtins
-- ``-q`` or ``--query`` tests if any of the specified builtins exists
-
+**-n** or **--names**
+    List the names of all defined builtins
+**-q** or **--query**
+    Tests if any of the specified builtin(s) exist
 
 Example
 -------
-
-
 
 ::
 

@@ -6,9 +6,10 @@ case - conditionally execute a block of commands
 Synopsis
 --------
 
-::
-
-    switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
+| ``switch`` *VALUE*
+|    [``case`` [*GLOB*...]
+|        [*COMMAND* ...]]
+| ``end``
 
 Description
 -----------

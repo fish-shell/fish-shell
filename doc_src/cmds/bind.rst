@@ -45,39 +45,39 @@ Options
 -------
 The following options are available:
 
-``-k`` or ``--key``
+**-k** or **--key**
     Specify a key name, such as 'left' or 'backspace' instead of a character sequence
 
-``-K`` or ``--key-names``
-    Display a list of available key names. Specifying ``-a`` or ``--all`` includes keys that don't have a known mapping
+**-K** or **--key-names**
+    Display a list of available key names. Specifying **-a** or **--all** includes keys that don't have a known mapping
 
-``-f`` or ``--function-names``
+**-f** or **--function-names**
     Display a list of available input functions
 
-``-L`` or ``--list-modes``
+**-L** or **--list-modes**
     Display a list of defined bind modes
 
-``-M MODE`` or ``--mode MODE``
+**-M MODE** or **--mode** *MODE*
     Specify a bind mode that the bind is used in. Defaults to "default"
 
-``-m NEW_MODE`` or ``--sets-mode NEW_MODE``
-    Change the current mode to ``NEW_MODE`` after this binding is executed
+**-m NEW_MODE** or **--sets-mode** *NEW_MODE*
+    Change the current mode to *NEW_MODE* after this binding is executed
 
-``-e`` or ``--erase``
+**-e** or **--erase**
     Erase the binding with the given sequence and mode instead of defining a new one.
     Multiple sequences can be specified with this flag.
-    Specifying ``-a`` or ``--all`` with ``-M`` or ``--mode`` erases all binds in the given mode regardless of sequence.
-    Specifying ``-a`` or ``--all`` without ``-M`` or ``--mode`` erases all binds in all modes regardless of sequence.
+    Specifying **-a** or **--all** with **-M** or **--mode** erases all binds in the given mode regardless of sequence.
+    Specifying **-a** or **--all** without **-M** or **--mode** erases all binds in all modes regardless of sequence.
 
-``-a`` or ``--all``
-    See ``--erase`` and ``--key-names``
+**-a** or **--all**
+    See **--erase** and **--key-names**
 
-``--preset`` and ``--user``
+**--preset** and **--user**
     Specify if bind should operate on user or preset bindings.
     User bindings take precedence over preset bindings when fish looks up mappings.
     By default, all ``bind`` invocations work on the "user" level except for listing, which will show both levels.
-    All invocations except for inserting new bindings can operate on both levels at the same time (if both ``--preset`` and ``--user`` are given).
-    ``--preset`` should only be used in full binding sets (like when working on ``fish_vi_key_bindings``).
+    All invocations except for inserting new bindings can operate on both levels at the same time (if both **--preset** and **--user** are given).
+    **--preset** should only be used in full binding sets (like when working on ``fish_vi_key_bindings``).
 
 Special input functions
 -----------------------
@@ -292,7 +292,7 @@ The following functions are included as normal functions, but are particularly u
      move the cursor or search the history depending on the cursor position and current mode
 
 ``edit_command_buffer``
-    open the visual editor (controlled by the ``VISUAL`` or ``EDITOR`` environment variables) with the current command-line contents
+    open the visual editor (controlled by the :envvar:`VISUAL` or :envvar:`EDITOR` environment variables) with the current command-line contents
 
 ``delete-or-exit``
     quit the shell if the current command-line is empty, or delete the character under the cursor if not

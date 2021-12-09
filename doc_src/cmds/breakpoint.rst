@@ -6,9 +6,7 @@ breakpoint - launch debug mode
 Synopsis
 --------
 
-::
-
-    breakpoint
+``breakpoint``
 
 
 Description

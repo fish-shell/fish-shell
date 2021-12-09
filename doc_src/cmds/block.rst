@@ -6,9 +6,7 @@ block - temporarily block delivery of events
 Synopsis
 --------
 
-::
-
-    block [OPTIONS...]
+``block`` [*OPTIONS* ...]
 
 
 Description
@@ -24,16 +22,17 @@ Event blocks should not be confused with code blocks, which are created with ``b
 
 The following parameters are available:
 
-- ``-l`` or ``--local`` Release the block automatically at the end of the current innermost code block scope
+**-l** or **--local**
+    Release the block automatically at the end of the current innermost code block scope
 
-- ``-g`` or ``--global`` Never automatically release the lock
+**-g** or **--global**
+    Never automatically release the lock
 
-- ``-e`` or ``--erase`` Release global block
-
+**-e** or **--erase**
+    Release global block
 
 Example
 -------
-
 ::
 
     # Create a function that listens for events
@@ -48,8 +47,7 @@ Example
     block -e
     # 'foo fired' will now be printed
 
-
 Notes
 -----
 
-Note that events are only received from the current fish process as there is no way to send events from one fish process to another.
+Events are only received from the current fish process as there is no way to send events from one fish process to another (yet).

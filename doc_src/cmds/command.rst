@@ -6,9 +6,7 @@ command - run a program
 Synopsis
 --------
 
-::
-
-    command [OPTIONS] COMMANDNAME [ARGS...]
+``command`` [ *OPTIONS* ] [**COMMAND** [*ARG* ...]]
 
 Description
 -----------
@@ -17,21 +15,22 @@ Description
 
 The following options are available:
 
-- ``-a`` or ``--all`` returns all the external COMMANDNAMEs that are found in ``$PATH`` in the order they are found.
+**-a** or **--all**
+    Prints all *COMMAND* found in :envvar:`PATH`, in the order found.
 
-- ``-q`` or ``--query``, silences the output and prints nothing, setting only the exit status. Implies ``--search``. For compatibility with old fish versions this is also ``--quiet`` (but this is deprecated).
+**-q** or **--query**
+    Silence output and print nothing, setting only exit status.
+    Implies **--search**.
+    For compatibility, this is also **--quiet** (deprecated).
 
-- ``-s`` or ``--search`` returns the name of the external command that would be executed, or nothing if no file with the specified name could be found in the ``$PATH``.
+**-v** (or **-s** or **--search**)
+    Prints the external command that would be executed, or prints nothing if no file with the specified name could be found in :envvar:`PATH`.
 
-With the ``-s`` option, ``command`` treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 1 if no commands could be found. Additionally passing a ``-q`` or ``--quiet`` option prevents any paths from being printed, like ``type -q``, for testing only the exit status.
-
-For basic compatibility with POSIX ``command``, the ``-v`` flag is recognized as an alias for ``-s``.
+With the **-v** option, ``command`` treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 1 if no commands could be found. Additionally passing **--quiet** option prevents any paths from being printed, like ``type -q``.
 
 Examples
 --------
 
-``command ls`` causes fish to execute the ``ls`` program, even if an ``ls`` function exists.
-
-``command -s ls`` returns the path to the ``ls`` program.
-
-``command -q git; and command git log`` runs ``git log`` only if ``git`` exists.
+| ``command ls`` causes fish to execute the ``ls`` program, even if an ``ls`` function exists.
+| ``command -s ls`` returns the path to the ``ls`` program.
+| ``command -q git; and command git log`` runs ``git log`` only if ``git`` exists.

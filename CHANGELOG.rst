@@ -68,7 +68,7 @@ Scripting improvements
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks like e.g. ``exec`` not being allowed in a pipeline and ``$$`` not being a valid variable. Most of these would have triggered an assert or other error before.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``commandline`` gained an ``--is-valid`` option to check if the commandline is syntactically valid and complete. This allows basic implementation of transient prompts (:issue:`8142`).
-- ``commandline`` gained an ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "7 more rows" message) (:issue:`8485`).
+- ``commandline`` gained a ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "7 more rows" message) (:issue:`8485`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
 - Running ``fish`` with a directory instead of a script as argument (e.g. ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
 - Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).

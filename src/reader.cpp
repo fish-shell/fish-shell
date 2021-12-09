@@ -71,7 +71,6 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "sanity.h"
 #include "screen.h"
 #include "signal.h"
 #include "termsize.h"

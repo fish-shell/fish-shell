@@ -21,7 +21,7 @@ or echo None once more
 # CHECK: None once more
 path extension /foo.txt
 and echo Success
-# CHECK: txt
+# CHECK: .txt
 # CHECK: Success
 path extension /foo.txt/bar
 or echo Not even here
@@ -30,7 +30,7 @@ path extension . ..
 or echo No extension
 # CHECK: No extension
 path extension ./foo.mp4
-# CHECK: mp4
+# CHECK: .mp4
 path extension ../banana
 # nothing, status 1
 echo $status
@@ -40,15 +40,19 @@ path extension ~/.config
 echo $status
 # CHECK: 1
 path extension ~/.config.d
-# CHECK: d
+# CHECK: .d
 path extension ~/.config.
 echo $status
-# one empty line, status 0
-# CHECK: 
+# status 0
+# CHECK: .
 # CHECK: 0
 
 path change-extension '' ./foo.mp4
 # CHECK: ./foo
+path change-extension wmv ./foo.mp4
+# CHECK: ./foo.wmv
+path change-extension .wmv ./foo.mp4
+# CHECK: ./foo.wmv
 path change-extension '' ../banana
 # CHECK: ../banana
 # still status 0, because there was an argument

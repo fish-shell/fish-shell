@@ -580,7 +580,7 @@ static int path_extension(parser_t &parser, io_streams_t &streams, int argc, con
 
         if (!pos) continue;
 
-        wcstring ext = arg->substr(*pos + 1);
+        wcstring ext = arg->substr(*pos);
         if (opts.quiet && !ext.empty()) {
             return STATUS_CMD_OK;
         }
@@ -612,7 +612,9 @@ static int path_change_extension(parser_t &parser, io_streams_t &streams, int ar
         // Only add on the extension "." if we have something.
         // That way specifying an empty extension strips it.
         if (*opts.arg1) {
-            ext.push_back(L'.');
+            if (opts.arg1[0] != L'.') {
+                ext.push_back(L'.');
+            }
             ext.append(opts.arg1);
         }
         path_out(streams, opts, ext);

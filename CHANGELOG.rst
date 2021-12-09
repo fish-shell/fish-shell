@@ -1,6 +1,9 @@
 fish 3.4.0 (released ???)
 =========================
 
+..
+   Ignore for 3.4.0 changelog: 3625 3954 7602 8096 8077 8079 8084 8137 8139 8151 8161 8238 8268 8433 8497 8479 8492 8472 8456 8285 8526 8527 8528
+
 Notable improvements and fixes
 ------------------------------
 - fish's command substitution syntax has been extended: ``$(cmd)`` now has the same meaning as ``(cmd)`` but it can be used inside double quotes, to prevent line splitting of the results (:issue:`159`)::
@@ -65,7 +68,7 @@ Scripting improvements
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks like e.g. ``exec`` not being allowed in a pipeline and ``$$`` not being a valid variable. Most of these would have triggered an assert or other error before.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``commandline`` gained an ``--is-valid`` option to check if the commandline is syntactically valid and complete. This allows basic implementation of transient prompts (:issue:`8142`).
-- ``commandline`` gained an ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "5 more rows" message) (:issue:`8485`).
+- ``commandline`` gained an ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "7 more rows" message) (:issue:`8485`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
 - Running ``fish`` with a directory instead of a script as argument (e.g. ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
 - Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
@@ -84,7 +87,7 @@ Interactive improvements
 - Vi mode cursors are now set properly after :kbd:`Control-C`. (:issue:`8125`).
 - Vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
-- Running a commandline consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
+- Running a command line consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
 - Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
 - ``history`` and ``__fish_print_help`` now properly support ``less`` before version 530, including the version that ships with macOS. (:issue:`8157`).
 - ``help`` now knows which section is in which document again (:issue:`8245`).
@@ -92,7 +95,7 @@ Interactive improvements
 - When executing a command, abbreviations are no longer expanded when the cursor is separated from the command by spaces, making it easier to suppress abbreviation expansion of commands without arguments. (:issue:`8423`).
 - ``fish_key_reader``'s output was simplified. By default, it now only prints a bind statement. The previous per-character timing information can be seen with a new ``--verbose`` switch (:issue:`8467`).
 - Custom completions are now also loaded for commands that contain tildes or variables like ``~/$bin/fish`` (:issue:`8442`).
-- Some multiline commandlines would be shadowed by the completion pager if it fills the entire terminal. This has been corrected (:issue:`8509`).
+- Command lines spanning multiple lines will not be overwritten by the completion pager when it fills the entire terminal (:issue:`8509`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -129,6 +132,7 @@ Completions
   - ``rakudo`` (:issue:`8113`)
   - ``roswell``
   - ``sbcl``
+  - ``starship`` (:issue:`8520`)
   -  ``wine``, ``wineboot`` and ``winemaker`` (:issue:`8411`)
   -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
   - ``zef`` (:issue:`8114`)

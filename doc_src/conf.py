@@ -167,11 +167,14 @@ latex_engine = 'xelatex'
 
 def get_command_description(path, name):
     """ Return the description for a command, by parsing its synopsis line """
-    with open(path) as fd:
-        for line in fd:
-            if line.startswith(name + " - "):
-                _, desc = line.split(" - ", 1)
+    with open(path) as opened:
+        for line in opened:
+            if line.startswith(name + ' - '):
+                _, desc = line.split(' - ', 1)
                 return desc.strip()
+            elif line.startswith('``' + name + '`` - '):
+                _, desc = line.split('`` - ', 1)
+                return desc.strip('`')
     raise SphinxWarning("No description in file %s" % os.path.basename(path))
 
 # Newer sphinxen apparently create another subdirectory which breaks our man lookup.

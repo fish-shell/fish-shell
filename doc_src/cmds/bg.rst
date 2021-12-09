@@ -6,9 +6,7 @@ bg - send jobs to background
 Synopsis
 --------
 
-::
-
-    bg [PID...]
+``bg`` [*PID* ...]
 
 Description
 -----------

@@ -6,11 +6,9 @@ alias - create a function
 Synopsis
 --------
 
-::
-
-    alias
-    alias [OPTIONS] NAME DEFINITION
-    alias [OPTIONS] NAME=DEFINITION
+| ``alias``
+| ``alias`` [*OPTIONS*] *NAME* *DEFINITION*
+| ``alias`` [*OPTIONS*] *NAME*=*DEFINITION*
 
 
 Description
@@ -27,16 +25,14 @@ You cannot create an alias to a function with the same name. Note that spaces ne
 
 The following options are available:
 
-- ``-h`` or ``--help`` displays help about using this command.
+- **-h** or **--help** displays help about using this command.
 
-- ``-s`` or ``--save`` Automatically save the function created by the alias into your fish configuration directory using :ref:`funcsave <cmd-funcsave>`.
+- **-s** or **--save** Automatically save the function created by the alias into your fish configuration directory using :ref:`funcsave <cmd-funcsave>`.
 
 Example
 -------
 
 The following code will create ``rmi``, which runs ``rm`` with additional arguments on every invocation.
-
-
 
 ::
 

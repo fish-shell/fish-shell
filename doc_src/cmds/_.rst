@@ -6,9 +6,7 @@ _ - call fish's translations
 Synopsis
 --------
 
-::
-
-    _ STRING...
+``_`` *STRING*
 
 Description
 -----------
@@ -19,18 +17,16 @@ It is equivalent to ``gettext fish STRING``, meaning it can only be used to look
 
 It requires fish to be built with gettext support. If that support is disabled, or there is no translation it will simply echo the argument back.
 
-The language depends on the current locale, set with ``$LANG`` and ``$LC_MESSAGES``.
+The language depends on the current locale, set with :envvar:`LANG` and :envvar:`LC_MESSAGES`.
 
 
 Options
 -------
 
-``_`` has no options.
+``_`` takes no options.
 
 Examples
 --------
-
-
 
 ::
 

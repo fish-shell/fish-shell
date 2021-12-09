@@ -6,19 +6,17 @@ argparse - parse options passed to a fish script or function
 Synopsis
 --------
 
-::
-
-    argparse [OPTIONS] OPTION_SPEC... -- [ARG...]
+``argparse`` [*OPTIONS*] *OPTION_SPEC*... -- [*ARG*...]
 
 
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments like how fish builtin commands handle their arguments. You pass arguments that define the known options, followed by a literal ``--``, then the arguments to be parsed (which might also include a literal ``--``). ``argparse`` then sets variables to indicate the passed options with their values, and sets $argv (and always $argv) to the remaining arguments. More on this in the :ref:`usage <cmd-argparse-usage>` section below.
+This command makes it easy for fish scripts and functions to handle arguments like how fish builtin commands handle their arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets $argv (and always $argv) to the remaining arguments. More on this in the :ref:`usage <cmd-argparse-usage>` section below.
 
 Each option specification (``OPTION_SPEC``) is written in the :ref:`domain specific language <cmd-argparse-option-specification>` described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
-Each option that is seen in the ARG list will result in variables named ``_flag_X``, where ``X`` is the short flag letter and the long flag name (if they are defined). For example a ``--help`` option could cause argparse to define one variable called ``_flag_h`` and another called ``_flag_help``.
+Each option that is seen in the ARG list will result in variables named ``_flag_X``, where **X** is the short flag letter and the long flag name (if they are defined). For example a **--help** option could cause argparse to define one variable called ``_flag_h`` and another called ``_flag_help``.
 
 The variables will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, it just is passed or not, it doesn't have a value) the values are the short and long flags seen. If the option is not a boolean the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag variable will not be set.
 
@@ -27,32 +25,32 @@ Options
 
 The following ``argparse`` options are available. They must appear before all OPTION_SPECs:
 
-- ``-n`` or ``--name`` is the command name for use in error messages. By default the current function name will be used, or ``argparse`` if run outside of a function.
+**-n** or **--name**
+    the command name for use in error messages. By default the current function name will be used, or ``argparse`` if run outside of a function.
 
-- ``-x`` or ``--exclusive`` should be followed by a comma separated list of short or long options that are mutually exclusive. You can use this more than once to define multiple sets of mutually exclusive options.
+**-x** or **--exclusive** should be followed by a comma separated list of short or long options that are mutually exclusive. You can use this more than once to define multiple sets of mutually exclusive options.
 
-- ``-N`` or ``--min-args`` is followed by an integer that defines the minimum number of acceptable non-option arguments. The default is zero.
+- **-N** or **--min-args** is followed by an integer that defines the minimum number of acceptable non-option arguments. The default is zero.
 
-- ``-X`` or ``--max-args`` is followed by an integer that defines the maximum number of acceptable non-option arguments. The default is infinity.
+- **-X** or **--max-args** is followed by an integer that defines the maximum number of acceptable non-option arguments. The default is infinity.
 
-- ``-i`` or ``--ignore-unknown`` ignores unknown options, keeping them and their arguments in $argv instead.
+- **-i** or **--ignore-unknown** ignores unknown options, keeping them and their arguments in $argv instead.
 
-- ``-s`` or ``--stop-nonopt`` causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
+- **-s** or **--stop-nonopt** causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 
-- ``-h`` or ``--help`` displays help about using this command.
+- **-h** or **--help** displays help about using this command.
 
 .. _cmd-argparse-usage:
 
 Usage
 -----
 
-To use this command, pass the option specifications (``OPTION_SPEC``), then a mandatory ``--``, and then the arguments you want to have parsed.
+To use this command, pass the option specifications (**OPTION_SPEC**), a mandatory **--**, and then the arguments to be parsed.
 
 A simple example::
 
     argparse --name=my_function 'h/help' 'n/name=' -- $argv
     or return
-
 
 If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns zero to indicate success. If ``$argv`` is not empty then it is checked for flags ``-h``, ``--help``, ``-n`` and ``--name``. If they are found they are removed from the arguments and local variables called ``_flag_OPTION`` are set so the script can determine which options were seen. If ``$argv`` doesn't have any errors, like a missing mandatory value for an option, then ``argparse`` exits with a status of zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
 
@@ -62,7 +60,6 @@ The ``--`` argument is required. You do not have to include any arguments after 
 
     set -l argv
     argparse 'h/help' 'n/name' -- $argv
-
 
 But this is not::
 
@@ -78,17 +75,17 @@ Option Specifications
 
 Each option specification consists of:
 
-- An optional alphanumeric short flag letter, followed by a ``/`` if the short flag can be used by someone invoking your command or, for backwards compatibility, a ``-`` if it should not be exposed as a valid short flag (in which case it will also not be exposed as a flag variable).
+- An optional alphanumeric short flag character, followed by a ``/`` if the short flag can be used by someone invoking your command or, for backwards compatibility, a ``-`` if it should not be exposed as a valid short flag (in which case it will also not be exposed as a flag variable).
 
-- An optional long flag name. If not present then only the short flag letter can be used, and if that is not present either it's an error.
+- An optional long flag name, which if not present the short flag can be used, and if that is also not present, an error is reported
 
 - Nothing if the flag is a boolean that takes no argument or is an integer flag, or
 
-- ``=`` if it requires a value and only the last instance of the flag is saved, or
+    - **=** if it requires a value and only the last instance of the flag is saved, or
 
-- ``=?`` it takes an optional value and only the last instance of the flag is saved, or
+    - **=?** if it takes an optional value and only the last instance of the flag is saved, or
 
-- ``=+`` if it requires a value and each instance of the flag is saved.
+    - **=+** if it requires a value and each instance of the flag is saved.
 
 - Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the exit status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on :ref:`Flag Value Validation <flag-value-validation>` for more information.
 

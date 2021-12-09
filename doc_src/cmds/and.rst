@@ -1,14 +1,12 @@
 .. _cmd-and:
 
 and - conditionally execute a command
-=====================================
+=========================================
 
 Synopsis
 --------
 
-::
-
-    COMMAND1; and COMMAND2
+PREVIOUS; ``and`` *COMMAND*
 
 Description
 -----------

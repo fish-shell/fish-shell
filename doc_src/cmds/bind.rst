@@ -5,14 +5,12 @@ bind - handle fish key bindings
 Synopsis
 --------
 
-::
-
-    bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
-    bind [(-M | --mode) MODE] [(-k | --key)] [--preset] [--user] SEQUENCE
-    bind (-K | --key-names) [(-a | --all)] [--preset] [--user]
-    bind (-f | --function-names)
-    bind (-L | --list-modes)
-    bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
+| ``bind`` [(**-M** | **--mode**) *MODE*] [(*-m* | *--sets-mode*) **NEW_MODE**] [*--preset* | *--user*] [*-s* | *--silent*] [**-k** | **--key**] *SEQUENCE* *COMMAND* ...
+| ``bind`` [**-M** | **--mode** *MODE*] [**-k** | **--key**] [**--preset**] [**--user**] *SEQUENCE*
+| ``bind`` **-K** | **--key-names** [**-a** | **--all**] [**--preset**] [**--user**]
+| ``bind`` **-f** | **--function-names**
+| ``bind`` **-L** | **--list-modes**
+| ``bind`` **-e** | **--erase** [**-M** | **--mode** *MODE*] [**--preset**] [**--user**] [**-a** | **--all**] | [**-k** | **--key**] *SEQUENCE* ...
 
 Description
 -----------
@@ -47,179 +45,269 @@ Options
 -------
 The following options are available:
 
-- ``-k`` or ``--key`` Specify a key name, such as 'left' or 'backspace' instead of a character sequence
+``-k`` or ``--key``
+    Specify a key name, such as 'left' or 'backspace' instead of a character sequence
 
-- ``-K`` or ``--key-names`` Display a list of available key names. Specifying ``-a`` or ``--all`` includes keys that don't have a known mapping
+``-K`` or ``--key-names``
+    Display a list of available key names. Specifying ``-a`` or ``--all`` includes keys that don't have a known mapping
 
-- ``-f`` or ``--function-names`` Display a list of available input functions
+``-f`` or ``--function-names``
+    Display a list of available input functions
 
-- ``-L`` or ``--list-modes`` Display a list of defined bind modes
+``-L`` or ``--list-modes``
+    Display a list of defined bind modes
 
-- ``-M MODE`` or ``--mode MODE`` Specify a bind mode that the bind is used in. Defaults to "default"
+``-M MODE`` or ``--mode MODE``
+    Specify a bind mode that the bind is used in. Defaults to "default"
 
-- ``-m NEW_MODE`` or ``--sets-mode NEW_MODE`` Change the current mode to ``NEW_MODE`` after this binding is executed
+``-m NEW_MODE`` or ``--sets-mode NEW_MODE``
+    Change the current mode to ``NEW_MODE`` after this binding is executed
 
-- ``-e`` or ``--erase`` Erase the binding with the given sequence and mode instead of defining a new one. Multiple sequences can be specified with this flag. Specifying ``-a`` or ``--all`` with ``-M`` or ``--mode`` erases all binds in the given mode regardless of sequence. Specifying ``-a`` or ``--all`` without ``-M`` or ``--mode`` erases all binds in all modes regardless of sequence.
+``-e`` or ``--erase``
+    Erase the binding with the given sequence and mode instead of defining a new one.
+    Multiple sequences can be specified with this flag.
+    Specifying ``-a`` or ``--all`` with ``-M`` or ``--mode`` erases all binds in the given mode regardless of sequence.
+    Specifying ``-a`` or ``--all`` without ``-M`` or ``--mode`` erases all binds in all modes regardless of sequence.
 
-- ``-a`` or ``--all`` See ``--erase`` and ``--key-names``
+``-a`` or ``--all``
+    See ``--erase`` and ``--key-names``
 
-- ``--preset`` and ``--user`` specify if bind should operate on user or preset bindings. User bindings take precedence over preset bindings when fish looks up mappings. By default, all ``bind`` invocations work on the "user" level except for listing, which will show both levels. All invocations except for inserting new bindings can operate on both levels at the same time (if both ``--preset`` and ``--user`` are given). ``--preset`` should only be used in full binding sets (like when working on ``fish_vi_key_bindings``).
+``--preset`` and ``--user``
+    Specify if bind should operate on user or preset bindings.
+    User bindings take precedence over preset bindings when fish looks up mappings.
+    By default, all ``bind`` invocations work on the "user" level except for listing, which will show both levels.
+    All invocations except for inserting new bindings can operate on both levels at the same time (if both ``--preset`` and ``--user`` are given).
+    ``--preset`` should only be used in full binding sets (like when working on ``fish_vi_key_bindings``).
 
 Special input functions
 -----------------------
 The following special input functions are available:
 
-- ``and``, only execute the next function if the previous succeeded (note: only some functions report success)
+``and``
+    only execute the next function if the previous succeeded (note: only some functions report success)
 
-- ``accept-autosuggestion``, accept the current autosuggestion completely
+``accept-autosuggestion``
+    accept the current autosuggestion completely
 
-- ``backward-char``, moves one character to the left
+``backward-char``
+    moves one character to the left
 
-- ``backward-bigword``, move one whitespace-delimited word to the left
+``backward-bigword``
+    move one whitespace-delimited word to the left
 
-- ``backward-delete-char``, deletes one character of input to the left of the cursor
+``backward-delete-char``
+    deletes one character of input to the left of the cursor
 
-- ``backward-kill-bigword``, move the whitespace-delimited word to the left of the cursor to the killring
+``backward-kill-bigword``
+    move the whitespace-delimited word to the left of the cursor to the killring
 
-- ``backward-kill-line``, move everything from the beginning of the line to the cursor to the killring
+``backward-kill-line``
+    move everything from the beginning of the line to the cursor to the killring
 
-- ``backward-kill-path-component``, move one path component to the left of the cursor to the killring. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
+``backward-kill-path-component``
+    move one path component to the left of the cursor to the killring. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
 
-- ``backward-kill-word``, move the word to the left of the cursor to the killring. The "word" here is everything up to punctuation or whitespace.
+``backward-kill-word``
+    move the word to the left of the cursor to the killring. The "word" here is everything up to punctuation or whitespace.
 
-- ``backward-word``, move one word to the left
+``backward-word``
+    move one word to the left
 
-- ``beginning-of-buffer``, moves to the beginning of the buffer, i.e. the start of the first line
+``beginning-of-buffer``
+    moves to the beginning of the buffer, i.e. the start of the first line
 
-- ``beginning-of-history``, move to the beginning of the history
+``beginning-of-history``
+    move to the beginning of the history
 
-- ``beginning-of-line``, move to the beginning of the line
+``beginning-of-line``
+    move to the beginning of the line
 
-- ``begin-selection``, start selecting text
+``begin-selection``
+    start selecting text
 
-- ``cancel``, cancel the current commandline and replace it with a new empty one
+``cancel``
+    cancel the current commandline and replace it with a new empty one
 
-- ``cancel-commandline``, cancel the current commandline and replace it with a new empty one, leaving the old one in place with a marker to show that it was cancelled
+``cancel-commandline``
+    cancel the current commandline and replace it with a new empty one, leaving the old one in place with a marker to show that it was cancelled
 
-- ``capitalize-word``, make the current word begin with a capital letter
+``capitalize-word``
+    make the current word begin with a capital letter
 
-- ``complete``, guess the remainder of the current token
+``complete``
+    guess the remainder of the current token
 
-- ``complete-and-search``, invoke the searchable pager on completion options (for convenience, this also moves backwards in the completion pager)
+``complete-and-search``
+    invoke the searchable pager on completion options (for convenience, this also moves backwards in the completion pager)
 
-- ``delete-char``, delete one character to the right of the cursor
+``delete-char``
+    delete one character to the right of the cursor
 
-- ``delete-or-exit``, deletes one character to the right of the cursor or exits the shell if the commandline is empty.
+``delete-or-exit``
+    deletes one character to the right of the cursor or exits the shell if the commandline is empty.
 
-- ``down-line``, move down one line
+``down-line``
+    move down one line
 
-- ``downcase-word``, make the current word lowercase
+``downcase-word``
+    make the current word lowercase
 
-- ``end-of-buffer``, moves to the end of the buffer, i.e. the end of the first line
+``end-of-buffer``
+    moves to the end of the buffer, i.e. the end of the first line
 
-- ``end-of-history``, move to the end of the history
+``end-of-history``
+    move to the end of the history
 
-- ``end-of-line``, move to the end of the line
+``end-of-line``
+    move to the end of the line
 
-- ``end-selection``, end selecting text
+``end-selection``
+    end selecting text
 
-- ``expand-abbr``, expands any abbreviation currently under the cursor
+``expand-abbr``
+    expands any abbreviation currently under the cursor
 
-- ``execute``, run the current commandline
+``execute``
+    run the current commandline
 
-- ``exit``, exit the shell
+``exit``
+    exit the shell
 
-- ``forward-bigword``, move one whitespace-delimited word to the right
+``forward-bigword``
+    move one whitespace-delimited word to the right
 
-- ``forward-char``, move one character to the right
+``forward-char``
+    move one character to the right
 
-- ``forward-single-char``, move one character to the right; if an autosuggestion is available, only take a single char from it
+``forward-single-char``
+    move one character to the right; if an autosuggestion is available, only take a single char from it
 
-- ``forward-word``, move one word to the right
+``forward-word``
+    move one word to the right
 
-- ``history-search-backward``, search the history for the previous match
+``history-search-backward``
+    search the history for the previous match
 
-- ``history-search-forward``, search the history for the next match
+``history-search-forward``
+    search the history for the next match
 
-- ``history-prefix-search-backward``, search the history for the previous prefix match
+``history-prefix-search-backward``
+    search the history for the previous prefix match
 
-- ``history-prefix-search-forward``, search the history for the next prefix match
+``history-prefix-search-forward``
+    search the history for the next prefix match
 
-- ``history-token-search-backward``, search the history for the previous matching argument
+``history-token-search-backward``
+    search the history for the previous matching argument
 
-- ``history-token-search-forward``, search the history for the next matching argument
+``history-token-search-forward``
+    search the history for the next matching argument
 
-- ``forward-jump`` and ``backward-jump``, read another character and jump to its next occurence after/before the cursor
+``forward-jump`` and ``backward-jump``
+    read another character and jump to its next occurence after/before the cursor
 
-- ``forward-jump-till`` and ``backward-jump-till``, jump to right *before* the next occurence
+``forward-jump-till`` and ``backward-jump-till``
+    jump to right *before* the next occurence
 
-- ``repeat-jump`` and ``repeat-jump-reverse``, redo the last jump in the same/opposite direction
+``repeat-jump`` and ``repeat-jump-reverse``
+    redo the last jump in the same/opposite direction
 
-- ``kill-bigword``, move the next whitespace-delimited word to the killring
+``kill-bigword``
+    move the next whitespace-delimited word to the killring
 
-- ``kill-line``, move everything from the cursor to the end of the line to the killring
+``kill-line``
+    move everything from the cursor to the end of the line to the killring
 
-- ``kill-selection``, move the selected text to the killring
+``kill-selection``
+    move the selected text to the killring
 
-- ``kill-whole-line``, move the line to the killring
+``kill-whole-line``
+    move the line to the killring
 
-- ``kill-word``, move the next word to the killring
+``kill-word``
+    move the next word to the killring
 
-- ``or``, only execute the next function if the previous succeeded (note: only some functions report success)
+``or``
+    only execute the next function if the previous succeeded (note: only some functions report success)
 
-- ``pager-toggle-search``, toggles the search field if the completions pager is visible.
+``pager-toggle-search``
+    toggles the search field if the completions pager is visible.
 
-- ``repaint``, reexecutes the prompt functions and redraws the prompt (also ``force-repaint`` for backwards-compatibility)
+``repaint``
+    reexecutes the prompt functions and redraws the prompt (also ``force-repaint`` for backwards-compatibility)
 
-- ``repaint-mode``, reexecutes the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
+``repaint-mode``
+    reexecutes the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>` and redraws the prompt. This is useful for vi-mode. If no ``fish_mode_prompt`` exists or it prints nothing, it acts like a normal repaint.
 
-- ``self-insert``, inserts the matching sequence into the command line
+``self-insert``
+    inserts the matching sequence into the command line
 
-- ``self-insert-notfirst``, inserts the matching sequence into the command line, unless the cursor is at the beginning
+``self-insert-notfirst``
+    inserts the matching sequence into the command line, unless the cursor is at the beginning
 
-- ``suppress-autosuggestion``, remove the current autosuggestion. Returns true if there was a suggestion to remove.
+``suppress-autosuggestion``
+    remove the current autosuggestion. Returns true if there was a suggestion to remove.
 
-- ``swap-selection-start-stop``, go to the other end of the highlighted text without changing the selection
+``swap-selection-start-stop``
+    go to the other end of the highlighted text without changing the selection
 
-- ``transpose-chars``, transpose two characters to the left of the cursor
+``transpose-chars``
+    transpose two characters to the left of the cursor
 
-- ``transpose-words``, transpose two words to the left of the cursor
+``transpose-words``
+    transpose two words to the left of the cursor
 
-- ``togglecase-char``, toggle the capitalisation (case) of the character under the cursor
+``togglecase-char``
+    toggle the capitalisation (case) of the character under the cursor
 
-- ``togglecase-selection``, toggle the capitalisation (case) of the selection
+``togglecase-selection``
+    toggle the capitalisation (case) of the selection
 
-- ``insert-line-under``, add a new line under the current line
+``insert-line-under``
+    add a new line under the current line
 
-- ``insert-line-over``, add a new line over the current line
+``insert-line-over``
+    add a new line over the current line
 
-- ``up-line``, move up one line
+``up-line``
+    move up one line
 
-- ``undo`` and ``redo``, revert or redo the most recent edits on the command line
+``undo`` and ``redo``
+    revert or redo the most recent edits on the command line
 
-- ``upcase-word``, make the current word uppercase
+``upcase-word``
+    make the current word uppercase
 
-- ``yank``, insert the latest entry of the killring into the buffer
+``yank``
+    insert the latest entry of the killring into the buffer
 
-- ``yank-pop``, rotate to the previous entry of the killring
+``yank-pop``
+    rotate to the previous entry of the killring
 
 Additional functions
 --------------------
 The following functions are included as normal functions, but are particularly useful for input editing:
 
-- ``up-or-search`` and ``down-or-search``,  which move the cursor or search the history depending on the cursor position and current mode
+``up-or-search`` and ``down-or-search``
+     move the cursor or search the history depending on the cursor position and current mode
 
-- ``edit_command_buffer``, open the visual editor (controlled by the ``VISUAL`` or ``EDITOR`` environment variables) with the current command-line contents
+``edit_command_buffer``
+    open the visual editor (controlled by the ``VISUAL`` or ``EDITOR`` environment variables) with the current command-line contents
 
-- ``delete-or-exit``, quit the shell if the current command-line is empty, or delete the character under the cursor if not
+``delete-or-exit``
+    quit the shell if the current command-line is empty, or delete the character under the cursor if not
 
-- ``fish_clipboard_copy``, copy the current selection to the system clipboard
+``fish_clipboard_copy``
+    copy the current selection to the system clipboard
 
-- ``fish_clipboard_paste``, paste the current selection from the system clipboard before the cursor
+``fish_clipboard_paste``
+    paste the current selection from the system clipboard before the cursor
 
-- ``fish_commandline_append``, append the argument to the command-line. If the command-line already ends with the argument, this removes the suffix instead. Starts with the last command from history if the command-line is empty.
+``fish_commandline_append``
+    append the argument to the command-line. If the command-line already ends with the argument, this removes the suffix instead. Starts with the last command from history if the command-line is empty.
 
-- ``fish_commandline_prepend``, prepend the argument to the command-line. If the command-line already starts with the argument, this removes the prefix instead. Starts with the last command from history if the command-line is empty.
+``fish_commandline_prepend``
+    prepend the argument to the command-line. If the command-line already starts with the argument, this removes the prefix instead. Starts with the last command from history if the command-line is empty.
 
 Examples
 --------

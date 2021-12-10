@@ -36,6 +36,9 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
 
     wcstring dir_in;
     if (argv[optind]) {
+        if (argv[optind] == "") {
+            return 0;
+        }
         dir_in = argv[optind];
     } else {
         auto maybe_dir_in = parser.vars().get(L"HOME");

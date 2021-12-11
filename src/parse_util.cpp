@@ -810,7 +810,7 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
     return true;
 }
 
-/// Returns 1 if the specified command is a builtin that may not be used in a pipeline.
+/// Returns true if the specified command is a builtin that may not be used in a pipeline.
 static const wchar_t *const forbidden_pipe_commands[] = {L"exec", L"case", L"break", L"return",
                                                          L"continue"};
 static bool parser_is_pipe_forbidden(const wcstring &word) {

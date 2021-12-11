@@ -6,23 +6,8 @@ complete - edit command specific tab-completions
 Synopsis
 --------
 
-::
-
-  complete [( -c | --command | -p | --path )] COMMAND
-          [( -c | --command | -p | --path ) COMMAND]...
-          [( -e | --erase )]
-          [( -s | --short-option ) SHORT_OPTION]...
-          [( -l | --long-option | -o | --old-option ) LONG_OPTION]...
-          [( -a | --arguments ) ARGUMENTS]
-          [( -k | --keep-order )]
-          [( -f | --no-files )]
-          [( -F | --force-files )]
-          [( -r | --require-parameter )]
-          [( -x | --exclusive )]
-          [( -w | --wraps ) WRAPPED_COMMAND]...
-          [( -n | --condition ) CONDITION]
-          [( -d | --description ) DESCRIPTION]
-  complete ( -C [STRING] | --do-complete[=STRING] )
+``complete`` **-c** | **--command** | **-p** | **--path** [*OPTIONS*] *COMMAND*
+``complete`` **-C** *STRING* | **--do-complete** *STRING*
 
 Description
 -----------

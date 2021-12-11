@@ -53,6 +53,7 @@ Deprecations and removed features
 - Mac OS X 10.9 is no longer supported. The minimum Mac version is now 10.10 "Yosemite."
 - ``_`` is now a reserved keyword (:issue:`8342`).
 - New special input functions ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace fish functions of the same names. The special input function ``delete-or-exit`` is no longer available as fish function (:issue:`8538`).
+- A newline/semicolon after an ``else`` statement is now optional, matching POSIX semantics.
 
 Scripting improvements
 ----------------------

@@ -630,7 +630,7 @@ struct elseif_clause_t final : public branch_t<type_t::elseif_clause> {
 struct else_clause_t final : public branch_t<type_t::else_clause> {
     // else ; body
     keyword_t<parse_keyword_t::kw_else> kw_else;
-    semi_nl_t semi_nl;
+    optional_t<semi_nl_t> semi_nl;
     job_list_t body;
 
     FIELDS(kw_else, semi_nl, body)

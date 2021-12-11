@@ -5268,6 +5268,16 @@ static void test_highlighting() {
         {L"end", highlight_role_t::keyword},
     });
 
+    highlight_tests.push_back({
+        {L"if", highlight_role_t::keyword},
+        {L"true", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"else", highlight_role_t::keyword},
+        {L"true", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::keyword},
+    });
+
     // Verify that cd shows errors for non-directories.
     highlight_tests.push_back({
         {L"cd", highlight_role_t::command},

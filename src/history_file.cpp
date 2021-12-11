@@ -23,8 +23,8 @@ static maybe_t<size_t> offset_of_next_item_fish_1_x(const char *begin, size_t mm
 static bool should_mmap() {
     if (history_t::never_mmap) return false;
 
-    // mmap only if we are known not-remote (return is 0).
-    return path_get_data_is_remote() == 0;
+    // mmap only if we are known not-remote.
+    return path_get_data_is_remote() == maybe_t<bool>{false};
 }
 
 // Read up to len bytes from fd into address, zeroing the rest.

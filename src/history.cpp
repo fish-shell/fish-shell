@@ -380,7 +380,7 @@ bool history_impl_t::maybe_lock_file(int fd, int lock_type) {
     // is on a remote filesystem.
     if (abandoned_locking) return false;
     if (history_t::chaos_mode) return false;
-    if (!path_get_data_is_remote()) return false;
+    if (path_get_data_is_remote() == maybe_t<bool>{true}) return false;
 
     double start_time = timef();
     int retval = flock(fd, lock_type);

@@ -336,9 +336,10 @@ namespace {
 /// The following type wraps up a user's "base" directories, corresponding (conceptually if not
 /// actually) to XDG spec.
 struct base_directory_t {
-    wcstring path{};       /// the path where we attempted to create the directory.
-    maybe_t<bool> is_remote{none};/// 1 if the directory is remote (e.g. NFS), 0 if local, -1 if unknown.
-    int err{0};            /// the error code if creating the directory failed, or 0 on success.
+    wcstring path{};  /// the path where we attempted to create the directory.
+    maybe_t<bool> is_remote{
+        none()};  /// true if the directory is remote (e.g. NFS), false if local, none if unknown.
+    int err{0};   /// the error code if creating the directory failed, or 0 on success.
     bool success() const { return err == 0; }
     bool used_xdg{false};  /// whether an XDG variable was used in resolving the directory.
 };
@@ -394,7 +395,7 @@ void path_emit_config_directory_messages(env_stack_t &vars) {
         maybe_issue_path_warning(L"data", _(L"can not save history"), data.used_xdg,
                                  L"XDG_DATA_HOME", data.path, data.err, vars);
     }
-    if (data.is_remote) {
+    if (data.is_remote == maybe_t<bool>{true}) {
         FLOG(path, "data path appears to be on a network volume");
     }
 
@@ -404,7 +405,7 @@ void path_emit_config_directory_messages(env_stack_t &vars) {
                                  config.used_xdg, L"XDG_CONFIG_HOME", config.path, config.err,
                                  vars);
     }
-    if (config.is_remote) {
+    if (config.is_remote == maybe_t<bool>{true}) {
         FLOG(path, "config path appears to be on a network volume");
     }
 }

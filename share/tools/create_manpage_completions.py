@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Run me like this: ./create_manpage_completions.py /usr/share/man/man{1,8}/* > man_completions.fish
@@ -64,7 +65,6 @@ diagnostic_indent = 0
 VERY_VERBOSE, BRIEF_VERBOSE, NOT_VERBOSE = 2, 1, 0
 
 # Pick some reasonable default values for settings
-global VERBOSITY, WRITE_TO_STDOUT, DEROFF_ONLY, KEEP_FILES
 VERBOSITY, WRITE_TO_STDOUT, DEROFF_ONLY, KEEP_FILES = NOT_VERBOSE, False, False, False
 
 

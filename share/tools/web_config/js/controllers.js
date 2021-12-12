@@ -146,11 +146,11 @@ controllers.controller("colorsController", function($scope, $http) {
                             "fish_pager_color_progress"
                            ];
         var remaining = settingNames.length;
-        postdata = {
+        var postdata = {
             "theme" : $scope.selectedColorScheme["name"],
             "colors": [],
         }
-        for (name of settingNames) {
+        for (var name of settingNames) {
             var selected;
             // Skip colors undefined in the current theme
             // js is dumb - the empty string is false,
@@ -235,16 +235,16 @@ controllers.controller("functionsController", function($scope, $http) {
 
     $scope.cleanupFishFunction = function (contents) {
         /* Replace leading tabs and groups of four spaces at the beginning of a line with two spaces. */
-        lines = contents ? contents.split('\n') : [];
-        rx = /^[\t ]+/
+        var lines = contents ? contents.split('\n') : [];
+        var rx = /^[\t ]+/
         for (var i=0; i < lines.length; i++) {
-            line = lines[i]
+            var line = lines[i]
             /* Get leading tabs and spaces */
-            whitespace_arr = rx.exec(line)
+            var whitespace_arr = rx.exec(line)
             if (whitespace_arr) {
                 /* Replace four spaces with two spaces, and tabs with two spaces */
                 var whitespace = whitespace_arr[0]
-                new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
+                var new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
                 lines[i] = new_whitespace + line.slice(whitespace.length)
             }
         }
@@ -380,7 +380,7 @@ controllers.controller("abbreviationsController", function($scope, $http) {
     $scope.abbreviations = [];
     $scope.addBlank = function() {
         // Add blank entry if it is missing
-        hasBlank = {hasBlank: false}
+        var hasBlank = {hasBlank: false}
         angular.forEach($scope.abbreviations, function(value, key) {
             if (value.phrase === "" && value.word === "") {
                 this.hasBlank = true;

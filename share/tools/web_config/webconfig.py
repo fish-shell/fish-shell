@@ -1102,14 +1102,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return result
 
     def do_get_color_for_variable(self, name):
-        # Return the color with the given name, or the empty string if there is
-        # none.
+        "Return the color with the given name, or the empty string if there is none."
         out, err = run_fish_cmd("echo -n $" + name)
         return out
 
-    def do_set_color_for_variable(
-        self, name, color
-    ):
+    def do_set_color_for_variable(self, name, color):
         "Sets a color for a fish color name, like 'autosuggestion'"
         if not name:
             raise ValueError
@@ -1415,12 +1412,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 color = item.get("color")
 
                 if what:
-                    output = self.do_set_color_for_variable(
-                        what,
-                        color,
-                    )
-            else:
-                output = "Bad request"
+                    output = self.do_set_color_for_variable(what, color)
+
         elif p == "/get_function/":
             what = postvars.get("what")
             output = [self.do_get_function(what[0])]

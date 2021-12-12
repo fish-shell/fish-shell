@@ -924,7 +924,7 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
             } else {
                 // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                 // then retry until not EPERM or the process group has exited.
-                FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", pgid);
+                FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM with pgid %d.", pgid);
                 continue;
             }
         } else if (errno == ENOTTY) {

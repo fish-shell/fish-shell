@@ -221,7 +221,7 @@ int thread_pool_t::perform(void_function_t &&func, bool cant_wait) {
 
     // Kick off the thread if we decided to do so.
     if (wakeup_thread) {
-        FLOGF(iothread, L"notifying a thread", this_thread());
+        FLOGF(iothread, L"notifying thread: %p", this_thread());
         pool.queue_cond.notify_one();
     }
     if (spawn_new_thread) {

@@ -2,7 +2,8 @@ fish 3.4.0 (released ???)
 =========================
 
 ..
-   Ignore for 3.4.0 changelog: 3625 3954 7602 8096 8077 8079 8084 8137 8139 8151 8161 8238 8268 8433 8497 8479 8492 8472 8456 8285 8526 8527 8528
+   Ignore for 3.4.0 changelog: 1363 3625 3954 6477 7602 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8394 8406 8409 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8521 8522 8526 8527 8528 8548
+
 
 Notable improvements and fixes
 ------------------------------
@@ -20,7 +21,7 @@ Notable improvements and fixes
     # this will still split on newlines only.
 
 - Complementing the ``prompt`` command in 3.3.0, ``fish_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a webbrowser. For example ``fish_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`). The current theme can be saved with ``fish_config theme dump`` and custom themes can be added by saving them in ``~/.config/fish/themes/``.
-- ``set`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped (:issue:`565`, :issue:`8145`)::
+- ``set`` and ``read`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped (:issue:`565`, :issue:`8145`)::
 
     function demonstration
         if true
@@ -82,11 +83,16 @@ Scripting improvements
 - ``cd ""`` no longer crashes fish (:issue:`8147`).
 - ``set --query`` can now query whether a variable is a path variable via ``--path`` or ``--unpath`` (:issue:`8494`).
 - Tilde characters (``~``) produced by custom completions are no longer escaped when applied to the command line, making it easier to use the output of a recursive ``complete -C`` in completion scripts (:issue:`4570`).
+- ``set --show`` reports when a variable is read-only (:issue:`8179`).
+- Erasing ``$fish_emoji_width`` will reset fish to the default emoji width (:issue:`8274`).
+- The ``la`` function no longer lists entries for "." and "..", matching other systems defaults (:issue:`8519`).
+- ``abbr -q`` returns the correct exit status when given multiple abbreviation names as arguments (:issue:`8431`).
+- ``command -v`` returns an exit status of 127 instead of 1 if no command was found (:issue:`8547`).
 
 Interactive improvements
 ------------------------
-- Vi mode cursors are now set properly after :kbd:`Control-C`. (:issue:`8125`).
-- Vi mode cursors are enabled in Apple Terminal (:issue:`8167`).
+- Vi mode cursors are now set properly after :kbd:`Control-C` (:issue:`8125`).
+- Vi mode cursors are enabled in Apple Terminal.app (:issue:`8167`) and foot (:issue:`8391`).
 - ``funced`` will try to edit the whole file containing a function definition, if there is one (:issue:`391`).
 - Running a command line consisting of just spaces now deletes an ephemeral (starting with space) history item again (:issue:`8232`).
 - Command substitutions no longer respect job control, instead running inside fish's own process group (:issue:`8172`). This more closely matches other shells, and improves :kbd:`Control-C` reliability inside a command substitution.
@@ -96,13 +102,21 @@ Interactive improvements
 - When executing a command, abbreviations are no longer expanded when the cursor is separated from the command by spaces, making it easier to suppress abbreviation expansion of commands without arguments. (:issue:`8423`).
 - ``fish_key_reader``'s output was simplified. By default, it now only prints a bind statement. The previous per-character timing information can be seen with a new ``--verbose`` switch (:issue:`8467`).
 - Custom completions are now also loaded for commands that contain tildes or variables like ``~/bin/fish`` or ``$PWD/fish`` (:issue:`8442`).
-- Command lines spanning multiple lines will not be overwritten by the completion pager when it fills the entire terminal (:issue:`8509`).
+- Command lines spanning multiple lines will not be overwritten by the completion pager when it fills the entire terminal (:issue:`8509`, :issue:`8405`).
+- When redrawing a multiline prompt, the old prompt is now properly cleared (:issue:`8163`).
+- Interactive completion would occasionally ignore the last word on the command line due to a race condition. This has been fixed (:issue:`8175`).
+- Propagation of universal variables from a fish process that is closing is faster (:issue:`8209`).
+- The command line buffer is drawn in the correct place if the prompt has a trailing empty line (:issue:`8298`).
+- ``history`` learned a new subcommand ``clear-session`` to erase all history from the current session (:issue:`5791`).
+- Pressing :kbd:`Control-C` in ``fish_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
+- :kbd:`Escape` can now bound without breaking arrow key bindings (:issue:`8428`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
+- The ``fish_status_to_signal`` helper function returns the correct signal names for the current platform, rather than Linux (:issue:`8530`).
 - The ``prompt_pwd`` helper function learned a ``--full-length-dirs N`` option to keep the last N directory components unshortened. In addition the number of characters to shorten each component should be shortened to can now be given as ``-d N`` or ``--dir-length N``. (:issue:`8208`)::
 
     > prompt_pwd --full-length-dirs 2 -d 1 ~/dev/fish-shell/share/tools/web_config
@@ -113,16 +127,18 @@ Completions
 - Added completions for:
 
   - Apple's ``shortcuts``
+  - ``argparse`` (:issue:`8434`)
   - ``az`` (:issue:`8141`)
   - ``black`` (:issue:`8123`)
-  - ``clasp``
+  - ``clasp`` (:issue:`8373`)
   - ``cpupower`` (:issue:`8302`)
-  - ``dart``
+  - ``dart`` (:issue:`8315`)
   - ``dscacheutil``
   - ``elvish`` (:issue:`8416`)
-  - ``ethtool``
+  - ``ethtool`` (:issue:`8283`)
   - ``exif`` (:issue:`8246`)
   - ``findstr`` (:issue:`8481`)
+  - ``git-sizer`` (:issue:`8156`)
   - ``gping`` (:issue:`8181`)
   - ``istioctl`` (:issue:`8343`)
   - ``kmutil``
@@ -132,16 +148,18 @@ Completions
   - ``pabcnet_clear`` (:issue:`8421`)
   - ``qmk`` (:issue:`8180`)
   - ``rakudo`` (:issue:`8113`)
-  - ``roswell``
-  - ``sbcl``
+  - ``roswell`` (:issue:`8330`)
+  - ``sbcl`` (:issue:`8330`)
   - ``starship`` (:issue:`8520`)
   -  ``wine``, ``wineboot`` and ``winemaker`` (:issue:`8411`)
   -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
+  -  Windows' ``color`` (:issue:`8483`)
   - ``zef`` (:issue:`8114`)
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Add missing completions for the ``-p`` option of ``xbps-query``.
 - The ``fish_is_nth_token`` function, which is particularly useful in completions for identifying the token number within the command line, replaces various internal functions to do the same (:issue:`8008`).
+- When using BSD ``mandoc``, completions for ``man`` now include man pages that have section aliases like ``infocmp(1, 1M, 1m)`` (:issue:`8305`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -151,6 +169,8 @@ Improved terminal support
 - Skin-tone emoji modifiers (U+1F3FB through U+1F3FF) are now measured as width 0 (:issue:`8275`).
 - fish's escape sequence removal now also knows Tmux's wrapped escapes.
 - Vi cursor shaping and $PWD reporting is now also enabled on foot (:issue:`8422`).
+- ``ls`` will use colors also on newer versions of Apple Terminal.app (:issue:`8309`).
+- The :kbd:`Delete` and :kbd:`Shift-Tab` keys work more reliably under ``st`` (:issue:`8352`, :issue:`8354`).
 
 Other improvements
 ------------------
@@ -161,6 +181,8 @@ For distributors
 ----------------
 - The minimum version of CMake required to build fish was raised to 3.5.0.
 - The CMake installation supports absolute paths for ``CMAKE_INSTALL_DATADIR`` (:issue:`8150`).
+- Building using NetBSD curses works on any platform (:issue:`8087`).
+- The build system does not choose a different linker (:issue:`8152`).
 
 --------------
 

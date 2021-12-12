@@ -276,10 +276,7 @@ maybe_t<int> builtin_history(parser_t &parser, io_streams_t &streams, const wcha
                 status = STATUS_INVALID_ARGS;
                 break;
             }
-            for (wcstring delete_string : args) {
-                if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"') {
-                    delete_string = delete_string.substr(1, delete_string.length() - 2);
-                }
+            for (const wcstring &delete_string : args) {
                 history->remove(delete_string);
             }
             break;

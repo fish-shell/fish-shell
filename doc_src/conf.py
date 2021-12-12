@@ -10,8 +10,8 @@ import glob
 import os.path
 import pygments
 import subprocess
-from sphinx.errors import SphinxError, SphinxWarning
-from docutils import nodes, utils
+from sphinx.errors import SphinxWarning
+from docutils import nodes
 
 # -- Helper functions --------------------------------------------------------
 
@@ -20,7 +20,6 @@ from docutils import nodes, utils
 # Used like :issue:`2364`
 def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None):
     options = options or {}
-    config = inliner.document.settings.env.app.config
     try:
         issue_num = int(text.strip())
         if issue_num <= 0:

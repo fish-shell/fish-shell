@@ -538,8 +538,7 @@ def get_special_ansi_escapes():
                 'bold': '\x1b[1m',
                 'underline': '\x1b[4m'
             }
-            pass
-
+            
     return g_special_escapes_dict
 
 

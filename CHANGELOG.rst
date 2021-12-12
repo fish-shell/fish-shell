@@ -65,7 +65,7 @@ Scripting improvements
     'blue '
 
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
-- ``return`` can now be used outside of functions. In scripts it does the same thing as :program:`cmd`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
+- ``return`` can now be used outside of functions. In scripts it does the same thing as :program:`exit`, in the commandline it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks like e.g. ``exec`` not being allowed in a pipeline and ``$$`` not being a valid variable. Most of these would have triggered an assert or other error before.
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``commandline`` gained an ``--is-valid`` option to check if the commandline is syntactically valid and complete. This allows basic implementation of transient prompts (:issue:`8142`).

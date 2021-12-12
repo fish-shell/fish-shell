@@ -926,9 +926,6 @@ class traversal_t {
     // Construct an empty visitor, used for iterator support.
     traversal_t() = default;
 
-    // \return whether we are finished visiting.
-    bool finished() const { return stack_.empty(); }
-
     // Append a node.
     void push(const node_t *n) {
         assert(n && "Should not push null node");

@@ -13,7 +13,7 @@ function __fish_tokenizer_state --description "Print the state of the tokenizer 
 
     set -l state normal
     if set -q _flag_initial_state
-        set str $_flag_initial_state
+        set state $_flag_initial_state
     end
 
     for char in (string split -- "" $argv[1])

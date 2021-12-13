@@ -73,6 +73,7 @@ controllers.controller("colorsController", function($scope, $http) {
 
     $scope.changeSelectedTextColor = function(color) {
         $scope.selectedColorScheme[$scope.selectedColorSetting] = color;
+        $scope.selectedColorScheme["colordata-" + $scope.selectedColorSetting].color = color;
         $scope.noteThemeChanged();
     }
 
@@ -102,9 +103,15 @@ controllers.controller("colorsController", function($scope, $http) {
                 }
                 if (scheme["url"]) currentScheme["url"] = scheme["url"];
 
+                var cols = [];
                 for (var i in data) {
                     if (isValidColor(data[i].color)) {
                         currentScheme[data[i].name] = data[i].color;
+                        // HACK: For some reason the colors array is cleared later
+                        // So we cheesily encode the actual objects as colordata-, so we can send them.
+                        // TODO: We should switch to keeping the objects, and also displaying them
+                        // with underlines and such.
+                        currentScheme["colordata-" + data[i].name] = data[i];
                     }
                 }
                 $scope.colorSchemes.push(currentScheme);
@@ -167,13 +174,14 @@ controllers.controller("colorsController", function($scope, $http) {
         }
         for (var name of settingNames) {
             var selected;
+            var realname = "colordata-" + name;
             // Skip colors undefined in the current theme
             // js is dumb - the empty string is false,
             // but we want that to mean unsetting a var.
-            if (!$scope.selectedColorScheme[name] && $scope.selectedColorScheme[name] !== '') {
+            if (!$scope.selectedColorScheme[realname] && $scope.selectedColorScheme[realname] !== '') {
                 selected = '';
             } else {
-                selected = $scope.selectedColorScheme[name];
+                selected = $scope.selectedColorScheme[realname];
             }
             postdata.colors.push({
                 "what" : name,

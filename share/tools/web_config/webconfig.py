@@ -226,6 +226,26 @@ def parse_color(color_str):
         "reverse": reverse,
     }
 
+def unparse_color(col):
+    """A basic function to return the fish version of a color dict"""
+    if isinstance(col, str):
+        return col
+    ret = ""
+    if col["color"]:
+        ret += col["color"]
+    if col["bold"]:
+        ret += " --bold"
+    if col["underline"]:
+        ret += " --underline"
+    if col["italics"]:
+        ret += " --italics"
+    if col["dim"]:
+        ret += " --dim"
+    if col["reverse"]:
+        ret += " --reverse"
+    if col["background"]:
+        ret += " --background=" + col["background"]
+    return ret
 
 def parse_bool(val):
     val = val.lower()
@@ -1114,6 +1134,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             raise ValueError
         if not color and not color == "":
             color = "normal"
+        else:
+            color = unparse_color(color)
         if not name.startswith("fish_pager_color_"):
             varname = "fish_color_" + name
         # If the name already starts with "fish_", use it as the varname

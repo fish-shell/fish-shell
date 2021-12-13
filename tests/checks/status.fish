@@ -56,7 +56,7 @@ status features
 #CHECK: stderr-nocaret          on  3.0 ^ no longer redirects stderr
 #CHECK: qmark-noglob            off 3.0 ? no longer globs
 #CHECK: regex-easyesc           off 3.1 string replace -r needs fewer \'s
-#CHECK: ampersand-nobg-in-token off 3.4 & only backgrounds if followed by a separating character
+#CHECK: ampersand-nobg-in-token off 3.4 & only backgrounds if followed by a separator
 status test-feature stderr-nocaret
 echo $status
 #CHECK: 0

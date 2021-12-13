@@ -1150,7 +1150,15 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # This is needed for 'fish_pager_color' vars.
         if name.startswith("fish_"):
             varname = name
-        # TODO: Check if the varname is allowable.
+        # Check if the varname is allowable.
+        varname = varname.strip()
+        if not re.match("^[a-zA-Z0-9_]+$", varname):
+            print("Refusing to use variable name: '", varname, "'")
+            return
+        color = color.strip()
+        if not re.match("^[a-zA-Z0-9_= -]*$", color):
+            print("Refusing to use color value: ", color)
+            return
         command = "set -U " + varname
         command += " " + color
 

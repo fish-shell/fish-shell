@@ -197,20 +197,28 @@ def parse_color(color_str):
     for comp in comps:
         # Remove quotes
         comp = comp.strip("'\" ")
-        if comp == "--bold":
+        if comp == "--bold" or comp == "-o":
             bold = True
-        elif comp == "--underline":
+        elif comp == "--underline" or comp == "-u":
             underline = True
-        elif comp == "--italics":
+        elif comp == "--italics" or comp == "-i":
             italics = True
-        elif comp == "--dim":
+        elif comp == "--dim" or comp == "-d":
             dim = True
-        elif comp == "--reverse":
+        elif comp == "--reverse" or comp == "-r":
             reverse = True
-        elif comp.startswith("--background="):
+        elif comp.startswith("--background"):
             # Background color
             background_color = better_color(
                 background_color, parse_one_color(comp[len("--background=") :])
+            )
+        elif comp.startswith("-b"):
+            # Background color in short.
+            skip = len("-b")
+            if comp[len("-b=")] in ["=", " "]:
+                skip += 1
+            background_color = better_color(
+                background_color, parse_one_color(comp[skip :])
             )
         else:
             # Regular color

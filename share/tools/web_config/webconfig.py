@@ -970,8 +970,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 extrainfo[key] = value
 
 
-            for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
-                color_name, color_value = [x.strip() for x in match.group(1, 2)]
+            for match in re.finditer(r"^fish_(pager_)?color_(\S+) ?(.*)", line):
+                color_name, color_value = [x.strip() for x in match.group(2, 3)]
+                if match.group(1):
+                    color_name = "fish_pager_color_" + color_name
                 color_desc = descriptions.get(color_name, "")
                 data = {"name": color_name, "description": color_desc}
                 data.update(parse_color(color_value))
@@ -1112,7 +1114,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             raise ValueError
         if not color and not color == "":
             color = "normal"
-        varname = "fish_color_" + name
+        if not name.startswith("fish_pager_color_"):
+            varname = "fish_color_" + name
         # If the name already starts with "fish_", use it as the varname
         # This is needed for 'fish_pager_color' vars.
         if name.startswith("fish_"):

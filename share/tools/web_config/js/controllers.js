@@ -82,7 +82,7 @@ controllers.controller("colorsController", function($scope, $http) {
     $scope.colorSchemes = [];
 
     isValidColor = function(col) {
-        // Check if preferred_background is actually a valid color
+        if (col == "normal") return true;
         var s = new Option().style;
         s.color = col;
         return !!s.color;
@@ -140,10 +140,25 @@ controllers.controller("colorsController", function($scope, $http) {
                             "user",
                             "host",
                             "cancel",
+                            // Cheesy hardcoded variable names ahoy!
+                            // These are all the pager vars,
+                            // we should really just save all these in a dictionary.
+                            "fish_pager_color_background",
+                            "fish_pager_color_prefix",
+                            "fish_pager_color_progress",
                             "fish_pager_color_completion",
                             "fish_pager_color_description",
-                            "fish_pager_color_prefix",
-                            "fish_pager_color_progress"
+                            "fish_pager_color_selected_background",
+                            "fish_pager_color_selected_prefix",
+                            "fish_pager_color_selected_completion",
+                            "fish_pager_color_selected_description",
+                            // TODO: Setting these to empty currently makes them weird. Figure out why!
+                            /*
+                            "fish_pager_color_secondary_background",
+                            "fish_pager_color_secondary_prefix",
+                            "fish_pager_color_secondary_completion",
+                            "fish_pager_color_secondary_description",
+                            */
                            ];
         var remaining = settingNames.length;
         var postdata = {

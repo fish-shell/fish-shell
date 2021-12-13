@@ -1110,7 +1110,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         "Sets a color for a fish color name, like 'autosuggestion'"
         if not name:
             raise ValueError
-        if not color:
+        if not color and not color == "":
             color = "normal"
         varname = "fish_color_" + name
         # If the name already starts with "fish_", use it as the varname

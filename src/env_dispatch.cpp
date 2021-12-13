@@ -62,22 +62,28 @@
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
 static const wcstring locale_variables[] = {L"LANG",
-                                            L"LANGUAGE",
                                             L"LC_ALL",
-                                            L"LC_ADDRESS",
                                             L"LC_COLLATE",
                                             L"LC_CTYPE",
-                                            L"LC_IDENTIFICATION",
-                                            L"LC_MEASUREMENT",
                                             L"LC_MESSAGES",
                                             L"LC_MONETARY",
-                                            L"LC_NAME",
                                             L"LC_NUMERIC",
+                                            L"LC_TIME",
+#if defined(_GNU_SOURCE) && defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2,2)
+                                            L"LANGUAGE", /* GNU libc extensions start */
+                                            L"LC_ADDRESS",
+                                            L"LC_IDENTIFICATION",
+                                            L"LC_MEASUREMENT",
+                                            L"LC_NAME",
                                             L"LC_PAPER",
                                             L"LC_TELEPHONE",
-                                            L"LC_TIME",
-                                            L"fish_allow_singlebyte_locale",
-                                            L"LOCPATH"};
+                                            L"LOCPATH", /* GNU libc extensions end */
+#endif // __GLIBC_PREREQ(2,2)
+#endif // defined(_GNU_SOURCE) && defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+                                            L"fish_allow_singlebyte_locale"
+                                            };
+
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.

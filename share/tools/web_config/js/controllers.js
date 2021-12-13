@@ -105,14 +105,12 @@ controllers.controller("colorsController", function($scope, $http) {
 
                 var cols = [];
                 for (var i in data) {
-                    if (isValidColor(data[i].color)) {
-                        currentScheme[data[i].name] = data[i].color;
-                        // HACK: For some reason the colors array is cleared later
-                        // So we cheesily encode the actual objects as colordata-, so we can send them.
-                        // TODO: We should switch to keeping the objects, and also displaying them
-                        // with underlines and such.
-                        currentScheme["colordata-" + data[i].name] = data[i];
-                    }
+                    currentScheme[data[i].name] = data[i].color;
+                    // HACK: For some reason the colors array is cleared later
+                    // So we cheesily encode the actual objects as colordata-, so we can send them.
+                    // TODO: We should switch to keeping the objects, and also displaying them
+                    // with underlines and such.
+                    currentScheme["colordata-" + data[i].name] = data[i];
                 }
                 $scope.colorSchemes.push(currentScheme);
             }

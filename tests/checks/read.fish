@@ -366,3 +366,12 @@ function-scoped-read
 # CHECK: $skamtebord[1]: |bar|
 # CHECK: $craaab: set in local scope, unexported, with 1 elements
 # CHECK: $craaab[1]: |baz|
+
+echo foo\nbar\nbaz | begin
+    read -l foo
+    read -l bar
+    cat
+    # CHECK: baz
+    echo $bar
+    # CHECK: bar
+end

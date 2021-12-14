@@ -105,7 +105,7 @@ controllers.controller("colorsController", function($scope, $http) {
 
                 var cols = [];
                 for (var i in data) {
-                    currentScheme[data[i].name] = data[i].color;
+                    currentScheme[data[i].name] = interpret_color(data[i].color).replace(/#/, '');
                     // HACK: For some reason the colors array is cleared later
                     // So we cheesily encode the actual objects as colordata-, so we can send them.
                     // TODO: We should switch to keeping the objects, and also displaying them

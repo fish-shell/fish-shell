@@ -191,7 +191,7 @@ def better_color(c1, c2):
 def parse_color(color_str):
     """A basic function to parse a color string, for example, 'red' '--bold'."""
     comps = color_str.split(" ")
-    color = "normal"
+    color = ""
     background_color = ""
     bold, underline, italics, dim, reverse = False, False, False, False, False
     for comp in comps:
@@ -209,20 +209,26 @@ def parse_color(color_str):
             reverse = True
         elif comp.startswith("--background"):
             # Background color
-            background_color = better_color(
-                background_color, parse_one_color(comp[len("--background=") :])
-            )
+            c = comp[len("--background=") :]
+            parsed_c = parse_one_color(c)
+            # We prefer the unparsed version - if it says "brgreen", we use brgreen,
+            # instead of 00ff00
+            if better_color(background_color, parsed_c) == parsed_c:
+                background_color = c
         elif comp.startswith("-b"):
             # Background color in short.
             skip = len("-b")
             if comp[len("-b=")] in ["=", " "]:
                 skip += 1
-            background_color = better_color(
-                background_color, parse_one_color(comp[skip :])
-            )
+            c = comp[skip :]
+            parsed_c = parse_one_color(c)
+            if better_color(background_color, parsed_c) == parsed_c:
+                background_color = c
         else:
             # Regular color
-            color = better_color(color, parse_one_color(comp))
+            parsed_c = parse_one_color(comp)
+            if better_color(color, parsed_c) == parsed_c:
+                color = comp
 
     return {
         "color": color,

@@ -218,7 +218,7 @@ function interpret_color(str) {
     if (str == 'brpurple') return '#ff00ff';
     if (str == 'brcyan') return '#00ffff';
     if (str == 'brwhite') return '#ffffff';
-    if (str == 'normal') return '';
+    if (str == 'normal') return '#ffffff';
     if (str == 'reset') return '';
     return '#' + str
 }

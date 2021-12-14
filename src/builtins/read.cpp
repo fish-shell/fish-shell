@@ -494,8 +494,6 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
     do {
         buff.clear();
 
-        // TODO: Determine if the original set of conditions for interactive reads should be
-        // reinstated: if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
         int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
         if (stream_stdin_is_a_tty && !opts.split_null) {
             // Read interactively using reader_readline(). This does not support splitting on null.

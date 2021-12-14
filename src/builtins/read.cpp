@@ -262,7 +262,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
 /// of chars.
 ///
 /// Returns an exit status.
-static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
+static int read_in_chunks(int fd, wcstring &buff, bool split_null, bool do_seek) {
     int exit_res = STATUS_CMD_OK;
     std::string str;
     bool eof = false;
@@ -284,7 +284,7 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
         if (bytes_consumed < bytes_read) {
             // We found a splitter. The +1 because we need to treat the splitter as consumed, but
             // not append it to the string.
-            if (lseek(fd, bytes_consumed - bytes_read + 1, SEEK_CUR) == -1) {
+            if (do_seek && lseek(fd, bytes_consumed - bytes_read + 1, SEEK_CUR) == -1) {
                 wperror(L"lseek");
                 return STATUS_CMD_ERROR;
             }
@@ -501,8 +501,15 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                 read_interactive(parser, buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
                                  opts.right_prompt, opts.commandline, streams.stdin_fd);
         } else if (!opts.nchars && !stream_stdin_is_a_tty &&
-                   lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
-            exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);
+                   (streams.stdin_is_directly_redirected || lseek(streams.stdin_fd, 0, SEEK_CUR) != -1)) {
+            // We read in chunks when we either can seek (so we put the bytes back),
+            // or we have the bytes to ourselves (because it's directly redirected).
+            //
+            // Note we skip seeking back even if we're directly redirected to a seekable stream,
+            // under the assumption that the stream will be closed soon anyway.
+            // You don't rewind VHS tapes before throwing them in the trash.
+            // TODO: Do this when nchars is set by seeking back.
+            exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null, !streams.stdin_is_directly_redirected);
         } else {
             exit_res =
                 read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);

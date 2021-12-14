@@ -177,7 +177,7 @@ controllers.controller("colorsController", function($scope, $http) {
             // js is dumb - the empty string is false,
             // but we want that to mean unsetting a var.
             if (!$scope.selectedColorScheme[realname] && $scope.selectedColorScheme[realname] !== '') {
-                selected = '';
+                continue;
             } else {
                 selected = $scope.selectedColorScheme[realname];
             }

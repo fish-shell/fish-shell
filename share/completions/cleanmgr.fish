@@ -6,9 +6,9 @@ function __cleanmgr_generate_args --description 'Function to generate args'
     return
   end
 
-  echo -e '/d\tSpecify the drive that you want Disk Cleanup to clean
+  echo -e '/d\tSpecify the drive
 /sageset\tDisplay the Disk Cleanup Settings dialog box and also create a registry keyt
-/sagerun\tRun the specified tasks that are assigned to the n value if you use the /sageset option
+/sagerun\tRun the specified tasks that are assigned to the n value
 /tuneup\tRun /sageset and /sagerun for the same n
 /lowdisk\tRun with the default settings
 /verylowdisk\tRun with the default settings, no user prompts

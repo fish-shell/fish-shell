@@ -28,7 +28,7 @@ function __schtasks_change_generate_args --argument-names previous_token
 
   if not __fish_seen_argument --windows 'et' --windows 'du'
     echo -e '/et\tSpecify the end time for the task
-/du\tA value that specifies the duration to run the task'
+/du\tA value that specifies the duration'
   end
 
   if not __fish_seen_argument --windows 'ENABLE' --windows 'DISABLE'
@@ -193,8 +193,8 @@ CSV'
   end
 
   echo -e '/fo\tSpecify the output format
-/nh\tRemove column headings from the table display
-/v\tAdd the advanced properties of the task to the display
+/nh\tRemove column headings
+/v\tAdd the advanced properties of the task
 /s\tSpecify the name or IP address of a remote computer
 /?\tShow help'
 end
@@ -236,7 +236,7 @@ function __schtasks_generate_args --description 'Function to generate args'
   end
 
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
-  
+
   if __fish_seen_argument --windows change
     __schtasks_change_generate_args "$previous_token"
   else if __fish_seen_argument --windows create

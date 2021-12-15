@@ -18,7 +18,7 @@ REG_EXPAND_SZ'
   end
 
   echo -e '/t\tSpecify the type for the registry entry
-/s\tSpecify the character to be used to separate multiple instances of data
+/s\tSpecify the character to be used
 /d\tSpecify the data for the new registry entry
 /f\tAdd the registry entry without prompting for confirmation
 /?\tShow help'
@@ -26,7 +26,7 @@ end
 
 function __reg_compare_generate_args --argument-names previous_token
   if not __fish_seen_argument --windows 'v' --windows 've'
-    echo -e '/v\tSpecify the value name to compare under the subkey
+    echo -e '/v\tSpecify the value name
 /ve\tSpecify that only entries that have a value name of null should be compared'
   end
 
@@ -44,7 +44,7 @@ end
 function __reg_copy_generate_args --argument-names previous_token
   echo -e '/s\tCopy all subkeys and entries under the specified subkey
 /f\tCopy the subkey without prompting for confirmation
-/?\tShow help'  
+/?\tShow help'
 end
 
 function __reg_delete_generate_args --argument-names previous_token
@@ -60,7 +60,7 @@ end
 
 function __reg_export_generate_args --argument-names previous_token
   echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
-/?\tShow help'  
+/?\tShow help'
 end
 
 function __reg_query_generate_args --argument-names previous_token
@@ -75,7 +75,7 @@ REG_NONE'
   end
 
   if not __fish_seen_argument --windows 'v' --windows 've'
-    echo -e '/v\tSpecify the registry value name that is to be queried
+    echo -e '/v\tSpecify the registry value name
 /ve\tRun a query for value names that are empty'
   end
 
@@ -84,7 +84,7 @@ REG_NONE'
 /d\tSpecify to search in data only'
   end
 
-  echo -e '/se\tSpecify the single value separator to search for in the value name type REG_MULTI_SZ
+  echo -e '/se\tSpecify the single value separator
 /f\tSpecify the data or pattern to search for
 /c\tSpecify that the query is case sensitive
 /e\tSpecify to return only exact matches
@@ -100,15 +100,15 @@ end
 
 function __reg_generate_args --description 'Function to generate args'
   if not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload
-    echo -e 'add\tAdd a new subkey or entry to the registry
+    echo -e 'add\tAdd a new subkey or entry
 compare\tCompare specified registry subkeys or entries
-copy\tCopy a registry entry to a specified location on the local or remote computer
-delete\tDelete a subkey or entries from the registry
+copy\tCopy a registry entry
+delete\tDelete a subkey or entries
 export\tCopy the specified subkeys, entries, and values of the local computer into a file
 import\tCopy the contents of a file that contains registry data into the registry of the local computer
 load\tWrite saved subkeys and entries into a different subkey in the registry
 query\tReturn a list of the next tier of subkeys and entries
-restore\tWrite saved subkeys and entries back to the registry
+restore\tWrite saved subkeys and entries back
 save\tSave a copy of specified subkeys, entries, and values of the registry in a specified file
 unload\tRemove a section of the registry that was loaded using the reg load operation'
     return

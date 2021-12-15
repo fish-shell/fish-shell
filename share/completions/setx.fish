@@ -16,9 +16,9 @@ function __setx_generate_args --description 'Function to generate args'
 
   if not __fish_seen_argument --windows 'a' --windows 'r' --windows 'x'
     echo -e '/a\tSpecify absolute coordinates and offset as search parameters
-/r\tSpecify relative coordinates and offset from String as search parameters
+/r\tSpecify relative coordinates and offset
 /x\tDisplay file coordinates, ignoring the /a, /r, and /d command-line options'
-  end 
+  end
 
   if __fish_seen_argument --windows 'a' --windows 'r'
     echo -e '/m\tSpecify to set the variable in the system environment'
@@ -27,7 +27,7 @@ function __setx_generate_args --description 'Function to generate args'
   echo -e '/s\tSpecify the name or IP address of a remote computer
 /k\tSpecify that the variable is set based on information from a registry key
 /f\tSpecify the file that you want to use
-/d\tSpecify delimiters to be used in addition to the four built-in delimiters
+/d\tSpecify delimiters to be used
 /?\tShow help'
 end
 

@@ -51,22 +51,22 @@ end
 
 function __fish_complete_special_vars
     printf "%s\t%s\n" \
-    PATH "list of dirs to look for commands in" \
-    CDPATH "list of dirs under which that cd searches" \
-    FISH_DEBUG "list of enabled debug categories" \
-    FISH_DEBUG_OUTPUT "debug output path" \
-    umask "current file creation mask" \
-    fish_handle_reflow "if fish should repaint prompt when the term resizes" \
-    fish_trace "print cmds as they execute, like set -x" \
-    fish_emoji_width "cols wide fish assumes emoji render as" \
-    fish_key_bindings "name of function that sets binds" \
-    fish_autosuggestion_enabled "turns autosuggestions on or off" \
-    fish_ambiguous_width "affects computed width of east asian chars" \
-    fish_escape_delay_ms "How long fish waits to distinguish escape and alt" \
-    fish_greeting "The message to display at start (also a function)" \
-    fish_history "The session id to store history under" \
-    fish_trace "Enables execution tracing (if set to non-empty value)" \
-    fish_user_paths "A list of dirs to prepend to PATH"
+        PATH "list of dirs to look for commands in" \
+        CDPATH "list of dirs under which that cd searches" \
+        FISH_DEBUG "list of enabled debug categories" \
+        FISH_DEBUG_OUTPUT "debug output path" \
+        umask "current file creation mask" \
+        fish_handle_reflow "if fish should repaint prompt when the term resizes" \
+        fish_trace "print cmds as they execute, like set -x" \
+        fish_emoji_width "cols wide fish assumes emoji render as" \
+        fish_key_bindings "name of function that sets binds" \
+        fish_autosuggestion_enabled "turns autosuggestions on or off" \
+        fish_ambiguous_width "affects computed width of east asian chars" \
+        fish_escape_delay_ms "How long fish waits to distinguish escape and alt" \
+        fish_greeting "The message to display at start (also a function)" \
+        fish_history "The session id to store history under" \
+        fish_trace "Enables execution tracing (if set to non-empty value)" \
+        fish_user_paths "A list of dirs to prepend to PATH"
 end
 
 #

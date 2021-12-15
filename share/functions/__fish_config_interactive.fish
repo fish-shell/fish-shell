@@ -28,7 +28,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     # If we are starting up for the first time, set various defaults.
     if test $__fish_initialized -lt 3400
-	    # Regular syntax highlighting colors
+        # Regular syntax highlighting colors
         __init_uvar fish_color_normal normal
         __init_uvar fish_color_command blue
         __init_uvar fish_color_param cyan

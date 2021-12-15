@@ -1,4 +1,4 @@
-if env --version &> /dev/null
+if env --version &>/dev/null
     set -l is_gnu --is-gnu
 end
 

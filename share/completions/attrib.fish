@@ -1,6 +1,6 @@
 function __attrib_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
-  
+
   switch $current_token
     case '+*'
       echo -e 'r\tSet the Read-only file attribute
@@ -17,7 +17,7 @@ i\tClear the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$curr
     case '*'
       if __fish_seen_argument --windows 's'
         echo -e '/d\tApply attrib and any command-line options to directories
-/l\tApply attrib and any command-line options to the Symbolic Link, rather than the target of it'
+/l\tApply attrib and any command-line options to the Symbolic Link'
       end
 
       echo -e '+\tSet the file attribute

@@ -17,7 +17,7 @@ complete --command powershell --old-option NonInteractive \
 complete --command powershell --old-option InputFormat --no-files --require-parameter \
   --arguments 'Text XML'  --description 'Describe the format of data sent to PowerShell'
 complete --command powershell --old-option OutputFormat --no-files --require-parameter \
-  --arguments 'Text XML'  --description 'Determine how output from PowerShell is formatted'
+  --arguments 'Text XML'  --description 'Determine how output is formatted'
 complete --command powershell --old-option WindowStyle --no-files --require-parameter \
   --arguments 'Normal Minimized Maximized Hidden' --description 'Set the window style for the session'
 complete --command powershell --old-option EncodedCommand --require-parameter \

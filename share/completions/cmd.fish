@@ -1,6 +1,6 @@
 function __cmd_generate_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
-  
+
   switch $current_token
     case '/t:*'
       echo -e '0\tBlack
@@ -37,8 +37,8 @@ off\tDisable delayed environment variable expansion' | awk -F '\t' "{ printf \"$
       echo -e '/s\tModify the treatment of string after /c or /k
 /q\tTurn the echo off
 /d\tDisable execution of AutoRun commands
-/a\tFormat internal command output to a pipe or a file as ANSI
-/u\tFormat internal command output to a pipe or a file as Unicode
+/a\tFormat internal command output as ANSI
+/u\tFormat internal command output as Unicode
 /t\tSet the background and foreground color
 /e\tManage command extensions
 /f\tManage file and directory name completion

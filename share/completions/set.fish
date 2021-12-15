@@ -6,14 +6,17 @@
 # Various helper functions
 #
 
-function __fish_set_is_color -d 'Test if We are specifying a color value for the prompt'
+function __fish_set_is_color -a foreground background -d 'Test if We are specifying a color value for the prompt'
     set -l cmd (commandline -poc)
     set -e cmd[1]
     for i in $cmd
         switch $i
-
+            case fish_color_search_match fish_color_selection fish_pager_color_selected_background
+                $background
+                return
             case 'fish_color_*' 'fish_pager_color_*'
-                return 0
+                $foreground
+                return
 
             case '-*'
 
@@ -110,13 +113,13 @@ complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument
 complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s l -l local' -f -a "(set -l | string replace ' ' \t'Local Variable: ')"
 
 # Color completions
-complete -c set -n __fish_set_is_color -x -a '(set_color --print-colors)' -d 'text color'
-complete -c set -n __fish_set_is_color -a --background -x -a '(set_color --print-colors)'
-complete -c set -n __fish_set_is_color -a --bold -x
-complete -c set -n __fish_set_is_color -a --dim -x
-complete -c set -n __fish_set_is_color -a --italics -x
-complete -c set -n __fish_set_is_color -a --reverse -x
-complete -c set -n __fish_set_is_color -a --underline -x
+complete -c set -n '__fish_set_is_color true false' -x -a '(set_color --print-colors)' -d 'text color'
+complete -c set -n '__fish_set_is_color false true' -a '--background=(set_color --print-colors)'
+complete -c set -n '__fish_set_is_color true false' -a --bold -x
+complete -c set -n '__fish_set_is_color true false' -a --dim -x
+complete -c set -n '__fish_set_is_color true false' -a --italics -x
+complete -c set -n '__fish_set_is_color true true' -a --reverse -x
+complete -c set -n '__fish_set_is_color true false' -a --underline -x
 
 # Locale completions
 complete -c set -n '__fish_set_is_locale; and not __fish_seen_argument -s e -l erase' -x -a '(command -sq locale; and locale -a)' -d Locale

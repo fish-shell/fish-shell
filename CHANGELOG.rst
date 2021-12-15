@@ -2,7 +2,7 @@ fish 3.4.0 (released ???)
 =========================
 
 ..
-   Ignore for 3.4.0 changelog: 1363 3625 3954 6477 7602 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8394 8406 8409 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8521 8522 8526 8527 8528 8548
+   Ignore for 3.4.0 changelog: 1363 3625 3954 6477 7602 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8394 8406 8409 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8518 8521 8522 8526 8527 8528 8548 8549
 
 
 Notable improvements and fixes
@@ -53,7 +53,7 @@ Deprecations and removed features
 - ``set --query`` now returns a falsy status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior you would use something like ``if not set -q foo; or set -q $foo``. We do not expect anyone to have used this on purpose, any places this happens are almost certainly buggy (:issue:`8214`).
 - Mac OS X 10.9 is no longer supported. The minimum Mac version is now 10.10 "Yosemite."
 - ``_`` is now a reserved keyword (:issue:`8342`).
-- New special input functions ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace fish functions of the same names. The special input function ``delete-or-exit`` is no longer available as fish function (:issue:`8538`).
+- The special input functions ``delete-or-exit``, ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace fish functions of the same names (:issue:`8538`).
 
 Scripting improvements
 ----------------------
@@ -106,13 +106,14 @@ Interactive improvements
 - When redrawing a multiline prompt, the old prompt is now properly cleared (:issue:`8163`).
 - Interactive completion would occasionally ignore the last word on the command line due to a race condition. This has been fixed (:issue:`8175`).
 - Propagation of universal variables from a fish process that is closing is faster (:issue:`8209`).
-- The command line buffer is drawn in the correct place if the prompt has a trailing empty line (:issue:`8298`).
+- The command line is drawn in the correct place if the prompt has a trailing empty line (:issue:`8298`).
 - ``history`` learned a new subcommand ``clear-session`` to erase all history from the current session (:issue:`5791`).
 - Pressing :kbd:`Control-C` in ``fish_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - :kbd:`Escape` can now bound without breaking arrow key bindings (:issue:`8428`).
+- The :kbd:`Alt-H` binding (to open a command’s manual page) now also ignores ``command`` (:issue:`8447`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -176,6 +177,7 @@ Other improvements
 ------------------
 - Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests. (:issue:`7851`)
 - The HTML version of the documentation now includes copy buttons for any code examples if JavaScript is available (:issue:`8218`).
+- The Debian & Ubuntu package linked from fishshell.com is now a single package, rather than split into ``fish`` and ``fish-common`` (:issue:`7845`).
 
 For distributors
 ----------------

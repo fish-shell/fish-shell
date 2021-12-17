@@ -8,7 +8,7 @@ Synopsis
 
 | loop_construct
 |    [*COMMANDS* ...]
-|    ``break``
+|    **break**
 |    [*COMMANDS* ...]
 | end
 

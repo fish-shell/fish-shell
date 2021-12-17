@@ -6,12 +6,12 @@ command - run a program
 Synopsis
 --------
 
-``command`` [ *OPTIONS* ] [**COMMAND** [*ARG* ...]]
+**command** [ **OPTIONS** ] [*COMMANDNAME* [ARG ...]]
 
 Description
 -----------
 
-``command`` forces the shell to execute the program ``COMMANDNAME`` and ignore any functions or builtins with the same name.
+**command** forces the shell to execute the program *COMMANDNAME* and ignore any functions or builtins with the same name.
 
 The following options are available:
 

@@ -6,7 +6,7 @@ complete - edit command specific tab-completions
 Synopsis
 --------
 
-``complete`` **-c** | **--command** | **-p** | **--path** [*OPTIONS*] *COMMAND*
+``complete`` **-c** | **--command** | **-p** | **--path** [*options*] *COMMAND*
 ``complete`` **-C** *STRING* | **--do-complete** *STRING*
 
 Description

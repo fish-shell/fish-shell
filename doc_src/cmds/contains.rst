@@ -6,9 +6,7 @@ contains - test if a word is present in a list
 Synopsis
 --------
 
-::
-
-    contains [OPTIONS] KEY [VALUES...]
+``contains`` [**options**] *KEY* [*VALUE* ...]
 
 Description
 -----------

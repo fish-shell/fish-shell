@@ -6,14 +6,12 @@ echo - display a line of text
 Synopsis
 --------
 
-::
-
-    echo [OPTIONS] [STRING]
+``echo`` [*options*] [*STRING*]
 
 Description
 -----------
 
-``echo`` displays a string of text.
+``echo`` displays *STRING* of text.
 
 The following options are available:
 

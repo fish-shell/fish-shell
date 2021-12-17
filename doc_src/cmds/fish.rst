@@ -8,7 +8,6 @@ Synopsis
 --------
 
 **fish** [*OPTIONS*] [*FILE* [*ARGS* ...]]
-
 **fish** [*OPTIONS*] [**-c** *COMMAND* [*ARGS* ...]]
 
 Description

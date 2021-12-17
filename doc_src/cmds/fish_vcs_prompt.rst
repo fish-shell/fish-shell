@@ -6,6 +6,7 @@ fish_vcs_prompt - output version control system information for use in a prompt
 Synopsis
 --------
 
+``fish_vcs_prompt``
 ::
 
      function fish_prompt

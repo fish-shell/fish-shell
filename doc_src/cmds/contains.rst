@@ -6,25 +6,26 @@ contains - test if a word is present in a list
 Synopsis
 --------
 
-``contains`` [**options**] *KEY* [*VALUE* ...]
+``contains`` [**options**] *KEY* [*VALUES* ...]
 
 Description
 -----------
 
-``contains`` tests whether the set ``VALUES`` contains the string ``KEY``. If so, ``contains`` exits with status 0; if not, it exits with status 1.
+``contains`` tests whether the set *VALUES* contains the string *KEY*.
+If so, ``contains`` exits with code 0; if not, it exits with code 1.
 
 The following options are available:
 
-- ``-i`` or ``--index`` print the word index
+- **-i** or **--index** print the word index
 
-Note that, like GNU tools and most of fish's builtins, ``contains`` interprets all arguments starting with a ``-`` as options to contains, until it reaches an argument that is ``--`` (two dashes). See the examples below.
+Note that ``contains`` interprets all arguments starting with a **-** as an option to ``contains``, until an **--** argument is reached.
+
+See the examples below.
 
 Example
 -------
 
-If $animals is a list of animals, the following will test if it contains a cat:
-
-
+If *animals* is a list of animals, the following will test if *animals* contains "cat":
 
 ::
 
@@ -33,9 +34,7 @@ If $animals is a list of animals, the following will test if it contains a cat:
     end
 
 
-This code will add some directories to $PATH if they aren't yet included:
-
-
+This code will add some directories to :envvar:`PATH` if they aren't yet included:
 
 ::
 
@@ -46,9 +45,7 @@ This code will add some directories to $PATH if they aren't yet included:
     end
 
 
-While this will check if ``hasargs`` was run with the ``-q`` option:
-
-
+While this will check if function ``hasargs`` is being ran with the **-q** option:
 
 ::
 
@@ -59,4 +56,5 @@ While this will check if ``hasargs`` was run with the ``-q`` option:
     end
 
 
-The ``--`` here stops ``contains`` from treating ``-q`` to an option to itself. Instead it treats it as a normal string to check.
+The **--** here stops ``contains`` from treating **-q** to an option to itself.
+Instead it treats it as a normal string to check.

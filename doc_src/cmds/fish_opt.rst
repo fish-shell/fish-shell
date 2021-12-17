@@ -5,12 +5,8 @@ fish_opt - create an option spec for the argparse command
 
 Synopsis
 --------
-
-::
-
-  fish_opt [ -h | --help ]
-  fish_opt ( -s X | --short=X ) [ -l LONG | --long=LONG ] [ --long-only ] [ -o | --optional-val ] [ -r | --required-val ] [ --multiple-vals ]
-
+| ``fish_opt`` [ **--help** ]
+| ``fish_opt`` [ (**-slor**, **--multiple-vals=**) *optname*]
 
 Description
 -----------

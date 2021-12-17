@@ -6,6 +6,7 @@ fish_prompt - define the appearance of the command line prompt
 Synopsis
 --------
 
+``fish_prompt``
 ::
 
   function fish_prompt

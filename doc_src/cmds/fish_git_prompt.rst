@@ -6,11 +6,13 @@ fish_git_prompt - output git information for use in a prompt
 Synopsis
 --------
 
+``fish_git_prompt``
 ::
 
      function fish_prompt
           printf '%s' $PWD (fish_git_prompt) ' $ '
      end
+
 
 Description
 -----------

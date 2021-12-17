@@ -8,7 +8,6 @@ Synopsis
 
 **eval** [*COMMANDS*...]
 
-
 Description
 -----------
 **eval** evaluates the specified parameters as a command.

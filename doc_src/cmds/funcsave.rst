@@ -6,10 +6,8 @@ funcsave - save the definition of a function to the user's autoload directory
 Synopsis
 --------
 
-::
-
-    funcsave FUNCTION_NAME
-    funcsave [-q] [(-d | --directory) DIR ] FUNCTION_NAME
+| ``funcsave`` *FUNCTION_NAME*
+| ``funcsave`` [**-q**] [(**-d** | **--directory**) *DIR*] *FUNCTION_NAME*
 
 
 Description

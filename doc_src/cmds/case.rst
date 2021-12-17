@@ -6,10 +6,10 @@ case - conditionally execute a block of commands
 Synopsis
 --------
 
-| ``switch`` *VALUE*
-|    [``case`` [*GLOB*...]
+| **switch** *VALUE*
+|    [**case** [*GLOB*...]
 |        [*COMMAND* ...]]
-| ``end``
+| **end**
 
 Description
 -----------

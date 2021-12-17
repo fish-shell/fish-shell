@@ -6,9 +6,7 @@ fish_update_completions - update completions using manual pages
 Synopsis
 --------
 
-::
-
-     fish_update_completions
+``fish_update_completions``
 
 Description
 -----------

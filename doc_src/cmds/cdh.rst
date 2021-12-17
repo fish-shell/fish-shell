@@ -6,7 +6,7 @@ cdh - change to a recently visited directory
 Synopsis
 --------
 
-``cdh`` [ *DIR* ]
+``cdh`` [*DIR*]
 
 Description
 -----------

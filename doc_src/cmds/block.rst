@@ -6,8 +6,7 @@ block - temporarily block delivery of events
 Synopsis
 --------
 
-``block`` [*OPTIONS* ...]
-
+**block** [*OPTIONS* ...]
 
 Description
 -----------

@@ -6,6 +6,7 @@ fish_hg_prompt - output Mercurial information for use in a prompt
 Synopsis
 --------
 
+**fish_hg_prompt**
 ::
 
      function fish_prompt

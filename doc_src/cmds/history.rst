@@ -6,15 +6,12 @@ history - show and manipulate command history
 Synopsis
 --------
 
-::
-
-    history [ search ] [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ --null ] [ -R | --reverse ] [ "search string"... ]
-    history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
-    history merge
-    history save
-    history clear
-    history clear-session
-    history ( -h | --help )
+| ``history`` [**search**] [**--show-time** **--case-sensitive**]
+	\	\   [**--exact** | **--prefix** | **--contains**] [**--max** *n*] [**--null** **--reverse**]
+	\	\   [ *SEARCH_STRING...* ]
+| ``history`` **delete** [**--show-time** **--case-sensitive**]
+	\	\   [**--exact** | **--prefix** | **--contains**] *SEARCH_STRING...*
+| ``history`` { **merge** | **save** | **clear** | **clear_session** }
 
 Description
 -----------

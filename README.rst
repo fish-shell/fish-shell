@@ -238,5 +238,5 @@ There is also a fish tag on Stackoverflow, but it is typically a poor fit.
 Found a bug? Have an awesome idea? Please `open an
 issue <https://github.com/fish-shell/fish-shell/issues/new>`__.
 
-.. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/C/C++%20CI/badge.svg
+.. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/make%20test/badge.svg
    :target: https://github.com/fish-shell/fish-shell/actions

@@ -26,11 +26,18 @@ bool path_get_config(wcstring &path);
 /// \return whether the directory was returned successfully
 bool path_get_data(wcstring &path);
 
-/// \return if the data directory is remote (eg. NFS).
-maybe_t<bool> path_get_data_is_remote();
+enum class dir_remoteness_t {
+    unknown,  // directory status is unknown
+    local,    // directory is known local
+    remote,   // directory is known remote
+};
 
-/// Like path_get_data_is_remote but for config directory.
-maybe_t<bool> path_get_config_is_remote();
+/// \return the remoteness of the fish data directory.
+/// This will be remote for filesystems like NFS, SMB, etc.
+dir_remoteness_t path_get_data_remoteness();
+
+/// Like path_get_data_remoteness but for the config directory.
+dir_remoteness_t path_get_config_remoteness();
 
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.

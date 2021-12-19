@@ -24,7 +24,7 @@ static bool should_mmap() {
     if (history_t::never_mmap) return false;
 
     // mmap only if we are known not-remote.
-    return path_get_data_is_remote() == maybe_t<bool>{false};
+    return path_get_config_remoteness() == dir_remoteness_t::local;
 }
 
 // Read up to len bytes from fd into address, zeroing the rest.

@@ -30,3 +30,4 @@ doc_src/** linguist-documentation
 *.fish linguist-language=fish
 src/*.h linguist-language=c++
 src/builtins/*.h linguist-language=c++
+share/completions/*.fish linguist-documentation

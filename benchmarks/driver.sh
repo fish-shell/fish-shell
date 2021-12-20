@@ -29,10 +29,12 @@ for benchmark in "$BENCHMARKS_DIR"/*; do
     fi
 
     if command -v hyperfine >/dev/null 2>&1; then
+        cmd1="$(quote "${FISH_PATH}") $(quote "$benchmark") > /dev/null"
         if [ -n "$FISH2_PATH" ]; then
-            hyperfine "$(quote "${FISH_PATH}") $benchmark > /dev/null" "$(quote "${FISH2_PATH}") $benchmark > /dev/null"
+            cmd2="$(quote "${FISH2_PATH}") $(quote "$benchmark") > /dev/null"
+            hyperfine "$cmd1" "$cmd2"
         else
-            hyperfine "$(quote "${FISH_PATH}") $benchmark > /dev/null"
+            hyperfine "$cmd1"
         fi
     fi
 done

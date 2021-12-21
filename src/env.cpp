@@ -667,8 +667,6 @@ bool env_scoped_impl_t::export_array_needs_regeneration() const {
 }
 
 std::shared_ptr<owning_null_terminated_array_t> env_scoped_impl_t::create_export_array() const {
-    var_table_t table;
-
     FLOG(env_export, L"create_export_array() recalc");
     var_table_t vals;
     get_exported(this->globals_, vals);

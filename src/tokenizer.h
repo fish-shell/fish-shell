@@ -60,20 +60,20 @@ enum class tokenizer_error_t {
 const wchar_t *tokenizer_get_error_message(tokenizer_error_t err);
 
 struct tok_t {
-    // The type of the token.
-    token_type_t type;
-
     // Offset of the token.
     size_t offset{0};
     // Length of the token.
     size_t length{0};
 
-    // If an error, this is the error code.
-    tokenizer_error_t error{tokenizer_error_t::none};
-
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
     size_t error_offset_within_token{size_t(-1)};
+
+    // The type of the token.
+    token_type_t type;
+
+    // If an error, this is the error code.
+    tokenizer_error_t error{tokenizer_error_t::none};
 
     // Construct from a token type.
     explicit tok_t(token_type_t type);
@@ -85,6 +85,7 @@ struct tok_t {
     /// Gets source for the token, or the empty string if it has no source.
     wcstring get_source(const wcstring &str) const { return wcstring(str, offset, length); }
 };
+static_assert(sizeof(tok_t) <= 32, "tok_t expected to be 32 bytes or less");
 
 /// The tokenizer struct.
 class tokenizer_t : noncopyable_t {

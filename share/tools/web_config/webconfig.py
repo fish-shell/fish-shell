@@ -67,7 +67,7 @@ def isMacOS10_12_5_OrLater():
     """ Return whether this system is macOS 10.12.5 or a later version. """
     try:
         return [int(x) for x in platform.mac_ver()[0].split(".")] >= [10, 12, 5]
-    except:
+    except ValueError:
         return False
 
 

@@ -260,7 +260,7 @@ void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
     if (receiver.empty()) {
         receiver = std::move(donator);
     } else {
-        receiver.insert(receiver.end(), std::make_move_iterator(donator.begin()),
+        receiver.emplace(receiver.end(), std::make_move_iterator(donator.begin()),
                         std::make_move_iterator(donator.end()));
     }
 }

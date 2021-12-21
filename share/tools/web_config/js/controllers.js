@@ -103,7 +103,6 @@ controllers.controller("colorsController", function($scope, $http) {
                 }
                 if (scheme["url"]) currentScheme["url"] = scheme["url"];
 
-                var cols = [];
                 for (var i in data) {
                     currentScheme[data[i].name] = interpret_color(data[i].color).replace(/#/, '');
                     // HACK: For some reason the colors array is cleared later

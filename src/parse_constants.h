@@ -7,6 +7,9 @@
 #include "common.h"
 #include "enum_map.h"
 
+using source_offset_t = uint32_t;
+constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
+
 #define PARSER_DIE()                   \
     do {                               \
         FLOG(error, L"Parser dying!"); \
@@ -15,10 +18,10 @@
 
 // A range of source code.
 struct source_range_t {
-    uint32_t start;
-    uint32_t length;
+    source_offset_t start;
+    source_offset_t length;
 
-    uint32_t end() const {
+    source_offset_t end() const {
         assert(start + length >= start && "Overflow");
         return start + length;
     }

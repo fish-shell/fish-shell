@@ -16,10 +16,6 @@
 #include "parse_constants.h"
 #include "tokenizer.h"
 
-typedef uint32_t source_offset_t;
-
-constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
-
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
     enum parse_token_type_t type;  // The type of the token as represented by the parser

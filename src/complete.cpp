@@ -1674,10 +1674,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         custom_arg_data_t arg_data{&var_assignments};
         arg_data.had_ddash = had_ddash;
 
-        assert(cmd_tok.offset < std::numeric_limits<uint32_t>::max());
-        assert(cmd_tok.length < std::numeric_limits<uint32_t>::max());
-        source_range_t command_range = {static_cast<uint32_t>(cmd_tok.offset),
-                                        static_cast<uint32_t>(cmd_tok.length)};
+        source_range_t command_range = {cmd_tok.offset, cmd_tok.length};
 
         wcstring exp_command = cmd_tok.get_source(cmdline);
         bool unescaped =

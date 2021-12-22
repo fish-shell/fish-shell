@@ -6,26 +6,26 @@ status - query fish runtime information
 Synopsis
 --------
 
-    **status**
-    **status** is-login
-    **status** is-interactive
-    **status** is-block
-    **status** is-breakpoint
-    **status** is-command-substitution
-    **status** is-no-job-control
-    **status** is-full-job-control
-    **status** is-interactive-job-control
-    **status** current-command
-    **status** filename
-    **status** basename
-    **status** dirname
-    **status** fish-path
-    **status** function
-    **status** line-number
-    **status** stack-trace
-    **status** job-control *CONTROL_TYPE*
-    **status** features
-    **status** test-feature *FEATURE*
+| **status**
+| **status** is-login
+| **status** is-interactive
+| **status** is-block
+| **status** is-breakpoint
+| **status** is-command-substitution
+| **status** is-no-job-control
+| **status** is-full-job-control
+| **status** is-interactive-job-control
+| **status** current-command
+| **status** filename
+| **status** basename
+| **status** dirname
+| **status** fish-path
+| **status** function
+| **status** line-number
+| **status** stack-trace
+| **status** job-control *CONTROL_TYPE*
+| **status** features
+| **status** test-feature *FEATURE*
 
 Description
 -----------

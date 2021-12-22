@@ -6,11 +6,7 @@ prompt_pwd - print pwd suitable for prompt
 Synopsis
 --------
 
-::
-
-    function fish_prompt
-        echo -n (prompt_pwd) '$ '
-    end
+``prompt_pwd``
 
 Description
 -----------

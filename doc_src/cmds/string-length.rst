@@ -8,9 +8,7 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
-
-    string length [(-q | --quiet)] [(-V | --visible)] [STRING...]
+``string`` length [**-q** | **--quiet**] [*STRING*...]
 
 .. END SYNOPSIS
 

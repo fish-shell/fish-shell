@@ -6,10 +6,10 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
-
-    string split [(-f | --fields) FIELDS] [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] SEP [STRING...]
-    string split0 [(-f | --fields) FIELDS] [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] [STRING...]
+| ``string`` split [**-m** | **--max** *MAX*] [**-n** | **--no-empty**] [**-q** | **--quiet**]
+    \   \    [**-r** | **--right**] *SEP* [*STRING*...]
+| ``string`` split0 [**-m** | **--max** *MAX*] [**-n** | **--no-empty**] [**-q** | **--quiet**]
+    \   \     [**-r** | **--right**] [*STRING*...]
 
 .. END SYNOPSIS
 

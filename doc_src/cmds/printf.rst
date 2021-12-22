@@ -6,9 +6,7 @@ printf - display text according to a format string
 Synopsis
 --------
 
-::
-
-    printf FORMAT [ARGUMENT ...]
+``printf`` *FORMAT* [*ARGUMENT* ...]
 
 Description
 -----------

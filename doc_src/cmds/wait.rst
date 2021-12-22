@@ -6,9 +6,7 @@ wait - wait for jobs to complete
 Synopsis
 --------
 
-::
-
-    wait [-n | --any] [PID | PROCESS_NAME] ...
+``wait`` [**-n** | **--any**] [*PID* | *PROCESS_NAME*] ...
 
 Description
 -----------
@@ -18,12 +16,10 @@ Description
 - If a pid is specified, the command waits for the job that the process with the pid belongs to.
 - If a process name is specified, the command waits for the jobs that the matched processes belong to.
 - If neither a pid nor a process name is specified, the command waits for all background jobs.
-- If the ``-n`` / ``--any`` flag is provided, the command returns as soon as the first job completes. If it is not provided, it returns after all jobs complete.
+- If the **-n** / **--any** flag is provided, the command returns as soon as the first job completes. If it is not provided, it returns after all jobs complete.
 
 Example
 -------
-
-
 
 ::
 

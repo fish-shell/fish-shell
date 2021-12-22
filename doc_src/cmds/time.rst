@@ -6,9 +6,7 @@ time - measure how long a command or block takes
 Synopsis
 --------
 
-::
-
-   time COMMAND
+**time** *COMMAND*
 
 Description
 -----------

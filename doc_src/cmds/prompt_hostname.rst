@@ -6,11 +6,7 @@ prompt_hostname - print the hostname, shortened for use in the prompt
 Synopsis
 --------
 
-::
-
-    function fish_prompt
-        echo -n (whoami)@(prompt_hostname) (prompt_pwd) '$ '
-    end
+``prompt_hostname``
 
 Description
 -----------
@@ -19,6 +15,12 @@ Description
 
 Examples
 --------
+
+::
+
+    function fish_prompt
+        echo -n (whoami)@(prompt_hostname) (prompt_pwd) '$ '
+    end
 
 ::
 

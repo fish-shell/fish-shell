@@ -6,9 +6,7 @@ not - negate the exit status of a job
 Synopsis
 --------
 
-::
-
-    not COMMAND [OPTIONS...]
+**not** *COMMAND* [*options*...]
 
 
 Description

@@ -6,24 +6,19 @@ while - perform a set of commands multiple times
 Synopsis
 --------
 
-::
-
-    while CONDITION; COMMANDS...; end
-
+**while** *CONDITION*; *COMMANDS...*; **end**
 
 Description
 -----------
 
-``while`` repeatedly executes ``CONDITION``, and if the exit status is 0, then executes ``COMMANDS``.
+**while** repeatedly executes ``CONDITION``, and if the exit status is 0, then executes ``COMMANDS``.
 
-The exit status of the while loop is the exit status of the last iteration of the ``COMMANDS`` executed, or 0 if none were executed. (This matches other shells and is POSIX-compatible.)
+The exit status of the **while** loop is the exit status of the last iteration of the ``COMMANDS`` executed, or 0 if none were executed. (This matches other shells and is POSIX-compatible.)
 
 You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` for complex conditions. Even more complex control can be achieved with ``while true`` containing a :ref:`break <cmd-break>`.
 
 Example
 -------
-
-
 
 ::
 

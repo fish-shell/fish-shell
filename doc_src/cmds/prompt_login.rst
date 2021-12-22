@@ -6,11 +6,7 @@ prompt_login - describe the login suitable for prompt
 Synopsis
 --------
 
-::
-
-    function fish_prompt
-        echo -n (prompt_login) (prompt_pwd) '$ '
-    end
+``prompt_login``
 
 Description
 -----------
@@ -19,6 +15,11 @@ Description
 
 Examples
 --------
+::
+
+    function fish_prompt
+        echo -n (prompt_login) (prompt_pwd) '$ '
+    end
 
 ::
 

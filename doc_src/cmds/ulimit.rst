@@ -6,9 +6,7 @@ ulimit - set or get resource usage limits
 Synopsis
 --------
 
-::
-
-    ulimit [OPTIONS] [LIMIT]
+```ulimit`` [**options**] [*limit*]
 
 
 Description

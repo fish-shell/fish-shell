@@ -6,9 +6,7 @@ umask - set or get the file creation mode mask
 Synopsis
 --------
 
-::
-
-    umask [OPTIONS] [MASK]
+``umask`` [**options**] [*MASK*]
 
 
 Description

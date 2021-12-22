@@ -6,9 +6,7 @@ or - conditionally execute a command
 Synopsis
 --------
 
-::
-
-    COMMAND1; or COMMAND2
+*COMMAND1*; **or** *COMMAND2*
 
 Description
 -----------

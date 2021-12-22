@@ -6,10 +6,8 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
-
-    string join [(-q | --quiet)] SEP [STRING...]
-    string join0 [(-q | --quiet)] [STRING...]
+| ``string`` join [**-q** | **--quiet**] SEP [*STRING*...]
+| ``string`` join0 [**-q** | **--quiet**] [*STRING*...]
 
 .. END SYNOPSIS
 

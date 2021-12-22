@@ -6,9 +6,8 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
-
-    string repeat [(-n | --count) COUNT] [(-m | --max) MAX] [(-N | --no-newline)] [(-q | --quiet)] [STRING...]
+``string`` repeat [**-n** | **--count** *COUNT*] [**-m** | **--max** *MAX*] [**-N** | **--no-newline**]
+    \   \     [**-q** | **--quiet**] [*STRING*...]
 
 .. END SYNOPSIS
 

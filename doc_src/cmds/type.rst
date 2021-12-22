@@ -6,7 +6,7 @@ type - locate a command and describe its type
 Synopsis
 --------
 
-**type** [*OPTIONS*] *NAME* [*NAME* ...]
+``type`` [*options*] *NAME* [...]
 
 Description
 -----------

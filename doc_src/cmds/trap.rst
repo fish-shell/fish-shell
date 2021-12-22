@@ -6,9 +6,7 @@ trap - perform an action when the shell receives a signal
 Synopsis
 --------
 
-::
-
-    trap [OPTIONS] [[ARG] REASON ... ]
+``trap`` [*options*] [[*ARG*] *REASON* ... ]
 
 Description
 -----------

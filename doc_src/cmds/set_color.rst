@@ -6,9 +6,7 @@ set_color - set the terminal color
 Synopsis
 --------
 
-::
-
-    set_color [OPTIONS] VALUE
+``set_color`` [*options*] *VALUE*
 
 Description
 -----------

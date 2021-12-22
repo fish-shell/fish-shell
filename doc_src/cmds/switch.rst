@@ -6,16 +6,14 @@ switch - conditionally execute a block of commands
 Synopsis
 --------
 
-::
-
-    switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
+**switch** *VALUE*; [**case** [*GLOB*...]; [*COMMANDS*...]; ...] **end**
 
 Description
 -----------
 
-``switch`` performs one of several blocks of commands, depending on whether a specified value equals one of several wildcarded values. ``case`` is used together with the ``switch`` statement in order to determine which block should be executed.
+``switch`` performs one of several blocks of commands, depending on whether a specified value equals one of several globbed values. ``case`` is used together with the ``switch`` statement in order to determine which block should be executed.
 
-Each ``case`` command is given one or more parameters. The first ``case`` command with a parameter that matches the string specified in the switch command will be evaluated. ``case`` parameters may contain wildcards. These need to be escaped or quoted in order to avoid regular wildcard expansion using filenames.
+Each ``case`` command is given one or more parameters. The first ``case`` command with a parameter that matches the string specified in the switch command will be evaluated. ``case`` parameters may contain globs. These need to be escaped or quoted in order to avoid regular glob expansion using filenames.
 
 Note that fish does not fall through on case statements. Only the first matching case is executed.
 

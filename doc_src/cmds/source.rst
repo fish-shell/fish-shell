@@ -6,16 +6,14 @@ source - evaluate contents of file
 Synopsis
 --------
 
-::
-
-    source FILENAME [ARGUMENTS...]
-    somecommand | source
+| **source** *FILE* [*arguments*...]
+| ``somecommand`` | **source**
 
 
 Description
 -----------
 
-``source`` evaluates the commands of the specified file in the current shell as a new block of code. This is different from starting a new process to perform the commands (i.e. ``fish < FILENAME``) since the commands will be evaluated by the current shell, which means that changes in shell variables will affect the current shell. If additional arguments are specified after the file name, they will be inserted into the ``$argv`` variable. The ``$argv`` variable will not include the name of the sourced file.
+``source`` evaluates the commands of the specified file in the current shell as a new block of code. This is different from starting a new process to perform the commands (i.e. ``fish < FILE``) since the commands will be evaluated by the current shell, which means that changes in shell variables will affect the current shell. If additional arguments are specified after the file name, they will be inserted into the ``$argv`` variable. The ``$argv`` variable will not include the name of the sourced file.
 
 fish will search the working directory to resolve relative paths but will not search ``$PATH``.
 

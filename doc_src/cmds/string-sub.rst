@@ -6,9 +6,8 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
-
-    string sub [(-s | --start) START] [(-e | --end) END] [(-l | --length) LENGTH] [(-q | --quiet)] [STRING...]
+``string`` sub [**-s** | **--start** *START*] [**-l** | **--length** *LENGTH*]
+    \        [**-q** | **--quiet**] [*STRING*...]
 
 .. END SYNOPSIS
 

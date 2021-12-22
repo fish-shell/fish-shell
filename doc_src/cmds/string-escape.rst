@@ -6,10 +6,8 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
-
-    string escape [(-n | --no-quoted)] [--style=xxx] [STRING...]
-    string unescape [--style=xxx] [STRING...]
+| ``string`` escape [**-n** | **--no-quoted**] [**--style=**] [*STRING*...]
+| ``string`` unescape [**--style=**] [*STRING*...]
 
 .. END SYNOPSIS
 

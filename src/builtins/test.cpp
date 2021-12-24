@@ -560,9 +560,12 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
 
     // Handle errors.
     // For now we only show the first error.
-    if (!parser.errors.empty()) {
+    if (!parser.errors.empty() || result->range.end < args.size()) {
         int narg = 0;
         int len_to_err = 0;
+        if (parser.errors.empty()) {
+            parser.error_idx = result->range.end;
+        }
         wcstring commandline;
         for (const wcstring &arg : args) {
             if (narg > 0) {
@@ -576,7 +579,13 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
         }
         err.append(program_name);
         err.append(L": ");
-        err.append(parser.errors.at(0));
+        if (!parser.errors.empty()) {
+            err.append(parser.errors.at(0));
+        } else {
+            append_format(err, L"unexpected argument at index %lu: '%ls'",
+                          static_cast<unsigned long>(result->range.end) + 1,
+                          args.at(result->range.end).c_str());
+        }
         err.push_back(L'\n');
         err.append(commandline);
         err.push_back(L'\n');
@@ -588,11 +597,6 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
         // parse_expression().
         assert(result->range.end <= args.size());
         if (result->range.end < args.size()) {
-            if (err.empty()) {
-                append_format(err, L"%ls: unexpected argument at index %lu: '%ls'\n", program_name,
-                              static_cast<unsigned long>(result->range.end) + 1,
-                              args.at(result->range.end).c_str());
-            }
             result.reset(nullptr);
         }
     }

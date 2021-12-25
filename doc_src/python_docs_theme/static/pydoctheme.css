@@ -212,8 +212,12 @@ tr, code, pre {
     background-color: inherit;
 }
 
-tt, code, pre, dl > dt span ~ em, #synopsis p {
+tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code {
     font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
+}
+
+#synopsis .line {
+    line-height: 150%;
 }
 
 pre, div[class*="highlight-"] {

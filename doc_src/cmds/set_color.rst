@@ -6,7 +6,7 @@ set_color - set the terminal color
 Synopsis
 --------
 
-``set_color`` [*options*] *VALUE*
+``set_color`` [*OPTIONS*] *VALUE*
 
 Description
 -----------
@@ -24,7 +24,7 @@ An RGB value with three or six hex digits, such as A0FF33 or f2f can be used. ``
 
 A second color may be given as a desired fallback color. e.g. ``set_color 124212 brblue`` will instruct set_color to use *brblue* if a terminal is not capable of the exact shade of grey desired. This is very useful when an 8 or 16 color terminal might otherwise not use a color.
 
-The following options are available:
+The following *OPTIONS* are available:
 
 - ``-b``, ``--background`` *COLOR* sets the background color.
 - ``-c``, ``--print-colors`` prints a list of the 16 named colors.

@@ -765,23 +765,15 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_local(const wcstring &key) const {
-    auto cursor = locals_;
-    while (cursor) {
-        auto where = cursor->env.find(key);
-        if (where != cursor->env.end()) {
-            return where->second;
-        }
-        cursor = cursor->next;
+    maybe_t<env_var_t> entry;
+    for (auto cur = locals_; cur; cur=cur->next) {
+        if ((entry = cur->find_entry(key))) break;
     }
-    return none();
+    return entry; // this is either the entry or none() from find_entry
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key) const {
-    auto where = globals_->env.find(key);
-    if (where != globals_->env.end()) {
-        return where->second;
-    }
-    return none();
+    return globals_->find_entry(key);
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key) const {

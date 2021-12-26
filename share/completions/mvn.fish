@@ -87,8 +87,13 @@ function __fish_mvn_profiles
     sed -n -e '/<profile>/{n; s!^.*<id>\([^<]*\)</id>.*$!\1!; p}' ~/.m2/settings.xml pom.xml 2>/dev/null
 end
 
+function __fish_mvn_projects
+    grep "<module>" pom.xml 2>/dev/null | sed 's/\s*<[^<]*>\(.*\)<[^<]*>/\1/'
+end
+
 complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles)" -d "Comma-delimited list of profiles to activate"
 
+complete -c mvn -f -r -o pl -l projects -a "(__fish_mvn_projects)" -d "Projects to build"
 
 #default properties for some plugins / profiles
 complete -c mvn -o DskipTests -d "Skipping JUnit Tests"

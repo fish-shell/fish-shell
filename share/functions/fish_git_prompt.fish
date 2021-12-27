@@ -345,18 +345,18 @@ function __fish_git_prompt_staged --description "fish_git_prompt helper, tells w
     # The "diff" functions all return > 0 if there _is_ a diff,
     # but we want to return 0 if there are staged changes.
     # So we invert the status.
-    not command git diff-index --cached --quiet HEAD -- 2>/dev/null
+    not command git -c core.fsmonitor= diff-index --cached --quiet HEAD -- 2>/dev/null
     and echo 1
 end
 
 function __fish_git_prompt_untracked --description "fish_git_prompt helper, tells whether or not the current repository has untracked files"
-    command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>&1
+    command git -c core.fsmonitor= ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>&1
     and echo 1
 end
 
 function __fish_git_prompt_dirty --description "fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
     # Like staged, invert the status because we want 0 to mean there are dirty files.
-    not command git diff --no-ext-diff --quiet --exit-code 2>/dev/null
+    not command git -c core.fsmonitor= diff --no-ext-diff --quiet --exit-code 2>/dev/null
     and echo 1
 end
 
@@ -372,7 +372,7 @@ function __fish_git_prompt_informative_status
     # It's quite a bit faster and unlikely anyone cares about the number of files if it's *all* of the files
     # in that directory.
     # The v2 format is better, but we don't actually care in this case.
-    set -l stats (string sub -l 2 (git status --porcelain -z -unormal | string split0))
+    set -l stats (string sub -l 2 (git -c core.fsmonitor= status --porcelain -z -unormal | string split0))
     set -l invalidstate (string match -r '^UU' $stats | count)
     set -l stagedstate (string match -r '^[ACDMR].' $stats | count)
     set -l dirtystate (string match -r '^.[ACDMR]' $stats | count)

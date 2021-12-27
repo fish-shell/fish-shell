@@ -2985,7 +2985,7 @@ static void test_wcstod() {
     auto tod_test = [](const wchar_t *a, const char *b) {
         char *narrow_end = nullptr;
         wchar_t *wide_end = nullptr;
-        double val1 = std::wcstod(a, &wide_end);
+        double val1 = fish_wcstod(a, &wide_end);
         double val2 = strtod(b, &narrow_end);
         do_test((std::isnan(val1) && std::isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
         do_test(wide_end - a == narrow_end - b);

@@ -39,6 +39,7 @@ Notable improvements and fixes
 
 - Performance improvements to globbing, especially on systems using glibc (by avoiding its slow iswalnum() function). In some cases (large directories with files with many numbers in the names) this almost doubles performance.
 - Autosuggestions can now be turned off by setting ``$fish_autosuggestion_enabled`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, e.g. to distinguish autosuggestions from the actual command line. (:issue:`8376`)
+- The command-not-found handler for Fedora/PackageKit now properly passes ahead all arguments
 
 Deprecations and removed features
 ---------------------------------

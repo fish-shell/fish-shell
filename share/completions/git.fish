@@ -2076,9 +2076,8 @@ complete -F -c git -n '__fish_git_using_command config' -s f -l file -d 'Read co
 complete -F -c git -n '__fish_git_using_command config' -l blob -d 'Read config from blob' -r
 
 # If no argument is specified, it's as if --get was used
-# Use -k with `__fish_git_config_keys` so that user defined valeus are shown first
-complete -c git -n '__fish_git_using_command config; and fish_is_nth_token 3' -kfa '(__fish_git_config_keys)'
-complete -f -c git -n '__fish_git_using_command config; and __fish_is_first_arg' -l get -d 'Get config with name' -kra '(__fish_git_config_keys)'
+# Use -k with `__fish_git_config_keys` so that user defined values are shown first
+complete -c git -n '__fish_git_using_command config; and fish_is_nth_token 2' -kfa '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get -d 'Get config with name' -kra '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-all -d 'Get all values matching key' -ka '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-urlmatch -d 'Get value specific for the section url' -r

@@ -2,7 +2,7 @@ fish 3.4.0 (released ???)
 =========================
 
 ..
-   Ignore for 3.4.0 changelog: 1363 3625 3954 6477 7602 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8335 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8394 8406 8409 8410 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8518 8521 8522 8526 8527 8528 8548 8549 8559 8584 8587 8588 8570
+   Ignore for 3.4.0 changelog: 1363 3625 3954 6477 7602 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8335 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8394 8406 8409 8410 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8518 8521 8522 8526 8527 8528 8548 8549 8559 8584 8587 8588 8570 8591
 
 
 Notable improvements and fixes
@@ -109,13 +109,9 @@ Interactive improvements
 - The command line is drawn in the correct place if the prompt has a trailing empty line (:issue:`8298`).
 - ``history`` learned a new subcommand ``clear-session`` to erase all history from the current session (:issue:`5791`).
 - Pressing :kbd:`Control-C` in ``fish_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
-<<<<<<< HEAD
 - The default command-not-found handler for Fedora/PackageKit now passes the whole command line, allowing for functionality such as running the suggested command directly (:issue:`8579`).
-||||||| parent of e13e9c95b (CHANGELOG: work on 3.4.0)
-=======
 - When looking for locale information, the Debian configuration is now used when available (:issue:`8557`).
 - Pasting text containing quotes from the clipboard trims spaces more appropriately (:issue:`8550`).
->>>>>>> e13e9c95b (CHANGELOG: work on 3.4.0)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1100,6 +1100,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         }
         procs_launched += 1;
     }
+    pipe_next_read.close();
 
     // If our pipeline was aborted before any process was successfully launched, then there is
     // nothing to reap, and we can perform an early return.

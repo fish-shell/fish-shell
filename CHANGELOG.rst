@@ -109,6 +109,7 @@ Interactive improvements
 - The command line is drawn in the correct place if the prompt has a trailing empty line (:issue:`8298`).
 - ``history`` learned a new subcommand ``clear-session`` to erase all history from the current session (:issue:`5791`).
 - Pressing :kbd:`Control-C` in ``fish_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
+- The default command-not-found handler for Fedora/PackageKit now passes the whole command line, allowing for functionality such as running the suggested command directly (:issue:`8579`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

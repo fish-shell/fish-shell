@@ -3000,6 +3000,52 @@ static void test_wcstod() {
     tod_test(L"nope", "nope");
 }
 
+static void test_fish_wcstod_underscores() {
+    say(L"Testing fish_wcstod_underscores");
+
+    auto compare = [](const wchar_t *underscores, const wchar_t *clean) {
+        say(underscores);
+        // Test that fish_wcstod_underscores treats s_underscores the same way that wcstod treats s_clean.
+        wchar_t *underscores_end = nullptr;
+        wchar_t *clean_end = nullptr;
+        double underscores_val = fish_wcstod_underscores(underscores, &underscores_end);
+        double clean_val = wcstod(clean, &clean_end);
+        do_test((std::isnan(underscores_val) && std::isnan(clean_val)) ||
+                fabs(underscores_val - clean_val) <= __DBL_EPSILON__);
+        do_test(wcslen(underscores) - (size_t)(underscores_end - underscores) ==
+                wcslen(clean) - (size_t)(clean_end - clean));
+    };
+
+    compare(L"2e0_2 hello", L"2e02 hello");
+    compare(L"2e0_0_2 hello", L"2e002 hello");
+    compare(L"0x0", L"0x0");
+    compare(L"0x1..", L"0x1..");
+    compare(L"0x0_0", L"0x00");
+    compare(L"0x_", L"0x_");
+    compare(L"0x_0", L"0x_0");
+    compare(L"0x0_", L"0x0_");
+    compare(L"0x0_2p3", L"0x2p3");
+    compare(L"0x2p_3", L"0x2p_3");
+    compare(L"0x2_p3", L"0x2_p3");
+    compare(L"0x2p3_", L"0x2p3_");
+    compare(L"0x2p3__", L"0x2p3__");
+    compare(L"0x2p0_3", L"0x2p03");
+    compare(L"0x2p-0_3", L"0x2p-03");
+    compare(L"-0x2p-0_3", L"-0x2p-03");
+    compare(L"0x2p0__3", L"0x2p0__3");
+    compare(L"0x2p_03", L"0x2p_03");
+    compare(L"0x2_p03", L"0x2_p03");
+    compare(L"0x0123_", L"0x0123_");
+    compare(L"0x0123._", L"0x0123._");
+    compare(L"0x0123_.", L"0x0123_.");
+    compare(L" 0x1", L" 0x1");
+    compare(L"0xF_FP2", L"0xFFP2");
+    compare(L"0x1234_5678", L"0x12345678");
+    compare(L"0x12.34_5678", L"0x12.345678");
+    compare(L"0x1234_56.78", L"0x123456.78");
+    compare(L"0x1__2", L"0x1__2");
+}
+
 static void test_dup2s() {
     using std::make_shared;
     io_chain_t chain;
@@ -6792,6 +6838,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("abbreviations"), test_abbreviations},
     {TEST_GROUP("builtins/test"), test_test},
     {TEST_GROUP("wcstod"), test_wcstod},
+    {TEST_GROUP("fish_wcstod_underscores"), test_fish_wcstod_underscores},
     {TEST_GROUP("dup2s"), test_dup2s},
     {TEST_GROUP("dup2s"), test_dup2s_fd_for_target_fd},
     {TEST_GROUP("path"), test_path},

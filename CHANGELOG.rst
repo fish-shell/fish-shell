@@ -39,7 +39,6 @@ Notable improvements and fixes
 
 - Performance improvements to globbing, especially on systems using glibc (by avoiding its slow iswalnum() function). In some cases (large directories with files with many numbers in the names) this almost doubles performance.
 - Autosuggestions can now be turned off by setting ``$fish_autosuggestion_enabled`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, e.g. to distinguish autosuggestions from the actual command line. (:issue:`8376`)
-- The command-not-found handler for Fedora/PackageKit now properly passes ahead all arguments
 
 Deprecations and removed features
 ---------------------------------
@@ -110,6 +109,7 @@ Interactive improvements
 - The command line is drawn in the correct place if the prompt has a trailing empty line (:issue:`8298`).
 - ``history`` learned a new subcommand ``clear-session`` to erase all history from the current session (:issue:`5791`).
 - Pressing :kbd:`Control-C` in ``fish_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
+- The default command-not-found handler for Fedora/PackageKit now passes the whole command line, allowing for functionality such as running the suggested command directly (:issue:`8579`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

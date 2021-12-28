@@ -40,8 +40,6 @@ enum class expand_flag {
     directories_only,
     /// Generate descriptions, stored in the description field of completions.
     gen_descriptions,
-    /// Don't expand home directories.
-    skip_home_directories,
     /// Allow fuzzy matching.
     fuzzy_match,
     /// Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if

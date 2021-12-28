@@ -1027,9 +1027,7 @@ expand_result_t expander_t::stage_braces(wcstring input, completion_receiver_t *
 }
 
 expand_result_t expander_t::stage_home_and_self(wcstring input, completion_receiver_t *out) {
-    if (!(flags & expand_flag::skip_home_directories)) {
-        expand_home_directory(input, ctx.vars);
-    }
+    expand_home_directory(input, ctx.vars);
     expand_percent_self(input);
     if (!out->add(std::move(input))) {
         return append_overflow_error(errors);
@@ -1199,9 +1197,7 @@ expand_result_t expander_t::expand_string(wcstring input, completion_receiver_t 
 
     if (total_result == expand_result_t::ok) {
         // Hack to un-expand tildes (see #647).
-        if (!(flags & expand_flag::skip_home_directories)) {
-            unexpand_tildes(input, ctx.vars, &completions);
-        }
+        unexpand_tildes(input, ctx.vars, &completions);
         if (!out_completions->add_list(std::move(completions))) {
             total_result = append_overflow_error(errors);
         }

@@ -417,10 +417,21 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         }
 
         case ENOEXEC: {
-            FLOGF_SAFE(exec,
-                       "The file '%s' is marked as an executable but could not be run by the "
-                       "operating system.",
-                       actual_cmd);
+            char interpreter_buff[128] = {};
+            const char *interpreter =
+                get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
+            if (!interpreter) {
+                FLOGF_SAFE(exec,
+                           "The file '%s' is executable but missing a Shebang (#!) line.",
+                           actual_cmd);
+            } else {
+                // If the shebang line exists, we would get an ENOENT or similar instead,
+                // so I don't know how to reach this.
+                FLOGF_SAFE(exec,
+                           "The file '%s' could not be run by the "
+                           "operating system. Maybe the Shebang (#!) line is broken?",
+                           actual_cmd);
+            }
             break;
         }
 

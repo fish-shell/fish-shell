@@ -403,6 +403,7 @@ class job_t : noncopyable_t {
         bool notified_of_stop{false};
 
         /// Whether the exit status should be negated. This flag can only be set by the not builtin.
+        /// Two "not" prefixes on a single job cancel each other out.
         bool negate{false};
 
         /// This job is disowned, and should be removed from the active jobs list.

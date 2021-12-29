@@ -106,12 +106,13 @@ Interactive improvements
 - When redrawing a multiline prompt, the old prompt is now properly cleared (:issue:`8163`).
 - Interactive completion would occasionally ignore the last word on the command line due to a race condition. This has been fixed (:issue:`8175`).
 - Propagation of universal variables from a fish process that is closing is faster (:issue:`8209`).
-- The command line is drawn in the correct place if the prompt has a trailing empty line (:issue:`8298`).
+- The command line is drawn in the correct place if the prompt ends with a newline (:issue:`8298`).
 - ``history`` learned a new subcommand ``clear-session`` to erase all history from the current session (:issue:`5791`).
 - Pressing :kbd:`Control-C` in ``fish_key_reader`` will no longer print the incorrect "Press [ctrl-C] again to exit" message (:issue:`8510`).
 - The default command-not-found handler for Fedora/PackageKit now passes the whole command line, allowing for functionality such as running the suggested command directly (:issue:`8579`).
 - When looking for locale information, the Debian configuration is now used when available (:issue:`8557`).
 - Pasting text containing quotes from the clipboard trims spaces more appropriately (:issue:`8550`).
+- The clipboard bindings ignore X-based clipboard programs if the ``DISPLAY`` environment variable is not set, which helps prefer the Windows clipboard when it is available (such as on WSL).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

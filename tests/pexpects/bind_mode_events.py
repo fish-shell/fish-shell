@@ -44,7 +44,8 @@ expect_prompt()
 timeout = 0.15
 
 if "CI" in os.environ:
-    # This doesn't work under tsan.
+    # This doesn't work under TSan, because TSan prevents select() being
+    # interrupted by a signal.
     import sys
     print("SKIPPING the last of bind_mode_events.py")
     sys.exit(0)

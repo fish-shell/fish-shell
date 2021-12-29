@@ -48,8 +48,10 @@ echo $status
 rm file.fish
 #CHECK: 126
 #CHECKERR: exec: {{.*}}{{.*}}
+#CHECKERR: exec: {{.*}}
 
 #CHECK: 126
+#CHECKERR: exec: {{.*}}
 #CHECKERR: exec: {{.*}}
 
 

@@ -5762,7 +5762,7 @@ static void test_string() {
         const wchar_t *argv[15];
         int expected_rc;
         const wchar_t *expected_out;
-    } string_tests[] = {
+    } string_tests[] = {  //
         {{L"string", L"escape", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"escape", L"", nullptr}, STATUS_CMD_OK, L"''\n"},
         {{L"string", L"escape", L"-n", L"", nullptr}, STATUS_CMD_OK, L"\n"},
@@ -5794,7 +5794,9 @@ static void test_string() {
         {{L"string", L"length", L"", nullptr}, STATUS_CMD_ERROR, L"0\n"},
         {{L"string", L"length", L"", L"", L"", nullptr}, STATUS_CMD_ERROR, L"0\n0\n0\n"},
         {{L"string", L"length", L"a", nullptr}, STATUS_CMD_OK, L"1\n"},
+#if WCHAR_T_BITS > 16
         {{L"string", L"length", L"\U0002008A", nullptr}, STATUS_CMD_OK, L"1\n"},
+#endif
         {{L"string", L"length", L"um", L"dois", L"três", nullptr}, STATUS_CMD_OK, L"2\n4\n4\n"},
         {{L"string", L"length", L"um", L"dois", L"três", nullptr}, STATUS_CMD_OK, L"2\n4\n4\n"},
         {{L"string", L"length", L"-q", nullptr}, STATUS_CMD_ERROR, L""},
@@ -6066,7 +6068,8 @@ static void test_string() {
         {{L"string", L"trim", L"-c", L"\\/", L"/a\\"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"\\a/"}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"}};
+        {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"}
+    };
 
     for (const auto &t : string_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);

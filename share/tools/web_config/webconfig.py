@@ -93,7 +93,10 @@ def is_chromeos_garcon():
     # Linux filesystem. This uses Garcon, see for example
     # https://chromium.googlesource.com/chromiumos/platform2/+/master/vm_tools/garcon/#opening-urls
     # https://source.chromium.org/search?q=garcon-url-handler
-    return "garcon-url-handler" in webbrowser.get().name
+    try:
+        return "garcon-url-handler" in webbrowser.get().name
+    except AttributeError:
+        return False
 
 
 def run_fish_cmd(text):

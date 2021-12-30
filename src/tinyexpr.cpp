@@ -375,6 +375,8 @@ static te_expr *base(state *s) {
     te_expr *ret;
     int arity;
 
+    auto previous = s->start;
+    auto next = s->next;
     switch (s->type) {
         case TOK_NUMBER:
             ret = new_expr(TE_CONSTANT, nullptr);
@@ -387,6 +389,12 @@ static te_expr *base(state *s) {
                 // (of course 3 pi could also be interpreted as 3 x pi)
                 s->type = TOK_ERROR;
                 s->error = TE_ERROR_MISSING_OPERATOR;
+                // The error should be given *between*
+                // the last two tokens.
+                // Since these are two separate numbers there is at least
+                // one space between.
+                s->start = previous;
+                s->next = next + 1;
             }
             break;
 

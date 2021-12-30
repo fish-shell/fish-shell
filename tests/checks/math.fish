@@ -128,7 +128,9 @@ not math 'sin()'
 not math '2 + 2 4'
 # CHECKERR: math: Error: Missing operator
 # CHECKERR: '2 + 2 4'
-# CHECKERR:       ^
+# This regex to check whitespace - the error appears between the second 2 and the 4!
+# (right after the 2)
+# CHECKERR: {{^}}      ^
 not math '(1 2)'
 # CHECKERR: math: Error: Missing operator
 # CHECKERR: '(1 2)'

@@ -3613,7 +3613,10 @@ static void test_autosuggest_suggest_special() {
     if (system("mkdir -p 'test/autosuggest_test/0foobar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
+#ifndef __CYGWIN__
+    // Cygwin disallows backslashes in filenames.
     if (system("mkdir -p 'test/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
+#endif
     if (system("mkdir -p test/autosuggest_test/4foo\\'bar")) {
         err(L"mkdir failed");  // a path with a single quote
     }
@@ -3654,11 +3657,13 @@ static void test_autosuggest_suggest_special() {
                                        __LINE__);
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/2", L"foo  bar/", vars,
                                        __LINE__);
+#ifndef __CYGWIN__
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/3", L"foo\\bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/3", L"foo\\bar/", vars,
                                        __LINE__);
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/3", L"foo\\bar/", vars,
                                        __LINE__);
+#endif
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/4", L"foo'bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/4", L"foo'bar/", vars,
                                        __LINE__);
@@ -3687,9 +3692,11 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd 2", L"foo  bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"2", L"foo  bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '2", L"foo  bar/", vars, __LINE__);
+#ifndef __CYGWIN__
     perform_one_autosuggestion_cd_test(L"cd 3", L"foo\\bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"3", L"foo\\bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '3", L"foo\\bar/", vars, __LINE__);
+#endif
     perform_one_autosuggestion_cd_test(L"cd 4", L"foo'bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"4", L"foo'bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '4", L"foo'bar/", vars, __LINE__);

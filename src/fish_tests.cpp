@@ -2194,13 +2194,16 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
 static void test_expand() {
     say(L"Testing parameter expansion");
     const expand_flags_t noflags{};
+    const wchar_t *const wnull = nullptr;
 
-    expand_test(L"foo", noflags, L"foo", 0, L"Strings do not expand to themselves");
-    expand_test(L"a{b,c,d}e", noflags, L"abe", L"ace", L"ade", 0, L"Bracket expansion is broken");
-    expand_test(L"a*", expand_flag::skip_wildcards, L"a*", 0, L"Cannot skip wildcard expansion");
-    expand_test(L"/bin/l\\0", expand_flag::for_completions, 0,
+    expand_test(L"foo", noflags, L"foo", wnull, L"Strings do not expand to themselves");
+    expand_test(L"a{b,c,d}e", noflags, L"abe", L"ace", L"ade", wnull,
+                L"Bracket expansion is broken");
+    expand_test(L"a*", expand_flag::skip_wildcards, L"a*", wnull,
+                L"Cannot skip wildcard expansion");
+    expand_test(L"/bin/l\\0", expand_flag::for_completions, wnull,
                 L"Failed to handle null escape in expansion");
-    expand_test(L"foo\\$bar", expand_flag::skip_variables, L"foo$bar", 0,
+    expand_test(L"foo\\$bar", expand_flag::skip_variables, L"foo$bar", wnull,
                 L"Failed to handle dollar sign in variable-skipping expansion");
 
     // bb
@@ -2237,7 +2240,6 @@ static void test_expand() {
     // This is checking that .* does NOT match . and ..
     // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
     // components (e.g. "./*" has to match the same as "*".
-    const wchar_t *const wnull = nullptr;
     expand_test(L"test/fish_expand_test/.*", noflags, L"test/fish_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
 

@@ -430,7 +430,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                     if (0 == strcmp(lastdot, ".fish")) {
                         FLOGF_SAFE(exec,
                                    "fish scripts require an interpreter directive (must start with "
-                                   "'#! fish').");
+                                   "'#!/path/to/fish').");
                     }
                 }
             } else {

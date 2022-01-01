@@ -155,7 +155,7 @@ Functions
 ``tan``
 	the tangent
 ``tanh``
-	the hyperbolic tangen
+	the hyperbolic tangent
 
 All of the trigonometric functions use radians (the pi-based scale, not 360°).
 

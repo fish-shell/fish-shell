@@ -57,7 +57,10 @@ Syntax
 ``math`` knows some operators, constants, functions and can (obviously) read numbers.
 
 For numbers, ``.`` is always the radix character regardless of locale - ``2.5``, not ``2,5``.
-Scientific notation (``10e5``) and hexadecimal (``0xFF``) are also available.
+Scientific notation (``10e5``) is also available,
+and hexadecimal (``0xFF``) is available on most platforms.
+
+``math`` allows you to use underscores as visual separators for digit grouping, for example as in ``1_000_000``, ``0xAB_CD_EF`` and ``1_234.567_890``. Underscores may appear between any two digits. Leading and trailing underscores, multiple consecutive underscores, and underscores next to an ``x`` (as in ``0x_FF``) or ``e`` (as in ``10_e2``) are not allowed.
 
 Operators
 ---------

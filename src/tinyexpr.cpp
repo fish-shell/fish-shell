@@ -275,10 +275,22 @@ static void next_token(state *s) {
             s->value = fish_wcstod_underscores(s->next, const_cast<wchar_t **>(&s->next));
             s->type = TOK_NUMBER;
         } else {
+            // We are about to look for a function call. None of our built-in functions
+            // start with any of these strings, so we will fail to find a function call.
+            // These strings can be erroneous uses of underscore numeric literal dividers,
+            // like 0x_1, which we don't allow. Give the user a better diagnostic in these cases.
+            if (!wcsncasecmp(s->next, L"x_", 2) ||
+                !wcsncasecmp(s->next, L"e_", 2) ||
+                !wcsncasecmp(s->next, L"p_", 2)) {
+                s->next++;
+                s->next++;
+                s->type = TOK_ERROR;
+                s->error = TE_ERROR_BAD_UNDERSCORE;
+            }
             /* Look for a function call. */
             // But not when it's an "x" followed by whitespace
             // - that's the alternative multiplication operator.
-            if (s->next[0] >= 'a' && s->next[0] <= 'z' &&
+            else if (s->next[0] >= 'a' && s->next[0] <= 'z' &&
                 !(s->next[0] == 'x' && isspace(s->next[1]))) {
                 const wchar_t *start;
                 start = s->next;

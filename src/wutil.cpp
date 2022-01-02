@@ -711,6 +711,78 @@ double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
     return std::wcstod(str, endptr);
 }
 
+/// Like wcstod(), but allows underscore dividers between digits in the input string.
+double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
+    // OpenBSD's strtod/wcstod do not support hex.
+    static const bool allow_hex = (fish_wcstod(L"0x1", nullptr) == 1);
+    const wchar_t *orig = str;
+    while (iswspace(*str)) str++;
+    std::wstring pruned;
+    auto take_char = [&pruned, &str]() {
+        if (*str != L'_') pruned.push_back(*str);
+        str++;
+    };
+    auto is_sign = [](wchar_t c) { return c == L'+' || c == L'-'; };
+    if (is_sign(*str)) take_char();
+    if (!wcscasecmp(str, L"infinity") || !wcscasecmp(str, L"nan")) {
+        return fish_wcstod(orig, endptr);
+    }
+    bool hex = false;
+    if (allow_hex && !wcsncmp(str, L"0x", 2)) {
+        take_char();
+        take_char();
+        hex = true;
+    }
+    auto is_mantissa_digit = [hex](wchar_t c) -> int { return hex ? iswxdigit(c) : iswdigit(c); };
+    bool got_radix = false;
+    bool got_digit = false;
+    while (is_mantissa_digit(*str) || *str == L'.' || *str == L'_') {
+        if (*str == L'_') {
+            if (str == orig || !is_mantissa_digit(*(str - 1)) || !is_mantissa_digit(*(str + 1))) {
+                break;
+            }
+        } else if (*str == L'.') {
+            if (got_radix) break;
+            got_radix = true;
+        } else {
+            got_digit = true;
+        }
+        take_char();
+    }
+    if (!got_digit) {
+        if (hex) {
+            str = orig;
+            while (*str != L'x') str++;
+            // hex = false; // This cannot have an effect in the rest of the function, so skip it.
+        } else {
+            if (endptr) *endptr = const_cast<wchar_t *>(orig);
+            return 0.0;
+        }
+    }
+    auto is_exp_char = [hex](wchar_t c) {
+        if (hex) {
+            return c == L'P' || c == L'p';
+        } else {
+            return c == L'E' || c == L'e';
+        }
+    };
+    // Check if *str is an exponent character followed by an optional sign and a digit.
+    if (is_exp_char(*str) &&
+            (iswdigit(*(str + 1)) ||
+             (is_sign(*(str + 1)) && iswdigit(*(str + 2))))) {
+        take_char(); // E/e/P/p
+        if (is_sign(*str)) take_char();
+        while (iswdigit(*str) || *str == L'_') {
+            if (*str == L'_' && (!iswdigit(*(str - 1)) || !iswdigit(*(str + 1)))) {
+                break;
+            }
+            take_char();
+        }
+    }
+    if (endptr) *endptr = const_cast<wchar_t *>(str);
+    return fish_wcstod(pruned.c_str(), nullptr);
+}
+
 file_id_t file_id_t::from_stat(const struct stat &buf) {
     file_id_t result = {};
     result.device = buf.st_dev;

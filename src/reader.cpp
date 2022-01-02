@@ -2935,7 +2935,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
         auto evt = inputter.read_char(allow_commands ? normal_handler : empty_handler);
-        if (!event_is_normal_char(evt) || !select_wrapper_t::poll_fd_readable(conf.in)) {
+        if (!event_is_normal_char(evt) || !fd_readable_set_t::poll_fd_readable(conf.in)) {
             event_needing_handling = std::move(evt);
             break;
         } else if (evt.input_style == char_input_style_t::notfirst && accumulated_chars.empty() &&

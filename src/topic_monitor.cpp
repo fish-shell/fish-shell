@@ -89,8 +89,8 @@ void binary_semaphore_t::wait() {
 #ifdef FISH_TSAN_WORKAROUNDS
             // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
             // call until data is available (that is, fish would use 100% cpu while waiting for
-            // processes). The select prevents that.
-            (void)select_wrapper_t::is_fd_readable(fd, select_wrapper_t::kNoTimeout);
+            // processes). This call prevents that.
+            (void)fd_readable_set_t::is_fd_readable(fd, fd_readable_set_t::kNoTimeout);
 #endif
             uint8_t ignored;
             auto amt = read(fd, &ignored, sizeof ignored);

@@ -33,7 +33,7 @@ struct fd_monitor_item_t {
     using callback_t = std::function<void(autoclose_fd_t &fd, item_wake_reason_t reason)>;
 
     /// A sentinel value meaning no timeout.
-    static constexpr uint64_t kNoTimeout = select_wrapper_t::kNoTimeout;
+    static constexpr uint64_t kNoTimeout = fd_readable_set_t::kNoTimeout;
 
     /// The fd to monitor.
     autoclose_fd_t fd{};
@@ -71,7 +71,7 @@ struct fd_monitor_item_t {
 
     // Invoke this item's callback if its value is set in fd or has timed out.
     // \return true to retain the item, false to remove it.
-    bool service_item(const select_wrapper_t &fds, const time_point_t &now);
+    bool service_item(const fd_readable_set_t &fds, const time_point_t &now);
 
     // Invoke this item's callback with a poke, if its ID is present in the (sorted) pokelist.
     // \return true to retain the item, false to remove it.

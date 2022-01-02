@@ -87,7 +87,7 @@ uint64_t fd_monitor_item_t::usec_remaining(const time_point_t &now) const {
     return since >= timeout_usec ? 0 : timeout_usec - since;
 }
 
-bool fd_monitor_item_t::service_item(const select_wrapper_t &fds, const time_point_t &now) {
+bool fd_monitor_item_t::service_item(const fd_readable_set_t &fds, const time_point_t &now) {
     bool should_retain = true;
     bool readable = fds.test(fd.fd());
     bool timed_out = !readable && usec_remaining(now) == 0;
@@ -113,7 +113,7 @@ bool fd_monitor_item_t::poke_item(const poke_list_t &pokelist) {
 void fd_monitor_t::run_in_background() {
     ASSERT_IS_BACKGROUND_THREAD();
     poke_list_t pokelist;
-    select_wrapper_t fds;
+    fd_readable_set_t fds;
     for (;;) {
         // Poke any items that need it.
         if (!pokelist.empty()) {
@@ -149,7 +149,7 @@ void fd_monitor_t::run_in_background() {
         }
 
         // Call select().
-        int ret = fds.select(timeout_usec);
+        int ret = fds.check_readable(timeout_usec);
         if (ret < 0 && errno != EINTR) {
             // Surprising error.
             wperror(L"select");

@@ -37,7 +37,8 @@ typedef enum {
     TE_ERROR_MISSING_OPERATOR = 6,
     TE_ERROR_UNEXPECTED_TOKEN = 7,
     TE_ERROR_LOGICAL_OPERATOR = 8,
-    TE_ERROR_UNKNOWN = 9
+    TE_ERROR_BAD_UNDERSCORE = 9,
+    TE_ERROR_UNKNOWN = 10
 } te_error_type_t;
 
 typedef struct te_error_t {

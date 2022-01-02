@@ -356,6 +356,10 @@ static void next_token(state *s) {
                         s->type = TOK_ERROR;
                         s->error = TE_ERROR_LOGICAL_OPERATOR;
                         break;
+                    case '_':
+                        s->type = TOK_ERROR;
+                        s->error = TE_ERROR_BAD_UNDERSCORE;
+                        break;
                     default:
                         s->type = TOK_ERROR;
                         s->error = TE_ERROR_MISSING_OPERATOR;

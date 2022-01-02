@@ -272,7 +272,7 @@ static void next_token(state *s) {
 
         /* Try reading a number. */
         if ((s->next[0] >= '0' && s->next[0] <= '9') || s->next[0] == '.') {
-            s->value = fish_wcstod(s->next, const_cast<wchar_t **>(&s->next));
+            s->value = fish_wcstod_underscores(s->next, const_cast<wchar_t **>(&s->next));
             s->type = TOK_NUMBER;
         } else {
             /* Look for a function call. */

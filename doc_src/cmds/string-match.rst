@@ -10,7 +10,7 @@ Synopsis
     \   \    [**-r** | **--regex**] [**-n** | **--index**] [**-q** | **--quiet**] [**-v** | **--invert**]
     \    \   *PATTERN* [*STRING*...]
 
-. END SYNOPSIS
+.. END SYNOPSIS
 
 Description
 -----------

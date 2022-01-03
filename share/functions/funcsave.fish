@@ -28,8 +28,7 @@ function funcsave --description "Save the current definition of all specified fu
     for funcname in $argv
         set -l funcpath "$funcdir/$funcname.fish"
         if functions -q -- $funcname
-            functions --no-details -- $funcname >$funcpath
-            and fish_indent --write $funcpath
+            functions --no-details -- $funcname | fish_indent >$funcpath
             and set -q _flag_quiet || printf (_ "%s: wrote %s\n") funcsave $funcpath
         else if test -w $funcpath
             rm $funcpath

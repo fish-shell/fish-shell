@@ -4,6 +4,7 @@
     <welcome file="welcome.rtf"/>
     <background file="terminal_logo.png" scaling="proportional" alignment="bottomleft"/>
     <pkg-ref id="com.ridiculousfish.fish-shell-pkg"/>
+    <options hostArchitectures="arm64,x86_64" />
     <options customize="never" require-scripts="false"/>
     <choices-outline>
         <line choice="default">

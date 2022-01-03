@@ -4131,7 +4131,7 @@ bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
 
     bool result = false;
     int fd = note->notification_fd();
-    if (fd >= 0 && select_wrapper_t::poll_fd_readable(fd)) {
+    if (fd >= 0 && fd_readable_set_t::poll_fd_readable(fd)) {
         result = note->notification_fd_became_readable(fd);
     }
     return result;

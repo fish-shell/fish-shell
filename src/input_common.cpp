@@ -60,7 +60,7 @@ using readb_result_t = int;
 static readb_result_t readb(int in_fd) {
     assert(in_fd >= 0 && "Invalid in fd");
     universal_notifier_t& notifier = universal_notifier_t::default_notifier();
-    select_wrapper_t fdset;
+    fd_readable_set_t fdset;
     for (;;) {
         fdset.clear();
         fdset.add(in_fd);
@@ -75,13 +75,13 @@ static readb_result_t readb(int in_fd) {
 
         // Get its suggested delay (possibly none).
         // Note a 0 here means do not poll.
-        uint64_t timeout = select_wrapper_t::kNoTimeout;
+        uint64_t timeout = fd_readable_set_t::kNoTimeout;
         if (uint64_t usecs_delay = notifier.usec_delay_between_polls()) {
             timeout = usecs_delay;
         }
 
         // Here's where we call select().
-        int select_res = fdset.select(timeout);
+        int select_res = fdset.check_readable(timeout);
         if (select_res < 0) {
             if (errno == EINTR || errno == EAGAIN) {
                 // A signal.
@@ -225,7 +225,7 @@ maybe_t<char_event_t> input_event_queue_t::readch_timed() {
     }
     const uint64_t usec_per_msec = 1000;
     uint64_t timeout_usec = static_cast<uint64_t>(wait_on_escape_ms) * usec_per_msec;
-    if (select_wrapper_t::is_fd_readable(in_, timeout_usec)) {
+    if (fd_readable_set_t::is_fd_readable(in_, timeout_usec)) {
         return readch();
     }
     return none();

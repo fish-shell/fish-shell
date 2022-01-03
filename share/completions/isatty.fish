@@ -1,1 +1,1 @@
-complete -c isatty -x -a "stdin stdout stderr"
+complete -c isatty -x -k -a "stdin stdout stderr"

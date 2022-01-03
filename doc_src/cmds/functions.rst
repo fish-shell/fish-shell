@@ -33,7 +33,7 @@ The following options are available:
     - ``autoloaded``, ``not-autoloaded`` or ``n/a``,
     - the line number within the file or zero if not applicable,
     - ``scope-shadowing`` if the function shadows the vars in the calling function (the normal case if it wasn't defined with ``--no-scope-shadowing``), else ``no-scope-shadowing``, or ``n/a`` if the function isn't defined,
-    - the function description minimally escaped so it is a single line or ``n/a`` if the function isn't defined.
+    - the function description minimally escaped so it is a single line, or ``n/a`` if the function isn't defined or has no description.
 
 You should not assume that only five lines will be written since we may add additional information to the output in the future.
 

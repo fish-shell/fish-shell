@@ -8,9 +8,9 @@ function __fish_man_page
         return
     end
 
-    #Skip leading `sudo`/`command` and display then manpage of following command
+    # Skip leading `sudo`/`command`/`xargs` and display then manpage of following command
     while set -q args[2]
-        and string match -qr -- '^(sudo|command|.*=.*)$' $args[1]
+        and string match -qr -- '^(sudo|command|xargs|.*=.*)$' $args[1]
         set -e args[1]
     end
 

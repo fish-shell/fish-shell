@@ -1,3 +1,3 @@
-complete -c for -n 'test (count (commandline -opc)) -eq 1' -s h -l help -d 'Display help and exit'
-complete -c for -n 'test (count (commandline -opc)) -eq 1' -f
-complete -c for -n 'test (count (commandline -opc)) -eq 2' -xa in
+complete -c for -n __fish_is_first_token -s h -l help -d 'Display help and exit'
+complete -c for -n __fish_is_first_token -f
+complete -c for -n 'fish_is_nth_token 2' -xa in

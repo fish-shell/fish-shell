@@ -151,7 +151,6 @@ Completions
   - ``mono`` (:issue:`8415`)
   -  Angular's ``ng`` (:issue:`8111`)
   - ``nodeenv`` (:issue:`8533`)
-  - ``opam switch`` (:issue:`8597`)
   - ``pabcnet_clear`` (:issue:`8421`)
   - ``qmk`` (:issue:`8180`)
   - ``rakudo`` (:issue:`8113`)
@@ -166,7 +165,6 @@ Completions
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Add missing completions for the ``-p`` option of ``xbps-query``.
 - The ``fish_is_nth_token`` function, which is particularly useful in completions for identifying the token number within the command line, replaces various internal functions to do the same (:issue:`8008`).
-- Completions for directories no longer display the size of the directory. This was an essentially meaningless number because it did not account for the files inside the directory (:issue:`8403`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

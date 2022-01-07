@@ -92,23 +92,6 @@ constexpr const char *PATH = "--path";
 /// The different types of messages found in the fishd file.
 enum class uvar_message_type_t { set, set_export };
 
-static wcstring get_machine_identifier();
-
-/// return a list of paths where the uvars file has been historically stored.
-static wcstring_list_t get_legacy_paths(const wcstring &wdir) {
-    wcstring_list_t result;
-    // A path used during fish 3.0 development.
-    result.push_back(wdir + L"/fish_universal_variables");
-
-    // Paths used in 2.x.
-    result.push_back(wdir + L"/fishd." + get_machine_identifier());
-    wcstring hostname_id;
-    if (get_hostname_identifier(hostname_id)) {
-        result.push_back(wdir + L'/' + hostname_id);
-    }
-    return result;
-}
-
 static maybe_t<wcstring> default_vars_path_directory() {
     wcstring path;
     if (!path_get_config(path)) return none();
@@ -467,8 +450,7 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     return ret == 0;
 }
 
-void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstring path,
-                                         bool migrate_legacy) {
+void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstring path) {
     if (path.empty()) return;
     assert(!initialized() && "Already initialized");
     vars_path_ = std::move(path);
@@ -478,31 +460,13 @@ void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstri
         // Successfully loaded from our normal path.
         return;
     }
-
-    if (errno == ENOENT && migrate_legacy) {
-        // We failed to load, because the file was not found. Attempt to load from our legacy paths.
-        if (auto dir = default_vars_path_directory()) {
-            for (const wcstring &path : get_legacy_paths(*dir)) {
-                if (load_from_path(path, callbacks)) {
-                    // Mark every variable as modified.
-                    // This tells the uvars to write out the values loaded from the legacy path;
-                    // otherwise it will conclude that the values have been deleted since they
-                    // aren't present.
-                    for (const auto &kv : vars) {
-                        modified.insert(kv.first);
-                    }
-                    break;
-                }
-            }
-        }
-    }
 }
 
 void env_universal_t::initialize(callback_data_list_t &callbacks) {
     // Set do_flock to false immediately if the default variable path is on a remote filesystem.
     // See #7968.
     if (path_get_config_remoteness() == dir_remoteness_t::remote) do_flock = false;
-    this->initialize_at_path(callbacks, default_vars_path(), true /* migrate legacy */);
+    this->initialize_at_path(callbacks, default_vars_path());
 }
 
 autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, wcstring *out_path) {
@@ -913,72 +877,6 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
 /// Maximum length of hostname. Longer hostnames are truncated.
 #define HOSTNAME_LEN 255
 
-/// Length of a MAC address.
-#define MAC_ADDRESS_MAX_LEN 6
-
-// Thanks to Jan Brittenson, http://lists.apple.com/archives/xcode-users/2009/May/msg00062.html
-#ifdef SIOCGIFHWADDR
-
-// Linux
-#include <net/if.h>
-#include <sys/socket.h>
-static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
-                            const char *interface = "eth0") {
-    bool result = false;
-    const int dummy = socket(AF_INET, SOCK_STREAM, 0);
-    if (dummy >= 0) {
-        struct ifreq r;
-        strncpy(const_cast<char *>(r.ifr_name), interface, sizeof r.ifr_name - 1);
-        r.ifr_name[sizeof r.ifr_name - 1] = 0;
-        if (ioctl(dummy, SIOCGIFHWADDR, &r) >= 0) {
-            std::memcpy(macaddr, r.ifr_hwaddr.sa_data, MAC_ADDRESS_MAX_LEN);
-            result = true;
-        }
-        close(dummy);
-    }
-    return result;
-}
-
-#elif defined(HAVE_GETIFADDRS)
-
-// OS X and BSD
-#include <ifaddrs.h>
-#include <net/if_dl.h>
-#include <sys/socket.h>
-static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
-                            const char *interface = "en0") {
-    // BSD, Mac OS X
-    struct ifaddrs *ifap;
-    bool ok = false;
-
-    if (getifaddrs(&ifap) != 0) {
-        return ok;
-    }
-
-    for (const ifaddrs *p = ifap; p; p = p->ifa_next) {
-        bool is_af_link = p->ifa_addr && p->ifa_addr->sa_family == AF_LINK;
-        if (is_af_link && p->ifa_name && p->ifa_name[0] &&
-            !strcmp((const char *)p->ifa_name, interface)) {
-            const sockaddr_dl &sdl = *reinterpret_cast<sockaddr_dl *>(p->ifa_addr);
-
-            size_t alen = sdl.sdl_alen;
-            if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
-            std::memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
-            ok = true;
-            break;
-        }
-    }
-    freeifaddrs(ifap);
-    return ok;
-}
-
-#else
-
-// Unsupported
-static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN]) { return false; }
-
-#endif
-
 /// Function to get an identifier based on the hostname.
 bool get_hostname_identifier(wcstring &result) {
     // The behavior of gethostname if the buffer size is insufficient differs by implementation and
@@ -993,22 +891,6 @@ bool get_hostname_identifier(wcstring &result) {
         success = !result.empty();
     }
     return success;
-}
-
-/// Get a sort of unique machine identifier. Prefer the MAC address; if that fails, fall back to the
-/// hostname; if that fails, pick something.
-static wcstring get_machine_identifier() {
-    wcstring result;
-    unsigned char mac_addr[MAC_ADDRESS_MAX_LEN] = {};
-    if (get_mac_address(mac_addr)) {
-        result.reserve(2 * MAC_ADDRESS_MAX_LEN);
-        for (auto i : mac_addr) {
-            append_format(result, L"%02x", i);
-        }
-    } else if (!get_hostname_identifier(result)) {
-        result.assign(L"nohost");  // fallback to a dummy value
-    }
-    return result;
 }
 
 namespace {

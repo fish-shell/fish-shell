@@ -61,14 +61,13 @@ class env_universal_t {
     /// Get a view on the universal variable table.
     const var_table_t &get_table() const { return vars; }
 
-    /// Initialize this uvars for the default path, migrating legacy variables.
+    /// Initialize this uvars for the default path.
     /// This should be called at most once on any given instance.
     void initialize(callback_data_list_t &callbacks);
 
     /// Initialize a this uvars for a given path.
     /// This is exposed for testing only.
-    void initialize_at_path(callback_data_list_t &callbacks, wcstring path,
-                            bool migrate_legacy = false);
+    void initialize_at_path(callback_data_list_t &callbacks, wcstring path);
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.

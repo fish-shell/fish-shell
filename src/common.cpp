@@ -1042,8 +1042,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
 }
 
 /// Escapes a string for use in a regex string. Not safe for use with `eval` as only
-/// characters reserved by PCRE2 are escaped, i.e. it relies on fish's automatic escaping
-/// of subshell output in subsequent concatenation or for use as an argument.
+/// characters reserved by PCRE2 are escaped.
 /// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
 static wcstring escape_string_pcre2(const wcstring &in) {
     wcstring out;

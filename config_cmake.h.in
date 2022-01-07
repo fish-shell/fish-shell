@@ -19,9 +19,6 @@
 /* Define to 1 if you have the `flock' function. */
 #cmakedefine HAVE_FLOCK 1
 
-/* Define to 1 if you have the `getifaddrs' function. */
-#cmakedefine HAVE_GETIFADDRS 1
-
 /* Define to 1 if you have the `getpwent' function. */
 #cmakedefine HAVE_GETPWENT 1
 

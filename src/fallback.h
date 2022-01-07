@@ -107,20 +107,6 @@ int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #endif
 #endif
 
-#ifndef HAVE_WCSNDUP
-/// Fallback for wcsndup function. Returns a copy of \c in, truncated to a maximum length of \c c.
-wchar_t *wcsndup(const wchar_t *in, size_t c);
-#endif
-
-#ifndef HAVE_WCSLCPY
-/// Copy src to string dst of size siz.  At most siz-1 characters will be copied.  Always NUL
-/// terminates (unless siz == 0).  Returns std::wcslen(src); if retval >= siz, truncation occurred.
-///
-/// This is the OpenBSD strlcpy function, modified for wide characters, and renamed to reflect this
-/// change.
-size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
-#endif
-
 // autoconf may fail to detect gettext (645), so don't define a function call gettext or we'll get
 // build errors.
 

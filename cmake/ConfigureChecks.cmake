@@ -89,7 +89,6 @@ check_struct_has_member("struct dirent" d_type dirent.h HAVE_STRUCT_DIRENT_D_TYP
 check_cxx_symbol_exists(dirfd "sys/types.h;dirent.h" HAVE_DIRFD)
 check_include_file_cxx(execinfo.h HAVE_EXECINFO_H)
 check_cxx_symbol_exists(flock sys/file.h HAVE_FLOCK)
-check_cxx_symbol_exists(getifaddrs ifaddrs.h HAVE_GETIFADDRS)
 check_cxx_symbol_exists(getpwent pwd.h HAVE_GETPWENT)
 check_cxx_symbol_exists(getrusage sys/resource.h HAVE_GETRUSAGE)
 check_cxx_symbol_exists(gettext libintl.h HAVE_GETTEXT)

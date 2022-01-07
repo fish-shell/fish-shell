@@ -100,14 +100,8 @@
 /* Define to 1 if you have the `wcsdup' function. */
 #cmakedefine HAVE_WCSDUP 1
 
-/* Define to 1 if you have the `wcslcpy' function. */
-#cmakedefine HAVE_WCSLCPY 1
-
 /* Define to 1 if you have the `wcsncasecmp' function. */
 #cmakedefine HAVE_WCSNCASECMP 1
-
-/* Define to 1 if you have the `wcsndup' function. */
-#cmakedefine HAVE_WCSNDUP 1
 
 /* Define to 1 if you have the `wcstod_l' function. */
 #cmakedefine HAVE_WCSTOD_L 1

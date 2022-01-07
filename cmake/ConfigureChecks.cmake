@@ -128,9 +128,7 @@ check_cxx_symbol_exists(eventfd sys/eventfd.h HAVE_EVENTFD)
 check_cxx_symbol_exists(pipe2 unistd.h HAVE_PIPE2)
 check_cxx_symbol_exists(wcscasecmp wchar.h HAVE_WCSCASECMP)
 check_cxx_symbol_exists(wcsdup wchar.h HAVE_WCSDUP)
-check_cxx_symbol_exists(wcslcpy wchar.h HAVE_WCSLCPY)
 check_cxx_symbol_exists(wcsncasecmp wchar.h HAVE_WCSNCASECMP)
-check_cxx_symbol_exists(wcsndup wchar.h HAVE_WCSNDUP)
 
 # These are for compatibility with Solaris 10, which places the following
 # in the std namespace.

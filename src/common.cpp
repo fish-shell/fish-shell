@@ -710,20 +710,18 @@ wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
                 pos = pos + 1;
             } else if (overflow) {
                 // In case of overflow, we print a newline, except if we already are at position 0.
-                wchar_t *token = wcsndup(start, pos - start);
+                wcstring token = msg.substr(start - msg.c_str(), pos - start);
                 if (line_width != 0) buff.push_back(L'\n');
-                buff.append(format_string(L"%ls-\n", token));
-                free(token);
+                buff.append(format_string(L"%ls-\n", token.c_str()));
                 line_width = 0;
             } else {
                 // Print the token.
-                wchar_t *token = wcsndup(start, pos - start);
+                wcstring token = msg.substr(start - msg.c_str(), pos - start);
                 if ((line_width + (line_width != 0 ? 1 : 0) + tok_width) > screen_width) {
                     buff.push_back(L'\n');
                     line_width = 0;
                 }
-                buff.append(format_string(L"%ls%ls", line_width ? L" " : L"", token));
-                free(token);
+                buff.append(format_string(L"%ls%ls", line_width ? L" " : L"", token.c_str()));
                 line_width += (line_width != 0 ? 1 : 0) + tok_width;
             }
 

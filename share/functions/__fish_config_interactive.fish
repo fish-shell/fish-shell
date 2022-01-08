@@ -4,13 +4,6 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
-    if test $__fish_initialized -lt 3000
-        # Perform transitions relevant to going from fish 2.x to 3.x.
-
-        # Migrate old universal abbreviations to the new scheme.
-        __fish_abbr_old | source
-    end
-
     # Make sure this function is only run once.
     if set -q __fish_config_interactive_done
         return

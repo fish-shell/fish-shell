@@ -6,8 +6,8 @@ history - show and manipulate command history
 Synopsis
 --------
 
-| ``history`` [**search**] [**--show-time** **--case-sensitive**]
-	\	\   [**--exact** | **--prefix** | **--contains**] [**--max** *n*] [**--null** **--reverse**]
+| ``history`` [**search**] [**--show-time**] [**--case-sensitive**]
+	\	\   [**--exact** | **--prefix** | **--contains**] [**--max** *n*] [**--null**] [**--reverse**]
 	\	\   [ *SEARCH_STRING...* ]
 | ``history`` **delete** [**--case-sensitive**]
 	\	\   [**--exact** | **--prefix** | **--contains**] *SEARCH_STRING...*

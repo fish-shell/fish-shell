@@ -6,8 +6,8 @@ builtin - run a builtin command
 Synopsis
 --------
 
-| **builtin** [*OPTIONS* ...] *BUILTINNAME*
-| **builtin** --query *BUILTINNAMES* ...
+| **builtin** [*OPTIONS*] *BUILTINNAME*
+| **builtin** --query *BUILTINNAME* ...
 
 Description
 -----------

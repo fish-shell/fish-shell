@@ -11,7 +11,10 @@ Synopsis
 	\	\   [ *SEARCH_STRING...* ]
 | ``history`` **delete** [**--case-sensitive**]
 	\	\   [**--exact** | **--prefix** | **--contains**] *SEARCH_STRING...*
-| ``history`` { **merge** | **save** | **clear** | **clear_session** }
+| ``history`` **merge**
+| ``history`` **save**
+| ``history`` **clear**
+| ``history`` **clear-session**
 
 Description
 -----------

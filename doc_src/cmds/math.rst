@@ -106,56 +106,56 @@ Functions
 ``abs``
     the absolute value, with positive sign
 ``acos``
-	arc cosine
+    arc cosine
 ``asin``
-	arc sine
+    arc sine
 ``atan``
-	arc tangent
+    arc tangent
 ``atan2``
-	arc tangent of two variables
+    arc tangent of two variables
 ``bitand``, ``bitor`` and ``bitxor``
     perform bitwise operations.
     These will throw away any non-integer parts andd interpret the rest as an int.
 ``ceil``
-	round number up to nearest integer
+    round number up to nearest integer
 ``cos``
-	the cosine
+    the cosine
 ``cosh``
-	hyperbolic cosine
+    hyperbolic cosine
 ``exp``
-	the base-e exponential function
+    the base-e exponential function
 ``fac``
-	factorial - also known as ``x!`` (``x * (x - 1) * (x - 2) * ... * 1``)
+    factorial - also known as ``x!`` (``x * (x - 1) * (x - 2) * ... * 1``)
 ``floor``
-	round number down to nearest integer
+    round number down to nearest integer
 ``ln``
-	the base-e logarithm
+    the base-e logarithm
 ``log`` or ``log10``
-	the base-10 logarithm
+    the base-10 logarithm
 ``log2``
-	the base-2 logarithm
+    the base-2 logarithm
 ``max``
-	returns the larger of two numbers
+    returns the larger of two numbers
 ``min``
-	returns the smaller of two numbers
+    returns the smaller of two numbers
 ``ncr``
-	"from n choose r" combination function - how many subsets of size r can be taken from n (order doesn't matter)
+    "from n choose r" combination function - how many subsets of size r can be taken from n (order doesn't matter)
 ``npr``
-	the number of subsets of size r that can be taken from a set of n elements (including different order)
+    the number of subsets of size r that can be taken from a set of n elements (including different order)
 ``pow(x,y)``
     returns x to the y (and can be written as ``x ^ y``)
 ``round``
-	rounds to the nearest integer, away from 0
+    rounds to the nearest integer, away from 0
 ``sin``
-	the sine function
+    the sine function
 ``sinh``
-	the hyperbolic sine
+    the hyperbolic sine
 ``sqrt``
-	the square root - (can also be written as ``x ^ 0.5``)
+    the square root - (can also be written as ``x ^ 0.5``)
 ``tan``
-	the tangent
+    the tangent
 ``tanh``
-	the hyperbolic tangent
+    the hyperbolic tangent
 
 All of the trigonometric functions use radians (the pi-based scale, not 360°).
 

@@ -6,7 +6,7 @@ while - perform a set of commands multiple times
 Synopsis
 --------
 
-**while** *CONDITION*; *COMMANDS...*; **end**
+**while** *CONDITION*; *COMMANDS*; **end**
 
 Description
 -----------

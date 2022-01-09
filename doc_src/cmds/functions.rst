@@ -10,7 +10,7 @@ Synopsis
 | **functions** [ **-D** | **--details** ] [ **-v** ] *FUNCTION*
 | **functions** **-c** *OLDNAME* *NEWNAME*
 | **functions** **-d** *DESCRIPTION* *FUNCTION*
-| **functions** [ **-e** | **-q** ] *FUNCTIONS...*
+| **functions** [ **-e** | **-q** ] *FUNCTION...*
 
 Description
 -----------

@@ -27,7 +27,7 @@ Synopsis
 	\	\	  [**-r** | **--right**] [*STRING*...]
 | ``string`` sub [**-s** | **--start** *START*] [**-l** | **--length** *LENGTH*]
 	\	     [**-q** | **--quiet**] [*STRING*...]
-| ``string`` trim [**-l** | **--left**] [**-r** | **--right**] [**-c** | **--chars** CHARS*]
+| ``string`` trim [**-l** | **--left**] [**-r** | **--right**] [**-c** | **--chars** *CHARS*]
 	\	\	[**-q** | **--quiet**] [*STRING*...]
 | ``string`` unescape [**--style=**] [*STRING*...]
 | ``string`` upper [**-q** | **--quiet**] [*STRING*...]

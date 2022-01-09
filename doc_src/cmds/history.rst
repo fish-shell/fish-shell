@@ -9,7 +9,7 @@ Synopsis
 | ``history`` [**search**] [**--show-time** **--case-sensitive**]
 	\	\   [**--exact** | **--prefix** | **--contains**] [**--max** *n*] [**--null** **--reverse**]
 	\	\   [ *SEARCH_STRING...* ]
-| ``history`` **delete** [**--show-time** **--case-sensitive**]
+| ``history`` **delete** [**--case-sensitive**]
 	\	\   [**--exact** | **--prefix** | **--contains**] *SEARCH_STRING...*
 | ``history`` { **merge** | **save** | **clear** | **clear_session** }
 

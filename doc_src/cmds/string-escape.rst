@@ -6,8 +6,8 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-| ``string`` escape [**-n** | **--no-quoted**] [**--style=**] [*STRING*...]
-| ``string`` unescape [**--style=**] [*STRING*...]
+| ``string`` escape [**-n** | **--no-quoted**] [**--style=**] [*STRING* ...]
+| ``string`` unescape [**--style=**] [*STRING* ...]
 
 .. END SYNOPSIS
 

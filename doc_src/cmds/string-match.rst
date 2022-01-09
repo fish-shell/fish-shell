@@ -8,7 +8,7 @@ Synopsis
 
 ``string`` match [**-a** | **--all**] [**-e** | **--entire**] [**-i** | **--ignore-case**]
     \   \    [**-r** | **--regex**] [**-n** | **--index**] [**-q** | **--quiet**] [**-v** | **--invert**]
-    \    \   *PATTERN* [*STRING*...]
+    \    \   *PATTERN* [*STRING* ...]
 
 .. END SYNOPSIS
 

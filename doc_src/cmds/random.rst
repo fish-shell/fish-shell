@@ -10,7 +10,7 @@ Synopsis
 | ``random`` *SEED*
 | ``random`` *START* *END*
 | ``random`` *START* *STEP* *END*
-| ``random`` choice [*ITEMS*...]
+| ``random`` choice [*ITEMS* ...]
 
 Description
 -----------

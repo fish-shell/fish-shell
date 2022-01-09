@@ -7,7 +7,7 @@ Synopsis
 .. BEGIN SYNOPSIS
 
 ``string`` trim [**-l** | **--left**] [**-r** | **--right**] [(**-c** | **--chars**) *CHARS*]
-    \   \   [**-q** | **--quiet**] [*STRING*...]
+    \   \   [**-q** | **--quiet**] [*STRING* ...]
 
 .. END SYNOPSIS
 

@@ -6,7 +6,7 @@ argparse - parse options passed to a fish script or function
 Synopsis
 --------
 
-``argparse`` [*OPTIONS*] *OPTION_SPEC*... -- [*ARG*...]
+``argparse`` [*OPTIONS*] *OPTION_SPEC* ... -- [*ARG* ...]
 
 
 Description

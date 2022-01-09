@@ -7,7 +7,7 @@ Synopsis
 --------
 
 | **switch** *VALUE*
-|    [**case** [*GLOB*...]
+|    [**case** [*GLOB* ...]
 |        [*COMMAND* ...]]
 | **end**
 

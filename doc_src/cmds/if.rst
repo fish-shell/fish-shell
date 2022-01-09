@@ -6,9 +6,9 @@ if - conditionally execute a command
 Synopsis
 --------
 
-| **if** *CONDITION*; *COMMANDS_TRUE*...;
-| [**else** **if** *CONDITION2*; *COMMANDS_TRUE2*...;]
-| [**else**; *COMMANDS_FALSE*...;]
+| **if** *CONDITION*; *COMMANDS_TRUE* ...;
+| [**else** **if** *CONDITION2*; *COMMANDS_TRUE2* ...;]
+| [**else**; *COMMANDS_FALSE* ...;]
 | **end**
 
 Description

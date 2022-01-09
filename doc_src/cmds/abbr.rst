@@ -38,7 +38,7 @@ The following options are available:
 **-l** or **--list**
     Lists all abbreviated words
 
-**-e** *WORD* or **--erase** *WORD*...
+**-e** *WORD* or **--erase** *WORD* ...
     Erase the given abbreviations
 
 **-q** or **--query**

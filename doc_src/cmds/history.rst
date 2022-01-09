@@ -7,10 +7,10 @@ Synopsis
 --------
 
 | ``history`` [**search**] [**--show-time**] [**--case-sensitive**]
-	\	\   [**--exact** | **--prefix** | **--contains**] [**--max** *n*] [**--null**] [**--reverse**]
-	\	\   [*SEARCH_STRING* ...]
+        \                  [**--exact** | **--prefix** | **--contains**] [**--max** *n*] [**--null**] [**--reverse**]
+        \                  [*SEARCH_STRING* ...]
 | ``history`` **delete** [**--case-sensitive**]
-	\	\   [**--exact** | **--prefix** | **--contains**] *SEARCH_STRING* ...
+        \                [**--exact** | **--prefix** | **--contains**] *SEARCH_STRING* ...
 | ``history`` **merge**
 | ``history`` **save**
 | ``history`` **clear**

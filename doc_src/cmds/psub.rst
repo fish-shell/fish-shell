@@ -6,7 +6,7 @@ psub - perform process substitution
 Synopsis
 --------
 
-*COMMAND1* ( *COMMAND2* | ``psub`` [**-F** | -**-fifo**] [**-f** | **--file**] [**-s** *SUFFIX*] )
+*COMMAND1* ( *COMMAND2* | ``psub`` [**-F** | -**-fifo**] [**-f** | **--file**] [(**-s** | **--suffix**) *SUFFIX*] )
 
 Description
 -----------

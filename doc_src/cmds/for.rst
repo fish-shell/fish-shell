@@ -6,7 +6,7 @@ for - perform a set of commands multiple times
 Synopsis
 --------
 
-**for** *VARNAME* in [*VALUES*...]; *COMMANDS*...; **end**
+**for** *VARNAME* in [*VALUES* ...]; *COMMANDS* ...; **end**
 
 Description
 -----------

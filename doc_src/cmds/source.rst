@@ -6,7 +6,7 @@ source - evaluate contents of file
 Synopsis
 --------
 
-| **source** *FILE* [*arguments*...]
+| **source** *FILE* [*arguments* ...]
 | ``somecommand`` | **source**
 
 

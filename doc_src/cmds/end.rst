@@ -7,14 +7,14 @@ Synopsis
 --------
 
 | **begin**
-|     [*COMMANDS*...] 
+|     [*COMMANDS* ...] 
 | **end**
 
-| **function** *NAME* [*OPTIONS*]; *COMMANDS*...; **end**
-| **if** *CONDITION*; *COMMANDS_TRUE*...; [**else**; *COMMANDS_FALSE*...;] **end**
-| **switch** *VALUE*; [**case** [*WILDCARD*...]; [*COMMANDS*...]; ...] **end**
-| **while** *CONDITION*; *COMMANDS*...; **end**
-| **for** *VARNAME* in [*VALUES*...]; **COMMANDS**...; **end**
+| **function** *NAME* [*OPTIONS*]; *COMMANDS* ...; **end**
+| **if** *CONDITION*; *COMMANDS_TRUE* ...; [**else**; *COMMANDS_FALSE* ...;] **end**
+| **switch** *VALUE*; [**case** [*WILDCARD* ...]; [*COMMANDS* ...]; ...] **end**
+| **while** *CONDITION*; *COMMANDS* ...; **end**
+| **for** *VARNAME* in [*VALUES* ...]; **COMMANDS** ...; **end**
 
 Description
 -----------

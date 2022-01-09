@@ -7,7 +7,7 @@ Synopsis
 .. BEGIN SYNOPSIS
 
 ``string`` pad [**-r** | **--right**] [(**-c** | **--char**) *CHAR*] [(**-w** | **--width**) *INTEGER*]
-    \   \      [*STRING*...]
+    \   \      [*STRING* ...]
 
 .. END SYNOPSIS
 

@@ -1207,7 +1207,7 @@ A more robust approach to argument handling is :ref:`argparse <cmd-argparse>`, w
 
       # If -h or --help is given, we print a little help text and return
       if set -q _flag_help
-          echo "mybetterfunction [-h|--help] [-s|--second] [ARGUMENT...]"
+          echo "mybetterfunction [-h|--help] [-s|--second] [ARGUMENT ...]"
           return 0
       end
 

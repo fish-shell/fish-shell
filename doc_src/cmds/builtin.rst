@@ -6,8 +6,10 @@ builtin - run a builtin command
 Synopsis
 --------
 
-| **builtin** [*OPTIONS*] *BUILTINNAME*
-| **builtin** --query *BUILTINNAME* ...
+.. synopsis::
+
+    builtin [OPTIONS] BUILTINNAME
+    builtin --query BUILTINNAME ...
 
 Description
 -----------

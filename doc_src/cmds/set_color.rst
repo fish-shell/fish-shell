@@ -6,7 +6,9 @@ set_color - set the terminal color
 Synopsis
 --------
 
-``set_color`` [*OPTIONS*] *VALUE*
+.. synopsis::
+
+    set_color [OPTIONS] VALUE
 
 Description
 -----------

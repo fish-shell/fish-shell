@@ -6,7 +6,9 @@ nextd - move forward through directory history
 Synopsis
 --------
 
-``nextd`` [**-l** | **--list**] [*POS*]
+.. synopsis::
+
+    nextd [-l | --list] [POS]
 
 Description
 -----------

@@ -6,7 +6,9 @@ switch - conditionally execute a block of commands
 Synopsis
 --------
 
-**switch** *VALUE*; [**case** [*GLOB* ...]; [*COMMANDS* ...]; ...] **end**
+.. synopsis::
+
+    switch VALUE; [case [GLOB ...]; [COMMANDS ...]; ...] end
 
 Description
 -----------

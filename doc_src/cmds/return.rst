@@ -7,7 +7,9 @@ return - stop the current inner function
 Synopsis
 --------
 
-**return** [*n*]
+.. synopsis::
+
+    return [n]
 
 Description
 -----------

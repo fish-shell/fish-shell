@@ -37,14 +37,17 @@ def issue_role(name, rawtext, text, lineno, inliner, options=None, content=None)
 
 # -- Load our extensions -------------------------------------------------
 def setup(app):
-    # Our own pygments lexer
+    # Our own pygments lexers
     from sphinx.highlighting import lexers
 
     this_dir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, this_dir)
     from fish_indent_lexer import FishIndentLexer
+    from fish_synopsis import FishSynopsisDirective, FishSynopsisLexer
 
     lexers["fish-docs-samples"] = FishIndentLexer()
+    lexers["fish-synopsis"] = FishSynopsisLexer()
+    app.add_directive("synopsis", FishSynopsisDirective)
 
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_role("issue", issue_role)

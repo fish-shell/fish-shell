@@ -6,7 +6,9 @@ dirs - print directory stack
 Synopsis
 --------
 
-``dirs`` [*-c*]
+.. synopsis::
+
+    dirs [-c]
 
 Description
 -----------

@@ -6,7 +6,9 @@ exec - execute command in current process
 Synopsis
 --------
 
-**exec** *COMMAND*
+.. synopsis::
+
+    exec COMMAND
 
 Description
 -----------

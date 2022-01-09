@@ -6,8 +6,10 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` replace [**-a** | **--all**] [**-f** | **--filter**] [**-i** | **--ignore-case**]
-         \         [**-r** | **--regex**] [**-q** | **--quiet**] *PATTERN* *REPLACE* [*STRING* ...]
+.. synopsis::
+
+    string replace [-a | --all] [-f | --filter] [-i | --ignore-case]
+                   [-r | --regex] [-q | --quiet] PATTERN REPLACE [STRING ...]
 
 .. END SYNOPSIS
 

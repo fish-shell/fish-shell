@@ -7,7 +7,9 @@ realpath - convert a path to an absolute path without symlinks
 Synopsis
 --------
 
-**realpath** [*options*] *PATH*
+.. synopsis::
+
+    realpath [options] PATH
 
 Description
 -----------

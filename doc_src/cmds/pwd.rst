@@ -6,8 +6,10 @@ pwd - output the current working directory
 Synopsis
 --------
 
-| ``pwd`` [**-P** | **--physical**]
-| ``pwd`` [**-L** | **--logical**]
+.. synopsis::
+
+    pwd [-P | --physical]
+    pwd [-L | --logical]
 
 
 Description

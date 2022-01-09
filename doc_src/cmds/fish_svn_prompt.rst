@@ -6,7 +6,10 @@ fish_svn_prompt - output Subversion information for use in a prompt
 Synopsis
 --------
 
-``fish_svn_prompt``
+.. synopsis::
+
+    fish_svn_prompt
+
 ::
 
      function fish_prompt

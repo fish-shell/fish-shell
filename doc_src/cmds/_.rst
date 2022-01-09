@@ -6,7 +6,9 @@ _ - call fish's translations
 Synopsis
 --------
 
-``_`` *STRING*
+.. synopsis::
+
+    _ STRING
 
 Description
 -----------

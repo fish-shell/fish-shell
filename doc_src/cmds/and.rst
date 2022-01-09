@@ -6,7 +6,9 @@ and - conditionally execute a command
 Synopsis
 --------
 
-PREVIOUS; **and** *COMMAND*
+.. synopsis::
+
+    PREVIOUS; and COMMAND
 
 Description
 -----------

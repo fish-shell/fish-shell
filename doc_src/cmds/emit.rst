@@ -6,7 +6,9 @@ emit - emit a generic event
 Synopsis
 --------
 
-``emit`` *EVENT_NAME* [*ARGUMENTS* ...]
+.. synopsis::
+
+    emit EVENT_NAME [ARGUMENTS ...]
 
 Description
 -----------

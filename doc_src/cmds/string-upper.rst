@@ -6,7 +6,9 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` upper [**-q** | **--quiet**] [*STRING* ...]
+.. synopsis::
+
+    string upper [-q | --quiet] [STRING ...]
 
 .. END SYNOPSIS
 

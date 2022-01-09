@@ -7,7 +7,9 @@ fish_indent - indenter and prettifier
 Synopsis
 --------
 
-**fish_indent** [*OPTIONS*] [*FILE* ...]
+.. synopsis::
+
+    fish_indent [OPTIONS] [FILE ...]
 
 
 Description

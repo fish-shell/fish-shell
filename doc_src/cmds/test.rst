@@ -6,8 +6,10 @@ test - perform tests on files and text
 Synopsis
 --------
 
-| ``test`` [*EXPRESSION*]
-| ``[`` [*EXPRESSION*] ]
+.. synopsis::
+
+    test [EXPRESSION]
+    [ [EXPRESSION] ]
 
 
 Description

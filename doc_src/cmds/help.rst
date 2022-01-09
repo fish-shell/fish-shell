@@ -6,7 +6,9 @@ help - display fish documentation
 Synopsis
 --------
 
-``help`` [*SECTION*]
+.. synopsis::
+
+    help [SECTION]
 
 Description
 -----------

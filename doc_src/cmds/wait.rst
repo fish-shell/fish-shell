@@ -6,7 +6,9 @@ wait - wait for jobs to complete
 Synopsis
 --------
 
-``wait`` [**-n** | **--any**] [*PID* | *PROCESS_NAME*] ...
+.. synopsis::
+
+    wait [-n | --any] [PID | PROCESS_NAME] ...
 
 Description
 -----------

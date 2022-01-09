@@ -6,7 +6,9 @@ prompt_pwd - print pwd suitable for prompt
 Synopsis
 --------
 
-``prompt_pwd``
+.. synopsis::
+
+    prompt_pwd
 
 Description
 -----------

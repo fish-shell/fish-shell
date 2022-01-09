@@ -6,7 +6,9 @@ isatty - test if a file descriptor is a terminal
 Synopsis
 --------
 
-``isatty`` [*FILE DESCRIPTOR*]
+.. synopsis::
+
+    isatty [FILE DESCRIPTOR]
 
 Description
 -----------

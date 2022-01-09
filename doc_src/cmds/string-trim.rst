@@ -6,8 +6,10 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` trim [**-l** | **--left**] [**-r** | **--right**] [(**-c** | **--chars**) *CHARS*]
-         \      [**-q** | **--quiet**] [*STRING* ...]
+.. synopsis::
+
+    string trim [-l | --left] [-r | --right] [(-c | --chars) CHARS]
+                [-q | --quiet] [STRING ...]
 
 .. END SYNOPSIS
 

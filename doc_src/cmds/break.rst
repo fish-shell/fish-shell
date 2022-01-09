@@ -6,11 +6,13 @@ break - stop the current inner loop
 Synopsis
 --------
 
-| loop_construct
-|    [*COMMANDS* ...]
-|    **break**
-|    [*COMMANDS* ...]
-| end
+.. synopsis::
+
+    loop_construct
+       [COMMANDS ...]
+       break
+       [COMMANDS ...]
+    end
 
 Description
 -----------

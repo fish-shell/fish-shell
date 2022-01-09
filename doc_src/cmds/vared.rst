@@ -6,7 +6,9 @@ vared - interactively edit the value of an environment variable
 Synopsis
 --------
 
-``vared`` *VARIABLE_NAME*
+.. synopsis::
+
+    vared VARIABLE_NAME
 
 Description
 -----------

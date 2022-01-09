@@ -7,7 +7,9 @@ exit - exit the shell
 Synopsis
 --------
 
-**exit** [*code*]
+.. synopsis::
+
+    exit [code]
 
 Description
 -----------

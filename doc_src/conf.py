@@ -67,7 +67,7 @@ highlight_language = "fish-docs-samples"
 # -- Project information -----------------------------------------------------
 
 project = "fish-shell"
-copyright = "2021, fish-shell developers"
+copyright = "2022, fish-shell developers"
 author = "fish-shell developers"
 issue_url = "https://github.com/fish-shell/fish-shell/issues"
 

@@ -6,7 +6,7 @@ function - create a function
 Synopsis
 --------
 
-**function** *NAME* [*OPTIONS*]; BODY ...; **end**
+**function** *NAME* [*OPTIONS*]; *BODY*; **end**
 
 
 Description

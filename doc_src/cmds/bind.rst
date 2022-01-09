@@ -6,11 +6,11 @@ Synopsis
 --------
 
 | ``bind`` [(**-M** | **--mode**) *MODE*] [(*-m* | *--sets-mode*) **NEW_MODE**] [*--preset* | *--user*] [*-s* | *--silent*] [**-k** | **--key**] *SEQUENCE* *COMMAND* ...
-| ``bind`` [**-M** | **--mode** *MODE*] [**-k** | **--key**] [**--preset**] [**--user**] *SEQUENCE*
-| ``bind`` **-K** | **--key-names** [**-a** | **--all**] [**--preset**] [**--user**]
-| ``bind`` **-f** | **--function-names**
-| ``bind`` **-L** | **--list-modes**
-| ``bind`` **-e** | **--erase** [**-M** | **--mode** *MODE*] [**--preset**] [**--user**] [**-a** | **--all**] | [**-k** | **--key**] *SEQUENCE* ...
+| ``bind`` [(**-M** | **--mode**) *MODE*] [**-k** | **--key**] [**--preset**] [**--user**] *SEQUENCE*
+| ``bind`` (**-K** | **--key-names**) [**-a** | **--all**] [**--preset**] [**--user**]
+| ``bind`` (**-f** | **--function-names**)
+| ``bind`` (**-L** | **--list-modes**)
+| ``bind`` (**-e** | **--erase**) [(**-M** | **--mode**) *MODE*] [**--preset**] [**--user**] [**-a** | **--all**] | [**-k** | **--key**] *SEQUENCE* ...
 
 Description
 -----------

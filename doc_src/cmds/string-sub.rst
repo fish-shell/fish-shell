@@ -6,7 +6,7 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` sub [**-s** | **--start** *START*] [**-l** | **--length** *LENGTH*]
+``string`` sub [(**-s** | **--start**) *START*] [(**-l** | **--length**) *LENGTH*]
     \        [**-q** | **--quiet**] [*STRING*...]
 
 .. END SYNOPSIS

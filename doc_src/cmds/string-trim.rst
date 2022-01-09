@@ -6,7 +6,7 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` trim [**-l** | **--left**] [**-r** | **--right**] [**-c** | **--chars** *CHARS*]
+``string`` trim [**-l** | **--left**] [**-r** | **--right**] [(**-c** | **--chars**) *CHARS*]
     \   \   [**-q** | **--quiet**] [*STRING*...]
 
 .. END SYNOPSIS

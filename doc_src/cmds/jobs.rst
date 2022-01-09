@@ -6,7 +6,9 @@ jobs - print currently running jobs
 Synopsis
 --------
 
-``jobs`` [*OPTIONS*] [*PID* | %*JOBID*]
+.. synopsis::
+
+    jobs [OPTIONS] [PID | %JOBID]
 
 
 Description

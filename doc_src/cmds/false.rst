@@ -6,7 +6,9 @@ false - return an unsuccessful result
 Synopsis
 --------
 
-**false**
+.. synopsis::
+
+    false
 
 Description
 -----------

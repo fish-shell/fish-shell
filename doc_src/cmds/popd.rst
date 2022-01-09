@@ -6,7 +6,9 @@ popd - move through directory stack
 Synopsis
 --------
 
-``popd``
+.. synopsis::
+
+    popd
 
 Description
 -----------

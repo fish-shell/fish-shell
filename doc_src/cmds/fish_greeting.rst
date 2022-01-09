@@ -6,7 +6,10 @@ fish_greeting - display a welcome message in interactive shells
 Synopsis
 --------
 
-**fish_greeting**
+.. synopsis::
+
+    fish_greeting
+
 ::
 
   function fish_greeting

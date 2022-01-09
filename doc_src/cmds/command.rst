@@ -6,7 +6,9 @@ command - run a program
 Synopsis
 --------
 
-**command** [**OPTIONS**] [*COMMANDNAME* [ARG ...]]
+.. synopsis::
+
+    command [OPTIONS] [COMMANDNAME [ARG ...]]
 
 Description
 -----------

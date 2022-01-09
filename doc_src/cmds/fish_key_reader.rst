@@ -6,7 +6,9 @@ fish_key_reader - explore what characters keyboard keys send
 Synopsis
 --------
 
-**fish_key_reader** [*OPTIONS*]
+.. synopsis::
+
+    fish_key_reader [OPTIONS]
 
 Description
 -----------

@@ -6,7 +6,9 @@ math - perform mathematics calculations
 Synopsis
 --------
 
-``math`` [(**-s** | **--scale**) *N*] [(**-b** | **--base**) *BASE*] *EXPRESSION* ...
+.. synopsis::
+
+    math [(-s | --scale) N] [(-b | --base) BASE] EXPRESSION ...
 
 
 Description

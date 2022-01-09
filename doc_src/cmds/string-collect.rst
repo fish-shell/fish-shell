@@ -6,7 +6,9 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` collect [**-N** | **--no-trim-newlines**] [*STRING* ...]
+.. synopsis::
+
+    string collect [-N | --no-trim-newlines] [STRING ...]
 
 .. END SYNOPSIS
 

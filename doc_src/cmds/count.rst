@@ -6,9 +6,11 @@ count - count the number of elements of a list
 Synopsis
 --------
 
-| ``count`` string1 string2 ...
-| *command* | ``count``
-| ``count`` [...] < *FILE*
+.. synopsis::
+
+    count string1 string2 ...
+    command | count
+    count [...] < FILE
 
 Description
 -----------

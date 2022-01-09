@@ -6,7 +6,9 @@ commandline - set or get the current command line buffer
 Synopsis
 --------
 
-``commandline`` [*OPTIONS*] [*CMD*]
+.. synopsis::
+
+    commandline [OPTIONS] [CMD]
 
 Description
 -----------

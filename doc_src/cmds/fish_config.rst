@@ -6,9 +6,11 @@ fish_config - start the web-based configuration interface
 Synopsis
 --------
 
-| ``fish_config`` [browse]
-| ``fish_config`` **prompt** (choose | list | save | show)
-| ``fish_config`` **theme** (choose | demo | dump | list | save | show)
+.. synopsis::
+
+    fish_config [browse]
+    fish_config prompt (choose | list | save | show)
+    fish_config theme (choose | demo | dump | list | save | show)
 
 Description
 -----------

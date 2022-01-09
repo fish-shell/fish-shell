@@ -6,7 +6,9 @@ funced - edit a function interactively
 Synopsis
 --------
 
-``funced`` [**OPTIONS**] *NAME*
+.. synopsis::
+
+    funced [OPTIONS] NAME
 
 Description
 -----------

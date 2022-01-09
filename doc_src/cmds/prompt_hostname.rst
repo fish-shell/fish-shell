@@ -6,7 +6,9 @@ prompt_hostname - print the hostname, shortened for use in the prompt
 Synopsis
 --------
 
-``prompt_hostname``
+.. synopsis::
+
+    prompt_hostname
 
 Description
 -----------

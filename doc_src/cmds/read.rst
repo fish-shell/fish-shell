@@ -6,7 +6,9 @@ read - read line of input into variables
 Synopsis
 --------
 
-``read`` [*options*] [*VARIABLE* ...]
+.. synopsis::
+
+    read [options] [VARIABLE ...]
 
 Description
 -----------

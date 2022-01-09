@@ -7,8 +7,10 @@ fish - the friendly interactive shell
 Synopsis
 --------
 
-| ``fish`` [*OPTIONS*] [*FILE* [ARG ...]]
-| ``fish`` [*OPTIONS*] [**-c** *COMMAND* [ARG ...]]
+.. synopsis::
+
+    fish [OPTIONS] [FILE [ARG ...]]
+    fish [OPTIONS] [-c COMMAND [ARG ...]]
 
 Description
 -----------

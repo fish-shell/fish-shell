@@ -6,7 +6,9 @@ prompt_login - describe the login suitable for prompt
 Synopsis
 --------
 
-``prompt_login``
+.. synopsis::
+
+    prompt_login
 
 Description
 -----------

@@ -6,9 +6,11 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` match [**-a** | **--all**] [**-e** | **--entire**] [**-i** | **--ignore-case**]
-         \       [**-r** | **--regex**] [**-n** | **--index**] [**-q** | **--quiet**] [**-v** | **--invert**]
-         \       *PATTERN* [*STRING* ...]
+.. synopsis::
+
+    string match [-a | --all] [-e | --entire] [-i | --ignore-case]
+                 [-r | --regex] [-n | --index] [-q | --quiet] [-v | --invert]
+                 PATTERN [STRING ...]
 
 .. END SYNOPSIS
 

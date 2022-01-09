@@ -6,8 +6,10 @@ source - evaluate contents of file
 Synopsis
 --------
 
-| **source** *FILE* [*arguments* ...]
-| ``somecommand`` | **source**
+.. synopsis::
+
+    source FILE [arguments ...]
+    somecommand | source
 
 
 Description

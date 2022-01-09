@@ -6,7 +6,9 @@ cd - change directory
 Synopsis
 --------
 
-**cd** [*DIRECTORY*]
+.. synopsis::
+
+    cd [DIRECTORY]
 
 Description
 -----------

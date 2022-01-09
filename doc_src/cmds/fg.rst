@@ -6,7 +6,9 @@ fg - bring job to foreground
 Synopsis
 --------
 
-``fg`` [*PID*]
+.. synopsis::
+
+    fg [PID]
 
 Description
 -----------

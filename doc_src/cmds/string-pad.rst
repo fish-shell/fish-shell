@@ -6,8 +6,10 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` pad [**-r** | **--right**] [(**-c** | **--char**) *CHAR*] [(**-w** | **--width**) *INTEGER*]
-         \     [*STRING* ...]
+.. synopsis::
+
+    string pad [-r | --right] [(-c | --char) CHAR] [(-w | --width) INTEGER]
+               [STRING ...]
 
 .. END SYNOPSIS
 

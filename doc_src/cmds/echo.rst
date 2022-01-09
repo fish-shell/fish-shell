@@ -6,7 +6,9 @@ echo - display a line of text
 Synopsis
 --------
 
-``echo`` [*options*] [*STRING*]
+.. synopsis::
+
+    echo [options] [STRING]
 
 Description
 -----------

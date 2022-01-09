@@ -64,6 +64,7 @@ New or improved bindings
   this is only enabled by default if the terminal advertises support for the ``indn`` capability via XTGETTCAP.
 - Bindings using shift with non-ASCII letters (such as :kbd:`ctrl-shift-ä`) are now supported.
   If there is any modifier other than shift, this is the recommended notation (as opposed to :kbd:`ctrl-Ä`).
+- Vi mode has learned :kbd:`ctrl-a` (increment) and :kbd:`ctrl-x` (decrement) (:issue:`11570`).
 
 Completions
 ^^^^^^^^^^^

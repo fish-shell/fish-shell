@@ -74630,6 +74630,9 @@ msgstr ""
 msgid "increase verbosity level by one"
 msgstr ""
 
+msgid "increment or decrement the number below the cursor"
+msgstr ""
+
 msgid "incremental mode"
 msgstr ""
 

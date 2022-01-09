@@ -74635,6 +74635,9 @@ msgstr ""
 msgid "increase verbosity level by one"
 msgstr ""
 
+msgid "increment or decrement the number below the cursor"
+msgstr "Erhöhe oder verringere die Zahl unter dem Cursor"
+
 msgid "incremental mode"
 msgstr ""
 
@@ -79188,6 +79191,9 @@ msgstr ""
 
 msgid "~ expansion"
 msgstr ""
+
+#~ msgid "increment or decrement a number"
+#~ msgstr "Erhöhe oder verringere eine Zahl"
 
 #~ msgid "builtin\n"
 #~ msgstr "Eingebauter Befehl\n"

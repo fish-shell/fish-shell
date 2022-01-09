@@ -74630,6 +74630,9 @@ msgstr "增加动词"
 msgid "increase verbosity level by one"
 msgstr "将动词水平增加一个"
 
+msgid "increment or decrement the number below the cursor"
+msgstr ""
+
 msgid "incremental mode"
 msgstr "递增模式"
 

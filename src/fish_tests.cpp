@@ -6813,7 +6813,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("universal"), test_universal_callbacks},
     {TEST_GROUP("universal"), test_universal_formats},
     {TEST_GROUP("universal"), test_universal_ok_to_save},
-    {TEST_GROUP("notifiers"), test_universal_notifiers},
+    {TEST_GROUP("universal"), test_universal_notifiers},
     {TEST_GROUP("wait_handles"), test_wait_handles},
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("autosuggestion_ignores"), test_autosuggestion_ignores},

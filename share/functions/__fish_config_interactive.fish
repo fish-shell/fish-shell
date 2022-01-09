@@ -9,6 +9,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
         return
     end
 
+    # For one-off upgrades of the fish version
+    if not set -q __fish_initialized
+        set -U __fish_initialized 0
+    end
+
     set -g __fish_config_interactive_done
     set -g __fish_active_key_bindings
 

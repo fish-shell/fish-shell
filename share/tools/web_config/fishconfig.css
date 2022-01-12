@@ -14,11 +14,6 @@ body {
     border-radius: 8px;
 }
 
-code {
-    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco,
-        "Lucida Console", monospace, fixed;
-}
-
 #parent {
     width: 100%;
     min-height: 480px;

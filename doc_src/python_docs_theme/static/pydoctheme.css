@@ -11,6 +11,19 @@ html {
 
 body {
     background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
+    /* Pick a font.
+       sans-serif is the Browser default. This is great because the user could change it.
+       Unfortunately the defaults are decades old and e.g. on Windows still use Arial in Firefox and Edge,
+       and this seems unlikely to change.
+       So we use system-ui, which is "the system's interface font".
+       Unfortunately on Windows *that* depends on the locale, and e.g. in Chinese it apparently
+       picks a font that is okay at chinese characters but fairly bad at latin ones.
+       So we prefer the standard Windows font Segoe.
+       If that's installed anywhere else that's unfortunate but not horrible because it's an okay font.
+
+       See e.g. https://github.com/twbs/bootstrap/issues/22328
+    */
+    font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 div#fmain {
@@ -128,7 +141,8 @@ ul li.toctree-l1 {
 
 form.inline-search input,
 div.sphinxsidebar input {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /* Inputs typically have different default fonts, remove that idea */
+    font-family: inherit;
     border: 1px solid #999999;
     font-size: smaller;
     border-radius: 3px;
@@ -213,7 +227,22 @@ tr, code, pre {
 }
 
 tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code {
-    font-family: monospace, fixed;
+    /* Pick a monospace font.
+       ui-monospace is the monospace version of system-ui - the system's monospace font.
+       Unfortunately it's barely supported anywhere (at time of writing only Safari does!),
+       and because monospace has the same limitations as sans-serif - Browser defaults are awful -
+       we hardcode a list of normal monospace fonts.
+       SFMono is San Francisco, Apple's font. Menlo is an older Apple one.
+       Consolas is a Windows font.
+       Ubuntu is the ubuntu monospace version, Hack is the default KDE monospace font,
+       Liberation is an arial-like.
+
+       NOTE: Under no circumstances can "Source Code Pro" appear in this list for a while as it had massive bugs on macOS.
+       It would not appear at all when colored.
+       This is unfortunate because it's the default Gnome monospace font.
+       Instead we use Noto, which is a common monospace font that is often installed for emoji support.
+    */
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
 }
 
 #synopsis .line {

@@ -213,7 +213,7 @@ tr, code, pre {
 }
 
 tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code {
-    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
+    font-family: monospace, fixed;
 }
 
 #synopsis .line {

@@ -133,6 +133,7 @@ Other help pages
 .. toctree::
    :maxdepth: 1
               
+   self
    faq
    interactive
    language

@@ -222,8 +222,15 @@ div.body a:hover {
     color: #00B0E4;
 }
 
-tr, code, pre {
+tr, pre {
     background-color: inherit;
+}
+
+code {
+    /* Make inline-code better visible */
+    background-color: rgba(0,0,0, .08);
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code {
@@ -509,5 +516,9 @@ div.body .internal.reference:link {
     /* The table background on fishfish Beta r1 */
     th, dl.field-list > dt {
         background-color: #121;
+    }
+
+    code {
+        background-color: rgba(255, 255, 255, .08);
     }
 }

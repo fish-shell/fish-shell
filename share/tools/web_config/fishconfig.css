@@ -1,6 +1,7 @@
 body {
     background: linear-gradient(to bottom, #a7cfdf 0%, #23538a 100%);
-    font-family: monospace, fixed;
+    /* List explained in the doc theme pydoctheme.css */
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
     color: #222;
 }
 

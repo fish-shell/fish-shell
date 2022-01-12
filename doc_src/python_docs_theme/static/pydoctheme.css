@@ -228,7 +228,7 @@ tr, pre {
 
 code {
     /* Make inline-code better visible */
-    background-color: rgba(0,0,0, .08);
+    background-color: rgba(20,20,80, .1);
     padding-left: 5px;
     padding-right: 5px;
 }
@@ -519,6 +519,6 @@ div.body .internal.reference:link {
     }
 
     code {
-        background-color: rgba(255, 255, 255, .08);
+        background-color: rgba(200, 200, 255, .1);
     }
 }

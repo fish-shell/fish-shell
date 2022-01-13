@@ -1,5 +1,5 @@
-@import url("classic.css");
-
+/* @import url("classic.css");
+ */
 :root {
   color-scheme: light dark; /* both supported */
 }
@@ -25,6 +25,230 @@ body {
     */
     font-family: "Segoe UI", system-ui, sans-serif;
 }
+
+/* SPHINX IMPORT */
+
+body {
+  font-size: 100%;
+  background-color: #eeeefa;
+  color: #000;
+  margin: 0;
+  padding: 0;
+}
+
+div.related ul {
+  margin: 0;
+  padding: 0 0 0 10px;
+  list-style: none;
+}
+div.related {
+  line-height: 30px;
+  color: #666666;
+  font-size: 90%;
+}
+
+div.related li {
+  display: inline;
+}
+
+a {
+  text-decoration: none;
+}
+
+div.related h3 {
+  display: none;
+}
+
+div.related li.right {
+  float: right;
+  margin-right: 5px;
+}
+
+div.sphinxsidebar {
+  width: 230px;
+  overflow-wrap: break-word;
+}
+
+div.documentwrapper {
+  width: 100%;
+  float: none;
+}
+
+div.highlight pre, table.highlighttable pre {
+  margin: 0;
+}
+
+pre {
+  padding: 5px;
+  color: unset;
+  line-height: 120%;
+  overflow: auto;
+  overflow-y: hidden;
+}
+
+div.body h1 {
+  font-size: 200%;
+}
+div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
+  font-weight: normal;
+}
+
+div.body p, div.body dd, div.body li, div.body blockquote {
+  text-align: justify;
+}
+
+div.body p, div.body dd, div.body li, div.body blockquote {
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+:not(li) > ol > li:last-child > :last-child, :not(li) > ul > li:last-child > :last-child {
+  margin-bottom: 0px;
+}
+div.sphinxsidebar ul ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.sphinxsidebar ul ul, div.sphinxsidebar ul.want-points {
+  margin-left: 20px;
+  list-style: square;
+}
+div.sphinxsidebar ul {
+  margin: 10px;
+  padding: 0;
+  color: #444444;
+  margin: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+div.sphinxsidebar h3 {
+  font-size: 1.4em;
+  font-weight: normal;
+  margin: 0;
+    margin-top: 0px;
+  padding: 0;
+}
+
+div.sphinxsidebarwrapper {
+  padding: 10px 5px 0 10px;
+}
+
+div[class*="highlight-"] {
+  margin: 1em 0;
+}
+
+dl.footnote > dt, dl.citation > dt {
+  float: left;
+  margin-right: 0.5em;
+}
+
+div.sphinxsidebar #searchbox input[type="text"] {
+    float: left;
+    width: 80%;
+    padding: 0.25em;
+    box-sizing: border-box;
+}
+
+div.sphinxsidebar #searchbox input[type="submit"] {
+  float: left;
+  width: 20%;
+  border-left: none;
+  padding: 0.25em;
+  box-sizing: border-box;
+}
+
+div.sphinxsidebar form {
+  margin-top: 10px;
+}
+
+div.sphinxsidebar #searchbox form.search {
+  overflow: hidden;
+}
+
+div.sphinxsidebar h4 {
+  color: #444444;
+  font-size: 1.3em;
+  font-weight: normal;
+  margin: 5px 0 0 0;
+  padding: 0;
+}
+
+div.body h2 {
+  font-size: 160%;
+}
+
+a.headerlink {
+  font-size: 0.8em;
+  padding: 0 4px 0 4px;
+  text-decoration: none;
+  visibility: hidden;
+}
+
+h1:hover > a.headerlink, h2:hover > a.headerlink, h3:hover > a.headerlink, h4:hover > a.headerlink, h5:hover > a.headerlink, h6:hover > a.headerlink, dt:hover > a.headerlink, caption:hover > a.headerlink, p.caption:hover > a.headerlink, div.code-block-caption:hover > a.headerlink {
+  visibility: visible;
+}
+a.headerlink:hover {
+  background-color: #aaaaaa;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+div.sphinxsidebar a {
+  color: #444444;
+}
+div.related a {
+  color: #444444;
+}
+
+div.sidebar::after, aside.sidebar::after, div.topic::after, div.admonition::after, blockquote::after {
+  display: block;
+  content: '';
+  clear: both;
+}
+div.warning {
+  border: 1px solid #f66;
+}
+div.admonition {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 7px;
+}
+div.admonition, div.topic, blockquote {
+  clear: left;
+}
+p.admonition-title::after {
+  content: ":";
+}
+div.admonition p {
+  margin-bottom: 5px;
+}
+p.admonition-title {
+  display: inline;
+}
+p.admonition-title {
+  margin: 0px 10px 5px 0px;
+  font-weight: bold;
+}
+
+div.footer {
+  padding: 9px 0 9px 0;
+  font-size: 75%;
+}
+
+div.footer a {
+  text-decoration: underline;
+}
+
+th, dl.field-list > dt {
+  background-color: #ede;
+}
+
+/* End of SPHINX IMPORT */
 
 div#fmain {
     color: #222;
@@ -107,10 +331,6 @@ div.sphinxsidebar::-webkit-scrollbar-thumb {
   border-radius: 10px;
 }
 
-div.documentwrapper {
-    float: none;
-}
-
 div.document {
     display: block;
 }
@@ -160,7 +380,9 @@ div.sphinxsidebar input[type=text] {
 div.body {
     padding: 10px 0 0 1.2em;
     min-width: 150px;
+    max-width: 800px;
 }
+
 
 div.body p {
     line-height: 2em;

@@ -32,6 +32,7 @@
 #include <cmath>
 #include <cwchar>
 #include <iterator>
+#include <limits>
 #include <vector>
 
 #include "common.h"
@@ -195,6 +196,18 @@ static double min(double a, double b) {
     return a < b ? a : b;
 }
 
+static double maximum(const std::vector<double> &args) {
+    double ret = -std::numeric_limits<double>::infinity();
+    for (auto a : args) ret = max(ret, a);
+    return ret;
+}
+
+static double minimum(const std::vector<double> &args) {
+    double ret = std::numeric_limits<double>::infinity();
+    for (auto a : args) ret = min(ret, a);
+    return ret;
+}
+
 struct te_builtin {
     const wchar_t *name;
     te_fun_t fn;
@@ -222,8 +235,8 @@ static const te_builtin functions[] = {
     {L"log", std::log10},
     {L"log10", std::log10},
     {L"log2", std::log2},
-    {L"max", max},
-    {L"min", min},
+    {L"max", maximum},
+    {L"min", minimum},
     {L"ncr", ncr},
     {L"npr", npr},
     {L"pi", M_PI},

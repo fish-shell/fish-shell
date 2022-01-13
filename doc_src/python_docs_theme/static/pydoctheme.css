@@ -466,11 +466,11 @@ div.body .internal.reference:link {
     }
 
     div.sphinxsidebar a, div.footer {
-        color: #CCC;
+        color: #DDD;
     }
 
-    div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3 {
-        color: #BBB;
+    div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3, div.footer a {
+        color: #DDD;
     }
     .highlight {
         background: #000;
@@ -490,7 +490,7 @@ div.body .internal.reference:link {
     }
     input {
         background-color: #222;
-        color: #BBB;
+        color: #DDD;
     }
 
     dt:target, span.highlighted {
@@ -505,9 +505,6 @@ div.body .internal.reference:link {
     }
     div.body a {
         color: #2092fa;
-    }
-    div.footer a {
-        color: #BBB;
     }
     
     /* Color based on the Name.Function (.nf) class from pygments.css. */

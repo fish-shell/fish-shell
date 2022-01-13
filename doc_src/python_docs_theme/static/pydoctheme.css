@@ -125,6 +125,7 @@ div#searchbox {
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
     margin-top: 1em;
+    font-family: inherit;
 }
 
 div.sphinxsidebarwrapper > h3:first-child {
@@ -165,6 +166,7 @@ div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
     margin: 0;
     border: 0;
     padding: 0.3em 0;
+    font-family: inherit;
 }
 
 div.body hr {

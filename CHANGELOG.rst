@@ -183,6 +183,7 @@ Other improvements
 ------------------
 - Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests. (:issue:`7851`)
 - The HTML version of the documentation now includes copy buttons for code examples (:issue:`8218`).
+- The HTML version of the documentation and the web-based configuration tool now pick more modern system fonts instead of falling back to Arial and something like Courier New most of the time (:issue:`8632`).
 - The Debian & Ubuntu package linked from fishshell.com is now a single package, rather than split into ``fish`` and ``fish-common`` (:issue:`7845`).
 - The macOS installer does not assert that Rosetta is required to install fish (:issue:`8566`).
 

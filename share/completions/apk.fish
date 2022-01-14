@@ -6,8 +6,8 @@ complete -f -c apk -n "__fish_seen_subcommand_from del fix version manifest" -a 
 
 # Global options
 complete -f -c apk -s h -l help -d "Show help"
-complete -x -c apk -s p -l root -d "Install packages to DIR"
-complete -x -c apk -s X -l repository -d "Use packages from REPO"
+complete -r -c apk -s p -l root -d "Install packages to DIR"
+complete -r -c apk -s X -l repository -d "Use packages from REPO"
 complete -f -c apk -s q -l quiet -d "Print less information"
 complete -f -c apk -s v -l verbose -d "Print more information"
 complete -f -c apk -s i -l interactive -d "Ask confirmation for certain operations"
@@ -20,18 +20,18 @@ complete -f -c apk -l force-overwrite -d "Overwrite files in other packages"
 complete -f -c apk -l force-refresh -d "Don't use cached files"
 complete -f -c apk -s U -l update-cache -d "Alias for --cache-max-age 1"
 complete -f -c apk -l progress -d "Show a progress bar"
-complete -f -c apk -l progress-fd -d "Write progress to FD"
+complete -x -c apk -l progress-fd -d "Write progress to FD"
 complete -f -c apk -l no-progress -d "Disable progress bar even for TTYs"
 complete -f -c apk -l purge -d "Delete also modified configuration files and uninstalled packages from cache"
 complete -f -c apk -l allow-untrusted -d "Install packages with untrusted signature or no signature"
-complete -f -c apk -l wait -d "Wait for TIME seconds to get an exclusive repository lock before failing"
-complete -f -c apk -l keys-dir -d "Override directory of trusted keys"
-complete -f -c apk -l repositories-file -d "Override repositories file"
+complete -x -c apk -l wait -d "Wait for TIME seconds to get an exclusive repository lock before failing"
+complete -r -c apk -l keys-dir -d "Override directory of trusted keys"
+complete -r -c apk -l repositories-file -d "Override repositories file"
 complete -f -c apk -l no-network -d "Don't use network"
 complete -f -c apk -l no-cache -d "Don't use any local cache path"
-complete -f -c apk -l cache-dir -d "Override cache directory"
-complete -f -c apk -l cache-max-age -d "Maximum AGE for index in cache before refresh"
-complete -f -c apk -l arch -d "Use architecture with --root"
+complete -r -c apk -l cache-dir -d "Override cache directory"
+complete -x -c apk -l cache-max-age -d "Maximum AGE for index in cache before refresh"
+complete -x -c apk -l arch -d "Use architecture with --root"
 complete -f -c apk -l print-arch -d "Print default architecture"
 
 # Commands
@@ -82,7 +82,7 @@ complete -f -c apk -n "__fish_seen_subcommand_from fix" -l directory-permissions
 # Info options
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s L -l contents -d "List included files"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s e -l installed -d "Check PACKAGE installed status"
-complete -f -c apk -n "__fish_seen_subcommand_from info" -s W -l who-owns -d "Print who owns the file"
+complete -r -c apk -n "__fish_seen_subcommand_from info" -s W -l who-owns -d "Print who owns the file"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s R -l depends -d "List the dependencies"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s P -l provides -d "List virtual packages provided"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s r -l rdepends -d "List reverse dependencies"
@@ -132,8 +132,8 @@ complete -f -c apk -n "__fish_seen_subcommand_from version" -s a -l all -d "Cons
 complete -x -c apk -n "__fish_seen_subcommand_from version" -s l -l limit -d "Limit to packages with output matching given operand"
 
 # Index options
-complete -x -c apk -n "__fish_seen_subcommand_from index" -s o -l output -d "Write the generated index to FILE"
-complete -x -c apk -n "__fish_seen_subcommand_from index" -s x -l index -d "Read an existing index from INDEX"
+complete -r -c apk -n "__fish_seen_subcommand_from index" -s o -l output -d "Write the generated index to FILE"
+complete -r -c apk -n "__fish_seen_subcommand_from index" -s x -l index -d "Read an existing index from INDEX"
 complete -x -c apk -n "__fish_seen_subcommand_from index" -s d -l description -d "Add a description to the index"
 complete -x -c apk -n "__fish_seen_subcommand_from index" -l rewrite-arch -d "Use ARCH as architecture for all packages"
 complete -f -c apk -n "__fish_seen_subcommand_from index" -l no-warnings -d "Disable the warning about missing dependencies"
@@ -143,7 +143,7 @@ complete -f -c apk -n "__fish_seen_subcommand_from fetch" -s L -l link -d "Creat
 complete -f -c apk -n "__fish_seen_subcommand_from fetch" -s R -l recursive -d "Fetch all dependencies too"
 complete -f -c apk -n "__fish_seen_subcommand_from fetch" -l simulate -d "Simulate the requested operation"
 complete -f -c apk -n "__fish_seen_subcommand_from fetch" -s s -l stdout -d "Dump the .apk to stdout"
-complete -x -c apk -n "__fish_seen_subcommand_from fetch" -s o -l output -d "Write the downloaded files to DIR"
+complete -r -c apk -n "__fish_seen_subcommand_from fetch" -s o -l output -d "Write the downloaded files to DIR"
 
 # Audit options
 complete -f -c apk -n "__fish_seen_subcommand_from audit" -l backup -d "Audit configuration files only"

@@ -122,6 +122,10 @@ static void builtin_complete_print(const wcstring &cmd, io_streams_t &streams, p
     }
 }
 
+/// Values used for long-only options.
+enum {
+    opt_escape = 1,
+};
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 // complete.cpp for any heavy lifting.
 maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
@@ -139,6 +143,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
     wcstring_list_t path;
     wcstring_list_t wrap_targets;
     bool preserve_order = false;
+    bool unescape_output = true;
 
     static const wchar_t *const short_options = L":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk";
     static const struct woption long_options[] = {
@@ -162,6 +167,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         {L"do-complete", optional_argument, nullptr, 'C'},
         {L"help", no_argument, nullptr, 'h'},
         {L"keep-order", no_argument, nullptr, 'k'},
+        {L"escape", no_argument, nullptr, opt_escape},
         {nullptr, 0, nullptr, 0}};
 
     int opt;
@@ -270,6 +276,10 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
                 do_complete = true;
                 have_do_complete_param = w.woptarg != nullptr;
                 if (have_do_complete_param) do_complete_param = w.woptarg;
+                break;
+            }
+            case opt_escape: {
+                unescape_output = false;
                 break;
             }
             case 'h': {
@@ -388,10 +398,12 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
                     faux_cmdline_with_completion.resize(faux_cmdline_with_completion.size() - 1);
                 }
 
-                // The input data is meant to be something like you would have on the command
-                // line, e.g. includes backslashes. The output should be raw, i.e. unescaped. So
-                // we need to unescape the command line. See #1127.
-                unescape_string_in_place(&faux_cmdline_with_completion, UNESCAPE_DEFAULT);
+                if (unescape_output) {
+                    // The input data is meant to be something like you would have on the command
+                    // line, e.g. includes backslashes. The output should be raw, i.e. unescaped. So
+                    // we need to unescape the command line. See #1127.
+                    unescape_string_in_place(&faux_cmdline_with_completion, UNESCAPE_DEFAULT);
+                }
                 streams.out.append(faux_cmdline_with_completion);
 
                 // Append any description.

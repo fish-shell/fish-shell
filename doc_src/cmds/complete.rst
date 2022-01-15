@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     complete ((-c | --command) | (-p | --path)) COMMAND [OPTIONS] 
-    complete ((-C | --do-complete)) STRING
+    complete ((-C | --do-complete)) [STRING] [--escape] 
 
 Description
 -----------
@@ -48,6 +48,8 @@ the fish manual.
 - ``-n CONDITION`` or ``--condition CONDITION`` specifies that this completion should only be used if the CONDITION (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases.
 
 - ``-C STRING`` or ``--do-complete=STRING`` makes complete try to find all possible completions for the specified string. If there is no STRING, the current commandline is used instead.
+
+- When using ``-C``, specify ``--escape`` to escape special characters in completions.
 
 Command specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU getopt library. These styles are:
 

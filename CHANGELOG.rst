@@ -94,6 +94,7 @@ Scripting improvements
 - ``command -v`` returns an exit status of 127 instead of 1 if no command was found (:issue:`8547`).
 - ``argparse`` with ``--ignore-unknown`` no longer breaks with multiple unknown options in a short option group (:issue:`8637`).
 - Comments inside command substitutions or brackets now correctly ignore parentheses, quotes, and brackets (:issue:`7866`, :issue:`8022`).
+- ``complete -C`` supports a new ``--escape`` option, which turns on escaping in returned completion strings (:issue:`3469`).
 
 Interactive improvements
 ------------------------

@@ -88,6 +88,7 @@ Scripting improvements
 - The ``la`` function no longer lists entries for "." and "..", matching other systems defaults (:issue:`8519`).
 - ``abbr -q`` returns the correct exit status when given multiple abbreviation names as arguments (:issue:`8431`).
 - ``command -v`` returns an exit status of 127 instead of 1 if no command was found (:issue:`8547`).
+- ``argparse`` with ``--ignore-unknown`` no longer breaks with multiple unknown options in a short option group (:issue:`8637`).
 
 Interactive improvements
 ------------------------

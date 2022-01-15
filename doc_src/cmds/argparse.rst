@@ -184,3 +184,18 @@ Some OPTION_SPEC examples:
 After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
+
+Limitations
+-----------
+
+One limitation with **--ignore-unknown** is that, if an unknown option is given in a group with known options, the entire group will be kept in $argv. ``argparse`` will not do any permutations here.
+
+For instance::
+
+  argparse --ignore-unknown h -- -ho
+  echo $_flag_h # is -h, because -h was given
+  echo $argv # is still -ho
+
+This limitation may be lifted in future.
+
+Additionally, it can only parse known options up to the first unknown option in the group - the unknown option could take options, so it isn't clear what any character after an unknown option means.

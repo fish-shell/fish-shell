@@ -23,7 +23,7 @@ end
 
 # Complete for the first argument only
 function __fish_conda_top
-    complete -c conda -n "test (count (commandline -opc)) -eq 1" $argv
+    complete -c conda -n __fish_is_first_token $argv
 end
 
 function __fish_conda_config_keys

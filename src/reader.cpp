@@ -4189,7 +4189,12 @@ bool reader_data_t::jump(jump_direction_t dir, jump_precision_t precision, edita
     return success;
 }
 
-maybe_t<wcstring> reader_readline(int nchars) { return current_data()->readline(nchars); }
+maybe_t<wcstring> reader_readline(int nchars) {
+    auto *data = current_data();
+    // Apply any outstanding commandline changes (#8633).
+    data->apply_commandline_state_changes();
+    return data->readline(nchars);
+}
 
 int reader_reading_interrupted() {
     int res = reader_test_and_clear_interrupted();

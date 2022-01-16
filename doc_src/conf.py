@@ -8,8 +8,8 @@
 
 import glob
 import os.path
-import pygments
 import subprocess
+import sys
 from sphinx.errors import SphinxWarning
 from docutils import nodes
 
@@ -41,10 +41,10 @@ def setup(app):
     from sphinx.highlighting import lexers
 
     this_dir = os.path.dirname(os.path.realpath(__file__))
-    fish_indent_lexer = pygments.lexers.load_lexer_from_file(
-        os.path.join(this_dir, "fish_indent_lexer.py"), lexername="FishIndentLexer"
-    )
-    lexers["fish-docs-samples"] = fish_indent_lexer
+    sys.path.insert(0, this_dir)
+    from fish_indent_lexer import FishIndentLexer
+
+    lexers["fish-docs-samples"] = FishIndentLexer()
 
     app.add_config_value("issue_url", default=None, rebuild="html")
     app.add_role("issue", issue_role)
@@ -52,17 +52,6 @@ def setup(app):
 
 # The default language to assume
 highlight_language = "fish-docs-samples"
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
 
 # -- Project information -----------------------------------------------------
 

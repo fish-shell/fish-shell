@@ -115,6 +115,7 @@ Interactive improvements
 - The clipboard bindings ignore X-based clipboard programs if the ``DISPLAY`` environment variable is not set, which helps prefer the Windows clipboard when it is available (such as on WSL).
 - ``funcsave`` will remove a saved copy of a function that has been erased with ``functions --erase``.
 - The Web-based configuration tool gained a number of improvements, including the ability to set pager colors.
+- The default ``fish_title`` prints a shorter title with shortened $PWD and no more redundant "fish" (:issue:`8641`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

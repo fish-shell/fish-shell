@@ -104,7 +104,7 @@ complete -f -n __fish_adb_no_subcommand -c adb -a wait-for-device -d 'Block unti
 complete -f -n __fish_adb_no_subcommand -c adb -a start-server -d 'Ensure that there is a server running'
 complete -f -n __fish_adb_no_subcommand -c adb -a kill-server -d 'Kill the server if it is running'
 complete -f -n __fish_adb_no_subcommand -c adb -a remount -d 'Remounts the /system partition on the device read-write'
-complete -f -n __fish_adb_no_subcommand -c adb -a reboot -d 'Reboots the device, optionally into the bootloader or recovery program'
+complete -f -n __fish_adb_no_subcommand -c adb -a reboot -d 'Reboot, optionally into bootloader or recovery'
 complete -f -n __fish_adb_no_subcommand -c adb -a get-state -d 'Prints state of the device'
 complete -f -n __fish_adb_no_subcommand -c adb -a get-serialno -d 'Prints serial number of the device'
 complete -f -n __fish_adb_no_subcommand -c adb -a get-devpath -d 'Prints device path'
@@ -114,7 +114,7 @@ complete -f -n __fish_adb_no_subcommand -c adb -a usb -d 'Restart the adbd daemo
 complete -f -n __fish_adb_no_subcommand -c adb -a tcpip -d 'Restart the adbd daemon listening on TCP'
 complete -f -n __fish_adb_no_subcommand -c adb -a ppp -d 'Run PPP over USB'
 complete -f -n __fish_adb_no_subcommand -c adb -a sideload -d 'Sideloads the given package'
-complete -f -n __fish_adb_no_subcommand -c adb -a reconnect -d 'Kick current connection from host side and make it reconnect.'
+complete -f -n __fish_adb_no_subcommand -c adb -a reconnect -d 'Kick connection from host side, then reconnect'
 
 # install options
 complete -n '__fish_seen_subcommand_from install' -c adb -s l -d 'Forward-lock the app'
@@ -160,7 +160,7 @@ complete -n '__fish_seen_subcommand_from forward' -c adb -l remove-all -d 'Remov
 complete -n '__fish_seen_subcommand_from sideload' -c adb -k -xa '(__fish_complete_suffix .zip)'
 
 # reconnect
-complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick current connection from device side and make it reconnect.'
+complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick connection from device side, then reconnect'
 
 # commands that accept listing device files
 complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'

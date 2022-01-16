@@ -45,11 +45,11 @@ struct te_fun_t {
     using fn_1 = double (*)(double);
     using fn_0 = double (*)();
 
-    te_fun_t(double val) : type_{CONSTANT}, arity_{0}, value{val} {}
-    te_fun_t(fn_0 fn) : type_{FN_FIXED}, arity_{0}, fun0{fn} {}
-    te_fun_t(fn_1 fn) : type_{FN_FIXED}, arity_{1}, fun1{fn} {}
-    te_fun_t(fn_2 fn) : type_{FN_FIXED}, arity_{2}, fun2{fn} {}
-    te_fun_t(fn_va fn) : type_{FN_VARIADIC}, arity_{-1}, fun_va{fn} {}
+    constexpr te_fun_t(double val) : type_{CONSTANT}, arity_{0}, value{val} {}
+    constexpr te_fun_t(fn_0 fn) : type_{FN_FIXED}, arity_{0}, fun0{fn} {}
+    constexpr te_fun_t(fn_1 fn) : type_{FN_FIXED}, arity_{1}, fun1{fn} {}
+    constexpr te_fun_t(fn_2 fn) : type_{FN_FIXED}, arity_{2}, fun2{fn} {}
+    constexpr te_fun_t(fn_va fn) : type_{FN_VARIADIC}, arity_{-1}, fun_va{fn} {}
 
     bool operator==(fn_2 fn) const { return arity_ == 2 && fun2 == fn; }
 
@@ -213,7 +213,7 @@ struct te_builtin {
     te_fun_t fn;
 };
 
-static const te_builtin functions[] = {
+static constexpr te_builtin functions[] = {
     /* must be in alphabetical order */
     // clang-format off
     {L"abs", std::fabs},
@@ -250,6 +250,7 @@ static const te_builtin functions[] = {
     {L"tau", 2 * M_PI},
     // clang-format on
 };
+ASSERT_SORTED_BY_NAME(functions);
 
 static const te_builtin *find_builtin(const wchar_t *name, int len) {
     const auto end = std::end(functions);

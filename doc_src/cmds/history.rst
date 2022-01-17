@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     history [search] [--show-time] [--case-sensitive]
-                     [--exact | --prefix | --contains] [--max n] [--null] [--reverse]
+                     [--exact | --prefix | --contains] [--max N] [--null] [--reverse]
                      [SEARCH_STRING ...]
     history delete [--case-sensitive]
                    [--exact | --prefix | --contains] SEARCH_STRING ...

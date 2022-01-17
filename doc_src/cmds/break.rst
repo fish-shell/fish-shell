@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    loop_construct
+    LOOP_CONSTRUCT
        [COMMANDS ...]
        break
        [COMMANDS ...]

@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    complete ((-c | --command) | (-p | --path)) COMMAND [options] 
+    complete ((-c | --command) | (-p | --path)) COMMAND [OPTIONS] 
     complete ((-C | --do-complete)) STRING
 
 Description

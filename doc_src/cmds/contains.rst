@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    contains [options] KEY [VALUES ...]
+    contains [OPTIONS] KEY [VALUES ...]
 
 Description
 -----------

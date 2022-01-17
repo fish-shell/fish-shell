@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    echo [options] [STRING]
+    echo [OPTIONS] [STRING]
 
 Description
 -----------

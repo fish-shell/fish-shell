@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    ulimit [options] [limit]
+    ulimit [OPTIONS] [LIMIT]
 
 
 Description

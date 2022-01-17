@@ -1669,6 +1669,7 @@ complete -f -c git -n __fish_git_needs_command -a push -d 'Update remote refs al
 complete -f -c git -n '__fish_git_using_command push; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -ka '(__fish_git_tags)' -d Tag
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -ka '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -ka '(__fish_git_heads)'
 # The "refspec" here is an optional "+" to signify a force-push
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "+*" -- (commandline -ct)' -a '+(__fish_git_branches | string replace -r \t".*" "")' -d 'Force-push branch'
 # git push REMOTE :BRANCH deletes BRANCH on remote REMOTE

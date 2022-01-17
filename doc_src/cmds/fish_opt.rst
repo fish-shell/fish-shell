@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     fish_opt [--help]
-    fish_opt [(-slor | --multiple-vals=) optname]
+    fish_opt [(-slor | --multiple-vals=) OPTNAME]
 
 Description
 -----------

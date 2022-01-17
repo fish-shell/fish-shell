@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    not COMMAND [options ...]
+    not COMMAND [OPTIONS ...]
 
 
 Description

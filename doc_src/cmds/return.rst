@@ -9,13 +9,13 @@ Synopsis
 
 .. synopsis::
 
-    return [n]
+    return [N]
 
 Description
 -----------
 
 :program:`return` halts a currently running function.
-The exit status is set to ``n`` if it is given.
+The exit status is set to ``N`` if it is given.
 If :program:`return` is invoked outside of a function or dot script it is equivalent to exit.
 
 It is often added inside of a conditional block such as an :ref:`if <cmd-if>` statement or a :ref:`switch <cmd-switch>` statement to conditionally stop the executing function and return to the caller; it can also be used to specify the exit status of a function.

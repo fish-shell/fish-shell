@@ -8,8 +8,8 @@ Synopsis
 
 .. synopsis::
 
-    source FILE [arguments ...]
-    somecommand | source
+    source FILE [ARGUMENTS ...]
+    SOMECOMMAND | source
 
 
 Description

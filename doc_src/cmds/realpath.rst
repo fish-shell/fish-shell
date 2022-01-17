@@ -9,7 +9,7 @@ Synopsis
 
 .. synopsis::
 
-    realpath [options] PATH
+    realpath [OPTIONS] PATH
 
 Description
 -----------

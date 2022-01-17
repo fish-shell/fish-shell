@@ -8,8 +8,8 @@ Synopsis
 
 .. synopsis::
 
-    count string1 string2 ...
-    command | count
+    count STRING1 STRING2 ...
+    COMMAND | count
     count [...] < FILE
 
 Description

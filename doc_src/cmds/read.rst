@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    read [options] [VARIABLE ...]
+    read [OPTIONS] [VARIABLE ...]
 
 Description
 -----------

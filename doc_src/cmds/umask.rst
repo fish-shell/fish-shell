@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    umask [options] [MASK]
+    umask [OPTIONS] [MASK]
 
 
 Description

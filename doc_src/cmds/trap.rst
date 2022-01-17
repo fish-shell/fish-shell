@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    trap [options] [[ARG] REASON ... ]
+    trap [OPTIONS] [[ARG] REASON ... ]
 
 Description
 -----------

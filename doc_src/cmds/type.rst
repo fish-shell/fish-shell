@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    type [options] NAME [...]
+    type [OPTIONS] NAME [...]
 
 Description
 -----------

@@ -980,6 +980,7 @@ complete -c git -n '__fish_git_using_command add' -s u -l update -d 'Only match 
 complete -c git -n '__fish_git_using_command add' -s A -l all -d 'Match files both in working tree and index'
 complete -c git -n '__fish_git_using_command add' -s N -l intent-to-add -d 'Record only the fact that the path will be added later'
 complete -c git -n '__fish_git_using_command add' -l refresh -d "Don't add the file(s), but only refresh their stat"
+complete -c git -n '__fish_git_using_command add' -l chmod -xa "-x\t'Track file as non-executable' +x\t'Track file as executable'"
 complete -c git -n '__fish_git_using_command add' -l ignore-errors -d 'Ignore errors'
 complete -c git -n '__fish_git_using_command add' -l ignore-missing -d 'Check if any of the given files would be ignored'
 # Renames also show up as untracked + deleted, and to get git to show it as a rename _both_ need to be added.

@@ -66,6 +66,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_pager_color_completion
         __init_uvar fish_pager_color_description B3A06D yellow
         __init_uvar fish_pager_color_progress brwhite --background=cyan
+        __init_uvar fish_pager_color_selected_background -r
 
         #
         # Directory history colors

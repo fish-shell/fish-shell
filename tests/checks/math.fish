@@ -261,3 +261,32 @@ math pow 2 x cos'(-pi)', 2
 math 'ncr(0/0, 1)'
 # CHECKERR: math: Error: Result is infinite
 # CHECKERR: 'ncr(0/0, 1)'
+
+# Variadic functions require at least one argument
+math min
+# CHECKERR: math: Error: Too few arguments
+# CHECKERR: 'min'
+# CHECKERR:    ^
+math min 2
+# CHECK: 2
+math min 2, 3, 4, 5, -10, 1
+# CHECK: -10
+
+# Parentheses are required to disambiguate function call nested in argument list,
+# except when the call is the last argument.
+math 'min 5, 4, 3, ncr 2, 1, 5'
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR:      'min 5, 4, 3, ncr 2, 1, 5'
+# CHECKERR: {{^}}                        ^
+math 'min 5, 4, 3, ncr(2, 1), 5'
+# CHECK: 2
+math 'min 5, 4, 3, 5, ncr 2, 1'
+# CHECK: 2
+# Variadic function consumes all available arguments,
+# so it is always the last argument unless parenthesised.
+# max(1, 2, min(3, 4, 5))
+math 'max 1, 2, min 3, 4, 5'
+# CHECK: 3
+# max(1, 2, min(3, 4), 5)
+math 'max 1, 2, min(3, 4), 5'
+# CHECK: 5

@@ -24,7 +24,7 @@ complete -c import -o interlace -d 'None, Line, Plane, or Partition [type]' -xa 
 complete -c import -o interpolate -d 'Pixel color interpolation method [method]' -xa '(import -list interpolate)'
 complete -c import -o label -d 'Assign a label to an image [string]'
 complete -c import -o limit -d 'Area, Disk, Map, or Memory resource limit [type value]' -x
-complete -c import -o monitor -d 'Monitor progress '
+complete -c import -o monitor -d 'Monitor progress'
 complete -c import -o page -d 'Size and location of an image canvas [geometry]'
 complete -c import -o pause -d 'Seconds delay between snapshots [value]'
 complete -c import -o pointsize -d 'Font point size [value]'

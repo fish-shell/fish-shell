@@ -1,5 +1,5 @@
-complete -c display -o alpha -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(display -list alpha)'
-complete -c display -o antialias -d 'Remove pixel-aliasing '
+complete -c display -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(display -list alpha)'
+complete -c display -o antialias -d 'Remove pixel-aliasing'
 complete -c display -o authenticate -d 'Decipher image with this password [password]'
 complete -c display -o backdrop -d 'Display image centered on a backdrop'
 complete -c display -o channel -d 'Apply option to select image channels [type]' -xa '(display -list channel)'
@@ -27,7 +27,7 @@ complete -c display -o label -d 'Assign a label to an image [string]'
 complete -c display -o limit -d 'Pixel cache resource limit [type value]' -x
 complete -c display -o loop -d 'Loop images then exit [iterations]'
 complete -c display -o map -d 'Display image using this Standard Colormap [type]' -x
-complete -c display -o monitor -d 'Monitor progress '
+complete -c display -o monitor -d 'Monitor progress'
 complete -c display -o page -d 'Size and location of an image canvas [geometry]'
 complete -c display -o profile -d 'Add, delete, or apply an image profile [filename]' -r
 complete -c display -o quality -d 'JPEG/MIFF/PNG compression level [value]'
@@ -41,7 +41,7 @@ complete -c display -o sampling-factor -d 'Horizontal and vertical sampling fact
 complete -c display -o seed -d 'Seed a new sequence of pseudo-random numbers [value]'
 complete -c display -o set -d 'Set an image property [property value]'
 complete -c display -o size -d 'Width and height of image [geometry]'
-complete -c display -o texture -d 'Name of texture to tile onto the image background [filename]' -r
+complete -c display -o texture -d 'Texture name to tile onto the image background [filename]' -r
 complete -c display -o transparent-color -d 'Transparent color [color]' -xa '(__fish_complete_convert_options color)'
 complete -c display -o treedepth -d 'Color tree depth [value]'
 complete -c display -o update -d 'Seconds detect when image file is modified and redisplay'
@@ -51,7 +51,7 @@ complete -c display -o virtual-pixel -d 'Virtual pixel access method [method]' -
 complete -c display -o window -d 'Display image to background of this window [id]' -xa 'root (__fish_print_xwindows)'
 complete -c display -o window-group -d 'Exit program when this window id is destroyed [id]'
 complete -c display -o write -d 'Write image to a file [filename]' -r
-complete -c display -o auto-orient -d 'Automagically orient image'
+complete -c display -o auto-orient -d 'Automagically orient (rotate) image'
 complete -c display -o border -d 'Surround image with a border of color [geometry]'
 complete -c display -o clip -d 'Clip along the first path from the 8BIM profile'
 complete -c display -o clip-path -d 'Clip along a named path from the 8BIM profile [id]'

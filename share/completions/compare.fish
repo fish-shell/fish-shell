@@ -1,4 +1,4 @@
-complete -c compare -o alpha -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(compare -list alpha)'
+complete -c compare -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(compare -list alpha)'
 complete -c compare -o authenticate -d 'Decipher image with this password [password]'
 complete -c compare -o channel -d 'Apply option to select image channels [type]' -xa '(compare -list channel)'
 complete -c compare -o colorspace -d 'Alternate image colorspace [type]' -xa '(compare -list colorspace)'
@@ -19,7 +19,7 @@ complete -c compare -o interlace -d 'Type of image interlacing scheme [type]' -x
 complete -c compare -o limit -d 'Pixel cache resource limit [type value]' -x
 complete -c compare -o lowlight-color -d 'De-emphasize pixel differences with this color [color]' -xa '(__fish_complete_convert_options color)'
 complete -c compare -o metric -d 'Measure differences between images with this metric [type]' -xa '(compare -list metric)'
-complete -c compare -o monitor -d 'Monitor progress '
+complete -c compare -o monitor -d 'Monitor progress'
 complete -c compare -o passphrase -d 'Get the passphrase from this file [filename]' -r
 complete -c compare -o profile -d 'Add, delete, or apply an image profile [filename]' -r
 complete -c compare -o quality -d 'JPEG/MIFF/PNG compression level [value]'
@@ -29,7 +29,7 @@ complete -c compare -o regard-warnings -d 'Pay attention to warning messages'
 complete -c compare -o respect-parentheses -d 'Settings remain in effect until parenthesis boundary'
 complete -c compare -o sampling-factor -d 'Horizontal and vertical sampling factor [geometry]'
 complete -c compare -o seed -d 'Seed a new sequence of pseudo-random numbers [value]'
-complete -c compare -o set -d 'Attribute set an image attribute [ value]'
+complete -c compare -o set -d 'Attribute set an image attribute [value]'
 complete -c compare -o size -d 'Width and height of image [geometry]'
 complete -c compare -o subimage-search -d 'Search for subimage'
 complete -c compare -o transparent-color -d 'Transparent color [color]' -xa '(__fish_complete_convert_options color)'

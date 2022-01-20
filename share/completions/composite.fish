@@ -1,5 +1,5 @@
 complete -c composite -o affine -d 'Affine transform matrix [matrix]'
-complete -c composite -o alpha -d 'On, activate, off, deactivate, set, opaque, copy transparent, extract, background, or shape [option]' -xa '(convert -list alpha)'
+complete -c composite -o alpha -d 'Control alpha/matte channel of an image [option]' -xa '(convert -list alpha)'
 complete -c composite -o authenticate -d 'Decipher image with this password [password]'
 complete -c composite -o blue-primary -d 'Chromaticity blue primary point [point]'
 complete -c composite -o channel -d 'Apply option to select image channels [type]' -xa '(convert -list channel)'
@@ -24,7 +24,7 @@ complete -c composite -o interlace -d 'Type of image interlacing scheme [type]' 
 complete -c composite -o interpolate -d 'Pixel color interpolation method [method]' -xa '(convert -list interpolate)'
 complete -c composite -o label -d 'Assign a label to an image [string]'
 complete -c composite -o limit -d 'Pixel cache resource limit [type value]' -x
-complete -c composite -o monitor -d 'Monitor progress '
+complete -c composite -o monitor -d 'Monitor progress'
 complete -c composite -o page -d 'Size and location of an image canvas (setting) [geometry]'
 complete -c composite -o pointsize -d 'Font point size [value]'
 complete -c composite -o quality -d 'JPEG/MIFF/PNG compression level [value]'
@@ -50,9 +50,9 @@ complete -c composite -o border -d 'Surround image with a border of color [geome
 complete -c composite -o bordercolor -d 'Border color [color]' -xa '(__fish_complete_convert_options color)'
 complete -c composite -o colors -d 'Preferred number of colors in the image [value]'
 complete -c composite -o decipher -d 'Convert cipher pixels to plain pixels [filename]' -r
-complete -c composite -o displace -d 'Shift lookup according to a relative displacement map [geometry]'
+complete -c composite -o displace -d 'Shift image pixels defined by a displacement map [geometry]'
 complete -c composite -o dissolve -d 'Dissolve the two images a given percent [value]'
-complete -c composite -o distort -d 'Shift lookup according to a absolute distortion map [geometry]'
+complete -c composite -o distort -d 'Shift lookup based on a absolute distortion map [geometry]'
 complete -c composite -o encipher -d 'Convert plain pixels to cipher pixels [filename]' -r
 complete -c composite -o extract -d 'Extract area from image [geometry]'
 complete -c composite -o geometry -d 'Location of the composite image [geometry]'

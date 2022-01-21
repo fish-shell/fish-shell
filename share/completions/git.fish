@@ -1237,7 +1237,7 @@ complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of ch
 complete -c git -n '__fish_git_using_command diff' -l staged -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
 complete -c git -n '__fish_git_using_command diff' -l exit-code -d 'Exit with 1 if there were differences or 0 if no differences'
-complete -c git -n '__fish_git_using_command diff' -s q -l quiet -d 'Disable all output of the program, implies --exit-code'
+complete -c git -n '__fish_git_using_command diff' -l quiet -d 'Disable all output of the program, implies --exit-code'
 complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the working tree with the "base" version'
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'

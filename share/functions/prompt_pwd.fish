@@ -1,4 +1,4 @@
-function prompt_pwd --description 'Print the current working directory, shortened to fit the prompt'
+function prompt_pwd --description 'short CWD for the prompt'
     set -l options h/help d/dir-length= D/full-length-dirs=
     argparse -n prompt_pwd $options -- $argv
     or return

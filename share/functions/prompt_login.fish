@@ -1,4 +1,4 @@
-function prompt_login --description "Print a description of the user and host suitable for the prompt"
+function prompt_login --description "display user name for the prompt"
     if not set -q __fish_machine
         set -g __fish_machine
         set -l debian_chroot $debian_chroot

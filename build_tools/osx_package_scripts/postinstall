@@ -1,3 +1,3 @@
 #!/bin/sh -x
 
-./add-shell ${DSTVOLUME}usr/local/bin/fish | logger -s -t "${INSTALL_PKG_SESSION_ID}"
+./add-shell ${DSTVOLUME}usr/local/bin/fish

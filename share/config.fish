@@ -140,7 +140,7 @@ end
 #
 # Launch debugger on SIGTRAP
 #
-function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --description "Signal handler for the TRAP signal. Launches a debug prompt."
+function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --description "TRAP signal handler: launches a debug prompt"
     breakpoint
 end
 

@@ -1,4 +1,4 @@
-function down-or-search -d "Depending on cursor position and current mode, either search forward or move down one line"
+function down-or-search -d "search forward or move down one line"
     # If we are already in search mode, continue
     if commandline --search-mode
         commandline -f history-search-forward

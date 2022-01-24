@@ -1,4 +1,4 @@
-function __cmd_generate_args --description 'Function to generate args'
+function __cmd_complete_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
 
   switch $current_token
@@ -47,4 +47,4 @@ off\tDisable delayed environment variable expansion' | awk -F '\t' "{ printf \"$
   end
 end
 
-complete --command cmd --no-files --arguments '(__cmd_generate_args)'
+complete --command cmd --no-files --arguments '(__cmd_complete_args)'

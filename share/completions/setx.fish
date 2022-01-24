@@ -1,4 +1,4 @@
-function __setx_generate_args --description 'Function to generate args'
+function __setx_complete_args --description 'Function to generate args'
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
   if test "$previous_token" = '/u'
@@ -31,4 +31,4 @@ function __setx_generate_args --description 'Function to generate args'
 /?\tShow help'
 end
 
-complete --command setx --no-files --arguments '(__setx_generate_args)'
+complete --command setx --no-files --arguments '(__setx_complete_args)'

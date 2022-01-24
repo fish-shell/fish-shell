@@ -1,4 +1,4 @@
-function __reg_add_generate_args --argument-names previous_token
+function __reg_add_complete_args --argument-names previous_token
   if test "$previous_token" = '/t'
     echo 'REG_SZ
 REG_MULTI_SZ
@@ -24,7 +24,7 @@ REG_EXPAND_SZ'
 /?\tShow help'
 end
 
-function __reg_compare_generate_args --argument-names previous_token
+function __reg_compare_complete_args --argument-names previous_token
   if not __fish_seen_argument --windows 'v' --windows 've'
     echo -e '/v\tSpecify the value name
 /ve\tSpecify that only entries that have a value name of null should be compared'
@@ -41,13 +41,13 @@ function __reg_compare_generate_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __reg_copy_generate_args --argument-names previous_token
+function __reg_copy_complete_args --argument-names previous_token
   echo -e '/s\tCopy all subkeys and entries under the specified subkey
 /f\tCopy the subkey without prompting for confirmation
 /?\tShow help'
 end
 
-function __reg_delete_generate_args --argument-names previous_token
+function __reg_delete_complete_args --argument-names previous_token
   if not __fish_seen_argument --windows 'v' --windows 've' --windows 'va'
     echo -e '/v\tDelete a specific entry under the subkey
 /ve\tSpecify that only entries that have no value will be deleted
@@ -58,12 +58,12 @@ function __reg_delete_generate_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __reg_export_generate_args --argument-names previous_token
+function __reg_export_complete_args --argument-names previous_token
   echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
 
-function __reg_query_generate_args --argument-names previous_token
+function __reg_query_complete_args --argument-names previous_token
   if test "$previous_token" = '/t'
     echo 'REG_SZ
 REG_MULTI_SZ
@@ -93,12 +93,12 @@ REG_NONE'
 /?\tShow help'
 end
 
-function __reg_save_generate_args --argument-names previous_token
+function __reg_save_complete_args --argument-names previous_token
   echo -e '/y\tOverwrite an existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
 
-function __reg_generate_args --description 'Function to generate args'
+function __reg_complete_args --description 'Function to generate args'
   if not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload
     echo -e 'add\tAdd a new subkey or entry
 compare\tCompare specified registry subkeys or entries
@@ -117,20 +117,20 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
   if __fish_seen_subcommand_from add
-    __reg_add_generate_args
+    __reg_add_complete_args
   else if __fish_seen_subcommand_from compare
-    __reg_compare_generate_args
+    __reg_compare_complete_args
   else if __fish_seen_subcommand_from copy
-    __reg_copy_generate_args
+    __reg_copy_complete_args
   else if __fish_seen_subcommand_from delete
-    __reg_delete_generate_args
+    __reg_delete_complete_args
   else if __fish_seen_subcommand_from export
-    __reg_export_generate_args
+    __reg_export_complete_args
   else if __fish_seen_subcommand_from query
-    __reg_query_generate_args
+    __reg_query_complete_args
   else if __fish_seen_subcommand_from save
-    __reg_save_generate_args
+    __reg_save_complete_args
   end
 end
 
-complete --command reg --no-files --arguments '(__reg_generate_args)'
+complete --command reg --no-files --arguments '(__reg_complete_args)'

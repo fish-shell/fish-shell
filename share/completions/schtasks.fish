@@ -2,7 +2,7 @@ function __schtasks_list_tasks --description 'Helper function to list tasks'
   schtasks /query /fo csv /nh | awk -F ',' '{ print $1 }'
 end
 
-function __schtasks_change_generate_args --argument-names previous_token
+function __schtasks_change_complete_args --argument-names previous_token
   if test "$previous_token" = '/tn'
     __schtasks_list_tasks
     return
@@ -46,7 +46,7 @@ function __schtasks_change_generate_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_create_generate_args --argument-names previous_token
+function __schtasks_create_complete_args --argument-names previous_token
   if test "$previous_token" = '/sc'
     echo -e 'MINUTE\tSpecify the number of minutes before the task should run
 HOURLY\tSpecify the number of hours before the task should run
@@ -112,7 +112,7 @@ ONIDLE\tSpecify that the task runs after the system is idle for the number of mi
 /?\tShow help'
 end
 
-function __schtasks_delete_generate_args --argument-names previous_token
+function __schtasks_delete_complete_args --argument-names previous_token
   if test "$previous_token" = '/tn'
     __schtasks_list_tasks
     return
@@ -137,7 +137,7 @@ function __schtasks_delete_generate_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_end_generate_args --argument-names previous_token
+function __schtasks_end_complete_args --argument-names previous_token
   if test "$previous_token" = '/tn'
     __schtasks_list_tasks
     return
@@ -161,7 +161,7 @@ function __schtasks_end_generate_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_query_generate_args --argument-names previous_token
+function __schtasks_query_complete_args --argument-names previous_token
   if test "$previous_token" = '/fo'
     echo -e 'TABLE
 LIST
@@ -189,7 +189,7 @@ CSV'
 /?\tShow help'
 end
 
-function __schtasks_run_generate_args --argument-names previous_token
+function __schtasks_run_complete_args --argument-names previous_token
   if test "$previous_token" = '/tn'
     __schtasks_list_tasks
     return
@@ -213,7 +213,7 @@ function __schtasks_run_generate_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_generate_args --description 'Function to generate args'
+function __schtasks_complete_args --description 'Function to generate args'
   if not __fish_seen_argument --windows change --windows create --windows delete --windows end \
     --windows query --windows run
     echo -e '/change\tChange one or more properties of a task
@@ -228,18 +228,18 @@ function __schtasks_generate_args --description 'Function to generate args'
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
   if __fish_seen_argument --windows change
-    __schtasks_change_generate_args "$previous_token"
+    __schtasks_change_complete_args "$previous_token"
   else if __fish_seen_argument --windows create
-    __schtasks_create_generate_args "$previous_token"
+    __schtasks_create_complete_args "$previous_token"
   else if __fish_seen_argument --windows delete
-    __schtasks_delete_generate_args "$previous_token"
+    __schtasks_delete_complete_args "$previous_token"
   else if __fish_seen_argument --windows end
-    __schtasks_end_generate_args "$previous_token"
+    __schtasks_end_complete_args "$previous_token"
   else if __fish_seen_argument --windows query
-    __schtasks_query_generate_args "$previous_token"
+    __schtasks_query_complete_args "$previous_token"
   else if __fish_seen_argument --windows run
-    __schtasks_run_generate_args "$previous_token"
+    __schtasks_run_complete_args "$previous_token"
   end
 end
 
-complete --command schtasks --no-files --arguments '(__schtasks_generate_args)'
+complete --command schtasks --no-files --arguments '(__schtasks_complete_args)'

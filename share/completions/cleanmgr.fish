@@ -1,4 +1,4 @@
-function __cleanmgr_generate_args --description 'Function to generate args'
+function __cleanmgr_complete_args --description 'Function to generate args'
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
   if test "$previous_token" = '/d'
@@ -15,4 +15,4 @@ function __cleanmgr_generate_args --description 'Function to generate args'
 /?\tShow help'
 end
 
-complete --command cleanmgr --no-files --arguments '(__cleanmgr_generate_args)'
+complete --command cleanmgr --no-files --arguments '(__cleanmgr_complete_args)'

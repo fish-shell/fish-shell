@@ -13,11 +13,6 @@ function __schtasks_change_generate_args --argument-names previous_token
     return
   end
 
-  if test "$previous_token" = '/rp'
-    __fish_generate_password
-    return
-  end
-
   if __fish_seen_argument --windows 's'
     echo -e '/u\tRun this command with the permissions of the specified user account'
   end
@@ -67,11 +62,6 @@ ONIDLE\tSpecify that the task runs whenever the system is idle for a specified p
 
   if string match --regex --quiet -- "$previous_token" '^/r?u$'
     __fish_list_windows_users
-    return
-  end
-
-  if test "$previous_token" = '/rp'
-    __fish_generate_password
     return
   end
 

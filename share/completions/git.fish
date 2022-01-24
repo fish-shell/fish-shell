@@ -1710,6 +1710,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_recent_c
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d Tag
 complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l continue -d 'Restart the rebasing process'
 complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l abort -d 'Abort the rebase operation'
+complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l edit-todo -d 'Edit the todo list'
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't change anything"
 complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l skip -d 'Restart the rebasing process by skipping the current patch'
 complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'

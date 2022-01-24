@@ -2,7 +2,7 @@ function __cleanmgr_complete_args --description 'Function to generate args'
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
   if test "$previous_token" = '/d'
-    __fish_list_windows_drives
+    __fish_print_windows_drives
     return
   end
 

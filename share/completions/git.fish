@@ -898,6 +898,7 @@ complete -f -c git -n '__fish_git_using_command fetch' -s v -l verbose -d 'Be ve
 complete -f -c git -n '__fish_git_using_command fetch' -s a -l append -d 'Append ref names and object names'
 # TODO --upload-pack
 complete -f -c git -n '__fish_git_using_command fetch' -s f -l force -d 'Force update of local branches'
+complete -f -c git -n '__fish_git_using_command fetch' -s p -l prune -d 'Remove remote-tracking references that no longer exist on the remote'
 # TODO other options
 
 #### filter-branch
@@ -1627,6 +1628,7 @@ complete -f -c git -n '__fish_git_using_command pull' -s a -l append -d 'Append 
 complete -f -c git -n '__fish_git_using_command pull' -s f -l force -d 'Force update of local branches'
 complete -f -c git -n '__fish_git_using_command pull' -s k -l keep -d 'Keep downloaded pack'
 complete -f -c git -n '__fish_git_using_command pull' -l no-tags -d 'Disable automatic tag following'
+complete -f -c git -n '__fish_git_using_command pull' -s p -l prune -d 'Remove remote-tracking references that no longer exist on the remote'
 # TODO --upload-pack
 complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
 complete -f -c git -n '__fish_git_using_command pull; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'

@@ -214,17 +214,6 @@ function __schtasks_run_complete_args -a previous_token
 end
 
 function __schtasks_complete_args -d 'Function to generate args'
-  if not __fish_seen_argument -w change -w create -w delete -w end \
-    -w query -w run
-    echo -e '/change\tChange one or more properties of a task
-/create\tSchedule a new task
-/delete\tDelete a scheduled task
-/end\tStop a program started by a task
-/query\tDisplay tasks scheduled to run on the computer
-/run\tStart a scheduled task immediately'
-    return
-  end
-
   set --local previous_token (commandline -oc)[-1]
 
   if __fish_seen_argument -w change
@@ -243,3 +232,22 @@ function __schtasks_complete_args -d 'Function to generate args'
 end
 
 complete -c schtasks -f -a '(__schtasks_complete_args)'
+
+complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+    -w query -w run' -a /change \
+    -d 'Change one or more properties of a task'
+complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+    -w query -w run' -a /create \
+    -d 'Schedule a new task'
+complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+    -w query -w run' -a /delete \
+    -d 'Delete a scheduled task'
+complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+    -w query -w run' -a /end \
+    -d 'Stop a program started by a task'
+complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+    -w query -w run' -a /query \
+    -d 'Display tasks scheduled to run on the computer'
+complete -c schtasks -f -n 'not __fish_seen_argument -w change -w create -w delete -w end \
+    -w query -w run' -a /run \
+    -d 'Start a scheduled task immediately'

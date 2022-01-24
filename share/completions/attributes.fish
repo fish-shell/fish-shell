@@ -27,12 +27,6 @@ shadowcopy\tSpecify that the volume is a shadow copy volume'
 end
 
 function __attributes_complete_args -d 'Function to generate args'
-  if not __fish_seen_subcommand_from disk volume
-    echo -e 'disk\tDisplay, set, or clear the attributes of a disk
-volume\tDisplay, set, or clear the attributes of a volume'
-    return
-  end
-
   if __fish_seen_subcommand_from disk
     __attributes_disk_complete_args
   else if __fish_seen_subcommand_from volume
@@ -41,3 +35,8 @@ volume\tDisplay, set, or clear the attributes of a volume'
 end
 
 complete -c attributes -f -a '(__attributes_complete_args)'
+
+complete -c attributes -f -n 'not __fish_seen_subcommand_from disk volume' -a disk \
+    -d 'Display, set, or clear the attributes of a disk'
+complete -c attributes -f -n 'not __fish_seen_subcommand_from dick volume' -a volume \
+    -d 'Display, set, or clear the attributes of a volume'

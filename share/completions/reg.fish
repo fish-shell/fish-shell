@@ -99,21 +99,6 @@ function __reg_save_complete_args
 end
 
 function __reg_complete_args -d 'Function to generate args'
-  if not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload
-    echo -e 'add\tAdd a new subkey or entry
-compare\tCompare specified registry subkeys or entries
-copy\tCopy a registry entry
-delete\tDelete a subkey or entries
-export\tCopy the specified subkeys, entries, and values of the local computer into a file
-import\tCopy the contents of a file that contains registry data into the registry of the local computer
-load\tWrite saved subkeys and entries into a different subkey in the registry
-query\tReturn a list of the next tier of subkeys and entries
-restore\tWrite saved subkeys and entries back
-save\tSave a copy of specified subkeys, entries, and values of the registry in a specified file
-unload\tRemove a section of the registry that was loaded using the reg load operation'
-    return
-  end
-
   set -l previous_token (commandline -oc)[-1]
 
   if __fish_seen_subcommand_from add
@@ -134,3 +119,37 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
 end
 
 complete -c reg -f -a '(__reg_complete_args)'
+
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a add \
+    -d 'Add a new subkey or entry'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a compare \
+    -d 'Compare specified registry subkeys or entries'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a copy \
+    -d 'Copy a registry entry'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a delete \
+    -d 'Delete a subkey or entries'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a export \
+    -d 'Copy the specified subkeys, entries, and values of the local computer into a file'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a import \
+    -d 'Copy the contents of a file that contains registry data into the registry of the local computer'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a load \
+    -d 'Write saved subkeys and entries into a different subkey in the registry'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a query \
+    -d 'Return a list of the next tier of subkeys and entries'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a restore \
+    -d 'Write saved subkeys and entries back'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a save \
+    -d 'Save a copy of specified subkeys, entries, and values of the registry in a specified file'
+complete -c reg -f \
+    -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a unload \
+    -d 'Remove a section of the registry that was loaded using the reg load operation'

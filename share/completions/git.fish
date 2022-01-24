@@ -947,10 +947,11 @@ complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcomma
 
 ### show
 complete -f -c git -n __fish_git_needs_command -a show -d 'Shows the last commit of a branch'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_tags)' -d Tag
-complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_commits)'
-complete -f -c git -n __fish_git_needs_rev_files -xa '(__fish_git_complete_rev_files)'
+complete -f -c git -n '__fish_git_using_command show; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command show; and not contains -- -- (commandline -opc)' -ka '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command show; and not contains -- -- (commandline -opc)' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_needs_rev_files; and not contains -- -- (commandline -opc)' -xa '(__fish_git_complete_rev_files)'
+complete -F -c git -n '__fish_git_using_command show; and contains -- -- (commandline -opc)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
 complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'
 complete -f -c git -n '__fish_git_using_command show' -l no-abbrev-commit -d 'Show the full 40-byte hexadecimal commit object name'

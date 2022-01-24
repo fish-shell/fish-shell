@@ -1,4 +1,4 @@
-function __cmdkey_generate_args --description 'Function to generate args'
+function __cmdkey_complete_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
   set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
 
@@ -31,4 +31,4 @@ function __cmdkey_generate_args --description 'Function to generate args'
   end
 end
 
-complete --command cmdkey --no-files --arguments '(__cmdkey_generate_args)'
+complete --command cmdkey --no-files --arguments '(__cmdkey_complete_args)'

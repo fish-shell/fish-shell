@@ -1,4 +1,4 @@
-function __attributes_disk_generate_args
+function __attributes_disk_complete_args
   if not __fish_seen_subcommand_from set clear
     echo -e 'set\tSet the specified attribute of the disk with focus
 clear\tClear the specified attribute of the disk with focus'
@@ -9,7 +9,7 @@ clear\tClear the specified attribute of the disk with focus'
 noerr\tWhen an error is encountered, DiskPart continues to process commands'
 end
 
-function __attributes_volume_generate_args
+function __attributes_volume_complete_args
   if not __fish_seen_subcommand_from set clear
     echo -e 'set\tSet the specified attribute of the volume with focus
 clear\tClear the specified attribute of the volume with focus'
@@ -23,7 +23,7 @@ shadowcopy\tSpecify that the volume is a shadow copy volume
 noerr\tWhen an error is encountered, DiskPart continues to process commands'
 end
 
-function __attributes_generate_args --description 'Function to generate args'
+function __attributes_complete_args --description 'Function to generate args'
   if not __fish_seen_subcommand_from disk volume
     echo -e 'disk\tDisplay, set, or clear the attributes of a disk
 volume\tDisplay, set, or clear the attributes of a volume'
@@ -31,10 +31,10 @@ volume\tDisplay, set, or clear the attributes of a volume'
   end
 
   if __fish_seen_subcommand_from disk
-    __attributes_disk_generate_args
+    __attributes_disk_complete_args
   else if __fish_seen_subcommand_from volume
-    __attributes_volume_generate_args
+    __attributes_volume_complete_args
   end
 end
 
-complete --command attributes --no-files --arguments '(__attributes_generate_args)'
+complete --command attributes --no-files --arguments '(__attributes_complete_args)'

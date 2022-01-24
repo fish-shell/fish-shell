@@ -1,4 +1,4 @@
-function __attrib_generate_args --description 'Function to generate args'
+function __attrib_complete_args --description 'Function to generate args'
   set --local current_token (commandline --current-token --cut-at-cursor)
 
   switch $current_token
@@ -27,4 +27,4 @@ i\tClear the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$curr
   end
 end
 
-complete --command attrib --no-files --arguments '(__attrib_generate_args)'
+complete --command attrib --no-files --arguments '(__attrib_complete_args)'

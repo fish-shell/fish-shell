@@ -1040,6 +1040,8 @@ complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new 
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'
 complete -f -c git -n '__fish_git_using_command checkout' -l ours -d 'Keep unmerged changes'
+complete -f -c git -n '__fish_git_using_command checkout' -l recurse-submodules -d 'Update the work trees of submodules'
+complete -f -c git -n '__fish_git_using_command checkout' -l no-recurse-submodules -d 'Do not update the work trees of submodules'
 # TODO options
 
 ### apply

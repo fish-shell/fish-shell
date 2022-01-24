@@ -798,6 +798,10 @@ format:\tSpecify which information to show"
     end
 end
 
+function __fish_git_is_rebasing
+    test -e (__fish_git rev-parse --git-path rebase-merge)
+end
+
 # general options
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n __fish_git_needs_command -l version -d 'Display version'
@@ -1703,10 +1707,10 @@ complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' -d Head
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d Tag
-complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
-complete -f -c git -n '__fish_git_using_command rebase' -l abort -d 'Abort the rebase operation'
+complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l continue -d 'Restart the rebasing process'
+complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l abort -d 'Abort the rebase operation'
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't change anything"
-complete -f -c git -n '__fish_git_using_command rebase' -l skip -d 'Restart the rebasing process by skipping the current patch'
+complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l skip -d 'Restart the rebasing process by skipping the current patch'
 complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'
 complete -f -c git -n '__fish_git_using_command rebase' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command rebase' -s v -l verbose -d 'Be verbose'

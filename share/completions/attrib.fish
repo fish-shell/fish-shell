@@ -1,5 +1,5 @@
-function __attrib_complete_args --description 'Function to generate args'
-  set --local current_token (commandline --current-token --cut-at-cursor)
+function __attrib_complete_args -d 'Function to generate args'
+  set -l current_token (commandline -tc)
 
   switch $current_token
     case '+*'
@@ -14,17 +14,18 @@ a\tClear the Archive file attribute
 s\tClear the System file attribute
 h\tClear the Hidden file attribute
 i\tClear the Not Content Indexed file attribute' | awk -F '\t' "{ printf \"$current_token%s\t%s\n\", \$1, \$2 }"
-    case '*'
-      if __fish_seen_argument --windows 's'
-        echo -e '/d\tApply attrib and any command-line options to directories
-/l\tApply attrib and any command-line options to the Symbolic Link'
-      end
-
-      echo -e '+\tSet the file attribute
--\tClear the file attribute
-/s\tApply to matching files in the current directory and all of its subdirectories
-/?\tShow help'
   end
 end
 
-complete --command attrib --no-files --arguments '(__attrib_complete_args)'
+complete -c attrib -f -a '(__attrib_complete_args)'
+
+complete -c attrib -f -n '__fish_seen_argument -w s' -a d \
+    -d 'Apply attrib and any command-line options to directories'
+complete -c attrib -f -n '__fish_seen_argument -w s' -a l \
+    -d 'Apply attrib and any command-line options to the Symbolic Link'
+
+complete -c attrib -f -a + -d 'Set the file attribute'
+complete -c attrib -f -a - -d 'Clear the file attribute'
+complete -c attrib -f -a /s \
+    -d 'Apply to matching files in the current directory and all of its subdirectories'
+complete -c attrib -f -a '/?' -d 'Show help'

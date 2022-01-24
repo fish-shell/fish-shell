@@ -1,4 +1,4 @@
-function __reg_add_complete_args --argument-names previous_token
+function __reg_add_complete_args -a previous_token
   if test "$previous_token" = '/t'
     echo 'REG_SZ
 REG_MULTI_SZ
@@ -12,7 +12,7 @@ REG_EXPAND_SZ'
     return
   end
 
-  if not __fish_seen_argument --windows 'v' --windows 've'
+  if not __fish_seen_argument -w 'v' -w 've'
     echo -e '/v\tSpecify the name of the add registry entry
 /ve\tSpecify that the added registry entry has a null value'
   end
@@ -24,13 +24,13 @@ REG_EXPAND_SZ'
 /?\tShow help'
 end
 
-function __reg_compare_complete_args --argument-names previous_token
-  if not __fish_seen_argument --windows 'v' --windows 've'
+function __reg_compare_complete_args
+  if not __fish_seen_argument -w 'v' -w 've'
     echo -e '/v\tSpecify the value name
 /ve\tSpecify that only entries that have a value name of null should be compared'
   end
 
-  if not __fish_seen_argument --windows 'oa' --windows 'od' --windows 'os' --windows 'on'
+  if not __fish_seen_argument -w 'oa' -w 'od' -w 'os' -w 'on'
     echo -e '/oa\tSpecify that all differences and matches are displayed
 /od\tSpecify that only differences are displayed
 /os\tSpecify that only matches are displayed
@@ -41,14 +41,14 @@ function __reg_compare_complete_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __reg_copy_complete_args --argument-names previous_token
+function __reg_copy_complete_args
   echo -e '/s\tCopy all subkeys and entries under the specified subkey
 /f\tCopy the subkey without prompting for confirmation
 /?\tShow help'
 end
 
-function __reg_delete_complete_args --argument-names previous_token
-  if not __fish_seen_argument --windows 'v' --windows 've' --windows 'va'
+function __reg_delete_complete_args
+  if not __fish_seen_argument -w 'v' -w 've' -w 'va'
     echo -e '/v\tDelete a specific entry under the subkey
 /ve\tSpecify that only entries that have no value will be deleted
 /va\tDelete all entries under the specified subkey'
@@ -58,12 +58,12 @@ function __reg_delete_complete_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __reg_export_complete_args --argument-names previous_token
+function __reg_export_complete_args
   echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
 
-function __reg_query_complete_args --argument-names previous_token
+function __reg_query_complete_args -a previous_token
   if test "$previous_token" = '/t'
     echo 'REG_SZ
 REG_MULTI_SZ
@@ -74,12 +74,12 @@ REG_NONE'
     return
   end
 
-  if not __fish_seen_argument --windows 'v' --windows 've'
+  if not __fish_seen_argument -w 'v' -w 've'
     echo -e '/v\tSpecify the registry value name
 /ve\tRun a query for value names that are empty'
   end
 
-  if not __fish_seen_argument --windows 'k' --windows 'd'
+  if not __fish_seen_argument -w 'k' -w 'd'
     echo -e '/k\tSpecify to search in key names only
 /d\tSpecify to search in data only'
   end
@@ -93,12 +93,12 @@ REG_NONE'
 /?\tShow help'
 end
 
-function __reg_save_complete_args --argument-names previous_token
+function __reg_save_complete_args
   echo -e '/y\tOverwrite an existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
 
-function __reg_complete_args --description 'Function to generate args'
+function __reg_complete_args -d 'Function to generate args'
   if not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload
     echo -e 'add\tAdd a new subkey or entry
 compare\tCompare specified registry subkeys or entries
@@ -114,10 +114,10 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
     return
   end
 
-  set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
+  set -l previous_token (commandline -oc)[-1]
 
   if __fish_seen_subcommand_from add
-    __reg_add_complete_args
+    __reg_add_complete_args $previous_token
   else if __fish_seen_subcommand_from compare
     __reg_compare_complete_args
   else if __fish_seen_subcommand_from copy
@@ -127,10 +127,10 @@ unload\tRemove a section of the registry that was loaded using the reg load oper
   else if __fish_seen_subcommand_from export
     __reg_export_complete_args
   else if __fish_seen_subcommand_from query
-    __reg_query_complete_args
+    __reg_query_complete_args $previous_token
   else if __fish_seen_subcommand_from save
     __reg_save_complete_args
   end
 end
 
-complete --command reg --no-files --arguments '(__reg_complete_args)'
+complete -c reg -f -a '(__reg_complete_args)'

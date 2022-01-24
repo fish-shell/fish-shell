@@ -1,32 +1,32 @@
-function __schtasks_list_tasks --description 'Helper function to list tasks'
+function __schtasks_print_tasks -d 'Helper function to print tasks'
   schtasks /query /fo csv /nh | awk -F ',' '{ print $1 }'
 end
 
-function __schtasks_change_complete_args --argument-names previous_token
+function __schtasks_change_complete_args -a previous_token
   if test "$previous_token" = '/tn'
-    __schtasks_list_tasks
+    __schtasks_print_tasks
     return
   end
 
-  if string match --regex --quiet -- "$previous_token" '^/r?u$'
-    __fish_list_windows_users
+  if string match -r -q -- "$previous_token" '^/r?u$'
+    __fish_print_windows_users
     return
   end
 
-  if __fish_seen_argument --windows 's'
+  if __fish_seen_argument -w 's'
     echo -e '/u\tRun this command with the permissions of the specified user account'
   end
 
-  if __fish_seen_argument --windows 'u'
+  if __fish_seen_argument -w 'u'
     echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
-  if not __fish_seen_argument --windows 'et' --windows 'du'
+  if not __fish_seen_argument -w 'et' -w 'du'
     echo -e '/et\tSpecify the end time for the task
 /du\tA value that specifies the duration'
   end
 
-  if not __fish_seen_argument --windows 'ENABLE' --windows 'DISABLE'
+  if not __fish_seen_argument -w 'ENABLE' -w 'DISABLE'
     echo -e '/ENABLE\tSpecify to enable the scheduled task
 /DISABLE\tSpecify to disable the scheduled task'
   end
@@ -46,7 +46,7 @@ function __schtasks_change_complete_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_create_complete_args --argument-names previous_token
+function __schtasks_create_complete_args -a previous_token
   if test "$previous_token" = '/sc'
     echo -e 'MINUTE\tSpecify the number of minutes before the task should run
 HOURLY\tSpecify the number of hours before the task should run
@@ -60,8 +60,8 @@ ONIDLE\tSpecify that the task runs whenever the system is idle for a specified p
     return
   end
 
-  if string match --regex --quiet -- "$previous_token" '^/r?u$'
-    __fish_list_windows_users
+  if string match -r -q -- "$previous_token" '^/r?u$'
+    __fish_print_windows_users
     return
   end
 
@@ -78,15 +78,15 @@ ONIDLE\tSpecify that the task runs after the system is idle for the number of mi
     return
   end
 
-  if __fish_seen_argument --windows 's'
+  if __fish_seen_argument -w 's'
     echo -e '/u\tRun this command with the permissions of the specified user account'
   end
 
-  if __fish_seen_argument --windows 'u'
+  if __fish_seen_argument -w 'u'
     echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
-  if not __fish_seen_argument --windows 'et' --windows 'du'
+  if not __fish_seen_argument -w 'et' -w 'du'
     echo -e '/et\tSpecify the time of day that a minute or hourly task schedule ends
 /du\tSpecify a maximum length of time for a minute or hourly schedule'
   end
@@ -112,22 +112,22 @@ ONIDLE\tSpecify that the task runs after the system is idle for the number of mi
 /?\tShow help'
 end
 
-function __schtasks_delete_complete_args --argument-names previous_token
+function __schtasks_delete_complete_args -a previous_token
   if test "$previous_token" = '/tn'
-    __schtasks_list_tasks
+    __schtasks_print_tasks
     return
   end
 
   if test "$previous_token" = '/u'
-    __fish_list_windows_users
+    __fish_print_windows_users
     return
   end
 
-  if __fish_seen_argument --windows 's'
+  if __fish_seen_argument -w 's'
     echo -e '/u\tRun this command with the permissions of the specified user account'
   end
 
-  if __fish_seen_argument --windows 'u'
+  if __fish_seen_argument -w 'u'
     echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
@@ -137,22 +137,22 @@ function __schtasks_delete_complete_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_end_complete_args --argument-names previous_token
+function __schtasks_end_complete_args -a previous_token
   if test "$previous_token" = '/tn'
-    __schtasks_list_tasks
+    __schtasks_print_tasks
     return
   end
 
   if test "$previous_token" = '/u'
-    __fish_list_windows_users
+    __fish_print_windows_users
     return
   end
 
-  if __fish_seen_argument --windows 's'
+  if __fish_seen_argument -w 's'
     echo -e '/u\tRun this command with the permissions of the specified user account'
   end
 
-  if __fish_seen_argument --windows 'u'
+  if __fish_seen_argument -w 'u'
     echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
@@ -161,7 +161,7 @@ function __schtasks_end_complete_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_query_complete_args --argument-names previous_token
+function __schtasks_query_complete_args -a previous_token
   if test "$previous_token" = '/fo'
     echo -e 'TABLE
 LIST
@@ -170,15 +170,15 @@ CSV'
   end
 
   if test "$previous_token" = '/u'
-    __fish_list_windows_users
+    __fish_print_windows_users
     return
   end
 
-  if __fish_seen_argument --windows 's'
+  if __fish_seen_argument -w 's'
     echo -e '/u\tRun this command with the permissions of the specified user account'
   end
 
-  if __fish_seen_argument --windows 'u'
+  if __fish_seen_argument -w 'u'
     echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
@@ -189,22 +189,22 @@ CSV'
 /?\tShow help'
 end
 
-function __schtasks_run_complete_args --argument-names previous_token
+function __schtasks_run_complete_args -a previous_token
   if test "$previous_token" = '/tn'
-    __schtasks_list_tasks
+    __schtasks_print_tasks
     return
   end
 
   if test "$previous_token" = '/u'
-    __fish_list_windows_users
+    __fish_print_windows_users
     return
   end
 
-  if __fish_seen_argument --windows 's'
+  if __fish_seen_argument -w 's'
     echo -e '/u\tRun this command with the permissions of the specified user account'
   end
 
-  if __fish_seen_argument --windows 'u'
+  if __fish_seen_argument -w 'u'
     echo -e '/p\tSpecify the password of the user account specified in the /u parameter'
   end
 
@@ -213,9 +213,9 @@ function __schtasks_run_complete_args --argument-names previous_token
 /?\tShow help'
 end
 
-function __schtasks_complete_args --description 'Function to generate args'
-  if not __fish_seen_argument --windows change --windows create --windows delete --windows end \
-    --windows query --windows run
+function __schtasks_complete_args -d 'Function to generate args'
+  if not __fish_seen_argument -w change -w create -w delete -w end \
+    -w query -w run
     echo -e '/change\tChange one or more properties of a task
 /create\tSchedule a new task
 /delete\tDelete a scheduled task
@@ -225,21 +225,21 @@ function __schtasks_complete_args --description 'Function to generate args'
     return
   end
 
-  set --local previous_token (commandline --tokenize --cut-at-cursor)[-1]
+  set --local previous_token (commandline -oc)[-1]
 
-  if __fish_seen_argument --windows change
+  if __fish_seen_argument -w change
     __schtasks_change_complete_args "$previous_token"
-  else if __fish_seen_argument --windows create
+  else if __fish_seen_argument -w create
     __schtasks_create_complete_args "$previous_token"
-  else if __fish_seen_argument --windows delete
+  else if __fish_seen_argument -w delete
     __schtasks_delete_complete_args "$previous_token"
-  else if __fish_seen_argument --windows end
+  else if __fish_seen_argument -w end
     __schtasks_end_complete_args "$previous_token"
-  else if __fish_seen_argument --windows query
+  else if __fish_seen_argument -w query
     __schtasks_query_complete_args "$previous_token"
-  else if __fish_seen_argument --windows run
+  else if __fish_seen_argument -w run
     __schtasks_run_complete_args "$previous_token"
   end
 end
 
-complete --command schtasks --no-files --arguments '(__schtasks_complete_args)'
+complete -c schtasks -f -a '(__schtasks_complete_args)'

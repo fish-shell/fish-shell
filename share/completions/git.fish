@@ -799,7 +799,7 @@ format:\tSpecify which information to show"
 end
 
 function __fish_git_is_rebasing
-    test -e (__fish_git rev-parse --git-path rebase-merge)
+    test -e (__fish_git rev-parse --absolute-git-dir)/rebase-merge
 end
 
 # general options

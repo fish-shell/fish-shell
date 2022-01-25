@@ -265,7 +265,7 @@ Examples
 
 ``path real`` returns the normalized, physical versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
 
-It is the same as ``realpath``, as it creates the "real", canonical version of the path. As such it can't operate on nonexistent paths.
+It is the same as ``realpath``, as it creates the "real", canonical version of the path. However, for nonexistent paths it will resolve as far as it can and normalize the nonexistent part.
 
 It returns 0 if any normalization or resolution was done, i.e. any given path wasn't in canonical form.
 
@@ -279,6 +279,11 @@ Examples
    # sh here is bash (on an Archlinux system)
    /usr/bin/bash
     
+   >_ path real /bin/foo///bar/../baz
+   # Assuming /bin exists and is a symlink to /usr/bin, but /bin/foo doesn't.
+   # This resolves the /bin/ and normalizes the nonexistent rest:
+   /usr/bin/foo/baz
+
 "change-extension" subcommand
 -----------------------------
 

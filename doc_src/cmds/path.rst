@@ -134,6 +134,12 @@ Examples
 
    >_ path extension ~/.config.
    .
+
+   >_ set -l path (path change-extension '' ./foo.mp4)
+   >_ set -l extension (path extension ./foo.mp4)
+   > echo $path$extension
+   # reconstructs the original path again.
+   ./foo.mp4
    
 .. _cmd-path-filter:
 
@@ -153,12 +159,14 @@ This is useful when you have a list of paths that you need to check. To match a 
 The available filters are:
 
 - ``-t`` or ``--type`` with the options: "dir", "file", "link", "block", "char", "fifo" and "socket", in which case the path needs to be a directory, file, link, block device, character device, named pipe or socket, respectively.
-- ``-d``, ``-f`` and ``-l`` are short for ``--type=dir``, ``--type=file`` and ``--type=link``, respectively.
+- ``-d``, ``-f`` and ``-l`` are short for ``--type=dir``, ``--type=file`` and ``--type=link``, respectively. There are no shortcuts for the other types.
 
 - ``-p`` or ``--perm`` with the options: "read", "write", and "exec", as well as "suid", "sgid", "sticky", "user" (referring to the path owner) and "group" (referring to the path's group), in which case the path needs to have all of the given permissions for the current user.
-- ``-r``, ``-w`` and ``-x`` are short for ``--perm=read``, ``--perm=write`` and ``--perm=exec``, respectively.
+- ``-r``, ``-w`` and ``-x`` are short for ``--perm=read``, ``--perm=write`` and ``--perm=exec``, respectively. There are no shortcuts for the other permissions.
 
-Note that the path needs to be *any* of the given types, but have *all* of the given permissions. The filter options can either be given as multiple options, or comma-separated - ``path filter -t dir,file`` or ``path filter --type dir --type file`` are equivalent.
+Note that the path needs to be *any* of the given types, but have *all* of the given permissions. This is because having a path that is both writable and executable makes sense, but having a path that is both a directory and a file doesn't. Links will count as the type of the linked-to file, so links to files count as files, links to directories count as directories.
+
+The filter options can either be given as multiple options, or comma-separated - ``path filter -t dir,file`` or ``path filter --type dir --type file`` are equivalent.
 
 If your operating system doesn't support a "sticky" bit, that check will always be false, so no path will pass.
 

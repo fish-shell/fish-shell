@@ -144,9 +144,8 @@ enum {
     PERM_EXEC = 1 << 2,
     PERM_SUID = 1 << 3,
     PERM_SGID = 1 << 4,
-    PERM_STICKY = 1 << 5,
-    PERM_USER = 1 << 6,
-    PERM_GROUP = 1 << 7,
+    PERM_USER = 1 << 5,
+    PERM_GROUP = 1 << 6,
 };
 typedef uint32_t path_perm_flags_t;
 
@@ -267,9 +266,6 @@ static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &s
                 opts->have_special_perm = true;
             } else if (p == L"sgid") {
                 opts->perm |= PERM_SGID;
-                opts->have_special_perm = true;
-            } else if (p == L"sticky") {
-                opts->perm |= PERM_STICKY;
                 opts->have_special_perm = true;
             } else if (p == L"user") {
                 opts->perm |= PERM_USER;
@@ -533,7 +529,6 @@ static bool filter_path(options_t opts, const wcstring &path) {
             if (opts.perm & PERM_SGID && !(S_ISGID & buf.st_mode)) return false;
             if (opts.perm & PERM_USER && !(geteuid() == buf.st_uid)) return false;
             if (opts.perm & PERM_GROUP && !(getegid() == buf.st_gid)) return false;
-            if (opts.perm & PERM_STICKY && !(S_ISVTX & buf.st_mode)) return false;
         }
     }
 

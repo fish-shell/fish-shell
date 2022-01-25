@@ -631,7 +631,28 @@ static int path_real(parser_t &parser, io_streams_t &streams, int argc, const wc
         auto real = wrealpath(*arg);
 
         if (!real) {
-            continue;
+            // The path doesn't exist, so we go up until we find
+            // something that does.
+            wcstring next = *arg;
+            // First add $PWD if we're relative
+            if (!next.empty() && next[0] != L'/') {
+                next = wgetcwd() + L"/" + next;
+            }
+            auto rest = wbasename(next);
+            while(!next.empty() && next != L"/") {
+                next = wdirname(next);
+                real = wrealpath(next);
+                if (real) {
+                    next.push_back(L'/');
+                    next.append(rest);
+                    real = normalize_path(next, false);
+                    break;
+                }
+                rest = wbasename(next) + L'/' + rest;
+            }
+            if (!real) {
+                continue;
+            }
         }
 
         // Return 0 if we found a realpath.

@@ -454,3 +454,10 @@ function crookshanks --wraps '$path_to_cat'
 end
 complete -C 'crookshanks '
 # CHECK: +pet
+
+# Custom completion works with variable overrides.
+complete cmd_with_fancy_completion -xa '(commandline -opc | count)'
+complete -C"a=1 b=2 cmd_with_fancy_completion "
+# CHECK: 1
+complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
+# CHECK: 2

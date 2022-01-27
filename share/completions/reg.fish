@@ -1,6 +1,6 @@
 function __reg_add_complete_args -a previous_token
-  if test "$previous_token" = '/t'
-    echo 'REG_SZ
+    if test "$previous_token" = /t
+        echo 'REG_SZ
 REG_MULTI_SZ
 REG_DWORD_BIG_ENDIAN
 REG_DWORD
@@ -9,15 +9,15 @@ REG_DWORD_LITTLE_ENDIAN
 REG_LINK
 REG_FULL_RESOURCE_DESCRIPTOR
 REG_EXPAND_SZ'
-    return
-  end
+        return
+    end
 
-  if not __fish_seen_argument -w 'v' -w 've'
-    echo -e '/v\tSpecify the name of the add registry entry
+    if not __fish_seen_argument -w v -w ve
+        echo -e '/v\tSpecify the name of the add registry entry
 /ve\tSpecify that the added registry entry has a null value'
-  end
+    end
 
-  echo -e '/t\tSpecify the type for the registry entry
+    echo -e '/t\tSpecify the type for the registry entry
 /s\tSpecify the character to be used
 /d\tSpecify the data for the new registry entry
 /f\tAdd the registry entry without prompting for confirmation
@@ -25,66 +25,66 @@ REG_EXPAND_SZ'
 end
 
 function __reg_compare_complete_args
-  if not __fish_seen_argument -w 'v' -w 've'
-    echo -e '/v\tSpecify the value name
+    if not __fish_seen_argument -w v -w ve
+        echo -e '/v\tSpecify the value name
 /ve\tSpecify that only entries that have a value name of null should be compared'
-  end
+    end
 
-  if not __fish_seen_argument -w 'oa' -w 'od' -w 'os' -w 'on'
-    echo -e '/oa\tSpecify that all differences and matches are displayed
+    if not __fish_seen_argument -w oa -w od -w os -w on
+        echo -e '/oa\tSpecify that all differences and matches are displayed
 /od\tSpecify that only differences are displayed
 /os\tSpecify that only matches are displayed
 /on\tSpecify that nothing is displayed'
-  end
+    end
 
-  echo -e '/s\tCompare all subkeys and entries recursively
+    echo -e '/s\tCompare all subkeys and entries recursively
 /?\tShow help'
 end
 
 function __reg_copy_complete_args
-  echo -e '/s\tCopy all subkeys and entries under the specified subkey
+    echo -e '/s\tCopy all subkeys and entries under the specified subkey
 /f\tCopy the subkey without prompting for confirmation
 /?\tShow help'
 end
 
 function __reg_delete_complete_args
-  if not __fish_seen_argument -w 'v' -w 've' -w 'va'
-    echo -e '/v\tDelete a specific entry under the subkey
+    if not __fish_seen_argument -w v -w ve -w va
+        echo -e '/v\tDelete a specific entry under the subkey
 /ve\tSpecify that only entries that have no value will be deleted
 /va\tDelete all entries under the specified subkey'
-  end
+    end
 
-  echo -e '/f\tDelete the existing registry subkey or entry without asking for confirmation
+    echo -e '/f\tDelete the existing registry subkey or entry without asking for confirmation
 /?\tShow help'
 end
 
 function __reg_export_complete_args
-  echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
+    echo -e '/y\tOverwrite any existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
 
 function __reg_query_complete_args -a previous_token
-  if test "$previous_token" = '/t'
-    echo 'REG_SZ
+    if test "$previous_token" = /t
+        echo 'REG_SZ
 REG_MULTI_SZ
 REG_EXPAND_SZ
 REG_DWORD
 REG_BINARY
 REG_NONE'
-    return
-  end
+        return
+    end
 
-  if not __fish_seen_argument -w 'v' -w 've'
-    echo -e '/v\tSpecify the registry value name
+    if not __fish_seen_argument -w v -w ve
+        echo -e '/v\tSpecify the registry value name
 /ve\tRun a query for value names that are empty'
-  end
+    end
 
-  if not __fish_seen_argument -w 'k' -w 'd'
-    echo -e '/k\tSpecify to search in key names only
+    if not __fish_seen_argument -w k -w d
+        echo -e '/k\tSpecify to search in key names only
 /d\tSpecify to search in data only'
-  end
+    end
 
-  echo -e '/se\tSpecify the single value separator
+    echo -e '/se\tSpecify the single value separator
 /f\tSpecify the data or pattern to search for
 /c\tSpecify that the query is case sensitive
 /e\tSpecify to return only exact matches
@@ -94,28 +94,28 @@ REG_NONE'
 end
 
 function __reg_save_complete_args
-  echo -e '/y\tOverwrite an existing file with the name filename without prompting for confirmation
+    echo -e '/y\tOverwrite an existing file with the name filename without prompting for confirmation
 /?\tShow help'
 end
 
 function __reg_complete_args -d 'Function to generate args'
-  set -l previous_token (commandline -oc)[-1]
+    set -l previous_token (commandline -oc)[-1]
 
-  if __fish_seen_subcommand_from add
-    __reg_add_complete_args $previous_token
-  else if __fish_seen_subcommand_from compare
-    __reg_compare_complete_args
-  else if __fish_seen_subcommand_from copy
-    __reg_copy_complete_args
-  else if __fish_seen_subcommand_from delete
-    __reg_delete_complete_args
-  else if __fish_seen_subcommand_from export
-    __reg_export_complete_args
-  else if __fish_seen_subcommand_from query
-    __reg_query_complete_args $previous_token
-  else if __fish_seen_subcommand_from save
-    __reg_save_complete_args
-  end
+    if __fish_seen_subcommand_from add
+        __reg_add_complete_args $previous_token
+    else if __fish_seen_subcommand_from compare
+        __reg_compare_complete_args
+    else if __fish_seen_subcommand_from copy
+        __reg_copy_complete_args
+    else if __fish_seen_subcommand_from delete
+        __reg_delete_complete_args
+    else if __fish_seen_subcommand_from export
+        __reg_export_complete_args
+    else if __fish_seen_subcommand_from query
+        __reg_query_complete_args $previous_token
+    else if __fish_seen_subcommand_from save
+        __reg_save_complete_args
+    end
 end
 
 complete -c reg -f -a '(__reg_complete_args)'

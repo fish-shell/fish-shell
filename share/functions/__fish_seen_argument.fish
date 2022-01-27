@@ -3,7 +3,7 @@ function __fish_seen_argument --description 'Check whether argument is used'
 
     set --local tokens (commandline --current-process --tokenize --cut-at-cursor)
     set --erase tokens[1]
-    
+
     for t in $tokens
         for s in $_flag_s
             if string match --regex --quiet -- "^-[A-z0-9]*"$s"[A-z0-9]*\$" $t

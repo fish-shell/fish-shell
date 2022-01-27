@@ -169,7 +169,7 @@ Completions
   - ``topgrade`` (:issue:`8651`)
   -  ``wine``, ``wineboot`` and ``winemaker`` (:issue:`8411`)
   -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
-  -  Windows' ``color`` (:issue:`8483`)
+  -  Windows' ``color`` (:issue:`8483`), ``attrib``, ``attributes``, ``choice``, ``clean``, ``cleanmgr``, ``cmd``, ``cmdkey``, ``comp``, ``forfiles``, ``powershell``, ``reg``, ``schtasks``, ``setx`` (:issue:`8486`)
   - ``zef`` (:issue:`8114`)
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).

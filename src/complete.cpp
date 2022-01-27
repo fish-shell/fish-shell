@@ -1608,7 +1608,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     if (tokens.size() == actual_token_count) {
         effective_cmdline = &cmdline;
     } else {
-        effective_cmdline_buf.assign(cmdline, tokens.front().offset);
+        effective_cmdline_buf.assign(cmdline, tokens.front().offset, wcstring::npos);
         effective_cmdline = &effective_cmdline_buf;
     }
 

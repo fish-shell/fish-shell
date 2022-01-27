@@ -3574,7 +3574,8 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
 
 static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
                                            const environment_t &vars, long line) {
-    completion_list_t comps = complete(command, {}, operation_context_t{vars});
+    completion_list_t comps = complete(
+        command, {}, operation_context_t{parser_t::principal_parser().shared(), vars, no_cancel});
 
     bool expects_error = (expected == L"<error>");
 

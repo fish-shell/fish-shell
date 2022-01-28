@@ -233,7 +233,8 @@ bool editable_line_t::undo() {
     maybe_t<int> last_group_id{-1};
     while (undo_history.edits_applied != 0) {
         const edit_t &edit = undo_history.edits.at(undo_history.edits_applied - 1);
-        if (did_undo && (!edit.group_id.has_value() || edit.group_id != last_group_id)) {
+        bool edit_group_is_last_group = edit.group_id != last_group_id;
+        if (did_undo && (!edit.group_id.has_value() || edit_group_is_last_group)) {
             // We've restored all the edits in this logical undo group
             break;
         }

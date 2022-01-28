@@ -31,11 +31,11 @@ function fish_initialize_colors -d "Set default color uvars"
         __init_uvar fish_color_cancel -r
 
         # Pager colors
-        __init_uvar fish_pager_color_prefix normal --bold --underline
-        __init_uvar fish_pager_color_completion 888
-        __init_uvar fish_pager_color_description B3A06D yellow
+        __init_uvar fish_pager_color_prefix cyan --bold --underline
+        __init_uvar fish_pager_color_completion normal
+        __init_uvar fish_pager_color_description B3A06D yellow -i
         __init_uvar fish_pager_color_progress brwhite --background=cyan
-        __init_uvar fish_pager_color_selected_background --background=111
+        __init_uvar fish_pager_color_selected_background -r
 
         #
         # Directory history colors

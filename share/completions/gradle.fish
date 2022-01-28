@@ -54,7 +54,7 @@ function __fish_gradle_get_task_completion
 
     set -l gradle_cache_file (__fish_gradle_create_completion_cache_file "{$PWD}-tasks")
     if not test -f "$gradle_cache_file" -a -s "$gradle_cache_file"
-        command gradle -q tasks --all 2>/dev/null | string match --regex '^[a-z][A-z:]+.*' | string replace ' - ' \t >"$gradle_cache_file"
+        command gradle -q tasks --all 2>/dev/null | string match --regex '^(?!-)[A-z:-]+(\s-\s)+.*|^(?!-)[A-z0-9:-]+$' | string replace ' - ' \t >"$gradle_cache_file"
     end
 
     # return possible tasks

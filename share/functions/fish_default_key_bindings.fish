@@ -1,4 +1,4 @@
-function fish_default_key_bindings -d "Default (emacs-like) key bindings"
+function fish_default_key_bindings -d "emacs-like key binds"
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help"

@@ -619,7 +619,7 @@ static int path_change_extension(parser_t &parser, io_streams_t &streams, int ar
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
-static int path_real(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
@@ -722,7 +722,7 @@ static constexpr const struct path_subcommand {
     {L"filter", &path_filter},
     {L"is", &path_is},
     {L"normalize", &path_normalize},
-    {L"real", &path_real},
+    {L"resolve", &path_resolve},
 };
 ASSERT_SORTED_BY_NAME(path_subcommands);
 

@@ -18,7 +18,7 @@ Synopsis
         [-d] [-f] [-l] [-r] [-w] [-x] \
         [(-p | --perm) PERMISSION] [PATH...]
     path normalize GENERAL_OPTIONS [PATH...]
-    path real GENERAL_OPTIONS [PATH...]
+    path resolve GENERAL_OPTIONS [PATH...]
     path change-extension GENERAL_OPTIONS EXTENSION [PATH...]
 
     GENERAL_OPTIONS := [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)]
@@ -256,14 +256,14 @@ Examples
     # The "//" is squashed, but /bin isn't resolved even if your system links it to /usr/bin.
     /bin/bash
     
-"real" subcommand
+"resolve" subcommand
 --------------------
 
 ::
 
-    path real [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path resolve [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path real`` returns the normalized, physical versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
+``path resolve`` returns the normalized, physical versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
 
 It is the same as ``realpath``, as it creates the "real", canonical version of the path. However, for nonexistent paths it will resolve as far as it can and normalize the nonexistent part.
 
@@ -274,12 +274,12 @@ Examples
 
 ::
 
-   >_ path real /bin//sh
+   >_ path resolve /bin//sh
    # The "//" is squashed, and /bin is resolved if your system links it to /usr/bin.
    # sh here is bash (on an Archlinux system)
    /usr/bin/bash
     
-   >_ path real /bin/foo///bar/../baz
+   >_ path resolve /bin/foo///bar/../baz
    # Assuming /bin exists and is a symlink to /usr/bin, but /bin/foo doesn't.
    # This resolves the /bin/ and normalizes the nonexistent rest:
    /usr/bin/foo/baz
@@ -339,13 +339,13 @@ This is why
 
 Some examples of combining ``path``::
 
-  # Expand all paths in the current directory, leave only executable files, and print their real path
-  path expand '*' -Z | path filter -zZ --perm=exec --type=file | path real -z
+  # Expand all paths in the current directory, leave only executable files, and print their resolved path
+  path expand '*' -Z | path filter -zZ --perm=exec --type=file | path resolve -z
 
   # The same thing, but using find (note -maxdepth needs to come first or find will scream)
   # (this also depends on your particular version of find)
   # Note the `-z` is unnecessary for any sensible version of find - if `path` sees a NULL,
   # it will split on NULL automatically.
-  find . -maxdepth 1 -type f -executable -print0 | path real -z
+  find . -maxdepth 1 -type f -executable -print0 | path resolve -z
 
-  set -l paths (path filter -p exec $PATH/fish -Z | path real)
+  set -l paths (path filter -p exec $PATH/fish -Z | path resolve)

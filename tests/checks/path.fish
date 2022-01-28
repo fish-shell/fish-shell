@@ -106,18 +106,18 @@ path normalize /bin//bash
 # CHECK:  /bin/bash
 
 # We need to remove the rest of the path because we have no idea what its value looks like.
-path real bin//sh | string match -r -- 'bin/bash$'
+path resolve bin//sh | string match -r -- 'bin/bash$'
 # The "//" is squashed, and the symlink is resolved.
 # sh here is bash
 # CHECK: bin/bash
 
-# `path real` with nonexistent paths
-set -l path (path real foo/bar)
+# `path resolve` with nonexistent paths
+set -l path (path resolve foo/bar)
 string match -rq "^"(string escape --style=regex -- $PWD)'/' -- $path
 and echo It matches pwd!
 # CHECK: It matches pwd!
 string replace -r "^"(string escape --style=regex -- $PWD)'/' "" -- $path
 # CHECK: foo/bar
 
-path real /banana//terracota/terracota/booooo/../pie
+path resolve /banana//terracota/terracota/booooo/../pie
 # CHECK: /banana/terracota/terracota/pie

@@ -257,16 +257,19 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Notify terminals when $PWD changes (issue #906).
     # VTE based terminals, Terminal.app, iTerm.app (TODO), and foot support this.
     if not set -q FISH_UNIT_TESTS_RUNNING
-        if string match -q -- 'foot*' $TERM
-            or test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = Apple_Terminal -a (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309 -o "$TERM_PROGRAM" = WezTerm
-            function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-                if status --is-command-substitution || set -q INSIDE_EMACS
-                    return
-                end
-                printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)
-            end
-            __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
+        and begin
+            string match -q -- 'foot*' $TERM
+            or test 0"$VTE_VERSION" -ge 3405
+            or test "$TERM_PROGRAM" = Apple_Terminal && test (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
+            or test "$TERM_PROGRAM" = WezTerm
         end
+        function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
+            if status --is-command-substitution || set -q INSIDE_EMACS
+                return
+            end
+            printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)
+        end
+        __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
 
     # Create empty configuration directores if they do not already exist

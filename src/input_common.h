@@ -207,6 +207,9 @@ class input_event_queue_t {
     /// will be the next character returned by readch.
     void push_front(const char_event_t &ch);
 
+    /// Find the first sequence of non-char events, and promote them to the front.
+    void promote_interruptions_to_front();
+
     /// Add multiple characters or readline events to the front of the queue of unread characters.
     /// The order of the provided events is not changed, i.e. they are not inserted in reverse
     /// order.

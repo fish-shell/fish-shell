@@ -504,6 +504,14 @@ class event_queue_peeker_t {
         idx_ = 0;
     }
 
+    /// Test if any of our peeked events are readline or check_exit.
+    bool char_sequence_interrupted() const {
+        for (const auto &evt : peeked_) {
+            if (evt.is_readline() || evt.is_check_exit()) return true;
+        }
+        return false;
+    }
+
     /// Reset our index back to 0.
     void restart() { idx_ = 0; }
 
@@ -594,7 +602,9 @@ static bool try_peek_sequence(event_queue_peeker_t *peeker, const wcstring &str)
 }
 
 /// \return the first mapping that matches, walking first over the user's mapping list, then the
-/// preset list. \return null if nothing matches.
+/// preset list.
+/// \return none if nothing matches, or if we may have matched a longer sequence but it was
+/// interrupted by a readline event.
 maybe_t<input_mapping_t> inputter_t::find_mapping(event_queue_peeker_t *peeker) {
     const input_mapping_t *generic = nullptr;
     const auto &vars = parser_->vars();
@@ -625,6 +635,12 @@ maybe_t<input_mapping_t> inputter_t::find_mapping(event_queue_peeker_t *peeker) 
             }
         }
         peeker->restart();
+    }
+
+    if (peeker->char_sequence_interrupted()) {
+        // We might have matched a longer sequence, but we were interrupted, e.g. by a signal.
+        FLOG(reader, "torn sequence, rearranging events");
+        return none();
     }
 
     if (escape) {
@@ -670,6 +686,15 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
         return;
     }
     peeker.restart();
+
+    if (peeker.char_sequence_interrupted()) {
+        // This may happen if we received a signal in the middle of an escape sequence or other
+        // multi-char binding. Move these non-char events to the front of the queue, handle them
+        // first, and then later we'll return and try the sequence again. See #8628.
+        peeker.consume();
+        this->promote_interruptions_to_front();
+        return;
+    }
 
     FLOGF(reader, L"no generic found, ignoring char...");
     auto evt = peeker.next();

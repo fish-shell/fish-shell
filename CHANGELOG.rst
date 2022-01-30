@@ -120,6 +120,7 @@ Interactive improvements
 - ``funcsave`` will remove a saved copy of a function that has been erased with ``functions --erase``.
 - The Web-based configuration tool gained a number of improvements, including the ability to set pager colors.
 - The default ``fish_title`` prints a shorter title with shortened $PWD and no more redundant "fish" (:issue:`8641`).
+- Multi-char bindings can no longer be interrupted by signals. (:issue:`8628`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

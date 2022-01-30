@@ -673,9 +673,6 @@ void inputter_t::mapping_execute_matching_or_generic(const command_handler_t &co
 
     FLOGF(reader, L"no generic found, ignoring char...");
     auto evt = peeker.next();
-    if (evt.is_eof()) {
-        this->push_front(evt);
-    }
     peeker.consume();
 }
 
@@ -750,7 +747,11 @@ char_event_t inputter_t::read_char(const command_handler_t &command_handler) {
             // If we have EOF, we need to immediately quit.
             // There's no need to go through the input functions.
             return evt;
+        } else if (evt.is_check_exit()) {
+            // Allow the reader to check for exit conditions.
+            return evt;
         } else {
+            assert(evt.is_char() && "Should be char event");
             this->push_front(evt);
             mapping_execute_matching_or_generic(command_handler);
             // Regarding allow_commands, we're in a loop, but if a fish command is executed,

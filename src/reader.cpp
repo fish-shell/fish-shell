@@ -4094,6 +4094,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                     clear_transient_edit();
                 }
                 history_search.reset();
+                command_line_has_transient_edit = false;
             }
 
             rls.last_cmd = readline_cmd;

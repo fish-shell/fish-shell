@@ -255,6 +255,15 @@ void input_event_queue_t::push_back(const char_event_t& ch) { queue_.push_back(c
 
 void input_event_queue_t::push_front(const char_event_t& ch) { queue_.push_front(ch); }
 
+void input_event_queue_t::promote_interruptions_to_front() {
+    // Find the first sequence of non-char events.
+    // EOF is considered a char: we don't want to pull EOF in front of real chars.
+    auto is_char = [](const char_event_t& ch) { return ch.is_char() || ch.is_eof(); };
+    auto first = std::find_if_not(queue_.begin(), queue_.end(), is_char);
+    auto last = std::find_if(first, queue_.end(), is_char);
+    std::rotate(queue_.begin(), first, last);
+}
+
 void input_event_queue_t::prepare_to_select() {}
 void input_event_queue_t::select_interrupted() {}
 input_event_queue_t::~input_event_queue_t() = default;

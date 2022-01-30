@@ -121,6 +121,7 @@ Interactive improvements
 - The Web-based configuration tool gained a number of improvements, including the ability to set pager colors.
 - The default ``fish_title`` prints a shorter title with shortened $PWD and no more redundant "fish" (:issue:`8641`).
 - Holding down an arrow key won't freeze the terminal with long periods of flashing (:issue:`8610`).
+- Multi-char bindings are no longer interrupted if a signal handler enqueues an event. (:issue:`8628`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

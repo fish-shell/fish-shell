@@ -1930,7 +1930,7 @@ maybe_t<source_range_t> reader_data_t::get_selection() const {
 
 /// Characters that may not be part of a token that is to be replaced by a case insensitive
 /// completion.
-#define REPLACE_UNCLEAN L"$*?({})"
+const wchar_t *REPLACE_UNCLEAN = L"$*?({})";
 
 /// Check if the specified string can be replaced by a case insensitive completion with the
 /// specified flags.

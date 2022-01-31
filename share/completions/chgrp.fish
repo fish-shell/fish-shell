@@ -19,6 +19,6 @@ else # not Linux
 	complete -c chgrp -s n -d "id is numeric; avoid lookup"
 	complete -c chgrp -s R -d "Operate recursively"
 	complete -c chgrp -s v -d "Output filenames"
-	complete -c chgrp -s x -d "Don'1t traverse fs mount points"
+	complete -c chgrp -s x -d "Don't traverse fs mountpoints"
 	complete -c chgrp -d Group -a "(__fish_complete_groups)"
 end

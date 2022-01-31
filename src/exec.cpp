@@ -118,6 +118,12 @@ static bool is_thompson_shell_payload(const char *p, size_t n) {
 /// such as Actually Portable Executable.
 /// N.B.: this is called after fork, it must not allocate heap memory.
 bool is_thompson_shell_script(const char *path) {
+    // Don't perform this check if the user disabled it
+    auto var = env_stack_t::globals().get(L"fish_missing_interpreter_hack");
+    if (!var.missing_or_empty() && !bool_from_string(var->as_string()))
+        return false;
+
+
     // Paths ending in ".fish" are never considered Thompson shell scripts.
     if (const char *lastdot = strrchr(path, '.')) {
         if (0 == strcmp(lastdot, ".fish")) {

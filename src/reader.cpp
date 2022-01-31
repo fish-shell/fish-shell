@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <csignal>
 #include <cwchar>
 #include <functional>
@@ -627,6 +628,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Whether this is the first prompt.
     bool first_prompt{true};
+
+    /// The time when the last flash() completed
+    std::chrono::time_point<std::chrono::steady_clock> last_flash;
 
     /// The representation of the current screen contents.
     screen_t screen;
@@ -1879,6 +1883,15 @@ void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
 
 /// Flash the screen. This function changes the color of the current line momentarily.
 void reader_data_t::flash() {
+    // Multiple flashes may be enqueued by keypress repeat events and can pile up to cause a
+    // significant delay in processing future input while all the flash() calls complete, as we
+    // effectively sleep for 100ms each go. See #8610.
+    auto now = std::chrono::steady_clock::now();
+    if ((now - last_flash) < std::chrono::milliseconds{50}) {
+        last_flash = now;
+        return;
+    }
+
     struct timespec pollint;
     editable_line_t *el = &command_line;
     layout_data_t data = make_layout_data();
@@ -1901,6 +1914,10 @@ void reader_data_t::flash() {
     data.colors = std::move(saved_colors);
     this->rendered_layout = std::move(data);
     paint_layout(L"unflash");
+
+    // Save the time we stopped flashing as the time of the most recent flash. We can't just
+    // increment the old `now` value because the sleep is non-deterministic.
+    last_flash = std::chrono::steady_clock::now();
 }
 
 maybe_t<source_range_t> reader_data_t::get_selection() const {

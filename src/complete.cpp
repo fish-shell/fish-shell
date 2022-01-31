@@ -346,11 +346,13 @@ void completions_sort_and_prioritize(completion_list_t *comps, completion_reques
 
     // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
     // arguments, and penalize files that end in tilde - they're frequently autosave files from e.g.
-    // emacs. Also prefer samecase to smartcase.
+    // emacs. Also prefer case insensitive to smartcase.
     if (flags & completion_request_t::autosuggestion) {
         stable_sort(comps->begin(), comps->end(), [](const completion_t &a, const completion_t &b) {
             if (a.match.case_fold != b.match.case_fold) {
-                return a.match.case_fold < b.match.case_fold;
+                //return a.match.case_fold < b.match.case_fold;
+                // Always return case insensitive if cases do not match
+                return false;
             }
             return compare_completions_by_duplicate_arguments(a, b) ||
                    compare_completions_by_tilde(a, b);

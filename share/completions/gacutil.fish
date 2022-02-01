@@ -1,26 +1,25 @@
-function __fish_seen_tokens --description 'Check whether there are already specified tokens in command line buffer'
-  set --local cmd (commandline --tokenize --cut-at-cursor)
-  set --erase cmd[1]
-  
-  for t in $cmd
-    contains -- "$t" $argv && return 0
-  end
+set -l COMMANDS -s i -o il -s u -o ul -o us -s l
 
-  return 1
-end
+complete -c gacutil -s '?' -d 'Show help'
 
-set --global COMMANDS -i -il -u -ul -us -l
+complete -c gacutil -s i -c "! __fish_seen_argument $COMMANDS" \
+    -d 'Install an assembly into the global assembly cache'
+complete -c gacutil -o il -c "! __fish_seen_argument $COMMANDS" \
+    -d 'Install one or more assemblies into the global assembly cache'
+complete -c gacutil -s u -c "! __fish_seen_argument $COMMANDS" \
+    -d 'Uninstall an assembly from the global assembly cache'
+complete -c gacutil -o ul -c "! __fish_seen_argument $COMMANDS" \
+    -d 'Uninstall one or more assemblies from the global assembly cache'
+complete -c gacutil -o us -c "! __fish_seen_argument $COMMANDS" \
+    -d 'Uninstall an assembly using the specifed assembly\'s full name'
+complete -c gacutil -s l -c "! __fish_seen_argument $COMMANDS" \
+    -d 'List the contents of the global assembly cache'
 
-complete --command gacutil --short-option '?' --description 'Show help'
-
-complete --command gacutil --short-option i --condition "! __fish_seen_tokens $COMMANDS" --description 'Install an assembly into the global assembly cache'
-complete --command gacutil --old-option il --condition "! __fish_seen_tokens $COMMANDS" --description 'Install one or more assemblies into the global assembly cache'
-complete --command gacutil --short-option u --condition "! __fish_seen_tokens $COMMANDS" --description 'Uninstall an assembly from the global assembly cache'
-complete --command gacutil --old-option ul --condition "! __fish_seen_tokens $COMMANDS" --description 'Uninstall one or more assemblies from the global assembly cache'
-complete --command gacutil --old-option us --condition "! __fish_seen_tokens $COMMANDS" --description 'Uninstall an assembly using the specifed assemblies full name'
-complete --command gacutil --short-option l --condition "! __fish_seen_tokens $COMMANDS" --description 'List the contents of the global assembly cache'
-
-complete --command gacutil --old-option package --condition '__fish_seen_tokens -i -il -u -ul -us' --description 'Create a directory in prefix/lib/mono'
-complete --command gacutil --old-option gacdir --condition "__fish_seen_tokens $COMMANDS" --description 'Use the GACs base directory'
-complete --command gacutil --old-option root --condition "__fish_seen_tokens $COMMANDS" --description 'Integrate with automake tools or packaging tools that require a prefix directory to be specified'
-complete --command gacutil --old-option check_refs --condition '__fish_seen_tokens -i -il' --description 'Check the assembly being installed into the GAC does not reference any non strong named assemblies'
+complete -c gacutil -o package -c '__fish_seen_tokens -s i -o il -s u -o ul -o us' \
+    -d 'Create a directory in prefix/lib/mono'
+complete -c gacutil -o gacdir -c "__fish_seen_argument $COMMANDS" \
+    -d 'Use the GACs base directory'
+complete -c gacutil -o root -c "__fish_seen_argument $COMMANDS" \
+    -d 'Integrate with automake tools or packaging tools that require a prefix directory to be specified'
+complete -c gacutil -o check_refs -c '__fish_seen_argument -s i -o il' \
+    -d 'Check the assembly being installed into the GAC does not reference any non strong named assemblies'

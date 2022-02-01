@@ -1,144 +1,153 @@
-function __complete_mono --description 'Internal completion function for appending string to the commandline' --argument-names separator
-  set --erase argv[1]
-  set --local str (commandline --current-token --cut-at-cursor | string replace --regex --filter "(.*$separator)[^$separator]*" '$1' | string replace --regex -- '--.*=' '')
-
-  for i in "$str"$argv
-    echo -e $i
-  end
-end
-
-function __is_darwin --description 'Check whether OS is Mac OS'
-  test "$(uname)" = 'Darwin'
-  return $status
-end
-
 # Runtime options
-complete --command mono --short-option h --long-option help --description 'Show help'
-complete --command mono --short-option V --long-option version --arguments 'number' --no-files --description 'Show version'
+complete -c mono -s h -l help -d 'Show help'
+complete -c mono -s V -l version -a 'number' -f -d 'Show version'
 
-complete --command mono --long-option aot --arguments '(__complete_mono , \'asmonly\tInstruct the AOT compiler to output assembly code instead of an object file\'\\
-  \'bind-to-runtime-version\tForce the generated AOT files to be bound to the runtime version of the compiling Mono\'\\
-  \'data-outfile\tInstruct the AOT code generator to output certain data constructs into a separate file\'\\
-  \'direct-icalls\tInvoke icalls directly instead of going through the operating system symbol lookup operation\'\\
-  \'direct-pinvoke\tInvoke PInvoke methods directly instead of going through the operating system symbol lookup operation\'\\
-  \'dwarfdebug\tInstruct the AOT compiler to emit DWARF debugging information\'\\
-  \'full\tCreate binaries which can be used with the --full-aot option\'\\
-  \'hybrid\tCreate binaries which can be used with the --hybrid-aot option\'\\
-  \'llvm\tPerform AOT with the LLVM backend instead of the Mono backend where possible\'\\
-  \'llvmonly\tPerform AOT with the LLVM backend exclusively and the Mono backend will not be used\'\\
-  \'llvmopts\tSpecify flags to the built-in set of flags passed to the LLVM optimizer\'\\
-  \'llvmllc\tSpecify flags to the built-in set of flags passed to the LLVM static compiler (llc)\'\\
-  \'mcpu\tAllow AOT mode to use all instructions current CPU supports\'\\
-  \'dedup-include\tPass compilation where we compile the methods that we had previously skipped\'\\
-  \'info\tPrint the architecture the AOT in this copy of Mono targets and quit\'\\
-  \'interp\tGenerate all required wrappers, so that it is possible to run --interpreter without any  code generation at runtime\'\\
-  \'depfile\tOutput a gcc -M style dependency file\'\\
-  \'ld-flags\tSpecify flags to pass to the C linker (if the current AOT mode calls for invoking it)\'\\
-  \'llvm-path\tSame for the llvm tools \\\'opt\\\' and \\\'llc\\\'\'\\
-  \'msym-dir\tInstruct the AOT compiler to generate offline sequence points .msym files\'\\
-  \'mtriple\tUse the GNU style target triple <TRIPLE> to determine some code generation options\'\\
-  \'nimt-trampolines\tPrecreate IMT trampolines in the AOT image\'\\
-  \'ngsharedvt-trampolines\tPrecreate value type generic sharing trampolines in the AOT image\'\\
-  \'nodebug\tInstruct the AOT compiler to not output any debugging information\'\\
-  \'no-direct-calls\tPrevent the AOT compiler from generating a direct calls to a method\'\\
-  \'nrgctx-trampolines\tPrecreate generic sharing trampolines in the AOT image\'\\
-  \'nrgctx-fetch-trampolines\tPrecreate generic sharing fetch trampolines in the AOT image\'\\
-  \'ntrampolines\tPrecreate method trampolines in the AOT image\'\\
-  \'outfile\tInstruct the AOT compiler to save the output to the specified file\'\\
-  \'print-skipped-methods\tOutput the skipped methods to the console\'\\
-  \'profile\tSpecify a file to use for profile-guided optimization\'\\
-  \'profile-only\t\'\\
-  \'readonly-value\tOverride the value of a static readonly field\'\\
-  \'save-temps,keep-temps\tInstruct the AOT compiler to keep temporary files\'\\
-  \'soft-debug\tInstruct the compiler to generate sequence point checks\'\\
-  \'static\tCreate  an ELF object file (.o) or .s file which can be statically linked into an executable when embedding the mono runtime\'\\
-  \'stats\tPrint various stats collected during AOT compilation\'\\
-  \'temp-path\tSpecify path to store temporary files created during AOT compilation\'\\
-  \'threads\tUse multiple threads when compiling the methods\'\\
-  \'tool-prefix\tPrepend <PREFIX> to the name of tools ran by the AOT compiler\'\\
-  \'verbose\tPrint additional information about type loading failures\'\\
-  \'write-symbols,no-write-symbols\tInstruct the AOT compiler to emit (or not emit) debug symbol information\'\\
-  \'no-opt\tInstruct the AOT compiler tot no call opt when compiling with LLVM\')'\
-  --no-files --description 'Precompile CIL code to native code'
+complete -c mono -l aot -a '(__fish_append , \\
+  asmonly\t"Instruct the AOT compiler to output assembly code instead of an object file" \\
+  bind-to-runtime-version\t"Force the generated AOT files to be bound to the runtime version of the compiling Mono" \\
+  data-outfile\t"Instruct the AOT code generator to output certain data constructs into a separate file" \\
+  direct-icalls\t"Invoke icalls directly instead of going through the operating system symbol lookup operation" \\
+  direct-pinvoke\t"Invoke PInvoke methods directly instead of going through the operating system symbol lookup operation" \\
+  dwarfdebug\t"Instruct the AOT compiler to emit DWARF debugging information" \\
+  full\t"Create binaries which can be used with the --full-aot option" \\
+  hybrid\t"Create binaries which can be used with the --hybrid-aot option" \\
+  llvm\t"Perform AOT with the LLVM backend instead of the Mono backend where possible" \\
+  llvmonly\t"Perform AOT with the LLVM backend exclusively and the Mono backend will not be used" \\
+  llvmopts\t"Specify flags to the built-in set of flags passed to the LLVM optimizer" \\
+  llvmllc\t"Specify flags to the built-in set of flags passed to the LLVM static compiler (llc)" \\
+  mcpu\t"Allow AOT mode to use all instructions current CPU supports" \\
+  dedup-include\t"Pass compilation where we compile the methods that we had previously skipped" \\
+  info\t"Print the architecture the AOT in this copy of Mono targets and quit" \\
+  interp\t"Generate all required wrappers, so that it is possible to run --interpreter without any  code generation at runtime" \\
+  depfile\t"Output a gcc -M style dependency file" \\
+  ld-flags\t"Specify flags to pass to the C linker (if the current AOT mode calls for invoking it)" \\
+  llvm-path\t"Same for the llvm tools \\\'opt\\\' and \\\'llc\\\'" \\
+  msym-dir\t"Instruct the AOT compiler to generate offline sequence points .msym files" \\
+  mtriple\t"Use the GNU style target triple <TRIPLE> to determine some code generation options" \\
+  nimt-trampolines\t"Precreate IMT trampolines in the AOT image" \\
+  ngsharedvt-trampolines\t"Precreate value type generic sharing trampolines in the AOT image" \\
+  nodebug\t"Instruct the AOT compiler to not output any debugging information" \\
+  no-direct-calls\t"Prevent the AOT compiler from generating a direct calls to a method" \\
+  nrgctx-trampolines\t"Precreate generic sharing trampolines in the AOT image" \\
+  nrgctx-fetch-trampolines\t"Precreate generic sharing fetch trampolines in the AOT image" \\
+  ntrampolines\t"Precreate method trampolines in the AOT image" \\
+  outfile\t"Instruct the AOT compiler to save the output to the specified file" \\
+  print-skipped-methods\t"Output the skipped methods to the console" \\
+  profile\t"Specify a file to use for profile-guided optimization" \\
+  profile-only\t"" \\
+  readonly-value\t"Override the value of a static readonly field" \\
+  save-temps,keep-temps\t"Instruct the AOT compiler to keep temporary files" \\
+  soft-debug\t"Instruct the compiler to generate sequence point checks" \\
+  static\t"Create  an ELF object file (.o) or .s file which can be statically linked into an executable when embedding the mono runtime" \\
+  stats\t"Print various stats collected during AOT compilation" \\
+  temp-path\t"Specify path to store temporary files created during AOT compilation" \\
+  threads\t"Use multiple threads when compiling the methods" \\
+  tool-prefix\t"Prepend <PREFIX> to the name of tools ran by the AOT compiler" \\
+  verbose\t"Print additional information about type loading failures" \\
+  write-symbols,no-write-symbols\t"Instruct the AOT compiler to emit (or not emit) debug symbol information" \\
+  no-opt\t"Instruct the AOT compiler tot no call opt when compiling with LLVM")' \
+  -f -d 'Precompile CIL code to native code'
 
-complete --command mono --long-option aot-path --description 'Show additional directories to search for AOT images'
-complete --command mono --long-option apply-bindings --description 'Apply the assembly bindings from the specified configuration file when running the AOT compiler'
-complete --command mono --long-option assembly-loader --arguments 'strict\t"Check that the public key token, culture and version of a candidate assembly matches the requested strong name" legacy\t"Allow candidate as long as the name matches"' --no-files --description 'Use assembly loader mode'
-complete --command mono --long-option attach --arguments='disable' --no-files --description 'Disable the attach functionality'
-complete --command mono --long-option config --description 'Read configuration from file instead of using default one'
+complete -c mono -l aot-path -d 'Show additional directories to search for AOT images'
+complete -c mono -l apply-bindings \
+    -d 'Apply the assembly bindings from the specified configuration file when running the AOT compiler'
+complete -c mono -l assembly-loader \
+    -a 'strict\t"Check that the public key token, culture and version of a candidate assembly matches the requested strong name" legacy\t"Allow candidate as long as the name matches"' \
+    -f -d 'Use assembly loader mode'
+complete -c mono -l attach -a 'disable' -f -d 'Disable the attach functionality'
+complete -c mono -l config -d 'Read configuration from file instead of using default one'
 
-complete --command mono --long-option debugger-agent --arguments '(__complete_mono , \'address\tSpecify the IP address where your debugger client is listening to\'\\
-  \'loglevel\tSpecify the diagnostics log level for\'\\
-  \'logfile\tInstruct the AOT code generator to output certain data constructs into a separate file\'\\
-  \'server\tSpecify the file where the log will be stored, it defaults to standard output\'\\
-  \'setpgid\tIf set to yes, Mono will call setpgid(0, 0) on startup\'\\
-  \'suspend\tSuspend the vm on startup until it connects successfully to a debugger front end\'\\
-  \'transport\tSpecify the transport that the debugger will use to communicate\')'\
-  --no-files --description 'Use a debugging agent inside the Mono runtime and connect it to a client user interface'
+complete -c mono -l debugger-agent -a '(__fish_append , \\
+  address\t"Specify the IP address where your debugger client is listening to" \\
+  loglevel\t"Specify the diagnostics log level for" \\
+  logfile\t"Instruct the AOT code generator to output certain data constructs into a separate file" \\
+  server\t"Specify the file where the log will be stored, it defaults to standard output" \\
+  setpgid\t"If set to yes, Mono will call setpgid(0, 0) on startup" \\
+  suspend\t"Suspend the vm on startup until it connects successfully to a debugger front end" \\
+  transport\t"Specify the transport that the debugger will use to communicate")' \
+  -f -d 'Use a debugging agent inside the Mono runtime and connect it to a client user interface'
 
-complete --command mono --long-option desktop --description 'Configure the virtual machine to be better suited for desktop applications'
-complete --command mono --long-option full-aot --description 'Prevent from generation any code at runtime and depend exclusively on the code generated from using mono --aot=full previously'
-complete --command mono --long-option full-aot-interp --description 'Same as --full-aot with fallback to the interpreter'
-complete --command mono --long-option gc --arguments 'boehm\tBoehm sgen\tSGen' --no-files --description 'Use the Garbage Collector engine'
-complete --command mono --long-option gc-debug --no-files --description 'Specify MONO_GC_DEBUG environment variable value'
-complete --command mono --long-option gc-params --no-files --description 'Specify MONO_GC_PARAMS environment variable value'
-__is_darwin && complete --command mono --long-option arch --arguments '32\t"32 bit" 64\t"64 bit"' --no-files --description 'Use the bitness of the Mono binary used, if available'
-complete --command mono --long-option interpreter --description 'Use Mono interpreter to execute a given assembly'
-complete --command mono --long-option hybrid-aot --description 'Run assemblies that have been stripped of IL'
-complete --command mono --long-option llvm --description 'Use the LLVM optimization and code generation engine to JIT or AOT compile'
-complete --command mono --long-option ffast-math --description 'Use Mono and LLVM aggressive floating point optimizations'
+complete -c mono -l desktop \
+    -d 'Configure the virtual machine to be better suited for desktop applications'
+complete -c mono -l full-aot \
+    -d 'Prevent from generation any code at runtime and depend exclusively on the code generated from using mono --aot=full previously'
+complete -c mono -l full-aot-interp \
+    -d 'Same as --full-aot with fallback to the interpreter'
+complete -c mono -l gc -a 'boehm\tBoehm sgen\tSGen' -f -d 'Use the Garbage Collector engine'
+complete -c mono -l gc-debug -f -d 'Specify MONO_GC_DEBUG environment variable value'
+complete -c mono -l gc-params -f -d 'Specify MONO_GC_PARAMS environment variable value'
+test "$(uname)" = 'Darwin' && complete -c mono -l arch -a '32\t"32 bit" 64\t"64 bit"' -f \
+    -d 'Use the bitness of the Mono binary used, if available'
+complete -c mono -l interpreter -d 'Use Mono interpreter to execute a given assembly'
+complete -c mono -l hybrid-aot -d 'Run assemblies that have been stripped of IL'
+complete -c mono -l llvm -d 'Use the LLVM optimization and code generation engine to JIT or AOT compile'
+complete -c mono -l ffast-math -d 'Use Mono and LLVM aggressive floating point optimizations'
 
-complete --command mono --short-option o --long-option optimize --arguments '(__complete_mono , \'abcrem\tArray bound checks removal\'\\
-  \'all\tTurn on all optimizations\'\\
-  \'aot\tUsage of Ahead Of Time compiled code\'\\
-  \'branch\tBranch optimizations\'\\
-  \'cfold\tConstant folding\'\\
-  \'cmov\tConditional moves [arch-dependency]\'\\
-  \'deadce\tDead code elimination\'\\
-  \'consprop\tConstant propagation\'\\
-  \'copyprop\tCopy propagation\'\\
-  \'fcmov\tFast x86 FP compares [arch-dependency]\'\\
-  \'float32\tPerform 32-bit float arithmetic using 32-bit operations\'\\
-  \'gshared\tEnable generic code sharing\'\\
-  \'inline\tInline method calls\'\\
-  \'intrins\tIntrinsic method implementations\'\\
-  \'linears\tLinear scan global reg allocation\'\\
-  \'leaf\tLeaf procedures optimizations\'\\
-  \'loop\tLoop related optimizations\'\\
-  \'peephole\tPeephole postpass\'\\
-  \'precomp\tPrecompile all methods before executing Main\'\\
-  \'sched\tInstruction scheduling\'\\
-  \'shared\tEmit per-domain code\'\\
-  \'sse2\tSSE2 instructions on x86 [arch-dependency]\'\\
-  \'tailc\tTail recursion and tail calls\'\\
-  \'transport\tSpecify the transport that the debugger will use to communicate\')'\
-  --no-files --description 'Use optimizations'
+complete -c mono -s o -l optimize -a '(__fish_append , \\
+  abcrem\t"Array bound checks removal" \\
+  all\t"Turn on all optimizations" \\
+  aot\t"Usage of Ahead Of Time compiled code" \\
+  branch\t"Branch optimizations" \\
+  cfold\t"Constant folding" \\
+  cmov\t"Conditional moves [arch-dependency]" \\
+  deadce\t"Dead code elimination" \\
+  consprop\t"Constant propagation" \\
+  copyprop\t"Copy propagation" \\
+  fcmov\t"Fast x86 FP compares [arch-dependency]" \\
+  float32\t"Perform 32-bit float arithmetic using 32-bit operations" \\
+  gshared\t"Enable generic code sharing" \\
+  inline\t"Inline method calls" \\
+  intrins\t"Intrinsic method implementations" \\
+  linears\t"Linear scan global reg allocation" \\
+  leaf\t"Leaf procedures optimizations" \\
+  loop\t"Loop related optimizations" \\
+  peephole\t"Peephole postpass" \\
+  precomp\t"Precompile all methods before executing Main" \\
+  sched\t"Instruction scheduling" \\
+  shared\t"Emit per-domain code" \\
+  sse2\t"SSE2 instructions on x86 [arch-dependency]" \\
+  tailc\t"Tail recursion and tail calls" \\
+  transport\t"Specify the transport that the debugger will use to communicate")' \
+  -f -d 'Use optimizations'
 
-complete --command mono --long-option response --description 'Use a response file'
-complete --command mono --long-option runtime --arguments '(mono --version)' --no-files --description 'Use Mono version'
-complete --command mono --long-option server --description 'Optimize the virtual machine to be better suited for server operations'
-complete --command mono --long-option use-map-jit --description 'Generate code using MAP_JIT on MacOS'
-complete --command mono --long-option verify-all --description 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
+complete -c mono -l response -d 'Use a response file'
+complete -c mono -l runtime -a '(mono --version)' -f -d 'Use Mono version'
+complete -c mono -l server -d 'Optimize the virtual machine to be better suited for server operations'
+complete -c mono -l use-map-jit -d 'Generate code using MAP_JIT on MacOS'
+complete -c mono -l verify-all \
+    -d 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
 
 # Development options
-complete --command mono --long-option debug --arguments '(__complete_mono , \'casts\tProduce a detailed error when throwing a InvalidCastException\'\\
-  \'mdb-optimizations\tDisable some JIT optimizations which are usually only disabled when running inside the debugger\'\\
-  \'gdb\tGenerate and register debugging information with gdb\')'\
-  --no-files --description 'Use the debugging mode in the runtime'
+complete -c mono -l debug -a '(__fish_append , \\
+  casts\t"Produce a detailed error when throwing a InvalidCastException" \\
+  mdb-optimizations\t"Disable some JIT optimizations which are usually only disabled when running inside the debugger" \\
+  gdb\t"Generate and register debugging information with gdb")' \
+  -f -d 'Use the debugging mode in the runtime'
 
-complete --command mono --long-option profile --description 'Use a profiler module with the given arguments'
-complete --command mono --long-option trace --description 'Show method names as they are invoked'
-complete --command mono --long-option no-x86-stack-align --description 'Don\'t align stack frames on the x86 architecture'
-complete --command mono --long-option jitmap --description 'Generate a JIT method map in a /tmp/perf-PID.map file'
+complete -c mono -l profile -f -d 'Use a profiler module with the given arguments'
+complete -c mono -l trace -f -d 'Show method names as they are invoked'
+complete -c mono -l no-x86-stack-align -d 'Don\'t align stack frames on the x86 architecture'
+complete -c mono -l jitmap -d 'Generate a JIT method map in a /tmp/perf-PID.map file'
 
 # JIT maintainer options
-complete --command mono --long-option bisect --no-files --description 'This flag is used by the automatic optimization bug bisector'
-complete --command mono --long-option break --no-files --description 'Insert a breakpoint before the method whose name is \'method\' (namespace.class:methodname)'
-complete --command mono --long-option breakonex --no-files --description 'Use a breakpoint on exceptions'
-complete --command mono --long-option compile --no-files --description 'Compile a method (namespace.name:methodname)'
-complete --command mono --long-option compile-all --description 'Compile all the methods in an assembly'
-complete --command mono --long-option graph --arguments 'cfg\t"Control Flow Graph (CFG)" dtree\t"Dominator Tree" code\t"CFG showing code" ssa\t"CFG showing code after SSA translation" optcode\t"CFG showing code after IR optimizations"' --no-files --description 'Generate a postscript file with a graph with the details about the specified method'
-complete --command mono --long-option ncompile --description 'Instruct the runtime on the number of times that the method(-s) specified by --compile/--compile-all to be compiled'
-complete --command mono --long-option stats --description 'Display information about the work done by the runtime during the execution of an application'
-complete --command mono --long-option wapi --arguments 'hps\t"Delete the global semaphore" semdel\t"List the currently used handles"' --no-files --description 'Perform maintenance of the process shared data'
-complete --command mono --short-option v --long-option verbose --description 'Show more messages'
+complete -c mono -l bisect -f -d 'This flag is used by the automatic optimization bug bisector'
+complete -c mono -l break -x \
+    -d 'Insert a breakpoint before the method whose name is \'method\' (namespace.class:methodname)'
+complete -c mono -l breakonex -d 'Use a breakpoint on exceptions'
+complete -c mono -l compile -x -d 'Compile a method (namespace.name:methodname)'
+complete -c mono -l compile-all -d 'Compile all the methods in an assembly'
+complete -c mono -l graph \
+    -a 'cfg\t"Control Flow Graph (CFG)"
+    dtree\t"Dominator Tree" code\t"CFG showing code"
+    ssa\t"CFG showing code after SSA translation"
+    optcode\t"CFG showing code after IR optimizations"' \
+    -x -d 'Generate a postscript file with a graph with the details about the specified method'
+complete -c mono -l ncompile \
+    -d 'Instruct the runtime on the number of times that the method(-s) specified by --compile/--compile-all to be compiled'
+complete -c mono -l stats \
+    -d 'Display information about the work done by the runtime during the execution of an application'
+complete -c mono -l wapi \
+    -a 'hps\t"Delete the global semaphore"
+    semdel\t"List the currently used handles"' \
+    -x -d 'Perform maintenance of the process shared data'
+complete -c mono -s v -l verbose -d 'Show more messages'

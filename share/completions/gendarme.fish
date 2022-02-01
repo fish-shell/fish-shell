@@ -1,13 +1,17 @@
-complete --command gendarme --long-option version --description 'Show version'
+complete -c gendarme -l version -d 'Show version'
 
-complete --command gendarme --long-option config --require-parameter --description 'Use config file'
-complete --command gendarme --long-option set --no-files --require-parameter --description 'Use rule set from config file'
-complete --command gendarme --long-option xml --require-parameter --description 'Convert stdout to XML and redirect to file'
-complete --command gendarme --long-option xml --require-parameter --description 'Convert stdout to HTML and redirect to file'
-complete --command gendarme --long-option console --description 'Show the defects on stdout'
-complete --command gendarme --long-option ignore --require-parameter --description 'Exclude the defects from file'
-complete --command gendarme --long-option limit --no-files --require-parameter --description 'Specify defect limit'
-complete --command gendarme --long-option severity --no-files --require-parameter --arguments 'all audit audit+ low low+ low- medium medium+ medium- high high+ high- critical critical-' --description 'Filter the reported defects to include the specified severity levels'
-complete --command gendarme --long-option confidence --no-files --require-parameter --arguments 'all low low+ normal normal+ normal- high high+ high- total total-' --description 'Filter the reported defects to include the specified confidence levels'
-complete --command gendarme --long-option quiet  --description 'Discard stdout'
-complete --command gendarme --short-option v --long-option verbose  --description 'Show more messages'
+complete -c gendarme -l config -r -d 'Use config file'
+complete -c gendarme -l set -x -d 'Use rule set from config file'
+complete -c gendarme -l xml -r -d 'Convert stdout to XML and redirect to file'
+complete -c gendarme -l html -r -d 'Convert stdout to HTML and redirect to file'
+complete -c gendarme -l console -d 'Show the defects on stdout'
+complete -c gendarme -l ignore -r -d 'Exclude the defects from file'
+complete -c gendarme -l limit -x -d 'Specify defect limit'
+complete -c gendarme -l severity -x \
+    -a 'all audit audit+ low low+ low- medium medium+ medium- high high+ high- critical critical-' \
+    -d 'Filter the reported defects to include the specified severity levels'
+complete -c gendarme -l confidence -x \
+    -a 'all low low+ normal normal+ normal- high high+ high- total total-' \
+    -d 'Filter the reported defects to include the specified confidence levels'
+complete -c gendarme -l quiet  -d 'Discard stdout'
+complete -c gendarme -s v -l verbose  -d 'Show more messages'

@@ -1,3 +1,3 @@
-complete --command sqlsharp --short-option f --require-parameter --description 'Read SQL commands from file'
-complete --command sqlsharp --short-option o --require-parameter --description 'Redirect stdout to file'
-complete --command sqlsharp --short-option s --description 'Use silent mode'
+complete -c sqlsharp -s f -r -d 'Read SQL commands from file'
+complete -c sqlsharp -s o -r -d 'Redirect stdout to file'
+complete -c sqlsharp -s s -d 'Use silent mode'

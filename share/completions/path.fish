@@ -6,7 +6,7 @@ complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a dirname -d 'Gi
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a extension -d 'Give extension for given paths'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a change-extension -d 'Change extension for given paths'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a normalize -d 'Normalize given paths (remove ./, resolve ../ against other components..)'
-complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a real -d 'Normalize given paths and resolve symlinks'
+complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a resolve -d 'Normalize given paths and resolve symlinks'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a filter -d 'Print paths that match a filter'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a is -d 'Return true if any path matched a filter'
 complete -f -c path -n "test (count (commandline -opc)) -lt 2" -a match -d 'Match paths against a glob'

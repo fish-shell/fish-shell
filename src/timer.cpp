@@ -113,13 +113,13 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
     auto unit_name = [](tunit unit) {
         switch (unit) {
             case tunit::minutes:
-                return "minutes";
+                return L"minutes";
             case tunit::seconds:
-                return "seconds";
+                return L"seconds";
             case tunit::milliseconds:
-                return "milliseconds";
+                return L"milliseconds";
             case tunit::microseconds:
-                return "microseconds";
+                return L"microseconds";
         }
         // GCC does not recognize the exhaustive switch above
         return "";
@@ -128,13 +128,13 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
     auto unit_short_name = [](tunit unit) {
         switch (unit) {
             case tunit::minutes:
-                return "mins";
+                return L"min";
             case tunit::seconds:
-                return "secs";
+                return L"sec";
             case tunit::milliseconds:
-                return "millis";
+                return L"ms";
             case tunit::microseconds:
-                return "micros";
+                return L"μs";
         }
         // GCC does not recognize the exhaustive switch above
         return "";
@@ -179,14 +179,14 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
         double child_usr_time = convert(child_usr_micros, child_unit);
         double child_sys_time = convert(child_sys_micros, child_unit);
 
-        int column2_unit_len = std::max(strlen(unit_short_name(wall_unit)),
+        int column2_unit_len = std::max(wcslen(unit_short_name(wall_unit)),
                                         strlen(unit_short_name(cpu_unit)));
         // TODO: improve layout and use standard two char units
         append_format(output,
                       L"\n________________________________________________________"
-                      L"\nExecuted in  %6.2F %-*s    %-*s  %s"
-                      L"\n   usr time  %6.2F %-*s  %6.2F %s  %6.2F %s"
-                      L"\n   sys time  %6.2F %-*s  %6.2F %s  %6.2F %s"
+                      L"\nExecuted in  %6.2F %-*ls    %-*s  %s"
+                      L"\n   usr time  %6.2F %-*ls  %6.2F %ls  %6.2F %ls"
+                      L"\n   sys time  %6.2F %-*ls  %6.2F %ls  %6.2F %ls"
                       L"\n",
                       wall_time, column2_unit_len, unit_short_name(wall_unit),
                       static_cast<int>(strlen(unit_short_name(fish_unit))) + 7, "fish", "external",

@@ -11,6 +11,19 @@
 #include <cstddef>
 #include <ctime>
 
+#if HAVE_CURSES_H
+#include <curses.h>
+#elif HAVE_NCURSES_H
+#include <ncurses.h>
+#elif HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
+#endif
+#if HAVE_TERM_H
+#include <term.h>
+#elif HAVE_NCURSES_TERM_H
+#include <ncurses/term.h>
+#endif
+
 #include "builtin.h"
 #include "common.h"
 #include "exec.h"
@@ -122,7 +135,7 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
                 return L"microseconds";
         }
         // GCC does not recognize the exhaustive switch above
-        return "";
+        return L"";
     };
 
     auto unit_short_name = [](tunit unit) {
@@ -137,7 +150,7 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
                 return L"μs";
         }
         // GCC does not recognize the exhaustive switch above
-        return "";
+        return L"";
     };
 
     auto convert = [](int64_t micros, tunit unit) {
@@ -163,10 +176,9 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
 
     wcstring output;
     if (!verbose) {
-        append_format(output, L"\n_______________________________"
-                              L"\nExecuted in  %6.2F %s"
-                              L"\n   usr time  %6.2F %s"
-                              L"\n   sys time  %6.2F %s"
+        append_format(output, L"\nExecuted in  %6.2F %ls"
+                              L"\n   usr time  %6.2F %ls"
+                              L"\n   sys time  %6.2F %ls"
                               L"\n",
                               wall_time, unit_name(wall_unit),
                               usr_time, unit_name(cpu_unit),
@@ -180,16 +192,16 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
         double child_sys_time = convert(child_sys_micros, child_unit);
 
         int column2_unit_len = std::max(wcslen(unit_short_name(wall_unit)),
-                                        strlen(unit_short_name(cpu_unit)));
-        // TODO: improve layout and use standard two char units
+                                        wcslen(unit_short_name(cpu_unit)));
+        // TODO: improve layout
         append_format(output,
-                      L"\n________________________________________________________"
+                      L"%s%s%s"
                       L"\nExecuted in  %6.2F %-*ls    %-*s  %s"
                       L"\n   usr time  %6.2F %-*ls  %6.2F %ls  %6.2F %ls"
-                      L"\n   sys time  %6.2F %-*ls  %6.2F %ls  %6.2F %ls"
-                      L"\n",
+                      L"\n   sys time  %6.2F %-*ls  %6.2F %ls  %6.2F %ls",
+                      enter_alt_charset_mode, std::string(45, 'q').c_str(), exit_alt_charset_mode,
                       wall_time, column2_unit_len, unit_short_name(wall_unit),
-                      static_cast<int>(strlen(unit_short_name(fish_unit))) + 7, "fish", "external",
+                      static_cast<int>(wcslen(unit_short_name(fish_unit))) + 7, "fish", "external",
                       usr_time, column2_unit_len, unit_short_name(cpu_unit), fish_usr_time,
                       unit_short_name(fish_unit), child_usr_time, unit_short_name(child_unit),
                       sys_time, column2_unit_len, unit_short_name(cpu_unit), fish_sys_time,

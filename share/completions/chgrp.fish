@@ -1,4 +1,4 @@
-if chgrp --version 2>/dev/null # not unix
+if chgrp --version &>/dev/null # not unix
 	complete -c chgrp -s c -l changes -d "Output diagnostic for changed files"
 	complete -c chgrp -l dereference -d "Dereference symlinks"
 	complete -c chgrp -s h -l no-dereference -d "Don't dereference symlinks"

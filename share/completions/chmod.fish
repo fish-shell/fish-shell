@@ -1,10 +1,4 @@
-#
-# Command specific completions for the chmod command.
-# These completions where generated from the commands
-# man page by the make_completions.py script, but may
-# have been hand edited since.
-#
-if chmod --version 2>/dev/null # gnu's not unix
+if chmod --version &>/dev/null # gnu's not unix
 	complete chmod -s c -l changes -d 'Like -v but report only changes'
 	complete chmod -l no-preserve-root -d 'Don\'t treat / special (default)'
 	complete chmod -l preserve-root -d 'Fail to operate recursively on /'

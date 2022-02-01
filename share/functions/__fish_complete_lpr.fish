@@ -19,7 +19,6 @@ function __fish_complete_lpr -d 'Complete lpr common options' --argument-names c
 
     switch $cmd
         case lp lpr
-            complete -c $cmd -s o -d 'Sets a job option' -xa '(__fish_complete_lpr_option)'
             complete -c $cmd -s m -d 'Send an email on job completion'
 
             complete -c $cmd -s o -xa landscape -d 'Landscape mode'
@@ -33,5 +32,7 @@ function __fish_complete_lpr -d 'Complete lpr common options' --argument-names c
             complete -c $cmd -s o -xa 'cpi=' -d 'Set the number of characters per inch to use'
             complete -c $cmd -s o -xa 'lpi=' -d 'Set the number of lines per inch to use'
             complete -c $cmd -s o -xa 'page-bottom= page-left= page-right= page-top=' -d 'Set the page margins when printing text files'
+            # this must be last
+            complete -c $cmd -s o -d 'Sets a job option' -xa '(__fish_complete_lpr_option)'
     end
 end

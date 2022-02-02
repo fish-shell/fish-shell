@@ -113,11 +113,11 @@ path resolve bin//sh | string match -r -- 'bin/bash$'
 
 # `path resolve` with nonexistent paths
 set -l path (path resolve foo/bar)
-string match -rq "^"(string escape --style=regex -- $PWD)'/' -- $path
+string match -rq "^"(pwd -P | string escape --style=regex)'/' -- $path
 and echo It matches pwd!
 or echo pwd is \'$PWD\' resolved path is \'$path\'
 # CHECK: It matches pwd!
-string replace -r "^"(string escape --style=regex -- $PWD)'/' "" -- $path
+string replace -r "^"(pwd -P | string escape --style=regex)'/' "" -- $path
 # CHECK: foo/bar
 
 path resolve /banana//terracota/terracota/booooo/../pie

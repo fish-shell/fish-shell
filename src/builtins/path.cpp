@@ -643,9 +643,9 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
                 next = wdirname(next);
                 real = wrealpath(next);
                 if (real) {
-                    next.push_back(L'/');
-                    next.append(rest);
-                    real = normalize_path(next, false);
+                    real->push_back(L'/');
+                    real->append(rest);
+                    real = normalize_path(*real, false);
                     break;
                 }
                 rest = wbasename(next) + L'/' + rest;

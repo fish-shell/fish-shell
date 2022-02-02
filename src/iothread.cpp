@@ -25,10 +25,7 @@
 #include "global_safety.h"
 #include "wutil.h"
 
-// We just define a thread limit of 1024.
-// On all systems I've seen the limit is higher,
-// but on some (like linux with glibc) the setting for _POSIX_THREAD_THREADS_MAX is 64,
-// which is too low, even tho the system can handle more than 64 threads.
+/// We just define a thread limit of 1024.
 #define IO_MAX_THREADS 1024
 
 // iothread has a thread pool. Sometimes there's no work to do, but extant threads wait around for a

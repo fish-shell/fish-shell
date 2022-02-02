@@ -1293,11 +1293,13 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     wcstring_list_t lst;
     (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
     if (!lst.empty()) {
-        std::fputws(L"\x1B]0;", stdout);
+        wcstring title_line = L"\x1B]0;";
         for (const auto &i : lst) {
-            std::fputws(i.c_str(), stdout);
+            title_line += i;
         }
-        ignore_result(write(STDOUT_FILENO, "\a", 1));
+        title_line += L"\a";
+        std::string narrow = wcs2string(title_line);
+        ignore_result(write_loop(STDOUT_FILENO, narrow.data(), narrow.size()));
     }
 
     outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());

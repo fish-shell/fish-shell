@@ -115,6 +115,7 @@ path resolve bin//sh | string match -r -- 'bin/bash$'
 set -l path (path resolve foo/bar)
 string match -rq "^"(string escape --style=regex -- $PWD)'/' -- $path
 and echo It matches pwd!
+or echo pwd is \'$PWD\' resolved path is \'$path\'
 # CHECK: It matches pwd!
 string replace -r "^"(string escape --style=regex -- $PWD)'/' "" -- $path
 # CHECK: foo/bar

@@ -451,6 +451,11 @@ std::unique_ptr<T> make_unique(Args &&...args) {
 /// \param quote the quote to use, usually pointed to by \c pos.
 const wchar_t *quote_end(const wchar_t *pos, wchar_t quote);
 
+/// This functions returns the end of the comment substring beginning at \c pos.
+///
+/// \param pos the position where the comment starts, including the '#' symbol.
+const wchar_t *comment_end(const wchar_t *pos);
+
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.
 void fish_setlocale();

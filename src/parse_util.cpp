@@ -90,6 +90,8 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
 static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, const wchar_t **end,
                                     bool allow_incomplete, bool *inout_is_quoted) {
     bool escaped = false;
+    bool is_first = true;
+    bool is_token_begin = true;
     bool syntax_error = false;
     int paran_count = 0;
     std::vector<int> quoted_cmdsubs;
@@ -122,6 +124,10 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
         if (!escaped) {
             if (*pos == L'\'' || *pos == L'"') {
                 if (!process_opening_quote(*pos)) break;
+            } else if (*pos == L'\\') {
+                escaped = true;
+            } else if (*pos == L'#' && is_token_begin) {
+                pos = comment_end(pos) - 1;
             } else {
                 if (*pos == L'(') {
                     if ((paran_count == 0) && (paran_begin == nullptr)) {
@@ -161,12 +167,12 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
                     }
                 }
             }
-        }
-        if (*pos == '\\') {
-            escaped = !escaped;
+            is_token_begin = is_token_delimiter(pos[0], is_first, pos[1]);
         } else {
             escaped = false;
+            is_token_begin = false;
         }
+        is_first = false;
     }
 
     syntax_error |= (paran_count < 0);

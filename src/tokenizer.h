@@ -133,6 +133,9 @@ class tokenizer_t : noncopyable_t {
     }
 };
 
+/// Tests if this character can delimit tokens.
+bool is_token_delimiter(wchar_t c, bool is_first, maybe_t<wchar_t> next);
+
 /// Returns only the first token from the specified string. This is a convenience function, used to
 /// retrieve the first token of a string. This can be useful for error messages, etc. On failure,
 /// returns the empty string.

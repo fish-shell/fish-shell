@@ -523,6 +523,13 @@ const wchar_t *quote_end(const wchar_t *pos, wchar_t quote) {
     return nullptr;
 }
 
+const wchar_t *comment_end(const wchar_t *pos) {
+    do {
+        pos++;
+    } while (*pos && *pos != L'\n');
+    return pos;
+}
+
 void fish_setlocale() {
     // Use various Unicode symbols if they can be encoded using the current locale, else a simple
     // ASCII char alternative. All of the can_be_encoded() invocations should return the same

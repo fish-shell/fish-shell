@@ -154,6 +154,7 @@ tok_t tokenizer_t::read_string() {
     int slice_offset = 0;
     const wchar_t *const buff_start = this->token_cursor;
     bool is_first = true;
+    bool is_token_begin = true;
 
     auto process_opening_quote = [&](wchar_t quote) -> const wchar_t * {
         const wchar_t *end = quote_end(this->token_cursor, quote);
@@ -192,6 +193,8 @@ tok_t tokenizer_t::read_string() {
         // has been explicitly ignored (escaped).
         else if (c == L'\\') {
             mode |= tok_modes::char_escape;
+        } else if (c == L'#' && is_token_begin) {
+            this->token_cursor = comment_end(this->token_cursor) - 1;
         } else if (c == L'(') {
             paran_offsets.push_back(this->token_cursor - this->start);
             expecting.push_back(L')');
@@ -278,8 +281,9 @@ tok_t tokenizer_t::read_string() {
         FLOGF(error, msg.c_str(), c, c, int(mode_begin), int(mode));
 #endif
 
-        this->token_cursor++;
+        is_token_begin = is_token_delimiter(this->token_cursor[0], is_first, this->token_cursor[1]);
         is_first = false;
+        this->token_cursor++;
     }
 
     if (!this->accept_unfinished && (mode != tok_modes::regular_text)) {
@@ -540,8 +544,7 @@ maybe_t<tok_t> tokenizer_t::next() {
     while (*this->token_cursor == L'#') {
         // We have a comment, walk over the comment.
         const wchar_t *comment_start = this->token_cursor;
-        while (this->token_cursor[0] != L'\n' && this->token_cursor[0] != L'\0')
-            this->token_cursor++;
+        this->token_cursor = comment_end(this->token_cursor);
         size_t comment_len = this->token_cursor - comment_start;
 
         // If we are going to continue after the comment, skip any trailing newline.
@@ -677,6 +680,10 @@ maybe_t<tok_t> tokenizer_t::next() {
     }
     assert(result.has_value() && "Should have a token");
     return result;
+}
+
+bool is_token_delimiter(wchar_t c, bool is_first, maybe_t<wchar_t> next) {
+    return c == L'(' || !tok_is_string_character(c, is_first, next);
 }
 
 wcstring tok_first(const wcstring &str) {

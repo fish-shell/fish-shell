@@ -87,13 +87,13 @@ complete -f -c apk -n "__fish_seen_subcommand_from info" -s R -l depends -d "Lis
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s P -l provides -d "List virtual packages provided"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s r -l rdepends -d "List reverse dependencies"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -l replaces -d "List packages that PACKAGE might replace"
-complete -f -c apk -n "__fish_seen_subcommand_from info" -s i -l install-if -d "List install_if rule"
-complete -f -c apk -n "__fish_seen_subcommand_from info" -s I -l rinstall-if -d "List packages having install_if referencing PACKAGE"
+complete -f -c apk -n "__fish_seen_subcommand_from info" -l install-if -d "List install_if rule"
+complete -f -c apk -n "__fish_seen_subcommand_from info" -l rinstall-if -d "List packages having install_if referencing PACKAGE"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s w -l webpage -d "Print the URL for the upstream"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s s -l size -d "Show installed size"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s d -l description -d "Print the description"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -l license -d "Print the license"
-complete -f -c apk -n "__fish_seen_subcommand_from info" -s t -l triggers -d "Print active triggers"
+complete -f -c apk -n "__fish_seen_subcommand_from info" -l triggers -d "Print active triggers"
 complete -f -c apk -n "__fish_seen_subcommand_from info" -s a -l all -d "Print all information"
 
 # List options
@@ -119,6 +119,7 @@ complete -f -c apk -n "__fish_seen_subcommand_from upgrade" -s l -l latest -d "S
 complete -f -c apk -n "__fish_seen_subcommand_from upgrade" -l no-self-upgrade -d "Don't do early upgrade of the apk"
 complete -f -c apk -n "__fish_seen_subcommand_from upgrade" -l self-upgrade-only -d "Only do self-upgrade"
 complete -f -c apk -n "__fish_seen_subcommand_from upgrade" -l ignore -d "Ignore the upgrade of PACKAGE"
+complete -f -c apk -n "__fish_seen_subcommand_from upgrade" -l prune -d "Prune the WORLD by removing packages which are no longer available"
 
 # Cache options
 complete -f -c apk -n "__fish_seen_subcommand_from cache" -s u -l upgrade -d "Prefer to upgrade package"

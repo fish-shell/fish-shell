@@ -1,16 +1,21 @@
-# Fish completions for the OpenZFS zfs command
-# TODO Possible enhancements:
-# - add a test to propose iSCSI and Trusted Extensions completions only when such system is present;
-# - Illumos man pages suggests that it does not support nbmand nor atime mount option, so these properties should be proposed only when available
-# - generally, propose properties only when the current OS and ZFS versions support them;
-# - for the promote command, propose only eligible filesystems;
-# - for the rollback command, propose only the most recent snapshot for each dataset, as it will not accept an intermediary snapshot;
-# - for the release command, complete with existing tags;
-# - for the diff command, complete the destination dataset of the diff;
-# - for the program command, complete the script to be executed
-# - for commands accepting several arguments of different types, propose arguments in the right order: for get, once the ZFS parameters have been given, only propose datasets
+# Fish completions for the ZFS `zfs` command
+#
+# Possible enhancements:
+# - Add a test to propose iSCSI and Trusted Extensions completions only when such system is present;
+# - Illumos man pages suggests that it does not support nbmand nor atime mount option, so these
+#   properties should be proposed only when available;
+# - Generally, propose properties only when the current OS and ZFS versions support them;
+# - For the promote command, propose only eligible filesystems;
+# - For the rollback command, propose only the most recent snapshot for each dataset, as it will not
+#   accept an intermediary snapshot;
+# - For the release command, complete with existing tags;
+# - For the diff command, complete the destination dataset of the diff;
+# - For the program command, complete the script to be executed;
+# - For commands accepting several arguments of different types, propose arguments in the right
+#   order: for get, once the ZFS parameters have been given, only propose datasets.
 
 set -l OS ""
+set -l freebsd_version ""
 switch (uname)
     case Linux
         set OS Linux
@@ -18,11 +23,20 @@ switch (uname)
         set OS macOS
     case FreeBSD
         set OS FreeBSD
+        set freebsd_version (uname -U)
     case SunOS
         set OS SunOS
         # Others?
     case "*"
         set OS unknown
+end
+
+# Certain functionality is exclusive to platforms using OpenZFS. This used to be just Linux, but it
+# now includes FreeBSD 13 and above.
+if not type -q __fish_is_openzfs
+    function __fish_is_openzfs --inherit-variable freebsd_version --inherit-variable OS
+        test $OS = Linux || test $OS = FreeBSD -a $freebsd_version -gt 1300000
+    end
 end
 
 # Does the current invocation need a command?
@@ -261,7 +275,8 @@ if test $OS = SunOS # This is currently only supported under Illumos, but that w
     complete -c zfs -f -n __fish_zfs_needs_command -a program -d 'Execute a ZFS Channel Program'
 end
 
-# Completions hereafter try to follow the man pages commands order, for maintainability, at the cost of multiple if statements
+# Completions hereafter try to follow the man pages commands order, for maintainability, at the cost
+# of multiple if statements.
 
 # create completions
 complete -c zfs -f -n '__fish_zfs_using_command create' -s p -d 'Create all needed non-existing parent datasets'
@@ -270,16 +285,20 @@ if test $OS = Linux # Only Linux supports the comma-separated format; others nee
 else
     complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 end
-# create completions for volumes; as -V is necessary to zfs to recognize a volume creation request, we use it as a condition to propose volume creation completions
-# If -V is typed after -s or -b, zfs should accept it, but fish won't propose -s or -b, but, as these options are for volumes only, it seems reasonable to expect the user to ask for a volume, with -V, before giving its characteristics with -s or -b
+# create completions for volumes; as -V is necessary to zfs to recognize a volume creation request,
+# we use it as a condition to propose volume creation completions.
+# If -V is typed after -s or -b, zfs should accept it, but fish won't propose -s or -b, but, as
+# these options are for volumes only, it seems reasonable to expect the user to ask for a volume,
+# with -V, before giving its characteristics with -s or -b
 complete -c zfs -x -n '__fish_zfs_using_command create' -s V -d 'Volume size'
 complete -c zfs -f -n '__fish_zfs_using_command create; and __fish_contains_opt -s V' -s s -d 'Create a sparse volume'
 complete -c zfs -x -n '__fish_zfs_using_command create; and __fish_contains_opt -s V' -s b -d Blocksize
-# new dataset completions, applicable for both regular datasets and volumes; must start with pool and may optionally
-# be a child of a pre-existing dataset.
+# new dataset completions, applicable for both regular datasets and volumes; must start with pool
+# and may optionally be a child of a pre-existing dataset.
 complete -c zfs -x -n '__fish_zfs_using_command create' -a '(printf "%s/\n" (__fish_print_zfs_filesystems))'
 
-# destroy completions; as the dataset is the last item, we can't know yet if it's a snapshot, a bookmark or something else, so we can't separate snapshot-specific options from others
+# destroy completions; as the dataset is the last item, we can't know yet if it's a snapshot, a
+# bookmark or something else, so we can't separate snapshot-specific options from others.
 complete -c zfs -f -n '__fish_zfs_using_command destroy' -s r -d 'Recursively destroy children'
 complete -c zfs -f -n '__fish_zfs_using_command destroy' -s R -d 'Recursively destroy all dependents'
 complete -c zfs -f -n '__fish_zfs_using_command destroy' -s f -d 'Force unmounting'
@@ -316,14 +335,16 @@ complete -c zfs -x -n '__fish_zfs_using_command clone' -d 'Snapshot to clone' -a
 # promote completions
 complete -c zfs -x -n '__fish_zfs_using_command promote' -d 'Clone to promote' -a '(__fish_print_zfs_filesystems)'
 
-# rename completions; as the dataset is the last item, we can't know yet if it's a snapshot or not, we can't separate snapshot-specific option from others
+# rename completions; as the dataset is the last item, we can't know yet if it's a snapshot or not,
+# we can't separate snapshot-specific option from others.
 complete -c zfs -f -n '__fish_zfs_using_command rename' -s p -d 'Create all needed non-existing parent datasets'
 complete -c zfs -f -n '__fish_zfs_using_command rename' -s r -d 'Recursively rename children snapshots'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zfs -f -n '__fish_zfs_using_command rename' -s f -d 'Force unmounting if needed'
-else if test $OS = FreeBSD
+end
+# These FreeBSD completions are in addition to any added via the OpenZFS check above
+if test $OS = FreeBSD
     complete -c zfs -f -n '__fish_zfs_using_command rename' -s u -d 'Do not remount filesystems during rename'
-    complete -c zfs -f -n '__fish_zfs_using_command rename; and __fish_not_contain_opt -s u' -s f -d 'Force unmounting if needed'
 end
 complete -c zfs -x -n '__fish_zfs_using_command rename' -d 'Dataset to rename' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 

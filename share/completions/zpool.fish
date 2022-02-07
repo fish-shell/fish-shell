@@ -53,7 +53,7 @@ end
 function __fish_zpool_list_used_vdevs -a pool
     # See discussion and variants discussed at
     # https://github.com/fish-shell/fish-shell/pull/5743#pullrequestreview-217432149
-    zpool list -Hv | string replace -rf "^\t([^\t]+).*" '$1' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
+    zpool list -Hv $pool | string replace -rf "^\t([^\t]+).*" '$1' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
 end
 
 function __fish_zpool_list_available_vdevs -V OS
@@ -71,8 +71,13 @@ function __fish_zpool_complete_vdevs
     # that it is relevant for the specified command; this is to be decided by calling, or not, the
     # current function for command completions.
     # We can display the physical devices, as they are relevant whereas we are in a vdev definition
-    # or not.
+    # or not. Many operations need this list of vdevs winnowed down to some precondition (mostly
+    # "vdevs associated with pool" or "vdevs not associated with pool") but it's not really feasible
+    # to do that here as the situations are highly subcommand-dependent and this function is
+    # structured to operate backwards only analyzing the subcommand at the very end. Long story
+    # short, that vdev filtering will need to happen at the call site, at least currently.
     __fish_zpool_list_available_vdevs
+
     # First, reverse token list to analyze it from the end
     set -l tokens 0
     for i in (commandline -co)[-1..1]
@@ -233,8 +238,17 @@ complete -c zpool -f -n '__fish_zpool_using_command attach' -s f -d 'Force use o
 if __fish_is_openzfs
     complete -c zpool -x -n '__fish_zpool_using_command attach' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
-complete -c zpool -x -n '__fish_zpool_using_command attach' -d 'Pool to attach virtual device to' -a '(__fish_complete_zfs_pools)'
-complete -c zpool -x -n '__fish_zpool_using_command attach' -d 'Virtual device to operate on' -a '(__fish_zpool_list_available_vdevs)'
+# The ideal behavior for attach is as follows:
+# - zpool attach [should list only pools]
+# - zpool attach <tank> [should list only devices already part of pool]
+# - zpool attach <tank> <da1> [should list only devices not already part of a/the pool]
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 2' -d 'Pool to attach virtual device to' -a '(__fish_complete_zfs_pools)'
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 3' -d 'Existing pool device to attach to' -a '(__fish_zpool_list_used_vdevs (fish_nth_token 2))'
+# Generate a list of devices in the system modulo devices already part of an online zpool.
+# These latter can be forcefully added, so we only exclude them if we don't introspect the presence
+# of a `-f` argument to `zpool attach` (but still exclude any devices already part of the same pool
+# that we're attaching to, "obviously").
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 4' -d 'Device to be attached' -a '(__fish_zpool_list_available_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
 
 # clear completions
 if test $OS = FreeBSD

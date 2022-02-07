@@ -3,12 +3,6 @@
 #
 
 #
-# All locale variables used by set completions
-#
-
-set -l __fish_locale_vars LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY LC_NUMERIC LC_TIME
-
-#
 # Various helper functions
 #
 
@@ -36,7 +30,7 @@ function __fish_set_is_locale -d 'Test if We are specifying a locale value for t
     for i in $cmd
         switch $i
 
-            case $__fish_locale_vars
+            case LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY LC_NUMERIC LC_TIME
                 return 0
 
             case '-*'

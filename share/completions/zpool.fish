@@ -230,8 +230,11 @@ if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command add' -s P -d 'Display device full path'
     complete -c zpool -x -n '__fish_zpool_using_command add' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
-complete -c zpool -x -n '__fish_zpool_using_command add; and __fish_prev_arg_in add' -d 'Pool to add virtual devices to' -a '(__fish_complete_zfs_pools)'
-complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
+complete -c zpool -x -n '__fish_zpool_using_command add; and __fish_is_nth_token 2' -d 'Pool to add virtual device(s) to' -a '(__fish_complete_zfs_pools)'
+# complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
+# Exclude devices already part of this pool, and devices already in any other pool unless
+# `zpool add -f` was used.
+complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -k -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
 
 # attach completions
 complete -c zpool -f -n '__fish_zpool_using_command attach' -s f -d 'Force use of virtual device'

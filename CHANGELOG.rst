@@ -177,6 +177,7 @@ Completions
 
 - Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
 - Many adjustments to complete correct options for system utilities on BSD and macOS.
+- Unified the OpenZFS-related completions across operating systems and improved the vdev-related completions for all platforms.
 - Add missing completions for the ``-p`` option of ``xbps-query``.
 - The ``fish_is_nth_token`` function, which is particularly useful in completions for identifying the token number within the command line, replaces various internal functions to do the same (:issue:`8008`).
 - When evaluating custom completions, the command line state no longer includes variable overrides (``var=val``). This unbreaks completions that read ``commandline -op``.

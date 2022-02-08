@@ -3350,3 +3350,5 @@ to call ttyname() on OS X.
 
 We’ve got some work to do to be as lean as bash, but we’re on the right
 track.
+
+.. vim: ft=rst : tw=0 :

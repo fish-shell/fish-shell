@@ -353,14 +353,21 @@ bool make_detached_pthread(void *(*func)(void *), void *param) {
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
     // extant requests. So we can ignore failure with some confidence.
-    pthread_t thread = 0;
-    int err = pthread_create(&thread, nullptr, func, param);
+    pthread_t thread;
+    pthread_attr_t thread_attr;
+    DIE_ON_FAILURE(pthread_attr_init(&thread_attr));
+
+    int err = pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
     if (err == 0) {
-        // Success, return the thread.
-        FLOGF(iothread, "pthread %p spawned", (intptr_t)thread);
-        DIE_ON_FAILURE(pthread_detach(thread));
+        err = pthread_create(&thread, &thread_attr, func, param);
+        if (err == 0) {
+            FLOGF(iothread, "pthread %d spawned", thread);
+            pthread_attr_destroy(&thread_attr);
+        } else {
+            perror("pthread_create");
+        }
     } else {
-        perror("pthread_create");
+        perror("pthread_attr_setdetachstate");
     }
     // Restore our sigmask.
     DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, nullptr));

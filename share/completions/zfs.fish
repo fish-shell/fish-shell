@@ -104,6 +104,87 @@ function __fish_zfs_list_groupspace_types
     echo -e "all\tBoth types"
 end
 
+function __fish_zfs_complete_property_values -a name
+    # To make updates easier, instead of using a switch/case here we just copy-and-paste the lines
+    # from zfsprops(8) directly, and then parse them when the function is called.
+
+    set all_options "
+    aclinherit=discard|noallow|restricted|passthrough|passthrough-x
+    aclmode=discard|groupmask|passthrough|restricted
+    acltype=off|nfsv4|posix
+    atime=on|off
+    canmount=on|off|noauto
+    checksum=on|off|fletcher2|fletcher4|sha256|noparity|sha512|skein|edonr
+    compression=on|off|gzip|gzip-N|lz4|lzjb|zle|zstd|zstd-N|zstd-fast|zstd-fast-N
+    context=none|SELinux_User:SElinux_Role:Selinux_Type:Sensitivity_Level
+    fscontext=none|SELinux_User:SElinux_Role:Selinux_Type:Sensitivity_Level
+    defcontext=none|SELinux_User:SElinux_Role:Selinux_Type:Sensitivity_Level
+    rootcontext=none|SELinux_User:SElinux_Role:Selinux_Type:Sensitivity_Level
+    copies=1|2|3
+    devices=on|off
+    dedup=off|on|verify|sha256[,verify]|sha512[,verify]|skein[,verify]|edonr,verify
+    dnodesize=legacy|auto|1k|2k|4k|8k|16k
+    encryption=off|on|aes-128-ccm|aes-192-ccm|aes-256-ccm|aes-128-gcm|aes-192-gcm|aes-256-gcm
+    keyformat=raw|hex|passphrase
+    keylocation=prompt|file://</absolute/file/path>
+    pbkdf2iters=iterations
+    exec=on|off
+    filesystem_limit=count|none
+    special_small_blocks=size
+    mountpoint=path|none|legacy
+    nbmand=on|off
+    overlay=on|off
+    primarycache=all|none|metadata
+    quota=size|none
+    snapshot_limit=count|none
+    recordsize=size
+    readonly=on|off
+    redundant_metadata=all|most
+    refquota=size|none
+    refreservation=size|none|auto
+    relatime=on|off
+    reservation=size|none
+    secondarycache=all|none|metadata
+    setuid=on|off
+    sharesmb=on|off|opts
+    sharenfs=on|off|opts
+    logbias=latency|throughput
+    snapdev=hidden|visible
+    snapdir=hidden|visible
+    sync=standard|always|disabled
+    version=N|current
+    volsize=size
+    volmode=default | full | geom | dev | none
+    vscan=on|off
+    xattr=on|off|sa
+    jailed=off | on
+    casesensitivity=sensitive|insensitive|mixed
+    normalization=none|formC|formD|formKC|formKD
+    utf8only=on|off
+"
+    # Convert the list above into an array of strings
+    set all_options (string split \n -- $all_options | string trim)
+
+    # Make sure the name doesn't already have a trailing = (depending on the context)
+    set name (string match -r '^[^=]+' -- $name)
+    # Extract the values "value1|value2" from the long list of "key=value1|value2"
+    set options (string match "$name=*" -- $all_options | string split =)[2]
+    # echo o1: (string escape -- $options)
+    # Put each possible value on its own line and account for formatting disparities
+    set options (string replace -a '|' \n -- $options | string trim)
+    # echo o2: (string escape -- $options)
+    # Remove open-ended options (size, count, path)
+    set options (string match -rv '^(size|count|iterations|path)$|\<.*?\>' -- $options)
+    # echo o3: (string escape -- $options)
+    # Expand optionally comma-separated arguments (e.g. skein[,verify] => skein\nskein,verify)
+    set options (string replace -r "(.*)\[,(.*?)\]" '$1\n$1,$2' -- $options)
+    # echo o4: (string escape -- $options)
+
+    if set -q options[1]
+        printf "$name=%s\n" $options
+    end
+end
+
 # Generate a list of possible values from the man page.
 # NB: This includes "hints" like "size" or "opts" which may be useful or unwanted. *shrug*
 if type -q man && type -q col
@@ -282,9 +363,8 @@ end
 complete -c zfs -f -n '__fish_zfs_using_command create' -s p -d 'Create all needed non-existing parent datasets'
 if test $OS = Linux # Only Linux supports the comma-separated format; others need multiple -o calls
     complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
-else
-    complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 end
+complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_zfs_complete_property_values (commandline -t))'
 # create completions for volumes; as -V is necessary to zfs to recognize a volume creation request,
 # we use it as a condition to propose volume creation completions.
 # If -V is typed after -s or -b, zfs should accept it, but fish won't propose -s or -b, but, as
@@ -312,9 +392,8 @@ complete -c zfs -x -n '__fish_zfs_using_command destroy' -d 'Dataset to destroy'
 complete -c zfs -f -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s r -d 'Recursively snapshot children'
 if test $OS = Linux # Only Linux supports the comma-separated format; others need multiple -o calls
     complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
-else
-    complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 end
+complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_zfs_complete_property_values (commandline -t))'
 complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -d 'Dataset to snapshot' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)'
 
 # rollback completions
@@ -327,9 +406,8 @@ complete -c zfs -x -n '__fish_zfs_using_command rollback' -d 'Snapshot to roll b
 complete -c zfs -f -n '__fish_zfs_using_command clone' -s p -d 'Create all needed non-existing parent datasets'
 if test $OS = Linux # Only Linux supports the comma-separated format; others need multiple -o calls
     complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
-else
-    complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 end
+complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_zfs_complete_property_values (commandline -t))'
 complete -c zfs -x -n '__fish_zfs_using_command clone' -d 'Snapshot to clone' -a '(__fish_print_zfs_snapshots --force)'
 
 # promote completions
@@ -359,11 +437,11 @@ complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt
 complete -c zfs -x -n '__fish_zfs_using_command list' -s t -d 'Dataset type' -a '(__fish_zfs_list_dataset_types)'
 complete -c zfs -x -n '__fish_zfs_using_command list' -d 'Dataset whose properties to list' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 
-# set completions
-complete -c zfs -x -n '__fish_zfs_using_command set' -d 'Property to set' -a '(__fish_complete_zfs_rw_properties)'
-complete -c zfs -x -n '__fish_zfs_using_command set; and string match -q -r "zfs set \S+ " (commandline -c)' -d 'Dataset whose property to set' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
+# set completions (zfs set PROP VALUE POOL/DATASET)
+complete -c zfs -x -n '__fish_zfs_using_command set; and __fish_is_nth_token 2' -d 'Property to set' -a '(__fish_complete_zfs_rw_properties)'
+complete -c zfs -x -n '__fish_zfs_using_command set; and __fish_is_nth_token 3' -d 'Dataset whose property to set' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 # set property value completions
-complete -c zfs -x -n '__fish_zfs_using_command set; and string match -qe = -- (commandline -t)' -a '(__fish_zfs_property_options (commandline -t | string match -r "[^=]+"))'
+complete -c zfs -x -n '__fish_zfs_using_command set; and __fish_is_nth_token 2' -a '(__fish_zfs_complete_property_values (fish_nth_token 2))'
 
 # get completions
 complete -c zfs -f -n '__fish_zfs_using_command get' -s r -d 'Operate recursively on datasets'
@@ -402,7 +480,10 @@ complete -c zfs -f -n '__fish_zfs_using_command userspace; or __fish_zfs_using_c
 complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -d 'Dataset whose space usage to get' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_snapshots)'
 
 # mount completions
-complete -c zfs -x -n '__fish_zfs_using_command mount' -s o -d 'Temporary mount point property' -a '(__fish_append , (__fish_complete_zfs_mountpoint_properties))'
+if test $OS = Linux
+    complete -c zfs -x -n '__fish_zfs_using_command mount' -s o -d 'Temporary mount point property' -a '(__fish_append , (__fish_complete_zfs_mountpoint_properties))'
+end
+complete -c zfs -x -n '__fish_zfs_using_command mount' -s o -d 'Temporary mount point property' -a '(__fish_complete_zfs_mountpoint_properties; __fish_zfs_complete_property_values (commandline -t))'
 complete -c zfs -f -n '__fish_zfs_using_command mount' -s v -d 'Report progress'
 complete -c zfs -f -n '__fish_zfs_using_command mount' -s a -d 'Mount all available ZFS filesystems'
 if contains -- $OS Linux SunOS

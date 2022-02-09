@@ -234,7 +234,7 @@ complete -c zpool -x -n '__fish_zpool_using_command add; and __fish_is_nth_token
 # complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
 # Exclude devices already part of this pool, and devices already in any other pool unless
 # `zpool add -f` was used.
-complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -k -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
+complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -k -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && __fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
 
 # attach completions
 complete -c zpool -f -n '__fish_zpool_using_command attach' -s f -d 'Force use of virtual device'
@@ -246,12 +246,12 @@ end
 # - zpool attach <tank> [should list only devices already part of pool]
 # - zpool attach <tank> <da1> [should list only devices not already part of a/the pool]
 complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 2' -d 'Pool to attach virtual device to' -a '(__fish_complete_zfs_pools)'
-complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 3' -d 'Existing pool device to attach to' -a '(__fish_zpool_list_used_vdevs (fish_nth_token 2))'
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 3' -d 'Existing pool device to attach to' -a '(__fish_zpool_list_used_vdevs (__fish_nth_token 2))'
 # Generate a list of devices in the system modulo devices already part of an online zpool.
 # These latter can be forcefully added, so we only exclude them if we don't introspect the presence
 # of a `-f` argument to `zpool attach` (but still exclude any devices already part of the same pool
 # that we're attaching to, "obviously").
-complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 4' -d 'Device to be attached' -a '(__fish_zpool_list_available_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 4' -d 'Device to be attached' -a '(__fish_zpool_list_available_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && __fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
 
 # clear completions
 if test $OS = FreeBSD

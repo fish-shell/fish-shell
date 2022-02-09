@@ -180,7 +180,6 @@ Completions
 - Many adjustments to complete correct options for system utilities on BSD and macOS.
 - Unified the OpenZFS-related completions across operating systems and improved the vdev-related completions for all platforms.
 - Add missing completions for the ``-p`` option of ``xbps-query``.
-- The ``fish_is_nth_token`` and accompanying ``fish_nth_token`` functions, which are particularly useful in completions for identifying the token number within the command line and replace various internal functions to do the same (:issue:`8008`).
 - When evaluating custom completions, the command line state no longer includes variable overrides (``var=val``). This unbreaks completions that read ``commandline -op``.
 
 Improved terminal support

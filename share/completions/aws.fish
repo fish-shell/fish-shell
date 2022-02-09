@@ -270,4 +270,4 @@ set -l aws_services \
     workspaces \
     xray
 
-complete -c aws -n "fish_is_nth_token 1" -xa "$aws_services"
+complete -c aws -n "__fish_is_nth_token 1" -xa "$aws_services"

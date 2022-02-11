@@ -50,12 +50,12 @@ end
 echo { alpha, beta }\ {lambda, gamma }, | string replace -r ',$' ''
 #CHECK: alpha lambda, beta lambda, alpha gamma, beta gamma
 
-# expansion with subshells
-for name in { (echo Meg), (echo Jo) }
+# expansion with subshells (#5048)
+for name in { (echo Meg), (echo Jo,etc.) }
     echo $name
 end
 #CHECK: Meg
-#CHECK: Jo
+#CHECK: Jo,etc.
 
 # subshells with expansion
 for name in (for name in {Beth, Amy}; printf "$name\n"; end)

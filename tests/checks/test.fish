@@ -49,7 +49,7 @@ t 5,2
 # CHECKERR: {{.*}}test.fish (line {{\d+}}):
 # CHECKERR: test $argv[1] -eq 5
 # CHECKERR: ^
-# CHECKERR: in function 't' with arguments '5,2'
+# CHECKERR: in function 't' with arguments '5\,2'
 # CHECKERR: called on line {{\d+}} of file {{.*}}test.fish
 
 test -x /usr/bin/go /usr/local/bin/go

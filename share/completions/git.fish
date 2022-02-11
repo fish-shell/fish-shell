@@ -58,6 +58,11 @@ function __fish_git_branches
         | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
 
+function __fish_git_submodules
+    __fish_git submodule 2>/dev/null \
+        | string replace -r '^.[^ ]+ ([^ ]+).*$' '$1'
+end
+
 function __fish_git_local_branches
     __fish_git for-each-ref --format='%(refname:strip=2)' refs/heads/ 2>/dev/null \
         | string replace -rf '.*' '$0\tLocal Branch'
@@ -1955,15 +1960,19 @@ complete -f -c git -n '__fish_git_using_command format-patch' -l no-numbered -s 
 
 
 ## git submodule
-set -l submodulecommands add status init update summary foreach sync
+set -l submodulecommands add status init deinit update set-branch set-url summary foreach sync absorbgitdirs
 complete -f -c git -n __fish_git_needs_command -a submodule -d 'Initialize, update or inspect submodules'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a add -d 'Add a submodule'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a status -d 'Show submodule status'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a init -d 'Initialize all submodules'
+complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a deinit -d 'Unregister the given submodules'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a update -d 'Update all submodules'
+complete -x -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a set-branch -d 'Sets the default remote tracking branch for the submodule'
+complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a set-url -d 'Sets the URL of the specified submodule'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a summary -d 'Show commit summary'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a foreach -d 'Run command on each submodule'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a sync -d 'Sync submodules\' URL with .gitmodules'
+complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a absorbgitdirs -d 'Move inner git directory of the submodule to the current git directory submodule\'s list'
 complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -s q -l quiet -d "Only print error messages"
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l init -d "Initialize all submodules"
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l checkout -d "Checkout the superproject's commit on a detached HEAD in the submodule"
@@ -1974,7 +1983,12 @@ complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subco
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l force -d "Discard local changes when switching to a different commit & always run checkout"
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from add' -l force -d "Also add ignored submodule path"
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from deinit' -l force -d "Remove even with local changes"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from deinit' -l all -d "Remove all submodules"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from deinit; and not contains -- -- (commandline -opc)' -a '(__fish_git_submodules)' -d Submodule
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from set-branch' -s b -l branch -d "Specify the branch to use"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from set-branch' -s d -l default -d "Use default branch of the submodule"
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from status summary' -l cached -d "Use the commit stored in the index"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from status; and not contains -- -- (commandline -opc)' -a '(__fish_git_submodules)' -d Submodule
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from summary' -l files -d "Compare the commit in the index with submodule HEAD"
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from foreach update status' -l recursive -d "Traverse submodules recursively"
 complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from foreach' -a "(__fish_complete_subcommand --fcs-skip=3)"

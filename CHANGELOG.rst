@@ -176,7 +176,7 @@ Completions
   -  Windows' ``color`` (:issue:`8483`), ``attrib``, ``attributes``, ``choice``, ``clean``, ``cleanmgr``, ``cmd``, ``cmdkey``, ``comp``, ``forfiles``, ``powershell``, ``reg``, ``schtasks``, ``setx`` (:issue:`8486`)
   - ``zef`` (:issue:`8114`)
 
-- Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
+- Improvements to many completions, especially for ``git`` aliases (:issue:`8129`), subcommands (:issue:`8134`) and submodules (:issue:`8716`).
 - Many adjustments to complete correct options for system utilities on BSD and macOS.
 - Unified the OpenZFS-related completions across operating systems and improved the vdev-related completions for all platforms.
 - Add missing completions for the ``-p`` option of ``xbps-query``.

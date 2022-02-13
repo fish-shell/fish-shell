@@ -137,7 +137,7 @@ int execute_setpgid(pid_t pid, pid_t pgroup, bool is_parent) {
     }
 }
 
-int child_setup_process(pid_t new_termowner, pid_t fish_pgrp, const job_t &job, bool is_forked,
+int child_setup_process(pid_t claim_tty_from, const job_t &job, bool is_forked,
                         const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
@@ -161,7 +161,7 @@ int child_setup_process(pid_t new_termowner, pid_t fish_pgrp, const job_t &job, 
             return err;
         }
     }
-    if (new_termowner != INVALID_PID && new_termowner != fish_pgrp) {
+    if (claim_tty_from >= 0 && tcgetpgrp(STDIN_FILENO) == claim_tty_from) {
         // Assign the terminal within the child to avoid the well-known race between tcsetgrp() in
         // the parent and the child executing. We are not interested in error handling here, except
         // we try to avoid this for non-terminals; in particular pipelines often make non-terminal
@@ -170,12 +170,10 @@ int child_setup_process(pid_t new_termowner, pid_t fish_pgrp, const job_t &job, 
         // another process which may happen if we are run in the background with job control
         // enabled. Note if stdin is not a tty, then tcgetpgrp() will return -1 and we will not
         // enter this.
-        if (tcgetpgrp(STDIN_FILENO) == fish_pgrp) {
-            // Ensure this doesn't send us to the background (see #5963)
-            signal(SIGTTIN, SIG_IGN);
-            signal(SIGTTOU, SIG_IGN);
-            (void)tcsetpgrp(STDIN_FILENO, new_termowner);
-        }
+        // Ensure this doesn't send us to the background (see #5963)
+        signal(SIGTTIN, SIG_IGN);
+        signal(SIGTTOU, SIG_IGN);
+        (void)tcsetpgrp(STDIN_FILENO, getpid());
     }
     sigset_t sigmask;
     sigemptyset(&sigmask);

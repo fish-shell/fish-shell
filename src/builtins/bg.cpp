@@ -30,9 +30,11 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
 
     streams.err.append_format(_(L"Send job %d '%ls' to background\n"), j->job_id(),
                               j->command_wcstr());
-    parser.job_promote(j);
     j->group->set_is_foreground(false);
-    j->continue_job(parser, false /* not in_foreground */);
+    if (!j->resume()) {
+        return STATUS_CMD_ERROR;
+    }
+    parser.job_promote(j);
     return STATUS_CMD_OK;
 }
 

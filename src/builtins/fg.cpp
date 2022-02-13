@@ -104,9 +104,21 @@ maybe_t<int> builtin_fg(parser_t &parser, io_streams_t &streams, const wchar_t *
     if (!ft.empty()) parser.set_var_and_fire(L"_", ENV_EXPORT, std::move(ft));
     reader_write_title(job->command(), parser);
 
+    // Note if tty transfer fails, we still try running the job.
     parser.job_promote(job);
+    make_fd_blocking(STDIN_FILENO);
     job->group->set_is_foreground(true);
-
-    job->continue_job(parser);
-    return STATUS_CMD_OK;
+    if (job->group->wants_terminal() && job->group->tmodes) {
+        int res = tcsetattr(STDIN_FILENO, TCSADRAIN, &job->group->tmodes.value());
+        if (res < 0) wperror(L"tcsetattr");
+    }
+    tty_transfer_t transfer;
+    transfer.to_job_group(job->group);
+    bool resumed = job->resume();
+    if (resumed) {
+        job->continue_job(parser);
+    }
+    if (job->is_stopped()) transfer.save_tty_modes();
+    transfer.reclaim();
+    return resumed ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }

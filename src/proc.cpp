@@ -137,6 +137,7 @@ bool job_t::signal(int signal) {
             return false;
         }
     } else {
+        // This job lives in fish's pgroup and we need to signal procs individually.
         for (const auto &p : processes) {
             if (!p->completed && p->pid && kill(p->pid, signal) == -1) {
                 return false;
@@ -788,61 +789,48 @@ void proc_update_jiffies(parser_t &parser) {
     }
 }
 
-// Return control of the terminal to a job's process group. restore_attrs is true if we are
-// restoring a previously-stopped job, in which case we need to restore terminal attributes.
-int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from_stopped) {
-    enum { notneeded = 0, success = 1, error = -1 };
-    if (!jg->wants_terminal() || !jg->get_pgid()) {
-        // The job doesn't want the terminal, or doesn't have a pgroup yet.
-        return notneeded;
+// static
+bool tty_transfer_t::try_transfer(const job_group_ref_t &jg) {
+    assert(jg && "Null job group");
+    if (!jg->wants_terminal()) {
+        // The job doesn't want the terminal.
+        return false;
     }
 
-    // Get the pgid.
+    // Get the pgid; we must have one if we want the terminal.
     pid_t pgid = *jg->get_pgid();
     assert(pgid >= 0 && "Invalid pgid");
 
-    // If we are continuing, ensure that stdin is marked as blocking first (issue #176).
-    // Also restore tty modes.
-    if (continuing_from_stopped) {
-        make_fd_blocking(STDIN_FILENO);
-        if (jg->tmodes.has_value()) {
-            int res = tcsetattr(STDIN_FILENO, TCSADRAIN, &jg->tmodes.value());
-            if (res < 0) wperror(L"tcsetattr");
-        }
-    }
+    // It should never be fish's pgroup.
+    pid_t fish_pgrp = getpgrp();
+    assert(pgid != fish_pgrp && "Job should not have fish's pgroup");
 
     // Ok, we want to transfer to the child.
     // Note it is important to be very careful about calling tcsetpgrp()!
     // fish ignores SIGTTOU which means that it has the power to reassign the tty even if it doesn't
     // own it. This means that other processes may get SIGTTOU and become zombies.
-    // Check who own the tty now. Thre's five cases of interest:
-    //   1. The process's pgrp is the same as fish. In that case there is nothing to do.
-    //   2. There is no tty at all (tcgetpgrp() returns -1). For example running from a pure script.
+    // Check who own the tty now. There's four cases of interest:
+    //   1. There is no tty at all (tcgetpgrp() returns -1). For example running from a pure script.
     //      Of course do not transfer it in that case.
-    //   3. The tty is owned by the process. This comes about often, as the process will call
+    //   2. The tty is owned by the process. This comes about often, as the process will call
     //      tcsetpgrp() on itself between fork ane exec. This is the essential race inherent in
     //      tcsetpgrp(). In this case we want to reclaim the tty, but do not need to transfer it
     //      ourselves since the child won the race.
-    //   4. The tty is owned by a different process. This may come about if fish is running in the
+    //   3. The tty is owned by a different process. This may come about if fish is running in the
     //      background with job control enabled. Do not transfer it.
-    //   5. The tty is owned by fish. In that case we want to transfer the pgid.
-    pid_t fish_pgrp = getpgrp();
-    if (fish_pgrp == pgid) {
-        // Case 1.
-        return notneeded;
-    }
+    //   4. The tty is owned by fish. In that case we want to transfer the pgid.
     pid_t current_owner = tcgetpgrp(STDIN_FILENO);
     if (current_owner < 0) {
-        // Case 2.
-        return notneeded;
+        // Case 1.
+        return false;
     } else if (current_owner == pgid) {
-        // Case 3.
-        return success;
+        // Case 2.
+        return true;
     } else if (current_owner != pgid && current_owner != fish_pgrp) {
-        // Case 4.
-        return notneeded;
+        // Case 3.
+        return false;
     }
-    // Case 5 - we do want to transfer it.
+    // Case 4 - we do want to transfer it.
 
     // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
     // is not the process group ID of a process in the same session as the calling process."
@@ -866,19 +854,19 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
                 case ENOTTY:
                     // stdin is not a tty. This may come about if job control is enabled but we are
                     // not a tty - see #6573.
-                    return notneeded;
+                    return false;
                 case EBADF:
                     // stdin has been closed. Workaround a glibc bug - see #3644.
                     redirect_tty_output();
-                    return notneeded;
+                    return false;
                 default:
                     wperror(L"tcgetpgrp");
-                    return error;
+                    return false;
             }
         }
         if (getpgrp_res == pgid) {
             FLOGF(proc_termowner, L"Process group %d already has control of terminal", pgid);
-            return notneeded;
+            return true;
         }
 
         bool pgroup_terminated = false;
@@ -906,12 +894,12 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
         } else if (errno == ENOTTY) {
             // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
             // call's EBADF handler above.
-            return notneeded;
+            return false;
         } else {
             FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
                   jg->get_job_id(), jg->get_command().c_str(), pgid);
             wperror(L"tcsetpgrp");
-            return error;
+            return false;
         }
 
         if (pgroup_terminated) {
@@ -921,33 +909,12 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
             // process in the group terminated and didn't need to access the terminal, otherwise
             // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
             FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n", pgid);
-            return notneeded;
+            return false;
         }
 
         break;
     }
-
-    return success;
-}
-
-/// Returns control of the terminal to the shell, and saves the terminal attribute state to the job
-/// group, so that we can restore the terminal ownership to the job at a later time.
-static void terminal_return_from_job_group(job_group_t *jg) {
-    errno = 0;
-    FLOG(proc_pgroup, "fish reclaiming terminal");
-    if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
-        FLOGF(warning, _(L"Could not return shell to foreground"));
-        wperror(L"tcsetpgrp");
-        return;
-    }
-
-    // Save jobs terminal modes.
-    struct termios tmodes {};
-    if (tcgetattr(STDIN_FILENO, &tmodes) == 0) {
-        jg->tmodes = tmodes;
-    } else if (errno != ENOTTY) {
-        wperror(L"tcgetattr");
-    }
+    return true;
 }
 
 bool job_t::is_foreground() const { return group->is_foreground(); }
@@ -964,66 +931,30 @@ maybe_t<pid_t> job_t::get_last_pid() const {
 
 job_id_t job_t::job_id() const { return group->get_job_id(); }
 
-void job_t::continue_job(parser_t &parser, bool in_foreground) {
-    // Put job first in the job list.
-    parser.job_promote(this);
+bool job_t::resume() {
     mut_flags().notified_of_stop = false;
+    if (!this->signal(SIGCONT)) {
+        FLOGF(proc_pgroup, "Failed to send SIGCONT to procs in job %ls", this->command_wcstr());
+        return false;
+    }
 
-    int pgid = -2;
-    if (auto tmp = get_pgid()) pgid = *tmp;
+    // reset the status of each process instance
+    for (auto &p : this->processes) {
+        p->stopped = false;
+    }
+    return true;
+}
 
-    // We must send_sigcont if the job is stopped.
-    bool send_sigcont = this->is_stopped();
-
-    FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
-          send_sigcont ? L"Continue" : L"Start", job_id(), pgid, command_wcstr(),
+void job_t::continue_job(parser_t &parser) {
+    FLOGF(proc_job_run, L"Run job %d, gid %d (%ls), %ls, %ls",
           is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
-    // Make sure we retake control of the terminal before leaving this function.
-    bool term_transferred = false;
-    cleanup_t take_term_back([&] {
-        if (term_transferred) {
-            // Issues of interest include #121 and #2114.
-            terminal_return_from_job_group(this->group.get());
-        }
-    });
-
-    if (!is_completed()) {
-        int transfer = terminal_maybe_give_to_job_group(this->group.get(), send_sigcont);
-        if (transfer < 0) {
-            // terminal_maybe_give_to_job prints an error.
-            return;
-        }
-        term_transferred = (transfer > 0);
-
-        // If both requested and necessary, send the job a continue signal.
-        if (send_sigcont) {
-            // This code used to check for JOB_CONTROL to decide between using killpg to signal all
-            // processes in the group or iterating over each process in the group and sending the
-            // signal individually. job_t::signal() does the same, but uses the shell's own pgroup
-            // to make that distinction.
-            if (!signal(SIGCONT)) {
-                FLOGF(proc_pgroup, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
-                // This returns without bubbling up the error. Presumably that is OK.
-                return;
-            }
-
-            // reset the status of each process instance
-            for (auto &p : processes) {
-                p->stopped = false;
-            }
-        }
-
-        if (in_foreground) {
-            // Wait for the status of our own job to change.
-            while (!check_cancel_from_fish_signal() && !is_stopped() && !is_completed()) {
-                process_mark_finished_children(parser, true);
-            }
-        }
+    // Wait for the status of our own job to change.
+    while (!check_cancel_from_fish_signal() && !is_stopped() && !is_completed()) {
+        process_mark_finished_children(parser, true);
     }
-
-    if (in_foreground && is_completed()) {
+    if (is_completed()) {
         // Set $status only if we are in the foreground and the last process in the job has
         // finished.
         const auto &p = processes.back();
@@ -1054,6 +985,37 @@ void hup_jobs(const job_list_t &jobs) {
         }
     }
 }
+
+void tty_transfer_t::to_job_group(const job_group_ref_t &jg) {
+    assert(!owner_ && "Terminal already transferred");
+    if (tty_transfer_t::try_transfer(jg)) {
+        owner_ = jg;
+    }
+}
+
+void tty_transfer_t::save_tty_modes() {
+    if (owner_) {
+        struct termios tmodes {};
+        if (tcgetattr(STDIN_FILENO, &tmodes) == 0) {
+            owner_->tmodes = tmodes;
+        } else if (errno != ENOTTY) {
+            wperror(L"tcgetattr");
+        }
+    }
+}
+
+void tty_transfer_t::reclaim() {
+    if (this->owner_) {
+        FLOG(proc_pgroup, "fish reclaiming terminal");
+        if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
+            FLOGF(warning, _(L"Could not return shell to foreground"));
+            wperror(L"tcsetpgrp");
+        }
+        this->owner_ = nullptr;
+    }
+}
+
+tty_transfer_t::~tty_transfer_t() { assert(!this->owner_ && "Forgot to reclaim() the tty"); }
 
 static std::atomic<bool> s_is_within_fish_initialization{false};
 

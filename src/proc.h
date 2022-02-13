@@ -176,6 +176,32 @@ class internal_proc_t {
 ///   function
 enum { INVALID_PID = -2 };
 
+// Allows transferring the tty to a job group, while it runs.
+class tty_transfer_t : nonmovable_t, noncopyable_t {
+   public:
+    tty_transfer_t() = default;
+
+    /// Transfer to the given job group, if it wants to own the terminal.
+    void to_job_group(const job_group_ref_t &jg);
+
+    /// Reclaim the tty if we transferred it.
+    void reclaim();
+
+    /// Save the current tty modes into the owning job group, if we are transferred.
+    void save_tty_modes();
+
+    /// The destructor will assert if reclaim() has not been called.
+    ~tty_transfer_t();
+
+   private:
+    // Try transferring the tty to the given job group.
+    // \return true if we should reclaim it.
+    static bool try_transfer(const job_group_ref_t &jg);
+
+    // The job group which owns the tty, or empty if none.
+    job_group_ref_t owner_;
+};
+
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a
@@ -466,11 +492,12 @@ class job_t : noncopyable_t {
     /// \return whether this job and its parent chain are fully constructed.
     bool job_chain_is_fully_constructed() const;
 
-    /// Continues running a job, which may be stopped, or may just have started.
-    /// This will send SIGCONT if the job is stopped.
-    /// If \p in_foreground is set, then wait for the job to stop or complete;
-    /// otherwise do not wait for the job.
-    void continue_job(parser_t &parser, bool in_foreground = true);
+    /// Run ourselves. Returning once we complete or stop.
+    void continue_job(parser_t &parser);
+
+    /// Prepare to resume a stopped job by sending SIGCONT and clearing the stopped flag.
+    /// \return true on success, false if we failed to send the signal.
+    bool resume();
 
     /// Send the specified signal to all processes in this job.
     /// \return true on success, false on failure.
@@ -544,15 +571,6 @@ bool is_within_fish_initialization();
 
 /// Send SIGHUP to the list \p jobs, excepting those which are in fish's pgroup.
 void hup_jobs(const job_list_t &jobs);
-
-/// Give ownership of the terminal to the specified job group, if it wants it.
-///
-/// \param jg The job group to give the terminal to.
-/// \param continuing_from_stopped If this variable is set, we are giving back control to a job that
-/// was previously stopped. In that case, we need to set the terminal attributes to those saved in
-/// the job.
-/// \return 1 if transferred, 0 if no transfer was necessary, -1 on error.
-int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from_stopped);
 
 /// Add a job to the list of PIDs/PGIDs we wait on even though they are not associated with any
 /// jobs. Used to avoid zombie processes after disown.

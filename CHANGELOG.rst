@@ -24,6 +24,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - The default command-not-found handler now reports a special error if there is a non-executable file (:issue:`8804`)
+- `less` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

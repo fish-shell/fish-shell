@@ -181,6 +181,7 @@ Completions
 - Unified the OpenZFS-related completions across operating systems and improved the vdev-related completions for all platforms.
 - Add missing completions for the ``-p`` option of ``xbps-query``.
 - When evaluating custom completions, the command line state no longer includes variable overrides (``var=val``). This unbreaks completions that read ``commandline -op``.
+- Replace completions for helm version 2 with helm 3-compatible completions.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

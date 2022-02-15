@@ -9,7 +9,7 @@ This is a description of the design principles that have been used to design fis
 
 2. Fish should be user friendly, but not at the expense of expressiveness. Most tradeoffs between power and ease of use can be avoided with careful design.
 
-3. Whenever possible without breaking the above goals, fish should follow the Posix syntax.
+3. Whenever possible without breaking the above goals, fish should follow POSIX.
 
 To achieve these high-level goals, the fish design relies on a number of more specific design principles. These are presented below, together with a rationale and a few examples for each.
 

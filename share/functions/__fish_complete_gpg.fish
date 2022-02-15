@@ -116,7 +116,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l lsign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key but mark it as non exportable"
 
     complete -c $__fish_complete_gpg_command -l delete-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
-    complete -c $__fish_complete_gpg_command -l delete-secret-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command --list-secret-key)" -d "Remove key from the secret and public keyring"
+    complete -c $__fish_complete_gpg_command -l delete-secret-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command --list-secret-keys)" -d "Remove key from the secret and public keyring"
     complete -c $__fish_complete_gpg_command -l delete-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
     complete -c $__fish_complete_gpg_command -l delete-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command --list-secret-keys)" -d "Remove key from the secret and public keyring"
     complete -c $__fish_complete_gpg_command -l delete-secret-and-public-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --delete-key, but if a secret key exists, it will be removed first"

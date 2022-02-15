@@ -1,9 +1,10 @@
 # Helper function for contextual autocompletion of GPG key ids
 
-function __fish_complete_gpg_key_id -d 'Complete using gpg key ids' -a __fish_complete_gpg_command
+function __fish_complete_gpg_key_id -d 'Complete using gpg key ids' -a __fish_complete_gpg_command list_arg
     # Use user id as description
     set -l keyid
-    $__fish_complete_gpg_command --list-keys --with-colons | while read -l garbage
+    set -q list_arg[1]; or set list_arg --list-keys
+    $__fish_complete_gpg_command $list_arg --with-colons | while read -l garbage
         switch $garbage
             case "uid*"
                 # Extract user ids (note: gpg escapes colons as '\x3a')

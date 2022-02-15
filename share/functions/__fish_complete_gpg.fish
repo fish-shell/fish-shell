@@ -101,7 +101,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
 
     complete -c $__fish_complete_gpg_command -s k -l list-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "List all keys from the public keyrings, or just the ones given on the command line"
     complete -c $__fish_complete_gpg_command -l list-public-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "List all keys from the public keyrings, or just the ones given on the command line"
-    complete -c $__fish_complete_gpg_command -s K -l list-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "List all keys from the secret keyrings, or just the ones given on the command line"
+    complete -c $__fish_complete_gpg_command -s K -l list-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command --list-secret-keys)" -d "List all keys from the secret keyrings, or just the ones given on the command line"
     complete -c $__fish_complete_gpg_command -l list-sigs -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --list-keys, but the signatures are listed too"
 
     complete -c $__fish_complete_gpg_command -l check-sigs -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --list-keys, but the signatures are listed and verified"

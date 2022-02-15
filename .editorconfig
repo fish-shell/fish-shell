@@ -21,5 +21,8 @@ indent_size = 2
 [Dockerfile]
 indent_size = 2
 
+[share/{completions,functions}/**.fish]
+max_line_length = none
+
 [COMMIT_EDITMSG]
 max_line_length = 80

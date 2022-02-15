@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-13 10:00-0300\n"
-"PO-Revision-Date: 2015-10-11 20:35-0300\n"
+"PO-Revision-Date: 2022-02-15 13:24+0100\n"
 "Last-Translator: Fábio Nogueira <deb-user-ba@ubuntu.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -73517,10 +73517,6 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/uniq.fish:11
 msgid "Precede each output line with count of its occurrence"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/uniq.fish:14
-msgid "Avoid comparing fist N characters"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/uniq.fish:16

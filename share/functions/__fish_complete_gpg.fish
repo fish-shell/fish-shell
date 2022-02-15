@@ -47,7 +47,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
         complete -c $__fish_complete_gpg_command -l skip-hidden-recipients -d "During decryption, skip all anonymous recipients"
         complete -c $__fish_complete_gpg_command -l tofu-default-policy -xa "auto good unknown bad ask" -d "Set the default TOFU policy"
         complete -c $__fish_complete_gpg_command -l tofu-policy -xa "auto good unknown bad ask" -d "Set the default TOFU policy for the specified keys"
-        complete -c $__fish_complete_gpg_command -l try-secret-key -xa "(__fish_complete_gpg_key_id $__fish_complete_gpg_command)" -d "Specify keys to be used for trial decryption"
+        complete -c $__fish_complete_gpg_command -l try-secret-key -xa "(__fish_complete_gpg_key_id $__fish_complete_gpg_command --list-secret-keys)" -d "Specify keys to be used for trial decryption"
 
         complete -c $__fish_complete_gpg_command -l with-icao-spelling -d "Print the ICAO spelling of the fingerprint in addition to the hex digits"
         complete -c $__fish_complete_gpg_command -l with-key-origin -d "Include the locally held information on the origin and last update of a key in a key listing"

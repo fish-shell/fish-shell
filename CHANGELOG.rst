@@ -2,7 +2,7 @@ fish 3.4.0 (released ???)
 =========================
 
 ..
-   Ignore for 3.4.0 changelog: 1363 3625 3954 6477 7602 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8146 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8335 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8391 8394 8403 8406 8409 8410 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8518 8521 8522 8526 8527 8528 8548 8549 8559 8575 8584 8587 8588 8570 8591 8596 8597 8601 8608 8612 8613 8614 8615 8621 8623 8625 8626 8630 8633 8636 8639 8643 8647 8650 8651 8652 8654 8655 8656 8658 8660 8661 8662 8665 8672 8675 8676 8686
+   Ignore for 3.4.0 changelog: 1363 2876 3625 3954 6477 7357 7602 8008 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8146 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8335 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8391 8394 8403 8406 8409 8410 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8518 8521 8522 8526 8527 8528 8548 8549 8559 8575 8584 8587 8588 8570 8591 8596 8597 8601 8608 8612 8613 8614 8615 8621 8623 8625 8626 8630 8633 8636 8639 8643 8645 8647 8650 8651 8652 8653 8654 8655 8656 8658 8660 8661 8662 8665 8667 8672 8675 8676 8686 8700 8710 8729 8731
 
 
 Notable improvements and fixes
@@ -93,7 +93,7 @@ Scripting improvements
 - ``abbr -q`` returns the correct exit status when given multiple abbreviation names as arguments (:issue:`8431`).
 - ``command -v`` returns an exit status of 127 instead of 1 if no command was found (:issue:`8547`).
 - ``argparse`` with ``--ignore-unknown`` no longer breaks with multiple unknown options in a short option group (:issue:`8637`).
-- Comments inside command substitutions or brackets now correctly ignore parentheses, quotes, and brackets (:issue:`7866`, :issue:`8022`).
+- Comments inside command substitutions or brackets now correctly ignore parentheses, quotes, and brackets (:issue:`7866`, :issue:`8022`, :issue:`8695`).
 - ``complete -C`` supports a new ``--escape`` option, which turns on escaping in returned completion strings (:issue:`3469`).
 
 Interactive improvements
@@ -160,7 +160,7 @@ Completions
   - ``istioctl`` (:issue:`8343`)
   - ``kmutil``
   - ``matlab`` (:issue:`8505`)
-  - ``mono`` (:issue:`8415`) and related tools ``csharp``, ``gacutil``, ``gendarme``, ``ikdasm``, ``ilasm``, ``mkbundle``, ``monodis``, ``monop``, ``sqlsharp`` and ``xsp``.
+  - ``mono`` (:issue:`8415`, :issue:`8452`) and related tools ``csharp``, ``gacutil``, ``gendarme``, ``ikdasm``, ``ilasm``, ``mkbundle``, ``monodis``, ``monop``, ``sqlsharp`` and ``xsp``.
   -  Angular's ``ng`` (:issue:`8111`)
   - ``nodeenv`` (:issue:`8533`)
   - ``octave`` (:issue:`8505`)
@@ -181,7 +181,7 @@ Completions
 - Unified the OpenZFS-related completions across operating systems and improved the vdev-related completions for all platforms.
 - Add missing completions for the ``-p`` option of ``xbps-query``.
 - When evaluating custom completions, the command line state no longer includes variable overrides (``var=val``). This unbreaks completions that read ``commandline -op``.
-- Replace completions for helm version 2 with helm 3-compatible completions.
+- Replace completions for helm version 2 with helm 3-compatible completions (:issue:`8724`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -111,7 +111,7 @@ div.documentwrapper {
     float: none;
 }
 
-div.document, div.body {
+div.document, div.body, div.warning {
     background-color: inherit;
     color: inherit;
 }

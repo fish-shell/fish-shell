@@ -56,15 +56,30 @@ Once fish has been installed, open a terminal. If fish is not the default shell:
 
     > exit
 
+.. _default-shell:
+
 Default Shell
 -------------
 
-To make fish your default shell:
+There are multiple ways to switch to fish (or any other shell) as your default.
 
-- Add the line ``/usr/local/bin/fish`` to ``/etc/shells``.
-- Change your default shell with ``chsh -s /usr/local/bin/fish``.
+The simpler is to set your terminal to start fish. See its configuration and set the program to start to ``/usr/local/bin/fish`` (if that's where fish is installed - substitute another location as appropriate).
 
-For detailed instructions see :ref:`Switching to fish <switching-to-fish>`.
+The more involved and complete way is to set fish as your login shell. To do that, you need to:
+
+1. Add the shell to ``/etc/shells`` with::
+
+    > echo /usr/local/bin/fish | sudo tee -a /etc/shells
+
+2. Change your default shell with::
+
+    > chsh -s /usr/local/bin/fish
+
+Again, substitute the path to fish for /usr/local/bin/fish - see ``command -s fish`` inside fish. To change it back to another shell, just substitute ``/usr/local/bin/fish`` with ``/bin/bash``, ``/bin/tcsh`` or ``/bin/zsh`` as appropriate in the steps above.
+
+.. warning::
+
+   Setting fish as your login shell may have issues, because some operating systems (including a bunch of linux distributions) only do some of their configuration in shell startup files like /etc/profile. So you could notice e.g. $PATH being wrong, and you would have to redo that setup.
 
 Uninstalling
 ------------

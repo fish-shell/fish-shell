@@ -29,7 +29,7 @@ which means you are all set up and can start using fish::
 
 This prompt that you see above is the fish default prompt: it shows your username, hostname, and working directory.
 - to change this prompt see :ref:`how to change your prompt <prompt>`
-- to switch to fish permanently see :ref:`switch your default shell to fish <switching-to-fish>`.
+- to switch to fish permanently see :ref:`Default Shell <default-shell>`.
 
 From now on, we'll pretend your prompt is just a ``>`` to save space.
 
@@ -763,29 +763,6 @@ Now in another shell::
 
     > echo $EDITOR
     vim
-
-
-.. _switching-to-fish:
-
-Switching to fish?
-------------------
-
-If you wish to use fish (or any other shell) as your default shell,
-you need to enter your new shell's executable in two places.
-
-Add the shell to ``/etc/shells`` with::
-
-    > echo /usr/local/bin/fish | sudo tee -a /etc/shells
-
-
-Change your default shell with::
-
-    > chsh -s /usr/local/bin/fish
-
-This assumes you installed fish to /usr/local/bin, which is the default location when you've compiled it yourself. If you installed it with a package manager, the usual location is /usr/bin/fish, but package managers typically already add it to /etc/shells. Just substitute the correct location.
-
-(To change it back to another shell, just substitute ``/usr/local/bin/fish``
-with ``/bin/bash``, ``/bin/tcsh`` or ``/bin/zsh`` as appropriate in the steps above.)
 
 
 Ready for more?

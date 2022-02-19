@@ -362,9 +362,13 @@ bool make_detached_pthread(void *(*func)(void *), void *param) {
         err = pthread_create(&thread, &thread_attr, func, param);
         if (err == 0) {
             FLOGF(iothread, "pthread %d spawned", thread);
-            pthread_attr_destroy(&thread_attr);
         } else {
             perror("pthread_create");
+        }
+        int err2 = pthread_attr_destroy(&thread_attr);
+        if (err2 != 0) {
+            perror("pthread_attr_destroy");
+            err = err2;
         }
     } else {
         perror("pthread_attr_setdetachstate");

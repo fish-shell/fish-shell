@@ -141,6 +141,12 @@ class parse_execution_context_t : noncopyable_t {
     end_execution_reason_t populate_job_from_job_node(job_t *j, const ast::job_t &job_node,
                                                       const block_t *associated_block);
 
+    // Assign a job group to the given job.
+    void setup_group(job_t *j);
+
+    // \return whether we should apply job control to our processes.
+    bool use_job_control() const;
+
     // Returns the line number of the node. Not const since it touches cached_lineno_offset.
     int line_offset_of_node(const ast::job_t *node);
     int line_offset_of_character_at_offset(size_t offset);

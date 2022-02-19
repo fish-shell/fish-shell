@@ -278,6 +278,10 @@ class process_t : noncopyable_t {
     /// True if process has stopped.
     bool stopped{false};
 
+    /// If set, this process is (or will become) the pgroup leader.
+    /// This is only meaningful for external processes.
+    bool leads_pgrp{false};
+
     /// Reported status value.
     proc_status_t status{};
 
@@ -318,9 +322,6 @@ class job_t : noncopyable_t {
 
         /// Whether this job was created as part of an event handler.
         bool from_event_handler{};
-
-        /// Whether the job is under job control, i.e. has its own pgrp.
-        bool job_control{};
     };
 
    private:
@@ -376,9 +377,8 @@ class job_t : noncopyable_t {
     // This is never null and not changed after construction.
     job_group_ref_t group{};
 
-    /// \return the pgid for the job, based on the job group.
-    /// This may be none if the job consists of just internal fish functions or builtins.
-    /// This may also be fish itself.
+    /// \return our pgid, or none if we don't have one, or are internal to fish
+    /// This never returns fish's own pgroup.
     maybe_t<pid_t> get_pgid() const;
 
     /// \return the pid of the last external process in the job.
@@ -424,7 +424,7 @@ class job_t : noncopyable_t {
     bool wants_timing() const { return properties.wants_timing; }
 
     /// \return if we want job control.
-    bool wants_job_control() const { return properties.job_control; }
+    bool wants_job_control() const;
 
     /// \return whether this job is initially going to run in the background, because & was
     /// specified.
@@ -438,6 +438,10 @@ class job_t : noncopyable_t {
     /// External procs include exec and external.
     bool has_internal_proc() const;
     bool has_external_proc() const;
+
+    /// \return whether this job, when run, will want a job ID.
+    /// Jobs that are only a single internal block do not get a job ID.
+    bool wants_job_id() const;
 
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched

@@ -120,9 +120,6 @@ bool job_t::is_completed() const {
 }
 
 bool job_t::posts_job_exit_events() const {
-    // If we never got a pgid then we never launched the external process, so don't report it.
-    if (!this->get_pgid()) return false;
-
     // Only report root job exits.
     // For example in `ls | begin ; cat ; end` we don't need to report the cat sub-job.
     if (!flags().is_group_root) return false;
@@ -131,14 +128,8 @@ bool job_t::posts_job_exit_events() const {
     return this->has_external_proc();
 }
 
-bool job_t::job_chain_is_fully_constructed() const { return group->is_root_constructed(); }
-
 bool job_t::signal(int signal) {
-    // Presumably we are distinguishing between the two cases below because we do
-    // not want to send ourselves the signal in question in case the job shares
-    // a pgid with the shell.
-    auto pgid = get_pgid();
-    if (pgid.has_value() && *pgid != getpgrp()) {
+    if (auto pgid = group->get_pgid()) {
         if (killpg(*pgid, signal) == -1) {
             char buffer[512];
             sprintf(buffer, "killpg(%d, %s)", *pgid, strsignal(signal));
@@ -152,7 +143,6 @@ bool job_t::signal(int signal) {
             }
         }
     }
-
     return true;
 }
 
@@ -312,12 +302,11 @@ job_t::job_t(const properties_t &props, wcstring command_str)
 
 job_t::~job_t() = default;
 
+bool job_t::wants_job_control() const { return group->wants_job_control(); }
+
 void job_t::mark_constructed() {
     assert(!is_constructed() && "Job was already constructed");
     mut_flags().constructed = true;
-    if (flags().is_group_root) {
-        group->mark_root_constructed();
-    }
 }
 
 bool job_t::has_internal_proc() const {
@@ -334,27 +323,20 @@ bool job_t::has_external_proc() const {
     return false;
 }
 
-/// A list of pids/pgids that have been disowned. They are kept around until either they exit or
+bool job_t::wants_job_id() const {
+    return processes.size() > 1 || !processes.front()->is_internal() || is_initially_background();
+}
+
+/// A list of pids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
 static owning_lock<std::vector<pid_t>> s_disowned_pids;
 
 void add_disowned_job(const job_t *j) {
     assert(j && "Null job");
-
-    // Never add our own (or an invalid) pgid as it is not unique to only
-    // one job, and may result in a deadlock if we attempt the wait.
-    auto pgid = j->get_pgid();
     auto disowned_pids = s_disowned_pids.acquire();
-    if (pgid && *pgid != getpgrp() && *pgid > 0) {
-        // waitpid(2) is signalled to wait on a process group rather than a
-        // process id by using the negative of its value.
-        disowned_pids->push_back(*pgid * -1);
-    } else {
-        // Instead, add the PIDs of any external processes
-        for (auto &process : j->processes) {
-            if (process->pid) {
-                disowned_pids->push_back(process->pid);
-            }
+    for (auto &process : j->processes) {
+        if (process->pid) {
+            disowned_pids->push_back(process->pid);
         }
     }
 }
@@ -630,7 +612,7 @@ static void remove_disowned_jobs(job_list_t &jobs) {
     auto iter = jobs.begin();
     while (iter != jobs.end()) {
         const auto &j = *iter;
-        if (j->flags().disown_requested && j->job_chain_is_fully_constructed()) {
+        if (j->flags().disown_requested && j->is_constructed()) {
             iter = jobs.erase(iter);
         } else {
             ++iter;
@@ -810,20 +792,14 @@ void proc_update_jiffies(parser_t &parser) {
 // restoring a previously-stopped job, in which case we need to restore terminal attributes.
 int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from_stopped) {
     enum { notneeded = 0, success = 1, error = -1 };
-
-    if (!jg->should_claim_terminal()) {
-        // The job doesn't want the terminal.
+    if (!jg->wants_terminal() || !jg->get_pgid()) {
+        // The job doesn't want the terminal, or doesn't have a pgroup yet.
         return notneeded;
     }
 
-    // Get the pgid; we may not have one.
-    pid_t pgid{};
-    if (auto mpgid = jg->get_pgid()) {
-        pgid = *mpgid;
-    } else {
-        FLOG(proc_termowner, L"terminal_give_to_job() returning early due to no process group");
-        return notneeded;
-    }
+    // Get the pgid.
+    pid_t pgid = *jg->get_pgid();
+    assert(pgid >= 0 && "Invalid pgid");
 
     // If we are continuing, ensure that stdin is marked as blocking first (issue #176).
     // Also restore tty modes.
@@ -933,7 +909,7 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
             return notneeded;
         } else {
             FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
-                  jg->get_id(), jg->get_command().c_str(), pgid);
+                  jg->get_job_id(), jg->get_command().c_str(), pgid);
             wperror(L"tcsetpgrp");
             return error;
         }
@@ -956,33 +932,22 @@ int terminal_maybe_give_to_job_group(const job_group_t *jg, bool continuing_from
 
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job
 /// group, so that we can restore the terminal ownership to the job at a later time.
-static bool terminal_return_from_job_group(job_group_t *jg) {
+static void terminal_return_from_job_group(job_group_t *jg) {
     errno = 0;
-    auto pgid = jg->get_pgid();
-    if (!pgid.has_value()) {
-        FLOG(proc_pgroup, "terminal_return_from_job() returning early due to no process group");
-        return true;
-    }
-
-    FLOG(proc_pgroup, "fish reclaiming terminal after job pgid", *pgid);
+    FLOG(proc_pgroup, "fish reclaiming terminal");
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
-        if (errno == ENOTTY) redirect_tty_output();
         FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
-        return false;
+        return;
     }
 
     // Save jobs terminal modes.
     struct termios tmodes {};
-    if (tcgetattr(STDIN_FILENO, &tmodes)) {
-        // If it's not a tty, it's not a tty, and there are no attributes to save (or restore)
-        if (errno == ENOTTY) return false;
-        FLOGF(warning, _(L"Could not return shell to foreground"));
+    if (tcgetattr(STDIN_FILENO, &tmodes) == 0) {
+        jg->tmodes = tmodes;
+    } else if (errno != ENOTTY) {
         wperror(L"tcgetattr");
-        return false;
     }
-    jg->tmodes = tmodes;
-    return true;
 }
 
 bool job_t::is_foreground() const { return group->is_foreground(); }
@@ -997,7 +962,7 @@ maybe_t<pid_t> job_t::get_last_pid() const {
     return none();
 }
 
-job_id_t job_t::job_id() const { return group->get_id(); }
+job_id_t job_t::job_id() const { return group->get_job_id(); }
 
 void job_t::continue_job(parser_t &parser, bool in_foreground) {
     // Put job first in the job list.

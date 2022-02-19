@@ -64,20 +64,11 @@ using job_group_ref_t = std::shared_ptr<job_group_t>;
 
 class job_group_t {
    public:
-    /// Set the pgid for this job group, latching it to this value.
-    /// The pgid should not already have been set.
-    /// Of course this does not keep the pgid alive by itself.
-    /// An internal job group does not have a pgid and it is an error to set it.
-    void set_pgid(pid_t pgid);
+    /// \return whether this group wants job control.
+    bool wants_job_control() const { return job_control_; }
 
-    /// Get the pgid, or none() if it has not been set.
-    maybe_t<pid_t> get_pgid() const;
-
-    /// \return whether we want job control
-    bool wants_job_control() const { return props_.job_control; }
-
-    /// \return whether this is an internal group.
-    bool is_internal() const { return props_.is_internal; }
+    /// \return if this job group should own the terminal when it runs.
+    bool wants_terminal() const { return wants_terminal_ && is_foreground(); }
 
     /// \return whether we are currently the foreground group.
     bool is_foreground() const { return is_foreground_; }
@@ -85,82 +76,70 @@ class job_group_t {
     /// Mark whether we are in the foreground.
     void set_is_foreground(bool flag) { is_foreground_ = flag; }
 
-    /// \return if this job group should own the terminal when it runs.
-    bool should_claim_terminal() const { return props_.wants_terminal && is_foreground(); }
-
-    /// \return whether this job group is awaiting a pgid.
-    /// This is true for non-internal trees that don't already have a pgid.
-    bool needs_pgid_assignment() const { return !props_.is_internal && !pgid_.has_value(); }
+    /// \return the command which produced this job tree.
+    const wcstring &get_command() const { return command_; }
 
     /// \return the job ID, or -1 if none.
-    job_id_t get_id() const { return props_.job_id; }
+    job_id_t get_job_id() const { return job_id_; }
+
+    /// \return whether we have a valid job ID. "Simple block" groups like function calls do not.
+    bool has_job_id() const { return job_id_ > 0; }
 
     /// Get the cancel signal, or 0 if none.
     int get_cancel_signal() const { return cancel_group->get_cancel_signal(); }
 
-    /// \return the command which produced this job tree.
-    const wcstring &get_command() const { return command_; }
-
     /// Mark that a process in this group got a signal, and so should cancel.
     void cancel_with_signal(int sig) { cancel_group->cancel_with_signal(sig); }
-
-    /// Mark the root as constructed.
-    /// This is used to avoid reaping a process group leader while there are still procs that may
-    /// want to enter its group.
-    void mark_root_constructed() { root_constructed_ = true; };
-    bool is_root_constructed() const { return root_constructed_; }
-
-    /// Given a job and a proposed job group (possibly null), return a group for the job.
-    /// The proposed group is the group from the parent job, or null if this is a root.
-    /// This never returns null.
-    static job_group_ref_t resolve_group_for_job(const job_t &job,
-                                                 const cancellation_group_ref_t &cancel_group,
-                                                 const job_group_ref_t &proposed_group);
-
-    ~job_group_t();
-
-    /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
-    /// the terminal to the same state after temporarily taking control over the terminal when a job
-    /// stops.
-    maybe_t<struct termios> tmodes{};
 
     /// The cancellation group. This is never null.
     const cancellation_group_ref_t cancel_group{};
 
+    /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
+    /// the terminal to the same state when resuming a stopped job.
+    maybe_t<struct termios> tmodes{};
+
+    /// Set the pgid for this job group, latching it to this value.
+    /// This should only be called if job control is active for this group.
+    /// The pgid should not already have been set, and should be different from fish's pgid.
+    /// Of course this does not keep the pgid alive by itself.
+    void set_pgid(pid_t pgid);
+
+    /// Get the pgid. This never returns fish's pgid.
+    maybe_t<pid_t> get_pgid() const { return pgid_; }
+
+    /// Construct a group for a job that will live internal to fish, optionally claiming a job ID.
+    static job_group_ref_t create(wcstring command, cancellation_group_ref_t cg, bool wants_job_id);
+
+    /// Construct a group for a job which will assign its first process as pgroup leader.
+    static job_group_ref_t create_with_job_control(wcstring command, cancellation_group_ref_t cg,
+                                                   bool wants_terminal);
+
+    ~job_group_t();
+
    private:
-    // The pgid to assign to jobs, or none if not yet set.
-    maybe_t<pid_t> pgid_{};
+    job_group_t(wcstring command, cancellation_group_ref_t cg, job_id_t job_id,
+                bool job_control = false, bool wants_terminal = false);
 
-    // Set of properties, which are constant.
-    struct properties_t {
-        // Whether jobs in this group should have job control.
-        bool job_control{};
+    // Whether job control is enabled.
+    // If this is set, then the first process in the root job must be external.
+    // It will become the process group leader.
+    const bool job_control_;
 
-        // Whether we should claim the terminal when we run in the foreground.
-        // TODO: this is effectively the same as job control, rationalize this.
-        bool wants_terminal{};
-
-        // Whether we are an internal job group.
-        bool is_internal{};
-
-        // The job ID of this group.
-        job_id_t job_id{};
-    };
-    const properties_t props_;
-
-    // The original command which produced this job tree.
-    const wcstring command_;
+    // Whether we should tcsetpgrp to the job when it runs in the foreground.
+    const bool wants_terminal_;
 
     // Whether we are in the foreground, meaning that the user is waiting for this.
     relaxed_atomic_bool_t is_foreground_{};
 
-    // Whether the root job is constructed. If not, we cannot reap it yet.
-    relaxed_atomic_bool_t root_constructed_{};
+    // The pgid leading our group. This is only ever set if job_control_ is true.
+    // This is never fish's pgid.
+    maybe_t<pid_t> pgid_{};
 
-    job_group_t(const properties_t &props, cancellation_group_ref_t cg, wcstring command)
-        : cancel_group(std::move(cg)), props_(props), command_(std::move(command)) {
-        assert(cancel_group && "Null cancel group");
-    }
+    // The original command which produced this job tree.
+    const wcstring command_;
+
+    /// Our job ID. -1 if none.
+    const job_id_t job_id_;
 };
 
 #endif

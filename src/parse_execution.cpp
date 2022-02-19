@@ -1338,20 +1338,11 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
 
     const auto &ld = parser->libdata();
 
-    auto job_control_mode = get_job_control_mode();
-    // Run all command substitutions in our pgroup.
-    bool wants_job_control =
-        !parser->is_command_substitution() &&
-        ((job_control_mode == job_control_t::all) ||
-         ((job_control_mode == job_control_t::interactive) && parser->is_interactive()) ||
-         (ctx.job_group && ctx.job_group->wants_job_control()));
-
     job_t::properties_t props{};
     props.initial_background = job_node.bg.has_value();
     props.skip_notification =
         ld.is_subshell || parser->is_block() || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
-    props.job_control = wants_job_control;
     props.wants_timing = job_node_wants_timing(job_node);
 
     // It's an error to have 'time' in a background job.
@@ -1374,22 +1365,11 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
 
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
-        // Resolve the job's group and mark if this job is the first to get it.
-        job->group = job_group_t::resolve_group_for_job(*job, cancel_group, ctx.job_group);
+        this->setup_group(job.get());
         assert(job->group && "Should not have a null group");
-        job->mut_flags().is_group_root = (job->group != ctx.job_group);
 
-        // Success. Give the job to the parser - it will clean it up.
+        // Give the job to the parser - it will clean it up.
         parser->job_add(job);
-
-        // Check to see if this contained any external commands.
-        bool job_contained_external_command = false;
-        for (const auto &proc : job->processes) {
-            if (proc->type == process_type_t::external) {
-                job_contained_external_command = true;
-                break;
-            }
-        }
 
         // Actually execute the job.
         if (!exec_job(*parser, job, block_io)) {
@@ -1404,7 +1384,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
 
         // Update universal variables on external commands.
         // TODO: justify this, why not on every command?
-        if (job_contained_external_command) {
+        if (job->has_external_proc()) {
             parser->vars().universal_barrier();
         }
     }
@@ -1543,6 +1523,42 @@ end_execution_reason_t parse_execution_context_t::eval_node(const ast::job_list_
         return this->report_error(STATUS_CMD_ERROR, job_list, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
     }
     return this->run_job_list(job_list, associated_block);
+}
+
+void parse_execution_context_t::setup_group(job_t *j) {
+    // We can use the parent group if it's compatible and we're not backgrounded.
+    if (ctx.job_group && (ctx.job_group->has_job_id() || !j->wants_job_id()) &&
+        !j->is_initially_background()) {
+        j->group = ctx.job_group;
+        return;
+    }
+
+    if (j->processes.front()->is_internal() || !this->use_job_control()) {
+        // This job either doesn't have a pgroup (e.g. a simple block), or lives in fish's pgroup.
+        j->group = job_group_t::create(j->command(), cancel_group, j->wants_job_id());
+    } else {
+        // This is a "real job" that gets its own pgroup.
+        j->processes.front()->leads_pgrp = true;
+        bool wants_terminal = !parser->libdata().is_event;
+        j->group = job_group_t::create_with_job_control(j->command(), cancel_group, wants_terminal);
+    }
+    j->group->set_is_foreground(!j->is_initially_background());
+    j->mut_flags().is_group_root = true;
+}
+
+bool parse_execution_context_t::use_job_control() const {
+    if (parser->is_command_substitution()) {
+        return false;
+    }
+    switch (get_job_control_mode()) {
+        case job_control_t::all:
+            return true;
+        case job_control_t::interactive:
+            return parser->is_interactive();
+        case job_control_t::none:
+            return false;
+    }
+    DIE("Unreachable");
 }
 
 int parse_execution_context_t::line_offset_of_node(const ast::job_t *node) {

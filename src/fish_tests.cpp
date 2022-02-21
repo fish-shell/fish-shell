@@ -6619,17 +6619,18 @@ static void test_timer_format() {
     t2.cpu_children.ru_stime.tv_usec = 500;
     t2.wall += std::chrono::microseconds(500);
     auto expected =
-        L"\x1b(0qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\x1b(B\n"
-"Executed in  500.00 μs     fish        external\n"
-"   usr time    1.00 sec    1.00 sec    1.00 ms\n"
-"   sys time    1.00 sec    1.00 sec    0.50 ms";
-  //        (a)            (b)            (c)
+        LR"(
+________________________________________________________
+Executed in  500.00 micros    fish         external
+   usr time    1.00 secs      1.00 secs    1.00 millis
+   sys time    1.00 secs      1.00 secs    0.50 millis
+)";  //        (a)            (b)            (c)
      // (a) remaining columns should align even if there are different units
      // (b) carry to the next unit when it would overflow %6.2F
      // (c) carry to the next unit when the larger one exceeds 1000
     std::wstring actual = timer_snapshot_t::print_delta(t1, t2, true);
     if (actual != expected) {
-        err(L"Failed to format timer snapshot\nExpected:\n %ls\nActual:\n %ls\n", expected,
+        err(L"Failed to format timer snapshot\nExpected: %ls\nActual:%ls\n", expected,
             actual.c_str());
     }
     setlocale(LC_NUMERIC, saved_locale);

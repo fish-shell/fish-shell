@@ -11,19 +11,6 @@
 #include <cstddef>
 #include <ctime>
 
-#if HAVE_CURSES_H
-#include <curses.h>
-#elif HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#endif
-#if HAVE_TERM_H
-#include <term.h>
-#elif HAVE_NCURSES_TERM_H
-#include <ncurses/term.h>
-#endif
-
 #include "builtin.h"
 #include "common.h"
 #include "exec.h"
@@ -126,31 +113,31 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
     auto unit_name = [](tunit unit) {
         switch (unit) {
             case tunit::minutes:
-                return L"minutes";
+                return "minutes";
             case tunit::seconds:
-                return L"seconds";
+                return "seconds";
             case tunit::milliseconds:
-                return L"milliseconds";
+                return "milliseconds";
             case tunit::microseconds:
-                return L"microseconds";
+                return "microseconds";
         }
         // GCC does not recognize the exhaustive switch above
-        return L"";
+        return "";
     };
 
     auto unit_short_name = [](tunit unit) {
         switch (unit) {
             case tunit::minutes:
-                return L"min";
+                return "mins";
             case tunit::seconds:
-                return L"sec";
+                return "secs";
             case tunit::milliseconds:
-                return L"ms";
+                return "millis";
             case tunit::microseconds:
-                return L"μs";
+                return "micros";
         }
         // GCC does not recognize the exhaustive switch above
-        return L"";
+        return "";
     };
 
     auto convert = [](int64_t micros, tunit unit) {
@@ -176,9 +163,10 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
 
     wcstring output;
     if (!verbose) {
-        append_format(output, L"\nExecuted in  %6.2F %ls"
-                              L"\n   usr time  %6.2F %ls"
-                              L"\n   sys time  %6.2F %ls"
+        append_format(output, L"\n_______________________________"
+                              L"\nExecuted in  %6.2F %s"
+                              L"\n   usr time  %6.2F %s"
+                              L"\n   sys time  %6.2F %s"
                               L"\n",
                               wall_time, unit_name(wall_unit),
                               usr_time, unit_name(cpu_unit),
@@ -191,17 +179,16 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
         double child_usr_time = convert(child_usr_micros, child_unit);
         double child_sys_time = convert(child_sys_micros, child_unit);
 
-        int column2_unit_len = std::max(wcslen(unit_short_name(wall_unit)),
-                                        wcslen(unit_short_name(cpu_unit)));
-        // TODO: improve layout
+        int column2_unit_len = std::max(strlen(unit_short_name(wall_unit)),
+                                        strlen(unit_short_name(cpu_unit)));
         append_format(output,
-                      L"%s%s%s"
-                      L"\nExecuted in  %6.2F %-*ls    %-*s  %s"
-                      L"\n   usr time  %6.2F %-*ls  %6.2F %ls  %6.2F %ls"
-                      L"\n   sys time  %6.2F %-*ls  %6.2F %ls  %6.2F %ls",
-                      enter_alt_charset_mode, std::string(45, 'q').c_str(), exit_alt_charset_mode,
+                      L"\n________________________________________________________"
+                      L"\nExecuted in  %6.2F %-*s    %-*s  %s"
+                      L"\n   usr time  %6.2F %-*s  %6.2F %s  %6.2F %s"
+                      L"\n   sys time  %6.2F %-*s  %6.2F %s  %6.2F %s"
+                      L"\n",
                       wall_time, column2_unit_len, unit_short_name(wall_unit),
-                      static_cast<int>(wcslen(unit_short_name(fish_unit))) + 7, "fish", "external",
+                      static_cast<int>(strlen(unit_short_name(fish_unit))) + 7, "fish", "external",
                       usr_time, column2_unit_len, unit_short_name(cpu_unit), fish_usr_time,
                       unit_short_name(fish_unit), child_usr_time, unit_short_name(child_unit),
                       sys_time, column2_unit_len, unit_short_name(cpu_unit), fish_sys_time,

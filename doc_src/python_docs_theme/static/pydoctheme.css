@@ -32,7 +32,7 @@ div#fmain {
     background-color: #EEEEFA;
     border-radius: 14px;
     position: relative;
-    margin: 15px auto 15px;
+    margin: 1em auto 1em;
     box-shadow: 0 0 5px 1px #333;
     width: 85%;
     /* This is super-cheesy, but 1270px is the maximum width of the sidebar, the content and the margins */
@@ -83,7 +83,7 @@ form.inline-search input[type="submit"] {
 div.sphinxsidebar {
     border-right: 1px solid #ccc;
     border-radius: 0px;
-    line-height: 150%;
+    line-height: 1em;
     font-size: smaller;
     margin-left: 0;
     float: left;
@@ -136,8 +136,8 @@ div.sphinxsidebarwrapper > ul > li > ul > li {
     margin-bottom: 0.4em;
 }
 
-ul li.toctree-l1 {
-    line-height: 170%;
+ul li, div.body li {
+    line-height: 2em;
 }
 
 form.inline-search input,
@@ -159,7 +159,7 @@ div.body {
 }
 
 div.body p {
-    line-height: 170%;
+    line-height: 2em;
 }
 
 div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
@@ -255,7 +255,7 @@ tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code {
 }
 
 #synopsis .line {
-    line-height: 150%;
+    line-height: 1em;
 }
 
 pre, div[class*="highlight-"] {
@@ -279,8 +279,8 @@ table.docutils {
     border: 1px solid #ddd;
     min-width: 20%;
     border-radius: 3px;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 1em;
+    margin-bottom: 1em;
     /* Make table scrollable on overflow */
     display: block;
     overflow: auto;
@@ -310,7 +310,7 @@ table.footnote, table.footnote td {
 }
 
 div.footer {
-    line-height: 150%;
+    line-height: 1em;
     margin-top: -2em;
     text-align: right;
     width: auto;
@@ -333,10 +333,18 @@ div.footer {
     font-size: 12pt;
 }
 
+dl {
+    margin-bottom: 1em;
+}
+
 dl.envvar, dl.describe {
     font-size: 11pt;
-    font-weight: normal !important;
+    font-weight: normal;
 
+}
+
+div.sphinxsidebar ul {
+    margin: 1em 10px 1em 10px;
 }
 
 /* On screens that are less than 700px wide remove anything non-essential

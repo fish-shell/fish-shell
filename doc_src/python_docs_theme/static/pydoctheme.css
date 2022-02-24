@@ -235,7 +235,7 @@ code {
     padding-right: 5px;
 }
 
-tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code {
+tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command {
     /* Pick a monospace font.
        ui-monospace is the monospace version of system-ui - the system's monospace font.
        Unfortunately it's barely supported anywhere (at time of writing only Safari does!),

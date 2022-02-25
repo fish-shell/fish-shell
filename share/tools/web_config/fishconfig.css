@@ -390,11 +390,11 @@ body {
 }
 
 .colorpicker_text_sample_tight {
-    font-size: 10pt;
-    line-height: 1.2em;
-    margin: 0px 6px;
-    max-width: 220px;
-    padding: 5px;
+    font-size: 11pt;
+    line-height: 1.5em;
+    margin: 0;
+    width: fit-content;
+    padding: 1em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: clip;

@@ -622,7 +622,7 @@ img.delete_icon {
     cursor: default;
 }
 
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 1000px) {
     /* On small screens remove the margins to leave more for the actual content */
     body {
         width: 100%;

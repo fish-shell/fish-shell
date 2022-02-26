@@ -768,4 +768,4 @@ Now in another shell::
 Ready for more?
 ---------------
 
-If you want to learn more about fish, there is :ref:`lots of detailed documentation <intro>`, the `official gitter channel <https://gitter.im/fish-shell/fish-shell>`__, an `official mailing list <https://lists.sourceforge.net/lists/listinfo/fish-users>`__, and the `github page <https://github.com/fish-shell/fish-shell/>`__.
+If you want to learn more about fish, there is :ref:`lots of detailed documentation <intro>`, the `official Matrix channel <https://matrix.to/#/#fish-shell:matrix.org>`__, an `official mailing list <https://lists.sourceforge.net/lists/listinfo/fish-users>`__, and the `github page <https://github.com/fish-shell/fish-shell/>`__.

@@ -230,8 +230,8 @@ Contact Us
 
 Questions, comments, rants and raves can be posted to the official fish
 mailing list at https://lists.sourceforge.net/lists/listinfo/fish-users
-or join us on our `gitter.im
-channel <https://gitter.im/fish-shell/fish-shell>`__. Or use the `fish tag
+or join us on our `Matrix
+channel <https://matrix.to/#/#fish-shell:matrix.org>`__. Or use the `fish tag
 on Unix & Linux Stackexchange <https://unix.stackexchange.com/questions/tagged/fish>`__.
 There is also a fish tag on Stackoverflow, but it is typically a poor fit.
 

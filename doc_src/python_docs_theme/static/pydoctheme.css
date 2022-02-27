@@ -28,13 +28,13 @@ body {
 
 div#fmain {
     color: #222;
-    padding: 10px 40px 10px;
+    padding: 1em 2em;
     background-color: #EEEEFA;
     border-radius: 14px;
     position: relative;
     margin: 1em auto 1em;
     box-shadow: 0 0 5px 1px #333;
-    width: 85%;
+    width: 90%;
     /* This is super-cheesy, but 1270px is the maximum width of the sidebar, the content and the margins */
     max-width: 1270px;
 }

@@ -89,10 +89,11 @@ The following special input functions are available:
     only execute the next function if the previous succeeded (note: only some functions report success)
 
 ``accept-autosuggestion``
-    accept the current autosuggestion completely
+    accept the current autosuggestion
 
 ``backward-char``
-    moves one character to the left
+    move one character to the left.
+    If the completion pager is active, select the previous completion instead.
 
 ``backward-bigword``
     move one whitespace-delimited word to the left
@@ -179,13 +180,15 @@ The following special input functions are available:
     move one whitespace-delimited word to the right
 
 ``forward-char``
-    move one character to the right
+    move one character to the right; or if at the end of the commandline, accept the current autosuggestion.
+    If the completion pager is active, select the next completion instead.
 
 ``forward-single-char``
-    move one character to the right; if an autosuggestion is available, only take a single char from it
+    move one character to the right; or if at the end of the commandline, accept a single char from the current autosuggestion.
 
 ``forward-word``
-    move one word to the right
+    move one word to the right; or if at the end of the commandline, accept one word
+    from the current autosuggestion.
 
 ``history-search-backward``
     search the history for the previous match
@@ -230,7 +233,8 @@ The following special input functions are available:
     move the next word to the killring
 
 ``nextd-or-forward-word``
-    if the commandline is empty, then move forward in the directory history, otherwise move one word to the right
+    if the commandline is empty, then move forward in the directory history, otherwise move one word to the right.
+    If at the end of the commandline, accept the current autosuggestion.
 
 ``or``
     only execute the next function if the previous succeeded (note: only some functions report success)

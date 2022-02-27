@@ -154,8 +154,6 @@ Examples
 
 ``path filter`` returns all of the given paths that match the given checks. In all cases, the paths need to exist, nonexistent paths are always filtered.
 
-This is useful when you have a list of paths that you need to check. To match a list of paths against a glob pattern, see :ref:`path match <cmd-path-match>`. To run a glob pattern to generate paths, see :ref:`path expand <cmd-path-expand>`.
-
 The available filters are:
 
 - ``-t`` or ``--type`` with the options: "dir", "file", "link", "block", "char", "fifo" and "socket", in which case the path needs to be a directory, file, link, block device, character device, named pipe or socket, respectively.
@@ -340,7 +338,7 @@ This is why
 Some examples of combining ``path``::
 
   # Expand all paths in the current directory, leave only executable files, and print their resolved path
-  path expand '*' -Z | path filter -zZ --perm=exec --type=file | path resolve -z
+  path filter -zZ -xf -- * | path resolve -z
 
   # The same thing, but using find (note -maxdepth needs to come first or find will scream)
   # (this also depends on your particular version of find)

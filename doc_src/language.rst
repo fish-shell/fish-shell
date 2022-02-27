@@ -492,20 +492,6 @@ Unlike bash (by default), fish will not pass on the literal glob character if no
 
     apt install "ncurses-*"
 
-For more capable wildcards, see the :ref:`path <cmd-path>` builtin, that features the ``path expand`` and ``path match`` subcommands that have full-featured globs, including ``[a-z]`` character ranges (and sets), ``[[:alnum:]]`` character classes and ``?`` for single-character matches. An example::
-
-    # I want all photos I took in October to December 2019, but not the ".raw" versions
-    > path expand 'IMG_20191[012]*' | path match -v '*.raw'
-    IMG_20191002_154337675_HDR.jpg
-    IMG_20191002_193313306.png
-    IMG_20191102_195530400_HDR.gif
-    IMG_20191104_122747460_HDR.jpg
-    IMG_20191105_195601152 (1).jpg
-    IMG_20191201_195601152.jpg
-
-    # Okay, now delete them
-    > rm (path expand 'IMG_20191[012]*' | path match -v '*.raw')
-
 .. _expand-variable:
 
 Variable expansion

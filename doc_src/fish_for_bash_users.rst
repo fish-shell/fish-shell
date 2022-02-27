@@ -94,7 +94,7 @@ will not match any files.
 
 There are no options to control globbing so it always behaves like that.
 
-See :ref:`Wildcards <expand-wildcard>` for more. For more involved globbing, the :ref:`path <cmd-path>` builtin has the ``path expand`` and ``path match`` subcommands that feature the familiar globs from bash, plus ``**``.
+See :ref:`Wildcards <expand-wildcard>` for more.
 
 Quoting
 -------

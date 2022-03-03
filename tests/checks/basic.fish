@@ -558,3 +558,13 @@ end
 # CHECKERR: for PWD in foo bar
 # CHECKERR: ^
 # XXX FIXME carat should point at PWD
+
+$fish -c 'echo \xtest'
+# CHECKERR: fish: Invalid token '\xtest'
+# CHECKERR: echo \xtest
+# CHECKERR: ^
+
+$fish -c 'echo \utest'
+# CHECKERR: fish: Invalid token '\utest'
+# CHECKERR: echo \utest
+# CHECKERR: ^

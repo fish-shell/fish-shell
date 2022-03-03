@@ -1219,6 +1219,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             for (size_t i = 0; i < chars; i++) {
                 long d = convert_digit(input[in_pos], base);
                 if (d < 0) {
+                    // If we have no digit, this is a tokenizer error.
+                    if (i == 0) errored = true;
                     break;
                 }
 
@@ -1226,7 +1228,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                 in_pos++;
             }
 
-            if (res <= max_val) {
+            if (!errored && res <= max_val) {
                 result_char_or_none =
                     static_cast<wchar_t>((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
             } else {

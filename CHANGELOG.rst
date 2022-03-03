@@ -95,6 +95,7 @@ Scripting improvements
 - ``argparse`` with ``--ignore-unknown`` no longer breaks with multiple unknown options in a short option group (:issue:`8637`).
 - Comments inside command substitutions or brackets now correctly ignore parentheses, quotes, and brackets (:issue:`7866`, :issue:`8022`, :issue:`8695`).
 - ``complete -C`` supports a new ``--escape`` option, which turns on escaping in returned completion strings (:issue:`3469`).
+- Invalid byte or unicode escapes like ``\Utest`` or ``\xNotHex`` are now a tokenizer error instead of causing the token to be truncated (:issue:`8545`).
 
 Interactive improvements
 ------------------------

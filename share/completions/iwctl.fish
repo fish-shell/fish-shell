@@ -6,7 +6,7 @@ set dpp '(iwctl dpp list | tail -n -2 | awk \'{print $1}\')'
 set knownnetworks '(iwctl known-networks list | tail -n -2 | awk \'{print $1}\')'
 set stations '(iwctl station list | tail -n -2 | awk \'{print $1}\')'
 set wsc '(iwctl wsc list | tail -n -2 | awk \'{print $1}\')'
-set net '(iwctl station wlan0 get-networks | tail -n -2 | awk \'{print $2}\')'
+set net (iwctl station wlan0 get-networks | tail -n +5 | string replace -ra '\e\[[\d;]+m' '' | string replace -rf '^[\s>]*(\S+)\s*.*' '$1')
 
 complete -f iwctl
 
@@ -42,13 +42,15 @@ complete -c iwctl -n "test (__fish_number_of_cmd_args_wo_opts) = 3; and __fish_s
 complete -c iwctl -n "test (__fish_number_of_cmd_args_wo_opts) = 3; and __fish_seen_subcommand_from wsc" \
     -xa "cancel push-button start-pin start-user-pin"
 
-# Forth arguement
+# Fourth arguement
 complete -c iwctl -n "test (__fish_number_of_cmd_args_wo_opts) = 4; and __fish_seen_subcommand_from device set-property" \
     -xa  "Powered Mode"
 complete -c iwctl -n "test (__fish_number_of_cmd_args_wo_opts) = 4; and __fish_seen_subcommand_from known-networks set-property" \
     -xa  "AutoConnect"
 complete -c iwctl -n "test (__fish_number_of_cmd_args_wo_opts) = 4; and __fish_seen_subcommand_from station connect" \
     -xa  '(iwctl station wlan0 get-networks | tail -n -2 | awk \'{print $2}\')'
+complete -c iwctl -n "test (__fish_number_of_cmd_args_wo_opts) = 4; and __fish_seen_subcommand_from connect" \
+    -xa  "$net"
 
 # Fifth arguement
 complete -c iwctl -n "test (__fish_number_of_cmd_args_wo_opts) = 5; and __fish_seen_subcommand_from device set-property Mode" \

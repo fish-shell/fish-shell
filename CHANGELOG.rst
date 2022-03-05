@@ -145,6 +145,7 @@ Completions
 
   - Apple's ``shortcuts``
   - ``argparse`` (:issue:`8434`)
+  - ``asd`` (:issue:`8759`)
   - ``az`` (:issue:`8141`)
   - ``black`` (:issue:`8123`)
   - ``clasp`` (:issue:`8373`)
@@ -168,6 +169,7 @@ Completions
   - ``pabcnet_clear`` (:issue:`8421`)
   - ``qmk`` (:issue:`8180`)
   - ``rakudo`` (:issue:`8113`)
+  - ``rc-status`` (:issue:`8757`)
   - ``roswell`` (:issue:`8330`)
   - ``sbcl`` (:issue:`8330`)
   - ``starship`` (:issue:`8520`)

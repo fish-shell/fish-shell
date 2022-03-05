@@ -4387,6 +4387,14 @@ void history_tests_t::test_history_races() {
         return;
     }
 
+    // This fails too often on Github Actions,
+    // leading to a bunch of spurious test failures on unrelated PRs.
+    // For now it's better to disable it.
+    // TODO: Figure out *why* it does that and fix it.
+    if (getenv("CI")) {
+        return;
+    }
+
     say(L"Testing history race conditions");
 
     // It appears TSAN and ASAN's allocators do not release their locks properly in atfork, so

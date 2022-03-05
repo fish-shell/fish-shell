@@ -1,5 +1,4 @@
-set -l levels_path /etc/runlevels/*
-set -l levels (string replace /etc/runlevels/ "" $levels_path)
+set -l levels '(set -l p /etc/runlevels/*; string replace /etc/runlevels "" $p)'
 
 #disable file listing
 complete -f rc-status

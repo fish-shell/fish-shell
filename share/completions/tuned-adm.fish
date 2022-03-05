@@ -5,24 +5,7 @@ complete -f tuned-adm
 set profiles (tuned-adm list 2>&1 < /dev/null  | awk  '{print $2}' | tail -n +2 | head -n -1)
 
 # all tuned-adm actions
-set -l action list \
-        ''
-set -l actions $actions active \
-        ''
-set -l actions $actions off \
-        ''
-set -l actions $actions profile \
-        ''
-set -l actions $actions profile_info \
-        ''
-set -l actions $actions recommend \
-        ''
-set -l actions $actions verify \
-        ''
-set -l actions $actions auto_profile \
-        ''
-set -l actions $actions profile_mode \
-        ''
+set -l actions list available profiles active off profile profile_info recommend verify auto_profile profile_mode
 
 #first argument
 complete -k -c tuned-adm -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \

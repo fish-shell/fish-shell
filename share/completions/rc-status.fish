@@ -1,7 +1,10 @@
+set -l levels_path /etc/runlevels/*
+set -l levels (string replace /etc/runlevels/ "" $levels_path)
+
 #disable file listing
 complete -f rc-status
 complete -c rc-status -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
-    -xa '$levels'
+    -xa "$levels"
 
 complete -c rc-status -s h -l help -d 'Display the help output'
 complete -c rc-status -s a -l all -d 'Show services from all run levels'

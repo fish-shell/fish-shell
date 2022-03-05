@@ -1,0 +1,34 @@
+name: 💡 Feature request
+title: "[Feature]: "
+description: Suggest an idea for this project
+labels: "feature request"
+body:
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: Tell us how your feature should work.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Current behavior
+      description: Explain the difference your feature will have from current behavior.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Possible solution
+      description: Tell us how it could be fixed at your glance.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Context
+      description: >
+        How has this issue affected you? What are you trying to accomplish?
+        Providing context helps us come up with a solution that is most useful in the real world.
+  - type: textarea
+    attributes:
+      label: Notes
+      description: >
+        Provide any extra details here.

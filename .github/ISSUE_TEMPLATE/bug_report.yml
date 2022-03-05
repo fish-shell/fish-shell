@@ -1,0 +1,64 @@
+name: 🐛 Bug report
+title: "[Bug]: "
+description: Create a bug report to help us improve
+labels: "bug:general"
+body:
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: Tell us what should happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Current behavior
+      description: Tell us what happens instead of the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Possible solution
+      description: Tell us how it could be fixed at your glance.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Context
+      description: >
+        How has this issue affected you? What are you trying to accomplish?
+        Providing context helps us come up with a solution that is most useful in the real world.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: >
+        Provide a link to a live example, or an unambiguous set of steps to reproduce this bug. Include code to reproduce, if relevant.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Fish version
+      placeholder: "How to get: fish --version"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Operating system and version
+      placeholder: "How to get: neofetch (or another command)"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Your ~/.config/fish/config.fish (or $XDG_CONFIG_HOME/fish/config.fish)
+      value: |
+        ```bash
+        # How to get: cat ~/.config/fish/config.fish
+        ```
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Notes
+      description: >
+        Provide any extra details here.

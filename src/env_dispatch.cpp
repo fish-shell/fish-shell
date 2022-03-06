@@ -61,16 +61,11 @@
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem. These are only the variables we're possibly interested in.
-static const wcstring locale_variables[] = {L"LANG",
-                                            L"LANGUAGE",
-                                            L"LC_ALL",
-                                            L"LC_COLLATE",
-                                            L"LC_CTYPE",
-                                            L"LC_MESSAGES",
-                                            L"LC_NUMERIC",
-                                            L"LC_TIME",
-                                            L"fish_allow_singlebyte_locale",
-                                            L"LOCPATH"};
+static const wcstring locale_variables[] = {
+    L"LANG",       L"LANGUAGE", L"LC_ALL",
+    L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES",
+    L"LC_NUMERIC", L"LC_TIME",  L"fish_allow_singlebyte_locale",
+    L"LOCPATH"};
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.

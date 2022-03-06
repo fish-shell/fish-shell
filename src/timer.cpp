@@ -163,14 +163,14 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
 
     wcstring output;
     if (!verbose) {
-        append_format(output, L"\n_______________________________"
-                              L"\nExecuted in  %6.2F %s"
-                              L"\n   usr time  %6.2F %s"
-                              L"\n   sys time  %6.2F %s"
-                              L"\n",
-                              wall_time, unit_name(wall_unit),
-                              usr_time, unit_name(cpu_unit),
-                              sys_time, unit_name(cpu_unit));
+        append_format(output,
+                      L"\n_______________________________"
+                      L"\nExecuted in  %6.2F %s"
+                      L"\n   usr time  %6.2F %s"
+                      L"\n   sys time  %6.2F %s"
+                      L"\n",
+                      wall_time, unit_name(wall_unit), usr_time, unit_name(cpu_unit), sys_time,
+                      unit_name(cpu_unit));
     } else {
         auto fish_unit = get_unit(std::max(fish_sys_micros, fish_usr_micros));
         auto child_unit = get_unit(std::max(child_sys_micros, child_usr_micros));
@@ -179,8 +179,8 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
         double child_usr_time = convert(child_usr_micros, child_unit);
         double child_sys_time = convert(child_sys_micros, child_unit);
 
-        int column2_unit_len = std::max(strlen(unit_short_name(wall_unit)),
-                                        strlen(unit_short_name(cpu_unit)));
+        int column2_unit_len =
+            std::max(strlen(unit_short_name(wall_unit)), strlen(unit_short_name(cpu_unit)));
         append_format(output,
                       L"\n________________________________________________________"
                       L"\nExecuted in  %6.2F %-*s    %-*s  %s"

@@ -200,21 +200,18 @@ This is an alternative to aliases, and has the advantage that you see the actual
 Programmable title
 ------------------
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :ref:`fish_title <cmd-fish_title>` function. The :ref:`fish_title <cmd-fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :ref:`status current-command <cmd-status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :ref:`fish_prompt <cmd-fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the :ref:`fish_title <cmd-fish_title>` function. The :ref:`fish_title <cmd-fish_title>` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The :ref:`status current-command <cmd-status>` builtin will always return the name of the job to be put into the foreground (or ``fish`` if control is returning to the shell) when the :ref:`fish_prompt <cmd-fish_prompt>` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string.
+
+The default fish title shows the hostname if connected via ssh, the currently running command (unless it is fish) and the current working directory. All of this is shortened to not make the tab too wide.
 
 Examples:
-The default fish title is::
 
+To show the last command and working directory in the title::
 
     function fish_title
-        echo (status current-command) ' '
+        # `prompt_pwd` shortens the title. This helps prevent tabs from becoming very wide.
+        echo $argv[1] (prompt_pwd)
         pwd
-    end
-
-To show the last command in the title::
-
-    function fish_title
-        echo $argv[1]
     end
 
 .. _prompt:

@@ -11,7 +11,7 @@ Synopsis
     string collect [-N | --no-trim-newlines] [STRING ...]
     string escape [-n | --no-quoted] [--style=] [STRING ...]
     string join [-q | --quiet] [-n | --no-empty] SEP [STRING ...]
-    string join0 [-q | --quiet] [-n | --no-empty] [STRING ...]
+    string join0 [-q | --quiet] [STRING ...]
     string length [-q | --quiet] [STRING ...]
     string lower [-q | --quiet] [STRING ...]
     string match [-a | --all] [-e | --entire] [-i | --ignore-case]

@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     string join [-q | --quiet] [-n | --no-empty] SEP [STRING ...]
-    string join0 [-q | --quiet] [-n | --no-empty] [STRING ...]
+    string join0 [-q | --quiet] [STRING ...]
 
 .. END SYNOPSIS
 

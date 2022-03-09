@@ -726,6 +726,7 @@ static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc,
                               const wchar_t **argv, bool is_join0) {
     options_t opts;
     opts.quiet_valid = true;
+    opts.no_empty_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, is_join0 ? 0 : 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -735,6 +736,8 @@ static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc,
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         if (!opts.quiet) {
+            if (opts.no_empty && arg->length() == 0) continue;
+
             if (nargs > 0) {
                 streams.out.append(sep);
             }

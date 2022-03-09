@@ -23,6 +23,7 @@ complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string matc
 
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a join
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a join0
+complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] join' -s n -l no-empty -d "Empty strings excluded"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a trim
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] trim" -s l -l left -d "Trim only leading chars"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] trim" -s r -l right -d "Trim only trailing chars"

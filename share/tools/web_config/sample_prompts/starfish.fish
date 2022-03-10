@@ -1,7 +1,7 @@
 # vim: filetype=sh
 # name: Starfish
 # author: Radu Potop
-# description: A prompt theme simiar to Starship.rs but without the emojis.
+# description: A prompt theme similar to Starship.rs but without the emojis.
 
 function fish_prompt --description 'Write out the prompt'
     set -l last_status $status

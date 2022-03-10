@@ -1,5 +1,3 @@
-complete -c rustup
-
 set -l subcmds \
     show \
     update \

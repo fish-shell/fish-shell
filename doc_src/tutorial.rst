@@ -361,14 +361,15 @@ You can also access ranges of elements, known as "slices":
 
 You can iterate over a list (or a slice) with a for loop::
 
-    > for val in $PATH
-        echo "entry: $val"
-      end
-    entry: /usr/bin/
-    entry: /bin
-    entry: /usr/sbin
-    entry: /sbin
-    entry: /usr/local/bin
+    for val in $PATH
+      echo "entry: $val"
+    end
+    # Will print:
+    # entry: /usr/bin/
+    # entry: /bin
+    # entry: /usr/sbin
+    # entry: /sbin
+    # entry: /usr/local/bin
 
 Lists adjacent to other lists or strings are expanded as :ref:`cartesian products <cartesian-product>` unless quoted (see :ref:`Variable expansion <expand-variable>`)::
 
@@ -569,13 +570,13 @@ Functions
 
 A fish function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the :ref:`function <cmd-function>` builtin::
 
-    > function say_hello
-         echo Hello $argv
-      end
-    > say_hello
-    Hello
-    > say_hello everybody!
-    Hello everybody!
+    function say_hello
+        echo Hello $argv
+    end
+    say_hello
+    # prints: Hello
+    say_hello everybody!
+    # prints: Hello everybody!
 
 
 Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place. [#]_
@@ -603,25 +604,26 @@ Loops
 
 While loops::
 
-    > while true
+    while true
         echo "Loop forever"
     end
-    Loop forever
-    Loop forever
-    Loop forever
-    ... # yes, this really will loop forever. Unless you abort it with ctrl-c.
+    # Prints:
+    # Loop forever
+    # Loop forever
+    # Loop forever
+    # yes, this really will loop forever. Unless you abort it with ctrl-c.
 
 
 For loops can be used to iterate over a list. For example, a list of files::
 
-    > for file in *.txt
+    for file in *.txt
         cp $file $file.bak
     end
 
 
 Iterating over a list of numbers can be done with ``seq``::
 
-    > for x in (seq 5)
+    for x in (seq 5)
         touch file_$x.txt
     end
 

@@ -34,7 +34,7 @@ Description
 
 With no arguments, ``status`` displays a summary of the current login and job control status of the shell.
 
-The following operations (sub-commands) are available:
+The following operations (subcommands) are available:
 
 **is-command-substitution**, **-c** or **--is-command-substitution**
     Returns 0 if fish is currently executing a command substitution.

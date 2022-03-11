@@ -46,7 +46,10 @@ The following options are available:
 **-q** or **--query**
     Return 0 (true) if one of the *WORD* is an abbreviation.
 
-In addition, when adding or renaming abbreviations:
+**-h** or **--help**
+    Displays help about using this command.
+
+In addition, when adding or renaming abbreviations, one of the following **SCOPE** options can be used:
 
 **-g** or **--global**
     Use a global variable

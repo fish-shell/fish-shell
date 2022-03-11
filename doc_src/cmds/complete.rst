@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     complete ((-c | --command) | (-p | --path)) COMMAND [OPTIONS] 
-    complete ((-C | --do-complete)) [STRING] [--escape] 
+    complete (-C | --do-complete) [--escape] STRING
 
 Description
 -----------
@@ -68,6 +68,9 @@ The following options are available:
 
 **--escape**
     When used with ``-C``, escape special characters in completions.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Command specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU getopt library. These styles are:
 

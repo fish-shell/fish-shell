@@ -62,6 +62,9 @@ The following options are available:
 **-t** or **--handlers-type** *TYPE*
     Show all event handlers matching the given *TYPE*.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 The default behavior of ``functions``, when called with no arguments, is to print the names of all defined functions. Unless the ``-a`` option is given, no functions starting with underscores are included in the output.
 
 If any non-option parameters are given, the definition of the specified functions are printed.

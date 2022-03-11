@@ -82,6 +82,9 @@ The following other options are available:
 **-L** or **--long**
     Do not abbreviate long values when printing set variables.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 If a variable is set to more than one value, the variable will be a list with the specified elements. If a variable is set to zero elements, it will become a list with zero elements.
 
 If the variable name is one or more list elements, such as ``PATH[1 3 7]``, only those list elements specified will be changed. If you specify a negative index when expanding or assigning to a list variable, the index will be calculated from the end of the list. For example, the index -1 means the last index of a list.
@@ -108,12 +111,12 @@ In query mode, the scope to be examined can be specified. Whether the variable h
 
 In erase mode, if variable indices are specified, only the specified slices of the list variable will be erased.
 
-``set`` requires all options to come before any other arguments. For example, ``set flags -l`` will have the effect of setting the value of the variable ``flags`` to '-l', not making the variable local.
+``set`` requires all options to come before any other arguments. For example, ``set flags -l`` will have the effect of setting the value of the variable :envvar:`flags` to '-l', not making the variable local.
 
 Exit status
 -----------
 
-In assignment mode, ``set`` does not modify the exit status, but passes along whatever $status was set, including by command substitutions. This allows capturing the output and exit status of a subcommand, like in ``if set output (command)``.
+In assignment mode, ``set`` does not modify the exit status, but passes along whatever :envvar:`status` was set, including by command substitutions. This allows capturing the output and exit status of a subcommand, like in ``if set output (command)``.
 
 In query mode, the exit status is the number of variables that were not found.
 

@@ -31,6 +31,9 @@ The following options are available:
 **-P** or **--physical**
     Output the physical working directory, with symlinks resolved.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 See Also
 --------
 

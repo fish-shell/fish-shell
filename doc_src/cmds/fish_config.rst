@@ -43,6 +43,8 @@ Available subcommands for the ``theme`` command:
 
 The themes are loaded from the theme directory shipped with fish or a ``themes`` directory in the fish configuration directory (typically ``~/.config/fish/themes``).
 
+The **-h** or **--help** option displays help about using this command.
+
 Example
 -------
 

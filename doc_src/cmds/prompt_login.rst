@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``prompt_login`` is a function to describe the current login. It will show the user, the host and also whether the shell is running in a chroot (currently debian's debian_chroot is supported).
+``prompt_login`` is a function to describe the current login. It will show the user, the host and also whether the shell is running in a chroot (currently Debian's ``debian_chroot`` file is supported).
 
 Examples
 --------

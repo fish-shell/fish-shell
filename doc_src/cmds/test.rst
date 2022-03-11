@@ -143,7 +143,7 @@ Expressions can be grouped using parentheses.
 **(** *EXPRESSION* **)**
      Returns the value of *EXPRESSION*.
 
- Note that parentheses will usually require escaping with ``\(`` to avoid being interpreted as a command substitution.
+Note that parentheses will usually require escaping with ``\(`` to avoid being interpreted as a command substitution.
 
 
 Examples
@@ -160,7 +160,7 @@ If the ``/tmp`` directory exists, copy the ``/etc/motd`` file to it:
     end
 
 
-If the variable ``MANPATH`` is defined and not empty, print the contents. (If ``MANPATH`` is not defined, then it will expand to zero arguments, unless quoted.)
+If the variable :envvar:`MANPATH` is defined and not empty, print the contents. (If :envvar:`MANPATH` is not defined, then it will expand to zero arguments, unless quoted.)
 
 
 
@@ -193,7 +193,7 @@ Numerical comparisons will simply fail if one of the operands is not a number:
     end
 
 
-A common comparison is with $status:
+A common comparison is with :envvar:`status`:
 
 
 

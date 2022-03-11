@@ -1,7 +1,7 @@
 .. _cmd-and:
 
 and - conditionally execute a command
-=========================================
+=====================================
 
 Synopsis
 --------
@@ -19,6 +19,8 @@ Description
 
 ``and`` does not change the current exit status itself, but the command it runs most likely will. The exit status of the last foreground command to exit can always be accessed using the :ref:`$status <variables-status>` variable.
 
+The **-h** or **--help** option displays help about using this command.
+
 Example
 -------
 
@@ -32,3 +34,4 @@ See Also
 --------
 
 - :ref:`or <cmd-or>` command
+- :ref:`not <cmd-not>` command

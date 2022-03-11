@@ -1,20 +1,20 @@
 .. _cmd-fish_opt:
 
-fish_opt - create an option spec for the argparse command
-=========================================================
+fish_opt - create an option specification for the argparse command
+==================================================================
 
 Synopsis
 --------
 
 .. synopsis::
 
-    fish_opt [--help]
     fish_opt [(-slor | --multiple-vals=) OPTNAME]
+    fish_opt --help
 
 Description
 -----------
 
-This command provides a way to produce option specifications suitable for use with the :ref:`argparse <cmd-argparse>` command. You can, of course, write the option specs by hand without using this command. But you might prefer to use this for the clarity it provides.
+This command provides a way to produce option specifications suitable for use with the :ref:`argparse <cmd-argparse>` command. You can, of course, write the option specifications by hand without using this command. But you might prefer to use this for the clarity it provides.
 
 The following ``argparse`` options are available:
 
@@ -42,7 +42,7 @@ The following ``argparse`` options are available:
 Examples
 --------
 
-Define a single option spec for the boolean help flag:
+Define a single option specification for the boolean help flag:
 
 
 

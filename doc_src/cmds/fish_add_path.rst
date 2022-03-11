@@ -24,7 +24,7 @@ Components are normalized by :ref:`realpath <cmd-realpath>`. Trailing slashes ar
 
 Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given (if $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to $PATH, so they still stay ahead of the system paths).
 
-If no component is new, the variable ($fish_user_paths or $PATH) is not set again or otherwise modified, so variable handlers are not triggered.
+If no component is new, the variable (:envvar:`fish_user_paths` or :envvar:`$PATH`) is not set again or otherwise modified, so variable handlers are not triggered.
 
 If a component is not an existing directory, ``fish_add_path`` ignores it.
 
@@ -54,6 +54,9 @@ Options
 
 **-n** or **--dry-run**
     Print the ``set`` command that would be used without executing it.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 If ``--move`` is used, it may of course lead to the path swapping order, so you should be careful doing that in config.fish.
 

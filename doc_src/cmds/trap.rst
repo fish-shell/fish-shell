@@ -29,15 +29,18 @@ The following parameters are available:
 **-p** or **--print**
     Prints all defined signal handlers.
 
-If ``ARG`` and ``REASON`` are both specified, ``ARG`` is the command to be executed when the event specified by ``REASON`` occurs (e.g., the signal is delivered).
+**-h** or **--help**
+    Displays help about using this command.
 
-If ``ARG`` is absent (and there is a single REASON) or -, each specified signal is reset to its original disposition (the value it had upon entrance to the shell).  If ``ARG`` is the null string the signal specified by each ``REASON`` is ignored by the shell and by the commands it invokes.
+If *ARG* and *REASON* are both specified, *ARG* is the command to be executed when the event specified by *REASON* occurs (e.g., the signal is delivered).
 
-If ``ARG`` is not present and ``-p`` has been supplied, then the trap commands associated with each ``REASON`` are displayed. If no arguments are supplied or if only ``-p`` is given, ``trap`` prints the list of commands associated with each signal.
+If *ARG* is absent (and there is a single *REASON*) or ``-``, each specified signal is reset to its original disposition (the value it had upon entrance to the shell).  If *ARG* is the null string the signal specified by each *REASON* is ignored by the shell and by the commands it invokes.
+
+If *ARG* is not present and **-p** has been supplied, then the trap commands associated with each *REASON* are displayed. If no arguments are supplied or if only **-p** is given, ``trap`` prints the list of commands associated with each signal.
 
 Signal names are case insensitive and the ``SIG`` prefix is optional.
 
-The exit status is 1 if any ``REASON`` is invalid; otherwise trap returns 0.
+The exit status is 1 if any *REASON* is invalid; otherwise trap returns 0.
 
 Example
 -------

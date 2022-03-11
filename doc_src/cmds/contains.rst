@@ -21,6 +21,9 @@ The following options are available:
 **-i** or **--index**
     Print the index (number of the element in the set) of the first matching element.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 Note that ``contains`` interprets all arguments starting with a **-** as an option to ``contains``, until an **--** argument is reached.
 
 See the examples below.

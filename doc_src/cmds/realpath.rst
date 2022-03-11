@@ -29,3 +29,6 @@ The following options are available:
 
 **-s** or **--no-symlinks**
     Don't resolve symlinks, only make paths absolute, squash multiple slashes and remove trailing slashes.
+
+**-h** or **--help**
+    Displays help about using this command.

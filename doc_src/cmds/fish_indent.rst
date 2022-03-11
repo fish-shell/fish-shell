@@ -45,3 +45,6 @@ The following options are available:
 
 **--dump-parse-tree**
     Dumps information about the parsed statements to standard error. This is likely to be of interest only to people working on the fish source code.
+
+**-h** or **--help**
+    Displays help about using this command.

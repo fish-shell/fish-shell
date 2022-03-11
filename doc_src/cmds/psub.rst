@@ -26,6 +26,9 @@ The following options are available:
 **-s** or **--suffix** *SUFFIX*
     Append SUFFIX to the filename.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 Example
 -------
 

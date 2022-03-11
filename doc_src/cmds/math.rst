@@ -48,6 +48,9 @@ The following options are available:
     Hex numbers will be printed with a ``0x`` prefix.
     Octal numbers will have a prefix of ``0`` but aren't understood by ``math`` as input.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 Return Values
 -------------
 

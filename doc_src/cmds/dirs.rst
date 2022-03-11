@@ -20,9 +20,12 @@ The following options are available:
 **-c**:
     Clear the directory stack instead of printing it.
 
-``dirs`` does not accept any parameters.
+**-h** or **--help**
+    Displays help about using this command.
+
+``dirs`` does not accept any arguments.
 
 See Also
 --------
 
-- the :ref:`cdh <cmd-cdh>` command which provides a more intuitive way to navigate to recently visited directories.
+- the :ref:`cdh <cmd-cdh>` command, which provides a more intuitive way to navigate to recently visited directories.

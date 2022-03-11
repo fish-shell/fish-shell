@@ -13,9 +13,9 @@ Synopsis
 Description
 -----------
 
-``fish_key_reader`` is used to explain how you would bind a certain key sequence. By default, it prints the :ref:`bind <cmd-bind>` command for one key sequence read interactively over standard input.
+:program:`fish_key_reader` is used to explain how you would bind a certain key sequence. By default, it prints the :ref:`bind <cmd-bind>` command for one key sequence read interactively over standard input.
 
-If the character sequence matches a special key name (see ``bind --key-names``),  both ``bind CHARS ...`` and ``bind -k KEYNAME ...`` usage will be shown. In verbose mode (enabled by passing ``--verbose``), additional details about the characters received, such as the delay between chars, are written to stderr.
+If the character sequence matches a special key name (see ``bind --key-names``),  both ``bind CHARS ...`` and ``bind -k KEYNAME ...`` usage will be shown. In verbose mode (enabled by passing ``--verbose``), additional details about the characters received, such as the delay between chars, are written to standard error.
 
 The following options are available:
 
@@ -34,7 +34,7 @@ The following options are available:
 Usage Notes
 -----------
 
-In verbose mode, the delay in milliseconds since the previous character was received is included in the diagnostic information written to stderr. This information may be useful to determine the optimal ``fish_escape_delay_ms`` setting or learn the amount of lag introduced by tools like ``ssh``, ``mosh`` or ``tmux``.
+In verbose mode, the delay in milliseconds since the previous character was received is included in the diagnostic information written to standard error. This information may be useful to determine the optimal ``fish_escape_delay_ms`` setting or learn the amount of lag introduced by tools like ``ssh``, ``mosh`` or ``tmux``.
 
 ``fish_key_reader`` intentionally disables handling of many signals. To terminate ``fish_key_reader`` in ``--continuous`` mode do:
 

@@ -10,11 +10,12 @@ Synopsis
 
     builtin [OPTIONS] BUILTINNAME
     builtin --query BUILTINNAME ...
+    builtin --names
 
 Description
 -----------
 
-``builtin`` forces the shell to use a builtin command, rather than a function or program.
+``builtin`` forces the shell to use a builtin command named *BUILTIN*, rather than a function or external program.
 
 The following options are available:
 
@@ -23,6 +24,9 @@ The following options are available:
 
 **-q** or **--query** *BUILTIN*
     Tests if any of the specified builtins exist.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Example
 -------

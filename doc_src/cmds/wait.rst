@@ -23,6 +23,8 @@ If neither a pid nor a process name is specified, the command waits for all back
 
 If the **-n** or **--any** flag is provided, the command returns as soon as the first job completes. If it is not provided, it returns after all jobs complete.
 
+The **-h** or **--help** option displays help about using this command.
+
 Example
 -------
 

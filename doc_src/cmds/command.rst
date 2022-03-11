@@ -28,6 +28,9 @@ The following options are available:
 **-v** (or **-s** or **--search**)
     Prints the external command that would be executed, or prints nothing if no file with the specified name could be found in :envvar:`PATH`.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 With the **-v** option, ``command`` treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 127 if no commands could be found. **--quiet** used with **-v** prevents commands being printed, like ``type -q``.
 
 Examples

@@ -8,7 +8,8 @@ Synopsis
 
 .. synopsis::
 
-    block [OPTIONS]
+    block [(--local | --global)]
+    block --erase
 
 Description
 -----------
@@ -21,6 +22,8 @@ The block can be removed. Any events which triggered while the block was in plac
 
 Event blocks should not be confused with code blocks, which are created with ``begin``, ``if``, ``while`` or ``for``
 
+Without options, the ``block`` command acts with function scope.
+
 The following options are available:
 
 **-l** or **--local**
@@ -31,6 +34,9 @@ The following options are available:
 
 **-e** or **--erase**
     Release global block.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Example
 -------

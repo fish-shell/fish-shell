@@ -33,9 +33,12 @@ Description
 **-q** or **--query**
     Prints no output for evaluation of jobs by exit status only. For compatibility with old fish versions this is also **--quiet** (but this is deprecated).
 
+**-h** or **--help**
+    Displays help about using this command.
+
 On systems that supports this feature, jobs will print the CPU usage of each job since the last command was executed. The CPU usage is expressed as a percentage of full CPU activity. Note that on multiprocessor systems, the total activity may be more than 100\%.
 
-Arguments of the form ``PID`` or ``%JOBID`` restrict the output to jobs with the selected process identifiers or job numbers respectively.
+Arguments of the form *PID* or *%JOBID* restrict the output to jobs with the selected process identifiers or job numbers respectively.
 
 If the output of ``jobs`` is redirected or if it is part of a command substitution, the column header that is usually printed is omitted, making it easier to parse.
 

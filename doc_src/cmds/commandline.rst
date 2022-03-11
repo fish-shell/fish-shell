@@ -31,6 +31,9 @@ The following options are available:
     This option cannot be combined with any other option.
     See :ref:`bind <cmd-bind>` for a list of input functions.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 The following options change the way ``commandline`` updates the command line buffer:
 
 **-a** or **--append**

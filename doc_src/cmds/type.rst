@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-With no options, :command:`type` indicates how each ``NAME`` would be interpreted if used as a command name.
+With no options, :command:`type` indicates how each *NAME* would be interpreted if used as a command name.
 
 The following options are available:
 
@@ -38,7 +38,10 @@ The following options are available:
 **-q** or **--query**
     Suppresses all output; this is useful when testing the exit status. For compatibility with old fish versions this is also **--quiet**.
 
-The ``-q``, ``-p``, ``-t`` and ``-P`` flags (and their long flag aliases) are mutually exclusive. Only one can be specified at a time.
+**-h** or **--help**
+    Displays help about using this command.
+
+The **-q**, **-p**, **-t** and **-P** flags (and their long flag aliases) are mutually exclusive. Only one can be specified at a time.
 
 
 Example

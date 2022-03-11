@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-``function`` creates a new function ``NAME`` with the body ``BODY``.
+``function`` creates a new function *NAME* with the body *BODY*.
 
 A function is a list of commands that will be executed when the name of the function is given as a command.
 

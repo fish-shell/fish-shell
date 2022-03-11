@@ -30,6 +30,9 @@ If there is no function called *NAME*, a new function will be created with the s
 **-s** or **--save**
     Automatically save the function after successfully editing it.
 
+**-h** or **--help**
+    Displays help about using this command.
+
 Example
 -------
 

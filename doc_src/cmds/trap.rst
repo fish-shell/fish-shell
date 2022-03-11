@@ -17,13 +17,17 @@ Description
 
 The following parameters are available:
 
-- ``ARG`` is the command to be executed on signal delivery.
+*ARG*
+    Command to be executed on signal delivery.
 
-- ``REASON`` is the name of the event to trap. For example, a signal like ``INT`` or ``SIGINT``, or the special symbol ``EXIT``.
+*REASON*
+    Name of the event to trap. For example, a signal like ``INT`` or ``SIGINT``, or the special symbol ``EXIT``.
 
-- ``-l`` or ``--list-signals`` prints a list of signal names.
+**-l** or **--list-signals**
+    Prints a list of signal names.
 
-- ``-p`` or ``--print`` prints all defined signal handlers.
+**-p** or **--print**
+    Prints all defined signal handlers.
 
 If ``ARG`` and ``REASON`` are both specified, ``ARG`` is the command to be executed when the event specified by ``REASON`` occurs (e.g., the signal is delivered).
 

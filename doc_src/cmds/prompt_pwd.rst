@@ -24,9 +24,14 @@ If any positional arguments are given, prompt_pwd shortens them instead of $PWD.
 Options
 -------
 
-- ``-h`` or ``--help`` displays the help and exits
-- ``-d`` or ``--dir-length=MAX`` causes the components to be shortened to MAX characters each. This overrides $fish_prompt_pwd_dir_length.
-- ``-D`` or ``--full-length-dirs=NUM`` keeps NUM components (counted from the right) as full length without shortening. This overrides $fish_prompt_pwd_full_dirs.
+**-d** or **--dir-length** *MAX*
+    Causes the components to be shortened to *MAX* characters each. This overrides :envvar:`fish_prompt_pwd_dir_length`.
+
+**-D** or **--full-length-dirs** *NUM*
+    Keeps *NUM* components (counted from the right) as full length without shortening. This overrides :envvar:`fish_prompt_pwd_full_dirs`.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Examples
 --------

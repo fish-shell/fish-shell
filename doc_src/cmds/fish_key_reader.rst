@@ -19,13 +19,17 @@ If the character sequence matches a special key name (see ``bind --key-names``),
 
 The following options are available:
 
-- ``-c`` or ``--continuous`` begins a session where multiple key sequences can be inspected. By default the program exits after capturing a single key sequence.
+**-c** or **--continuous**
+    Begins a session where multiple key sequences can be inspected. By default the program exits after capturing a single key sequence.
 
-- ``-V`` or ``--verbose`` tells fish_key_reader to output timing information and explain the sequence in more detail.
+**-V** or **--verbose**
+    Tells fish_key_reader to output timing information and explain the sequence in more detail.
 
-- ``-h`` or ``--help`` prints usage information.
+**-h** or **--help**
+    Displays help about using this command.
 
-- ``-v`` or ``--version`` prints fish_key_reader's version and exits.
+**-v** or **--version**
+    Displays the current :program:`fish` version and then exits.
 
 Usage Notes
 -----------

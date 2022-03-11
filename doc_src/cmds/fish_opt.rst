@@ -18,19 +18,26 @@ This command provides a way to produce option specifications suitable for use wi
 
 The following ``argparse`` options are available:
 
-- ``-s`` or ``--short`` takes a single letter that is used as the short flag in the option being defined. This option is mandatory.
+**-s** or **--short**
+    Takes a single letter that is used as the short flag in the option being defined. This option is mandatory.
 
-- ``-l`` or ``--long`` takes a string that is used as the long flag in the option being defined. This option is optional and has no default. If no long flag is defined then only the short flag will be allowed when parsing arguments using the option spec.
+**-l** or **--long**
+    Takes a string that is used as the long flag in the option being defined. This option is optional and has no default. If no long flag is defined then only the short flag will be allowed when parsing arguments using the option specification.
 
-- ``--long-only`` means the option spec being defined will only allow the long flag name to be used. The short flag name must still be defined (i.e., ``--short`` must be specified) but it cannot be used when parsing args using this option spec.
+**--long-only**
+    The option being defined will only allow the long flag name to be used. The short flag name must still be defined (i.e., **--short** must be specified) but it cannot be used when parsing arguments using this option specification.
 
-- ``-o`` or ``--optional-val`` means the option being defined can take a value but it is optional rather than required. If the option is seen more than once when parsing arguments only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will zero elements if no value was given with the option else it will have exactly one element.
+**-o** or **--optional-val**
+    Tthe option being defined can take a value, but it is optional rather than required. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will zero elements if no value was given with the option else it will have exactly one element.
 
-- ``-r`` or ``--required-val`` means the option being defined requires a value. If the option is seen more than once when parsing arguments only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will have exactly one element.
+**-r** or **--required-val**
+    The option being defined requires a value. If the option is seen more than once when parsing arguments, only the last value seen is saved. This means the resulting flag variable created by ``argparse`` will have exactly one element.
 
-- ``--multiple-vals`` means the option being defined requires a value each time it is seen. Each instance is stored. This means the resulting flag variable created by ``argparse`` will have one element for each instance of this option in the args.
+**--multiple-vals**
+    The option being defined requires a value each time it is seen. Each instance is stored. This means the resulting flag variable created by ``argparse`` will have one element for each instance of this option in the arguments.
 
-- ``-h`` or ``--help`` displays help about using this command.
+**-h** or **--help**
+    Displays help about using this command.
 
 Examples
 --------

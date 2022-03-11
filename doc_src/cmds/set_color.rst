@@ -26,17 +26,30 @@ An RGB value with three or six hex digits, such as A0FF33 or f2f can be used. ``
 
 A second color may be given as a desired fallback color. e.g. ``set_color 124212 brblue`` will instruct set_color to use *brblue* if a terminal is not capable of the exact shade of grey desired. This is very useful when an 8 or 16 color terminal might otherwise not use a color.
 
-The following *OPTIONS* are available:
+The following options are available:
 
-- ``-b``, ``--background`` *COLOR* sets the background color.
-- ``-c``, ``--print-colors`` prints a list of the 16 named colors.
-- ``-o``, ``--bold`` sets bold mode.
-- ``-d``, ``--dim`` sets dim mode.
-- ``-i``, ``--italics`` sets italics mode.
-- ``-r``, ``--reverse`` sets reverse mode.
-- ``-u``, ``--underline`` sets underlined mode.
+**-b** or **--background** *COLOR*
+    Sets the background color.
 
-Using the *normal* keyword will reset foreground, background, and all formatting back to default.
+**-c** or **--print-colors**
+    Prints a list of the 16 named colors.
+
+**-o** or **--bold**
+    Sets bold mode.
+
+**-d** or **--dim**
+    Sets dim mode.
+
+**-i** or **--italics**
+    Sets italics mode.
+
+**-r** or **--reverse**
+    Sets reverse mode.
+
+**-u** or **--underline**
+    Sets underlined mode.
+
+Using the **normal** keyword will reset foreground, background, and all formatting back to default.
 
 Notes
 -----

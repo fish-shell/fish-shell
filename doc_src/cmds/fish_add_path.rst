@@ -31,14 +31,29 @@ If a component is not an existing directory, ``fish_add_path`` ignores it.
 Options
 -------
 
-- ``-a`` or ``--append`` causes the components to be added to the *end* of the variable
-- ``-p`` or ``--prepend`` causes the components to be added to the *front* of the variable (this is the default)
-- ``-g`` or ``--global`` means to use a global $fish_user_paths
-- ``-U`` or ``--universal`` means to use a universal $fish_user_paths - this is the default if it doesn't already exist
-- ``-P`` or ``--path`` means to use $PATH directly
-- ``-m`` or ``--move`` means to move already existing components to the place they would be added - by default they would be left in place and not added again
-- ``-v`` or ``--verbose`` means to print the :ref:`set <cmd-set>` command used
-- ``-n`` or ``--dry-run`` means to print the ``set`` command that would be used without executing it
+**-a** or **--append**
+    Add components to the *end* of the variable.
+
+**-p** or **--prepend**
+    Add components to the *front* of the variable (this is the default).
+
+**-g** or **--global**
+    Use a global :envvar:`fish_user_paths`.
+
+**-U** or **--universal**
+    Use a universal :envvar:`fish_user_paths` - this is the default if it doesn't already exist.
+
+**-P** or **--path**
+    Manipulate :envvar:`PATH` directly.
+
+**-m** or **--move**
+    Move already-existing components to the place they would be added - by default they would be left in place and not added again.
+
+**-v** or **--verbose**
+    Print the :ref:`set <cmd-set>` command used.
+
+**-n** or **--dry-run**
+    Print the ``set`` command that would be used without executing it.
 
 If ``--move`` is used, it may of course lead to the path swapping order, so you should be careful doing that in config.fish.
 

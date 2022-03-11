@@ -19,20 +19,29 @@ Description
 
 The following options are available:
 
-- ``-w`` or ``--write`` indents a specified file and immediately writes to that file.
+**-w** or **--write**
+    Indents a specified file and immediately writes to that file.
 
-- ``-i`` or ``--no-indent`` do not indent commands; only reformat to one job per line.
+**-i** or **--no-indent**
+    Do not indent commands; only reformat to one job per line.
 
-- ``-c`` or ``--check`` do not indent, only return 0 if the code is already indented as fish_indent would, the number of failed files otherwise. Also print the failed filenames if not reading from stdin.
+**-c** or **--check**
+    Do not indent, only return 0 if the code is already indented as fish_indent would, the number of failed files otherwise. Also print the failed filenames if not reading from standard input.
 
-- ``-v`` or ``--version`` displays the current fish version and then exits.
+**-v** or **--version**
+    Displays the current :program:`fish` version and then exits.
 
-- ``--ansi`` colorizes the output using ANSI escape sequences, appropriate for the current $TERM, using the colors defined in the environment (such as ``$fish_color_command``).
+**--ansi**
+    Colorizes the output using ANSI escape sequences, appropriate for the current :envvar:`TERM`, using the colors defined in the environment (such as :envvar:`fish_color_command`).
 
-- ``--html`` outputs HTML, which supports syntax highlighting if the appropriate CSS is defined. The CSS class names are the same as the variable names, such as ``fish_color_command``.
+**--html**
+    Outputs HTML, which supports syntax highlighting if the appropriate CSS is defined. The CSS class names are the same as the variable names, such as ``fish_color_command``.
 
-- ``-d`` or ``--debug=DEBUG_CATEGORIES`` enable debug output and specify a pattern for matching debug categories. See :ref:`Debugging <debugging-fish>` in :ref:`fish <cmd-fish>` (1) for details.
+**-d** or **--debug=DEBUG_CATEGORIES**
+    Enable debug output and specify a pattern for matching debug categories. See :ref:`Debugging <debugging-fish>` in :ref:`fish <cmd-fish>` (1) for details.
 
-- ``-o`` or ``--debug-output=DEBUG_FILE`` specify a file path to receive the debug output, including categories and ``fish_trace``. The default is stderr.
+**-o** or **--debug-output=DEBUG_FILE**
+    Specify a file path to receive the debug output, including categories and ``fish_trace``. The default is standard error.
 
-- ``--dump-parse-tree`` dumps information about the parsed statements to stderr. This is likely to be of interest only to people working on the fish source code.
+**--dump-parse-tree**
+    Dumps information about the parsed statements to standard error. This is likely to be of interest only to people working on the fish source code.

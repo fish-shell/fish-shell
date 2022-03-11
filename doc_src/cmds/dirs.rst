@@ -15,7 +15,10 @@ Description
 
 ``dirs`` prints the current :ref:`directory stack <directory-stack>`, as created by :ref:`pushd <cmd-pushd>` and modified by :ref:`popd <cmd-popd>`.
 
-With "-c", it clears the directory stack instead.
+The following options are available:
+
+**-c**:
+    Clear the directory stack instead of printing it.
 
 ``dirs`` does not accept any parameters.
 

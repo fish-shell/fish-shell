@@ -21,11 +21,14 @@ If the ``$VISUAL`` environment variable is set, it will be used as the program t
 
 If there is no function called *NAME*, a new function will be created with the specified name.
 
-- ``-e command`` or ``--editor command`` Open the function body inside the text editor given by the command (for example, ``-e vi``). The special command ``fish`` will use the built-in editor (same as specifying ``-i``).
+**-e command** or **--editor command**
+    Open the function body inside the text editor given by the command (for example, **-e vi**). The special command ``fish`` will use the built-in editor (same as specifying **-i**).
 
-- ``-i`` or ``--interactive`` Force opening the function body in the built-in editor even if ``$VISUAL`` or ``$EDITOR`` is defined.
+**-i** or **--interactive**
+    Force opening the function body in the built-in editor even if ``$VISUAL`` or ``$EDITOR`` is defined.
 
-- ``-s`` or ``--save`` Automatically save the function after successfully editing it.
+**-s** or **--save**
+    Automatically save the function after successfully editing it.
 
 Example
 -------

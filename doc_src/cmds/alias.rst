@@ -27,9 +27,11 @@ You cannot create an alias to a function with the same name. Note that spaces ne
 
 The following options are available:
 
-- **-h** or **--help** displays help about using this command.
+**-h** or **--help**
+    Displays help about using this command.
 
-- **-s** or **--save** Automatically save the function created by the alias into your fish configuration directory using :ref:`funcsave <cmd-funcsave>`.
+**-s** or **--save**
+    Saves the function created by the alias into your fish configuration directory using :ref:`funcsave <cmd-funcsave>`.
 
 Example
 -------

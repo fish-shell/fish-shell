@@ -17,11 +17,14 @@ Some shells (e.g., ksh, bash) feature a syntax that is a mix between command sub
 
 The following options are available:
 
-- ``-f`` or ``--file`` will cause psub to use a regular file instead of a named pipe to communicate with the calling process. This will cause ``psub`` to be significantly slower when large amounts of data are involved, but has the advantage that the reading process can seek in the stream. This is the default.
+**-f** or **--file**
+    Use a regular file instead of a named pipe to communicate with the calling process. This will cause ``psub`` to be significantly slower when large amounts of data are involved, but has the advantage that the reading process can seek in the stream. This is the default.
 
-- ``-F`` or ``--fifo`` will cause psub to use a named pipe rather than a file. You should only use this if the command produces no more than 8 KiB of output. The limit on the amount of data a FIFO can buffer varies with the OS but is typically 8 KiB, 16 KiB or 64 KiB. If you use this option and the command on the left of the psub pipeline produces more output a deadlock is likely to occur.
+**-F** or **--fifo**
+    Use a named pipe rather than a file. You should only use this if the command produces no more than 8 KiB of output. The limit on the amount of data a FIFO can buffer varies with the OS but is typically 8 KiB, 16 KiB or 64 KiB. If you use this option and the command on the left of the psub pipeline produces more output a deadlock is likely to occur.
 
-- ``-s`` or ``--suffix`` will append SUFFIX to the filename.
+**-s** or **--suffix** *SUFFIX*
+    Append SUFFIX to the filename.
 
 Example
 -------

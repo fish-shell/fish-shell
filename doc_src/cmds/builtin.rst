@@ -16,12 +16,13 @@ Description
 
 ``builtin`` forces the shell to use a builtin command, rather than a function or program.
 
-The following parameters are available:
+The following options are available:
 
 **-n** or **--names**
-    List the names of all defined builtins
-**-q** or **--query**
-    Tests if any of the specified builtin(s) exist
+    Lists the names of all defined builtins.
+
+**-q** or **--query** *BUILTIN*
+    Tests if any of the specified builtins exist.
 
 Example
 -------

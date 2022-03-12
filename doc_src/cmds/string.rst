@@ -39,11 +39,11 @@ Description
 
 ``string`` performs operations on strings.
 
-STRING arguments are taken from the command line unless standard input is connected to a pipe or a file, in which case they are read from standard input, one STRING per line. It is an error to supply STRING arguments on the command line and on standard input.
+*STRING* arguments are taken from the command line unless standard input is connected to a pipe or a file, in which case they are read from standard input, one *STRING* per line. It is an error to supply *STRING* arguments on the command line and on standard input.
 
 Arguments beginning with ``-`` are normally interpreted as switches; ``--`` causes the following arguments not to be treated as switches even if they begin with ``-``. Switches and required arguments are recognized only on the command line.
 
-Most subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
+Most subcommands accept a **-q** or **--quiet** switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
 
 The following subcommands are available.
 
@@ -274,7 +274,7 @@ Examples
 Regular Expressions
 -------------------
 
-Both the ``match`` and ``replace`` subcommand support regular expressions when used with the ``-r`` or ``--regex`` option. The dialect is that of PCRE2.
+Both the ``match`` and ``replace`` subcommand support regular expressions when used with the **-r** or **--regex** option. The dialect is that of PCRE2.
 
 In general, special characters are special by default, so ``a+`` matches one or more "a"s, while ``a\+`` matches an "a" and then a "+". ``(a+)`` matches one or more "a"s in a capturing group (``(?:XXXX)`` denotes a non-capturing group). For the replacement parameter of ``replace``, ``$n`` refers to the n-th group of the match. In the match parameter, ``\n`` (e.g. ``\1``) refers back to groups.
 
@@ -335,7 +335,7 @@ If you are familiar with these, it is useful to know how ``string`` differs from
 
 In contrast to these classics, ``string`` reads input either from stdin or as arguments. ``string`` also does not deal with files, so it requires redirections to be used with them.
 
-In contrast to ``grep``, ``string``'s ``match`` defaults to glob-mode, while ``replace`` defaults to literal matching. If set to regex-mode, they use PCRE regular expressions, which is comparable to ``grep``'s ``-P`` option. ``match`` defaults to printing just the match, which is like ``grep`` with ``-o`` (use ``--entire`` to enable grep-like behavior).
+In contrast to ``grep``, ``string``'s ``match`` defaults to glob-mode, while ``replace`` defaults to literal matching. If set to regex-mode, they use PCRE regular expressions, which is comparable to ``grep``'s ``-P`` option. ``match`` defaults to printing just the match, which is like ``grep`` with ``-o`` (use **--entire** to enable grep-like behavior).
 
 Like ``sed``'s ``s/old/new/`` command, ``string replace`` still prints strings that don't match. ``sed``'s ``-n`` in combination with a ``/p`` modifier or command is like ``string replace -f``.
 

@@ -15,6 +15,7 @@ Description
 
 ``emit`` emits, or fires, an event. Events are delivered to, or caught by, special functions called :ref:`event handlers <event>`. The arguments are passed to the event handlers as function arguments.
 
+The **--help** or **-h** option displays help about using this command.
 
 Example
 -------

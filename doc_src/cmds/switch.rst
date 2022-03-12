@@ -25,9 +25,7 @@ Note that command substitutions in a case statement will be evaluated even if it
 Example
 -------
 
-If the variable \$animal contains the name of an animal, the following code would attempt to classify it:
-
-
+If the variable :envvar:`animal` contains the name of an animal, the following code would attempt to classify it:
 
 ::
 

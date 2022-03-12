@@ -27,4 +27,8 @@ If a :command:`realpath` command exists, that will be preferred.
 
 The following options are available:
 
-- ``-s`` or ``--no-symlinks``: Don't resolve symlinks, only make paths absolute, squash multiple slashes and remove trailing slashes.
+**-s** or **--no-symlinks**
+    Don't resolve symlinks, only make paths absolute, squash multiple slashes and remove trailing slashes.
+
+**-h** or **--help**
+    Displays help about using this command.

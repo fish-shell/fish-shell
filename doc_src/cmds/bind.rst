@@ -81,6 +81,9 @@ The following options are available:
     All invocations except for inserting new bindings can operate on both levels at the same time (if both **--preset** and **--user** are given).
     **--preset** should only be used in full binding sets (like when working on ``fish_vi_key_bindings``).
 
+**-h** or **--help**
+    Displays help about using this command.
+
 Special input functions
 -----------------------
 The following special input functions are available:

@@ -23,6 +23,8 @@ If a job is stopped, it is sent a signal to continue running, and a warning is p
 
 ``disown`` returns 0 if all specified jobs were disowned successfully, and 1 if any problems were encountered.
 
+The **--help** or **-h** option displays help about using this command.
+
 Example
 -------
 

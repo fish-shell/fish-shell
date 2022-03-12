@@ -19,6 +19,8 @@ The exit status of the **while** loop is the exit status of the last iteration o
 
 You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` for complex conditions. Even more complex control can be achieved with ``while true`` containing a :ref:`break <cmd-break>`.
 
+The **-h** or **--help** option displays help about using this command.
+
 Example
 -------
 

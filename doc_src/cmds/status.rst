@@ -34,46 +34,64 @@ Description
 
 With no arguments, ``status`` displays a summary of the current login and job control status of the shell.
 
-The following operations (sub-commands) are available:
+The following operations (subcommands) are available:
 
-- ``is-command-substitution`` returns 0 if fish is currently executing a command substitution. Also ``-c`` or ``--is-command-substitution``.
+**is-command-substitution**, **-c** or **--is-command-substitution**
+    Returns 0 if fish is currently executing a command substitution.
 
-- ``is-block`` returns 0 if fish is currently executing a block of code. Also ``-b`` or ``--is-block``.
+**is-block**, **-b** or **--is-block**
+    Returns 0 if fish is currently executing a block of code.
 
-- ``is-breakpoint`` returns 0 if fish is currently showing a prompt in the context of a ``breakpoint`` command. See also the ``fish_breakpoint_prompt`` function.
+**is-breakpoint**
+    Returns 0 if fish is currently showing a prompt in the context of a :ref:`breakpoint <cmd-breakpoint>` command. See also the :ref:`fish_breakpoint_prompt <cmd-fish_breakpoint_prompt>` function.
 
-- ``is-interactive`` returns 0 if fish is interactive - that is, connected to a keyboard. Also ``-i`` or ``--is-interactive``.
+**is-interactive**, **-i** or **--is-interactive**
+    Returns 0 if fish is interactive - that is, connected to a keyboard.
 
-- ``is-login`` returns 0 if fish is a login shell - that is, if fish should perform login tasks such as setting up the PATH. Also ``-l`` or ``--is-login``.
+**is-login**, **-l** or **--is-login**
+    Returns 0 if fish is a login shell - that is, if fish should perform login tasks such as setting up :envvar:`PATH`.
 
-- ``is-full-job-control`` returns 0 if full job control is enabled. Also ``--is-full-job-control`` (no short flag).
+**is-full-job-control** or **--is-full-job-control**
+    Returns 0 if full job control is enabled.
 
-- ``is-interactive-job-control`` returns 0 if interactive job control is enabled. Also, ``--is-interactive-job-control`` (no short flag).
+**is-interactive-job-control** or **--is-interactive-job-control**
+    Returns 0 if interactive job control is enabled.
 
-- ``is-no-job-control`` returns 0 if no job control is enabled. Also ``--is-no-job-control`` (no short flag).
+**is-no-job-control** or **--is-no-job-control**
+    Returns 0 if no job control is enabled.
 
-- ``current-command`` prints the name of the currently-running function or command, like the deprecated ``_`` variable.
+**current-command**
+    Prints the name of the currently-running function or command, like the deprecated :envvar:`_` variable.
 
-- ``filename`` prints the filename of the currently-running script. Also ``current-filename``, ``-f`` or ``--current-filename``. If the current script was called via a symlink, this will return the symlink. If the current script was received by piping into ``source``, then this will return ``-``.
+**filename**, **current-filename**, **-f** or **--current-filename**
+    Prints the filename of the currently-running script. If the current script was called via a symlink, this will return the symlink. If the current script was received by piping into :ref:`source <cmd-source>`, then this will return ``-``.
 
-- ``basename`` prints just the filename of the running script, without any path-components before.
+**basename**
+    Prints just the filename of the running script, without any path components before.
 
-- ``dirname`` prints just the path to the running script, without the actual filename itself. This can be relative to $PWD (including just "."), depending on how the script was called. This is the same as passing the ``filename`` to ``dirname(3)``. It's useful if you want to use other files in the current script's directory or similar.
+**dirname**
+    Prints just the path to the running script, without the actual filename itself. This can be relative to :envvar:`PWD` (including just "."), depending on how the script was called. This is the same as passing the filename to ``dirname(3)``. It's useful if you want to use other files in the current script's directory or similar.
 
-- ``fish-path`` prints the absolute path to the currently executing instance of fish.
+**fish-path**
+    Prints the absolute path to the currently executing instance of fish.
 
-- ``function`` prints the name of the currently called function if able, when missing displays "Not a
-  function" (or equivalent translated string). Also ``current-function``.
+**function** or **current-function**
+    Prints the name of the currently called function if able, when missing displays "Not a function" (or equivalent translated string).
 
-- ``line-number`` prints the line number of the currently running script. Also ``current-line-number``, ``-n`` or ``--current-line-number``.
+**line-number**, **current-line-number**, **-n** or **--current-line-number**
+    Prints the line number of the currently running script.
 
-- ``stack-trace`` prints a stack trace of all function calls on the call stack. Also ``print-stack-trace``, ``-t`` or ``--print-stack-trace``.
+**stack-trace**, **print-stack-trace**, **-t** or **--print-stack-trace**
+    Prints a stack trace of all function calls on the call stack.
 
-- ``job-control CONTROL_TYPE`` sets the job control type, which can be ``none``, ``full``, or ``interactive``. Also ``-j CONTROL_TYPE`` or ``--job-control CONTROL_TYPE``.
+**job-control**, **-j** or **--job-control** *CONTROL_TYPE*
+    Sets the job control type to *CONTROL_TYPE*, which can be **none**, **full**, or **interactive**.
 
-- ``features`` lists all available feature flags.
+**features**
+    Lists all available feature flags.
 
-- ``test-feature FEATURE`` returns 0 when FEATURE is enabled, 1 if it is disabled, and 2 if it is not recognized.
+**test-feature** *FEATURE*
+    Returns 0 when FEATURE is enabled, 1 if it is disabled, and 2 if it is not recognized.
 
 Notes
 -----

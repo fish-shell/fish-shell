@@ -21,6 +21,8 @@ If ``PID`` is specified, the job containing a process with the specified process
 For compatibility with other shells, job expansion syntax is supported for ``fg``. A *PID* of the format **%1** will foreground job 1.
 Job numbers can be seen in the output of :ref:`jobs <cmd-jobs>`.
 
+The **--help** or **-h** option displays help about using this command.
+
 Example
 -------
 

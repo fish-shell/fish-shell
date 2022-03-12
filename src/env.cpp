@@ -600,6 +600,7 @@ class env_scoped_impl_t : public environment_t, noncopyable_t {
     // query.
     maybe_t<env_var_t> try_get_computed(const wcstring &key) const;
     maybe_t<env_var_t> try_get_local(const wcstring &key) const;
+    maybe_t<env_var_t> try_get_function(const wcstring &key) const;
     maybe_t<env_var_t> try_get_global(const wcstring &key) const;
     maybe_t<env_var_t> try_get_universal(const wcstring &key) const;
 
@@ -772,6 +773,22 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_local(const wcstring &key) const {
     return entry; // this is either the entry or none() from find_entry
 }
 
+maybe_t<env_var_t> env_scoped_impl_t::try_get_function(const wcstring &key) const {
+    maybe_t<env_var_t> entry;
+    auto node = locals_;
+    while (node->next) {
+        node = node->next;
+        // The first node that introduces a new scope is ours.
+        // If this doesn't happen, we go on until we've reached the
+        // topmost local scope.
+        if (node->new_scope) break;
+    }
+    for (auto cur = node; cur; cur=cur->next) {
+        if ((entry = cur->find_entry(key))) break;
+    }
+    return entry; // this is either the entry or none() from find_entry
+}
+
 maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key) const {
     return globals_->find_entry(key);
 }
@@ -791,6 +808,9 @@ maybe_t<env_var_t> env_scoped_impl_t::get(const wcstring &key, env_mode_flags_t 
 
     if (!result && query.local) {
         result = try_get_local(key);
+    }
+    if (!result && query.function) {
+        result = try_get_function(key);
     }
     if (!result && query.global) {
         result = try_get_global(key);

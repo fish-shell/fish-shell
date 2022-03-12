@@ -109,7 +109,9 @@ To store configuration write it to a file called ``~/.config/fish/config.fish``.
 
 ``.fish`` scripts in ``~/.config/fish/conf.d/`` are also automatically executed before ``config.fish``.
 
-These files are read on the startup of every shell, whether interactive and/or if they're login shells. Use ``status --is-interactive`` and ``status --is-login`` to discriminate.
+These files are read on the startup of every shell, whether interactive and/or if they're login shells. Use ``status --is-interactive`` and ``status --is-login`` to do things only in interactive/login shells, respectively.
+
+This is the short version; for a full explanation, like for sysadmins or integration for developers of other software, see :ref:`Configuration files <configuration>`.
 
 Examples:
 ---------

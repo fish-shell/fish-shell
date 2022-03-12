@@ -22,6 +22,8 @@ You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` in the condition. See the
 
 The exit status of the last foreground command to exit can always be accessed using the :ref:`$status <variables-status>` variable.
 
+The **-h** or **--help** option displays help about using this command.
+
 Example
 -------
 

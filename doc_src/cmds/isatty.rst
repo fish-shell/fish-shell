@@ -19,6 +19,7 @@ Description
 
 If the specified file descriptor is a terminal device, the exit status of the command is zero. Otherwise, the exit status is non-zero. No messages are printed to standard error.
 
+The **-h** or **--help** option displays help about using this command.
 
 Examples
 --------

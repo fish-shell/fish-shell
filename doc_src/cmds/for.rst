@@ -17,6 +17,8 @@ Description
 
 Much like :ref:`set <cmd-set>`, **for** does not modify $status, but the evaluation of its subordinate commands can.
 
+The **-h** or **--help** option displays help about using this command.
+
 Example
 -------
 

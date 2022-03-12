@@ -22,11 +22,14 @@ Access rights are explained in the manual page for the ``chmod(1)`` program.
 
 With no parameters, the current file creation mode mask is printed as an octal number.
 
-- ``-h`` or ``--help`` prints this message.
+**-S** or **--symbolic**
+    Prints the umask in symbolic form instead of octal form.
 
-- ``-S`` or ``--symbolic`` prints the umask in symbolic form instead of octal form.
+**-p** or **--as-command**
+    Outputs the umask in a form that may be reused as input.
 
-- ``-p`` or ``--as-command`` outputs the umask in a form that may be reused as input
+**-h** or **--help**
+    Displays help about using this command.
 
 If a numeric mask is specified as a parameter, the current shell's umask will be set to that value, and the rights specified by that mask will be removed from new files and directories by default.
 

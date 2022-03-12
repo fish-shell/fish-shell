@@ -868,6 +868,29 @@ end
 
 erase-funcvar
 
+set -f foo
+set -l banana
+set -g global
+begin
+    set -qf foo
+    and echo foo is function scoped
+    # CHECK: foo is function scoped
+
+    set -l localvar414
+    set -qf localvar414
+    or echo localvar414 is not function scoped
+    # CHECK: localvar414 is not function scoped
+
+    set -qf banana
+    and echo banana is function scoped
+    # CHECK: banana is function scoped
+
+    set -l global
+    set -qf global
+    or echo global is not function scoped
+    # CHECK: global is not function scoped
+end
+
 set --query $this_is_not_set
 echo $status
 # CHECK: 255

@@ -18,7 +18,7 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string join`` joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise. If ``-n`` or ``--no-empty`` is specified, empty strings are excluded from consideration (e.g. ``string join -n + a b "" c`` would expand to ``a+b+c`` not ``a+b++c``).
+``string join`` joins its *STRING* arguments into a single string separated by *SEP*, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise. If ``-n`` or ``--no-empty`` is specified, empty strings are excluded from consideration (e.g. ``string join -n + a b "" c`` would expand to ``a+b+c`` not ``a+b++c``).
 
 ``string join0`` joins its STRING arguments into a single string separated by the zero byte (NUL), and adds a trailing NUL. This is most useful in conjunction with tools that accept NUL-delimited input, such as ``sort -z``. Exit status: 0 if at least one join was performed, or 1 otherwise.
 

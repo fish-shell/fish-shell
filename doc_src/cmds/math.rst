@@ -64,6 +64,8 @@ Syntax
 For numbers, ``.`` is always the radix character regardless of locale - ``2.5``, not ``2,5``.
 Scientific notation (``10e5``) and hexadecimal (``0xFF``) are also available.
 
+``math`` allows you to use underscores as visual separators for digit grouping. For example, you can write ``1_000_000``, ``0x_89_AB_CD_EF``, and ``1.234_567_e89``.
+
 Operators
 ---------
 

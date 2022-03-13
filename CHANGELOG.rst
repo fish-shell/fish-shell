@@ -69,6 +69,7 @@ Scripting improvements
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside functions. In scripts, it does the same thing as ``exit``. In interactive mode,it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks such as ``exec`` not being allowed in a pipeline, and ``$$`` not being a valid variable. Generally, another error was generated anyway.
+- ``math`` now allows you to use underscores as visual separators when writing numbers - for example, ``math 1_000 + 2_000`` returns ``3000`` (:issue:`8496`).
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``commandline`` gained an ``--is-valid`` option to check if the command line is syntactically valid and complete. This allows basic implementation of transient prompts (:issue:`8142`).
 - ``commandline`` gained a ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "7 more rows" message) (:issue:`8485`).

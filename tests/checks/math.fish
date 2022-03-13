@@ -261,3 +261,24 @@ math pow 2 x cos'(-pi)', 2
 math 'ncr(0/0, 1)'
 # CHECKERR: math: Error: Result is infinite
 # CHECKERR: 'ncr(0/0, 1)'
+
+math 0_1
+# CHECK: 1
+math 0x0_A
+# CHECK: 10
+math 1_000 + 2_000
+# CHECK: 3000
+math 1_0_0_0
+# CHECK: 1000
+math 0_0.5_0 + 0_1.0_0
+# CHECK: 1.5
+math 2e0_0_2
+# CHECK: 200
+math -0_0.5_0_0E0_0_3
+# CHECK: -500
+math 20e-0_1
+# CHECK: 2
+math 0x0_2.0_0_0P0_2
+# CHECK: 8
+math -0x8p-0_3
+# CHECK: -1

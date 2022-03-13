@@ -79,6 +79,11 @@ class arg_iterator_t {
     // Backing storage for the next() string.
     wcstring storage_;
     const io_streams_t &streams_;
+    // If set, we have consumed all of stdin and its last line is missing a newline character.
+    // This is an edge case -- we expect text input, which is conventionally terminated by a
+    // newline character. But if it isn't, we use this to avoid creating one out of thin air,
+    // to not corrupt input data.
+    bool missing_trailing_newline = false;
 
     /// Reads the next argument from stdin, returning true if an argument was produced and false if
     /// not. On true, the string is stored in storage_.
@@ -94,6 +99,7 @@ class arg_iterator_t {
                 // If we still have buffer contents, flush them,
                 // in case there was no trailing sep.
                 if (buffer_.empty()) return false;
+                missing_trailing_newline = true;
                 storage_ = str2wcstring(buffer_);
                 buffer_.clear();
                 return true;
@@ -131,6 +137,11 @@ class arg_iterator_t {
             return nullptr;
         }
     }
+
+    /// Returns true if we should add a newline after printing output for the current item.
+    /// This is only ever false in an edge case, namely after we have consumed stdin and the
+    /// last line is missing a trailing newline.
+    bool want_newline() const { return !missing_trailing_newline; }
 };
 
 // This is used by the string subcommands to communicate with the option parser which flags are
@@ -688,7 +699,9 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, cons
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
         streams.out.append(escape_string(*arg, flags, opts.escape_style));
-        streams.out.append(L'\n');
+        if (aiter.want_newline()) {
+            streams.out.append(L'\n');
+        }
         nesc++;
     }
 
@@ -713,7 +726,9 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc,
         wcstring result;
         if (unescape_string(*arg, &result, flags, opts.escape_style)) {
             streams.out.append(result);
-            streams.out.append(L'\n');
+            if (aiter.want_newline()) {
+                streams.out.append(L'\n');
+            }
             nesc++;
         }
     }
@@ -745,7 +760,11 @@ static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc,
         nargs++;
     }
     if (nargs > 0 && !opts.quiet) {
-        streams.out.push_back(is_join0 ? L'\0' : L'\n');
+        if (is_join0) {
+            streams.out.push_back(L'\0');
+        } else if (aiter.want_newline()) {
+            streams.out.push_back(L'\n');
+        }
     }
 
     return nargs > 1 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
@@ -1323,7 +1342,9 @@ static int string_pad(parser_t &parser, io_streams_t &streams, int argc, const w
                 padded.append(pad, opts.char_to_pad);
             }
         }
-        padded.push_back(L'\n');
+        if (aiter_width.want_newline()) {
+            padded.push_back(L'\n');
+        }
         streams.out.append(padded);
     }
 
@@ -1343,7 +1364,7 @@ class string_replacer_t {
 
     virtual ~string_replacer_t() = default;
     int replace_count() const { return total_replaced; }
-    virtual bool replace_matches(const wcstring &arg) = 0;
+    virtual bool replace_matches(const wcstring &arg, bool want_newline) = 0;
 };
 
 class literal_replacer_t : public string_replacer_t {
@@ -1360,7 +1381,7 @@ class literal_replacer_t : public string_replacer_t {
           patlen(pattern.length()) {}
 
     ~literal_replacer_t() override = default;
-    bool replace_matches(const wcstring &arg) override;
+    bool replace_matches(const wcstring &arg, bool want_newline) override;
 };
 
 static maybe_t<wcstring> interpret_escapes(const wcstring &arg) {
@@ -1400,12 +1421,12 @@ class regex_replacer_t : public string_replacer_t {
         }
     }
 
-    bool replace_matches(const wcstring &arg) override;
+    bool replace_matches(const wcstring &arg, bool want_newline) override;
 };
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool literal_replacer_t::replace_matches(const wcstring &arg) {
+bool literal_replacer_t::replace_matches(const wcstring &arg, bool want_newline) {
     wcstring result;
     bool replacement_occurred = false;
 
@@ -1432,7 +1453,9 @@ bool literal_replacer_t::replace_matches(const wcstring &arg) {
 
     if (!opts.quiet && (!opts.filter || replacement_occurred)) {
         streams.out.append(result);
-        streams.out.append(L'\n');
+        if (want_newline) {
+            streams.out.append(L'\n');
+        }
     }
 
     return true;
@@ -1440,7 +1463,7 @@ bool literal_replacer_t::replace_matches(const wcstring &arg) {
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool regex_replacer_t::replace_matches(const wcstring &arg) {
+bool regex_replacer_t::replace_matches(const wcstring &arg, bool want_newline) {
     if (!regex.code) return false;   // pcre2_compile() failed
     if (!replacement) return false;  // replacement was an invalid string
 
@@ -1488,7 +1511,9 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
         bool replacement_occurred = pcre2_rc > 0;
         if (!opts.quiet && (!opts.filter || replacement_occurred)) {
             streams.out.append(outstr);
-            streams.out.append(L'\n');
+            if (want_newline) {
+                streams.out.append(L'\n');
+            }
         }
         total_replaced += pcre2_rc;
     }
@@ -1520,7 +1545,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, con
 
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
-        if (!replacer->replace_matches(*arg)) return STATUS_INVALID_ARGS;
+        if (!replacer->replace_matches(*arg, aiter.want_newline())) return STATUS_INVALID_ARGS;
         if (opts.quiet && replacer->replace_count() > 0) return STATUS_CMD_OK;
     }
 
@@ -1601,12 +1626,12 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
                 for (const auto &field : opts.fields) {
                     if (field - 1 < (long)splits.size()) {
                         streams.out.append_with_separation(splits.at(field - 1),
-                                                           separation_type_t::explicitly);
+                                                           separation_type_t::explicitly, true);
                     }
                 }
             } else {
                 for (const wcstring &split : splits) {
-                    streams.out.append_with_separation(split, separation_type_t::explicitly);
+                    streams.out.append_with_separation(split, separation_type_t::explicitly, true);
                 }
             }
         }
@@ -1641,7 +1666,8 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, con
                 len -= 1;
             }
         }
-        streams.out.append_with_separation(s, len, separation_type_t::explicitly);
+        streams.out.append_with_separation(s, len, separation_type_t::explicitly,
+                                           aiter.want_newline());
         appended += len;
     }
 
@@ -1650,7 +1676,9 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, con
     // echo (true | string collect --allow-empty)"bar"
     // prints "bar".
     if (opts.allow_empty && appended == 0) {
-        streams.out.append_with_separation(L"", 0, separation_type_t::explicitly);
+        streams.out.append_with_separation(
+            L"", 0, separation_type_t::explicitly,
+            true /* historical behavior is to always print a newline */);
     }
 
     return appended > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
@@ -1718,7 +1746,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, cons
     }
 
     // Historical behavior is to never append a newline if all strings were empty.
-    if (!opts.quiet && !opts.no_newline && !all_empty) {
+    if (!opts.quiet && !opts.no_newline && !all_empty && aiter.want_newline()) {
         streams.out.append(L'\n');
     }
 
@@ -1780,7 +1808,9 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, const w
         // Note that std::string permits count to extend past end of string.
         if (!opts.quiet) {
             streams.out.append(s->substr(pos, count));
-            streams.out.append(L'\n');
+            if (aiter.want_newline()) {
+                streams.out.append(L'\n');
+            }
         }
         nsub++;
         if (opts.quiet) return STATUS_CMD_OK;
@@ -1823,7 +1853,9 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, const 
         ntrim += arg->size() - (end - begin);
         if (!opts.quiet) {
             streams.out.append(wcstring(*arg, begin, end - begin));
-            streams.out.append(L'\n');
+            if (aiter.want_newline()) {
+                streams.out.append(L'\n');
+            }
         } else if (ntrim > 0) {
             return STATUS_CMD_OK;
         }
@@ -1849,7 +1881,9 @@ static int string_transform(parser_t &parser, io_streams_t &streams, int argc, c
         if (transformed != *arg) n_transformed++;
         if (!opts.quiet) {
             streams.out.append(transformed);
-            streams.out.append(L'\n');
+            if (aiter.want_newline()) {
+                streams.out.append(L'\n');
+            }
         } else if (n_transformed > 0) {
             return STATUS_CMD_OK;
         }

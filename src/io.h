@@ -365,11 +365,14 @@ class output_stream_t : noncopyable_t, nonmovable_t {
     virtual int flush_and_check_error();
 
     /// An optional override point. This is for explicit separation.
-    virtual void append_with_separation(const wchar_t *s, size_t len, separation_type_t type);
+    /// \param want_newline this is true if the output item should be ended with a newline. This
+    /// is only relevant if we are printing the output to a stream,
+    virtual void append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
+                                        bool want_newline);
 
     /// The following are all convenience overrides.
-    void append_with_separation(const wcstring &s, separation_type_t type) {
-        append_with_separation(s.data(), s.size(), type);
+    void append_with_separation(const wcstring &s, separation_type_t type, bool want_newline) {
+        append_with_separation(s.data(), s.size(), type, want_newline);
     }
 
     /// Append a string.
@@ -443,7 +446,8 @@ class buffered_output_stream_t final : public output_stream_t {
     }
 
     void append(const wchar_t *s, size_t amt) override;
-    void append_with_separation(const wchar_t *s, size_t len, separation_type_t type) override;
+    void append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
+                                bool want_newline) override;
     int flush_and_check_error() override;
 
    private:

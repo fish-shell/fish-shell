@@ -1,4 +1,4 @@
-function fish_status_to_signal --description "Print signal name from argument (\$status), or just argument"
+function fish_status_to_signal --description "Convert exit code to signal name"
     __fish_make_completion_signals # Make sure signals are cached
     for arg in $argv
         if test $arg -gt 128

@@ -287,7 +287,7 @@ void state::next_token() {
 
         /* Try reading a number. */
         if ((next_[0] >= '0' && next_[0] <= '9') || next_[0] == '.') {
-            current_ = fish_wcstod(next_, const_cast<wchar_t **>(&next_));
+            current_ = fish_wcstod_underscores(next_, const_cast<wchar_t **>(&next_));
             type_ = TOK_NUMBER;
         } else {
             /* Look for a function call. */

@@ -6,7 +6,9 @@ contains - test if a word is present in a list
 Synopsis
 --------
 
-``contains`` [**options**] *KEY* [*VALUES* ...]
+.. synopsis::
+
+    contains [OPTIONS] KEY [VALUES ...]
 
 Description
 -----------
@@ -16,7 +18,11 @@ If so, ``contains`` exits with code 0; if not, it exits with code 1.
 
 The following options are available:
 
-- **-i** or **--index** print the word index
+**-i** or **--index**
+    Print the index (number of the element in the set) of the first matching element.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Note that ``contains`` interprets all arguments starting with a **-** as an option to ``contains``, until an **--** argument is reached.
 

@@ -6,9 +6,11 @@ fish_config - start the web-based configuration interface
 Synopsis
 --------
 
-| ``fish_config`` [browse]
-| ``fish_config`` **prompt** (choose | list | save | show)
-| ``fish_config`` **theme** (choose | demo | dump | list | save | show)
+.. synopsis::
+
+    fish_config [browse]
+    fish_config prompt (choose | list | save | show)
+    fish_config theme (choose | demo | dump | list | save | show)
 
 Description
 -----------
@@ -40,6 +42,8 @@ Available subcommands for the ``theme`` command:
 - ``show`` shows what the given sample theme (or all) would look like.
 
 The themes are loaded from the theme directory shipped with fish or a ``themes`` directory in the fish configuration directory (typically ``~/.config/fish/themes``).
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

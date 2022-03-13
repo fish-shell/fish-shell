@@ -1,16 +1,16 @@
 # First argument is the names of the service, i.e. a file in /etc/init.d
-complete -c service -n "fish_is_nth_token 1" -xa "(__fish_print_service_names)" -d Service
+complete -c service -n "__fish_is_nth_token 1" -xa "(__fish_print_service_names)" -d Service
 
 # as found in __fish_print_service_names.fish
 if test -d /run/systemd/system # Systemd systems
-    complete -c service -n 'not fish_is_nth_token 1' -xa "start stop restart status enable disable"
+    complete -c service -n 'not __fish_is_nth_token 1' -xa "start stop restart status enable disable"
 else if type -f rc-service 2>/dev/null # OpenRC (Gentoo)
-    complete -c service -n 'not fish_is_nth_token 1' -xa "start stop restart"
+    complete -c service -n 'not __fish_is_nth_token 1' -xa "start stop restart"
 else if test -d /etc/init.d # SysV on Debian and other linuxen
-    complete -c service -n 'not fish_is_nth_token 1' -xa "start stop --full-restart"
+    complete -c service -n 'not __fish_is_nth_token 1' -xa "start stop --full-restart"
 else # FreeBSD
     # Use the output of `service -v foo` to retrieve the list of service-specific verbs
-    complete -c service -n 'not fish_is_nth_token 1' -xa "(__fish_complete_freebsd_service_actions)"
+    complete -c service -n 'not __fish_is_nth_token 1' -xa "(__fish_complete_freebsd_service_actions)"
 end
 
 function __fish_complete_freebsd_service_actions

@@ -9,7 +9,7 @@ set -l line_endings LF CR CRLF
 set -l woff_fmts woff woff2
 
 complete -f -c ttx -k -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx; __fish_complete_suffix .ttc)'
-complete -c ttx -f -n "fish_is_nth_token 1" -k -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx)'
+complete -c ttx -f -n "__fish_is_nth_token 1" -k -a '(__fish_complete_suffix .otf; __fish_complete_suffix .ttf; __fish_complete_suffix .ttx)'
 
 # General options
 complete -c ttx -f -s h -d'Show help message'

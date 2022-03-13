@@ -6,11 +6,13 @@ functions - print or erase functions
 Synopsis
 --------
 
-| **functions** [ **-a** | **--all** ] [ **-n | **--names** ]
-| **functions** [ **-D** | **--details** ] [ **-v** ] *FUNCTION*
-| **functions** **-c** *OLDNAME* *NEWNAME*
-| **functions** **-d** *DESCRIPTION* *FUNCTION*
-| **functions** [ **-e** | **-q** ] *FUNCTIONS...*
+.. synopsis::
+
+    functions [-a | --all] [-n | --names]
+    functions [-D | --details] [-v] FUNCTION
+    functions -c OLDNAME NEWNAME
+    functions -d DESCRIPTION FUNCTION
+    functions [-e | -q] FUNCTION ...
 
 Description
 -----------
@@ -19,35 +21,49 @@ Description
 
 The following options are available:
 
-- ``-a`` or ``--all`` lists all functions, even those whose name starts with an underscore.
+**-a** or **--all**
+    Lists all functions, even those whose name starts with an underscore.
 
-- ``-c OLDNAME NEWNAME`` or ``--copy OLDNAME NEWNAME`` creates a new function named NEWNAME, using the definition of the OLDNAME function.
+**-c** or **--copy** *OLDNAME* *NEWNAME*
+    Creates a new function named *NEWNAME*, using the definition of the *OLDNAME* function.
 
-- ``-d DESCRIPTION`` or ``--description=DESCRIPTION`` changes the description of this function.
+**-d** or **--description** *DESCRIPTION*
+    Changes the description of this function.
 
-- ``-e`` or ``--erase`` causes the specified functions to be erased. This also means that it is prevented from autoloading in the current session. Use :ref:`funcsave <cmd-funcsave>` to remove the saved copy.
+**-e** or **--erase**
+    Causes the specified functions to be erased. This also means that it is prevented from autoloading in the current session. Use :ref:`funcsave <cmd-funcsave>` to remove the saved copy.
 
-- ``-D`` or ``--details`` reports the path name where the specified function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading stdin, ``-`` if the function was created via :ref:`source <cmd-source>`, and ``n/a`` if the function isn't available. (Functions created via :ref:`alias <cmd-alias>` will return ``-``, because ``alias`` uses ``source`` internally.) If the ``--verbose`` option is also specified then five lines are written:
+**-D** or **--details**
+    Reports the path name where the specified function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading standard input, **-** if the function was created via :ref:`source <cmd-source>`, and ``n/a`` if the function isn't available. (Functions created via :ref:`alias <cmd-alias>` will return **-**, because ``alias`` uses ``source`` internally.) If the **--verbose** option is also specified then five lines are written:
 
     - the pathname as already described,
     - ``autoloaded``, ``not-autoloaded`` or ``n/a``,
     - the line number within the file or zero if not applicable,
-    - ``scope-shadowing`` if the function shadows the vars in the calling function (the normal case if it wasn't defined with ``--no-scope-shadowing``), else ``no-scope-shadowing``, or ``n/a`` if the function isn't defined,
+    - ``scope-shadowing`` if the function shadows the vars in the calling function (the normal case if it wasn't defined with **--no-scope-shadowing**), else ``no-scope-shadowing``, or ``n/a`` if the function isn't defined,
     - the function description minimally escaped so it is a single line, or ``n/a`` if the function isn't defined or has no description.
 
-You should not assume that only five lines will be written since we may add additional information to the output in the future.
+    You should not assume that only five lines will be written since we may add additional information to the output in the future.
 
-- ``--no-details`` turns off function path reporting, so just the definition will be printed.
+**--no-details**
+    Turns off function path reporting, so just the definition will be printed.
 
-- ``-n`` or ``--names`` lists the names of all defined functions.
+**-n** or **--names**
+    Lists the names of all defined functions.
 
-- ``-q`` or ``--query`` tests if the specified functions exist.
+**-q** or **--query**
+    Tests if the specified functions exist.
 
-- ``-v`` or ``--verbose`` will make some output more verbose.
+**-v** or **--verbose**
+    Make some output more verbose.
 
-- ``-H`` or ``--handlers`` will show all event handlers.
+**-H** or **--handlers**
+    Show all event handlers.
 
-- ``-t`` or ``--handlers-type TYPE`` will show all event handlers matching the given type
+**-t** or **--handlers-type** *TYPE*
+    Show all event handlers matching the given *TYPE*.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 The default behavior of ``functions``, when called with no arguments, is to print the names of all defined functions. Unless the ``-a`` option is given, no functions starting with underscores are included in the output.
 

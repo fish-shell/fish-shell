@@ -3,9 +3,9 @@ complete -c pg_dumpall --no-files
 # General options:
 complete -c pg_dumpall -s f -l file -r -d "Output file name"
 complete -c pg_dumpall -s v -l verbose -d "Verbose mode"
-complete -c pg_dumpall -s V -l version -d "Output version information, then exit"
+complete -c pg_dumpall -s V -l version -d "Output version information"
 complete -c pg_dumpall -l lock-wait-timeout -x -d "Fail after waiting TIMEOUT for a table lock"
-complete -c pg_dumpall -s '?' -l help -d "Show this help, then exit"
+complete -c pg_dumpall -s '?' -l help -d "Show this help"
 
 # Options controlling the output content:
 complete -c pg_dumpall -s a -l data-only -d "Dump only the data, not the schema"
@@ -35,7 +35,7 @@ complete -c pg_dumpall -l no-sync -d "Do not wait for changes to be written safe
 complete -c pg_dumpall -l no-tablespaces -d "Do not dump tablespace assignments"
 complete -c pg_dumpall -l no-unlogged-table-data -d "Do not dump unlogged table data"
 complete -c pg_dumpall -l quote-all-identifiers -d "Quote all identifiers, even if not key words"
-complete -c pg_dumpall -l use-set-session-authorization -d "Use SET SESSION AUTHORIZATION commands instead of ALTER OWNER commands to set ownership"
+complete -c pg_dumpall -l use-set-session-authorization -d "Use SET SESSION AUTHORIZATION instead of ALTER OWNER"
 
 # Connection options:
 complete -c pg_dumpall -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Database to dump"

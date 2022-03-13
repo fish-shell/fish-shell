@@ -6,12 +6,16 @@ popd - move through directory stack
 Synopsis
 --------
 
-``popd``
+.. synopsis::
+
+    popd
 
 Description
 -----------
 
 ``popd`` removes the top directory from the :ref:`directory stack <directory-stack>` and changes the working directory to the new top directory. Use :ref:`pushd <cmd-pushd>` to add directories to the stack.
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

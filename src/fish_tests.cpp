@@ -3000,6 +3000,49 @@ static void test_wcstod() {
     tod_test(L"nope", "nope");
 }
 
+static void test_fish_wcstod_underscores() {
+    say(L"Testing fish_wcstod_underscores");
+
+    auto test_case = [](const wchar_t *s, size_t expected_num_consumed) {
+        wchar_t *endptr = nullptr;
+        fish_wcstod_underscores(s, &endptr);
+        size_t num_consumed = (size_t)(endptr - (wchar_t *)s);
+        do_test(expected_num_consumed == num_consumed);
+    };
+
+    test_case(L"123", 3);
+    test_case(L"1_2.3_4.5_6", 7);
+    test_case(L"1_2", 3);
+    test_case(L"1_._2", 5);
+    test_case(L"1__2", 4);
+    test_case(L" 1__2 3__4 ", 5);
+    test_case(L"1_2 3_4", 3);
+    test_case(L" 1", 2);
+    test_case(L" 1_", 3);
+    test_case(L" 1__", 4);
+    test_case(L" 1___", 5);
+    test_case(L" 1___ 2___", 5);
+    test_case(L" _1", 3);
+    test_case(L"1 ", 1);
+    test_case(L"infinity_", 8);
+    test_case(L" -INFINITY", 10);
+    test_case(L"_infinity", 0);
+    test_case(L"nan(0)", 6);
+    test_case(L"nan(0)_", 6);
+    test_case(L"_nan(0)", 0);
+    // We don't strip the underscores in this commented-out test case, and the behavior is
+    // implementation-defined, so we don't actually know how many characters will get consumed. On
+    // macOS the strtod man page only says what happens with an alphanumeric string passed to nan(),
+    // but the strtod consumes all of the characters even if there are underscores.
+    // test_case(L"nan(0_1_2)", 3);
+    test_case(L" _ 1", 0);
+    test_case(L"0x_dead_beef", 12);
+    test_case(L"None", 0);
+    test_case(L" None", 0);
+    test_case(L"Also none", 0);
+    test_case(L" Also none", 0);
+}
+
 static void test_dup2s() {
     using std::make_shared;
     io_chain_t chain;
@@ -3574,7 +3617,8 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
 
 static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
                                            const environment_t &vars, long line) {
-    completion_list_t comps = complete(command, {}, operation_context_t{vars});
+    completion_list_t comps = complete(
+        command, {}, operation_context_t{parser_t::principal_parser().shared(), vars, no_cancel});
 
     bool expects_error = (expected == L"<error>");
 
@@ -4383,6 +4427,14 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count, siz
 void history_tests_t::test_history_races() {
     // This always fails under WSL
     if (is_windows_subsystem_for_linux()) {
+        return;
+    }
+
+    // This fails too often on Github Actions,
+    // leading to a bunch of spurious test failures on unrelated PRs.
+    // For now it's better to disable it.
+    // TODO: Figure out *why* it does that and fix it.
+    if (getenv("CI")) {
         return;
     }
 
@@ -6792,6 +6844,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("abbreviations"), test_abbreviations},
     {TEST_GROUP("builtins/test"), test_test},
     {TEST_GROUP("wcstod"), test_wcstod},
+    {TEST_GROUP("fish_wcstod_underscores"), test_fish_wcstod_underscores},
     {TEST_GROUP("dup2s"), test_dup2s},
     {TEST_GROUP("dup2s"), test_dup2s_fd_for_target_fd},
     {TEST_GROUP("path"), test_path},

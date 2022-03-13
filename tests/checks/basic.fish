@@ -533,6 +533,23 @@ echo banana
 echo (echo hello\\)
 # CHECK: hello\
 
+# This used to be a parse error - #7866.
+echo (echo foo;#)
+     )
+# CHECK: foo
+echo (echo bar #'
+     )
+# CHECK: bar
+echo (#"
+      echo baz)
+# CHECK: baz
+
+# Make sure we don't match up brackets within comments (#8022).
+$fish -c 'echo f[oo # not valid, no matching ]'
+# CHECKERR: fish: Unexpected end of string, square brackets do not match
+# CHECKERR: echo f[oo # not valid, no matching ]
+# CHECKERR: {{      }}^
+
 # Should fail because $PWD is read-only.
 for PWD in foo bar
     true
@@ -541,3 +558,13 @@ end
 # CHECKERR: for PWD in foo bar
 # CHECKERR: ^
 # XXX FIXME carat should point at PWD
+
+$fish -c 'echo \xtest'
+# CHECKERR: fish: Invalid token '\xtest'
+# CHECKERR: echo \xtest
+# CHECKERR: ^
+
+$fish -c 'echo \utest'
+# CHECKERR: fish: Invalid token '\utest'
+# CHECKERR: echo \utest
+# CHECKERR: ^

@@ -6,7 +6,9 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-``string`` collect [**-N** | **--no-trim-newlines**] [*STRING*...]
+.. synopsis::
+
+    string collect [-N | --no-trim-newlines] [STRING ...]
 
 .. END SYNOPSIS
 
@@ -21,9 +23,9 @@ A command like ``echo (cmd | string collect)`` is mostly equivalent to a quoted 
 
 If invoked with multiple arguments instead of input, ``string collect`` preserves each argument separately, where the number of output arguments is equal to the number of arguments given to ``string collect``.
 
-Any trailing newlines on the input are trimmed, just as with ``"$(cmd)"`` substitution. Use ``--no-trim-newlines`` to disable this behavior, which may be useful when running a command such as ``set contents (cat filename | string collect -N)``.
+Any trailing newlines on the input are trimmed, just as with ``"$(cmd)"`` substitution. Use **--no-trim-newlines** to disable this behavior, which may be useful when running a command such as ``set contents (cat filename | string collect -N)``.
 
-With ``--allow-empty``, ``string collect`` always prints one (empty) argument. This can be used to prevent an argument from disappearing.
+With **--allow-empty**, ``string collect`` always prints one (empty) argument. This can be used to prevent an argument from disappearing.
 
 .. END DESCRIPTION
 

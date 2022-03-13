@@ -6,7 +6,10 @@ fish_hg_prompt - output Mercurial information for use in a prompt
 Synopsis
 --------
 
-**fish_hg_prompt**
+.. synopsis::
+
+    fish_hg_prompt
+
 ::
 
      function fish_prompt
@@ -22,7 +25,7 @@ The fish_hg_prompt function displays information about the current Mercurial rep
 
 By default, only the current branch is shown because ``hg status`` can be slow on a large repository. You can enable a more informative prompt by setting the variable ``$fish_prompt_hg_show_informative_status``, for example::
 
-	set --universal fish_prompt_hg_show_informative_status
+    set --universal fish_prompt_hg_show_informative_status
 
 If you enabled the informative status, there are numerous customization options, which can be controlled with fish variables.
 

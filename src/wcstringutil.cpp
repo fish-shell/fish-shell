@@ -317,7 +317,7 @@ int fish_wcwidth_visible(wchar_t widechar) {
 }
 
 int fish_wcswidth_visible(const wcstring &str) {
-    size_t res = 0;
+    int res = 0;
     for (wchar_t ch : str) {
         if (ch == L'\b') {
             res += -1;

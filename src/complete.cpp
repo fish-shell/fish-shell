@@ -1390,7 +1390,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     // buitin_commandline will refer to the wrapped command. But not if
     // we're doing autosuggestions.
     maybe_t<cleanup_t> remove_transient{};
-    bool wants_transient = ad->wrap_depth > 0 && !is_autosuggest;
+    bool wants_transient = (ad->wrap_depth > 0 || ad->var_assignments) && !is_autosuggest;
     if (wants_transient) {
         ctx.parser->libdata().transient_commandlines.push_back(cmdline);
         remove_transient.emplace([=] { ctx.parser->libdata().transient_commandlines.pop_back(); });
@@ -1575,6 +1575,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     // Get all the arguments.
     std::vector<tok_t> tokens;
     parse_util_process_extent(cmdline.c_str(), position_in_statement, nullptr, nullptr, &tokens);
+    size_t actual_token_count = tokens.size();
 
     // Hack: fix autosuggestion by removing prefixing "and"s #6249.
     if (is_autosuggest) {
@@ -1601,6 +1602,14 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         complete_cmd(L"");
         complete_abbr(L"");
         return;
+    }
+
+    wcstring *effective_cmdline, effective_cmdline_buf;
+    if (tokens.size() == actual_token_count) {
+        effective_cmdline = &cmdline;
+    } else {
+        effective_cmdline_buf.assign(cmdline, tokens.front().offset, wcstring::npos);
+        effective_cmdline = &effective_cmdline_buf;
     }
 
     const tok_t &cmd_tok = tokens.front();
@@ -1674,7 +1683,8 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         custom_arg_data_t arg_data{&var_assignments};
         arg_data.had_ddash = had_ddash;
 
-        source_range_t command_range = {cmd_tok.offset, cmd_tok.length};
+        source_offset_t bias = cmdline.size() - effective_cmdline->size();
+        source_range_t command_range = {cmd_tok.offset - bias, cmd_tok.length};
 
         wcstring exp_command = cmd_tok.get_source(cmdline);
         bool unescaped =
@@ -1684,7 +1694,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
         if (unescaped) {
             // Have to walk over the command and its entire wrap chain. If any command
             // disables do_file, then they all do.
-            walk_wrap_chain(exp_command, cmdline, command_range, &arg_data);
+            walk_wrap_chain(exp_command, *effective_cmdline, command_range, &arg_data);
             do_file = arg_data.do_file;
 
             // If we're autosuggesting, and the token is empty, don't do file suggestions.

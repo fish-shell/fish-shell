@@ -113,6 +113,7 @@ function help --description 'Show help for the fish shell'
 
     # HACK: Hardcode all section titles for each page.
     # This could possibly be automated.
+    set -l intropages introduction where-to-go installation starting-and-exiting default-shell uninstalling shebang-line configuration examples resources other-help-pages
     set -l for_bash_pages arithmetic-expansion bash-command-substitutions blocks-and-loops builtins-and-other-commands command-substitutions fish-for-bash-users heredocs process-substitution prompts quoting special-variables string-manipulation subshells test-test variables wildcards-globs
     set -l faqpages faq-ssh-interactive faq-unicode faq-uninstalling frequently-asked-questions how-can-i-use-as-a-shortcut-for-cd how-do-i-change-the-greeting-message how-do-i-check-whether-a-variable-is-defined how-do-i-check-whether-a-variable-is-not-empty how-do-i-customize-my-syntax-highlighting-colors how-do-i-get-the-exit-status-of-a-command how-do-i-make-fish-my-default-shell how-do-i-run-a-command-every-login-what-s-fish-s-equivalent-to-bashrc-or-profile how-do-i-run-a-command-from-history how-do-i-run-a-subcommand-the-backtick-doesn-t-work how-do-i-set-my-prompt how-do-i-set-or-clear-an-environment-variable i-accidentally-entered-a-directory-path-and-fish-changed-directory-what-happened i-m-getting-weird-graphical-glitches-a-staircase-effect-ghost-characters-cursor-in-the-wrong-position i-m-seeing-weird-output-before-each-prompt-when-using-screen-what-s-wrong my-command-pkg-config-gives-its-output-as-a-single-long-string my-command-prints-no-matches-for-wildcard-but-works-in-bash the-open-command-doesn-t-work uninstalling-fish what-is-the-equivalent-to-this-thing-from-bash-or-other-shells where-can-i-find-extra-tools-for-fish why-does-my-prompt-show-a-i why-doesn-t-history-substitution-etc-work why-doesn-t-set-ux-exported-universal-variables-seem-to-work why-won-t-ssh-scp-rsync-connect-properly-when-fish-is-my-login-shell
     set -l interactivepages abbreviations autosuggestions color command-line-editor command-mode configurable-greeting copy-and-paste-kill-ring custom-bindings custom-binds directory-stack editor emacs-mode emacs-mode-commands greeting help history-search id7 insert-mode interactive interactive-use killring multiline multiline-editing navigating-directories pager-color-variables private-mode programmable-prompt programmable-title prompt searchable-command-history shared-bindings shared-binds syntax-highlighting syntax-highlighting-variables tab-completion title variables-color variables-color-pager vi-mode vi-mode-command vi-mode-commands vi-mode-insert vi-mode-visual visual-mode
@@ -161,8 +162,11 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "cmds/$fish_help_item.html"
         case ''
             set fish_help_page "index.html"
+        case $intropages
+            set fish_help_page "index.html$fish_help_item"
         case "*"
-            set fish_help_page "index.html#$fish_help_item"
+            printf (_ "%s: no fish help topic '%s', try 'man %s'\n") help $fish_help_item $fish_help_item
+            return 1
     end
 
     # In Crostini Chrome OS Linux, the default browser opens URLs in Chrome running outside the

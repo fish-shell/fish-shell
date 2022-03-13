@@ -5,7 +5,6 @@
 
 from pygments.lexer import Lexer
 from pygments.token import (
-    Keyword,
     Name,
     Comment,
     String,
@@ -30,10 +29,10 @@ ROLE_TO_TOKEN = {
     "normal": Name.Variable,
     "error": Generic.Error,
     "command": Name.Function,
-    "keyword": Keyword,
+    "keyword": Name.Function,
     "statement_terminator": Punctuation,
     "param": Name.Constant,
-    "option": Name.Literal,
+    "option": Name.Constant,
     "comment": Comment,
     "match": DEFAULT,
     "search_match": DEFAULT,

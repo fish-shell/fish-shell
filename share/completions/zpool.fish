@@ -1,10 +1,15 @@
-# Fish completions for the OpenZFS zpool command
+# Fish completions for the ZFS `zpool` command
+#
 # Possible improvements:
-# - whenever possible, propose designation of vdevs using their GUID
-# - for eligible commands, with arguments of different types, only propose second type completions after the first have been selected; for instance, only propose pool members for offline command
-# - this has been written mainly from manpages, which are known to be out-of-sync with the real feature set; some discrepancies have been addressed, but it is highly likely that others still lie
+# - Whenever possible, propose designation of vdevs using their GUID.
+# - For eligible commands, with arguments of different types, only propose second type completions
+#   after the first have been selected; for instance, only propose pool members for offline command.
+# - This has been written mainly from manpages, which are known to be out-of-sync with the real
+#   feature set; some discrepancies have been addressed, but it is highly likely that others still
+#   lie.
 
 set -l OS ""
+set -l freebsd_version ""
 switch (uname)
     case Linux
         set OS Linux
@@ -12,11 +17,20 @@ switch (uname)
         set OS macOS
     case FreeBSD
         set OS FreeBSD
+        set freebsd_version (uname -U)
     case SunOS
         set OS SunOS
         # Others?
     case "*"
         set OS unknown
+end
+
+# Certain functionality is exclusive to platforms using OpenZFS. This used to be just Linux, but it
+# now includes FreeBSD 13 and above.
+if not type -q __fish_is_openzfs
+    function __fish_is_openzfs --inherit-variable freebsd_version --inherit-variable OS
+        test $OS = Linux || test $OS = FreeBSD -a $freebsd_version -gt 1300000
+    end
 end
 
 # Does the current invocation need a command?
@@ -39,7 +53,7 @@ end
 function __fish_zpool_list_used_vdevs -a pool
     # See discussion and variants discussed at
     # https://github.com/fish-shell/fish-shell/pull/5743#pullrequestreview-217432149
-    zpool list -Hv | string replace -rf "^\t([^\t]+).*" '$1' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
+    zpool list -Hv $pool | string replace -rf "^\t([^\t]+).*" '$1' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
 end
 
 function __fish_zpool_list_available_vdevs -V OS
@@ -53,9 +67,17 @@ function __fish_zpool_list_available_vdevs -V OS
 end
 
 function __fish_zpool_complete_vdevs
-    # As this function is to be called for completions only when necessary, we don't need to verify that it is relevant for the specified command; this is to be decided by calling, or not, the current function for command completions
-    # We can display the physical devices, as they are relevant whereas we are in a vdev definition or not
+    # As this function is to be called for completions only when necessary, we don't need to verify
+    # that it is relevant for the specified command; this is to be decided by calling, or not, the
+    # current function for command completions.
+    # We can display the physical devices, as they are relevant whereas we are in a vdev definition
+    # or not. Many operations need this list of vdevs winnowed down to some precondition (mostly
+    # "vdevs associated with pool" or "vdevs not associated with pool") but it's not really feasible
+    # to do that here as the situations are highly subcommand-dependent and this function is
+    # structured to operate backwards only analyzing the subcommand at the very end. Long story
+    # short, that vdev filtering will need to happen at the call site, at least currently.
     __fish_zpool_list_available_vdevs
+
     # First, reverse token list to analyze it from the end
     set -l tokens 0
     for i in (commandline -co)[-1..1]
@@ -80,14 +102,17 @@ function __fish_zpool_complete_vdevs
                     __fish_zpool_list_vdev_types
                 end
                 return
-                # Here, we accept any possible zpool command; this way, the developper will not have to augment or reduce the list when adding the current function to or removing it from the completions for the said command
+                # Here, we accept any possible zpool command; this way, the developer will not have
+                # to augment or reduce the list when adding the current function to or removing it
+                # from the completions for the said command.
             case \? add attach clear create destroy detach events get history import iostat labelclear list offline online reguid reopen remove replace scrub set split status upgrade
                 __fish_zpool_list_vdev_types
                 return
             case "" # Au cas où
                 echo "" >/dev/null
             case "-*" "*=*" "*,*"
-                # The token is an option or an option argument; as no option uses a vdev as its argument, we can abandon commandline parsing
+                # The token is an option or an option argument; as no option uses a vdev as its
+                # argument, we can abandon commandline parsing.
                 __fish_zpool_list_vdev_types
                 return
         end
@@ -174,7 +199,7 @@ complete -c zpool -f -n __fish_zpool_needs_command -a clear -d 'Clear devices er
 complete -c zpool -f -n __fish_zpool_needs_command -a create -d 'Create a new storage pool'
 complete -c zpool -f -n __fish_zpool_needs_command -a destroy -d 'Destroy a storage pool'
 complete -c zpool -f -n __fish_zpool_needs_command -a detach -d 'Detach virtual device from a mirroring pool'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n __fish_zpool_needs_command -a events -d 'Display pool event log'
 end
 complete -c zpool -f -n __fish_zpool_needs_command -a export -d 'Export a pool'
@@ -199,22 +224,34 @@ complete -c zpool -f -n __fish_zpool_needs_command -a upgrade -d 'List upgradeab
 # add completions
 complete -c zpool -f -n '__fish_zpool_using_command add' -s f -d 'Force use of virtual device'
 complete -c zpool -f -n '__fish_zpool_using_command add' -s n -d 'Dry run: only display resulting configuration'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command add' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command add' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command add' -s P -d 'Display device full path'
     complete -c zpool -x -n '__fish_zpool_using_command add' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
-complete -c zpool -x -n '__fish_zpool_using_command add; and __fish_prev_arg_in add' -d 'Pool to add virtual devices to' -a '(__fish_complete_zfs_pools)'
-complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
+complete -c zpool -x -n '__fish_zpool_using_command add; and __fish_is_nth_token 2' -d 'Pool to add virtual device(s) to' -a '(__fish_complete_zfs_pools)'
+# complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
+# Exclude devices already part of this pool, and devices already in any other pool unless
+# `zpool add -f` was used.
+complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -k -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && __fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
 
 # attach completions
 complete -c zpool -f -n '__fish_zpool_using_command attach' -s f -d 'Force use of virtual device'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -x -n '__fish_zpool_using_command attach' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
-complete -c zpool -x -n '__fish_zpool_using_command attach' -d 'Pool to attach virtual device to' -a '(__fish_complete_zfs_pools)'
-complete -c zpool -x -n '__fish_zpool_using_command attach' -d 'Virtual device to operate on' -a '(__fish_zpool_list_available_vdevs)'
+# The ideal behavior for attach is as follows:
+# - zpool attach [should list only pools]
+# - zpool attach <tank> [should list only devices already part of pool]
+# - zpool attach <tank> <da1> [should list only devices not already part of a/the pool]
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 2' -d 'Pool to attach virtual device to' -a '(__fish_complete_zfs_pools)'
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 3' -d 'Existing pool device to attach to' -a '(__fish_zpool_list_used_vdevs (__fish_nth_token 2))'
+# Generate a list of devices in the system modulo devices already part of an online zpool.
+# These latter can be forcefully added, so we only exclude them if we don't introspect the presence
+# of a `-f` argument to `zpool attach` (but still exclude any devices already part of the same pool
+# that we're attaching to, "obviously").
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 4' -d 'Device to be attached' -a '(__fish_zpool_list_available_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && __fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
 
 # clear completions
 if test $OS = FreeBSD
@@ -236,7 +273,7 @@ complete -c zpool -x -n '__fish_zpool_using_command create' -s o -d 'Pool proper
 complete -c zpool -x -n '__fish_zpool_using_command create' -s O -d 'Root filesystem property' -a '(__fish_complete_zfs_ro_properties; __fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 complete -c zpool -r -n '__fish_zpool_using_command create' -s R -d 'Equivalent to "-o cachefile=none,altroot=ROOT"'
 complete -c zpool -x -n '__fish_zpool_using_command create' -s m -d 'Root filesystem mountpoint' -a 'legacy none'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -x -n '__fish_zpool_using_command create' -s t -d 'Set a different in-core pool name'
 end
 complete -c zpool -x -n '__fish_zpool_using_command create' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
@@ -250,7 +287,7 @@ complete -c zpool -x -n '__fish_zpool_using_command clear' -d 'Pool to detach de
 complete -c zpool -x -n '__fish_zpool_using_command clear' -d 'Physical device to detach' -a '(__fish_zpool_list_used_vdevs)'
 
 # events completions
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command events' -s v -d 'Print verbose event information'
     complete -c zpool -f -n '__fish_zpool_using_command events' -s H -d 'Print output in a machine-parsable format'
     complete -c zpool -f -n '__fish_zpool_using_command events' -s f -d 'Output appended data as the log grows'
@@ -259,7 +296,7 @@ if test $OS = Linux
 end
 
 # export completions
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command export' -s a -d 'Export all pools'
 end
 complete -c zpool -f -n '__fish_zpool_using_command export' -s f -d 'Force unmounting of all contained datasets'
@@ -292,7 +329,7 @@ complete -c zpool -f -n '__fish_zpool_using_command import' -s m -d 'Ignore miss
 complete -c zpool -r -n '__fish_zpool_using_command import' -s R -d 'Equivalent to "-o cachefile=none,altroot=ROOT"'
 complete -c zpool -f -n '__fish_zpool_using_command import' -s N -d 'Do not mount contained filesystems'
 complete -c zpool -f -n '__fish_zpool_using_command import; and __fish_contains_opt -s F' -s n -d 'Dry run: only determine if the recovery is possible, without attempting it'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command import; and __fish_contains_opt -s F' -s X -d 'Roll back to a previous TXG (hazardous)'
     complete -c zpool -r -n '__fish_zpool_using_command import' -s T -d 'TXG to roll back to (implies -FX)'
     complete -c zpool -f -n '__fish_zpool_using_command import' -s t -d 'Specify, as the last argument, a temporary pool name'
@@ -301,7 +338,7 @@ complete -c zpool -f -n '__fish_zpool_using_command import; and __fish_not_conta
 
 # iostat completions
 complete -c zpool -x -n '__fish_zpool_using_command iostat' -s T -d 'Display a timestamp using specified format'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command iostat' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command iostat' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command iostat' -s P -d 'Display device full path'
@@ -316,7 +353,7 @@ complete -c zpool -x -n '__fish_zpool_using_command labelclear' -d 'Device to cl
 
 # list completions
 complete -c zpool -f -n '__fish_zpool_using_command list' -s H -d 'Print output in a machine-parsable format'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command list' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command list' -s L -d 'Resolve device path symbolic links'
 end
@@ -348,7 +385,7 @@ complete -c zpool -x -n '__fish_zpool_using_command reopen' -d 'Pool which devic
 
 # replace completions
 complete -c zpool -f -n '__fish_zpool_using_command replace' -s f -d 'Force use of virtual device'
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -x -n '__fish_zpool_using_command replace' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
 complete -c zpool -x -n '__fish_zpool_using_command replace' -d 'Pool to replace device' -a '(__fish_complete_zfs_pools)'
@@ -367,7 +404,7 @@ complete -c zpool -x -n '__fish_zpool_using_command set' -d 'Property to set' -a
 complete -c zpool -x -n '__fish_zpool_using_command set' -d 'Pool which property is to be set' -a '(__fish_complete_zfs_pools)'
 
 # split completions
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command split' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command split' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command split' -s P -d 'Display device full path'
@@ -381,7 +418,7 @@ end
 complete -c zpool -x -n '__fish_zpool_using_command split' -d 'Pool to split' -a '(__fish_complete_zfs_pools)'
 
 # status completions
-if test $OS = Linux
+if __fish_is_openzfs
     complete -c zpool -f -n '__fish_zpool_using_command status' -s g -d 'Display virtual device GUID instead of device name'
     complete -c zpool -f -n '__fish_zpool_using_command status' -s L -d 'Resolve device path symbolic links'
     complete -c zpool -f -n '__fish_zpool_using_command status' -s P -d 'Display device full path'

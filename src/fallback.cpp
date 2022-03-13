@@ -243,12 +243,6 @@ int fish_wcwidth(wchar_t wc) {
     else if (wc == variation_selector_15)
         return 0;
 
-    // Korean Hangul Jamo median vowels and final consonants.
-    // These can either appear in combined form, taking 0 width themselves,
-    // or standalone with a 1 width. Since that's literally not expressible with wcwidth(),
-    // we take the position that the typical way for them to show up is composed.
-    if (wc >= L'\u1160' && wc <= L'\u11FF') return 0;
-
     // Check for Emoji_Modifier property. Only the Fitzpatrick modifiers have this, in range
     // 1F3FB..1F3FF. This is a hack because such an emoji appearing on its own would be drawn as
     // width 2, but that's unlikely to be useful. See #8275.

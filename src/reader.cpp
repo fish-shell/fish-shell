@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <csignal>
 #include <cwchar>
 #include <functional>
@@ -627,6 +628,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Whether this is the first prompt.
     bool first_prompt{true};
+
+    /// The time when the last flash() completed
+    std::chrono::time_point<std::chrono::steady_clock> last_flash;
 
     /// The representation of the current screen contents.
     screen_t screen;
@@ -1289,11 +1293,13 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     wcstring_list_t lst;
     (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
     if (!lst.empty()) {
-        std::fputws(L"\x1B]0;", stdout);
+        wcstring title_line = L"\x1B]0;";
         for (const auto &i : lst) {
-            std::fputws(i.c_str(), stdout);
+            title_line += i;
         }
-        ignore_result(write(STDOUT_FILENO, "\a", 1));
+        title_line += L"\a";
+        std::string narrow = wcs2string(title_line);
+        ignore_result(write_loop(STDOUT_FILENO, narrow.data(), narrow.size()));
     }
 
     outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
@@ -1879,6 +1885,15 @@ void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
 
 /// Flash the screen. This function changes the color of the current line momentarily.
 void reader_data_t::flash() {
+    // Multiple flashes may be enqueued by keypress repeat events and can pile up to cause a
+    // significant delay in processing future input while all the flash() calls complete, as we
+    // effectively sleep for 100ms each go. See #8610.
+    auto now = std::chrono::steady_clock::now();
+    if ((now - last_flash) < std::chrono::milliseconds{50}) {
+        last_flash = now;
+        return;
+    }
+
     struct timespec pollint;
     editable_line_t *el = &command_line;
     layout_data_t data = make_layout_data();
@@ -1901,6 +1916,10 @@ void reader_data_t::flash() {
     data.colors = std::move(saved_colors);
     this->rendered_layout = std::move(data);
     paint_layout(L"unflash");
+
+    // Save the time we stopped flashing as the time of the most recent flash. We can't just
+    // increment the old `now` value because the sleep is non-deterministic.
+    last_flash = std::chrono::steady_clock::now();
 }
 
 maybe_t<source_range_t> reader_data_t::get_selection() const {
@@ -1913,7 +1932,7 @@ maybe_t<source_range_t> reader_data_t::get_selection() const {
 
 /// Characters that may not be part of a token that is to be replaced by a case insensitive
 /// completion.
-#define REPLACE_UNCLEAN L"$*?({})"
+const wchar_t *REPLACE_UNCLEAN = L"$*?({})";
 
 /// Check if the specified string can be replaced by a case insensitive completion with the
 /// specified flags.
@@ -4075,6 +4094,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                     clear_transient_edit();
                 }
                 history_search.reset();
+                command_line_has_transient_edit = false;
             }
 
             rls.last_cmd = readline_cmd;
@@ -4189,7 +4209,12 @@ bool reader_data_t::jump(jump_direction_t dir, jump_precision_t precision, edita
     return success;
 }
 
-maybe_t<wcstring> reader_readline(int nchars) { return current_data()->readline(nchars); }
+maybe_t<wcstring> reader_readline(int nchars) {
+    auto *data = current_data();
+    // Apply any outstanding commandline changes (#8633).
+    data->apply_commandline_state_changes();
+    return data->readline(nchars);
+}
 
 int reader_reading_interrupted() {
     int res = reader_test_and_clear_interrupted();

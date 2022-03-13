@@ -6,7 +6,10 @@ fish_status_to_signal - convert exit codes to human-friendly signals
 Synopsis
 --------
 
-``fish_status_to_signal`` *NUM*
+.. synopsis::
+
+    fish_status_to_signal NUM
+
 ::
 
     function fish_prompt

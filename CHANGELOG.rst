@@ -1,9 +1,5 @@
-fish 3.4.0 (released ???)
-=========================
-
-..
-   Ignore for 3.4.0 changelog: 1363 3625 3954 6477 7602 8059 8077 8079 8084 8096 8118 8127 8128 8130 8137 8139 8146 8151 8153 8161 8170 8176 8183 8184 8191 8192 8195 8202 8204 8205 8206 8219 8221 8222 8224 8227 8228 8229 8230 8231 8235 8236 8237 8238 8239 8241 8243 8249 8252 8253 8256 8257 8260 8268 8270 8271 8277 8280 8285 8287 8289 8295 8299 8305 8306 8308 8310 8311 8314 8321 8323 8326 8327 8334 8335 8337 8338 8344 8353 8358 8365 8367 8368 8380 8381 8385 8391 8394 8403 8406 8409 8410 8419 8429 8430 8433 8438 8439 8441 8444 8446 8449 8456 8457 8471 8472 8476 8477 8478 8479 8480 8487 8492 8495 8497 8500 8511 8518 8521 8522 8526 8527 8528 8548 8549 8559 8575 8584 8587 8588 8570 8591 8596 8597 8601 8608 8612 8613 8615 8623
-
+fish 3.4.0 (released March 12, 2022)
+====================================
 
 Notable improvements and fixes
 ------------------------------
@@ -21,7 +17,7 @@ Notable improvements and fixes
     # this will still split on newlines only.
 
 - Complementing the ``prompt`` command in 3.3.0, ``fish_config`` gained a ``theme`` subcommand to show and pick from the sample themes (meaning color schemes) directly in the terminal, instead of having to open a Web browser. For example ``fish_config theme choose Nord`` loads the Nord theme in the current session (:issue:`8132`). The current theme can be saved with ``fish_config theme dump``, and custom themes can be added by saving them in ``~/.config/fish/themes/``.
-- ``set`` and ``read`` learned a new option ``--function`` to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped (:issue:`565`, :issue:`8145`)::
+- ``set`` and ``read`` learned a new option, ``--function``, to set a variable in the function's top scope. This should be a more familiar way of scoping variables and avoids issues with ``--local``, which is actually block-scoped (:issue:`565`, :issue:`8145`)::
 
     function demonstration
         if true
@@ -39,6 +35,7 @@ Notable improvements and fixes
 
 - Performance improvements to globbing, especially on systems using glibc. In some cases (large directories with files with many numbers in the names) this almost halves the time taken to expand the glob.
 - Autosuggestions can now be turned off by setting ``$fish_autosuggestion_enabled`` to 0, and (almost) all highlighting can be turned off by choosing the new "None" theme. The exception is necessary colors, like those which distinguish autosuggestions from the actual command line. (:issue:`8376`)
+- The ``fish_git_prompt`` function, which is included in the default prompts, now overrides ``git`` to avoid running  commands set by per-repository configuration. This avoids a potential security issue in some circumstances, and has been assigned CVE-2022-20001 (:issue:`8589`).
 
 Deprecations and removed features
 ---------------------------------
@@ -48,6 +45,10 @@ Deprecations and removed features
     > echo foo & bar # will still run "echo foo" in the background and then run "bar"
     # with both ampersand-nobg-in-token and qmark-noglob, this argument has no special characters anymore
     > open https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=youtu.be
+
+  As a reminder, feature flags can be set on startup with ``fish --features ampersand-nobg-in-token,qmark-noglob`` or with a universal variable called ``fish_features``::
+
+    > set -Ua fish_features ampersand-nobg-in-token
 
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
 - ``set --query`` now returns an exit status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior, use ``if not set -q foo; or set -q $foo`` - but this is unlikely to be desireable (:issue:`8214`).
@@ -68,6 +69,7 @@ Scripting improvements
 - ``$fish_user_paths`` is now automatically deduplicated to fix a common user error of appending to it in config.fish when it is universal (:issue:`8117`). :ref:`fish_add_path <cmd-fish_add_path>` remains the recommended way to add to $PATH.
 - ``return`` can now be used outside functions. In scripts, it does the same thing as ``exit``. In interactive mode,it sets ``$status`` without exiting (:issue:`8148`).
 - An oversight prevented all syntax checks from running on commands given to ``fish -c`` (:issue:`8171`). This includes checks such as ``exec`` not being allowed in a pipeline, and ``$$`` not being a valid variable. Generally, another error was generated anyway.
+- ``math`` now allows you to use underscores as visual separators when writing numbers - for example, ``math 1_000 + 2_000`` returns ``3000`` (:issue:`8496`).
 - ``fish_indent`` now correctly reformats tokens that end with a backslash followed by a newline (:issue:`8197`).
 - ``commandline`` gained an ``--is-valid`` option to check if the command line is syntactically valid and complete. This allows basic implementation of transient prompts (:issue:`8142`).
 - ``commandline`` gained a ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "7 more rows" message) (:issue:`8485`).
@@ -84,10 +86,14 @@ Scripting improvements
 - ``set --query`` can now query whether a variable is a path variable via ``--path`` or ``--unpath`` (:issue:`8494`).
 - Tilde characters (``~``) produced by custom completions are no longer escaped when applied to the command line, making it easier to use the output of a recursive ``complete -C`` in completion scripts (:issue:`4570`).
 - ``set --show`` reports when a variable is read-only (:issue:`8179`).
-- Erasing ``$fish_emoji_width`` will reset fish to the default emoji width (:issue:`8274`).
+- Erasing ``$fish_emoji_width`` will reset fish to the default guessed emoji width (:issue:`8274`).
 - The ``la`` function no longer lists entries for "." and "..", matching other systems defaults (:issue:`8519`).
 - ``abbr -q`` returns the correct exit status when given multiple abbreviation names as arguments (:issue:`8431`).
 - ``command -v`` returns an exit status of 127 instead of 1 if no command was found (:issue:`8547`).
+- ``argparse`` with ``--ignore-unknown`` no longer breaks with multiple unknown options in a short option group (:issue:`8637`).
+- Comments inside command substitutions or brackets now correctly ignore parentheses, quotes, and brackets (:issue:`7866`, :issue:`8022`, :issue:`8695`).
+- ``complete -C`` supports a new ``--escape`` option, which turns on escaping in returned completion strings (:issue:`3469`).
+- Invalid byte or unicode escapes like ``\Utest`` or ``\xNotHex`` are now a tokenizer error instead of causing the token to be truncated (:issue:`8545`).
 
 Interactive improvements
 ------------------------
@@ -114,6 +120,9 @@ Interactive improvements
 - The clipboard bindings ignore X-based clipboard programs if the ``DISPLAY`` environment variable is not set, which helps prefer the Windows clipboard when it is available (such as on WSL).
 - ``funcsave`` will remove a saved copy of a function that has been erased with ``functions --erase``.
 - The Web-based configuration tool gained a number of improvements, including the ability to set pager colors.
+- The default ``fish_title`` prints a shorter title with shortened $PWD and no more redundant "fish" (:issue:`8641`).
+- Holding down an arrow key won't freeze the terminal with long periods of flashing (:issue:`8610`).
+- Multi-char bindings are no longer interrupted if a signal handler enqueues an event. (:issue:`8628`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -134,6 +143,7 @@ Completions
 
   - Apple's ``shortcuts``
   - ``argparse`` (:issue:`8434`)
+  - ``asd`` (:issue:`8759`)
   - ``az`` (:issue:`8141`)
   - ``black`` (:issue:`8123`)
   - ``clasp`` (:issue:`8373`)
@@ -145,27 +155,33 @@ Completions
   - ``exif`` (:issue:`8246`)
   - ``findstr`` (:issue:`8481`)
   - ``git-sizer`` (:issue:`8156`)
+  - ``gnome-extensions`` (:issue:`8732`)
   - ``gping`` (:issue:`8181`)
   - ``isatty`` (:issue:`8609`)
   - ``istioctl`` (:issue:`8343`)
   - ``kmutil``
-  - ``mono`` (:issue:`8415`)
+  - ``kubectl`` (:issue:`8734`)
+  - ``matlab`` (:issue:`8505`)
+  - ``mono`` (:issue:`8415`) and related tools ``csharp``, ``gacutil``, ``gendarme``, ``ikdasm``, ``ilasm``, ``mkbundle``, ``monodis``, ``monop``, ``sqlsharp`` and ``xsp`` (:issue:`8452`)
   -  Angular's ``ng`` (:issue:`8111`)
   - ``nodeenv`` (:issue:`8533`)
+  - ``octave`` (:issue:`8505`)
   - ``pabcnet_clear`` (:issue:`8421`)
   - ``qmk`` (:issue:`8180`)
   - ``rakudo`` (:issue:`8113`)
+  - ``rc-status`` (:issue:`8757`)
   - ``roswell`` (:issue:`8330`)
   - ``sbcl`` (:issue:`8330`)
   - ``starship`` (:issue:`8520`)
+  - ``topgrade`` (:issue:`8651`)
   -  ``wine``, ``wineboot`` and ``winemaker`` (:issue:`8411`)
   -  Windows Subsystem for Linux (WSL)'s ``wslpath`` (:issue:`8364`)
-  -  Windows' ``color`` (:issue:`8483`)
+  -  Windows' ``color`` (:issue:`8483`), ``attrib``, ``attributes``, ``choice``, ``clean``, ``cleanmgr``, ``cmd``, ``cmdkey``, ``comp``, ``forfiles``, ``powershell``, ``reg``, ``schtasks``, ``setx`` (:issue:`8486`)
   - ``zef`` (:issue:`8114`)
 
-- Improvements to many completions, especially for ``git`` aliases (:issue:`8129`) and subcommands (:issue:`8134`).
-- Add missing completions for the ``-p`` option of ``xbps-query``.
-- The ``fish_is_nth_token`` function, which is particularly useful in completions for identifying the token number within the command line, replaces various internal functions to do the same (:issue:`8008`).
+- Improvements to many completions, especially for ``git`` aliases (:issue:`8129`), subcommands (:issue:`8134`) and submodules (:issue:`8716`).
+- Many adjustments to complete correct options for system utilities on BSD and macOS.
+- When evaluating custom completions, the command line state no longer includes variable overrides (``var=val``). This unbreaks completions that read ``commandline -op``.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -181,18 +197,19 @@ Improved terminal support
 
 Other improvements
 ------------------
-- Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests. (:issue:`7851`)
+- Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests with targets named ``test_$filename`` - ``make test_set.fish`` only runs the set.fish test. (:issue:`7851`)
 - The HTML version of the documentation now includes copy buttons for code examples (:issue:`8218`).
 - The HTML version of the documentation and the web-based configuration tool now pick more modern system fonts instead of falling back to Arial and something like Courier New most of the time (:issue:`8632`).
 - The Debian & Ubuntu package linked from fishshell.com is now a single package, rather than split into ``fish`` and ``fish-common`` (:issue:`7845`).
-- The macOS installer does not assert that Rosetta is required to install fish (:issue:`8566`).
+- The macOS installer does not assert that Rosetta is required to install fish on machines with Apple Silicon (:issue:`8566`).
+- The macOS installer now cleans up previous .pkg installations when upgrading. (:issue:`2963`).
 
 For distributors
 ----------------
 - The minimum version of CMake required to build fish is now 3.5.0.
 - The CMake installation supports absolute paths for ``CMAKE_INSTALL_DATADIR`` (:issue:`8150`).
 - Building using NetBSD curses works on any platform (:issue:`8087`).
-- The build system does not choose a different linker (:issue:`8152`).
+- The build system now uses the default linker instead of forcing use of the gold or lld linker (:issue:`8152`).
 
 --------------
 
@@ -3334,3 +3351,5 @@ to call ttyname() on OS X.
 
 We’ve got some work to do to be as lean as bash, but we’re on the right
 track.
+
+.. vim: ft=rst : tw=0 :

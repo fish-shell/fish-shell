@@ -6,7 +6,10 @@ block - temporarily block delivery of events
 Synopsis
 --------
 
-**block** [*OPTIONS* ...]
+.. synopsis::
+
+    block [(--local | --global)]
+    block --erase
 
 Description
 -----------
@@ -19,16 +22,21 @@ The block can be removed. Any events which triggered while the block was in plac
 
 Event blocks should not be confused with code blocks, which are created with ``begin``, ``if``, ``while`` or ``for``
 
-The following parameters are available:
+Without options, the ``block`` command acts with function scope.
+
+The following options are available:
 
 **-l** or **--local**
-    Release the block automatically at the end of the current innermost code block scope
+    Release the block automatically at the end of the current innermost code block scope.
 
 **-g** or **--global**
-    Never automatically release the lock
+    Never automatically release the lock.
 
 **-e** or **--erase**
-    Release global block
+    Release global block.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Example
 -------

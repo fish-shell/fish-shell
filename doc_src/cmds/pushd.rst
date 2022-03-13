@@ -6,18 +6,22 @@ pushd - push directory to directory stack
 Synopsis
 --------
 
-``pushd`` *DIRECTORY*
+.. synopsis::
+
+    pushd DIRECTORY
 
 Description
 -----------
 
-The ``pushd`` function adds ``DIRECTORY`` to the top of the :ref:`directory stack <directory-stack>` and makes it the current working directory. :ref:`popd <cmd-popd>` will pop it off and return to the original directory.
+The ``pushd`` function adds *DIRECTORY* to the top of the :ref:`directory stack <directory-stack>` and makes it the current working directory. :ref:`popd <cmd-popd>` will pop it off and return to the original directory.
 
 Without arguments, it exchanges the top two directories in the stack.
 
 ``pushd +NUMBER`` rotates the stack counter-clockwise i.e. from bottom to top
 
 ``pushd -NUMBER`` rotates clockwise i.e. top to bottom.
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

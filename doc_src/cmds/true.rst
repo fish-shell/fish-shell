@@ -6,7 +6,9 @@ true - return a successful result
 Synopsis
 --------
 
-``true``
+.. synopsis::
+
+    true
 
 Description
 -----------

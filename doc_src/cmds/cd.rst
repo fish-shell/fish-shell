@@ -6,11 +6,13 @@ cd - change directory
 Synopsis
 --------
 
-**cd** [*DIRECTORY*]
+.. synopsis::
+
+    cd [DIRECTORY]
 
 Description
 -----------
-**cd** changes the current working directory.
+``cd`` changes the current working directory.
 
 If *DIRECTORY* is given, it will become the new directory. If no parameter is given, the :envvar:`HOME` environment variable will be used.
 
@@ -25,6 +27,8 @@ This wrapper function maintains a history of the 25 most recently visited direct
 If you make those universal variables your **cd** history is shared among all fish instances.
 
 As a special case, ``cd .`` is equivalent to ``cd $PWD``, which is useful in cases where a mountpoint has been recycled or a directory has been removed and recreated.
+
+The **--help** or **-h** option displays help about using this command, and does not change the directory.
 
 Examples
 --------

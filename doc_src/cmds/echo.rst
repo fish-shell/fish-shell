@@ -6,7 +6,9 @@ echo - display a line of text
 Synopsis
 --------
 
-``echo`` [*options*] [*STRING*]
+.. synopsis::
+
+    echo [OPTIONS] [STRING]
 
 Description
 -----------
@@ -15,13 +17,17 @@ Description
 
 The following options are available:
 
-- ``-n``, Do not output a newline
+- **-n**
+    Do not output a newline.
 
-- ``-s``, Do not separate arguments with spaces
+**-s**
+    Do not separate arguments with spaces.
 
-- ``-E``, Disable interpretation of backslash escapes (default)
+**-E**
+    Disable interpretation of backslash escapes (default).
 
-- ``-e``, Enable interpretation of backslash escapes
+**-e**
+    Enable interpretation of backslash escapes.
 
 Unlike other shells, this echo accepts ``--`` to signal the end of the options.
 

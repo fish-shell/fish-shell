@@ -6,8 +6,10 @@ pwd - output the current working directory
 Synopsis
 --------
 
-| ``pwd`` [**-P** | **--physical**]
-| ``pwd`` [**-L** | **--logical**]
+.. synopsis::
+
+    pwd [-P | --physical]
+    pwd [-L | --logical]
 
 
 Description
@@ -23,9 +25,14 @@ Description
 
 The following options are available:
 
-- ``-L`` or ``--logical`` Output the logical working directory, without resolving symlinks (default behavior).
+**-L** or **--logical**
+    Output the logical working directory, without resolving symlinks (default behavior).
 
-- ``-P`` or ``--physical`` Output the physical working directory, with symlinks resolved.
+**-P** or **--physical**
+    Output the physical working directory, with symlinks resolved.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 See Also
 --------

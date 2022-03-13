@@ -9,6 +9,8 @@ complete -c complete_test_alpha3 --no-files -w 'complete_test_alpha2 extra2'
 
 complete -C'complete_test_alpha1 arg1 '
 # CHECK: complete_test_alpha1 arg1
+complete --escape -C'complete_test_alpha1 arg1 '
+# CHECK: complete_test_alpha1\ arg1\
 complete -C'complete_test_alpha2 arg2 '
 # CHECK: complete_test_alpha1 extra1 arg2
 complete -C'complete_test_alpha3 arg3 '
@@ -454,3 +456,10 @@ function crookshanks --wraps '$path_to_cat'
 end
 complete -C 'crookshanks '
 # CHECK: +pet
+
+# Custom completion works with variable overrides.
+complete cmd_with_fancy_completion -xa '(commandline -opc | count)'
+complete -C"a=1 b=2 cmd_with_fancy_completion "
+# CHECK: 1
+complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
+# CHECK: 2

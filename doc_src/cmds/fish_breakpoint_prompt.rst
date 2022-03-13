@@ -6,7 +6,10 @@ fish_breakpoint_prompt - define the prompt when stopped at a breakpoint
 Synopsis
 --------
 
-**fish_breakpoint_prompt**
+.. synopsis::
+
+    fish_breakpoint_prompt
+
 ::
 
     function fish_breakpoint_prompt

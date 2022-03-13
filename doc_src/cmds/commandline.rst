@@ -6,7 +6,9 @@ commandline - set or get the current command line buffer
 Synopsis
 --------
 
-``commandline`` [*OPTIONS*] [*CMD*]
+.. synopsis::
+
+    commandline [OPTIONS] [CMD]
 
 Description
 -----------
@@ -28,6 +30,9 @@ The following options are available:
     Causes any additional arguments to be interpreted as input functions, and puts them into the queue, so that they will be read before any additional actual key presses are.
     This option cannot be combined with any other option.
     See :ref:`bind <cmd-bind>` for a list of input functions.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 The following options change the way ``commandline`` updates the command line buffer:
 

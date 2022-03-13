@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <signal.h>
 #include <unistd.h>
 
 #include <cstring>
@@ -10,6 +11,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
@@ -223,9 +225,27 @@ maybe_t<char_event_t> input_event_queue_t::readch_timed() {
     if (auto evt = try_pop()) {
         return evt;
     }
-    const uint64_t usec_per_msec = 1000;
-    uint64_t timeout_usec = static_cast<uint64_t>(wait_on_escape_ms) * usec_per_msec;
-    if (fd_readable_set_t::is_fd_readable(in_, timeout_usec)) {
+    // We are not prepared to handle a signal immediately; we only want to know if we get input on
+    // our fd before the timeout. Use pselect to block all signals; we will handle signals
+    // before the next call to getch().
+    sigset_t sigs;
+    sigfillset(&sigs);
+
+    // pselect expects timeouts in nanoseconds.
+    const uint64_t nsec_per_msec = 1000 * 1000;
+    const uint64_t nsec_per_sec = nsec_per_msec * 1000;
+    const uint64_t wait_nsec = wait_on_escape_ms * nsec_per_msec;
+    struct timespec timeout;
+    timeout.tv_sec = (wait_nsec) / nsec_per_sec;
+    timeout.tv_nsec = (wait_nsec) % nsec_per_sec;
+
+    // We have one fd of interest.
+    fd_set fdset;
+    FD_ZERO(&fdset);
+    FD_SET(in_, &fdset);
+
+    int res = pselect(in_ + 1, &fdset, nullptr, nullptr, &timeout, &sigs);
+    if (res > 0) {
         return readch();
     }
     return none();
@@ -234,6 +254,15 @@ maybe_t<char_event_t> input_event_queue_t::readch_timed() {
 void input_event_queue_t::push_back(const char_event_t& ch) { queue_.push_back(ch); }
 
 void input_event_queue_t::push_front(const char_event_t& ch) { queue_.push_front(ch); }
+
+void input_event_queue_t::promote_interruptions_to_front() {
+    // Find the first sequence of non-char events.
+    // EOF is considered a char: we don't want to pull EOF in front of real chars.
+    auto is_char = [](const char_event_t& ch) { return ch.is_char() || ch.is_eof(); };
+    auto first = std::find_if_not(queue_.begin(), queue_.end(), is_char);
+    auto last = std::find_if(first, queue_.end(), is_char);
+    std::rotate(queue_.begin(), first, last);
+}
 
 void input_event_queue_t::prepare_to_select() {}
 void input_event_queue_t::select_interrupted() {}

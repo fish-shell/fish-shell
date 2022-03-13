@@ -309,13 +309,14 @@ shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
 
 void output_stream_t::append_narrow_buffer(separated_buffer_t buffer) {
     for (const auto &rhs_elem : buffer.elements()) {
-        append_with_separation(str2wcstring(rhs_elem.contents), rhs_elem.separation);
+        append_with_separation(str2wcstring(rhs_elem.contents), rhs_elem.separation, false);
     }
 }
 
-void output_stream_t::append_with_separation(const wchar_t *s, size_t len, separation_type_t type) {
+void output_stream_t::append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
+                                             bool want_newline) {
     append(s, len);
-    if (type == separation_type_t::explicitly) {
+    if (type == separation_type_t::explicitly && want_newline) {
         append(L'\n');
     }
 }
@@ -352,7 +353,8 @@ void buffered_output_stream_t::append(const wchar_t *s, size_t amt) {
 }
 
 void buffered_output_stream_t::append_with_separation(const wchar_t *s, size_t len,
-                                                      separation_type_t type) {
+                                                      separation_type_t type, bool want_newline) {
+    UNUSED(want_newline);
     buffer_->append(wcs2string(s, len), type);
 }
 

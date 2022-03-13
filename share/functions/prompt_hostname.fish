@@ -1,3 +1,3 @@
-function prompt_hostname --description 'Print the hostname, shortened for use in the prompt'
+function prompt_hostname --description 'short hostname for the prompt'
     string replace -r "\..*" "" $hostname
 end

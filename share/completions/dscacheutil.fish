@@ -1,6 +1,6 @@
 # dscacheutil
 complete -c dscacheutil -f -d 'Directory Service cache utility'
-complete -c dscacheutil -s h -d 'lists options' -f  -n '[ (commandline -opc | count) -le 1 ]'
+complete -c dscacheutil -s h -d 'lists options' -f -n '[ (commandline -opc | count) -le 1 ]'
 complete -c dscacheutil -s q -d 'initiate query' -f -x -n '[ (commandline -opc | count) -le 1 ] || contains -- -a (commandline -opc) || contains -- -q (commandline -opc) && [ (commandline -opc | count) -lt 3 ]' -a "
 group\t'name or gid'
 host\t'name or ip address'

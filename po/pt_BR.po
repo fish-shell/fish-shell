@@ -18,7 +18,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-13 10:00-0300\n"
-"PO-Revision-Date: 2015-10-11 20:35-0300\n"
+"PO-Revision-Date: 2022-02-15 13:24+0100\n"
 "Last-Translator: Fábio Nogueira <deb-user-ba@ubuntu.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -73519,10 +73519,6 @@ msgstr ""
 msgid "Precede each output line with count of its occurrence"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/uniq.fish:14
-msgid "Avoid comparing fist N characters"
-msgstr ""
-
 #: /tmp/fish/implicit/share/completions/uniq.fish:16
 msgid "Case insensitive comparision"
 msgstr ""
@@ -87073,7 +87069,7 @@ msgstr ""
 msgid "Check if the current directory is a git repository"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/fish_is_nth_token.fish:1
+#: /tmp/fish/implicit/share/functions/__fish_is_nth_token.fish:1
 msgid "Test if current token is on Nth place"
 msgstr ""
 

@@ -523,6 +523,13 @@ const wchar_t *quote_end(const wchar_t *pos, wchar_t quote) {
     return nullptr;
 }
 
+const wchar_t *comment_end(const wchar_t *pos) {
+    do {
+        pos++;
+    } while (*pos && *pos != L'\n');
+    return pos;
+}
+
 void fish_setlocale() {
     // Use various Unicode symbols if they can be encoded using the current locale, else a simple
     // ASCII char alternative. All of the can_be_encoded() invocations should return the same
@@ -1212,6 +1219,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             for (size_t i = 0; i < chars; i++) {
                 long d = convert_digit(input[in_pos], base);
                 if (d < 0) {
+                    // If we have no digit, this is a tokenizer error.
+                    if (i == 0) errored = true;
                     break;
                 }
 
@@ -1219,7 +1228,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                 in_pos++;
             }
 
-            if (res <= max_val) {
+            if (!errored && res <= max_val) {
                 result_char_or_none =
                     static_cast<wchar_t>((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
             } else {

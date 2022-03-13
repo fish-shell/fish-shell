@@ -1,4 +1,4 @@
-complete -c conjure -o monitor -d 'Monitor progress '
+complete -c conjure -o monitor -d 'Monitor progress'
 complete -c conjure -o quiet -d 'Suppress all warning messages'
 complete -c conjure -o regard-warnings -d 'Pay attention to warning messages'
 complete -c conjure -o seed -d 'Seed a new sequence of pseudo-random numbers [value]'

@@ -290,3 +290,23 @@ math 'max 1, 2, min 3, 4, 5'
 # max(1, 2, min(3, 4), 5)
 math 'max 1, 2, min(3, 4), 5'
 # CHECK: 5
+math 0_1
+# CHECK: 1
+math 0x0_A
+# CHECK: 10
+math 1_000 + 2_000
+# CHECK: 3000
+math 1_0_0_0
+# CHECK: 1000
+math 0_0.5_0 + 0_1.0_0
+# CHECK: 1.5
+math 2e0_0_2
+# CHECK: 200
+math -0_0.5_0_0E0_0_3
+# CHECK: -500
+math 20e-0_1
+# CHECK: 2
+math 0x0_2.0_0_0P0_2
+# CHECK: 8
+math -0x8p-0_3
+# CHECK: -1

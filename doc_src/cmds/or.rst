@@ -6,7 +6,9 @@ or - conditionally execute a command
 Synopsis
 --------
 
-*COMMAND1*; **or** *COMMAND2*
+.. synopsis::
+
+    COMMAND1; or COMMAND2
 
 Description
 -----------
@@ -16,6 +18,8 @@ Description
 ``or`` statements may be used as part of the condition in an :ref:`and <cmd-if>` or :ref:`while <cmd-while>` block.
 
 ``or`` does not change the current exit status itself, but the command it runs most likely will. The exit status of the last foreground command to exit can always be accessed using the :ref:`$status <variables-status>` variable.
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

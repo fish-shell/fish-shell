@@ -596,6 +596,9 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
                 opts.argv.push_back(arg_contents - 1);
                 // Work around weirdness with wgetopt, which crashes if we `continue` here.
                 if (w.woptind == argc) break;
+                // Explain to wgetopt that we want to skip to the next arg,
+                // because we can't handle this opt group.
+                w.nextchar = nullptr;
             }
             if (retval != STATUS_CMD_OK) return retval;
             long_idx = -1;

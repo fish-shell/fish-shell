@@ -6,12 +6,14 @@ abbr - manage fish abbreviations
 Synopsis
 --------
 
-| ``abbr`` --add [*SCOPE*] *WORD* *EXPANSION*
-| ``abbr`` --erase *WORD* ...
-| ``abbr`` --rename [*SCOPE*] *OLD_WORD* *NEW_WORD*
-| ``abbr`` --show
-| ``abbr`` --list
-| ``abbr`` --query *WORD* ...
+.. synopsis::
+
+    abbr --add [SCOPE] WORD EXPANSION
+    abbr --erase WORD ...
+    abbr --rename [SCOPE] OLD_WORD NEW_WORD
+    abbr --show
+    abbr --list
+    abbr --query WORD ...
 
 Description
 -----------
@@ -38,13 +40,16 @@ The following options are available:
 **-l** or **--list**
     Lists all abbreviated words
 
-**-e** *WORD* or **--erase** *WORD*...
+**-e** *WORD* or **--erase** *WORD* ...
     Erase the given abbreviations
 
 **-q** or **--query**
     Return 0 (true) if one of the *WORD* is an abbreviation.
 
-In addition, when adding or renaming abbreviations:
+**-h** or **--help**
+    Displays help about using this command.
+
+In addition, when adding or renaming abbreviations, one of the following **SCOPE** options can be used:
 
 **-g** or **--global**
     Use a global variable

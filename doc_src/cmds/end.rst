@@ -6,15 +6,19 @@ end - end a block of commands
 Synopsis
 --------
 
-| **begin**
-|     [*COMMANDS*...] 
-| **end**
+.. synopsis::
 
-| **function** *NAME* [*OPTIONS*]; *COMMANDS*...; **end**
-| **if** *CONDITION*; *COMMANDS_TRUE*...; [**else**; *COMMANDS_FALSE*...;] **end**
-| **switch** *VALUE*; [**case** [*WILDCARD*...]; [*COMMANDS*...]; ...] **end**
-| **while** *CONDITION*; *COMMANDS*...; **end**
-| **for** *VARNAME* in [*VALUES*...]; **COMMANDS**...; **end**
+    begin
+        [COMMANDS ...] 
+    end
+
+.. synopsis::
+
+    function NAME [OPTIONS]; COMMANDS ...; end
+    if CONDITION; COMMANDS_TRUE ...; [else; COMMANDS_FALSE ...;] end
+    switch VALUE; [case [WILDCARD ...]; [COMMANDS ...]; ...] end
+    while CONDITION; COMMANDS ...; end
+    for VARNAME in [VALUES ...]; COMMANDS ...; end
 
 Description
 -----------

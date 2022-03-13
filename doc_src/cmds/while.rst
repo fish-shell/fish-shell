@@ -6,7 +6,9 @@ while - perform a set of commands multiple times
 Synopsis
 --------
 
-**while** *CONDITION*; *COMMANDS...*; **end**
+.. synopsis::
+
+    while CONDITION; COMMANDS; end
 
 Description
 -----------
@@ -16,6 +18,8 @@ Description
 The exit status of the **while** loop is the exit status of the last iteration of the ``COMMANDS`` executed, or 0 if none were executed. (This matches other shells and is POSIX-compatible.)
 
 You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` for complex conditions. Even more complex control can be achieved with ``while true`` containing a :ref:`break <cmd-break>`.
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

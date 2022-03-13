@@ -67,7 +67,6 @@
         --contrast: #FFFFFF;
     }
     .highlight .k { color: #507a97; font-weight: bold } /* Keyword */
-    .highlight .nf { color: #009fe7 } /* Name.Function */
     .highlight .nf { color: #008fd7 } /* Name.Function */
     .highlight .nb { color: #209a87 } /* Name.Builtin */
     .highlight .s2 { color: #9ce781 } /* Literal.String.Double */

@@ -181,7 +181,6 @@ wcstring timer_snapshot_t::print_delta(const timer_snapshot_t &t1, const timer_s
 
         int column2_unit_len = std::max(strlen(unit_short_name(wall_unit)),
                                         strlen(unit_short_name(cpu_unit)));
-        // TODO: improve layout and use standard two char units
         append_format(output,
                       L"\n________________________________________________________"
                       L"\nExecuted in  %6.2F %-*s    %-*s  %s"

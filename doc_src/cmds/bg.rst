@@ -6,7 +6,9 @@ bg - send jobs to background
 Synopsis
 --------
 
-``bg`` [*PID* ...]
+.. synopsis::
+
+    bg [PID ...]
 
 Description
 -----------
@@ -21,6 +23,8 @@ When at least one of the arguments isn't a valid job specifier,
 ``bg`` will print an error without backgrounding anything.
 
 When all arguments are valid job specifiers, ``bg`` will background all matching jobs that exist.
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

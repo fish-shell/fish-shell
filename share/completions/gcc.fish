@@ -502,8 +502,8 @@ complete -c gcc -o Xlinker -d 'Pass option as an option to the linker'
 complete -c gcc -s u -d 'Pretend the symbol symbol is undefined, to force linking of library modules to define it'
 complete -c gcc -o Idir -d 'Add the directory dir to the head of the list of directories to be searched for header files'
 complete -c gcc -o iquotedir -d 'Add the directory dir to the head of the list of directories to be searched for header files only for the case of #include "file"; they are not searched for #include <file>, otherwise just like -I'
-complete -c gcc -o Ldir -d 'Add directory dir to the list of directories to be searched for -l'
-complete -c gcc -o Bprefix -d 'This option specifies where to find the executables, libraries, include files, and data files of the compiler itself'
+complete -c gcc -o L -d 'Add directory dir to the list of directories to be searched for -l'
+complete -c gcc -o B -d 'This option specifies where to find the executables, libraries, include files, and data files of the compiler itself'
 complete -c gcc -o specs -r -d 'Process file after the compiler reads in the standard specs file, in order to override the defaults that the gcc driver program uses when determining what switches to pass to cc1, cc1plus, as, ld, etc'
 complete -c gcc -l sysroot -x -a '(__fish_complete_directories)' -d 'Use dir as the logical root directory for headers and libraries'
 complete -c gcc -o I- -d 'This option has been deprecated'
@@ -513,10 +513,6 @@ complete -c gcc -o EL -d 'Compile code for little endian mode'
 complete -c gcc -o EB -d 'Compile code for big endian mode'
 complete -c gcc -o mmangle-cpu -d 'Prepend the name of the cpu to all public symbol names'
 complete -c gcc -o mcpu -d 'Compile code for ARC variant cpu' -x
-complete -c gcc -o mtext -d 'Put functions, data, and readonly data in text-section, data-section, and readonly-data-section respectively by default'
-complete -c gcc -o mdata -d 'Put functions, data, and readonly data in text-section, data-section, and readonly-data-section respectively by default'
-complete -c gcc -o mrodata -d 'Put functions, data, and readonly data in text-section, data-section, and readonly-data-section respectively by default'
-complete -c gcc -o section -d 'Put functions, data, and readonly data in text-section, data-section, and readonly-data-section respectively by default'
 complete -c gcc -o mabi -d 'Generate code for the specified ABI' -x
 complete -c gcc -o mapcs-frame -d 'Generate a stack frame that is compliant with the ARM Procedure Call Standard for all functions, even if this is not strictly necessary for correct execution of the code'
 complete -c gcc -o mapcs -d 'This is a synonym for -mapcs-frame'
@@ -529,7 +525,7 @@ complete -c gcc -o mlittle-endian -d 'Generate code for a processor running in l
 complete -c gcc -o mbig-endian -d 'Generate code for a processor running in big-endian mode; the default is to compile code for a little-endian processor'
 complete -c gcc -o mwords-little-endian -d 'This option only applies when generating code for big-endian processors'
 complete -c gcc -o mcpu -d 'This specifies the name of the target ARM processor' -x
-complete -c gcc -o mtune -d 'This option is very similar to the -mcpu= option, except that instead of specifying the actual target processor type, and hence restricting which instructions can be used, it specifies that GCC should tune the performance of the code as if the target were of the type specified in this option, but still choosing the instructions that it will generate based on the cpu specified by a -mcpu= option' -x
+complete -c gcc -o mtune -d 'Tune output for this cpu without restricting the instructions to it'
 complete -c gcc -o march -d 'This specifies the name of the target ARM architecture' -x
 complete -c gcc -o mfpu -x -d 'This specifies what floating point hardware (or hardware emulation) is available on the target'
 complete -c gcc -o mfpe -x -d 'This specifies what floating point hardware (or hardware emulation) is available on the target'

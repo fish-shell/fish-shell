@@ -6,10 +6,12 @@ if - conditionally execute a command
 Synopsis
 --------
 
-| **if** *CONDITION*; *COMMANDS_TRUE*...;
-| [**else** **if** *CONDITION2*; *COMMANDS_TRUE2*...;]
-| [**else**; *COMMANDS_FALSE*...;]
-| **end**
+.. synopsis::
+
+    if CONDITION; COMMANDS_TRUE ...;
+    [else if CONDITION2; COMMANDS_TRUE2 ...;]
+    [else; COMMANDS_FALSE ...;]
+    end
 
 Description
 -----------
@@ -19,6 +21,8 @@ Description
 You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` in the condition. See the second example below.
 
 The exit status of the last foreground command to exit can always be accessed using the :ref:`$status <variables-status>` variable.
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

@@ -6,13 +6,15 @@ argparse - parse options passed to a fish script or function
 Synopsis
 --------
 
-``argparse`` [*OPTIONS*] *OPTION_SPEC*... -- [*ARG*...]
+.. synopsis::
+
+    argparse [OPTIONS] OPTION_SPEC ... -- [ARG ...]
 
 
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments like how fish builtin commands handle their arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets $argv (and always $argv) to the remaining arguments. More on this in the :ref:`usage <cmd-argparse-usage>` section below.
+This command makes it easy for fish scripts and functions to handle arguments. You pass arguments that define the known options, followed by a literal **--**, then the arguments to be parsed (which might also include a literal **--**). ``argparse`` then sets variables to indicate the passed options with their values, and sets ``$argv`` to the remaining arguments. See the :ref:`usage <cmd-argparse-usage>` section below.
 
 Each option specification (``OPTION_SPEC``) is written in the :ref:`domain specific language <cmd-argparse-option-specification>` described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
@@ -23,22 +25,28 @@ The variables will be set with local scope (i.e., as if the script had done ``se
 Options
 -------
 
-The following ``argparse`` options are available. They must appear before all OPTION_SPECs:
+The following ``argparse`` options are available. They must appear before all *OPTION_SPEC*\ s:
 
 **-n** or **--name**
-    the command name for use in error messages. By default the current function name will be used, or ``argparse`` if run outside of a function.
+    The command name for use in error messages. By default the current function name will be used, or ``argparse`` if run outside of a function.
 
-**-x** or **--exclusive** should be followed by a comma separated list of short or long options that are mutually exclusive. You can use this more than once to define multiple sets of mutually exclusive options.
+**-x** or **--exclusive** *OPTIONS*
+    A comma separated list of options that are mutually exclusive. You can use this more than once to define multiple sets of mutually exclusive options.
 
-- **-N** or **--min-args** is followed by an integer that defines the minimum number of acceptable non-option arguments. The default is zero.
+**-N** or **--min-args** *NUMBER*
+    The minimum number of acceptable non-option arguments. The default is zero.
 
-- **-X** or **--max-args** is followed by an integer that defines the maximum number of acceptable non-option arguments. The default is infinity.
+**-X** or **--max-args** *NUMBER*
+    The maximum number of acceptable non-option arguments. The default is infinity.
 
-- **-i** or **--ignore-unknown** ignores unknown options, keeping them and their arguments in $argv instead.
+**-i** or **--ignore-unknown**
+    Ignores unknown options, keeping them and their arguments in $argv instead.
 
-- **-s** or **--stop-nonopt** causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
+**-s** or **--stop-nonopt**
+    Causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 
-- **-h** or **--help** displays help about using this command.
+**-h** or **--help**
+    Displays help about using this command.
 
 .. _cmd-argparse-usage:
 
@@ -157,7 +165,7 @@ Fish ships with a ``_validate_int`` function that accepts a ``--min`` and ``--ma
 Example OPTION_SPECs
 --------------------
 
-Some OPTION_SPEC examples:
+Some *OPTION_SPEC* examples:
 
 - ``h/help`` means that both ``-h`` and ``--help`` are valid. The flag is a boolean and can be used more than once. If either flag is used then ``_flag_h`` and ``_flag_help`` will be set to the count of how many times either flag was seen.
 
@@ -184,3 +192,18 @@ Some OPTION_SPEC examples:
 After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
+
+Limitations
+-----------
+
+One limitation with **--ignore-unknown** is that, if an unknown option is given in a group with known options, the entire group will be kept in $argv. ``argparse`` will not do any permutations here.
+
+For instance::
+
+  argparse --ignore-unknown h -- -ho
+  echo $_flag_h # is -h, because -h was given
+  echo $argv # is still -ho
+
+This limitation may be lifted in future.
+
+Additionally, it can only parse known options up to the first unknown option in the group - the unknown option could take options, so it isn't clear what any character after an unknown option means.

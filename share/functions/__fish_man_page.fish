@@ -8,9 +8,9 @@ function __fish_man_page
         return
     end
 
-    #Skip leading `sudo`/`command` and display then manpage of following command
+    # Skip leading commands and display then manpage of following command
     while set -q args[2]
-        and string match -qr -- '^(sudo|command|.*=.*)$' $args[1]
+        and string match -qr -- '^(and|begin|builtin|caffeinate|command|doas|entr|env|exec|if|mosh|nice|not|or|pipenv|prime-run|setsid|sudo|systemd-nspawn|time|watch|while|xargs|.*=.*)$' $args[1]
         set -e args[1]
     end
 

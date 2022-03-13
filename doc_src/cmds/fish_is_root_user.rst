@@ -6,7 +6,7 @@ fish_is_root_user - check if the current user is root
 Synopsis
 --------
 
-::
+.. synopsis::
 
     fish_is_root_user
 

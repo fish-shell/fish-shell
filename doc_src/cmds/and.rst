@@ -6,9 +6,9 @@ and - conditionally execute a command
 Synopsis
 --------
 
-::
+.. synopsis::
 
-    COMMAND1; and COMMAND2
+    PREVIOUS; and COMMAND
 
 Description
 -----------
@@ -18,6 +18,8 @@ Description
 ``and`` statements may be used as part of the condition in an :ref:`while <cmd-while>` or :ref:`if <cmd-if>` block.
 
 ``and`` does not change the current exit status itself, but the command it runs most likely will. The exit status of the last foreground command to exit can always be accessed using the :ref:`$status <variables-status>` variable.
+
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------
@@ -32,3 +34,4 @@ See Also
 --------
 
 - :ref:`or <cmd-or>` command
+- :ref:`not <cmd-not>` command

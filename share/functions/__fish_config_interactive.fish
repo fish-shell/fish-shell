@@ -26,21 +26,19 @@ function __fish_config_interactive -d "Initializations that should be performed 
         end
     end
 
-    #
     # If we are starting up for the first time, set various defaults.
-    if test $__fish_initialized -lt 3100
-
+    if test $__fish_initialized -lt 3400
         # Regular syntax highlighting colors
         __init_uvar fish_color_normal normal
-        __init_uvar fish_color_command 005fd7
-        __init_uvar fish_color_param 00afff
-        __init_uvar fish_color_redirection 00afff
-        __init_uvar fish_color_comment 990000
-        __init_uvar fish_color_error ff0000
-        __init_uvar fish_color_escape 00a6b2
-        __init_uvar fish_color_operator 00a6b2
-        __init_uvar fish_color_end 009900
-        __init_uvar fish_color_quote 999900
+        __init_uvar fish_color_command blue
+        __init_uvar fish_color_param cyan
+        __init_uvar fish_color_redirection cyan --bold
+        __init_uvar fish_color_comment red
+        __init_uvar fish_color_error brred
+        __init_uvar fish_color_escape brcyan
+        __init_uvar fish_color_operator brcyan
+        __init_uvar fish_color_end green
+        __init_uvar fish_color_quote yellow
         __init_uvar fish_color_autosuggestion 555 brblack
         __init_uvar fish_color_user brgreen
         __init_uvar fish_color_host normal
@@ -52,7 +50,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_cwd_root red
 
         # Background color for search matches
-        __init_uvar fish_color_search_match bryellow --background=brblack
+        __init_uvar fish_color_search_match --background=111
 
         # Background color for selections
         __init_uvar fish_color_selection white --bold --background=brblack
@@ -62,10 +60,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_cancel -r
 
         # Pager colors
-        __init_uvar fish_pager_color_prefix normal --bold --underline
-        __init_uvar fish_pager_color_completion
-        __init_uvar fish_pager_color_description B3A06D yellow
+        __init_uvar fish_pager_color_prefix cyan --bold --underline
+        __init_uvar fish_pager_color_completion normal
+        __init_uvar fish_pager_color_description B3A06D yellow -i
         __init_uvar fish_pager_color_progress brwhite --background=cyan
+        __init_uvar fish_pager_color_selected_background -r
 
         #
         # Directory history colors
@@ -258,16 +257,19 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Notify terminals when $PWD changes (issue #906).
     # VTE based terminals, Terminal.app, iTerm.app (TODO), and foot support this.
     if not set -q FISH_UNIT_TESTS_RUNNING
-        if string match -q -- 'foot*' $TERM
-            or test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = Apple_Terminal -a (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309 -o "$TERM_PROGRAM" = WezTerm
-            function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-                if status --is-command-substitution || set -q INSIDE_EMACS
-                    return
-                end
-                printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)
-            end
-            __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
+        and begin
+            string match -q -- 'foot*' $TERM
+            or test 0"$VTE_VERSION" -ge 3405
+            or test "$TERM_PROGRAM" = Apple_Terminal && test (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
+            or test "$TERM_PROGRAM" = WezTerm
         end
+        function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
+            if status --is-command-substitution || set -q INSIDE_EMACS
+                return
+            end
+            printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)
+        end
+        __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
 
     # Create empty configuration directores if they do not already exist
@@ -282,5 +284,5 @@ end" >$__fish_config_dir/config.fish
 
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.
-    set __fish_initialized 3100
+    set __fish_initialized 3400
 end

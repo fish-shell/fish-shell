@@ -73,6 +73,7 @@ controllers.controller("colorsController", function($scope, $http) {
 
     $scope.changeSelectedTextColor = function(color) {
         $scope.selectedColorScheme[$scope.selectedColorSetting] = color;
+        $scope.selectedColorScheme["colordata-" + $scope.selectedColorSetting].color = color;
         $scope.noteThemeChanged();
     }
 
@@ -82,7 +83,7 @@ controllers.controller("colorsController", function($scope, $http) {
     $scope.colorSchemes = [];
 
     isValidColor = function(col) {
-        // Check if preferred_background is actually a valid color
+        if (col == "normal") return true;
         var s = new Option().style;
         s.color = col;
         return !!s.color;
@@ -103,9 +104,12 @@ controllers.controller("colorsController", function($scope, $http) {
                 if (scheme["url"]) currentScheme["url"] = scheme["url"];
 
                 for (var i in data) {
-                    if (isValidColor(data[i].color)) {
-                        currentScheme[data[i].name] = data[i].color;
-                    }
+                    currentScheme[data[i].name] = interpret_color(data[i].color).replace(/#/, '');
+                    // HACK: For some reason the colors array is cleared later
+                    // So we cheesily encode the actual objects as colordata-, so we can send them.
+                    // TODO: We should switch to keeping the objects, and also displaying them
+                    // with underlines and such.
+                    currentScheme["colordata-" + data[i].name] = data[i];
                 }
                 $scope.colorSchemes.push(currentScheme);
             }
@@ -140,25 +144,41 @@ controllers.controller("colorsController", function($scope, $http) {
                             "user",
                             "host",
                             "cancel",
+                            // Cheesy hardcoded variable names ahoy!
+                            // These are all the pager vars,
+                            // we should really just save all these in a dictionary.
+                            "fish_pager_color_background",
+                            "fish_pager_color_prefix",
+                            "fish_pager_color_progress",
                             "fish_pager_color_completion",
                             "fish_pager_color_description",
-                            "fish_pager_color_prefix",
-                            "fish_pager_color_progress"
+                            "fish_pager_color_selected_background",
+                            "fish_pager_color_selected_prefix",
+                            "fish_pager_color_selected_completion",
+                            "fish_pager_color_selected_description",
+                            // TODO: Setting these to empty currently makes them weird. Figure out why!
+                            /*
+                            "fish_pager_color_secondary_background",
+                            "fish_pager_color_secondary_prefix",
+                            "fish_pager_color_secondary_completion",
+                            "fish_pager_color_secondary_description",
+                            */
                            ];
         var remaining = settingNames.length;
-        postdata = {
+        var postdata = {
             "theme" : $scope.selectedColorScheme["name"],
             "colors": [],
         }
-        for (name of settingNames) {
+        for (var name of settingNames) {
             var selected;
+            var realname = "colordata-" + name;
             // Skip colors undefined in the current theme
             // js is dumb - the empty string is false,
             // but we want that to mean unsetting a var.
-            if (!$scope.selectedColorScheme[name] && $scope.selectedColorScheme[name] !== '') {
-                selected = '';
+            if (!$scope.selectedColorScheme[realname] && $scope.selectedColorScheme[realname] !== '') {
+                continue;
             } else {
-                selected = $scope.selectedColorScheme[name];
+                selected = $scope.selectedColorScheme[realname];
             }
             postdata.colors.push({
                 "what" : name,
@@ -235,16 +255,16 @@ controllers.controller("functionsController", function($scope, $http) {
 
     $scope.cleanupFishFunction = function (contents) {
         /* Replace leading tabs and groups of four spaces at the beginning of a line with two spaces. */
-        lines = contents ? contents.split('\n') : [];
-        rx = /^[\t ]+/
+        var lines = contents ? contents.split('\n') : [];
+        var rx = /^[\t ]+/
         for (var i=0; i < lines.length; i++) {
-            line = lines[i]
+            var line = lines[i]
             /* Get leading tabs and spaces */
-            whitespace_arr = rx.exec(line)
+            var whitespace_arr = rx.exec(line)
             if (whitespace_arr) {
                 /* Replace four spaces with two spaces, and tabs with two spaces */
                 var whitespace = whitespace_arr[0]
-                new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
+                var new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
                 lines[i] = new_whitespace + line.slice(whitespace.length)
             }
         }
@@ -380,7 +400,7 @@ controllers.controller("abbreviationsController", function($scope, $http) {
     $scope.abbreviations = [];
     $scope.addBlank = function() {
         // Add blank entry if it is missing
-        hasBlank = {hasBlank: false}
+        var hasBlank = {hasBlank: false}
         angular.forEach($scope.abbreviations, function(value, key) {
             if (value.phrase === "" && value.word === "") {
                 this.hasBlank = true;

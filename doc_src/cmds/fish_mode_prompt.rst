@@ -6,6 +6,10 @@ fish_mode_prompt - define the appearance of the mode indicator
 Synopsis
 --------
 
+.. synopsis::
+
+    fish_mode_prompt
+
 ::
 
      function fish_mode_prompt

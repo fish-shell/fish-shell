@@ -9,7 +9,6 @@ include(FeatureSummary)
 set(SPHINX_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/doc_src")
 set(SPHINX_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}/user_doc")
 set(SPHINX_BUILD_DIR "${SPHINX_ROOT_DIR}/build")
-set(SPHINX_CACHE_DIR "${SPHINX_ROOT_DIR}/doctrees")
 set(SPHINX_HTML_DIR "${SPHINX_ROOT_DIR}/html")
 set(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 
@@ -22,7 +21,7 @@ add_custom_target(sphinx-docs
         -j auto
         -q -b html
         -c "${SPHINX_SRC_DIR}"
-        -d "${SPHINX_CACHE_DIR}"
+        -d "${SPHINX_ROOT_DIR}/.doctrees-html"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
     DEPENDS ${SPHINX_SRC_DIR}/fish_indent_lexer.py fish_indent
@@ -35,7 +34,7 @@ add_custom_target(sphinx-manpages
         -j auto
         -q -b man
         -c "${SPHINX_SRC_DIR}"
-        -d "${SPHINX_CACHE_DIR}"
+        -d "${SPHINX_ROOT_DIR}/.doctrees-man"
         "${SPHINX_SRC_DIR}"
         # TODO: This only works if we only have section 1 manpages.
         "${SPHINX_MANPAGE_DIR}/man1"

@@ -6,9 +6,10 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
+.. synopsis::
 
-    string sub [(-s | --start) START] [(-e | --end) END] [(-l | --length) LENGTH] [(-q | --quiet)] [STRING...]
+    string sub [(-s | --start) START] [(-l | --length) LENGTH]
+               [-q | --quiet] [STRING ...]
 
 .. END SYNOPSIS
 
@@ -17,7 +18,7 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string sub`` prints a substring of each string argument. The start/end of the substring can be specified with ``-s``/``-e`` or ``--start``/``--end`` followed by a 1-based index value. Positive index values are relative to the start of the string and negative index values are relative to the end of the string. The default start value is 1. The length of the substring can be specified with ``-l`` or ``--length``. If the length or end is not specified, the substring continues to the end of each STRING. Exit status: 0 if at least one substring operation was performed, 1 otherwise. ``--length`` is mutually exclusive with ``--end``.
+``string sub`` prints a substring of each string argument. The start/end of the substring can be specified with **-s**/**-e** or **--start**/**--end** followed by a 1-based index value. Positive index values are relative to the start of the string and negative index values are relative to the end of the string. The default start value is 1. The length of the substring can be specified with **-l** or **--length**. If the length or end is not specified, the substring continues to the end of each STRING. Exit status: 0 if at least one substring operation was performed, 1 otherwise. **--length** is mutually exclusive with **--end**.
 
 .. END DESCRIPTION
 

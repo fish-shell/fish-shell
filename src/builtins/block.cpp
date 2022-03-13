@@ -1,4 +1,4 @@
-// Implementation of the bind builtin.
+// Implementation of the block builtin.
 #include "config.h"  // IWYU pragma: keep
 
 #include "block.h"

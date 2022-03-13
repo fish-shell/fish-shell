@@ -3,10 +3,8 @@
 # Example of how to use this:
 # env PATH="/dir/containing/fish/indent/:$PATH" pygmentize -f terminal256 -l /path/to/fish_indent_lexer.py:FishIndentLexer -x ~/test.fish
 
-import os
 from pygments.lexer import Lexer
 from pygments.token import (
-    Keyword,
     Name,
     Comment,
     String,
@@ -23,9 +21,6 @@ from pygments.token import (
 import re
 import subprocess
 
-# The token type representing output to the console.
-OUTPUT_TOKEN = Text
-
 # A fallback token type.
 DEFAULT = Text
 
@@ -34,10 +29,10 @@ ROLE_TO_TOKEN = {
     "normal": Name.Variable,
     "error": Generic.Error,
     "command": Name.Function,
-    "keyword": Keyword,
+    "keyword": Name.Function,
     "statement_terminator": Punctuation,
     "param": Name.Constant,
-    "option": Name.Literal,
+    "option": Name.Constant,
     "comment": Comment,
     "match": DEFAULT,
     "search_match": DEFAULT,
@@ -131,5 +126,5 @@ class FishIndentLexer(Lexer):
                     result.extend(tokenize_fish_command(m.group(2), m.start(2)))
                 else:
                     # Non-prompt line representing output from a command.
-                    result.append((m.start(2), OUTPUT_TOKEN, m.group(2)))
+                    result.append((m.start(2), Generic.Output, m.group(2)))
         return result

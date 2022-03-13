@@ -93,11 +93,11 @@ string length --visible (set_color red)abc
 begin
     set -l fish_emoji_width 2
     # This should print the emoji width
-    string length --visible . 🥁
+    string length --visible . \U2693
     # CHECK: 1
     # CHECK: 2
     set -l fish_emoji_width 1
-    string length --visible . 🥁
+    string length --visible . \U2693
     # CHECK: 1
     # CHECK: 1
 end

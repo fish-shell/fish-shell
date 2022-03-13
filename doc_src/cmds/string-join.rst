@@ -6,10 +6,10 @@ Synopsis
 
 .. BEGIN SYNOPSIS
 
-::
+.. synopsis::
 
-    string join [(-q | --quiet)] SEP [STRING...]
-    string join0 [(-q | --quiet)] [STRING...]
+    string join [-q | --quiet] SEP [STRING ...]
+    string join0 [-q | --quiet] [STRING ...]
 
 .. END SYNOPSIS
 
@@ -18,9 +18,9 @@ Description
 
 .. BEGIN DESCRIPTION
 
-``string join`` joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
+``string join`` joins its *STRING* arguments into a single string separated by *SEP*, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
-``string join0`` joins its STRING arguments into a single string separated by the zero byte (NUL), and adds a trailing NUL. This is most useful in conjunction with tools that accept NUL-delimited input, such as ``sort -z``. Exit status: 0 if at least one join was performed, or 1 otherwise.
+``string join0`` joins its *STRING* arguments into a single string separated by the zero byte (NUL), and adds a trailing NUL. This is most useful in conjunction with tools that accept NUL-delimited input, such as ``sort -z``. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
 Because Unix uses NUL as the string terminator, passing the output of ``string join0`` as an *argument* to a command (via a :ref:`command substitution <expand-command-substitution>`) won't actually work. Fish will pass the correct bytes along, but the command won't be able to tell where the argument ends. This is a limitation of Unix' argument passing.
 

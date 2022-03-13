@@ -1,7 +1,7 @@
 # Tab completion for cargo (https://github.com/rust-lang/cargo).
 
 ## --- WRITTEN MANUALLY ---
-set -l __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s+(.*)' '$1\t$2' | string escape)
+set -l __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s*(.*)' '$1\t$2' | string escape)
 
 complete -c cargo -f -c cargo -n __fish_use_subcommand -a "$__fish_cargo_subcommands"
 complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a "$__fish_cargo_subcommands"

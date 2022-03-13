@@ -1,5 +1,3 @@
-complete -c rustup
-
 set -l subcmds \
     show \
     update \
@@ -230,7 +228,7 @@ complete -c rustup -n __fish_should_complete_switches -s v -l verbose
 complete -c rustup -n __fish_should_complete_switches -s h -l help
 complete -c rustup -n __fish_should_complete_switches -s V -l version
 
-complete -c rustup -n "fish_is_nth_token 1" -xa "$subcmds"
+complete -c rustup -n "__fish_is_nth_token 1" -xa "$subcmds"
 
 complete -c rustup -n "__fish_prev_arg_in default" -xa "$__rustup_toolchains_short $__rustup_toolchains"
 complete -c rustup -n "__fish_prev_arg_in toolchain" -xa "add install list remove uninstall link help"

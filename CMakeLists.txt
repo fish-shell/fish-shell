@@ -110,7 +110,7 @@ set(FISH_SRCS
     src/null_terminated_array.cpp src/operation_context.cpp src/output.cpp
     src/pager.cpp src/parse_execution.cpp src/parse_tree.cpp src/parse_util.cpp
     src/parser.cpp src/parser_keywords.cpp src/path.cpp src/postfork.cpp
-    src/proc.cpp src/reader.cpp src/redirection.cpp src/sanity.cpp src/screen.cpp
+    src/proc.cpp src/reader.cpp src/redirection.cpp src/screen.cpp
     src/signal.cpp src/termsize.cpp src/timer.cpp src/tinyexpr.cpp
     src/tokenizer.cpp src/topic_monitor.cpp src/trace.cpp src/utf8.cpp src/util.cpp
     src/wait_handle.cpp src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp 

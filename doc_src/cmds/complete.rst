@@ -6,23 +6,10 @@ complete - edit command specific tab-completions
 Synopsis
 --------
 
-::
+.. synopsis::
 
-  complete [( -c | --command | -p | --path )] COMMAND
-          [( -c | --command | -p | --path ) COMMAND]...
-          [( -e | --erase )]
-          [( -s | --short-option ) SHORT_OPTION]...
-          [( -l | --long-option | -o | --old-option ) LONG_OPTION]...
-          [( -a | --arguments ) ARGUMENTS]
-          [( -k | --keep-order )]
-          [( -f | --no-files )]
-          [( -F | --force-files )]
-          [( -r | --require-parameter )]
-          [( -x | --exclusive )]
-          [( -w | --wraps ) WRAPPED_COMMAND]...
-          [( -n | --condition ) CONDITION]
-          [( -d | --description ) DESCRIPTION]
-  complete ( -C [STRING] | --do-complete[=STRING] )
+    complete ((-c | --command) | (-p | --path)) COMMAND [OPTIONS] 
+    complete (-C | --do-complete) [--escape] STRING
 
 Description
 -----------
@@ -32,35 +19,58 @@ Description
 For an introduction to writing your own completions, see :ref:`Writing your own completions <completion-own>` in
 the fish manual.
 
-- ``-c COMMAND`` or ``--command COMMAND`` specifies that ``COMMAND`` is the name of the command. If there is no ``-c`` or ``-p``, one non-option argument will be used as the command.
+The following options are available:
 
-- ``-p COMMAND`` or ``--path COMMAND`` specifies that ``COMMAND`` is the absolute path of the command (optionally containing wildcards).
+**-c** or **--command** *COMMAND*
+    Specifies that *COMMAND* is the name of the command. If there is no **-c** or **-p**, one non-option argument will be used as the command.
 
-- ``-e`` or ``--erase`` deletes the specified completion.
+**-p** or **--path** *COMMAND*
+    Specifies that *COMMAND* is the absolute path of the command (optionally containing wildcards).
 
-- ``-s SHORT_OPTION`` or ``--short-option=SHORT_OPTION`` adds a short option to the completions list.
+**-e** or **--erase**
+    Deletes the specified completion.
 
-- ``-l LONG_OPTION`` or ``--long-option=LONG_OPTION`` adds a GNU style long option to the completions list.
+**-s** or **--short-option** *SHORT_OPTION*
+    Adds a short option to the completions list.
 
-- ``-o LONG_OPTION`` or ``--old-option=LONG_OPTION`` adds an old style long option to the completions list (See below for details).
+**-l** or **--long-option** *LONG_OPTION*
+    Adds a GNU style long option to the completions list.
 
-- ``-a ARGUMENTS`` or ``--arguments=ARGUMENTS`` adds the specified option arguments to the completions list.
+**-o** or **--old-option** *LONG_OPTION*
+    Adds an old style long option to the completions list (see below for details).
 
-- ``-k`` or ``--keep-order`` keeps the order of ``ARGUMENTS`` instead of sorting alphabetically. Multiple ``complete`` calls with ``-k`` result in arguments of the later ones displayed first.
+**-a** or **--arguments** *ARGUMENTS*
+    Adds the specified option arguments to the completions list.
 
-- ``-f`` or ``--no-files`` says that this completion may not be followed by a filename.
+**-k** or **--keep-order**
+    Keeps the order of *ARGUMENTS* instead of sorting alphabetically. Multiple ``complete`` calls with **-k** result in arguments of the later ones displayed first.
 
-- ``-F`` or ``--force-files`` says that this completion may be followed by a filename, even if another applicable ``complete`` specified ``--no-files``.
+**-f** or **--no-files**
+    This completion may not be followed by a filename.
 
-- ``-r`` or ``--require-parameter`` says that this completion must have an option argument, i.e. may not be followed by another option.
+**-F** or **--force-files**
+    This completion may be followed by a filename, even if another applicable ``complete`` specified **--no-files**.
 
-- ``-x`` or ``--exclusive`` is short for ``-r`` and ``-f``.
+**-r** or **--require-parameter**
+    This completion must have an option argument, i.e. may not be followed by another option.
 
-- ``-w WRAPPED_COMMAND`` or ``--wraps=WRAPPED_COMMAND`` causes the specified command to inherit completions from the wrapped command (See below for details).
+**-x** or **--exclusive**
+    Short for **-r** and **-f**.
 
-- ``-n CONDITION`` or ``--condition CONDITION`` specifies that this completion should only be used if the CONDITION (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases.
+**-w** or **--wraps** *WRAPPED_COMMAND*
+    Causes the specified command to inherit completions from *WRAPPED_COMMAND* (see below for details).
 
-- ``-C STRING`` or ``--do-complete=STRING`` makes complete try to find all possible completions for the specified string. If there is no STRING, the current commandline is used instead.
+**-n** or **--condition** *CONDITION*
+    This completion should only be used if the *CONDITION* (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases.
+
+**-C** or **--do-complete** *STRING*
+    Makes ``complete`` try to find all possible completions for the specified string. If there is no *STRING*, the current commandline is used instead.
+
+**--escape**
+    When used with ``-C``, escape special characters in completions.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Command specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU getopt library. These styles are:
 

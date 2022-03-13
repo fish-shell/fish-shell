@@ -699,7 +699,6 @@ class Deroffer:
         return False
 
     def macro_i_ir(self):
-        pass
         return False
 
     def macro_Nm(self):
@@ -1144,12 +1143,9 @@ if __name__ == "__main__":
     import gzip
 
     paths = sys.argv[1:]
-    if True:
-        deroff_files(paths)
-    else:
-        import cProfile, profile, pstats
-
-        profile.run("deroff_files(paths)", "fooprof")
-        p = pstats.Stats("fooprof")
-        p.sort_stats("time").print_stats(100)
-        # p.sort_stats('calls').print_callers(.5, 'startswith')
+    deroff_files(paths)
+    #    import cProfile, profile, pstats
+    #    profile.run("deroff_files(paths)", "fooprof")
+    #    p = pstats.Stats("fooprof")
+    #    p.sort_stats("time").print_stats(100)
+    #    p.sort_stats('calls').print_callers(.5, 'startswith')

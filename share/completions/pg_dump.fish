@@ -3,13 +3,13 @@ complete -c pg_dump --no-files -a '(__fish_complete_pg_database)'
 # General options:
 complete -c pg_dump -s f -l file -r -d "Output file or directory name"
 complete -c pg_dump -s F -l format -x -a "p\t'Plain text' c\t'Custom format' d\t'Directory archive' t\t'Tar archive'" -d "Output file format"
-complete -c pg_dump -s j -l jobs -x -d "Use this many parallel jobs to dump"
+complete -c pg_dump -s j -l jobs -x -d "Number of parallel jobs to dump"
 complete -c pg_dump -s v -l verbose -d "Verbose mode"
-complete -c pg_dump -s V -l version -d "Output version information, then exit"
+complete -c pg_dump -s V -l version -d "Output version information"
 complete -c pg_dump -s Z -l compress -x -d "Compression level for compressed formats"
 complete -c pg_dump -l lock-wait-timeout -x -d "Fail after waiting TIMEOUT for a table lock"
 complete -c pg_dump -l no-sync -d "Do not wait for changes to be written safely to disk"
-complete -c pg_dump -s '?' -l help -d "Show this help, then exit"
+complete -c pg_dump -s '?' -l help -d "Show this help"
 
 # Options controlling the output content:
 complete -c pg_dump -s a -l data-only -d "Dump only the data, not the schema"
@@ -47,8 +47,8 @@ complete -c pg_dump -l quote-all-identifiers -d "Quote all identifiers, even if 
 complete -c pg_dump -l section -x -a "pre-data data post-data" -d "Dump named section (pre-data, data, or post-data)"
 complete -c pg_dump -l serializable-deferrable -d "Wait until the dump can run without anomalies"
 complete -c pg_dump -l snapshot -x -d "Use given snapshot for the dump"
-complete -c pg_dump -l strict-names -d "Require table and/or schema include patterns to match at least one entity each"
-complete -c pg_dump -l use-set-session-authorization -d "Use SET SESSION AUTHORIZATION commands instead of ALTER OWNER commands to set ownership"
+complete -c pg_dump -l strict-names -d "Require table/schema include patterns to match entities"
+complete -c pg_dump -l use-set-session-authorization -d "Use SET SESSION AUTHORIZATION instead of ALTER OWNER"
 
 # Connection options:
 complete -c pg_dump -s d -l dbname -x -a '(__fish_complete_pg_database)' -d "Database to dump"

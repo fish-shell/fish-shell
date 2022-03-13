@@ -20,9 +20,8 @@
 // The first fd in the "high range." fds below this are allowed to be used directly by users in
 // redirections, e.g. >&3
 const int k_first_high_fd = 10;
-
 static constexpr uint64_t kUsecPerMsec = 1000;
-static constexpr uint64_t kUsecPerSec = 1000 * kUsecPerMsec;
+static constexpr uint64_t kUsecPerSec [[gnu::unused]] = 1000 * kUsecPerMsec;
 
 void autoclose_fd_t::close() {
     if (fd_ < 0) return;
@@ -30,23 +29,85 @@ void autoclose_fd_t::close() {
     fd_ = -1;
 }
 
-select_wrapper_t::select_wrapper_t() { clear(); }
+fd_readable_set_t::fd_readable_set_t() { clear(); }
 
-void select_wrapper_t::clear() {
+#if FISH_READABLE_SET_USE_POLL
+
+// Convert from a usec to a poll-friendly msec.
+static int usec_to_poll_msec(uint64_t timeout_usec) {
+    uint64_t timeout_msec = timeout_usec / kUsecPerMsec;
+    // Round to nearest, down for halfway.
+    timeout_msec += ((timeout_usec % kUsecPerMsec) > kUsecPerMsec / 2) ? 1 : 0;
+    if (timeout_usec == fd_readable_set_t::kNoTimeout ||
+        timeout_msec > std::numeric_limits<int>::max()) {
+        // Negative values mean wait forever in poll-speak.
+        return -1;
+    }
+    return static_cast<int>(timeout_msec);
+}
+
+void fd_readable_set_t::clear() { pollfds_.clear(); }
+
+static inline bool pollfd_less_than(const pollfd &lhs, int rhs) { return lhs.fd < rhs; }
+
+void fd_readable_set_t::add(int fd) {
+    if (fd >= 0) {
+        auto where = std::lower_bound(pollfds_.begin(), pollfds_.end(), fd, pollfd_less_than);
+        if (where == pollfds_.end() || where->fd != fd) {
+            pollfds_.insert(where, pollfd{fd, POLLIN, 0});
+        }
+    }
+}
+
+bool fd_readable_set_t::test(int fd) const {
+    // If a pipe is widowed with no data, Linux sets POLLHUP but not POLLIN, so test for both.
+    auto where = std::lower_bound(pollfds_.begin(), pollfds_.end(), fd, pollfd_less_than);
+    return where != pollfds_.end() && where->fd == fd && (where->revents & (POLLIN | POLLHUP));
+}
+
+// static
+int fd_readable_set_t::do_poll(struct pollfd *fds, size_t count, uint64_t timeout_usec) {
+    assert(count <= std::numeric_limits<nfds_t>::max() && "count too big");
+    return ::poll(fds, static_cast<nfds_t>(count), usec_to_poll_msec(timeout_usec));
+}
+
+int fd_readable_set_t::check_readable(uint64_t timeout_usec) {
+    if (pollfds_.empty()) return 0;
+    return do_poll(&pollfds_[0], pollfds_.size(), timeout_usec);
+}
+
+// static
+bool fd_readable_set_t::is_fd_readable(int fd, uint64_t timeout_usec) {
+    if (fd < 0) return false;
+    struct pollfd pfd {
+        fd, POLLIN, 0
+    };
+    int ret = fd_readable_set_t::do_poll(&pfd, 1, timeout_usec);
+    return ret > 0 && (pfd.revents & POLLIN);
+}
+
+#else
+// Implementation based on select().
+
+void fd_readable_set_t::clear() {
     FD_ZERO(&fdset_);
     nfds_ = 0;
 }
 
-void select_wrapper_t::add(int fd) {
+void fd_readable_set_t::add(int fd) {
+    if (fd >= FD_SETSIZE) {
+        FLOGF(error, "fd %d too large for select()", fd);
+        return;
+    }
     if (fd >= 0) {
         FD_SET(fd, &fdset_);
         nfds_ = std::max(nfds_, fd + 1);
     }
 }
 
-bool select_wrapper_t::test(int fd) const { return fd >= 0 && FD_ISSET(fd, &fdset_); }
+bool fd_readable_set_t::test(int fd) const { return fd >= 0 && FD_ISSET(fd, &fdset_); }
 
-int select_wrapper_t::select(uint64_t timeout_usec) {
+int fd_readable_set_t::check_readable(uint64_t timeout_usec) {
     if (timeout_usec == kNoTimeout) {
         return ::select(nfds_, &fdset_, nullptr, nullptr, nullptr);
     } else {
@@ -58,16 +119,18 @@ int select_wrapper_t::select(uint64_t timeout_usec) {
 }
 
 // static
-bool select_wrapper_t::is_fd_readable(int fd, uint64_t timeout_usec) {
+bool fd_readable_set_t::is_fd_readable(int fd, uint64_t timeout_usec) {
     if (fd < 0) return false;
-    select_wrapper_t s;
+    fd_readable_set_t s;
     s.add(fd);
-    int res = s.select(timeout_usec);
+    int res = s.check_readable(timeout_usec);
     return res > 0 && s.test(fd);
 }
 
+#endif  // not FISH_READABLE_SET_USE_POLL
+
 // static
-bool select_wrapper_t::poll_fd_readable(int fd) { return is_fd_readable(fd, 0); }
+bool fd_readable_set_t::poll_fd_readable(int fd) { return is_fd_readable(fd, 0); }
 
 #ifdef HAVE_EVENTFD
 // Note we do not want to use EFD_SEMAPHORE because we are binary (not counting) semaphore.

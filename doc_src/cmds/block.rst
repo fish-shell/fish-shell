@@ -6,10 +6,10 @@ block - temporarily block delivery of events
 Synopsis
 --------
 
-::
+.. synopsis::
 
-    block [OPTIONS...]
-
+    block [(--local | --global)]
+    block --erase
 
 Description
 -----------
@@ -22,18 +22,24 @@ The block can be removed. Any events which triggered while the block was in plac
 
 Event blocks should not be confused with code blocks, which are created with ``begin``, ``if``, ``while`` or ``for``
 
-The following parameters are available:
+Without options, the ``block`` command acts with function scope.
 
-- ``-l`` or ``--local`` Release the block automatically at the end of the current innermost code block scope
+The following options are available:
 
-- ``-g`` or ``--global`` Never automatically release the lock
+**-l** or **--local**
+    Release the block automatically at the end of the current innermost code block scope.
 
-- ``-e`` or ``--erase`` Release global block
+**-g** or **--global**
+    Never automatically release the lock.
 
+**-e** or **--erase**
+    Release global block.
+
+**-h** or **--help**
+    Displays help about using this command.
 
 Example
 -------
-
 ::
 
     # Create a function that listens for events
@@ -48,8 +54,7 @@ Example
     block -e
     # 'foo fired' will now be printed
 
-
 Notes
 -----
 
-Note that events are only received from the current fish process as there is no way to send events from one fish process to another.
+Events are only received from the current fish process as there is no way to send events from one fish process to another (yet).

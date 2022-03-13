@@ -17,7 +17,7 @@ fish_color_match 0AA
 fish_color_normal B2B2B2
 fish_color_operator 0AA
 fish_color_param ccccff
-fish_color_quote F50
+fish_color_quote 9ce781
 fish_color_redirection FFF
 fish_color_search_match --background=533
 fish_color_selection --background=B218B2

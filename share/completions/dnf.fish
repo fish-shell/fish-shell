@@ -160,6 +160,22 @@ complete -c dnf -n "__fish_seen_subcommand_from module; and __fish_seen_subcomma
 complete -c dnf -n "__fish_seen_subcommand_from module" -xa info -d "Print module information"
 complete -c dnf -n "__fish_seen_subcommand_from module; and __fish_seen_subcommand_from info" -l profile -d "Print module profiles information"
 
+# Offline-distrosync
+complete -c dnf -n __fish_use_subcommand -xa offline-distrosync -d "Synchronizes packages to match the latest"
+complete -c dnf -n "__fish_seen_subcommand_from offline-distrosync" -xa download -d "Download updates for offline upgrade"
+complete -c dnf -n "__fish_seen_subcommand_from offline-distrosync" -xa clean -d "Remove cached packages"
+complete -c dnf -n "__fish_seen_subcommand_from offline-distrosync" -xa reboot -d "Reboot and install packages"
+complete -c dnf -n "__fish_seen_subcommand_from offline-distrosync" -xa upgrade -d "Install cached packages without reboot"
+complete -c dnf -n "__fish_seen_subcommand_from offline-distrosync" -xa log -d "Show logs of upgrade attempts"
+
+# Offline-upgrade
+complete -c dnf -n __fish_use_subcommand -xa offline-upgrade -d "Prepare offline upgrade of the system"
+complete -c dnf -n "__fish_seen_subcommand_from offline-upgrade" -xa download -d "Download updates for offline upgrade"
+complete -c dnf -n "__fish_seen_subcommand_from offline-upgrade" -xa clean -d "Remove cached packages"
+complete -c dnf -n "__fish_seen_subcommand_from offline-upgrade" -xa reboot -d "Reboot and install packages"
+complete -c dnf -n "__fish_seen_subcommand_from offline-upgrade" -xa upgrade -d "Install cached packages without reboot"
+complete -c dnf -n "__fish_seen_subcommand_from offline-upgrade" -xa log -d "Show logs of upgrade attempts"
+
 # Provides
 complete -c dnf -n __fish_use_subcommand -xa provides -d "Finds packages providing the given command"
 
@@ -216,6 +232,14 @@ complete -c dnf -n "__fish_seen_subcommand_from repoquery" -l whatsupplements
 complete -c dnf -n "__fish_seen_subcommand_from repoquery" -l alldeps
 complete -c dnf -n "__fish_seen_subcommand_from repoquery" -l exactdeps
 complete -c dnf -n "__fish_seen_subcommand_from repoquery" -l srpm
+
+# System-upgrade
+complete -c dnf -n __fish_use_subcommand -xa system-upgrade -d "Prepare major version upgrade of the system"
+complete -c dnf -n "__fish_seen_subcommand_from system-upgrade" -xa download -d "Download updates for offline upgrade"
+complete -c dnf -n "__fish_seen_subcommand_from system-upgrade" -xa clean -d "Remove cached packages"
+complete -c dnf -n "__fish_seen_subcommand_from system-upgrade" -xa reboot -d "Reboot and install packages"
+complete -c dnf -n "__fish_seen_subcommand_from system-upgrade" -xa upgrade -d "Install cached packages without reboot"
+complete -c dnf -n "__fish_seen_subcommand_from system-upgrade" -xa log -d "Show logs of upgrade attempts"
 
 # Query options
 complete -c dnf -n "__fish_seen_subcommand_from repoquery" -s i -l info -d "Show detailed information about the package"

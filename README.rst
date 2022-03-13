@@ -48,8 +48,8 @@ and can be installed using the following commands:
 ::
 
    sudo apt-add-repository ppa:fish-shell/release-3
-   sudo apt-get update
-   sudo apt-get install fish
+   sudo apt update
+   sudo apt install fish
 
 Instructions for other distributions may be found at
 `fishshell.com <https://fishshell.com>`__.
@@ -212,7 +212,7 @@ On Debian or Ubuntu you want:
 
 ::
 
-   sudo apt-get install build-essential cmake ncurses-dev libncurses5-dev libpcre2-dev gettext
+   sudo apt install build-essential cmake ncurses-dev libncurses5-dev libpcre2-dev gettext
 
 On RedHat, CentOS, or Amazon EC2:
 
@@ -231,15 +231,12 @@ Contact Us
 Questions, comments, rants and raves can be posted to the official fish
 mailing list at https://lists.sourceforge.net/lists/listinfo/fish-users
 or join us on our `gitter.im
-channel <https://gitter.im/fish-shell/fish-shell>`__. Or use the `fish
-tag on
-Stackoverflow <https://stackoverflow.com/questions/tagged/fish>`__ for
-questions related to fish script and the `fish tag on
-Superuser <https://superuser.com/questions/tagged/fish>`__ for all other
-questions (e.g., customizing colors, changing key bindings).
+channel <https://gitter.im/fish-shell/fish-shell>`__. Or use the `fish tag
+on Unix & Linux Stackexchange <https://unix.stackexchange.com/questions/tagged/fish>`__.
+There is also a fish tag on Stackoverflow, but it is typically a poor fit.
 
 Found a bug? Have an awesome idea? Please `open an
 issue <https://github.com/fish-shell/fish-shell/issues/new>`__.
 
-.. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/C/C++%20CI/badge.svg
+.. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/make%20test/badge.svg
    :target: https://github.com/fish-shell/fish-shell/actions

@@ -6,29 +6,33 @@ random - generate random number
 Synopsis
 --------
 
-::
+.. synopsis::
 
     random
     random SEED
     random START END
     random START STEP END
-    random choice [ITEMS...]
+    random choice [ITEMS ...]
 
 Description
 -----------
 
 ``random`` generates a pseudo-random integer from a uniform distribution. The
 range (inclusive) depends on the arguments.
+
 No arguments indicate a range of 0 to 32767 (inclusive).
 
 If one argument is specified, the internal engine will be seeded with the
 argument for future invocations of ``random`` and no output will be produced.
 
-Two arguments indicate a range from START to END (both START and END included).
+Two arguments indicate a range from *START* to *END* (both *START* and *END* included).
 
-Three arguments indicate a range from START to END with a spacing of STEP
+Three arguments indicate a range from *START* to *END* with a spacing of *STEP*
 between possible outputs.
+
 ``random choice`` will select one random item from the succeeding arguments.
+
+The **-h** or **--help** option displays help about using this command.
 
 Note that seeding the engine will NOT give the same result across different
 systems.

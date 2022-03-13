@@ -126,9 +126,23 @@ not math 'sin()'
 # CHECKERR: 'sin()'
 # CHECKERR:      ^
 not math '2 + 2 4'
-# CHECKERR: math: Error: Too many arguments
+# CHECKERR: math: Error: Missing operator
 # CHECKERR: '2 + 2 4'
-# CHECKERR:        ^
+# This regex to check whitespace - the error appears between the second 2 and the 4!
+# (right after the 2)
+# CHECKERR: {{^}}      ^
+not math '(1 2)'
+# CHECKERR: math: Error: Missing operator
+# CHECKERR: '(1 2)'
+# CHECKERR:    ^
+not math '(1 pi)'
+# CHECKERR: math: Error: Missing operator
+# CHECKERR: '(1 pi)'
+# CHECKERR:    ^
+not math '(1 pow 1,2)'
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: '(1 pow 1,2)'
+# CHECKERR:       ^
 not math
 # CHECKERR: math: expected >= 1 arguments; got 0
 not math -s 12
@@ -181,6 +195,11 @@ math 'log(16'
 # CHECKERR: math: Error: Missing closing parenthesis
 # CHECKERR: 'log(16'
 # CHECKERR:       ^
+
+math '(2'
+# CHECKERR: math: Error: Missing closing parenthesis
+# CHECKERR: '(2'
+# CHECKERR:   ^
 
 math --base=16 255 / 15
 # CHECK: 0x11

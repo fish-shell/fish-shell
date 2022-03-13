@@ -15,7 +15,8 @@ else # OS X
     complete -c cat -s e -d "Show unprintables, end lines with \$"
     complete -c cat -s n -d "Enumerate lines"
     complete -c cat -s s -d "Squeeze away >1 blank lines"
-    complete -c cat -s t -d "Show unprintables; tab as '^I'"
+    complete -c cat -s t -d "Show unprintables; tab as ^I"
     complete -c cat -s u -d "Disable output buffering"
     complete -c cat -s v -d "Escape non-printing chars"
+    complete -c cat -s l -d "Set/block on F_SETLKW stdout lock"
 end

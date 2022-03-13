@@ -115,7 +115,14 @@ check_struct_has_member("struct stat" st_mtim.tv_nsec "sys/stat.h" HAVE_STRUCT_S
     LANGUAGE CXX)
 check_include_file_cxx(sys/ioctl.h HAVE_SYS_IOCTL_H)
 check_include_file_cxx(sys/select.h HAVE_SYS_SELECT_H)
+
+# glibc 2.30 deprecated <sys/sysctl.h> because that's what glibc does.
+# Checking for that here rather than hardcoding a check on the glibc
+# version in the C++ sources at point of use makes more sense.
+SET(OLD_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 check_include_files("sys/types.h;sys/sysctl.h" HAVE_SYS_SYSCTL_H)
+SET(CMAKE_C_FLAGS "${OLD_CMAKE_C_FLAGS}")
 
 check_cxx_symbol_exists(eventfd sys/eventfd.h HAVE_EVENTFD)
 check_cxx_symbol_exists(pipe2 unistd.h HAVE_PIPE2)

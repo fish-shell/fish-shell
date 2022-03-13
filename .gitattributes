@@ -21,11 +21,13 @@
 /.github/* export-ignore
 /.builds export-ignore
 /.builds/* export-ignore
-/.travis.yml export-ignore
 
 # for linguist; let github identify our project as C++ instead of C due to pcre2
-pcre2/* linguist-vendored
+pcre2/** linguist-vendored
 angular.js linguist-vendored
-doc_src/* linguist-documentation
+angular-*.js linguist-vendored
+doc_src/** linguist-documentation
 *.fish linguist-language=fish
 src/*.h linguist-language=c++
+src/builtins/*.h linguist-language=c++
+share/completions/*.fish linguist-documentation

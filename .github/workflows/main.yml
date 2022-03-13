@@ -1,9 +1,10 @@
-name: Test
+name: make test
 
 on: [push, pull_request]
 
 env:
   CTEST_PARALLEL_LEVEL: "1"
+  CMAKE_BUILD_PARALLEL_LEVEL: "4"
 
 jobs:
   ubuntu:

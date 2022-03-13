@@ -6,7 +6,7 @@ dirh - print directory history
 Synopsis
 --------
 
-::
+.. synopsis::
 
     dirh
 

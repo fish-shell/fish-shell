@@ -635,6 +635,34 @@ end
 #CHECK: $var6[1]: |ghi|
 #CHECK: $var6[2]: |jkl|
 
+# `and` creates no new scope on its own
+true; and set -l var7a 89 179
+set -q var7a
+echo $status
+#CHECK: 0
+
+# `begin` of an `and` creates a new scope
+true; and begin
+    set -l var7b 359 719
+end
+set -q var7b
+echo $status
+#CHECK: 1
+
+# `or` creates no new scope on its own
+false; or set -l var8a 1439 2879
+set -q var8a
+echo $status
+#CHECK: 0
+
+# `begin` of an `or` creates a new scope
+false; or begin
+    set -l var8b 9091 9901
+end
+set -q var8b
+echo $status
+#CHECK: 1
+
 # Exporting works
 set -x TESTVAR0
 set -x TESTVAR1 a
@@ -839,6 +867,29 @@ function erase-funcvar
 end
 
 erase-funcvar
+
+set -f foo
+set -l banana
+set -g global
+begin
+    set -qf foo
+    and echo foo is function scoped
+    # CHECK: foo is function scoped
+
+    set -l localvar414
+    set -qf localvar414
+    or echo localvar414 is not function scoped
+    # CHECK: localvar414 is not function scoped
+
+    set -qf banana
+    and echo banana is function scoped
+    # CHECK: banana is function scoped
+
+    set -l global
+    set -qf global
+    or echo global is not function scoped
+    # CHECK: global is not function scoped
+end
 
 set --query $this_is_not_set
 echo $status

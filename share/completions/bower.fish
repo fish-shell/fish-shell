@@ -64,7 +64,7 @@ for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' <bower.json 2
     jq -r '.dependencies | to_entries[] | .key' bower.json
 end
 
-complete -c bower -n "fish_is_nth_token 1" -x -a '(__bower_cmds)'
+complete -c bower -n "__fish_is_nth_token 1" -x -a '(__bower_cmds)'
 complete -c bower -n __fish_should_complete_switches -x -a '(__bower_args)'
 complete -c bower -n "__fish_seen_subcommand_from install" -x -a '(__bower_matching_pkgs)'
 complete -c bower -n "__fish_seen_subcommand_from uninstall" -x -a '(__bower_list_installed)'

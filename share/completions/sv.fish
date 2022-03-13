@@ -10,15 +10,24 @@ set -l commands \
     shutdown force-stop force-reload force-restart force-shutdown \
     try-restart check
 
-
 function __fish_complete_sv_list_services
-    for dir in $SVDIR /run/runit/service/ /etc/runit/current /etc/runit/runsvdir/
-        test -d $dir
-        and break
+    set -l svdir
+    for candidate_svdir in \
+        "$SVDIR" \
+        /run/runit/runsvdir/current \
+        /run/runit/service \
+        /etc/services \
+        /services
+        if test -d $candidate_svdir
+            set svdir $candidate_svdir
+            break
+        end
     end
-    set -l services (string match -r '[^/]*$' $dir/*)
-    set -l out (sv status $services 2>/dev/null)
-    and string replace -r "^(\w+: )(.*?):" '$2\t$1$2:' $out
+    set -q svdir[1]; or return
+    set -l services (command ls $svdir)
+    set -l sv_status (sv status $services 2>/dev/null |
+                      string replace -ar ';.*$' '')
+    and string replace -r "^(\w+: )(.*?):" '$2\t$1' $sv_status
     or printf "%s\n" $services
 end
 

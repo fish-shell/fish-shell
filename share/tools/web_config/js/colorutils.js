@@ -85,21 +85,21 @@ function adjust_lightness(color_str, func) {
     if (color_str == 'white') color_str = 'c0c0c0';
 
 
-    rgb = parseInt(color_str, 16)
-    r = (rgb >> 16) & 0xFF
-    g = (rgb >> 8) & 0xFF
-    b = (rgb >> 0) & 0xFF
+    var rgb = parseInt(color_str, 16)
+    var r = (rgb >> 16) & 0xFF
+    var g = (rgb >> 8) & 0xFF
+    var b = (rgb >> 0) & 0xFF
 
-    hsl = rgb_to_hsl(r, g, b)
-    new_lightness = func(hsl[2])
+    var hsl = rgb_to_hsl(r, g, b)
+    var new_lightness = func(hsl[2])
     function to_int_str(val) {
-        str = Math.round(val).toString(16)
+        var str = Math.round(val).toString(16)
         while (str.length < 2)
             str = '0' + str
         return str
     }
 
-    new_rgb = hsl_to_rgb(hsl[0], hsl[1], new_lightness)
+    var new_rgb = hsl_to_rgb(hsl[0], hsl[1], new_lightness)
     return to_int_str(new_rgb[0]) + to_int_str(new_rgb[1]) + to_int_str(new_rgb[2])
 }
 
@@ -218,7 +218,7 @@ function interpret_color(str) {
     if (str == 'brpurple') return '#ff00ff';
     if (str == 'brcyan') return '#00ffff';
     if (str == 'brwhite') return '#ffffff';
-    if (str == 'normal') return '';
+    if (str == 'normal') return '#ffffff';
     if (str == 'reset') return '';
     return '#' + str
 }

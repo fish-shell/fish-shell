@@ -25,10 +25,7 @@
 #include "global_safety.h"
 #include "wutil.h"
 
-// We just define a thread limit of 1024.
-// On all systems I've seen the limit is higher,
-// but on some (like linux with glibc) the setting for _POSIX_THREAD_THREADS_MAX is 64,
-// which is too low, even tho the system can handle more than 64 threads.
+/// We just define a thread limit of 1024.
 #define IO_MAX_THREADS 1024
 
 // iothread has a thread pool. Sometimes there's no work to do, but extant threads wait around for a
@@ -221,7 +218,7 @@ int thread_pool_t::perform(void_function_t &&func, bool cant_wait) {
 
     // Kick off the thread if we decided to do so.
     if (wakeup_thread) {
-        FLOGF(iothread, L"notifying a thread", this_thread());
+        FLOGF(iothread, L"notifying thread: %p", this_thread());
         pool.queue_cond.notify_one();
     }
     if (spawn_new_thread) {
@@ -247,7 +244,7 @@ void iothread_perform_impl(void_function_t &&func, bool cant_wait) {
 int iothread_port() { return get_notify_signaller().read_fd(); }
 
 void iothread_service_main_with_timeout(uint64_t timeout_usec) {
-    if (select_wrapper_t::is_fd_readable(iothread_port(), timeout_usec)) {
+    if (fd_readable_set_t::is_fd_readable(iothread_port(), timeout_usec)) {
         iothread_service_main();
     }
 }
@@ -356,14 +353,25 @@ bool make_detached_pthread(void *(*func)(void *), void *param) {
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
     // extant requests. So we can ignore failure with some confidence.
-    pthread_t thread = 0;
-    int err = pthread_create(&thread, nullptr, func, param);
+    pthread_t thread;
+    pthread_attr_t thread_attr;
+    DIE_ON_FAILURE(pthread_attr_init(&thread_attr));
+
+    int err = pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
     if (err == 0) {
-        // Success, return the thread.
-        FLOGF(iothread, "pthread %p spawned", (intptr_t)thread);
-        DIE_ON_FAILURE(pthread_detach(thread));
+        err = pthread_create(&thread, &thread_attr, func, param);
+        if (err == 0) {
+            FLOGF(iothread, "pthread %d spawned", thread);
+        } else {
+            perror("pthread_create");
+        }
+        int err2 = pthread_attr_destroy(&thread_attr);
+        if (err2 != 0) {
+            perror("pthread_attr_destroy");
+            err = err2;
+        }
     } else {
-        perror("pthread_create");
+        perror("pthread_attr_setdetachstate");
     }
     // Restore our sigmask.
     DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, nullptr));

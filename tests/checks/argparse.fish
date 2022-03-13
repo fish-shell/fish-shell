@@ -498,3 +498,14 @@ begin
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
 end
+
+begin
+    argparse --ignore-unknown h i -- -hoa -oia
+    echo -- $argv
+    #CHECK: -hoa -oia
+    echo $_flag_h
+    #CHECK: -h
+    set -q _flag_i
+    or echo No flag I
+    #CHECK: No flag I
+end

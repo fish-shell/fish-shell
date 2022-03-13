@@ -6,6 +6,10 @@ fish_vcs_prompt - output version control system information for use in a prompt
 Synopsis
 --------
 
+.. synopsis::
+
+    fish_vcs_prompt
+
 ::
 
      function fish_prompt
@@ -25,7 +29,7 @@ It calls out to VCS-specific functions. The currently supported systems are:
 
 If a VCS isn't installed, the respective function does nothing.
 
-The svn prompt is disabled by default because it's slow on large svn repositories. To enable it, modify fish_vcs_prompt to uncomment it. See :ref:`funced <cmd-funced>`.
+The Subversion prompt is disabled by default, because it's slow on large repositories. To enable it, modify ``fish_vcs_prompt`` to uncomment it. See :ref:`funced <cmd-funced>`.
 
 For more information, see the documentation for each of the functions above.
 

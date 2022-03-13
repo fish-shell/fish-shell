@@ -11,17 +11,30 @@ html {
 
 body {
     background: linear-gradient(to bottom, #a7cfdf 0%,#23538a 100%);
+    /* Pick a font.
+       sans-serif is the Browser default. This is great because the user could change it.
+       Unfortunately the defaults are decades old and e.g. on Windows still use Arial in Firefox and Edge,
+       and this seems unlikely to change.
+       So we use system-ui, which is "the system's interface font".
+       Unfortunately on Windows *that* depends on the locale, and e.g. in Chinese it apparently
+       picks a font that is okay at chinese characters but fairly bad at latin ones.
+       So we prefer the standard Windows font Segoe.
+       If that's installed anywhere else that's unfortunate but not horrible because it's an okay font.
+
+       See e.g. https://github.com/twbs/bootstrap/issues/22328
+    */
+    font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 div#fmain {
     color: #222;
-    padding: 10px 40px 10px;
+    padding: 1em 2em;
     background-color: #EEEEFA;
     border-radius: 14px;
     position: relative;
-    margin: 15px auto 15px;
+    margin: 1em auto 1em;
     box-shadow: 0 0 5px 1px #333;
-    width: 85%;
+    width: 90%;
     /* This is super-cheesy, but 1270px is the maximum width of the sidebar, the content and the margins */
     max-width: 1270px;
 }
@@ -70,7 +83,7 @@ form.inline-search input[type="submit"] {
 div.sphinxsidebar {
     border-right: 1px solid #ccc;
     border-radius: 0px;
-    line-height: 150%;
+    line-height: 1em;
     font-size: smaller;
     margin-left: 0;
     float: left;
@@ -98,7 +111,7 @@ div.documentwrapper {
     float: none;
 }
 
-div.document, div.body {
+div.document, div.body, div.warning {
     background-color: inherit;
     color: inherit;
 }
@@ -112,6 +125,7 @@ div#searchbox {
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
     margin-top: 1em;
+    font-family: inherit;
 }
 
 div.sphinxsidebarwrapper > h3:first-child {
@@ -122,13 +136,14 @@ div.sphinxsidebarwrapper > ul > li > ul > li {
     margin-bottom: 0.4em;
 }
 
-ul li.toctree-l1 {
-    line-height: 170%;
+ul li, div.body li {
+    line-height: 2em;
 }
 
 form.inline-search input,
 div.sphinxsidebar input {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /* Inputs typically have different default fonts, remove that idea */
+    font-family: inherit;
     border: 1px solid #999999;
     font-size: smaller;
     border-radius: 3px;
@@ -144,13 +159,15 @@ div.body {
 }
 
 div.body p {
-    line-height: 170%;
+    line-height: 2em;
+    text-align: left;
 }
 
 div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
     margin: 0;
     border: 0;
     padding: 0.3em 0;
+    font-family: inherit;
 }
 
 div.body hr {
@@ -208,12 +225,38 @@ div.body a:hover {
     color: #00B0E4;
 }
 
-tr, code, pre {
+tr, pre {
     background-color: inherit;
 }
 
-tt, code, pre, dl > dt span ~ em, #synopsis p {
-    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
+code {
+    /* Make inline-code better visible */
+    background-color: rgba(20,20,80, .1);
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command {
+    /* Pick a monospace font.
+       ui-monospace is the monospace version of system-ui - the system's monospace font.
+       Unfortunately it's barely supported anywhere (at time of writing only Safari does!),
+       and because monospace has the same limitations as sans-serif - Browser defaults are awful -
+       we hardcode a list of normal monospace fonts.
+       SFMono is San Francisco, Apple's font. Menlo is an older Apple one.
+       Consolas is a Windows font.
+       Ubuntu is the ubuntu monospace version, Hack is the default KDE monospace font,
+       Liberation is an arial-like.
+
+       NOTE: Under no circumstances can "Source Code Pro" appear in this list for a while as it had massive bugs on macOS.
+       It would not appear at all when colored.
+       This is unfortunate because it's the default Gnome monospace font.
+       Instead we use Noto, which is a common monospace font that is often installed for emoji support.
+    */
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
+}
+
+#synopsis .line {
+    line-height: 1em;
 }
 
 pre, div[class*="highlight-"] {
@@ -237,8 +280,8 @@ table.docutils {
     border: 1px solid #ddd;
     min-width: 20%;
     border-radius: 3px;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 1em;
+    margin-bottom: 1em;
     /* Make table scrollable on overflow */
     display: block;
     overflow: auto;
@@ -268,7 +311,7 @@ table.footnote, table.footnote td {
 }
 
 div.footer {
-    line-height: 150%;
+    line-height: 1em;
     margin-top: -2em;
     text-align: right;
     width: auto;
@@ -291,10 +334,18 @@ div.footer {
     font-size: 12pt;
 }
 
+dl {
+    margin-bottom: 1em;
+}
+
 dl.envvar, dl.describe {
     font-size: 11pt;
-    font-weight: normal !important;
+    font-weight: normal;
 
+}
+
+div.sphinxsidebar ul {
+    margin: 1em 10px 1em 10px;
 }
 
 /* On screens that are less than 700px wide remove anything non-essential
@@ -426,11 +477,11 @@ div.body .internal.reference:link {
     }
 
     div.sphinxsidebar a, div.footer {
-        color: #CCC;
+        color: #DDD;
     }
 
-    div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3 {
-        color: #BBB;
+    div.sphinxsidebar h3 a, div.related a, div.sphinxsidebar h3, div.footer a {
+        color: #DDD;
     }
     .highlight {
         background: #000;
@@ -450,7 +501,7 @@ div.body .internal.reference:link {
     }
     input {
         background-color: #222;
-        color: #BBB;
+        color: #DDD;
     }
 
     dt:target, span.highlighted {
@@ -466,9 +517,6 @@ div.body .internal.reference:link {
     div.body a {
         color: #2092fa;
     }
-    div.footer a {
-        color: #BBB;
-    }
     
     /* Color based on the Name.Function (.nf) class from pygments.css. */
     .command { color: #008fd7 }
@@ -476,5 +524,9 @@ div.body .internal.reference:link {
     /* The table background on fishfish Beta r1 */
     th, dl.field-list > dt {
         background-color: #121;
+    }
+
+    code {
+        background-color: rgba(200, 200, 255, .1);
     }
 }

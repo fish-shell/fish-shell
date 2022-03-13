@@ -1220,6 +1220,8 @@ void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
         cursor_arr = this->desired.cursor;
     }
 
+    int full_line_count = this->desired.cursor.y + 1;
+
     // Now that we've output everything, set the cursor to the position that we saved in the loop
     // above.
     this->desired.cursor = cursor_arr;
@@ -1231,7 +1233,6 @@ void screen_t::write(const wcstring &left_prompt, const wcstring &right_prompt,
 
     // Re-render our completions page if necessary. Limit the term size of the pager to the true
     // term size, minus the number of lines consumed by our string.
-    int full_line_count = cursor_arr.y + 1;
     pager.set_term_size(termsize_t{std::max(1, curr_termsize.width),
                                    std::max(1, curr_termsize.height - full_line_count)});
     pager.update_rendering(&page_rendering);

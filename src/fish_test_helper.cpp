@@ -156,6 +156,22 @@ static void sigkill_self() {
     abort();
 }
 
+static void stdin_make_nonblocking() {
+    const int fd = STDIN_FILENO;
+    // Catch SIGCONT so pause() wakes us up.
+    signal(SIGCONT, [](int) {});
+
+    for (;;) {
+        int flags = fcntl(fd, F_GETFL, 0);
+        fprintf(stdout, "stdin was %sblocking\n", (flags & O_NONBLOCK) ? "non" : "");
+        if (fcntl(fd, F_SETFL, flags | O_NONBLOCK)) {
+            perror("fcntl");
+            exit(EXIT_FAILURE);
+        }
+        pause();
+    }
+}
+
 static void show_help();
 
 /// A thing that fish_test_helper can do.
@@ -188,6 +204,8 @@ static fth_command_t s_commands[] = {
      "Print to stdout the name(s) of ignored signals"},
     {"print_stop_cont", print_stop_cont, "Print when we get SIGTSTP and SIGCONT, exiting on input"},
     {"sigkill_self", sigkill_self, "Send SIGKILL to self"},
+    {"stdin_make_nonblocking", stdin_make_nonblocking,
+     "Print if stdin is blocking and then make it nonblocking"},
     {"help", show_help, "Print list of fish_test_helper commands"},
 };
 

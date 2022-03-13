@@ -53,7 +53,7 @@ function __fish_set_locale
     # NOTE: Slackware puts the locale in /etc/profile.d/lang.sh, which we can't use because it's a
     # full POSIX-shell script.
     set -l user_cfg_dir (set -q XDG_CONFIG_HOME; and echo $XDG_CONFIG_HOME; or echo ~/.config)
-    for f in $user_cfg_dir/locale.conf /etc/locale.conf /etc/env.d/02locale /etc/sysconfig/i18n
+    for f in $user_cfg_dir/locale.conf /etc/locale.conf /etc/env.d/02locale /etc/sysconfig/i18n /etc/default/locale
         if test -r $f
             while read -l kv
                 set kv (string split '=' -- $kv)

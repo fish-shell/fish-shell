@@ -110,5 +110,5 @@ maybe_t<int> builtin_command(parser_t &parser, io_streams_t &streams, const wcha
         }
     }
 
-    return found ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    return found ? STATUS_CMD_OK : STATUS_CMD_UNKNOWN;
 }

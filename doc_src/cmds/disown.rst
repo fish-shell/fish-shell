@@ -6,9 +6,9 @@ disown - remove a process from the list of jobs
 Synopsis
 --------
 
-::
+.. synopsis::
 
-    disown [ PID ... ]
+    disown [PID ...]
 
 Description
 -----------
@@ -22,6 +22,8 @@ If no process is specified, the most recently-used job is removed (like :ref:`bg
 If a job is stopped, it is sent a signal to continue running, and a warning is printed. It is not possible to use the :ref:`bg <cmd-bg>` builtin to continue a job once it has been disowned.
 
 ``disown`` returns 0 if all specified jobs were disowned successfully, and 1 if any problems were encountered.
+
+The **--help** or **-h** option displays help about using this command.
 
 Example
 -------

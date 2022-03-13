@@ -31,17 +31,10 @@ mkdir -p "$PKGDIR/build" "$PKGDIR/root" "$PKGDIR/intermediates" "$PKGDIR/dst"
 pkgbuild --scripts "$SRC_DIR/build_tools/osx_package_scripts" --root "$PKGDIR/root/" --identifier 'com.ridiculousfish.fish-shell-pkg' --version "$VERSION" "$PKGDIR/intermediates/fish.pkg"
 productbuild  --package-path "$PKGDIR/intermediates" --distribution "$SRC_DIR/build_tools/osx_distribution.xml" --resources "$SRC_DIR/build_tools/osx_package_resources/" "$OUTPUT_PATH/fish-$VERSION.pkg"
 
-# Here is the historical way to sign the installer package.
-# But when run on macOS 11.1, the resulting installers don't work on 10.11.
-# So we have our own script instead. See issue #7656.
-# Also see https://developer.apple.com/forums/thread/664842
-# If/when productsign is fixed to support 10.11, we can switch back to this.
-# MAC_PRODUCTSIGN_ID=${MAC_PRODUCTSIGN_ID:--}
-# productsign --sign "${MAC_PRODUCTSIGN_ID}" "$OUTPUT_PATH/fish-$VERSION.pkg" "$OUTPUT_PATH/fish-$VERSION-signed.pkg" && mv "$OUTPUT_PATH/fish-$VERSION-signed.pkg" "$OUTPUT_PATH/fish-$VERSION.pkg"
-
-"$SRC_DIR/build_tools/mac_sign_package.sh" "$OUTPUT_PATH/fish-$VERSION.pkg"
+MAC_PRODUCTSIGN_ID=${MAC_PRODUCTSIGN_ID:--}
+productsign --sign "${MAC_PRODUCTSIGN_ID}" "$OUTPUT_PATH/fish-$VERSION.pkg" "$OUTPUT_PATH/fish-$VERSION-signed.pkg" && mv "$OUTPUT_PATH/fish-$VERSION-signed.pkg" "$OUTPUT_PATH/fish-$VERSION.pkg"
 
 # Make the app
-{ cd "$PKGDIR/build" && make signed_fish_macapp && zip -r "$OUTPUT_PATH/fish-$VERSION.app.zip" fish.app; }
+{ cd "$PKGDIR/build" && make -j 12 signed_fish_macapp && zip -r "$OUTPUT_PATH/fish-$VERSION.app.zip" fish.app; }
 
 rm -r "$PKGDIR"

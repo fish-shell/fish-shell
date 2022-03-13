@@ -6,6 +6,7 @@ Terminal=true
 # Other uses would have to replace these with the correct path.
 Exec=fish
 Name=fish
+Comment=The user-friendly command line shell
 Icon=fish
 # "Shell" would be the proper category, but it's reserved so we can't use it.
 Categories=ConsoleOnly;System;

@@ -31,7 +31,7 @@ else # BSD/macOS
     set -l uname (uname -s)
     # Solaris:   cp [-R | r [H | L | P ]] [-fi ] [-p        ]
     # openbsd:   cp	[-R |   [H | L | P ]] [-fi ] [-pv       ]
-    # macos:     cp [-R |   [H | L | P ]] [-fin] [-pva   cX ] # -c: clone -X: copy xattrs
+    # macos:     cp [-R |   [H | L | P ]] [-fin] [-pvalxscX ] # -c: clone -X: copy xattrs
     # netbsd:    cp [-R |   [H | L | P ]] [-fi ] [-pval    N] # -l: hard link instead of copy -N: don't copy file flags
     # dragonfly: cp [-R |   [H | L | P ]] [-fin] [-pvalx    ] # -x: don't traverse mount points
     # freebsd:   cp	[-R |   [H | L | P ]] [-fin] [-pvalxs   ] # -s: symlink instead of copy
@@ -62,7 +62,6 @@ else # BSD/macOS
     if test "$uname" = Darwin
         complete -c cp -s c -d "Clone using clonefile(2)"
         complete -c cp -s X -d "Omit xattrs, resource forks"
-        exit 0
     end
     complete -c cp -s l -d "Hard link instead of copying"
     if test "$uname" = NetBSD
@@ -70,7 +69,7 @@ else # BSD/macOS
         exit 0
     end
     complete -c cp -s x -d "Don't traverse mount points"
-    if test "$uname" = FreeBSD
+    if test "$uname" = FreeBSD -o "$uname" = Darwin
         complete -c cp -s s -d "Symlink instead of copying"
     end
 end

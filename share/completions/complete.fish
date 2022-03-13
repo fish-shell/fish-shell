@@ -1,5 +1,6 @@
 # Completions for complete
 
+complete -c complete -xa '(__fish_complete_command)'
 complete -c complete -s c -l command -d "Command to add completion to" -xa '(__fish_complete_command)'
 complete -c complete -s p -l path -d "Path to add completion to" -r
 complete -c complete -s s -l short-option -d "POSIX-style short option to complete" -x

@@ -343,24 +343,6 @@ This also means that a few things are unsupportable:
 - Non-monospace fonts - there is *no way* for fish to figure out what width a specific character has as it has no influence on the terminal's font rendering.
 - Different widths for multiple ambiguous width characters - there is no way for fish to know which width you assign to each character.
 
-How do I make fish my default shell?
-------------------------------------
-If you installed fish manually (e.g. by compiling it, not by using a package manager), you first need to add fish to the list of shells by executing the following command (assuming you installed fish in /usr/local)::
-
-    echo /usr/local/bin/fish | sudo tee -a /etc/shells
-
-
-If you installed a prepackaged version of fish, the package manager should have already done this for you.
-
-In order to change your default shell, type::
-
-    chsh -s /usr/local/bin/fish
-
-
-You may need to adjust the above path to e.g. ``/usr/bin/fish``. Use the command ``which fish`` if you are unsure of where fish is installed.
-
-Unfortunately, there is no way to make the changes take effect at once. You will need to log out and back in again.
-
 .. _faq-uninstalling:
 
 Uninstalling fish

@@ -6,15 +6,16 @@ exec - execute command in current process
 Synopsis
 --------
 
-::
+.. synopsis::
 
-    exec COMMAND [OPTIONS...]
+    exec COMMAND
 
 Description
 -----------
 
 ``exec`` replaces the currently running shell with a new command. On successful completion, ``exec`` never returns. ``exec`` cannot be used inside a pipeline.
 
+The **--help** or **-h** option displays help about using this command.
 
 Example
 -------

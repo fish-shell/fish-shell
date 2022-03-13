@@ -33,6 +33,6 @@ else
     complete -c df -s a -d "Show all file systems"
     complete -c df -s g -d "Show sizes in gigabytes"
     complete -c df -s m -d "Show sizes in megabytes"
-    complete -c df -s n -d "Print out the previously obtained statistics from the file systems"
+    complete -c df -s n -d "Use cached statistics"
 
 end

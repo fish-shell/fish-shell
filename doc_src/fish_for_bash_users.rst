@@ -292,15 +292,15 @@ and a rough fish equivalent::
       set -l prompt_symbol '$'
       fish_is_root_user; and set prompt_symbol '#'
 
-      echo -s $hostname (set_color blue) (prompt_pwd) \
+      echo -s (prompt_hostname) (set_color blue) (prompt_pwd) \
       (set_color yellow) $prompt_symbol (set_color normal)
   end
 
 This shows a few differences:
 
 - Fish provides :ref:`set_color <cmd-set_color>` to color text. It can use the 16 named colors and also RGB sequences (so you could also use ``set_color 5555FF``)
-- Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is simply a function, so you can use variables like ``$hostname``.
-- Fish offers helper functions for adding things to the prompt, like :ref:`fish_vcs_prompt <cmd-fish_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn) and :ref:`prompt_pwd <cmd-prompt_pwd>` for showing a shortened $PWD (the user's home directory becomes ``~`` and any path component is shortened). 
+- Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is simply a function. To achieve the effect of ``\h``, fish provides helper functions like :ref:`prompt_hostname <cmd-prompt_hostname>`, which prints a shortened version of the hostname.
+- Fish offers other helper functions for adding things to the prompt, like :ref:`fish_vcs_prompt <cmd-fish_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn), and :ref:`prompt_pwd <cmd-prompt_pwd>` for showing a shortened ``$PWD`` (the user's home directory becomes ``~`` and any path component is shortened).
 
 The default prompt is reasonably full-featured and its code can be read via ``type fish_prompt``.
 

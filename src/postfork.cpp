@@ -350,7 +350,11 @@ maybe_t<pid_t> posix_spawner_t::spawn(const char *cmd, char *const argv[], char 
             std::vector<char *> argv2;
             char interp[] = _PATH_BSHELL;
             argv2.push_back(interp);
-            for (size_t i = 0; argv[i] != nullptr; i++) {
+            // The command to call should use the full path,
+            // not what we would pass as argv0.
+            std::string cmd2 = cmd;
+            argv2.push_back(&cmd2[0]);
+            for (size_t i = 1; argv[i] != nullptr; i++) {
                 argv2.push_back(argv[i]);
             }
             argv2.push_back(nullptr);
@@ -414,9 +418,27 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
 
         case ENOEXEC: {
             FLOGF_SAFE(exec,
-                       "The file '%s' is marked as an executable but could not be run by the "
+                       "Failed to execute process: '%s' the file could not be run by the "
                        "operating system.",
                        actual_cmd);
+            char interpreter_buff[128] = {};
+            const char *interpreter =
+                get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
+            if (!interpreter) {
+                // Paths ending in ".fish" need to start with a shebang
+                if (const char *lastdot = strrchr(actual_cmd, '.')) {
+                    if (0 == strcmp(lastdot, ".fish")) {
+                        FLOGF_SAFE(exec,
+                                   "fish scripts require an interpreter directive (must start with "
+                                   "'#!/path/to/fish').");
+                    }
+                }
+            } else {
+                // If the shebang line exists, we would get an ENOENT or similar instead,
+                // so I don't know how to reach this.
+                FLOGF_SAFE(exec, "Maybe the interpreter directive (#! line) is broken?",
+                           actual_cmd);
+            }
             break;
         }
 
@@ -429,11 +451,11 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             const char *interpreter =
                 get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
             if (interpreter && 0 != access(interpreter, X_OK)) {
-                // Detect windows line endings and complain specifically about them.
+                // Detect Windows line endings and complain specifically about them.
                 auto len = strlen(interpreter);
                 if (len && interpreter[len - 1] == '\r') {
                     FLOGF_SAFE(exec,
-                               "Failed to execute process '%s':  The file uses windows line "
+                               "Failed to execute process '%s':  The file uses Windows line "
                                "endings (\\r\\n). Run dos2unix or similar to fix it.",
                                actual_cmd);
                 } else {
@@ -539,6 +561,9 @@ static char *get_interpreter(const char *command, char *buffer, size_t buff_size
     if (std::strncmp(buffer, "#! /", const_strlen("#! /")) == 0) {
         return buffer + 3;
     } else if (std::strncmp(buffer, "#!/", const_strlen("#!/")) == 0) {
+        return buffer + 2;
+    } else if (std::strncmp(buffer, "#!", const_strlen("#!")) == 0) {
+        // Relative path, basically always an issue.
         return buffer + 2;
     }
     return nullptr;

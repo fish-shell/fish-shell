@@ -1,0 +1,7 @@
+#!/bin/sh -x
+
+echo "Removing any previous installation"
+pkgutil --pkg-info ${INSTALL_PKG_SESSION_ID} && pkgutil --only-files --files ${INSTALL_PKG_SESSION_ID} | while read installed
+     do rm -v ${DSTVOLUME}${installed}
+done
+echo "... removed"

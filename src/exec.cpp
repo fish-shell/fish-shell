@@ -150,6 +150,7 @@ bool is_thompson_shell_script(const char *path) {
     // This function never returns, so we take certain liberties with constness.
     auto envv = const_cast<char **>(cenvv);
     auto argv = const_cast<char **>(cargv);
+    auto cmd2 = const_cast<char *>(actual_cmd);
 
     execve(actual_cmd, argv, envv);
     err = errno;
@@ -169,6 +170,9 @@ bool is_thompson_shell_script(const char *path) {
             char interp[] = _PATH_BSHELL;
             argv2[0] = interp;
             std::copy_n(argv, 1 + nargs, &argv2[1]);  // +1 to copy terminating nullptr
+            // The command to call should use the full path,
+            // not what we would pass as argv0.
+            argv2[1] = cmd2;
             execve(_PATH_BSHELL, argv2, envv);
         }
     }
@@ -1096,6 +1100,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const io_chain_t &bl
         }
         procs_launched += 1;
     }
+    pipe_next_read.close();
 
     // If our pipeline was aborted before any process was successfully launched, then there is
     // nothing to reap, and we can perform an early return.

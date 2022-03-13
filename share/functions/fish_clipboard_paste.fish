@@ -7,7 +7,7 @@ function fish_clipboard_paste
     else if set -q DISPLAY; and type -q xsel
         set data (xsel --clipboard)
     else if set -q DISPLAY; and type -q xclip
-        set data (xclip -selection clipboard -o)
+        set data (xclip -selection clipboard -o 2>/dev/null)
     else if type -q powershell.exe
         set data (powershell.exe Get-Clipboard | string trim -r -c \r)
     end

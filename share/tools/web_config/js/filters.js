@@ -6,8 +6,8 @@ filters.filter("filterVariable", function() {
         if (variables == undefined) return result;
         if (query == null) { return variables };
 
-        for(i=0; i<variables.length; ++i) {
-            variable = variables[i];
+        for(var i=0; i<variables.length; ++i) {
+            var variable = variables[i];
             if (variable.name.indexOf(query) != -1 ||  variable.value.indexOf(query) != -1) {
                 result.push(variable);
             }
@@ -23,14 +23,14 @@ filters.filter("filterBinding", function() {
         if (bindings == undefined) return result;
         if (query == null) { return bindings};
 
-        for(i=0; i<bindings.length; ++i) {
-            binding = bindings[i];
+        for(var i=0; i<bindings.length; ++i) {
+            var binding = bindings[i];
             if (binding.command.indexOf(query) != -1) {
                 result.push(binding);
                 continue;
             }
-            varieties = binding.bindings;
-            for (j=0; j<varieties.length; ++j) {
+            var varieties = binding.bindings;
+            for (var j=0; j<varieties.length; ++j) {
                 if (varieties[j].readable_binding.toLowerCase().indexOf(query.toLowerCase()) != -1) {
                     result.push(binding);
                     break;
@@ -48,8 +48,8 @@ filters.filter("filterAbbreviations", function() {
         if (abbreviations == undefined) return result;
         if (query == null) { return abbreviations};
 
-        for(i=0; i<abbreviations.length; ++i) {
-            abbr = abbreviations[i];
+        for(var i=0; i<abbreviations.length; ++i) {
+            var abbr = abbreviations[i];
             if (abbr.word.toLowerCase().indexOf(query) != -1 || abbr.phrase.toLowerCase().indexOf(query.toLowerCase()) != -1) {
                 result.push(abbr);
             }

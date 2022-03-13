@@ -71,9 +71,12 @@ complete -c nmap -l max-os-tries -d 'Set the maximum number of OS detection trie
 # NMAP SCRIPTING ENGINE (NSE)
 complete -c nmap -o sC -d 'Scan: Scripts (default)'
 function __fish_complete_nmap_script
+    set -l now (date "+%s")
+
     # cache completion for 5 minutes (`nmap --script-help all` is slow)
-    if test -z "$__fish_nmap_script_completion_cache" -o (date -d "now - 5min" +"%s") -gt "$__fish_nmap_script_completion_cache_time"
-        set -g __fish_nmap_script_completion_cache_time (date +"%s")
+    # must use `math` because of differences between BSD and GNU `date`
+    if test -z "$__fish_nmap_script_completion_cache" -o (math $now - 5 "*" 60) -gt "$__fish_nmap_script_completion_cache_time"
+        set -g __fish_nmap_script_completion_cache_time $now
         set -g __fish_nmap_script_completion_cache ""
         set -l cmd
         for l in (nmap --script-help all 2> /dev/null | grep -A2 -B1 Categories: | grep -v '^\\(--\\|Categories:\\|https:\\)')

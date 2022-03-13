@@ -1,0 +1,1 @@
+starship completions fish | source

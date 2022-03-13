@@ -26,7 +26,6 @@
 #include "parse_util.h"
 #include "proc.h"
 #include "reader.h"
-#include "sanity.h"
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 

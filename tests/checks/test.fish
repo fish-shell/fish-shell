@@ -51,3 +51,11 @@ t 5,2
 # CHECKERR: ^
 # CHECKERR: in function 't' with arguments '5,2'
 # CHECKERR: called on line {{\d+}} of file {{.*}}test.fish
+
+test -x /usr/bin/go /usr/local/bin/go
+# CHECKERR: test: unexpected argument at index 3: '/usr/local/bin/go'
+# CHECKERR: -x /usr/bin/go /usr/local/bin/go
+# CHECKERR: {{               \^}}
+# CHECKERR: {{.*}}test.fish (line {{\d+}}):
+# CHECKERR: test -x /usr/bin/go /usr/local/bin/go
+# CHECKERR: ^

@@ -182,6 +182,16 @@ class token_stream_t {
 
         assert(token.length <= SOURCE_OFFSET_INVALID);
         result.source_length = static_cast<source_offset_t>(token.length);
+
+        if (token.error != tokenizer_error_t::none) {
+            auto subtoken_offset = static_cast<source_offset_t>(token.error_offset_within_token);
+            // Skip invalid tokens that have a zero length, especially if they are at EOF.
+            if (subtoken_offset < result.source_length) {
+                result.source_start += subtoken_offset;
+                result.source_length -= subtoken_offset;
+            }
+        }
+
         return result;
     }
 
@@ -1212,26 +1222,26 @@ struct populator_t {
         visit_stack_.pop_back();
     }
 
-    // Flags controlling parsing.
+    /// Flags controlling parsing.
     parse_tree_flags_t flags_{};
 
-    // Stream of tokens which we consume.
-    token_stream_t tokens_;
-
-    // The type which we are attempting to parse, typically job_list but may be
-    // freestanding_argument_list.
-    const type_t top_type_;
-
-    // If set, we are unwinding due to error recovery.
-    bool unwinding_{false};
-
-    // If set, we have encountered an error.
-    bool any_error_{false};
-
-    // Extra stuff like comment ranges.
+    /// Extra stuff like comment ranges.
     ast_t::extras_t extras_{};
 
-    // A stack containing the nodes whose fields we are visiting.
+    /// Stream of tokens which we consume.
+    token_stream_t tokens_;
+
+    /** The type which we are attempting to parse, typically job_list but may be
+        freestanding_argument_list. */
+    const type_t top_type_;
+
+    /// If set, we are unwinding due to error recovery.
+    bool unwinding_{false};
+
+    /// If set, we have encountered an error.
+    bool any_error_{false};
+
+    /// A stack containing the nodes whose fields we are visiting.
     std::vector<const node_t *> visit_stack_{};
 
     // If non-null, populate with errors.

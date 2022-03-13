@@ -501,7 +501,7 @@ void env_universal_t::initialize_at_path(callback_data_list_t &callbacks, wcstri
 void env_universal_t::initialize(callback_data_list_t &callbacks) {
     // Set do_flock to false immediately if the default variable path is on a remote filesystem.
     // See #7968.
-    if (path_get_config_is_remote() == 1) do_flock = false;
+    if (path_get_config_remoteness() == dir_remoteness_t::remote) do_flock = false;
     this->initialize_at_path(callbacks, default_vars_path(), true /* migrate legacy */);
 }
 
@@ -1459,7 +1459,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
                 // If we're no longer readable, go back to wait mode.
                 // Conversely, if we have been readable too long, perhaps some fish died while its
                 // written data was still on the pipe; drain some.
-                if (!select_wrapper_t::poll_fd_readable(pipe_fd.fd())) {
+                if (!fd_readable_set_t::poll_fd_readable(pipe_fd.fd())) {
                     set_state(waiting_for_readable);
                 } else if (get_time() >= state_start_usec + k_readable_too_long_duration_usec) {
                     drain_excess();
@@ -1479,7 +1479,7 @@ class universal_notifier_named_pipe_t final : public universal_notifier_t {
                 // change occurred with ours.
                 if (get_time() >= state_start_usec + k_flash_duration_usec) {
                     drain_written();
-                    if (!select_wrapper_t::poll_fd_readable(pipe_fd.fd())) {
+                    if (!fd_readable_set_t::poll_fd_readable(pipe_fd.fd())) {
                         set_state(waiting_for_readable);
                     } else {
                         set_state(polling_during_readable);

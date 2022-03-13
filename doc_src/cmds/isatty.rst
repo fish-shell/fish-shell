@@ -6,7 +6,7 @@ isatty - test if a file descriptor is a terminal
 Synopsis
 --------
 
-::
+.. synopsis::
 
     isatty [FILE DESCRIPTOR]
 
@@ -19,15 +19,12 @@ Description
 
 If the specified file descriptor is a terminal device, the exit status of the command is zero. Otherwise, the exit status is non-zero. No messages are printed to standard error.
 
+The **-h** or **--help** option displays help about using this command.
 
 Examples
 --------
 
-From an interactive shell, the commands below exit with a return value of zero:
-
-
-
-::
+From an interactive shell, the commands below exit with a return value of zero::
 
     isatty
     isatty stdout
@@ -35,11 +32,7 @@ From an interactive shell, the commands below exit with a return value of zero:
     echo | isatty 1
 
 
-And these will exit non-zero:
-
-
-
-::
+And these will exit non-zero::
 
     echo | isatty
     isatty 9

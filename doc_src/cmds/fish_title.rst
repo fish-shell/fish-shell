@@ -6,6 +6,10 @@ fish_title - define the terminal's title
 Synopsis
 --------
 
+.. synopsis::
+
+    fish_title
+
 ::
 
   function fish_title

@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <csignal>
 #include <cwchar>
 #include <functional>
@@ -71,7 +72,6 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "sanity.h"
 #include "screen.h"
 #include "signal.h"
 #include "termsize.h"
@@ -565,7 +565,7 @@ struct selection_data_t {
     bool operator!=(const selection_data_t &rhs) const { return !(*this == rhs); }
 };
 
-/// A value-type struct representing a layout from which we can call to s_write().
+/// A value-type struct representing a layout that can be rendered.
 /// The intent is that everything we send to the screen is encapsulated in this struct.
 struct layout_data_t {
     /// Text of the command line.
@@ -628,6 +628,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Whether this is the first prompt.
     bool first_prompt{true};
+
+    /// The time when the last flash() completed
+    std::chrono::time_point<std::chrono::steady_clock> last_flash;
 
     /// The representation of the current screen contents.
     screen_t screen;
@@ -1290,11 +1293,13 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     wcstring_list_t lst;
     (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
     if (!lst.empty()) {
-        std::fputws(L"\x1B]0;", stdout);
+        wcstring title_line = L"\x1B]0;";
         for (const auto &i : lst) {
-            std::fputws(i.c_str(), stdout);
+            title_line += i;
         }
-        ignore_result(write(STDOUT_FILENO, "\a", 1));
+        title_line += L"\a";
+        std::string narrow = wcs2string(title_line);
+        ignore_result(write_loop(STDOUT_FILENO, narrow.data(), narrow.size()));
     }
 
     outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
@@ -1463,6 +1468,8 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::backward_word:
         case rl::forward_bigword:
         case rl::backward_bigword:
+        case rl::nextd_or_forward_word:
+        case rl::prevd_or_backward_word:
         case rl::delete_char:
         case rl::backward_delete_char:
         case rl::kill_line:
@@ -1878,6 +1885,15 @@ void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
 
 /// Flash the screen. This function changes the color of the current line momentarily.
 void reader_data_t::flash() {
+    // Multiple flashes may be enqueued by keypress repeat events and can pile up to cause a
+    // significant delay in processing future input while all the flash() calls complete, as we
+    // effectively sleep for 100ms each go. See #8610.
+    auto now = std::chrono::steady_clock::now();
+    if ((now - last_flash) < std::chrono::milliseconds{50}) {
+        last_flash = now;
+        return;
+    }
+
     struct timespec pollint;
     editable_line_t *el = &command_line;
     layout_data_t data = make_layout_data();
@@ -1900,6 +1916,10 @@ void reader_data_t::flash() {
     data.colors = std::move(saved_colors);
     this->rendered_layout = std::move(data);
     paint_layout(L"unflash");
+
+    // Save the time we stopped flashing as the time of the most recent flash. We can't just
+    // increment the old `now` value because the sleep is non-deterministic.
+    last_flash = std::chrono::steady_clock::now();
 }
 
 maybe_t<source_range_t> reader_data_t::get_selection() const {
@@ -1912,7 +1932,7 @@ maybe_t<source_range_t> reader_data_t::get_selection() const {
 
 /// Characters that may not be part of a token that is to be replaced by a case insensitive
 /// completion.
-#define REPLACE_UNCLEAN L"$*?({})"
+const wchar_t *REPLACE_UNCLEAN = L"$*?({})";
 
 /// Check if the specified string can be replaced by a case insensitive completion with the
 /// specified flags.
@@ -2741,6 +2761,7 @@ void reader_data_t::update_commandline_state() const {
     snapshot->history = this->history;
     snapshot->selection = this->get_selection();
     snapshot->pager_mode = !this->current_page_rendering.screen_data.empty();
+    snapshot->pager_fully_disclosed = this->current_page_rendering.remaining_to_disclose == 0;
     snapshot->search_mode = this->history_search.active();
     snapshot->initialized = true;
 }
@@ -2933,7 +2954,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
         auto evt = inputter.read_char(allow_commands ? normal_handler : empty_handler);
-        if (!event_is_normal_char(evt) || !select_wrapper_t::poll_fd_readable(conf.in)) {
+        if (!event_is_normal_char(evt) || !fd_readable_set_t::poll_fd_readable(conf.in)) {
             event_needing_handling = std::move(evt);
             break;
         } else if (evt.input_style == char_input_style_t::notfirst && accumulated_chars.empty() &&
@@ -3510,7 +3531,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::backward_word:
-        case rl::backward_bigword: {
+        case rl::backward_bigword:
+        case rl::prevd_or_backward_word: {
+            if (c == rl::prevd_or_backward_word && command_line.empty()) {
+                auto last_statuses = parser().get_last_statuses();
+                (void)parser().eval(L"prevd", io_chain_t{});
+                parser().set_last_statuses(std::move(last_statuses));
+                force_exec_prompt_and_repaint = true;
+                inputter.queue_char(readline_cmd_t::repaint);
+                break;
+            }
+
             auto move_style =
                 (c == rl::backward_word) ? move_word_style_punctuation : move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
@@ -3518,7 +3549,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::forward_word:
-        case rl::forward_bigword: {
+        case rl::forward_bigword:
+        case rl::nextd_or_forward_word: {
+            if (c == rl::nextd_or_forward_word && command_line.empty()) {
+                auto last_statuses = parser().get_last_statuses();
+                (void)parser().eval(L"nextd", io_chain_t{});
+                parser().set_last_statuses(std::move(last_statuses));
+                force_exec_prompt_and_repaint = true;
+                inputter.queue_char(readline_cmd_t::repaint);
+                break;
+            }
+
             auto move_style =
                 (c == rl::forward_word) ? move_word_style_punctuation : move_word_style_whitespace;
             editable_line_t *el = active_edit_line();
@@ -4053,6 +4094,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                     clear_transient_edit();
                 }
                 history_search.reset();
+                command_line_has_transient_edit = false;
             }
 
             rls.last_cmd = readline_cmd;
@@ -4167,7 +4209,12 @@ bool reader_data_t::jump(jump_direction_t dir, jump_precision_t precision, edita
     return success;
 }
 
-maybe_t<wcstring> reader_readline(int nchars) { return current_data()->readline(nchars); }
+maybe_t<wcstring> reader_readline(int nchars) {
+    auto *data = current_data();
+    // Apply any outstanding commandline changes (#8633).
+    data->apply_commandline_state_changes();
+    return data->readline(nchars);
+}
 
 int reader_reading_interrupted() {
     int res = reader_test_and_clear_interrupted();

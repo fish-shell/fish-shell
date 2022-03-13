@@ -6,9 +6,9 @@ not - negate the exit status of a job
 Synopsis
 --------
 
-::
+.. synopsis::
 
-    not COMMAND [OPTIONS...]
+    not COMMAND [OPTIONS ...]
 
 
 Description
@@ -16,6 +16,7 @@ Description
 
 ``not`` negates the exit status of another command. If the exit status is zero, ``not`` returns 1. Otherwise, ``not`` returns 0.
 
+The **-h** or **--help** option displays help about using this command.
 
 Example
 -------

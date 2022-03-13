@@ -2194,13 +2194,16 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
 static void test_expand() {
     say(L"Testing parameter expansion");
     const expand_flags_t noflags{};
+    const wchar_t *const wnull = nullptr;
 
-    expand_test(L"foo", noflags, L"foo", 0, L"Strings do not expand to themselves");
-    expand_test(L"a{b,c,d}e", noflags, L"abe", L"ace", L"ade", 0, L"Bracket expansion is broken");
-    expand_test(L"a*", expand_flag::skip_wildcards, L"a*", 0, L"Cannot skip wildcard expansion");
-    expand_test(L"/bin/l\\0", expand_flag::for_completions, 0,
+    expand_test(L"foo", noflags, L"foo", wnull, L"Strings do not expand to themselves");
+    expand_test(L"a{b,c,d}e", noflags, L"abe", L"ace", L"ade", wnull,
+                L"Bracket expansion is broken");
+    expand_test(L"a*", expand_flag::skip_wildcards, L"a*", wnull,
+                L"Cannot skip wildcard expansion");
+    expand_test(L"/bin/l\\0", expand_flag::for_completions, wnull,
                 L"Failed to handle null escape in expansion");
-    expand_test(L"foo\\$bar", expand_flag::skip_variables, L"foo$bar", 0,
+    expand_test(L"foo\\$bar", expand_flag::skip_variables, L"foo$bar", wnull,
                 L"Failed to handle dollar sign in variable-skipping expansion");
 
     // bb
@@ -2237,7 +2240,6 @@ static void test_expand() {
     // This is checking that .* does NOT match . and ..
     // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
     // components (e.g. "./*" has to match the same as "*".
-    const wchar_t *const wnull = nullptr;
     expand_test(L"test/fish_expand_test/.*", noflags, L"test/fish_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
 
@@ -2985,7 +2987,7 @@ static void test_wcstod() {
     auto tod_test = [](const wchar_t *a, const char *b) {
         char *narrow_end = nullptr;
         wchar_t *wide_end = nullptr;
-        double val1 = std::wcstod(a, &wide_end);
+        double val1 = fish_wcstod(a, &wide_end);
         double val2 = strtod(b, &narrow_end);
         do_test((std::isnan(val1) && std::isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
         do_test(wide_end - a == narrow_end - b);
@@ -3145,6 +3147,29 @@ static std::shared_ptr<function_properties_t> make_test_func_props() {
     }
     assert(ret->func_node && "Unable to find block statement");
     return ret;
+}
+
+static void test_wildcards() {
+    say(L"Testing wildcards");
+    do_test(!wildcard_has(L""));
+    do_test(wildcard_has(L"*"));
+    do_test(!wildcard_has(L"\\*"));
+    do_test(!wildcard_has(L"\"*\""));
+
+    wcstring wc = L"foo*bar";
+    do_test(wildcard_has(wc) && !wildcard_has_internal(wc));
+    unescape_string_in_place(&wc, UNESCAPE_SPECIAL);
+    do_test(!wildcard_has(wc) && wildcard_has_internal(wc));
+
+    auto &feat = mutable_fish_features();
+    auto saved = feat.test(features_t::flag_t::qmark_noglob);
+    feat.set(features_t::flag_t::qmark_noglob, false);
+    do_test(wildcard_has(L"?"));
+    do_test(!wildcard_has(L"\\?"));
+    feat.set(features_t::flag_t::qmark_noglob, true);
+    do_test(!wildcard_has(L"?"));
+    do_test(!wildcard_has(L"\\?"));
+    feat.set(features_t::flag_t::qmark_noglob, saved);
 }
 
 static void test_complete() {
@@ -3549,7 +3574,8 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
 
 static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
                                            const environment_t &vars, long line) {
-    completion_list_t comps = complete(command, {}, operation_context_t{vars});
+    completion_list_t comps = complete(
+        command, {}, operation_context_t{parser_t::principal_parser().shared(), vars, no_cancel});
 
     bool expects_error = (expected == L"<error>");
 
@@ -3588,7 +3614,10 @@ static void test_autosuggest_suggest_special() {
     if (system("mkdir -p 'test/autosuggest_test/0foobar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
+#ifndef __CYGWIN__
+    // Cygwin disallows backslashes in filenames.
     if (system("mkdir -p 'test/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
+#endif
     if (system("mkdir -p test/autosuggest_test/4foo\\'bar")) {
         err(L"mkdir failed");  // a path with a single quote
     }
@@ -3629,11 +3658,13 @@ static void test_autosuggest_suggest_special() {
                                        __LINE__);
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/2", L"foo  bar/", vars,
                                        __LINE__);
+#ifndef __CYGWIN__
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/3", L"foo\\bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/3", L"foo\\bar/", vars,
                                        __LINE__);
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/3", L"foo\\bar/", vars,
                                        __LINE__);
+#endif
     perform_one_autosuggestion_cd_test(L"cd test/autosuggest_test/4", L"foo'bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/4", L"foo'bar/", vars,
                                        __LINE__);
@@ -3662,9 +3693,11 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd 2", L"foo  bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"2", L"foo  bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '2", L"foo  bar/", vars, __LINE__);
+#ifndef __CYGWIN__
     perform_one_autosuggestion_cd_test(L"cd 3", L"foo\\bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"3", L"foo\\bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '3", L"foo\\bar/", vars, __LINE__);
+#endif
     perform_one_autosuggestion_cd_test(L"cd 4", L"foo'bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd \"4", L"foo'bar/", vars, __LINE__);
     perform_one_autosuggestion_cd_test(L"cd '4", L"foo'bar/", vars, __LINE__);
@@ -4099,7 +4132,7 @@ bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
 
     bool result = false;
     int fd = note->notification_fd();
-    if (fd >= 0 && select_wrapper_t::poll_fd_readable(fd)) {
+    if (fd >= 0 && fd_readable_set_t::poll_fd_readable(fd)) {
         result = note->notification_fd_became_readable(fd);
     }
     return result;
@@ -4351,6 +4384,14 @@ void history_tests_t::test_history_races_pound_on_history(size_t item_count, siz
 void history_tests_t::test_history_races() {
     // This always fails under WSL
     if (is_windows_subsystem_for_linux()) {
+        return;
+    }
+
+    // This fails too often on Github Actions,
+    // leading to a bunch of spurious test failures on unrelated PRs.
+    // For now it's better to disable it.
+    // TODO: Figure out *why* it does that and fix it.
+    if (getenv("CI")) {
         return;
     }
 
@@ -5737,7 +5778,7 @@ static void test_string() {
         const wchar_t *argv[15];
         int expected_rc;
         const wchar_t *expected_out;
-    } string_tests[] = {
+    } string_tests[] = {  //
         {{L"string", L"escape", nullptr}, STATUS_CMD_ERROR, L""},
         {{L"string", L"escape", L"", nullptr}, STATUS_CMD_OK, L"''\n"},
         {{L"string", L"escape", L"-n", L"", nullptr}, STATUS_CMD_OK, L"\n"},
@@ -5769,7 +5810,9 @@ static void test_string() {
         {{L"string", L"length", L"", nullptr}, STATUS_CMD_ERROR, L"0\n"},
         {{L"string", L"length", L"", L"", L"", nullptr}, STATUS_CMD_ERROR, L"0\n0\n0\n"},
         {{L"string", L"length", L"a", nullptr}, STATUS_CMD_OK, L"1\n"},
+#if WCHAR_T_BITS > 16
         {{L"string", L"length", L"\U0002008A", nullptr}, STATUS_CMD_OK, L"1\n"},
+#endif
         {{L"string", L"length", L"um", L"dois", L"três", nullptr}, STATUS_CMD_OK, L"2\n4\n4\n"},
         {{L"string", L"length", L"um", L"dois", L"três", nullptr}, STATUS_CMD_OK, L"2\n4\n4\n"},
         {{L"string", L"length", L"-q", nullptr}, STATUS_CMD_ERROR, L""},
@@ -6041,7 +6084,8 @@ static void test_string() {
         {{L"string", L"trim", L"-c", L"\\/", L"/a\\"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"\\a/"}, STATUS_CMD_OK, L"a\n"},
-        {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"}};
+        {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"}
+    };
 
     for (const auto &t : string_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
@@ -6765,6 +6809,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("word_motion"), test_word_motion},
     {TEST_GROUP("is_potential_path"), test_is_potential_path},
     {TEST_GROUP("colors"), test_colors},
+    {TEST_GROUP("wildcard"), test_wildcards},
     {TEST_GROUP("complete"), test_complete},
     {TEST_GROUP("autoload"), test_autoload},
     {TEST_GROUP("input"), test_input},
@@ -6777,7 +6822,7 @@ static const test_t s_tests[]{
     {TEST_GROUP("universal"), test_universal_callbacks},
     {TEST_GROUP("universal"), test_universal_formats},
     {TEST_GROUP("universal"), test_universal_ok_to_save},
-    {TEST_GROUP("notifiers"), test_universal_notifiers},
+    {TEST_GROUP("universal"), test_universal_notifiers},
     {TEST_GROUP("wait_handles"), test_wait_handles},
     {TEST_GROUP("completion_insertions"), test_completion_insertions},
     {TEST_GROUP("autosuggestion_ignores"), test_autosuggestion_ignores},

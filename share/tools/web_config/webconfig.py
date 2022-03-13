@@ -67,7 +67,7 @@ def isMacOS10_12_5_OrLater():
     """ Return whether this system is macOS 10.12.5 or a later version. """
     try:
         return [int(x) for x in platform.mac_ver()[0].split(".")] >= [10, 12, 5]
-    except:
+    except ValueError:
         return False
 
 
@@ -93,7 +93,10 @@ def is_chromeos_garcon():
     # Linux filesystem. This uses Garcon, see for example
     # https://chromium.googlesource.com/chromiumos/platform2/+/master/vm_tools/garcon/#opening-urls
     # https://source.chromium.org/search?q=garcon-url-handler
-    return "garcon-url-handler" in webbrowser.get().name
+    try:
+        return "garcon-url-handler" in webbrowser.get().name
+    except AttributeError:
+        return False
 
 
 def run_fish_cmd(text):
@@ -191,30 +194,44 @@ def better_color(c1, c2):
 def parse_color(color_str):
     """A basic function to parse a color string, for example, 'red' '--bold'."""
     comps = color_str.split(" ")
-    color = "normal"
+    color = ""
     background_color = ""
     bold, underline, italics, dim, reverse = False, False, False, False, False
     for comp in comps:
         # Remove quotes
         comp = comp.strip("'\" ")
-        if comp == "--bold":
+        if comp == "--bold" or comp == "-o":
             bold = True
-        elif comp == "--underline":
+        elif comp == "--underline" or comp == "-u":
             underline = True
-        elif comp == "--italics":
+        elif comp == "--italics" or comp == "-i":
             italics = True
-        elif comp == "--dim":
+        elif comp == "--dim" or comp == "-d":
             dim = True
-        elif comp == "--reverse":
+        elif comp == "--reverse" or comp == "-r":
             reverse = True
-        elif comp.startswith("--background="):
+        elif comp.startswith("--background"):
             # Background color
-            background_color = better_color(
-                background_color, parse_one_color(comp[len("--background=") :])
-            )
+            c = comp[len("--background=") :]
+            parsed_c = parse_one_color(c)
+            # We prefer the unparsed version - if it says "brgreen", we use brgreen,
+            # instead of 00ff00
+            if better_color(background_color, parsed_c) == parsed_c:
+                background_color = c
+        elif comp.startswith("-b"):
+            # Background color in short.
+            skip = len("-b")
+            if comp[len("-b=")] in ["=", " "]:
+                skip += 1
+            c = comp[skip :]
+            parsed_c = parse_one_color(c)
+            if better_color(background_color, parsed_c) == parsed_c:
+                background_color = c
         else:
             # Regular color
-            color = better_color(color, parse_one_color(comp))
+            parsed_c = parse_one_color(comp)
+            if better_color(color, parsed_c) == parsed_c:
+                color = comp
 
     return {
         "color": color,
@@ -226,6 +243,26 @@ def parse_color(color_str):
         "reverse": reverse,
     }
 
+def unparse_color(col):
+    """A basic function to return the fish version of a color dict"""
+    if isinstance(col, str):
+        return col
+    ret = ""
+    if col["color"]:
+        ret += col["color"]
+    if col["bold"]:
+        ret += " --bold"
+    if col["underline"]:
+        ret += " --underline"
+    if col["italics"]:
+        ret += " --italics"
+    if col["dim"]:
+        ret += " --dim"
+    if col["reverse"]:
+        ret += " --reverse"
+    if col["background"]:
+        ret += " --background=" + col["background"]
+    return ret
 
 def parse_bool(val):
     val = val.lower()
@@ -538,8 +575,7 @@ def get_special_ansi_escapes():
                 'bold': '\x1b[1m',
                 'underline': '\x1b[4m'
             }
-            pass
-
+            
     return g_special_escapes_dict
 
 
@@ -971,8 +1007,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 extrainfo[key] = value
 
 
-            for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
-                color_name, color_value = [x.strip() for x in match.group(1, 2)]
+            for match in re.finditer(r"^fish_(pager_)?color_(\S+) ?(.*)", line):
+                color_name, color_value = [x.strip() for x in match.group(2, 3)]
+                if match.group(1):
+                    color_name = "fish_pager_color_" + color_name
                 color_desc = descriptions.get(color_name, "")
                 data = {"name": color_name, "description": color_desc}
                 data.update(parse_color(color_value))
@@ -1103,25 +1141,33 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return result
 
     def do_get_color_for_variable(self, name):
-        # Return the color with the given name, or the empty string if there is
-        # none.
+        "Return the color with the given name, or the empty string if there is none."
         out, err = run_fish_cmd("echo -n $" + name)
         return out
 
-    def do_set_color_for_variable(
-        self, name, color
-    ):
+    def do_set_color_for_variable(self, name, color):
         "Sets a color for a fish color name, like 'autosuggestion'"
         if not name:
             raise ValueError
-        if not color:
+        if not color and not color == "":
             color = "normal"
-        varname = "fish_color_" + name
+        else:
+            color = unparse_color(color)
+        if not name.startswith("fish_pager_color_"):
+            varname = "fish_color_" + name
         # If the name already starts with "fish_", use it as the varname
         # This is needed for 'fish_pager_color' vars.
         if name.startswith("fish_"):
             varname = name
-        # TODO: Check if the varname is allowable.
+        # Check if the varname is allowable.
+        varname = varname.strip()
+        if not re.match("^[a-zA-Z0-9_]+$", varname):
+            print("Refusing to use variable name: '", varname, "'")
+            return
+        color = color.strip()
+        if not re.match("^[a-zA-Z0-9_= -]*$", color):
+            print("Refusing to use color value: ", color)
+            return
         command = "set -U " + varname
         command += " " + color
 
@@ -1416,12 +1462,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 color = item.get("color")
 
                 if what:
-                    output = self.do_set_color_for_variable(
-                        what,
-                        color,
-                    )
-            else:
-                output = "Bad request"
+                    output = self.do_set_color_for_variable(what, color)
+
         elif p == "/get_function/":
             what = postvars.get("what")
             output = [self.do_get_function(what[0])]

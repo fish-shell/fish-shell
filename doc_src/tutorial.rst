@@ -29,7 +29,7 @@ which means you are all set up and can start using fish::
 
 This prompt that you see above is the fish default prompt: it shows your username, hostname, and working directory.
 - to change this prompt see :ref:`how to change your prompt <prompt>`
-- to switch to fish permanently see :ref:`switch your default shell to fish <switching-to-fish>`.
+- to switch to fish permanently see :ref:`Default Shell <default-shell>`.
 
 From now on, we'll pretend your prompt is just a ``>`` to save space.
 
@@ -361,14 +361,15 @@ You can also access ranges of elements, known as "slices":
 
 You can iterate over a list (or a slice) with a for loop::
 
-    > for val in $PATH
-        echo "entry: $val"
-      end
-    entry: /usr/bin/
-    entry: /bin
-    entry: /usr/sbin
-    entry: /sbin
-    entry: /usr/local/bin
+    for val in $PATH
+      echo "entry: $val"
+    end
+    # Will print:
+    # entry: /usr/bin/
+    # entry: /bin
+    # entry: /usr/sbin
+    # entry: /sbin
+    # entry: /usr/local/bin
 
 Lists adjacent to other lists or strings are expanded as :ref:`cartesian products <cartesian-product>` unless quoted (see :ref:`Variable expansion <expand-variable>`)::
 
@@ -569,13 +570,13 @@ Functions
 
 A fish function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like ``$1``, but instead in a single list ``$argv``. To create a function, use the :ref:`function <cmd-function>` builtin::
 
-    > function say_hello
-         echo Hello $argv
-      end
-    > say_hello
-    Hello
-    > say_hello everybody!
-    Hello everybody!
+    function say_hello
+        echo Hello $argv
+    end
+    say_hello
+    # prints: Hello
+    say_hello everybody!
+    # prints: Hello everybody!
 
 
 Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place. [#]_
@@ -583,7 +584,8 @@ Unlike other shells, fish does not have aliases or special prompt syntax. Functi
 You can list the names of all functions with the :ref:`functions <cmd-functions>` builtin (note the plural!). fish starts out with a number of functions::
 
     > functions
-    N_, abbr, alias, bg, cd, cdh, contains_seq, delete-or-exit, dirh, dirs, disown, down-or-search, edit_command_buffer, export, fg, fish_add_path, fish_breakpoint_prompt, fish_clipboard_copy, fish_clipboard_paste, fish_config, fish_default_key_bindings, fish_default_mode_prompt, fish_git_prompt, fish_hg_prompt, fish_hybrid_key_bindings, fish_indent, fish_is_root_user, fish_job_summary, fish_key_reader, fish_md5, fish_mode_prompt, fish_npm_helper, fish_opt, fish_print_git_action, fish_print_hg_root, fish_prompt, fish_sigtrap_handler, fish_svn_prompt, fish_title, fish_update_completions, fish_vcs_prompt, fish_vi_cursor, fish_vi_key_bindings, funced, funcsave, grep, help, history, hostname, isatty, kill, la, ll, ls, man, nextd, nextd-or-forward-word, open, popd, prevd, prevd-or-backward-word, prompt_hostname, prompt_pwd, psub, pushd, realpath, seq, setenv, suspend, trap, type, umask, up-or-search, vared, wait
+    N_, abbr, alias, bg, cd, cdh, contains_seq, dirh, dirs, disown, down-or-search, edit_command_buffer, export, fg, fish_add_path, fish_breakpoint_prompt, fish_clipboard_copy, fish_clipboard_paste, fish_config, fish_default_key_bindings, fish_default_mode_prompt, fish_git_prompt, fish_hg_prompt, fish_hybrid_key_bindings, fish_indent, fish_is_root_user, fish_job_summary, fish_key_reader, fish_md5, fish_mode_prompt, fish_npm_helper, fish_opt, fish_print_git_action, fish_print_hg_root, fish_prompt, fish_sigtrap_handler, fish_svn_prompt, fish_title, fish_update_completions, fish_vcs_prompt, fish_vi_cursor, fish_vi_key_bindings, funced, funcsave, grep, help, history, hostname, isatty, kill, la, ll, ls, man, nextd, open, popd, prevd, prompt_hostname, prompt_pwd, psub, pushd, realpath, seq, setenv, suspend, trap, type, umask, up-or-search, vared, wait
+
 
 
 You can see the source for any function by passing its name to ``functions``::
@@ -602,25 +604,26 @@ Loops
 
 While loops::
 
-    > while true
+    while true
         echo "Loop forever"
     end
-    Loop forever
-    Loop forever
-    Loop forever
-    ... # yes, this really will loop forever. Unless you abort it with ctrl-c.
+    # Prints:
+    # Loop forever
+    # Loop forever
+    # Loop forever
+    # yes, this really will loop forever. Unless you abort it with ctrl-c.
 
 
 For loops can be used to iterate over a list. For example, a list of files::
 
-    > for file in *.txt
+    for file in *.txt
         cp $file $file.bak
     end
 
 
 Iterating over a list of numbers can be done with ``seq``::
 
-    > for x in (seq 5)
+    for x in (seq 5)
         touch file_$x.txt
     end
 
@@ -762,29 +765,6 @@ Now in another shell::
 
     > echo $EDITOR
     vim
-
-
-.. _switching-to-fish:
-
-Switching to fish?
-------------------
-
-If you wish to use fish (or any other shell) as your default shell,
-you need to enter your new shell's executable in two places.
-
-Add the shell to ``/etc/shells`` with::
-
-    > echo /usr/local/bin/fish | sudo tee -a /etc/shells
-
-
-Change your default shell with::
-
-    > chsh -s /usr/local/bin/fish
-
-This assumes you installed fish to /usr/local/bin, which is the default location when you've compiled it yourself. If you installed it with a package manager, the usual location is /usr/bin/fish, but package managers typically already add it to /etc/shells. Just substitute the correct location.
-
-(To change it back to another shell, just substitute ``/usr/local/bin/fish``
-with ``/bin/bash``, ``/bin/tcsh`` or ``/bin/zsh`` as appropriate in the steps above.)
 
 
 Ready for more?

@@ -1,6 +1,7 @@
 body {
     background: linear-gradient(to bottom, #a7cfdf 0%, #23538a 100%);
-    font-family: monospace, fixed;
+    /* List explained in the doc theme pydoctheme.css */
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
     color: #222;
 }
 
@@ -12,11 +13,6 @@ body {
     -webkit-box-shadow: 0 0 1px 1px #333;
     box-shadow: 0 0 5px 1px #333;
     border-radius: 8px;
-}
-
-code {
-    font-family: "Source Code Pro", "DejaVu Sans Mono", Menlo, "Ubuntu Mono", Consolas, Monaco,
-        "Lucida Console", monospace, fixed;
 }
 
 #parent {
@@ -394,11 +390,11 @@ code {
 }
 
 .colorpicker_text_sample_tight {
-    font-size: 10pt;
-    line-height: 1.2em;
-    margin: 0px 6px;
-    max-width: 220px;
-    padding: 5px;
+    font-size: 11pt;
+    line-height: 1.5em;
+    margin: 0;
+    width: fit-content;
+    padding: 1em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: clip;
@@ -626,7 +622,7 @@ img.delete_icon {
     cursor: default;
 }
 
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 1000px) {
     /* On small screens remove the margins to leave more for the actual content */
     body {
         width: 100%;

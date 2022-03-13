@@ -19,6 +19,8 @@ enum class readline_cmd_t {
     backward_word,
     forward_bigword,
     backward_bigword,
+    nextd_or_forward_word,
+    prevd_or_backward_word,
     history_search_backward,
     history_search_forward,
     history_prefix_search_backward,
@@ -204,6 +206,9 @@ class input_event_queue_t {
     /// Add a character or a readline function to the front of the queue of unread characters.  This
     /// will be the next character returned by readch.
     void push_front(const char_event_t &ch);
+
+    /// Find the first sequence of non-char events, and promote them to the front.
+    void promote_interruptions_to_front();
 
     /// Add multiple characters or readline events to the front of the queue of unread characters.
     /// The order of the provided events is not changed, i.e. they are not inserted in reverse

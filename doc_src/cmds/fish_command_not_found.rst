@@ -6,11 +6,11 @@ fish_command_not_found - what to do when a command wasn't found
 Synopsis
 --------
 
-::
+.. synopsis::
 
-  function fish_command_not_found
-      ...
-  end
+    function fish_command_not_found
+       ...
+    end
 
 
 Description

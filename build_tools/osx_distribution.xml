@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <installer-gui-script minSpecVersion="1">
     <title>fish shell</title>
-    <welcome file="welcome.rtf"/>
+    <welcome file="welcome.html" mime-type="text/html"/>
     <background file="terminal_logo.png" scaling="proportional" alignment="bottomleft"/>
     <pkg-ref id="com.ridiculousfish.fish-shell-pkg"/>
-    <options customize="never" require-scripts="false"/>
+    <options hostArchitectures="arm64,x86_64" rootVolumeOnly="true"/>
+    <options customize="never" require-scripts="true"/>
     <choices-outline>
         <line choice="default">
             <line choice="com.ridiculousfish.fish-shell-pkg"/>

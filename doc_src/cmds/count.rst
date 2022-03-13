@@ -6,11 +6,11 @@ count - count the number of elements of a list
 Synopsis
 --------
 
-::
+.. synopsis::
 
-    count $VARIABLE
+    count STRING1 STRING2 ...
     COMMAND | count
-    count < FILE
+    count [...] < FILE
 
 Description
 -----------

@@ -1,3 +1,46 @@
+fish 3.5.0 (not yet released)
+====================================
+
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+- Most ``string`` no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
+- Special support for non-standard color sequences has been removed from fish's escape sequence removal. This applies to terminals like the Data General Dasher D220 from 1984. We do not expect anyone to have ever used fish with such a terminal. (:issue:`8769`)
+
+Scripting improvements
+----------------------
+- ``math`` can now handle underscores (``_``) as visual separators in numbers (:issue:`8611`, :issue:`8496`)::
+
+    math 5 + 2_123_252
+
+- ``math``'s ``min`` and ``max`` functions now take a variable number of arguments instead of always requiring 2 (:issue:`8644`, :issue:`8646`)    .
+- ``read`` is now faster as the last process in a pipeline (:issue:`8552`).
+
+Interactive improvements
+------------------------
+
+New or improved bindings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+
+Completions
+^^^^^^^^^^^
+
+Improved terminal support
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Other improvements
+------------------
+
+For distributors
+----------------
+
+--------------
+
 fish 3.4.0 (released March 12, 2022)
 ====================================
 

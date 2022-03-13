@@ -368,10 +368,10 @@ class output_stream_t : noncopyable_t, nonmovable_t {
     /// \param want_newline this is true if the output item should be ended with a newline. This
     /// is only relevant if we are printing the output to a stream,
     virtual void append_with_separation(const wchar_t *s, size_t len, separation_type_t type,
-                                        bool want_newline);
+                                        bool want_newline = true);
 
     /// The following are all convenience overrides.
-    void append_with_separation(const wcstring &s, separation_type_t type, bool want_newline) {
+    void append_with_separation(const wcstring &s, separation_type_t type, bool want_newline = true) {
         append_with_separation(s.data(), s.size(), type, want_newline);
     }
 

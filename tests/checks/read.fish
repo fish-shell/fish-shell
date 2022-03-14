@@ -375,3 +375,10 @@ echo foo\nbar\nbaz | begin
     echo $bar
     # CHECK: bar
 end
+
+begin
+    echo 1
+    echo 2
+end | read -l --line foo bar
+echo $foo $bar
+# CHECK: 1 2

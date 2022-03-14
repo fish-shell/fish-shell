@@ -134,7 +134,7 @@ static dir_remoteness_t path_remoteness(const wcstring &path) {
     // In practice the only system to use this path is NetBSD.
     struct statvfs buf {};
     if (statvfs(narrow.c_str(), &buf) < 0) return dir_remoteness_t::unknown;
-    return (buf.f_flag & ST_LOCAL) ? false : true;
+    return (buf.f_flag & ST_LOCAL) ? dir_remoteness_t::local : dir_remoteness_t::remote;
 #elif defined(MNT_LOCAL)
     struct statfs buf {};
     if (statfs(narrow.c_str(), &buf) < 0) return dir_remoteness_t::unknown;

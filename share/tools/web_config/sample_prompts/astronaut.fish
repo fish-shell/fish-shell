@@ -1,5 +1,4 @@
-# vim: filetype=sh
-# name: Starfish
+# name: Astronaut
 # author: Radu Potop
 # description: A prompt theme similar to Starship.rs but without the emojis.
 

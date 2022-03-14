@@ -38,7 +38,7 @@ static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool i
                             bool reverse, rgb_color_t bg) {
     if (bold && enter_bold_mode) {
         // These casts are needed to work with different curses implementations.
-        writembs_nofail(outp, tparm(const_cast<char *>(enter_bold_mode)));
+        writembs_nofail(outp, fish_tparm(const_cast<char *>(enter_bold_mode)));
     }
 
     if (underline && enter_underline_mode) {
@@ -59,7 +59,7 @@ static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool i
         writembs_nofail(outp, enter_standout_mode);
     }
     if (!bg.is_none() && bg.is_normal()) {
-        writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
+        writembs_nofail(outp, fish_tparm(const_cast<char *>(exit_attribute_mode)));
     }
 }
 
@@ -79,7 +79,7 @@ static void print_colors(io_streams_t &streams, bool bold, bool underline, bool 
         if (!bg.is_none()) {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
-            writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
+            writembs_nofail(outp, fish_tparm(const_cast<char *>(exit_attribute_mode)));
         }
         outp.writech(L'\n');
     }  // conveniently, 'normal' is always the last color so we don't need to reset here
@@ -233,12 +233,12 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, const wc
     print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
 
     if (bgcolor != nullptr && bg.is_normal()) {
-        writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
+        writembs_nofail(outp, fish_tparm(const_cast<char *>(exit_attribute_mode)));
     }
 
     if (!fg.is_none()) {
         if (fg.is_normal() || fg.is_reset()) {
-            writembs_nofail(outp, tparm(const_cast<char *>(exit_attribute_mode)));
+            writembs_nofail(outp, fish_tparm(const_cast<char *>(exit_attribute_mode)));
         } else {
             if (!outp.write_color(fg, true /* is_fg */)) {
                 // We need to do *something* or the lack of any output messes up

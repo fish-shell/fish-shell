@@ -258,10 +258,10 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 
     for (auto p : esc2) {
         if (!p) continue;
-        // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
+        // Test both padded and unpadded version, just to be safe. Most versions of fish_tparm don't
         // actually seem to do anything these days.
         size_t esc_seq_len =
-            std::max(try_sequence(tparm(const_cast<char *>(p)), code), try_sequence(p, code));
+            std::max(try_sequence(fish_tparm(const_cast<char *>(p)), code), try_sequence(p, code));
         if (esc_seq_len) {
             *resulting_length = esc_seq_len;
             return true;
@@ -632,7 +632,7 @@ void screen_t::move(int new_x, int new_y) {
     bool use_multi = multi_str != nullptr && multi_str[0] != '\0' &&
                      abs(x_steps) * std::strlen(str) > std::strlen(multi_str);
     if (use_multi && cur_term) {
-        char *multi_param = tparm(const_cast<char *>(multi_str), abs(x_steps));
+        char *multi_param = fish_tparm(const_cast<char *>(multi_str), abs(x_steps));
         writembs(outp, multi_param);
     } else {
         for (i = 0; i < abs(x_steps); i++) {
@@ -1288,7 +1288,7 @@ void screen_t::reset_abandoning_line(int screen_width) {
     if (screen_width > non_space_width) {
         bool justgrey = true;
         if (cur_term && enter_dim_mode) {
-            std::string dim = tparm(const_cast<char *>(enter_dim_mode));
+            std::string dim = fish_tparm(const_cast<char *>(enter_dim_mode));
             if (!dim.empty()) {
                 // Use dim if they have it, so the color will be based on their actual normal
                 // color and the background of the termianl.
@@ -1300,24 +1300,24 @@ void screen_t::reset_abandoning_line(int screen_width) {
             if (max_colors >= 238) {
                 // draw the string in a particular grey
                 abandon_line_string.append(
-                    str2wcstring(tparm(const_cast<char *>(set_a_foreground), 237)));
+                    str2wcstring(fish_tparm(const_cast<char *>(set_a_foreground), 237)));
             } else if (max_colors >= 9) {
                 // bright black (the ninth color, looks grey)
                 abandon_line_string.append(
-                    str2wcstring(tparm(const_cast<char *>(set_a_foreground), 8)));
+                    str2wcstring(fish_tparm(const_cast<char *>(set_a_foreground), 8)));
             } else if (max_colors >= 2 && enter_bold_mode) {
                 // we might still get that color by setting black and going bold for bright
                 abandon_line_string.append(
-                    str2wcstring(tparm(const_cast<char *>(enter_bold_mode))));
+                    str2wcstring(fish_tparm(const_cast<char *>(enter_bold_mode))));
                 abandon_line_string.append(
-                    str2wcstring(tparm(const_cast<char *>(set_a_foreground), 0)));
+                    str2wcstring(fish_tparm(const_cast<char *>(set_a_foreground), 0)));
             }
         }
 
         abandon_line_string.append(get_omitted_newline_str());
 
         if (cur_term && exit_attribute_mode) {
-            abandon_line_string.append(str2wcstring(tparm(
+            abandon_line_string.append(str2wcstring(fish_tparm(
                 const_cast<char *>(exit_attribute_mode))));  // normal text ANSI escape sequence
         }
 

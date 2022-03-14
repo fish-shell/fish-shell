@@ -11,7 +11,8 @@ function fish_prompt --description 'Write out the prompt'
     set -l prompt_status ""
 
     # Since we display the prompt on a new line allow the directory names to be longer.
-    set -g fish_prompt_pwd_dir_length 10
+    set -q fish_prompt_pwd_dir_length
+    or set -lx fish_prompt_pwd_dir_length 0
 
     # Color the prompt differently when we're root
     set -l suffix '❯'

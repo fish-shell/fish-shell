@@ -27,9 +27,15 @@ New or improved bindings
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
+- A new ``Astronaut`` prompt (:issue:`8775`)
+
 
 Completions
 ^^^^^^^^^^^
+- Added completions for:
+  - brightnessctl (:issue:`8758`)
+  - tuned-adm (:issue:`8760`)
+
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

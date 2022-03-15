@@ -134,7 +134,7 @@ Variable                                                   Meaning
 ``fish_color_search_match``                                history search matches and selected pager items (background only)
 ==========================================                 =====================================================================
 
-If a variable isn't set, fish usually tries ``$fish_color_normal``, except for:
+If a variable isn't set or is empty, fish usually tries ``$fish_color_normal``, except for:
 
 - ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
 - ``$fish_color_option``, where it tries ``$fish_color_param`` first.
@@ -178,7 +178,7 @@ Variable                                                   Meaning
 ``fish_pager_color_secondary_description``                 description of every second unselected completion
 ==========================================                 ===========================================================
 
-When the secondary or selected variables aren't set, the normal variables are used, except for ``$fish_pager_color_selected_background``, where the background of ``$fish_color_search_match`` is tried first.
+When the secondary or selected variables aren't set or are empty, the normal variables are used, except for ``$fish_pager_color_selected_background``, where the background of ``$fish_color_search_match`` is tried first.
 
 .. _abbreviations:
 

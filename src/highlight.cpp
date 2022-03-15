@@ -337,8 +337,8 @@ rgb_color_t highlight_color_resolver_t::resolve_spec_uncached(const highlight_sp
     highlight_role_t role = is_background ? highlight.background : highlight.foreground;
 
     auto var = vars.get(get_highlight_var_name(role));
-    if (!var) var = vars.get(get_highlight_var_name(get_fallback(role)));
-    if (!var) var = vars.get(get_highlight_var_name(highlight_role_t::normal));
+    if (var.missing_or_empty()) var = vars.get(get_highlight_var_name(get_fallback(role)));
+    if (var.missing_or_empty()) var = vars.get(get_highlight_var_name(highlight_role_t::normal));
     if (var) result = parse_color(*var, is_background);
 
     // Handle modifiers.

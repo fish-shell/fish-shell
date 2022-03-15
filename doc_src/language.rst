@@ -873,7 +873,7 @@ Shell variables
 
 Variables are a way to save data and pass it around. They can be used just by the shell, or they can be ":ref:`exported <variables-export>`", so that a copy of the variable is available to any external command the shell starts. An exported variable is referred to as an "environment variable".
 
-To set a variable value, use the :ref:`set <cmd-set>` command. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+To set a variable value, use the :ref:`set <cmd-set>` command. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters, but may not consist of numbers only.
 
 Example:
 
@@ -1532,7 +1532,7 @@ Shell variable and function names
 
 The names given to variables and functions (so called "identifiers") have to follow certain rules:
 
-- A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+- A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters, but may not consist of numbers only.
 
 - A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
 

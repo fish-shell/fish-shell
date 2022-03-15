@@ -78,11 +78,10 @@ complete $heroku_looking -xa plugins -d 'manage plugins to the heroku gem'
 complete $heroku_looking -xa regions -d 'list available regions'
 complete $heroku_looking -xa stack -d 'manage the stack for an app'
 complete $heroku_looking -xa status -d 'check status of heroku platform'
-complete $heroku_looking -xa twofactor
 complete $heroku_looking -xa update -d 'update the heroku client'
 complete $heroku_looking -xa version -d 'display version'
 
-complete $heroku_looking -xa git:clone -d "APP DIRECTORY clones a heroku app to your local machine at DIRECTORY (defaults to app name)"
+complete $heroku_looking -xa git:clone -d "clones heroku application to machine at DIRECTORY. defaults to app name."
 complete $heroku_looking -xa git:remote -d "adds a git remote to an app repo (-a APP)"
 
 # Addons subcommands

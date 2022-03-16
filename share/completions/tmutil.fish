@@ -35,7 +35,7 @@ complete -f -c tmutil -n __fish_use_subcommand -a latestbackup -d 'Print the pat
 complete -c tmutil -n __fish_use_subcommand -a listlocalsnapshotdates -d 'List the creation dates of all local Time Machine snapshots'
 complete -r -c tmutil -n __fish_use_subcommand -a listlocalsnapshots -d 'List local Time Machine snapshots of the specified volume'
 complete -f -c tmutil -n __fish_use_subcommand -a listbackups -d 'Print paths for all snapshots'
-complete -f -c tmutil -n __fish_use_subcommand -a localsnapshot -d 'Create new local Time Machine snapshots of all APFS volumes included in TM backup'
+complete -f -c tmutil -n __fish_use_subcommand -a localsnapshot -d 'Create new local Time Machine snapshot of APFS volume in TM backup'
 complete -f -c tmutil -n __fish_use_subcommand -a machinedirectory -d 'Print the path to the current machine directory'
 complete -f -c tmutil -n __fish_use_subcommand -a removedestination -d 'Removes a backup destination'
 complete -f -c tmutil -n __fish_use_subcommand -a removeexclusion -d 'Remove an exclusion'

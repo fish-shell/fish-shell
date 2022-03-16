@@ -1588,7 +1588,7 @@ Here is what they mean:
 
 - ``stderr-nocaret`` was introduced in fish 3.0 (and made the default in 3.3). It makes ``^`` an ordinary character instead of denoting an stderr redirection, to make dealing with quoting and such easier. Use ``2>`` instead.
 - ``qmark-noglob`` was also introduced in fish 3.0. It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
-- ``regex-easyesy`` was introduced in 3.1. It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` cals if you use this anywhere.
+- ``regex-easyesc`` was introduced in 3.1. It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` cals if you use this anywhere.
 - ``ampersand-nobg-in-token`` was introduced in fish 3.4. It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
 
 

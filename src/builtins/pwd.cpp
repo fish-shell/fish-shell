@@ -61,7 +61,7 @@ maybe_t<int> builtin_pwd(parser_t &parser, io_streams_t &streams, const wchar_t 
             pwd = std::move(*real_pwd);
         } else {
             const char *error = std::strerror(errno);
-            streams.err.append_format(L"%ls: realpath failed: %s", cmd, error);
+            streams.err.append_format(L"%ls: realpath failed: %s\n", cmd, error);
             return STATUS_CMD_ERROR;
         }
     }

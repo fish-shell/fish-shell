@@ -18,6 +18,7 @@ Scripting improvements
 - ``math``'s ``min`` and ``max`` functions now take a variable number of arguments instead of always requiring 2 (:issue:`8644`, :issue:`8646`)    .
 - ``read`` is now faster as the last process in a pipeline (:issue:`8552`).
 - ``string join`` gained a new ``--no-empty`` flag to skip empty arguments (:issue:`8774`, :issue:`8351`).
+- ``read`` now actually only triggers the ``fish_read`` event, not the ``fish_prompt`` event (:issue:`8797`). It was supposed to work this way since fish 3.2.0.
 
 Interactive improvements
 ------------------------

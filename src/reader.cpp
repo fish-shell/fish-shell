@@ -2799,6 +2799,7 @@ static int read_i(parser_t &parser) {
     conf.syntax_check_ok = true;
     conf.autosuggest_ok = check_autosuggestion_enabled(parser.vars());
     conf.expand_abbrev_ok = true;
+    conf.event = L"fish_prompt";
 
     if (parser.is_breakpoint() && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
         conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME;
@@ -4009,7 +4010,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     }
     first_prompt = false;
 
-    event_fire_generic(parser(), L"fish_prompt");
+    if (!conf.event.empty()) {
+        event_fire_generic(parser(), conf.event.c_str());
+    }
     exec_prompt();
 
     /// A helper that kicks off syntax highlighting, autosuggestion computing, and repaints.

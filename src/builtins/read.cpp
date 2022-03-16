@@ -224,6 +224,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
 
     conf.left_prompt_cmd = prompt;
     conf.right_prompt_cmd = right_prompt;
+    conf.event = L"fish_read";
 
     conf.in = in;
 
@@ -233,7 +234,6 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     commandline_set_buffer(commandline, std::wcslen(commandline));
     scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
 
-    event_fire_generic(parser, L"fish_read");
     auto mline = reader_readline(nchars);
     interactive.restore();
     if (mline) {

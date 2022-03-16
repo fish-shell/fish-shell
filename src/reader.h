@@ -196,6 +196,9 @@ struct reader_config_t {
     /// Right prompt command, typically fish_right_prompt.
     wcstring right_prompt_cmd{};
 
+    /// Name of the event to trigger once we're set up.
+    wcstring event{};
+
     /// Whether tab completion is OK.
     bool complete_ok{false};
 

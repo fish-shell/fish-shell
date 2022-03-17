@@ -32,4 +32,14 @@ echo $status
 # CHECKERR: { echo; echo }
 # CHECKERR: ^
 
+set -g PATH .
+echo banana > foobar
+foobar --banana
+# CHECKERR: fish: Unknown command: foobar
+# CHECKERR: fish: ./foobar exists but isn't executable
+# CHECKERR: checks/command-not-found.fish (line 37):
+# CHECKERR: foobar --banana
+# CHECKERR: ^
+
+
 exit 0

@@ -8,6 +8,7 @@ Deprecations and removed features
 ---------------------------------
 - Most ``string`` no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
 - Special support for non-standard color sequences has been removed from fish's escape sequence removal. This applies to terminals like the Data General Dasher D220 from 1984. We do not expect anyone to have ever used fish with such a terminal. (:issue:`8769`)
+- Code to upgrade universal variables from fish before 3.0 has been removed. Users who upgrade directly from fishes before then will have to set their universal variables (including abbreviations) again. (:issue:`8781`)
 
 Scripting improvements
 ----------------------
@@ -22,6 +23,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- The default command-not-found handler now reports a special error if there is a non-executable file (:issue:`8804`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -40,6 +42,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- CWD-reporting is now turned on for Kitty as well (:issue:`8806`)
 
 Other improvements
 ------------------

@@ -12,7 +12,7 @@ if test -r /etc/os-release
 end
 
 function __fish_default_command_not_found_handler
-    printf "fish: Unknown command: %s\n" (string escape -- $argv[1]) >&2
+    printf (_ "fish: Unknown command: %s\n") (string escape -- $argv[1]) >&2
     for file in $PATH/$argv[1]
         if test -e $file -a ! -x $file
             printf (_ "fish: %s exists but isn't executable\n") (string escape -- $file) >&2

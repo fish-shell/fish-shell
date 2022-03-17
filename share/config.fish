@@ -12,7 +12,7 @@ or set -g __fish_added_user_paths
 # Create the default command_not_found handler
 #
 function __fish_default_command_not_found_handler
-    printf "fish: Unknown command: %s\n" (string escape -- $argv[1]) >&2
+    printf (_ "fish: Unknown command: %s\n") (string escape -- $argv[1]) >&2
     for file in $PATH/$argv[1]
         if test -e $file -a ! -x $file
             printf (_ "fish: %s exists but isn't executable\n") (string escape -- $file) >&2

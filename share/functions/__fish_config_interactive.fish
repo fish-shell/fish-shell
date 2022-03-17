@@ -255,10 +255,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     # Notify terminals when $PWD changes (issue #906).
-    # VTE based terminals, Terminal.app, iTerm.app (TODO), and foot support this.
+    # VTE based terminals, Terminal.app, iTerm.app (TODO), foot, and kitty support this.
     if not set -q FISH_UNIT_TESTS_RUNNING
         and begin
             string match -q -- 'foot*' $TERM
+            or string match -q -- 'xterm-kitty*' $TERM
             or test 0"$VTE_VERSION" -ge 3405
             or test "$TERM_PROGRAM" = Apple_Terminal && test (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
             or test "$TERM_PROGRAM" = WezTerm

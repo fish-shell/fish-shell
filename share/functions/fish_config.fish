@@ -149,27 +149,27 @@ function fish_config --description "Launch fish's web based configuration"
                     string replace -r '.*/([^/]*).theme$' '$1' $dir/*.theme
                     return
                 case demo
-                    echo -ns (set_color $fish_color_command) /bright/vixens
+                    echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_param) jump
+                    echo -ns (set_color $fish_color_param || set_color $fish_color_normal) jump
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_redirection) '|'
+                    echo -ns (set_color $fish_color_redirection || set_color $fish_color_normal) '|'
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_quote) '"fowl"'
+                    echo -ns (set_color $fish_color_quote || set_color $fish_color_normal) '"fowl"'
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_redirection) '> quack'
+                    echo -ns (set_color $fish_color_redirection || set_color $fish_color_normal) '> quack'
                     echo -ns (set_color normal) ' '
-                    echo -ns (set_color $fish_color_end) '&'
+                    echo -ns (set_color $fish_color_end || set_color $fish_color_normal) '&'
                     set_color normal
-                    echo -s (set_color $fish_color_comment) ' # This is a comment'
+                    echo -s (set_color $fish_color_comment || set_color $fish_color_normal) ' # This is a comment'
                     set_color normal
-                    echo -ns (set_color $fish_color_command) echo
+                    echo -ns (set_color $fish_color_command || set_color $fish_color_normal) echo
                     echo -ns (set_color normal) ' '
-                    echo -s (set_color $fish_color_error) "'" (set_color $fish_color_quote) "Errors are the portal to discovery"
+                    echo -s (set_color $fish_color_error || set_color $fish_color_normal) "'" (set_color $fish_color_quote || set_color $fish_color_normal) "Errors are the portal to discovery"
                     set_color normal
-                    echo -ns (set_color $fish_color_command) Th
+                    echo -ns (set_color $fish_color_command || set_color $fish_color_normal) Th
                     set_color normal
-                    set_color $fish_color_autosuggestion
+                    set_color $fish_color_autosuggestion || set_color $fish_color_normal
                     echo is is an autosuggestion
                     echo
                 case show

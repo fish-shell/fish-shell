@@ -81,6 +81,16 @@ def is_wsl():
     return False
 
 
+def is_sailfish_os():
+    """ Return whether we are running on Sailfish OS """
+    if "linux" in platform.system().lower() and os.access("/etc/sailfish-release", os.R_OK):
+        with open("/etc/sailfish-release", "r") as f:
+            # Find 'ID=sailfishos'
+            if "sailfishos" in f.read():
+                return True
+    return False 
+
+
 def is_termux():
     """ Return whether we are running under the Termux application for Android"""
     return "com.termux" in os.environ["PATH"] and find_executable("termux-open-url")
@@ -1637,7 +1647,7 @@ def runThing():
             sys.exit(-1)
     elif is_termux():
         subprocess.call(["termux-open-url", url])
-    elif is_chromeos_garcon():
+    elif is_chromeos_garcon() or is_sailfish_os():
         webbrowser.open(url)
     else:
         webbrowser.open(fileurl)

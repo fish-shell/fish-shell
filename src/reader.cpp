@@ -1416,10 +1416,11 @@ void reader_init() {
     termsize_container_t::shared().updating(parser);
 }
 
-/// Restore the term mode if we own the terminal. It's important we do this before
-/// restore_foreground_process_group, otherwise we won't think we own the terminal.
+/// Restore the term mode if we own the terminal and are interactive (#8705).
+/// It's important we do this before restore_foreground_process_group,
+/// otherwise we won't think we own the terminal.
 void restore_term_mode() {
-    if (getpgrp() != tcgetpgrp(STDIN_FILENO)) return;
+    if (!is_interactive_session() || getpgrp() != tcgetpgrp(STDIN_FILENO)) return;
 
     if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == EIO) {
         redirect_tty_output();

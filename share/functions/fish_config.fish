@@ -236,7 +236,15 @@ function fish_config --description "Launch fish's web based configuration"
                         return 1
                     end
 
-                    set -l have_color 0
+                    set -l known_colors fish_color_{normal,command,keyword,quote,redirection,\
+                        end,error,param,option,comment,selection,operator,escape,autosuggestion,\
+                        cwd,user,host,host_remote,cancel,search_match} \
+                        fish_pager_color_{progress,background,prefix,completion,description,\
+                        selected_background,selected_prefix,selected_completion,selected_description,\
+                        secondary_background,secondary_prefix,secondary_completion,secondary_description}
+
+
+                    set -l have_colors
                     while read -lat toks
                         # We only allow color variables.
                         # Not the specific list, but something named *like* a color variable.
@@ -251,11 +259,19 @@ function fish_config --description "Launch fish's web based configuration"
                             set -eg $toks[1]
                         end
                         set $scope $toks
-                        set have_color 1
+                        set -a have_colors $toks[1]
                     end <$file
 
+                    # Set all colors that aren't mentioned to empty
+                    for c in $known_colors
+                        contains -- $c $have_colors
+                        and continue
+
+                        set $scope $c
+                    end
+
                     # Return true if we changed at least one color
-                    test $have_color -eq 1
+                    set -q have_colors[1]
                     return
                 case dump
                     # Write the current theme in .theme format, to stdout.

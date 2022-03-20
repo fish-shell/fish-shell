@@ -6,10 +6,17 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
-- Most ``string`` no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
+- Most ``string`` subcommands no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
 - Special support for non-standard color sequences has been removed from fish's escape sequence removal. This applies to terminals like the Data General Dasher D220 from 1984. We do not expect anyone to have ever used fish with such a terminal. (:issue:`8769`)
 - Code to upgrade universal variables from fish before 3.0 has been removed. Users who upgrade directly from fishes before then will have to set their universal variables (including abbreviations) again. (:issue:`8781`)
+- The meaning of an empty color variable has changed. Previously, when a variable was empty it would be interpreted as the "normal" color. Now fish will ignore empty color variables and go to the fallback color. For example::
 
+    set -g fish_color_command blue
+    set -g fish_color_keyword # before this would make keywords "normal" (usually white in a dark terminal), now it'll make them blue
+
+  This makes it easier to make self-contained colorschemes that don't accidentally use color that was set before.
+  ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty. (:issue:`8793`)
+  
 Scripting improvements
 ----------------------
 - ``math`` can now handle underscores (``_``) as visual separators in numbers (:issue:`8611`, :issue:`8496`)::
@@ -25,7 +32,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - The default command-not-found handler now reports a special error if there is a non-executable file (:issue:`8804`)
-- `less` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
+- ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

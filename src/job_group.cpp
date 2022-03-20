@@ -31,10 +31,8 @@ static void release_job_id(job_id_t jid) {
     consumed_job_ids->erase(where);
 }
 
-job_group_t::job_group_t(wcstring command, cancellation_group_ref_t cg, job_id_t job_id,
-                         bool job_control, bool wants_terminal)
-    : cancel_group(std::move(cg)),
-      job_control_(job_control),
+job_group_t::job_group_t(wcstring command, job_id_t job_id, bool job_control, bool wants_terminal)
+    : job_control_(job_control),
       wants_terminal_(wants_terminal),
       command_(std::move(command)),
       job_id_(job_id) {}
@@ -46,16 +44,14 @@ job_group_t::~job_group_t() {
 }
 
 // static
-job_group_ref_t job_group_t::create(wcstring command, cancellation_group_ref_t cg,
-                                    bool wants_job_id) {
+job_group_ref_t job_group_t::create(wcstring command, bool wants_job_id) {
     job_id_t jid = wants_job_id ? acquire_job_id() : 0;
-    return job_group_ref_t(new job_group_t(std::move(command), std::move(cg), jid));
+    return job_group_ref_t(new job_group_t(std::move(command), jid));
 }
 
 // static
-job_group_ref_t job_group_t::create_with_job_control(wcstring command, cancellation_group_ref_t cg,
-                                                     bool wants_terminal) {
-    return job_group_ref_t(new job_group_t(std::move(command), std::move(cg), acquire_job_id(),
+job_group_ref_t job_group_t::create_with_job_control(wcstring command, bool wants_terminal) {
+    return job_group_ref_t(new job_group_t(std::move(command), acquire_job_id(),
                                            true /* job_control */, wants_terminal));
 }
 

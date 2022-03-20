@@ -19,6 +19,8 @@ sendline("while true; sh -c 'echo Here we go; sleep .25; kill -s INT $$'; end")
 sleep(0.30)
 expect_str("Here we go")
 expect_prompt()
+sendline("echo $status")
+expect_str("130")
 
 sendline("echo it worked")
 expect_str("it worked")

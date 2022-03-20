@@ -119,12 +119,10 @@ static redirection_spec_t get_stderr_merge() {
 
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree,
                                                      const operation_context_t &ctx,
-                                                     cancellation_group_ref_t cancel_group,
                                                      io_chain_t block_io)
     : pstree(std::move(pstree)),
       parser(ctx.parser.get()),
       ctx(ctx),
-      cancel_group(std::move(cancel_group)),
       block_io(std::move(block_io)) {}
 
 // Utilities
@@ -228,7 +226,9 @@ process_type_t parse_execution_context_t::process_type_for_command(
 }
 
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
-    if (ctx.check_cancel() || check_cancel_from_fish_signal()) {
+    // If one of our jobs ended with SIGINT, we stop execution.
+    // Likewise if fish itself got a SIGINT, or if something ran exit, etc.
+    if (cancel_signal || ctx.check_cancel() || check_cancel_from_fish_signal()) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();
@@ -1387,6 +1387,9 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         if (job->has_external_proc()) {
             parser->vars().universal_barrier();
         }
+
+        // If the job got a SIGINT or SIGQUIT, then we're going to start unwinding.
+        if (!cancel_signal) cancel_signal = job->group->get_cancel_signal();
     }
 
     if (profile_item != nullptr) {
@@ -1535,12 +1538,12 @@ void parse_execution_context_t::setup_group(job_t *j) {
 
     if (j->processes.front()->is_internal() || !this->use_job_control()) {
         // This job either doesn't have a pgroup (e.g. a simple block), or lives in fish's pgroup.
-        j->group = job_group_t::create(j->command(), cancel_group, j->wants_job_id());
+        j->group = job_group_t::create(j->command(), j->wants_job_id());
     } else {
         // This is a "real job" that gets its own pgroup.
         j->processes.front()->leads_pgrp = true;
         bool wants_terminal = !parser->libdata().is_event;
-        j->group = job_group_t::create_with_job_control(j->command(), cancel_group, wants_terminal);
+        j->group = job_group_t::create_with_job_control(j->command(), wants_terminal);
     }
     j->group->set_is_foreground(!j->is_initially_background());
     j->mut_flags().is_group_root = true;

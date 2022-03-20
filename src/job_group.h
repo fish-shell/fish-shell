@@ -13,42 +13,6 @@
 /// 1 is the first valid job ID.
 using job_id_t = int;
 
-/// A cancellation group is "a set of jobs that should cancel together." It's effectively just a
-/// shared pointer to a bool which latches to true on cancel.
-/// For example, in `begin ; true ; end | false`, we have two jobs: the outer pipline and the inner
-/// 'true'. These share a cancellation group.
-/// Note this is almost but not quite a job group. A job group is a "a set of jobs which share a
-/// pgid" but cancellation groups may be bigger. For example in `begin ; sleep 1; sleep 2; end` we
-/// have that 'begin' is an internal group (a simple function/block execution) without a pgid,
-/// while each 'sleep' will be a different job, with its own pgid, and so be in a different job
-/// group. But all share a cancellation group.
-/// Note that a background job will always get a new cancellation group.
-/// Cancellation groups must be thread safe.
-class cancellation_group_t {
-   public:
-    /// \return true if we should cancel.
-    bool should_cancel() const { return get_cancel_signal() != 0; }
-
-    /// \return the signal indicating cancellation, or 0 if none.
-    int get_cancel_signal() const { return signal_; }
-
-    /// If we have not already cancelled, then trigger cancellation with the given signal.
-    void cancel_with_signal(int signal) {
-        assert(signal > 0 && "Invalid cancel signal");
-        signal_.compare_exchange(0, signal);
-    }
-
-    /// Helper to return a new group.
-    static std::shared_ptr<cancellation_group_t> create() {
-        return std::make_shared<cancellation_group_t>();
-    }
-
-   private:
-    /// If we cancelled from a signal, return that signal, else 0.
-    relaxed_atomic_t<int> signal_{0};
-};
-using cancellation_group_ref_t = std::shared_ptr<cancellation_group_t>;
-
 /// job_group_t is conceptually similar to the idea of a process group. It represents data which
 /// is shared among all of the "subjobs" that may be spawned by a single job.
 /// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
@@ -86,13 +50,13 @@ class job_group_t {
     bool has_job_id() const { return job_id_ > 0; }
 
     /// Get the cancel signal, or 0 if none.
-    int get_cancel_signal() const { return cancel_group->get_cancel_signal(); }
+    int get_cancel_signal() const { return signal_; }
 
     /// Mark that a process in this group got a signal, and so should cancel.
-    void cancel_with_signal(int sig) { cancel_group->cancel_with_signal(sig); }
-
-    /// The cancellation group. This is never null.
-    const cancellation_group_ref_t cancel_group{};
+    void cancel_with_signal(int signal) {
+        assert(signal > 0 && "Invalid cancel signal");
+        signal_.compare_exchange(0, signal);
+    }
 
     /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
     /// the terminal to the same state when resuming a stopped job.
@@ -108,17 +72,16 @@ class job_group_t {
     maybe_t<pid_t> get_pgid() const { return pgid_; }
 
     /// Construct a group for a job that will live internal to fish, optionally claiming a job ID.
-    static job_group_ref_t create(wcstring command, cancellation_group_ref_t cg, bool wants_job_id);
+    static job_group_ref_t create(wcstring command, bool wants_job_id);
 
     /// Construct a group for a job which will assign its first process as pgroup leader.
-    static job_group_ref_t create_with_job_control(wcstring command, cancellation_group_ref_t cg,
-                                                   bool wants_terminal);
+    static job_group_ref_t create_with_job_control(wcstring command, bool wants_terminal);
 
     ~job_group_t();
 
    private:
-    job_group_t(wcstring command, cancellation_group_ref_t cg, job_id_t job_id,
-                bool job_control = false, bool wants_terminal = false);
+    job_group_t(wcstring command, job_id_t job_id, bool job_control = false,
+                bool wants_terminal = false);
 
     // Whether job control is enabled.
     // If this is set, then the first process in the root job must be external.
@@ -140,6 +103,9 @@ class job_group_t {
 
     /// Our job ID. -1 if none.
     const job_id_t job_id_;
+
+    /// The signal causing us the group to cancel, or 0.
+    relaxed_atomic_t<int> signal_{0};
 };
 
 #endif

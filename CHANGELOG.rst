@@ -39,12 +39,13 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
   - brightnessctl (:issue:`8758`)
+  - rclone (:issue:`8819`)
   - tuned-adm (:issue:`8760`)
 
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- CWD-reporting is now turned on for Kitty as well (:issue:`8806`)
+- CWD-reporting is now turned on for kitty as well (:issue:`8806`)
 
 Other improvements
 ------------------

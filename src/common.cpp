@@ -1621,11 +1621,6 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
     return unescape_string(input.c_str(), input.size(), output, escape_special, style);
 }
 
-[[gnu::noinline]] void bugreport() {
-    FLOG(error, _(L"This is a bug. Break on 'bugreport' to debug."));
-    FLOG(error, _(L"If you can reproduce it, please report: "), PACKAGE_BUGREPORT, L'.');
-}
-
 wcstring format_size(long long sz) {
     wcstring result;
     const wchar_t *sz_name[] = {L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", nullptr};

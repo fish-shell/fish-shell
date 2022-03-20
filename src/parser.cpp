@@ -543,13 +543,6 @@ const job_t *parser_t::job_with_id(job_id_t id) const {
     return nullptr;
 }
 
-const job_t *parser_t::job_with_internal_id(internal_job_id_t id) const {
-    for (const auto &job : job_list) {
-        if (job->internal_job_id == id) return job.get();
-    }
-    return nullptr;
-}
-
 job_t *parser_t::job_get_from_pid(pid_t pid) const {
     for (const auto &job : jobs()) {
         for (const process_ptr_t &p : job->processes) {

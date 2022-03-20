@@ -686,16 +686,6 @@ bool is_token_delimiter(wchar_t c, bool is_first, maybe_t<wchar_t> next) {
     return c == L'(' || !tok_is_string_character(c, is_first, next);
 }
 
-wcstring tok_first(const wcstring &str) {
-    tokenizer_t t(str.c_str(), 0);
-    if (auto token = t.next()) {
-        if (token->type == token_type_t::string) {
-            return t.text_of(*token);
-        }
-    }
-    return {};
-}
-
 wcstring tok_command(const wcstring &str) {
     tokenizer_t t(str.c_str(), 0);
     while (auto token = t.next()) {

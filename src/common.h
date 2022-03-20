@@ -519,9 +519,6 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 /// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
 wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize);
 
-/// Print a short message about how to file a bug report to stderr.
-void bugreport();
-
 /// Return the number of seconds from the UNIX epoch, with subsecond precision. This function uses
 /// the gettimeofday function and will have the same precision as that function.
 using timepoint_t = double;

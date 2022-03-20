@@ -136,12 +136,7 @@ class tokenizer_t : noncopyable_t {
 /// Tests if this character can delimit tokens.
 bool is_token_delimiter(wchar_t c, bool is_first, maybe_t<wchar_t> next);
 
-/// Returns only the first token from the specified string. This is a convenience function, used to
-/// retrieve the first token of a string. This can be useful for error messages, etc. On failure,
-/// returns the empty string.
-wcstring tok_first(const wcstring &str);
-
-/// Like to tok_first, but skip variable assignments like A=B.
+/// \return the first token from the string, skipping variable assignments like A=B.
 wcstring tok_command(const wcstring &str);
 
 /// Struct wrapping up a parsed pipe or redirection.

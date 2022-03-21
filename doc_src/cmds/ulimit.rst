@@ -24,8 +24,14 @@ Use one of the following switches to specify which resource limit to set or repo
 **-d** or **--data-size**
     The maximum size of a process' data segment.
 
+**-e** or **--nice**
+    Controls the maximum nice value; on Linux, this value is subtracted from 20 to give the effective value.
+
 **-f** or **--file-size**
     The maximum size of files created by a process.
+
+**-i** or **--pending-signals**
+    The maximum number of signals that may be queued.
 
 **-l** or **--lock-size**
     The maximum size that may be locked into memory.
@@ -35,6 +41,12 @@ Use one of the following switches to specify which resource limit to set or repo
 
 **-n** or **--file-descriptor-count**
     The maximum number of open file descriptors.
+
+**-q** or **--queue-size**
+    The maximum size of data in POSIX message queues.
+
+**-r** or **--realtime-priority**
+    The maximum realtime scheduling priority.
 
 **-s** or **--stack-size**
     The maximum stack size.
@@ -47,6 +59,9 @@ Use one of the following switches to specify which resource limit to set or repo
 
 **-v** or **--virtual-memory-size**
     The maximum amount of virtual memory available to the shell.
+
+**-y** or **--realtime-maxtime**
+    The maximum contiguous realtime CPU time in microseconds.
 
 Note that not all these limits are available in all operating systems.
 

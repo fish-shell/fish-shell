@@ -37,12 +37,12 @@ static const struct resource_t resource_arr[] = {
 #endif
     {RLIMIT_NOFILE, L"Maximum number of open file descriptors", L'n', 1},
     {RLIMIT_STACK, L"Maximum stack size", L's', 1024},
-    {RLIMIT_CPU, L"Maximum amount of cpu time in seconds", L't', 1},
+    {RLIMIT_CPU, L"Maximum amount of CPU time in seconds", L't', 1},
 #ifdef RLIMIT_NPROC
-    {RLIMIT_NPROC, L"Maximum number of processes available to a single user", L'u', 1},
+    {RLIMIT_NPROC, L"Maximum number of processes available to current user", L'u', 1},
 #endif
 #ifdef RLIMIT_AS
-    {RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v', 1024},
+    {RLIMIT_AS, L"Maximum amount of virtual memory available to each process", L'v', 1024},
 #endif
     {0, nullptr, 0, 0}};
 

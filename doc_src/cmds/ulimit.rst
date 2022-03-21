@@ -25,7 +25,7 @@ Use one of the following switches to specify which resource limit to set or repo
     The maximum size of a process' data segment.
 
 **-f** or **--file-size**
-    The maximum size of files created by the shell.
+    The maximum size of files created by a process.
 
 **-l** or **--lock-size**
     The maximum size that may be locked into memory.
@@ -34,7 +34,7 @@ Use one of the following switches to specify which resource limit to set or repo
     The maximum resident set size.
 
 **-n** or **--file-descriptor-count**
-    The maximum number of open file descriptors (most systems do not allow this value to be set).
+    The maximum number of open file descriptors.
 
 **-s** or **--stack-size**
     The maximum stack size.
@@ -43,7 +43,7 @@ Use one of the following switches to specify which resource limit to set or repo
     The maximum amount of CPU time in seconds.
 
 **-u** or **--process-count**
-    The maximum number of processes available to a single user.
+    The maximum number of processes available to the current user.
 
 **-v** or **--virtual-memory-size**
     The maximum amount of virtual memory available to the shell.
@@ -54,7 +54,7 @@ The value of limit can be a number in the unit specified for the resource or one
 
 If limit is given, it is the new value of the specified resource. If no option is given, then **-f** is assumed. Values are in kilobytes, except for **-t**, which is in seconds and **-n** and **-u**, which are unscaled values. The exit status is 0 unless an invalid option or argument is supplied, or an error occurs while setting a new limit.
 
-``ulimit`` also accepts the following switches that determine what type of limit to set:
+``ulimit`` also accepts the following options that determine what type of limit to set:
 
 **-H** or **--hard**
     Sets hard resource limit.

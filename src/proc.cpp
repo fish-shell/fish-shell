@@ -946,7 +946,8 @@ bool job_t::resume() {
 }
 
 void job_t::continue_job(parser_t &parser) {
-    FLOGF(proc_job_run, L"Run job %d, gid %d (%ls), %ls, %ls",
+    FLOGF(proc_job_run, L"Run job %d (%ls), %ls, %ls",
+          job_id(), command_wcstr(),
           is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 

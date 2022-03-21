@@ -1615,8 +1615,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         const wchar_t *begin, *end;
 
         const wchar_t *buff = command_line.c_str();
-        parse_util_token_extent(buff, cursor_pos, &begin, nullptr, nullptr, nullptr);
-        end = buff + cursor_pos;
+        parse_util_token_extent(buff, cursor_pos, &begin, &end, nullptr, nullptr);
 
         wcstring sb(buff, begin - buff);
 

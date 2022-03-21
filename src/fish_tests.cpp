@@ -3327,6 +3327,13 @@ static void test_complete() {
         completions.front().completion, completions.front().flags, cmdline, &where, false);
     do_test(newcmdline == L"touch test/complete_test/bracket\\[abc\\] ");
 
+    // #8820
+    size_t cursor_pos = 11;
+    newcmdline =
+        completion_apply_to_command_line(L"Debug/", COMPLETE_REPLACES_TOKEN | COMPLETE_NO_SPACE,
+                                         L"mv debug debug", &cursor_pos, true);
+    do_test(newcmdline == L"mv debug Debug/");
+
 #ifndef __CYGWIN__  // Square brackets are not legal path characters on WIN32/CYGWIN
     cmdline = LR"(touch test/complete_test/gnarlybracket\\[)";
     completions = do_complete(cmdline, {});

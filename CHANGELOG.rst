@@ -37,6 +37,7 @@ Interactive improvements
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
+- The nextd-or-forward-word and prevd-or-backward-word bindings move like forward/backward-word again instead of forward/backward-bigword.
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

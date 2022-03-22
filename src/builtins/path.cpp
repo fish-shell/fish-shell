@@ -14,6 +14,7 @@
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../util.h"
 #include "../wcstringutil.h"
 #include "../wgetopt.h"
 #include "../wutil.h"  // IWYU pragma: keep
@@ -155,6 +156,9 @@ struct options_t {  //!OCLINT(too many fields)
     bool perm_valid = false;
     bool type_valid = false;
     bool invert_valid = false;
+    bool what_valid = false;
+    bool have_what = false;
+    const wchar_t *what = nullptr;
 
     bool null_in = false;
     bool null_out = false;
@@ -344,6 +348,16 @@ static int handle_flag_v(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_what(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    UNUSED(argv);
+    UNUSED(parser);
+    UNUSED(streams);
+    opts->have_what = true;
+    opts->what = w.woptarg;
+    return STATUS_CMD_OK;
+}
+
 /// This constructs the wgetopt() short options string based on which arguments are valid for the
 /// subcommand. We have to do this because many short flags have multiple meanings and may or may
 /// not require an argument depending on the meaning.
@@ -372,6 +386,7 @@ static const struct woption long_options[] = {
                                               {L"perm", required_argument, nullptr, 'p'},
                                               {L"type", required_argument, nullptr, 't'},
                                               {L"invert", required_argument, nullptr, 't'},
+                                              {L"what", required_argument, nullptr, 1},
                                               {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function = {
@@ -381,6 +396,7 @@ static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function
     {'r', handle_flag_r}, {'w', handle_flag_w},
     {'x', handle_flag_x}, {'f', handle_flag_f},
     {'l', handle_flag_l}, {'d', handle_flag_d},
+    {1, handle_flag_what},
 };
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
@@ -666,6 +682,66 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
+    options_t opts;
+    opts.invert_valid = true;
+    opts.what_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    auto func = +[] (const wcstring &x) {
+        return wbasename(x.c_str());
+    };
+    if (opts.have_what) {
+        if (std::wcscmp(opts.what, L"basename") == 0) {
+            // Do nothing, this is the default
+        } else if (std::wcscmp(opts.what, L"dirname") == 0) {
+            func = +[] (const wcstring &x) {
+                return wdirname(x.c_str());
+            };
+        } else if (std::wcscmp(opts.what, L"path") == 0) {
+            // Act as if --what hadn't been given.
+            opts.have_what = false;
+        } else {
+            path_error(streams, _(L"%ls: Invalid sort key '%ls'\n"), argv[0], opts.what);
+            return STATUS_INVALID_ARGS;
+        }
+    }
+
+    wcstring_list_t list;
+    arg_iterator_t aiter(argv, optind, streams, opts.null_in);
+    while (const wcstring *arg = aiter.nextstr()) {
+        list.push_back(*arg);
+    }
+
+    if (opts.have_what) {
+        // Keep a map to avoid repeated func calls and to keep things alive.
+        std::map<wcstring, wcstring> funced;
+        for (const auto &arg : list) {
+            funced[arg] = func(arg);
+        }
+
+        std::sort(list.begin(), list.end(),
+                  [&](const wcstring &a, const wcstring &b) {
+                      return (wcsfilecmp_glob(funced[a].c_str(), funced[b].c_str()) < 0) != opts.invert;
+                  });
+    } else {
+        // Without --what, we just sort by the entire path,
+        // so we have no need to transform and such.
+        std::sort(list.begin(), list.end(),
+                  [&](const wcstring &a, const wcstring &b) {
+                      return (wcsfilecmp_glob(a.c_str(), b.c_str()) < 0) != opts.invert;
+                  });
+    }
+
+    for (const auto &entry : list) {
+        path_out(streams, opts, entry);
+    }
+
+    /* TODO: Return true only if already sorted? */
+    return STATUS_CMD_OK;
+}
 
 // All strings are taken to be filenames, and if they match the type/perms/etc (and exist!)
 // they are passed along.
@@ -723,6 +799,7 @@ static constexpr const struct path_subcommand {
     {L"is", &path_is},
     {L"normalize", &path_normalize},
     {L"resolve", &path_resolve},
+    {L"sort", &path_sort},
 };
 ASSERT_SORTED_BY_NAME(path_subcommands);
 

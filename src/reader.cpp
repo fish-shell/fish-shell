@@ -3544,7 +3544,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             auto move_style =
-                (c == rl::backward_word) ? move_word_style_punctuation : move_word_style_whitespace;
+                (c != rl::backward_bigword) ? move_word_style_punctuation : move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
                       false);
             break;
@@ -3562,7 +3562,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             auto move_style =
-                (c == rl::forward_word) ? move_word_style_punctuation : move_word_style_whitespace;
+                (c != rl::forward_bigword) ? move_word_style_punctuation : move_word_style_whitespace;
             editable_line_t *el = active_edit_line();
             if (el->position() < el->size()) {
                 move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);

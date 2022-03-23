@@ -34,7 +34,7 @@ Interactive improvements
 - The default command-not-found handler now reports a special error if there is a non-executable file (:issue:`8804`)
 - ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).
-- ``ulimit`` learned a number of new options for the resource limits available on Linux (:issue:`8786`).
+- ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD and NetBSD (:issue:`8786`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

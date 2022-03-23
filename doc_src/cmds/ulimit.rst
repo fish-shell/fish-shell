@@ -18,6 +18,9 @@ Description
 
 Use one of the following switches to specify which resource limit to set or report:
 
+**-b** or **--socket-buffers**
+    The maximum size of socket buffers.
+
 **-c** or **--core-size**
     The maximum size of core files created. By setting this limit to zero, core dumps can be disabled.
 
@@ -57,13 +60,25 @@ Use one of the following switches to specify which resource limit to set or repo
 **-u** or **--process-count**
     The maximum number of processes available to the current user.
 
+**-w** or **--swap-size**
+    The maximum swap space available to the current user.
+
 **-v** or **--virtual-memory-size**
     The maximum amount of virtual memory available to the shell.
 
 **-y** or **--realtime-maxtime**
     The maximum contiguous realtime CPU time in microseconds.
 
-Note that not all these limits are available in all operating systems.
+**-K** or **--kernel-queues**
+    The maximum number of kqueues (kernel queues) for the current user.
+
+**-P** or **--ptys**
+    The maximum number of pseudo-terminals for the current user.
+
+**-T** or **--threads**
+    The maximum number of simultaneous threads for the current user.
+
+Note that not all these limits are available in all operating systems; consult the documentation for ``setrlimit`` in your operating system.
 
 The value of limit can be a number in the unit specified for the resource or one of the special values ``hard``, ``soft``, or ``unlimited``, which stand for the current hard limit, the current soft limit, and no limit, respectively.
 

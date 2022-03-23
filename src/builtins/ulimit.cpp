@@ -26,6 +26,9 @@ struct resource_t {
 
 /// Array of resource_t structs, describing all known resource types.
 static const struct resource_t resource_arr[] = {
+#ifdef RLIMIT_SBSIZE
+    {RLIMIT_SBSIZE, L"Maximum size of socket buffers", L'b', 1024},
+#endif
     {RLIMIT_CORE, L"Maximum size of core files created", L'c', 1024},
     {RLIMIT_DATA, L"Maximum size of a process’s data segment", L'd', 1024},
 #ifdef RLIMIT_NICE
@@ -56,8 +59,20 @@ static const struct resource_t resource_arr[] = {
 #ifdef RLIMIT_AS
     {RLIMIT_AS, L"Maximum amount of virtual memory available to each process", L'v', 1024},
 #endif
+#ifdef RLIMIT_SWAP
+    {RLIMIT_SWAP, L"Maximum swap space", L'w', 1024},
+#endif
 #ifdef RLIMIT_RTTIME
     {RLIMIT_RTTIME, L"Maximum contiguous realtime CPU time", L'y', 1},
+#endif
+#ifdef RLIMIT_KQUEUES
+    {RLIMIT_KQUEUES, L"Maximum number of kqueues", L'K', 1},
+#endif
+#ifdef RLIMIT_NPTS
+    {RLIMIT_NPTS, L"Maximum number of pseudo-terminals", L'P', 1},
+#endif
+#ifdef RLIMIT_NTHR
+    {RLIMIT_NTHR, L"Maximum number of simultaneous threads", L'T', 1},
 #endif
     {0, nullptr, 0, 0}};
 
@@ -173,11 +188,12 @@ maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar
     bool soft = false;
     int what = RLIMIT_FSIZE;
 
-    static const wchar_t *const short_options = L":HSacdefilmnqrstuvyh";
+    static const wchar_t *const short_options = L":HSabcdefilmnqrstuvwyKPTh";
     static const struct woption long_options[] = {
         {L"all", no_argument, nullptr, 'a'},
         {L"hard", no_argument, nullptr, 'H'},
         {L"soft", no_argument, nullptr, 'S'},
+        {L"socket-buffers", no_argument, nullptr, 'b'},
         {L"core-size", no_argument, nullptr, 'c'},
         {L"data-size", no_argument, nullptr, 'd'},
         {L"nice", no_argument, nullptr, 'e'},
@@ -192,7 +208,11 @@ maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar
         {L"cpu-time", no_argument, nullptr, 't'},
         {L"process-count", no_argument, nullptr, 'u'},
         {L"virtual-memory-size", no_argument, nullptr, 'v'},
+        {L"swap-size", no_argument, nullptr, 'w'},
         {L"realtime-maxtime", no_argument, nullptr, 'y'},
+        {L"kernel-queues", no_argument, nullptr, 'K'},
+        {L"ptys", no_argument, nullptr, 'P'},
+        {L"threads", no_argument, nullptr, 'T'},
         {L"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0}};
 
@@ -212,6 +232,12 @@ maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar
                 soft = true;
                 break;
             }
+#ifdef RLIMIT_SBSIZE
+            case 'b': {
+                what = RLIMIT_SBSIZE;
+                break;
+            }
+#endif
             case 'c': {
                 what = RLIMIT_CORE;
                 break;
@@ -284,9 +310,33 @@ maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar
                 break;
             }
 #endif
+#ifdef RLIMIT_SWAP
+            case 'w': {
+                what = RLIMIT_SWAP;
+                break;
+            }
+#endif
 #ifdef RLIMIT_RTTIME
             case 'y': {
                 what = RLIMIT_RTTIME;
+                break;
+            }
+#endif
+#ifdef RLIMIT_KQUEUES
+            case 'K': {
+                what = RLIMIT_KQUEUES;
+                break;
+            }
+#endif
+#ifdef RLIMIT_NPTS
+            case 'P': {
+                what = RLIMIT_NPTS;
+                break;
+            }
+#endif
+#ifdef RLIMIT_NTHR
+            case 'T': {
+                what = RLIMIT_NTHR;
                 break;
             }
 #endif

@@ -205,6 +205,14 @@ maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const wcstrin
 }
 
 void autoload_t::perform_autoload(const wcstring &path, parser_t &parser) {
+    // We do the useful part of what exec_subshell does ourselves
+    // - we source the file.
+    // We don't create a buffer or check ifs or create a read_limit
+
     wcstring script_source = L"source " + escape_string(path, ESCAPE_ALL);
-    exec_subshell(script_source, parser, false /* do not apply exit status */);
+    auto prev_statuses = parser.get_last_statuses();
+    const cleanup_t put_back([&] {
+        parser.set_last_statuses(prev_statuses);
+    });
+    parser.eval(script_source, io_chain_t{});
 }

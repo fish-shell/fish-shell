@@ -179,7 +179,7 @@ Parentheses and the ``-o`` and ``-a`` operators can be combined to produce more 
 
     if test \( -f /foo -o -f /bar \) -a \( -f /baz -o -f /bat \)
         echo Success.
-    end.
+    end
 
 
 Numerical comparisons will simply fail if one of the operands is not a number:

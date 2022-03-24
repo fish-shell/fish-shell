@@ -1,3 +1,17 @@
+fish 3.4.1 (released ?)
+==================================
+
+This release of fish fixes the following problems identified in fish 3.4.0:
+
+- The ``fish_title`` function now uses an old-school ``()`` command substitution to prevent an error when an old fish is still running on upgrade and picks the new function up (:issue:`8778`)
+- Building on NetBSD (:issue:`8788`) and OpenIndiana (:issue:`8780`) works again
+- The new C++ implementation of ``nextd-or-forward-word``, bound to alt-right-arrow by default, accidentally moved like ``forward-bigword`` (:issue:`8790`).
+- ``funcsave -q`` wasn't actually quiet and the long version was removed. This has been corrected (:issue:`8830`).
+
+If you are upgrading from version 3.3.1 or before, please also review the release notes for 3.3.0 (included below).
+
+--------------
+
 fish 3.4.0 (released March 12, 2022)
 ====================================
 

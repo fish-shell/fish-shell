@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     funcsave FUNCTION_NAME
-    funcsave [-q] [(-d | --directory) DIR] FUNCTION_NAME
+    funcsave [-q | --quiet] [(-d | --directory) DIR] FUNCTION_NAME
 
 
 Description

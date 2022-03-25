@@ -1941,17 +1941,12 @@ const wchar_t *REPLACE_UNCLEAN = L"$*?({})";
 /// other than if the new token is already an exact replacement, e.g. if the COMPLETE_DONT_ESCAPE
 /// flag is set.
 static bool reader_can_replace(const wcstring &in, int flags) {
-    const wchar_t *str = in.c_str();
-
     if (flags & COMPLETE_DONT_ESCAPE) {
         return true;
     }
 
     // Test characters that have a special meaning in any character position.
-    while (*str) {
-        if (std::wcschr(REPLACE_UNCLEAN, *str)) return false;
-        str++;
-    }
+    if (in.find_first_of(REPLACE_UNCLEAN) != wcstring::npos) return false;
 
     return true;
 }
@@ -1986,7 +1981,7 @@ bool reader_data_t::handle_completions(const completion_list_t &comp, size_t tok
     bool success = false;
     const editable_line_t *el = &command_line;
 
-    const wcstring tok(el->text().c_str() + token_begin, token_end - token_begin);
+    const wcstring tok(el->text(), token_begin, token_end - token_begin);
 
     // Check trivial cases.
     size_t size = comp.size();

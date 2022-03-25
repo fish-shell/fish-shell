@@ -323,17 +323,17 @@ static maybe_t<split_var_t> split_var_and_indexes(const wchar_t *arg, env_mode_f
                                                   const environment_t &vars,
                                                   io_streams_t &streams) {
     split_var_t res{};
-    const wchar_t *open_bracket = std::wcschr(arg, L'[');
-    size_t varname_len = open_bracket ? open_bracket - arg : wcslen(arg);
-    res.varname.assign(arg, varname_len);
+    wcstring argstr{arg};
+    auto open_bracket = argstr.find(L'[');
+    res.varname.assign(arg, open_bracket == wcstring::npos ? argstr.size() : open_bracket);
     res.var = vars.get(res.varname, mode);
-    if (!open_bracket) {
+    if (open_bracket == wcstring::npos) {
         // Common case of no bracket.
         return res;
     }
 
     long varsize = res.varsize();
-    const wchar_t *p = open_bracket + 1;
+    const wchar_t *p = arg + open_bracket + 1;
     while (*p != L']') {
         const wchar_t *end;
         long l_ind;

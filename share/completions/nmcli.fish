@@ -1,4 +1,6 @@
-set -l cname (string escape -- (nmcli -g NAME connection show --active)\t"Active connection")
+set -l nmoutput (nmcli -g NAME connection show --active 2>/dev/null)
+or exit # networkmanager isn't running, no point in completing
+set -l cname (string escape -- $nmoutput\t"Active connection")
 set -a cname (string escape -- (nmcli -g NAME connection show)\t"Connection")
 set -l ifname (string escape -- (nmcli -g DEVICE device status)\t"Interface name")
 set -l ssid (string escape -- (nmcli -g SSID device wifi list)\t"SSID")

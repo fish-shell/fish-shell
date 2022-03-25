@@ -4011,7 +4011,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     first_prompt = false;
 
     if (!conf.event.empty()) {
-        event_fire_generic(parser(), conf.event.c_str());
+        event_fire_generic(parser(), conf.event);
     }
     exec_prompt();
 

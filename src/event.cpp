@@ -492,11 +492,9 @@ void event_print(io_streams_t &streams, const wcstring &type_filter) {
     }
 }
 
-void event_fire_generic(parser_t &parser, const wchar_t *name, const wcstring_list_t *args) {
-    assert(name && "Null name");
-
+void event_fire_generic(parser_t &parser, wcstring name, const wcstring_list_t *args) {
     event_t ev(event_type_t::generic);
-    ev.desc.str_param1 = name;
+    ev.desc.str_param1 = std::move(name);
     if (args) ev.arguments = *args;
     event_fire(parser, ev);
 }

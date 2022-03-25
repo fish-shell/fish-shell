@@ -692,11 +692,10 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
 
 /// Like wcstod(), but wcstod() is enormously expensive on some platforms so this tries to have a
 /// fast path.
-double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
+double fish_wcstod(const wchar_t *str, wchar_t **endptr, size_t len) {
     // We can ignore the locale because we use LC_NUMERIC=C!
     // The "fast path." If we're all ASCII and we fit inline, use strtod().
     char narrow[128];
-    size_t len = std::wcslen(str);
     size_t len_plus_0 = 1 + len;
     auto is_ascii = [](wchar_t c) { return 0 <= c && c <= 127; };
     if (len_plus_0 <= sizeof narrow && std::all_of(str, str + len, is_ascii)) {
@@ -711,6 +710,13 @@ double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
         return ret;
     }
     return std::wcstod(str, endptr);
+}
+
+double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
+    return fish_wcstod(str, endptr, std::wcslen(str));
+}
+double fish_wcstod(const wcstring &str, wchar_t **endptr) {
+    return fish_wcstod(str.c_str(), endptr, str.size());
 }
 
 /// Like wcstod(), but allows underscore separators. Leading, trailing, and multiple underscores are

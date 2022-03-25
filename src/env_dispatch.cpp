@@ -445,7 +445,7 @@ static void update_fish_color_support(const environment_t &vars) {
                 FLOGF(term_support, L"Truecolor support: Enabling for st");
                 support_term24bit = true;
             } else if (auto vte = vars.get(L"VTE_VERSION")) {
-                if (fish_wcstod(vte->as_string().c_str(), nullptr) > 3600) {
+                if (fish_wcstod(vte->as_string(), nullptr) > 3600) {
                     FLOGF(term_support, L"Truecolor support: Enabling for VTE version %ls",
                           vte->as_string().c_str());
                     support_term24bit = true;

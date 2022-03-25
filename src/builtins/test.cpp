@@ -669,13 +669,14 @@ bool parenthetical_expression::evaluate(io_streams_t *streams, wcstring_list_t &
 }
 
 // Parse a double from arg. Return true on success, false on failure.
-static bool parse_double(const wchar_t *arg, double *out_res) {
+static bool parse_double(const wcstring &argstr, double *out_res) {
     // Consume leading spaces.
+    const wchar_t *arg = argstr.c_str();
     while (arg && *arg != L'\0' && iswspace(*arg)) arg++;
     if (!arg) return false;
     errno = 0;
     wchar_t *end = nullptr;
-    *out_res = fish_wcstod(arg, &end);
+    *out_res = fish_wcstod(arg, &end, argstr.size() - (arg - argstr.c_str()));
     // Consume trailing spaces.
     while (end && *end != L'\0' && iswspace(*end)) end++;
     return errno == 0 && end > arg && *end == L'\0';
@@ -688,7 +689,7 @@ static bool parse_double(const wchar_t *arg, double *out_res) {
 static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t &errors) {
     const wchar_t *argcs = arg.c_str();
     double floating = 0;
-    bool got_float = parse_double(argcs, &floating);
+    bool got_float = parse_double(arg, &floating);
     errno = 0;
     long long integral = fish_wcstoll(argcs);
     bool got_int = (errno == 0);

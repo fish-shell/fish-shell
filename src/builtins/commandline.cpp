@@ -60,7 +60,7 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
     switch (append_mode) {
         case REPLACE_MODE: {
             out.append(insert);
-            out_pos = std::wcslen(insert) + (begin - buff);
+            out_pos = out.size();
             break;
         }
         case APPEND_MODE: {

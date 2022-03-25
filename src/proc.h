@@ -563,12 +563,6 @@ void proc_init();
 /// Wait for any process finishing, or receipt of a signal.
 void proc_wait_any(parser_t &parser);
 
-/// Set and get whether we are in initialization.
-// Hackish. In order to correctly report the origin of code with no associated file, we need to
-// know whether it's run during initialization or not.
-void set_is_within_fish_initialization(bool flag);
-bool is_within_fish_initialization();
-
 /// Send SIGHUP to the list \p jobs, excepting those which are in fish's pgroup.
 void hup_jobs(const job_list_t &jobs);
 

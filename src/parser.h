@@ -152,6 +152,9 @@ struct library_data_t {
     /// Number of recursive calls to the internal completion function.
     uint32_t complete_recursion_level{0};
 
+    /// If set, we are currently within fish's initialization routines.
+    bool within_fish_init{false};
+
     /// If we're currently repainting the commandline.
     /// Useful to stop infinite loops.
     bool is_repaint{false};

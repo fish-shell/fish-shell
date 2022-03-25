@@ -341,7 +341,7 @@ static void append_block_description_to_stack_trace(const parser_t &parser, cons
         if (file) {
             append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
                           user_presentable_path(file, parser.vars()).c_str());
-        } else if (is_within_fish_initialization()) {
+        } else if (parser.libdata().within_fish_init) {
             append_format(trace, _(L"\tcalled during startup\n"));
         }
     }
@@ -493,7 +493,7 @@ wcstring parser_t::current_line() {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "),
                           user_presentable_path(file, vars()).c_str(), lineno);
-        } else if (is_within_fish_initialization()) {
+        } else if (libdata().within_fish_init) {
             append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
             append_format(prefix, L"%ls (line %d): ", _(L"Standard input"), lineno);

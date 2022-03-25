@@ -233,9 +233,10 @@ static void source_config_in_directory(parser_t &parser, const wcstring &dir) {
     FLOGF(config, L"sourcing %ls", escaped_pathname.c_str());
 
     const wcstring cmd = L"builtin source " + escaped_pathname;
-    set_is_within_fish_initialization(true);
+
+    parser.libdata().within_fish_init = true;
     parser.eval(cmd, io_chain_t());
-    set_is_within_fish_initialization(false);
+    parser.libdata().within_fish_init = false;
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
@@ -426,6 +427,7 @@ int main(int argc, char **argv) {
     set_main_thread();
     setup_fork_guards();
     signal_unblock_all();
+
     setlocale(LC_ALL, "");
 
     // struct stat tmp;

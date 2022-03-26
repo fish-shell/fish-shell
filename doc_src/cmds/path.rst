@@ -239,6 +239,8 @@ Examples
 
 Unlike ``realpath`` or ``path resolve``, it does not make the paths absolute. It also does not resolve any symlinks. As such it can operate on non-existent paths.
 
+Leading "./" components are usually removed. But when a path starts with ``-``, ``path normalize`` will add it instead to avoid confusion with options.
+
 It returns 0 if any normalization was done, i.e. any given path wasn't in canonical form.
 
 Examples
@@ -256,6 +258,9 @@ Examples
     
     >_ path normalize ./my/subdirs/../sub2
     my/sub2
+
+    >_ path normalize -- -/foo
+    ./-/foo
 
 "resolve" subcommand
 --------------------

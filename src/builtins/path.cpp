@@ -482,7 +482,11 @@ static int path_dirname(parser_t &parser, io_streams_t &streams, int argc, const
 // Not a constref because this must have the same type as wdirname.
 // cppcheck-suppress passedByValue
 static wcstring normalize_helper(wcstring path) {
-    return normalize_path(path, false);
+    wcstring np = normalize_path(path, false);
+    if (!np.empty() && np[0] == L'-') {
+        np = L"./" + np;
+    }
+    return np;
 }
 
 static bool filter_path(options_t opts, const wcstring &path) {

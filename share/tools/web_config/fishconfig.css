@@ -1,7 +1,7 @@
 body {
     background: linear-gradient(to bottom, #a7cfdf 0%, #23538a 100%);
     /* List explained in the doc theme pydoctheme.css */
-    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI",Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
     color: #222;
 }
 
@@ -30,12 +30,14 @@ body {
 
 .tab {
     display: table-cell;
+    border: 1px solid #ccc;
+    border-right: none;
+    border-top: none;
     padding-bottom: 15px;
     padding-top: 15px;
     padding-left: 3px;
     padding-right: 3px;
-    font-size: 18pt;
-    font-weight: 500;
+    font-size: 14pt;
     text-align: center;
     background-color: white;
     cursor: pointer;
@@ -507,10 +509,6 @@ img.delete_icon {
     overflow: hidden;
     text-overflow: ellipsis;
     color: #c0c0c0; /* set_color normal, assume white (not brwhite) */
-}
-
-.prompt_demo, .prompt_demo_text, .data_table_row, .colorpicker_text_sample_tight, .colorpicker_text_sample, .history_text, pre, code, tt {
-    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Ubuntu Mono", "Hack", "Noto Sans Mono", Liberation Mono, monospace;
 }
 
 .prompt_demo {

@@ -96,15 +96,15 @@ fish cannot change the background color of your terminal. Refer to your terminal
 
 		<div style="position: absolute; right: 5px; bottom: 5px;">
 
-			<span class="customize_theme_button"
+			<button class="customize_theme_button"
 				  ng-class="{button_highlight: customizationActive}"
 				  data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'black')}"
-				  ng-click="toggleCustomizationActive();">Customize</span>
+				  ng-click="toggleCustomizationActive();">Customize</button>
 
-			<span class="save_button"
+			<button class="save_button"
 				  data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'black')}"
 				  ng-show="showSaveButton"
-				  ng-click="setTheme()">{{saveThemeButtonTitle}}</span>
+				  ng-click="setTheme()">{{saveThemeButtonTitle}}</button>
 		</div>
 
     </div>

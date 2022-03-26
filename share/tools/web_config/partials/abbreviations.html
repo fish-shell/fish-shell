@@ -14,7 +14,7 @@
             <span ng-show="abbreviation.editable"><input ng-model="abbreviation.phrase" class="abbreviation_input" style="text-align: left; 	min-width: 22em;"></span>
         </td>
         <td ng-class="{ data_table_cell: true }" class="abbreviation_actions">
-            <span ng-show="abbreviation.editable && abbreviation.word && abbreviation.phrase" ng-click="saveAbbreviation(abbreviation)"><span class="save_button" style="margin: inherit;">Save</span></span>
+            <span ng-show="abbreviation.editable && abbreviation.word && abbreviation.phrase" ng-click="saveAbbreviation(abbreviation)"><button class="save_button" style="margin: inherit;">Save</button></span>
             <a ng-show="abbreviation.word" ng-click="removeAbbreviation(abbreviation)"><img alt="Delete" src="delete.png" style="vertical-align: text-bottom"></a>
         </td>
     </tr>

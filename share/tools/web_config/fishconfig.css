@@ -529,13 +529,9 @@ img.delete_icon {
 .generic_button {
     border-radius: 5px;
     border: solid rgba(71, 71, 71, 0.5) 1px;
-    padding: 5px 8px;
     font-size: 13pt;
-    display: inline-block;
-    margin-top: 12px;
     background-color: rgba(128, 128, 128, 0.4);
     color: #fff;
-    cursor: pointer;
 }
 
 .save_button:hover,

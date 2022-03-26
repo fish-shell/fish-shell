@@ -6,11 +6,11 @@
 	    <div ng-bind-html='selectedPrompt.demo | to_trusted' style='flex-grow: 1' class="prompt_demo unbordered"></div>
 	    <div ng-if='selectedPrompt.right' title="right prompt for {{selectedPrompt.name }}" ng-bind-html='selectedPrompt.right | to_trusted' class="prompt_demo unbordered" ng-click="selectPrompt(prompt)"></div>
     </div>
-	<div style="position: absolute; right: 5px; bottom: 5px; color:">
-		<span class="save_button"
+	<div style="position: absolute; right: 5px; bottom: 5px;">
+		<button class="save_button"
 			ng-show="showSaveButton"
 			style="color: #CCC"
-			ng-click="setPrompt()">{{ savePromptButtonTitle }}</span>
+			ng-click="setPrompt()">{{ savePromptButtonTitle }}</button>
 	</div>
 </div>
 <div style="margin: 10px 15px 7px 15px; padding-bottom: 10px; border-bottom: solid 1px #999">Preview a prompt below:</div>

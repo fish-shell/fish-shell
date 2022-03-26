@@ -237,7 +237,7 @@ Examples
 
 ``path normalize`` returns the normalized versions of all paths. That means it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
 
-It is the same as ``realpath --no-symlinks``, as it creates the "real", canonical version of the path but doesn't resolve any symlinks. As such it can operate on nonexistent paths.
+Unlike ``realpath`` or ``path resolve``, it does not make the paths absolute. It also does not resolve any symlinks. As such it can operate on non-existent paths.
 
 It returns 0 if any normalization was done, i.e. any given path wasn't in canonical form.
 
@@ -254,6 +254,9 @@ Examples
     # The "//" is squashed, but /bin isn't resolved even if your system links it to /usr/bin.
     /bin/bash
     
+    >_ path normalize ./my/subdirs/../sub2
+    my/sub2
+
 "resolve" subcommand
 --------------------
 
@@ -261,9 +264,9 @@ Examples
 
     path resolve [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
 
-``path resolve`` returns the normalized, physical versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
+``path resolve`` returns the normalized, physical and absolute versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components. Then it turns that path into the absolute path starting from the filesystem root "/".
 
-It is the same as ``realpath``, as it creates the "real", canonical version of the path. However, for nonexistent paths it will resolve as far as it can and normalize the nonexistent part.
+It is similar to ``realpath``, as it creates the "real", canonical version of the path. However, for nonexistent paths it will resolve as far as it can and normalize the nonexistent part.
 
 It returns 0 if any normalization or resolution was done, i.e. any given path wasn't in canonical form.
 

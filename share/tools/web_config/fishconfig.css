@@ -34,7 +34,6 @@ body {
 
 .tab {
     display: table-cell;
-    white-space: nowrap;
     padding-bottom: 15px;
     padding-top: 15px;
     padding-left: 3px;

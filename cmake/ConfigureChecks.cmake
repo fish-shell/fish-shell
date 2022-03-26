@@ -11,9 +11,6 @@ if(APPLE)
     if(REQUIRES_UNGUARDED_AVAILABILITY)
         list(APPEND CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS} "-Werror=unguarded-availability")
     endif()
-    # Fix for https://github.com/fish-shell/fish-shell/issues/5244
-    # via https://gitlab.kitware.com/cmake/cmake/-/issues/18921
-    set(CMAKE_FIND_FRAMEWORK NEVER)
 endif()
 
 # An unrecognized flag is usually a warning and not an error, which CMake apparently does

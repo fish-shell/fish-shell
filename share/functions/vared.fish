@@ -17,25 +17,18 @@ function vared --description "Edit variable value"
 
             case '*'
                 if test (count $$argv ) -lt 2
-                    set -l init ''
-                    if test -n "$$argv"
-                        set init $$argv
-                    end
-                    set -l prompt 'set_color green; echo '$argv'; set_color normal; echo "> "'
-                    if read -p $prompt -c $init tmp
+                    # Avoid using any local variables in this function, otherwise they can't be edited
+                    # https://github.com/fish-shell/fish-shell/issues/8836
 
-                        # If variable already exists, do not add any
-                        # switches, so we don't change export rules. But
-                        # if it does not exist, we make the variable
-                        # global, so that it will not die when this
-                        # function dies
+                    # The command substitution in this line controls the scope.
+                    # If variable already exists, do not add any switches, so we don't change
+                    # scoping or export rules. But if it does not exist, we make the variable
+                    # global, so that it will not die when this function dies.
 
-                        if test -n "$$argv"
-                            set $argv $tmp
-                        else
-                            set -g $argv $tmp
-                        end
-                    end
+                    read -p 'set_color green; echo '$argv'; set_color normal; echo "> "' \
+                        (if not set -q $argv; echo -g; end) \
+                        -c "$$argv" \
+                        $argv
                 else
                     printf (_ '%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\n') vared $argv (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo) $argv (set_color normal; echo) $argv
                 end

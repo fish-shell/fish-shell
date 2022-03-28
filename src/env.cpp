@@ -65,10 +65,11 @@ static acquired_lock<env_universal_t> uvars() {
     return s_universal_variables->acquire();
 }
 
+/// Set when a universal variable has been modified but not yet been written to disk via sync().
+static relaxed_atomic_bool_t s_uvars_locally_modified{false};
+
 /// Whether we were launched with no_config; in this case setting a uvar instead sets a global.
 static relaxed_atomic_bool_t s_uvar_scope_is_global{false};
-
-bool env_universal_barrier() { return env_stack_t::principal().universal_barrier(); }
 
 namespace {
 struct electric_var_t {
@@ -430,7 +431,9 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
         // Set up universal variables using the default path.
         callback_data_list_t callbacks;
         uvars()->initialize(callbacks);
-        env_universal_callbacks(&vars, callbacks);
+        for (const callback_data_t &cb : callbacks) {
+            env_dispatch_var_change(cb.key, vars);
+        }
 
         // Do not import variables that have the same name and value as
         // an exported universal variable. See issues #5258 and #5348.
@@ -1289,23 +1292,25 @@ mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
     return result;
 }
 
-bool env_stack_t::universal_barrier() {
-    // Only perform universal barriers for the principal env stack.
-    // This means that changes from other fish processes will only be visible when the "main thread
-    // runs."
-    if (!is_principal()) return false;
-
-    ASSERT_IS_MAIN_THREAD();
-    if (s_uvar_scope_is_global) return false;
+std::vector<event_t> env_stack_t::universal_sync(bool always) {
+    if (s_uvar_scope_is_global) return {};
+    if (!always && !s_uvars_locally_modified) return {};
+    s_uvars_locally_modified = false;
 
     callback_data_list_t callbacks;
     bool changed = uvars()->sync(callbacks);
     if (changed) {
         universal_notifier_t::default_notifier().post_notification();
     }
-
-    env_universal_callbacks(this, callbacks);
-    return changed || !callbacks.empty();
+    // React internally to changes to special variables like LANG, and populate on-variable events.
+    std::vector<event_t> result;
+    for (const callback_data_t &cb : callbacks) {
+        env_dispatch_var_change(cb.key, *this);
+        event_t evt =
+            cb.is_erase() ? event_t::variable_erase(cb.key) : event_t::variable_set(cb.key);
+        result.push_back(std::move(evt));
+    }
+    return result;
 }
 
 statuses_t env_stack_t::get_last_statuses() const {
@@ -1368,9 +1373,9 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
             env_dispatch_var_change(key, *this);
         }
     }
-    // If the principal stack modified universal variables, then post a barrier.
-    if (ret.uvar_modified && is_principal()) {
-        universal_barrier();
+    // Mark if we modified a uvar.
+    if (ret.uvar_modified) {
+        s_uvars_locally_modified = true;
     }
     return ret.status;
 }
@@ -1393,8 +1398,8 @@ int env_stack_t::remove(const wcstring &key, int mode) {
             env_dispatch_var_change(key, *this);
         }
     }
-    if (ret.uvar_modified && is_principal()) {
-        universal_barrier();
+    if (ret.uvar_modified) {
+        s_uvars_locally_modified = true;
     }
     return ret.status;
 }

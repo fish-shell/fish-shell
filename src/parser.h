@@ -259,12 +259,19 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// This is in "reverse" order: the topmost block is at the front. This enables iteration from
     /// top down using range-based for loops.
     std::deque<block_t> block_list;
+
     /// The 'depth' of the fish call stack.
     int eval_level = -1;
+
     /// Set of variables for the parser.
     const std::shared_ptr<env_stack_t> variables;
+
     /// Miscellaneous library data.
     library_data_t library_data{};
+
+    /// If set, we synchronize universal variables after external commands,
+    /// including sending on-variable change events.
+    bool syncs_uvars_{false};
 
     /// List of profile items.
     /// This must be a deque because we return pointers to them to callers,
@@ -381,6 +388,11 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val);
     int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
 
+    /// Update any universal variables and send event handlers.
+    /// If \p always is set, then do it even if we have no pending changes (that is, look for
+    /// changes from other fish instances); otherwise only sync if this instance has changed uvars.
+    void sync_uvars_and_fire(bool always = false);
+
     /// Pushes a new block. Returns a pointer to the block, stored in the parser. The pointer is
     /// valid until the call to pop_block().
     block_t *push_block(block_t &&b);
@@ -428,6 +440,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// \return whether the number of functions in the stack exceeds our stack depth limit.
     bool function_stack_is_overflowing() const;
+
+    /// Mark whether we should sync universal variables.
+    void set_syncs_uvars(bool flag) { syncs_uvars_ = flag; }
 
     /// \return a shared pointer reference to this parser.
     std::shared_ptr<parser_t> shared();

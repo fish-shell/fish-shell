@@ -259,10 +259,6 @@ class env_stack_t final : public environment_t {
     /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
     void pop();
 
-    /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
-    /// \return true if something changed, false otherwise.
-    bool universal_barrier();
-
     /// Returns an array containing all exported variables in a format suitable for execv.
     std::shared_ptr<owning_null_terminated_array_t> export_arr();
 
@@ -284,6 +280,12 @@ class env_stack_t final : public environment_t {
     /// Slightly optimized implementation.
     wcstring get_pwd_slash() const override;
 
+    /// Synchronizes universal variable changes.
+    /// If \p always is set, perform synchronization even if there's no pending changes from this
+    /// instance (that is, look for changes from other fish instances).
+    /// \return a list of events for changed variables.
+    std::vector<event_t> universal_sync(bool always);
+
     // Compatibility hack; access the "environment stack" from back when there was just one.
     static const std::shared_ptr<env_stack_t> &principal_ref();
     static env_stack_t &principal() { return *principal_ref(); }
@@ -296,10 +298,6 @@ class env_stack_t final : public environment_t {
 bool get_use_posix_spawn();
 
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
-
-/// Synchronizes all universal variable changes: writes everything out, reads stuff in.
-/// \return true if any value changed.
-bool env_universal_barrier();
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();

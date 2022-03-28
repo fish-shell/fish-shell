@@ -180,7 +180,7 @@ char_event_t input_event_queue_t::readch() {
                 break;
 
             case readb_uvar_notified:
-                env_universal_barrier();
+                this->uvar_change_notified();
                 break;
 
             case readb_ioport_notified:
@@ -266,4 +266,5 @@ void input_event_queue_t::promote_interruptions_to_front() {
 
 void input_event_queue_t::prepare_to_select() {}
 void input_event_queue_t::select_interrupted() {}
+void input_event_queue_t::uvar_change_notified() {}
 input_event_queue_t::~input_event_queue_t() = default;

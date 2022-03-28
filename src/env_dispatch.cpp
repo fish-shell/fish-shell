@@ -194,19 +194,6 @@ void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
     s_var_dispatch_table->dispatch(key, vars);
 }
 
-// Trigger events due to a universal variable changing.
-void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &callbacks) {
-    for (const callback_data_t &cb : callbacks) {
-        env_dispatch_var_change(cb.key, *stack);
-
-        // TODO: eliminate this principal_parser. Need to rationalize how multiple threads work
-        // here.
-        event_t evt =
-            cb.is_erase() ? event_t::variable_erase(cb.key) : event_t::variable_set(cb.key);
-        event_fire(parser_t::principal_parser(), evt);
-    }
-}
-
 static void handle_fish_term_change(const env_stack_t &vars) {
     update_fish_color_support(vars);
     reader_schedule_prompt_repaint();

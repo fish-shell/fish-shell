@@ -9,13 +9,14 @@
 #include "common.h"
 #include "env_universal_common.h"
 
-/// Initialize variable dispatch.
 class environment_t;
+class env_stack_t;
+class parser_t;
+
+/// Initialize variable dispatch.
 void env_dispatch_init(const environment_t &vars);
 
-class env_stack_t;
+/// React to changes in variables like LANG which require running some code.
 void env_dispatch_var_change(const wcstring &key, env_stack_t &vars);
-
-void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &callbacks);
 
 #endif

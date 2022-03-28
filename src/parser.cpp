@@ -72,6 +72,15 @@ int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstr
     return set_var_and_fire(key, mode, std::move(vals));
 }
 
+void parser_t::sync_uvars_and_fire(bool always) {
+    if (this->syncs_uvars_) {
+        auto evts = this->vars().universal_sync(always);
+        for (const auto &evt : evts) {
+            event_fire(*this, evt);
+        }
+    }
+}
+
 block_t *parser_t::push_block(block_t &&block) {
     block.src_lineno = parser_t::get_lineno();
     block.src_filename = parser_t::current_filename();

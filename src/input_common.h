@@ -225,6 +225,10 @@ class input_event_queue_t {
     /// Override point for when when select() is interrupted by a signal. The default does nothing.
     virtual void select_interrupted();
 
+    /// Override point for when when select() is interrupted by the universal variable notifier.
+    /// The default does nothing.
+    virtual void uvar_change_notified();
+
     virtual ~input_event_queue_t();
 
    private:

@@ -351,6 +351,10 @@ void inputter_t::select_interrupted() /* override */ {
     this->push_front(char_event_t{char_event_type_t::check_exit});
 }
 
+void inputter_t::uvar_change_notified() /* override */ {
+    this->parser_->sync_uvars_and_fire(true /* always */);
+}
+
 void inputter_t::function_push_arg(wchar_t arg) { input_function_args_.push_back(arg); }
 
 wchar_t inputter_t::function_pop_arg() {

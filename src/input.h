@@ -60,6 +60,9 @@ class inputter_t final : private input_event_queue_t {
     // Called when select() is interrupted by a signal.
     void select_interrupted() override;
 
+    // Called when we are notified of a uvar change.
+    void uvar_change_notified() override;
+
     void function_push_arg(wchar_t arg);
     void function_push_args(readline_cmd_t code);
     void mapping_execute(const input_mapping_t &m, const command_handler_t &command_handler);

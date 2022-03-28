@@ -1383,10 +1383,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(const ast::job_t &jo
         }
 
         // Update universal variables on external commands.
-        // TODO: justify this, why not on every command?
-        if (job->has_external_proc()) {
-            parser->vars().universal_barrier();
-        }
+        // We only incorporate external changes if we had an external proc, for hysterical raisins.
+        parser->sync_uvars_and_fire(job->has_external_proc() /* always */);
 
         // If the job got a SIGINT or SIGQUIT, then we're going to start unwinding.
         if (!cancel_signal) cancel_signal = job->group->get_cancel_signal();

@@ -510,6 +510,7 @@ int main(int argc, char **argv) {
     reader_init();
 
     parser_t &parser = parser_t::principal_parser();
+    parser.set_syncs_uvars(!opts.no_config);
 
     if (!opts.no_exec && !opts.no_config) {
         read_init(parser, paths);

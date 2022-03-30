@@ -625,7 +625,7 @@ git config -z --get-regexp 'alias\..*' | while read -lz alias cmdline
     string match -q --regex '\w+' -- $command; or continue
     # Git aliases can contain chars that variable names can't - escape them.
     set -l alias (string replace 'alias.' '' -- $alias | string escape --style=var)
-    set -g __fish_git_alias_$alias $command
+    set -g __fish_git_alias_$alias $command $cmdline
 end
 
 function __fish_git_using_command
@@ -638,11 +638,39 @@ function __fish_git_using_command
     # Check aliases.
     set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
     set -q $varname
-    and contains -- $$varname $argv
+    and contains -- $$varname[1][1] $argv
     and return 0
     return 1
 end
 
+function __fish_git_contains_opt
+    # Check if an option has been given
+    # First check the commandline normally
+    __fish_contains_opt $argv
+    and return
+
+    # Now check the alias
+    argparse s= -- $argv
+    set -l cmd (__fish_git_needs_command)
+    set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
+    if set -q $varname
+        echo -- $$varname | read -lat toks
+        set toks (string replace -r '(-.*)=.*' '' -- $toks)
+        for i in $argv
+            if contains -- --$i $toks
+                return 0
+            end
+        end
+
+        for i in $_flag_s
+            if string match -qr -- "^-$i|^-[^-]*$i" $toks
+                return 0
+            end
+        end
+    end
+
+    return 1
+end
 function __fish_git_stash_using_command
     set -l cmd (commandline -opc)
     __fish_git_using_command stash
@@ -1061,7 +1089,7 @@ complete -f -c git -n '__fish_git_using_command apply' -s 3 -l 3way -d 'Attempt 
 complete -F -c git -n '__fish_git_using_command apply' -l build-fake-ancestor -d 'Build a temporary index containing these blobs'
 complete -f -c git -n '__fish_git_using_command apply' -s R -l reverse -d 'Apply the patch in reverse'
 complete -f -c git -n '__fish_git_using_command apply' -l reject -d 'Leave rejected hunks in *.rej files'
-complete -f -c git -n '__fish_git_using_command apply; and __fish_contains_opt numstat' -s z -d 'Do not munge pathnames'
+complete -f -c git -n '__fish_git_using_command apply; and __fish_git_contains_opt numstat' -s z -d 'Do not munge pathnames'
 complete -x -c git -n '__fish_git_using_command apply am' -s p -d 'Remove n leading path components'
 complete -x -c git -n '__fish_git_using_command apply am' -s C -d 'Ensure n that lines of surrounding context match'
 complete -f -c git -n '__fish_git_using_command apply' -l unidiff-zero -d 'Do not break on diffs generated using --unified=0'
@@ -1183,7 +1211,7 @@ complete -x -c git -n '__fish_git_using_command commit' -s m -l message -d 'Use 
 complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the selected commit message without launching an editor'
 complete -f -c git -n '__fish_git_using_command commit' -l no-gpg-sign -d 'Do not sign commit'
 complete -f -c git -n '__fish_git_using_command commit' -s n -l no-verify -d 'Do not run pre-commit and commit-msg hooks'
-complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
+complete -f -c git -n '__fish_git_using_command commit; and __fish_git_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty -d 'Create a commit with no changes'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty-message -d 'Create a commit with no commit message'
 # TODO options
@@ -1255,12 +1283,12 @@ complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the 
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
-complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached staged' -a '(
+complete -c git -n '__fish_git_using_command diff; and not __fish_git_contains_opt cached staged' -a '(
     set -l kinds modified
     contains -- -- (commandline -opc) && set -a kinds deleted modified-staged-deleted
     __fish_git_files $kinds
 )'
-complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cached staged' -fa '(__fish_git_files all-staged)'
+complete -c git -n '__fish_git_using_command diff; and __fish_git_contains_opt cached staged' -fa '(__fish_git_files all-staged)'
 
 ### Function to list available tools for git difftool and mergetool
 
@@ -1778,9 +1806,9 @@ complete -f -c git -n '__fish_git_using_command restore' -l ignore-unmerged -d '
 complete -f -c git -n '__fish_git_using_command restore' -l ignore-skip-worktree-bits -d 'Ignore the sparse-checkout file and unconditionally restore any files in <pathspec>'
 complete -f -c git -n '__fish_git_using_command restore' -l overlay -d 'Never remove files when restoring'
 complete -f -c git -n '__fish_git_using_command restore' -l no-overlay -d 'Remove files when restoring (default)'
-complete -f -c git -n '__fish_git_using_command restore; and not __fish_contains_opt -s S staged' -a '(__fish_git_files modified deleted modified-staged-deleted unmerged)'
-complete -f -c git -n '__fish_git_using_command restore; and __fish_contains_opt -s S staged' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
-complete -F -c git -n '__fish_git_using_command restore; and __fish_contains_opt -s s source'
+complete -f -c git -n '__fish_git_using_command restore; and not __fish_git_contains_opt -s S staged' -a '(__fish_git_files modified deleted modified-staged-deleted unmerged)'
+complete -f -c git -n '__fish_git_using_command restore; and __fish_git_contains_opt -s S staged' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
+complete -F -c git -n '__fish_git_using_command restore; and __fish_git_contains_opt -s s source'
 # switch options
 complete -f -c git -n __fish_git_needs_command -a switch -d 'Switch to a branch'
 complete -k -f -c git -n '__fish_git_using_command switch' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
@@ -1823,7 +1851,7 @@ complete -f -c git -n '__fish_git_using_command revert' -l skip -d 'Skip the cur
 ### rm
 complete -c git -n __fish_git_needs_command -a rm -d 'Remove files from the working tree and the index'
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Unstage files from the index'
-complete -c git -n '__fish_git_using_command rm; and __fish_contains_opt cached' -f -a '(__fish_git_files all-staged)'
+complete -c git -n '__fish_git_using_command rm; and __fish_git_contains_opt cached' -f -a '(__fish_git_files all-staged)'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
 complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'
@@ -1856,7 +1884,7 @@ complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify s
 complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting existing tag'
 complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_git_commits)' -d 'List tags that contain a commit'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command tag; and __fish_git_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d Tag
 # TODO options
 
 ### worktree

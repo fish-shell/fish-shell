@@ -27,6 +27,10 @@ git init >/dev/null 2>&1
 # Note: We *can't* list all here because in addition to aliases,
 # git also uses all commands in $PATH called `git-something` as custom commands,
 # so this depends on system state!
+
+# First set up a test alias - *before loading the completions*
+git config --local alias.re 'restore --staged'
+
 complete -C'git ' | grep '^add'\t
 # (note: actual tab character in the check here)
 #CHECK: add	Add file contents to the index
@@ -95,3 +99,8 @@ git config diff.external 'echo diff >> ran.txt; false'
 touch untracked_file
 fish_git_prompt > /dev/null
 cat ran.txt # should output nothing
+
+test "$(complete -C'git re ')" = "$(complete -C'git restore --staged ')"
+or begin
+    echo -- Oops re completes unlike restore --staged
+end

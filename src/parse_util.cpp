@@ -1108,7 +1108,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
     // Check that we don't try to pipe through exec.
     bool is_in_pipeline = (pipe_pos != pipeline_position_t::none);
     if (is_in_pipeline && decoration == statement_decoration_t::exec) {
-        errored = append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, L"exec");
+        errored =
+            append_syntax_error(parse_errors, source_start, INVALID_PIPELINE_CMD_ERR_MSG, L"exec");
     }
 
     // This is a somewhat stale check that 'and' and 'or' are not in pipelines, except at the
@@ -1119,8 +1120,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         // commands.
         const wcstring &command = dst.command.source(buff_src, storage);
         if (command == L"and" || command == L"or") {
-            errored =
-                append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
+            errored = append_syntax_error(parse_errors, source_start, INVALID_PIPELINE_CMD_ERR_MSG,
+                                          command.c_str());
         }
     }
 
@@ -1148,8 +1149,8 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
 
         // Check that pipes are sound.
         if (!errored && parser_is_pipe_forbidden(command) && is_in_pipeline) {
-            errored =
-                append_syntax_error(parse_errors, source_start, EXEC_ERR_MSG, command.c_str());
+            errored = append_syntax_error(parse_errors, source_start, INVALID_PIPELINE_CMD_ERR_MSG,
+                                          command.c_str());
         }
 
         // Check that we don't break or continue from outside a loop.

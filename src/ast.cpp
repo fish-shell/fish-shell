@@ -1076,7 +1076,7 @@ struct populator_t {
         const auto &tok = peek_token(1);
         if (tok.keyword == parse_keyword_t::kw_and || tok.keyword == parse_keyword_t::kw_or) {
             const wchar_t *cmdname = (tok.keyword == parse_keyword_t::kw_and ? L"and" : L"or");
-            parse_error(tok, parse_error_andor_in_pipeline, EXEC_ERR_MSG, cmdname);
+            parse_error(tok, parse_error_andor_in_pipeline, INVALID_PIPELINE_CMD_ERR_MSG, cmdname);
         }
         node.accept(*this);
     }

@@ -49,7 +49,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
             if (skip_caret && this->text.empty()) return L"";
             break;
         case parse_error_andor_in_pipeline:
-            append_format(result, EXEC_ERR_MSG,
+            append_format(result, INVALID_PIPELINE_CMD_ERR_MSG,
                           src.substr(this->source_start, this->source_length).c_str());
             return result;
         case parse_error_bare_variable_assignment: {

@@ -70,7 +70,7 @@ using parsed_source_ref_t = std::shared_ptr<const parsed_source_t>;
 parsed_source_ref_t parse_source(wcstring &&src, parse_tree_flags_t flags,
                                  parse_error_list_t *errors);
 
-/// Error message for improper use of the exec builtin.
-#define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
+/// Error message when a command may not be in a pipeline.
+#define INVALID_PIPELINE_CMD_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
 
 #endif

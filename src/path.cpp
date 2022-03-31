@@ -87,6 +87,15 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                 return true;
             }
             err = EACCES;
+            if (out_path) *out_path = std::move(next_path);
+        } else if (errno != ENOENT && err == ENOENT) {
+            // Keep the first *interesting* error and path around.
+            // ENOENT isn't interesting because not having a file is the normal case.
+            auto tmperr = errno;
+            // Ignore if the parent directory is already inaccessible.
+            if (access(wcs2string(wdirname(next_path)).c_str(), X_OK) != 0) continue;
+            err = tmperr;
+            if (out_path) *out_path = std::move(next_path);
         }
     }
 

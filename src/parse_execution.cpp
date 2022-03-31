@@ -731,8 +731,12 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
     const wchar_t *const cmd = cmd_str.c_str();
     if (err_code != ENOENT) {
+        // TODO: We currently handle all errors here the same,
+        // but this mainly applies to EACCES. We could also feasibly get:
+        // ELOOP
+        // ENAMETOOLONG
         return this->report_error(STATUS_NOT_EXECUTABLE, statement,
-                                  _(L"The file '%ls' is not executable by this user"), cmd);
+                                  _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
     }
 
     // Handle unrecognized commands with standard command not found handler that can make better
@@ -872,7 +876,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         if (!has_command && !use_implicit_cd) {
             // No command. If we're --no-execute return okay - it might be a function.
             if (no_exec()) return end_execution_reason_t::ok;
-            return this->handle_command_not_found(cmd, statement, no_cmd_err_code);
+            return this->handle_command_not_found(path_to_external_command.empty() ? cmd : path_to_external_command, statement, no_cmd_err_code);
         }
     }
 

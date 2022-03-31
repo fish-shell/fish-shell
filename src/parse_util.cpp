@@ -39,6 +39,9 @@
 /// Error message for arguments to 'end'
 #define END_ARG_ERR_MSG _(L"'end' does not take arguments. Did you forget a ';'?")
 
+/// Error message when 'time' is in a pipeline.
+#define TIME_IN_PIPELINE_ERR_MSG _(L"The 'time' command may only be at the beginning of a pipeline")
+
 /// Maximum length of a variable name to show in error reports before truncation
 static constexpr int var_err_len = 16;
 
@@ -1122,6 +1125,11 @@ static bool detect_errors_in_decorated_statement(const wcstring &buff_src,
         if (command == L"and" || command == L"or") {
             errored = append_syntax_error(parse_errors, source_start, INVALID_PIPELINE_CMD_ERR_MSG,
                                           command.c_str());
+        }
+
+        // Similarly for time (#8841).
+        if (command == L"time") {
+            errored = append_syntax_error(parse_errors, source_start, TIME_IN_PIPELINE_ERR_MSG);
         }
     }
 

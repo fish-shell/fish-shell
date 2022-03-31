@@ -36,6 +36,7 @@ Interactive improvements
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).
 - ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD and NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`).
 - The ``vared`` command can now successfully edit variables named "tmp" or "prompt" (:issue:`8836`).
+- ``time`` now emits an error if used after the first command in a pipeline (:issue:`8841`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

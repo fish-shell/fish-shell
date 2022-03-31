@@ -11,6 +11,12 @@ $status
 # CHECK: <echo foo | exec grep # this exec is not allowed!>
 # CHECK: <           ^>
 
+echo 'true | time false' | $fish 2>| string replace -r '(.*)' '<$1>'
+# CHECK: <fish: The 'time' command may only be at the beginning of a pipeline>
+# CHECK: <true | time false>
+# CHECK: <       ^>
+
+
 echo '
 
 (true one)

@@ -157,7 +157,7 @@ bool history_file_contents_t::infer_file_type() {
 std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd) {
     // Check that the file is seekable, and its size.
     off_t len = lseek(fd, 0, SEEK_END);
-    if (len <= 0) return nullptr;
+    if (len <= 0 || static_cast<unsigned long>(len) >= SIZE_MAX) return nullptr;
 
     bool mmap_file_directly = should_mmap();
     std::unique_ptr<mmap_region_t> region =

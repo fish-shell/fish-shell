@@ -110,7 +110,7 @@ class fd_monitor_t {
     // Poke items in the pokelist, removing any items that close their FD.
     // The pokelist is consumed after this.
     // This is only called in the background thread.
-    void poke_in_background(poke_list_t pokelist);
+    void poke_in_background(const poke_list_t &pokelist);
 
     // The list of items to monitor. This is only accessed on the background thread.
     item_list_t items_{};

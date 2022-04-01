@@ -22,7 +22,6 @@
 #include <utility>
 #include <vector>
 
-#include "pcre2.h"
 #include "../builtin.h"
 #include "../common.h"
 #include "../env.h"
@@ -35,6 +34,7 @@
 #include "../wgetopt.h"
 #include "../wildcard.h"
 #include "../wutil.h"  // IWYU pragma: keep
+#include "pcre2.h"
 
 // How many bytes we read() at once.
 // Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
@@ -616,7 +616,7 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"fields", required_argument, nullptr, 'f'},
                                               {L"allow-empty", no_argument, nullptr, 'a'},
                                               {L"width", required_argument, nullptr, 'w'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},

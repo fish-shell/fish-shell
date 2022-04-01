@@ -122,7 +122,7 @@ maybe_t<int> builtin_jobs(parser_t &parser, io_streams_t &streams, const wchar_t
         {L"command", no_argument, nullptr, 'c'}, {L"group", no_argument, nullptr, 'g'},
         {L"help", no_argument, nullptr, 'h'},    {L"last", no_argument, nullptr, 'l'},
         {L"pid", no_argument, nullptr, 'p'},     {L"quiet", no_argument, nullptr, 'q'},
-        {L"query", no_argument, nullptr, 'q'},   {nullptr, 0, nullptr, 0}};
+        {L"query", no_argument, nullptr, 'q'},   {}};
 
     int opt;
     wgetopter_t w;

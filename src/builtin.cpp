@@ -107,8 +107,7 @@ void builtin_wperror(const wchar_t *program_name, io_streams_t &streams) {
 }
 
 static const wchar_t *const short_options = L"+:h";
-static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
-                                              {nullptr, 0, nullptr, 0}};
+static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'}, {}};
 
 int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int argc,
                              const wchar_t **argv, parser_t &parser, io_streams_t &streams) {

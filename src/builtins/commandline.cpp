@@ -170,7 +170,7 @@ maybe_t<int> builtin_commandline(parser_t &parser, io_streams_t &streams, const 
                                                   {L"paging-mode", no_argument, nullptr, 'P'},
                                                   {L"paging-full-mode", no_argument, nullptr, 'F'},
                                                   {L"is-valid", no_argument, nullptr, 1},
-                                                  {nullptr, 0, nullptr, 0}};
+                                                  {}};
 
     int opt;
     wgetopter_t w;

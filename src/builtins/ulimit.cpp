@@ -218,7 +218,7 @@ maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar
         {L"ptys", no_argument, nullptr, 'P'},
         {L"threads", no_argument, nullptr, 'T'},
         {L"help", no_argument, nullptr, 'h'},
-        {nullptr, 0, nullptr, 0}};
+        {}};
 
     int opt;
     wgetopter_t w;
@@ -396,7 +396,8 @@ maybe_t<int> builtin_ulimit(parser_t &parser, io_streams_t &streams, const wchar
     }
 
     if (what == RLIMIT_UNKNOWN) {
-        streams.err.append_format(_(L"%ls: Resource limit not available on this operating system\n"), cmd);
+        streams.err.append_format(
+            _(L"%ls: Resource limit not available on this operating system\n"), cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }

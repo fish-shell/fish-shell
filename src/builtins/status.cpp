@@ -129,7 +129,7 @@ static const struct woption long_options[] = {
     {L"line", no_argument, nullptr, 'n'},
     {L"line-number", no_argument, nullptr, 'n'},
     {L"print-stack-trace", no_argument, nullptr, 't'},
-    {nullptr, 0, nullptr, 0}};
+    {}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
 static bool set_status_cmd(const wchar_t *cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,

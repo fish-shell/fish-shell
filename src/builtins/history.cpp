@@ -70,7 +70,7 @@ static const struct woption long_options[] = {{L"prefix", no_argument, nullptr, 
                                               {L"clear", no_argument, nullptr, 4},
                                               {L"merge", no_argument, nullptr, 5},
                                               {L"reverse", no_argument, nullptr, 'R'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
 static bool set_hist_cmd(const wchar_t *cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,

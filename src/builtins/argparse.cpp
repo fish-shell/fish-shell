@@ -66,7 +66,7 @@ static const struct woption long_options[] = {
     {L"stop-nonopt", no_argument, nullptr, 's'},    {L"ignore-unknown", no_argument, nullptr, 'i'},
     {L"name", required_argument, nullptr, 'n'},     {L"exclusive", required_argument, nullptr, 'x'},
     {L"help", no_argument, nullptr, 'h'},           {L"min-args", required_argument, nullptr, 'N'},
-    {L"max-args", required_argument, nullptr, 'X'}, {nullptr, 0, nullptr, 0}};
+    {L"max-args", required_argument, nullptr, 'X'}, {}};
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
@@ -454,7 +454,7 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
         const auto &opt_spec = kv.second;
         if (opt_spec->short_flag_valid) short_options->push_back(opt_spec->short_flag);
 
-        int arg_type = no_argument;
+        woption_argument_t arg_type = no_argument;
         if (opt_spec->num_allowed == -1) {
             arg_type = optional_argument;
             if (opt_spec->short_flag_valid) short_options->append(L"::");
@@ -468,7 +468,7 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
                 {opt_spec->long_flag.c_str(), arg_type, nullptr, opt_spec->short_flag});
         }
     }
-    long_options->push_back({nullptr, 0, nullptr, 0});
+    long_options->push_back(woption{});
 }
 
 static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,

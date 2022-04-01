@@ -59,7 +59,7 @@ static const struct woption long_options[] = {{L"erase", no_argument, nullptr, '
                                               {L"verbose", no_argument, nullptr, 'v'},
                                               {L"handlers", no_argument, nullptr, 'H'},
                                               {L"handlers-type", required_argument, nullptr, 't'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 
 static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {

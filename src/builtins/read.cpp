@@ -80,7 +80,7 @@ static const struct woption long_options[] = {{L"array", no_argument, nullptr, '
                                               {L"tokenize", no_argument, nullptr, 't'},
                                               {L"unexport", no_argument, nullptr, 'u'},
                                               {L"universal", no_argument, nullptr, 'U'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -505,7 +505,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
                    // if we're chunking we could get multiple lines so we would have to advance
                    // more than 1 per run through the loop. Let's skip that for now.
                    !opts.one_line &&
-                   (streams.stdin_is_directly_redirected || lseek(streams.stdin_fd, 0, SEEK_CUR) != -1)) {
+                   (streams.stdin_is_directly_redirected ||
+                    lseek(streams.stdin_fd, 0, SEEK_CUR) != -1)) {
             // We read in chunks when we either can seek (so we put the bytes back),
             // or we have the bytes to ourselves (because it's directly redirected).
             //
@@ -513,7 +514,8 @@ maybe_t<int> builtin_read(parser_t &parser, io_streams_t &streams, const wchar_t
             // under the assumption that the stream will be closed soon anyway.
             // You don't rewind VHS tapes before throwing them in the trash.
             // TODO: Do this when nchars is set by seeking back.
-            exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null, !streams.stdin_is_directly_redirected);
+            exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null,
+                                      !streams.stdin_is_directly_redirected);
         } else {
             exit_res =
                 read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);

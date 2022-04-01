@@ -40,7 +40,7 @@ static const wchar_t *const short_options = L"+:hs:b:";
 static const struct woption long_options[] = {{L"scale", required_argument, nullptr, 's'},
                                               {L"base", required_argument, nullptr, 'b'},
                                               {L"help", no_argument, nullptr, 'h'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 
 static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, const wchar_t **argv, parser_t &parser, io_streams_t &streams) {

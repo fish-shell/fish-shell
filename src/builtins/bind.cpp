@@ -343,7 +343,7 @@ static int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                                                   {L"sets-mode", required_argument, nullptr, 'm'},
                                                   {L"silent", no_argument, nullptr, 's'},
                                                   {L"user", no_argument, nullptr, 'u'},
-                                                  {nullptr, 0, nullptr, 0}};
+                                                  {}};
 
     int opt;
     wgetopter_t w;

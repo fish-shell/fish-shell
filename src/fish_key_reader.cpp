@@ -303,7 +303,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode, bool *verb
                                        {"help", no_argument, nullptr, 'h'},
                                        {"version", no_argument, nullptr, 'v'},
                                        {"verbose", no_argument, nullptr, 'V'},
-                                       {nullptr, 0, nullptr, 0}};
+                                       {}};
     int opt;
     bool error = false;
     while (!error && (opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {

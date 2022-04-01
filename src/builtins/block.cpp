@@ -29,7 +29,7 @@ static int parse_cmd_opts(block_cmd_opts_t &opts, int *optind,  //!OCLINT(high n
                                                   {L"local", no_argument, nullptr, 'l'},
                                                   {L"global", no_argument, nullptr, 'g'},
                                                   {L"help", no_argument, nullptr, 'h'},
-                                                  {nullptr, 0, nullptr, 0}};
+                                                  {}};
 
     int opt;
     wgetopter_t w;

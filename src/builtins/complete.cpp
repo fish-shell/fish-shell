@@ -168,7 +168,7 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         {L"help", no_argument, nullptr, 'h'},
         {L"keep-order", no_argument, nullptr, 'k'},
         {L"escape", no_argument, nullptr, opt_escape},
-        {nullptr, 0, nullptr, 0}};
+        {}};
 
     int opt;
     wgetopter_t w;

@@ -77,7 +77,7 @@ static const struct woption long_options[] = {{L"export", no_argument, nullptr, 
                                               {L"path", no_argument, nullptr, opt_path},
                                               {L"unpath", no_argument, nullptr, opt_unpath},
                                               {L"help", no_argument, nullptr, 'h'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 
 // Hint for invalid path operation with a colon.
 #define BUILTIN_SET_MISMATCHED_ARGS _(L"%ls: You provided %d indexes but %d values\n")

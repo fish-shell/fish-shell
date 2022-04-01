@@ -53,7 +53,7 @@ static const struct woption long_options[] = {
     {L"argument-names", required_argument, nullptr, 'a'},
     {L"no-scope-shadowing", no_argument, nullptr, 'S'},
     {L"inherit-variable", required_argument, nullptr, 'V'},
-    {nullptr, 0, nullptr, 0}};
+    {}};
 
 /// \return the internal_job_id for a pid, or 0 if none.
 /// This looks through both active and finished jobs.

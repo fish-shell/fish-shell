@@ -23,7 +23,7 @@ static const wchar_t *const short_options = L":hnq";
 static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
                                               {L"names", no_argument, nullptr, 'n'},
                                               {L"query", no_argument, nullptr, 'q'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 
 static int parse_cmd_opts(builtin_cmd_opts_t &opts, int *optind, int argc, const wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {

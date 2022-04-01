@@ -303,7 +303,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
         {"private", no_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'v'},
-        {nullptr, 0, nullptr, 0}};
+        {}};
 
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {

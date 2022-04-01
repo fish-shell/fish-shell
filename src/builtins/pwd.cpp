@@ -18,7 +18,7 @@ static const wchar_t *const short_options = L"LPh";
 static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
                                               {L"logical", no_argument, nullptr, 'L'},
                                               {L"physical", no_argument, nullptr, 'P'},
-                                              {nullptr, 0, nullptr, 0}};
+                                              {}};
 maybe_t<int> builtin_pwd(parser_t &parser, io_streams_t &streams, const wchar_t **argv) {
     UNUSED(parser);
     const wchar_t *cmd = argv[0];

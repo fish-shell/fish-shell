@@ -912,7 +912,7 @@ int main(int argc, char *argv[]) {
                                        {"ansi", no_argument, nullptr, 2},
                                        {"pygments", no_argument, nullptr, 3},
                                        {"check", no_argument, nullptr, 'c'},
-                                       {nullptr, 0, nullptr, 0}};
+                                       {}};
 
     int opt;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {

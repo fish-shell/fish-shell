@@ -64,17 +64,16 @@ Examples
 
 ::
 
-    abbr -a -g gco git checkout
+    abbr -a gco git checkout
 
-Add a new abbreviation where ``gco`` will be replaced with ``git checkout`` global to the current shell.
+Add a new abbreviation where ``gco`` will be replaced with ``git checkout``.
 This abbreviation will not be automatically visible to other shells unless the same command is run in those shells (such as when executing the commands in config.fish).
 
 ::
 
-    abbr -a -U l less
+    abbr -a l less
 
 Add a new abbreviation where ``l`` will be replaced with ``less`` universal to all shells.
-Note that you omit the **-U** since it is the default.
 
 ::
 

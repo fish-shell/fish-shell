@@ -91,7 +91,7 @@ endif()
 
 # List of sources for builtin functions.
 set(FISH_BUILTIN_SRCS
-    src/builtin.cpp src/builtins/argparse.cpp
+    src/builtin.cpp src/builtins/abbr.cpp src/builtins/argparse.cpp
     src/builtins/bg.cpp src/builtins/bind.cpp src/builtins/block.cpp
     src/builtins/builtin.cpp src/builtins/cd.cpp src/builtins/command.cpp
     src/builtins/commandline.cpp src/builtins/complete.cpp src/builtins/contains.cpp
@@ -107,9 +107,9 @@ set(FISH_BUILTIN_SRCS
 
 # List of other sources.
 set(FISH_SRCS
-    src/ast.cpp src/autoload.cpp src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
-    src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp src/exec.cpp
-    src/expand.cpp src/fallback.cpp src/fd_monitor.cpp src/fish_version.cpp
+    src/ast.cpp src/abbrs.cpp src/autoload.cpp src/color.cpp src/common.cpp src/complete.cpp
+    src/env.cpp src/env_dispatch.cpp src/env_universal_common.cpp src/event.cpp
+    src/exec.cpp src/expand.cpp src/fallback.cpp src/fd_monitor.cpp src/fish_version.cpp
     src/flog.cpp src/function.cpp src/future_feature_flags.cpp src/highlight.cpp
     src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp
     src/io.cpp src/iothread.cpp src/job_group.cpp src/kill.cpp

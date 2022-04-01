@@ -1,29 +1,36 @@
 #RUN: %fish %s
+
+# Universal abbreviations are imported.
+set -U _fish_abbr_cuckoo somevalue
+set fish (status fish-path)
+$fish -c abbr
+# CHECK: abbr -a -U -- cuckoo somevalue
+
 # Test basic add and list of __abbr1
 abbr __abbr1 alpha beta gamma
 abbr | grep __abbr1
-# CHECK: abbr -a -U -- __abbr1 'alpha beta gamma'
+# CHECK: abbr -a -- __abbr1 'alpha beta gamma'
 
 # Erasing one that doesn\'t exist should do nothing
 abbr --erase NOT_AN_ABBR
 abbr | grep __abbr1
-# CHECK: abbr -a -U -- __abbr1 'alpha beta gamma'
+# CHECK: abbr -a -- __abbr1 'alpha beta gamma'
 
 # Adding existing __abbr1 should be idempotent
 abbr __abbr1 alpha beta gamma
 abbr | grep __abbr1
-# CHECK: abbr -a -U -- __abbr1 'alpha beta gamma'
+# CHECK: abbr -a -- __abbr1 'alpha beta gamma'
 
 # Replacing __abbr1 definition
 abbr __abbr1 delta
 abbr | grep __abbr1
-# CHECK: abbr -a -U -- __abbr1 delta
+# CHECK: abbr -a -- __abbr1 delta
 
 # __abbr1 -s and --show tests
 abbr -s | grep __abbr1
 abbr --show | grep __abbr1
-# CHECK: abbr -a -U -- __abbr1 delta
-# CHECK: abbr -a -U -- __abbr1 delta
+# CHECK: abbr -a -- __abbr1 delta
+# CHECK: abbr -a -- __abbr1 delta
 
 # Test erasing __abbr1
 abbr -e __abbr1
@@ -32,13 +39,13 @@ abbr | grep __abbr1
 # Ensure we escape special characters on output
 abbr '~__abbr2' '$xyz'
 abbr | grep __abbr2
-# CHECK: abbr -a -U -- '~__abbr2' '$xyz'
+# CHECK: abbr -a -- '~__abbr2' '$xyz'
 abbr -e '~__abbr2'
 
 # Ensure we handle leading dashes in abbreviation names properly
 abbr -- --__abbr3 xyz
 abbr | grep __abbr3
-# CHECK: abbr -a -U -- --__abbr3 xyz
+# CHECK: abbr -a -- --__abbr3 xyz
 abbr -e -- --__abbr3
 
 # Test that an abbr word containing spaces is rejected
@@ -51,7 +58,7 @@ abbr __abbr4 omega
 abbr | grep __abbr5
 abbr -r __abbr4 __abbr5
 abbr | grep __abbr5
-# CHECK: abbr -a -U -- __abbr5 omega
+# CHECK: abbr -a -- __abbr5 omega
 abbr -e __abbr5
 abbr | grep __abbr4
 
@@ -77,7 +84,7 @@ abbr -r __abbr8 __abbr9 __abbr10
 abbr | grep __abbr8
 abbr | grep __abbr9
 abbr | grep __abbr10
-# CHECK: abbr -a -U -- __abbr8 omega
+# CHECK: abbr -a -- __abbr8 omega
 
 # Test renaming to existing abbreviation
 abbr __abbr11 omega11
@@ -106,3 +113,22 @@ echo $status
 abbr -q banana __abbr8 foobar
 echo $status
 # CHECK: 0
+
+abbr --add grape --position nowhere juice
+echo $status
+# CHECKERR: abbr: Invalid position 'nowhere'
+# CHECKERR: Position must be one of: command, anywhere.
+# CHECK: 2
+
+abbr --add grape --position anywhere juice
+echo $status
+# CHECK: 0
+
+abbr --add grape --position command juice
+echo $status
+# CHECK: 0
+
+abbr --query banana --position anywhere
+echo $status
+# CHECKERR: abbr: --position option requires --add
+# CHECK: 2

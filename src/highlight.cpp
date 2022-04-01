@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "abbrs.h"
 #include "ast.h"
 #include "builtin.h"
 #include "color.h"
@@ -1334,7 +1335,8 @@ static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t de
     if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd);
 
     // Abbreviations
-    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
+    if (!is_valid && abbreviation_ok)
+        is_valid = abbrs_expand(cmd, abbrs_position_t::command).has_value();
 
     // Regular commands
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, vars).has_value();

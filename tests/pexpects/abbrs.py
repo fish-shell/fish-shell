@@ -19,13 +19,13 @@ sendline(r"""bind '?' 'echo "<$(commandline)>"; commandline ""'; """)
 expect_prompt()
 
 # Basic test.
+# Default abbreviations expand only in command position.
 sendline(r"abbr alpha beta")
 expect_prompt()
 
 send(r"alpha ?")
 expect_str(r"<beta >")
 
-# Default abbreviations expand only in command position.
 send(r"echo alpha ?")
 expect_str(r"<echo alpha >")
 
@@ -50,3 +50,12 @@ sendline(r"echo )")
 expect_str(r"Unexpected ')' for unopened parenthesis")
 send(r"?")
 expect_str(r"<echo )>")
+
+# Support position anywhere.
+sendline(r"abbr alpha --position anywhere beta2")
+
+send(r"alpha ?")
+expect_str(r"<beta2 >")
+
+send(r"echo alpha ?")
+expect_str(r"<echo beta2 >")

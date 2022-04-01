@@ -263,8 +263,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 
 /// Expand abbreviations at the given cursor position. Exposed for testing purposes only.
 /// \return none if no abbreviations were expanded, otherwise the new command line.
-maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                                      const environment_t &vars);
+maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, size_t cursor_pos);
 
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,

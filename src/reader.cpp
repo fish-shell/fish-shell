@@ -44,6 +44,7 @@
 #include <set>
 #include <type_traits>
 
+#include "abbrs.h"
 #include "ast.h"
 #include "color.h"
 #include "common.h"
@@ -1347,10 +1348,8 @@ void reader_data_t::pager_selection_changed() {
 }
 
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
-maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                                      const environment_t &vars) {
-    // See if we are at "command position". Get the surrounding command substitution, and get the
-    // extent of the first token.
+maybe_t<edit_t> reader_expand_abbreviation_at_cursor(const wcstring &cmdline, size_t cursor_pos) {
+    // Get the surrounding command substitution.
     const wchar_t *const buff = cmdline.c_str();
     const wchar_t *cmdsub_begin = nullptr, *cmdsub_end = nullptr;
     parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsub_begin, &cmdsub_end);
@@ -1369,39 +1368,44 @@ maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, s
         ast_t::parse(subcmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens |
                                  parse_flag_leave_unterminated);
 
-    // Look for plain statements where the cursor is at the end of the command.
-    const ast::string_t *matching_cmd_node = nullptr;
-    for (const node_t &n : ast) {
-        const auto *stmt = n.try_as<decorated_statement_t>();
-        if (!stmt) continue;
-
-        // Skip if we have a decoration.
-        if (stmt->opt_decoration) continue;
-
-        // See if the command's source range range contains our cursor, including at the end.
-        auto msource = stmt->command.try_source_range();
-        if (!msource) continue;
-
-        // Now see if its source range contains our cursor, including at the end.
-        if (subcmd_cursor_pos >= msource->start &&
-            subcmd_cursor_pos <= msource->start + msource->length) {
-            // Success!
-            matching_cmd_node = &stmt->command;
-            break;
+    // Find a leaf node where the cursor is at its end.
+    const node_t *leaf = nullptr;
+    traversal_t tv = ast.walk();
+    while (const node_t *node = tv.next()) {
+        if (node->category == category_t::leaf) {
+            auto r = node->try_source_range();
+            if (r && r->start <= subcmd_cursor_pos && subcmd_cursor_pos <= r->end()) {
+                leaf = node;
+                break;
+            }
         }
     }
+    if (!leaf) {
+        return none();
+    }
 
-    // Now if we found a command node, expand it.
-    maybe_t<edit_t> result{};
-    if (matching_cmd_node) {
-        assert(!matching_cmd_node->unsourced && "Should not be unsourced");
-        const wcstring token = matching_cmd_node->source(subcmd);
-        if (auto abbreviation = expand_abbreviation(token, vars)) {
-            // There was an abbreviation! Replace the token in the full command. Maintain the
-            // relative position of the cursor.
-            source_range_t r = matching_cmd_node->source_range();
-            result = edit_t(subcmd_offset + r.start, r.length, std::move(*abbreviation));
+    // We found the leaf node before the cursor.
+    // Decide if this leaf is in "command position:" it is the command part of an undecorated
+    // statement.
+    bool leaf_is_command = false;
+    for (const node_t *cursor = leaf; cursor; cursor = cursor->parent) {
+        if (const auto *stmt = cursor->try_as<decorated_statement_t>()) {
+            if (!stmt->opt_decoration && leaf == &stmt->command) {
+                leaf_is_command = true;
+                break;
+            }
         }
+    }
+    abbrs_position_t expand_position =
+        leaf_is_command ? abbrs_position_t::command : abbrs_position_t::anywhere;
+
+    // Now we can expand the abbreviation.
+    maybe_t<edit_t> result{};
+    if (auto abbreviation = abbrs_expand(leaf->source(subcmd), expand_position)) {
+        // There was an abbreviation! Replace the token in the full command. Maintain the
+        // relative position of the cursor.
+        source_range_t r = leaf->source_range();
+        result = edit_t(subcmd_offset + r.start, r.length, abbreviation.acquire());
     }
     return result;
 }
@@ -1417,7 +1421,7 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
         // Try expanding abbreviations.
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
 
-        if (auto edit = reader_expand_abbreviation_in_command(el->text(), cursor_pos, vars())) {
+        if (auto edit = reader_expand_abbreviation_at_cursor(el->text(), cursor_pos)) {
             push_edit(el, std::move(*edit));
             update_buff_pos(el);
             result = true;

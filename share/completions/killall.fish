@@ -19,7 +19,8 @@ for i in $__kill_signals
     and complete -c killall -s s -x -a "$number $name"
 end
 
-complete -c killall -xa '(__fish_complete_proc)'
+
+complete -c killall -xa '(__fish_complete_proc | string replace -r -- "^-" "")'
 
 if killall --version >/dev/null 2>/dev/null # GNU
     complete -c killall -s e -l exact -d 'Require an exact match for very long names'
@@ -32,15 +33,13 @@ if killall --version >/dev/null 2>/dev/null # GNU
 else # probably BSD
     complete -c killall -s v -d 'Print what is done'
     complete -c killall -s e -d 'Use effective UID instead of the real UID for -u'
-    complete -c killall -s help
+    complete -c killall -o help
     complete -c killall -s l -d 'List names of available signals'
     complete -c killall -s m -d 'Case sensitive process matching'
     complete -c killall -s s -d "Simulate, send no signals"
     complete -c killall -s d -d "Simulate & summarize, send no signals"
     complete -c killall -s u -x -a "(__fish_complete_users)" -d "kill given user's processes"
-    complete -c killall -s -u -l user -x -a "(__fish_complete_users)"
-    complete -c killall -s t -d 'Limit to processes on specified TTY'
-    complete -c killall -s t -xa "(ps a -o tty | sed 1d | uniq)"
+    complete -c killall -s t -xa "(ps a -o tty | sed 1d | uniq)" -d 'Limit to processes on specified TTY'
     complete -c killall -s c -x -d 'Limit to processes matching pattern'
     complete -c killall -s z -d "Don't skip zombies"
 end

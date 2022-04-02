@@ -192,7 +192,7 @@ set line abcdefghijklmnopqrstuvwxyz
 # Ensure the `read` command terminates if asked to read too much data. The var
 # should be empty. We throw away any data we read if it exceeds the limit on
 # what we consider reasonable.
-yes $line | dd bs=1024 count=(math "1 + $fish_read_limit / 1024") 2>/dev/null | read --null x
+yes $line | dd iflag=fullblock bs=1024 count=(math "1 + $fish_read_limit / 1024") 2>/dev/null | read --null x
 if test $status -ne 122
     echo reading too much data did not terminate with failure status
 end
@@ -239,13 +239,13 @@ end
 
 # Same as previous test but limit the amount of data fed to `read` rather than
 # using the `--nchars` flag.
-yes $line | dd bs=1024 count=(math "$fish_read_limit / 1024") 2>/dev/null | read --null x
+yes $line | dd iflag=fullblock bs=1024 count=(math "$fish_read_limit / 1024") 2>/dev/null | read --null x
 if test $status -ne 0
     echo the read of the max amount of data failed unexpectedly
 end
 if test (string length "$x") -ne $fish_read_limit
     # See how much data 'yes' produced.
-    set yeslen (yes $line | dd bs=1024 count=(math "$fish_read_limit / 1024") 2>/dev/null | wc -c | tr -d " \t\n\r")
+    set yeslen (yes $line | dd iflag=fullblock bs=1024 count=(math "$fish_read_limit / 1024") 2>/dev/null | wc -c | tr -d " \t\n\r")
     echo reading the max amount of data with --nchars failed the length test. read: (string length "$x"), limit: $fish_read_limit, yes produced: $yeslen
 end
 

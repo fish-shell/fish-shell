@@ -31,6 +31,13 @@ if (HAS_REDUNDANT_MOVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wredundant-move")
 endif()
 
+# Disable static destructors if we can.
+check_cxx_compiler_flag("-fno-c++-static-destructors" DISABLE_STATIC_DESTRUCTORS)
+if (DISABLE_STATIC_DESTRUCTORS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-c++-static-destructors")
+endif()
+
+
 # Try using CMake's own logic to locate curses/ncurses
 find_package(Curses)
 if(NOT ${CURSES_FOUND})

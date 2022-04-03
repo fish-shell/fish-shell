@@ -26,7 +26,7 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a stack-trace -d "Print a list of all function calls leading up to running the current command"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a features -d "List all feature flags"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a test-feature -d "Test if a feature flag is enabled"
-complete -f -c status -n "__fish_seen_subcommand_from test-feature" -a '(status features)'
+complete -f -c status -n "__fish_seen_subcommand_from test-feature" -a '(status features | sed "s/\s\+\S*\s\+\S*/\t/")'
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a fish-path -d "Print the path to the current instance of fish"
 
 # The job-control command changes fish state.

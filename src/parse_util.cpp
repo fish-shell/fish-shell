@@ -959,7 +959,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
         wcstring unesc;
         if (!unescape_string(arg_src.c_str() + begin, end - begin, &unesc, UNESCAPE_SPECIAL)) {
             if (out_errors) {
-                append_syntax_error(out_errors, source_start, L"Invalid token '%ls'",
+                append_syntax_error(out_errors, source_start + begin, L"Invalid token '%ls'",
                                     arg_src.c_str());
             }
             return 1;

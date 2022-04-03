@@ -66,3 +66,11 @@ echo "quoted1""quoted2"(echo unquoted3)"$(echo quoted4)_$(echo quoted5)"
 
 var=a echo "$var$(echo b)"
 # CHECK: ab
+
+# Make sure we don't swallow an escaped dollar.
+echo \$(echo 1)
+# CHECK: $1
+echo "\$(echo 1)"
+# CHECK: $(echo 1)
+echo "\$$(echo 1)"
+# CHECK: $1

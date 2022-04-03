@@ -91,7 +91,8 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
 }
 
 static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, const wchar_t **end,
-                                    bool allow_incomplete, bool *inout_is_quoted) {
+                                    bool allow_incomplete, bool *inout_is_quoted,
+                                    bool *out_has_dollar) {
     bool escaped = false;
     bool is_first = true;
     bool is_token_begin = true;
@@ -104,10 +105,12 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
     assert(in && "null parameter");
 
     const wchar_t *pos = in;
+    const wchar_t *last_dollar = nullptr;
     auto process_opening_quote = [&](wchar_t quote) -> bool /* ok */ {
         const wchar_t *q_end = quote_end(pos, quote);
         if (!q_end) return false;
         if (*q_end == L'$') {
+            last_dollar = q_end;
             quoted_cmdsubs.push_back(paran_count);
         }
         // We want to report whether the outermost comand substitution between
@@ -131,10 +134,15 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
                 escaped = true;
             } else if (*pos == L'#' && is_token_begin) {
                 pos = comment_end(pos) - 1;
+            } else if (*pos == L'$') {
+                last_dollar = pos;
             } else {
                 if (*pos == L'(') {
                     if ((paran_count == 0) && (paran_begin == nullptr)) {
                         paran_begin = pos;
+                        if (out_has_dollar) {
+                            *out_has_dollar = last_dollar == pos - 1;
+                        }
                     }
 
                     paran_count++;
@@ -151,7 +159,7 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
                         break;
                     }
 
-                    // Check if the ) did complete a quoted command substituion.
+                    // Check if the ) did complete a quoted command substitution.
                     if (!quoted_cmdsubs.empty() && quoted_cmdsubs.back() == paran_count) {
                         quoted_cmdsubs.pop_back();
                         // Quoted command substitutions temporarily close double quotes.
@@ -244,7 +252,8 @@ long parse_util_slice_length(const wchar_t *in) {
 
 int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
                                      wcstring *out_contents, size_t *out_start, size_t *out_end,
-                                     bool accept_incomplete, bool *inout_is_quoted) {
+                                     bool accept_incomplete, bool *inout_is_quoted,
+                                     bool *out_has_dollar) {
     // Clear the return values.
     if (out_contents != nullptr) out_contents->clear();
     *out_start = 0;
@@ -261,7 +270,7 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     const wchar_t *bracket_range_end = nullptr;
 
     int ret = parse_util_locate_cmdsub(valid_range_start, &bracket_range_begin, &bracket_range_end,
-                                       accept_incomplete, inout_is_quoted);
+                                       accept_incomplete, inout_is_quoted, out_has_dollar);
     if (ret <= 0) {
         return ret;
     }
@@ -303,7 +312,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
     const wchar_t *pos = buff;
     for (;;) {
         const wchar_t *begin = nullptr, *end = nullptr;
-        if (parse_util_locate_cmdsub(pos, &begin, &end, true, nullptr) <= 0) {
+        if (parse_util_locate_cmdsub(pos, &begin, &end, true, nullptr, nullptr) <= 0) {
             // No subshell found, all done.
             break;
         }

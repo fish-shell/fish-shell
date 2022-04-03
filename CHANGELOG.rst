@@ -20,6 +20,7 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - Quoted command substitution that directly follow a variable expansion (like ``echo "$var$(echo x)"``) no longer affect the variable expansion (:issue:`8849`).
+- Fish now correctly expands command substitutions that are preceded by an escaped dollar (like ``echo \$(echo)``). This regressed in version 3.4.0.
 - ``math`` can now handle underscores (``_``) as visual separators in numbers (:issue:`8611`, :issue:`8496`)::
 
     math 5 + 2_123_252

@@ -30,10 +30,12 @@ long parse_util_slice_length(const wchar_t *in);
 /// the end of the string if it was incomplete
 /// \param accept_incomplete whether to permit missing closing parenthesis
 /// \param inout_is_quoted whether the cursor is in a double-quoted context.
+/// \param out_has_dollar whether the command substitution has the optional leading $.
 /// \return -1 on syntax error, 0 if no subshells exist and 1 on success
 int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset,
                                      wcstring *out_contents, size_t *out_start, size_t *out_end,
-                                     bool accept_incomplete, bool *inout_is_quoted = nullptr);
+                                     bool accept_incomplete, bool *inout_is_quoted = nullptr,
+                                     bool *out_has_dollar = nullptr);
 
 /// Find the beginning and end of the command substitution under the cursor. If no subshell is
 /// found, the entire string is returned. If the current command substitution is not ended, i.e. the

@@ -626,8 +626,9 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
     wcstring subcmd;
 
     bool is_quoted = false;
+    bool has_dollar = false;
     switch (parse_util_locate_cmdsubst_range(input, &cursor, &subcmd, &paren_begin, &paren_end,
-                                             false, &is_quoted)) {
+                                             false, &is_quoted, &has_dollar)) {
         case -1: {
             append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Mismatched parenthesis");
             return expand_result_t::make_error(STATUS_EXPAND_ERROR);
@@ -645,8 +646,6 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             DIE("unhandled parse_ret value");
         }
     }
-
-    bool have_dollar = paren_begin > 0 && input.at(paren_begin - 1) == L'$';
 
     wcstring_list_t sub_res;
     int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.job_group, sub_res);
@@ -757,7 +756,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             wcstring whole_item;
             whole_item.reserve(paren_begin + 1 + sub_res_joined.size() + 1 +
                                tail_item.completion.size());
-            whole_item.append(input, 0, paren_begin - have_dollar);
+            whole_item.append(input, 0, paren_begin - has_dollar);
             whole_item.push_back(INTERNAL_SEPARATOR);
             whole_item.append(sub_res_joined);
             whole_item.push_back(INTERNAL_SEPARATOR);
@@ -776,7 +775,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             wcstring whole_item;
             whole_item.reserve(paren_begin + 1 + sub_item2.size() + 1 +
                                tail_item.completion.size());
-            whole_item.append(input, 0, paren_begin - have_dollar);
+            whole_item.append(input, 0, paren_begin - has_dollar);
             whole_item.push_back(INTERNAL_SEPARATOR);
             whole_item.append(sub_item2);
             whole_item.push_back(INTERNAL_SEPARATOR);

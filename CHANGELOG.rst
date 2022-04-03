@@ -66,6 +66,7 @@ Other improvements
 
 For distributors
 ----------------
+- libatomic is now correctly detected as necessary when building on RISC-V (:issue:`8850`).
 
 --------------
 

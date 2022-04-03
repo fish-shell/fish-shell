@@ -1389,12 +1389,12 @@ struct segment_t {
     /* implicit */ segment_t(const char *text) : text(text) {}
 };
 
-using test_t = std::vector<segment_t>;
-using test_list_t = std::vector<test_t>;
+using indent_test_t = std::vector<segment_t>;
+using indent_test_list_t = std::vector<indent_test_t>;
 
 // Add a new test to a test list based on a series of ints and texts.
 template <typename... Types>
-void add_test(test_list_t *v, const Types &...types) {
+void add_test(indent_test_list_t *v, const Types &...types) {
     segment_t segments[] = {types...};
     v->emplace_back(std::begin(segments), std::end(segments));
 }
@@ -1404,7 +1404,7 @@ static void test_indents() {
     say(L"Testing indents");
     using namespace indent_tests;
 
-    test_list_t tests;
+    indent_test_list_t tests;
     add_test(&tests,              //
              0, "if", 1, " foo",  //
              0, "\nend");
@@ -1544,7 +1544,7 @@ static void test_indents() {
     );
 
     int test_idx = 0;
-    for (const test_t &test : tests) {
+    for (const indent_test_t &test : tests) {
         // Construct the input text and expected indents.
         wcstring text;
         std::vector<int> expected_indents;

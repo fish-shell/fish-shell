@@ -63,3 +63,6 @@ echo "($(echo A)B$(echo C))"
 
 echo "quoted1""quoted2"(echo unquoted3)"$(echo quoted4)_$(echo quoted5)"
 # CHECK: quoted1quoted2unquoted3quoted4_quoted5
+
+var=a echo "$var$(echo b)"
+# CHECK: ab

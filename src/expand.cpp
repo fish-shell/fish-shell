@@ -758,7 +758,9 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
             whole_item.reserve(paren_begin + 1 + sub_res_joined.size() + 1 +
                                tail_item.completion.size());
             whole_item.append(input, 0, paren_begin - have_dollar);
+            whole_item.push_back(INTERNAL_SEPARATOR);
             whole_item.append(sub_res_joined);
+            whole_item.push_back(INTERNAL_SEPARATOR);
             whole_item.append(tail_item.completion.substr(const_strlen(L"\"")));
             if (!out->add(std::move(whole_item))) {
                 return append_overflow_error(errors);

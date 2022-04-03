@@ -19,6 +19,7 @@ Deprecations and removed features
   
 Scripting improvements
 ----------------------
+- Quoted command substitution that directly follow a variable expansion (like ``echo "$var$(echo x)"``) no longer affect the variable expansion (:issue:`8849`).
 - ``math`` can now handle underscores (``_``) as visual separators in numbers (:issue:`8611`, :issue:`8496`)::
 
     math 5 + 2_123_252

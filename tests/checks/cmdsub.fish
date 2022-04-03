@@ -74,3 +74,7 @@ echo "\$(echo 1)"
 # CHECK: $(echo 1)
 echo "\$$(echo 1)"
 # CHECK: $1
+
+# Make sure we don't error on an escaped $@ inside a quoted cmdsub.
+echo "$(echo '$@')"
+# CHECK: $@

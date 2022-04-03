@@ -955,7 +955,46 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
     size_t source_start = source_range->start;
     parser_test_error_bits_t err = 0;
 
+    auto check_subtoken = [&arg_src, &out_errors, source_start](size_t begin, size_t end) -> int {
+        wcstring unesc;
+        if (!unescape_string(arg_src.c_str() + begin, end - begin, &unesc, UNESCAPE_SPECIAL)) {
+            if (out_errors) {
+                append_syntax_error(out_errors, source_start, L"Invalid token '%ls'",
+                                    arg_src.c_str());
+            }
+            return 1;
+        }
+
+        parser_test_error_bits_t err = 0;
+        // Check for invalid variable expansions.
+        const size_t unesc_size = unesc.size();
+        for (size_t idx = 0; idx < unesc_size; idx++) {
+            if (unesc.at(idx) != VARIABLE_EXPAND && unesc.at(idx) != VARIABLE_EXPAND_SINGLE) {
+                continue;
+            }
+
+            wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
+            if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
+                next_char != '(' && !valid_var_name_char(next_char)) {
+                err = 1;
+                if (out_errors) {
+                    // We have something like $$$^....  Back up until we reach the first $.
+                    size_t first_dollar = idx;
+                    while (first_dollar > 0 &&
+                           (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
+                            unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
+                        first_dollar--;
+                    }
+                    parse_util_expand_variable_error(unesc, source_start, first_dollar, out_errors);
+                }
+            }
+        }
+
+        return err;
+    };
+
     size_t cursor = 0;
+    size_t checked = 0;
     wcstring subst;
 
     bool do_loop = true;
@@ -963,8 +1002,9 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
     while (do_loop) {
         size_t paren_begin = 0;
         size_t paren_end = 0;
+        bool has_dollar = false;
         switch (parse_util_locate_cmdsubst_range(arg_src, &cursor, &subst, &paren_begin, &paren_end,
-                                                 false, &is_quoted)) {
+                                                 false, &is_quoted, &has_dollar)) {
             case -1: {
                 err |= PARSER_TEST_ERROR;
                 if (out_errors) {
@@ -977,6 +1017,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                 break;
             }
             case 1: {
+                err |= check_subtoken(checked, paren_begin - has_dollar);
+
                 assert(paren_begin < paren_end && "Parens out of order?");
                 parse_error_list_t subst_errors;
                 err |= parse_util_detect_errors(subst, &subst_errors);
@@ -990,6 +1032,8 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
                 if (out_errors != nullptr) {
                     out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
                 }
+
+                checked = paren_end + 1;
                 break;
             }
             default: {
@@ -997,37 +1041,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const ast::argumen
             }
         }
     }
-
-    wcstring unesc;
-    if (!unescape_string(arg_src, &unesc, UNESCAPE_SPECIAL)) {
-        if (out_errors) {
-            append_syntax_error(out_errors, source_start, L"Invalid token '%ls'", arg_src.c_str());
-        }
-        return 1;
-    }
-
-    // Check for invalid variable expansions.
-    const size_t unesc_size = unesc.size();
-    for (size_t idx = 0; idx < unesc_size; idx++) {
-        if (unesc.at(idx) != VARIABLE_EXPAND && unesc.at(idx) != VARIABLE_EXPAND_SINGLE) {
-            continue;
-        }
-
-        wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
-        if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
-            next_char != '(' && !valid_var_name_char(next_char)) {
-            err = 1;
-            if (out_errors) {
-                // We have something like $$$^....  Back up until we reach the first $.
-                size_t first_dollar = idx;
-                while (first_dollar > 0 && (unesc.at(first_dollar - 1) == VARIABLE_EXPAND ||
-                                            unesc.at(first_dollar - 1) == VARIABLE_EXPAND_SINGLE)) {
-                    first_dollar--;
-                }
-                parse_util_expand_variable_error(unesc, source_start, first_dollar, out_errors);
-            }
-        }
-    }
+    err |= check_subtoken(checked, arg_src.size());
 
     return err;
 }

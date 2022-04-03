@@ -24,23 +24,23 @@ functions -D f2
 # ==========
 # Verify that `functions --details` works as expected when given the name of a
 # function that could be autoloaded but isn't currently loaded.
-set x (functions -D abbr)
+set x (functions -D vared)
 if test (count $x) -ne 1
-    or not string match -q '*/share/functions/abbr.fish' "$x"
-    echo "Unexpected output for 'functions -D abbr': $x" >&2
+    or not string match -q '*/share/functions/vared.fish' "$x"
+    echo "Unexpected output for 'functions -D vared': $x" >&2
 end
 
 # ==========
 # Verify that `functions --verbose --details` works as expected when given the name of a
 # function that was autoloaded.
-set x (functions -v -D abbr)
+set x (functions -v -D vared)
 if test (count $x) -ne 5
-    or not string match -q '*/share/functions/abbr.fish' $x[1]
+    or not string match -q '*/share/functions/vared.fish' $x[1]
     or test $x[2] != autoloaded
-    or test $x[3] != 1
+    or test $x[3] != 6
     or test $x[4] != scope-shadowing
-    or test $x[5] != 'Manage abbreviations'
-    echo "Unexpected output for 'functions -v -D abbr': $x" >&2
+    or test $x[5] != 'Edit variable value'
+    echo "Unexpected output for 'functions -v -D vared': $x" >&2
 end
 
 # ==========

@@ -34,9 +34,9 @@ function cdh --description "Menu based cd command"
     set -l dirc (count $uniq_dirs)
     if test $dirc -gt (count $letters)
         set -l msg (_ 'This should not happen. Have you changed the cd function?')
-        printf "$msg\n"
+        printf "$msg\n" >&2
         set -l msg (_ 'There are %s unique dirs in your history but I can only handle %s')
-        printf "$msg\n" $dirc (count $letters)
+        printf "$msg\n" $dirc (count $letters) >&2
         return 1
     end
 
@@ -77,11 +77,11 @@ function cdh --description "Menu based cd command"
             cd $uniq_dirs[$choice]
             return
         else
-            printf "$msg\n" $dirc $choice
+            printf "$msg\n" $dirc $choice >&2
             return 1
         end
     else
-        printf "$msg\n" $dirc $choice
+        printf "$msg\n" $dirc $choice >&2
         return 1
     end
 end

@@ -37,7 +37,7 @@ function __fish_print_help --description "Print help message for the specified f
             set -a format -rLL={$cols}n
         end
     else
-        echo fish: (_ "Cannot format help; no parser found")
+        echo fish: (_ "Cannot format help; no parser found") >&2
         return 1
     end
 

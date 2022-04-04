@@ -5,7 +5,7 @@ function fish_update_completions --description "Update man-page based completion
     if set -l python (__fish_anypython)
         $python $update_args
     else
-        printf "%s\n" (_ "python executable not found")
+        printf "%s\n" (_ "python executable not found") >&2
         return 1
     end
 end

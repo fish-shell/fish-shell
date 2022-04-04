@@ -13,7 +13,7 @@ function help --description 'Show help for the fish shell'
         if string match -q string $argv[1]
             set fish_help_item (string join '-' $argv[1] $argv[2])
         else
-            echo "help: Expected at most 1 args, got 2"
+            echo "help: Expected at most 1 args, got 2" >&2
             return 1
         end
     end
@@ -93,8 +93,8 @@ function help --description 'Show help for the fish shell'
     end
 
     if not set -q fish_browser[1]
-        printf (_ '%s: Could not find a web browser.\n') help
-        printf (_ 'Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\n\n')
+        printf (_ '%s: Could not find a web browser.\n') help >&2
+        printf (_ 'Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\n\n') >&2
         return 1
     end
 

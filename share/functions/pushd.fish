@@ -25,7 +25,7 @@ function pushd --description 'Push directory to stack'
     if not set -q argv[1]
         # check that the stack isn't empty
         if not set -q dirstack[1]
-            echo "pushd: no other directory"
+            echo "pushd: no other directory" >&2
             return 1
         end
 
@@ -48,7 +48,7 @@ function pushd --description 'Push directory to stack'
         if test -n "$rot_r"
             # check the rotation in range
             if test $rot_r -ge (count $stack)
-                echo "pushd: -$rot_r: directory stack index out of range"
+                echo "pushd: -$rot_r: directory stack index out of range" >&2
                 return 1
             end
 
@@ -57,7 +57,7 @@ function pushd --description 'Push directory to stack'
 
         # check the rotation in range
         if test $rot_l -ge (count $stack)
-            echo "pushd: +$rot_l: directory stack index out of range"
+            echo "pushd: +$rot_l: directory stack index out of range" >&2
             return 1
         else
             # rotate stack unless rot_l is 0

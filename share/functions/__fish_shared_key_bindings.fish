@@ -5,7 +5,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     if contains -- -h $argv
         or contains -- --help $argv
-        echo "Sorry but this function doesn't support -h or --help"
+        echo "Sorry but this function doesn't support -h or --help" >&2
         return 1
     end
 

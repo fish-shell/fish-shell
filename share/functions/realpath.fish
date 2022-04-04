@@ -49,7 +49,7 @@ function realpath -d "return an absolute path without symlinks"
     end
 
     if not set -q argv[1]
-        printf (_ "%ls: Expected at least %d args, got only %d\n") realpath 1 0
+        printf (_ "%ls: Expected at least %d args, got only %d\n") realpath 1 0 >&2
         return 1
     end
 

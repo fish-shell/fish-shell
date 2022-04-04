@@ -12,7 +12,7 @@ function vared --description "Edit variable value"
                 return 0
 
             case '-*'
-                printf (_ "%s: Unknown option %s\n") vared $argv
+                printf (_ "%s: Unknown option %s\n") vared $argv >&2
                 return 1
 
             case '*'
@@ -30,10 +30,10 @@ function vared --description "Edit variable value"
                         -c "$$argv" \
                         $argv
                 else
-                    printf (_ '%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\n') vared $argv (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo) $argv (set_color normal; echo) $argv
+                    printf (_ '%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\n') vared $argv (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo) $argv (set_color normal; echo) $argv >&2
                 end
         end
     else
-        printf (_ '%s: Expected exactly one argument, got %s.\n\nSynopsis:\n\t%svared%s VARIABLE\n') vared (count $argv) (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo)
+        printf (_ '%s: Expected exactly one argument, got %s.\n\nSynopsis:\n\t%svared%s VARIABLE\n') vared (count $argv) (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo) >&2
     end
 end

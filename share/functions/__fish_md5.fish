@@ -5,7 +5,7 @@ function __fish_md5
             if test $argv[1] = -s
                 echo (echo $argv[2] | md5sum | string split ' ')[1]
             else
-                printf (_ "%s: Too many arguments %s\n") fish_md5 $argv
+                printf (_ "%s: Too many arguments %s\n") fish_md5 $argv >&2
             end
         else
             echo (md5sum $argv[1] | string split ' ')[1]
@@ -17,7 +17,7 @@ function __fish_md5
             if test $argv[1] = -s
                 md5 -s $argv[2]
             else
-                printf (_ "%s: Too many arguments %s\n") fish_md5 $argv
+                printf (_ "%s: Too many arguments %s\n") fish_md5 $argv >&2
             end
         else
             md5 -q $argv[1]

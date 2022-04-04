@@ -1,7 +1,7 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     if contains -- -h $argv
         or contains -- --help $argv
-        echo "Sorry but this function doesn't support -h or --help"
+        echo "Sorry but this function doesn't support -h or --help" >&2
         return 1
     end
 

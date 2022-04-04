@@ -14,7 +14,7 @@ if not command -sq open
         end
 
         if not set -q argv[1]
-            printf (_ "%ls: Expected at least %d args, got only %d\n") open 1 0
+            printf (_ "%ls: Expected at least %d args, got only %d\n") open 1 0 >&2
             return 1
         end
 
@@ -34,7 +34,7 @@ if not command -sq open
                 disown $last_pid 2>/dev/null
             end
         else
-            echo (_ 'No open utility found. Try installing "xdg-open" or "xdg-utils".')
+            echo (_ 'No open utility found. Try installing "xdg-open" or "xdg-utils".') >&2
         end
     end
 end

@@ -54,7 +54,7 @@ function funced --description 'Edit function definition'
     set -l editor_cmd
     echo $editor | read -ta editor_cmd
     if not type -q -f "$editor_cmd[1]"
-        echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found")
+        echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found") >&2
         set editor fish
     end
 

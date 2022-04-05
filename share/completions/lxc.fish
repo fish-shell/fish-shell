@@ -1,6 +1,6 @@
 function __fish_lxc_no_subcommand -d 'Test if lxc has yet to be given the command'
     for i in (commandline --tokenize --cut-at-cursor --current-process)
-        if contains -- $i config copy delete exec file help image launch list move network profile publish remote restore restart snapshot start stop
+        if contains -- $i config console copy delete exec file help image info launch list move network pause profile publish remote rename restart restore shell snapshot start stop
             return 1
         end
     end
@@ -8,10 +8,11 @@ function __fish_lxc_no_subcommand -d 'Test if lxc has yet to be given the comman
 end
 
 function __fish_lxc_list_containers
-    lxc list -c n | string match -r '\| [a-zA-Z_-]+' | string replace -r '\| ' ''
+    lxc list -c n | string match -r '\| [a-zA-Z0-9_-]+' | string replace -r '\| ' ''
 end
 
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments config -d 'Manage configuration.'
+complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments console -d 'Attach to instance console.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments copy -d 'Copy containers within or in between lxd instances.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments delete -d 'Delete containers or snapshots.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments exec -d 'Execute the specified command in a container.'
@@ -31,8 +32,10 @@ complete --condition __fish_lxc_no_subcommand --command lxc --no-files --argumen
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments profile -d 'Manage configuration profiles.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments publish -d 'Publish containers as images.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments remote -d 'Manage remote LXD servers.'
+complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments rename -d 'Rename instance or snapshot.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments restart -d 'Changes state of one or more containers to restart.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments restore -d 'Set the current state of a container back to a snapshot.'
+complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments shell -d 'Execute commands in instance.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments snapshot -d 'Create a read-only snapshot of a container.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments start -d 'Changes state of one or more containers to start.'
 complete --condition __fish_lxc_no_subcommand --command lxc --no-files --arguments stop -d 'Changes state of one or more containers to stop.'
@@ -41,11 +44,8 @@ complete --condition __fish_lxc_no_subcommand --command lxc --no-files --argumen
 # config
 complete --condition '__fish_seen_subcommand_from config' --command lxc --no-files --arguments "device get set unset show edit trust"
 
-# exec
-complete --condition '__fish_seen_subcommand_from exec' --command lxc --no-files --arguments "(__fish_lxc_list_containers)"
+# args taking container name
+for cmd in console copy delete exec export info move pause publish rename restart restore shell snapshot start stop
+	complete --condition "__fish_seen_subcommand_from $cmd" --command lxc --no-files --arguments "(__fish_lxc_list_containers)"
+end
 
-# start
-complete --condition '__fish_seen_subcommand_from start' --command lxc --no-files --arguments "(__fish_lxc_list_containers)"
-
-# stop
-complete --condition '__fish_seen_subcommand_from stop' --command lxc --no-files --arguments "(__fish_lxc_list_containers)"

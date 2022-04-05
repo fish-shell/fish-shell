@@ -55,6 +55,8 @@ Completions
   - brightnessctl (:issue:`8758`)
   - rclone (:issue:`8819`)
   - tuned-adm (:issue:`8760`)
+- Improved completions for:
+  - lxc
 
 
 Improved terminal support

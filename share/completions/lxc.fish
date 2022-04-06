@@ -44,8 +44,6 @@ complete --condition __fish_lxc_no_subcommand --command lxc --no-files --argumen
 # config
 complete --condition '__fish_seen_subcommand_from config' --command lxc --no-files --arguments "device get set unset show edit trust"
 
-# args taking container name
-for cmd in console copy delete exec export info move pause publish rename restart restore shell snapshot start stop
-	complete --condition "__fish_seen_subcommand_from $cmd" --command lxc --no-files --arguments "(__fish_lxc_list_containers)"
-end
+set -l subcommands_taking_name console copy delete exec export info move pause publish rename restart restore shell snapshot start stop
+complete --condition "__fish_seen_subcommand_from $subcommands_taking_name" --command lxc --no-files --arguments "(__fish_lxc_list_containers)"
 

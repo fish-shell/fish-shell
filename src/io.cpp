@@ -307,7 +307,7 @@ shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
     return nullptr;
 }
 
-void output_stream_t::append_narrow_buffer(separated_buffer_t buffer) {
+void output_stream_t::append_narrow_buffer(const separated_buffer_t &buffer) {
     for (const auto &rhs_elem : buffer.elements()) {
         append_with_separation(str2wcstring(rhs_elem.contents), rhs_elem.separation, false);
     }

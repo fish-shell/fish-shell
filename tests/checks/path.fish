@@ -118,6 +118,10 @@ path resolve bin//sh | string match -r -- 'bin/bash$'
 # sh here is bash
 # CHECK: bin/bash
 
+# "../" cancels out even files.
+path resolve bin//sh/../ | string match -r -- 'bin$'
+# CHECK: bin
+
 # `path resolve` with nonexistent paths
 set -l path (path resolve foo/bar)
 string match -rq "^"(pwd -P | string escape --style=regex)'/' -- $path

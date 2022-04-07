@@ -675,6 +675,11 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
             }
         }
 
+        // Normalize the path so "../" components are eliminated even after
+        // nonexistent or non-directory components.
+        // Otherwise `path resolve foo/../` will be `$PWD/foo/../` if foo is a file.
+        real = normalize_path(*real, false);
+
         // Return 0 if we found a realpath.
         if (opts.quiet) {
             return STATUS_CMD_OK;

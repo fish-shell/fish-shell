@@ -141,3 +141,17 @@ string replace -r "^"(pwd -P | string escape --style=regex)'/' "" -- $path
 
 path resolve /banana//terracota/terracota/booooo/../pie
 # CHECK: /banana/terracota/terracota/pie
+
+path sort --what=basename {def,abc}/{456,123,789,abc,def,0} | path sort --what=dirname -v
+# CHECK: def/0
+# CHECK: def/123
+# CHECK: def/456
+# CHECK: def/789
+# CHECK: def/abc
+# CHECK: def/def
+# CHECK: abc/0
+# CHECK: abc/123
+# CHECK: abc/456
+# CHECK: abc/789
+# CHECK: abc/abc
+# CHECK: abc/def

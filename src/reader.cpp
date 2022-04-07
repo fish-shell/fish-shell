@@ -3195,7 +3195,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::backward_kill_line: {
             editable_line_t *el = active_edit_line();
-            if (el->position() <= 0) {
+            if (el->position() == 0) {
                 break;
             }
             const wchar_t *buff = el->text().c_str();

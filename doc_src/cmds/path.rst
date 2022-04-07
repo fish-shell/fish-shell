@@ -20,6 +20,8 @@ Synopsis
     path normalize GENERAL_OPTIONS [PATH...]
     path resolve GENERAL_OPTIONS [PATH...]
     path change-extension GENERAL_OPTIONS EXTENSION [PATH...]
+    path sort GENERAL_OPTIONS [(-v | --invert)] \
+        [--what=basename|dirname|path] [([PATH...]
 
     GENERAL_OPTIONS := [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)]
 
@@ -333,6 +335,39 @@ Examples
    /home/alfa/.config
    # status 0
    
+"sort" subcommand
+-----------------------------
+
+::
+
+    path sort [(-z | --null-in)] [(-Z | --null-out)] \
+        [(-q | --quiet)] [(-v | --invert)] \
+        [--what=basename|dirname|path] [([PATH...]
+
+
+``path sort`` returns the given paths in sorted order. They are sorted in the same order as globs - alphabetically, but with runs of numerical digits compared numerically.
+
+With ``--invert`` or ``-v`` the sort is reversed.
+
+With ``--what=`` only the given path of the path is compared, e.g. ``--what=dirname`` causes only the dirname to be compared, ``--what=basename`` only the basename and ``--what=path`` causes the entire path to be compared (this is the default).
+
+The sort used is stable, so sorting first by basename and then by dirname works and causes the files to be grouped according to directory.
+
+It currently returns 0 if it was given any paths.
+
+Examples
+^^^^^^^^
+
+::
+
+   >_ path sort 10-foo 2-bar
+   2-bar
+   10-foo
+
+   >_ path sort --invert 10-foo 2-bar
+   10-foo
+   2-bar
+
 Combining ``path``
 -------------------
 

@@ -1017,9 +1017,3 @@ void tty_transfer_t::reclaim() {
 }
 
 tty_transfer_t::~tty_transfer_t() { assert(!this->owner_ && "Forgot to reclaim() the tty"); }
-
-static std::atomic<bool> s_is_within_fish_initialization{false};
-
-void set_is_within_fish_initialization(bool flag) { s_is_within_fish_initialization.store(flag); }
-
-bool is_within_fish_initialization() { return s_is_within_fish_initialization.load(); }

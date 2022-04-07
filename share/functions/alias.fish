@@ -1,6 +1,6 @@
 function alias --description 'Creates a function wrapping a command'
     set -l options h/help s/save
-    argparse -n alias --max-args=2 $options -- $argv
+    argparse --max-args=2 $options -- $argv
     or return
 
     if set -q _flag_help
@@ -35,10 +35,10 @@ function alias --description 'Creates a function wrapping a command'
 
     # sanity check
     if test -z "$name"
-        printf ( _ "%s: Name cannot be empty\n") alias >&2
+        printf ( _ "%s: name cannot be empty\n") alias >&2
         return 1
     else if test -z "$body"
-        printf ( _ "%s: Body cannot be empty\n") alias >&2
+        printf ( _ "%s: body cannot be empty\n") alias >&2
         return 1
     end
 
@@ -55,17 +55,18 @@ function alias --description 'Creates a function wrapping a command'
         else
             set prefix command
         end
+    else
+        # Do not define wrapper completion if we have "alias foo 'foo xyz'" or "alias foo 'sudo foo'"
+        # This is to prevent completions from recursively calling themselves (#7389).
+        # The latter will have rare false positives but it's more important to
+        # prevent recursion for this high-level command.
+        if test $last_word != $name
+            set -f wraps --wraps (string escape -- $body)
+        end
     end
     set -l cmd_string (string escape -- "alias $argv")
 
-    # Do not define wrapper completion if we have "alias foo 'foo xyz'" or "alias foo 'sudo foo'"
-    # This is to prevent completions from recursively calling themselves (#7389).
-    # The latter will have rare false positives but it's more important to
-    # prevent recursion for this high-level command.
-    set -l wraps
-    if test $first_word != $name; and test $last_word != $name
-        set wraps --wraps (string escape -- $body)
-    end
+
 
     echo "function $name $wraps --description $cmd_string; $prefix $body \$argv; end" | source
     if set -q _flag_save

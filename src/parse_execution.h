@@ -94,11 +94,11 @@ class parse_execution_context_t : noncopyable_t {
         const ast::variable_assignment_list_t &variable_assignments_list_t);
     end_execution_reason_t populate_not_process(job_t *job, process_t *proc,
                                                 const ast::not_statement_t &not_statement);
-    end_execution_reason_t populate_plain_process(job_t *job, process_t *proc,
+    end_execution_reason_t populate_plain_process(process_t *proc,
                                                   const ast::decorated_statement_t &statement);
 
     template <typename Type>
-    end_execution_reason_t populate_block_process(job_t *job, process_t *proc,
+    end_execution_reason_t populate_block_process(process_t *proc,
                                                   const ast::statement_t &statement,
                                                   const Type &specific_statement);
 

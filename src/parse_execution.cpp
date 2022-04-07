@@ -832,8 +832,7 @@ end_execution_reason_t parse_execution_context_t::expand_command(
 
 /// Creates a 'normal' (non-block) process.
 end_execution_reason_t parse_execution_context_t::populate_plain_process(
-    job_t *job, process_t *proc, const ast::decorated_statement_t &statement) {
-    assert(job != nullptr);
+    process_t *proc, const ast::decorated_statement_t &statement) {
     assert(proc != nullptr);
 
     // We may decide that a command should be an implicit cd.
@@ -1037,12 +1036,11 @@ end_execution_reason_t parse_execution_context_t::populate_not_process(
 
 template <typename Type>
 end_execution_reason_t parse_execution_context_t::populate_block_process(
-    job_t *job, process_t *proc, const ast::statement_t &statement,
+    process_t *proc, const ast::statement_t &statement,
     const Type &specific_statement) {
     using namespace ast;
     // We handle block statements by creating process_type_t::block_node, that will bounce back to
     // us when it's time to execute them.
-    UNUSED(job);
     static_assert(Type::AstType == type_t::block_statement ||
                       Type::AstType == type_t::if_statement ||
                       Type::AstType == type_t::switch_statement,
@@ -1144,19 +1142,19 @@ end_execution_reason_t parse_execution_context_t::populate_job_process(
             break;
         }
         case type_t::block_statement:
-            result = this->populate_block_process(job, proc, statement,
+            result = this->populate_block_process(proc, statement,
                                                   *specific_statement.as<block_statement_t>());
             break;
         case type_t::if_statement:
-            result = this->populate_block_process(job, proc, statement,
+            result = this->populate_block_process(proc, statement,
                                                   *specific_statement.as<if_statement_t>());
             break;
         case type_t::switch_statement:
-            result = this->populate_block_process(job, proc, statement,
+            result = this->populate_block_process(proc, statement,
                                                   *specific_statement.as<switch_statement_t>());
             break;
         case type_t::decorated_statement: {
-            result = this->populate_plain_process(job, proc,
+            result = this->populate_plain_process(proc,
                                                   *specific_statement.as<decorated_statement_t>());
             break;
         }
@@ -1222,7 +1220,7 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
     return result;
 }
 
-static bool remove_job(parser_t &parser, job_t *job) {
+static bool remove_job(parser_t &parser, const job_t *job) {
     for (auto j = parser.jobs().begin(); j != parser.jobs().end(); ++j) {
         if (j->get() == job) {
             parser.jobs().erase(j);

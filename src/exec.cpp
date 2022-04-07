@@ -427,7 +427,7 @@ static launch_result_t fork_child_for_process(const std::shared_ptr<job_t> &job,
         DIE("Child process returned control to fork_child lambda!");
     }
 
-    s_fork_count++;
+    ++s_fork_count;
     FLOGF(exec_fork, L"Fork #%d, pid %d: %s for '%ls'", int(s_fork_count), pid, fork_type,
           p->argv0());
     return launch_result_t::ok;
@@ -527,7 +527,7 @@ static launch_result_t exec_external_command(parser_t &parser, const std::shared
 #if FISH_USE_POSIX_SPAWN
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
     if (can_use_posix_spawn_for_job(j, dup2s)) {
-        s_fork_count++;  // spawn counts as a fork+exec
+        ++s_fork_count;  // spawn counts as a fork+exec
 
         posix_spawner_t spawner(j.get(), dup2s);
         maybe_t<pid_t> pid = spawner.spawn(actual_cmd, const_cast<char *const *>(argv),

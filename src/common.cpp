@@ -681,12 +681,13 @@ void narrow_string_safe(char buff[64], const wchar_t *s) {
 
 wcstring reformat_for_screen(const wcstring &msg, const termsize_t &termsize) {
     wcstring buff;
-    int line_width = 0;
+
     int screen_width = termsize.width;
 
     if (screen_width) {
         const wchar_t *start = msg.c_str();
         const wchar_t *pos = start;
+        int line_width = 0;
         while (true) {
             int overflow = 0;
 

@@ -536,9 +536,8 @@ static int handle_flag_V(const wchar_t **argv, parser_t &parser, io_streams_t &s
 
 static int handle_flag_w(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
-    long width = 0;
     if (opts->width_valid) {
-        width = fish_wcstol(w.woptarg);
+        long width  = fish_wcstol(w.woptarg);
         if (width < 0) {
             string_error(streams, _(L"%ls: Invalid width value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;

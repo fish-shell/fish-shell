@@ -4,20 +4,24 @@
 # Extension - for figuring out the file extension of a given path.
 path extension /
 or echo None
+# CHECK:
 # CHECK: None
 
 # No extension
 path extension /.
 or echo Filename is just a dot, no extension
+# CHECK:
 # CHECK: Filename is just a dot, no extension
 
 # No extension - ".foo" is the filename
 path extension /.foo
 or echo None again
+# CHECK:
 # CHECK: None again
 
 path extension /foo
 or echo None once more
+# CHECK:
 # CHECK: None once more
 path extension /foo.txt
 and echo Success
@@ -25,17 +29,21 @@ and echo Success
 # CHECK: Success
 path extension /foo.txt/bar
 or echo Not even here
+# CHECK:
 # CHECK: Not even here
 path extension . ..
 or echo No extension
+# CHECK:
 # CHECK: No extension
 path extension ./foo.mp4
 # CHECK: .mp4
 path extension ../banana
+# CHECK:
 # nothing, status 1
 echo $status
 # CHECK: 1
 path extension ~/.config
+# CHECK:
 # nothing, status 1
 echo $status
 # CHECK: 1

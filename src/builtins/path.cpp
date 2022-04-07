@@ -736,16 +736,24 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
             funced[arg] = func(arg);
         }
 
-        std::sort(list.begin(), list.end(),
+        // We use a stable sort here, and also explicit < and >,
+        // to avoid changing the order so you can chain calls.
+        std::stable_sort(list.begin(), list.end(),
                   [&](const wcstring &a, const wcstring &b) {
-                      return (wcsfilecmp_glob(funced[a].c_str(), funced[b].c_str()) < 0) != opts.invert;
+                      if (!opts.invert)
+                          return (wcsfilecmp_glob(funced[a].c_str(), funced[b].c_str()) < 0);
+                      else
+                          return (wcsfilecmp_glob(funced[a].c_str(), funced[b].c_str()) > 0);
                   });
     } else {
         // Without --what, we just sort by the entire path,
         // so we have no need to transform and such.
-        std::sort(list.begin(), list.end(),
+        std::stable_sort(list.begin(), list.end(),
                   [&](const wcstring &a, const wcstring &b) {
-                      return (wcsfilecmp_glob(a.c_str(), b.c_str()) < 0) != opts.invert;
+                      if (!opts.invert)
+                          return (wcsfilecmp_glob(a.c_str(), b.c_str()) < 0);
+                      else
+                          return (wcsfilecmp_glob(a.c_str(), b.c_str()) > 0);
                   });
     }
 

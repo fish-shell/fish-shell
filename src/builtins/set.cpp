@@ -720,6 +720,12 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, c
     // Is the variable valid?
     if (!valid_var_name(split->varname)) {
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, split->varname.c_str());
+        auto pos = split->varname.find(L'=');
+        if (pos != wcstring::npos) {
+            streams.err.append_format(L"%ls: Did you mean `set %ls %ls`?", cmd,
+                                      escape_string(split->varname.substr(0, pos), ESCAPE_ALL, STRING_STYLE_SCRIPT).c_str(),
+                                      escape_string(split->varname.substr(pos + 1), ESCAPE_ALL, STRING_STYLE_SCRIPT).c_str());
+        }
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }

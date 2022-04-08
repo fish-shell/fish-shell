@@ -770,6 +770,13 @@ set --show ""
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
 
+set foo="ba nana"
+#CHECKERR: set: foo=ba nana: invalid variable name. See `help identifiers`
+#CHECKERR: set: Did you mean `set foo 'ba nana'`?
+#CHECKERR: {{.*}}set.fish (line {{\d+}}):
+#CHECKERR: set foo="ba nana"
+#CHECKERR: ^
+#CHECKERR: (Type 'help set' for related documentation)
 # Test path splitting
 begin
     set -l PATH /usr/local/bin:/usr/bin

@@ -471,7 +471,7 @@ env | grep __fish_empty_uvar
 for a,b in y 1 z 3
     echo $a,$b
 end
-# CHECKERR: {{.*}} for: a,b: invalid variable. See `help identifiers`
+# CHECKERR: {{.*}} for: a,b: invalid variable name. See `help identifiers`
 # CHECKERR: for a,b in y 1 z 3
 # CHECKERR:     ^
 
@@ -530,7 +530,7 @@ sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'globa
 
 # Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
-#CHECKERR: set: argle bargle: invalid variable. See `help identifiers`
+#CHECKERR: set: argle bargle: invalid variable name. See `help identifiers`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set --show 'argle bargle'
 #CHECKERR: ^
@@ -757,14 +757,14 @@ echo $status
 true
 
 set "" foo
-#CHECKERR: set: : invalid variable. See `help identifiers`
+#CHECKERR: set: : invalid variable name. See `help identifiers`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set "" foo
 #CHECKERR: ^
 #CHECKERR: (Type 'help set' for related documentation)
 
 set --show ""
-#CHECKERR: set: : invalid variable. See `help identifiers`
+#CHECKERR: set: : invalid variable name. See `help identifiers`
 #CHECKERR: {{.*}}set.fish (line {{\d+}}):
 #CHECKERR: set --show ""
 #CHECKERR: ^

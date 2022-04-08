@@ -60,10 +60,10 @@ struct builtin_data_t {
 #define BUILTIN_ERR_MAX_ARG_COUNT1 _(L"%ls: expected <= %d arguments; got %d\n")
 
 /// Error message for invalid variable name.
-#define BUILTIN_ERR_VARNAME _(L"%ls: %ls: invalid variable. See `help identifiers`\n")
+#define BUILTIN_ERR_VARNAME _(L"%ls: %ls: invalid variable name. See `help identifiers`\n")
 
 /// Error message for invalid bind mode name.
-#define BUILTIN_ERR_BIND_MODE _(L"%ls: %ls: invalid mode. See `help identifiers`\n")
+#define BUILTIN_ERR_BIND_MODE _(L"%ls: %ls: invalid mode name. See `help identifiers`\n")
 
 /// Error message when too many arguments are supplied to a builtin.
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _(L"%ls: too many arguments\n")

@@ -21,7 +21,7 @@ const features_t::metadata_t features_t::metadata[features_t::flag_count] = {
     {string_replace_backslash, L"regex-easyesc", L"3.1", L"string replace -r needs fewer \\'s",
      true, false},
     {ampersand_nobg_in_token, L"ampersand-nobg-in-token", L"3.4",
-     L"& only backgrounds if followed by a separator", false, false},
+     L"& only backgrounds if followed by a separator", true, false},
 };
 
 const struct features_t::metadata_t *features_t::metadata_for(const wchar_t *name) {

@@ -188,7 +188,7 @@ For example, ``echo hello 2> output.stderr`` writes the standard error (file des
 
 It is an error to redirect a builtin, function, or block to a file descriptor above 2. However this is supported for external commands.
 
-.. [#] Previous versions of fish also allowed specifying this as ``^DESTINATION``, but that made another character special so it was deprecated and will be removed in the future. See :ref:`feature flags<featureflags>`.
+.. [#] Previous versions of fish also allowed specifying this as ``^DESTINATION``, but that made another character special so it was deprecated and removed. See :ref:`feature flags<featureflags>`.
 
 .. _pipes:
 
@@ -1581,8 +1581,8 @@ You can see the current list of features via ``status features``::
     > status features
     stderr-nocaret          on  3.0 ^ no longer redirects stderr
     qmark-noglob            off 3.0 ? no longer globs
-    regex-easyesc           off 3.1 string replace -r needs fewer \\'s
-    ampersand-nobg-in-token off 3.4 & only backgrounds if followed by a separating character
+    regex-easyesc           on  3.1 string replace -r needs fewer \\'s
+    ampersand-nobg-in-token on  3.4 & only backgrounds if followed by a separating character
 
 Here is what they mean:
 
@@ -1594,25 +1594,27 @@ Here is what they mean:
 
 These changes are introduced off by default. They can be enabled on a per session basis::
 
-    > fish --features qmark-noglob,stderr-nocaret
+    > fish --features qmark-noglob,regex-easyesc
 
 
 or opted into globally for a user::
 
 
-    > set -U fish_features stderr-nocaret qmark-noglob
+    > set -U fish_features regex-easyesc qmark-noglob
 
 Features will only be set on startup, so this variable will only take effect if it is universal or exported.
 
 You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob". Instead of a version, the special group ``all`` enables all features.
 
-Prefixing a feature with ``no-`` turns it off instead. E.g. to reenable the ``^`` redirection::
+Prefixing a feature with ``no-`` turns it off instead. E.g. to reenable the ``?`` single-character glob::
 
-  set -Ua fish_features no-stderr-nocaret
+  set -Ua fish_features no-qmark-noglob
 
 Currently, the following features are enabled by default:
 
-- stderr-nocaret - ``^`` no longer redirects stderr, use ``2>``. Enabled by default in fish 3.3.0.
+- stderr-nocaret - ``^`` no longer redirects stderr, use ``2>``. Enabled by default in fish 3.3.0. No longer changeable since fish 3.5.0.
+- regex-easyesc - ``string replace -r`` requires fewer backslashes in the replacement part. Enabled by default in fish 3.5.0.
+- ampersand-nobg-in-token - ``&`` in the middle of a word is a normal character instead of backgrounding. Enabled by default in fish 3.5.0.
 
 .. _event:
 

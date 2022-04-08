@@ -1942,16 +1942,10 @@ static void test_feature_flags() {
     say(L"Testing future feature flags");
     using ft = features_t;
     ft f;
-    do_test(f.test(ft::stderr_nocaret));
-    f.set(ft::stderr_nocaret, true);
-    do_test(f.test(ft::stderr_nocaret));
-    f.set(ft::stderr_nocaret, false);
-    do_test(!f.test(ft::stderr_nocaret));
-
     f.set_from_string(L"stderr-nocaret,nonsense");
     do_test(f.test(ft::stderr_nocaret));
     f.set_from_string(L"stderr-nocaret,no-stderr-nocaret,nonsense");
-    do_test(!f.test(ft::stderr_nocaret));
+    do_test(f.test(ft::stderr_nocaret));
 
     // Ensure every metadata is represented once.
     size_t counts[ft::flag_count] = {};

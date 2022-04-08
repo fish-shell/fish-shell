@@ -63,6 +63,9 @@ class features_t {
 
         /// Default flag value.
         const bool default_value;
+
+        /// Whether the value can still be changed or not.
+        const bool read_only;
     };
 
     /// The metadata, indexed by flag.

@@ -55,9 +55,6 @@ const wchar_t *tokenizer_get_error_message(tokenizer_error_t err) {
     return nullptr;
 }
 
-// Whether carets redirect stderr.
-static bool caret_redirs() { return !feature_test(features_t::stderr_nocaret); }
-
 /// Return an error token and mark that we no longer have a next token.
 tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token_start,
                               const wchar_t *error_loc, maybe_t<size_t> token_length) {
@@ -117,10 +114,6 @@ static bool tok_is_string_character(wchar_t c, bool is_first, maybe_t<wchar_t> n
             bool next_is_string = next && tok_is_string_character(*next, false, none());
             // Unlike in other shells, '&' is not special if followed by a string character.
             return next_is_string;
-        }
-        case L'^': {
-            // Conditional separator.
-            return !caret_redirs() || !is_first;
         }
         default: {
             return true;
@@ -436,27 +429,6 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                                : STDIN_FILENO;               // like <&3 or < /tmp/file.txt
             break;
         }
-        case L'^': {
-            if (!caret_redirs()) {
-                // ^ is not special if caret_redirs is disabled.
-                return none();
-            } else {
-                if (has_fd) {
-                    return none();
-                }
-                consume(L'^');
-                result.fd = STDERR_FILENO;
-                result.mode = redirection_mode_t::overwrite;
-                if (try_consume(L'^')) {
-                    result.mode = redirection_mode_t::append;
-                } else if (try_consume(L'&')) {
-                    // This is a redirection to an fd.
-                    result.mode = redirection_mode_t::fd;
-                }
-                if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
-                break;
-            }
-        }
         case L'&': {
             consume(L'&');
             if (try_consume(L'|')) {
@@ -655,7 +627,7 @@ maybe_t<tok_t> tokenizer_t::next() {
             // Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string.
             const wchar_t *error_location = this->token_cursor;
             maybe_t<pipe_or_redir_t> redir_or_pipe{};
-            if (iswdigit(*this->token_cursor) || (*this->token_cursor == L'^' && caret_redirs())) {
+            if (iswdigit(*this->token_cursor)) {
                 redir_or_pipe = pipe_or_redir_t::from_string(this->token_cursor);
             }
 

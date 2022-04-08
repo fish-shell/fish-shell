@@ -791,16 +791,6 @@ static void test_tokenizer() {
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     if (get_redir_mode(L"3</tmp/filetxt") != redirection_mode_t::input)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-
-    // Test ^ with our feature flag on and off.
-    auto saved_flags = fish_features();
-    mutable_fish_features().set(features_t::stderr_nocaret, false);
-    if (get_redir_mode(L"^") != redirection_mode_t::overwrite)
-        err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    mutable_fish_features().set(features_t::stderr_nocaret, true);
-    if (get_redir_mode(L"^") != none())
-        err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    mutable_fish_features() = saved_flags;
 }
 
 // Little function that runs in a background thread, bouncing to the main.

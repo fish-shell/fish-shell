@@ -167,11 +167,13 @@ using only_if_t = typename std::enable_if<B>::type;
 template <typename FieldVisitor, typename Field>
 only_if_t<Field::Category != category_t::list> visit_1_field(FieldVisitor &v, Field &field) {
     v.visit_node_field(field);
+    return;
 }
 
 template <typename FieldVisitor, typename Field>
 only_if_t<Field::Category == category_t::list> visit_1_field(FieldVisitor &v, Field &field) {
     v.visit_list_field(field);
+    return;
 }
 
 template <typename FieldVisitor, typename Field>

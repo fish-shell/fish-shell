@@ -344,6 +344,7 @@ struct source_range_visitor_t {
                 total.length = end - total.start;
             }
         }
+        return;
     }
 
     // Other node types recurse.
@@ -1086,6 +1087,7 @@ struct populator_t {
     enable_if_t<Node::Category == category_t::branch> visit_node_field(Node &node) {
         // This field is a direct embedding of an AST value.
         node.accept(*this);
+        return;
     }
 
     // Overload for token fields.

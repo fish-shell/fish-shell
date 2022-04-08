@@ -16,12 +16,12 @@ features_t::features_t() {
 features_t features_t::global_features;
 
 const features_t::metadata_t features_t::metadata[features_t::flag_count] = {
-    {stderr_nocaret, L"stderr-nocaret", L"3.0", L"^ no longer redirects stderr", true},
-    {qmark_noglob, L"qmark-noglob", L"3.0", L"? no longer globs", false},
+    {stderr_nocaret, L"stderr-nocaret", L"3.0", L"^ no longer redirects stderr", true, true /* read-only */},
+    {qmark_noglob, L"qmark-noglob", L"3.0", L"? no longer globs", false, false},
     {string_replace_backslash, L"regex-easyesc", L"3.1", L"string replace -r needs fewer \\'s",
-     true},
+     true, false},
     {ampersand_nobg_in_token, L"ampersand-nobg-in-token", L"3.4",
-     L"& only backgrounds if followed by a separator", false},
+     L"& only backgrounds if followed by a separator", false, false},
 };
 
 const struct features_t::metadata_t *features_t::metadata_for(const wchar_t *name) {
@@ -55,11 +55,17 @@ void features_t::set_from_string(const wcstring &str) {
         // future versions).
         // The special name 'all' may be used for those who like to live on the edge.
         if (const metadata_t *md = metadata_for(name)) {
-            this->set(md->flag, value);
+            // Only change it if it's not read-only.
+            // Don't complain if it is, this is typically set from a variable.
+            if (!md->read_only) {
+                this->set(md->flag, value);
+            }
         } else {
             for (const metadata_t &md : metadata) {
                 if (std::wcsstr(md.groups, name) || !std::wcscmp(name, L"all")) {
-                    this->set(md.flag, value);
+                    if (!md.read_only) {
+                        this->set(md.flag, value);
+                    }
                 }
             }
         }

@@ -31,48 +31,6 @@
 
 class io_chain_t;
 
-/// While block description.
-#define WHILE_BLOCK N_(L"'while' block")
-
-/// For block description.
-#define FOR_BLOCK N_(L"'for' block")
-
-/// Breakpoint block.
-#define BREAKPOINT_BLOCK N_(L"block created by breakpoint")
-
-/// Variable assignment block.
-#define VARIABLE_ASSIGNMENT_BLOCK N_(L"block created by variable assignment prefixing a command")
-
-/// If block description.
-#define IF_BLOCK N_(L"'if' conditional block")
-
-/// Function invocation block description.
-#define FUNCTION_CALL_BLOCK N_(L"function invocation block")
-
-/// Function invocation block description.
-#define FUNCTION_CALL_NO_SHADOW_BLOCK N_(L"function invocation block with no variable shadowing")
-
-/// Switch block description.
-#define SWITCH_BLOCK N_(L"'switch' block")
-
-/// Top block description.
-#define TOP_BLOCK N_(L"global root block")
-
-/// Command substitution block description.
-#define SUBST_BLOCK N_(L"command substitution block")
-
-/// Begin block description.
-#define BEGIN_BLOCK N_(L"'begin' unconditional block")
-
-/// Source block description.
-#define SOURCE_BLOCK N_(L"block created by the . builtin")
-
-/// Source block description.
-#define EVENT_BLOCK N_(L"event handler block")
-
-/// Unknown block description.
-#define UNKNOWN_BLOCK N_(L"unknown/invalid block")
-
 // Given a file path, return something nicer. Currently we just "unexpand" tildes.
 static wcstring user_presentable_path(const wcstring &path, const environment_t &vars) {
     return replace_home_directory_with_tilde(path, vars);

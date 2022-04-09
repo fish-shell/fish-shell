@@ -87,13 +87,6 @@ class completion_t {
     completion_t(completion_t &&) noexcept;
     completion_t &operator=(completion_t &&) noexcept;
 
-    // Compare two completions. No operating overlaoding to make this always explicit (there's
-    // potentially multiple ways to compare completions).
-    //
-    // "Naturally less than" means in a natural ordering, where digits are treated as numbers. For
-    // example, foo10 is naturally greater than foo2 (but alphabetically less than it).
-    static bool is_naturally_less_than(const completion_t &a, const completion_t &b);
-
     /// \return the completion's match rank. Lower ranks are better completions.
     uint32_t rank() const { return match.rank(); }
 

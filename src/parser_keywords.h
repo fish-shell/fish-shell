@@ -20,11 +20,4 @@ bool parser_keywords_is_subcommand(const wcstring &cmd);
 /// \return 1 of the command parameter is a command, 0 otherwise
 bool parser_keywords_is_reserved(const wcstring &word);
 
-/// Test if the specified string is command that opens a new block.
-bool parser_keywords_is_block(const wcstring &word);
-
-/// Check if the specified command is one of the builtins that cannot have arguments, any followin
-/// argument is interpreted as a new command.
-bool parser_keywords_skip_arguments(const wcstring &cmd);
-
 #endif

@@ -462,7 +462,6 @@ class job_t : noncopyable_t {
     /// \return whether we have internal or external procs, respectively.
     /// Internal procs are builtins, blocks, and functions.
     /// External procs include exec and external.
-    bool has_internal_proc() const;
     bool has_external_proc() const;
 
     /// \return whether this job, when run, will want a job ID.

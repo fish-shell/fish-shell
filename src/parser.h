@@ -380,7 +380,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \return a value like ENV_OK.
     int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring val);
     int set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
-    int set_empty_var_and_fire(const wcstring &key, env_mode_flags_t mode);
 
     /// Pushes a new block. Returns a pointer to the block, stored in the parser. The pointer is
     /// valid until the call to pop_block().
@@ -388,9 +387,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Remove the outermost block, asserting it's the given one.
     void pop_block(const block_t *expected);
-
-    /// Return a description of the given blocktype.
-    static const wchar_t *get_block_desc(block_type_t block);
 
     /// Return the function name for the specified stack frame. Default is one (current frame).
     maybe_t<wcstring> get_function_name(int level = 1);

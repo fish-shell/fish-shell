@@ -241,10 +241,6 @@ __attribute__((always_inline)) static inline bool natural_compare_completions(
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }
 
-bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {
-    return natural_compare_completions(a, b);
-}
-
 void completion_t::prepend_token_prefix(const wcstring &prefix) {
     if (this->flags & COMPLETE_REPLACES_TOKEN) {
         this->completion.insert(0, prefix);
@@ -882,7 +878,7 @@ static void complete_load(const wcstring &name) {
 bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcstring &popt,
                                              const wcstring &str, bool use_switches,
                                              bool *out_do_file) {
-    bool use_common = true, use_files = true, has_force = false;
+    bool use_files = true, has_force = false;
 
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, &path, &cmd, ctx.vars);
@@ -926,8 +922,7 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
     // the lock because callouts (like the condition) may add or remove completions. See issue 2.
     for (const option_list_t &options : all_options) {
         size_t short_opt_pos = short_option_pos(str, options);
-        bool last_option_requires_param = false;
-        use_common = true;
+        bool last_option_requires_param = false, use_common = true;
         if (use_switches) {
             if (str[0] == L'-') {
                 // Check if we are entering a combined option and argument (like --color=auto or

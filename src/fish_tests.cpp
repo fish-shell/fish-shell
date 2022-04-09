@@ -2874,8 +2874,6 @@ static void test_test_brackets() {
     null_output_stream_t null{};
     io_streams_t streams(null, null);
 
-    wcstring_list_t args;
-
     const wchar_t *args1[] = {L"[", L"foo", nullptr};
     do_test(builtin_test(parser, streams, args1) != 0);
 

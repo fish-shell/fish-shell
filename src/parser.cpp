@@ -114,10 +114,6 @@ int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstr
     return set_var_and_fire(key, mode, std::move(vals));
 }
 
-int parser_t::set_empty_var_and_fire(const wcstring &key, env_mode_flags_t mode) {
-    return set_var_and_fire(key, mode, wcstring_list_t{});
-}
-
 block_t *parser_t::push_block(block_t &&block) {
     block.src_lineno = parser_t::get_lineno();
     block.src_filename = parser_t::current_filename();
@@ -138,39 +134,6 @@ void parser_t::pop_block(const block_t *expected) {
     bool pop_env = expected->wants_pop_env;
     block_list.pop_front();  // beware, this deallocates 'expected'.
     if (pop_env) vars().pop();
-}
-
-const wchar_t *parser_t::get_block_desc(block_type_t block) {
-    switch (block) {
-        case block_type_t::while_block:
-            return WHILE_BLOCK;
-        case block_type_t::for_block:
-            return FOR_BLOCK;
-        case block_type_t::if_block:
-            return IF_BLOCK;
-        case block_type_t::function_call:
-            return FUNCTION_CALL_BLOCK;
-
-        case block_type_t::function_call_no_shadow:
-            return FUNCTION_CALL_NO_SHADOW_BLOCK;
-        case block_type_t::switch_block:
-            return SWITCH_BLOCK;
-        case block_type_t::subst:
-            return SUBST_BLOCK;
-        case block_type_t::top:
-            return TOP_BLOCK;
-        case block_type_t::begin:
-            return BEGIN_BLOCK;
-        case block_type_t::source:
-            return SOURCE_BLOCK;
-        case block_type_t::event:
-            return EVENT_BLOCK;
-        case block_type_t::breakpoint:
-            return BREAKPOINT_BLOCK;
-        case block_type_t::variable_assignment:
-            return VARIABLE_ASSIGNMENT_BLOCK;
-    }
-    return _(UNKNOWN_BLOCK);
 }
 
 const block_t *parser_t::block_at_index(size_t idx) const {

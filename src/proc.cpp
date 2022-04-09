@@ -310,13 +310,6 @@ void job_t::mark_constructed() {
     mut_flags().constructed = true;
 }
 
-bool job_t::has_internal_proc() const {
-    for (const auto &p : processes) {
-        if (p->is_internal()) return true;
-    }
-    return false;
-}
-
 bool job_t::has_external_proc() const {
     for (const auto &p : processes) {
         if (!p->is_internal()) return true;

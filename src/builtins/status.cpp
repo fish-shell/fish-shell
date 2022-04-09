@@ -100,7 +100,6 @@ namespace {
 struct status_cmd_opts_t {
     int level{1};
     maybe_t<job_control_t> new_job_control_mode{};
-    const wchar_t *feature_name{};
     status_cmd_t status_cmd{STATUS_UNDEF};
     bool print_help{false};
 };

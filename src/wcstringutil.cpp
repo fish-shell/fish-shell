@@ -315,15 +315,3 @@ int fish_wcwidth_visible(wchar_t widechar) {
     if (widechar == L'\b') return -1;
     return std::max(0, fish_wcwidth(widechar));
 }
-
-int fish_wcswidth_visible(const wcstring &str) {
-    int res = 0;
-    for (wchar_t ch : str) {
-        if (ch == L'\b') {
-            res += -1;
-        } else {
-            res += std::max(0, fish_wcwidth(ch));
-        }
-    }
-    return res;
-}

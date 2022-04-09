@@ -695,7 +695,7 @@ static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_
             // We do a simple replacement of punctuation chars rather than calling
             // escape_string(long_flag, 0, STRING_STYLE_VAR).
             wcstring long_flag = opt_spec->long_flag;
-            std::replace_if(long_flag.begin(), long_flag.end(), std::iswpunct, L'_');
+            std::replace_if(long_flag.begin(), long_flag.end(), iswpunct, L'_');
             vars.set(var_name_prefix + long_flag, ENV_LOCAL, opt_spec->vals);
         }
     }

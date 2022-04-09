@@ -495,14 +495,13 @@ static void test_format() {
 }
 
 /// Helper to convert a narrow string to a sequence of hex digits.
-static char *str2hex(const char *input) {
-    char *output = (char *)malloc(5 * std::strlen(input) + 1);
-    char *p = output;
-    for (; *input; input++) {
-        sprintf(p, "0x%02X ", (int)*input & 0xFF);
-        p += 5;
+static std::string str2hex(const std::string &input) {
+    std::string output;
+    for (char c : input) {
+        char buff[16];
+        size_t amt = snprintf(buff, sizeof buff, "0x%02X ", (int)(c & 0xFF));
+        output.append(buff, amt);
     }
-    *p = '\0';
     return output;
 }
 
@@ -520,13 +519,9 @@ static void test_convert() {
         const wcstring w = str2wcstring(orig);
         std::string n = wcs2string(w);
         if (orig != n) {
-            char *o2 = str2hex(orig.c_str());
-            char *n2 = str2hex(n.c_str());
             err(L"Line %d - %d: Conversion cycle of string:\n%4d chars: %s\n"
                 L"produced different string:\n%4d chars: %s",
-                __LINE__, i, orig.size(), o2, n.size(), n2);
-            free(o2);
-            free(n2);
+                __LINE__, i, orig.size(), str2hex(orig).c_str(), n.size(), str2hex(n).c_str());
         }
     }
 }

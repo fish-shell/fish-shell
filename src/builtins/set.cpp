@@ -484,15 +484,12 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             return STATUS_CMD_ERROR;
         }
 
-        if (split->indexes.empty()) {
-            // No indexes, just increment if our variable is missing.
-            if (!split->var) retval++;
-        } else {
+        if (split->indexes.empty() && !split->var) retval++; // No indicies, increment if missing
+        else {
             // Increment for every index out of range.
             long varsize = split->varsize();
-            for (long idx : split->indexes) {
-                if (idx < 1 || idx > varsize) retval++;
-            }
+            retval += std::count_if(split->indexes.begin(), split->indexes.end(),
+                                    [varsize](long i) { return (i < 1 || i > varsize); });
         }
     }
 

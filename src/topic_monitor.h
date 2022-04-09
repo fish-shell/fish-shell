@@ -102,10 +102,11 @@ class generation_list_t {
 
     /// \return whether any topic is valid.
     bool any_valid() const {
-        auto arr = as_array();
-        return std::any_of(arr.cbegin(), arr.cend(), [](generation_t gen) {
-            return gen != invalid_generation;
-        });
+        bool valid = false;
+        for (auto gen : as_array()) {
+            if (gen != invalid_generation) valid = true;
+        }
+        return valid;
     }
 
     bool operator==(const generation_list_t &rhs) const {

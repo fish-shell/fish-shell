@@ -28,15 +28,7 @@ function __fish_whatis_current_token -d "Show man page entries or function descr
 
     printf "%s\n" $desc
 
-    set -l line_count (count (fish_prompt))
-    # Ensure line_count is greater than one to accomodate different
-    # versions of the `seq` command, some of which print the sequence in
-    # reverse order when the second argument is smaller than the first
-    if test $line_count -gt 1
-        for x in (seq 2 $line_count)
-            printf "\n"
-        end
-    end
+    string repeat \n --count=(math (count (fish_prompt)) - 1)
 
     commandline -f repaint
 end

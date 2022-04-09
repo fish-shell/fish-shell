@@ -15,12 +15,7 @@ function __fish_list_current_token -d "List contents of token under the cursor i
         end
     end
 
-    set -l line_count (count (fish_prompt))
-    if test $line_count -gt 1
-        for x in (seq 2 $line_count)
-            printf "\n"
-        end
-    end
+    string repeat \n --count=(math (count (fish_prompt)) - 1)
 
     commandline -f repaint
 end

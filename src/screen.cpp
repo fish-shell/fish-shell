@@ -309,7 +309,7 @@ static size_t measure_run_from(const wchar_t *input, size_t start, size_t *out_e
                                layout_cache_t &cache) {
     size_t width = 0;
     size_t idx = start;
-    for (idx = start; !is_run_terminator(input[idx]); idx++) {
+    for (; !is_run_terminator(input[idx]); idx++) {
         if (input[idx] == L'\x1B') {
             // This is the start of an escape code; we assume it has width 0.
             // -1 because we are going to increment in the loop.

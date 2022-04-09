@@ -369,7 +369,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                             const char *const *envv) {
     switch (err) {
         case E2BIG: {
-            char sz1[128], sz2[128];
+            char sz1[128];
 
             long arg_max = -1;
 
@@ -388,6 +388,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
 
             if (arg_max > 0) {
                 if (sz >= static_cast<unsigned long long>(arg_max)) {
+                    char sz2[128];
                     format_size_safe(sz2, static_cast<unsigned long long>(arg_max));
                     FLOGF_SAFE(exec,
                                "Failed to execute process '%s': the size of argument and "

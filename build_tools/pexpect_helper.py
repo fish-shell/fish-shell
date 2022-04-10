@@ -48,8 +48,13 @@ def get_callsite():
     """Return a triple (filename, line_number, line_text) of the call site location."""
     callstack = inspect.getouterframes(inspect.currentframe())
     for f in callstack:
-        if inspect.getmodule(f.frame) is not Message.MODULE:
-            return (os.path.basename(f.filename), f.lineno, f.code_context)
+        # Skip call sites from this file.
+        if inspect.getmodule(f.frame) is Message.MODULE:
+            continue
+        # Skip functions which have a truthy callsite_skip attribute.
+        if getattr(f.function, "callsite_skip", False):
+            continue
+        return (os.path.basename(f.filename), f.lineno, f.code_context)
     return ("Unknown", -1, "")
 
 

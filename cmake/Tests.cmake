@@ -159,6 +159,7 @@ foreach(CHECK ${FISH_CHECKS})
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
   set_tests_properties(${CHECK_NAME} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
+  set_tests_properties(${CHECK_NAME} PROPERTIES ENVIRONMENT FISH_FORCE_COLOR=1)
   add_test_target("${CHECK_NAME}")
 endforeach(CHECK)
 
@@ -171,5 +172,6 @@ foreach(PEXPECT ${PEXPECTS})
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
   set_tests_properties(${PEXPECT} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
+  set_tests_properties(${PEXPECT} PROPERTIES ENVIRONMENT FISH_FORCE_COLOR=1)
   add_test_target("${PEXPECT}")
 endforeach(PEXPECT)

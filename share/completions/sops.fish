@@ -93,7 +93,7 @@ complete -x -c sops -n "__fish_sops_commands exec-file" -l keyservice -d "Specif
 
 # publish flags
 complete -F -c sops -n "__fish_sops_commands publish" -s y -l yes -d "Pre-approve all changes and run non-interactively"
-complete -F -c sops -n "__fish_sops_commands publish" -l omit-extentions -d "Omit file extensions in destination path when publishing sops file"
+complete -F -c sops -n "__fish_sops_commands publish" -l omit-extensions -d "Omit file extensions in destination path when publishing sops file"
 complete -F -c sops -n "__fish_sops_commands publish" -l recursive -d "If source path is a directory, publish all its content recursively"
 complete -F -c sops -n "__fish_sops_commands publish" -l verbose -d "Enable verbose logging output"
 complete -F -c sops -n "__fish_sops_commands publish" -l enable-local-keyservice -d "use local key service"

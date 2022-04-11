@@ -1,5 +1,24 @@
 # Completion for SOPS (Secrets OPerationS)
 
+function __fish_sops_no_subcommand
+  not __fish_sops_has_subcommand
+end
+
+function __fish_sops_has_subcommand
+  set -l cmd (commandline -poc)
+  set -e cmd[1]
+  set -l opts d/decrypt e/encrypt r/rotate i/in-place s/show-master-keys v/version
+  set -a opts extract ignore-mac verbose enable-local-keyservice
+  set -a opts k/kms= p/pgp= a/age=
+  set -a opts gcp-kms= aws-profile= azure-kv= hc-vault-transit= input-type= output-type=
+  set -a opts add-gcp-kms= rm-gcp-kms= add-azure-kv= rm-azure-kv= add-kms= rm-kms=
+  set -a opts add-hc-vault-transit= rm-hc-vault-transit= add-age= rm-age= add-pgp= rm-pgp=
+  set -a opts unencrypted-suffix= encrypted-suffix= unencrypted-regex= encrypted-regex=
+  set -a opts config= encryption-context= set= shamir-secret-sharing-threshold= output= keyservice=
+  argparse -s $opts -- $cmd 2>/dev/null
+  set -q argv[1]
+end
+
 function __fish_sops_commands --description "Test if argument(s) match a sops command"
   if not set -q argv[1]
     return 1
@@ -28,49 +47,49 @@ complete -F -c sops -n __fish_is_first_arg -a help -d "Shows a list of commands 
 complete -F -c sops -n __fish_is_first_arg -a h -d "Shows a list of commands or help for one command"
 
 # Primary flags without parameters
-complete -F -c sops -n __fish_is_first_token -s d -l decrypt -d "Decrypt a file and output the result to stdout"
-complete -F -c sops -n __fish_is_first_token -s e -l encrypt -d "Encrypt a file and output the result to stdout"
-complete -F -c sops -n __fish_is_first_token -s r -l rotate -d "Generate new encryption key & reencrypt with the new key"
-complete -F -c sops -n __fish_is_first_token -s i -l in-place -d "Write output back to the same file instead of stdout"
-complete -F -c sops -n __fish_is_first_token -s s -l show-master-keys -d "Display master encryption keys in the file during editing"
-complete -F -c sops -n __fish_is_first_token -l extract -d "Extract a specific key or branch from decrypted input document"
-complete -F -c sops -n __fish_is_first_token -l ignore-mac -d "Ignore Message Authentication Code during decryption"
-complete -F -c sops -n __fish_is_first_token -l verbose -d "Enable verbose logging output"
-complete -F -c sops -n __fish_is_first_token -l enable-local-keyservice -d "Use local key service"
-complete -F -c sops -n __fish_is_first_token -s v -l version -d "Print the version"
+complete -F -c sops -n __fish_sops_no_subcommand -s d -l decrypt -d "Decrypt a file and output the result to stdout"
+complete -F -c sops -n __fish_sops_no_subcommand -s e -l encrypt -d "Encrypt a file and output the result to stdout"
+complete -F -c sops -n __fish_sops_no_subcommand -s r -l rotate -d "Generate new encryption key & reencrypt with the new key"
+complete -F -c sops -n __fish_sops_no_subcommand -s i -l in-place -d "Write output back to the same file instead of stdout"
+complete -F -c sops -n __fish_sops_no_subcommand -s s -l show-master-keys -d "Display master encryption keys in the file during editing"
+complete -F -c sops -n __fish_sops_no_subcommand -l extract -d "Extract a specific key or branch from decrypted input document"
+complete -F -c sops -n __fish_sops_no_subcommand -l ignore-mac -d "Ignore Message Authentication Code during decryption"
+complete -F -c sops -n __fish_sops_no_subcommand -l verbose -d "Enable verbose logging output"
+complete -F -c sops -n __fish_sops_no_subcommand -l enable-local-keyservice -d "Use local key service"
+complete -F -c sops -n __fish_sops_no_subcommand -s v -l version -d "Print the version"
 
 # Primary flags with required parameters
-complete -x -c sops -n __fish_is_first_token -s k -l kms -d "Comma separated list of KMS ARNs"
-complete -x -c sops -n __fish_is_first_token -s p -l pgp -d "Comma separated list of PGP fingerprints"
-complete -x -c sops -n __fish_is_first_token -s a -l age -d "Comma separated list of age recipients"
-complete -x -c sops -n __fish_is_first_token -l gcp-kms -d "Comma separated list of GCP KMS resource IDs"
-complete -x -c sops -n __fish_is_first_token -l aws-profile -d "The AWS profile to use for requests to AWS"
-complete -x -c sops -n __fish_is_first_token -l azure-kv -d "Comma separated list of Azure Key Vault URLs"
-complete -x -c sops -n __fish_is_first_token -l hc-vault-transit -d "Comma separated list of Vault's key URI"
-complete -x -c sops -n __fish_is_first_token -l input-type -d "Currently json, yaml, dotenv and binary are supported."
-complete -x -c sops -n __fish_is_first_token -l output-type -d "Currently json, yaml, dotenv and binary are supported."
-complete -x -c sops -n __fish_is_first_token -l add-gcp-kms -d "Comma-separated list of GCP KMS key resource IDs"
-complete -x -c sops -n __fish_is_first_token -l rm-gcp-kms -d "Remove comma-separated list of GCP KMS key resource IDs"
-complete -x -c sops -n __fish_is_first_token -l add-azure-kv -x -d "Add comma-separated list of Azure Key Vault key URLs"
-complete -x -c sops -n __fish_is_first_token -l rm-azure-kv -x -d "Remove comma-separated list of Azure Key Vault key URLs"
-complete -x -c sops -n __fish_is_first_token -l add-kms -x -d "Add comma-separated list of KMS ARNs"
-complete -x -c sops -n __fish_is_first_token -l rm-kms -x -d "Remove comma-separated list of KMS ARNs"
-complete -x -c sops -n __fish_is_first_token -l add-hc-vault-transit -x -d "Add comma-separated list of Vault's URI key"
-complete -x -c sops -n __fish_is_first_token -l rm-hc-vault-transit -x -d "Remove comma-separated list of Vault's URI key"
-complete -x -c sops -n __fish_is_first_token -l add-age -x -d "Add comma-separated list of age recipients fingerprints"
-complete -x -c sops -n __fish_is_first_token -l rm-age -x -d "Remove comma-separated list of age recipients fingerprints"
-complete -x -c sops -n __fish_is_first_token -l add-pgp -x -d "Add comma-separated list of PGP fingerprints"
-complete -x -c sops -n __fish_is_first_token -l rm-pgp -x -d "Remove comma-separated list of PGP fingerprints"
-complete -x -c sops -n __fish_is_first_token -l unencrypted-suffix -d "Override the unencrypted key suffix"
-complete -x -c sops -n __fish_is_first_token -l encrypted-suffix -d "Override the encrypted key suffix"
-complete -x -c sops -n __fish_is_first_token -l unencrypted-regex -d "Set the unencrypted key suffix"
-complete -x -c sops -n __fish_is_first_token -l encrypted-regex -d "Set the encrypted key suffix"
-complete -r -c sops -n __fish_is_first_token -l config -d "Path to sops' config file"
-complete -x -c sops -n __fish_is_first_token -l encryption-context -d "Comma separated list of KMS encryption context key:value pairs"
-complete -x -c sops -n __fish_is_first_token -l set -d "Set a specific key or branch in the input document (edit mode)"
-complete -x -c sops -n __fish_is_first_token -l shamir-secret-sharing-threshold -x -d "Number of master keys required to retrieve the data key with shamir"
-complete -r -c sops -n __fish_is_first_token -l output -d "Save the output after encryption or decryption to file"
-complete -x -c sops -n __fish_is_first_token -l keyservice -d "Specify key services to use in addition to the local one"
+complete -x -c sops -n __fish_sops_no_subcommand -s k -l kms -d "Comma separated list of KMS ARNs"
+complete -x -c sops -n __fish_sops_no_subcommand -s p -l pgp -d "Comma separated list of PGP fingerprints"
+complete -x -c sops -n __fish_sops_no_subcommand -s a -l age -d "Comma separated list of age recipients"
+complete -x -c sops -n __fish_sops_no_subcommand -l gcp-kms -d "Comma separated list of GCP KMS resource IDs"
+complete -x -c sops -n __fish_sops_no_subcommand -l aws-profile -d "The AWS profile to use for requests to AWS"
+complete -x -c sops -n __fish_sops_no_subcommand -l azure-kv -d "Comma separated list of Azure Key Vault URLs"
+complete -x -c sops -n __fish_sops_no_subcommand -l hc-vault-transit -d "Comma separated list of Vault's key URI"
+complete -x -c sops -n __fish_sops_no_subcommand -l input-type -d "Currently json, yaml, dotenv and binary are supported."
+complete -x -c sops -n __fish_sops_no_subcommand -l output-type -d "Currently json, yaml, dotenv and binary are supported."
+complete -x -c sops -n __fish_sops_no_subcommand -l add-gcp-kms -d "Comma-separated list of GCP KMS key resource IDs"
+complete -x -c sops -n __fish_sops_no_subcommand -l rm-gcp-kms -d "Remove comma-separated list of GCP KMS key resource IDs"
+complete -x -c sops -n __fish_sops_no_subcommand -l add-azure-kv -x -d "Add comma-separated list of Azure Key Vault key URLs"
+complete -x -c sops -n __fish_sops_no_subcommand -l rm-azure-kv -x -d "Remove comma-separated list of Azure Key Vault key URLs"
+complete -x -c sops -n __fish_sops_no_subcommand -l add-kms -x -d "Add comma-separated list of KMS ARNs"
+complete -x -c sops -n __fish_sops_no_subcommand -l rm-kms -x -d "Remove comma-separated list of KMS ARNs"
+complete -x -c sops -n __fish_sops_no_subcommand -l add-hc-vault-transit -x -d "Add comma-separated list of Vault's URI key"
+complete -x -c sops -n __fish_sops_no_subcommand -l rm-hc-vault-transit -x -d "Remove comma-separated list of Vault's URI key"
+complete -x -c sops -n __fish_sops_no_subcommand -l add-age -x -d "Add comma-separated list of age recipients fingerprints"
+complete -x -c sops -n __fish_sops_no_subcommand -l rm-age -x -d "Remove comma-separated list of age recipients fingerprints"
+complete -x -c sops -n __fish_sops_no_subcommand -l add-pgp -x -d "Add comma-separated list of PGP fingerprints"
+complete -x -c sops -n __fish_sops_no_subcommand -l rm-pgp -x -d "Remove comma-separated list of PGP fingerprints"
+complete -x -c sops -n __fish_sops_no_subcommand -l unencrypted-suffix -d "Override the unencrypted key suffix"
+complete -x -c sops -n __fish_sops_no_subcommand -l encrypted-suffix -d "Override the encrypted key suffix"
+complete -x -c sops -n __fish_sops_no_subcommand -l unencrypted-regex -d "Set the unencrypted key suffix"
+complete -x -c sops -n __fish_sops_no_subcommand -l encrypted-regex -d "Set the encrypted key suffix"
+complete -r -c sops -n __fish_sops_no_subcommand -l config -d "Path to sops' config file"
+complete -x -c sops -n __fish_sops_no_subcommand -l encryption-context -d "Comma separated list of KMS encryption context key:value pairs"
+complete -x -c sops -n __fish_sops_no_subcommand -l set -d "Set a specific key or branch in the input document (edit mode)"
+complete -x -c sops -n __fish_sops_no_subcommand -l shamir-secret-sharing-threshold -x -d "Number of master keys required to retrieve the data key with shamir"
+complete -r -c sops -n __fish_sops_no_subcommand -l output -d "Save the output after encryption or decryption to file"
+complete -x -c sops -n __fish_sops_no_subcommand -l keyservice -d "Specify key services to use in addition to the local one"
 
 # Global flags
 complete -F -c sops -s h -l help -d "Show help"

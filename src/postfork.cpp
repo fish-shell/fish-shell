@@ -374,14 +374,16 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             long arg_max = -1;
 
             size_t sz = 0;
+            size_t szenv = 0;
             const char *const *p;
             for (p = argv; *p; p++) {
                 sz += std::strlen(*p) + 1;
             }
 
             for (p = envv; *p; p++) {
-                sz += std::strlen(*p) + 1;
+                szenv += std::strlen(*p) + 1;
             }
+            sz += szenv;
 
             format_size_safe(sz1, sz);
             arg_max = sysconf(_SC_ARG_MAX);
@@ -401,6 +403,12 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                     FLOGF_SAFE(exec,
                                "Failed to execute process '%s': An argument exceeds the OS "
                                "argument length limit.", actual_cmd);
+                }
+
+                if (szenv >= static_cast<unsigned long long>(arg_max) / 2) {
+                    FLOGF_SAFE(exec,
+                               "Hint: Your exported variables take up over half the limit. Try erasing or unexporting variables."
+                               );
                 }
             } else {
                 FLOGF_SAFE(exec,

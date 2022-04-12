@@ -2,41 +2,25 @@
 complete -f -c terraform -l version -d "Print version information"
 complete -f -c terraform -l help -d "Show help"
 
-### apply
+### apply/destroy
+set -l apply apply destroy
+
 complete -f -c terraform -n __fish_use_subcommand -a apply -d "Build or change infrastructure"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o backup -d "Path to backup the existing state file"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o lock -d "Lock the state file when locking is supported"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o lock-timeout -d "Duration to retry a state lock"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o input -d "Ask for input for variables if not directly set"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o no-color -d "If specified, output won't contain any color"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o parallelism -d "Limit the number of concurrent operations"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o refresh -d "Update state prior to checking for differences"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o state -d "Path to a Terraform state file"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o state-out -d "Path to write state"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o target -d "Resource to target"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o var -d "Set a variable in the Terraform configuration"
-complete -f -c terraform -n "__fish_seen_subcommand_from apply" -o var-file -d "Set variables from a file"
+complete -f -c terraform -n __fish_use_subcommand -a destroy -d "Destroy Terraform-managed infrastructure"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o backup -d "Path to backup the existing state file"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o lock -d "Lock the state file when locking is supported"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o lock-timeout -d "Duration to retry a state lock"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o input -d "Ask for input for variables if not directly set"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o no-color -d "If specified, output won't contain any color"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o parallelism -d "Limit the number of concurrent operations"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o state -d "Path to a Terraform state file"
+complete -f -c terraform -n "__fish_seen_subcommand_from $apply" -o state-out -d "Path to write state"
 
 ### console
 complete -f -c terraform -n __fish_use_subcommand -a console -d "Interactive console for Terraform interpolations"
 complete -f -c terraform -n "__fish_seen_subcommand_from console" -o state -d "Path to a Terraform state file"
 complete -f -c terraform -n "__fish_seen_subcommand_from console" -o var -d "Set a variable in the Terraform configuration"
 complete -f -c terraform -n "__fish_seen_subcommand_from console" -o var-file -d "Set variables from a file"
-
-### destroy
-complete -f -c terraform -n __fish_use_subcommand -a destroy -d "Destroy Terraform-managed infrastructure"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o backup -d "Path to backup the existing state file"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o force -d "Don't ask for input for destroy confirmation"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o lock -d "Lock the state file when locking is supported"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o lock-timeout -d "Duration to retry a state lock"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o no-color -d "If specified, output won't contain any color"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o parallelism -d "Limit the number of concurrent operations"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o refresh -d "Update state prior to checking for differences"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o state -d "Path to a Terraform state file"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o state-out -d "Path to write state"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o target -d "Resource to target"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o var -d "Set a variable in the Terraform configuration"
-complete -f -c terraform -n "__fish_seen_subcommand_from destroy" -o var-file -d "Set variables from a file"
 
 ### env
 complete -f -c terraform -n __fish_use_subcommand -a env -d "Environment management"
@@ -103,7 +87,7 @@ complete -f -c terraform -n "__fish_seen_subcommand_from output" -o json -d "Pri
 
 ### plan
 complete -f -c terraform -n __fish_use_subcommand -a plan -d "Generate and show an execution plan"
-complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o destroy -d "Generate a plan to destroy all resources"
+
 complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o detailed-exitcode -d "Return detailed exit codes"
 complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o input -d "Ask for input for variables if not directly set"
 complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o lock -d "Lock the state file when locking is supported"
@@ -112,11 +96,16 @@ complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o module-depth -
 complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o no-color -d "If specified, output won't contain any color"
 complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o out -d "Write a plan file to the given path"
 complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o parallelism -d "Limit the number of concurrent operations"
-complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o refresh -d "Update state prior to checking for differences"
 complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o state -d "Path to a Terraform state file"
-complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o target -d "Resource to target"
-complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o var -d "Set a variable in the Terraform configuration"
-complete -f -c terraform -n "__fish_seen_subcommand_from plan" -o var-file -d "Set variables from a file"
+
+### plan customization options are reusable across apply, destroy, and plan
+set -l plan apply destroy plan
+
+complete -f -c terraform -n "__fish_seen_subcommand_from $plan" -o destroy -d "Generate a plan to destroy all resources"
+complete -f -c terraform -n "__fish_seen_subcommand_from $plan" -o refresh -d "Update state prior to checking for differences"
+complete -f -c terraform -n "__fish_seen_subcommand_from $plan" -o target -d "Resource to target"
+complete -f -c terraform -n "__fish_seen_subcommand_from $plan" -o var -d "Set a variable in the Terraform configuration"
+complete -f -c terraform -n "__fish_seen_subcommand_from $plan" -o var-file -d "Set variables from a file"
 
 ### push
 complete -f -c terraform -n __fish_use_subcommand -a push -d "Upload this Terraform module to Atlas to run"

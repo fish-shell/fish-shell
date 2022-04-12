@@ -391,8 +391,8 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                     char sz2[128];
                     format_size_safe(sz2, static_cast<unsigned long long>(arg_max));
                     FLOGF_SAFE(exec,
-                               "Failed to execute process '%s': the size of argument and "
-                               "environment lists %s exceeds the OS limit of %s.",
+                               "Failed to execute process '%s': the total size of the argument list and "
+                               "exported variables (%s) exceeds the OS limit of %s.",
                                actual_cmd, sz1, sz2);
                 } else {
                     // MAX_ARG_STRLEN, a linux thing that limits the size of one argument. It's
@@ -404,8 +404,8 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                 }
             } else {
                 FLOGF_SAFE(exec,
-                           "Failed to execute process '%s': The total size of the argument and "
-                           "environment lists (%s) exceeds the "
+                           "Failed to execute process '%s': the total size of the argument list and "
+                           "exported variables (%s) exceeds the "
                            "operating system limit.",
                            actual_cmd, sz1);
             }

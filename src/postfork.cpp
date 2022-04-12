@@ -400,7 +400,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                     // print the real limit.
                     FLOGF_SAFE(exec,
                                "Failed to execute process '%s': An argument exceeds the OS "
-                               "argument length limit.");
+                               "argument length limit.", actual_cmd);
                 }
             } else {
                 FLOGF_SAFE(exec,

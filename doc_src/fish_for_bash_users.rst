@@ -51,7 +51,8 @@ For instance, here's bash
 
   > foo="bar baz"
   > printf '"%s"\n' $foo
-  # will print two lines, because we didn't double-quote, so the variable is split
+  # will print two lines, because we didn't double-quote
+  # this is word splitting
   "bar"
   "baz"
 
@@ -234,7 +235,7 @@ and could be written in other shells as
 
 .. code-block:: sh
 
-  # This "-" is still necessary, because the heredoc is *also* passed over stdin!
+  # This "-" is still necessary - the heredoc is *also* passed over stdin!
   pacman --remove - << EOF
   xterm
   rxvt-unicode
@@ -284,7 +285,7 @@ As an example, here's a relatively simple bash prompt:
 .. code-block:: sh
 
     # <$HOSTNAME> <$PWD in blue> <Prompt Sign in Yellow> <Rest in default light white>
-    export PS1='\h\[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] '
+    PS1='\h\[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] '
 
 and a rough fish equivalent::
 
@@ -292,7 +293,8 @@ and a rough fish equivalent::
       set -l prompt_symbol '$'
       fish_is_root_user; and set prompt_symbol '#'
 
-      echo -s (prompt_hostname) (set_color blue) (prompt_pwd) \
+      echo -s (prompt_hostname) \
+      (set_color blue) (prompt_pwd) \
       (set_color yellow) $prompt_symbol (set_color normal)
   end
 
@@ -365,7 +367,8 @@ Fish's blocking constructs look a little different. They all start with a word, 
       echo foo
   end
 
-  # (note that bash specifically allows the word "function" as an extension, but POSIX only specifies the form without, so it's more compatible to just use the form without)
+  # (bash allows the word "function",
+  #  but this is an extension as an extension)
 
 Fish does not have an ``until``. Use ``while not`` or ``while !``.
 
@@ -383,7 +386,7 @@ This includes things like:
 
     # Both sides of a pipe
     foo | while read -r bar; do
-        # This variable will not be visible outside of the while loop.
+        # This will not be visible outside of the loop.
         VAR=VAL
         # This background process will not be, either
         baz &

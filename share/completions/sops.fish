@@ -1,11 +1,11 @@
 # Completion for SOPS (Secrets OPerationS)
 
-function __fish_sops_no_subcommand
-  not __fish_sops_has_subcommand
+function __fish_sops_no_subcommand --description "Test if there is a subcommand given"
+  not __fish_sops_print_remaining_args
 end
 
-function __fish_sops_has_subcommand
-  set -l cmd (commandline -poc)
+function __fish_sops_print_remaining_args --description "Print remaining argument given"
+  set -l cmd (commandline -poc) (commandline -ct)
   set -e cmd[1]
   set -l opts d/decrypt e/encrypt r/rotate i/in-place s/show-master-keys v/version
   set -a opts extract ignore-mac verbose enable-local-keyservice
@@ -16,35 +16,33 @@ function __fish_sops_has_subcommand
   set -a opts unencrypted-suffix= encrypted-suffix= unencrypted-regex= encrypted-regex=
   set -a opts config= encryption-context= set= shamir-secret-sharing-threshold= output= keyservice=
   argparse -s $opts -- $cmd 2>/dev/null
-  set -q argv[1]
+  if test -n "$argv"
+    and not string match -qr '^-' $argv[1]
+    string join0 -- $argv
+    return 0
+  else
+    return 1
+  end
 end
 
 function __fish_sops_commands --description "Test if argument(s) match a sops command"
-  if not set -q argv[1]
-    return 1
-  end
-  set -l cmd (commandline -cp)
-  if set -q argv[2]
-    if string match -qr -- "sops\s+$argv[1]\s+$argv[2]\s+\S*" $cmd
-      return 0
-    end
-    return 1
-  end
-  if string match -qr -- "sops\s+$argv[1]\s+\S*" $cmd
+  set -l args (__fish_sops_print_remaining_args | string split0)
+  if string match -qr $argv $args[1]
     return 0
+  else
+    return 1
   end
-  return 1
 end
 
 # Primary commands
-complete -F -c sops -n __fish_is_first_arg -a exec-env -d "Execute a command with decrypted values inserted into the environment"
-complete -F -c sops -n __fish_is_first_arg -a exec-file -d "Execute a command with decrypted contents as a temporary file"
-complete -F -c sops -n __fish_is_first_arg -a publish -d "Publish sops file or directory to a configured destination"
-complete -F -c sops -n __fish_is_first_arg -a keyservice -d "Start a SOPS key kervice server"
-complete -F -c sops -n __fish_is_first_arg -a groups -d "Modify the groups on a SOPS file"
-complete -F -c sops -n __fish_is_first_arg -a updatekeys -d "Update the keys of a SOPS file using the config file"
-complete -F -c sops -n __fish_is_first_arg -a help -d "Shows a list of commands or help for one command"
-complete -F -c sops -n __fish_is_first_arg -a h -d "Shows a list of commands or help for one command"
+complete -F -c sops -n __fish_is_first_token -a exec-env -d "Execute a command with decrypted values inserted into the environment"
+complete -F -c sops -n __fish_is_first_token -a exec-file -d "Execute a command with decrypted contents as a temporary file"
+complete -F -c sops -n __fish_is_first_token -a publish -d "Publish sops file or directory to a configured destination"
+complete -F -c sops -n __fish_is_first_token -a keyservice -d "Start a SOPS key kervice server"
+complete -F -c sops -n __fish_is_first_token -a groups -d "Modify the groups on a SOPS file"
+complete -F -c sops -n __fish_is_first_token -a updatekeys -d "Update the keys of a SOPS file using the config file"
+complete -F -c sops -n __fish_is_first_token -a help -d "Shows a list of commands or help for one command"
+complete -F -c sops -n __fish_is_first_token -a h -d "Shows a list of commands or help for one command"
 
 # Primary flags without parameters
 complete -F -c sops -n __fish_sops_no_subcommand -s d -l decrypt -d "Decrypt a file and output the result to stdout"
@@ -131,26 +129,26 @@ complete -x -c sops -n "__fish_sops_commands groups add; and __fish_prev_arg_in 
 complete -x -c sops -n "__fish_sops_commands groups delete; and __fish_prev_arg_in delete" -a "(__fish_print_users)"
 
 # groups add flags
-complete -F -c sops -n "__fish_sops_commands groups add" -s f -l file -d "The file to add the group to"
-complete -F -c sops -n "__fish_sops_commands groups add" -s i -l in-place -d "Write output back to the same file instead of stdout"
-complete -x -c sops -n "__fish_sops_commands groups add" -l pgp -d "The PGP fingerprints the new group should contain"
-complete -x -c sops -n "__fish_sops_commands groups add" -l kms -d "The KMS ARNs the new group should contain"
-complete -x -c sops -n "__fish_sops_commands groups add" -l aws-profile -d "The AWS profile to use for requests to AWS"
-complete -x -c sops -n "__fish_sops_commands groups add" -l gcp-kms -d "The GCP KMS Resource ID the new group should contain"
-complete -x -c sops -n "__fish_sops_commands groups add" -l azure-kv -d "The Azure Key Vault key URL the new group should contain"
-complete -x -c sops -n "__fish_sops_commands groups add" -l hc-vault-transit -d "The full vault path to the key used to encrypt/decrypt"
-complete -x -c sops -n "__fish_sops_commands groups add" -l age -d "The age recipient the new group should contain. Can be specified more than once"
-complete -x -c sops -n "__fish_sops_commands groups add" -l shamir-secret-sharing-threshold -d "Number of master keys required to retrieve data key with shamir"
-complete -x -c sops -n "__fish_sops_commands groups add" -l encryption-context -d "Comma separated list of KMS encryption context key:value pairs"
-complete -x -c sops -n "__fish_sops_commands groups add" -l enable-local-keyservice -d "Use local key service"
-complete -x -c sops -n "__fish_sops_commands groups add" -l keyservice -d "Specify key services to use in addition to the local one"
+complete -F -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -s f -l file -d "The file to add the group to"
+complete -F -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -s i -l in-place -d "Write output back to the same file instead of stdout"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l pgp -d "The PGP fingerprints the new group should contain"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l kms -d "The KMS ARNs the new group should contain"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l aws-profile -d "The AWS profile to use for requests to AWS"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l gcp-kms -d "The GCP KMS Resource ID the new group should contain"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l azure-kv -d "The Azure Key Vault key URL the new group should contain"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l hc-vault-transit -d "The full vault path to the key used to encrypt/decrypt"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l age -d "The age recipient the new group should contain. Can be specified more than once"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l shamir-secret-sharing-threshold -d "Number of master keys required to retrieve data key with shamir"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l encryption-context -d "Comma separated list of KMS encryption context key:value pairs"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l enable-local-keyservice -d "Use local key service"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -l keyservice -d "Specify key services to use in addition to the local one"
 
 # groups delete flags
-complete -F -c sops -n "__fish_sops_commands groups delete" -s f -l file -d "The file to add the group to"
-complete -F -c sops -n "__fish_sops_commands groups delete" -s i -l in-place -d "Write output back to the same file instead of stdout"
-complete -x -c sops -n "__fish_sops_commands groups delete" -l shamir-secret-sharing-threshold -d "Number of master keys required to retrieve data key with shamir"
-complete -x -c sops -n "__fish_sops_commands groups delete" -l enable-local-keyservice -d "Use local key service"
-complete -x -c sops -n "__fish_sops_commands groups delete" -l keyservice -d "Specify key services to use in addition to the local one"
+complete -F -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in delete" -s f -l file -d "The file to add the group to"
+complete -F -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in delete" -s i -l in-place -d "Write output back to the same file instead of stdout"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in delete" -l shamir-secret-sharing-threshold -d "Number of master keys required to retrieve data key with shamir"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in delete" -l enable-local-keyservice -d "Use local key service"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in delete" -l keyservice -d "Specify key services to use in addition to the local one"
 
 # updatekeys flags
 complete -F -c sops -n "__fish_sops_commands updatekeys" -s y -l yes -d "Pre-approve all changes and run non-interactively"

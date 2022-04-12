@@ -125,8 +125,8 @@ complete -F -c sops -n "__fish_sops_commands keyservice" -l verbose -d "Enable v
 # groups subcommands
 complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in groups" -a add -d "Add a new group to a SOPS file"
 complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in groups" -a delete -d "Delete a key group from a SOPS file"
-complete -x -c sops -n "__fish_sops_commands groups add; and __fish_prev_arg_in add" -a "(__fish_print_users)"
-complete -x -c sops -n "__fish_sops_commands groups delete; and __fish_prev_arg_in delete" -a "(__fish_print_users)"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -a "(__fish_print_users)"
+complete -x -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in delete" -a "(__fish_print_users)"
 
 # groups add flags
 complete -F -c sops -n "__fish_sops_commands groups; and __fish_prev_arg_in add" -s f -l file -d "The file to add the group to"

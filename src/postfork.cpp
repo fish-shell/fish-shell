@@ -401,7 +401,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                     // defined in binfmts.h, but we don't want to include that just to be able to
                     // print the real limit.
                     FLOGF_SAFE(exec,
-                               "Failed to execute process '%s': An argument exceeds the OS "
+                               "Failed to execute process '%s': An argument or exported variable exceeds the OS "
                                "argument length limit.", actual_cmd);
                 }
 

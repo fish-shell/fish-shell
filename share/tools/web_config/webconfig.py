@@ -1696,8 +1696,10 @@ def runThing():
             sys.exit(-1)
     elif is_termux():
         subprocess.call(["termux-open-url", url])
-    elif is_chromeos_garcon() or is_sailfish_os():
+    elif is_chromeos_garcon():
         webbrowser.open(url)
+    elif is_sailfish_os():
+        subprocess.call(["xdg-open", url])
     else:
         webbrowser.open(fileurl)
 

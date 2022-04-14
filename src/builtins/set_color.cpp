@@ -113,17 +113,14 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, const wc
 #ifdef __APPLE__
     // Hack in missing italics and dim capabilities omitted from MacOS xterm-256color terminfo
     // Helps Terminal.app/iTerm
-    if ((!enter_italics_mode || enter_italics_mode == "") ||
-        (!enter_dim_mode || enter_dim_mode == "")) {
-        const auto term_prog = parser.vars().get(L"TERM_PROGRAM");
-        if (!term_prog.missing_or_empty() && (term_prog->as_string() == L"Apple_Terminal" ||
-                                              term_prog->as_string() == L"iTerm.app")) {
-            const auto term = parser.vars().get(L"TERM");
-            if (!term.missing_or_empty() && (term->as_string() == L"xterm-256color")) {
-                enter_italics_mode = sitm_esc;
-                exit_italics_mode = ritm_esc;
-                enter_dim_mode = dim_esc;
-            }
+    const auto term_prog = parser.vars().get(L"TERM_PROGRAM");
+    if (!term_prog.missing_or_empty() && (term_prog->as_string() == L"Apple_Terminal" ||
+        term_prog->as_string() == L"iTerm.app")) {
+        const auto term = parser.vars().get(L"TERM");
+        if (!term.missing_or_empty() && (term->as_string() == L"xterm-256color")) {
+            enter_italics_mode = sitm_esc;
+            exit_italics_mode = ritm_esc;
+            enter_dim_mode = dim_esc;
         }
     }
 #endif

@@ -53,7 +53,7 @@ eval test_function
 
 # Future Feature Flags
 status features
-#CHECK: stderr-nocaret          on  3.0 ^ no longer redirects stderr
+#CHECK: stderr-nocaret          on  3.0 ^ no longer redirects stderr (historical, can no longer be changed)
 #CHECK: qmark-noglob            off 3.0 ? no longer globs
 #CHECK: regex-easyesc           on  3.1 string replace -r needs fewer \'s
 #CHECK: ampersand-nobg-in-token on  3.4 & only backgrounds if followed by a separator

@@ -235,15 +235,19 @@ static void setup_user() {
     if (!retval && result) {
         const wcstring uname = str2wcstring(userinfo.pw_name);
         vars.set_one(L"USER", ENV_GLOBAL | ENV_EXPORT, uname);
-        if (userinfo.pw_dir) {
-            const wcstring dir = str2wcstring(userinfo.pw_dir);
-            vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
-        } else {
-            // We cannot get $HOME. This triggers warnings for history and config.fish already,
-            // so it isn't necessary to warn here as well.
-            vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+        // Only change $HOME if it's empty, so we allow e.g. `HOME=(mktemp -d)`.
+        // This is okay with common `su` and `sudo` because they set $HOME.
+        if (vars.get(L"HOME").missing_or_empty()) {
+            if (userinfo.pw_dir) {
+                const wcstring dir = str2wcstring(userinfo.pw_dir);
+                vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
+            } else {
+                // We cannot get $HOME. This triggers warnings for history and config.fish already,
+                // so it isn't necessary to warn here as well.
+                vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+            }
         }
-    } else {
+    } else if (vars.get(L"HOME").missing_or_empty()) {
         // If $USER is empty as well (which we tried to set above), we can't get $HOME.
         vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
     }

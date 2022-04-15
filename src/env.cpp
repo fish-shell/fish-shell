@@ -325,11 +325,8 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
         }
     }
 
-    // Some `su`s keep $USER when changing to root.
-    // This leads to issues later on (and e.g. in prompts),
-    // so we work around it by resetting $USER.
-    // TODO: Figure out if that su actually checks if username == "root"(as the man page says) or
-    // UID == 0.
+    // Set $USER, $HOME and $EUID
+    // This involves going to passwd and stuff.
     vars.set_one(L"EUID", ENV_GLOBAL, to_string(static_cast<unsigned long long>(geteuid())));
     setup_user();
 

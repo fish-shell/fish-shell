@@ -6,6 +6,20 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
+- The ``stderr-nocaret`` feature flag, introduced in fish 3.0 and enabled by default in fish 3.1, has been made read-only.
+  That means it is no longer possible to disable it, and code supporting the ``^`` redirection has been removed (:issue:`8857`, :issue:`8865`).
+- The following feature flags have been enabled by default:
+  - ``regex-easyesc``, which makes ``string replace -r`` not do a superfluous round of unescaping in the replacement expression.
+    That means e.g. to escape any "a" or "b" in an argument you can use ``string replace -ra '([ab])' '\\\\$1' foobar`` instead of needing 8 backslashes.
+    This flag was introduced in fish 3.1.
+  - ``ampersand-nobg-in-token``, which makes ``&`` not refer to backgrounding if it occurs in the middle of a word, so ``echo foo&bar`` will print "foo&bar".
+    This flag was introduced in fish 3.4.
+
+  To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to $fish_features and restart fish::
+
+    set -Ua fish_features no-regex-easyesc
+
+  Like ``stderr-nocaret``, they will eventually be made read-only.
 - Most ``string`` subcommands no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
 - Fish's escape sequence removal (like for ``string length --visible`` or to figure out how wide the prompt is) no longer has special support for non-standard color sequences like from Data General terminals, e.g. the Data General Dasher D220 from 1984. This removes a bunch of work in the common case, allowing ``string length --visible`` to be much faster with unknown escape sequences. We don't expect anyone to have ever used fish with such a terminal (:issue:`8769`).
 - Code to upgrade universal variables from fish before 3.0 has been removed. Users who upgrade directly from fishes before then will have to set their universal variables (including abbreviations) again. (:issue:`8781`)

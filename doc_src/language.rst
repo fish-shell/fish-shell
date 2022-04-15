@@ -1416,6 +1416,10 @@ Fish also provides additional information through the values of certain environm
 
    the current username. This variable can be changed.
 
+.. ENVVAR:: EUID
+
+   the current effective user id, set by fish at startup. This variable can be changed.
+
 .. envvar:: version
 
    the version of the currently running fish (also available as ``FISH_VERSION`` for backward compatibility).

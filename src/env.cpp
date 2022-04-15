@@ -294,6 +294,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // so we work around it by resetting $USER.
     // TODO: Figure out if that su actually checks if username == "root"(as the man page says) or
     // UID == 0.
+    vars.set_one(L"EUID", ENV_GLOBAL, to_string(static_cast<unsigned long long>(geteuid())));
     uid_t uid = getuid();
     setup_user(uid == 0);
 

@@ -201,7 +201,7 @@ wcstring_list_t null_environment_t::get_names(int flags) const {
 /// Set up the USER and HOME variable.
 static void setup_user() {
     auto &vars = env_stack_t::globals();
-    auto uid = getuid();
+    auto uid = geteuid();
     auto user_var = vars.get(L"USER");
     struct passwd userinfo;
     struct passwd *result;
@@ -230,7 +230,6 @@ static void setup_user() {
 
     // Either we didn't have a $USER or it had a different uid.
     // We need to get the data *again* via the uid.
-    // TODO: Do we need euid() here instead?
     int retval = getpwuid_r(uid, &userinfo, buf, sizeof(buf), &result);
     if (!retval && result) {
         const wcstring uname = str2wcstring(userinfo.pw_name);

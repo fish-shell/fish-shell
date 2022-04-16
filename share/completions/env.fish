@@ -1,14 +1,16 @@
+set -l is_gnu
 if env --version &>/dev/null
-    set -l is_gnu --is-gnu
+    set is_gnu --is-gnu
 end
 
 function __fish_env_remaining_args -V is_gnu
+    set -l argv (commandline -opc) (commandline -ct)
     if set -q is_gnu[1]
-        argparse -s i/ignore-environment u/unset= help version -- (commandline -opc) (commandline -ct) 2>/dev/null
-        or return 1
+        argparse -s i/ignore-environment u/unset= help version -- $argv 2>/dev/null
+        or return 0
     else
-        argparse -s 0 i P= S= u= v -- (commandline -opc) (commandline -ct) 2>/dev/null
-        or return 1
+        argparse -s 0 i P= S= u= v -- $argv 2>/dev/null
+        or return 0
     end
 
     # argv[1] is `env` or an alias.
@@ -27,7 +29,7 @@ function __fish_env_remaining_args -V is_gnu
     string join \n -- $argv
 
     # Return true if there is a subcommand.
-    set -q argv[1]
+    test -n "$argv[1]"
 end
 
 function __fish_complete_env_subcommand

@@ -92,10 +92,9 @@ tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags)
 
 tok_t::tok_t(token_type_t type) : type(type) {}
 
-/// Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the
-/// first character. Hash (#) starts a comment if it's the first character in a token; otherwise it
-/// is considered a string character. See issue #953.
-static bool tok_is_string_character(wchar_t c, bool is_first, maybe_t<wchar_t> next) {
+/// Tests if this character can be a part of a string. Hash (#) starts a comment if it's the first
+/// character in a token; otherwise it is considered a string character. See issue #953.
+static bool tok_is_string_character(wchar_t c, maybe_t<wchar_t> next) {
     switch (c) {
         case L'\0':
         case L' ':
@@ -111,7 +110,7 @@ static bool tok_is_string_character(wchar_t c, bool is_first, maybe_t<wchar_t> n
         }
         case L'&': {
             if (!feature_test(features_t::ampersand_nobg_in_token)) return false;
-            bool next_is_string = next && tok_is_string_character(*next, false, none());
+            bool next_is_string = next && tok_is_string_character(*next, none());
             // Unlike in other shells, '&' is not special if followed by a string character.
             return next_is_string;
         }
@@ -146,7 +145,6 @@ tok_t tokenizer_t::read_string() {
     std::vector<size_t> quoted_cmdsubs;
     int slice_offset = 0;
     const wchar_t *const buff_start = this->token_cursor;
-    bool is_first = true;
     bool is_token_begin = true;
 
     auto process_opening_quote = [&](wchar_t quote) -> const wchar_t * {
@@ -261,7 +259,7 @@ tok_t tokenizer_t::read_string() {
                 break;
             }
         } else if (mode == tok_modes::regular_text &&
-                   !tok_is_string_character(c, is_first, this->token_cursor[1])) {
+                   !tok_is_string_character(c, this->token_cursor[1])) {
             break;
         }
 
@@ -274,8 +272,7 @@ tok_t tokenizer_t::read_string() {
         FLOGF(error, msg.c_str(), c, c, int(mode_begin), int(mode));
 #endif
 
-        is_token_begin = is_token_delimiter(this->token_cursor[0], is_first, this->token_cursor[1]);
-        is_first = false;
+        is_token_begin = is_token_delimiter(this->token_cursor[0], this->token_cursor[1]);
         this->token_cursor++;
     }
 
@@ -654,8 +651,8 @@ maybe_t<tok_t> tokenizer_t::next() {
     return result;
 }
 
-bool is_token_delimiter(wchar_t c, bool is_first, maybe_t<wchar_t> next) {
-    return c == L'(' || !tok_is_string_character(c, is_first, next);
+bool is_token_delimiter(wchar_t c, maybe_t<wchar_t> next) {
+    return c == L'(' || !tok_is_string_character(c, next);
 }
 
 wcstring tok_command(const wcstring &str) {
@@ -736,10 +733,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
 }
 
 bool move_word_state_machine_t::is_path_component_character(wchar_t c) {
-    // Always treat separators as first. All this does is ensure that we treat ^ as a string
-    // character instead of as stderr redirection, which I hypothesize is usually what is
-    // desired.
-    return tok_is_string_character(c, true, none()) && !std::wcschr(L"/={,}'\":@", c);
+    return tok_is_string_character(c, none()) && !std::wcschr(L"/={,}'\":@", c);
 }
 
 bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {

@@ -94,7 +94,6 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
                                     bool allow_incomplete, bool *inout_is_quoted,
                                     bool *out_has_dollar) {
     bool escaped = false;
-    bool is_first = true;
     bool is_token_begin = true;
     bool syntax_error = false;
     int paran_count = 0;
@@ -178,12 +177,11 @@ static int parse_util_locate_cmdsub(const wchar_t *in, const wchar_t **begin, co
                     }
                 }
             }
-            is_token_begin = is_token_delimiter(pos[0], is_first, pos[1]);
+            is_token_begin = is_token_delimiter(pos[0], pos[1]);
         } else {
             escaped = false;
             is_token_begin = false;
         }
-        is_first = false;
     }
 
     syntax_error |= (paran_count < 0);

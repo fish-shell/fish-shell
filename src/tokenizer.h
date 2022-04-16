@@ -134,7 +134,7 @@ class tokenizer_t : noncopyable_t {
 };
 
 /// Tests if this character can delimit tokens.
-bool is_token_delimiter(wchar_t c, bool is_first, maybe_t<wchar_t> next);
+bool is_token_delimiter(wchar_t c, maybe_t<wchar_t> next);
 
 /// \return the first token from the string, skipping variable assignments like A=B.
 wcstring tok_command(const wcstring &str);

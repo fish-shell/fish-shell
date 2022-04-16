@@ -56,9 +56,6 @@
 #include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-#define DEFAULT_TERM1 "ansi"
-#define DEFAULT_TERM2 "dumb"
-
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem. These are only the variables we're possibly interested in.
 static const wcstring locale_variables[] = {
@@ -457,31 +454,38 @@ static void update_fish_color_support(const environment_t &vars) {
 // `TERM` to our fallback. We're only doing this in the hope of getting a minimally functional
 // shell. If we launch an external command that uses TERM it should get the same value we were
 // given, if any.
-static bool initialize_curses_using_fallback(const char *term) {
-    // If $TERM is already set to the fallback name we're about to use there isn't any point in
-    // seeing if the fallback name can be used.
-    auto &vars = env_stack_t::globals();
+static void initialize_curses_using_fallbacks(const environment_t &vars) {
+    const wchar_t *const fallbacks[] = {L"ansi", L"dumb"};
+
     auto term_var = vars.get(L"TERM");
     if (term_var.missing_or_empty()) {
-        return false;
+        return;
     }
 
-    auto term_env = wcs2string(term_var->as_string());
-    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) {
-        return false;
-    }
+    for (const wchar_t *fallback : fallbacks) {
+        // If $TERM is already set to the fallback name we're about to use there isn't any point in
+        // seeing if the fallback name can be used.
+        if (term_var->as_string() == fallback) {
+            continue;
+        }
 
-    if (is_interactive_session()) FLOGF(warning, _(L"Using fallback terminal type '%s'."), term);
+        int err_ret = 0;
+        std::string term = wcs2string(fallback);
+        bool success = (setupterm(&term[0], STDOUT_FILENO, &err_ret) == OK);
 
-    int err_ret;
-    if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) {
-        return true;
+        if (is_interactive_session()) {
+            if (success) {
+                FLOGF(warning, _(L"Using fallback terminal type '%s'."), term.c_str());
+            } else {
+                FLOGF(warning,
+                      _(L"Could not set up terminal using the fallback terminal type '%s'."),
+                      term.c_str());
+            }
+        }
+        if (success) {
+            break;
+        }
     }
-    if (is_interactive_session()) {
-        FLOGF(warning, _(L"Could not set up terminal using the fallback terminal type '%s'."),
-              term);
-    }
-    return false;
 }
 
 /// This is a pretty lame heuristic for detecting terminals that do not support setting the
@@ -537,8 +541,8 @@ static void init_curses(const environment_t &vars) {
 
     int err_ret;
     if (setupterm(nullptr, STDOUT_FILENO, &err_ret) == ERR) {
-        auto term = vars.get(L"TERM");
         if (is_interactive_session()) {
+            auto term = vars.get(L"TERM");
             FLOGF(warning, _(L"Could not set up terminal."));
             if (term.missing_or_empty()) {
                 FLOGF(warning, _(L"TERM environment variable not set."));
@@ -549,9 +553,7 @@ static void init_curses(const environment_t &vars) {
             }
         }
 
-        if (!initialize_curses_using_fallback(DEFAULT_TERM1)) {
-            initialize_curses_using_fallback(DEFAULT_TERM2);
-        }
+        initialize_curses_using_fallbacks(vars);
     }
 
     can_set_term_title = does_term_support_setting_title(vars);

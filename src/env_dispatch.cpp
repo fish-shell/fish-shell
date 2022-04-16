@@ -61,16 +61,11 @@
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem. These are only the variables we're possibly interested in.
-static const wcstring locale_variables[] = {L"LANG",
-                                            L"LANGUAGE",
-                                            L"LC_ALL",
-                                            L"LC_COLLATE",
-                                            L"LC_CTYPE",
-                                            L"LC_MESSAGES",
-                                            L"LC_NUMERIC",
-                                            L"LC_TIME",
-                                            L"fish_allow_singlebyte_locale",
-                                            L"LOCPATH"};
+static const wcstring locale_variables[] = {
+    L"LANG",       L"LANGUAGE", L"LC_ALL",
+    L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES",
+    L"LC_NUMERIC", L"LC_TIME",  L"fish_allow_singlebyte_locale",
+    L"LOCPATH"};
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
@@ -467,15 +462,21 @@ static bool initialize_curses_using_fallback(const char *term) {
     // seeing if the fallback name can be used.
     auto &vars = env_stack_t::globals();
     auto term_var = vars.get(L"TERM");
-    if (term_var.missing_or_empty()) return false;
+    if (term_var.missing_or_empty()) {
+        return false;
+    }
 
     auto term_env = wcs2string(term_var->as_string());
-    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) return false;
+    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) {
+        return false;
+    }
 
     if (is_interactive_session()) FLOGF(warning, _(L"Using fallback terminal type '%s'."), term);
 
     int err_ret;
-    if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) return true;
+    if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) {
+        return true;
+    }
     if (is_interactive_session()) {
         FLOGF(warning, _(L"Could not set up terminal using the fallback terminal type '%s'."),
               term);

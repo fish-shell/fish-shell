@@ -768,10 +768,10 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_local(const wcstring &key) const {
     maybe_t<env_var_t> entry;
-    for (auto cur = locals_; cur; cur=cur->next) {
+    for (auto cur = locals_; cur; cur = cur->next) {
         if ((entry = cur->find_entry(key))) break;
     }
-    return entry; // this is either the entry or none() from find_entry
+    return entry;  // this is either the entry or none() from find_entry
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_function(const wcstring &key) const {
@@ -784,10 +784,10 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_function(const wcstring &key) cons
         // topmost local scope.
         if (node->new_scope) break;
     }
-    for (auto cur = node; cur; cur=cur->next) {
+    for (auto cur = node; cur; cur = cur->next) {
         if ((entry = cur->find_entry(key))) break;
     }
-    return entry; // this is either the entry or none() from find_entry
+    return entry;  // this is either the entry or none() from find_entry
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key) const {

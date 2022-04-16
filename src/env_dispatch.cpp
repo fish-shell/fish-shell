@@ -491,6 +491,11 @@ static void initialize_curses_using_fallbacks(const environment_t &vars) {
 // Apply any platform-specific hacks to cur_term/
 static void apply_term_hacks(const environment_t &vars) {
     UNUSED(vars);
+    // Be careful, variables like "enter_italics_mode" are #defined to dereference through cur_term.
+    // See #8876.
+    if (!cur_term) {
+        return;
+    }
 #ifdef __APPLE__
     // Hack in missing italics and dim capabilities omitted from MacOS xterm-256color terminfo
     // Helps Terminal.app/iTerm

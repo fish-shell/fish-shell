@@ -488,6 +488,37 @@ static void initialize_curses_using_fallbacks(const environment_t &vars) {
     }
 }
 
+// Apply any platform-specific hacks to cur_term/
+static void apply_term_hacks(const environment_t &vars) {
+    UNUSED(vars);
+#ifdef __APPLE__
+    // Hack in missing italics and dim capabilities omitted from MacOS xterm-256color terminfo
+    // Helps Terminal.app/iTerm
+    wcstring term_prog;
+    if (auto var = vars.get(L"TERM_PROGRAM")) {
+        term_prog = var->as_string();
+    }
+    if (term_prog == L"Apple_Terminal" || term_prog == L"iTerm.app") {
+        const auto term = vars.get(L"TERM");
+        if (term && term->as_string() == L"xterm-256color") {
+            static char sitm_esc[] = "\x1B[3m";
+            static char ritm_esc[] = "\x1B[23m";
+            static char dim_esc[] = "\x1B[2m";
+
+            if (!enter_italics_mode) {
+                enter_italics_mode = sitm_esc;
+            }
+            if (!exit_italics_mode) {
+                exit_italics_mode = ritm_esc;
+            }
+            if (!enter_dim_mode) {
+                enter_dim_mode = dim_esc;
+            }
+        }
+    }
+#endif
+}
+
 /// This is a pretty lame heuristic for detecting terminals that do not support setting the
 /// title. If we recognise the terminal name as that of a virtual terminal, we assume it supports
 /// setting the title. If we recognise it as that of a console, we assume it does not support
@@ -539,7 +570,7 @@ static void init_curses(const environment_t &vars) {
         }
     }
 
-    int err_ret;
+    int err_ret{0};
     if (setupterm(nullptr, STDOUT_FILENO, &err_ret) == ERR) {
         if (is_interactive_session()) {
             auto term = vars.get(L"TERM");
@@ -555,6 +586,8 @@ static void init_curses(const environment_t &vars) {
 
         initialize_curses_using_fallbacks(vars);
     }
+
+    apply_term_hacks(vars);
 
     can_set_term_title = does_term_support_setting_title(vars);
     term_has_xn =

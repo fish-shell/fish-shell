@@ -54,7 +54,7 @@ class autoload_t {
     /// Construct an autoloader that loads from the paths given by \p env_var_name.
     explicit autoload_t(wcstring env_var_name);
 
-    autoload_t(autoload_t &&);
+    autoload_t(autoload_t &&) noexcept;
     ~autoload_t();
 
     /// Given a command, get a path to autoload.

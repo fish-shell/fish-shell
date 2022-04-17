@@ -47,7 +47,7 @@ function fish_add_path --description "Add paths to the PATH"
         set -l p (builtin realpath -s -- $path 2>/dev/null)
 
         # Ignore non-existing paths
-        if not test -d "$p"; or continue
+        if not test -d "$p"
             # path does not exist
             if set -q _flag_verbose;
                 # print a message in verbose mode

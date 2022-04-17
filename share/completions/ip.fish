@@ -405,6 +405,7 @@ function __fish_complete_ip
         case netns
             if not set -q cmd[3]
                 printf '%s\t%s\n' add "Add network namespace" \
+                    attach "Attach process to network namespace" \
                     delete "Delete network namespace" \
                     set "Change network namespace attributes" \
                     identify "Display network namespace for a process id" \
@@ -416,9 +417,33 @@ function __fish_complete_ip
             else
                 switch $cmd[2]
                     case delete
-                        __fish_ip_netns_list
+                        if not set -q cmd[4]
+                            __fish_ip_netns_list
+                        end
                     case exec
-                        __fish_ip_netns_list
+                        if not set -q cmd[4]
+                            __fish_ip_netns_list
+                        else
+                            __fish_complete_subcommand --commandline $cmd[4..-1]
+                        end
+                    case pids
+                        if not set -q cmd[4]
+                            __fish_ip_netns_list
+                        end
+                    case set
+                        if not set -q cmd[4]
+                            __fish_ip_netns_list
+                        end
+                    case attach
+                        if not set -q cmd[4]
+                            __fish_ip_netns_list
+                        else
+                            __fish_complete_pids
+                        end
+                    case identify
+                        if not set -q cmd[4]
+                            __fish_complete_pids
+                        end
                 end
             end
     end

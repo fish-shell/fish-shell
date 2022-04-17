@@ -3638,11 +3638,9 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
 // backslashes.
 static void test_autosuggest_suggest_special() {
-#if __SANITIZE_ADDRESS__
     // This manages to crash the asan on Ubuntu 20.04
     // So just skip it.
-    return;
-#endif
+#ifndef __SANITIZE_ADDRESS__
     if (system("mkdir -p 'test/autosuggest_test/0foobar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
@@ -3752,6 +3750,7 @@ static void test_autosuggest_suggest_special() {
 
     parser_t::principal_parser().vars().remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
     popd();
+#endif //ndef SANITIZE_ADDRESS
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {

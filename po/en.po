@@ -62481,8 +62481,8 @@ msgid "Edit variable value"
 msgstr "Edit variable value"
 
 #: /tmp/fish/implicit/share/functions/fish_add_path.fish:1
-msgid "Skipping non-existent path:"
-msgstr "Skipping non-existent path:"
+msgid "Skipping non-existent path: %s\n"
+msgstr "Skipping non-existent path: %s\n"
 
 #~ msgid "%ls: No function name given\n"
 #~ msgstr "%ls: No function name given\n"

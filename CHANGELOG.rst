@@ -83,7 +83,10 @@ Other improvements
 For distributors
 ----------------
 - libatomic is now correctly detected as necessary when building on RISC-V (:issue:`8850`).
-
+- The paths for completions, functions, and configuration snippets now include
+  subdirectories ``fish/vendor_completions.d``, ``fish/vendor_functions.d``, and
+  ``fish/vendor_conf.d`` (respectively) within ``XDG_DATA_HOME`` (or ``~/.local/share``
+  if not defined) (:issue:`8887`).
 --------------
 
 fish 3.4.1 (released March 25, 2022)

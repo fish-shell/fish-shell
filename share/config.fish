@@ -56,9 +56,9 @@ set -l vendor_functionsdirs
 set -l vendor_confdirs
 # Don't load vendor directories when running unit tests
 if not set -q FISH_UNIT_TESTS_RUNNING
-    set vendor_completionsdirs $xdg_data_dirs/vendor_completions.d
-    set vendor_functionsdirs $xdg_data_dirs/vendor_functions.d
-    set vendor_confdirs $xdg_data_dirs/vendor_conf.d
+    set vendor_completionsdirs $__fish_user_data_dir/vendor_completions.d $xdg_data_dirs/vendor_completions.d
+    set vendor_functionsdirs $__fish_user_data_dir/vendor_functions.d $xdg_data_dirs/vendor_functions.d
+    set vendor_confdirs $__fish_user_data_dir/vendor_conf.d $xdg_data_dirs/vendor_conf.d
 
     # Ensure that extra directories are always included.
     if not contains -- $__extra_completionsdir $vendor_completionsdirs

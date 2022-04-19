@@ -8,12 +8,20 @@ function __fish_print_rpm_packages
     set -l xdg_cache_home (__fish_make_cache_dir)
     or return
 
+    set -l fmt_mtime (
+        if stat --version 2>/dev/null >/dev/null
+            echo -- -c%Y  # GNU
+        else
+            echo -- -f%m  # BSD
+        end
+    )
+
     if type -q -f /usr/share/yum-cli/completion-helper.py
         # If the cache is less than six hours old, we do not recalculate it
         set -l cache_file $xdg_cache_home/.yum-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set -l age (math (date +%s) - (stat $fmt_mtime $cache_file))
             set -l max_age 21600
             if test $age -lt $max_age
                 return
@@ -32,7 +40,7 @@ function __fish_print_rpm_packages
         set -l cache_file $xdg_cache_home/.rpm-cache.$USER
         if test -f $cache_file
             cat $cache_file
-            set -l age (math (date +%s) - (stat -c '%Y' $cache_file))
+            set -l age (math (date +%s) - (stat $fmt_mtime $cache_file))
             set -l max_age 250
             if test $age -lt $max_age
                 return

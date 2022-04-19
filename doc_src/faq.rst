@@ -256,7 +256,7 @@ If the wildcard doesn't match any files, fish prints an error instead of running
 
   > echo *this*does*not*exist
   fish: No matches for wildcard '*this*does*not*exist'. See `help expand`.
-  echo *this*does*not*exist 2>| xsel --clipboard
+  echo *this*does*not*exist
        ^
 
 Now, bash also tries to match files in this case, but when it doesn't find a match, it passes along the literal wildcard string instead.

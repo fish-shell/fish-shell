@@ -316,7 +316,7 @@ By default ``$fish_function_path`` contains the following:
 
 - A directory for users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
-- Directories for other software to put their own functions. These are in the directories in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``fish/vendor_functions.d``. The default is usually ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
+- Directories for other software to put their own functions. These are in the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable, in a subdirectory called ``fish/vendor_functions.d``. The default value for ``XDG_DATA_DIRS`` is usually ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
 - The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
 If you are unsure, your functions probably belong in ``~/.config/fish/functions``.
@@ -1559,7 +1559,7 @@ Configuration files are run in the following order:
 
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
   - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d/``)
-  - Directories for others to ship configuration snippets for their software. Fish searches the directories in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_conf.d`` directory; if that is not defined, the default is ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``, unless your distribution customized this.
+  - Directories for others to ship configuration snippets for their software. Fish searches the directories under ``$__fish_user_data_dir`` (usually ``~/.local/share/fish``, controlled by the ``XDG_DATA_HOME`` environment variable) and in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_conf.d`` directory; if not defined, the default value of ``XDG_DATA_DIRS`` is ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``, unless your distribution customized this.
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").

@@ -20,7 +20,7 @@ complete -c rustc -f -l extern
 complete -c rustc -f -l sysroot
 complete -c rustc -x -l color -a 'auto always never'
 
-set -l rust_docs (rustc -C help \
+set -l rust_docs (rustc -C help 2>/dev/null \
     | string replace -r -i '(\s+)-C(.+)(\s+)--(\s+)([^\n]+)' '$2 $5' \
     | string trim \
     | string match -r '^.*[^:]$')
@@ -34,7 +34,7 @@ end
 
 # rustc -Z is only available with the nightly toolchain, which may not be installed
 if rustc +nightly >/dev/null 2>&1
-    set -l rust_docs (rustc +nightly -Z help \
+    set -l rust_docs (rustc +nightly -Z help 2>/dev/null \
         | string replace -r -i '(\s+)-Z(.+)--(\s+)([^\n]+)' '$2 $4' \
         | string trim \
         | string match -r '^.*[^:]$')
@@ -47,7 +47,7 @@ if rustc +nightly >/dev/null 2>&1
     end
 end
 
-set -l rust_docs (rustc -W help  \
+set -l rust_docs (rustc -W help 2>/dev/null  \
     | string match -r \
         '(?:\s+)(?:.+)(?:\s+)(?:allow|warn|deny|forbid)(?:\s+){2}(?:[^\n]+)' \
     | string replace -r -i \

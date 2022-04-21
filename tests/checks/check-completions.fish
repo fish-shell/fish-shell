@@ -3,7 +3,9 @@
 
 # No output is good output
 for f in $__fish_data_dir/completions/*.fish
-    if command -q (string replace -r '.*/([^/]+).fish' '$1' $f)
-        $fish $f
+    if type -q (string replace -r '.*/([^/]+).fish' '$1' $f)
+        set -l out ($fish $f 2>&1 | string collect)
+        test -n "$out"
+        and echo -- OUTPUT from $f: $out
     end
 end

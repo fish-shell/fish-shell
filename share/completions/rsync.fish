@@ -183,7 +183,6 @@ complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" 
 )(
 	# Get the list of remote files from the specified rsync server.
         rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' |
-        string replace -r '(\S+\s+){4}' '' | # drop the first four columns
-        string escape -n
+        string replace -r '(\S+\s+){4}' '' # drop the first four columns
 )
 "

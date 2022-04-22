@@ -561,6 +561,10 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
             for (const wcstring &arg : case_args) {
                 // Unescape wildcards so they can be expanded again.
                 wcstring unescaped_arg = parse_util_unescape_wildcards(arg);
+                if (arg.empty()) {
+                    wcstring empty_arg = std::to_wstring('*');
+                    wcstring unescaped_arg = parse_util_unescape_wildcards(empty_arg);
+                }
                 bool match = wildcard_match(switch_value_expanded, unescaped_arg);
 
                 // If this matched, we're done.

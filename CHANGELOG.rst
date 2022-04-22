@@ -9,6 +9,7 @@ Deprecations and removed features
 - The ``stderr-nocaret`` feature flag, introduced in fish 3.0 and enabled by default in fish 3.1, has been made read-only.
   That means it is no longer possible to disable it, and code supporting the ``^`` redirection has been removed (:issue:`8857`, :issue:`8865`).
 - The following feature flags have been enabled by default:
+
   - ``regex-easyesc``, which makes ``string replace -r`` not do a superfluous round of unescaping in the replacement expression.
     That means e.g. to escape any "a" or "b" in an argument you can use ``string replace -ra '([ab])' '\\\\$1' foobar`` instead of needing 8 backslashes.
     This flag was introduced in fish 3.1.
@@ -30,7 +31,7 @@ Deprecations and removed features
 
   This makes it easier to make self-contained colorschemes that don't accidentally use color that was set before.
   ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty. (:issue:`8793`)
-  
+
 Scripting improvements
 ----------------------
 - Quoted command substitution that directly follow a variable expansion (like ``echo "$var$(echo x)"``) no longer affect the variable expansion (:issue:`8849`).

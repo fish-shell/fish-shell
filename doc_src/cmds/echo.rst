@@ -17,7 +17,7 @@ Description
 
 The following options are available:
 
-- **-n**
+**-n**
     Do not output a newline.
 
 **-s**

@@ -22,4 +22,7 @@ wcstring kill_yank();
 /// Get copy of kill ring as vector of strings
 wcstring_list_t kill_entries();
 
+/// Remove a specified string from the killring.
+void kill_remove(wcstring str);
+
 #endif

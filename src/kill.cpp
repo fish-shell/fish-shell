@@ -59,3 +59,10 @@ wcstring_list_t kill_entries() {
     auto kill_list = s_kill_list.acquire();
     return wcstring_list_t{kill_list->begin(), kill_list->end()};
 }
+
+void kill_remove(wcstring str) {
+    auto kill_list = s_kill_list.acquire();
+    // find the str and remove it
+    auto iter = std::find(kill_list->begin(), kill_list->end(), old);
+    if (iter != kill_list->end()) kill_list->erase(iter);
+}

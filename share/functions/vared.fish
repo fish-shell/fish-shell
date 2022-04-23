@@ -17,8 +17,10 @@ function vared --description "Edit variable value"
 
             case '*'
                 if test (count $$argv ) -lt 2
-                    # Avoid using any local variables in this function, otherwise they can't be edited
+                    # Try to avoid using local variables in this function, otherwise they can't be edited.
                     # https://github.com/fish-shell/fish-shell/issues/8836
+                    # However we need to use one local, as you can't read directly into an index (like vared PATH[4]).
+                    set -l __fish_vared_temp_value
 
                     # The command substitution in this line controls the scope.
                     # If variable already exists, do not add any switches, so we don't change
@@ -28,7 +30,12 @@ function vared --description "Edit variable value"
                     read -p 'set_color green; echo '$argv'; set_color normal; echo "> "' \
                         (if not set -q $argv; echo -g; end) \
                         -c "$$argv" \
-                        $argv
+                        __fish_vared_temp_value
+                    if test -n "$$argv"
+                        set $argv $__fish_vared_temp_value
+                    else
+                        set -g $argv $__fish_vared_temp_value
+                    end
                 else
                     printf (_ '%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\n') vared $argv (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo) $argv (set_color normal; echo) $argv >&2
                 end

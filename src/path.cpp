@@ -29,82 +29,73 @@
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// Note that PREFIX is defined in the `Makefile` and is thus defined when this module is compiled.
-// This ensures we always default to "/bin", "/usr/bin" and the bin dir defined for the fish
-// programs. Possibly with a duplicate dir if PREFIX is empty, "/", "/usr" or "/usr/". If the PREFIX
-// duplicates /bin or /usr/bin that is harmless other than a trivial amount of time testing a path
-// we've already tested.
-const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
+// PREFIX is defined at build time.
+const wcstring_list_t kDefaultPath({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
-static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
-                               const maybe_t<env_var_t> &bin_path_var) {
-    // Unix paths can't include a NULL-byte, that's the separator.
-    // If we let this through, we'd end up checking up to the NULL,
-    // so we'd get the wrong path.
-    if (cmd.find(L'\0') != wcstring::npos) return false;
+static get_path_result_t path_get_path_core(const wcstring &cmd, const wcstring_list_t &pathsv,
+                                            const environment_t &vars) {
+    const get_path_result_t noent_res{ENOENT, wcstring{}};
+    get_path_result_t result{};
+
+    /// Test if the given path can be executed.
+    /// \return 0 on success, an errno value on failure.
+    auto test_path = [](const wcstring &path) -> int {
+        std::string narrow = wcs2string(path);
+        struct stat buff;
+        if (access(narrow.c_str(), X_OK) != 0 || stat(narrow.c_str(), &buff) != 0) {
+            return errno;
+        }
+        return S_ISREG(buff.st_mode) ? 0 : EACCES;
+    };
+
+    // Commands cannot contain NUL byte.
+    if (cmd.find(L'\0') != wcstring::npos) {
+        return noent_res;
+    }
+
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {
-        std::string narrow = wcs2string(cmd);
-        if (access(narrow.c_str(), X_OK) != 0) {
-            return false;
-        }
-
-        struct stat buff;
-        if (stat(narrow.c_str(), &buff)) {
-            return false;
-        }
-        if (S_ISREG(buff.st_mode)) {
-            if (out_path) out_path->assign(cmd);
-            return true;
-        }
-        errno = EACCES;
-        return false;
+        wcstring abs_cmd = path_apply_working_directory(cmd, vars.get_pwd_slash());
+        int merr = test_path(abs_cmd);
+        return get_path_result_t{merr, std::move(abs_cmd)};
     }
 
-    const wcstring_list_t *pathsv;
-    if (bin_path_var) {
-        pathsv = &bin_path_var->as_list();
-    } else {
-        pathsv = &dflt_pathsv;
-    }
-
-    int err = ENOENT;
-    for (auto next_path : *pathsv) {
+    get_path_result_t best = noent_res;
+    wcstring proposed_path;
+    for (const auto &next_path : pathsv) {
         if (next_path.empty()) continue;
-        append_path_component(next_path, cmd);
-        std::string narrow = wcs2string(next_path);
-        if (access(narrow.c_str(), X_OK) == 0) {
-            struct stat buff;
-            if (stat(narrow.c_str(), &buff) == -1) {
-                if (errno != EACCES) {
-                    wperror(L"stat");
-                }
-                continue;
-            }
-            if (S_ISREG(buff.st_mode)) {
-                if (out_path) *out_path = std::move(next_path);
-                return true;
-            }
-            err = EACCES;
-            if (out_path) *out_path = std::move(next_path);
-        } else if (errno != ENOENT && err == ENOENT) {
+        proposed_path = next_path;
+        append_path_component(proposed_path, cmd);
+        int merr = test_path(proposed_path);
+        if (merr == 0) {
+            // We found one.
+            best = get_path_result_t{merr, std::move(proposed_path)};
+            break;
+        } else if (merr != ENOENT && best.err == ENOENT) {
             // Keep the first *interesting* error and path around.
             // ENOENT isn't interesting because not having a file is the normal case.
-            auto tmperr = errno;
             // Ignore if the parent directory is already inaccessible.
-            if (access(wcs2string(wdirname(next_path)).c_str(), X_OK) != 0) continue;
-            err = tmperr;
-            if (out_path) *out_path = std::move(next_path);
+            if (waccess(wdirname(proposed_path), X_OK) == 0) {
+                best = get_path_result_t{merr, std::move(proposed_path)};
+            }
         }
     }
-
-    errno = err;
-    return false;
+    return best;
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars) {
-    return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
+maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars) {
+    auto result = path_try_get_path(cmd, vars);
+    if (result.err != 0) {
+        return none();
+    }
+    wcstring path = std::move(result.path);
+    return path;
+}
+
+get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &vars) {
+    auto pathvar = vars.get(L"PATH");
+    return path_get_path_core(cmd, pathvar ? pathvar->as_list() : kDefaultPath, vars);
 }
 
 static bool path_is_executable(const std::string &path) {

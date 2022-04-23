@@ -735,8 +735,9 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         // but this mainly applies to EACCES. We could also feasibly get:
         // ELOOP
         // ENAMETOOLONG
-        return this->report_error(STATUS_NOT_EXECUTABLE, statement,
-                                  _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
+        return this->report_error(
+            STATUS_NOT_EXECUTABLE, statement,
+            _(L"Unknown command. '%ls' exists but is not an executable file."), cmd);
     }
 
     // Handle unrecognized commands with standard command not found handler that can make better
@@ -852,14 +853,11 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
     // Determine the process type.
     enum process_type_t process_type = process_type_for_command(statement, cmd);
 
-    wcstring path_to_external_command;
+    get_path_result_t external_cmd{};
     if (process_type == process_type_t::external || process_type == process_type_t::exec) {
         // Determine the actual command. This may be an implicit cd.
-        bool has_command = path_get_path(cmd, &path_to_external_command, parser->vars());
-
-        // If there was no command, then we care about the value of errno after checking for it, to
-        // distinguish between e.g. no file vs permissions problem.
-        const int no_cmd_err_code = errno;
+        external_cmd = path_try_get_path(cmd, parser->vars());
+        bool has_command = external_cmd.err == 0;
 
         // If the specified command does not exist, and is undecorated, try using an implicit cd.
         if (!has_command && statement.decoration() == statement_decoration_t::none) {
@@ -875,7 +873,8 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         if (!has_command && !use_implicit_cd) {
             // No command. If we're --no-execute return okay - it might be a function.
             if (no_exec()) return end_execution_reason_t::ok;
-            return this->handle_command_not_found(path_to_external_command.empty() ? cmd : path_to_external_command, statement, no_cmd_err_code);
+            return this->handle_command_not_found(
+                external_cmd.path.empty() ? cmd : external_cmd.path, statement, external_cmd.err);
         }
     }
 
@@ -885,7 +884,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
     if (use_implicit_cd) {
         // Implicit cd is simple.
         cmd_args = {L"cd", cmd};
-        path_to_external_command.clear();
+        external_cmd = get_path_result_t{};
 
         // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
         process_type =
@@ -917,7 +916,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
     proc->type = process_type;
     proc->set_argv(std::move(cmd_args));
     proc->set_redirection_specs(std::move(redirections));
-    proc->actual_cmd = std::move(path_to_external_command);
+    proc->actual_cmd = std::move(external_cmd.path);
     return end_execution_reason_t::ok;
 }
 
@@ -1036,8 +1035,7 @@ end_execution_reason_t parse_execution_context_t::populate_not_process(
 
 template <typename Type>
 end_execution_reason_t parse_execution_context_t::populate_block_process(
-    process_t *proc, const ast::statement_t &statement,
-    const Type &specific_statement) {
+    process_t *proc, const ast::statement_t &statement, const Type &specific_statement) {
     using namespace ast;
     // We handle block statements by creating process_type_t::block_node, that will bounce back to
     // us when it's time to execute them.
@@ -1154,8 +1152,8 @@ end_execution_reason_t parse_execution_context_t::populate_job_process(
                                                   *specific_statement.as<switch_statement_t>());
             break;
         case type_t::decorated_statement: {
-            result = this->populate_plain_process(proc,
-                                                  *specific_statement.as<decorated_statement_t>());
+            result =
+                this->populate_plain_process(proc, *specific_statement.as<decorated_statement_t>());
             break;
         }
         default: {

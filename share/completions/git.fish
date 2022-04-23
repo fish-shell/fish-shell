@@ -1410,13 +1410,14 @@ complete -f -c git -n '__fish_git_using_command grep' -s q -l quiet -d 'exit wit
 
 ### init
 complete -f -c git -n __fish_git_needs_command -a init -d 'Create an empty git repository or reinitialize an existing one'
+complete -f -c git -n '__fish_git_using_command init' -s q -l quiet -d 'Only print error and warning messages'
+complete -f -c git -n '__fish_git_using_command init' -l bare -d 'Create a bare repository'
 # TODO options
 
 ### log
 complete -c git -n __fish_git_needs_command -a shortlog -d 'Show commit shortlog'
 complete -c git -n __fish_git_needs_command -a log -d 'Show commit logs'
 complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
-
 complete -c git -n '__fish_git_using_command log' -l follow -d 'Continue listing file history beyond renames'
 complete -c git -n '__fish_git_using_command log' -l no-decorate -d 'Don\'t print ref names'
 complete -f -c git -n '__fish_git_using_command log' -l decorate -a 'short\tHide\ prefixes full\tShow\ full\ ref\ names auto\tHide\ prefixes\ if\ printed\ to\ terminal no\tDon\\\'t\ display\ ref' -d 'Print out ref names'
@@ -1729,6 +1730,9 @@ complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcomman
 
 ### prune
 complete -f -c git -n __fish_git_needs_command -a prune -d 'Prune all unreachable objects from the object database'
+complete -f -c git -n '__fish_git_using_command prune' -s n -l dry-run -d 'Just report what it would remove'
+complete -f -c git -n '__fish_git_using_command prune' -s v -l verbose -d 'Report all removed objects'
+complete -f -c git -n '__fish_git_using_command prune' -l progress -d 'Show progress'
 # TODO options
 
 ### pull
@@ -1920,6 +1924,12 @@ complete -f -c git -n '__fish_git_using_command revert' -ka '(__fish_git_commits
 complete -f -c git -n '__fish_git_using_command revert' -l continue -d 'Continue the operation in progress'
 complete -f -c git -n '__fish_git_using_command revert' -l abort -d 'Cancel the operation'
 complete -f -c git -n '__fish_git_using_command revert' -l skip -d 'Skip the current commit and continue with the rest of the sequence'
+complete -f -c git -n '__fish_git_using_command revert' -l quit -d 'Forget about the current operation in progress'
+complete -f -c git -n '__fish_git_using_command revert' -l no-edit -d 'Do not start the commit message editor'
+complete -f -c git -n '__fish_git_using_command revert' -s n -l no-commit -d 'Applies the changes necessary to revert the named commits to your working tree and the index, but does not make the commits'
+complete -f -c git -n '__fish_git_using_command revert' -s s -l signoff -d 'Add a Signed-off-by trailer at the end of the commit message'
+complete -f -c git -n '__fish_git_using_command revert' -l rerere-autoupdate -d 'Allow the rerere mechanism to update the index with the result of auto-conflict resolution if possible'
+complete -f -c git -n '__fish_git_using_command revert' -l no-rerere-autoupdate -d 'Does not allow the rerere mechanism to update the index with the result of auto-conflict resolution if possible'
 # TODO options
 
 ### rm
@@ -1931,6 +1941,7 @@ complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive remova
 complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'
 complete -c git -n '__fish_git_using_command rm' -s f -l force -d 'Override the up-to-date check'
 complete -c git -n '__fish_git_using_command rm' -s n -l dry-run -d 'Dry run'
+complete -c git -n '__fish_git_using_command rm' -l sparse -d 'Allow updating index entries outside of the sparse-checkout cone'
 # TODO options
 
 ### status
@@ -1941,6 +1952,10 @@ complete -f -c git -n '__fish_git_using_command status' -l porcelain -d 'Give th
 complete -f -c git -n '__fish_git_using_command status' -s z -d 'Terminate entries with null character'
 complete -f -c git -n '__fish_git_using_command status' -s u -l untracked-files -x -a 'no normal all' -d 'The untracked files handling mode'
 complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x -a 'none untracked dirty all' -d 'Ignore changes to submodules'
+complete -f -c git -n '__fish_git_using_command status' -s v -l verbose -d 'Also show the textual changes that are staged to be committed'
+complete -f -c git -n '__fish_git_using_command status' -l no-ahead-behind -d 'Do not display detailed ahead/behind counts for the branch relative to its upstream branch'
+complete -f -c git -n '__fish_git_using_command status' -l renames -d 'Turn on rename detection regardless of user configuration'
+complete -f -c git -n '__fish_git_using_command status' -l no-renames -d 'Turn off rename detection regardless of user configuration'
 # TODO options
 
 ### stripspace

@@ -1353,6 +1353,7 @@ complete -f -c git -n '__fish_git_using_command difftool' -s t -l tool -d 'Use t
 complete -f -c git -n '__fish_git_using_command difftool' -l tool-help -d 'Print a list of diff tools that may be used with `--tool`'
 complete -f -c git -n '__fish_git_using_command difftool' -l trust-exit-code -d 'Exit when an invoked diff tool returns a non-zero exit code'
 complete -f -c git -n '__fish_git_using_command difftool' -s x -l extcmd -d 'Specify a custom command for viewing diffs'
+complete -f -c git -n '__fish_git_using_command difftool' -l no-gui -d 'Overrides --gui setting'
 # TODO options
 
 ### gc
@@ -1367,7 +1368,45 @@ complete -f -c git -n '__fish_git_using_command gc' -l keep-largest-pack -d 'Ign
 
 ### grep
 complete -c git -n __fish_git_needs_command -a grep -d 'Print lines matching a pattern'
-# TODO options
+complete -f -c git -n '__fish_git_using_command grep' -l cached -d 'Search blobs registered in the index file'
+complete -f -c git -n '__fish_git_using_command grep' -l no-index -d 'Search files in the current directory not managed by Git'
+complete -f -c git -n '__fish_git_using_command grep' -l untracked -d 'Search also in untracked files'
+complete -f -c git -n '__fish_git_using_command grep' -l no-exclude-standard -d 'Also search in ignored files by not honoring the .gitignore mechanism'
+complete -f -c git -n '__fish_git_using_command grep' -l exclude-standard -d 'Do not pay attention to ignored files specified via the .gitignore mechanism'
+complete -f -c git -n '__fish_git_using_command grep' -l recurse-submodules -d 'Recursively search in each submodule that is active and checked out in the repository'
+complete -f -c git -n '__fish_git_using_command grep' -s a -l text -d 'Process binary files as if they were text'
+complete -f -c git -n '__fish_git_using_command grep' -l textconv -d 'Honor textconv filter settings'
+complete -f -c git -n '__fish_git_using_command grep' -l no-textconv -d 'Do not honor textconv filter settings'
+complete -f -c git -n '__fish_git_using_command grep' -s i -l ignore-case -d 'Ignore case differences between the patterns and the files'
+complete -f -c git -n '__fish_git_using_command grep' -s I -d 'Don’t match the pattern in binary files'
+complete -f -c git -n '__fish_git_using_command grep' -s r -l recursive -d 'Descend into levels of directories endlessly'
+complete -f -c git -n '__fish_git_using_command grep' -l no-recursive -d 'Do not descend into directories'
+complete -f -c git -n '__fish_git_using_command grep' -s w -l word-regexp -d 'Match the pattern only at word boundary'
+complete -f -c git -n '__fish_git_using_command grep' -s v -l invert-match -d 'Select non-matching lines'
+complete -f -c git -n '__fish_git_using_command grep' -l full-name -d 'Forces paths to be output relative to the project top directory'
+complete -f -c git -n '__fish_git_using_command grep' -s E -l extended-regexp -d 'Use POSIX extended regexp for patterns'
+complete -f -c git -n '__fish_git_using_command grep' -s G -l basic-regexp -d 'Use POSIX basic regexp for patterns'
+complete -f -c git -n '__fish_git_using_command grep' -s P -l perl-regexp -d 'Use Perl-compatible regular expressions for patterns. Git must be compiled with support for this'
+complete -f -c git -n '__fish_git_using_command grep' -s F -l fixed-strings -d 'Don’t interpret pattern as a regex'
+complete -f -c git -n '__fish_git_using_command grep' -s n -l line-number -d 'Prefix the line number to matching lines'
+complete -f -c git -n '__fish_git_using_command grep' -l column -d 'Prefix the 1-indexed byte-offset of the first match from the start of the matching line'
+complete -f -c git -n '__fish_git_using_command grep' -s l -l files-with-matches -d 'Show only the names of files that contain matches'
+complete -f -c git -n '__fish_git_using_command grep' -s L -l files-without-match -d 'Show only the names of files that do not contain matches'
+complete -f -c git -n '__fish_git_using_command grep' -s z -l null -d 'Use \\0 as the delimiter for pathnames in the output, and print them verbatim'
+complete -f -c git -n '__fish_git_using_command grep' -s o -l only-matching -d 'Print only the matched parts of a matching line'
+complete -f -c git -n '__fish_git_using_command grep' -s c -l count -d 'Instead of showing every matched line, show the number of lines that match'
+complete -f -c git -n '__fish_git_using_command grep' -l no-color -d 'Turn off match highlighting, even when the configuration file gives the default to color output'
+complete -f -c git -n '__fish_git_using_command grep' -l break -d 'Print an empty line between matches from different files'
+complete -f -c git -n '__fish_git_using_command grep' -l heading -d 'Show the filename above the matches in that file instead of at the start of each shown line'
+complete -f -c git -n '__fish_git_using_command grep' -s p -l show-function -d 'Show the preceding line that contains the function name of the match, unless the matching line is a function name itself'
+complete -f -c git -n '__fish_git_using_command grep' -s W -l function-context -d 'Show the surrounding text from the previous line containing a function name up to the one before the next function name'
+complete -f -c git -n '__fish_git_using_command grep' -s e -d 'The next parameter is the pattern'
+complete -f -c git -n '__fish_git_using_command grep' -l and -d 'Combine patterns using and'
+complete -f -c git -n '__fish_git_using_command grep' -l or -d 'Combine patterns using or'
+complete -f -c git -n '__fish_git_using_command grep' -l not -d 'Combine patterns using not'
+complete -f -c git -n '__fish_git_using_command grep' -l all-match -d 'Limit the match to files that have lines to match all of them when giving multiple pattern expressions combined with --or'
+complete -f -c git -n '__fish_git_using_command grep' -s q -l quiet -d 'exit with status 0 when there is a match and with non-zero status when there isn’t instead of outputting matched lines'
+# TODO options, including max-depth, h, open-files-in-pager, contexts, threads, file
 
 ### init
 complete -f -c git -n __fish_git_needs_command -a init -d 'Create an empty git repository or reinitialize an existing one'

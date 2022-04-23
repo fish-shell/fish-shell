@@ -99,6 +99,7 @@ Completions
   - tuned-adm (:issue:`8760`)
   - archlinux-java
   - fastboot
+  - various git subcommands (fetch, show-branch, archive (:issue:`8398`), difftool, grep, init, prune, revert, status, rm)
 
 
 Improved terminal support

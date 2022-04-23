@@ -1028,6 +1028,15 @@ complete -f -c git -n '__fish_git_using_command show' -l show-signature -d 'Chec
 ### show-branch
 complete -f -c git -n __fish_git_needs_command -a show-branch -d 'Shows the commits on branches'
 complete -f -c git -n '__fish_git_using_command show-branch' -k -a '(__fish_git_refs)' -d Rev
+complete -f -c git -n '__fish_git_using_command show-branch' -s r -l remotes -d "Shows the remote tracking branches"
+complete -f -c git -n '__fish_git_using_command show-branch' -s a -l all -d "Show both remote-tracking branches and local branches"
+complete -f -c git -n '__fish_git_using_command show-branch' -l current -d "Includes the current branch to the list of revs to be shown"
+complete -f -c git -n '__fish_git_using_command show-branch' -l topo-order -d "Makes commits appear in topological order"
+complete -f -c git -n '__fish_git_using_command show-branch' -l date-order -d "Makes commits appear in date order"
+complete -f -c git -n '__fish_git_using_command show-branch' -l sparse -d "Shows merges only reachable from one tip"
+complete -f -c git -n '__fish_git_using_command show-branch' -l no-name -d "Do not show naming strings for each commit"
+complete -f -c git -n '__fish_git_using_command show-branch' -l sha1-name -d "Name commits with unique prefix"
+complete -f -c git -n '__fish_git_using_command show-branch' -l no-color -d "Turn off colored output"
 # TODO options
 
 ### add
@@ -1132,6 +1141,9 @@ complete -f -c git -n '__fish_git_using_command apply' -l unsafe-paths -d 'Allow
 
 ### archive
 complete -f -c git -n __fish_git_needs_command -a archive -d 'Create an archive of files from a named tree'
+complete -f -c git -n '__fish_git_using_command archive' -s l -l list -d "Show all available formats"
+complete -f -c git -n '__fish_git_using_command archive' -s v -l verbose -d "Be verbose"
+complete -f -c git -n '__fish_git_using_command archive' -l worktree-attributes -d "Look for attributes in .gitattributes files in the working tree as well"
 # TODO options
 
 ### bisect

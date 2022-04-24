@@ -98,6 +98,7 @@ Completions
   - rclone (:issue:`8819`)
   - tuned-adm (:issue:`8760`)
   - archlinux-java
+  - fastboot
 
 
 Improved terminal support

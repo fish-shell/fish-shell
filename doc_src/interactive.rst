@@ -120,6 +120,7 @@ Variable                                                   Meaning
 ``fish_color_end``                                         process separators like ``;`` and ``&``
 ``fish_color_error``                                       syntax errors
 ``fish_color_param``                                       ordinary command parameters
+``fish_color_valid_path``                                  parameters that are filenames (if the file exists)
 ``fish_color_option``                                      options starting with "-", up to the first "--" parameter
 ``fish_color_comment``                                     comments like '# important'
 ``fish_color_selection``                                   selected text in vi visual mode
@@ -127,11 +128,14 @@ Variable                                                   Meaning
 ``fish_color_escape``                                      character escapes like ``\n`` and ``\x70``
 ``fish_color_autosuggestion``                              autosuggestions (the proposed rest of a command)
 ``fish_color_cwd``                                         the current working directory in the default prompt
+``fish_color_cwd_root``                                    the current working directory in the default prompt for the root user
 ``fish_color_user``                                        the username in the default prompt
 ``fish_color_host``                                        the hostname in the default prompt
 ``fish_color_host_remote``                                 the hostname in the default prompt for remote sessions (like ssh)
+``fish_color_status``                                      the last command's nonzero exit code in the default prompt
 ``fish_color_cancel``                                      the '^C' indicator on a canceled command
 ``fish_color_search_match``                                history search matches and selected pager items (background only)
+
 ==========================================                 =====================================================================
 
 If a variable isn't set or is empty, fish usually tries ``$fish_color_normal``, except for:

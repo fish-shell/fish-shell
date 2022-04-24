@@ -11,7 +11,7 @@ function funcdel --description "Remove the current definition of all specified f
     if set -q _flag_directory
         set funcdir $_flag_directory
     else
-        set funcdir $fish_function_path
+        set funcdir $__fish_config_dir/functions
     end
 
     if not set -q argv[1]
@@ -32,7 +32,6 @@ function funcdel --description "Remove the current definition of all specified f
             printf (_ "%s: not defined as a function '%s'\n") funcdel $funcname >&2
             set retval 1
         else if not test -e $funcpath
-            echo "$funcname does not exist as a user function"
             printf (_ "%s: not a saved user function '%s'\n") funcdel $funcname >&2
             set retval 2
         else

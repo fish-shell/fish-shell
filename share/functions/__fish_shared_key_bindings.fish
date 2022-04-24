@@ -187,10 +187,15 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv ")" self-insert expand-abbr
         # Ctrl-space inserts space without expanding abbrs
         bind --preset $argv -k nul 'commandline -i " "'
+        # Shift-space (CSI u escape sequence) behaves like space because it's easy to mistype.
+        bind --preset $argv \e\[32\;2u 'commandline -i " "; commandline -f expand-abbr'.
 
 
         bind --preset $argv \n execute
         bind --preset $argv \r execute
+        # Control+Return behave like Return because it's easy to mistype after accepting an autosuggestion.
+        bind --preset $argv \e\[27\;5\;13~ execute # Sent with XTerm.vt100.formatOtherKeys: 0
+        bind --preset $argv \e\[13\;5u execute # CSI u sequence, sent with XTerm.vt100.formatOtherKeys: 1
     end
 end
 

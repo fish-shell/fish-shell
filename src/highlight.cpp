@@ -450,7 +450,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     // Not handled specially. Is the command valid?
     bool cmd_ok = builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command) ||
-                  path_get_path(parsed_command, nullptr, ctx.vars);
+                  path_get_path(parsed_command, ctx.vars).has_value();
     if (!cmd_ok) {
         return false;
     }
@@ -1318,7 +1318,7 @@ static bool command_is_valid(const wcstring &cmd, enum statement_decoration_t de
     if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
 
     // Regular commands
-    if (!is_valid && command_ok) is_valid = path_get_path(cmd, nullptr, vars);
+    if (!is_valid && command_ok) is_valid = path_get_path(cmd, vars).has_value();
 
     // Implicit cd
     if (!is_valid && implicit_cd_ok) {

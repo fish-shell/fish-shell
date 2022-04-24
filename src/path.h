@@ -44,17 +44,21 @@ dir_remoteness_t path_get_config_remoteness();
 class env_stack_t;
 void path_emit_config_directory_messages(env_stack_t &vars);
 
-/// Finds the path of an executable.
-///
-/// Args:
-/// cmd - The name of the executable.
-/// output_or_NULL - If non-NULL, store the path.
-/// vars - The environment variables to use
-///
-/// Returns:
-/// false if the command can not be found else true. The result
-/// should be freed with free().
-bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars);
+/// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
+/// \returns the path if found, none if not.
+maybe_t<wcstring> path_get_path(const wcstring &cmd, const environment_t &vars);
+
+/// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
+/// On success, err will be 0 and the path is returned.
+/// On failure, we return the "best path" with err set appropriately.
+/// For example, if we find a non-executable file, we will return its path and EACCESS.
+/// If no candidate path is found, path will be empty and err will be set to ENOENT.
+/// Possible err values are taken from access().
+struct get_path_result_t {
+    int err;
+    wcstring path;
+};
+get_path_result_t path_try_get_path(const wcstring &cmd, const environment_t &vars);
 
 /// Return all the paths that match the given command.
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars);

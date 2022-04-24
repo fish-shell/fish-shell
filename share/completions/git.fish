@@ -933,12 +933,32 @@ complete -f -c git -n __fish_git_needs_command -a fetch -d 'Download objects and
 # Suggest "repository", then "refspec" - this also applies to e.g. push/pull
 complete -f -c git -n '__fish_git_using_command fetch; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d Remote
 complete -f -c git -n '__fish_git_using_command fetch; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
-complete -f -c git -n '__fish_git_using_command fetch' -s q -l quiet -d 'Be quiet'
-complete -f -c git -n '__fish_git_using_command fetch' -s v -l verbose -d 'Be verbose'
-complete -f -c git -n '__fish_git_using_command fetch' -s a -l append -d 'Append ref names and object names'
-# TODO --upload-pack
+complete -f -c git -n '__fish_git_using_command fetch' -s q -l quiet -d 'Be more quiet'
+complete -f -c git -n '__fish_git_using_command fetch' -s v -l verbose -d 'Be more verbose'
+complete -f -c git -n '__fish_git_using_command fetch' -s a -l append -d 'Append to .git/FETCH_HEAD instead of overwriting'
+complete -f -c git -n '__fish_git_using_command fetch' -l upload-pack -d 'Path to upload pack on remote end'
 complete -f -c git -n '__fish_git_using_command fetch' -s f -l force -d 'Force update of local branches'
-complete -f -c git -n '__fish_git_using_command fetch' -s p -l prune -d 'Remove remote-tracking references that no longer exist on the remote'
+complete -f -c git -n '__fish_git_using_command fetch' -s p -l prune -d 'Prune remote-tracking branches no longer on remote'
+complete -f -c git -n '__fish_git_using_command fetch' -l all -d 'Fetch all remotes'
+complete -f -c git -n '__fish_git_using_command fetch' -l atomic -d 'Use atomic transfer to update references'
+complete -f -c git -n '__fish_git_using_command fetch' -s m -l multiple -d 'Fetch from multiple remotes'
+complete -f -c git -n '__fish_git_using_command fetch' -s t -l tags -d 'Fetch all tags and associated objects'
+complete -f -c git -n '__fish_git_using_command fetch' -s P -l prune-tags -d 'Prune local tags no longer on remote and clobber changed tags'
+complete -f -c git -n '__fish_git_using_command fetch' -l prefetch -d 'Modify the refspec to replace all refs within refs/prefetch/'
+complete -f -c git -n '__fish_git_using_command fetch' -s j -l jobs -d 'Numbers of submodules fetched in parallel'
+complete -f -c git -n '__fish_git_using_command fetch' -s n -d 'Do not fetch all tags (--no-tags)'
+complete -f -c git -n '__fish_git_using_command fetch' -l dry-run -d 'Dry run'
+complete -f -c git -n '__fish_git_using_command fetch' -l depth -d 'Limit number of commits'
+complete -f -c git -n '__fish_git_using_command fetch' -l with-fetch-head -d 'Write fetched references to the FETCH_HEAD file'
+complete -f -c git -n '__fish_git_using_command fetch' -l update-shallow -d 'Accept refs that update .git/shallow'
+complete -f -c git -n '__fish_git_using_command fetch' -s k -l keep -d 'Keep downloaded pack'
+complete -f -c git -n '__fish_git_using_command fetch' -s u -l update-head-ok -d 'Allow updating of HEAD ref'
+complete -f -c git -n '__fish_git_using_command fetch' -l progress -d 'Force progress reporting'
+complete -f -c git -n '__fish_git_using_command fetch' -l deepen -d 'Deepen history of shallow clones'
+complete -f -c git -n '__fish_git_using_command fetch' -l shallow-since -d 'Deepen history of shallow repository based on time'
+complete -f -c git -n '__fish_git_using_command fetch' -l shallow-exclude -d 'Deepen history of shallow clone, excluding rev'
+complete -f -c git -n '__fish_git_using_command fetch' -l unshallow -d 'Convert to a complete repository'
+complete -f -c git -n '__fish_git_using_command fetch' -l refetch -d 'Re-fetch without negotiating common commits'
 # TODO other options
 
 #### filter-branch

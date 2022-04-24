@@ -513,8 +513,9 @@ static completion_entry_t &complete_get_exact_entry(completion_entry_set_t &comp
 /// Find the full path and commandname from a command string 'str'.
 static void parse_cmd_string(const wcstring &str, wcstring *path, wcstring *cmd,
                              const environment_t &vars) {
-    bool found = path_get_path(str, path, vars);
-    // If the command was not found, 'path' is the empty string.
+    auto path_result = path_try_get_path(str, vars);
+    bool found = (path_result.err == 0);
+    *path = std::move(path_result.path);
     // Resolve commands that use relative paths because we compare full paths with "complete -p".
     if (found && !str.empty() && str.at(0) != L'/') {
         if (auto full_path = wrealpath(*path)) {
@@ -888,11 +889,8 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
     // Only reload environment variables if builtin_exists returned false, as an optimization
     if (!head_exists) {
         head_exists = function_exists_no_autoload(cmd);
-        // While it may seem like first testing `path_get_path` before resorting to an env lookup
-        // may be faster, path_get_path can potentially do a lot of FS/IO access, so env.get() +
-        // function_exists() should still be faster.
         // Use cmd_orig here as it is potentially pathed.
-        head_exists = head_exists || path_get_path(cmd_orig, nullptr, ctx.vars);
+        head_exists = head_exists || path_get_path(cmd_orig, ctx.vars).has_value();
     }
 
     if (!head_exists) {

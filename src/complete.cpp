@@ -226,9 +226,9 @@ completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t ma
       flags(resolve_auto_space(completion, flags_val)) {}
 
 completion_t::completion_t(const completion_t &) = default;
-completion_t::completion_t(completion_t &&) noexcept = default;
+completion_t::completion_t(completion_t &&) = default;
 completion_t &completion_t::operator=(const completion_t &) = default;
-completion_t &completion_t::operator=(completion_t &&) noexcept = default;
+completion_t &completion_t::operator=(completion_t &&) = default;
 completion_t::~completion_t() = default;
 
 __attribute__((always_inline)) static inline bool natural_compare_completions(

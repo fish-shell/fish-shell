@@ -8,12 +8,30 @@ Deprecations and removed features
 ---------------------------------
 - The ``stderr-nocaret`` feature flag, introduced in fish 3.0 and enabled by default in fish 3.1, has been made read-only.
   That means it is no longer possible to disable it, and code supporting the ``^`` redirection has been removed (:issue:`8857`, :issue:`8865`).
+
+  To recap: Fish used to support ``^`` to redirect stderr, so you could use commands like::
+
+    test "$foo" -gt 8 ^/dev/null
+
+  to ignore error messages. This made the ``^`` symbol require escaping and quoting, and was a bit of a weird shortcut considering ``2>`` already worked, which is only one character longer.
+
+  So the above can simply become::
+
+    test "$foo" -gt 8 2>/dev/null
+
 - The following feature flags have been enabled by default:
 
   - ``regex-easyesc``, which makes ``string replace -r`` not do a superfluous round of unescaping in the replacement expression.
     That means e.g. to escape any "a" or "b" in an argument you can use ``string replace -ra '([ab])' '\\\\$1' foobar`` instead of needing 8 backslashes.
+
+    This only affects the *replacement* expression, not the *match* expression (the ``'([ab])'`` part in the example).
+    A survey of plugins on github did not turn up any affected code, so we do not expect a huge fallout.
+
     This flag was introduced in fish 3.1.
   - ``ampersand-nobg-in-token``, which makes ``&`` not refer to backgrounding if it occurs in the middle of a word, so ``echo foo&bar`` will print "foo&bar".
+
+    Reformatting with ``fish_indent`` would already introduce spaces, turning ``echo foo&bar`` into ``echo foo & bar``.
+
     This flag was introduced in fish 3.4.
 
   To turn off these flags, add ``no-regex-easyesc`` or ``no-ampersand-nobg-in-token`` to $fish_features and restart fish::
@@ -27,7 +45,10 @@ Deprecations and removed features
 - The meaning of an empty color variable has changed. Previously, when a variable was empty it would be interpreted as the "normal" color. Now fish will ignore empty color variables and go to the fallback color. For example::
 
     set -g fish_color_command blue
-    set -g fish_color_keyword # before this would make keywords "normal" (usually white in a dark terminal), now it'll make them blue
+    set -g fish_color_keyword
+
+  would previously make keywords "normal" (usually white in a dark terminal) because it stopped after checking $fish_color_keyword.
+  Now it'll make them blue. To achieve the previous behavior, use the normal color explicitly: ``set -g fish_color_keyword normal``.
 
   This makes it easier to make self-contained colorschemes that don't accidentally use color that was set before.
   ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty. (:issue:`8793`)
@@ -40,7 +61,11 @@ Scripting improvements
 
     math 5 + 2_123_252
 
-- ``math``'s ``min`` and ``max`` functions now take a variable number of arguments instead of always requiring 2 (:issue:`8644`, :issue:`8646`)    .
+- ``math``'s ``min`` and ``max`` functions now take a variable number of arguments instead of always requiring 2 (:issue:`8644`, :issue:`8646`)::
+
+    > math min 8,2,4
+    2
+
 - ``read`` is now faster as the last process in a pipeline (:issue:`8552`).
 - ``string join`` gained a new ``--no-empty`` flag to skip empty arguments (:issue:`8774`, :issue:`8351`).
 - ``read`` now actually only triggers the ``fish_read`` event, not the ``fish_prompt`` event (:issue:`8797`). It was supposed to work this way since fish 3.2.0.

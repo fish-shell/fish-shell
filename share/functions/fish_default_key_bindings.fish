@@ -27,27 +27,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
     __fish_shared_key_bindings $argv
     or return # protect against invalid $argv
 
-    # This is the default binding, i.e. the one used if no other binding matches
-    bind --preset $argv "" self-insert
-    or exit # protect against invalid $argv
-
-    # Space and other command terminators expands abbrs _and_ inserts itself.
-    bind --preset $argv " " self-insert expand-abbr
-    bind --preset $argv ";" self-insert expand-abbr
-    bind --preset $argv "|" self-insert expand-abbr
-    bind --preset $argv "&" self-insert expand-abbr
-    bind --preset $argv "^" self-insert expand-abbr
-    bind --preset $argv ">" self-insert expand-abbr
-    bind --preset $argv "<" self-insert expand-abbr
-    # Closing a command substitution expands abbreviations
-    bind --preset $argv ")" self-insert expand-abbr
-    # Ctrl-space inserts space without expanding abbrs
-    bind --preset $argv -k nul 'commandline -i " "'
-
-
-    bind --preset $argv \n execute
-    bind --preset $argv \r execute
-
     bind --preset $argv \ck kill-line
 
     bind --preset $argv \eOC forward-char

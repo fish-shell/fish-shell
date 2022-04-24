@@ -166,6 +166,32 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Only insert spaces if we're either quoted or not at the beginning of the commandline
     # - this strips leading spaces if they would trigger histignore.
     bind --preset -M paste " " self-insert-notfirst
+
+    # Bindings that are shared in text-insertion modes.
+    if not set -l index (contains --index -- -M $argv)
+        or test $argv[(math $index + 1)] = insert
+
+        # This is the default binding, i.e. the one used if no other binding matches
+        bind --preset $argv "" self-insert
+        or exit # protect against invalid $argv
+
+        # Space and other command terminators expands abbrs _and_ inserts itself.
+        bind --preset $argv " " self-insert expand-abbr
+        bind --preset $argv ";" self-insert expand-abbr
+        bind --preset $argv "|" self-insert expand-abbr
+        bind --preset $argv "&" self-insert expand-abbr
+        bind --preset $argv "^" self-insert expand-abbr
+        bind --preset $argv ">" self-insert expand-abbr
+        bind --preset $argv "<" self-insert expand-abbr
+        # Closing a command substitution expands abbreviations
+        bind --preset $argv ")" self-insert expand-abbr
+        # Ctrl-space inserts space without expanding abbrs
+        bind --preset $argv -k nul 'commandline -i " "'
+
+
+        bind --preset $argv \n execute
+        bind --preset $argv \r execute
+    end
 end
 
 function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'

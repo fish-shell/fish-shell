@@ -50,24 +50,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         __fish_shared_key_bindings -s -M $mode
     end
 
-    bind -s --preset -M insert \r execute
-    bind -s --preset -M insert \n execute
-
-    bind -s --preset -M insert "" self-insert
-
-    # Space and other command terminators expand abbrs _and_ inserts itself.
-    bind -s --preset -M insert " " self-insert expand-abbr
-    bind -s --preset -M insert ";" self-insert expand-abbr
-    bind -s --preset -M insert "|" self-insert expand-abbr
-    bind -s --preset -M insert "&" self-insert expand-abbr
-    bind -s --preset -M insert "^" self-insert expand-abbr
-    bind -s --preset -M insert ">" self-insert expand-abbr
-    bind -s --preset -M insert "<" self-insert expand-abbr
-    # Closing a command substitution expands abbreviations
-    bind -s --preset -M insert ")" self-insert expand-abbr
-    # Ctrl-space inserts space without expanding abbrs
-    bind -s --preset -M insert -k nul 'commandline -i " "'
-
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
     # See #2871

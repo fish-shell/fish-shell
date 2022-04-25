@@ -72,6 +72,7 @@ Completions
   - brightnessctl (:issue:`8758`)
   - rclone (:issue:`8819`)
   - tuned-adm (:issue:`8760`)
+  - archlinux-java
 
 
 Improved terminal support

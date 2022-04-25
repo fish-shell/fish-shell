@@ -1611,8 +1611,8 @@ complete -f -c git -n '__fish_git_using_command merge' -l progress -d 'Force pro
 complete -f -c git -n '__fish_git_using_command merge' -l no-progress -d 'Force no progress status'
 complete -f -c git -n '__fish_git_using_command merge' -l allow-unrelated-histories -d 'Allow merging even when branches do not share a common history'
 complete -x -c git -n '__fish_git_using_command merge' -s m -d 'Set the commit message'
-complete -f -c git -n '__fish_git_using_command merge' -s rerere-autoupdate -d 'If possible, use previous conflict resolutions'
-complete -f -c git -n '__fish_git_using_command merge' -s no-rerere-autoupdate -d 'Do not use previous conflict resolutions'
+complete -f -c git -n '__fish_git_using_command merge' -l rerere-autoupdate -d 'If possible, use previous conflict resolutions'
+complete -f -c git -n '__fish_git_using_command merge' -l no-rerere-autoupdate -d 'Do not use previous conflict resolutions'
 complete -f -c git -n '__fish_git_using_command merge' -l abort -d 'Abort the current conflict resolution process'
 complete -f -c git -n '__fish_git_using_command merge' -l continue -d 'Conclude current conflict resolution process'
 

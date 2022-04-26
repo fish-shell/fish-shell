@@ -8,7 +8,8 @@ function __fish_make_completion_signals --description 'Make list of kill signals
     # Just hardcode the signals.
     set -l os (uname)
     if string match -q 'CYGWIN*' -- $os
-        or string match -iq Msys -- $os
+        or string match -eiq Msys -- $os
+        or string match -eiq mingw -- $os
         set -a __kill_signals "1 HUP" "2 INT" "3 QUIT" "4 ILL" "5 TRAP" "6 ABRT" \
             "6 IOT" "7 BUS" "8 FPE" "9 KILL" "10 USR1" "11 SEGV" \
             "12 USR2" "13 PIPE" "14 ALRM" "15 TERM" "16 STKFLT" "17 CHLD" \
@@ -32,13 +33,13 @@ function __fish_make_completion_signals --description 'Make list of kill signals
         # Posix systems print out the name of a signal using 'kill -l SIGNUM'.
         complete -c kill -s l --description "List names of available signals"
         for i in (seq 31)
-            set -a __kill_signals $i" "(kill -l $i | string upper)
+            set -a __kill_signals $i" "(kill -l $i 2>/dev/null | string upper)
         end
     else
         # util-linux (on Arch) and procps-ng (on Debian) kill use 'kill -L' to write out a numbered list
         # of signals. Use this to complete on both number _and_ on signal name.
         complete -c kill -s L --description "List codes and names of available signals"
-        kill -L | string trim | string replace -ra '   *' \n | while read -l signo signame
+        kill -L 2>/dev/null | string trim | string replace -ra '   *' \n | while read -l signo signame
             set -a __kill_signals "$signo $signame"
         end
     end

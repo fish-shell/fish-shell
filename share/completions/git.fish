@@ -979,7 +979,7 @@ complete -c git -n '__fish_git_using_command filter-branch' -s f -l force -d 'Fi
 ### remote
 set -l remotecommands add rm remove show prune update rename set-head set-url set-branches get-url
 complete -f -c git -n __fish_git_needs_command -a remote -d 'Manage set of tracked repositories'
-complete -f -c git -n '__fish_git_using_command remote' -a '(__fish_git_remotes)'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from $remotecommands" -a '(__fish_git_remotes)'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -s v -l verbose -d 'Be verbose'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a add -d 'Adds a new remote'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a rm -d 'Removes a remote'

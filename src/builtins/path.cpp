@@ -157,6 +157,8 @@ struct options_t {  //!OCLINT(too many fields)
     bool type_valid = false;
     bool invert_valid = false;
     bool what_valid = false;
+    bool unique_valid = false;
+    bool unique = false;
     bool have_what = false;
     const wchar_t *what = nullptr;
 
@@ -348,6 +350,16 @@ static int handle_flag_v(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_u(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->unique_valid) {
+        opts->unique = true;
+        return STATUS_CMD_OK;
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 static int handle_flag_what(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     UNUSED(argv);
@@ -373,6 +385,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
         short_opts.append(L"fld");
     }
     if (opts->invert_valid) short_opts.append(L"v");
+    if (opts->unique_valid) short_opts.append(L"u");
     return short_opts;
 }
 
@@ -386,6 +399,7 @@ static const struct woption long_options[] = {
                                               {L"perm", required_argument, nullptr, 'p'},
                                               {L"type", required_argument, nullptr, 't'},
                                               {L"invert", required_argument, nullptr, 't'},
+                                              {L"unique", no_argument, nullptr, 'u'},
                                               {L"what", required_argument, nullptr, 1},
                                               {}};
 
@@ -396,7 +410,8 @@ static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function
     {'r', handle_flag_r}, {'w', handle_flag_w},
     {'x', handle_flag_x}, {'f', handle_flag_f},
     {'l', handle_flag_l}, {'d', handle_flag_d},
-    {1, handle_flag_what},
+    {'l', handle_flag_l}, {'d', handle_flag_d},
+    {'u', handle_flag_u}, {1, handle_flag_what},
 };
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
@@ -700,6 +715,7 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
     options_t opts;
     opts.invert_valid = true;
     opts.what_valid = true;
+    opts.unique_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -745,6 +761,13 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
                       else
                           return (wcsfilecmp_glob(funced[a].c_str(), funced[b].c_str()) > 0);
                   });
+        if (opts.unique) {
+            list.erase(std::unique(list.begin(), list.end(),
+                              [&](const wcstring &a, const wcstring &b) {
+                                  return funced[a] == funced[b];
+                              }),
+                       list.end());
+        }
     } else {
         // Without --what, we just sort by the entire path,
         // so we have no need to transform and such.
@@ -755,6 +778,9 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
                       else
                           return (wcsfilecmp_glob(a.c_str(), b.c_str()) > 0);
                   });
+        if (opts.unique) {
+            list.erase(std::unique(list.begin(), list.end()), list.end());
+        }
     }
 
     for (const auto &entry : list) {

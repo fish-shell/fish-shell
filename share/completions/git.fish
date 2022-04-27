@@ -1378,7 +1378,7 @@ complete -f -c git -n '__fish_git_using_command grep' -s a -l text -d 'Process b
 complete -f -c git -n '__fish_git_using_command grep' -l textconv -d 'Honor textconv filter settings'
 complete -f -c git -n '__fish_git_using_command grep' -l no-textconv -d 'Do not honor textconv filter settings'
 complete -f -c git -n '__fish_git_using_command grep' -s i -l ignore-case -d 'Ignore case differences between the patterns and the files'
-complete -f -c git -n '__fish_git_using_command grep' -s I -d 'Don’t match the pattern in binary files'
+complete -f -c git -n '__fish_git_using_command grep' -s I -d 'Don\'t match the pattern in binary files'
 complete -f -c git -n '__fish_git_using_command grep' -s r -l recursive -d 'Descend into levels of directories endlessly'
 complete -f -c git -n '__fish_git_using_command grep' -l no-recursive -d 'Do not descend into directories'
 complete -f -c git -n '__fish_git_using_command grep' -s w -l word-regexp -d 'Match the pattern only at word boundary'

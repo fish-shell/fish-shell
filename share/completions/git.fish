@@ -1372,7 +1372,7 @@ complete -f -c git -n '__fish_git_using_command grep' -l cached -d 'Search blobs
 complete -f -c git -n '__fish_git_using_command grep' -l no-index -d 'Search files in the current directory not managed by Git'
 complete -f -c git -n '__fish_git_using_command grep' -l untracked -d 'Search also in untracked files'
 complete -f -c git -n '__fish_git_using_command grep' -l no-exclude-standard -d 'Also search in ignored files by not honoring the .gitignore mechanism'
-complete -f -c git -n '__fish_git_using_command grep' -l exclude-standard -d 'Do not pay attention to ignored files specified via the .gitignore mechanism'
+complete -f -c git -n '__fish_git_using_command grep' -l exclude-standard -d 'Do not search ignored files specified via the .gitignore mechanism'
 complete -f -c git -n '__fish_git_using_command grep' -l recurse-submodules -d 'Recursively search in each submodule that is active and checked out in the repository'
 complete -f -c git -n '__fish_git_using_command grep' -s a -l text -d 'Process binary files as if they were text'
 complete -f -c git -n '__fish_git_using_command grep' -l textconv -d 'Honor textconv filter settings'

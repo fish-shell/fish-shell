@@ -141,9 +141,9 @@ def escape_fish_cmd(text):
 
 def strip_one_layer(text, char):
     # Strip the text from one layer of a given character
-    if text[-1]==char:
+    if text[-1] == char:
         text = text[:-1]
-    if text[0]==char:
+    if text[0] == char:
         text = text[1:]
     return text
 

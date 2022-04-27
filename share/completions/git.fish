@@ -1386,7 +1386,7 @@ complete -f -c git -n '__fish_git_using_command grep' -s v -l invert-match -d 'S
 complete -f -c git -n '__fish_git_using_command grep' -l full-name -d 'Forces paths to be output relative to the project top directory'
 complete -f -c git -n '__fish_git_using_command grep' -s E -l extended-regexp -d 'Use POSIX extended regexp for patterns'
 complete -f -c git -n '__fish_git_using_command grep' -s G -l basic-regexp -d 'Use POSIX basic regexp for patterns'
-complete -f -c git -n '__fish_git_using_command grep' -s P -l perl-regexp -d 'Use Perl-compatible regular expressions for patterns. Git must be compiled with support for this'
+complete -f -c git -n '__fish_git_using_command grep' -s P -l perl-regexp -d 'Use Perl-compatible regular expressions for patterns.'
 complete -f -c git -n '__fish_git_using_command grep' -s F -l fixed-strings -d 'Don’t interpret pattern as a regex'
 complete -f -c git -n '__fish_git_using_command grep' -s n -l line-number -d 'Prefix the line number to matching lines'
 complete -f -c git -n '__fish_git_using_command grep' -l column -d 'Prefix the 1-indexed byte-offset of the first match from the start of the matching line'
@@ -1398,14 +1398,14 @@ complete -f -c git -n '__fish_git_using_command grep' -s c -l count -d 'Instead 
 complete -f -c git -n '__fish_git_using_command grep' -l no-color -d 'Turn off match highlighting, even when the configuration file gives the default to color output'
 complete -f -c git -n '__fish_git_using_command grep' -l break -d 'Print an empty line between matches from different files'
 complete -f -c git -n '__fish_git_using_command grep' -l heading -d 'Show the filename above the matches in that file instead of at the start of each shown line'
-complete -f -c git -n '__fish_git_using_command grep' -s p -l show-function -d 'Show the preceding line that contains the function name of the match, unless the matching line is a function name itself'
-complete -f -c git -n '__fish_git_using_command grep' -s W -l function-context -d 'Show the surrounding text from the previous line containing a function name up to the one before the next function name'
+complete -f -c git -n '__fish_git_using_command grep' -s p -l show-function -d 'Show the line that contains the function name of the match, unless the match is a function name itself'
+complete -f -c git -n '__fish_git_using_command grep' -s W -l function-context -d 'Show the surrounding text from the line containing a function name up to the one before the next function name'
 complete -f -c git -n '__fish_git_using_command grep' -s e -d 'The next parameter is the pattern'
 complete -f -c git -n '__fish_git_using_command grep' -l and -d 'Combine patterns using and'
 complete -f -c git -n '__fish_git_using_command grep' -l or -d 'Combine patterns using or'
 complete -f -c git -n '__fish_git_using_command grep' -l not -d 'Combine patterns using not'
-complete -f -c git -n '__fish_git_using_command grep' -l all-match -d 'Limit the match to files that have lines to match all of them when giving multiple pattern expressions combined with --or'
-complete -f -c git -n '__fish_git_using_command grep' -s q -l quiet -d 'exit with status 0 when there is a match and with non-zero status when there isn’t instead of outputting matched lines'
+complete -f -c git -n '__fish_git_using_command grep' -l all-match -d 'Only match files that can match all the pattern expressions when giving multiple'
+complete -f -c git -n '__fish_git_using_command grep' -s q -l quiet -d 'just exit with status 0 when there is a match and with non-zero status when there isn’t'
 # TODO options, including max-depth, h, open-files-in-pager, contexts, threads, file
 
 ### init
@@ -1928,8 +1928,8 @@ complete -f -c git -n '__fish_git_using_command revert' -l quit -d 'Forget about
 complete -f -c git -n '__fish_git_using_command revert' -l no-edit -d 'Do not start the commit message editor'
 complete -f -c git -n '__fish_git_using_command revert' -s n -l no-commit -d 'Apply changes to index but don't create a commit'
 complete -f -c git -n '__fish_git_using_command revert' -s s -l signoff -d 'Add a Signed-off-by trailer at the end of the commit message'
-complete -f -c git -n '__fish_git_using_command revert' -l rerere-autoupdate -d 'Allow the rerere mechanism to update the index with the result of auto-conflict resolution if possible'
-complete -f -c git -n '__fish_git_using_command revert' -l no-rerere-autoupdate -d 'Does not allow the rerere mechanism to update the index with the result of auto-conflict resolution if possible'
+complete -f -c git -n '__fish_git_using_command revert' -l rerere-autoupdate -d 'Allow the rerere mechanism to update the index with the result of auto-conflict resolution'
+complete -f -c git -n '__fish_git_using_command revert' -l no-rerere-autoupdate -d 'Does not allow the rerere mechanism to update the index with auto-conflict resolution'
 # TODO options
 
 ### rm

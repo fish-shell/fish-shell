@@ -139,6 +139,14 @@ def escape_fish_cmd(text):
     escaped = text.replace("\\", "\\\\").replace("'", "\\'")
     return "'" + escaped + "'"
 
+def strip_one_layer(text, char):
+    # Strip the text from one layer of a given character
+    if text[-1]==char:
+        text = text[:-1]
+    if text[0]==char:
+        text = text[1:]
+    return text
+
 
 named_colors = {
     "black": "000000",
@@ -1329,8 +1337,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # Remove one layer of single-quotes because escape_fish_cmd adds them back.
             "abbr --add %s %s"
             % (
-                escape_fish_cmd(abbreviation["word"].strip("'")),
-                escape_fish_cmd(abbreviation["phrase"].strip("'")),
+                escape_fish_cmd(strip_one_layer(abbreviation["word"], "'")),
+                escape_fish_cmd(strip_one_layer(abbreviation["phrase"], "'")),
             )
         )
         if err:

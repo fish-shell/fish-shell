@@ -1387,7 +1387,7 @@ complete -f -c git -n '__fish_git_using_command grep' -l full-name -d 'Forces pa
 complete -f -c git -n '__fish_git_using_command grep' -s E -l extended-regexp -d 'Use POSIX extended regexp for patterns'
 complete -f -c git -n '__fish_git_using_command grep' -s G -l basic-regexp -d 'Use POSIX basic regexp for patterns'
 complete -f -c git -n '__fish_git_using_command grep' -s P -l perl-regexp -d 'Use Perl-compatible regular expressions for patterns.'
-complete -f -c git -n '__fish_git_using_command grep' -s F -l fixed-strings -d 'Don’t interpret pattern as a regex'
+complete -f -c git -n '__fish_git_using_command grep' -s F -l fixed-strings -d 'Don\'t interpret pattern as a regex'
 complete -f -c git -n '__fish_git_using_command grep' -s n -l line-number -d 'Prefix the line number to matching lines'
 complete -f -c git -n '__fish_git_using_command grep' -l column -d 'Prefix the 1-indexed byte-offset of the first match from the start of the matching line'
 complete -f -c git -n '__fish_git_using_command grep' -s l -l files-with-matches -d 'Show only the names of files that contain matches'

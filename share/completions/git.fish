@@ -1926,7 +1926,7 @@ complete -f -c git -n '__fish_git_using_command revert' -l abort -d 'Cancel the 
 complete -f -c git -n '__fish_git_using_command revert' -l skip -d 'Skip the current commit and continue with the rest of the sequence'
 complete -f -c git -n '__fish_git_using_command revert' -l quit -d 'Forget about the current operation in progress'
 complete -f -c git -n '__fish_git_using_command revert' -l no-edit -d 'Do not start the commit message editor'
-complete -f -c git -n '__fish_git_using_command revert' -s n -l no-commit -d 'Applies the changes necessary to revert the named commits to your working tree and the index, but does not make the commits'
+complete -f -c git -n '__fish_git_using_command revert' -s n -l no-commit -d 'Apply changes to index but don't create a commit'
 complete -f -c git -n '__fish_git_using_command revert' -s s -l signoff -d 'Add a Signed-off-by trailer at the end of the commit message'
 complete -f -c git -n '__fish_git_using_command revert' -l rerere-autoupdate -d 'Allow the rerere mechanism to update the index with the result of auto-conflict resolution if possible'
 complete -f -c git -n '__fish_git_using_command revert' -l no-rerere-autoupdate -d 'Does not allow the rerere mechanism to update the index with the result of auto-conflict resolution if possible'

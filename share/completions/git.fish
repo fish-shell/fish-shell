@@ -558,25 +558,6 @@ function __fish_git_ranges
     end
 end
 
-function __fish_git_needs_command
-    # Figure out if the current invocation already has a command.
-    set -l cmd (commandline -opc)
-    set -e cmd[1]
-    argparse -s (__fish_git_global_optspecs) -- $cmd 2>/dev/null
-    or return 0
-    # These flags function as commands, effectively.
-    set -q _flag_version; and return 1
-    set -q _flag_html_path; and return 1
-    set -q _flag_man_path; and return 1
-    set -q _flag_info_path; and return 1
-    if set -q argv[1]
-        # Also print the command, so this can be used to figure out what it is.
-        echo $argv[1]
-        return 1
-    end
-    return 0
-end
-
 function __fish_git_config_keys
     # Print already defined config values first
     # Config keys may span multiple lines, so parse using null char
@@ -628,19 +609,12 @@ git config -z --get-regexp 'alias\..*' | while read -lz alias cmdline
     set -g __fish_git_alias_$alias $command $cmdline
 end
 
-function __fish_git_using_command
-    set -l cmd (__fish_git_needs_command)
-    test -z "$cmd"
-    and return 1
-    contains -- $cmd $argv
-    and return 0
+function __fish_git_needs_command
+    $__fish_git_needs_command
+end
 
-    # Check aliases.
-    set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
-    set -q $varname
-    and contains -- $$varname[1][1] $argv
-    and return 0
-    return 1
+function __fish_git_using_command
+    contains $__fish_git_subcommand $argv
 end
 
 function __fish_git_contains_opt
@@ -651,10 +625,8 @@ function __fish_git_contains_opt
 
     # Now check the alias
     argparse s= -- $argv
-    set -l cmd (__fish_git_needs_command)
-    set -l varname __fish_git_alias_(string escape --style=var -- $cmd)
-    if set -q $varname
-        echo -- $$varname | read -lat toks
+    if set -q __fish_git_expanded_alias[1]
+        echo -- $__fish_git_expanded_alias | read -lat toks
         set toks (string replace -r '(-.*)=.*' '' -- $toks)
         for i in $argv
             if contains -- --$i $toks
@@ -2208,3 +2180,29 @@ for file in $PATH/git-*
     complete -c git -f -n "__fish_git_using_command $subcommand" -a "(__fish_git_complete_custom_command $subcommand)"
     set -a __fish_git_custom_commands_completion $subcommand
 end
+
+complete -c git -f -a '(
+    set -g __fish_git_needs_command true
+    set -g __fish_git_subcommand ""
+    set -g __fish_git_expanded_alias
+
+    set -l cmd (commandline -opc)
+    set -e cmd[1]
+    argparse -s (__fish_git_global_optspecs) -- $cmd 2>/dev/null
+    or return
+
+    if set -q argv[1] || set -q _flag_version || set -q _flag_html_path || set -q _flag_man_path || set -q _flag_info_path
+        set __fish_git_needs_command false
+    end
+
+    if set -q argv[1]
+        set -l subcommand $argv[1]
+        # TODO Expand recursive aliases.
+        set -l varname __fish_git_alias_(string escape --style=var -- $subcommand)
+        if set -q $varname
+            set -g __fish_git_expanded_alias $$varname
+            set subcommand $__fish_git_expanded_alias[1]
+        end
+        set -g __fish_git_subcommand "$subcommand"
+    end
+)'

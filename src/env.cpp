@@ -198,18 +198,57 @@ wcstring_list_t null_environment_t::get_names(int flags) const {
     return {};
 }
 
-/// Set up the USER variable.
-static void setup_user(bool force) {
+/// Set up the USER and HOME variable.
+static void setup_user() {
     auto &vars = env_stack_t::globals();
-    if (force || vars.get(L"USER").missing_or_empty()) {
-        struct passwd userinfo;
-        struct passwd *result;
-        char buf[8192];
-        int retval = getpwuid_r(getuid(), &userinfo, buf, sizeof(buf), &result);
+    auto uid = geteuid();
+    auto user_var = vars.get(L"USER");
+    struct passwd userinfo;
+    struct passwd *result;
+    char buf[8192];
+
+    // If we have a $USER, we try to get the passwd entry for the name.
+    // If that has the same UID that we use, we assume the data is correct.
+    if (!user_var.missing_or_empty()) {
+        std::string unam_narrow = wcs2string(user_var->as_string());
+        int retval = getpwnam_r(unam_narrow.c_str(), &userinfo, buf, sizeof(buf), &result);
         if (!retval && result) {
-            const wcstring uname = str2wcstring(userinfo.pw_name);
-            vars.set_one(L"USER", ENV_GLOBAL | ENV_EXPORT, uname);
+            if (result->pw_uid == uid) {
+                // The uid matches but we still might need to set $HOME.
+                if (vars.get(L"HOME").missing_or_empty()) {
+                    if (userinfo.pw_dir) {
+                        const wcstring dir = str2wcstring(userinfo.pw_dir);
+                        vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
+                    } else {
+                        vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+                    }
+                }
+                return;
+            }
         }
+    }
+
+    // Either we didn't have a $USER or it had a different uid.
+    // We need to get the data *again* via the uid.
+    int retval = getpwuid_r(uid, &userinfo, buf, sizeof(buf), &result);
+    if (!retval && result) {
+        const wcstring uname = str2wcstring(userinfo.pw_name);
+        vars.set_one(L"USER", ENV_GLOBAL | ENV_EXPORT, uname);
+        // Only change $HOME if it's empty, so we allow e.g. `HOME=(mktemp -d)`.
+        // This is okay with common `su` and `sudo` because they set $HOME.
+        if (vars.get(L"HOME").missing_or_empty()) {
+            if (userinfo.pw_dir) {
+                const wcstring dir = str2wcstring(userinfo.pw_dir);
+                vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
+            } else {
+                // We cannot get $HOME. This triggers warnings for history and config.fish already,
+                // so it isn't necessary to warn here as well.
+                vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+            }
+        }
+    } else if (vars.get(L"HOME").missing_or_empty()) {
+        // If $USER is empty as well (which we tried to set above), we can't get $HOME.
+        vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
     }
 }
 
@@ -289,52 +328,10 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
         }
     }
 
-    // Some `su`s keep $USER when changing to root.
-    // This leads to issues later on (and e.g. in prompts),
-    // so we work around it by resetting $USER.
-    // TODO: Figure out if that su actually checks if username == "root"(as the man page says) or
-    // UID == 0.
+    // Set $USER, $HOME and $EUID
+    // This involves going to passwd and stuff.
     vars.set_one(L"EUID", ENV_GLOBAL, to_string(static_cast<unsigned long long>(geteuid())));
-    uid_t uid = getuid();
-    setup_user(uid == 0);
-
-    // Set up the HOME variable.
-    // Unlike $USER, it doesn't seem that `su`s pass this along
-    // if the target user is root, unless "--preserve-environment" is used.
-    // Since that is an explicit choice, we should allow it to enable e.g.
-    //     env HOME=(mktemp -d) su --preserve-environment fish
-    //
-    // Note: This needs to be *before* path_get_*, because that uses $HOME!
-    if (vars.get(L"HOME").missing_or_empty()) {
-        auto user_var = vars.get(L"USER");
-        if (!user_var.missing_or_empty()) {
-            std::string unam_narrow = wcs2string(user_var->as_string());
-            struct passwd userinfo;
-            struct passwd *result;
-            char buf[8192];
-            int retval = getpwnam_r(unam_narrow.c_str(), &userinfo, buf, sizeof(buf), &result);
-            if (retval || !result) {
-                // Maybe USER is set but it's bogus. Reset USER from the db and try again.
-                setup_user(true);
-                user_var = vars.get(L"USER");
-                if (!user_var.missing_or_empty()) {
-                    unam_narrow = wcs2string(user_var->as_string());
-                    retval = getpwnam_r(unam_narrow.c_str(), &userinfo, buf, sizeof(buf), &result);
-                }
-            }
-            if (!retval && result && userinfo.pw_dir) {
-                const wcstring dir = str2wcstring(userinfo.pw_dir);
-                vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
-            } else {
-                // We cannot get $HOME. This triggers warnings for history and config.fish already,
-                // so it isn't necessary to warn here as well.
-                vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
-            }
-        } else {
-            // If $USER is empty as well (which we tried to set above), we can't get $HOME.
-            vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
-        }
-    }
+    setup_user();
 
     wcstring user_config_dir;
     path_get_config(user_config_dir);

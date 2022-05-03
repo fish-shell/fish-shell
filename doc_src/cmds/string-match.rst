@@ -9,7 +9,8 @@ Synopsis
 .. synopsis::
 
     string match [-a | --all] [-e | --entire] [-i | --ignore-case]
-                 [-r | --regex] [-n | --index] [-q | --quiet] [-v | --invert]
+                 [-g | --groups-only] [-r | --regex] [-n | --index]
+                 [-q | --quiet] [-v | --invert]
                  PATTERN [STRING ...]
 
 .. END SYNOPSIS

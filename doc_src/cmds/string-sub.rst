@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    string sub [(-s | --start) START] [(-l | --length) LENGTH]
+    string sub [(-s | --start) START] [(-e | --end) END] [(-l | --length) LENGTH]
                [-q | --quiet] [STRING ...]
 
 .. END SYNOPSIS

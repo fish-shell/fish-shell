@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    string collect [-N | --no-trim-newlines] [STRING ...]
+    string collect [-a | --allow-empty] [-N | --no-trim-newlines] [STRING ...]
 
 .. END SYNOPSIS
 

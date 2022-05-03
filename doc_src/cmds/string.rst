@@ -8,14 +8,15 @@ Synopsis
 
 .. synopsis::
 
-    string collect [-N | --no-trim-newlines] [STRING ...]
+    string collect [-a | --allow-empty] [-N | --no-trim-newlines] [STRING ...]
     string escape [-n | --no-quoted] [--style=] [STRING ...]
     string join [-q | --quiet] [-n | --no-empty] SEP [STRING ...]
     string join0 [-q | --quiet] [STRING ...]
     string length [-q | --quiet] [STRING ...]
     string lower [-q | --quiet] [STRING ...]
     string match [-a | --all] [-e | --entire] [-i | --ignore-case]
-                 [-r | --regex] [-n | --index] [-q | --quiet] [-v | --invert]
+                 [-g | --groups-only] [-r | --regex] [-n | --index]
+                 [-q | --quiet] [-v | --invert]
                  PATTERN [STRING ...]
     string pad [-r | --right] [-c | --char CHAR] [-w | --width INTEGER]
                [STRING ...]
@@ -27,7 +28,7 @@ Synopsis
                  [-q | --quiet] [-r | --right] SEP [STRING ...]
     string split0 [-f | --fields] FIELDS [(-m | --max) MAX] [-n | --no-empty]
                   [-q | --quiet] [-r | --right] [STRING ...]
-    string sub [(-s | --start) START] [(-l | --length) LENGTH]
+    string sub [(-s | --start) START] [(-e | --end) END] [(-l | --length) LENGTH]
                [-q | --quiet] [STRING ...]
     string trim [-l | --left] [-r | --right] [(-c | --chars) CHARS]
                 [-q | --quiet] [STRING ...]

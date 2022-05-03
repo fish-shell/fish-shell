@@ -8,9 +8,9 @@ Synopsis
 
 .. synopsis::
 
-    string split [-f | --fields] FIELDS [(-m | --max) MAX] [-n | --no-empty] 
+    string split [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty] 
                  [-q | --quiet] [-r | --right] SEP [STRING ...]
-    string split0 [-f | --fields] FIELDS [(-m | --max) MAX] [-n | --no-empty]
+    string split0 [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty]
                   [-q | --quiet] [-r | --right] [STRING ...]
 
 .. END SYNOPSIS

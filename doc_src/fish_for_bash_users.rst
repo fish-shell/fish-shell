@@ -368,7 +368,7 @@ Fish's blocking constructs look a little different. They all start with a word, 
   end
 
   # (bash allows the word "function",
-  #  but this is an extension as an extension)
+  #  but this is an extension)
 
 Fish does not have an ``until``. Use ``while not`` or ``while !``.
 

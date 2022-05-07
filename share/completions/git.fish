@@ -994,6 +994,7 @@ complete -f -c git -n '__fish_git_using_command show' -l expand-tabs -d 'Perform
 complete -f -c git -n '__fish_git_using_command show' -l no-expand-tabs -d 'Do not perform a tab expansion in the log message'
 complete -f -c git -n '__fish_git_using_command show' -l notes -k -a '(__fish_git_refs)' -d 'Show the notes that annotate the commit'
 complete -f -c git -n '__fish_git_using_command show' -l no-notes -d 'Do not show notes'
+complete -f -c git -n '__fish_git_using_command show' -s s -l no-patch -d 'Suppress diff output'
 complete -f -c git -n '__fish_git_using_command show' -l show-signature -d 'Check the validity of a signed commit object'
 
 

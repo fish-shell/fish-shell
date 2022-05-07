@@ -469,6 +469,10 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                                "executable command.",
                                actual_cmd, interpreter);
                 }
+            } else if (access(actual_cmd, X_OK) == 0) {
+                FLOGF_SAFE(exec,
+                           "Failed to execute process '%s': The file exists and is executable. Check the interpreter or linker?",
+                           actual_cmd);
             } else {
                 FLOGF_SAFE(exec,
                            "Failed to execute process '%s': The file does not exist or could not "

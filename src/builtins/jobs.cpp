@@ -26,18 +26,19 @@ enum {
     JOBS_PRINT_NOTHING,  // print nothing (exit status only)
 };
 
-/// Calculates the cpu usage (in percent) of the specified job.
-static int cpu_use(const job_t *j) {
+/// Calculates the cpu usage (as a fraction of 1) of the specified job.
+/// This may exceed 1 if there are multiple CPUs!
+static double cpu_use(const job_t *j) {
     double u = 0;
     for (const process_ptr_t &p : j->processes) {
         timepoint_t now = timef();
-        unsigned long jiffies = proc_get_jiffies(p->pid);
+        clock_ticks_t jiffies = proc_get_jiffies(p->pid);
         double since = now - p->last_time;
         if (since > 0 && jiffies > p->last_jiffies) {
-            u += (jiffies - p->last_jiffies) / since;
+            u += clock_ticks_to_seconds(jiffies - p->last_jiffies) / since;
         }
     }
-    return u * 1000000;
+    return u;
 }
 
 /// Print information about the specified job.
@@ -64,7 +65,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
             streams.out.append_format(L"%d\t%d\t", j->job_id(), pgid);
 
             if (have_proc_stat()) {
-                streams.out.append_format(L"%d%%\t", cpu_use(j));
+                streams.out.append_format(L"%.0f%%\t", 100. * cpu_use(j));
             }
 
             streams.out.append(j->is_stopped() ? _(L"stopped") : _(L"running"));

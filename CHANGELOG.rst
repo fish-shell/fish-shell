@@ -3,6 +3,7 @@ fish 3.5.0 (not yet released)
 
 Notable improvements and fixes
 ------------------------------
+- ``jobs`` now correctly reports CPU usage as a percentage, instead of as a number of clock ticks (:issue:`8919`).
 
 Deprecations and removed features
 ---------------------------------

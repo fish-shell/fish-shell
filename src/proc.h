@@ -43,6 +43,13 @@ enum class job_control_t : uint8_t {
     none,
 };
 
+/// A number of clock ticks.
+using clock_ticks_t = uint64_t;
+
+/// \return clock ticks in seconds, or 0 on failure.
+/// This uses sysconf(_SC_CLK_TCK) to convert to seconds.
+double clock_ticks_to_seconds(clock_ticks_t ticks);
+
 namespace ast {
 struct statement_t;
 }
@@ -315,7 +322,7 @@ class process_t : noncopyable_t {
     timepoint_t last_time{0};
 
     /// Number of jiffies spent in process at last cpu time check.
-    unsigned long last_jiffies{0};
+    clock_ticks_t last_jiffies{0};
 
    private:
     wcstring_list_t argv_;
@@ -546,7 +553,7 @@ void print_exit_warning_for_jobs(const job_list_t &jobs);
 
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by a given pid. This
 /// function is only available on systems with the procfs file entry 'stat', i.e. Linux.
-unsigned long proc_get_jiffies(pid_t inpid);
+clock_ticks_t proc_get_jiffies(pid_t inpid);
 
 /// Update process time usage for all processes by calling the proc_get_jiffies function for every
 /// process of every job.

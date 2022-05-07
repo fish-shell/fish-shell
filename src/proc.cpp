@@ -734,8 +734,16 @@ bool job_reap(parser_t &parser, bool allow_interactive) {
     return process_clean_after_marking(parser, allow_interactive);
 }
 
+double clock_ticks_to_seconds(clock_ticks_t ticks) {
+    long clock_ticks_per_sec = sysconf(_SC_CLK_TCK);
+    if (clock_ticks_per_sec > 0) {
+        return ticks / static_cast<double>(clock_ticks_per_sec);
+    }
+    return 0;
+}
+
 /// Get the CPU time for the specified process.
-unsigned long proc_get_jiffies(pid_t inpid) {
+clock_ticks_t proc_get_jiffies(pid_t inpid) {
     if (inpid <= 0 || !have_proc_stat()) return 0;
 
     char state;
@@ -754,7 +762,6 @@ unsigned long proc_get_jiffies(pid_t inpid) {
     int fd = open_cloexec(fn, O_RDONLY);
     if (fd < 0) return 0;
 
-    // TODO: replace the use of fscanf() as it is brittle and should never be used.
     FILE *f = fdopen(fd, "r");
     int count = fscanf(f,
                        "%9d %1023s %c %9d %9d %9d %9d %9d %9lu "
@@ -769,7 +776,8 @@ unsigned long proc_get_jiffies(pid_t inpid) {
                        &sigignore, &sigcatch, &wchan, &nswap, &cnswap, &exit_signal, &processor);
     fclose(f);
     if (count < 17) return 0;
-    return utime + stime + cutime + cstime;
+    return clock_ticks_t(utime) + clock_ticks_t(stime) + clock_ticks_t(cutime) +
+           clock_ticks_t(cstime);
 }
 
 /// Update the CPU time for all jobs.
@@ -939,8 +947,7 @@ bool job_t::resume() {
 }
 
 void job_t::continue_job(parser_t &parser) {
-    FLOGF(proc_job_run, L"Run job %d (%ls), %ls, %ls",
-          job_id(), command_wcstr(),
+    FLOGF(proc_job_run, L"Run job %d (%ls), %ls, %ls", job_id(), command_wcstr(),
           is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 

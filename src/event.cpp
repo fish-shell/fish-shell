@@ -97,38 +97,51 @@ static void set_signal_observed(int sig, bool val) {
     }
 }
 
+/// \return true if a handler is "one shot": it fires at most once.
+static bool handler_is_one_shot(const event_handler_t &handler) {
+    switch (handler.desc.type) {
+        case event_type_t::process_exit:
+            return handler.desc.param1.pid != EVENT_ANY_PID;
+        case event_type_t::job_exit:
+            return handler.desc.param1.jobspec.pid != EVENT_ANY_PID;
+        case event_type_t::caller_exit:
+            return true;
+        case event_type_t::signal:
+        case event_type_t::variable:
+        case event_type_t::generic:
+        case event_type_t::any:
+            return false;
+    }
+    DIE("Unreachable");
+}
+
 /// Tests if one event instance matches the definition of an event class.
 /// In case of a match, \p only_once indicates that the event cannot match again by nature.
-static bool handler_matches(const event_handler_t &classv, const event_t &instance,
-                            bool &only_once) {
-    only_once = false;
-    if (classv.desc.type == event_type_t::any) return true;
-    if (classv.desc.type != instance.desc.type) return false;
+static bool handler_matches(const event_handler_t &handler, const event_t &instance) {
+    if (handler.desc.type == event_type_t::any) return true;
+    if (handler.desc.type != instance.desc.type) return false;
 
-    switch (classv.desc.type) {
+    switch (handler.desc.type) {
         case event_type_t::signal: {
-            return classv.desc.param1.signal == instance.desc.param1.signal;
+            return handler.desc.param1.signal == instance.desc.param1.signal;
         }
         case event_type_t::variable: {
-            return instance.desc.str_param1 == classv.desc.str_param1;
+            return instance.desc.str_param1 == handler.desc.str_param1;
         }
         case event_type_t::process_exit: {
-            if (classv.desc.param1.pid == EVENT_ANY_PID) return true;
-            only_once = true;
-            return classv.desc.param1.pid == instance.desc.param1.pid;
+            if (handler.desc.param1.pid == EVENT_ANY_PID) return true;
+            return handler.desc.param1.pid == instance.desc.param1.pid;
         }
         case event_type_t::job_exit: {
-            const auto &jobspec = classv.desc.param1.jobspec;
+            const auto &jobspec = handler.desc.param1.jobspec;
             if (jobspec.pid == EVENT_ANY_PID) return true;
-            only_once = true;
             return jobspec.internal_job_id == instance.desc.param1.jobspec.internal_job_id;
         }
         case event_type_t::caller_exit: {
-            only_once = true;
-            return classv.desc.param1.caller_id == instance.desc.param1.caller_id;
+            return handler.desc.param1.caller_id == instance.desc.param1.caller_id;
         }
         case event_type_t::generic: {
-            return classv.desc.str_param1 == instance.desc.str_param1;
+            return handler.desc.str_param1 == instance.desc.str_param1;
         }
         case event_type_t::any:
         default: {
@@ -199,14 +212,25 @@ void event_add_handler(std::shared_ptr<event_handler_t> eh) {
     s_event_handlers.acquire()->push_back(std::move(eh));
 }
 
-void event_remove_function_handlers(const wcstring &name) {
+// \remove handlers for which \p func returns true.
+template <typename T>
+static void remove_handlers_if(const T &func) {
     auto handlers = s_event_handlers.acquire();
-    auto begin = handlers->begin(), end = handlers->end();
-    handlers->erase(std::remove_if(begin, end,
-                                   [&](const shared_ptr<event_handler_t> &eh) {
-                                       return eh->function_name == name;
-                                   }),
-                    end);
+    auto iter = handlers->begin();
+    while (iter != handlers->end()) {
+        event_handler_t *handler = iter->get();
+        if (func(*handler)) {
+            handler->removed = true;
+            iter = handlers->erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
+void event_remove_function_handlers(const wcstring &name) {
+    remove_handlers_if(
+        [&](const event_handler_t &handler) { return handler.function_name == name; });
 }
 
 event_handler_list_t event_get_function_handlers(const wcstring &name) {
@@ -242,56 +266,20 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
     scoped_push<bool> suppress_trace{&ld.suppress_fish_trace, true};
 
     // Capture the event handlers that match this event.
-    struct firing_handler_t {
-        std::shared_ptr<event_handler_t> handler;
-        bool delete_after_call;
-    };
-    std::vector<firing_handler_t> fire;
+    std::vector<std::shared_ptr<event_handler_t>> fire;
     {
         auto event_handlers = s_event_handlers.acquire();
         for (const auto &handler : *event_handlers) {
-            // Check if this event is a match.
-            bool only_once = false;
-            if (!handler_matches(*handler, event, only_once)) {
-                continue;
+            if (handler_matches(*handler, event)) {
+                fire.push_back(handler);
             }
-
-            // If the nature of the event means it can't be fired more than once, deregister the
-            // event. This also works around a bug where jobs run without job control (no separate
-            // pgrp) cause handlers to run for each subsequent job started without job control
-            // (#7721). We can't erase it here because we check if the event is still extant before
-            // actually calling it below, so we instead push it along with its "delete after
-            // calling" value.
-            fire.push_back(firing_handler_t{handler, only_once});
         }
     }
 
     // Iterate over our list of matching events. Fire the ones that are still present.
-    for (const auto &firing_event : fire) {
-        auto &handler = firing_event.handler;
-        // Only fire if this event is still present.
-        // TODO: this is kind of crazy. We want to support removing (and thereby suppressing) an
-        // event handler from another, but we also don't want to hold the lock across callouts. How
-        // can we make this less silly?
-        {
-            auto event_handlers = s_event_handlers.acquire();
-            if (!contains(*event_handlers, handler)) {
-                continue;
-            }
-
-            // Delete the event before firing it so we don't have to lock and unlock the event
-            // handlers list when handing control off to the handler.
-            if (firing_event.delete_after_call) {
-                FLOGF(event, L"Pruning handler '%ls' before firing", event.desc.str_param1.c_str());
-                for (auto event_handler = event_handlers->begin();
-                     event_handler != event_handlers->end(); ++event_handler) {
-                    if (event_handler->get() == firing_event.handler.get()) {
-                        event_handlers->erase(event_handler);
-                        break;
-                    }
-                }
-            }
-        }
+    for (const auto &handler : fire) {
+        // A previous handlers may have erased this one.
+        if (handler->removed) continue;
 
         // Construct a buffer to evaluate, starting with the function name and then all the
         // arguments.
@@ -311,6 +299,11 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         parser.eval(buffer, io_chain_t());
         parser.pop_block(b);
         parser.set_last_statuses(std::move(prev_statuses));
+    }
+
+    // Remove any one-shot handlers.
+    if (!fire.empty()) {
+        remove_handlers_if(handler_is_one_shot);
     }
 }
 

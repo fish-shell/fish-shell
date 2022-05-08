@@ -89,7 +89,12 @@ struct event_handler_t {
     /// Name of the function to invoke.
     wcstring function_name{};
 
-    explicit event_handler_t(event_type_t t) : desc(t) {}
+    /// A flag set when an event handler is removed from the global list.
+    /// Once set, this is never cleared.
+    bool removed{false};
+
+    explicit event_handler_t(event_type_t t) : desc(std::move(t)) {}
+
     event_handler_t(event_description_t d, wcstring name)
         : desc(std::move(d)), function_name(std::move(name)) {}
 };
@@ -152,7 +157,6 @@ void event_print(io_streams_t &streams, const wcstring &type_filter);
 wcstring event_get_desc(const parser_t &parser, const event_t &e);
 
 /// Fire a generic event with the specified name.
-void event_fire_generic(parser_t &parser, wcstring name,
-                        const wcstring_list_t *args = nullptr);
+void event_fire_generic(parser_t &parser, wcstring name, const wcstring_list_t *args = nullptr);
 
 #endif

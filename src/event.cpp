@@ -33,7 +33,7 @@ class pending_signals_t {
     std::atomic<uint32_t> counter_{0};
 
     /// List of pending signals.
-    std::array<std::atomic<bool>, SIGNAL_COUNT> received_{};
+    std::array<relaxed_atomic_bool_t, SIGNAL_COUNT> received_{};
 
     /// The last counter visible in acquire_pending().
     /// This is not accessed from a signal handler.
@@ -52,7 +52,7 @@ class pending_signals_t {
     void mark(int which) {
         if (which >= 0 && static_cast<size_t>(which) < received_.size()) {
             // Must mark our received first, then pending.
-            received_[which].store(true, std::memory_order_relaxed);
+            received_[which] = true;
             uint32_t count = counter_.load(std::memory_order_relaxed);
             counter_.store(1 + count, std::memory_order_release);
         }
@@ -68,18 +68,14 @@ class pending_signals_t {
             return {};
         }
 
-        // The signal count has changed. Store the new counter and fetch all the signals that are
-        // set.
+        // The signal count has changed. Store the new counter and fetch all set signals.
         *current = count;
         std::bitset<SIGNAL_COUNT> result{};
-        uint32_t bit = 0;
-        for (auto &signal : received_) {
-            bool val = signal.load(std::memory_order_relaxed);
-            if (val) {
-                result.set(bit);
-                signal.store(false, std::memory_order_relaxed);
+        for (size_t i = 0; i < NSIG; i++) {
+            if (received_[i]) {
+                result.set(i);
+                received_[i] = false;
             }
-            bit++;
         }
         return result;
     }

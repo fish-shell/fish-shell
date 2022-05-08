@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "common.h"
-#include "enum_set.h"
 #include "io.h"
 
 /// The process id that is used to match any process id.
@@ -36,11 +35,6 @@ enum class event_type_t {
     caller_exit,
     /// A generic event.
     generic,
-};
-
-template <>
-struct enum_info_t<event_type_t> {
-    static constexpr size_t count = static_cast<size_t>(event_type_t::generic) + 1;
 };
 
 /// Null-terminated list of valid event filter names.
@@ -137,10 +131,6 @@ void event_remove_function_handlers(const wcstring &name);
 
 /// Return all event handlers for the given function.
 event_handler_list_t event_get_function_handlers(const wcstring &name);
-
-/// \return the event types for which handlers are registered.
-/// This can be a performance optimization to avoid emitting events.
-enum_set_t<event_type_t> event_get_handled_types();
 
 /// Returns whether an event listener is registered for the given signal. This is safe to call from
 /// a signal handler.

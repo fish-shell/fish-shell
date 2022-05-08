@@ -4,6 +4,7 @@ fish 3.5.0 (not yet released)
 Notable improvements and fixes
 ------------------------------
 - ``jobs`` now correctly reports CPU usage as a percentage, instead of as a number of clock ticks (:issue:`8919`).
+- ``process-exit`` events now fire when the process exits even if the job has not yet exited, fixing a regression in 3.4.1 (:issue:`8914`).
 
 Deprecations and removed features
 ---------------------------------

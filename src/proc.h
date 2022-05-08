@@ -315,6 +315,9 @@ class process_t : noncopyable_t {
     /// This is only meaningful for external processes.
     bool leads_pgrp{false};
 
+    /// Whether we have generated a proc_exit event.
+    bool posted_proc_exit{false};
+
     /// Reported status value.
     proc_status_t status{};
 

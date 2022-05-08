@@ -456,17 +456,24 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     reap_disowned_pids();
 }
 
-/// Given a job that has completed, generate job_exit, process_exit, and caller_exit events.
-static void generate_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
-    // Generate proc and job exit events, except for jobs originating in event handlers.
+/// Generate process_exit events for any completed processes in \p j.
+static void generate_process_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
+    // Historically we have avoided generating events for jobs from event handlers, as an event
+    // handler may itself produce a new event.
     if (!j->from_event_handler()) {
-        // process_exit events.
-        for (const auto &proc : j->processes) {
-            if (proc->pid > 0) {
-                out_evts->push_back(event_t::process_exit(proc->pid, proc->status.status_value()));
+        for (const auto &p : j->processes) {
+            if (p->pid > 0 && p->completed && !p->posted_proc_exit) {
+                p->posted_proc_exit = true;
+                out_evts->push_back(event_t::process_exit(p->pid, p->status.status_value()));
             }
         }
+    }
+}
 
+/// Given a job that has completed, generate job_exit and caller_exit events.
+static void generate_job_exit_events(const job_ref_t &j, std::vector<event_t> *out_evts) {
+    // Generate proc and job exit events, except for jobs originating in event handlers.
+    if (!j->from_event_handler()) {
         // job_exit events.
         if (j->posts_job_exit_events()) {
             if (auto last_pid = j->get_last_pid()) {
@@ -677,6 +684,11 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         }
     }
 
+    // Generate process_exit events for finished processes.
+    for (const auto &j : parser.jobs()) {
+        generate_process_exit_events(j, &exit_events);
+    }
+
     // Remove completed, processable jobs from our job list.
     for (auto iter = parser.jobs().begin(); iter != parser.jobs().end();) {
         const job_ref_t &j = *iter;
@@ -688,7 +700,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         // Remember it for summary later, generate exit events, maybe save its wait handle if it
         // finished in the background.
         if (job_or_proc_wants_summary(j)) jobs_to_summarize.push_back(j);
-        generate_exit_events(j, &exit_events);
+        generate_job_exit_events(j, &exit_events);
         save_wait_handle_for_completed_job(j, parser.get_wait_handles());
 
         // Remove it.

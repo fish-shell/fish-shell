@@ -157,6 +157,6 @@ void event_print(io_streams_t &streams, const wcstring &type_filter);
 wcstring event_get_desc(const parser_t &parser, const event_t &e);
 
 /// Fire a generic event with the specified name.
-void event_fire_generic(parser_t &parser, wcstring name, const wcstring_list_t *args = nullptr);
+void event_fire_generic(parser_t &parser, wcstring name, wcstring_list_t args = {});
 
 #endif

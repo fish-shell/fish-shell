@@ -600,8 +600,7 @@ int main(int argc, char **argv) {
     event_fire(parser, event_t::process_exit(getpid(), exit_status));
 
     // Trigger any exit handlers.
-    wcstring_list_t event_args = {to_string(exit_status)};
-    event_fire_generic(parser, L"fish_exit", &event_args);
+    event_fire_generic(parser, L"fish_exit", {to_string(exit_status)});
 
     restore_term_mode();
     restore_term_foreground_process_group_for_exit();

@@ -32,6 +32,6 @@ maybe_t<int> builtin_emit(parser_t &parser, io_streams_t &streams, const wchar_t
 
     const wchar_t *eventname = argv[optind];
     wcstring_list_t args(argv + optind + 1, argv + argc);
-    event_fire_generic(parser, eventname, &args);
+    event_fire_generic(parser, eventname, std::move(args));
     return STATUS_CMD_OK;
 }

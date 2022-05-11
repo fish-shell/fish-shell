@@ -170,6 +170,8 @@ The filter options can either be given as multiple options, or comma-separated -
 
 With ``--invert``, the meaning of the filtering is inverted - any path that wouldn't pass (including by not existing) passes, and any path that would pass fails.
 
+When a path starts with ``-``, ``path filter`` will prepend ``./`` to avoid it being interpreted as an option otherwise.
+
 It returns 0 if at least one path passed the filter.
 
 ``path is`` is shorthand for ``path filter -q``, i.e. just checking without producing output, see :ref:`The is subcommand <cmd-path-is>`.

@@ -186,7 +186,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         # Closing a command substitution expands abbreviations
         bind --preset $argv ")" self-insert expand-abbr
         # Ctrl-space inserts space without expanding abbrs
-        bind --preset $argv -k nul 'commandline -i " "'
+        bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
         # Shift-space (CSI u escape sequence) behaves like space because it's easy to mistype.
         bind --preset $argv \e\[32\;2u 'commandline -i " "; commandline -f expand-abbr'.
 

@@ -544,7 +544,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 
     enum { e_unquoted, e_single_quoted, e_double_quoted } mode = e_unquoted;
-    maybe_t<size_t> unclosed_quote_offset;
+    maybe_t<size_t> unclosed_quote_offset = none();
     int bracket_count = 0;
     for (size_t in_pos = 0; in_pos < buff_len; in_pos++) {
         const wchar_t c = buffstr.at(in_pos);

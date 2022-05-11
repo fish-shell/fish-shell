@@ -94,6 +94,17 @@ chmod +x bin/*
 path filter bin argagagji
 # The (hopefully) nonexistent argagagji is filtered implicitly:
 # CHECK: bin
+
+# With --invert, the existing bin is filtered
+path filter --invert bin argagagji
+# CHECK: argagagji
+
+# With --invert and a type, bin fails the type,
+# and argagagji doesn't exist, so both are printed.
+path filter -vf bin argagagji
+# CHECK: bin
+# CHECK: argagagji
+
 path filter --type file bin bin/fish
 # Only fish is a file
 # CHECK: bin/fish

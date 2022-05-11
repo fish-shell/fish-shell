@@ -807,9 +807,8 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
     int n_transformed = 0;
     arg_iterator_t aiter(argv, optind, streams, opts.null_in);
     while (const wcstring *arg = aiter.nextstr()) {
-        if ((!opts.invert || (!opts.have_perm && !opts.have_type)) && filter_path(opts, *arg)) {
+        if ((!opts.have_perm && !opts.have_type) || (filter_path(opts, *arg) != opts.invert)) {
             // If we don't have filters, check if it exists.
-            // (for match this is done by the glob already)
             if (!opts.have_type && !opts.have_perm) {
                 bool ok = !waccess(*arg, F_OK);
                 if (ok == opts.invert) continue;

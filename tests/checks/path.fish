@@ -120,6 +120,11 @@ path normalize -- -/foo -foo/foo
 path normalize -- ../-foo
 # CHECK: ../-foo
 
+# This goes for filter as well
+touch -- -foo
+path filter -f -- -foo
+# CHECK: ./-foo
+
 # We need to remove the rest of the path because we have no idea what its value looks like.
 path resolve bin//sh | string match -r -- 'bin/bash$'
 # The "//" is squashed, and the symlink is resolved.

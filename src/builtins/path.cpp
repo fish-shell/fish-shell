@@ -815,7 +815,15 @@ static int path_filter(parser_t &parser, io_streams_t &streams, int argc, const 
                 if (ok == opts.invert) continue;
             }
 
-            path_out(streams, opts, *arg);
+            // We *know* this is a filename,
+            // and so if it starts with a `-` we *know* it is relative
+            // to $PWD. So we can add `./`.
+            if (!arg->empty() && arg->front() == L'-') {
+                wcstring out = L"./" + *arg;
+                path_out(streams, opts, out);
+            } else {
+                path_out(streams, opts, *arg);
+            }
             n_transformed++;
             if (opts.quiet) return STATUS_CMD_OK;
         }

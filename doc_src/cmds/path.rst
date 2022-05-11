@@ -34,6 +34,8 @@ PATH arguments are taken from the command line unless standard input is connecte
 
 Arguments starting with ``-`` are normally interpreted as switches; ``--`` causes the following arguments not to be treated as switches even if they begin with ``-``. Switches and required arguments are recognized only on the command line.
 
+When a path starts with ``-``, ``path filter`` and ``path normalize`` will prepend ``./`` on output to avoid it being interpreted as an option otherwise, so it's safe to pass path's output to other commands that can handle relative paths.
+
 All subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
 
 All subcommands also accept a ``-Z`` or ``--null-out`` switch, which makes them print output separated with NULL instead of newlines. This is for further processing, e.g. passing to another ``path``, or ``xargs -0``. This is not recommended when the output goes to the terminal or a command substitution.

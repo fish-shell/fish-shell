@@ -87,7 +87,8 @@ Interactive improvements
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
-- The nextd-or-forward-word and prevd-or-backward-word bindings move like forward/backward-word again instead of forward/backward-bigword.
+- The ``nextd-or-forward-word`` and ``prevd-or-backward-word`` bindings move like forward/backward-word again instead of forward/backward-bigword.
+- Keyboard shortcut :kbd:`Alt-S` (previously: toggle ``sudo`` prepended to current commandline contents) now supports ``doas`` on systems without ``sudo`` (:issue:`8942`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

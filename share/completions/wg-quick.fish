@@ -1,7 +1,7 @@
 set -l valid_subcmds up down strip save
 
 function __fish_wg_complete_interfaces
-    LC_ALL=C wg show 2>| string replace -rf 'Unable to access interface (.*): Operation not permitted' '$1'
+    wg show interfaces
 end
 
 complete -c wg-quick -f

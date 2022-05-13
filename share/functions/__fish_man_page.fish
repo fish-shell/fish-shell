@@ -23,6 +23,7 @@ function __fish_man_page
     # the best we can do is to *try* the man page, and assume that `man` will return false if it fails.
     # See #7863.
     if set -q args[2]
+        and not string match -q -- '*/*' $args[2]
         and man "$maincmd-$args[2]" &>/dev/null
         man "$maincmd-$args[2]"
     else

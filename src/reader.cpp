@@ -778,9 +778,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Given that the user is tab-completing a token \p wc whose cursor is at \p pos in the token,
     /// try expanding it as a wildcard, populating \p result with the expanded string.
-    /// \return true to suppress completions (e.g. because we expanded the wildcard, or the user
-    /// cancelled), false to allow normal completions.
-    bool try_expand_wildcard(wcstring wc, size_t pos, wcstring *result);
+    expand_result_t::result_t try_expand_wildcard(wcstring wc, size_t pos, wcstring *result);
 
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
@@ -2788,7 +2786,8 @@ void reader_data_t::apply_commandline_state_changes() {
     }
 }
 
-bool reader_data_t::try_expand_wildcard(wcstring wc, size_t position, wcstring *result) {
+expand_result_t::result_t reader_data_t::try_expand_wildcard(wcstring wc, size_t position,
+                                                             wcstring *result) {
     // Hacky from #8593: only expand if there are wildcards in the "current path component."
     // Find the "current path component" by looking for an unescaped slash before and after
     // our position.
@@ -2805,7 +2804,7 @@ bool reader_data_t::try_expand_wildcard(wcstring wc, size_t position, wcstring *
         comp_end++;
     }
     if (!wildcard_has(wc.c_str() + comp_start, comp_end - comp_start)) {
-        return false;
+        return expand_result_t::wildcard_no_match;
     }
 
     result->clear();
@@ -2818,21 +2817,8 @@ bool reader_data_t::try_expand_wildcard(wcstring wc, size_t position, wcstring *
                          expand_flag::preserve_home_tildes};
     completion_list_t expanded;
     expand_result_t ret = expand_string(std::move(wc), &expanded, flags, ctx);
-    switch (ret.result) {
-        case expand_result_t::error:
-            // This may come about if we exceeded the max number of matches.
-            // Return "success" to suppress normal completions.
-            flash();
-            return true;
-        case expand_result_t::wildcard_no_match:
-            // Allow normal completions.
-            return false;
-        case expand_result_t::cancel:
-            // e.g. the user hit control-C. Suppress normal completions.
-            return true;
-        case expand_result_t::ok:
-            break;
-    }
+    if (ret != expand_result_t::ok) return ret.result;
+
     // Insert all matches (escaped) and a trailing space.
     wcstring joined;
     for (const auto &match : expanded) {
@@ -2848,7 +2834,7 @@ bool reader_data_t::try_expand_wildcard(wcstring wc, size_t position, wcstring *
     }
 
     *result = std::move(joined);
-    return true;
+    return expand_result_t::ok;
 }
 
 void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loop_state_t &rls) {
@@ -2886,13 +2872,25 @@ void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loo
     // Check if we have a wildcard within this string; if so we first attempt to expand the
     // wildcard; if that succeeds we don't then apply user completions (#8593).
     wcstring wc_expanded;
-    if (try_expand_wildcard(wcstring(token_begin, token_end), position_in_token, &wc_expanded)) {
-        rls.comp.clear();
-        rls.complete_did_insert = false;
-        size_t tok_off = static_cast<size_t>(token_begin - buff);
-        size_t tok_len = static_cast<size_t>(token_end - token_begin);
-        el->push_edit(edit_t{tok_off, tok_len, std::move(wc_expanded)});
-        return;
+    switch (
+        try_expand_wildcard(wcstring(token_begin, token_end), position_in_token, &wc_expanded)) {
+        case expand_result_t::error:
+            // This may come about if we exceeded the max number of matches.
+            // Return "success" to suppress normal completions.
+            flash();
+            return;
+        case expand_result_t::wildcard_no_match:
+            break;
+        case expand_result_t::cancel:
+            // e.g. the user hit control-C. Suppress normal completions.
+            return;
+        case expand_result_t::ok:
+            rls.comp.clear();
+            rls.complete_did_insert = false;
+            size_t tok_off = static_cast<size_t>(token_begin - buff);
+            size_t tok_len = static_cast<size_t>(token_end - token_begin);
+            el->push_edit(edit_t{tok_off, tok_len, std::move(wc_expanded)});
+            return;
     }
 
     // Construct a copy of the string from the beginning of the command substitution

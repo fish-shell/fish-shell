@@ -1663,6 +1663,7 @@ complete -c git -n '__fish_git_using_command mergetool' -s O -d 'Process files i
 
 ### mv
 complete -c git -n __fish_git_needs_command -a mv -d 'Move or rename a file, a directory, or a symlink'
+complete -f -c git -n '__fish_git_using_command mv' -a '(git ls-files)'
 complete -f -c git -n '__fish_git_using_command mv' -s f -l force -d 'Force rename/moving even if target exists'
 complete -f -c git -n '__fish_git_using_command mv' -s k -d 'Skip rename/move which can lead to error'
 complete -f -c git -n '__fish_git_using_command mv' -s n -l dry-run -d 'Only show what would happen'

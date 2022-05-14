@@ -103,6 +103,7 @@ Completions
   - tuned-adm (:issue:`8760`)
   - archlinux-java
   - fastboot
+  - apk (:issue:`8951`)
 
 
 Improved terminal support

@@ -76,17 +76,15 @@ Operators
 ``-``
     for subtraction
 ``*`` or ``x``
-    for multiplication
+    for multiplication. ``*`` is the glob character and needs to be quoted or escaped, ``x`` needs to be followed by whitespace or it looks like ``0x`` hexadecimal notation.
 ``/``
     for division
-    (Note that ``*`` is the glob character and needs to be quoted or escaped, ``x`` needs to be followed by whitespace or it looks like ``0x`` hexadecimal notation.)
 ``^``
     for exponentiation
 ``%``
     for modulo
 ``(`` or ``)``
-    for grouping.
-    (These need to be quoted or escaped because ``()`` denotes a command substitution.)
+    for grouping. These need to be quoted or escaped because ``()`` denotes a command substitution.
 
 They are all used in an infix manner - ``5 + 2``, not ``+ 5 2``.
 
@@ -122,7 +120,7 @@ Functions
     arc tangent of two variables
 ``bitand``, ``bitor`` and ``bitxor``
     perform bitwise operations.
-    These will throw away any non-integer parts andd interpret the rest as an int.
+    These will throw away any non-integer parts and interpret the rest as an int.
 ``ceil``
     round number up to nearest integer
 ``cos``
@@ -142,9 +140,9 @@ Functions
 ``log2``
     the base-2 logarithm
 ``max``
-    returns the larger of two numbers
+    returns the largest of the given numbers - this takes an arbitrary number of arguments (but at least one)
 ``min``
-    returns the smaller of two numbers
+    returns the smallest of the given numbers - this takes an arbitrary number of arguments (but at least one)
 ``ncr``
     "from n choose r" combination function - how many subsets of size r can be taken from n (order doesn't matter)
 ``npr``
@@ -192,6 +190,8 @@ Examples
 ``math --base=hex 192`` prints ``0xc0``.
 
 ``math 'ncr(49,6)'`` prints 13983816 - that's the number of possible picks in 6-from-49 lotto.
+
+``math max 5,2,3,1`` prints 5.
 
 Compatibility notes
 -------------------

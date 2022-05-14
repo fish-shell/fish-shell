@@ -1554,7 +1554,7 @@ complete -c git -n '__fish_git_using_command ls-files' -s d -l deleted -d 'Show 
 complete -c git -n '__fish_git_using_command ls-files' -s m -l modified -d 'Show modified files in the output'
 complete -c git -n '__fish_git_using_command ls-files' -s o -l others -d 'Show other (i.e. untracked) files in the output'
 complete -c git -n '__fish_git_using_command ls-files' -s i -l ignored -d 'Show only ignored files in the output'
-complete -c git -n '__fish_git_using_command ls-files' -s s -l staged -d "Show staged contents' mode bits, object name and stage number in the output"
+complete -c git -n '__fish_git_using_command ls-files' -s s -l stage -d "Show staged contents' mode bits, object name and stage number in the output"
 complete -c git -n '__fish_git_using_command ls-files' -l directory -d 'If a whole directory is classified as "other", show just its name'
 complete -c git -n '__fish_git_using_command ls-files' -l no-empty-directory -d 'Do not list empty directories'
 complete -c git -n '__fish_git_using_command ls-files' -s u -l unmerged -d 'Show unmerged files in the output'

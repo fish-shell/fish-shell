@@ -110,6 +110,9 @@ maybe_t<int> builtin_cd(parser_t &parser, io_streams_t &streams, const wchar_t *
     } else if (!broken_symlink.empty()) {
         streams.err.append_format(_(L"%ls: '%ls' is a broken symbolic link to '%ls'\n"), cmd,
                                   broken_symlink.c_str(), broken_symlink_target.c_str());
+    } else if (best_errno == ELOOP) {
+        streams.err.append_format(_(L"%ls: Too many levels of symbolic links: '%ls'\n"), cmd,
+                                  dir_in.c_str());
     } else if (best_errno == ENOENT) {
         streams.err.append_format(_(L"%ls: The directory '%ls' does not exist\n"), cmd,
                                   dir_in.c_str());

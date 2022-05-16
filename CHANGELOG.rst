@@ -120,6 +120,7 @@ For distributors
   subdirectories ``fish/vendor_completions.d``, ``fish/vendor_functions.d``, and
   ``fish/vendor_conf.d`` (respectively) within ``XDG_DATA_HOME`` (or ``~/.local/share``
   if not defined) (:issue:`8887`).
+
 --------------
 
 fish 3.4.1 (released March 25, 2022)

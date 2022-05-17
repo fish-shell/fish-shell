@@ -60,5 +60,5 @@ PATH=$tmpdir/{bin,etc,link,sbin} fish_add_path -nPpm $tmpdir/{link,sbin} | strin
 
 # See that trying to add a path twice doesn't duplicate it
 PATH=$tmpdir/{bin,etc,link,sbin} fish_add_path -nPpm $tmpdir/sbin{,} | string replace -a $tmpdir ''
-# CHECK: set -g PATH /sbin /link /bin /etc
+# CHECK: set -g PATH /sbin /bin /etc /link
 exit 0

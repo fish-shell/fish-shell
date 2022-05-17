@@ -58,11 +58,11 @@ function fish_add_path --description "Add paths to the PATH"
 
         if set -l ind (contains -i -- $p $$var)
             # In move-mode, we remove it from its current position and add it back.
-            if set -q _flag_move
+            if set -q _flag_move; and not contains -- $p $newpaths
                 set -a indexes $ind
                 set -a newpaths $p
             end
-        else
+        else if not contains -- $p $newpaths
             # Without move, we only add it if it's not in.
             set -a newpaths $p
         end

@@ -60,3 +60,25 @@ echo empty block eval: $status # 0
 source /banana/\t/foo
 # CHECKERR: source: Error encountered while sourcing file '/banana/\t/foo':
 # CHECKERR: source: No such file or directory
+
+# See that eval can't be defined as a function
+function eval
+    builtin eval $argv
+end
+# CHECKERR: checks/eval.fish (line {{\d+}}): function: eval: cannot use reserved keyword as function name
+# CHECKERR: function eval
+# CHECKERR: ^
+
+
+function evil --no-scope-shadowing
+    eval $argv
+end
+
+# And this is why we do this: `eval` *can't* be cleanly shadowed with a function,
+# because that would always introduce a new block or at the very least clobber $argv.
+eval set -l argv this works
+echo $argv
+# CHECK: this works
+evil set -l argv this does not
+echo $argv
+# CHECK: this works

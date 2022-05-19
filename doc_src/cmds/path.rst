@@ -277,7 +277,7 @@ Examples
 
 ``path resolve`` returns the normalized, physical and absolute versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components. Then it turns that path into the absolute path starting from the filesystem root "/".
 
-It is similar to ``realpath``, as it creates the "real", canonical version of the path. However, for nonexistent paths it will resolve as far as it can and normalize the nonexistent part.
+It is similar to ``realpath``, as it creates the "real", canonical version of the path. However, for paths that can't be resolved, e.g. if they don't exist or form a symlink loop, it will resolve as far as it can and normalize the rest.
 
 It returns 0 if any normalization or resolution was done, i.e. any given path wasn't in canonical form.
 

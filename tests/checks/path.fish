@@ -184,3 +184,17 @@ path sort --unique --what=basename {def,abc}/{456,123,789} def/{abc,def,0} abc/{
 # CHECK: abc/foo
 
 
+
+# Symlink loop.
+# It goes brrr.
+ln -s target link
+ln -s link target
+
+test (path resolve target) = (pwd -P)/target
+and echo target resolves to target
+# CHECK: target resolves to target
+
+test (path resolve link) = (pwd -P)/link
+and echo link resolves to link
+# CHECK: link resolves to link
+

@@ -38,7 +38,7 @@ When a path starts with ``-``, ``path filter`` and ``path normalize`` will prepe
 
 All subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status. In this case these commands will quit early, without reading all of the available input.
 
-All subcommands also accept a ``-Z`` or ``--null-out`` switch, which makes them print output separated with NULL instead of newlines. This is for further processing, e.g. passing to another ``path``, or ``xargs -0``. This is not recommended when the output goes to the terminal or a command substitution.
+All subcommands also accept a ``-Z`` or ``--null-out`` switch, which makes them print output separated with NUL instead of newlines. This is for further processing, e.g. passing to another ``path``, or ``xargs -0``. This is not recommended when the output goes to the terminal or a command substitution.
 
 All subcommands also accept a ``-z`` or ``--null-in`` switch, which makes them accept arguments from stdin separated with NULL-bytes. Since Unix paths can't contain NULL, that makes it possible to handle all possible paths and read input from e.g. ``find -print0``. If arguments are given on the commandline this has no effect. This should mostly be unnecessary since ``path`` automatically starts splitting on NULL if one appears in the first PATH_MAX bytes, PATH_MAX being the operating system's maximum length for a path plus a NULL byte.
 

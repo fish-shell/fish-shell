@@ -691,9 +691,7 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
                     real = normalize_path(*real, false);
                     break;
                 }
-                rest = wbasename(next);
-                rest += L'/';
-                rest += rest;
+                rest = wbasename(next) + L'/' + rest;
             }
             if (!real) {
                 continue;

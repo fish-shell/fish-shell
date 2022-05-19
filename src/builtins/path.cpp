@@ -14,6 +14,8 @@
 #include "../common.h"
 #include "../fallback.h"  // IWYU pragma: keep
 #include "../io.h"
+#include "../parser.h"
+#include "../path.h"
 #include "../util.h"
 #include "../wcstringutil.h"
 #include "../wgetopt.h"
@@ -676,7 +678,8 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
             wcstring next = *arg;
             // First add $PWD if we're relative
             if (!next.empty() && next[0] != L'/') {
-                next = wgetcwd() + L"/" + next;
+                // Note pwd can have symlinks, but we are about to resolve it anyway.
+                next = path_apply_working_directory(*arg, parser.vars().get_pwd_slash());
             }
             auto rest = wbasename(next);
             while(!next.empty() && next != L"/") {

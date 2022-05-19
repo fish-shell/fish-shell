@@ -21,7 +21,7 @@ Synopsis
     path resolve GENERAL_OPTIONS [PATH...]
     path change-extension GENERAL_OPTIONS EXTENSION [PATH...]
     path sort GENERAL_OPTIONS [(-v | --invert)] \
-        [-u | --unique] [--what=basename|dirname|path] [([PATH...]
+        [-u | --unique] [--key=basename|dirname|path] [([PATH...]
 
     GENERAL_OPTIONS := [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)]
 
@@ -346,14 +346,14 @@ Examples
 
     path sort [(-z | --null-in)] [(-Z | --null-out)] \
         [(-q | --quiet)] [(-v | --invert)] \
-        [--what=basename|dirname|path] [([PATH...]
+        [--key=basename|dirname|path] [([PATH...]
 
 
 ``path sort`` returns the given paths in sorted order. They are sorted in the same order as globs - alphabetically, but with runs of numerical digits compared numerically.
 
 With ``--invert`` or ``-v`` the sort is reversed.
 
-With ``--what=`` only the given path of the path is compared, e.g. ``--what=dirname`` causes only the dirname to be compared, ``--what=basename`` only the basename and ``--what=path`` causes the entire path to be compared (this is the default).
+With ``--key=`` only the given path of the path is compared, e.g. ``--key=dirname`` causes only the dirname to be compared, ``--key=basename`` only the basename and ``--key=path`` causes the entire path to be compared (this is the default).
 
 With ``--unique`` or ``-u`` the sort is deduplicated, meaning only the first of a run that have the same key is kept. So if you are sorting by basename, then only the first of each basename is used.
 
@@ -374,7 +374,7 @@ Examples
    10-foo
    2-bar
 
-   >_ path sort --unique --what=basename $fish_function_path/*.fish
+   >_ path sort --unique --key=basename $fish_function_path/*.fish
    # prints a list of all function files fish would use, sorted by name.
 
 

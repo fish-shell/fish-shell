@@ -158,11 +158,11 @@ struct options_t {  //!OCLINT(too many fields)
     bool perm_valid = false;
     bool type_valid = false;
     bool invert_valid = false;
-    bool what_valid = false;
+    bool key_valid = false;
     bool unique_valid = false;
     bool unique = false;
-    bool have_what = false;
-    const wchar_t *what = nullptr;
+    bool have_key = false;
+    const wchar_t *key = nullptr;
 
     bool null_in = false;
     bool null_out = false;
@@ -362,13 +362,13 @@ static int handle_flag_u(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
-static int handle_flag_what(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+static int handle_flag_key(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     UNUSED(argv);
     UNUSED(parser);
     UNUSED(streams);
-    opts->have_what = true;
-    opts->what = w.woptarg;
+    opts->have_key = true;
+    opts->key = w.woptarg;
     return STATUS_CMD_OK;
 }
 
@@ -402,7 +402,7 @@ static const struct woption long_options[] = {
                                               {L"type", required_argument, nullptr, 't'},
                                               {L"invert", required_argument, nullptr, 'v'},
                                               {L"unique", no_argument, nullptr, 'u'},
-                                              {L"what", required_argument, nullptr, 1},
+                                              {L"key", required_argument, nullptr, 1},
                                               {}};
 
 static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function = {
@@ -413,7 +413,7 @@ static const std::unordered_map<char, decltype(*handle_flag_q)> flag_to_function
     {'x', handle_flag_x}, {'f', handle_flag_f},
     {'l', handle_flag_l}, {'d', handle_flag_d},
     {'l', handle_flag_l}, {'d', handle_flag_d},
-    {'u', handle_flag_u}, {1, handle_flag_what},
+    {'u', handle_flag_u}, {1, handle_flag_key},
 };
 
 /// Parse the arguments for flags recognized by a specific string subcommand.
@@ -719,7 +719,7 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
 static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
     opts.invert_valid = true;
-    opts.what_valid = true;
+    opts.key_valid = true;
     opts.unique_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
@@ -728,18 +728,18 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
     auto func = +[] (const wcstring &x) {
         return wbasename(x);
     };
-    if (opts.have_what) {
-        if (std::wcscmp(opts.what, L"basename") == 0) {
+    if (opts.have_key) {
+        if (std::wcscmp(opts.key, L"basename") == 0) {
             // Do nothing, this is the default
-        } else if (std::wcscmp(opts.what, L"dirname") == 0) {
+        } else if (std::wcscmp(opts.key, L"dirname") == 0) {
             func = +[] (const wcstring &x) {
                 return wdirname(x);
             };
-        } else if (std::wcscmp(opts.what, L"path") == 0) {
-            // Act as if --what hadn't been given.
-            opts.have_what = false;
+        } else if (std::wcscmp(opts.key, L"path") == 0) {
+            // Act as if --key hadn't been given.
+            opts.have_key = false;
         } else {
-            path_error(streams, _(L"%ls: Invalid sort key '%ls'\n"), argv[0], opts.what);
+            path_error(streams, _(L"%ls: Invalid sort key '%ls'\n"), argv[0], opts.key);
             return STATUS_INVALID_ARGS;
         }
     }
@@ -750,7 +750,7 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
         list.push_back(*arg);
     }
 
-    if (opts.have_what) {
+    if (opts.have_key) {
         // Keep a map to avoid repeated func calls and to keep things alive.
         std::map<wcstring, wcstring> funced;
         for (const auto &arg : list) {
@@ -774,7 +774,7 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
                        list.end());
         }
     } else {
-        // Without --what, we just sort by the entire path,
+        // Without --key, we just sort by the entire path,
         // so we have no need to transform and such.
         std::stable_sort(list.begin(), list.end(),
                   [&](const wcstring &a, const wcstring &b) {

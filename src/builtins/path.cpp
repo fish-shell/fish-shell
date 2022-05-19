@@ -724,14 +724,14 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
     if (retval != STATUS_CMD_OK) return retval;
 
     auto func = +[] (const wcstring &x) {
-        return wbasename(x.c_str());
+        return wbasename(x);
     };
     if (opts.have_what) {
         if (std::wcscmp(opts.what, L"basename") == 0) {
             // Do nothing, this is the default
         } else if (std::wcscmp(opts.what, L"dirname") == 0) {
             func = +[] (const wcstring &x) {
-                return wdirname(x.c_str());
+                return wdirname(x);
             };
         } else if (std::wcscmp(opts.what, L"path") == 0) {
             // Act as if --what hadn't been given.

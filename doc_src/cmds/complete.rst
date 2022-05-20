@@ -61,7 +61,7 @@ The following options are available:
     Causes the specified command to inherit completions from *WRAPPED_COMMAND* (see below for details).
 
 **-n** or **--condition** *CONDITION*
-    This completion should only be used if the *CONDITION* (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases.
+    This completion should only be used if the *CONDITION* (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases. If multiple conditions are specified, fish will try them in the order they are specified until one fails or all succeeded.
 
 **-C** or **--do-complete** *STRING*
     Makes ``complete`` try to find all possible completions for the specified string. If there is no *STRING*, the current commandline is used instead.

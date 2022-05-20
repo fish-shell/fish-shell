@@ -230,7 +230,7 @@ void completions_sort_and_prioritize(completion_list_t *comps,
 /// \param flags A set of completion flags
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, completion_mode_t result_mode,
-                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc, int flags);
+                  wcstring_list_t condition, const wchar_t *comp, const wchar_t *desc, int flags);
 
 /// Remove a previously defined completion.
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,

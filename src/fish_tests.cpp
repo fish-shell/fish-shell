@@ -3345,7 +3345,7 @@ static void test_complete() {
     // Trailing spaces (#1261).
     completion_mode_t no_files{};
     no_files.no_files = true;
-    complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, no_files, nullptr, L"qux",
+    complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, no_files, {}, L"qux",
                  nullptr, COMPLETE_AUTO_SPACE);
     completions = do_complete(L"foobarbaz ", {});
     do_test(completions.size() == 1);

@@ -466,3 +466,36 @@ complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
 
 complete -c thing -x -F
 # CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'
+# Multiple conditions
+complete -f -c shot
+complete -fc shot -n 'test (count (commandline -opc) -eq 1' -n 'test (commandline -opc)[-1] = shot' -a 'through'
+# CHECKERR: complete: Condition 'test (count (commandline -opc) -eq 1' contained a syntax error
+# CHECKERR: complete: Unexpected end of string, expecting ')'
+# CHECKERR: test (count (commandline -opc) -eq 1
+# CHECKERR: ^
+complete -fc shot -n 'test (count (commandline -opc)) -eq 1' -n 'test (commandline -opc)[-1] = shot' -a 'through'
+complete -fc shot -n 'test (count (commandline -opc)) -eq 2' -n 'test (commandline -opc)[-1] = through' -a 'the'
+complete -fc shot -n 'test (count (commandline -opc)) -eq 3' -n 'test (commandline -opc)[-1] = the' -a 'heart'
+complete -fc shot -n 'test (count (commandline -opc)) -eq 4' -n 'test (commandline -opc)[-1] = heart' -a 'and'
+complete -fc shot -n 'test (count (commandline -opc)) -eq 5' -n 'test (commandline -opc)[-1] = and' -a "you\'re"
+complete -fc shot -n 'test (count (commandline -opc)) -eq 6' -n 'test (commandline -opc)[-1] = "you\'re"' -a 'to'
+complete -fc shot -n 'test (count (commandline -opc)) -eq 7' -n 'test (commandline -opc)[-1] = to' -a 'blame'
+
+complete -C"shot "
+# CHECK: through
+complete -C"shot through "
+# CHECK: the
+
+# See that conditions after a failing one aren't executed.
+set -g oops 0
+complete -fc oooops
+complete -fc oooops -n true -n true -n true -n 'false' -n 'set -g oops 1' -a oops
+complete -C'oooops '
+echo $oops
+# CHECK: 0
+
+complete -fc oooops -n 'true' -n 'set -g oops 1' -a oops
+complete -C'oooops '
+# CHECK: oops
+echo $oops
+# CHECK: 1

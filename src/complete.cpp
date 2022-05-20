@@ -98,8 +98,8 @@ struct complete_entry_opt_t {
     wcstring comp;
     // Description of the completion.
     wcstring desc;
-    // Condition under which to use the option.
-    wcstring condition;
+    // Conditions under which to use the option.
+    wcstring_list_t condition;
     // Determines how completions should be performed on the argument after the switch.
     completion_mode_t result_mode;
     // Completion flags.
@@ -404,6 +404,7 @@ class completer_t {
     bool complete_variable(const wcstring &str, size_t start_offset);
 
     bool condition_test(const wcstring &condition);
+    bool condition_test(const wcstring_list_t &conditions);
 
     void complete_strings(const wcstring &wc_escaped, const description_func_t &desc_func,
                           const completion_list_t &possible_comp, complete_flags_t flags);
@@ -497,6 +498,13 @@ bool completer_t::condition_test(const wcstring &condition) {
         test_res = cached_entry->second;
     }
     return test_res;
+}
+
+bool completer_t::condition_test(const wcstring_list_t &conditions) {
+    for (const auto &c : conditions) {
+        if (!condition_test(c)) return false;
+    }
+    return true;
 }
 
 /// Locate the specified entry. Create it if it doesn't exist. Must be called while locked.
@@ -1725,7 +1733,7 @@ void append_completion(completion_list_t *completions, wcstring comp, wcstring d
 
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, completion_mode_t result_mode,
-                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
+                  wcstring_list_t condition, const wchar_t *comp, const wchar_t *desc,
                   complete_flags_t flags) {
     assert(cmd && "Null command");
     // option should be empty iff the option type is arguments only.
@@ -1742,7 +1750,7 @@ void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
     opt.result_mode = result_mode;
 
     if (comp) opt.comp = comp;
-    if (condition) opt.condition = condition;
+    opt.condition = std::move(condition);
     if (desc) opt.desc = desc;
     opt.flags = flags;
 
@@ -1841,7 +1849,9 @@ static wcstring completion2string(const complete_entry_opt_t &o, const wcstring 
 
     append_switch(out, L'd', C_(o.desc));
     append_switch(out, L'a', o.comp);
-    append_switch(out, L'n', o.condition);
+    for (const auto &c : o.condition) {
+        append_switch(out, L'n', c);
+    }
     out.append(L"\n");
     return out;
 }

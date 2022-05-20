@@ -903,8 +903,8 @@ complete -f -c git -n '__fish_git_using_command fetch pull' -l set-upstream -d '
 #### fetch
 complete -f -c git -n __fish_git_needs_command -a fetch -d 'Download objects and refs from another repository'
 # Suggest "repository", then "refspec" - this also applies to e.g. push/pull
-complete -f -c git -n '__fish_git_using_command fetch; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d Remote
-complete -f -c git -n '__fish_git_using_command fetch; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
+complete -f -c git -n '__fish_git_using_command fetch' -n 'not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d Remote
+complete -f -c git -n '__fish_git_using_command fetch' -n '__fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
 complete -f -c git -n '__fish_git_using_command fetch' -s q -l quiet -d 'Be more quiet'
 complete -f -c git -n '__fish_git_using_command fetch' -s v -l verbose -d 'Be more verbose'
 complete -f -c git -n '__fish_git_using_command fetch' -s a -l append -d 'Append to .git/FETCH_HEAD instead of overwriting'
@@ -951,40 +951,40 @@ complete -c git -n '__fish_git_using_command filter-branch' -s f -l force -d 'Fi
 ### remote
 set -l remotecommands add rm remove show prune update rename set-head set-url set-branches get-url
 complete -f -c git -n __fish_git_needs_command -a remote -d 'Manage set of tracked repositories'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from $remotecommands" -a '(__fish_git_remotes)'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -s v -l verbose -d 'Be verbose'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a add -d 'Adds a new remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a rm -d 'Removes a remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a remove -d 'Removes a remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a show -d 'Shows a remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a prune -d 'Deletes all stale tracking branches'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a update -d 'Fetches updates'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a rename -d 'Renames a remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a set-head -d 'Sets the default branch for a remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a set-url -d 'Changes URLs for a remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a get-url -d 'Retrieves URLs for a remote'
-complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a set-branches -d 'Changes the list of branches tracked by a remote'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -s f -d 'Once the remote information is set up git fetch <name> is run'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -l tags -d 'Import every tag from a remote with git fetch <name>'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -l no-tags -d "Don't import tags from a remote with git fetch <name>"
-complete -f -c git -n '__fish_git_using_command remote; and __fish_seen_subcommand_from remove' -xa '(__fish_git_remotes)'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-branches" -l add -d 'Add to the list of currently tracked branches instead of replacing it'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l push -d 'Manipulate push URLs instead of fetch URLs'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l add -d 'Add new URL instead of changing the existing URLs'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l delete -d 'Remove URLs that match specified URL'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from get-url" -l push -d 'Query push URLs rather than fetch URLs'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from get-url" -l all -d 'All URLs for the remote will be listed'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from show" -s n -d 'Remote heads are not queried, cached information is used instead'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from prune" -l dry-run -d 'Report what will be pruned but do not actually prune it'
-complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from update" -l prune -d 'Prune all remotes that are updated'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from $remotecommands" -a '(__fish_git_remotes)'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -s v -l verbose -d 'Be verbose'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a add -d 'Adds a new remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a rm -d 'Removes a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a remove -d 'Removes a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a show -d 'Shows a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a prune -d 'Deletes all stale tracking branches'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a update -d 'Fetches updates'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a rename -d 'Renames a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a set-head -d 'Sets the default branch for a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a set-url -d 'Changes URLs for a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a get-url -d 'Retrieves URLs for a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "not __fish_seen_subcommand_from $remotecommands" -a set-branches -d 'Changes the list of branches tracked by a remote'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from add " -s f -d 'Once the remote information is set up git fetch <name> is run'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from add " -l tags -d 'Import every tag from a remote with git fetch <name>'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from add " -l no-tags -d "Don't import tags from a remote with git fetch <name>"
+complete -f -c git -n '__fish_git_using_command remote' -n '__fish_seen_subcommand_from remove' -xa '(__fish_git_remotes)'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from set-branches" -l add -d 'Add to the list of currently tracked branches instead of replacing it'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from set-url" -l push -d 'Manipulate push URLs instead of fetch URLs'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from set-url" -l add -d 'Add new URL instead of changing the existing URLs'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from set-url" -l delete -d 'Remove URLs that match specified URL'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from get-url" -l push -d 'Query push URLs rather than fetch URLs'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from get-url" -l all -d 'All URLs for the remote will be listed'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from show" -s n -d 'Remote heads are not queried, cached information is used instead'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from prune" -l dry-run -d 'Report what will be pruned but do not actually prune it'
+complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcommand_from update" -l prune -d 'Prune all remotes that are updated'
 
 ### show
 complete -f -c git -n __fish_git_needs_command -a show -d 'Shows the last commit of a branch'
-complete -f -c git -n '__fish_git_using_command show; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command show; and not contains -- -- (commandline -opc)' -ka '(__fish_git_tags)' -d Tag
-complete -f -c git -n '__fish_git_using_command show; and not contains -- -- (commandline -opc)' -ka '(__fish_git_commits)'
-complete -f -c git -n '__fish_git_needs_rev_files; and not contains -- -- (commandline -opc)' -xa '(__fish_git_complete_rev_files)'
-complete -F -c git -n '__fish_git_using_command show; and contains -- -- (commandline -opc)'
+complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_needs_rev_files' -n 'not contains -- -- (commandline -opc)' -xa '(__fish_git_complete_rev_files)'
+complete -F -c git -n '__fish_git_using_command show' -n 'contains -- -- (commandline -opc)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
 complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'
 complete -f -c git -n '__fish_git_using_command show' -l no-abbrev-commit -d 'Show the full 40-byte hexadecimal commit object name'
@@ -1065,15 +1065,15 @@ complete -f -c git -n '__fish_git_using_command am' -l quit -d 'Abort without re
 complete -c git -n '__fish_git_using_command am' -l show-current-patch -a 'diff raw' -d 'Show message at which patch failures occured'
 
 ### checkout
-complete -F -c git -n '__fish_git_using_command checkout; and contains -- -- (commandline -opc)'
+complete -F -c git -n '__fish_git_using_command checkout' -n 'contains -- -- (commandline -opc)'
 complete -f -c git -n __fish_git_needs_command -a checkout -d 'Checkout and switch to a branch'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_files modified deleted modified-staged-deleted)'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_recent_commits --all)'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_tags)' -d Tag
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_heads)' -d Head
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_local_branches)'
+complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_recent_commits --all)'
+complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_tags)' -d Tag
+complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
+complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_heads)' -d Head
+complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_local_branches)'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'
@@ -1094,7 +1094,7 @@ complete -f -c git -n '__fish_git_using_command apply' -s 3 -l 3way -d 'Attempt 
 complete -F -c git -n '__fish_git_using_command apply' -l build-fake-ancestor -d 'Build a temporary index containing these blobs'
 complete -f -c git -n '__fish_git_using_command apply' -s R -l reverse -d 'Apply the patch in reverse'
 complete -f -c git -n '__fish_git_using_command apply' -l reject -d 'Leave rejected hunks in *.rej files'
-complete -f -c git -n '__fish_git_using_command apply; and __fish_git_contains_opt numstat' -s z -d 'Do not munge pathnames'
+complete -f -c git -n '__fish_git_using_command apply' -n '__fish_git_contains_opt numstat' -s z -d 'Do not munge pathnames'
 complete -x -c git -n '__fish_git_using_command apply am' -s p -d 'Remove n leading path components'
 complete -x -c git -n '__fish_git_using_command apply am' -s C -d 'Ensure n that lines of surrounding context match'
 complete -f -c git -n '__fish_git_using_command apply' -l unidiff-zero -d 'Do not break on diffs generated using --unified=0'
@@ -1121,7 +1121,7 @@ complete -f -c git -n '__fish_git_using_command archive' -l worktree-attributes 
 
 ### bisect
 complete -f -c git -n __fish_git_needs_command -a bisect -d 'Find the change that introduced a bug by binary search'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_prev_arg_in bisect' -xa "
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_prev_arg_in bisect' -xa "
 start\t'Start a new bisect session'
 bad\t'Mark a commit as bad'
 new\t'Mark a commit as new'
@@ -1136,19 +1136,19 @@ log\t'Record a bisect log file'
 run\t'Bisect automaically with the given command as discriminator'
 help\t'Print a synopsis of all commands'
 "
-complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --' -F
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l term-new -l term-bad -x -d 'Use another term instead of new/bad'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l term-old -l term-good -x -d 'Use another term instead of old/good'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l no-checkout -d 'Do not checkout tree, only update BISECT_HEAD'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start' -l first-parent -d 'On merge commits, follow only the first parent commit'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from start; and not contains -- -- (commandline -opc)' -a '(__fish_git_refs)'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from bad new good old' -a '(__fish_git_refs)'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from terms' -l --term-good -d 'Print the term for the old state'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from terms' -l --term-bad -d 'Print the term for the new state'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from skip' -a '(__fish_git_ranges)'
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from reset' -a '(__fish_git_refs)'
-complete -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from replay' -F
-complete -f -c git -n '__fish_git_using_command bisect; and __fish_seen_subcommand_from run' -xa '(__fish_complete_subcommand --fcs-skip=3)'
+complete -c git -n '__fish_git_using_command bisect' -n '__fish_seen_argument --' -F
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from start' -l term-new -l term-bad -x -d 'Use another term instead of new/bad'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from start' -l term-old -l term-good -x -d 'Use another term instead of old/good'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from start' -l no-checkout -d 'Do not checkout tree, only update BISECT_HEAD'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from start' -l first-parent -d 'On merge commits, follow only the first parent commit'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from start' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_refs)'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from bad new good old' -a '(__fish_git_refs)'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from terms' -l --term-good -d 'Print the term for the old state'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from terms' -l --term-bad -d 'Print the term for the new state'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from skip' -a '(__fish_git_ranges)'
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from reset' -a '(__fish_git_refs)'
+complete -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from replay' -F
+complete -f -c git -n '__fish_git_using_command bisect' -n '__fish_seen_subcommand_from run' -xa '(__fish_complete_subcommand --fcs-skip=3)'
 
 ### branch
 complete -f -c git -n __fish_git_needs_command -a branch -d 'List, create, or delete branches'
@@ -1177,7 +1177,7 @@ complete -f -c git -n '__fish_git_using_command cherry' -k -a '(__fish_git_refs)
 complete -f -c git -n __fish_git_needs_command -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -k -a '(__fish_git_ranges)'
 # TODO: Filter further
-complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -n '__fish_git_possible_commithash' -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append info in generated commit on the origin of the cherry-picked change'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'
@@ -1220,7 +1220,7 @@ complete -x -c git -n '__fish_git_using_command commit' -s m -l message -d 'Use 
 complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the selected commit message without launching an editor'
 complete -f -c git -n '__fish_git_using_command commit' -l no-gpg-sign -d 'Do not sign commit'
 complete -f -c git -n '__fish_git_using_command commit' -s n -l no-verify -d 'Do not run pre-commit and commit-msg hooks'
-complete -f -c git -n '__fish_git_using_command commit; and __fish_git_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
+complete -f -c git -n '__fish_git_using_command commit' -n '__fish_git_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty -d 'Create a commit with no changes'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty-message -d 'Create a commit with no commit message'
 complete -f -c git -n '__fish_git_using_command commit' -s s -l signoff -d 'Append Signed-off-by trailer to commit message'
@@ -1284,7 +1284,7 @@ complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Fo
 
 ### diff
 complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between commits, commit and working tree, etc'
-complete -c git -n '__fish_git_using_command diff; and not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l staged -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
@@ -1294,12 +1294,12 @@ complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the 
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
-complete -c git -n '__fish_git_using_command diff; and not __fish_git_contains_opt cached staged' -a '(
+complete -c git -n '__fish_git_using_command diff' -n 'not __fish_git_contains_opt cached staged' -a '(
     set -l kinds modified
     contains -- -- (commandline -opc) && set -a kinds deleted modified-staged-deleted
     __fish_git_files $kinds
 )'
-complete -c git -n '__fish_git_using_command diff; and __fish_git_contains_opt cached staged' -fa '(__fish_git_files all-staged)'
+complete -c git -n '__fish_git_using_command diff' -n '__fish_git_contains_opt cached staged' -fa '(__fish_git_files all-staged)'
 
 ### Function to list available tools for git difftool and mergetool
 
@@ -1313,7 +1313,7 @@ end
 
 ### difftool
 complete -c git -n __fish_git_needs_command -a difftool -d 'Open diffs in a visual tool'
-complete -c git -n '__fish_git_using_command difftool; and not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command difftool' -n 'not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command difftool' -l cached -d 'Visually show diff of changes in the index'
 complete -f -c git -n '__fish_git_using_command difftool' -a '(
     set -l kinds modified
@@ -1393,8 +1393,8 @@ complete -f -c git -n '__fish_git_using_command init' -l bare -d 'Create a bare 
 ### log
 complete -c git -n __fish_git_needs_command -a shortlog -d 'Show commit shortlog'
 complete -c git -n __fish_git_needs_command -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command log' -a '(git ls-files)'
+complete -c git -n '__fish_git_using_command log' -n 'not contains -- -- (commandline -opc)' -k -a '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command log' -l follow -d 'Continue listing file history beyond renames'
 complete -c git -n '__fish_git_using_command log' -l no-decorate -d 'Don\'t print ref names'
 complete -f -c git -n '__fish_git_using_command log' -l decorate -a 'short\tHide\ prefixes full\tShow\ full\ ref\ names auto\tHide\ prefixes\ if\ printed\ to\ terminal no\tDon\\\'t\ display\ ref' -d 'Print out ref names'
@@ -1675,36 +1675,36 @@ complete -f -c git -n '__fish_git_using_command mv' -s v -l verbose -d 'Report n
 ### notes
 set -l notescommands add copy append edit show merge remove # list prune get-ref
 complete -c git -n __fish_git_needs_command -a notes -d 'Add or inspect object notes'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a list -d 'List notes for given object'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a add -d 'Add notes for a given object'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a copy -d 'Copy notes from object1 to object2'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a append -d 'Append to the notes of existing object'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a edit -d 'Edit notes for a given object'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a show -d 'Show notes for given object'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a merge -d 'Merge the given notes ref to current notes ref'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a remove -d 'Remove notes for given object'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a prune -d 'Remove notes for non-existing/unreachable objects'
-complete -f -c git -n "__fish_git_using_command notes; and not __fish_seen_subcommand_from $notescommands" -a get-ref -d 'Print current notes ref'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from $notescommands" -ka '(__fish_git_commits)'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add copy" -s f -l force -d 'Overwrite existing notes'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append edit" -l allow-empty -d 'Allow empty note'
-complete -r -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s F -l file -d 'Read note message from file'
-complete -x -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s m -l message -d 'Use this note message'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s C -l reuse-message -a '(__fish_git_commits)' -d 'Copy note from object'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from add append" -s c -l reedit-message -a '(__fish_git_commits)' -d 'Copy and edit note from object'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from copy remove" -l stdin -d 'Read object names from stdin'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge remove prune" -s v -l verbose -d 'Be more verbose'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge remove prune" -s q -l quiet -d 'Operate quietly'
-complete -x -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge" -s s -l strategy -d 'Merge strategy to use to resolve conflicts' -a "
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a list -d 'List notes for given object'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a add -d 'Add notes for a given object'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a copy -d 'Copy notes from object1 to object2'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a append -d 'Append to the notes of existing object'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a edit -d 'Edit notes for a given object'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a show -d 'Show notes for given object'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a merge -d 'Merge the given notes ref to current notes ref'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a remove -d 'Remove notes for given object'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a prune -d 'Remove notes for non-existing/unreachable objects'
+complete -f -c git -n "__fish_git_using_command notes" -n "not __fish_seen_subcommand_from $notescommands" -a get-ref -d 'Print current notes ref'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from $notescommands" -ka '(__fish_git_commits)'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from add copy" -s f -l force -d 'Overwrite existing notes'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from add append edit" -l allow-empty -d 'Allow empty note'
+complete -r -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from add append" -s F -l file -d 'Read note message from file'
+complete -x -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from add append" -s m -l message -d 'Use this note message'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from add append" -s C -l reuse-message -a '(__fish_git_commits)' -d 'Copy note from object'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from add append" -s c -l reedit-message -a '(__fish_git_commits)' -d 'Copy and edit note from object'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from copy remove" -l stdin -d 'Read object names from stdin'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge remove prune" -s v -l verbose -d 'Be more verbose'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge remove prune" -s q -l quiet -d 'Operate quietly'
+complete -x -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge" -s s -l strategy -d 'Merge strategy to use to resolve conflicts' -a "
 	manual\t'Instruct the user to resolve merge conflicts'
 	ours\t'Resolve conflicts in favour of local version'
 	theirs\t'Resolve conflicts in favour of remote version'
 	union\t'Resolve conflicts by concatenating local and remote versions'
 	cat_sort_uniq\t'Concatenate, sort and remove duplicate lines'
 	"
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge" -l commit -d 'Finalize git notes merge'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from merge" -l abort -d 'Abort git notes merge'
-complete -f -c git -n "__fish_git_using_command notes; and __fish_seen_subcommand_from remove" -l ignore-missing -d 'Do not throw error on deleting non-existing object note'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge" -l commit -d 'Finalize git notes merge'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from merge" -l abort -d 'Abort git notes merge'
+complete -f -c git -n "__fish_git_using_command notes" -n "__fish_seen_subcommand_from remove" -l ignore-missing -d 'Do not throw error on deleting non-existing object note'
 
 ### prune
 complete -f -c git -n __fish_git_needs_command -a prune -d 'Prune all unreachable objects from the object database'
@@ -1726,8 +1726,8 @@ complete -f -c git -n '__fish_git_using_command pull' -l no-tags -d 'Disable aut
 complete -f -c git -n '__fish_git_using_command pull' -s p -l prune -d 'Remove remote-tracking references that no longer exist on the remote'
 # TODO --upload-pack
 complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
-complete -f -c git -n '__fish_git_using_command pull; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
-complete -f -c git -n '__fish_git_using_command pull; and __fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
+complete -f -c git -n '__fish_git_using_command pull' -n 'not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
+complete -f -c git -n '__fish_git_using_command pull' -n '__fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
 # Options related to merging
 complete -f -c git -n '__fish_git_using_command pull' -l commit -d "Autocommit the merge"
 complete -f -c git -n '__fish_git_using_command pull' -l no-commit -d "Don't autocommit the merge"
@@ -1765,17 +1765,17 @@ complete -f -c git -n '__fish_git_using_command range-diff' -l no-dual-color -d 
 
 ### push
 complete -f -c git -n __fish_git_needs_command -a push -d 'Update remote refs along with associated objects'
-complete -f -c git -n '__fish_git_using_command push; and not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -ka '(__fish_git_tags)' -d Tag
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -ka '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote' -ka '(__fish_git_heads)'
+complete -f -c git -n '__fish_git_using_command push' -n 'not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
+complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -ka '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -ka '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -ka '(__fish_git_heads)'
 # The "refspec" here is an optional "+" to signify a force-push
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "+*" -- (commandline -ct)' -a '+(__fish_git_branches | string replace -r \t".*" "")' -d 'Force-push branch'
+complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q "+*" -- (commandline -ct)' -a '+(__fish_git_branches | string replace -r \t".*" "")' -d 'Force-push branch'
 # git push REMOTE :BRANCH deletes BRANCH on remote REMOTE
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q ":*" -- (commandline -ct)' -a ':(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Delete remote branch'
+complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q ":*" -- (commandline -ct)' -a ':(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Delete remote branch'
 # then src:dest (where both src and dest are git objects, so we want to complete branches)
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "+*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Force-push local branch to remote branch'
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Push local branch to remote branch'
+complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q "+*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Force-push local branch to remote branch'
+complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q "*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Push local branch to remote branch'
 complete -f -c git -n '__fish_git_using_command push' -l all -d 'Push all refs under refs/heads/'
 complete -f -c git -n '__fish_git_using_command push' -l prune -d "Remove remote branches that don't have a local counterpart"
 complete -f -c git -n '__fish_git_using_command push' -l mirror -d 'Push all refs under refs/'
@@ -1799,11 +1799,11 @@ complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' -d Head
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d Tag -k
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_recent_commits)' -k
-complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l continue -d 'Restart the rebasing process'
-complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l abort -d 'Abort the rebase operation'
-complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l edit-todo -d 'Edit the todo list'
+complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l continue -d 'Restart the rebasing process'
+complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l abort -d 'Abort the rebase operation'
+complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l edit-todo -d 'Edit the todo list'
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't change anything"
-complete -f -c git -n '__fish_git_using_command rebase; and __fish_git_is_rebasing' -l skip -d 'Restart the rebasing process by skipping the current patch'
+complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l skip -d 'Restart the rebasing process by skipping the current patch'
 complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'
 complete -f -c git -n '__fish_git_using_command rebase' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command rebase' -s v -l verbose -d 'Be verbose'
@@ -1832,20 +1832,20 @@ complete -f -c git -n __fish_git_needs_command -a reflog -d 'Manage reflog infor
 complete -f -c git -n '__fish_git_using_command reflog' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command reflog' -a '(__fish_git_heads)' -d Head
 
-complete -f -c git -n "__fish_git_using_command reflog; and not __fish_seen_subcommand_from $reflogcommands" -a "$reflogcommands"
+complete -f -c git -n "__fish_git_using_command reflog" -n "not __fish_seen_subcommand_from $reflogcommands" -a "$reflogcommands"
 
 ### reset
 complete -c git -n __fish_git_needs_command -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset the index and the working tree'
 complete -f -c git -n '__fish_git_using_command reset' -l soft -d 'Reset head without touching the index or the working tree'
 complete -f -c git -n '__fish_git_using_command reset' -l mixed -d 'The default: reset the index but not the working tree'
-complete -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
+complete -c git -n '__fish_git_using_command reset' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
 # reset can either undo changes to versioned modified files,
 # or remove files from the staging area.
 # Deleted files seem to need a "--" separator.
-complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -opc)' -a '(__fish_git_files all-staged modified)'
-complete -f -c git -n '__fish_git_using_command reset; and contains -- -- (commandline -opc)' -a '(__fish_git_files all-staged deleted modified)'
-complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -opc)' -a '(__fish_git_reflog)' -d Reflog
+complete -f -c git -n '__fish_git_using_command reset' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_files all-staged modified)'
+complete -f -c git -n '__fish_git_using_command reset' -n 'contains -- -- (commandline -opc)' -a '(__fish_git_files all-staged deleted modified)'
+complete -f -c git -n '__fish_git_using_command reset' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_reflog)' -d Reflog
 # TODO options
 
 ### restore and switch
@@ -1862,9 +1862,9 @@ complete -f -c git -n '__fish_git_using_command restore' -l ignore-unmerged -d '
 complete -f -c git -n '__fish_git_using_command restore' -l ignore-skip-worktree-bits -d 'Ignore the sparse-checkout file and unconditionally restore any files in <pathspec>'
 complete -f -c git -n '__fish_git_using_command restore' -l overlay -d 'Never remove files when restoring'
 complete -f -c git -n '__fish_git_using_command restore' -l no-overlay -d 'Remove files when restoring (default)'
-complete -f -c git -n '__fish_git_using_command restore; and not __fish_git_contains_opt -s S staged' -a '(__fish_git_files modified deleted modified-staged-deleted unmerged)'
-complete -f -c git -n '__fish_git_using_command restore; and __fish_git_contains_opt -s S staged' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
-complete -F -c git -n '__fish_git_using_command restore; and __fish_git_contains_opt -s s source'
+complete -f -c git -n '__fish_git_using_command restore' -n 'not __fish_git_contains_opt -s S staged' -a '(__fish_git_files modified deleted modified-staged-deleted unmerged)'
+complete -f -c git -n '__fish_git_using_command restore' -n '__fish_git_contains_opt -s S staged' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
+complete -F -c git -n '__fish_git_using_command restore' -n '__fish_git_contains_opt -s s source'
 # switch options
 complete -f -c git -n __fish_git_needs_command -a switch -d 'Switch to a branch'
 complete -k -f -c git -n '__fish_git_using_command switch' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
@@ -1913,7 +1913,7 @@ complete -f -c git -n '__fish_git_using_command revert' -l no-rerere-autoupdate 
 ### rm
 complete -c git -n __fish_git_needs_command -a rm -d 'Remove files from the working tree and the index'
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Unstage files from the index'
-complete -c git -n '__fish_git_using_command rm; and __fish_git_contains_opt cached' -f -a '(__fish_git_files all-staged)'
+complete -c git -n '__fish_git_using_command rm' -n '__fish_git_contains_opt cached' -f -a '(__fish_git_files all-staged)'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
 complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'
@@ -1943,7 +1943,7 @@ complete -f -c git -n '__fish_git_using_command stripspace' -s c -l comment-line
 
 ### tag
 complete -f -c git -n __fish_git_needs_command -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | string match -r -v \'^-\')) -eq 3' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command tag' -n '__fish_not_contain_opt -s d' -n '__fish_not_contain_opt -s v' -n 'test (count (commandline -opc | string match -r -v \'^-\')) -eq 3' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command tag' -s a -l annotate -d 'Make an unsigned, annotated tag object'
 complete -f -c git -n '__fish_git_using_command tag' -s s -l sign -d 'Make a GPG-signed tag'
 complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a tag'
@@ -1951,62 +1951,62 @@ complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify s
 complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting existing tag'
 complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_git_commits)' -d 'List tags that contain a commit'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_git_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command tag' -n '__fish_git_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d Tag
 # TODO options
 
 ### worktree
 set -l git_worktree_commands add list lock move prune remove unlock
 complete -c git -n __fish_git_needs_command -a worktree -d 'Manage multiple working trees'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a add -d 'Create a working tree'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a list -d 'List details of each worktree'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a lock -d 'Lock a working tree'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a move -d 'Move a working tree to a new location'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a prune -d 'Prune working tree information in $GIT_DIR/worktrees'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a remove -d 'Remove a working tree'
-complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a unlock -d 'Unlock a working tree'
+complete -f -c git -n "__fish_git_using_command worktree" -n "not __fish_seen_subcommand_from $git_worktree_commands" -a add -d 'Create a working tree'
+complete -f -c git -n "__fish_git_using_command worktree" -n "not __fish_seen_subcommand_from $git_worktree_commands" -a list -d 'List details of each worktree'
+complete -f -c git -n "__fish_git_using_command worktree" -n "not __fish_seen_subcommand_from $git_worktree_commands" -a lock -d 'Lock a working tree'
+complete -f -c git -n "__fish_git_using_command worktree" -n "not __fish_seen_subcommand_from $git_worktree_commands" -a move -d 'Move a working tree to a new location'
+complete -f -c git -n "__fish_git_using_command worktree" -n "not __fish_seen_subcommand_from $git_worktree_commands" -a prune -d 'Prune working tree information in $GIT_DIR/worktrees'
+complete -f -c git -n "__fish_git_using_command worktree" -n "not __fish_seen_subcommand_from $git_worktree_commands" -a remove -d 'Remove a working tree'
+complete -f -c git -n "__fish_git_using_command worktree" -n "not __fish_seen_subcommand_from $git_worktree_commands" -a unlock -d 'Unlock a working tree'
 
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add move remove' -s f -l force -d 'Override safeguards'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add move remove' -s f -l force -d 'Override safeguards'
 
-complete -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add'
-complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_branches)'
-complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_heads)' -d Head
-complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_tags)' -d Tag
-complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
-complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_local_branches)'
-complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -s b -d 'Create a new branch'
-complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -s B -d 'Create a new branch even if it already exists'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l detach -d 'Detach HEAD in the new working tree'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l checkout -d 'Checkout <commit-ish> after creating working tree'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l no-checkout -d 'Suppress checkout'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l guess-remote
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l no-guess-remote
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l track -d 'Mark <commit-ish> as "upstream" from the new branch'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l no-track -d 'Don\'t mark <commit-ish> as "upstream" from the new branch'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l lock -d 'Lock working tree after creation'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -s q -l quiet -d 'Suppress feedback messages'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from list' -l porcelain -d 'Output in an easy-to-parse format for scripts'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from lock' -a '(__fish_git_complete_worktrees)' -d Worktree
-complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from lock' -l reason -d 'An explanation why the working tree is locked'
-complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move; and not __fish_any_arg_in (__fish_git_complete_worktrees)' -a '(__fish_git_complete_worktrees)' -d Worktree
-complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move; and __fish_any_arg_in (__fish_git_complete_worktrees)' -a '(__fish_complete_directories)'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -s n -l dry-run -d 'Do not remove anything'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -s v -l verbose -d 'Report all removals'
-complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -l expire -d 'Only expire unused working trees older than <time>'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from remove' -a '(__fish_git_complete_worktrees)' -d Worktree
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from unlock' -a '(__fish_git_complete_worktrees)' -d Worktree
+complete -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add'
+complete -k -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -a '(__fish_git_branches)'
+complete -k -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -a '(__fish_git_heads)' -d Head
+complete -k -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -a '(__fish_git_tags)' -d Tag
+complete -k -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
+complete -k -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -a '(__fish_git_local_branches)'
+complete -x -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -s b -d 'Create a new branch'
+complete -x -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -s B -d 'Create a new branch even if it already exists'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l detach -d 'Detach HEAD in the new working tree'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l checkout -d 'Checkout <commit-ish> after creating working tree'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l no-checkout -d 'Suppress checkout'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l guess-remote
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l no-guess-remote
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l track -d 'Mark <commit-ish> as "upstream" from the new branch'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l no-track -d 'Don\'t mark <commit-ish> as "upstream" from the new branch'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -l lock -d 'Lock working tree after creation'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from add' -s q -l quiet -d 'Suppress feedback messages'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from list' -l porcelain -d 'Output in an easy-to-parse format for scripts'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from lock' -a '(__fish_git_complete_worktrees)' -d Worktree
+complete -x -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from lock' -l reason -d 'An explanation why the working tree is locked'
+complete -x -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from move' -n 'not __fish_any_arg_in (__fish_git_complete_worktrees)' -a '(__fish_git_complete_worktrees)' -d Worktree
+complete -x -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from move' -n '__fish_any_arg_in (__fish_git_complete_worktrees)' -a '(__fish_complete_directories)'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from prune' -s n -l dry-run -d 'Do not remove anything'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from prune' -s v -l verbose -d 'Report all removals'
+complete -x -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from prune' -l expire -d 'Only expire unused working trees older than <time>'
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from remove' -a '(__fish_git_complete_worktrees)' -d Worktree
+complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcommand_from unlock' -a '(__fish_git_complete_worktrees)' -d Worktree
 
 ### stash
 complete -c git -n __fish_git_needs_command -a stash -d 'Stash away changes'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a list -d 'List stashes'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a show -d 'Show the changes recorded in the stash'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a pop -d 'Apply and remove a single stashed state'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a apply -d 'Apply a single stashed state'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a clear -d 'Remove all stashed states'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a drop -d 'Remove a single stashed state from the stash list'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a create -d 'Create a stash'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a save -d 'Save a new stash'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a branch -d 'Create a new branch from a stash'
-complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a push -d 'Create a new stash with given files'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a list -d 'List stashes'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a show -d 'Show the changes recorded in the stash'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a pop -d 'Apply and remove a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a apply -d 'Apply a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a clear -d 'Remove all stashed states'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a drop -d 'Remove a single stashed state from the stash list'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a create -d 'Create a stash'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a save -d 'Save a new stash'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a branch -d 'Create a new branch from a stash'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a push -d 'Create a new stash with given files'
 
 complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_complete_stashes)'
 complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_complete_stashes)'
@@ -2057,36 +2057,36 @@ complete -f -c git -n '__fish_git_using_command format-patch' -l no-numbered -s 
 ## git submodule
 set -l submodulecommands add status init deinit update set-branch set-url summary foreach sync absorbgitdirs
 complete -f -c git -n __fish_git_needs_command -a submodule -d 'Initialize, update or inspect submodules'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a add -d 'Add a submodule'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a status -d 'Show submodule status'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a init -d 'Initialize all submodules'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a deinit -d 'Unregister the given submodules'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a update -d 'Update all submodules'
-complete -x -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a set-branch -d 'Sets the default remote tracking branch for the submodule'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a set-url -d 'Sets the URL of the specified submodule'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a summary -d 'Show commit summary'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a foreach -d 'Run command on each submodule'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a sync -d 'Sync submodules\' URL with .gitmodules'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -a absorbgitdirs -d 'Move submodule\'s git directory to current .git/module directory'
-complete -f -c git -n "__fish_git_using_command submodule; and not __fish_seen_subcommand_from $submodulecommands" -s q -l quiet -d "Only print error messages"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l init -d "Initialize all submodules"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l checkout -d "Checkout the superproject's commit on a detached HEAD in the submodule"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l merge -d "Merge the superproject's commit into the current branch of the submodule"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l rebase -d "Rebase current branch onto the superproject's commit"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -s N -l no-fetch -d "Don't fetch new objects from the remote"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l remote -d "Instead of using superproject's SHA-1, use the state of the submodule's remote-tracking branch"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l force -d "Discard local changes when switching to a different commit & always run checkout"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from add' -l force -d "Also add ignored submodule path"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from deinit' -l force -d "Remove even with local changes"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from deinit' -l all -d "Remove all submodules"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from deinit; and not contains -- -- (commandline -opc)' -a '(__fish_git_submodules)' -d Submodule
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from set-branch' -s b -l branch -d "Specify the branch to use"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from set-branch' -s d -l default -d "Use default branch of the submodule"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from status summary' -l cached -d "Use the commit stored in the index"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from status; and not contains -- -- (commandline -opc)' -a '(__fish_git_submodules)' -d Submodule
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from summary' -l files -d "Compare the commit in the index with submodule HEAD"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from foreach update status' -l recursive -d "Traverse submodules recursively"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from foreach' -a "(__fish_complete_subcommand --fcs-skip=3)"
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a add -d 'Add a submodule'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a status -d 'Show submodule status'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a init -d 'Initialize all submodules'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a deinit -d 'Unregister the given submodules'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a update -d 'Update all submodules'
+complete -x -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a set-branch -d 'Sets the default remote tracking branch for the submodule'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a set-url -d 'Sets the URL of the specified submodule'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a summary -d 'Show commit summary'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a foreach -d 'Run command on each submodule'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a sync -d 'Sync submodules\' URL with .gitmodules'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -a absorbgitdirs -d 'Move submodule\'s git directory to current .git/module directory'
+complete -f -c git -n "__fish_git_using_command submodule" -n "not __fish_seen_subcommand_from $submodulecommands" -s q -l quiet -d "Only print error messages"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l init -d "Initialize all submodules"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l checkout -d "Checkout the superproject's commit on a detached HEAD in the submodule"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l merge -d "Merge the superproject's commit into the current branch of the submodule"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l rebase -d "Rebase current branch onto the superproject's commit"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -s N -l no-fetch -d "Don't fetch new objects from the remote"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l remote -d "Instead of using superproject's SHA-1, use the state of the submodule's remote-tracking branch"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l force -d "Discard local changes when switching to a different commit & always run checkout"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from add' -l force -d "Also add ignored submodule path"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from deinit' -l force -d "Remove even with local changes"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from deinit' -l all -d "Remove all submodules"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from deinit' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_submodules)' -d Submodule
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from set-branch' -s b -l branch -d "Specify the branch to use"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from set-branch' -s d -l default -d "Use default branch of the submodule"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from status summary' -l cached -d "Use the commit stored in the index"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from status' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_submodules)' -d Submodule
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from summary' -l files -d "Compare the commit in the index with submodule HEAD"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from foreach update status' -l recursive -d "Traverse submodules recursively"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from foreach' -a "(__fish_complete_subcommand --fcs-skip=3)"
 
 ## git whatchanged
 complete -f -c git -n __fish_git_needs_command -a whatchanged -d 'Show logs with difference each commit introduces'
@@ -2199,7 +2199,7 @@ complete -F -c git -n '__fish_git_using_command config' -l blob -d 'Read config 
 
 # If no argument is specified, it's as if --get was used
 # Use -k with `__fish_git_config_keys` so that user defined values are shown first
-complete -c git -n '__fish_git_using_command config; and __fish_is_nth_token 2' -kfa '(__fish_git_config_keys)'
+complete -c git -n '__fish_git_using_command config' -n '__fish_is_nth_token 2' -kfa '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get -d 'Get config with name' -kra '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-all -d 'Get all values matching key' -ka '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-urlmatch -d 'Get value specific for the section url' -r
@@ -2222,7 +2222,7 @@ complete -f -c git -n '__fish_git_using_command config' -s z -l null -d 'Termina
 complete -f -c git -n '__fish_git_using_command config' -l name-only -d 'Show variable names only'
 complete -f -c git -n '__fish_git_using_command config' -l includes -d 'Respect include directives'
 complete -f -c git -n '__fish_git_using_command config' -l show-origin -d 'Show origin of configuration'
-complete -f -c git -n '__fish_git_using_command config; and __fish_seen_argument get' -l default -d 'Use default value when missing entry'
+complete -f -c git -n '__fish_git_using_command config' -n '__fish_seen_argument get' -l default -d 'Use default value when missing entry'
 
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n __fish_git_needs_command -a '(__fish_git_custom_commands)' -d 'Custom command'

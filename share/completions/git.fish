@@ -1223,6 +1223,8 @@ complete -f -c git -n '__fish_git_using_command commit' -s n -l no-verify -d 'Do
 complete -f -c git -n '__fish_git_using_command commit; and __fish_git_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty -d 'Create a commit with no changes'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty-message -d 'Create a commit with no commit message'
+complete -f -c git -n '__fish_git_using_command commit' -s s -l signoff -d 'Append Signed-off-by trailer to commit message'
+complete -f -c git -n '__fish_git_using_command commit' -l no-signoff -d 'Do not append Signed-off-by trailer to commit message'
 # TODO options
 
 ### count-objects

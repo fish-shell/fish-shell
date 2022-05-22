@@ -1391,8 +1391,7 @@ void reader_data_t::exec_prompt() {
 }
 
 void reader_init() {
-    parser_t &parser = parser_t::principal_parser();
-    auto &vars = parser.vars();
+    auto &vars = parser_t::principal_parser().vars();
 
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
@@ -1423,10 +1422,6 @@ void reader_init() {
     if (is_interactive_session() && getpgrp() == tcgetpgrp(STDIN_FILENO)) {
         term_donate(/* quiet */ true);
     }
-
-    // We do this not because we actually need the window size but for its side-effect of correctly
-    // setting the COLUMNS and LINES env vars.
-    termsize_container_t::shared().updating(parser);
 }
 
 /// Restore the term mode if we own the terminal and are interactive (#8705).

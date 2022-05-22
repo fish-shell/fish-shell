@@ -1391,13 +1391,6 @@ void reader_data_t::exec_prompt() {
 }
 
 void reader_init() {
-    auto &vars = parser_t::principal_parser().vars();
-
-    // Ensure this var is present even before an interactive command is run so that if it is used
-    // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
-    // prompt is written.
-    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
-
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
 

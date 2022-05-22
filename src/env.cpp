@@ -347,6 +347,11 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
     vars.set_one(L"IFS", ENV_GLOBAL, L"\n \t");
 
+    // Ensure this var is present even before an interactive command is run so that if it is used
+    // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
+    // prompt is written.
+    vars.set_one(L"CMD_DURATION", ENV_UNEXPORT, L"0");
+
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
     vars.set_one(L"version", ENV_GLOBAL, version);

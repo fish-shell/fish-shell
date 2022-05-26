@@ -723,14 +723,14 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    auto func = +[] (const wcstring &x) {
+    auto keyfunc = +[] (const wcstring &x) {
         return wbasename(x);
     };
     if (opts.have_key) {
         if (std::wcscmp(opts.key, L"basename") == 0) {
             // Do nothing, this is the default
         } else if (std::wcscmp(opts.key, L"dirname") == 0) {
-            func = +[] (const wcstring &x) {
+            keyfunc = +[] (const wcstring &x) {
                 return wdirname(x);
             };
         } else if (std::wcscmp(opts.key, L"path") == 0) {
@@ -749,10 +749,10 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
     }
 
     if (opts.have_key) {
-        // Keep a map to avoid repeated func calls and to keep things alive.
-        std::map<wcstring, wcstring> funced;
+        // Keep a map to avoid repeated keyfunc calls and to keep things alive.
+        std::map<wcstring, wcstring> key;
         for (const auto &arg : list) {
-            funced[arg] = func(arg);
+            key[arg] = keyfunc(arg);
         }
 
         // We use a stable sort here, and also explicit < and >,
@@ -760,14 +760,14 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
         std::stable_sort(list.begin(), list.end(),
                   [&](const wcstring &a, const wcstring &b) {
                       if (!opts.invert)
-                          return (wcsfilecmp_glob(funced[a].c_str(), funced[b].c_str()) < 0);
+                          return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) < 0);
                       else
-                          return (wcsfilecmp_glob(funced[a].c_str(), funced[b].c_str()) > 0);
+                          return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) > 0);
                   });
         if (opts.unique) {
             list.erase(std::unique(list.begin(), list.end(),
                               [&](const wcstring &a, const wcstring &b) {
-                                  return funced[a] == funced[b];
+                                  return key[a] == key[b];
                               }),
                        list.end());
         }

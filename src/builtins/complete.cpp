@@ -170,6 +170,8 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
         {L"escape", no_argument, nullptr, opt_escape},
         {}};
 
+    bool have_x = false;
+
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -177,6 +179,8 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
             case 'x': {
                 result_mode.no_files = true;
                 result_mode.requires_param = true;
+                // Needed to print an error later.
+                have_x = true;
                 break;
             }
             case 'f': {
@@ -301,8 +305,15 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
     }
 
     if (result_mode.no_files && result_mode.force_files) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, L"complete",
-                                  L"'--no-files' and '--force-files'");
+        if (!have_x) {
+            streams.err.append_format(BUILTIN_ERR_COMBO2, L"complete",
+                                      L"'--no-files' and '--force-files'");
+        } else {
+            // The reason for us not wanting files is `-x`,
+            // which is short for `-rf`.
+            streams.err.append_format(BUILTIN_ERR_COMBO2, L"complete",
+                                      L"'--exclusive' and '--force-files'");
+        }
         return STATUS_INVALID_ARGS;
     }
 

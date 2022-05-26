@@ -463,3 +463,6 @@ complete -C"a=1 b=2 cmd_with_fancy_completion "
 # CHECK: 1
 complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
 # CHECK: 2
+
+complete -c thing -x -F
+# CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'

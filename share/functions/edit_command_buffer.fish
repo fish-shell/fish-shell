@@ -44,7 +44,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     set -l basename (string match -r '[^/]*$' -- $editor[1])
     switch $basename
         case vi vim nvim
-            set -a editor +$line +"norm $col|" $f
+            set -a editor +$line +"norm! $col|" $f
         case emacs emacsclient gedit kak
             set -a editor +$line:$col $f
         case nano

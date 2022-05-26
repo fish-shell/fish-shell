@@ -8,22 +8,22 @@ Synopsis
 
 ::
 
-    path basename GENERAL_OPTIONS [PATH...]
-    path dirname GENERAL_OPTIONS  [PATH...]
-    path extension GENERAL_OPTIONS [PATH...]
-    path filter GENERAL_OPTIONS [(-v | --invert)] \
+    path basename GENERAL_OPTIONS [PATH ...]
+    path dirname GENERAL_OPTIONS  [PATH ...]
+    path extension GENERAL_OPTIONS [PATH ...]
+    path filter GENERAL_OPTIONS [-v | --invert]
         [-d] [-f] [-l] [-r] [-w] [-x] \
-        [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
-    path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE] \
-        [-d] [-f] [-l] [-r] [-w] [-x] \
-        [(-p | --perm) PERMISSION] [PATH...]
-    path normalize GENERAL_OPTIONS [PATH...]
-    path resolve GENERAL_OPTIONS [PATH...]
-    path change-extension GENERAL_OPTIONS EXTENSION [PATH...]
-    path sort GENERAL_OPTIONS [(-v | --invert)] \
-        [-u | --unique] [--key=basename|dirname|path] [([PATH...]
+        [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH ...]
+    path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE]
+        [-d] [-f] [-l] [-r] [-w] [-x]
+        [(-p | --perm) PERMISSION] [PATH ...]
+    path normalize GENERAL_OPTIONS [PATH ...]
+    path resolve GENERAL_OPTIONS [PATH ...]
+    path change-extension GENERAL_OPTIONS EXTENSION [PATH ...]
+    path sort GENERAL_OPTIONS [-v | --invert]
+        [-u | --unique] [--key=basename|dirname|path] [PATH ...]
 
-    GENERAL_OPTIONS := [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)]
+    GENERAL_OPTIONS := [-z | --null-in] [-Z | --null-out] [-q | --quiet]
 
 Description
 -----------
@@ -53,7 +53,7 @@ The following subcommands are available.
 
 ::
 
-    path basename [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path basename [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
 ``path basename`` returns the last path component of the given path, by removing the directory prefix and removing trailing slashes. In other words, it is the part that is not the dirname. For files you might call it the "filename".
 
@@ -86,7 +86,7 @@ Examples
 
 ::
 
-    path dirname [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path dirname [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
 ``path dirname`` returns the dirname for the given path. This is the part before the last "/", discounting trailing slashes. In other words, it is the part that is not the basename (discounting superfluous slashes).
 
@@ -111,7 +111,7 @@ Examples
 
 ::
 
-    path extension [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path extension [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
 ``path extension`` returns the extension of the given path. This is the part after (and including) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no extension and an empty line is printed.
 
@@ -152,9 +152,9 @@ Examples
 
 ::
 
-    path filter [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] \
+    path filter [-z | --null-in] [-Z | --null-out] [-q | --quiet] \
         [-d] [-f] [-l] [-r] [-w] [-x] \
-        [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+        [-v | --invert] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH ...]
 
 ``path filter`` returns all of the given paths that match the given checks. In all cases, the paths need to exist, nonexistent paths are always filtered.
 
@@ -214,9 +214,9 @@ Examples
 
 ::
 
-    path is [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] \
+    path is [-z | --null-in] [-Z | --null-out] [-q | --quiet] \
         [-d] [-f] [-l] [-r] [-w] [-x] \
-        [(-v | --invert)] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH...]
+        [-v | --invert] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH ...]
 
 ``path is`` is short for ``path filter -q``. It returns true if any of the given files passes the filter, but does not produce any output.
 
@@ -239,7 +239,7 @@ Examples
 
 ::
 
-    path normalize [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path normalize [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
 ``path normalize`` returns the normalized versions of all paths. That means it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
 
@@ -273,7 +273,7 @@ Examples
 
 ::
 
-    path resolve [(-z | --null-in)] [(-Z | --null-out)] [(-q | --quiet)] [PATH...]
+    path resolve [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
 ``path resolve`` returns the normalized, physical and absolute versions of all paths. That means it resolves symlinks and does what ``path normalize`` does: it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components. Then it turns that path into the absolute path starting from the filesystem root "/".
 
@@ -288,7 +288,7 @@ Examples
 
    >_ path resolve /bin//sh
    # The "//" is squashed, and /bin is resolved if your system links it to /usr/bin.
-   # sh here is bash (on an Archlinux system)
+   # sh here is bash (this is common on linux systems)
    /usr/bin/bash
     
    >_ path resolve /bin/foo///bar/../baz
@@ -301,8 +301,8 @@ Examples
 
 ::
 
-    path change-extension [(-z | --null-in)] [(-Z | --null-out)] \
-        [(-q | --quiet)] EXTENSION [PATH...]
+    path change-extension [-z | --null-in] [-Z | --null-out] \
+        [-q | --quiet] EXTENSION [PATH ...]
 
 ``path change-extension`` returns the given paths, with their extension changed to the given new extension. The extension is the part after (and including) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no previous extension and the new one is simply added.
 
@@ -344,9 +344,9 @@ Examples
 
 ::
 
-    path sort [(-z | --null-in)] [(-Z | --null-out)] \
-        [(-q | --quiet)] [(-v | --invert)] \
-        [--key=basename|dirname|path] [([PATH...]
+    path sort [-z | --null-in] [-Z | --null-out] \
+        [-q | --quiet] [-v | --invert] \
+        [--key=basename|dirname|path] [PATH ...]
 
 
 ``path sort`` returns the given paths in sorted order. They are sorted in the same order as globs - alphabetically, but with runs of numerical digits compared numerically.

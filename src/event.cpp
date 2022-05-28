@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <functional>
 #include <memory>
@@ -87,14 +88,29 @@ static pending_signals_t s_pending_signals;
 /// List of event handlers.
 static owning_lock<event_handler_list_t> s_event_handlers;
 
-/// Variables (one per signal) set when a signal is observed. This is inspected by a signal handler.
-static volatile sig_atomic_t s_observed_signals[NSIG] = {};
+/// Tracks the number of registered event handlers for each signal.
+/// This is inspected by a signal handler. We assume no values in here overflow.
+static std::array<relaxed_atomic_t<uint32_t>, NSIG> s_observed_signals;
 
-static void set_signal_observed(int sig, bool val) {
-    if (sig >= 0 &&
-        static_cast<size_t>(sig) < sizeof s_observed_signals / sizeof *s_observed_signals) {
-        s_observed_signals[sig] = val;
+static inline void inc_signal_observed(int sig) {
+    if (0 <= sig && sig < NSIG) {
+        s_observed_signals[sig]++;
     }
+}
+
+static inline void dec_signal_observed(int sig) {
+    if (0 <= sig && sig < NSIG) {
+        s_observed_signals[sig]--;
+    }
+}
+
+bool event_is_signal_observed(int sig) {
+    // We are in a signal handler!
+    uint32_t count = 0;
+    if (0 <= sig && sig < NSIG) {
+        count = s_observed_signals[sig];
+    }
+    return count > 0;
 }
 
 /// \return true if a handler is "one shot": it fires at most once.
@@ -206,13 +222,14 @@ wcstring event_get_desc(const parser_t &parser, const event_t &evt) {
 void event_add_handler(std::shared_ptr<event_handler_t> eh) {
     if (eh->desc.type == event_type_t::signal) {
         signal_handle(eh->desc.param1.signal);
-        set_signal_observed(eh->desc.param1.signal, true);
+        inc_signal_observed(eh->desc.param1.signal);
     }
 
     s_event_handlers.acquire()->push_back(std::move(eh));
 }
 
 // \remove handlers for which \p func returns true.
+// Simultaneously update our signal_observed array.
 template <typename T>
 static void remove_handlers_if(const T &func) {
     auto handlers = s_event_handlers.acquire();
@@ -221,6 +238,9 @@ static void remove_handlers_if(const T &func) {
         event_handler_t *handler = iter->get();
         if (func(*handler)) {
             handler->removed = true;
+            if (handler->desc.type == event_type_t::signal) {
+                dec_signal_observed(handler->desc.param1.signal);
+            }
             iter = handlers->erase(iter);
         } else {
             ++iter;
@@ -240,16 +260,6 @@ event_handler_list_t event_get_function_handlers(const wcstring &name) {
         if (eh->function_name == name) {
             result.push_back(eh);
         }
-    }
-    return result;
-}
-
-bool event_is_signal_observed(int sig) {
-    // We are in a signal handler! Don't allocate memory, etc.
-    bool result = false;
-    if (sig >= 0 && static_cast<unsigned long>(sig) <
-                        sizeof(s_observed_signals) / sizeof(*s_observed_signals)) {
-        result = s_observed_signals[sig];
     }
     return result;
 }

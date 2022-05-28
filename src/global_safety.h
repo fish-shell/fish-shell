@@ -93,9 +93,11 @@ class relaxed_atomic_t {
 
     // postincrement
     T operator++(int) { return value_.fetch_add(1, std::memory_order_relaxed); }
+    T operator--(int) { return value_.fetch_sub(1, std::memory_order_relaxed); }
 
     // preincrement
-    T operator++() { return 1 + value_.fetch_add(1, std::memory_order_relaxed); }
+    T operator++() { return value_.fetch_add(1, std::memory_order_relaxed) + 1; }
+    T operator--() { return value_.fetch_sub(1, std::memory_order_relaxed) - 1; }
 };
 
 using relaxed_atomic_bool_t = relaxed_atomic_t<bool>;

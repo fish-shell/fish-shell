@@ -234,9 +234,8 @@ void reader_pop();
 /// The readers interrupt signal handler. Cancels all currently running blocks.
 void reader_handle_sigint();
 
-/// \return whether we should cancel fish script due to fish itself receiving a signal.
-/// TODO: this doesn't belong in reader.
-bool check_cancel_from_fish_signal();
+/// \return whether fish is currently unwinding the stack in preparation to exit.
+bool fish_is_unwinding_for_exit();
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 /// Exposed for testing purposes only.

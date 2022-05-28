@@ -228,7 +228,7 @@ process_type_t parse_execution_context_t::process_type_for_command(
 maybe_t<end_execution_reason_t> parse_execution_context_t::check_end_execution() const {
     // If one of our jobs ended with SIGINT, we stop execution.
     // Likewise if fish itself got a SIGINT, or if something ran exit, etc.
-    if (cancel_signal || ctx.check_cancel() || check_cancel_from_fish_signal()) {
+    if (cancel_signal || ctx.check_cancel() || fish_is_unwinding_for_exit()) {
         return end_execution_reason_t::cancelled;
     }
     const auto &ld = parser->libdata();

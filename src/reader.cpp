@@ -963,7 +963,7 @@ static void term_steal() {
     termsize_container_t::shared().invalidate_tty();
 }
 
-bool check_cancel_from_fish_signal() {
+bool fish_is_unwinding_for_exit() {
     switch (s_exit_state) {
         case exit_state_t::none:
             // Cancel if we got SIGHUP.

@@ -951,7 +951,7 @@ void job_t::continue_job(parser_t &parser) {
           parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     // Wait for the status of our own job to change.
-    while (!check_cancel_from_fish_signal() && !is_stopped() && !is_completed()) {
+    while (!fish_is_unwinding_for_exit() && !is_stopped() && !is_completed()) {
         process_mark_finished_children(parser, true);
     }
     if (is_completed()) {

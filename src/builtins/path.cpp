@@ -673,8 +673,8 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
         auto real = wrealpath(*arg);
 
         if (!real) {
-            // The path doesn't exist, so we go up until we find
-            // something that does.
+            // The path doesn't exist, isn't readable or a symlink loop.
+            // We go up until we find something that works.
             wcstring next = *arg;
             // First add $PWD if we're relative
             if (!next.empty() && next[0] != L'/') {

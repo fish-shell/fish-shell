@@ -400,7 +400,7 @@ static const struct woption long_options[] = {
                                               {L"null-out", no_argument, nullptr, 'Z'},
                                               {L"perm", required_argument, nullptr, 'p'},
                                               {L"type", required_argument, nullptr, 't'},
-                                              {L"invert", required_argument, nullptr, 'v'},
+                                              {L"invert", no_argument, nullptr, 'v'},
                                               {L"unique", no_argument, nullptr, 'u'},
                                               {L"key", required_argument, nullptr, 1},
                                               {}};

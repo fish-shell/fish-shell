@@ -73,6 +73,7 @@ Scripting improvements
 - ``string join`` gained a new ``--no-empty`` flag to skip empty arguments (:issue:`8774`, :issue:`8351`).
 - ``read`` now actually only triggers the ``fish_read`` event, not the ``fish_prompt`` event (:issue:`8797`). It was supposed to work this way since fish 3.2.0.
 - The tty modes are no longer restored when non-interactive shells exit. This fixes wrong tty modes in pipelines with interactive commands. (:issue:`8705`).
+- Scripts can now catch and handle SIGINT and SIGTERM, either via ``function --on-signal`` or with ``trap``. (:issue:`6649`).
 
 Interactive improvements
 ------------------------

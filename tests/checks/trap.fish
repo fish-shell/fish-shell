@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: env fth=%fish_test_helper %fish %s
 
 set -g SIGUSR1_COUNT 0
 
@@ -49,3 +49,41 @@ echo "Hope it did not run"
 kill -USR1 $fish_pid
 sleep .1
 #CHECK: Got USR1: 3
+
+# We can trap SIGINT.
+# Trapping it prevents exiting.
+function handle_int --on-signal SIGINT
+    echo Got SIGINT
+end
+kill -INT $fish_pid
+#CHECK: Got SIGINT
+
+# In non-interactive mode, we have historically treated
+# a child process which dies with SIGINT as if we got SIGINT.
+# However in this case we don't execute handlers; we just don't exit.
+$fth sigint_self
+echo "Should not have exited"
+#CHECK: Should not have exited
+
+# If a signal is received while handling a signal, that is deferred until the handler is done.
+set -g INTCOUNT 0
+function handle_int --on-signal SIGINT
+    test $INTCOUNT -gt 2 && return
+    set -g INTCOUNT (math $INTCOUNT + 1)
+    echo "start handle_int $INTCOUNT"
+    sleep .1
+    kill -INT $fish_pid
+    echo "end handle_int $INTCOUNT"
+end
+kill -INT $fish_pid
+# CHECK: start handle_int 1
+# CHECK: end handle_int 1
+# CHECK: start handle_int 2
+# CHECK: end handle_int 2
+# CHECK: start handle_int 3
+# CHECK: end handle_int 3
+
+# Remove our handler and SIGINT ourselves. Now we should exit.
+functions --erase handle_int
+kill -INT $fish_pid
+echo "I should not run"

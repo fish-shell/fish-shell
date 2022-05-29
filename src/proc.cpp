@@ -225,14 +225,19 @@ static void handle_child_status(const shared_ptr<job_t> &job, process_t *proc,
         proc->completed = true;
     }
 
-    // If the child was killed by SIGINT or SIGQUIT, then treat it as if we received that signal.
+    // If the child was killed by SIGINT or SIGQUIT, then cancel the entire group if interactive. If
+    // not interactive, we have historically re-sent the signal to ourselves; however don't do that
+    // if the signal is trapped (#6649).
+    // Note the asymmetry: if the fish process gets SIGINT we will run SIGINT handlers. If a child
+    // process gets SIGINT we do not run SIGINT handlers; we just don't exit. This should be
+    // rationalized.
     if (status.signal_exited()) {
         int sig = status.signal_code();
         if (sig == SIGINT || sig == SIGQUIT) {
             if (is_interactive_session()) {
                 // Mark the job group as cancelled.
                 job->group->cancel_with_signal(sig);
-            } else {
+            } else if (!event_is_signal_observed(sig)) {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
                 struct sigaction act;
                 sigemptyset(&act.sa_mask);

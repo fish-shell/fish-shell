@@ -42,7 +42,7 @@ The following options are available:
     Run this function when the fish child process with process ID PID exits. Instead of a PID, for backward compatibility, "``%self``" can be specified as an alias for ``$fish_pid``, and the function will be run when the current fish instance exits.
 
 **-s** *SIGSPEC* or **--on-signal** *SIGSPEC*
-    Run this function when the signal ``SIGSPEC`` is delivered. ``SIGSPEC`` can be a signal number, or the signal name, such as ``SIGHUP`` (or just ``HUP``). Note that the signal must have been delivered to :program:`fish`; for example, :kbd:`Ctrl-C` sends ``SIGINT`` to the foreground process group, which will not be :program:`fish` if you are running another command at the time.
+    Run this function when the signal ``SIGSPEC`` is delivered. ``SIGSPEC`` can be a signal number, or the signal name, such as ``SIGHUP`` (or just ``HUP``). Note that the signal must have been delivered to :program:`fish`; for example, :kbd:`Ctrl-C` sends ``SIGINT`` to the foreground process group, which will not be :program:`fish` if you are running another command at the time. Observing a signal will prevent fish from exiting in response to that signal.
 
 **-S** or **--no-scope-shadowing**
     Allows the function to access the variables of calling functions. Normally, any variables inside the function that have the same name as variables from the calling function are "shadowed", and their contents are independent of the calling function.

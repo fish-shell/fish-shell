@@ -38,7 +38,7 @@ If *ARG* is absent (and there is a single *REASON*) or ``-``, each specified sig
 
 If *ARG* is not present and **-p** has been supplied, then the trap commands associated with each *REASON* are displayed. If no arguments are supplied or if only **-p** is given, ``trap`` prints the list of commands associated with each signal.
 
-Signal names are case insensitive and the ``SIG`` prefix is optional.
+Signal names are case insensitive and the ``SIG`` prefix is optional. Trapping a signal will prevent fish from exiting in response to that signal.
 
 The exit status is 1 if any *REASON* is invalid; otherwise trap returns 0.
 

@@ -233,14 +233,13 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
     switch (sig) {
 #ifdef SIGWINCH
         case SIGWINCH:
-            /// Respond to a winch signal by telling the termsize container.
+            // Respond to a winch signal by telling the termsize container.
             termsize_container_t::handle_winch();
             break;
 #endif
 
         case SIGHUP:
-            /// Respond to a hup signal by exiting, unless it is caught by a shellscript function,
-            /// in which case we do nothing.
+            // Exit unless the signal was trapped.
             if (!observed) {
                 reader_sighup();
             }
@@ -248,16 +247,19 @@ static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
             break;
 
         case SIGTERM:
-            /// Handle sigterm. The only thing we do is restore the front process ID, then die.
-            restore_term_foreground_process_group_for_exit();
-            signal(SIGTERM, SIG_DFL);
-            raise(SIGTERM);
+            // Handle sigterm. The only thing we do is restore the front process ID, then die.
+            if (!observed) {
+                restore_term_foreground_process_group_for_exit();
+                signal(SIGTERM, SIG_DFL);
+                raise(SIGTERM);
+            }
             break;
 
         case SIGINT:
-            /// Interactive mode ^C handler. Respond to int signal by setting interrupted-flag and
-            /// stopping all loops and conditionals.
-            s_cancellation_signal = SIGINT;
+            // Cancel unless the signal was trapped.
+            if (!observed) {
+                s_cancellation_signal = SIGINT;
+            }
             reader_handle_sigint();
             topic_monitor_t::principal().post(topic_t::sighupint);
             break;

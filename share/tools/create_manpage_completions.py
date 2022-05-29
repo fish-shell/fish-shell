@@ -929,9 +929,15 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
     for manpage_path in paths:
         index += 1
 
-        # Get the "base" command, e.g. gcc.1.gz -> gcc
+        # Get the "base" command, e.g. mkfs.xfs.8.gz -> mkfs.xfs
         man_file_name = os.path.basename(manpage_path)
-        CMDNAME = man_file_name.split(".", 1)[0]
+        # 1. strip the optional compressor suffix
+        CMDNAME, extension = os.path.splitext(man_file_name)
+        # 2. strip mandatory section nu:ber
+        if CMDNAME.endswith((".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9")):
+            CMDNAME, extension = os.path.splitext(CMDNAME)
+        # 3. XXX strip optional version(?) number?
+        # see comment above `already_output_completions = {}` line
 
         # Show progress if we're doing that
         if show_progress:

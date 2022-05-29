@@ -158,6 +158,7 @@ struct options_t {  //!OCLINT(too many fields)
     bool perm_valid = false;
     bool type_valid = false;
     bool invert_valid = false;
+    bool reverse_valid = false;
     bool key_valid = false;
     bool unique_valid = false;
     bool unique = false;
@@ -177,6 +178,7 @@ struct options_t {  //!OCLINT(too many fields)
     path_perm_flags_t perm = 0;
 
     bool invert = false;
+    bool reverse = false;
 
     const wchar_t *arg1 = nullptr;
 };
@@ -306,8 +308,16 @@ static int handle_flag_perms(const wchar_t **argv, parser_t &parser, io_streams_
 
 static int handle_flag_r(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
-    return handle_flag_perms(argv, parser, streams, w, opts, PERM_READ);
+    if (opts->reverse_valid) {
+        opts->reverse = true;
+        return STATUS_CMD_OK;
+    } else if (opts->perm_valid) {
+        return handle_flag_perms(argv, parser, streams, w, opts, PERM_READ);
+    }
+    path_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
 }
+
 static int handle_flag_w(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     return handle_flag_perms(argv, parser, streams, w, opts, PERM_WRITE);
@@ -387,6 +397,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
         short_opts.append(L"fld");
     }
     if (opts->invert_valid) short_opts.append(L"v");
+    if (opts->reverse_valid) short_opts.append(L"r");
     if (opts->unique_valid) short_opts.append(L"u");
     return short_opts;
 }
@@ -401,6 +412,7 @@ static const struct woption long_options[] = {
                                               {L"perm", required_argument, nullptr, 'p'},
                                               {L"type", required_argument, nullptr, 't'},
                                               {L"invert", no_argument, nullptr, 'v'},
+                                              {L"reverse", no_argument, nullptr, 'r'},
                                               {L"unique", no_argument, nullptr, 'u'},
                                               {L"key", required_argument, nullptr, 1},
                                               {}};
@@ -716,7 +728,7 @@ static int path_resolve(parser_t &parser, io_streams_t &streams, int argc, const
 
 static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wchar_t **argv) {
     options_t opts;
-    opts.invert_valid = true;
+    opts.reverse_valid = true;
     opts.key_valid = true;
     opts.unique_valid = true;
     int optind;
@@ -759,7 +771,7 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
         // to avoid changing the order so you can chain calls.
         std::stable_sort(list.begin(), list.end(),
                   [&](const wcstring &a, const wcstring &b) {
-                      if (!opts.invert)
+                      if (!opts.reverse)
                           return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) < 0);
                       else
                           return (wcsfilecmp_glob(key[a].c_str(), key[b].c_str()) > 0);
@@ -776,7 +788,7 @@ static int path_sort(parser_t &parser, io_streams_t &streams, int argc, const wc
         // so we have no need to transform and such.
         std::stable_sort(list.begin(), list.end(),
                   [&](const wcstring &a, const wcstring &b) {
-                      if (!opts.invert)
+                      if (!opts.reverse)
                           return (wcsfilecmp_glob(a.c_str(), b.c_str()) < 0);
                       else
                           return (wcsfilecmp_glob(a.c_str(), b.c_str()) > 0);

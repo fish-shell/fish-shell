@@ -20,7 +20,7 @@ Synopsis
     path normalize GENERAL_OPTIONS [PATH ...]
     path resolve GENERAL_OPTIONS [PATH ...]
     path change-extension GENERAL_OPTIONS EXTENSION [PATH ...]
-    path sort GENERAL_OPTIONS [-v | --invert]
+    path sort GENERAL_OPTIONS [-r | --reverse]
         [-u | --unique] [--key=basename|dirname|path] [PATH ...]
 
     GENERAL_OPTIONS := [-z | --null-in] [-Z | --null-out] [-q | --quiet]
@@ -345,13 +345,13 @@ Examples
 ::
 
     path sort [-z | --null-in] [-Z | --null-out] \
-        [-q | --quiet] [-v | --invert] \
+        [-q | --quiet] [-r | --reverse] \
         [--key=basename|dirname|path] [PATH ...]
 
 
 ``path sort`` returns the given paths in sorted order. They are sorted in the same order as globs - alphabetically, but with runs of numerical digits compared numerically.
 
-With ``--invert`` or ``-v`` the sort is reversed.
+With ``--reverse`` or ``-r`` the sort is reversed.
 
 With ``--key=`` only the given path of the path is compared, e.g. ``--key=dirname`` causes only the dirname to be compared, ``--key=basename`` only the basename and ``--key=path`` causes the entire path to be compared (this is the default).
 

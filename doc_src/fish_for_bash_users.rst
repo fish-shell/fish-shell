@@ -83,7 +83,7 @@ See :ref:`Shell variables <variables>` for more.
 Wildcards (globs)
 -----------------
 
-Fish only supports the ``*`` and ``**`` glob (and the deprecated ``?`` glob). If a glob doesn't match it fails the command (like with bash's ``failglob``) unless the command is ``for``, ``set`` or ``count`` or the glob is used with an environment override (``VAR=* command``), in which case it expands to nothing (like with bash's ``nullglob`` option).
+Fish only supports the ``*`` and ``**`` glob (and the deprecated ``?`` glob) as syntax. If a glob doesn't match it fails the command (like with bash's ``failglob``) unless the command is ``for``, ``set`` or ``count`` or the glob is used with an environment override (``VAR=* command``), in which case it expands to nothing (like with bash's ``nullglob`` option).
 
 Globbing doesn't happen on expanded variables, so::
 

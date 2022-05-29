@@ -891,7 +891,7 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
             function_exists(L"cd", *parser) ? process_type_t::function : process_type_t::builtin;
     } else {
         // Not implicit cd.
-        const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;
+        const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count" || cmd == L"path") ? nullglob : failglob;
         // Form the list of arguments. The command is the first argument, followed by any arguments
         // from expanding the command, followed by the argument nodes themselves. E.g. if the
         // command is '$gco foo' and $gco is git checkout.

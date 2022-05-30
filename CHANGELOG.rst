@@ -7,7 +7,7 @@ Notable improvements and fixes
 - ``process-exit`` events now fire when the process exits even if the job has not yet exited, fixing a regression in 3.4.1 (:issue:`8914`).
 - A new ``path`` builtin to filter and transform paths (:issue:`7658`, :issue:`8958`). For example, to list all the separate extensions used on files in /usr/share/man::
 
-  path filter -f /usr/share/man/** | path change-extension '' | path extension | path sort -u
+    path filter -f /usr/share/man/** | path change-extension '' | path extension | path sort -u
 
 Deprecations and removed features
 ---------------------------------

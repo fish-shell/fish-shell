@@ -81,7 +81,7 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - Tab (or any ``complete`` key binding) now prefer to expand wildcards instead of invoking completions, if there is a wildcard in the path component under the cursor (:issue:`954`).
-- The default command-not-found handler now reports a special error if there is a non-executable file (:issue:`8804`)
+- Fish now reports a special error if a command wasn't found and there is a non-executable file by that name in $PATH (:issue:`8804`).
 - ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).
 - ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD and NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`).
@@ -92,7 +92,6 @@ Interactive improvements
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
-- The ``nextd-or-forward-word`` and ``prevd-or-backward-word`` bindings move like forward/backward-word again instead of forward/backward-bigword.
 - Keyboard shortcut :kbd:`Alt-S` (previously: toggle ``sudo`` prepended to current commandline contents) now supports ``doas`` on systems without ``sudo`` (:issue:`8942`).
 
 Improved prompts
@@ -109,6 +108,7 @@ Completions
   - archlinux-java
   - fastboot
   - apk (:issue:`8951`)
+- ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`)
 
 
 Improved terminal support

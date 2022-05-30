@@ -26,7 +26,10 @@ The ``fish_git_prompt`` function displays information about the current git repo
 
 There are numerous customization options, which can be controlled with git options or fish variables. git options, where available, take precedence over the fish variable with the same function. git options can be set on a per-repository or global basis. git options can be set with the ``git config`` command, while fish variables can be set as usual with the :ref:`set <cmd-set>` command.
 
-- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of untracked files, dirty files, unpushed/unpulled commits, and more. In large repositories, this can take a lot of time, so it you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
+- ``$__fish_git_prompt_show_informative_status`` or the git option ``bash.showInformativeStatus`` can be set to enable the "informative" display, which will show a large amount of information - the number of dirty files, unpushed/unpulled commits, and more.
+  In large repositories, this can take a lot of time, so it you may wish to disable it in these repositories with  ``git config --local bash.showInformativeStatus false``. It also changes the characters the prompt uses to less plain ones (``✚`` instead of ``*`` for the dirty state for example) , and if you are only interested in that, set ``$__fish_git_prompt_use_informative_chars`` instead.
+
+  Because counting untracked files requires a lot of time, the number of untracked files is only shown if enabled via ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles``.
 
 - ``$__fish_git_prompt_showdirtystate`` or the git option ``bash.showDirtyState`` can be set to show if the repository is "dirty", i.e. has uncommitted changes.
 

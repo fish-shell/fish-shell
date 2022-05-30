@@ -251,9 +251,8 @@ function fish_git_prompt --description "Prompt function for Git"
             or begin
                 set -q __fish_git_prompt_show_informative_status
                 and test "$dirty" != false
-                and test "$untracked" != false
             end
-            set informative_status (__fish_git_prompt_informative_status $git_dir)
+            set informative_status (untracked=$untracked __fish_git_prompt_informative_status $git_dir)
             if test -n "$informative_status"
                 set informative_status "$space$informative_status"
             end
@@ -358,12 +357,17 @@ function __fish_git_prompt_informative_status
         set stashstate (count < $stashfile)
     end
 
-    # Use git status --porcelain.
-    # This uses the "normal" untracked mode so untracked directories are considered as 1 entry.
-    # It's quite a bit faster and unlikely anyone cares about the number of files if it's *all* of the files
+    # If we're not told to show untracked files, we don't.
+    # If we are, we still use the "normal" mode because it's a lot faster,
+    # and it's unlikely anyone cares about the number of files if it's *all* of the files
     # in that directory.
+    set -l untr -uno
+    test "$untracked" = true
+    and set untr -unormal
+
+    # Use git status --porcelain.
     # The v2 format is better, but we don't actually care in this case.
-    set -l stats (string sub -l 2 (git -c core.fsmonitor= status --porcelain -z -unormal | string split0))
+    set -l stats (string sub -l 2 (git -c core.fsmonitor= status --porcelain -z $untr | string split0))
     set -l invalidstate (string match -r '^UU' $stats | count)
     set -l stagedstate (string match -r '^[ACDMR].' $stats | count)
     set -l dirtystate (string match -r '^.[ACDMR]' $stats | count)

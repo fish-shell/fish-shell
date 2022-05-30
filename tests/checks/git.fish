@@ -54,8 +54,15 @@ echo # the git prompt doesn't print a newline
 set -g __fish_git_prompt_show_informative_status 1
 fish_git_prompt
 echo
+#CHECK: (newbranch|✔)
+
+# Informative mode only shows untracked files if explicitly told.
+set -g __fish_git_prompt_showuntrackedfiles 1
+fish_git_prompt
+echo
 #CHECK: (newbranch|…1)
 set -e __fish_git_prompt_show_informative_status
+set -e __fish_git_prompt_showuntrackedfiles
 
 # Confirm the mode changes back
 fish_git_prompt

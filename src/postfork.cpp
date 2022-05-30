@@ -392,30 +392,34 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                 if (sz >= static_cast<unsigned long long>(arg_max)) {
                     char sz2[128];
                     format_size_safe(sz2, static_cast<unsigned long long>(arg_max));
-                    FLOGF_SAFE(exec,
-                               "Failed to execute process '%s': the total size of the argument list and "
-                               "exported variables (%s) exceeds the OS limit of %s.",
-                               actual_cmd, sz1, sz2);
+                    FLOGF_SAFE(
+                        exec,
+                        "Failed to execute process '%s': the total size of the argument list and "
+                        "exported variables (%s) exceeds the OS limit of %s.",
+                        actual_cmd, sz1, sz2);
                 } else {
                     // MAX_ARG_STRLEN, a linux thing that limits the size of one argument. It's
                     // defined in binfmts.h, but we don't want to include that just to be able to
                     // print the real limit.
                     FLOGF_SAFE(exec,
-                               "Failed to execute process '%s': An argument or exported variable exceeds the OS "
-                               "argument length limit.", actual_cmd);
+                               "Failed to execute process '%s': An argument or exported variable "
+                               "exceeds the OS "
+                               "argument length limit.",
+                               actual_cmd);
                 }
 
                 if (szenv >= static_cast<unsigned long long>(arg_max) / 2) {
                     FLOGF_SAFE(exec,
-                               "Hint: Your exported variables take up over half the limit. Try erasing or unexporting variables."
-                               );
+                               "Hint: Your exported variables take up over half the limit. Try "
+                               "erasing or unexporting variables.");
                 }
             } else {
-                FLOGF_SAFE(exec,
-                           "Failed to execute process '%s': the total size of the argument list and "
-                           "exported variables (%s) exceeds the "
-                           "operating system limit.",
-                           actual_cmd, sz1);
+                FLOGF_SAFE(
+                    exec,
+                    "Failed to execute process '%s': the total size of the argument list and "
+                    "exported variables (%s) exceeds the "
+                    "operating system limit.",
+                    actual_cmd, sz1);
             }
             break;
         }
@@ -471,7 +475,8 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
                 }
             } else if (access(actual_cmd, X_OK) == 0) {
                 FLOGF_SAFE(exec,
-                           "Failed to execute process '%s': The file exists and is executable. Check the interpreter or linker?",
+                           "Failed to execute process '%s': The file exists and is executable. "
+                           "Check the interpreter or linker?",
                            actual_cmd);
             } else {
                 FLOGF_SAFE(exec,

@@ -247,7 +247,7 @@ class history_search_t {
     /// The (possibly lowercased) search term.
     wcstring canon_term_;
 
-   /// Our search type.
+    /// Our search type.
     enum history_search_type_t search_type_ { history_search_type_t::contains };
 
     /// Our flags.

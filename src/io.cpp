@@ -251,9 +251,11 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                                     auto next = wdirname(dname);
                                     if (!wstat(next, &buf)) {
                                         if (!S_ISDIR(buf.st_mode)) {
-                                            FLOGF(warning, _(L"Path '%ls' is not a directory"), next.c_str());
+                                            FLOGF(warning, _(L"Path '%ls' is not a directory"),
+                                                  next.c_str());
                                         } else {
-                                            FLOGF(warning, _(L"Path '%ls' does not exist"), dname.c_str());
+                                            FLOGF(warning, _(L"Path '%ls' does not exist"),
+                                                  dname.c_str());
                                         }
                                         break;
                                     }

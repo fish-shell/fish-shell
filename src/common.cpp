@@ -991,8 +991,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L'"':
                 case L'%':
                 case L'~': {
-                    bool char_is_normal = (c == L'~' && no_tilde) ||
-                                          (c == L'?' && no_qmark);
+                    bool char_is_normal = (c == L'~' && no_tilde) || (c == L'?' && no_qmark);
                     if (!char_is_normal) {
                         need_escape = true;
                         if (escape_all) out += L'\\';

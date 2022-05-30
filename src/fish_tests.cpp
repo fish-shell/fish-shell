@@ -3750,7 +3750,7 @@ static void test_autosuggest_suggest_special() {
 
     parser_t::principal_parser().vars().remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
     popd();
-#endif //ndef SANITIZE_ADDRESS
+#endif  // ndef SANITIZE_ADDRESS
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {

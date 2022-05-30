@@ -728,7 +728,7 @@ double fish_wcstod(const wcstring &str, wchar_t **endptr) {
 /// are not consumed.
 double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
     const wchar_t *orig = str;
-    while (iswspace(*str)) str++; // Skip leading whitespace.
+    while (iswspace(*str)) str++;  // Skip leading whitespace.
     size_t leading_whitespace = size_t(str - orig);
     auto is_sign = [](wchar_t c) { return c == L'+' || c == L'-'; };
     auto is_inf_or_nan_char = [](wchar_t c) {
@@ -757,8 +757,11 @@ double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
     // literals using 0o, etc., we could just use iswalnum, instead of iswxdigit and P/p/X/x checks.
     while (iswxdigit(*str) || *str == L'P' || *str == L'p' || *str == L'X' || *str == L'x' ||
            is_sign(*str) || *str == L'.' || *str == L'_') {
-        if (*str == L'_') underscores.push_back(pruned.length());
-        else pruned.push_back(*str);
+        if (*str == L'_') {
+            underscores.push_back(pruned.length());
+        } else {
+            pruned.push_back(*str);
+        }
         str++;
     }
     const wchar_t *pruned_begin = pruned.c_str();
@@ -768,11 +771,13 @@ double fish_wcstod_underscores(const wchar_t *str, wchar_t **endptr) {
         if (endptr) *endptr = (wchar_t *)orig;
         return result;
     }
-    auto consumed_underscores_end = std::upper_bound(underscores.begin(), underscores.end(),
-                                                     size_t(pruned_end - pruned_begin));
+    auto consumed_underscores_end =
+        std::upper_bound(underscores.begin(), underscores.end(), size_t(pruned_end - pruned_begin));
     size_t num_underscores_consumed = std::distance(underscores.begin(), consumed_underscores_end);
-    if (endptr) *endptr = (wchar_t *)(orig + leading_whitespace + (pruned_end - pruned_begin)
-                                    + num_underscores_consumed);
+    if (endptr) {
+        *endptr = (wchar_t *)(orig + leading_whitespace + (pruned_end - pruned_begin) +
+                              num_underscores_consumed);
+    }
     return result;
 }
 

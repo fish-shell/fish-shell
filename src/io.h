@@ -371,7 +371,8 @@ class output_stream_t : noncopyable_t, nonmovable_t {
                                         bool want_newline = true);
 
     /// The following are all convenience overrides.
-    void append_with_separation(const wcstring &s, separation_type_t type, bool want_newline = true) {
+    void append_with_separation(const wcstring &s, separation_type_t type,
+                                bool want_newline = true) {
         append_with_separation(s.data(), s.size(), type, want_newline);
     }
 

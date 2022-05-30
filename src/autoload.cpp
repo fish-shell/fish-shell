@@ -211,8 +211,6 @@ void autoload_t::perform_autoload(const wcstring &path, parser_t &parser) {
 
     wcstring script_source = L"source " + escape_string(path, ESCAPE_ALL);
     auto prev_statuses = parser.get_last_statuses();
-    const cleanup_t put_back([&] {
-        parser.set_last_statuses(prev_statuses);
-    });
+    const cleanup_t put_back([&] { parser.set_last_statuses(prev_statuses); });
     parser.eval(script_source, io_chain_t{});
 }

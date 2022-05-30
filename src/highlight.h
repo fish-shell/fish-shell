@@ -76,8 +76,9 @@ namespace std {
 template <>
 struct hash<highlight_spec_t> {
     std::size_t operator()(const highlight_spec_t &v) const {
-        const size_t vals[4] = {static_cast<uint32_t>(v.foreground), static_cast<uint32_t>(v.background),
-                          v.valid_path, v.force_underline};
+        const size_t vals[4] = {static_cast<uint32_t>(v.foreground),
+                                static_cast<uint32_t>(v.background), v.valid_path,
+                                v.force_underline};
         return (vals[0] << 0) + (vals[1] << 6) + (vals[2] << 12) + (vals[3] << 18);
     }
 };

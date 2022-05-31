@@ -16,9 +16,9 @@
 #include <atomic>
 #include <cstddef>
 #include <cwchar>
+#include <forward_list>
 #include <functional>
 #include <iterator>
-#include <list>
 #include <memory>
 #include <numeric>
 #include <set>
@@ -124,7 +124,7 @@ struct complete_entry_opt_t {
 static relaxed_atomic_t<unsigned int> k_complete_order{0};
 
 /// Struct describing a command completion.
-using option_list_t = std::list<complete_entry_opt_t>;
+using option_list_t = std::forward_list<complete_entry_opt_t>;
 class completion_entry_t {
    public:
     /// List of all options.
@@ -137,28 +137,21 @@ class completion_entry_t {
     /// Getters for option list.
     const option_list_t &get_options() const { return options; }
 
-    /// Adds or removes an option.
+    /// Adds an option.
     void add_option(const complete_entry_opt_t &opt) { options.push_front(opt); }
-    bool remove_option(const wcstring &option, complete_option_type_t type);
+
+    /// Remove all completion options in the specified entry that match the specified short / long
+    /// option strings. Returns true if it is now empty and should be deleted, false if it's not
+    /// empty.
+    bool remove_option(const wcstring &option, complete_option_type_t type) {
+        this->options.remove_if([&](const complete_entry_opt_t &opt) {
+            return opt.option == option && opt.type == type;
+        });
+        return this->options.empty();
+    }
 
     completion_entry_t() : order(++k_complete_order) {}
 };
-
-/// Remove all completion options in the specified entry that match the specified short / long
-/// option strings. Returns true if it is now empty and should be deleted, false if it's not empty.
-/// Must be called while locked.
-bool completion_entry_t::remove_option(const wcstring &option, complete_option_type_t type) {
-    auto iter = this->options.begin();
-    while (iter != this->options.end()) {
-        if (iter->option == option && iter->type == type) {
-            iter = this->options.erase(iter);
-        } else {
-            // Just go to the next one.
-            ++iter;
-        }
-    }
-    return this->options.empty();
-}
 }  // namespace
 
 /// Set of all completion entries. Keyed by the command name, and whether it is a path.

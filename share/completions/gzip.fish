@@ -8,6 +8,7 @@ complete -c gzip -s d -l decompress -k -x -a "
 
 complete -c gzip -s f -l force -d Overwrite
 complete -c gzip -s h -l help -d "Display help and exit"
+complete -c gzip -s k -l keep -d "Keep input files"
 complete -c gzip -s l -l list -d "List compression information"
 complete -c gzip -s L -l license -d "Print license"
 complete -c gzip -s n -l no-name -d "Do not save/restore filename"

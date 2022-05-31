@@ -2062,7 +2062,7 @@ struct test_environment_t : public environment_t {
         return none();
     }
 
-    wcstring_list_t get_names(int flags) const override {
+    wcstring_list_t get_names(env_mode_flags_t flags) const override {
         UNUSED(flags);
         wcstring_list_t result;
         for (const auto &kv : vars) {
@@ -2082,7 +2082,7 @@ struct pwd_environment_t : public test_environment_t {
         return test_environment_t::get(key, mode);
     }
 
-    wcstring_list_t get_names(int flags) const override {
+    wcstring_list_t get_names(env_mode_flags_t flags) const override {
         auto res = test_environment_t::get_names(flags);
         res.clear();
         if (std::count(res.begin(), res.end(), L"PWD") == 0) {
@@ -3197,7 +3197,7 @@ static void test_complete() {
 
     auto func_props = make_test_func_props();
     struct test_complete_vars_t : environment_t {
-        wcstring_list_t get_names(int flags) const override {
+        wcstring_list_t get_names(env_mode_flags_t flags) const override {
             UNUSED(flags);
             return {L"Foo1", L"Foo2",  L"Foo3",   L"Bar1",   L"Bar2",
                     L"Bar3", L"alpha", L"ALPHA!", L"gamma1", L"GAMMA2"};

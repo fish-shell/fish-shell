@@ -194,7 +194,7 @@ maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t
     UNUSED(mode);
     return none();
 }
-wcstring_list_t null_environment_t::get_names(int flags) const {
+wcstring_list_t null_environment_t::get_names(env_mode_flags_t flags) const {
     UNUSED(flags);
     return {};
 }
@@ -571,7 +571,7 @@ class env_scoped_impl_t : public environment_t, noncopyable_t {
     }
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
-    wcstring_list_t get_names(int flags) const override;
+    wcstring_list_t get_names(env_mode_flags_t flags) const override;
 
     perproc_data_t &perproc_data() { return perproc_data_; }
     const perproc_data_t &perproc_data() const { return perproc_data_; }
@@ -835,7 +835,7 @@ maybe_t<env_var_t> env_scoped_impl_t::get(const wcstring &key, env_mode_flags_t 
     return result;
 }
 
-wcstring_list_t env_scoped_impl_t::get_names(int flags) const {
+wcstring_list_t env_scoped_impl_t::get_names(env_mode_flags_t flags) const {
     const query_t query(flags);
     std::set<wcstring> names;
 
@@ -1348,7 +1348,9 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
     return acquire_impl()->get(key, mode);
 }
 
-wcstring_list_t env_stack_t::get_names(int flags) const { return acquire_impl()->get_names(flags); }
+wcstring_list_t env_stack_t::get_names(env_mode_flags_t flags) const {
+    return acquire_impl()->get_names(flags);
+}
 
 int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
     // Historical behavior.

@@ -187,7 +187,7 @@ class environment_t {
    public:
     virtual maybe_t<env_var_t> get(const wcstring &key,
                                    env_mode_flags_t mode = ENV_DEFAULT) const = 0;
-    virtual wcstring_list_t get_names(int flags) const = 0;
+    virtual wcstring_list_t get_names(env_mode_flags_t flags) const = 0;
     virtual ~environment_t();
 
     /// Returns the PWD with a terminating slash.
@@ -201,7 +201,7 @@ class null_environment_t : public environment_t {
     ~null_environment_t() override;
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
-    wcstring_list_t get_names(int flags) const override;
+    wcstring_list_t get_names(env_mode_flags_t flags) const override;
 };
 
 /// A mutable environment which allows scopes to be pushed and popped.
@@ -229,7 +229,7 @@ class env_stack_t final : public environment_t {
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
     /// Implementation of environment_t.
-    wcstring_list_t get_names(int flags) const override;
+    wcstring_list_t get_names(env_mode_flags_t flags) const override;
 
     /// Sets the variable with the specified name to the given values.
     int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);

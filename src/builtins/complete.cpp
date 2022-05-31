@@ -33,7 +33,8 @@
 static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wchar_t *short_opt,
                                   const wcstring_list_t &gnu_opts, const wcstring_list_t &old_opts,
                                   completion_mode_t result_mode, const wcstring_list_t &condition,
-                                  const wchar_t *comp, const wchar_t *desc, int flags) {
+                                  const wchar_t *comp, const wchar_t *desc,
+                                  complete_flags_t flags) {
     for (const wchar_t *s = short_opt; *s; s++) {
         complete_add(cmd, cmd_is_path, wcstring{*s}, option_type_short, result_mode, condition,
                      comp, desc, flags);
@@ -59,8 +60,8 @@ static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wc
 static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_list_t &paths,
                                  const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
                                  const wcstring_list_t &old_opt, completion_mode_t result_mode,
-                                 const wcstring_list_t &condition, const wchar_t *comp, const wchar_t *desc,
-                                 int flags) {
+                                 const wcstring_list_t &condition, const wchar_t *comp,
+                                 const wchar_t *desc, complete_flags_t flags) {
     for (const wcstring &cmd : cmds) {
         builtin_complete_add2(cmd.c_str(), false /* not path */, short_opt, gnu_opt, old_opt,
                               result_mode, condition, comp, desc, flags);
@@ -428,8 +429,8 @@ maybe_t<int> builtin_complete(parser_t &parser, io_streams_t &streams, const wch
             parser.libdata().builtin_complete_current_commandline = false;
         }
     } else if (path.empty() && gnu_opt.empty() && short_opt.empty() && old_opt.empty() && !remove &&
-               !*comp && !*desc && condition.empty() && wrap_targets.empty() && !result_mode.no_files &&
-               !result_mode.force_files && !result_mode.requires_param) {
+               !*comp && !*desc && condition.empty() && wrap_targets.empty() &&
+               !result_mode.no_files && !result_mode.force_files && !result_mode.requires_param) {
         // No arguments that would add or remove anything specified, so we print the definitions of
         // all matching completions.
         if (cmd_to_complete.empty()) {

@@ -1941,7 +1941,7 @@ const wchar_t *REPLACE_UNCLEAN = L"$*?({})";
 /// Advanced tokens like those containing {}-style expansion can not at the moment be replaced,
 /// other than if the new token is already an exact replacement, e.g. if the COMPLETE_DONT_ESCAPE
 /// flag is set.
-static bool reader_can_replace(const wcstring &in, int flags) {
+static bool reader_can_replace(const wcstring &in, complete_flags_t flags) {
     if (flags & COMPLETE_DONT_ESCAPE) {
         return true;
     }

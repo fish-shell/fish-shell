@@ -230,7 +230,8 @@ void completions_sort_and_prioritize(completion_list_t *comps,
 /// \param flags A set of completion flags
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, completion_mode_t result_mode,
-                  wcstring_list_t condition, const wchar_t *comp, const wchar_t *desc, int flags);
+                  wcstring_list_t condition, const wchar_t *comp, const wchar_t *desc,
+                  complete_flags_t flags);
 
 /// Remove a previously defined completion.
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
@@ -261,7 +262,7 @@ bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const 
 /// \param desc The description of the completion
 /// \param flags completion flags
 void append_completion(completion_list_t *completions, wcstring comp, wcstring desc = wcstring(),
-                       int flags = 0,
+                       complete_flags_t flags = 0,
                        string_fuzzy_match_t match = string_fuzzy_match_t::exact_match());
 
 /// Support for "wrap targets." A wrap target is a command that completes like another command.

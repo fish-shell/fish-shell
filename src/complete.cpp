@@ -25,7 +25,6 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 #include "autoload.h"
@@ -122,7 +121,7 @@ struct complete_entry_opt_t {
 };
 
 /// Last value used in the order field of completion_entry_t.
-static std::atomic<unsigned int> k_complete_order{0};
+static relaxed_atomic_t<unsigned int> k_complete_order{0};
 
 /// Struct describing a command completion.
 using option_list_t = std::list<complete_entry_opt_t>;
@@ -131,10 +130,6 @@ class completion_entry_t {
     /// List of all options.
     option_list_t options;
 
-    /// Command string.
-    const wcstring cmd;
-    /// True if command is a path.
-    const bool cmd_is_path;
     /// Order for when this completion was created. This aids in outputting completions sorted by
     /// time.
     const unsigned int order;
@@ -146,8 +141,7 @@ class completion_entry_t {
     void add_option(const complete_entry_opt_t &opt) { options.push_front(opt); }
     bool remove_option(const wcstring &option, complete_option_type_t type);
 
-    completion_entry_t(wcstring c, bool type)
-        : cmd(std::move(c)), cmd_is_path(type), order(++k_complete_order) {}
+    completion_entry_t() : order(++k_complete_order) {}
 };
 
 /// Remove all completion options in the specified entry that match the specified short / long
@@ -167,35 +161,14 @@ bool completion_entry_t::remove_option(const wcstring &option, complete_option_t
 }
 }  // namespace
 
-/// Set of all completion entries.
-namespace std {
-template <>
-struct hash<completion_entry_t> {
-    size_t operator()(const completion_entry_t &c) const {
-        std::hash<wcstring> hasher;
-        return hasher(wcstring(c.cmd));
-    }
-};
-template <>
-struct equal_to<completion_entry_t> {
-    bool operator()(const completion_entry_t &c1, const completion_entry_t &c2) const {
-        return c1.cmd == c2.cmd;
-    }
-};
-
-}  // namespace std
-using completion_entry_set_t = std::unordered_set<completion_entry_t>;
-static owning_lock<completion_entry_set_t> s_completion_set;
+/// Set of all completion entries. Keyed by the command name, and whether it is a path.
+using completion_key_t = std::pair<wcstring, bool>;
+using completion_entry_map_t = std::map<completion_key_t, completion_entry_t>;
+static owning_lock<completion_entry_map_t> s_completion_map;
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 using wrapper_map_t = std::unordered_map<wcstring, wcstring_list_t>;
 static owning_lock<wrapper_map_t> wrapper_map;
-
-/// Comparison function to sort completions by their order field.
-static bool compare_completions_by_order(const completion_entry_t &p1,
-                                         const completion_entry_t &p2) {
-    return p1.order < p2.order;
-}
 
 description_func_t const_desc(const wcstring &s) {
     return [=](const wcstring &ignored) {
@@ -505,17 +478,6 @@ bool completer_t::condition_test(const wcstring_list_t &conditions) {
         if (!condition_test(c)) return false;
     }
     return true;
-}
-
-/// Locate the specified entry. Create it if it doesn't exist. Must be called while locked.
-static completion_entry_t &complete_get_exact_entry(completion_entry_set_t &completion_set,
-                                                    const wcstring &cmd, bool cmd_is_path) {
-    auto ins = completion_set.emplace(cmd, cmd_is_path);
-
-    // NOTE SET_ELEMENTS_ARE_IMMUTABLE: Exposing mutable access here is only okay as long as callers
-    // do not change any field that matters to ordering - affecting order without telling std::set
-    // invalidates its internal state.
-    return const_cast<completion_entry_t &>(*ins.first);
 }
 
 /// Find the full path and commandname from a command string 'str'.
@@ -914,12 +876,14 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
     // Make a list of lists of all options that we care about.
     std::vector<option_list_t> all_options;
     {
-        auto completion_set = s_completion_set.acquire();
-        for (const completion_entry_t &i : *completion_set) {
-            const wcstring &match = i.cmd_is_path ? path : cmd;
-            if (wildcard_match(match, i.cmd)) {
+        auto completion_map = s_completion_map.acquire();
+        for (const auto &kv : *completion_map) {
+            const completion_key_t &key = kv.first;
+            bool cmd_is_path = key.second;
+            const wcstring &match = cmd_is_path ? path : cmd;
+            if (wildcard_match(match, key.first)) {
                 // Copy all of their options into our list.
-                all_options.push_back(i.get_options());  // Oof, this is a lot of copying
+                all_options.push_back(kv.second.get_options());  // Oof, this is a lot of copying
             }
         }
     }
@@ -1739,8 +1703,8 @@ void complete_add(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
     assert(option.empty() == (option_type == option_type_args_only));
 
     // Lock the lock that allows us to edit the completion entry list.
-    auto completion_set = s_completion_set.acquire();
-    completion_entry_t &c = complete_get_exact_entry(*completion_set, cmd, cmd_is_path);
+    auto completion_map = s_completion_map.acquire();
+    completion_entry_t &c = (*completion_map)[std::make_pair(cmd, cmd_is_path)];
 
     // Create our new option.
     complete_entry_opt_t opt;
@@ -1758,25 +1722,19 @@ void complete_add(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
 
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
                      complete_option_type_t type) {
-    auto completion_set = s_completion_set.acquire();
-
-    completion_entry_t tmp_entry(cmd, cmd_is_path);
-    auto iter = completion_set->find(tmp_entry);
-    if (iter != completion_set->end()) {
-        // const_cast: See SET_ELEMENTS_ARE_IMMUTABLE.
-        auto &entry = const_cast<completion_entry_t &>(*iter);
-
-        bool delete_it = entry.remove_option(option, type);
+    auto completion_map = s_completion_map.acquire();
+    auto iter = completion_map->find(std::make_pair(cmd, cmd_is_path));
+    if (iter != completion_map->end()) {
+        bool delete_it = iter->second.remove_option(option, type);
         if (delete_it) {
-            completion_set->erase(iter);
+            completion_map->erase(iter);
         }
     }
 }
 
 void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
-    auto completion_set = s_completion_set.acquire();
-    completion_entry_t tmp_entry(cmd, cmd_is_path);
-    completion_set->erase(tmp_entry);
+    auto completion_map = s_completion_map.acquire();
+    completion_map->erase(std::make_pair(cmd, cmd_is_path));
 }
 
 completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_flags_t flags,
@@ -1807,10 +1765,10 @@ static void append_switch(wcstring &out, const wcstring &opt) {
     append_format(out, L" --%ls", opt.c_str());
 }
 
-static wcstring completion2string(const complete_entry_opt_t &o, const wcstring &cmd,
-                                  bool is_path) {
-    wcstring out;
-    out.append(L"complete");
+static wcstring completion2string(const completion_key_t &key, const complete_entry_opt_t &o) {
+    const wcstring &cmd = key.first;
+    bool is_path = key.second;
+    wcstring out = L"complete";
 
     if (o.flags & COMPLETE_DONT_SORT) append_switch(out, L'k');
 
@@ -1858,20 +1816,22 @@ static wcstring completion2string(const complete_entry_opt_t &o, const wcstring 
 /// Use by the bare `complete`, loaded completions are printed out as commands
 wcstring complete_print(const wcstring &cmd) {
     wcstring out;
-    out.reserve(40);  // just a guess
-    auto completion_set = s_completion_set.acquire();
 
-    // Get a list of all completions in a vector, then sort it by order.
-    std::vector<std::reference_wrapper<const completion_entry_t>> all_completions;
-    // These should be "c"begin/end, but then gcc from ~~the dark ages~~ RHEL 7 would complain.
-    all_completions.insert(all_completions.begin(), completion_set->begin(), completion_set->end());
-    sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
+    // Get references to our completions and sort them by order.
+    auto completions = s_completion_map.acquire();
+    using comp_ref_t = std::reference_wrapper<const completion_entry_map_t::value_type>;
+    std::vector<comp_ref_t> completion_refs(completions->begin(), completions->end());
+    std::sort(completion_refs.begin(), completion_refs.end(), [](comp_ref_t a, comp_ref_t b) {
+        return a.get().second.order < b.get().second.order;
+    });
 
-    for (const completion_entry_t &e : all_completions) {
-        if (!cmd.empty() && e.cmd != cmd) continue;
-        const option_list_t &options = e.get_options();
+    for (const comp_ref_t &cr : completion_refs) {
+        const completion_key_t &key = cr.get().first;
+        const completion_entry_t &entry = cr.get().second;
+        if (!cmd.empty() && key.first != cmd) continue;
+        const option_list_t &options = entry.get_options();
         for (const complete_entry_opt_t &o : options) {
-            out.append(completion2string(o, e.cmd, e.cmd_is_path));
+            out.append(completion2string(key, o));
         }
     }
 

@@ -33,20 +33,20 @@ enum {
     /// a space).
     COMPLETE_NO_SPACE = 1 << 0,
     /// This is not the suffix of a token, but replaces it entirely.
-    COMPLETE_REPLACES_TOKEN = 1 << 2,
+    COMPLETE_REPLACES_TOKEN = 1 << 1,
     /// This completion may or may not want a space at the end - guess by checking the last
     /// character of the completion.
-    COMPLETE_AUTO_SPACE = 1 << 3,
+    COMPLETE_AUTO_SPACE = 1 << 2,
     /// This completion should be inserted as-is, without escaping.
-    COMPLETE_DONT_ESCAPE = 1 << 4,
+    COMPLETE_DONT_ESCAPE = 1 << 3,
     /// If you do escape, don't escape tildes.
-    COMPLETE_DONT_ESCAPE_TILDES = 1 << 5,
+    COMPLETE_DONT_ESCAPE_TILDES = 1 << 4,
     /// Do not sort supplied completions
-    COMPLETE_DONT_SORT = 1 << 6,
+    COMPLETE_DONT_SORT = 1 << 5,
     /// This completion looks to have the same string as an existing argument.
-    COMPLETE_DUPLICATES_ARGUMENT = 1 << 7
+    COMPLETE_DUPLICATES_ARGUMENT = 1 << 6,
 };
-using complete_flags_t = int;
+using complete_flags_t = uint8_t;
 
 /// std::function which accepts a completion string and returns its description.
 using description_func_t = std::function<wcstring(const wcstring &)>;
@@ -70,10 +70,6 @@ class completion_t {
     /// The type of fuzzy match.
     string_fuzzy_match_t match;
     /// Flags determining the completion behavior.
-    ///
-    /// Determines whether a space should be inserted after this completion if it is the only
-    /// possible completion using the COMPLETE_NO_SPACE flag. The COMPLETE_NO_CASE can be used to
-    /// signal that this completion is case insensitive.
     complete_flags_t flags;
 
     // Construction.

@@ -30,7 +30,7 @@
 // complete_add function only accepts one short switch and one long switch.
 
 /// Silly function.
-static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wchar_t *short_opt,
+static void builtin_complete_add2(const wcstring &cmd, bool cmd_is_path, const wchar_t *short_opt,
                                   const wcstring_list_t &gnu_opts, const wcstring_list_t &old_opts,
                                   completion_mode_t result_mode, const wcstring_list_t &condition,
                                   const wchar_t *comp, const wchar_t *desc,
@@ -63,13 +63,13 @@ static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_lis
                                  const wcstring_list_t &condition, const wchar_t *comp,
                                  const wchar_t *desc, complete_flags_t flags) {
     for (const wcstring &cmd : cmds) {
-        builtin_complete_add2(cmd.c_str(), false /* not path */, short_opt, gnu_opt, old_opt,
-                              result_mode, condition, comp, desc, flags);
+        builtin_complete_add2(cmd, false /* not path */, short_opt, gnu_opt, old_opt, result_mode,
+                              condition, comp, desc, flags);
     }
 
     for (const wcstring &path : paths) {
-        builtin_complete_add2(path.c_str(), true /* is path */, short_opt, gnu_opt, old_opt,
-                              result_mode, condition, comp, desc, flags);
+        builtin_complete_add2(path, true /* is path */, short_opt, gnu_opt, old_opt, result_mode,
+                              condition, comp, desc, flags);
     }
 }
 

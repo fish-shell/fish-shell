@@ -93,6 +93,8 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Keyboard shortcut :kbd:`Alt-S` (previously: toggle ``sudo`` prepended to current commandline contents) now supports ``doas`` on systems without ``sudo`` (:issue:`8942`).
+- The ``kill-whole-line`` special input function now kills the newline preceeding the last line. This makes ``dd`` in vi-mode clear the last line properly.
+- Introduce the ``kill-inner-line`` special input function, which kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines.
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

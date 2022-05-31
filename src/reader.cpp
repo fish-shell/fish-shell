@@ -1479,6 +1479,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::yank_pop:
         case rl::backward_kill_line:
         case rl::kill_whole_line:
+        case rl::kill_inner_line:
         case rl::kill_word:
         case rl::kill_bigword:
         case rl::backward_kill_word:
@@ -3295,9 +3296,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             kill(el, begin - buff, len, KILL_PREPEND, rls.last_cmd != rl::backward_kill_line);
             break;
         }
-        case rl::kill_whole_line: {
-            // We match the emacs behavior here: "kills the entire line including the following
-            // newline".
+        case rl::kill_whole_line:  // We match the emacs behavior here: "kills the entire line
+                                   // including the following newline".
+        case rl::kill_inner_line:  // Do not kill the following newline
+        {
             editable_line_t *el = active_edit_line();
             const wchar_t *buff = el->text().c_str();
 
@@ -3312,16 +3314,27 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
             // Push end forwards to just past the next newline, or just past the last char.
             size_t end = el->position();
-            while (buff[end] != L'\0') {
-                end++;
-                if (buff[end - 1] == L'\n') {
+            for (;; end++) {
+                if (buff[end] == L'\0') {
+                    if (c == rl::kill_whole_line && begin > 0) {
+                        // We are on the last line. Delete the newline in the beginning to clear
+                        // this line.
+                        begin--;
+                    }
+                    break;
+                }
+                if (buff[end] == L'\n') {
+                    if (c == rl::kill_whole_line) {
+                        end++;
+                    }
                     break;
                 }
             }
+
             assert(end >= begin);
 
             if (end > begin) {
-                kill(el, begin, end - begin, KILL_APPEND, rls.last_cmd != rl::kill_whole_line);
+                kill(el, begin, end - begin, KILL_APPEND, rls.last_cmd != c);
             }
             break;
         }

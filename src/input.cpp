@@ -139,6 +139,7 @@ static constexpr const input_function_metadata_t input_function_metadata[] = {
     {L"insert-line-over", readline_cmd_t::insert_line_over},
     {L"insert-line-under", readline_cmd_t::insert_line_under},
     {L"kill-bigword", readline_cmd_t::kill_bigword},
+    {L"kill-inner-line", readline_cmd_t::kill_inner_line},
     {L"kill-line", readline_cmd_t::kill_line},
     {L"kill-selection", readline_cmd_t::kill_selection},
     {L"kill-whole-line", readline_cmd_t::kill_whole_line},

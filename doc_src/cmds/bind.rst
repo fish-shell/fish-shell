@@ -230,7 +230,10 @@ The following special input functions are available:
     move the selected text to the killring
 
 ``kill-whole-line``
-    move the line to the killring
+    move the line (including the following newline) to the killring. If the line is the last line, its preceeding newline is also removed
+
+``kill-inner-line``
+    move the line (without the following newline) to the killring
 
 ``kill-word``
     move the next word to the killring

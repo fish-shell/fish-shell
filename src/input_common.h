@@ -37,6 +37,7 @@ enum class readline_cmd_t {
     end_of_history,
     backward_kill_line,
     kill_whole_line,
+    kill_inner_line,
     kill_word,
     kill_bigword,
     backward_kill_word,

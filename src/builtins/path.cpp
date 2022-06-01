@@ -247,7 +247,7 @@ static int handle_flag_t(const wchar_t **argv, parser_t &parser, io_streams_t &s
             } else if (t == L"link") {
                 opts->type |= TYPE_LINK;
             } else {
-                path_error(streams, _(L"%ls: Invalid type '%ls'"), L"path", t.c_str());
+                path_error(streams, _(L"%ls: Invalid type '%ls'\n"), L"path", t.c_str());
                 return STATUS_INVALID_ARGS;
             }
         }
@@ -284,7 +284,7 @@ static int handle_flag_p(const wchar_t **argv, parser_t &parser, io_streams_t &s
                 opts->perm |= PERM_GROUP;
                 opts->have_special_perm = true;
             } else {
-                path_error(streams, _(L"%ls: Invalid permission '%ls'"), L"path", p.c_str());
+                path_error(streams, _(L"%ls: Invalid permission '%ls'\n"), L"path", p.c_str());
                 return STATUS_INVALID_ARGS;
             }
         }

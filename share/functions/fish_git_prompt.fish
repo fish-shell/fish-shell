@@ -269,9 +269,9 @@ function fish_git_prompt --description "Prompt function for Git"
                 test "$untracked" = true; and set opt -unormal
                 set -l stat (command git -c core.fsmonitor= status --porcelain -z --ignored=no $opt | string split0)
 
-                set dirtystate (string match -qr '^.?M' -- $stat; and echo 1)
+                set dirtystate (string match -qr '^.[ACDMR]' -- $stat; and echo 1)
                 if test -n "$sha"
-                    set stagedstate (string match -qr '^[^? ]' -- $stat; and echo 1)
+                    set stagedstate (string match -qr '^[ACDMR].' -- $stat; and echo 1)
                 else
                     set invalidstate 1
                 end

@@ -85,6 +85,26 @@ fish_git_prompt
 echo
 #CHECK: (newbranch %)
 
+set -e __fish_git_prompt_showuntrackedfiles
+set -e __fish_git_prompt_status_order
+
+git -c user.email=banana@example.com -c user.name=banana commit -m foo >/dev/null
+fish_git_prompt
+echo
+#CHECK: (newbranch)
+
+echo "test" > foo
+fish_git_prompt
+echo
+#CHECK: (newbranch *)
+
+git add foo
+fish_git_prompt
+echo
+#CHECK: (newbranch +)
+
+
+
 # Turn on everything and verify we correctly ignore sus config files.
 set -g __fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 set -g __fish_git_prompt_showdirtystate 1

@@ -234,6 +234,8 @@ code {
     background-color: rgba(20,20,80, .1);
     padding-left: 5px;
     padding-right: 5px;
+    margin-left: 3px;
+    margin-right: 3px;
 }
 
 tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command {
@@ -527,7 +529,7 @@ div.body .internal.reference:link {
     }
 
     code {
-        background-color: rgba(200, 200, 255, .1);
+        background-color: rgba(200, 200, 255, .2);
     }
 
     .warning code {

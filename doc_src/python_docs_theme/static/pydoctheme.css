@@ -111,6 +111,10 @@ div.documentwrapper {
     float: none;
 }
 
+div.document {
+    display: flex;
+}
+
 div.document, div.body, div.warning {
     background-color: inherit;
     color: inherit;
@@ -350,6 +354,11 @@ div.sphinxsidebar ul {
     margin: 1em 10px 1em 10px;
 }
 
+
+div.bodywrapper {
+    margin: 0;
+}
+
 /* On screens that are less than 700px wide remove anything non-essential
    - the sidebar, the gradient background, ... */
 @media screen and (max-width: 700px) {
@@ -377,10 +386,6 @@ div.sphinxsidebar ul {
         display: none !important;
     }
     div.content {margin-left: 0;}
-
-    div.bodywrapper {
-        margin: 0;
-    }
     div.body {
         padding: 1rem;
     }

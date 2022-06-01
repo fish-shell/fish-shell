@@ -180,7 +180,7 @@ div.body hr {
     height: 1px;
 }
 
-div.body pre {
+div.body pre, code {
     border-radius: 3px;
     border: 1px solid #ac9;
 }
@@ -270,7 +270,7 @@ pre, div[class*="highlight-"] {
     clear: unset;
 }
 
-div.body tt, div.body code {
+div.body tt {
     border-radius: 3px;
 }
 
@@ -471,7 +471,7 @@ div.body .internal.reference:link {
         color: inherit;
     }
 
-    div.body pre {
+    div.body pre, code {
         border: 1px solid #536;
     }
 

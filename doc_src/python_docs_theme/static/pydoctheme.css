@@ -467,6 +467,10 @@ div.body .internal.reference:link {
         color: inherit;
     }
 
+    div.body pre {
+        border: 1px solid #536;
+    }
+
     .footnote, .footnote-reference {
         background-color: #101020;
     }

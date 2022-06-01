@@ -3,7 +3,7 @@
 #
 
 function __dnf_list_installed_packages
-    dnf repoquery --cacheonly "$cur*" --qf "%{NAME}" --installed
+    dnf repoquery --cacheonly "$cur*" --qf "%{NAME}" --installed </dev/null
 end
 
 function __dnf_list_available_packages
@@ -24,7 +24,9 @@ function __dnf_list_available_packages
         set results (sqlite3 /var/cache/dnf/packages.db "SELECT pkg FROM available WHERE pkg LIKE \"$tok%\"" 2>/dev/null |
             string replace -r -- '-[^-]*-[^-]*$' '')
     else
-        set results (dnf repoquery --cacheonly "$tok*" --qf "%{NAME}" --available 2>/dev/null)
+        # In some cases dnf will ask for input (e.g. to accept gpg keys).
+        # Connect it to /dev/null to try to stop it.
+        set results (dnf repoquery --cacheonly "$tok*" --qf "%{NAME}" --available </dev/null 2>/dev/null)
     end
     if set -q results[1]
         set results (string match -r -- '.*\\.rpm$' $files) $results

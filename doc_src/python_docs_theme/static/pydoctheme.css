@@ -112,7 +112,7 @@ div.documentwrapper {
 }
 
 div.document {
-    display: flex;
+    display: block;
 }
 
 div.document, div.body, div.warning {
@@ -356,7 +356,7 @@ div.sphinxsidebar ul {
 
 
 div.bodywrapper {
-    margin: 0;
+    margin-left: 230px;
 }
 
 /* On screens that are less than 700px wide remove anything non-essential
@@ -371,6 +371,10 @@ div.bodywrapper {
     div.documentwrapper {
         float: left;
     }
+    div.bodywrapper {
+        margin-left: 0;
+    }
+
 
     div.sphinxsidebar ul {
         flex-basis: content;

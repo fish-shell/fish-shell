@@ -74,6 +74,26 @@ Specific elements of a list can be selected::
 
   echo $list[5..7]
 
+The arguments to ``set`` are ordinary, so you can also set a variable to the output of a command::
+
+  # Set lines to all the lines in file, one element per line
+  set lines (cat file)
+
+or a mixture of literal values and output::
+
+  > set numbers 1 2 3 (seq 5 8) 9
+  > printf '%s\n' $numbers
+  1
+  2
+  3
+  5
+  6
+  7
+  8
+  9
+
+A ``=`` is unnecessary and unhelpful with ``set`` - ``set foo = bar`` will set the variable "foo" to two values: "=" and "bar". ``set foo=bar`` will print an error.
+
 See :ref:`Shell variables <variables>` for more.
 
 .. [#] zsh also does not perform word splitting by default (the SH_WORD_SPLIT option controls this)

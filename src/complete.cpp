@@ -138,7 +138,7 @@ class completion_entry_t {
     const option_list_t &get_options() const { return options; }
 
     /// Adds an option.
-    void add_option(const complete_entry_opt_t &opt) { options.push_front(opt); }
+    void add_option(complete_entry_opt_t &&opt) { options.push_front(std::move(opt)); }
 
     /// Remove all completion options in the specified entry that match the specified short / long
     /// option strings. Returns true if it is now empty and should be deleted, false if it's not
@@ -1710,7 +1710,7 @@ void complete_add(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
     if (desc) opt.desc = desc;
     opt.flags = flags;
 
-    c.add_option(opt);
+    c.add_option(std::move(opt));
 }
 
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,

@@ -267,7 +267,9 @@ function fish_git_prompt --description "Prompt function for Git"
                 # With just dirty, it's ~20%.
                 set -l opt -uno
                 test "$untracked" = true; and set opt -unormal
-                set -l stat (command git -c core.fsmonitor= status --porcelain -z --ignored=no $opt | string split0)
+                # Don't use `--ignored=no`; it was introduced in Git 2.16, from January 2018
+                # Ignored files are omitted by default
+                set -l stat (command git -c core.fsmonitor= status --porcelain -z $opt | string split0)
 
                 set dirtystate (string match -qr '^.[ACDMR]' -- $stat; and echo 1)
                 if test -n "$sha"

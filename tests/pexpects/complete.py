@@ -2,14 +2,35 @@
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
-send, sendline, sleep, expect_prompt, expect_re = (
+send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,
     sp.sendline,
     sp.sleep,
     sp.expect_prompt,
     sp.expect_re,
+    sp.expect_str,
 )
 expect_prompt()
+
+# Verify COMPLETE_AUTO_SPACE behavior
+sendline("complete -x -c monster -a truck")
+expect_prompt()
+sendline("complete -x -c monster -a energy=")
+expect_prompt()
+send("monster t")
+sleep(0.1)
+send("\t")
+sleep(0.1)
+send("!")
+expect_str("monster truck !")  # space
+send("\b" * 64)
+send("monster e")
+sleep(0.1)
+send("\t")
+sleep(0.1)
+send("!")
+expect_str("monster energy=!")  # no space
+send("\b" * 64)
 
 sendline(
     """

@@ -19,4 +19,4 @@ complete -c useradd -s b -l base-dir -d 'The initial path prefix for a new user\
 complete -c useradd -s e -l expiredate -d 'The date on which the user account is disabled' -r
 complete -c useradd -s f -l inactive -d 'Number of days to disable account after password expiration' -r
 complete -c useradd -s g -l gid -d 'The group name or ID for a new user\'s initial group' -x -a '(string match -r "^[^#].*" < /etc/group | string split -f1,3 ":" | string join ":" | string replace -a ":" \n)'
-complete -c useradd -s s -l shell -d 'Name of the new user\'s login shell' -x -a '(string match -r "^[^#].*" < /etc/shells)'
+complete -c useradd -s s -l shell -d 'Name of the new user\'s login shell' -x -a '(string match -r "^[^#].*" < /etc/shells; type -afp nologin)'

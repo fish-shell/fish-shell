@@ -244,13 +244,6 @@ completion_list_t complete(const wcstring &cmd, completion_request_flags_t flags
 /// Return a list of all current completions.
 wcstring complete_print(const wcstring &cmd = L"");
 
-/// Tests if the specified option is defined for the specified command.
-int complete_is_valid_option(const wcstring &str, const wcstring &opt,
-                             wcstring_list_t *inErrorsOrNull, bool allow_autoload);
-
-/// Tests if the specified argument is valid for the specified option and command.
-bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const wcstring &arg);
-
 /// Create a new completion entry.
 ///
 /// \param completions The array of completions to append to

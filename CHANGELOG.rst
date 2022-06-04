@@ -1881,6 +1881,7 @@ Interactive improvements
    key both on its own and as part of a control sequence, was applied to
    all control characters; this has been reduced to just the escape key.
 -  Completing a function shows the description properly (:issue:`5206`).
+-  `commandline` can now be used to set the commandline for the next command, restoring a behavior in 3.4.1 (:issue:`8807`).
 -  Added completions for
 
    -  ``ansible``, including ``ansible-galaxy``, ``ansible-playbook``

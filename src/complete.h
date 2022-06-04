@@ -195,12 +195,10 @@ void completions_sort_and_prioritize(completion_list_t *comps,
 
 /// Add a completion.
 ///
-/// All supplied values are copied, they should be freed by or otherwise disposed by the caller.
-///
 /// Examples:
 ///
-/// The command 'gcc -o' requires that a file follows it, so the NO_COMMON option is suitable. This
-/// can be done using the following line:
+/// The command 'gcc -o' requires that a file follows it, so the requires_param mode is suitable.
+/// This can be done using the following line:
 ///
 /// complete -c gcc -s o -r
 ///

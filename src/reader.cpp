@@ -2952,9 +2952,12 @@ static int read_i(parser_t &parser) {
     while (!check_exit_loop_maybe_warning(data.get())) {
         ++run_count;
 
-        maybe_t<wcstring> tmp = data->readline(0);
-        if (tmp && !tmp->empty()) {
-            const wcstring command = tmp.acquire();
+        if (maybe_t<wcstring> mcmd = data->readline(0)) {
+            const wcstring command = mcmd.acquire();
+            if (command.empty()) {
+                continue;
+            }
+
             data->update_buff_pos(&data->command_line, 0);
             data->command_line.clear();
             data->command_line_changed(&data->command_line);
@@ -2984,6 +2987,10 @@ static int read_i(parser_t &parser) {
                 // Reset the warning.
                 data->did_warn_for_bg_jobs = false;
             }
+
+            // Apply any command line update from this command or fish_postexec, etc.
+            // See #8807.
+            data->apply_commandline_state_changes();
         }
     }
     reader_pop();

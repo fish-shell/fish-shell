@@ -2,7 +2,14 @@
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
-send, sendline, sleep, expect_prompt, expect_str = sp.send, sp.sendline, sp.sleep, sp.expect_prompt, sp.expect_str
+send, sendline, sleep, expect_prompt, expect_re, expect_str = (
+    sp.send,
+    sp.sendline,
+    sp.sleep,
+    sp.expect_prompt,
+    sp.expect_re,
+    sp.expect_str,
+)
 expect_prompt()
 
 sendline("bind '~' 'handle_tilde'")
@@ -47,3 +54,8 @@ sendline("complete -c foo -xa '(commandline)'")
 expect_prompt()
 send("foo bar \t")
 expect_str("foo bar foo\ bar\ ")
+send("\b" * 64)
+
+# Commandline works when run on its own (#8807).
+sendline("commandline whatever")
+expect_re("prompt [0-9]+>whatever")

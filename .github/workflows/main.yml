@@ -6,6 +6,9 @@ env:
   CTEST_PARALLEL_LEVEL: "1"
   CMAKE_BUILD_PARALLEL_LEVEL: "4"
 
+permissions:
+  contents: read
+
 jobs:
   ubuntu:
 

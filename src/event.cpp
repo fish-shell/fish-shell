@@ -287,6 +287,7 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
     }
 
     // Iterate over our list of matching events. Fire the ones that are still present.
+    bool fired_one_shot = false;
     for (const auto &handler : fire) {
         // A previous handlers may have erased this one.
         if (handler->removed) continue;
@@ -309,11 +310,16 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         parser.eval(buffer, io_chain_t());
         parser.pop_block(b);
         parser.set_last_statuses(std::move(prev_statuses));
+
+        handler->fired = true;
+        fired_one_shot |= handler_is_one_shot(*handler);
     }
 
-    // Remove any one-shot handlers.
-    if (!fire.empty()) {
-        remove_handlers_if(handler_is_one_shot);
+    // Remove any fired one-shot handlers.
+    if (fired_one_shot) {
+        remove_handlers_if([](const event_handler_t &handler) {
+            return handler.fired && handler_is_one_shot(handler);
+        });
     }
 }
 

@@ -84,14 +84,17 @@ struct event_description_t {
 /// Represents a handler for an event.
 struct event_handler_t {
     /// Properties of the event to match.
-    event_description_t desc;
+    const event_description_t desc;
 
     /// Name of the function to invoke.
-    wcstring function_name{};
+    const wcstring function_name{};
 
     /// A flag set when an event handler is removed from the global list.
     /// Once set, this is never cleared.
-    bool removed{false};
+    relaxed_atomic_bool_t removed{false};
+
+    /// A flag set when an event handler is first fired.
+    relaxed_atomic_bool_t fired{false};
 
     explicit event_handler_t(event_type_t t) : desc(std::move(t)) {}
 

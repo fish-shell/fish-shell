@@ -89,6 +89,7 @@ Interactive improvements
 - ``time`` now emits an error if used after the first command in a pipeline (:issue:`8841`).
 - ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag.
 - Since fish 3.2.0, pressing :kbd:`Control-D` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
+- A bug that caused multi-line prompts to be moved down a line when switching between insert and normal mode has been fixed (:issue:`3481`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

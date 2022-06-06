@@ -3079,6 +3079,10 @@ void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
         wperror(L"tcsetattr");
     }
     termsize_container_t::shared().invalidate_tty();
+
+    // The input command scripts may have changed our tty - ignore any such changes.
+    // See #3481.
+    screen.save_status();
 }
 
 /// Read normal characters, inserting them into the command line.

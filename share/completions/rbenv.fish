@@ -69,6 +69,10 @@ complete -f -c rbenv -n __fish_rbenv_needs_command -a init -d 'Configure the she
 complete -f -c rbenv -n __fish_rbenv_needs_command -a install -d 'Install a Ruby version'
 complete -f -c rbenv -n '__fish_rbenv_using_command install' -a '(__fish_rbenv_official_rubies)'
 
+### uninstall
+complete -f -c rbenv -n __fish_rbenv_needs_command -a uninstall -d 'Uninstall a Ruby version'
+complete -f -c rbenv -n '__fish_rbenv_using_command uninstall' -a '(__fish_rbenv_installed_rubies)'
+
 ### local
 complete -f -c rbenv -n __fish_rbenv_needs_command -a local -d 'Set or show the local application-specific Ruby version'
 complete -f -c rbenv -n '__fish_rbenv_using_command local' -a '(__fish_rbenv_installed_rubies)'

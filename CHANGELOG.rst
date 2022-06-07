@@ -1,6 +1,9 @@
 fish 3.5.0 (not yet released)
 ====================================
 
+..
+   Ignore for 3.5.0 changelog: 8921 8923 8928 8929 8941 8953 8954 8955 8957 8960 8969 8977 8982 8984 8986 8990 9002
+
 Notable improvements and fixes
 ------------------------------
 - ``jobs`` now correctly reports CPU usage as a percentage, instead of as a number of clock ticks (:issue:`8919`).
@@ -95,7 +98,7 @@ New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Keyboard shortcut :kbd:`Alt-S` (previously: toggle ``sudo`` prepended to current commandline contents) now supports ``doas`` on systems without ``sudo`` (:issue:`8942`).
 - The ``kill-whole-line`` special input function now kills the newline preceeding the last line. This makes ``dd`` in vi-mode clear the last line properly.
-- Introduce the ``kill-inner-line`` special input function, which kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines.
+- Introduce the ``kill-inner-line`` special input function, which kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines (:issue:`8983`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

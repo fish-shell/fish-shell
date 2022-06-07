@@ -94,7 +94,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     end
 
     set -q fish_cursor_unknown
-    or set -g fish_cursor_unknown block blink
+    or set -g fish_cursor_unknown block
 
     echo "
           function fish_vi_cursor_handle --on-variable fish_bind_mode --on-event fish_postexec --on-event fish_focus_in

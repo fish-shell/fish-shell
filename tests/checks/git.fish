@@ -40,6 +40,9 @@ touch foo
 complete -C'git add '
 #CHECK: foo	Untracked file
 
+complete -C'git add :'
+#CHECK: :/:foo	Untracked file
+
 git config alias.s status
 complete 'git s --s'
 # CHECK --short

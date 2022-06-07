@@ -342,7 +342,11 @@ function __fish_git_files
                     if string match -q '../*' -- $file
                         or string match -q ':*' -- (commandline -ct)
                         set -l fromroot (builtin realpath -- $file 2>/dev/null)
-                        and set fromroot (string replace -- "$root/" ":/" "$fromroot")
+                        # `:` starts pathspec "magic", and the second `:` terminates it.
+                        # `/` is the magic letter for "from repo root".
+                        # If we didn't terminate it we'd have to escape any special chars
+                        # (non-alphanumeric, glob or regex special characters, in whatever dialect git uses)
+                        and set fromroot (string replace -- "$root/" ":/:" "$fromroot")
                         and printf '%s\t%s\n' "$fromroot" $d
                     end
                 end
@@ -476,10 +480,10 @@ function __fish_git_files
                 end
                 set -a file (string join / -- $previous)
 
-                # The filename with ":/" prepended.
+                # The filename with ":/:" prepended.
                 if string match -q '../*' -- $file
                     or string match -q ':*' -- (commandline -ct)
-                    set file (string replace -- "$root/" ":/" "$root/$relfile")
+                    set file (string replace -- "$root/" ":/:" "$root/$relfile")
                 end
 
                 if test "$root/$relfile" = (pwd -P)/$relfile

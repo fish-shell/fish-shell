@@ -23,4 +23,4 @@ tasks:
           gmake -j2
   - test: |
           cd fish/build
-          gmake test SHOW_INTERACTIVE_LOG=1
+          gmake test

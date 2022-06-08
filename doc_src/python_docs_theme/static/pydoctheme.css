@@ -95,9 +95,6 @@ div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
 
 div.body p, div.body dd, div.body li, div.body blockquote {
   text-align: justify;
-}
-
-div.body p, div.body dd, div.body li, div.body blockquote {
   -moz-hyphens: auto;
   -ms-hyphens: auto;
   -webkit-hyphens: auto;
@@ -187,61 +184,42 @@ a.headerlink {
   visibility: hidden;
 }
 
-h1:hover > a.headerlink, h2:hover > a.headerlink, h3:hover > a.headerlink, h4:hover > a.headerlink, h5:hover > a.headerlink, h6:hover > a.headerlink, dt:hover > a.headerlink, caption:hover > a.headerlink, p.caption:hover > a.headerlink, div.code-block-caption:hover > a.headerlink {
+*:hover > a.headerlink {
   visibility: visible;
 }
+
 a.headerlink:hover {
   background-color: #aaaaaa;
 }
 
-a:hover {
+a:hover, div.footer a {
   text-decoration: underline;
 }
 
-div.sphinxsidebar a {
-  color: #444444;
-}
-div.related a {
+div.related a, div.sphinxsidebar a {
   color: #444444;
 }
 
-div.sidebar::after, aside.sidebar::after, div.topic::after, div.admonition::after, blockquote::after {
-  display: block;
-  content: '';
-  clear: both;
-}
 div.warning {
   border: 1px solid #f66;
 }
+
 div.admonition {
-  margin-top: 10px;
-  margin-bottom: 10px;
   padding: 7px;
 }
-div.admonition, div.topic, blockquote {
-  clear: left;
-}
+
 p.admonition-title::after {
   content: ":";
 }
-div.admonition p {
-  margin-bottom: 5px;
-}
+
 p.admonition-title {
   display: inline;
-}
-p.admonition-title {
-  margin: 0px 10px 5px 0px;
   font-weight: bold;
 }
 
 div.footer {
   padding: 9px 0 9px 0;
   font-size: 75%;
-}
-
-div.footer a {
-  text-decoration: underline;
 }
 
 th, dl.field-list > dt {

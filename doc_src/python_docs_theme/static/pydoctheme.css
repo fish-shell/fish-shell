@@ -188,6 +188,11 @@ p.admonition-title {
   font-weight: bold;
 }
 
+div.admonition p.admonition-title + p {
+  display: inline;
+}
+
+
 div.footer {
   padding: 9px 0 9px 0;
   font-size: 75%;
@@ -197,6 +202,19 @@ th, dl.field-list > dt {
   background-color: #ede;
 }
 
+table.docutils {
+  border-collapse: collapse;
+}
+.align-default {
+  text-align: center;
+}
+
+th > :last-child, td > :last-child {
+  margin-bottom: 0px;
+}
+th > :first-child, td > :first-child {
+  margin-top: 0px;
+}
 /* End of SPHINX IMPORT */
 
 div#fmain {
@@ -302,6 +320,15 @@ ul li, div.body li {
     line-height: 2em;
 }
 
+ul.simple p {
+  /* See "special features" list on index.html */
+  margin-bottom: 0;
+}
+
+ul.simple > li:not(:first-child) > p {
+  margin-top: 0;
+}
+
 form.inline-search input,
 div.sphinxsidebar input {
     border: 1px solid #999999;
@@ -329,6 +356,10 @@ div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
     margin: 0;
     border: 0;
     padding: 0.3em 0;
+}
+
+div.body h3 {
+  font-size: 140%;
 }
 
 div.body hr {

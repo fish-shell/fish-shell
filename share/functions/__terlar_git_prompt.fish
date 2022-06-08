@@ -33,7 +33,13 @@ function __terlar_git_prompt --description 'Write out the git prompt'
 
     echo -n '|'
 
-    set -l index (git status --porcelain 2>/dev/null|cut -c 1-2|sort -u)
+    # Ignore untracked files unless we're explicitly asked.
+    # This is dog slow.
+    set -l untr -uno
+    set -q __fish_git_prompt_showuntrackedfiles
+    and set untr -unormal
+
+    set -l index (git -c core.fsmonitor= status --porcelain 2>/dev/null|cut -c 1-2|sort -u)
 
     if test -z "$index"
         set_color $fish_color_git_clean

@@ -62,6 +62,7 @@ Deprecations and removed features
   ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty. (:issue:`8793`)
 - ``eval`` is now a reserved keyword, so it can't be used as a function name. This follows ``set`` and ``read``, and is necessary because it can't be cleanly shadowed by a function - at the very least ``eval set -l argv foo`` breaks. Fish will ignore autoload files for it, so left over ``eval.fish`` from previous fish versions won't be loaded.
 - The git prompt in informative mode now defaults to skipping counting untracked files, as this was extremely slow. To turn it on, set ``$__fish_git_prompt_showuntrackedfiles`` or set the git config value "bash.showuntrackedfiles" to ``true`` explicitly (this can be done per-repo). The "informative+vcs" sample prompt already skipped display of untracked files, but didn't do so in a way that skipped the computation, so it should be quite a bit faster in many cases (:issue:`8980`).
+- The ``__terlar_git_prompt`` function, used by the "Terlar" sample prompt, has been rebuilt as a configuration of the normal ``fish_git_prompt`` to ease maintenance, improve performance and add features (like reading per-repo git configuration). Some slight changes remain, users who absolutely must have the same behavior are encouraged to copy the old function (:issue:`9011`, :issue:`7918`, :issue:`8979`).
 
 Scripting improvements
 ----------------------

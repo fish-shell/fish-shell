@@ -84,16 +84,11 @@ cp -a README.rst %{buildroot}%{_datadir}/doc/fish/
 cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
 
 %check
-# Use cmake_build, if it exists, to directly run the fish_run_tests target
-%if 0%{?cmake_build:1}
-%cmake_build --target fish_run_tests
-%else
 # OpenSUSE does out-of-tree builds and defines __builddir
 %if 0%{?__builddir:1}
 cd %__builddir
 %endif
 make fish_run_tests
-%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT

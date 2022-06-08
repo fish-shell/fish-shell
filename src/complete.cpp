@@ -283,7 +283,7 @@ static void unique_completions_retaining_order(completion_list_t *comps) {
     comps->erase(std::remove_if(comps->begin(), comps->end(), pred), comps->end());
 }
 
-void completions_sort_and_prioritize(completion_list_t *comps, completion_request_flags_t flags) {
+void completions_sort_and_prioritize(completion_list_t *comps, completion_request_options_t flags) {
     if (comps->empty()) return;
 
     // Find the best rank.
@@ -309,7 +309,7 @@ void completions_sort_and_prioritize(completion_list_t *comps, completion_reques
     // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
     // arguments, and penalize files that end in tilde - they're frequently autosave files from e.g.
     // emacs. Also prefer samecase to smartcase.
-    if (flags & completion_request_t::autosuggestion) {
+    if (flags.autosuggestion) {
         stable_sort(comps->begin(), comps->end(), [](const completion_t &a, const completion_t &b) {
             if (a.match.case_fold != b.match.case_fold) {
                 return a.match.case_fold < b.match.case_fold;
@@ -327,7 +327,7 @@ class completer_t {
     const operation_context_t &ctx;
 
     /// Flags associated with the completion request.
-    const completion_request_flags_t flags;
+    const completion_request_options_t flags;
 
     /// The output completions.
     completion_receiver_t completions;
@@ -336,17 +336,6 @@ class completer_t {
     /// results.
     using condition_cache_t = std::unordered_map<wcstring, bool>;
     condition_cache_t condition_cache;
-
-    enum complete_type_t { COMPLETE_DEFAULT, COMPLETE_AUTOSUGGEST };
-
-    complete_type_t type() const {
-        return (flags & completion_request_t::autosuggestion) ? COMPLETE_AUTOSUGGEST
-                                                              : COMPLETE_DEFAULT;
-    }
-
-    bool wants_descriptions() const { return flags & completion_request_t::descriptions; }
-
-    bool fuzzy() const { return flags & completion_request_t::fuzzy_match; }
 
     bool try_complete_variable(const wcstring &str);
     bool try_complete_user(const wcstring &str);
@@ -377,9 +366,9 @@ class completer_t {
 
     expand_flags_t expand_flags() const {
         expand_flags_t result{};
-        if (this->type() == COMPLETE_AUTOSUGGEST) result |= expand_flag::skip_cmdsubst;
-        if (this->fuzzy()) result |= expand_flag::fuzzy_match;
-        if (this->wants_descriptions()) result |= expand_flag::gen_descriptions;
+        if (flags.autosuggestion) result |= expand_flag::skip_cmdsubst;
+        if (flags.fuzzy_match) result |= expand_flag::fuzzy_match;
+        if (flags.descriptions) result |= expand_flag::gen_descriptions;
         return result;
     }
 
@@ -429,7 +418,7 @@ class completer_t {
                                                 const std::vector<tok_t> &args);
 
    public:
-    completer_t(const operation_context_t &ctx, completion_request_flags_t f)
+    completer_t(const operation_context_t &ctx, completion_request_options_t f)
         : ctx(ctx), flags(f), completions(ctx.expansion_limit) {}
 
     void perform_for_commandline(wcstring cmdline);
@@ -642,7 +631,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
     if (result == expand_result_t::cancel) {
         return;
     }
-    if (result == expand_result_t::ok && this->wants_descriptions()) {
+    if (result == expand_result_t::ok && this->flags.descriptions) {
         this->complete_cmd_desc(str_cmd);
     }
 
@@ -707,7 +696,7 @@ void completer_t::complete_abbr(const wcstring &cmd) {
 ///
 void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
                                      const wcstring &desc, complete_flags_t flags) {
-    bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);
+    const bool is_autosuggest = this->flags.autosuggestion;
 
     bool saved_interactive = false;
     statuses_t status;
@@ -1070,7 +1059,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     if (!do_file) flags |= expand_flag::skip_wildcards;
 
     if (handle_as_special_cd && do_file) {
-        if (this->type() == COMPLETE_AUTOSUGGEST) {
+        if (this->flags.autosuggestion) {
             flags |= expand_flag::special_for_cd_autosuggestion;
         }
         flags |= expand_flag::directories_only;
@@ -1078,7 +1067,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     }
 
     // Squelch file descriptions per issue #254.
-    if (this->type() == COMPLETE_AUTOSUGGEST || do_file) flags.clear(expand_flag::gen_descriptions);
+    if (this->flags.autosuggestion || do_file) flags.clear(expand_flag::gen_descriptions);
 
     // We have the following cases:
     //
@@ -1132,7 +1121,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
     bool res = false;
 
     for (const wcstring &env_name : ctx.vars.get_names(0)) {
-        bool anchor_start = !fuzzy();
+        bool anchor_start = !this->flags.fuzzy_match;
         maybe_t<string_fuzzy_match_t> match =
             string_fuzzy_match_string(var, env_name, anchor_start);
         if (!match) continue;
@@ -1150,8 +1139,8 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         wcstring desc;
-        if (this->wants_descriptions()) {
-            if (this->type() != COMPLETE_AUTOSUGGEST) {
+        if (this->flags.descriptions) {
+            if (this->flags.autosuggestion) {
                 // $history can be huge, don't put all of it in the completion description; see
                 // #6288.
                 if (env_name == L"history") {
@@ -1232,7 +1221,7 @@ bool completer_t::try_complete_variable(const wcstring &str) {
 
     // Now complete if we have a variable start. Note the variable text may be empty; in that case
     // don't generate an autosuggestion, but do allow tab completion.
-    bool allow_empty = !(this->flags & completion_request_t::autosuggestion);
+    bool allow_empty = !this->flags.autosuggestion;
     bool text_is_empty = (variable_start == len);
     bool result = false;
     if (variable_start != wcstring::npos && (allow_empty || !text_is_empty)) {
@@ -1343,7 +1332,7 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
                                   custom_arg_data_t *ad) {
     if (ctx.check_cancel()) return;
 
-    bool is_autosuggest = this->type() == COMPLETE_AUTOSUGGEST;
+    bool is_autosuggest = this->flags.autosuggestion;
     // Perhaps set a transient commandline so that custom completions
     // buitin_commandline will refer to the wrapped command. But not if
     // we're doing autosuggestions.
@@ -1520,7 +1509,7 @@ void completer_t::perform_for_commandline(wcstring cmdline) {
     }};
 
     const size_t cursor_pos = cmdline.size();
-    const bool is_autosuggest = (flags & completion_request_t::autosuggestion);
+    const bool is_autosuggest = flags.autosuggestion;
 
     // Find the process to operate on. The cursor may be past it (#1261), so backtrack
     // until we know we're no longer in a space. But the space may actually be part of the
@@ -1730,7 +1719,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
     completion_map->erase(std::make_pair(cmd, cmd_is_path));
 }
 
-completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_flags_t flags,
+completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_options_t flags,
                            const operation_context_t &ctx) {
     // Determine the innermost subcommand.
     const wchar_t *cmdsubst_begin, *cmdsubst_end;

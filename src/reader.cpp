@@ -1777,7 +1777,7 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
         if (std::wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
 
         // Try normal completions.
-        completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
+        completion_request_options_t complete_flags = completion_request_options_t::autosuggest();
         completion_list_t completions = complete(search_string, complete_flags, ctx);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
@@ -2892,9 +2892,7 @@ void reader_data_t::compute_and_apply_completions(readline_cmd_t c, readline_loo
     // Ensure that `commandline` inside the completions gets the current state.
     update_commandline_state();
 
-    completion_request_flags_t complete_flags = {completion_request_t::descriptions,
-                                                 completion_request_t::fuzzy_match};
-    rls.comp = complete(buffcpy, complete_flags, parser_ref->context());
+    rls.comp = complete(buffcpy, completion_request_options_t::normal(), parser_ref->context());
 
     // User-supplied completions may have changed the commandline - prevent buffer
     // overflow.

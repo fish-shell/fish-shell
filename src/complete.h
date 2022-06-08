@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "common.h"
-#include "enum_set.h"
 #include "wcstringutil.h"
 
 struct completion_mode_t {
@@ -95,19 +94,29 @@ class completion_t {
 
 using completion_list_t = std::vector<completion_t>;
 
-enum class completion_request_t {
-    autosuggestion,  // indicates the completion is for an autosuggestion
-    descriptions,    // indicates that we want descriptions
-    fuzzy_match,     // indicates that we don't require a prefix match
-    COUNT
-};
+struct completion_request_options_t {
+    bool autosuggestion{};  // requesting autosuggestion
+    bool descriptions{};    // make descriptions
+    bool fuzzy_match{};     // if set, we do not require a prefix match
 
-template <>
-struct enum_info_t<completion_request_t> {
-    static constexpr auto count = completion_request_t::COUNT;
-};
+    // Options for an autosuggestion.
+    static completion_request_options_t autosuggest() {
+        completion_request_options_t res{};
+        res.autosuggestion = true;
+        res.descriptions = false;
+        res.fuzzy_match = false;
+        return res;
+    }
 
-using completion_request_flags_t = enum_set_t<completion_request_t>;
+    // Options for a "normal" completion.
+    static completion_request_options_t normal() {
+        completion_request_options_t res{};
+        res.autosuggestion = false;
+        res.descriptions = true;
+        res.fuzzy_match = true;
+        return res;
+    }
+};
 
 class completion_t;
 using completion_list_t = std::vector<completion_t>;
@@ -191,7 +200,7 @@ enum complete_option_type_t {
 /// Sorts and remove any duplicate completions in the completion list, then puts them in priority
 /// order.
 void completions_sort_and_prioritize(completion_list_t *comps,
-                                     completion_request_flags_t flags = {});
+                                     completion_request_options_t flags = {});
 
 /// Add a completion.
 ///
@@ -236,7 +245,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
 /// \return all completions of the command cmd.
 class operation_context_t;
-completion_list_t complete(const wcstring &cmd, completion_request_flags_t flags,
+completion_list_t complete(const wcstring &cmd, completion_request_options_t flags,
                            const operation_context_t &ctx);
 
 /// Return a list of all current completions.

@@ -3216,7 +3216,7 @@ static void test_complete() {
 
     auto parser = parser_t::principal_parser().shared();
 
-    auto do_complete = [&](const wcstring &cmd, completion_request_flags_t flags) {
+    auto do_complete = [&](const wcstring &cmd, completion_request_options_t flags) {
         return complete(cmd, flags, operation_context_t{parser, vars, no_cancel});
     };
 
@@ -3254,7 +3254,9 @@ static void test_complete() {
     completions_sort_and_prioritize(&completions);
     do_test(completions.empty());
 
-    completions = do_complete(L"$1", completion_request_t::fuzzy_match);
+    completion_request_options_t fuzzy_options{};
+    fuzzy_options.fuzzy_match = true;
+    completions = do_complete(L"$1", fuzzy_options);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 3);
     do_test(completions.at(0).completion == L"$Bar1");
@@ -3394,7 +3396,7 @@ static void test_complete() {
     do_test(completions.at(0).completion == L"stfile");
     completions = do_complete(L"something abc=stfile", {});
     do_test(completions.empty());
-    completions = do_complete(L"something abc=stfile", completion_request_t::fuzzy_match);
+    completions = do_complete(L"something abc=stfile", fuzzy_options);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"abc=testfile");
 
@@ -3566,7 +3568,7 @@ static void test_completion_insertions() {
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
                                                const environment_t &vars, long line) {
     completion_list_t comps =
-        complete(command, completion_request_t::autosuggestion, operation_context_t{vars});
+        complete(command, completion_request_options_t::autosuggest(), operation_context_t{vars});
 
     bool expects_error = (expected == L"<error>");
 
@@ -3754,8 +3756,8 @@ static void test_autosuggest_suggest_special() {
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
-    completion_list_t comps =
-        complete(command, completion_request_t::autosuggestion, operation_context_t::empty());
+    completion_list_t comps = complete(command, completion_request_options_t::autosuggest(),
+                                       operation_context_t::empty());
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;

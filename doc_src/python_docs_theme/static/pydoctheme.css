@@ -1,5 +1,3 @@
-/* @import url("classic.css");
- */
 :root {
   color-scheme: light dark; /* both supported */
 }
@@ -29,6 +27,7 @@ body {
 /* SPHINX IMPORT */
 
 body {
+  /* These stay, assuming some browsers pick different defaults */
   font-size: 100%;
   background-color: #eeeefa;
   color: #000;
@@ -41,6 +40,7 @@ div.related ul {
   padding: 0 0 0 10px;
   list-style: none;
 }
+
 div.related {
   line-height: 30px;
   color: #666666;
@@ -49,10 +49,6 @@ div.related {
 
 div.related li {
   display: inline;
-}
-
-a {
-  text-decoration: none;
 }
 
 div.related h3 {
@@ -69,18 +65,8 @@ div.sphinxsidebar {
   overflow-wrap: break-word;
 }
 
-div.documentwrapper {
-  width: 100%;
-  float: none;
-}
-
-div.highlight pre, table.highlighttable pre {
-  margin: 0;
-}
-
 pre {
   padding: 5px;
-  color: unset;
   line-height: 120%;
   overflow: auto;
   overflow-y: hidden;
@@ -89,13 +75,12 @@ pre {
 div.body h1 {
   font-size: 200%;
 }
+
 div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
   font-weight: normal;
 }
 
 div.body p, div.body dd, div.body li, div.body blockquote {
-  text-align: justify;
-  -moz-hyphens: auto;
   -ms-hyphens: auto;
   -webkit-hyphens: auto;
   hyphens: auto;
@@ -104,29 +89,23 @@ div.body p, div.body dd, div.body li, div.body blockquote {
 :not(li) > ol > li:last-child > :last-child, :not(li) > ul > li:last-child > :last-child {
   margin-bottom: 0px;
 }
+
 div.sphinxsidebar ul ul {
   margin-top: 0;
   margin-bottom: 0;
 }
+
 div.sphinxsidebar ul ul, div.sphinxsidebar ul.want-points {
   margin-left: 20px;
   list-style: square;
 }
+
 div.sphinxsidebar ul {
   margin: 10px;
   padding: 0;
   color: #444444;
   margin: 10px;
-  padding: 0;
   list-style: none;
-}
-
-div.sphinxsidebar h3 {
-  font-size: 1.4em;
-  font-weight: normal;
-  margin: 0;
-    margin-top: 0px;
-  padding: 0;
 }
 
 div.sphinxsidebarwrapper {
@@ -137,32 +116,25 @@ div[class*="highlight-"] {
   margin: 1em 0;
 }
 
-dl.footnote > dt, dl.citation > dt {
-  float: left;
-  margin-right: 0.5em;
-}
-
 div.sphinxsidebar #searchbox input[type="text"] {
-    float: left;
     width: 80%;
     padding: 0.25em;
-    box-sizing: border-box;
 }
 
 div.sphinxsidebar #searchbox input[type="submit"] {
-  float: left;
   width: 20%;
-  border-left: none;
   padding: 0.25em;
-  box-sizing: border-box;
 }
 
 div.sphinxsidebar form {
   margin-top: 10px;
 }
 
-div.sphinxsidebar #searchbox form.search {
-  overflow: hidden;
+div.sphinxsidebar h3 {
+  font-size: 1.4em;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
 }
 
 div.sphinxsidebar h4 {
@@ -177,19 +149,18 @@ div.body h2 {
   font-size: 160%;
 }
 
+a {
+  text-decoration: none;
+}
+
 a.headerlink {
   font-size: 0.8em;
   padding: 0 4px 0 4px;
-  text-decoration: none;
   visibility: hidden;
 }
 
 *:hover > a.headerlink {
   visibility: visible;
-}
-
-a.headerlink:hover {
-  background-color: #aaaaaa;
 }
 
 a:hover, div.footer a {
@@ -246,7 +217,6 @@ div.related {
     padding: 0.5em 0;
     border-top: 1px solid #ccc;
     margin-top: 0;
-    background-color: inherit;
 }
 
 div.section {
@@ -309,15 +279,6 @@ div.sphinxsidebar::-webkit-scrollbar-thumb {
   border-radius: 10px;
 }
 
-div.document {
-    display: block;
-}
-
-div.document, div.body, div.warning {
-    background-color: inherit;
-    color: inherit;
-}
-
 div#searchbox {
     /* Cheesy: The padding is on the sphinxsidebar*wrapper*,
        so if this is the last element the bottom padding won't apply.
@@ -327,7 +288,6 @@ div#searchbox {
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
     margin-top: 1em;
-    font-family: inherit;
 }
 
 div.sphinxsidebarwrapper > h3:first-child {
@@ -344,8 +304,6 @@ ul li, div.body li {
 
 form.inline-search input,
 div.sphinxsidebar input {
-    /* Inputs typically have different default fonts, remove that idea */
-    font-family: inherit;
     border: 1px solid #999999;
     font-size: smaller;
     border-radius: 3px;
@@ -371,7 +329,6 @@ div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
     margin: 0;
     border: 0;
     padding: 0.3em 0;
-    font-family: inherit;
 }
 
 div.body hr {
@@ -429,10 +386,6 @@ div.body a:hover {
     color: #00B0E4;
 }
 
-tr, pre {
-    background-color: inherit;
-}
-
 code {
     /* Make inline-code better visible */
     background-color: rgba(20,20,80, .1);
@@ -463,11 +416,6 @@ tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command {
 
 #synopsis .line {
     line-height: 1em;
-}
-
-pre, div[class*="highlight-"] {
-    /* For some reason sphinx since 3.1.2 sets "clear: both" here, which breaks in interesting ways */
-    clear: unset;
 }
 
 div.body tt {
@@ -648,14 +596,6 @@ div.body .internal.reference:link {
     font-size: 90%;
 }
 
-.sig-name {
-    font-size: unset;
-}
-
-.sig, dl.envvar {
-    font-family: unset;
-}
-
 @media (prefers-color-scheme: dark) {
     body {
         background: linear-gradient(to top, #1f1f3f 0%,#051f3a 100%);
@@ -664,11 +604,6 @@ div.body .internal.reference:link {
         color: #DDD;
         background-color: #202028;
         box-shadow: 0 0 5px 1px #000;
-    }
-
-    div.body h1, div.body h2, div.body h3, div.body h4, div.body h5, div.body h6 {
-        background-color: inherit;
-        color: inherit;
     }
 
     div.body pre, code {
@@ -743,9 +678,5 @@ div.body .internal.reference:link {
 
     code {
         background-color: rgba(200, 200, 255, .2);
-    }
-
-    .warning code {
-        background-color: #604040;
     }
 }

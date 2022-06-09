@@ -745,8 +745,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
           inputter(*parser_ref, conf.in),
           history(std::move(hist)) {}
 
-    /// Returns the width of the current cursor in characters
-    size_t cursor_width();
+    /// Whether the selection should always include the character after the cursor.
+    bool select_char_after_cursor();
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
 
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
@@ -1019,16 +1019,9 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
     return full_line;
 }
 
-size_t reader_data_t::cursor_width() {
-    auto bind_mode = vars().get(FISH_BIND_MODE_VAR);
-    auto fish_cursor_var = FISH_CURSOR_VAR_PREFIX
-        + (bind_mode ? bind_mode->as_string() : DEFAULT_BIND_MODE);
-    if (auto cursor = vars().get(fish_cursor_var)) {
-        if (cursor->as_string() == FISH_CURSOR_LINE) {
-            return 0;
-        }
-    }
-    return 1;
+bool reader_data_t::select_char_after_cursor() {
+    auto val = vars().get(L"fish_select_char_after_cursor");
+    return !val || val->as_string() == L"1";
 }
 
 /// Update the cursor position.
@@ -1040,10 +1033,10 @@ void reader_data_t::update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos
     if (el == &command_line && selection.has_value()) {
         if (selection->begin <= buff_pos) {
             selection->start = selection->begin;
-            selection->stop = buff_pos + cursor_width();
+            selection->stop = buff_pos + (select_char_after_cursor() ? 1 : 0);
         } else {
             selection->start = buff_pos;
-            selection->stop = selection->begin + cursor_width();
+            selection->stop = selection->begin + (select_char_after_cursor() ? 1 : 0);
         }
     }
 }
@@ -3904,7 +3897,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             size_t pos = command_line.position();
             selection->begin = pos;
             selection->start = pos;
-            selection->stop = pos + cursor_width();
+            selection->stop = pos + (select_char_after_cursor() ? 1 : 0);
             break;
         }
 

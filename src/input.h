@@ -13,9 +13,6 @@
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 #define DEFAULT_BIND_MODE L"default"
 
-#define FISH_CURSOR_VAR_PREFIX L"fish_cursor_"
-#define FISH_CURSOR_LINE L"line"
-
 class event_queue_peeker_t;
 class parser_t;
 

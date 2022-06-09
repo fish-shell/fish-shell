@@ -1,4 +1,18 @@
 function __fish_print_portage_repository_paths --description 'Print the paths of all configured repositories'
-    # repos.conf may be a file or a directory
-    find /etc/portage/repos.conf -type f -exec cat '{}' + | string replace -r --filter '^\s*location\s*=\s*(\S+)' '$1'
+    set a /etc/portage/repos.conf
+    set default /usr/share/portage/config/repos.conf
+    set confs
+    if test -f $a
+        set confs $a
+    else if test -d $a
+        set -p confs (find $a -type f -name '*.conf')
+        if not contains "$a/gentoo.conf" $confs
+            set -p confs $default
+        end
+    else
+        set confs $default
+    end
+    for b in $confs
+        cat $b | string match -g -r 'location = (.*$)'
+    end
 end

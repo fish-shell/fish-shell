@@ -836,21 +836,15 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, &path, &cmd, ctx.vars);
 
-    // FLOGF(error, L"\nThinking about looking up completions for %ls\n", cmd.c_str());
-    bool head_exists = builtin_exists(cmd);
-    // Only reload environment variables if builtin_exists returned false, as an optimization
-    if (!head_exists) {
-        head_exists = function_exists_no_autoload(cmd);
-        // Use cmd_orig here as it is potentially pathed.
-        head_exists = head_exists || path_get_path(cmd_orig, ctx.vars).has_value();
-    }
-
-    if (!head_exists) {
-        // Do not load custom completions if the head does not exist
+    // Use cmd_orig here for paths, as it is potentially pathed.
+    bool cmd_exists = builtin_exists(cmd) || function_exists_no_autoload(cmd) ||
+                      path_get_path(cmd_orig, ctx.vars).has_value();
+    if (!cmd_exists) {
+        // Do not load custom completions if the command does not exist
         // This prevents errors caused during the execution of completion providers for
         // tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
         // and automatic completions ("gi" autosuggestion provider -> git)
-        FLOG(complete, "Skipping completions for non-existent head");
+        FLOG(complete, "Skipping completions for non-existent command");
     } else {
         iothread_perform_on_main([&]() { complete_load(cmd); });
     }
@@ -1347,10 +1341,9 @@ void completer_t::complete_custom(const wcstring &cmd, const wcstring &cmdline,
     cleanup_t restore_vars{apply_var_assignments(*ad->var_assignments)};
     if (ctx.check_cancel()) return;
 
-    if (!complete_param_for_command(
-            cmd, ad->previous_argument, ad->current_argument, !ad->had_ddash,
-            &ad->do_file)) {  // Invoke any custom completions for this command.
-    }
+    // Invoke any custom completions for this command.
+    (void)complete_param_for_command(cmd, ad->previous_argument, ad->current_argument,
+                                     !ad->had_ddash, &ad->do_file);
 }
 
 static bool expand_command_token(const operation_context_t &ctx, wcstring &cmd_tok) {

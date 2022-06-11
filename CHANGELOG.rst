@@ -2,7 +2,7 @@ fish 3.5.0 (not yet released)
 ====================================
 
 ..
-   Ignore for 3.5.0 changelog: 8921 8923 8928 8929 8941 8953 8954 8955 8957 8960 8969 8977 8982 8984 8986 8990 9002
+   Ignore for 3.5.0 changelog: 8827 8829 8833 8840 8860 8863 8873 8875 8881 8882 8889 8896 8900 8907 8908 8909 8912 8915 8916 8921 8923 8928 8929 8938 8941 8953 8954 8955 8957 8960 8969 8973 8977 8978 8982 8984 8986 8990 8991 8993 8997 9002 9004 9005 9008
 
 Notable improvements and fixes
 ------------------------------
@@ -92,9 +92,10 @@ Interactive improvements
 - ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD and NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`).
 - The ``vared`` command can now successfully edit variables named "tmp" or "prompt" (:issue:`8836`).
 - ``time`` now emits an error if used after the first command in a pipeline (:issue:`8841`).
-- ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag.
+- ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag (:issue:`8884`).
 - Since fish 3.2.0, pressing :kbd:`Control-D` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
 - A bug that caused multi-line prompts to be moved down a line when switching between insert and normal mode has been fixed (:issue:`3481`).
+- The web-based configuration system no longer strips too many quotes in the abbreviation display (:issue:`8917`, :issue:`8918`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -110,12 +111,15 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
-  - brightnessctl (:issue:`8758`)
-  - rclone (:issue:`8819`)
-  - tuned-adm (:issue:`8760`)
-  - archlinux-java
-  - fastboot
+  - archlinux-java (:issue:`8911`)
   - apk (:issue:`8951`)
+  - brightnessctl (:issue:`8758`)
+  - efibootmgr (:issue:`9010`)
+  - fastboot
+  - optimus-manager (:issue:`8913`)
+  - rclone (:issue:`8819`)
+  - sops (:issue:`8821`)
+  - tuned-adm (:issue:`8760`)
 - ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`)
 
 

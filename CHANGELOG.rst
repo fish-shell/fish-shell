@@ -2,13 +2,13 @@ fish 3.5.0 (not yet released)
 ====================================
 
 ..
-   Ignore for 3.5.0 changelog: 8827 8829 8833 8840 8860 8863 8873 8875 8881 8882 8889 8896 8900 8907 8908 8909 8912 8915 8916 8921 8923 8928 8929 8938 8941 8953 8954 8955 8957 8960 8969 8973 8977 8978 8982 8984 8986 8990 8991 8993 8997 9002 9004 9005 9008
+   Ignore for 3.5.0 changelog: 8694 8783 8795 8796 8800 8801 8811 8818 8826 8827 8829 8833 8840 8860 8863 8872 8873 8875 8881 8882 8889 8896 8900 8907 8908 8909 8912 8915 8916 8921 8923 8928 8929 8938 8941 8953 8954 8955 8957 8960 8969 8973 8977 8978 8982 8984 8986 8990 8991 8993 8997 9002 9004 9005 9008
 
 Notable improvements and fixes
 ------------------------------
-- ``jobs`` now correctly reports CPU usage as a percentage, instead of as a number of clock ticks (:issue:`8919`).
-- ``process-exit`` events now fire when the process exits even if the job has not yet exited, fixing a regression in 3.4.1 (:issue:`8914`).
-- A new ``path`` builtin to filter and transform paths (:issue:`7658`, :issue:`8958`). For example, to list all the separate extensions used on files in /usr/share/man::
+- Tab (or any ``complete`` key binding) now prefer to expand wildcards instead of invoking completions, if there is a wildcard in the path component under the cursor (:issue:`954`, :issue:`8593`).
+- Scripts can now catch and handle SIGINT and SIGTERM, either via ``function --on-signal`` or with ``trap``. (:issue:`6649`).
+- A new ``path`` builtin to filter and transform paths (:issue:`7658`, :issue:`8958`). For example, to list all the separate extensions used on files in /usr/share/man (after removing one extension, commonly a ".gz")::
 
     path filter -f /usr/share/man/** | path change-extension '' | path extension | path sort -u
 
@@ -81,27 +81,34 @@ Scripting improvements
 - ``string join`` gained a new ``--no-empty`` flag to skip empty arguments (:issue:`8774`, :issue:`8351`).
 - ``read`` now actually only triggers the ``fish_read`` event, not the ``fish_prompt`` event (:issue:`8797`). It was supposed to work this way since fish 3.2.0.
 - The tty modes are no longer restored when non-interactive shells exit. This fixes wrong tty modes in pipelines with interactive commands. (:issue:`8705`).
-- Scripts can now catch and handle SIGINT and SIGTERM, either via ``function --on-signal`` or with ``trap``. (:issue:`6649`).
+- Some functions shipped with fish printed error messages to stdout, now they rightly go to stderr (:issue:`8855`).
+- ``jobs`` now correctly reports CPU usage as a percentage, instead of as a number of clock ticks (:issue:`8919`).
+- ``process-exit`` events now fire when the process exits even if the job has not yet exited, fixing a regression in 3.4.1 (:issue:`8914`).
 
 Interactive improvements
 ------------------------
-- Tab (or any ``complete`` key binding) now prefer to expand wildcards instead of invoking completions, if there is a wildcard in the path component under the cursor (:issue:`954`).
 - Fish now reports a special error if a command wasn't found and there is a non-executable file by that name in $PATH (:issue:`8804`).
 - ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).
-- ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD and NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`).
-- The ``vared`` command can now successfully edit variables named "tmp" or "prompt" (:issue:`8836`).
+- ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD and NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`, :issue:`8786`).
+- The ``vared`` command can now successfully edit variables named "tmp" or "prompt" (:issue:`8836`, :issue:`8837`).
 - ``time`` now emits an error if used after the first command in a pipeline (:issue:`8841`).
 - ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag (:issue:`8884`).
 - Since fish 3.2.0, pressing :kbd:`Control-D` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
 - A bug that caused multi-line prompts to be moved down a line when switching between insert and normal mode has been fixed (:issue:`3481`).
 - The web-based configuration system no longer strips too many quotes in the abbreviation display (:issue:`8917`, :issue:`8918`).
+- Fish started with ``--no-config`` will now use the default keybindings (:issue:`8493`)
+- When fish inherits a $USER value that doesn't correspond to the euid, it will now correct it in all cases instead of just when euid is 0 (:issue:`8879`, :issue:`8583`).
+- Fish sets a new $EUID variable containing the fish's effective user id (:issue:`8866`).
+- ``history search`` no longer interprets the search term as an option (:issue:`8853`)
+- The status message when a job terminates should no longer be erased by a multiline prompt (:issue:`8817`)
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
-- Keyboard shortcut :kbd:`Alt-S` (previously: toggle ``sudo`` prepended to current commandline contents) now supports ``doas`` on systems without ``sudo`` (:issue:`8942`).
+- The :kbd:`Alt-S` binding will now insert ``doas`` instead of ``sudo`` if necessary (:issue:`8942`).
 - The ``kill-whole-line`` special input function now kills the newline preceeding the last line. This makes ``dd`` in vi-mode clear the last line properly.
 - Introduce the ``kill-inner-line`` special input function, which kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines (:issue:`8983`).
+- The CSI u sequence for shift+space is now bound to the same thing as space (:issue:`8874`)
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -115,11 +122,12 @@ Completions
   - apk (:issue:`8951`)
   - brightnessctl (:issue:`8758`)
   - efibootmgr (:issue:`9010`)
-  - fastboot
+  - fastboot (:issue:`8904`)
   - optimus-manager (:issue:`8913`)
   - rclone (:issue:`8819`)
   - sops (:issue:`8821`)
   - tuned-adm (:issue:`8760`)
+  - wg-quick (:issue:`8687`)
 - ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`)
 
 
@@ -132,11 +140,12 @@ Other improvements
 
 For distributors
 ----------------
-- libatomic is now correctly detected as necessary when building on RISC-V (:issue:`8850`).
+- libatomic is now correctly detected as necessary when building on RISC-V (:issue:`8850`, :issue:`8851`).
+- In some cases, cmake found the wrong libintl on macOS. This has been corrected (:issue:`5244`).
 - The paths for completions, functions, and configuration snippets now include
   subdirectories ``fish/vendor_completions.d``, ``fish/vendor_functions.d``, and
   ``fish/vendor_conf.d`` (respectively) within ``XDG_DATA_HOME`` (or ``~/.local/share``
-  if not defined) (:issue:`8887`).
+  if not defined) (:issue:`8887`, :issue:`7816`).
 
 --------------
 

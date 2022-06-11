@@ -504,6 +504,9 @@ struct autosuggestion_t {
     // The string which was searched for.
     wcstring search_string{};
 
+    // The list of completions which may need loading.
+    wcstring_list_t needs_load{};
+
     // Whether the autosuggestion should be case insensitive.
     // This is true for file-generated autosuggestions, but not for history.
     bool icase{false};
@@ -1778,18 +1781,21 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
 
         // Try normal completions.
         completion_request_options_t complete_flags = completion_request_options_t::autosuggest();
-        completion_list_t completions = complete(search_string, complete_flags, ctx);
-        completions_sort_and_prioritize(&completions, complete_flags);
+        wcstring_list_t needs_load;
+        completion_list_t completions = complete(search_string, complete_flags, ctx, &needs_load);
+
+        autosuggestion_t result{};
+        result.search_string = search_string;
+        result.needs_load = std::move(needs_load);
+        result.icase = true;  // normal completions are case-insensitive.
         if (!completions.empty()) {
+            completions_sort_and_prioritize(&completions, complete_flags);
             const completion_t &comp = completions.at(0);
             size_t cursor = cursor_pos;
-            wcstring suggestion = completion_apply_to_command_line(
+            result.text = completion_apply_to_command_line(
                 comp.completion, comp.flags, search_string, &cursor, true /* append only */);
-            // Normal completions are case-insensitive.
-            return autosuggestion_t{std::move(suggestion), search_string, true /* icase */};
         }
-
-        return nothing;
+        return result;
     };
 }
 
@@ -1805,10 +1811,28 @@ bool reader_data_t::can_autosuggest() const {
 // Called after an autosuggestion has been computed on a background thread.
 void reader_data_t::autosuggest_completed(autosuggestion_t result) {
     ASSERT_IS_MAIN_THREAD();
-    if (result.search_string == in_flight_autosuggest_request)
+    if (result.search_string == in_flight_autosuggest_request) {
         in_flight_autosuggest_request.clear();
-    if (!result.empty() && can_autosuggest() && result.search_string == command_line.text() &&
-        string_prefixes_string_case_insensitive(result.search_string, result.text)) {
+    }
+    if (result.search_string != command_line.text()) {
+        // This autosuggestion is stale.
+        return;
+    }
+    // Maybe load completions for commands discovered by this autosuggestion.
+    bool loaded_new = false;
+    for (const wcstring &to_load : result.needs_load) {
+        if (complete_load(to_load, this->parser())) {
+            FLOGF(complete, "Autosuggest found new completions for %ls, restarting",
+                  to_load.c_str());
+            loaded_new = true;
+        }
+    }
+    if (loaded_new) {
+        // We loaded new completions for this command.
+        // Re-do our autosuggestion.
+        this->update_autosuggestion();
+    } else if (!result.empty() && can_autosuggest() &&
+               string_prefixes_string_case_insensitive(result.search_string, result.text)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
         autosuggestion = std::move(result);
         if (this->is_repaint_needed()) {

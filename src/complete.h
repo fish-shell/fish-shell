@@ -26,6 +26,7 @@ struct completion_mode_t {
 #define PROG_COMPLETE_SEP L'\t'
 
 class environment_t;
+class parser_t;
 
 enum {
     /// Do not insert space afterwards if this is the only completion. (The default is to try insert
@@ -243,10 +244,18 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
 /// Removes all completions for a given command.
 void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
+/// Load command-specific completions for the specified command.
+/// \return true if something new was loaded, false if not.
+bool complete_load(const wcstring &cmd, parser_t &parser);
+
 /// \return all completions of the command cmd.
+/// If \p ctx contains a parser, this will autoload functions and completions as needed.
+/// If it does not contain a parser, then any completions which need autoloading will be returned in
+/// \p needs_load, if not null.
 class operation_context_t;
 completion_list_t complete(const wcstring &cmd, completion_request_options_t flags,
-                           const operation_context_t &ctx);
+                           const operation_context_t &ctx,
+                           wcstring_list_t *out_needs_load = nullptr);
 
 /// Return a list of all current completions.
 wcstring complete_print(const wcstring &cmd = L"");

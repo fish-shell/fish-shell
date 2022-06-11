@@ -332,6 +332,9 @@ class completer_t {
     /// The output completions.
     completion_receiver_t completions;
 
+    /// Commands which we would have tried to load, if we had a parser.
+    wcstring_list_t needs_load;
+
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
     using condition_cache_t = std::unordered_map<wcstring, bool>;
@@ -424,6 +427,8 @@ class completer_t {
     void perform_for_commandline(wcstring cmdline);
 
     completion_list_t acquire_completions() { return completions.take(); }
+
+    wcstring_list_t acquire_needs_load() { return std::move(needs_load); }
 };
 
 // Autoloader for completions.
@@ -799,25 +804,6 @@ static size_t short_option_pos(const wcstring &arg, const option_list_t &options
     return arg.size() - 1;
 }
 
-/// Load command-specific completions for the specified command.
-static void complete_load(const wcstring &name) {
-    // We have to load this as a function, since it may define a --wraps or signature.
-    // See issue #2466.
-    auto &parser = parser_t::principal_parser();
-    function_get_props_autoload(name, parser);
-
-    // It's important to NOT hold the lock around completion loading.
-    // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
-    // it.
-    // Note we only look at the global fish_function_path and fish_complete_path.
-    maybe_t<wcstring> path_to_load =
-        completion_autoloader.acquire()->resolve_command(name, env_stack_t::globals());
-    if (path_to_load) {
-        autoload_t::perform_autoload(*path_to_load, parser);
-        completion_autoloader.acquire()->mark_autoload_finished(name);
-    }
-}
-
 /// complete_param: Given a command, find completions for the argument str of command cmd_orig with
 /// previous option popt. If file completions should be disabled, then mark *out_do_file as false.
 ///
@@ -845,8 +831,10 @@ bool completer_t::complete_param_for_command(const wcstring &cmd_orig, const wcs
         // tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
         // and automatic completions ("gi" autosuggestion provider -> git)
         FLOG(complete, "Skipping completions for non-existent command");
-    } else {
-        iothread_perform_on_main([&]() { complete_load(cmd); });
+    } else if (ctx.parser) {
+        complete_load(cmd, *ctx.parser);
+    } else if (!completion_autoloader.acquire()->has_attempted_autoload(cmd)) {
+        needs_load.push_back(cmd);
     }
 
     // Make a list of lists of all options that we care about.
@@ -1713,7 +1701,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
 }
 
 completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_options_t flags,
-                           const operation_context_t &ctx) {
+                           const operation_context_t &ctx, wcstring_list_t *out_needs_loads) {
     // Determine the innermost subcommand.
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
@@ -1722,6 +1710,9 @@ completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_
     wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
     completer_t completer(ctx, flags);
     completer.perform_for_commandline(std::move(cmd));
+    if (out_needs_loads) {
+        *out_needs_loads = completer.acquire_needs_load();
+    }
     return completer.acquire_completions();
 }
 
@@ -1786,6 +1777,30 @@ static wcstring completion2string(const completion_key_t &key, const complete_en
     }
     out.append(L"\n");
     return out;
+}
+
+bool complete_load(const wcstring &cmd, parser_t &parser) {
+    bool loaded_new = false;
+
+    // We have to load this as a function, since it may define a --wraps or signature.
+    // See issue #2466.
+    if (function_load(cmd, parser)) {
+        // We autoloaded something; check if we have a --wraps.
+        loaded_new |= complete_get_wrap_targets(cmd).size() > 0;
+    }
+
+    // It's important to NOT hold the lock around completion loading.
+    // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
+    // it.
+    // Note we only look at the global fish_function_path and fish_complete_path.
+    maybe_t<wcstring> path_to_load =
+        completion_autoloader.acquire()->resolve_command(cmd, env_stack_t::globals());
+    if (path_to_load) {
+        autoload_t::perform_autoload(*path_to_load, parser);
+        completion_autoloader.acquire()->mark_autoload_finished(cmd);
+        loaded_new = true;
+    }
+    return loaded_new;
 }
 
 /// Use by the bare `complete`, loaded completions are printed out as commands

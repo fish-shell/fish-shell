@@ -88,6 +88,9 @@ class autoload_t {
     /// This does not actually mark the command as being autoloaded.
     bool can_autoload(const wcstring &cmd);
 
+    /// \return whether autoloading has been attempted for a command.
+    bool has_attempted_autoload(const wcstring &cmd);
+
     /// \return the names of all commands that have been autoloaded. Note this includes "in-flight"
     /// commands.
     wcstring_list_t get_autoloaded_commands() const;

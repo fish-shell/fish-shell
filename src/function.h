@@ -74,6 +74,10 @@ function_properties_ref_t function_get_props(const wcstring &name);
 /// \return the properties for a function, or nullptr if none, perhaps triggering autoloading.
 function_properties_ref_t function_get_props_autoload(const wcstring &name, parser_t &parser);
 
+/// Try autoloading a function.
+/// \return true if something new was autoloaded, false if it was already loaded or did not exist.
+bool function_load(const wcstring &name, parser_t &parser);
+
 /// Sets the description of the function with the name \c name.
 /// This triggers autoloading.
 void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &parser);

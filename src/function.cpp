@@ -85,7 +85,7 @@ static std::shared_ptr<function_properties_t> copy_props(const function_properti
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded.
 /// Note this executes fish script code.
-static void try_autoload(const wcstring &name, parser_t &parser) {
+bool function_load(const wcstring &name, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
     maybe_t<wcstring> path_to_autoload;
     // Note we can't autoload while holding the funcset lock.
@@ -99,10 +99,11 @@ static void try_autoload(const wcstring &name, parser_t &parser) {
 
     // Release the lock and perform any autoload, then reacquire the lock and clean up.
     if (path_to_autoload) {
-        // Crucially, the lock is acquired *after* do_autoload_file_at_path().
+        // Crucially, the lock is acquired after perform_autoload().
         autoload_t::perform_autoload(*path_to_autoload, parser);
         function_set.acquire()->autoloader.mark_autoload_finished(name);
     }
+    return path_to_autoload.has_value();
 }
 
 /// Insert a list of all dynamically loaded functions into the specified list.
@@ -166,7 +167,7 @@ function_properties_ref_t function_get_props(const wcstring &name) {
 function_properties_ref_t function_get_props_autoload(const wcstring &name, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
     if (parser_keywords_is_reserved(name)) return nullptr;
-    try_autoload(name, parser);
+    function_load(name, parser);
     return function_get_props(name);
 }
 
@@ -217,7 +218,7 @@ static wcstring get_function_body_source(const function_properties_t &props) {
 
 void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
-    try_autoload(name, parser);
+    function_load(name, parser);
     auto funcset = function_set.acquire();
     auto iter = funcset->funcs.find(name);
     if (iter != funcset->funcs.end()) {

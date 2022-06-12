@@ -96,6 +96,7 @@ Interactive improvements
 - ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag (:issue:`8884`).
 - Since fish 3.2.0, pressing :kbd:`Control-D` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
 - A bug that caused multi-line prompts to be moved down a line when pasting or switching modes has been fixed (:issue:`3481`).
+- Changing the cursor shape is now enabled by default in iTerm2. (:issue:`3696`).
 - The web-based configuration system no longer strips too many quotes in the abbreviation display (:issue:`8917`, :issue:`8918`).
 - Fish started with ``--no-config`` will now use the default keybindings (:issue:`8493`)
 - When fish inherits a $USER value that doesn't correspond to the euid, it will now correct it in all cases instead of just when euid is 0 (:issue:`8879`, :issue:`8583`).

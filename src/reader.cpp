@@ -738,6 +738,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     parser_t &parser() { return *parser_ref; }
     const parser_t &parser() const { return *parser_ref; }
 
+    /// Convenience cover over exec_count().
+    uint64_t exec_count() const { return parser().libdata().exec_count; }
+
     reader_data_t(std::shared_ptr<parser_t> parser, std::shared_ptr<history_t> hist,
                   reader_config_t &&conf)
         : conf(std::move(conf)),
@@ -3079,10 +3082,6 @@ void reader_data_t::run_input_command_scripts(const wcstring_list_t &cmds) {
         wperror(L"tcsetattr");
     }
     termsize_container_t::shared().invalidate_tty();
-
-    // The input command scripts may have changed our tty - ignore any such changes.
-    // See #3481.
-    screen.save_status();
 }
 
 /// Read normal characters, inserting them into the command line.
@@ -3098,6 +3097,10 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     };
     command_handler_t empty_handler = {};
 
+    // We repaint our prompt if fstat reports the tty as having changed.
+    // But don't react to tty changes that we initiated, because of commands or
+    // on-variable events (e.g. for fish_bind_mode). See #3481.
+    uint64_t last_exec_count = exec_count();
     while (accumulated_chars.size() < limit) {
         bool allow_commands = (accumulated_chars.empty());
         auto evt = inputter.read_char(allow_commands ? normal_handler : empty_handler);
@@ -3110,6 +3113,11 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
             continue;
         } else {
             accumulated_chars.push_back(evt.get_char());
+        }
+
+        if (last_exec_count != exec_count()) {
+            last_exec_count = exec_count();
+            screen.save_status();
         }
     }
 
@@ -3125,6 +3133,12 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
         // Since we handled a normal character, we don't have a last command.
         rls.last_cmd.reset();
     }
+
+    if (last_exec_count != exec_count()) {
+        last_exec_count = exec_count();
+        screen.save_status();
+    }
+
     return event_needing_handling;
 }
 

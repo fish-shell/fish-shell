@@ -1,9 +1,5 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
-# Github Actions currently (2022-06-09)
-# doesn't include the tmux-256color terminfo on macOS.
-# So we skip tmux tests there.
-#REQUIRES: test -z "$CI" -o "$(uname)" != Darwin
 
 set -g isolated_tmux_fish_extra_args -C '
     set -g fish_autosuggestion_enabled 0

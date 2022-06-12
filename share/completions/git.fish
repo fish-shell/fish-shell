@@ -487,6 +487,7 @@ function __fish_git_files
                 end
 
                 if test "$root/$relfile" = (pwd -P)/$relfile
+                    and not string match -q ':*' -- (commandline -ct)
                     set file $relfile
                 end
 

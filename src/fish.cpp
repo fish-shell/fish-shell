@@ -516,7 +516,7 @@ int main(int argc, char **argv) {
         read_init(parser, paths);
     }
 
-    if (opts.is_interactive_session && opts.no_config && !opts.no_exec) {
+    if (is_interactive_session() && opts.no_config && !opts.no_exec) {
         // If we have no config, we default to the default key bindings.
         parser.vars().set_one(L"fish_key_bindings", ENV_UNEXPORT, L"fish_default_key_bindings");
         if (function_exists(L"fish_default_key_bindings", parser)) {

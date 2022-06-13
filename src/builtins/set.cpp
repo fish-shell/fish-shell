@@ -765,11 +765,13 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, c
         new_values = new_var_values_by_index(*split, argc, argv);
     }
 
-    warn_if_uvar_shadows_global(cmd, opts, split->varname, streams, parser);
     // Set the value back in the variable stack and fire any events.
     int retval = env_set_reporting_errors(cmd, split->varname, scope, std::move(new_values),
                                           streams, parser);
 
+    if (retval == ENV_OK) {
+        warn_if_uvar_shadows_global(cmd, opts, split->varname, streams, parser);
+    }
     return retval;
 }
 

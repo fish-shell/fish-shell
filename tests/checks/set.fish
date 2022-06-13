@@ -905,3 +905,11 @@ echo $status
 set --query
 echo $status
 # CHECK: 255
+
+set -U status
+# CHECKERR: set: Tried to modify the special variable 'status' with the wrong scope
+set -S status
+# CHECK: $status: set in global scope, unexported, with 1 elements
+# CHECK: Variable is read-only
+# CHECK: $status[1]: |2|
+

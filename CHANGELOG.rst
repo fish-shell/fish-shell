@@ -96,7 +96,6 @@ Interactive improvements
 - ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag (:issue:`8884`).
 - Since fish 3.2.0, pressing :kbd:`Control-D` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
 - A bug that caused multi-line prompts to be moved down a line when pasting or switching modes has been fixed (:issue:`3481`).
-- Changing the cursor shape is now enabled by default in iTerm2. (:issue:`3696`).
 - The web-based configuration system no longer strips too many quotes in the abbreviation display (:issue:`8917`, :issue:`8918`).
 - Fish started with ``--no-config`` will now use the default keybindings (:issue:`8493`)
 - When fish inherits a $USER value that doesn't correspond to the euid, it will now correct it in all cases instead of just when euid is 0 (:issue:`8879`, :issue:`8583`).
@@ -108,7 +107,7 @@ New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - The :kbd:`Alt-S` binding will now insert ``doas`` instead of ``sudo`` if necessary (:issue:`8942`).
 - The ``kill-whole-line`` special input function now kills the newline preceeding the last line. This makes ``dd`` in vi-mode clear the last line properly.
-- Introduce the ``kill-inner-line`` special input function, which kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines (:issue:`8983`).
+- The new ``kill-inner-line`` special input function kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines (:issue:`8983`).
 - The CSI u sequence for shift+space is now bound to the same thing as space (:issue:`8874`)
 
 Improved prompts
@@ -119,6 +118,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+
   - archlinux-java (:issue:`8911`)
   - apk (:issue:`8951`)
   - brightnessctl (:issue:`8758`)
@@ -129,12 +129,14 @@ Completions
   - sops (:issue:`8821`)
   - tuned-adm (:issue:`8760`)
   - wg-quick (:issue:`8687`)
+
 - ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`)
 
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - CWD-reporting is now turned on for kitty as well (:issue:`8806`)
+- Changing the cursor shape is now enabled by default in iTerm2. (:issue:`3696`).
 
 Other improvements
 ------------------

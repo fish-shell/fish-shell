@@ -936,6 +936,9 @@ complete -f -c git -n '__fish_git_using_command fetch' -l shallow-since -d 'Deep
 complete -f -c git -n '__fish_git_using_command fetch' -l shallow-exclude -d 'Deepen history of shallow clone, excluding rev'
 complete -f -c git -n '__fish_git_using_command fetch' -l unshallow -d 'Convert to a complete repository'
 complete -f -c git -n '__fish_git_using_command fetch' -l refetch -d 'Re-fetch without negotiating common commits'
+complete -f -c git -n '__fish_git_using_command fetch' -l negotiation-tip -d 'Only report commits reachable from these tips' -xa '(__fish_git_commits; __fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command fetch' -l negotiate-only -d "Don't fetch, only show commits in common with the server"
+
 # TODO other options
 
 #### filter-branch
@@ -1015,6 +1018,9 @@ complete -f -c git -n '__fish_git_using_command show-branch' -l sparse -d "Shows
 complete -f -c git -n '__fish_git_using_command show-branch' -l no-name -d "Do not show naming strings for each commit"
 complete -f -c git -n '__fish_git_using_command show-branch' -l sha1-name -d "Name commits with unique prefix"
 complete -f -c git -n '__fish_git_using_command show-branch' -l no-color -d "Turn off colored output"
+complete -f -c git -n '__fish_git_using_command show-branch' -l merge-base -d "Determine merge bases for the given commits"
+complete -f -c git -n '__fish_git_using_command show-branch' -l independent -d "Show which refs can't be reached from any other"
+complete -f -c git -n '__fish_git_using_command show-branch' -l topics -d "Show only commits that are not on the first given branch"
 # TODO options
 
 ### add
@@ -1080,11 +1086,15 @@ complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains --
 complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_heads)' -d Head
 complete -k -f -c git -n '__fish_git_using_command checkout' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_local_branches)'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
+complete -f -c git -n '__fish_git_using_command checkout' -s B -d 'Create a new branch or reset existing to start point'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -l theirs -d 'Keep staged changes'
 complete -f -c git -n '__fish_git_using_command checkout' -l ours -d 'Keep unmerged changes'
 complete -f -c git -n '__fish_git_using_command checkout' -l recurse-submodules -d 'Update the work trees of submodules'
 complete -f -c git -n '__fish_git_using_command checkout' -l no-recurse-submodules -d 'Do not update the work trees of submodules'
+complete -f -c git -n '__fish_git_using_command checkout' -l progress -d 'Report progress even if not connected to a terminal'
+complete -f -c git -n '__fish_git_using_command checkout' -l no-progress -d "Don't report progress"
+complete -f -c git -n '__fish_git_using_command checkout' -s f -l force -d 'Switch even if working tree differs or unmerged files exist'
 # TODO options
 
 ### apply

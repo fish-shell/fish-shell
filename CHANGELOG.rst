@@ -6,9 +6,9 @@ fish 3.5.0 (not yet released)
 
 Notable improvements and fixes
 ------------------------------
-- Tab (or any ``complete`` key binding) now prefer to expand wildcards instead of invoking completions, if there is a wildcard in the path component under the cursor (:issue:`954`, :issue:`8593`).
+- Tab (or any key bound to ``complete``) now expands wildcards instead of invoking completions, if there is a wildcard in the path component under the cursor (:issue:`954`, :issue:`8593`).
 - Scripts can now catch and handle SIGINT and SIGTERM, either via ``function --on-signal`` or with ``trap``. (:issue:`6649`).
-- A new ``path`` builtin to filter and transform paths (:issue:`7658`, :issue:`8958`). For example, to list all the separate extensions used on files in /usr/share/man (after removing one extension, commonly a ".gz")::
+- A new ``path`` builtin command to filter and transform paths (:issue:`7659`, :issue:`8958`). For example, to list all the separate extensions used on files in /usr/share/man (after removing one extension, commonly a ".gz")::
 
     path filter -f /usr/share/man/** | path change-extension '' | path extension | path sort -u
 
@@ -119,16 +119,16 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 
-  - archlinux-java (:issue:`8911`)
-  - apk (:issue:`8951`)
-  - brightnessctl (:issue:`8758`)
-  - efibootmgr (:issue:`9010`)
-  - fastboot (:issue:`8904`)
-  - optimus-manager (:issue:`8913`)
-  - rclone (:issue:`8819`)
-  - sops (:issue:`8821`)
-  - tuned-adm (:issue:`8760`)
-  - wg-quick (:issue:`8687`)
+  - ``archlinux-java`` (:issue:`8911`)
+  - ``apk`` (:issue:`8951`)
+  - ``brightnessctl`` (:issue:`8758`)
+  - ``efibootmgr`` (:issue:`9010`)
+  - ``fastboot`` (:issue:`8904`)
+  - ``optimus-manager`` (:issue:`8913`)
+  - ``rclone`` (:issue:`8819`)
+  - ``sops`` (:issue:`8821`)
+  - ``tuned-adm`` (:issue:`8760`)
+  - ``wg-quick`` (:issue:`8687`)
 
 - ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`)
 

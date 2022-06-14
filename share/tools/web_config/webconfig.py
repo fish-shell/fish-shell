@@ -1689,6 +1689,10 @@ print(
     "Web config started at %s%s%s"
     % (esc["underline"], fileurl, esc["exit_attribute_mode"])
 )
+print(
+    "If that doesn't work, try opening %s%s%s"
+    % (esc["underline"], url, esc["exit_attribute_mode"])
+)
 print("%sHit ENTER to stop.%s" % (esc["bold"], esc["exit_attribute_mode"]))
 
 

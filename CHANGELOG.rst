@@ -50,13 +50,12 @@ Deprecations and removed features
 - Most ``string`` subcommands no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
 - Fish's escape sequence removal (like for ``string length --visible`` or to figure out how wide the prompt is) no longer has special support for non-standard color sequences like from Data General terminals, e.g. the Data General Dasher D220 from 1984. This removes a bunch of work in the common case, allowing ``string length --visible`` to be much faster with unknown escape sequences. We don't expect anyone to have ever used fish with such a terminal (:issue:`8769`).
 - Code to upgrade universal variables from fish before 3.0 has been removed. Users who upgrade directly from fish versions 2.7.1 or before will have to set their universal variables & abbreviations again. (:issue:`8781`)
-- The meaning of an empty color variable has changed. Previously, when a variable was empty it would be interpreted as the "normal" color. Now fish will ignore empty color variables and go to the fallback color. For example::
+- The meaning of an empty color variable has changed. Previously, when a variable was set but empty, it would be interpreted as the "normal" color. Now, empty color variables cause the same effect as unset variables - the general highlighting variable for that type is used instead. For example::
 
     set -g fish_color_command blue
     set -g fish_color_keyword
 
-  would previously make keywords "normal" (usually white in a dark terminal) because it stopped after checking $fish_color_keyword.
-  Now it'll make them blue. To achieve the previous behavior, use the normal color explicitly: ``set -g fish_color_keyword normal``.
+  would previously make keywords "normal" (usually white in a dark terminal). Now it'll make them blue. To achieve the previous behavior, use the normal color explicitly: ``set -g fish_color_keyword normal``.
 
   This makes it easier to make self-contained color schemes that don't accidentally use color that was set before.
   ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty. (:issue:`8793`)
@@ -79,7 +78,7 @@ Scripting improvements
 
 - ``read`` is now faster as the last process in a pipeline (:issue:`8552`).
 - ``string join`` gained a new ``--no-empty`` flag to skip empty arguments (:issue:`8774`, :issue:`8351`).
-- ``read`` now actually only triggers the ``fish_read`` event, not the ``fish_prompt`` event (:issue:`8797`). It was supposed to work this way since fish 3.2.0.
+- ``read`` now only triggers the ``fish_read`` event, not the ``fish_prompt`` event (:issue:`8797`). It was supposed to work this way in fish 3.2.0 and later, but both events were emitted.
 - The TTY modes are no longer restored when non-interactive shells exit. This fixes wrong tty modes in pipelines with interactive commands. (:issue:`8705`).
 - Some functions shipped with fish printed error messages to standard output, but they now they rightly go to standard error (:issue:`8855`).
 - ``jobs`` now correctly reports CPU usage as a percentage, instead of as a number of clock ticks (:issue:`8919`).
@@ -108,7 +107,7 @@ New or improved bindings
 - The :kbd:`Alt-S` binding will now insert ``doas`` instead of ``sudo`` if necessary (:issue:`8942`).
 - The ``kill-whole-line`` special input function now kills the newline preceeding the last line. This makes ``dd`` in vi-mode clear the last line properly.
 - The new ``kill-inner-line`` special input function kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines (:issue:`8983`).
-- The CSI u sequence for :kbd:`Shift-Space` is now bound to the same thing as :kbd:`Space` (:issue:`8874`)
+- On terminals that emit special sequences for these combinations, :kbd:`Shift-Space` is bound like :kbd:`Space`, and :kbd:`Ctrl-Return` is bound like :kbd:`Return` (:issue:`8874`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -129,21 +128,17 @@ Completions
   - ``tuned-adm`` (:issue:`8760`)
   - ``wg-quick`` (:issue:`8687`)
 
-- ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`)
-
+- ``complete`` can now be given multiple ``--condition`` options. They will be attempted in the order they were given, and only if all succeed will the completion be made available (as if they were connected with ``&&``). This helps with caching - fish's complete system stores the return value of each condition as long as the commandline doesn't change, so this can reduce the number of conditions that need to be evaluated (:issue:`8536`, :issue:`8967`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- CWD-reporting is now turned on for kitty as well (:issue:`8806`)
-- Changing the cursor shape is now enabled by default in iTerm2. (:issue:`3696`).
-
-Other improvements
-------------------
+- Working directory reporting is enabled for kitty (:issue:`8806`).
+- Changing the cursor shape is now enabled by default in iTerm2 (:issue:`3696`).
 
 For distributors
 ----------------
 - libatomic is now correctly detected as necessary when building on RISC-V (:issue:`8850`, :issue:`8851`).
-- In some cases, cmake found the wrong libintl on macOS. This has been corrected (:issue:`5244`).
+- In some cases, the build process found the wrong libintl on macOS. This has been corrected (:issue:`5244`).
 - The paths for completions, functions, and configuration snippets now include
   subdirectories ``fish/vendor_completions.d``, ``fish/vendor_functions.d``, and
   ``fish/vendor_conf.d`` (respectively) within ``XDG_DATA_HOME`` (or ``~/.local/share``

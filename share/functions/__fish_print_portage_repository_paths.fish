@@ -6,9 +6,9 @@ function __fish_print_portage_repository_paths --description 'Print the paths of
     and set b (find $a -type f )
     test -f $a
     and set b $a
-    test -n (echo $b)
-    and string match -q "[gentoo]" (cat $b)
+    test -n "$b"
+    and string match -q "[gentoo]" -- (cat $b)
     and set c $b
     or set -a c $b
-    cat $c | string match -g -r 'location = (.*$)'
+    cat $c | string match -g -r '^location = (.*$)'
 end

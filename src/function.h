@@ -89,7 +89,7 @@ bool function_exists_no_autoload(const wcstring &cmd);
 /// Returns all function names.
 ///
 /// \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore.
-wcstring_list_t function_get_names(int get_hidden);
+wcstring_list_t function_get_names(bool get_hidden);
 
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.

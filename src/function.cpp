@@ -106,7 +106,7 @@ static void try_autoload(const wcstring &name, parser_t &parser) {
 }
 
 /// Insert a list of all dynamically loaded functions into the specified list.
-static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) {
+static void autoload_names(std::unordered_set<wcstring> &names, bool get_hidden) {
     size_t i;
 
     // TODO: justfy this.
@@ -249,7 +249,7 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
     return true;
 }
 
-wcstring_list_t function_get_names(int get_hidden) {
+wcstring_list_t function_get_names(bool get_hidden) {
     std::unordered_set<wcstring> names;
     auto funcset = function_set.acquire();
     autoload_names(names, get_hidden);

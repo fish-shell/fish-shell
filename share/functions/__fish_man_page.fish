@@ -1,6 +1,6 @@
 function __fish_man_page
-    # Get all commandline tokens not starting with "-"
-    set -l args (commandline -po | string match -rv '^-')
+    # Get all commandline tokens not starting with "-", up to and including the cursor's
+    set -l args (string match -rv '^-|^$' -- (commandline -cpo && commandline -t))
 
     # If commandline is empty, exit.
     if not set -q args[1]

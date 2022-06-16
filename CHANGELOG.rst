@@ -1,8 +1,5 @@
-fish 3.5.0 (not yet released)
-====================================
-
-..
-   Ignore for 3.5.0 changelog: 7658 8694 8783 8795 8796 8800 8801 8811 8818 8826 8827 8829 8833 8840 8860 8863 8872 8873 8875 8881 8882 8889 8895 8896 8898 8900 8907 8908 8909 8912 8915 8916 8921 8923 8928 8929 8938 8941 8953 8954 8955 8957 8960 8969 8973 8977 8978 8982 8984 8986 8990 8991 8993 8997 9002 9004 9005 9008 9012 9016
+fish 3.5.0 (released June 16, 2022)
+===================================
 
 Notable improvements and fixes
 ------------------------------
@@ -89,7 +86,7 @@ Interactive improvements
 - Fish now reports a special error if a command wasn't found and there is a non-executable file by that name in :envvar:`PATH` (:issue:`8804`).
 - ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).
-- ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD and NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`, :issue:`8786`).
+- ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD ande NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`, :issue:`8786`).
 - The ``vared`` command can now successfully edit variables named "tmp" or "prompt" (:issue:`8836`, :issue:`8837`).
 - ``time`` now emits an error if used after the first command in a pipeline (:issue:`8841`).
 - ``fish_add_path`` now prints a message for skipped non-existent paths when using the ``-v`` flag (:issue:`8884`).

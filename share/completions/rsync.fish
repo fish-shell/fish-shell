@@ -176,6 +176,28 @@ complete -c rsync -d Hostname -a "
 #
 # Remote path
 #
+# Unfortunately, the escaping changed in version 3.2.4.
+# Even more unfortunate, rsync's version output is horrible:
+# rsync  version v3.2.4  protocol version 31
+# Copyright (C) 1996-2022 by Andrew Tridgell, Wayne Davison, and others.
+# Web site: https://rsync.samba.org/
+# ... (and then a ton of lines about capabilities)
+#
+# This includes multiple spaces, the version might start with "v" depending on whether it's
+# built from a git tag or not...
+
+set -l new_escaping # has an element if the new escaping style introduced in 3.2.4 is required
+
+set -l rsync_ver (rsync --version |
+                  string replace -rf '^rsync +version\D+([\d.]+) .*' '$1' |
+                  string split .)
+
+if test "$rsync_ver[1]" -gt 3 2>/dev/null
+    or test "$rsync_ver[1]" -eq 3 -a "$rsync_ver[2]" -gt 2 2>/dev/null
+    or test "$rsync_ver[1]" -eq 3 -a "$rsync_ver[2]" -eq 2 -a "$rsync_ver[3]" -gt 3 2>/dev/null
+    set new_escaping 1
+end
+
 complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -xa "
 (
 	# Prepend any user@host:/path information supplied before the remote completion.
@@ -183,6 +205,6 @@ complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" 
 )(
 	# Get the list of remote files from the specified rsync server.
         rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' |
-        string replace -r '(\S+\s+){4}' '' # drop the first four columns
+        string replace -r '(\S+\s+){4}' '' "(set -q new_escaping[1]; or echo ' | string escape -n'; echo)"
 )
 "

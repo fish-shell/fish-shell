@@ -2,7 +2,7 @@ fish 3.5.0 (not yet released)
 ====================================
 
 ..
-   Ignore for 3.5.0 changelog: 8694 8783 8795 8796 8800 8801 8811 8818 8826 8827 8829 8833 8840 8860 8863 8872 8873 8875 8881 8882 8889 8896 8900 8907 8908 8909 8912 8915 8916 8921 8923 8928 8929 8938 8941 8953 8954 8955 8957 8960 8969 8973 8977 8978 8982 8984 8986 8990 8991 8993 8997 9002 9004 9005 9008
+   Ignore for 3.5.0 changelog: 7658 8694 8783 8795 8796 8800 8801 8811 8818 8826 8827 8829 8833 8840 8860 8863 8872 8873 8875 8881 8882 8889 8895 8896 8898 8900 8907 8908 8909 8912 8915 8916 8921 8923 8928 8929 8938 8941 8953 8954 8955 8957 8960 8969 8973 8977 8978 8982 8984 8986 8990 8991 8993 8997 9002 9004 9005 9008 9012 9016
 
 Notable improvements and fixes
 ------------------------------
@@ -50,7 +50,7 @@ Deprecations and removed features
 - Most ``string`` subcommands no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
 - Fish's escape sequence removal (like for ``string length --visible`` or to figure out how wide the prompt is) no longer has special support for non-standard color sequences like from Data General terminals, e.g. the Data General Dasher D220 from 1984. This removes a bunch of work in the common case, allowing ``string length --visible`` to be much faster with unknown escape sequences. We don't expect anyone to have ever used fish with such a terminal (:issue:`8769`).
 - Code to upgrade universal variables from fish before 3.0 has been removed. Users who upgrade directly from fish versions 2.7.1 or before will have to set their universal variables & abbreviations again. (:issue:`8781`)
-- The meaning of an empty color variable has changed. Previously, when a variable was set but empty, it would be interpreted as the "normal" color. Now, empty color variables cause the same effect as unset variables - the general highlighting variable for that type is used instead. For example::
+- The meaning of an empty color variable has changed (:issue:`8793`). Previously, when a variable was set but empty, it would be interpreted as the "normal" color. Now, empty color variables cause the same effect as unset variables - the general highlighting variable for that type is used instead. For example::
 
     set -g fish_color_command blue
     set -g fish_color_keyword
@@ -58,9 +58,9 @@ Deprecations and removed features
   would previously make keywords "normal" (usually white in a dark terminal). Now it'll make them blue. To achieve the previous behavior, use the normal color explicitly: ``set -g fish_color_keyword normal``.
 
   This makes it easier to make self-contained color schemes that don't accidentally use color that was set before.
-  ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty. (:issue:`8793`)
+  ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty.
 - ``eval`` is now a reserved keyword, so it can't be used as a function name. This follows ``set`` and ``read``, and is necessary because it can't be cleanly shadowed by a function - at the very least ``eval set -l argv foo`` breaks. Fish will ignore autoload files for it, so left over ``eval.fish`` from previous fish versions won't be loaded.
-- The git prompt in informative mode now defaults to skipping counting untracked files, as this was extremely slow. To turn it on, set :envvar:`__fish_git_prompt_showuntrackedfiles` or set the git config value "bash.showuntrackedfiles" to ``true`` explicitly (this can be done per-repo). The "informative+vcs" sample prompt already skipped display of untracked files, but didn't do so in a way that skipped the computation, so it should be quite a bit faster in many cases (:issue:`8980`).
+- The git prompt in informative mode now defaults to skipping counting untracked files, as this was extremely slow. To turn it on, set :envvar:`__fish_git_prompt_showuntrackedfiles` or set the git config value "bash.showuntrackedfiles" to ``true`` explicitly (which can be done for individual repositories). The "informative+vcs" sample prompt already skipped display of untracked files, but didn't do so in a way that skipped the computation, so it should be quite a bit faster in many cases (:issue:`8980`).
 - The ``__terlar_git_prompt`` function, used by the "Terlar" sample prompt, has been rebuilt as a configuration of the normal ``fish_git_prompt`` to ease maintenance, improve performance and add features (like reading per-repo git configuration). Some slight changes remain; users who absolutely must have the same behavior are encouraged to copy the old function (:issue:`9011`, :issue:`7918`, :issue:`8979`).
 
 Scripting improvements

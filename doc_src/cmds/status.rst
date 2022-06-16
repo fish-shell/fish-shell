@@ -73,7 +73,7 @@ The following operations (subcommands) are available:
     Prints just the path to the running script, without the actual filename itself. This can be relative to :envvar:`PWD` (including just "."), depending on how the script was called. This is the same as passing the filename to ``dirname(3)``. It's useful if you want to use other files in the current script's directory or similar.
 
 **fish-path**
-    Prints the absolute path to the currently executing instance of fish.
+    Prints the absolute path to the currently executing instance of fish. This is a best-effort attempt and the exact output is down to what the platform gives fish. In some cases you might only get "fish".
 
 **function** or **current-function**
     Prints the name of the currently called function if able, when missing displays "Not a function" (or equivalent translated string).

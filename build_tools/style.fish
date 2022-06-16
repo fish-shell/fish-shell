@@ -23,9 +23,11 @@ if test $all = yes
     set -l files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
     if set -q files[1]
         echo
-        echo You have uncommitted changes. Cowardly refusing to restyle the entire code base.
-        echo
-        exit 1
+        echo 'You have uncommitted changes. Are you sure you want to restyle?'
+        read -P 'y/N? ' -n1 -l ans
+        if not string match -qi "y" -- $ans
+            exit 1
+        end
     end
     set c_files src/*.h src/*.cpp src/*.c
     set fish_files share/**.fish

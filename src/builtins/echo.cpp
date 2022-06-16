@@ -78,69 +78,6 @@ static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, const wc
     return STATUS_CMD_OK;
 }
 
-// Convert a octal or hex character to its binary value. Surprisingly a version
-// of this function using a lookup table is only ~1.5% faster than the `switch`
-// statement version below. Since that requires initializing a table statically
-// (which is problematic if we run on an EBCDIC system) we don't use that
-// solution. Also, we relax the style rule that `case` blocks should always be
-// enclosed in parentheses given the nature of this code.
-static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
-    assert(base == 8 || base == 16);  // base must be hex or octal
-    switch (wc) {
-        case L'0':
-            return 0;
-        case L'1':
-            return 1;
-        case L'2':
-            return 2;
-        case L'3':
-            return 3;
-        case L'4':
-            return 4;
-        case L'5':
-            return 5;
-        case L'6':
-            return 6;
-        case L'7':
-            return 7;
-        default: {
-            break;
-        }
-    }
-
-    if (base != 16) return UINT_MAX;
-
-    switch (wc) {
-        case L'8':
-            return 8;
-        case L'9':
-            return 9;
-        case L'a':
-        case L'A':
-            return 10;
-        case L'b':
-        case L'B':
-            return 11;
-        case L'c':
-        case L'C':
-            return 12;
-        case L'd':
-        case L'D':
-            return 13;
-        case L'e':
-        case L'E':
-            return 14;
-        case L'f':
-        case L'F':
-            return 15;
-        default: {
-            break;
-        }
-    }
-
-    return UINT_MAX;
-}
-
 /// Parse a numeric escape sequence in str, returning whether we succeeded. Also return the number
 /// of characters consumed and the resulting value. Supported escape sequences:
 ///
@@ -153,7 +90,7 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
     unsigned int start = 0;  // the first character of the numeric part of the sequence
 
     unsigned int base = 0, max_digits = 0;
-    if (builtin_echo_digit(str[0], 8) != UINT_MAX) {
+    if (convert_digit(str[0], 8) != -1) {
         // Octal escape
         base = 8;
 
@@ -176,8 +113,8 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
     unsigned int idx;
     unsigned char val = 0;  // resulting character
     for (idx = start; idx < start + max_digits; idx++) {
-        unsigned int digit = builtin_echo_digit(str[idx], base);
-        if (digit == UINT_MAX) break;
+        int digit = convert_digit(str[idx], base);
+        if (digit == -1) break;
         val = val * base + digit;
     }
 

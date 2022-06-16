@@ -68,6 +68,8 @@ By using one of the event handler switches, a function can be made to run automa
 
 - ``fish_cancel``, which is emitted when a commandline is cleared (used for terminal-shell integration).
 
+Functions may not be named the same as a reserved keyword. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
+
 Example
 -------
 

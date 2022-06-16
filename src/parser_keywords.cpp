@@ -22,6 +22,7 @@ static const wcstring subcommand_keywords[]{L"command", L"builtin", L"while", L"
 static const string_set_t block_keywords = {L"for",      L"while",  L"if",
                                             L"function", L"switch", L"begin"};
 
+// Don't forget to add any new reserved keywords to the documentation
 static const wcstring reserved_keywords[] = {
     L"end",    L"case", L"else",   L"return", L"continue", L"break", L"argparse", L"read",
     L"string", L"set",  L"status", L"test",   L"[",        L"_",     L"eval"};

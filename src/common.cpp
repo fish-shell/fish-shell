@@ -1895,7 +1895,7 @@ std::string get_executable_path(const char *argv0) {
             auto dellen = const_strlen(" (deleted)");
             if (buffstr.size() > dellen &&
                 buffstr.compare(buffstr.size() - dellen, dellen, " (deleted)") == 0) {
-                buffstr = buffstr.substr(0, buffstr.size() - const_strlen(" (deleted)"));
+                buffstr = buffstr.substr(0, buffstr.size() - dellen);
             }
         }
         return buffstr;

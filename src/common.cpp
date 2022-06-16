@@ -95,8 +95,6 @@ const wchar_t *program_name;
 /// This is set during startup and not modified after.
 static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
 
-static void debug_shared(wchar_t msg_level, const wcstring &msg);
-
 #if defined(OS_IS_CYGWIN) || defined(WSL)
 // MS Windows tty devices do not currently have either a read or write timestamp. Those
 // respective fields of `struct stat` are always the current time. Which means we can't
@@ -224,17 +222,17 @@ bool is_windows_subsystem_for_linux() {
     return backtrace_text;
 }
 
-[[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
+[[gnu::noinline]] void show_stackframe(int frame_count, int skip_levels) {
     if (frame_count < 1) return;
 
     wcstring_list_t bt = demangled_backtrace(frame_count, skip_levels + 2);
-    debug_shared(msg_level, L"Backtrace:\n" + join_strings(bt, L'\n') + L'\n');
+    FLOG(error, L"Backtrace:\n" + join_strings(bt, L'\n') + L'\n');
 }
 
 #else   // HAVE_BACKTRACE_SYMBOLS
 
-[[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int, int) {
-    debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
+[[gnu::noinline]] void show_stackframe(int, int) {
+    FLOGF(error, L"Sorry, but your system does not support backtraces");
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
 
@@ -604,17 +602,6 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
     return program_name && !std::wcscmp(program_name, TESTS_PROGRAM_NAME);
-}
-
-static void debug_shared(const wchar_t level, const wcstring &msg) {
-    pid_t current_pid;
-    if (!is_forked_child()) {
-        std::fwprintf(stderr, L"<%lc> %ls: %ls\n", level, program_name, msg.c_str());
-    } else {
-        current_pid = getpid();
-        std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", level, program_name, current_pid,
-                      msg.c_str());
-    }
 }
 
 // Careful to not negate LLONG_MIN.
@@ -1833,7 +1820,7 @@ void redirect_tty_output() {
     } else {
         FLOGF(error, L"%s:%zu: failed assertion: %s", file, line, msg);
     }
-    show_stackframe(L'E', 99, 1);
+    show_stackframe(99, 1);
     abort();
 }
 

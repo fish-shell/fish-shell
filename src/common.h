@@ -196,7 +196,7 @@ extern const wcstring g_empty_string;
 #define FATAL_EXIT()                                \
     do {                                            \
         char exit_read_buff;                        \
-        show_stackframe(L'E');                      \
+        show_stackframe();                          \
         ignore_result(read(0, &exit_read_buff, 1)); \
         exit_without_destructors(1);                \
     } while (0)
@@ -276,7 +276,7 @@ std::shared_ptr<T> move_to_sharedptr(T &&v) {
 using cancel_checker_t = std::function<bool()>;
 
 /// Print a stack trace to stderr.
-void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
+void show_stackframe(int frame_count = 100, int skip_levels = 0);
 
 /// Returns a  wide character string equivalent of the specified multibyte character string.
 ///

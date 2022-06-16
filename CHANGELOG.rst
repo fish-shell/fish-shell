@@ -1,3 +1,43 @@
+fish 3.6.0 (released ???)
+===================================
+
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Scripting improvements
+----------------------
+- When fish was upgraded on linux, ``status fish-path`` would print the path with a " (deleted)" (e.g. ``/usr/bin/fish (deleted)``). That suffix will now be removed so the path should be correct again (:issue:`9018`).
+
+Interactive improvements
+------------------------
+
+New or improved bindings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Improved prompts
+^^^^^^^^^^^^^^^^
+
+Completions
+^^^^^^^^^^^
+- Added completions for:
+
+
+Improved terminal support
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Other improvements
+------------------
+- The css for fish's documentation no longer depends on sphinx' stock "classic" theme. This should improve compatibility with sphinx versions and ease upgrading (:issue:`9003`).
+
+
+For distributors
+----------------
+
+--------------
+
 fish 3.5.0 (released June 16, 2022)
 ===================================
 

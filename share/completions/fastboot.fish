@@ -28,7 +28,7 @@ complete -n "not __fish_seen_subcommand_from $commands" -c fastboot -l set-activ
 complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a flashall -d 'Flash all partitions from $ANDROID_PRODUCT_OUT'
 complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a getvar -d 'Display given bootloader variable'
 complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a oem -d 'Execute OEM-specific command'
-complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a flashing -d 'Lock/unlock'
+complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a flashing -d Lock/unlock
 complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a reboot -d 'Reboot device'
 complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a update -d 'Flash all partitions from an update.zip package'
 complete -f -n "not __fish_seen_subcommand_from $commands" -c fastboot -a erase -d 'Erase a flash partition'

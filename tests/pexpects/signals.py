@@ -59,7 +59,7 @@ expect_prompt()
 
 sendline("sleep 5")
 sleep(0.100)
-subprocess.call(["pkill", "-TERM",  "-P", str(sp.spawn.pid), "sleep"])
+subprocess.call(["pkill", "-TERM", "-P", str(sp.spawn.pid), "sleep"])
 expect_str("fish_kill_signal 15")
 expect_prompt()
 

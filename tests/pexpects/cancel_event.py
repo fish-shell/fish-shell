@@ -19,6 +19,7 @@ if "CI" in os.environ:
     # This doesn't work under TSan, because TSan prevents select() being
     # interrupted by a signal.
     import sys
+
     print("SKIPPING cancel_event.py")
     sys.exit(0)
 

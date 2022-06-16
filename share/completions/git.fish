@@ -909,7 +909,7 @@ complete -f -c git -n '__fish_git_using_command fetch pull' -l set-upstream -d '
 complete -f -c git -n __fish_git_needs_command -a fetch -d 'Download objects and refs from another repository'
 # Suggest "repository", then "refspec" - this also applies to e.g. push/pull
 complete -f -c git -n '__fish_git_using_command fetch' -n 'not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d Remote
-complete -f -c git -n '__fish_git_using_command fetch' -n '__fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
+complete -f -c git -n '__fish_git_using_command fetch' -n __fish_git_branch_for_remote -a '(__fish_git_branch_for_remote)'
 complete -f -c git -n '__fish_git_using_command fetch' -s q -l quiet -d 'Be more quiet'
 complete -f -c git -n '__fish_git_using_command fetch' -s v -l verbose -d 'Be more verbose'
 complete -f -c git -n '__fish_git_using_command fetch' -s a -l append -d 'Append to .git/FETCH_HEAD instead of overwriting'
@@ -991,7 +991,7 @@ complete -f -c git -n __fish_git_needs_command -a show -d 'Shows the last commit
 complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_tags)' -d Tag
 complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -opc)' -ka '(__fish_git_commits)'
-complete -f -c git -n '__fish_git_needs_rev_files' -n 'not contains -- -- (commandline -opc)' -xa '(__fish_git_complete_rev_files)'
+complete -f -c git -n __fish_git_needs_rev_files -n 'not contains -- -- (commandline -opc)' -xa '(__fish_git_complete_rev_files)'
 complete -F -c git -n '__fish_git_using_command show' -n 'contains -- -- (commandline -opc)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
 complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'
@@ -1192,7 +1192,7 @@ complete -f -c git -n '__fish_git_using_command cherry' -k -a '(__fish_git_refs)
 complete -f -c git -n __fish_git_needs_command -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -k -a '(__fish_git_ranges)'
 # TODO: Filter further
-complete -f -c git -n '__fish_git_using_command cherry-pick' -n '__fish_git_possible_commithash' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -n __fish_git_possible_commithash -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append info in generated commit on the origin of the cherry-picked change'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'
@@ -1742,7 +1742,7 @@ complete -f -c git -n '__fish_git_using_command pull' -s p -l prune -d 'Remove r
 # TODO --upload-pack
 complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
 complete -f -c git -n '__fish_git_using_command pull' -n 'not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
-complete -f -c git -n '__fish_git_using_command pull' -n '__fish_git_branch_for_remote' -a '(__fish_git_branch_for_remote)'
+complete -f -c git -n '__fish_git_using_command pull' -n __fish_git_branch_for_remote -a '(__fish_git_branch_for_remote)'
 # Options related to merging
 complete -f -c git -n '__fish_git_using_command pull' -l commit -d "Autocommit the merge"
 complete -f -c git -n '__fish_git_using_command pull' -l no-commit -d "Don't autocommit the merge"
@@ -1781,16 +1781,16 @@ complete -f -c git -n '__fish_git_using_command range-diff' -l no-dual-color -d 
 ### push
 complete -f -c git -n __fish_git_needs_command -a push -d 'Update remote refs along with associated objects'
 complete -f -c git -n '__fish_git_using_command push' -n 'not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
-complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -ka '(__fish_git_tags)' -d Tag
-complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -ka '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -ka '(__fish_git_heads)'
+complete -f -c git -n '__fish_git_using_command push' -n __fish_git_branch_for_remote -ka '(__fish_git_tags)' -d Tag
+complete -f -c git -n '__fish_git_using_command push' -n __fish_git_branch_for_remote -ka '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command push' -n __fish_git_branch_for_remote -ka '(__fish_git_heads)'
 # The "refspec" here is an optional "+" to signify a force-push
-complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q "+*" -- (commandline -ct)' -a '+(__fish_git_branches | string replace -r \t".*" "")' -d 'Force-push branch'
+complete -f -c git -n '__fish_git_using_command push' -n __fish_git_branch_for_remote -n 'string match -q "+*" -- (commandline -ct)' -a '+(__fish_git_branches | string replace -r \t".*" "")' -d 'Force-push branch'
 # git push REMOTE :BRANCH deletes BRANCH on remote REMOTE
-complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q ":*" -- (commandline -ct)' -a ':(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Delete remote branch'
+complete -f -c git -n '__fish_git_using_command push' -n __fish_git_branch_for_remote -n 'string match -q ":*" -- (commandline -ct)' -a ':(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Delete remote branch'
 # then src:dest (where both src and dest are git objects, so we want to complete branches)
-complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q "+*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Force-push local branch to remote branch'
-complete -f -c git -n '__fish_git_using_command push' -n '__fish_git_branch_for_remote' -n 'string match -q "*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Push local branch to remote branch'
+complete -f -c git -n '__fish_git_using_command push' -n __fish_git_branch_for_remote -n 'string match -q "+*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Force-push local branch to remote branch'
+complete -f -c git -n '__fish_git_using_command push' -n __fish_git_branch_for_remote -n 'string match -q "*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Push local branch to remote branch'
 complete -f -c git -n '__fish_git_using_command push' -l all -d 'Push all refs under refs/heads/'
 complete -f -c git -n '__fish_git_using_command push' -l prune -d "Remove remote branches that don't have a local counterpart"
 complete -f -c git -n '__fish_git_using_command push' -l mirror -d 'Push all refs under refs/'
@@ -1814,11 +1814,11 @@ complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' -d Head
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d Tag -k
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_recent_commits)' -k
-complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l continue -d 'Restart the rebasing process'
-complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l abort -d 'Abort the rebase operation'
-complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l edit-todo -d 'Edit the todo list'
+complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l continue -d 'Restart the rebasing process'
+complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l abort -d 'Abort the rebase operation'
+complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l edit-todo -d 'Edit the todo list'
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't change anything"
-complete -f -c git -n '__fish_git_using_command rebase' -n '__fish_git_is_rebasing' -l skip -d 'Restart the rebasing process by skipping the current patch'
+complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l skip -d 'Restart the rebasing process by skipping the current patch'
 complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'
 complete -f -c git -n '__fish_git_using_command rebase' -s q -l quiet -d 'Be quiet'
 complete -f -c git -n '__fish_git_using_command rebase' -s v -l verbose -d 'Be verbose'
@@ -2012,16 +2012,16 @@ complete -f -c git -n '__fish_git_using_command worktree' -n '__fish_seen_subcom
 
 ### stash
 complete -c git -n __fish_git_needs_command -a stash -d 'Stash away changes'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a list -d 'List stashes'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a show -d 'Show the changes recorded in the stash'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a pop -d 'Apply and remove a single stashed state'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a apply -d 'Apply a single stashed state'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a clear -d 'Remove all stashed states'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a drop -d 'Remove a single stashed state from the stash list'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a create -d 'Create a stash'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a save -d 'Save a new stash'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a branch -d 'Create a new branch from a stash'
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_not_using_subcommand' -a push -d 'Create a new stash with given files'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a list -d 'List stashes'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a show -d 'Show the changes recorded in the stash'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a pop -d 'Apply and remove a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a apply -d 'Apply a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a clear -d 'Remove all stashed states'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a drop -d 'Remove a single stashed state from the stash list'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a create -d 'Create a stash'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a save -d 'Save a new stash'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a branch -d 'Create a new branch from a stash'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a push -d 'Create a new stash with given files'
 
 complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_complete_stashes)'
 complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_complete_stashes)'

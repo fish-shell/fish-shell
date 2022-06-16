@@ -1893,7 +1893,8 @@ std::string get_executable_path(const char *argv0) {
         std::string buffstr{buff};
         if (access(buff, F_OK)) {
             auto dellen = const_strlen(" (deleted)");
-            if (buffstr.size() > dellen && buffstr.compare(buffstr.size() - dellen, dellen, " (deleted)") == 0) {
+            if (buffstr.size() > dellen &&
+                buffstr.compare(buffstr.size() - dellen, dellen, " (deleted)") == 0) {
                 buffstr = buffstr.substr(0, buffstr.size() - const_strlen(" (deleted)"));
             }
         }

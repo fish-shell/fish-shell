@@ -343,7 +343,7 @@ expect_str("bound ctrl-z")
 
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)
-sendline('function myexit; echo exit; exit; end; bind \cz myexit')
+sendline("function myexit; echo exit; exit; end; bind \cz myexit")
 expect_prompt()
 send("\x1A")
 expect_str("exit")

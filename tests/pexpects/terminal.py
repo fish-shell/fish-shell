@@ -3,7 +3,7 @@ from pexpect_helper import SpawnedProc
 import platform
 
 # Set a 0 terminal size
-sp = SpawnedProc(args=["-d", "term-support"], dimensions=(0,0))
+sp = SpawnedProc(args=["-d", "term-support"], dimensions=(0, 0))
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,
     sp.sendline,
@@ -59,6 +59,5 @@ if platform.system() in ["Linux"]:
     # This should not match because we should not get any output.
     # Unfortunately we have to wait for the timeout to expire - set it to a second.
     expect_str("hellohello", timeout=1, shouldfail=True)
-    send("\x11") # ctrl-q to resume flow
+    send("\x11")  # ctrl-q to resume flow
     expect_prompt("hellohello")
-

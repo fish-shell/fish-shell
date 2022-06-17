@@ -1475,23 +1475,33 @@ So if both ``cat`` and ``grep`` succeeded, ``$status`` would be 1 because of the
 Locale Variables
 ^^^^^^^^^^^^^^^^
 
-The "locale" of a program is its set of language and regional settings that depend on language and cultural convention. In UNIX, these are made up of several categories. For example, :envvar:`LC_CTYPE` defines character classification and case conversion, while :envvar:`LC_TIME` defines the time formats.
+The "locale" of a program is its set of language and regional settings that depend on language and cultural convention. In UNIX, these are made up of several categories. The categories are:
 
 .. envvar:: LANG
 
    This is the typical environment variable for specifying a locale. A user may set this variable to express the language they speak, their region, and a character encoding. The actual values are specific to their platform, except for special values like ``C`` or ``POSIX``.
 
+   The value of LANG is used for each category unless the variable for that category was set or LC_ALL is set. So typically you only need to set LANG.
+
+   An example value might be ``en_US.UTF-8`` for the american version of english and the UTF-8 encoding, or ``de_AT.UTF-8`` for the austrian version of german and the UTF-8 encoding.
+   Your operating system might have a ``locale`` command that you can call as ``locale -a`` to see a list of defined locales.
+
+   A UTF-8 encoding is recommended.
+
 .. envvar:: LC_ALL
    
-   Overrides the :envvar:`LANG` environment variable and the values of the other ``LC_*`` variables.
+   Overrides the :envvar:`LANG` environment variable and the values of the other ``LC_*`` variables. If this is set, none of the other variables are used for anything.
+
+   Usually the other variables should be used instead. Use LC_ALL only when you need to override something.
 
 .. envvar:: LC_COLLATE
 
-   Specifies the locale to use for the ``LC_COLATE`` category. This determines the rules about equivilance of cases and alphabetical ordering: collation.
+   This determines the rules about equivalence of cases and alphabetical ordering: collation.
 
 .. envvar:: LC_CTYPE
 
-   Specifies the locale to use for the ``LC_CTYPE`` category, which determines classification rules, like if the type of character is an alpha, digit, and so on.
+   This determines classification rules, like if the type of character is an alpha, digit, and so on.
+   Most importantly, it defines the text *encoding* - which numbers map to which characters. On modern systems, this should typically be something ending in "UTF-8".
 
 .. envvar:: LC_MESSAGES
 

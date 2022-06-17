@@ -136,7 +136,7 @@ Interactive improvements
 - The Web-based configuration system no longer strips too many quotes in the abbreviation display (:issue:`8917`, :issue:`8918`).
 - Fish started with ``--no-config`` will now use the default keybindings (:issue:`8493`)
 - When fish inherits a :envvar:`USER` environment variable value that doesn't correspond to the current effective user ID, it will now correct it in all cases (:issue:`8879`, :issue:`8583`).
-- Fish sets a new :envvar:`EUID`` variable containing the current effective user id (:issue:`8866`).
+- Fish sets a new :envvar:`EUID` variable containing the current effective user id (:issue:`8866`).
 - ``history search`` no longer interprets the search term as an option (:issue:`8853`)
 - The status message when a job terminates should no longer be erased by a multiline prompt (:issue:`8817`)
 

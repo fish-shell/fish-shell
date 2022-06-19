@@ -200,8 +200,7 @@ wcstring_list_t null_environment_t::get_names(env_mode_flags_t flags) const {
 }
 
 /// Set up the USER and HOME variable.
-static void setup_user() {
-    auto &vars = env_stack_t::globals();
+static void setup_user(env_stack_t &vars) {
     auto uid = geteuid();
     auto user_var = vars.get(L"USER");
     struct passwd userinfo;
@@ -218,8 +217,8 @@ static void setup_user() {
                 // The uid matches but we still might need to set $HOME.
                 if (vars.get(L"HOME").missing_or_empty()) {
                     if (userinfo.pw_dir) {
-                        const wcstring dir = str2wcstring(userinfo.pw_dir);
-                        vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
+                        vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT,
+                                     str2wcstring(userinfo.pw_dir));
                     } else {
                         vars.set_empty(L"HOME", ENV_GLOBAL | ENV_EXPORT);
                     }
@@ -239,8 +238,7 @@ static void setup_user() {
         // This is okay with common `su` and `sudo` because they set $HOME.
         if (vars.get(L"HOME").missing_or_empty()) {
             if (userinfo.pw_dir) {
-                const wcstring dir = str2wcstring(userinfo.pw_dir);
-                vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, dir);
+                vars.set_one(L"HOME", ENV_GLOBAL | ENV_EXPORT, str2wcstring(userinfo.pw_dir));
             } else {
                 // We cannot get $HOME. This triggers warnings for history and config.fish already,
                 // so it isn't necessary to warn here as well.
@@ -332,7 +330,7 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
     // Set $USER, $HOME and $EUID
     // This involves going to passwd and stuff.
     vars.set_one(L"EUID", ENV_GLOBAL, to_string(static_cast<unsigned long long>(geteuid())));
-    setup_user();
+    setup_user(vars);
 
     wcstring user_config_dir;
     path_get_config(user_config_dir);

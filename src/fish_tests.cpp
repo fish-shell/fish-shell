@@ -4424,21 +4424,6 @@ void history_tests_t::test_history_races() {
 
     say(L"Testing history race conditions");
 
-    // It appears TSAN and ASAN's allocators do not release their locks properly in atfork, so
-    // allocating with multiple threads risks deadlock. Drain threads before running under ASAN.
-    // TODO: stop forking with these tests.
-    bool needs_thread_drain = false;
-#if __SANITIZE_ADDRESS__
-    needs_thread_drain |= true;
-#endif
-#if defined(__has_feature)
-    needs_thread_drain |= __has_feature(thread_sanitizer) || __has_feature(address_sanitizer);
-#endif
-
-    if (needs_thread_drain) {
-        iothread_drain_all();
-    }
-
     // Test concurrent history writing.
     // How many concurrent writers we have
     constexpr size_t RACE_COUNT = 4;

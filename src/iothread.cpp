@@ -57,9 +57,6 @@ struct thread_pool_t : noncopyable_t, nonmovable_t {
 
         /// The number of threads which are waiting for more work.
         size_t waiting_threads{0};
-
-        /// A flag indicating we should not process new requests.
-        bool drain{false};
     };
 
     /// Data which needs to be atomically accessed.
@@ -182,9 +179,7 @@ int thread_pool_t::perform(void_function_t &&func, bool cant_wait) {
         auto data = pool.req_data.acquire();
         data->request_queue.push(std::move(req));
         FLOGF(iothread, L"enqueuing work item (count is %lu)", data->request_queue.size());
-        if (data->drain) {
-            // Do nothing here.
-        } else if (data->waiting_threads >= data->request_queue.size()) {
+        if (data->waiting_threads >= data->request_queue.size()) {
             // There's enough waiting threads, wake one up.
             wakeup_thread = true;
         } else if (cant_wait || data->total_threads < pool.max_threads) {
@@ -228,46 +223,12 @@ void iothread_service_main_with_timeout(uint64_t timeout_usec) {
     }
 }
 
-/// At the moment, this function is only used in the test suite and in a
-/// drain-all-threads-before-fork compatibility mode that no architecture requires, so it's OK that
-/// it's terrible.
-int iothread_drain_all() {
-    ASSERT_IS_MAIN_THREAD();
-    ASSERT_IS_NOT_FORKED_CHILD();
-
-    int thread_count;
-    auto &pool = s_io_thread_pool;
-    // Set the drain flag.
-    {
-        auto data = pool.req_data.acquire();
-        assert(!data->drain && "Should not be draining already");
-        data->drain = true;
-        thread_count = data->total_threads;
-    }
-
-    // Wake everyone up.
-    pool.queue_cond.notify_all();
-
-    double now = timef();
-
+/// At the moment, this function is only used in the test suite.
+void iothread_drain_all() {
     // Nasty polling via select().
-    while (pool.req_data.acquire()->total_threads > 0) {
+    while (s_io_thread_pool.req_data.acquire()->total_threads > 0) {
         iothread_service_main_with_timeout(1000);
     }
-
-    // Clear the drain flag.
-    // Even though we released the lock, nobody should have added a new thread while the drain flag
-    // is set.
-    {
-        auto data = pool.req_data.acquire();
-        assert(data->total_threads == 0 && "Should be no threads");
-        assert(data->drain && "Should be draining");
-        data->drain = false;
-    }
-
-    double after = timef();
-    FLOGF(iothread, "Drained %d thread(s) in %.02f msec", thread_count, 1000 * (after - now));
-    return thread_count;
 }
 
 // Service the main thread queue, by invoking any functions enqueued for the main thread.

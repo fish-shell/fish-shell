@@ -9,42 +9,8 @@
 
 #include "common.h"
 
-// fish is multithreaded. Global (which includes function and file-level statics) when used naively
-// may therefore lead to data races. Use the following types to characterize and enforce correct
-// access patterns.
-
-/// A mainthread_t variable may only be accessed on the main thread.
-template <typename T>
-class mainthread_t : noncopyable_t {
-    T value_{};
-
-   public:
-    mainthread_t(T value) : value_(std::move(value)) {}
-    mainthread_t() = default;
-
-    T *operator->() {
-        ASSERT_IS_MAIN_THREAD();
-        return &value_;
-    }
-
-    operator T &() {
-        ASSERT_IS_MAIN_THREAD();
-        return value_;
-    }
-
-    operator const T &() const {
-        ASSERT_IS_MAIN_THREAD();
-        return value_;
-    }
-
-    void operator=(T value) {
-        ASSERT_IS_MAIN_THREAD();
-        value_ = std::move(value);
-    }
-};
-
-/// A latch variable may only be set once, on the main thread.
-/// The value is a immortal.
+/// A latch variable may only be set once.
+/// The value is immortal.
 template <typename T>
 class latch_t : noncopyable_t, nonmovable_t {
     T *value_{};
@@ -57,7 +23,6 @@ class latch_t : noncopyable_t, nonmovable_t {
     const T *operator->() const { return value_; }
 
     void operator=(std::unique_ptr<T> value) {
-        ASSERT_IS_MAIN_THREAD();
         assert(value_ == nullptr && "Latch variable initialized multiple times");
         assert(value != nullptr && "Latch variable initialized with null");
         // Note: deliberate leak.
@@ -65,11 +30,6 @@ class latch_t : noncopyable_t, nonmovable_t {
     }
 
     void operator=(T &&value) { *this = make_unique<T>(std::move(value)); }
-
-    template <typename... Args>
-    void emplace(Args &&...args) {
-        *this = make_unique<T>(std::forward<Args>(args)...);
-    }
 };
 
 /// An atomic type that always use relaxed reads.

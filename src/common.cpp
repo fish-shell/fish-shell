@@ -1939,14 +1939,14 @@ std::string get_path_to_tmp_dir() {
 // bullet-proof and that's OK.
 bool is_console_session() {
     static const bool console_session = [] {
-        ASSERT_IS_MAIN_THREAD();
-
-        const char *tty_name = ttyname(0);
+        char tty_name[PATH_MAX];
+        if (ttyname_r(STDIN_FILENO, tty_name, sizeof tty_name) != 0) {
+            return false;
+        }
         constexpr auto len = const_strlen("/dev/tty");
         const char *TERM = getenv("TERM");
         return
             // Test that the tty matches /dev/(console|dcons|tty[uv\d])
-            tty_name &&
             ((strncmp(tty_name, "/dev/tty", len) == 0 &&
               (tty_name[len] == 'u' || tty_name[len] == 'v' || isdigit(tty_name[len]))) ||
              strcmp(tty_name, "/dev/dcons") == 0 || strcmp(tty_name, "/dev/console") == 0)

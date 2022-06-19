@@ -303,6 +303,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Get the "principal" parser, whatever that is.
     static parser_t &principal_parser();
 
+    /// Assert that this parser is allowed to execute on the current thread.
+    void assert_can_execute() const;
+
     /// Global event blocks.
     event_blockage_list_t global_event_blocks;
 

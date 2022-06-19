@@ -2954,6 +2954,7 @@ uint64_t reader_status_count() { return status_count; }
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
+    parser.assert_can_execute();
     reader_config_t conf;
     conf.complete_ok = true;
     conf.highlight_ok = true;

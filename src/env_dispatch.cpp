@@ -187,7 +187,6 @@ static void guess_emoji_width(const environment_t &vars) {
 
 /// React to modifying the given variable.
 void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
-    ASSERT_IS_MAIN_THREAD();
     // Do nothing if not yet fully initialized.
     if (!s_var_dispatch_table) return;
 

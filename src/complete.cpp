@@ -532,7 +532,6 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const description
 /// If command to complete is short enough, substitute the description with the whatis information
 /// for the executable.
 void completer_t::complete_cmd_desc(const wcstring &str) {
-    ASSERT_IS_MAIN_THREAD();
     if (!ctx.parser) return;
 
     wcstring cmd;

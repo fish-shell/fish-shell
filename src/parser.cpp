@@ -54,9 +54,11 @@ parser_t::~parser_t() = default;
 const std::shared_ptr<parser_t> parser_t::principal{new parser_t()};
 
 parser_t &parser_t::principal_parser() {
-    ASSERT_IS_MAIN_THREAD();
+    principal->assert_can_execute();
     return *principal;
 }
+
+void parser_t::assert_can_execute() const { ASSERT_IS_MAIN_THREAD(); }
 
 int parser_t::set_var_and_fire(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
     int res = vars().set(key, mode, std::move(vals));

@@ -361,7 +361,7 @@ static void reap_disowned_pids() {
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
 static void process_mark_finished_children(parser_t &parser, bool block_ok) {
-    ASSERT_IS_MAIN_THREAD();
+    parser.assert_can_execute();
 
     // Get the exit and signal generations of all reapable processes.
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
@@ -647,7 +647,7 @@ static void save_wait_handle_for_completed_job(const shared_ptr<job_t> &job,
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// \return whether something was printed.
 static bool process_clean_after_marking(parser_t &parser, bool allow_interactive) {
-    ASSERT_IS_MAIN_THREAD();
+    parser.assert_can_execute();
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
@@ -728,7 +728,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 }
 
 bool job_reap(parser_t &parser, bool allow_interactive) {
-    ASSERT_IS_MAIN_THREAD();
+    parser.assert_can_execute();
     // Early out for the common case that there are no jobs.
     if (parser.jobs().empty()) {
         return false;

@@ -22,6 +22,8 @@ class latch_t : noncopyable_t, nonmovable_t {
     T *operator->() { return value_; }
     const T *operator->() const { return value_; }
 
+    bool is_set() const { return value_ != nullptr; }
+
     void operator=(std::unique_ptr<T> value) {
         assert(value_ == nullptr && "Latch variable initialized multiple times");
         assert(value != nullptr && "Latch variable initialized with null");

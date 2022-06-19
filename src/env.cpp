@@ -1133,7 +1133,6 @@ maybe_t<int> env_stack_impl_t::try_set_electric(const wcstring &key, const query
 /// Set a universal variable, inheriting as applicable from the given old variable.
 void env_stack_impl_t::set_universal(const wcstring &key, wcstring_list_t val,
                                      const query_t &query) {
-    ASSERT_IS_MAIN_THREAD();
     auto oldvar = uvars()->get(key);
     // Resolve whether or not to export.
     bool exports = false;

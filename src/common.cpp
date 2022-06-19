@@ -1729,10 +1729,7 @@ void setup_fork_guards() {
                    [] { pthread_atfork(nullptr, nullptr, [] { is_forked_proc = true; }); });
 }
 
-void save_term_foreground_process_group() {
-    ASSERT_IS_MAIN_THREAD();
-    initial_fg_process_group = tcgetpgrp(STDIN_FILENO);
-}
+void save_term_foreground_process_group() { initial_fg_process_group = tcgetpgrp(STDIN_FILENO); }
 
 void restore_term_foreground_process_group_for_exit() {
     // We wish to restore the tty to the initial owner. There's two ways this can go wrong:

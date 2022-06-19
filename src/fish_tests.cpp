@@ -788,19 +788,6 @@ static void test_tokenizer() {
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 }
 
-// Little function that runs in a background thread, bouncing to the main.
-static int test_iothread_thread_call(std::atomic<int> *addr) {
-    int before = *addr;
-    iothread_perform_on_main([=]() { *addr += 1; });
-    int after = *addr;
-
-    // Must have incremented it at least once.
-    if (before >= after) {
-        err(L"Failed to increment from background thread");
-    }
-    return after;
-}
-
 static void test_fd_monitor() {
     say(L"Testing fd_monitor");
 
@@ -935,17 +922,24 @@ static void test_fd_monitor() {
 
 static void test_iothread() {
     say(L"Testing iothreads");
-    std::unique_ptr<std::atomic<int>> int_ptr = make_unique<std::atomic<int>>(0);
-    int iterations = 64;
+    std::atomic<int> shared_int{0};
+    const int iterations = 64;
+    std::promise<void> prom;
     for (int i = 0; i < iterations; i++) {
-        iothread_perform([&]() { test_iothread_thread_call(int_ptr.get()); });
+        iothread_perform([&] {
+            int newv = 1 + shared_int.fetch_add(1, std::memory_order_relaxed);
+            if (newv == iterations) {
+                prom.set_value();
+            }
+        });
     }
-    iothread_drain_all();
+    auto status = prom.get_future().wait_for(std::chrono::seconds(64));
 
     // Should have incremented it once per thread.
-    do_test(*int_ptr == iterations);
-    if (*int_ptr != iterations) {
-        say(L"Expected int to be %d, but instead it was %d", iterations, int_ptr->load());
+    do_test(status == std::future_status::ready);
+    do_test(shared_int == iterations);
+    if (shared_int != iterations) {
+        say(L"Expected int to be %d, but instead it was %d", iterations, shared_int.load());
     }
 }
 

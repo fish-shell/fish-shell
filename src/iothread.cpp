@@ -107,28 +107,7 @@ struct thread_pool_t : noncopyable_t, nonmovable_t {
 static thread_pool_t &s_io_thread_pool = *(new thread_pool_t(1, IO_MAX_THREADS));
 
 /// A queue of "things to do on the main thread."
-struct main_thread_queue_t : noncopyable_t {
-    // Functions to invoke as the completion callback from debounce.
-    std::vector<void_function_t> completions;
-
-    // iothread_perform_on_main requests.
-    // Note this contains pointers to structs that are stack-allocated on the requesting thread.
-    std::vector<void_function_t> requests;
-
-    /// Transfer ownership of ourselves to a new queue and return it.
-    /// 'this' is left empty.
-    main_thread_queue_t take() {
-        main_thread_queue_t result;
-        std::swap(result.completions, this->completions);
-        std::swap(result.requests, this->requests);
-        return result;
-    }
-
-    // Moving is allowed, but not copying.
-    main_thread_queue_t() = default;
-    main_thread_queue_t(main_thread_queue_t &&) = default;
-    main_thread_queue_t &operator=(main_thread_queue_t &&) = default;
-};
+using main_thread_queue_t = std::vector<void_function_t>;
 static owning_lock<main_thread_queue_t> s_main_thread_queue;
 
 /// \return the signaller for completions and main thread requests.
@@ -300,39 +279,14 @@ void iothread_service_main() {
 
     // Move the queue to a local variable.
     // Note the s_main_thread_queue lock is not held after this.
-    main_thread_queue_t queue = s_main_thread_queue.acquire()->take();
+    main_thread_queue_t queue;
+    s_main_thread_queue.acquire()->swap(queue);
 
     // Perform each completion in order.
-    for (const void_function_t &func : queue.completions) {
+    for (const void_function_t &func : queue) {
         // ensure we don't invoke empty functions, that raises an exception
         if (func) func();
     }
-
-    // Perform each main thread request.
-    for (const void_function_t &func : queue.requests) {
-        if (func) func();
-    }
-}
-
-void iothread_perform_on_main(const void_function_t &func) {
-    if (is_main_thread()) {
-        func();
-        return;
-    }
-
-    // Make a new request. Note we are synchronous, so our closure can use references instead of
-    // copying.
-    std::promise<void> wait_until_done;
-    auto handler = [&] {
-        func();
-        wait_until_done.set_value();
-    };
-    // Append it. Ensure we don't hold the lock after.
-    s_main_thread_queue.acquire()->requests.emplace_back(std::move(handler));
-
-    // Tell the signaller and then wait until our future is set.
-    get_notify_signaller().post();
-    wait_until_done.get_future().wait();
 }
 
 bool make_detached_pthread(void *(*func)(void *), void *param) {
@@ -501,7 +455,7 @@ uint64_t debounce_t::perform(std::function<void()> handler) {
 
 // static
 void debounce_t::enqueue_main_thread_result(std::function<void()> func) {
-    s_main_thread_queue.acquire()->completions.push_back(std::move(func));
+    s_main_thread_queue.acquire()->push_back(std::move(func));
     get_notify_signaller().post();
 }
 

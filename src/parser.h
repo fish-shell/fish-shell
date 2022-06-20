@@ -273,6 +273,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// including sending on-variable change events.
     bool syncs_uvars_{false};
 
+    /// If set, we are the principal parser.
+    bool is_principal_{false};
+
     /// List of profile items.
     /// This must be a deque because we return pointers to them to callers,
     /// who may hold them across blocks (which would cause reallocations internal
@@ -288,12 +291,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \return whether we are currently evaluating a command substitution.
     bool is_command_substitution() const;
 
-    /// Create a parser.
-    parser_t();
-    parser_t(std::shared_ptr<env_stack_t> vars);
-
-    /// The main parser.
-    static const std::shared_ptr<parser_t> principal;
+    /// Create a parser
+    parser_t(std::shared_ptr<env_stack_t> vars, bool is_principal = false);
 
    public:
     // No copying allowed.

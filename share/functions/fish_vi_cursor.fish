@@ -37,9 +37,6 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         # - It is set for xterm, and everyone and their dog claims to be xterm
         #
         # So we just don't care about $TERM, unless it is one of the few terminals that actually have their own entry.
-        #
-        # Note: Previous versions also checked $TMUX, and made sure that then $TERM was screen* or tmux*.
-        # We don't care, since we *cannot* handle term-in-a-terms 100% correctly.
         if not set -q KONSOLE_PROFILE_NAME
             and not test -n "$KONSOLE_VERSION" -a "$KONSOLE_VERSION" -ge 200400 # konsole, but new.
             and not set -q ITERM_PROFILE
@@ -52,6 +49,10 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             and not string match -q 'rxvt*' -- $TERM
             and not string match -q 'alacritty*' -- $TERM
             and not string match -q 'foot*' -- $TERM
+            and not begin
+                set -q TMUX
+                and string match -qr '^screen|^tmux' -- $TERM
+            end
             return
         end
     end
@@ -78,13 +79,6 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             set function __fish_cursor_xterm
     end
 
-    set -l tmux_prefix
-    set -l tmux_postfix
-    if set -q TMUX
-        set tmux_prefix echo -ne "'\ePtmux;\e'"
-        set tmux_postfix echo -ne "'\e\\\\'"
-    end
-
     set -q fish_cursor_unknown
     or set -g fish_cursor_unknown block
 
@@ -94,9 +88,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
               if not set -q \$varname
                 set varname fish_cursor_unknown
               end
-              $tmux_prefix
               $function \$\$varname
-              $tmux_postfix
           end
          " | source
 
@@ -106,9 +98,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
               if not set -q \$varname
                 set varname fish_cursor_unknown
               end
-              $tmux_prefix
               $function \$\$varname
-              $tmux_postfix
           end
          " | source
 end

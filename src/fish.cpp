@@ -545,6 +545,9 @@ int main(int argc, char **argv) {
         res = run_command_list(parser, opts.postconfig_cmds, {});
     }
 
+    // Clear signals in case we were interrupted (#9024).
+    signal_clear_cancel();
+
     if (!opts.batch_cmds.empty()) {
         // Run the commands specified as arguments, if any.
         if (get_login()) {

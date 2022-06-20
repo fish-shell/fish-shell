@@ -13,6 +13,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- Cancelling an initial command via control-C no longer prevents configuration scripts from running (:issue:`9024`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

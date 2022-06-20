@@ -28,6 +28,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- Cursor shaping for vi-mode is now also enabled by default in tmux, and will happen if tmux decides the outer terminal is capable (:issue:`8981`).
 
 Other improvements
 ------------------

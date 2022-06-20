@@ -112,6 +112,9 @@ pygments_style = None
 html_theme_path = ["."]
 html_theme = "python_docs_theme"
 
+# Shared styles across all doc versions.
+html_css_files = ["/docs/shared/style.css"]
+
 # Don't add a weird "_sources" directory
 html_copy_source = False
 

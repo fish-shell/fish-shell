@@ -35,6 +35,11 @@
         {{ searchbox() }}
     </li>
     {%- endif %}
+    {# This is hidden by default, unhidden by our global shared script. #}
+    <div id="old-docs-notice" style="display: none">
+        This documents an old version of fish.
+        <a href="{{ pathto('../current/', 1) }}">See the latest release.</a>
+    </div>
 {% endblock %}
 
 {# The sidebar goes into the *document* block, so it ends up in the document *div* so it doesn't go over the footer #}
@@ -60,6 +65,8 @@
 </div>
 
 <script type="text/javascript">
+ FISH_DOCS_VERSION = "{{ version }}";
+
  function copy_to_clipboard(it) {
      // Find the pre tag we're interested in.
      var pre = it.target;
@@ -112,4 +119,5 @@
       }
   })();
 </script>
+<script defer type="text/javascript" src="/docs/shared/script.js"></script>
 {% endblock %}

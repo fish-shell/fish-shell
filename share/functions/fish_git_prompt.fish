@@ -619,14 +619,12 @@ function __fish_git_prompt_validate_colors --description "fish_git_prompt helper
 end
 
 function __fish_git_prompt_reset -a type -a op -a var --description "Event handler, resets prompt when functionality changes" \
-    --on-variable=__fish_git_prompt_{repaint,describe_style,show_informative_status,use_informative_chars,showdirtystate,showstashstate,showuntrackedfiles,showupstream}
+    --on-variable=__fish_git_prompt_{show_informative_status,use_informative_chars}
     if status --is-interactive
-        if contains -- $var __fish_git_prompt_show_informative_status __fish_git_prompt_use_informative_chars
-            # Clear characters that have different defaults with/without informative status
-            set -e ___fish_git_prompt_char_{name,cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind}
-            # Clear init so we reset the chars next time.
-            set -e ___fish_git_prompt_init
-        end
+        # Clear characters that have different defaults with/without informative status
+        set -e ___fish_git_prompt_char_{name,cleanstate,dirtystate,invalidstate,stagedstate,stashstate,stateseparator,untrackedfiles,upstream_ahead,upstream_behind}
+        # Clear init so we reset the chars next time.
+        set -e ___fish_git_prompt_init
     end
 end
 

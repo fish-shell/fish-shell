@@ -38,6 +38,7 @@ Other improvements
 
 For distributors
 ----------------
+- *Placeholder text*
 
 --------------
 

@@ -556,14 +556,22 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
                             const wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     UNUSED(opts);
     const auto &vars = parser.vars();
+    auto inheriteds = env_get_inherited();
     if (argc == 0) {  // show all vars
-        wcstring_list_t names = parser.vars().get_names(ENV_USER);
+        wcstring_list_t names = vars.get_names(ENV_USER);
         sort(names.begin(), names.end());
         for (const auto &name : names) {
             if (name == L"history") continue;
             show_scope(name.c_str(), ENV_LOCAL, streams, vars);
             show_scope(name.c_str(), ENV_GLOBAL, streams, vars);
             show_scope(name.c_str(), ENV_UNIVERSAL, streams, vars);
+
+            // Show the originally imported value as a debugging aid.
+            auto inherited = inheriteds.find(name);
+            if (inherited != inheriteds.end()) {
+                const wcstring escaped_val = escape_string(inherited->second, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+                streams.out.append_format(_(L"$%ls: originally inherited as |%ls|\n"), name.c_str(), escaped_val.c_str());
+            }
         }
     } else {
         for (int i = 0; i < argc; i++) {
@@ -585,6 +593,11 @@ static int builtin_set_show(const wchar_t *cmd, const set_cmd_opts_t &opts, int 
             show_scope(arg, ENV_LOCAL, streams, vars);
             show_scope(arg, ENV_GLOBAL, streams, vars);
             show_scope(arg, ENV_UNIVERSAL, streams, vars);
+            auto inherited = inheriteds.find(arg);
+            if (inherited != inheriteds.end()) {
+                const wcstring escaped_val = escape_string(inherited->second, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+                streams.out.append_format(_(L"$%ls: originally inherited as |%ls|\n"), arg, escaped_val.c_str());
+            }
         }
     }
 

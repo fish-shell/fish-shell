@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <mutex>
 #include <set>
 #include <utility>
@@ -284,6 +285,12 @@ static void setup_path() {
     }
 }
 
+static std::map<wcstring, wcstring> inheriteds;
+
+const std::map<wcstring, wcstring> &env_get_inherited() {
+    return inheriteds;
+}
+
 void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_paths) {
     env_stack_t &vars = env_stack_t::principal();
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins
@@ -300,9 +307,11 @@ void env_init(const struct config_paths_t *paths, bool do_uvars, bool default_pa
             if (!electric_var_t::for_name(key_and_val)) {
                 vars.set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
             }
+            inheriteds[key] = L"";
         } else {
             key.assign(key_and_val, 0, eql);
             val.assign(key_and_val, eql + 1, wcstring::npos);
+            inheriteds[key] = val;
             if (!electric_var_t::for_name(key)) {
                 // fish_user_paths should not be exported; attempting to re-import it from
                 // a value we previously (due to user error) exported will cause impossibly

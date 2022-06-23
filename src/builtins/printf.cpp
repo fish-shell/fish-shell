@@ -169,6 +169,12 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
         } else {
             // This isn't entirely fatal - the value should still be printed.
             this->nonfatal_error(_(L"%ls: value not completely converted (can't convert '%ls')"), s, end);
+            // Warn about octal numbers as they can be confusing.
+            // Do it if the unconverted digit is a valid hex digit,
+            // because it could also be an "0x" -> "0" typo.
+            if (*s == L'0' && iswxdigit(*end)) {
+                this->nonfatal_error(_(L"Hint: a leading '0' without an 'x' indicates an octal number"), s, end);
+            }
         }
     }
 }

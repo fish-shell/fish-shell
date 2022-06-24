@@ -139,6 +139,7 @@ complete -n '__fish_seen_subcommand_from install' -c adb -s s -d 'Install on SD 
 complete -n '__fish_seen_subcommand_from install' -c adb -l algo -d 'Algorithm name'
 complete -n '__fish_seen_subcommand_from install' -c adb -l key -d 'Hex-encoded key'
 complete -n '__fish_seen_subcommand_from install' -c adb -l iv -d 'Hex-encoded iv'
+complete -n '__fish_seen_subcommand_from install' -c adb -ka '(__fish_complete_suffix .apk)'
 
 # uninstall
 complete -n '__fish_seen_subcommand_from uninstall' -c adb -s k -d 'Keep the data and cache directories'

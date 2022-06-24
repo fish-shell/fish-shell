@@ -318,6 +318,8 @@ class Type1ManParser(ManParser):
             options_section = options_section[options_matched.end() - 3 :]
             options_matched = re.search(options_parts_regex, options_section)
 
+        return True
+            
     def fallback(self, options_section):
         add_diagnostic("Trying fallback")
         options_parts_regex = re.compile("\.TP( \d+)?(.*?)\.TP", re.DOTALL)
@@ -423,6 +425,8 @@ class Type2ManParser(ManParser):
             options_section = options_section[options_matched.end() - 3 :]
             options_matched = re.search(options_parts_regex, options_section)
 
+        return True
+
 
 class Type3ManParser(ManParser):
     def is_my_type(self, manpage):
@@ -463,6 +467,8 @@ class Type3ManParser(ManParser):
 
             options_section = options_section[options_matched.end() - 3 :]
             options_matched = re.search(options_parts_regex, options_section)
+
+        return True
 
 
 class Type4ManParser(ManParser):
@@ -506,6 +512,8 @@ class Type4ManParser(ManParser):
 
             options_section = options_section[options_matched.end() - 3 :]
             options_matched = re.search(options_parts_regex, options_section)
+
+        return True
 
 
 class TypeScdocManParser(ManParser):

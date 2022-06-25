@@ -132,7 +132,7 @@ bool job_t::signal(int signal) {
     if (auto pgid = group->get_pgid()) {
         if (killpg(*pgid, signal) == -1) {
             char buffer[512];
-            sprintf(buffer, "killpg(%d, %s)", *pgid, strsignal(signal));
+            snprintf(buffer, 512, "killpg(%d, %s)", *pgid, strsignal(signal));
             wperror(str2wcstring(buffer).c_str());
             return false;
         }

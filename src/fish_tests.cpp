@@ -478,7 +478,7 @@ static void test_format() {
     for (int j = -129; j <= 129; j++) {
         char buff1[128], buff2[128];
         format_long_safe(buff1, j);
-        sprintf(buff2, "%d", j);
+        snprintf(buff2, 128, "%d", j);
         do_test(!std::strcmp(buff1, buff2));
 
         wchar_t wbuf1[128], wbuf2[128];
@@ -490,7 +490,7 @@ static void test_format() {
     long q = LONG_MIN;
     char buff1[128], buff2[128];
     format_long_safe(buff1, q);
-    sprintf(buff2, "%ld", q);
+    snprintf(buff2, 128, "%ld", q);
     do_test(!std::strcmp(buff1, buff2));
 }
 

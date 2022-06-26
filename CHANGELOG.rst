@@ -1,3 +1,12 @@
+fish 3.5.1 (released ???)
+====================================
+
+This release of fish fixes the following problems identified in fish 3.5.0:
+
+- A change in the completion script for ``git`` caused problems when completing ``git blame`` or ``git -C``, which has been fixed (:issue:`9053`).
+
+--------------
+
 fish 3.5.0 (released June 16, 2022)
 ===================================
 

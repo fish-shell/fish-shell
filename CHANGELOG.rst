@@ -26,6 +26,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+- A regression in 3.5.0 caused completions for ``git -C`` to print errors, which has been fixed.
 
 
 Improved terminal support

@@ -3,6 +3,8 @@
 # e.g. the fish_git_prompt variable handlers test `status is-interactive`.
 #REQUIRES: command -v git
 
+set -g fish (status fish-path)
+
 # Tests run from git (e.g. git rebase --exec 'ninja test'...) inherit a weird git environment.
 # Ensure that no git environment variables are inherited.
 for varname in (set -x | string match 'GIT_*' | string replace -r ' .*' '')
@@ -134,3 +136,6 @@ test "$(complete -C'git re ')" = "$(complete -C'git restore --staged ')"
 or begin
     echo -- Oops re completes unlike restore --staged
 end
+
+$fish -c 'complete -C "git -C ./.gi"'
+# CHECK: ./.git/	Directory

@@ -10,6 +10,7 @@ Deprecations and removed features
 Scripting improvements
 ----------------------
 - When fish was upgraded on linux, ``status fish-path`` would print the path with a " (deleted)" (e.g. ``/usr/bin/fish (deleted)``). That suffix will now be removed so the path should be correct again (:issue:`9018`).
+- ``argparse`` can now be used without option specifications, to allow using --min-args, --max-args or for commands that take no options (but might in future) (:issue:`9006`).
 
 Interactive improvements
 ------------------------

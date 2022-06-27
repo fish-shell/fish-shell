@@ -285,7 +285,7 @@ and echo unxpected argparse return status >&2
 # CHECKERR: argparse: Value 'a1' for flag 'm' is not an integer
 
 # Check the exit status from argparse validation
-argparse 'm#max!set | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
+argparse 'm#max!set -l | grep "^_flag_"; function x; return 57; end; x' -- argle --max=83 bargle 2>&1
 set -l saved_status $status
 test $saved_status -eq 57
 and echo expected argparse return status $saved_status

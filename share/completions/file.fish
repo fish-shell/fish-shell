@@ -4,7 +4,14 @@ complete -c file -s b -l brief -d 'Do not prepend filenames to output lines'
 complete -c file -s c -l checking-printout -d 'Print the parsed form of the magic file'
 complete -c file -s C -l compile -d 'Write an output file containing a pre-parsed version of file'
 complete -c file -s h -l no-dereference -d 'Do not follow symlinks'
-complete -c file -s i -l mime -d 'Output mime type strings instead human readable strings'
+
+if test (uname) = Darwin
+    complete -c file -s i -d 'Do not classify regular file contents'
+    complete -c file -s I -l mime -d 'Output mime type strings instead human readable strings'
+else
+    complete -c file -s i -l mime -d 'Output mime type strings instead human readable strings'
+end
+
 complete -c file -s k -l keep-going -d 'Don\'t stop at the first match'
 complete -c file -s L -l dereference -d 'Follow symlinks'
 complete -c file -s n -l no-buffer -d 'Flush stdout after checking each file'

@@ -13,6 +13,7 @@ This release also fixes a number of problems identified in fish 3.5.0.
 - On terminals that emit a ``CSI u`` sequence for :kbd:`Shift-Space`, fish inserts a space instead of printing an error. (:issue:`9054`).
 - ``status fish-path`` on Linux-based platforms could print the path with a " (deleted)" suffix (such as ``/usr/bin/fish (deleted)``), which is now removed (:issue:`9019`).
 - Cancelling an initial command (from fish's ``--init-command`` option) with :kbd:`Control-C` no longer prevents configuration scripts from running (:issue:`9024`).
+- The job summary contained extra blank lines if the prompt used multiple lines, which is now fixed (:issue:`9044`).
 
 --------------
 

@@ -35,6 +35,11 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
         set cmd_line (string trim (string sub -l $truncated_len $cmd_line))$ellipsis
     end
 
+    if test $is_foreground -eq 0; and test $signal_or_end_name != STOPPED
+        # Add a newline *before* our message so we get the message after the commandline.
+        echo >&2
+    end
+
     switch $signal_or_end_name
         case STOPPED
             printf ( _ "fish: Job %s, '%s' has stopped\n" ) $job_id $cmd_line
@@ -49,9 +54,11 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
                     $job_id $cmd_line $signal_or_end_name $signal_desc
             end
     end >&2
-    string repeat \n --count=(math (count (fish_prompt)) - 1) >&2
 
     if test $is_foreground -eq 0; and test $signal_or_end_name != STOPPED
+        # We want one newline per line in the prompt after the first.
+        # To ensure that, don't let `string repeat` add a newline. See #9044.
+        string repeat -N \n --count=(math (count (fish_prompt)) - 1) >&2
         commandline -f repaint
     end
 end

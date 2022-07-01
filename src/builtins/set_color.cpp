@@ -63,10 +63,11 @@ static void print_modifiers(outputter_t &outp, bool bold, bool underline, bool i
     }
 }
 
-static void print_colors(io_streams_t &streams, bool bold, bool underline, bool italics, bool dim,
+static void print_colors(io_streams_t &streams, wcstring_list_t args, bool bold, bool underline, bool italics, bool dim,
                          bool reverse, rgb_color_t bg) {
     outputter_t outp;
-    for (const auto &color_name : rgb_color_t::named_color_names()) {
+    if (args.empty()) args = rgb_color_t::named_color_names();
+    for (const auto &color_name : args) {
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
             print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
             rgb_color_t color = rgb_color_t(color_name);
@@ -182,7 +183,8 @@ maybe_t<int> builtin_set_color(parser_t &parser, io_streams_t &streams, const wc
         if (bgcolor && bg.is_special()) {
             bg = rgb_color_t(L"");
         }
-        print_colors(streams, bold, underline, italics, dim, reverse, bg);
+        wcstring_list_t args(argv + w.woptind, argv + argc);
+        print_colors(streams, args, bold, underline, italics, dim, reverse, bg);
         return STATUS_CMD_OK;
     }
 

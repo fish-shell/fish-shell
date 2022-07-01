@@ -82,3 +82,13 @@ expect_str("\n\x1b[37mwhite")
 expect_str("\n\x1b[33myellow")
 expect_str("normal")
 expect_prompt()
+
+# ENABLE RGB MODE - turn this off if you want to test anything after this!
+sendline("set -g fish_term24bit 1")
+expect_prompt()
+
+# See that --print-colors prints the given colors.
+sendline("set_color --print-colors ff0 red")
+expect_str("\x1b[38;2;255;255;0mff0")
+expect_str("\x1b[31mred")
+expect_prompt()
